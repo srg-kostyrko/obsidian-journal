@@ -104,6 +104,12 @@ export interface NavLayout {
   rows: number;
 }
 
+// A NavLayout tagged with the pane width it was read at, so a sweep's failure names the width
+// that broke rather than only the shape.
+export interface SweptNavLayout extends NavLayout {
+  width: number;
+}
+
 export interface MonthGridLayout {
   // Rounded width of each month in the grid; more than one value means the months disagree.
   widths: number[];
@@ -181,6 +187,22 @@ export async function narrowNavLayout(widthPx: number): Promise<NavLayout> {
     widthPx,
   );
   return readNavLayout();
+}
+
+// Pane widths from below a phone note (~345px) up to a wide desktop one, the range a nav row
+// has to hold a sane layout across. The floor is not the narrowest width the row survives: a
+// weekly block whose week number runs to two digits clips below ~200px, because the current
+// group floors at its own min-content and two chevrons beside a 3em week number need more than
+// such a pane leaves. 280px keeps the sweep clear of that edge by a margin no font can close,
+// which is the whole point of sweeping rather than asserting a single width.
+export const NAV_PANE_WIDTHS = [280, 320, 360, 400, 440, 480, 560, 640];
+
+export async function navLayoutsAcross(widths: readonly number[]): Promise<SweptNavLayout[]> {
+  const swept: SweptNavLayout[] = [];
+  for (const width of widths) {
+    swept.push({ width, ...(await narrowNavLayout(width)) });
+  }
+  return swept;
 }
 
 function readNavLayout(): Promise<NavLayout> {

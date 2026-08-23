@@ -12,6 +12,7 @@ import {
   NAV_FENCE,
   NAV_NEXT,
   NAV_NEXT_BLOCK,
+  NAV_PANE_WIDTHS,
   NAV_PREVIOUS_BLOCK,
   NAV_VIEW,
   TIMELINE_BAD_FENCE,
@@ -24,6 +25,7 @@ import {
   livePreviewNote,
   monthGridLayout,
   narrowNavLayout,
+  navLayoutsAcross,
   navViewFill,
   openInLivePreview,
   openInReadingMode,
@@ -141,11 +143,21 @@ describe("code blocks", () => {
         expect(layout.overflowX).toBe(0);
       });
 
-      it("keeps the weekly nav blocks on one row at a phone-pane width", async () => {
+      it("never leaves two weekly nav blocks sharing a row with the third below, at any pane width", async () => {
         await renderBlock("nav/narrow-weekly-row.md", hostNote("weekly", "2026-09-06", NAV_FENCE), NAV_VIEW);
-        const layout = await narrowNavLayout(360);
-        expect(layout.rows).toBe(1);
-        expect(layout.overflowX).toBe(0);
+        const swept = await navLayoutsAcross(NAV_PANE_WIDTHS);
+        // The #271 report is the two-up-one-below state, which greedy flex wrapping produces at
+        // every width between "all three fit" and "none fits beside another". Either the three
+        // share the line or each takes its own; nothing in between is a layout the block offers.
+        // Which width they stop sharing at is a property of the face the host renders in — a
+        // weekly block needs 344px of one and past 360px of another — so it is not asserted here,
+        // only that no width lands between the two states.
+        expect(swept.filter((layout) => layout.rows !== 1 && layout.rows !== 3)).toEqual([]);
+        // ... and nothing spills past the pane edge at any of them (#216).
+        expect(swept.filter((layout) => layout.overflowX !== 0)).toEqual([]);
+        // Both states are reachable, or a block that only ever stacked would satisfy the above.
+        expect(swept.at(0)?.rows).toBe(3);
+        expect(swept.at(-1)?.rows).toBe(1);
       });
 
       it("fills the pane with the nav row in Live Preview, where the block mounts in an editor widget", async () => {
