@@ -1,43 +1,22 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import { anchor, installTestCalendar } from "@/calendar/testing";
+import { anchor } from "@/calendar/testing";
+import { decorationsModule } from "@/decorations/module";
+import { decorationsSettingsModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
-import { provideInjectorOnApp } from "@/infrastructure/di";
+import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
-import { buildNotesCalendarHarness, type NotesCalendarHarness } from "@/notes-calendar/testing";
+import { notesCalendarModule } from "@/notes-calendar/module";
+import { shelvesCoreModule } from "@/shelves/module";
+import { testContainer } from "@/testing";
 
 import TimelineCalendar from "./TimelineCalendar.vue";
-
-function mount(h: NotesCalendarHarness) {
-  return render(TimelineCalendar, {
-    props: { refDate: anchor("2026-08-15"), shelf: null },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, h.container);
-          },
-        },
-      ],
-    },
-  });
-}
 
 beforeAll(() => initLocale("en"));
 
 describe("TimelineCalendar", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
-  it("sizes its columns around the padding the journals in scope reserve", () => {
+  it("sizes its columns around the padding the journals in scope reserve", async () => {
     // A year of months wraps across rows, so the grid has to know how wide a decorated
     // month gets before it decides how many fit on one.
     const decoration = buildDecoration({
@@ -45,11 +24,18 @@ describe("TimelineCalendar", () => {
       conditions: [buildCondition("weekday", { weekdays: [1] })],
       styles: [buildStyle("shape", { placement_x: "right", placement_y: "middle", size: 0.5 })],
     });
-    const h = buildNotesCalendarHarness({
-      journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }) },
+    const harness = await testContainer({
+      modules: [
+        journalsCoreModule,
+        shelvesCoreModule,
+        decorationsModule,
+        decorationsSettingsModule,
+        notesCalendarModule,
+      ],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }) } },
     });
 
-    const { container } = mount(h);
+    const { container } = harness.render(TimelineCalendar, { props: { refDate: anchor("2026-08-15"), shelf: null } });
 
     const grid = container.querySelector<HTMLElement>(".timeline-calendar");
     expect(grid?.style.getPropertyValue("--journal-cell-padding-inline")).toBe("max(0.6em, 2px)");
