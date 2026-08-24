@@ -33,6 +33,7 @@ const convertedTestGlobs = [
   "src/commands/**/*.test.ts",
   "src/maintenance/**/*.test.ts",
   "src/api/**/*.test.ts",
+  "src/calendar/**/*.test.ts",
 ];
 
 // `no-restricted-syntax` options replace rather than merge, so this array must carry
