@@ -9,6 +9,7 @@ import { CUSTOM_LOCALE } from "@/calendar/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { calendarSlice } from "@/calendar/settings/slice";
 import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
+import { codeBlocksModule } from "@/code-blocks";
 import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError, useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
@@ -160,6 +161,16 @@ describe("testContainer", () => {
 
   it("throws a named error when a full module leaks host state", async () => {
     await expect(testContainer({ modules: [journalsModule] })).rejects.toThrow(TestContainerLeakedHostStateError);
+  });
+
+  it("counts a registered code-block processor as leaked host state", async () => {
+    // CodeBlockService is eager and always present, so a full module's code-block
+    // definitions reach the host during autoLoad without touching commands or tabs.
+    // The regex, not the error class: codeBlocksModule registers no command or tab, so a
+    // class-only assertion would still pass if this leak were the one the guard cannot see.
+    await expect(testContainer({ modules: [journalsCoreModule, codeBlocksModule] })).rejects.toThrow(
+      /codeBlockProcessors/,
+    );
   });
 });
 

@@ -143,7 +143,11 @@ subject **is** a host registration passes a full module, with
 `testContainer` throws rather than letting a misconfigured boot pass quietly.
 
 `TestContainerLeakedHostStateError` fires when a boot left commands, setting
-tabs, or ribbon icons behind — which a core module never produces. The usual
+tabs, ribbon icons, or markdown code-block processors behind — which a core
+module never produces. Code-block processors are on that list because
+`CodeBlockService` is eager and lives in the host module the harness always
+adds, so a full feature module's `CodeBlockDefinitionToken` values reach the
+host during `autoLoad` without touching a command or a tab. The usual
 cause is a full `<feature>Module` in `modules`. **The type system does not catch
 this**: the tokens a full module adds beyond core are all multi-tokens, whose
 bindings are additive, so registering one a second time succeeds silently.

@@ -51,9 +51,9 @@ const REPAIR_WARNINGS = new Set([
 
 /**
  * Thrown when a `testContainer` boot leaves host side effects (a registered command, setting
- * tab, or ribbon icon) that a CORE module never produces. The likely cause is a FULL
- * `<feature>Module` passed in `modules` instead of its core half — see the `modules` option's
- * doc comment below for why the type system does not catch this.
+ * tab, ribbon icon, or markdown code-block processor) that a CORE module never produces. The
+ * likely cause is a FULL `<feature>Module` passed in `modules` instead of its core half — see
+ * the `modules` option's doc comment below for why the type system does not catch this.
  */
 export class TestContainerLeakedHostStateError extends Error {
   constructor(leaked: readonly string[]) {
@@ -169,8 +169,8 @@ export interface TestContainerOptions {
   /**
    * Disarms a guard for a test whose subject IS the guarded thing.
    *
-   * `hostState` — the test asserts on `host.commands`/`settingTabs`/`ribbonIcons`, so it passes a
-   * FULL `<feature>Module` on purpose. Not an escape hatch for "the guard is in my way": a
+   * `hostState` — the test asserts on `host.commands`/`settingTabs`/`ribbonIcons`/
+   * `codeBlockProcessors`, so it passes a FULL `<feature>Module` on purpose. Not an escape hatch for "the guard is in my way": a
    * component test needing UI tokens takes `<feature>UiModule`, not this.
    *
    * `dataRepair` — the test exercises the settings repair path with a deliberately broken fixture.
@@ -299,6 +299,10 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
     if (host.commands.size > 0) leaked.push("commands");
     if (host.settingTabs.length > 0) leaked.push("settingTabs");
     if (host.ribbonIcons.length > 0) leaked.push("ribbonIcons");
+    // CodeBlockService is eager and lives in the always-added host module, so a full feature
+    // module's CodeBlockDefinitionToken values reach the host during autoLoad — the same leak
+    // a stray command is, and invisible without this line.
+    if (host.codeBlockProcessors.size > 0) leaked.push("codeBlockProcessors");
     if (leaked.length > 0) throw new TestContainerLeakedHostStateError(leaked);
   }
 
