@@ -2,16 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { effectScope, type EffectScope, type ShallowRef } from "vue";
 
 import type { CalendarDate } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
 
 import { useToday } from "./use-today";
 
 describe("useToday", () => {
-  let teardown: () => void;
   let scope: EffectScope;
 
   beforeEach(() => {
-    ({ teardown } = installTestCalendar());
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 4, 25, 23, 30, 0));
     scope = effectScope();
@@ -19,7 +16,6 @@ describe("useToday", () => {
   afterEach(() => {
     scope.stop();
     vi.useRealTimers();
-    teardown();
   });
 
   const today = (): Readonly<ShallowRef<CalendarDate>> => scope.run(() => useToday())!;

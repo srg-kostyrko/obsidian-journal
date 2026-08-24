@@ -1,11 +1,11 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import { DayPeriod, MonthPeriod, OpenInterval } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
+import { date, testCalendar } from "@/calendar/testing";
 
 import CalendarMonthView from "./CalendarMonthView.vue";
 
@@ -18,15 +18,6 @@ function setWeek(dow: number, doy: number): void {
 }
 
 describe("CalendarMonthView", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
   describe("day cells", () => {
     it("renders cells for every day in every week overlapping the month", () => {
       const outerPeriod = MonthPeriod.containing(date("2024-05-15"));
