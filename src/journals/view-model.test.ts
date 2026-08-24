@@ -1,39 +1,43 @@
-import { createNanoEvents } from "nanoevents";
-import { describe, expect, it } from "vitest";
-import { reactive } from "vue";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { journalDefaultsFor, type JournalConfig } from "./config";
-import { JournalsRepository, type JournalsEvents } from "./repository";
+import { testContainer } from "@/testing";
+
+import { journalsCoreModule } from "./module";
+import { JournalsRepository } from "./repository";
+import { fixedJournal } from "./testing";
 import { JournalsViewModel } from "./view-model";
 
-function viewModelOver(initial: Record<string, JournalConfig> = {}) {
-  const storage = reactive<Record<string, JournalConfig>>({ ...initial });
-  const events = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(storage, events);
-  const vm = JournalsViewModel.fromRepository(repo);
-  return { vm, repo, storage, events };
+import type { JournalConfig } from "./config";
+
+async function viewModelOver(journals: Record<string, JournalConfig> = {}) {
+  const harness = await testContainer({ modules: [journalsCoreModule], data: { journals } });
+  return { harness, vm: harness.resolve(JournalsViewModel) };
 }
 
 describe("JournalsViewModel", () => {
   describe("journals", () => {
-    it("yields the current entities", () => {
-      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+    it("yields the current entities", async () => {
+      const { vm } = await viewModelOver({ daily: fixedJournal("daily", { type: "day" }) });
+
       expect(vm.journals.value.map((journal) => journal.name)).toEqual(["daily"]);
     });
 
-    it("reflects mutations after create", () => {
-      const { vm, repo } = viewModelOver();
-      repo.create("daily", { type: "day" });
+    it("reflects mutations after create", async () => {
+      const { harness, vm } = await viewModelOver();
+
+      harness.resolve(JournalsRepository).create("daily", { type: "day" });
+
       expect(vm.journals.value.map((journal) => journal.name)).toEqual(["daily"]);
     });
   });
 
   describe("journalOptions", () => {
-    it("returns name-labelled options for each journal", () => {
-      const { vm } = viewModelOver({
-        daily: journalDefaultsFor({ type: "day" }, "daily"),
-        weekly: journalDefaultsFor({ type: "week" }, "weekly"),
+    it("returns name-labelled options for each journal", async () => {
+      const { vm } = await viewModelOver({
+        daily: fixedJournal("daily", { type: "day" }),
+        weekly: fixedJournal("weekly", { type: "week" }),
       });
+
       expect(vm.journalOptions.value).toEqual([
         { value: "daily", label: "daily" },
         { value: "weekly", label: "weekly" },
@@ -42,38 +46,44 @@ describe("JournalsViewModel", () => {
   });
 
   describe("journalCount", () => {
-    it("returns the number of journals", () => {
-      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+    it("returns the number of journals", async () => {
+      const { vm } = await viewModelOver({ daily: fixedJournal("daily", { type: "day" }) });
+
       expect(vm.journalCount.value).toBe(1);
     });
   });
 
   describe("getJournal", () => {
-    it("returns Some for a known name", () => {
-      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
+    it("returns Some for a known name", async () => {
+      const { vm } = await viewModelOver({ daily: fixedJournal("daily", { type: "day" }) });
+
       expect(vm.getJournal("daily").isSome()).toBe(true);
     });
 
-    it("returns None for an unknown name", () => {
-      const { vm } = viewModelOver();
+    it("returns None for an unknown name", async () => {
+      const { vm } = await viewModelOver();
+
       expect(vm.getJournal("nope").isNone()).toBe(true);
     });
   });
 
   describe("isJournalNameAvailable", () => {
+    let harness: Awaited<ReturnType<typeof viewModelOver>>;
+
+    beforeEach(async () => {
+      harness = await viewModelOver({ daily: fixedJournal("daily", { type: "day" }) });
+    });
+
     it("is false when the name is in use", () => {
-      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-      expect(vm.isJournalNameAvailable("daily")).toBe(false);
+      expect(harness.vm.isJournalNameAvailable("daily")).toBe(false);
     });
 
     it("is true when the name is free", () => {
-      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-      expect(vm.isJournalNameAvailable("other")).toBe(true);
+      expect(harness.vm.isJournalNameAvailable("other")).toBe(true);
     });
 
     it("treats the excludeCurrent name as available", () => {
-      const { vm } = viewModelOver({ daily: journalDefaultsFor({ type: "day" }, "daily") });
-      expect(vm.isJournalNameAvailable("daily", "daily")).toBe(true);
+      expect(harness.vm.isJournalNameAvailable("daily", "daily")).toBe(true);
     });
   });
 });
