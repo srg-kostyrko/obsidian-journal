@@ -19,7 +19,7 @@ export default defineConfig({
   test: {
     coverage: {
       provider: "v8",
-      reporter: ["text-summary", "json-summary", "html"],
+      reporter: ["text", "text-summary", "json-summary", "html"],
       include: ["src/**"],
       exclude: [
         "src/i18n/paraglide/**",

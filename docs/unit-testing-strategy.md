@@ -57,14 +57,14 @@ const harness = await testContainer({
 });
 ```
 
-| Option       | What it does                                                                                                                                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `modules`    | Feature **CORE** modules (plus UI modules for component tests). Never a full `<feature>Module` — see below.                                                                                                                     |
-| `data`       | Seeded settings, keyed by collection or slice key, parsed by the real schema. Omit it entirely, rather than passing `{}`, to simulate a fresh install.                                                                          |
-| `overrides`  | `overrideWith(Token, fake)` entries, applied after every module registers and before `autoLoad` resolves anything.                                                                                                              |
-| `initialize` | Services to `initialize()` after `autoLoad`, named per test. `main.ts` initializes eight; a test opting into two modules cannot run that list, and baking one into the harness would be a second wiring definition that drifts. |
-| `autoLoad`   | Defaults to `true`. `false` for a test that must not boot eager services.                                                                                                                                                       |
-| `allow`      | Disarms a guard for a test whose subject **is** the guarded thing.                                                                                                                                                              |
+| Option       | What it does                                                                                                                                                                                                                                                                 |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `modules`    | Feature **CORE** modules (plus UI modules for component tests). Never a full `<feature>Module` — see below.                                                                                                                                                                  |
+| `data`       | Seeded settings, keyed by collection or slice key, parsed by the real schema. Omit it entirely, rather than passing `{}`, to simulate a fresh install. `data.version` is an honored key too — it defaults to `CURRENT_VERSION` but can be set lower to exercise a migration. |
+| `overrides`  | `overrideWith(Token, fake)` entries, applied after every module registers and before `autoLoad` resolves anything.                                                                                                                                                           |
+| `initialize` | Services to `initialize()` after `autoLoad`, named per test. `main.ts` initializes eight; a test opting into two modules cannot run that list, and baking one into the harness would be a second wiring definition that drifts.                                              |
+| `autoLoad`   | Defaults to `true`. `false` for a test that must not boot eager services.                                                                                                                                                                                                    |
+| `allow`      | Disarms a guard for a test whose subject **is** the guarded thing.                                                                                                                                                                                                           |
 
 `TestHarness` hands back:
 
@@ -98,8 +98,10 @@ some eager service happened to resolve the token first, which changes whenever
 an unrelated module gains a dependency. An eager one throws
 `CannotOverrideError{reason:"resolved"}`.
 
-`Container.override` is lint-restricted to test files and `testing.ts`. It
-exists for the host boundary and has no production caller.
+`Container.override` is lint-restricted to test files and `testing.ts`, with
+one carve-out: `src/infrastructure/di/**` is exempt from the ban, because
+that is where `Container.override` itself is defined and tested. Outside that
+directory it exists for the host boundary and has no production caller.
 
 ### Modules split three ways
 
@@ -210,15 +212,42 @@ export function buildCommand(overrides: Partial<CommandConfig> = {}): CommandCon
 
 The schema-parse form fails loudly when the schema changes and cannot drift.
 
-**Naming: `build<Entity>(overrides)`.** Keep a variant-named wrapper only where
-the variant genuinely changes the shape — `fixedJournal` versus `customJournal`.
+**Naming: `build<Entity>(overrides)`.** The base form takes a single
+`Partial<Entity>` argument — the entity's name passes through `overrides` like
+any other field, with a default supplied the same way the rest are. Promote a
+field to a leading positional argument only inside a variant-named wrapper,
+and only when that field selects the variant's shape before the entity can be
+built at all — `fixedJournal(name, write, overrides)` takes `write`
+positionally for that reason (parsing needs the write kind before it can
+construct the shape), and takes `name` positionally alongside it rather than
+splitting one wrapper into "some fields positional, some not". Keep a
+variant-named wrapper at all only where the variant genuinely changes the
+shape — `fixedJournal` versus `customJournal`.
 
 **Fixtures live in the feature's `testing.ts`**, never as a local factory in a
-test file. Under `src/journals` — the only directory converted onto this
-harness so far — a local `makeJournal`/`seedView`/`viewWith` is a lint error:
-eslint's `no-restricted-syntax` bans a `make`/`build`/`seed`/`create`
-function-name pattern there, pointing back at the feature's `testing.ts`. The
-rule extends to each directory as its own sweep converts it.
+test file — that is the rule. What enforces it inside `src/journals` today is
+narrower than the rule itself: eslint's `no-restricted-syntax` flags only a
+`FunctionDeclaration` (not a `const foo = (...) => ...`) whose name matches
+`^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)`. It
+is a naming tripwire, not a general ban — still worth having, because it
+catches the common shape without anyone having to remember it — but it has
+known gaps even inside `src/journals`, where six local factories currently
+pass lint: `baseConfig` (`use-folder-extractor.test.ts`) and `withName`
+(`use-invertibility-check.test.ts`) don't start with one of the four prefixes
+at all; `buildRepo` (`repository.test.ts`), `makeParameters`
+(`bulk-add-service.test.ts`) and `makeSectionComponent`
+(`JournalEditSubpage.test.ts`) start with a matching prefix but name a noun
+outside the six-word alternation. `baseConfig` also hand-builds a full
+`JournalConfig` literal, which contradicts the "no literal that restates a
+schema default" rule above — the selector gap let it through.
+
+The entity alternation (`Journal|Command|View|Shelf|Decoration|Config`) and
+the message ("use fixedJournal/customJournal") are both journals-specific. A
+sweep enabling this rule for its own directory must extend the alternation
+with its own entity nouns and rewrite the message for its own fixture names —
+widening only the file glob to cover, say, `src/notes-calendar` or
+`src/code-blocks` turns on a selector that matches nothing there, which looks
+identical to a working one (see [Enforcement](#enforcement)).
 
 ### The standard for new tests
 
@@ -231,13 +260,18 @@ The path it is retiring still exists. Five `static fromParts` methods —
 `src/shelves/repository.ts:24`, `src/shelves/service.ts:11`,
 `src/views/repository.ts:20` — bypass the schema entirely: each does
 `Object.create(this.prototype)` to skip the constructor, then casts through a
-local `Mutable` interface to write protected fields. Fourteen test files, all
-in directories not yet converted, still call the matching
-`fakeRepo`/`fromParts` fixture. Data seeded that way never sees the parse
-defaults or the repair path, and the helpers live in production source, which
-the [file-location rules](architecture.md#testing) forbid. Deleting a
-feature's `fromParts` is the closing step of that feature's Phase 3 sweep —
-not a decision to make ahead of the sweep that owns it.
+local `Mutable` interface to write protected fields. Forty-four test files
+still reach one of these methods: 35 call `fromParts` directly and 14 call
+the `fakeRepo` fixture that wraps it (5 files do both). Two of the 44 —
+`src/journals/repository.test.ts` and `src/journals/view-model.test.ts` — sit
+inside `src/journals` itself, so "converted" does not yet mean
+`JournalsRepository.fromParts` is unused; the journals sweep retires it only
+once those two are rewritten onto `testContainer({ data })`. Data seeded
+through `fromParts`/`fakeRepo` never sees the parse defaults or the repair
+path, and the helpers live in production source, which the
+[file-location rules](architecture.md#testing) forbid. Deleting a feature's
+`fromParts` is the closing step of that feature's Phase 3 sweep — not a
+decision to make ahead of the sweep that owns it.
 
 ### Fakes do not carry error queues
 
@@ -274,6 +308,10 @@ with nested `describe()` blocks, not dashes, colons, or periods packed into
 one label.
 
 ### Do not test the framework, and do not test constants
+
+This section covers per-assertion cases inside a test that is otherwise worth
+writing. [What not to test](#what-not-to-test) covers the other end of the
+same question — whole categories of file that should carry no test at all.
 
 Skip a test whose only assertion is the framework's own contract: `instanceof`
 on an error subclass that only calls `super()`, Promise thenable behavior, Vue
@@ -361,13 +399,13 @@ a container override instead.
 All rules use `no-restricted-syntax` selectors — the mechanism the config already
 uses for the `vi.mock` ban. No custom plugin.
 
-| Rule                                                           | What it catches                                               |
-| -------------------------------------------------------------- | ------------------------------------------------------------- |
-| No `new Container()` in a test                                 | Build it with `testContainer()` from `@/testing`              |
-| No `.register(...).use*` inside a test body or hook            | Pass a feature CORE/UI module to `testContainer({ modules })` |
-| No local entity factories                                      | Fixtures live in the feature's `testing.ts`                   |
-| No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector      |
-| `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)       |
+| Rule                                                           | What it catches                                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| No `new Container()` in a test                                 | Build it with `testContainer()` from `@/testing`                                |
+| No `.register(...).use*` inside a test body or hook            | Pass a feature CORE/UI module to `testContainer({ modules })`                   |
+| No local factory matching journals' naming tripwire            | Fixtures live in the feature's `testing.ts` — see [gaps](#fixtures-and-seeding) |
+| No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector                        |
+| `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)                         |
 
 **Scope is per-directory, and rolls out as each feature converts.** Today the
 full set is enabled for `src/journals/**/*.test.ts`; the base `vi.mock` rule
@@ -402,15 +440,30 @@ conversion campaign, not a target to chase.
 DI wiring files — `src/**/module.ts` and `src/**/ui-module.ts` — are excluded.
 Module wiring is not testable by this standard's own rules, so counting it
 measured lines nobody was permitted to act on, and every module split added a
-fresh zero-covered file that dragged the floor down.
+fresh zero-covered file that dragged the floor down. The exclusion rests on an
+invariant, not the filename alone: a `module.ts` holds wiring only. The moment
+one exports behavior of its own, that behavior needs a test the same as
+anything else — `src/settings/legacy/module.ts` already does this, exporting
+a `legacyMigrations` array that `module.test.ts` exercises directly; the
+exclusion covers the registration function beside it, not that array.
 
 **The thresholds are never regenerated automatically.** A PR that lowers coverage
-edits the numbers in the same diff, where a reviewer sees the change. An earlier
-gate in this campaign counted assertions against a committed baseline and was
-deleted precisely because the cheapest route past a failure was regenerating the
-baseline, which trains reviewers to dismiss it.
+edits the numbers in the same diff, where a reviewer sees the change. The same
+applies in the other direction: a PR that raises coverage raises the floor in
+the same diff, rather than leaving the gap between the floor and the measured
+value to widen. Across eight sweeps expected to raise coverage, an untouched
+floor drifts further below actual each time, and the gap is exactly what lets
+a later deletion pass silently — the failure mode this floor exists to catch.
+An earlier gate in this campaign counted assertions against a committed
+baseline and was deleted precisely because the cheapest route past a failure
+was regenerating the baseline, which trains reviewers to dismiss it.
 
 ## What not to test
+
+Whole categories of file that should carry no test at all — see
+[Do not test the framework, and do not test constants](#do-not-test-the-framework-and-do-not-test-constants)
+for the per-assertion version of the same question inside a test worth
+writing.
 
 Module wiring, barrel shapes, and the fakes themselves. The compiler and the
 tooling already guarantee those, and a test for a fake tests test infrastructure
@@ -418,11 +471,16 @@ rather than behavior. Wiring is the e2e suite's job: dropping a startup module's
 registration leaves `npm test` fully green while the e2e command-palette journey
 fails immediately.
 
-`src/testing.ts` is the exception the rule implies rather than contradicts. Its
-guards and options have behavior that can fail — a seed silently repaired, a leak
-undetected, an override applied after the service resolved — and a defect there
-makes every test in the repo lie. Test those. Its wiring stays untested like any
-other module's.
+The exception the rule implies rather than contradicts is a class, not one
+file: test infrastructure whose own behavior can fail. `src/testing.ts` is the
+named example — its guards and options have behavior that can fail, a seed
+silently repaired, a leak undetected, an override applied after the service
+resolved, and a defect there makes every test in the repo lie, so it is
+tested. `src/calendar/testing.test.ts` pins the ambient-calendar reset the
+harness depends on, and `src/infrastructure/host/internal/testing.test.ts`
+pins the fake host's vault ↔ `metadataCache` consistency — both are the same
+class of exception for the same reason. Wiring stays untested like any other
+module's; behavior a defect in which would make other tests lie does not.
 
 ## Exemplars
 

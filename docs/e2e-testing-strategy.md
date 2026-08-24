@@ -1,8 +1,9 @@
 # End-to-end testing strategy
 
 How we introduce e2e tests that exercise the plugin inside a **real Obsidian
-process** — the one seam our 3518 mock-based unit/component tests (359 files)
-structurally cannot reach.
+process** — the one seam the mock-based unit/component suite (owned by
+[`docs/unit-testing-strategy.md`](unit-testing-strategy.md)) structurally
+cannot reach.
 
 ## Why e2e at all
 
