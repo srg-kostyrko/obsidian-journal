@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Bug Fixes
+
+- A newly created journal no longer shares its navigation block, decorations, or interval block with other journals of the same period type. Previously, editing one daily journal's navigation block silently changed every other daily journal's navigation block too, since they were the same underlying setting until one of them was edited by hand.
+
 ## [3.2.0] - 2026-08-23
 
 ### Features

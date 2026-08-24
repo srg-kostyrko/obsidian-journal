@@ -5,6 +5,8 @@ import type { AnchorString } from "@/calendar";
 
 import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
 
+import type { JournalWrite } from "./config";
+
 describe("journalDefaultsFor", () => {
   it("defaults nameTemplate to {{date}}", () => {
     const cfg = journalDefaultsFor({ type: "day" }, "daily");
@@ -346,5 +348,61 @@ describe("journalConfigCollection default item", () => {
 
     expect(item.write).toEqual({ type: "day" });
     expect(item.name).toBe("Broken");
+  });
+});
+
+describe("journalDefaultsFor identity between journals", () => {
+  it("gives two day journals separate navBlock objects", () => {
+    const first = journalDefaultsFor({ type: "day" }, "a");
+    const second = journalDefaultsFor({ type: "day" }, "b");
+
+    expect(first.navBlock).not.toBe(second.navBlock);
+  });
+
+  it("gives two day journals separate decorations arrays", () => {
+    const first = journalDefaultsFor({ type: "day" }, "a");
+    const second = journalDefaultsFor({ type: "day" }, "b");
+
+    expect(first.decorations).not.toBe(second.decorations);
+  });
+
+  it("gives two week journals separate intervalBlock objects", () => {
+    const first = journalDefaultsFor({ type: "week" }, "a");
+    const second = journalDefaultsFor({ type: "week" }, "b");
+
+    expect(first.intervalBlock).not.toBe(second.intervalBlock);
+  });
+
+  it("gives two custom journals separate navBlock, decorations and intervalBlock objects", () => {
+    const write: JournalWrite = {
+      type: "custom",
+      every: "week",
+      duration: 2,
+      anchorDate: "2024-01-01" as AnchorString,
+    };
+    const first = journalDefaultsFor(write, "a");
+    const second = journalDefaultsFor(write, "b");
+
+    expect(first.navBlock).not.toBe(second.navBlock);
+    expect(first.decorations).not.toBe(second.decorations);
+    expect(first.intervalBlock).not.toBe(second.intervalBlock);
+  });
+
+  it("does not leak a mutation to one journal's navBlock into a journal created afterwards", () => {
+    const first = journalDefaultsFor({ type: "day" }, "a");
+    first.navBlock.lines.push([]);
+
+    const second = journalDefaultsFor({ type: "day" }, "b");
+
+    expect(second.navBlock.lines).toHaveLength(6);
+  });
+
+  it("does not leak a mutation to one journal's decorations into a journal created afterwards", () => {
+    const first = journalDefaultsFor({ type: "day" }, "a");
+    first.decorations.push(first.decorations[0]);
+
+    const second = journalDefaultsFor({ type: "day" }, "b");
+
+    expect(second.decorations).toHaveLength(1);
   });
 });
