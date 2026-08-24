@@ -28,7 +28,13 @@ import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/mo
 import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
 import { FakeNoticeService, FakePluginData, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
-import { CURRENT_VERSION, SettingsService, settingsCoreModule } from "@/settings";
+import {
+  CURRENT_VERSION,
+  CollectionDefinitionToken,
+  SettingsService,
+  SliceDefinitionToken,
+  settingsCoreModule,
+} from "@/settings";
 import { templatesModule } from "@/templates";
 
 import type { App } from "vue";
@@ -45,9 +51,9 @@ const REPAIR_WARNINGS = new Set([
 
 /**
  * Thrown when a `testContainer` boot leaves host side effects (a registered command, setting
- * tab, or ribbon icon) that a CORE module never produces. The likely cause is a FULL
- * `<feature>Module` passed in `modules` instead of its core half — see the `modules` option's
- * doc comment below for why the type system does not catch this.
+ * tab, ribbon icon, or markdown code-block processor) that a CORE module never produces. The
+ * likely cause is a FULL `<feature>Module` passed in `modules` instead of its core half — see
+ * the `modules` option's doc comment below for why the type system does not catch this.
  */
 export class TestContainerLeakedHostStateError extends Error {
   constructor(leaked: readonly string[]) {
@@ -74,6 +80,26 @@ export class TestContainerInvalidSeedError extends Error {
     super(`testContainer seed did not survive the settings parse:\n  ${warnings.join("\n  ")}`);
     this.name = "TestContainerInvalidSeedError";
     this.warnings = warnings;
+  }
+}
+
+/**
+ * Thrown when `data` carries a key that no loaded module registers. An absent slice or collection
+ * key is silent by design — a fresh install has none — which leaves a *mis-keyed* seed silent too:
+ * `calender` for `calendar` would otherwise let the test assert against the slice's defaults and
+ * pass with the seed ignored. The other cause is a correctly spelled key whose module was left out
+ * of `modules`.
+ */
+export class TestContainerUnknownSeedKeyError extends Error {
+  readonly keys: readonly string[];
+  constructor(keys: readonly string[], registered: readonly string[]) {
+    super(
+      `testContainer seed has key(s) no loaded module registers: ${keys.join(", ")}. ` +
+        `Registered: ${registered.join(", ")}. Either the key is misspelled, or the module that ` +
+        "registers it is missing from `modules`.",
+    );
+    this.name = "TestContainerUnknownSeedKeyError";
+    this.keys = keys;
   }
 }
 
@@ -118,7 +144,8 @@ export interface TestContainerOptions {
    * Seeded settings data, keyed by collection or slice key. Parsed by the real schema. `version`
    * is an honored key too — it defaults to `CURRENT_VERSION` but can be overridden to exercise
    * migrations. Omit `data` entirely (rather than passing `{}`) to simulate a fresh install with
-   * no stored data at all.
+   * no stored data at all. Any other key throws `TestContainerUnknownSeedKeyError`: the parse
+   * treats an absent key as a fresh install and returns defaults, so a typo is otherwise silent.
    */
   readonly data?: Record<string, unknown>;
   /** Defaults to true. Set false to skip eager construction. */
@@ -142,8 +169,8 @@ export interface TestContainerOptions {
   /**
    * Disarms a guard for a test whose subject IS the guarded thing.
    *
-   * `hostState` — the test asserts on `host.commands`/`settingTabs`/`ribbonIcons`, so it passes a
-   * FULL `<feature>Module` on purpose. Not an escape hatch for "the guard is in my way": a
+   * `hostState` — the test asserts on `host.commands`/`settingTabs`/`ribbonIcons`/
+   * `codeBlockProcessors`, so it passes a FULL `<feature>Module` on purpose. Not an escape hatch for "the guard is in my way": a
    * component test needing UI tokens takes `<feature>UiModule`, not this.
    *
    * `dataRepair` — the test exercises the settings repair path with a deliberately broken fixture.
@@ -241,6 +268,17 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   const init = await settings.initialize();
   if (init.kind === "err") throw init.error;
 
+  const seededKeys = Object.keys(options.data ?? {});
+  if (seededKeys.length > 0) {
+    const registered = new Set([
+      "version",
+      ...container.resolve(SliceDefinitionToken).map((slice) => slice.key),
+      ...container.resolve(CollectionDefinitionToken).map((collection) => collection.key),
+    ]);
+    const unknown = seededKeys.filter((key) => !registered.has(key));
+    if (unknown.length > 0) throw new TestContainerUnknownSeedKeyError(unknown, [...registered].toSorted());
+  }
+
   if (options.allow?.dataRepair !== true) {
     const repairs = logs.records
       .filter((record) => REPAIR_WARNINGS.has(record.message))
@@ -261,6 +299,10 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
     if (host.commands.size > 0) leaked.push("commands");
     if (host.settingTabs.length > 0) leaked.push("settingTabs");
     if (host.ribbonIcons.length > 0) leaked.push("ribbonIcons");
+    // CodeBlockService is eager and lives in the always-added host module, so a full feature
+    // module's CodeBlockDefinitionToken values reach the host during autoLoad — the same leak
+    // a stray command is, and invisible without this line.
+    if (host.codeBlockProcessors.size > 0) leaked.push("codeBlockProcessors");
     if (leaked.length > 0) throw new TestContainerLeakedHostStateError(leaked);
   }
 

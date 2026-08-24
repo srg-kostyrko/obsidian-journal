@@ -7,7 +7,9 @@ import { defineComponent, h } from "vue";
 import { Calendar } from "@/calendar";
 import { CUSTOM_LOCALE } from "@/calendar/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
+import { calendarSlice } from "@/calendar/settings/slice";
 import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
+import { codeBlocksModule } from "@/code-blocks";
 import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError, useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
@@ -28,6 +30,7 @@ import { SettingsService } from "@/settings";
 import {
   TestContainerInvalidSeedError,
   TestContainerLeakedHostStateError,
+  TestContainerUnknownSeedKeyError,
   overrideWith,
   overrideWithClass,
   testContainer,
@@ -159,6 +162,16 @@ describe("testContainer", () => {
   it("throws a named error when a full module leaks host state", async () => {
     await expect(testContainer({ modules: [journalsModule] })).rejects.toThrow(TestContainerLeakedHostStateError);
   });
+
+  it("counts a registered code-block processor as leaked host state", async () => {
+    // CodeBlockService is eager and always present, so a full module's code-block
+    // definitions reach the host during autoLoad without touching commands or tabs.
+    // The regex, not the error class: codeBlocksModule registers no command or tab, so a
+    // class-only assertion would still pass if this leak were the one the guard cannot see.
+    await expect(testContainer({ modules: [journalsCoreModule, codeBlocksModule] })).rejects.toThrow(
+      /codeBlockProcessors/,
+    );
+  });
 });
 
 describe("overrides", () => {
@@ -248,6 +261,37 @@ describe("seed guard", () => {
         data: { journals: "nonsense" },
       }),
     ).rejects.toThrow(TestContainerInvalidSeedError);
+  });
+
+  it("rejects a seed key that no loaded module registers", async () => {
+    await expect(
+      testContainer({
+        modules: [calendarSettingsCoreModule],
+        data: { calender: { mode: "custom", dow: 1, doy: 4, global: false } },
+      }),
+    ).rejects.toThrow(TestContainerUnknownSeedKeyError);
+  });
+
+  it("names the unknown key in the error", async () => {
+    await expect(
+      testContainer({
+        modules: [calendarSettingsCoreModule],
+        data: { calender: { mode: "custom", dow: 1, doy: 4, global: false } },
+      }),
+    ).rejects.toThrow(
+      expect.objectContaining({
+        keys: ["calender"],
+      } satisfies Partial<TestContainerUnknownSeedKeyError>),
+    );
+  });
+
+  it("accepts a seed key registered by a module the test opted into", async () => {
+    const harness = await testContainer({
+      modules: [calendarSettingsCoreModule],
+      data: { calendar: { mode: "custom", dow: 1, doy: 4, global: false } },
+    });
+
+    expect(harness.settings.getSlice(calendarSlice).state).toEqual({ mode: "custom", dow: 1, doy: 4, global: false });
   });
 
   it("accepts a deliberately broken fixture when the test opts in", async () => {
