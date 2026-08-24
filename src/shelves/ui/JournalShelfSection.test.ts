@@ -1,80 +1,54 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { journalConfigCollection } from "@/journals";
-import { JournalsRepository } from "@/journals/repository";
-import { JournalsEventsToken } from "@/journals/tokens";
-import { createSettingsService } from "@/settings/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { testContainer } from "@/testing";
 
-import { shelvesCollection } from "../config";
 import { PlaceJournalFlow } from "../flows/place-journal.flow";
-import { ShelvesRepository } from "../repository";
-import { ShelvesService } from "../service";
-import { ShelvesEventsToken } from "../tokens";
+import { shelvesCoreModule } from "../module";
+import { buildShelf } from "../testing";
 
 import JournalShelfSection from "./JournalShelfSection.vue";
 
-afterEach(() => cleanup());
+import type { ShelfConfig } from "../config";
 
-async function setup(shelves: Record<string, { name: string; journals: string[] }> = {}) {
-  const { service: settings, container } = createSettingsService({
-    collections: [journalConfigCollection, shelvesCollection],
-    raw: { version: 5, shelves },
+async function setup(shelves: Record<string, ShelfConfig> = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule],
+    data: { shelves },
   });
-  await settings.initialize();
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
-  container.register(JournalsRepository).useClass(JournalsRepository);
-  container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
-  container.register(ShelvesRepository).useClass(ShelvesRepository);
-  container.register(ShelvesService).useClass(ShelvesService);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  const flows = container.resolve(Flows);
+  const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
-  return { container, flows };
-}
-
-function mount(container: Container, journalName: string) {
-  return render(JournalShelfSection, {
-    props: { journalName },
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
+  return { harness, flows };
 }
 
 describe("JournalShelfSection", () => {
   it("renders nothing when no shelves exist", async () => {
-    const { container } = await setup({});
-    mount(container, "daily");
+    const { harness } = await setup({});
+    harness.render(JournalShelfSection, { props: { journalName: "daily" } });
     expect(screen.queryByText(m.common_label_shelf())).toBeNull();
   });
 
   it("shows the not-on-a-shelf message when the journal is unassigned", async () => {
-    const { container } = await setup({ Work: { name: "Work", journals: [] } });
-    mount(container, "daily");
+    const { harness } = await setup({ Work: buildShelf("Work") });
+    harness.render(JournalShelfSection, { props: { journalName: "daily" } });
     await userEvent.click(screen.getByText(m.common_label_shelf()));
     expect(screen.getByText(m.shelf_section_not_on_shelf())).toBeTruthy();
   });
 
   it("shows the current shelf when the journal is on one", async () => {
-    const { container } = await setup({ Work: { name: "Work", journals: ["daily"] } });
-    mount(container, "daily");
+    const { harness } = await setup({ Work: buildShelf("Work", { journals: ["daily"] }) });
+    harness.render(JournalShelfSection, { props: { journalName: "daily" } });
     await userEvent.click(screen.getByText(m.common_label_shelf()));
     expect(screen.getByText("Work")).toBeTruthy();
   });
 
   it("invokes PlaceJournalFlow when the place button is clicked", async () => {
-    const { container, flows } = await setup({ Work: { name: "Work", journals: [] } });
-    mount(container, "daily");
+    const { harness, flows } = await setup({ Work: buildShelf("Work") });
+    harness.render(JournalShelfSection, { props: { journalName: "daily" } });
     await userEvent.click(screen.getByText(m.common_label_shelf()));
     await userEvent.click(screen.getByLabelText(m.shelf_section_place_tooltip()));
     expect(flows.invoke).toHaveBeenCalledWith(PlaceJournalFlow, { journalName: "daily" });

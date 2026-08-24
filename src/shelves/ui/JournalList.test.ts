@@ -1,44 +1,11 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
-import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
-import type { JournalConfig } from "@/journals";
+import { fixedJournal } from "@/journals/testing";
 
 import JournalList from "./JournalList.vue";
-
-afterEach(() => cleanup());
-
-function makeJournal(name: string): JournalConfig {
-  return {
-    name,
-    write: { type: "day" },
-    timeline: { start: "2024-01-01" as AnchorString, end: { kind: "never" } },
-    dateFormat: "YYYY-MM-DD",
-    frontmatter: {
-      dateField: "journal-date",
-      startDateField: "journal-start-date",
-      endDateField: "journal-end-date",
-      addStartDate: false,
-      addEndDate: false,
-    },
-    numbering: {
-      enabled: false,
-      anchorDate: "2024-01-01" as AnchorString,
-      allowBefore: false,
-      sources: [],
-    },
-    nameTemplate: "{{date}}",
-    folder: "",
-    templates: [],
-    confirmCreation: false,
-    decorations: [],
-    autoCreate: false,
-    navBlock: { type: "create", lines: [], decorateWholeBlock: false },
-    intervalBlock: { type: "create", lines: [], decorateWholeBlock: false },
-  };
-}
 
 describe("JournalList", () => {
   it("shows the empty text when there are no entries", () => {
@@ -48,7 +15,7 @@ describe("JournalList", () => {
 
   it("renders a row per journal", () => {
     render(JournalList, {
-      props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
+      props: { entries: [["Journal A", fixedJournal("Journal A", { type: "day" })]], emptyText: "Nothing here" },
     });
     expect(screen.getByText("Journal A")).toBeTruthy();
     expect(screen.queryByText("Nothing here")).toBeNull();
@@ -56,7 +23,7 @@ describe("JournalList", () => {
 
   it("emits bulk-add with the journal name", async () => {
     const { emitted } = render(JournalList, {
-      props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
+      props: { entries: [["Journal A", fixedJournal("Journal A", { type: "day" })]], emptyText: "Nothing here" },
     });
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_bulk_add({ name: "Journal A" })));
     expect(emitted()["bulk-add"]).toEqual([["Journal A"]]);
@@ -64,7 +31,7 @@ describe("JournalList", () => {
 
   it("emits edit with the journal name", async () => {
     const { emitted } = render(JournalList, {
-      props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
+      props: { entries: [["Journal A", fixedJournal("Journal A", { type: "day" })]], emptyText: "Nothing here" },
     });
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_edit({ name: "Journal A" })));
     expect(emitted().edit).toEqual([["Journal A"]]);
@@ -72,7 +39,7 @@ describe("JournalList", () => {
 
   it("emits clone with the journal name", async () => {
     const { emitted } = render(JournalList, {
-      props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
+      props: { entries: [["Journal A", fixedJournal("Journal A", { type: "day" })]], emptyText: "Nothing here" },
     });
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_clone({ name: "Journal A" })));
     expect(emitted().clone).toEqual([["Journal A"]]);
@@ -80,7 +47,7 @@ describe("JournalList", () => {
 
   it("emits delete with the journal name", async () => {
     const { emitted } = render(JournalList, {
-      props: { entries: [["Journal A", makeJournal("Journal A")]], emptyText: "Nothing here" },
+      props: { entries: [["Journal A", fixedJournal("Journal A", { type: "day" })]], emptyText: "Nothing here" },
     });
     await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Journal A" })));
     expect(emitted().delete).toEqual([["Journal A"]]);

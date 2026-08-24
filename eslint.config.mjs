@@ -27,7 +27,7 @@ const noStrayDefineModal = {
 // `src/infrastructure/**` is deliberately absent and stays absent: its host/di/flows
 // tests are what testContainer is built from, so converting them onto the harness
 // would test the harness through itself.
-const convertedTestGlobs = ["src/journals/**/*.test.ts"];
+const convertedTestGlobs = ["src/journals/**/*.test.ts", "src/shelves/**/*.test.ts"];
 
 // `no-restricted-syntax` options replace rather than merge, so this array must carry
 // the vi.mock selector too — a block that omits it lifts the isolation ban for every
@@ -53,7 +53,7 @@ const campaignTestSelectors = [
   },
   {
     selector: "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)/]",
-    message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal.",
+    message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal/buildShelf.",
   },
   {
     // Conditioned on the file already building a harness, rather than banning the raw import

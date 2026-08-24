@@ -1,28 +1,15 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/vue";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
-import type { ModalApi } from "@/infrastructure/host/modals";
-import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { testContainer, type TestHarness } from "@/testing";
+
+import { shelvesCoreModule } from "../module";
 
 import { shelfNameModal } from "./modals";
 import ShelfNameModal from "./ShelfNameModal.vue";
-
-afterEach(() => cleanup());
-
-function mountModal(props: { currentName?: string; takenNames?: string[] }) {
-  const submit = vi.fn();
-  const cancel = vi.fn();
-  const api: ModalApi<string> = { submit, cancel };
-  render(ShelfNameModal, {
-    props: { currentName: props.currentName, takenNames: props.takenNames ?? [] },
-    global: {
-      plugins: [{ install: (app) => provideModalApiOnApp(app, api as ModalApi<unknown>) }],
-    },
-  });
-  return { submit, cancel };
-}
 
 describe("shelfNameModal definition", () => {
   it("uses the add title when no current name is supplied", () => {
@@ -35,22 +22,30 @@ describe("shelfNameModal definition", () => {
 });
 
 describe("ShelfNameModal", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({ modules: [journalsCoreModule, shelvesCoreModule] });
+  });
+
   it("submits the entered name", async () => {
-    const { submit } = mountModal({});
+    const { submit } = harness.renderModal<typeof ShelfNameModal, string>(ShelfNameModal, {
+      props: { takenNames: [] },
+    });
     await userEvent.type(screen.getByRole("textbox"), "Work");
     await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(submit).toHaveBeenCalledWith("Work"));
   });
 
   it("surfaces a required error when the name is empty", async () => {
-    const { submit } = mountModal({});
+    const { submit } = harness.renderModal(ShelfNameModal, { props: { takenNames: [] } });
     await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.shelf_name_required_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
 
   it("surfaces a uniqueness error when the name is taken", async () => {
-    const { submit } = mountModal({ takenNames: ["Work"] });
+    const { submit } = harness.renderModal(ShelfNameModal, { props: { takenNames: ["Work"] } });
     await userEvent.type(screen.getByRole("textbox"), "Work");
     await userEvent.click(screen.getByText(m.common_action_create()));
     await waitFor(() => expect(screen.getByText(m.shelf_name_unique_error())).toBeTruthy());
@@ -58,14 +53,14 @@ describe("ShelfNameModal", () => {
   });
 
   it("rejects the unchanged name when renaming", async () => {
-    const { submit } = mountModal({ currentName: "Work" });
+    const { submit } = harness.renderModal(ShelfNameModal, { props: { currentName: "Work", takenNames: [] } });
     await userEvent.click(screen.getByText(m.common_action_submit()));
     await waitFor(() => expect(screen.getByText(m.shelf_name_unchanged_error())).toBeTruthy());
     expect(submit).not.toHaveBeenCalled();
   });
 
   it("cancels when the user clicks Cancel", async () => {
-    const { cancel } = mountModal({});
+    const { cancel } = harness.renderModal(ShelfNameModal, { props: { takenNames: [] } });
     await userEvent.click(screen.getByText(m.common_action_cancel()));
     expect(cancel).toHaveBeenCalledTimes(1);
   });

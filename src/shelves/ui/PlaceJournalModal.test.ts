@@ -1,31 +1,24 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/vue";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
-import type { ModalApi } from "@/infrastructure/host/modals";
-import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { testContainer, type TestHarness } from "@/testing";
+
+import { shelvesCoreModule } from "../module";
 
 import PlaceJournalModal from "./PlaceJournalModal.vue";
 
-afterEach(() => cleanup());
-
-function mountModal(props: { currentShelf?: string; shelfNames?: string[] }) {
-  const submit = vi.fn();
-  const cancel = vi.fn();
-  const api: ModalApi<string> = { submit, cancel };
-  render(PlaceJournalModal, {
-    props: { currentShelf: props.currentShelf ?? "", shelfNames: props.shelfNames ?? [] },
-    global: {
-      plugins: [{ install: (app) => provideModalApiOnApp(app, api as ModalApi<unknown>) }],
-    },
-  });
-  return { submit, cancel };
-}
-
 describe("PlaceJournalModal", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({ modules: [journalsCoreModule, shelvesCoreModule] });
+  });
+
   it("offers every shelf plus the not-on-a-shelf option", () => {
-    mountModal({ shelfNames: ["Work", "Personal"] });
+    harness.renderModal(PlaceJournalModal, { props: { currentShelf: "", shelfNames: ["Work", "Personal"] } });
     const optionValues = [...screen.getByRole("combobox").querySelectorAll("option")].map((o) =>
       o.getAttribute("value"),
     );
@@ -33,26 +26,30 @@ describe("PlaceJournalModal", () => {
   });
 
   it("starts with the journal's current shelf selected", () => {
-    mountModal({ currentShelf: "Personal", shelfNames: ["Work", "Personal"] });
+    harness.renderModal(PlaceJournalModal, { props: { currentShelf: "Personal", shelfNames: ["Work", "Personal"] } });
     expect(screen.getByRole<HTMLSelectElement>("combobox").value).toBe("Personal");
   });
 
   it("submits the chosen shelf", async () => {
-    const { submit } = mountModal({ shelfNames: ["Work"] });
+    const { submit } = harness.renderModal<typeof PlaceJournalModal, string>(PlaceJournalModal, {
+      props: { currentShelf: "", shelfNames: ["Work"] },
+    });
     await userEvent.selectOptions(screen.getByRole("combobox"), "Work");
     await userEvent.click(screen.getByText(m.common_action_submit()));
     expect(submit).toHaveBeenCalledWith("Work");
   });
 
   it("submits the empty shelf to unassign the journal", async () => {
-    const { submit } = mountModal({ currentShelf: "Work", shelfNames: ["Work"] });
+    const { submit } = harness.renderModal<typeof PlaceJournalModal, string>(PlaceJournalModal, {
+      props: { currentShelf: "Work", shelfNames: ["Work"] },
+    });
     await userEvent.selectOptions(screen.getByRole("combobox"), "");
     await userEvent.click(screen.getByText(m.common_action_submit()));
     expect(submit).toHaveBeenCalledWith("");
   });
 
   it("cancels when the user clicks Cancel", async () => {
-    const { cancel } = mountModal({});
+    const { cancel } = harness.renderModal(PlaceJournalModal, { props: { currentShelf: "", shelfNames: [] } });
     await userEvent.click(screen.getByText(m.common_action_cancel()));
     expect(cancel).toHaveBeenCalledTimes(1);
   });
