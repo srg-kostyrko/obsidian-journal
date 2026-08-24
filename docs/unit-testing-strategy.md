@@ -181,3 +181,177 @@ caller passed in `global.plugins`; a caller's `global.stubs` and
 component that **is** a modal, wiring its `useModal()` to mock `submit`/`cancel`.
 For a component that **opens** a modal, assert on `modals.lastOpen()` instead.
 Picking the wrong one produces a test that passes without exercising anything.
+
+## Fixtures and seeding
+
+**A fixture never contains a literal that restates a schema default or a
+production defaults function. It delegates.**
+
+Two delegation forms. Journals has a production defaults factory, which is
+richer than the schema defaults — `journalDefaultsFor` populates `navBlock`
+and a per-type `nameTemplate` that the schema's own defaults do not:
+
+```ts
+export function fixedJournal(name: string, write: JournalWrite, overrides: Partial<JournalConfig> = {}): JournalConfig;
+```
+
+(`src/journals/testing.ts`.)
+
+A feature with no defaults factory of its own parses a minimal object through
+the production schema instead, then applies overrides. No fixture like this
+exists yet for commands — this is the shape a Phase 3 sweep should write, not
+a file to go looking for:
+
+```ts
+export function buildCommand(overrides: Partial<CommandConfig> = {}): CommandConfig {
+  return { ...v.parse(commandConfigSchema, MINIMAL_COMMAND), ...overrides };
+}
+```
+
+The schema-parse form fails loudly when the schema changes and cannot drift.
+
+**Naming: `build<Entity>(overrides)`.** Keep a variant-named wrapper only where
+the variant genuinely changes the shape — `fixedJournal` versus `customJournal`.
+
+**Fixtures live in the feature's `testing.ts`**, never as a local factory in a
+test file. Under `src/journals` — the only directory converted onto this
+harness so far — a local `makeJournal`/`seedView`/`viewWith` is a lint error:
+eslint's `no-restricted-syntax` bans a `make`/`build`/`seed`/`create`
+function-name pattern there, pointing back at the feature's `testing.ts`. The
+rule extends to each directory as its own sweep converts it.
+
+### The standard for new tests
+
+`testContainer({ data })` routes through the real settings parse. It is the
+standard, and the only seeding path a new test should use: a name-keyed
+record mirroring on-disk settings, not an array.
+
+The path it is retiring still exists. Five `static fromParts` methods —
+`src/journals/repository.ts:33`, `src/commands/repository.ts:22`,
+`src/shelves/repository.ts:24`, `src/shelves/service.ts:11`,
+`src/views/repository.ts:20` — bypass the schema entirely: each does
+`Object.create(this.prototype)` to skip the constructor, then casts through a
+local `Mutable` interface to write protected fields. Fourteen test files, all
+in directories not yet converted, still call the matching
+`fakeRepo`/`fromParts` fixture. Data seeded that way never sees the parse
+defaults or the repair path, and the helpers live in production source, which
+the [file-location rules](architecture.md#testing) forbid. Deleting a
+feature's `fromParts` is the closing step of that feature's Phase 3 sweep —
+not a decision to make ahead of the sweep that owns it.
+
+### Fakes do not carry error queues
+
+A fake never grows a `simulate*Error` queue. A test that needs an error path
+uses `vi.spyOn` with `mockReturnValueOnce`. A baked-in queue adds a parallel
+state machine — typed buffers, ordering, drain semantics — to every fake, to
+serve the minority of tests that need one.
+
+## Assertions
+
+**Spy on a boundary you cannot see past; assert the outcome whenever the
+outcome is observable.** The discriminator is whether the fake host can show
+you the result.
+
+A spy is right for `flows.invoke` in a component test: components call
+`void flows.invoke(Flow, args)` fire-and-forget, so dispatching the flow _is_
+the entire contract and there is no result to observe.
+
+A spy is wrong for something like `creation.attachNote`
+(`src/journals/notes/note-creation.ts`). The contract is the frontmatter
+written to the note, and that is readable through the fake host's vault.
+Assert the note, not the call. The suite leaned on spies partly because the
+old partial fakes had no vault; the fake host removes that excuse.
+
+### One behavior per test
+
+> When tests share an identical arrange and act and differ only in which
+> field of one result they read, they are one test. When the arrange differs,
+> they stay separate.
+
+A test name containing "and" is describing two tests. Name a test as subject
+plus verb — "rejects an empty title", not "title validation". Express scope
+with nested `describe()` blocks, not dashes, colons, or periods packed into
+one label.
+
+### Do not test the framework, and do not test constants
+
+Skip a test whose only assertion is the framework's own contract: `instanceof`
+on an error subclass that only calls `super()`, Promise thenable behavior, Vue
+lifecycle, vee-validate, moment locale switching. Ask what application
+behavior would break the test. If the answer is "only if Vue breaks", delete
+it.
+
+Likewise a test that restates one literal from a defaults function proves the
+literal was copied twice. The invariant version — "accepts the unmodified
+defaults for a {type} journal", asserting that the defaults satisfy the
+schema — is the one worth keeping. The discriminator is **"would a user
+notice if this literal changed"**, not "does it restate a literal": a default
+a user sees on every newly created journal is behavior, and a test pinning it
+stays.
+
+### Query by role, text, and label — through `m.*()`
+
+Vue components are tested through `@testing-library/vue` with `user-event`,
+querying by role and text rather than by CSS class or test-only attributes.
+Pass user-facing copy through the generated paraglide messages so a reword
+becomes a typecheck failure instead of silent drift:
+
+```ts
+await userEvent.click(screen.getByText(m.common_action_submit()));
+```
+
+One carve-out: grid surfaces address cells positionally, and the e2e layer
+already pins day cells by `data-anchor`. Those may use attribute selectors.
+Everything else may not.
+
+### No ceremony around matchers
+
+No wrappers around `expect()` chains, and no test-local re-implementations of
+library factories. A narrowing helper that returns the inner value and prints
+the actual `Err` earns its place — `expectOk`/`expectErr`
+(`src/infrastructure/result/testing.ts`) are the standing example — one that
+hides a matcher does not.
+
+No type ceremony in a mock assertion either. Write:
+
+```ts
+expect(submit).toHaveBeenCalledWith({ newName: "morning" });
+```
+
+Vitest's matchers take unconstrained generics and do not typecheck the
+expected value. That is fine here, because a wrong key fails the assertion
+loudly. Type checking earns its place only where a mistake causes a **silent
+pass** — which is why `m.*()` is mandatory for user-facing copy and nothing
+analogous is mandated for mock arguments.
+
+Use `expectTypeOf` for compile-time type assertions; never `@ts-expect-error`.
+
+### Naming
+
+`harness`, never `h`. `container`, never `c`. Single letters are for loop
+indices.
+
+## Isolation
+
+The unit suite runs `isolate: false` in a shared vitest project, so workers
+reuse one module registry across the files they run. That is what keeps the
+suite fast: the import graph is paid once per worker instead of once per file.
+
+The cost is that a file can reach the next one through anything
+process-global. A test that does belongs in `*.isolated.test.ts`, which runs
+in its own registry. Two kinds are known:
+
+- `vi.mock`, whose factory replaces the module for every later file in the
+  worker. This one is eslint-enforced.
+- Rewriting moment's **global** locale, which leaves the next file on a
+  different week grid.
+
+The resulting flake surfaces as a nondeterministic count in a _different_ file
+than the polluting one, which is why the rule is worth following before you
+have a failure to explain.
+
+**`vi.mock` is for third-party modules only** — modules that cannot run under
+happy-dom, such as `@vueuse/integrations/useSortable` and `obsidian`. Not the
+project's own modules, and never a child component: mocking a child asserts
+which component the parent renders rather than what the user sees. Reach for
+a container override instead.
