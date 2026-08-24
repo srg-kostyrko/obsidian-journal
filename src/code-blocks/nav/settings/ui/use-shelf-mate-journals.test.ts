@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
@@ -9,10 +10,20 @@ import { testContainer } from "@/testing";
 
 import { useShelfMateJournals } from "./use-shelf-mate-journals";
 
+// Seeded alongside the shelves even though useShelfMateJournals never reads
+// JournalsRepository: the "none" branch must fall back to an empty list, and
+// only another journal actually existing can tell that apart from a fallback
+// to all journals (CLAUDE.md's "Deliberate non-bugs" shelf-mate ruling).
+const journals = {
+  daily: fixedJournal("daily", { type: "day" }),
+  weekly: fixedJournal("weekly", { type: "day" }),
+  other: fixedJournal("other", { type: "day" }),
+};
+
 async function mount(journalName: string, shelves?: Record<string, ShelfConfig>) {
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule],
-    ...(shelves && { data: { shelves } }),
+    data: { journals, ...(shelves && { shelves }) },
   });
 
   let result: readonly string[] = [];

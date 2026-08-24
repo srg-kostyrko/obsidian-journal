@@ -1,9 +1,9 @@
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { initLocale, m } from "@/i18n";
-import { testContainer } from "@/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { calendarAppearanceCoreModule } from "../module";
 import { appearanceSlice } from "../slice";
@@ -17,16 +17,19 @@ async function openSection(): Promise<void> {
 beforeAll(() => initLocale("en"));
 
 describe("AppearanceBlock", () => {
-  it("starts collapsed and hides the highlight color rows", async () => {
-    const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+  let harness: TestHarness;
 
+  beforeEach(async () => {
+    harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
+  });
+
+  it("starts collapsed and hides the highlight color rows", async () => {
     harness.render(AppearanceBlock);
 
     expect(screen.queryByText(m.calendar_appearance_today_text())).toBeNull();
   });
 
   it("reveals the highlight color rows once expanded", async () => {
-    const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
     harness.render(AppearanceBlock);
 
     await openSection();
@@ -35,7 +38,6 @@ describe("AppearanceBlock", () => {
   });
 
   it("writes a today text color change through the picker to the slice", async () => {
-    const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
     harness.render(AppearanceBlock);
     await openSection();
 

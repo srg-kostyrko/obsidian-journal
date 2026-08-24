@@ -23,7 +23,7 @@ function journalWithNavLines(name: string, lines: NavBlockSegment[][]): JournalC
   return { ...base, navBlock: { ...base.navBlock, lines } };
 }
 
-function buildCustomJournal(name: string, lines: NavBlockSegment[][]): JournalConfig {
+function journalWithIntervalLines(name: string, lines: NavBlockSegment[][]): JournalConfig {
   const base = customJournal(name, "day", 1, "2026-01-01");
   return { ...base, intervalBlock: { ...base.intervalBlock, lines } };
 }
@@ -132,7 +132,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("appends to intervalBlock lines when the field is intervalBlock", async () => {
-    const { flows, modals, repo } = await build({ custom: buildCustomJournal("custom", [[segA]]) });
+    const { flows, modals, repo } = await build({ custom: journalWithIntervalLines("custom", [[segA]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "custom", field: "intervalBlock" });
     submit(modals, submittedSegment);
     const result = await promise;

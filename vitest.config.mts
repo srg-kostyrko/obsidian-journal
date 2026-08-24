@@ -114,9 +114,9 @@ export default defineConfig({
         // time. That guard commit sits outside the fifteen this sweep owns, so the number above is
         // reported rather than reasoned past.
         //
-        // Both module splits (b2d84892, 4d0d4448, 23031276) moved nothing: every file either touches
-        // — `module.ts` and the new `ui-module.ts` alike — is already outside the DI-wiring exclude
-        // glob, so neither half was ever counted regardless of what still loads it. The
+        // All three module splits (b2d84892, 4d0d4448, 23031276) moved nothing: every file each one
+        // touches — `module.ts` and the new `ui-module.ts` alike — is already outside the DI-wiring
+        // exclude glob, so neither half was ever counted regardless of what still loads it. The
         // buildNavSegment fixture (8e4ac100) moved nothing either: its `v.parse` call lives in the
         // excluded testing.ts, and the schema object it parses against was already built at import
         // time. No `Repository.fromParts`/`ViewModel.fromRepository` hatch exists under

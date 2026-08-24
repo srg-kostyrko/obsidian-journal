@@ -1,7 +1,6 @@
 import { assert, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
 import { initLocale } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
@@ -11,8 +10,6 @@ import { customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import { buildNavRowContext } from "./nav-row-context";
-
-installTestCalendar();
 
 interface NavServices {
   cycle: CycleService;

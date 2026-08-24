@@ -13,6 +13,14 @@ import { testContainer } from "@/testing";
 
 import TimelineQuarter from "./TimelineQuarter.vue";
 
+const MODULES = [
+  journalsCoreModule,
+  shelvesCoreModule,
+  decorationsModule,
+  decorationsSettingsModule,
+  notesCalendarModule,
+];
+
 beforeAll(() => initLocale("en"));
 
 describe("TimelineQuarter", () => {
@@ -25,13 +33,7 @@ describe("TimelineQuarter", () => {
       styles: [buildStyle("shape", { placement_x: "right", placement_y: "middle", size: 0.5 })],
     });
     const harness = await testContainer({
-      modules: [
-        journalsCoreModule,
-        shelvesCoreModule,
-        decorationsModule,
-        decorationsSettingsModule,
-        notesCalendarModule,
-      ],
+      modules: MODULES,
       data: { journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }) } },
     });
 
