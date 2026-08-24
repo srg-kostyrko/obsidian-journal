@@ -4,8 +4,9 @@ import { moment } from "obsidian";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
-import { Calendar, calendarSettingsModule } from "@/calendar";
+import { Calendar } from "@/calendar";
 import { CUSTOM_LOCALE } from "@/calendar/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
 import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError, useService } from "@/infrastructure/di";
@@ -234,7 +235,7 @@ describe("seed guard", () => {
   it("rejects a fixture whose slice the settings parse reset to defaults", async () => {
     await expect(
       testContainer({
-        modules: [calendarSettingsModule],
+        modules: [calendarSettingsCoreModule],
         data: { calendar: { mode: "custom", dow: 9, doy: 4, global: false } },
       }),
     ).rejects.toThrow(TestContainerInvalidSeedError);

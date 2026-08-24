@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ref } from "vue";
 
 import { type CalendarDate, DayPeriod, MonthPeriod, OpenInterval, YearPeriod } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date } from "@/calendar/testing";
 
 import { useCalendarGrid } from "./use-calendar-grid";
 
@@ -16,14 +16,6 @@ function monthCells(refDate: CalendarDate): readonly DayPeriod[] {
 }
 
 describe("useCalendarGrid", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("isSelected", () => {
     it("marks the cell whose period matches the selection of the same kind", () => {
       const cells = useCalendarGrid({

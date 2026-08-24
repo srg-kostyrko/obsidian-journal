@@ -1,7 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { parseDateExpression } from "./date-input";
-import { installTestCalendar } from "./testing";
 
 function parsed(input: string): string | null {
   const result = parseDateExpression(input);
@@ -9,16 +8,6 @@ function parsed(input: string): string | null {
 }
 
 describe("parseDateExpression", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
   it("parses an absolute anchor", () => {
     expect(parsed("2026-08-18")).toBe("2026-08-18");
   });

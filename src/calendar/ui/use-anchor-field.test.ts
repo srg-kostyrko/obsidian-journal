@@ -1,20 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ref } from "vue";
 
 import { DayPeriod, WeekPeriod, type AnchorString } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date } from "@/calendar/testing";
 
 import { useAnchorField } from "./use-anchor-field";
 
 describe("useAnchorField", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("getter", () => {
     it("maps an empty anchor to null", () => {
       const anchor = ref<AnchorString>("" as AnchorString);

@@ -1,16 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Clock } from "./clock";
-import { installTestCalendar } from "./testing";
 
 describe("Clock", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
   afterEach(() => {
-    teardown();
     vi.useRealTimers();
   });
 

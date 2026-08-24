@@ -1,18 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { DayPeriod } from "./period-day";
-import { date, installTestCalendar } from "./testing";
+import { date } from "./testing";
 
 describe("DayPeriod", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("containing", () => {
     it("uses the given date as start", () => {
       expect(DayPeriod.containing(date("2025-03-14")).start.toAnchor()).toBe("2025-03-14");

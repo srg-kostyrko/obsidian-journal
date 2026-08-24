@@ -1,14 +1,15 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, within } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen, within } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
-import { Calendar, WeekPresetApplierToken } from "@/calendar";
+import { WeekPresetApplierToken } from "@/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { m } from "@/i18n";
-import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
-import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult } from "@/infrastructure/result";
-import { ReloadHintService } from "@/settings";
-import { createSettingsService } from "@/settings/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { journalsSettingsCoreModule } from "@/journals/settings/module";
+import { ReloadHintService, type SettingsService } from "@/settings";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { calendarDisplaySlice } from "../display-slice";
 import { calendarSlice } from "../slice";
@@ -18,49 +19,27 @@ import { weekPresetPickerModal } from "./modals";
 
 import type { CalendarSliceState } from "../slice";
 
-function setupContainer(initial?: CalendarSliceState) {
-  const raw = initial ? { version: 5, calendar: initial } : undefined;
-  const settings = createSettingsService({ slices: [calendarSlice, calendarDisplaySlice], raw });
-  const container = settings.container;
-
-  const modalService = {
-    open: vi.fn(),
-  } as unknown as ModalService;
-  container.register(ModalService).useValue(modalService);
-  container.register(Calendar).useValue(new Calendar());
-  container.register(ReloadHintService).useClass(ReloadHintService);
+async function setupContainer(initial?: CalendarSliceState): Promise<{
+  harness: TestHarness;
+  applier: { apply: ReturnType<typeof vi.fn> };
+}> {
+  let settings!: SettingsService;
   // Mirrors WeekPresetService.apply: the real applier writes the slice synchronously before
   // it awaits the re-anchor, so reload-hint tests stay sensitive to call order against a
   // stub that does the same.
   const applier = {
     apply: vi.fn((next: CalendarSliceState) => {
-      settings.service.getSlice(calendarSlice).state = next;
+      settings.getSlice(calendarSlice).state = next;
       return AsyncResult.ok();
     }),
   };
-  container.register(WeekPresetApplierToken).useValue(applier);
-
-  return {
-    container,
-    settings: settings.service,
-    modalService,
-    reloadHint: container.resolve(ReloadHintService),
-    applier,
-  };
-}
-
-function mount(container: Container) {
-  return render(CalendarWeekBlock, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
+  const harness = await testContainer({
+    modules: [journalsCoreModule, journalsSettingsCoreModule, calendarSettingsCoreModule],
+    data: { calendar: initial ?? { mode: "locale" }, calendarDisplay: {} },
+    overrides: [overrideWith(WeekPresetApplierToken, applier)],
   });
+  settings = harness.settings;
+  return { harness, applier };
 }
 
 async function openSection(): Promise<void> {
@@ -74,65 +53,54 @@ function toggleInRow(name: string): HTMLElement {
   return within(row as HTMLElement).getByRole("checkbox");
 }
 
-afterEach(() => cleanup());
-
 describe("CalendarWeekBlock", () => {
   it("starts collapsed and hides the inner settings", async () => {
-    const { container, settings } = setupContainer();
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer();
+    harness.render(CalendarWeekBlock);
     expect(screen.queryByText(m.calendar_week_config_change())).toBeNull();
   });
 
   it("renders the Change button once expanded", async () => {
-    const { container, settings } = setupContainer();
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer();
+    harness.render(CalendarWeekBlock);
     await openSection();
     expect(screen.getByText(m.calendar_week_config_change())).toBeTruthy();
   });
 
   it("hides the global toggle when mode is locale", async () => {
-    const { container, settings } = setupContainer({ mode: "locale" });
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer({ mode: "locale" });
+    harness.render(CalendarWeekBlock);
     await openSection();
     expect(screen.queryByText(m.calendar_apply_globally_title())).toBeNull();
   });
 
   it("shows the global toggle when mode is custom", async () => {
-    const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    harness.render(CalendarWeekBlock);
     await openSection();
     expect(screen.getByText(m.calendar_apply_globally_title())).toBeTruthy();
   });
 
   it("opens the modal when Change is clicked", async () => {
-    const { container, settings, modalService } = setupContainer();
-    await settings.initialize();
-    const pending = new Promise<CalendarSliceState>(() => undefined);
-    (modalService.open as ReturnType<typeof vi.fn>).mockReturnValue(
-      AsyncResult.fromPromise(pending, () => new Error("never")),
-    );
-    mount(container);
+    const { harness } = await setupContainer();
+    harness.render(CalendarWeekBlock);
     await openSection();
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
-    expect(modalService.open).toHaveBeenCalledWith(weekPresetPickerModal, { current: { mode: "locale" } });
+    const opened = harness.modals.lastOpen<{ current: CalendarSliceState }, CalendarSliceState>();
+    expect(opened.definition).toBe(weekPresetPickerModal);
+    expect(opened.props).toEqual({ current: { mode: "locale" } });
   });
 
   it("shows the active preset name in the description", async () => {
-    const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    harness.render(CalendarWeekBlock);
     await openSection();
     expect(screen.getByText(m.calendar_preset_name({ preset: "iso-8601" }))).toBeTruthy();
   });
 
   it("shows a dynamic summary when the current week settings do not match a named preset", async () => {
-    const { container, settings } = setupContainer({ mode: "custom", dow: 3, doy: 7, global: false });
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer({ mode: "custom", dow: 3, doy: 7, global: false });
+    harness.render(CalendarWeekBlock);
     await openSection();
     expect(screen.getByText(m.calendar_preset_name({ preset: "custom" }))).toBeTruthy();
     expect(screen.getByText(/Wednesday/)).toBeTruthy();
@@ -140,70 +108,71 @@ describe("CalendarWeekBlock", () => {
   });
 
   it("flips slice.state.global when the apply-globally toggle is clicked", async () => {
-    const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    harness.render(CalendarWeekBlock);
     await openSection();
     await userEvent.click(toggleInRow(m.calendar_apply_globally_title()));
-    const state = settings.getSlice(calendarSlice).state;
+    const state = harness.settings.getSlice(calendarSlice).state;
     expect(state).toEqual({ mode: "custom", dow: 1, doy: 4, global: true });
   });
 
   it("writes timelineNavigation to the display slice when its toggle is flipped", async () => {
-    const { container, settings } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    harness.render(CalendarWeekBlock);
     await openSection();
 
     await userEvent.click(toggleInRow(m.calendar_timeline_navigation_label()));
 
-    expect(settings.getSlice(calendarDisplaySlice).state.timelineNavigation).toBe(true);
+    expect(harness.settings.getSlice(calendarDisplaySlice).state.timelineNavigation).toBe(true);
   });
 
   it("requests a reload when the apply-globally toggle is flipped", async () => {
-    const { container, settings, reloadHint } = setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
-    await settings.initialize();
-    mount(container);
+    const { harness } = await setupContainer({ mode: "custom", dow: 1, doy: 4, global: false });
+    harness.render(CalendarWeekBlock);
     await openSection();
     await userEvent.click(toggleInRow(m.calendar_apply_globally_title()));
-    expect(reloadHint.pending.value).toBe(true);
+    expect(harness.resolve(ReloadHintService).pending.value).toBe(true);
   });
 
   it("does not request a reload for a preset change that never touches the global patch", async () => {
-    const { container, settings, modalService, reloadHint } = setupContainer();
-    await settings.initialize();
-    (modalService.open as ReturnType<typeof vi.fn>).mockReturnValue(
-      AsyncResult.ok<CalendarSliceState>({ mode: "custom", dow: 0, doy: 6, global: false }),
-    );
-    mount(container);
+    const { harness, applier } = await setupContainer();
+    harness.render(CalendarWeekBlock);
     await openSection();
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
-    await Promise.resolve();
-    expect(reloadHint.pending.value).toBe(false);
+    harness.modals
+      .lastOpen<{ current: CalendarSliceState }, CalendarSliceState>()
+      .submit({ mode: "custom", dow: 0, doy: 6, global: false });
+    // The tap callback that requests the reload hint and hands off to the applier settles
+    // asynchronously across several promise hops; wait for the applier call as the signal
+    // that it has run before reading the (otherwise-default) reload-hint flag.
+    await vi.waitFor(() => expect(applier.apply).toHaveBeenCalled());
+    expect(harness.resolve(ReloadHintService).pending.value).toBe(false);
   });
 
   it("requests a reload when the picked preset turns the global patch on", async () => {
-    const { container, settings, modalService, reloadHint } = setupContainer();
-    await settings.initialize();
-    (modalService.open as ReturnType<typeof vi.fn>).mockReturnValue(
-      AsyncResult.ok<CalendarSliceState>({ mode: "custom", dow: 0, doy: 6, global: true }),
-    );
-    mount(container);
+    const { harness, applier } = await setupContainer();
+    harness.render(CalendarWeekBlock);
     await openSection();
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
-    await Promise.resolve();
-    expect(reloadHint.pending.value).toBe(true);
+    harness.modals
+      .lastOpen<{ current: CalendarSliceState }, CalendarSliceState>()
+      .submit({ mode: "custom", dow: 0, doy: 6, global: true });
+    await vi.waitFor(() => expect(applier.apply).toHaveBeenCalled());
+    expect(harness.resolve(ReloadHintService).pending.value).toBe(true);
   });
 
   it("hands the picked preset to the applier", async () => {
-    const { container, settings, modalService, applier } = setupContainer();
-    await settings.initialize();
-    vi.mocked(modalService.open).mockReturnValue(AsyncResult.ok({ mode: "custom", dow: 0, doy: 6, global: false }));
-    mount(container);
+    const { harness, applier } = await setupContainer();
+    harness.render(CalendarWeekBlock);
     await openSection();
 
     await userEvent.click(screen.getByText(m.calendar_week_config_change()));
+    harness.modals
+      .lastOpen<{ current: CalendarSliceState }, CalendarSliceState>()
+      .submit({ mode: "custom", dow: 0, doy: 6, global: false });
 
-    expect(applier.apply).toHaveBeenCalledWith({ mode: "custom", dow: 0, doy: 6, global: false });
+    await vi.waitFor(() =>
+      expect(applier.apply).toHaveBeenCalledWith({ mode: "custom", dow: 0, doy: 6, global: false }),
+    );
   });
 });

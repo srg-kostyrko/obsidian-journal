@@ -1,42 +1,18 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
-import { Calendar, MonthPeriod, OpenInterval, YearPeriod } from "@/calendar";
+import { MonthPeriod, OpenInterval, YearPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { date } from "@/calendar/testing";
 
 import CalendarYearView from "./CalendarYearView.vue";
 
 function mount(props: { outerPeriod: YearPeriod; selected: Period | null; bounds?: OpenInterval }) {
-  const container = new Container();
-  container.register(Calendar).useValue(testCalendar());
-
-  return render(CalendarYearView, {
-    props,
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  return render(CalendarYearView, { props });
 }
 
 describe("CalendarYearView", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
   describe("month cells", () => {
     it("renders exactly twelve month cells", () => {
       const outerPeriod = YearPeriod.containing(date("2025-01-01"));

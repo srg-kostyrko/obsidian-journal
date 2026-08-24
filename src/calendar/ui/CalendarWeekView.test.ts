@@ -1,45 +1,18 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
-import { Calendar, MonthPeriod, OpenInterval, WeekPeriod } from "@/calendar";
+import { MonthPeriod, OpenInterval, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { date } from "@/calendar/testing";
 
 import CalendarWeekView from "./CalendarWeekView.vue";
 
-function mount(
-  props: { outerPeriod: MonthPeriod; selected: Period | null; bounds?: OpenInterval },
-  calendar?: Calendar,
-) {
-  const container = new Container();
-  container.register(Calendar).useValue(calendar ?? testCalendar());
-
-  return render(CalendarWeekView, {
-    props,
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+function mount(props: { outerPeriod: MonthPeriod; selected: Period | null; bounds?: OpenInterval }) {
+  return render(CalendarWeekView, { props });
 }
 
 describe("CalendarWeekView", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
   describe("week cells", () => {
     it("renders one cell per week overlapping the month", () => {
       const outerPeriod = MonthPeriod.containing(date("2025-03-15"));

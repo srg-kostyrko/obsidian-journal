@@ -362,6 +362,9 @@ function parseSliceValue<TSchema extends AnySchema>(
   raw: unknown,
   logger: Logger,
 ): InferOutput<TSchema> {
+  // Absence is the fresh-install case and must stay silent, mirroring parseCollectionValue's
+  // carve-out above; a stored value of the wrong shape still falls through to the warning below.
+  if (raw === undefined) return structuredClone(definition.defaults);
   const parsed = v.safeParse(definition.schema, raw);
   if (parsed.success) return parsed.output;
   logger.warn("slice reset to defaults", {

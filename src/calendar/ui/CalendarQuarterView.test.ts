@@ -1,42 +1,18 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
-import { Calendar, OpenInterval, QuarterPeriod, YearPeriod } from "@/calendar";
+import { OpenInterval, QuarterPeriod, YearPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { date } from "@/calendar/testing";
 
 import CalendarQuarterView from "./CalendarQuarterView.vue";
 
 function mount(props: { outerPeriod: YearPeriod; selected: Period | null; bounds?: OpenInterval }) {
-  const container = new Container();
-  container.register(Calendar).useValue(testCalendar());
-
-  return render(CalendarQuarterView, {
-    props,
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  return render(CalendarQuarterView, { props });
 }
 
 describe("CalendarQuarterView", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
   describe("quarter cells", () => {
     it("renders exactly four quarter cells", () => {
       const outerPeriod = YearPeriod.containing(date("2025-01-01"));

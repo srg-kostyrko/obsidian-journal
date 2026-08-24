@@ -46,6 +46,7 @@ words:
   - vueuse
   - wdio
   - wikilinks
+  - worktree
 ignorePaths:
   - node_modules
   - build

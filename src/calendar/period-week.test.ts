@@ -1,18 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { WeekPeriod } from "./period-week";
 import { date, installTestCalendar } from "./testing";
 
 describe("WeekPeriod", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("containing", () => {
     it("spans Monday to start", () => {
       expect(WeekPeriod.containing(date("2025-03-14")).start.toAnchor()).toBe("2025-03-10");
@@ -46,8 +37,7 @@ describe("WeekPeriod", () => {
     // so only the day six into the week is still inside January 1-7 of the week-year no matter
     // which weekday January 1 lands on.
     it("is the Saturday inside a Sunday-start week under dow=0, doy=6", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
 
       expect(WeekPeriod.containing(date("2025-03-14")).representative.toAnchor()).toBe("2025-03-15");
     });
@@ -157,8 +147,7 @@ describe("WeekPeriod", () => {
     });
 
     it("resolves the same week to its Sunday under a Sunday-start grid", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
       expect(WeekPeriod.ofWeek(2026, 23).anchor.toAnchor()).toBe("2026-05-31");
     });
 
@@ -170,29 +159,25 @@ describe("WeekPeriod", () => {
 
   describe("non-ISO locale", () => {
     it("uses Sunday-start week when configured with dow=0", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
 
       expect(WeekPeriod.containing(date("2025-03-14")).start.toAnchor()).toBe("2025-03-09");
     });
 
     it("ends Saturday when Sunday-start", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
 
       expect(WeekPeriod.containing(date("2025-03-14")).end.toAnchor()).toBe("2025-03-15");
     });
 
     it("anchor is the Sunday for a Sun-start week under dow=0, doy=6", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
 
       expect(WeekPeriod.containing(date("2025-03-14")).anchor.toAnchor()).toBe("2025-03-09");
     });
 
     it("year returns owning year for a cross-year week under dow=0, doy=6", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
 
       // Week containing 2025-12-31: starts Sun 2025-12-28, ends Sat 2026-01-03,
       // owning day (Friday) is 2026-01-02 → owning year is 2026.
@@ -200,8 +185,7 @@ describe("WeekPeriod", () => {
     });
 
     it("representative.year matches year for the cross-year week under dow=0, doy=6", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
 
       const week = WeekPeriod.containing(date("2025-12-31"));
 
@@ -212,8 +196,7 @@ describe("WeekPeriod", () => {
     // furthest to reach. The 2025-12-31 week above puts it mid-week, so it passes under
     // any offset from 4 through 6 and cannot distinguish a wrong one.
     it("representative.year matches year when January 1 falls on the week's last day", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 0, doy: 6 }));
+      installTestCalendar({ dow: 0, doy: 6 });
 
       const week = WeekPeriod.containing(date("2021-12-28"));
 
@@ -221,8 +204,7 @@ describe("WeekPeriod", () => {
     });
 
     it("representative falls inside the week under dow=6, doy=12", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 6, doy: 12 }));
+      installTestCalendar({ dow: 6, doy: 12 });
 
       const week = WeekPeriod.containing(date("2025-03-10"));
 
@@ -231,8 +213,7 @@ describe("WeekPeriod", () => {
     });
 
     it("representative.year matches year for a cross-year week under dow=6, doy=12", () => {
-      teardown();
-      ({ teardown } = installTestCalendar({ dow: 6, doy: 12 }));
+      installTestCalendar({ dow: 6, doy: 12 });
 
       const week = WeekPeriod.containing(date("2021-12-28"));
 
