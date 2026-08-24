@@ -1,21 +1,31 @@
-import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
+import { journalsCoreModule } from "@/journals/module";
+import { testContainer } from "@/testing";
+
 import { shelvesCollection } from "./config";
+import { shelvesCoreModule } from "./module";
 
 describe("shelvesCollection", () => {
-  it("loads a shelf saved before decorations existed with an empty decoration list", () => {
-    const parsed = v.parse(shelvesCollection.itemSchema, { name: "work", journals: [] });
-    expect(parsed.decorations).toEqual([]);
+  it("loads a shelf saved before decorations existed with an empty decoration list", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule],
+      data: { shelves: { work: { name: "work", journals: [] } } },
+    });
+
+    expect(harness.settings.recordOf(shelvesCollection).work.decorations).toEqual([]);
   });
 
-  it("keeps a shelf's journals when its decorations fail to parse", () => {
-    const parsed = v.parse(shelvesCollection.itemSchema, {
-      name: "work",
-      journals: ["daily"],
-      decorations: [{ type: "not-a-decoration" }],
+  it("keeps a shelf's journals when its decorations fail to parse", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule],
+      data: {
+        shelves: { work: { name: "work", journals: ["daily"], decorations: [{ type: "not-a-decoration" }] } },
+      },
     });
-    expect(parsed.journals).toEqual(["daily"]);
-    expect(parsed.decorations).toEqual([]);
+
+    const shelf = harness.settings.recordOf(shelvesCollection).work;
+    expect(shelf.journals).toEqual(["daily"]);
+    expect(shelf.decorations).toEqual([]);
   });
 });

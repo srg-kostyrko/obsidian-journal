@@ -1,54 +1,59 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { journalsCoreModule } from "@/journals/module";
-import { testContainer, type TestHarness } from "@/testing";
+import { testContainer } from "@/testing";
 
-import { shelvesCollection } from "./config";
+import { shelvesCollection, type ShelfConfig } from "./config";
 import { InvalidShelfNameError, InvalidShelfUpdateError, ShelfNameTakenError, UnknownShelfError } from "./errors";
 import { shelvesCoreModule } from "./module";
 import { ShelvesRepository } from "./repository";
 import { buildShelf } from "./testing";
 import { ShelvesEventsToken } from "./tokens";
 
+async function buildRepo(initial: Record<string, ShelfConfig> = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule],
+    data: { shelves: initial },
+  });
+  return {
+    repo: harness.resolve(ShelvesRepository),
+    storage: harness.settings.recordOf(shelvesCollection),
+    events: harness.resolve(ShelvesEventsToken),
+  };
+}
+
 describe("ShelvesRepository", () => {
   describe("create", () => {
-    let harness: TestHarness;
+    it("inserts a shelf with empty journals list", async () => {
+      const { repo, storage } = await buildRepo();
 
-    beforeEach(async () => {
-      harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: {} },
-      });
+      repo.create("Personal");
+
+      expect(storage.Personal).toEqual(buildShelf("Personal"));
     });
 
-    it("inserts a shelf with empty journals list", () => {
-      harness.resolve(ShelvesRepository).create("Personal");
-
-      expect(harness.settings.recordOf(shelvesCollection).Personal).toEqual(buildShelf("Personal"));
-    });
-
-    it("emits created", () => {
+    it("emits created", async () => {
+      const { repo, events } = await buildRepo();
       const spy = vi.fn();
-      harness.resolve(ShelvesEventsToken).on("created", spy);
+      events.on("created", spy);
 
-      harness.resolve(ShelvesRepository).create("Personal");
+      repo.create("Personal");
 
       expect(spy).toHaveBeenCalledWith("Personal");
     });
 
-    it("rejects an empty name", () => {
-      const result = harness.resolve(ShelvesRepository).create("");
+    it("rejects an empty name", async () => {
+      const { repo } = await buildRepo();
+
+      const result = repo.create("");
 
       expect(result.isErr() && result.error).toBeInstanceOf(InvalidShelfNameError);
     });
 
     it("rejects a name in use", async () => {
-      harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
+      const { repo } = await buildRepo({ Personal: buildShelf("Personal") });
 
-      const result = harness.resolve(ShelvesRepository).create("Personal");
+      const result = repo.create("Personal");
 
       expect(result.isErr() && result.error).toBeInstanceOf(ShelfNameTakenError);
     });
@@ -56,81 +61,59 @@ describe("ShelvesRepository", () => {
 
   describe("rename", () => {
     it("stores the entry under the new key with the new name field", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal", { journals: ["daily"] }) } },
-      });
+      const { repo, storage } = await buildRepo({ Personal: buildShelf("Personal", { journals: ["daily"] }) });
 
-      harness.resolve(ShelvesRepository).rename("Personal", "Home");
+      repo.rename("Personal", "Home");
 
-      expect(harness.settings.recordOf(shelvesCollection).Home).toEqual({
-        name: "Home",
-        journals: ["daily"],
-        decorations: [],
-      });
+      expect(storage.Home).toEqual({ name: "Home", journals: ["daily"], decorations: [] });
     });
 
     it("removes the old key on rename", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal", { journals: ["daily"] }) } },
-      });
+      const { repo, storage } = await buildRepo({ Personal: buildShelf("Personal", { journals: ["daily"] }) });
 
-      harness.resolve(ShelvesRepository).rename("Personal", "Home");
+      repo.rename("Personal", "Home");
 
-      expect(harness.settings.recordOf(shelvesCollection).Personal).toBeUndefined();
+      expect(storage.Personal).toBeUndefined();
     });
 
-    describe("with a lone Personal shelf", () => {
-      let harness: TestHarness;
+    it("emits renamed", async () => {
+      const { repo, events } = await buildRepo({ Personal: buildShelf("Personal") });
+      const spy = vi.fn();
+      events.on("renamed", spy);
 
-      beforeEach(async () => {
-        harness = await testContainer({
-          modules: [journalsCoreModule, shelvesCoreModule],
-          data: { shelves: { Personal: buildShelf("Personal") } },
-        });
-      });
+      repo.rename("Personal", "Home");
 
-      it("emits renamed", () => {
-        const spy = vi.fn();
-        harness.resolve(ShelvesEventsToken).on("renamed", spy);
+      expect(spy).toHaveBeenCalledWith("Personal", "Home");
+    });
 
-        harness.resolve(ShelvesRepository).rename("Personal", "Home");
+    it("rejects empty new name", async () => {
+      const { repo } = await buildRepo({ Personal: buildShelf("Personal") });
 
-        expect(spy).toHaveBeenCalledWith("Personal", "Home");
-      });
+      const result = repo.rename("Personal", "");
 
-      it("rejects empty new name", () => {
-        const result = harness.resolve(ShelvesRepository).rename("Personal", "");
+      expect(result.isErr() && result.error).toBeInstanceOf(InvalidShelfNameError);
+    });
 
-        expect(result.isErr() && result.error).toBeInstanceOf(InvalidShelfNameError);
-      });
+    it("rejects newName equal to oldName", async () => {
+      const { repo } = await buildRepo({ Personal: buildShelf("Personal") });
 
-      it("rejects newName equal to oldName", () => {
-        const result = harness.resolve(ShelvesRepository).rename("Personal", "Personal");
+      const result = repo.rename("Personal", "Personal");
 
-        expect(result.isErr() && result.error).toBeInstanceOf(InvalidShelfNameError);
-      });
+      expect(result.isErr() && result.error).toBeInstanceOf(InvalidShelfNameError);
     });
 
     it("rejects unknown old name", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: {} },
-      });
+      const { repo } = await buildRepo();
 
-      const result = harness.resolve(ShelvesRepository).rename("nope", "Home");
+      const result = repo.rename("nope", "Home");
 
       expect(result.isErr() && result.error).toBeInstanceOf(UnknownShelfError);
     });
 
     it("rejects newName already in use", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal"), Home: buildShelf("Home") } },
-      });
+      const { repo } = await buildRepo({ Personal: buildShelf("Personal"), Home: buildShelf("Home") });
 
-      const result = harness.resolve(ShelvesRepository).rename("Personal", "Home");
+      const result = repo.rename("Personal", "Home");
 
       expect(result.isErr() && result.error).toBeInstanceOf(ShelfNameTakenError);
     });
@@ -138,89 +121,67 @@ describe("ShelvesRepository", () => {
 
   describe("deleteWith", () => {
     it("removes the shelf when destination is omitted", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal", { journals: ["a"] }) } },
-      });
+      const { repo, storage } = await buildRepo({ Personal: buildShelf("Personal", { journals: ["a"] }) });
 
-      harness.resolve(ShelvesRepository).deleteWith("Personal");
+      repo.deleteWith("Personal");
 
-      expect(harness.settings.recordOf(shelvesCollection).Personal).toBeUndefined();
+      expect(storage.Personal).toBeUndefined();
     });
 
     it("appends source journals to destination before removing", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: {
-          shelves: {
-            Personal: buildShelf("Personal", { journals: ["a"] }),
-            Home: buildShelf("Home", { journals: ["b"] }),
-          },
-        },
+      const { repo, storage } = await buildRepo({
+        Personal: buildShelf("Personal", { journals: ["a"] }),
+        Home: buildShelf("Home", { journals: ["b"] }),
       });
 
-      harness.resolve(ShelvesRepository).deleteWith("Personal", "Home");
+      repo.deleteWith("Personal", "Home");
 
-      expect(harness.settings.recordOf(shelvesCollection).Home?.journals).toEqual(["b", "a"]);
-      expect(harness.settings.recordOf(shelvesCollection).Personal).toBeUndefined();
+      expect(storage.Home?.journals).toEqual(["b", "a"]);
+      expect(storage.Personal).toBeUndefined();
     });
 
     it("emits deleted", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
+      const { repo, events } = await buildRepo({ Personal: buildShelf("Personal") });
       const spy = vi.fn();
-      harness.resolve(ShelvesEventsToken).on("deleted", spy);
+      events.on("deleted", spy);
 
-      harness.resolve(ShelvesRepository).deleteWith("Personal");
+      repo.deleteWith("Personal");
 
       expect(spy).toHaveBeenCalledWith("Personal");
     });
 
     it("rejects unknown source", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: {} },
-      });
+      const { repo } = await buildRepo();
 
-      const result = harness.resolve(ShelvesRepository).deleteWith("nope");
+      const result = repo.deleteWith("nope");
 
       expect(result.isErr() && result.error).toBeInstanceOf(UnknownShelfError);
     });
 
     it("rejects provided-but-unknown destination", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
+      const { repo } = await buildRepo({ Personal: buildShelf("Personal") });
 
-      const result = harness.resolve(ShelvesRepository).deleteWith("Personal", "ghost");
+      const result = repo.deleteWith("Personal", "ghost");
 
       expect(result.isErr() && result.error).toBeInstanceOf(UnknownShelfError);
     });
   });
 
   describe("inherited update", () => {
-    let harness: TestHarness;
+    it("rejects a name change with InvalidShelfUpdateError", async () => {
+      const { repo } = await buildRepo({ Personal: buildShelf("Personal") });
 
-    beforeEach(async () => {
-      harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
-    });
-
-    it("rejects a name change with InvalidShelfUpdateError", () => {
-      const result = harness.resolve(ShelvesRepository).update("Personal", { name: "Home" });
+      const result = repo.update("Personal", { name: "Home" });
 
       expect(result.isErr() && result.error).toBeInstanceOf(InvalidShelfUpdateError);
     });
 
-    it("accepts journal-list updates", () => {
-      harness.resolve(ShelvesRepository).update("Personal", { journals: ["daily"] });
+    it("accepts journal-list updates", async () => {
+      const { repo, storage } = await buildRepo({ Personal: buildShelf("Personal") });
 
-      expect(harness.settings.recordOf(shelvesCollection).Personal?.journals).toEqual(["daily"]);
+      repo.update("Personal", { journals: ["daily"] });
+
+      expect(storage.Personal?.journals).toEqual(["daily"]);
     });
   });
 });

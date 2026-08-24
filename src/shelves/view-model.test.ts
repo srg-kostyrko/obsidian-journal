@@ -1,32 +1,35 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { journalsCoreModule } from "@/journals/module";
-import { testContainer, type TestHarness } from "@/testing";
+import { testContainer } from "@/testing";
 
 import { shelvesCoreModule } from "./module";
 import { ShelvesRepository } from "./repository";
 import { buildShelf } from "./testing";
 import { ShelvesViewModel } from "./view-model";
 
+import type { ShelfConfig } from "./config";
+
+async function buildVM(initial: Record<string, ShelfConfig> = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule],
+    data: { shelves: initial },
+  });
+  return { vm: harness.resolve(ShelvesViewModel), repo: harness.resolve(ShelvesRepository) };
+}
+
 describe("ShelvesViewModel", () => {
   describe("shelves", () => {
     it("yields the current shelves", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
+      const { vm } = await buildVM({ Personal: buildShelf("Personal") });
 
-      expect(harness.resolve(ShelvesViewModel).shelves.value.map((s) => s.name)).toEqual(["Personal"]);
+      expect(vm.shelves.value.map((s) => s.name)).toEqual(["Personal"]);
     });
 
     it("reflects mutations after create", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: {} },
-      });
-      const vm = harness.resolve(ShelvesViewModel);
+      const { vm, repo } = await buildVM();
 
-      harness.resolve(ShelvesRepository).create("Personal");
+      repo.create("Personal");
 
       expect(vm.shelves.value.map((s) => s.name)).toEqual(["Personal"]);
     });
@@ -34,12 +37,9 @@ describe("ShelvesViewModel", () => {
 
   describe("shelfOptions", () => {
     it("labels options by the shelf name", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal"), Home: buildShelf("Home") } },
-      });
+      const { vm } = await buildVM({ Personal: buildShelf("Personal"), Home: buildShelf("Home") });
 
-      expect(harness.resolve(ShelvesViewModel).shelfOptions.value).toEqual([
+      expect(vm.shelfOptions.value).toEqual([
         { value: "Personal", label: "Personal" },
         { value: "Home", label: "Home" },
       ]);
@@ -48,54 +48,43 @@ describe("ShelvesViewModel", () => {
 
   describe("shelfCount", () => {
     it("returns the count", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
+      const { vm } = await buildVM({ Personal: buildShelf("Personal") });
 
-      expect(harness.resolve(ShelvesViewModel).shelfCount.value).toBe(1);
+      expect(vm.shelfCount.value).toBe(1);
     });
   });
 
   describe("getShelf", () => {
-    let harness: TestHarness;
+    it("returns Some for a known name", async () => {
+      const { vm } = await buildVM({ Personal: buildShelf("Personal") });
 
-    beforeEach(async () => {
-      harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
+      expect(vm.getShelf("Personal").isSome()).toBe(true);
     });
 
-    it("returns Some for a known name", () => {
-      expect(harness.resolve(ShelvesViewModel).getShelf("Personal").isSome()).toBe(true);
-    });
+    it("returns None for an unknown name", async () => {
+      const { vm } = await buildVM();
 
-    it("returns None for an unknown name", () => {
-      expect(harness.resolve(ShelvesViewModel).getShelf("nope").isNone()).toBe(true);
+      expect(vm.getShelf("nope").isNone()).toBe(true);
     });
   });
 
   describe("isShelfNameAvailable", () => {
-    let harness: TestHarness;
+    it("is false when the name is in use", async () => {
+      const { vm } = await buildVM({ Personal: buildShelf("Personal") });
 
-    beforeEach(async () => {
-      harness = await testContainer({
-        modules: [journalsCoreModule, shelvesCoreModule],
-        data: { shelves: { Personal: buildShelf("Personal") } },
-      });
+      expect(vm.isShelfNameAvailable("Personal")).toBe(false);
     });
 
-    it("is false when the name is in use", () => {
-      expect(harness.resolve(ShelvesViewModel).isShelfNameAvailable("Personal")).toBe(false);
+    it("is true when the name is free", async () => {
+      const { vm } = await buildVM({ Personal: buildShelf("Personal") });
+
+      expect(vm.isShelfNameAvailable("Other")).toBe(true);
     });
 
-    it("is true when the name is free", () => {
-      expect(harness.resolve(ShelvesViewModel).isShelfNameAvailable("Other")).toBe(true);
-    });
+    it("treats excludeCurrent as available", async () => {
+      const { vm } = await buildVM({ Personal: buildShelf("Personal") });
 
-    it("treats excludeCurrent as available", () => {
-      expect(harness.resolve(ShelvesViewModel).isShelfNameAvailable("Personal", "Personal")).toBe(true);
+      expect(vm.isShelfNameAvailable("Personal", "Personal")).toBe(true);
     });
   });
 });
