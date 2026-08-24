@@ -7,6 +7,10 @@
 
 # npm
 node_modules
+# packages/api is not a workspace, so `cd packages/api && npm publish` (docs/releasing.md)
+# resolves its own peer tree and leaves a lockfile behind. node_modules is already covered
+# above; without this line the lockfile beside it is one `git add -A` from being committed.
+packages/api/package-lock.json
 
 
 test-vault/.obsidian/plugins/journals/*
