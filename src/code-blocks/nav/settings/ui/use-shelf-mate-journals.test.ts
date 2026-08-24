@@ -1,40 +1,24 @@
-import { cleanup, render } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it } from "vitest";
-import { defineComponent, h, reactive } from "vue";
+import { describe, expect, it } from "vitest";
+import { defineComponent, h } from "vue";
 
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import {
-  JournalsRepository,
-  JournalsViewModel,
-  journalDefaultsFor,
-  type JournalConfig,
-  type JournalsEvents,
-} from "@/journals";
-import { ShelvesRepository, type ShelfConfig, type ShelvesEvents } from "@/shelves";
+import { journalsCoreModule } from "@/journals/module";
+import type { ShelfConfig } from "@/shelves";
+import { shelvesCoreModule } from "@/shelves/module";
+import { buildShelf } from "@/shelves/testing";
+import { testContainer } from "@/testing";
 
 import { useShelfMateJournals } from "./use-shelf-mate-journals";
 
-afterEach(() => cleanup());
-
-function mount(options: {
-  journalName: string;
-  journals: Record<string, JournalConfig>;
-  shelves: Record<string, ShelfConfig>;
-}) {
-  const container = new Container();
-  const journalsStorage = reactive(options.journals);
-  const shelvesStorage = reactive(options.shelves);
-  const repo = JournalsRepository.fromParts(journalsStorage, createNanoEvents<JournalsEvents>());
-  const shelvesRepo = ShelvesRepository.fromParts(shelvesStorage, createNanoEvents<ShelvesEvents>());
-  container.register(JournalsRepository).useValue(repo);
-  container.register(JournalsViewModel).useValue(JournalsViewModel.fromRepository(repo));
-  container.register(ShelvesRepository).useValue(shelvesRepo);
+async function mount(journalName: string, shelves?: Record<string, ShelfConfig>) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule],
+    ...(shelves && { data: { shelves } }),
+  });
 
   let result: readonly string[] = [];
   const Probe = defineComponent({
     setup() {
-      const list = useShelfMateJournals(options.journalName);
+      const list = useShelfMateJournals(journalName);
       return () => {
         result = list.value;
         return h("div");
@@ -42,47 +26,23 @@ function mount(options: {
     },
   });
 
-  render(Probe, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  harness.render(Probe);
   return () => result;
 }
 
-const journal = (name: string): JournalConfig => journalDefaultsFor({ type: "day" }, name);
-
 describe("useShelfMateJournals", () => {
-  it("returns shelf-mates excluding the current journal", () => {
-    const get = mount({
-      journalName: "daily",
-      journals: { daily: journal("daily"), weekly: journal("weekly"), other: journal("other") },
-      shelves: { home: { name: "home", journals: ["daily", "weekly"], decorations: [] } },
-    });
+  it("returns shelf-mates excluding the current journal", async () => {
+    const get = await mount("daily", { home: buildShelf("home", { journals: ["daily", "weekly"] }) });
     expect(get()).toEqual(["weekly"]);
   });
 
-  it("returns empty when the journal is not in any shelf", () => {
-    const get = mount({
-      journalName: "daily",
-      journals: { daily: journal("daily"), weekly: journal("weekly") },
-      shelves: { home: { name: "home", journals: ["weekly"], decorations: [] } },
-    });
+  it("returns empty when the journal is not in any shelf", async () => {
+    const get = await mount("daily", { home: buildShelf("home", { journals: ["weekly"] }) });
     expect(get()).toEqual([]);
   });
 
-  it("returns empty when no shelves exist", () => {
-    const get = mount({
-      journalName: "daily",
-      journals: { daily: journal("daily") },
-      shelves: {},
-    });
+  it("returns empty when no shelves exist", async () => {
+    const get = await mount("daily");
     expect(get()).toEqual([]);
   });
 });
