@@ -204,9 +204,11 @@ describe("JournalsApiService writes", () => {
 
     const result = await api.ensureNote("daily", "2026-08-18");
 
-    // The index is still empty — the result must come from the write, not a lookup.
     expect(index.entryByAnchor("daily", "2026-08-18" as AnchorString).isNone()).toBe(true);
     expect(result.note.path).toBe("2026-08-18.md");
+    // The index is still empty, and a lookup reports `file: null` for a note it does not know
+    // yet — so a non-null file is what proves the result came from the write. The path cannot
+    // prove it: a lookup renders the same path from the same template on the same miss.
     expect(result.note.file).not.toBeNull();
     expect(result.note.endDate).toBe("2026-08-18");
   });

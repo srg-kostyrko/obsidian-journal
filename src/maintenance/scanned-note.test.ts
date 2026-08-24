@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { NoteMetadataService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
 import { NotePathService } from "@/journals/notes/note-path";
@@ -27,6 +28,12 @@ async function buildResolver(journals: Record<string, JournalConfig>) {
   };
 }
 
+function leaveUnparsed(host: FakeHost, path: string) {
+  const cache = host.app.metadataCache;
+  const parsed = cache.getFileCache.bind(cache);
+  return vi.spyOn(cache, "getFileCache").mockImplementation((file) => (file.path === path ? null : parsed(file)));
+}
+
 describe("ScannedNoteResolver", () => {
   it("ignores a note that claims no journal", async () => {
     const { resolver, host } = await buildResolver({ daily: fixedJournal("daily", { type: "day" }) });
@@ -40,9 +47,12 @@ describe("ScannedNoteResolver", () => {
     host.putFile("Unparsed.md", "", { journal: "daily" });
     // A file landing in the vault and Obsidian having parsed it are two separate moments;
     // only the second one makes its frontmatter readable.
-    vi.spyOn(host.app.metadataCache, "getFileCache").mockReturnValue(null);
+    const cache = leaveUnparsed(host, "Unparsed.md");
 
     expect(resolver.resolve("Unparsed.md" as VaultPath).kind).toBe("unparsed");
+    // A missing file reports "unparsed" too, so the verdict alone proves nothing: the cache
+    // read is what pins this to a note that is present in the vault but not yet parsed.
+    expect(cache).toHaveBeenCalled();
   });
 
   it("skips a note belonging to a custom-interval journal", async () => {
