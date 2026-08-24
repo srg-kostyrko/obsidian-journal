@@ -1,115 +1,46 @@
-import { createNanoEvents } from "nanoevents";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { SuggestService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
-import { LoggerModule } from "@/infrastructure/logger";
-import { AsyncResult, Err, Ok } from "@/infrastructure/result";
 import type { JournalConfig } from "@/journals/config";
-import { CycleService } from "@/journals/cycle";
-import { JournalDateResolver } from "@/journals/flows";
-import { FrontmatterService } from "@/journals/frontmatter";
+import { EnsureJournalEntryFlow, OpenJournalEntryFlow } from "@/journals/flows";
 import { JournalsIndex } from "@/journals/journals-index";
-import { NoteCreationService } from "@/journals/notes/note-creation";
-import { NotePathService } from "@/journals/notes/note-path";
-import { NumberingService } from "@/journals/numbering";
+import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
-import type { JournalsEvents } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
-import { TimelineService } from "@/journals/timeline";
-import { JournalsEventsToken } from "@/journals/tokens";
-import { ShelvesService } from "@/shelves/service";
-import { TemplateEngine } from "@/templates";
+import { VaultSubscriptionService } from "@/journals/vault-subscription";
+import type { ShelfConfig } from "@/shelves/config";
+import { shelvesCoreModule } from "@/shelves/module";
+import { buildShelf } from "@/shelves/testing";
+import { testContainer } from "@/testing";
 
 import { JournalsApiService } from "./journals-api";
+import { apiModule } from "./module";
 
 interface BuildOptions {
-  /** Which shelf each journal sits on. Default: none. */
-  shelfOf?: (name: string) => string;
-  /** What the picker returns when several journals match. null = dismissed. */
-  pick?: string | null;
+  /** Shelves to seed, keyed the same as their own name. Default: none. */
+  shelves?: Record<string, ShelfConfig>;
   /** Leave the index un-ready so whenReady() stays pending. Default true. */
   ready?: boolean;
 }
 
-interface FlowCall {
-  flow: string;
-  parameters: Record<string, unknown>;
+async function buildApi(journals: Record<string, JournalConfig>, options: BuildOptions = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    data: { journals, shelves: options.shelves ?? {} },
+    initialize: options.ready === false ? [] : [VaultSubscriptionService],
+  });
+  const api = harness.resolve(JournalsApiService);
+  const index = harness.resolve(JournalsIndex);
+  const repo = harness.resolve(JournalsRepository);
+  const flows = vi.spyOn(harness.resolve(Flows), "invoke");
+  return { harness, api, index, repo, flows };
 }
-
-function buildApi(journals: Record<string, JournalConfig>, options: BuildOptions = {}) {
-  const pickedNames: string[][] = [];
-  const flowCalls: FlowCall[] = [];
-
-  const c = new Container();
-  c.addModule(LoggerModule);
-  // fakeRepo would build its own emitter; the API subscribes through the DI token, so both
-  // sides have to share one.
-  const journalEvents = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(journals, journalEvents);
-  c.register(JournalsRepository).useValue(repo);
-  c.register(JournalsEventsToken).useValue(journalEvents);
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(TimelineService).useClass(TimelineService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  c.register(TemplateEngine).useClass(TemplateEngine);
-  c.register(NotePathService).useClass(NotePathService);
-  c.register(ShelvesService).useValue({ shelfOf: options.shelfOf ?? (() => "") } as never);
-  c.register(NoteFileService).useValue({ resolve: (path: string) => ({ path }) } as never);
-  c.register(WorkspaceService).useValue({} as never);
-  c.register(SuggestService).useValue({
-    open: (_definition: unknown, names: string[]) => {
-      pickedNames.push([...names]);
-      return Promise.resolve(options.pick == null ? new Err(new Error("dismissed")) : new Ok(options.pick));
-    },
-  } as never);
-  c.register(JournalDateResolver).useClass(JournalDateResolver);
-  c.register(NoteCreationService).useValue({} as never);
-
-  const index = c.resolve(JournalsIndex);
-  if (options.ready !== false) index.markReady();
-
-  // Stands in for Flows. It deliberately does NOT register the new entry: a real write
-  // returns as soon as the note is on disk, and JournalsIndex only learns about it once
-  // Obsidian re-parses the frontmatter. Idempotent for an entry that already exists,
-  // matching NoteCreationService.ensureNote.
-  c.register(Flows).useValue({
-    invoke: (cls: { name: string }, parameters: Record<string, unknown>) => {
-      flowCalls.push({ flow: cls.name, parameters });
-      const name = String(parameters.journalName);
-      const anchor = String(parameters.anchor) as AnchorString;
-      const existing = index.entryByAnchor(name, anchor);
-      if (existing.isSome()) return AsyncResult.ok({ path: existing.value.path, created: false });
-      return AsyncResult.ok({ path: `${name}/${anchor}.md` as VaultPath, created: true });
-    },
-  } as never);
-  c.register(JournalsApiService).useClass(JournalsApiService);
-
-  return { api: c.resolve(JournalsApiService), index, repo, pickedNames, flowCalls };
-}
-
-const ISO_WEEK = { dow: 1, doy: 4 };
 
 describe("JournalsApiService reads", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar(ISO_WEEK));
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
   it("lists every journal when the selector is omitted", async () => {
-    const { api } = buildApi({
+    const { api } = await buildApi({
       daily: fixedJournal("daily", { type: "day" }),
       weekly: fixedJournal("weekly", { type: "week" }),
     });
@@ -120,7 +51,7 @@ describe("JournalsApiService reads", () => {
   });
 
   it("does not wait for the index to be ready", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) }, { ready: false });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) }, { ready: false });
 
     const listed = await api.listJournals();
 
@@ -128,13 +59,13 @@ describe("JournalsApiService reads", () => {
   });
 
   it("ANDs the selector fields", async () => {
-    const { api } = buildApi(
+    const { api } = await buildApi(
       {
         workDaily: fixedJournal("workDaily", { type: "day" }),
         homeDaily: fixedJournal("homeDaily", { type: "day" }),
         workWeekly: fixedJournal("workWeekly", { type: "week" }),
       },
-      { shelfOf: (name) => (name.startsWith("work") ? "Work" : "") },
+      { shelves: { Work: buildShelf("Work", { journals: ["workDaily", "workWeekly"] }) } },
     );
 
     const listed = await api.listJournals({ writeType: "day", shelf: "Work" });
@@ -143,9 +74,9 @@ describe("JournalsApiService reads", () => {
   });
 
   it("selects off-shelf journals with a null shelf", async () => {
-    const { api } = buildApi(
+    const { api } = await buildApi(
       { onShelf: fixedJournal("onShelf", { type: "day" }), loose: fixedJournal("loose", { type: "day" }) },
-      { shelfOf: (name) => (name === "onShelf" ? "Work" : "") },
+      { shelves: { Work: buildShelf("Work", { journals: ["onShelf"] }) } },
     );
 
     const listed = await api.listJournals({ shelf: null });
@@ -154,13 +85,13 @@ describe("JournalsApiService reads", () => {
   });
 
   it("returns null from journalInfo for an unknown journal", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     expect(await api.journalInfo("nope")).toBeNull();
   });
 
   it("reports a period with no note as file null and a predicted path", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     const [note] = await api.notesFor("daily", "2026-08-18");
 
@@ -172,7 +103,7 @@ describe("JournalsApiService reads", () => {
   });
 
   it("gives a weekly note its first day as date and its representative as displayDate", async () => {
-    const { api } = buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+    const { api } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
 
     const [note] = await api.notesFor("weekly", "2026-01-01");
 
@@ -182,7 +113,8 @@ describe("JournalsApiService reads", () => {
   });
 
   it("reports the note's real path when one exists, not the rendered one", async () => {
-    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    harness.host.putFile("Somewhere/Else/renamed.md", "existing");
     index.register({
       journalName: "daily",
       anchor: "2026-08-18" as AnchorString,
@@ -196,7 +128,7 @@ describe("JournalsApiService reads", () => {
   });
 
   it("fans out across every matching journal", async () => {
-    const { api } = buildApi({
+    const { api } = await buildApi({
       a: fixedJournal("a", { type: "day" }),
       b: fixedJournal("b", { type: "day" }),
     });
@@ -207,7 +139,7 @@ describe("JournalsApiService reads", () => {
   });
 
   it("gives a null path for a date outside the timeline with no note", async () => {
-    const { api } = buildApi({
+    const { api } = await buildApi({
       past: fixedJournal(
         "past",
         { type: "day" },
@@ -227,13 +159,13 @@ describe("JournalsApiService reads", () => {
   });
 
   it("rejects a date it cannot read with invalid-date", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     await expect(api.notesFor("daily", "whenever")).rejects.toMatchObject({ code: "invalid-date" });
   });
 
   it("resolves journalOf from the file it was handed", async () => {
-    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
     index.register({
       journalName: "daily",
       anchor: "2026-08-18" as AnchorString,
@@ -249,57 +181,50 @@ describe("JournalsApiService reads", () => {
   });
 
   it("returns null from journalOf for a note that is not connected", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     expect(await api.journalOf({ path: "Random/note.md" })).toBeNull();
   });
 });
 
 describe("JournalsApiService writes", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar(ISO_WEEK));
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
   it("creates the note through the ensure flow and reports created", async () => {
-    const { api, flowCalls } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     const result = await api.ensureNote("daily", "2026-08-18");
 
     expect(result.created).toBe(true);
     expect(result.note.journal).toBe("daily");
     expect(result.note.file).not.toBeNull();
-    expect(flowCalls.at(-1)?.flow).toBe("EnsureJournalEntryFlow");
+    expect(flows).toHaveBeenLastCalledWith(EnsureJournalEntryFlow, expect.anything(), expect.anything());
   });
 
   it("returns the created note before the index has caught up", async () => {
-    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     const result = await api.ensureNote("daily", "2026-08-18");
 
     // The index is still empty — the result must come from the write, not a lookup.
     expect(index.entryByAnchor("daily", "2026-08-18" as AnchorString).isNone()).toBe(true);
-    expect(result.note.path).toBe("daily/2026-08-18.md");
+    expect(result.note.path).toBe("2026-08-18.md");
     expect(result.note.file).not.toBeNull();
     expect(result.note.endDate).toBe("2026-08-18");
   });
 
   it("opens through the open flow, passing the open mode", async () => {
-    const { api, flowCalls } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     await api.openNote("daily", "2026-08-18", { openMode: "split" });
 
-    expect(flowCalls.at(-1)?.flow).toBe("OpenJournalEntryFlow");
-    expect(flowCalls.at(-1)?.parameters).toMatchObject({ openMode: "split" });
+    expect(flows).toHaveBeenLastCalledWith(
+      OpenJournalEntryFlow,
+      expect.objectContaining({ openMode: "split" }),
+      expect.anything(),
+    );
   });
 
   it("rejects with no-matching-journal when the selector matches nothing", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     await expect(api.ensureNote({ writeType: "quarter" }, "2026-08-18")).rejects.toMatchObject({
       code: "no-matching-journal",
@@ -307,13 +232,13 @@ describe("JournalsApiService writes", () => {
   });
 
   it("rejects with journal-not-found for an unknown name", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     await expect(api.ensureNote("nope", "2026-08-18")).rejects.toMatchObject({ code: "journal-not-found" });
   });
 
   it("rejects with outside-timeline when no note exists and the date is out of range", async () => {
-    const { api } = buildApi({
+    const { api } = await buildApi({
       past: fixedJournal(
         "past",
         { type: "day" },
@@ -330,7 +255,7 @@ describe("JournalsApiService writes", () => {
   });
 
   it("still reaches a note that exists outside the timeline", async () => {
-    const { api, index } = buildApi({
+    const { api, index, harness } = await buildApi({
       past: fixedJournal(
         "past",
         { type: "day" },
@@ -342,6 +267,7 @@ describe("JournalsApiService writes", () => {
         },
       ),
     });
+    harness.host.putFile("Past/2026-08-18.md", "existing");
     index.register({
       journalName: "past",
       anchor: "2026-08-18" as AnchorString,
@@ -355,70 +281,74 @@ describe("JournalsApiService writes", () => {
   });
 
   it("shows the picker when several journals match, and uses the choice", async () => {
-    const { api, pickedNames } = buildApi(
-      { a: fixedJournal("a", { type: "day" }), b: fixedJournal("b", { type: "day" }) },
-      { pick: "b" },
-    );
+    const { api, harness } = await buildApi({
+      a: fixedJournal("a", { type: "day" }),
+      b: fixedJournal("b", { type: "day" }),
+    });
 
-    const result = await api.ensureNote({ writeType: "day" }, "2026-08-18");
+    const pending = api.ensureNote({ writeType: "day" }, "2026-08-18");
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(harness.suggests.opens).toHaveLength(1);
+    expect(harness.suggests.lastOpen<string[], string>().input).toEqual(["a", "b"]);
+    harness.suggests.lastOpen<string[], string>().choose("b");
+    const result = await pending;
 
-    expect(pickedNames).toEqual([["a", "b"]]);
     expect(result.note.journal).toBe("b");
   });
 
   it("rejects with aborted when the user dismisses the picker", async () => {
-    const { api } = buildApi(
-      { a: fixedJournal("a", { type: "day" }), b: fixedJournal("b", { type: "day" }) },
-      { pick: null },
-    );
+    const { api, harness } = await buildApi({
+      a: fixedJournal("a", { type: "day" }),
+      b: fixedJournal("b", { type: "day" }),
+    });
 
-    await expect(api.ensureNote({ writeType: "day" }, "2026-08-18")).rejects.toMatchObject({ code: "aborted" });
+    const pending = api.ensureNote({ writeType: "day" }, "2026-08-18");
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    harness.suggests.lastOpen<string[], string>().cancel();
+
+    await expect(pending).rejects.toMatchObject({ code: "aborted" });
   });
 
   it("passes skipConfirmation only when confirm is given", async () => {
-    const { api, flowCalls } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     await api.ensureNote("daily", "2026-08-18", { confirm: false });
-    expect(flowCalls.at(-1)?.parameters).toMatchObject({ skipConfirmation: true });
+    expect(flows.mock.calls.at(-1)?.[1]).toMatchObject({ skipConfirmation: true });
 
     await api.ensureNote("daily", "2026-08-19");
-    expect(flowCalls.at(-1)?.parameters.skipConfirmation).toBeUndefined();
+    expect((flows.mock.calls.at(-1)?.[1] as { skipConfirmation?: boolean }).skipConfirmation).toBeUndefined();
   });
 
   it("shares one flow invocation between concurrent calls for the same period", async () => {
-    const { api, flowCalls } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     const [first, second] = await Promise.all([
       api.ensureNote("daily", "2026-08-18"),
       api.ensureNote("daily", "2026-08-18"),
     ]);
 
-    expect(flowCalls).toHaveLength(1);
+    expect(flows).toHaveBeenCalledTimes(1);
     expect(first.note.path).toBe(second.note.path);
   });
 
   it("does not share invocations across different periods", async () => {
-    const { api, flowCalls } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     await Promise.all([api.ensureNote("daily", "2026-08-18"), api.ensureNote("daily", "2026-08-19")]);
 
-    expect(flowCalls).toHaveLength(2);
+    expect(flows).toHaveBeenCalledTimes(2);
   });
 });
 
 describe("JournalsApiService events", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar(ISO_WEEK));
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
-  it("reports a rename with both names", () => {
-    const { api, repo } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+  it("reports a rename with both names", async () => {
+    const { api, repo } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
     const seen: { from: string; to: string }[] = [];
     api.on("journalRenamed", (event) => {
       seen.push(event);
@@ -429,8 +359,8 @@ describe("JournalsApiService events", () => {
     expect(seen).toEqual([{ from: "daily", to: "journal" }]);
   });
 
-  it("reports an added note by date", () => {
-    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+  it("reports an added note by date", async () => {
+    const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
     const seen: { journal: string; date: string; path: string }[] = [];
     api.on("noteAdded", (event) => {
       seen.push(event);
@@ -445,8 +375,8 @@ describe("JournalsApiService events", () => {
     expect(seen).toEqual([{ journal: "daily", date: "2026-08-18", path: "Journal/2026-08-18.md" }]);
   });
 
-  it("reports a removed note", () => {
-    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+  it("reports a removed note", async () => {
+    const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
     index.register({
       journalName: "daily",
       anchor: "2026-08-18" as AnchorString,
@@ -462,8 +392,8 @@ describe("JournalsApiService events", () => {
     expect(seen).toEqual([{ journal: "daily", date: "2026-08-18" }]);
   });
 
-  it("stops delivering after the disposer runs", () => {
-    const { api, index } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+  it("stops delivering after the disposer runs", async () => {
+    const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
     let calls = 0;
     const off = api.on("noteAdded", () => {
       calls += 1;
@@ -481,18 +411,8 @@ describe("JournalsApiService events", () => {
 });
 
 describe("JournalsApiService unloading", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar(ISO_WEEK));
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
   it("rejects an in-flight call with plugin-unloaded", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) }, { ready: false });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) }, { ready: false });
     const pending = api.notesFor("daily", "2026-08-18");
 
     await api[Symbol.asyncDispose]();
@@ -501,7 +421,7 @@ describe("JournalsApiService unloading", () => {
   });
 
   it("rejects calls made after disposal", async () => {
-    const { api } = buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     await api[Symbol.asyncDispose]();
 

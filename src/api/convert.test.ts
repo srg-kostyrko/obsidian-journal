@@ -1,6 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { installTestCalendar } from "@/calendar/testing";
 import { customJournal, fixedJournal } from "@/journals/testing";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
@@ -11,16 +10,6 @@ function anchorOf(input: Parameters<typeof toCalendarDate>[0]): string | null {
 }
 
 describe("toCalendarDate", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
   it("reads a JS Date in local time, ignoring its clock", () => {
     expect(anchorOf(new Date(2026, 7, 18, 23, 45))).toBe("2026-08-18");
   });
