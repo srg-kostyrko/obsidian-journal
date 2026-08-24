@@ -356,9 +356,9 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     templates: [],
     confirmCreation: false,
     autoCreate: false,
-    decorations: isCustom ? customDecorations : fixedDecorations,
-    navBlock: defaultNavBlocks[write.type],
-    intervalBlock: isCustom ? customIntervalBlock : emptyIntervalBlock,
+    decorations: structuredClone(isCustom ? customDecorations : fixedDecorations),
+    navBlock: structuredClone(defaultNavBlocks[write.type]),
+    intervalBlock: structuredClone(isCustom ? customIntervalBlock : emptyIntervalBlock),
   };
 }
 

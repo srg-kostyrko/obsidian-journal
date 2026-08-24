@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Bug Fixes
+
+- Journals created in the same session no longer share one navigation block, interval block, and set of decorations. Editing the navigation block of one daily journal used to change every daily journal created alongside it in that session, and a journal created after such an edit was born carrying it; restarting Obsidian separated them again, so journals created in different sessions were never affected. A journal already changed this way keeps the settings it ended up with — check the navigation blocks and decorations of journals you created together, and set them back by hand where they are wrong.
+
 ## [3.2.0] - 2026-08-23
 
 ### Features
