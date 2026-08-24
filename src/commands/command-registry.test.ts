@@ -647,21 +647,41 @@ describe("DynamicCommandRegistry shelf targets", () => {
 
   it("updates the shelf name on a shelf-targeted command when its shelf is renamed", async () => {
     const { commandsRepo, shelvesRepo } = await buildRegistry({
-      shelves: { work: buildShelf("work") },
-      commands: { "cmd-1": buildCommand({ target: { kind: "shelf", shelfName: "work", writeType: "day" } }) },
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      shelves: { work: buildShelf("work"), other: buildShelf("other") },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
+        "cmd-2": buildCommand({ target: { kind: "shelf", shelfName: "other", writeType: "day" } }),
+        "cmd-3": buildCommand({ target: { kind: "journal", journalName: "daily" } }),
+      },
     });
     shelvesRepo.rename("work", "office");
     const target = commandsRepo.get("cmd-1").getOr(buildCommand())?.target;
     expect(target).toEqual({ kind: "shelf", shelfName: "office", writeType: "day" });
+    // Non-matching shelf and non-shelf targets are untouched by the cascade.
+    expect(commandsRepo.get("cmd-2").getOr(buildCommand())?.target).toEqual({
+      kind: "shelf",
+      shelfName: "other",
+      writeType: "day",
+    });
+    expect(commandsRepo.get("cmd-3").getOr(buildCommand())?.target).toEqual({ kind: "journal", journalName: "daily" });
   });
 
   it("removes a shelf-targeted command when its shelf is deleted", async () => {
     const { commandsRepo, shelvesRepo } = await buildRegistry({
-      shelves: { work: buildShelf("work") },
-      commands: { "cmd-1": buildCommand({ target: { kind: "shelf", shelfName: "work", writeType: "day" } }) },
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      shelves: { work: buildShelf("work"), other: buildShelf("other") },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
+        "cmd-2": buildCommand({ target: { kind: "shelf", shelfName: "other", writeType: "day" } }),
+        "cmd-3": buildCommand({ target: { kind: "journal", journalName: "daily" } }),
+      },
     });
     shelvesRepo.deleteWith("work");
     expect(commandsRepo.get("cmd-1").isNone()).toBe(true);
+    // Non-matching shelf and non-shelf targets survive the deletion cascade.
+    expect(commandsRepo.get("cmd-2").isSome()).toBe(true);
+    expect(commandsRepo.get("cmd-3").isSome()).toBe(true);
   });
 
   it("keeps a renamed shelf's command operational", async () => {

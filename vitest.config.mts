@@ -71,8 +71,15 @@ export default defineConfig({
         //
         // The commands component step (d8d38490), both module splits and the api step (ed62898c)
         // moved no number.
+        //
+        // Shelf cascade re-seed -> 92.19 / 87.86 / 89.12 / 94.31. The Commands step above lost two
+        // branches because its converted shelf-rename and shelf-delete tests seeded only a command
+        // matching the shelf being renamed or deleted, so the skip arm of the loop in
+        // `#onShelfRenamed` (:265) and `#onShelfDeleted` (:273) was never taken. Both tests now also
+        // seed a non-matching command (a different shelf, and a non-shelf target) and assert it is
+        // left alone, exercising that arm again and restoring the two branches.
         statements: 92.19,
-        branches: 87.82,
+        branches: 87.86,
         functions: 89.12,
         lines: 94.31,
       },
