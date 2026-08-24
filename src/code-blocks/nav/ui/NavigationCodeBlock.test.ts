@@ -1,326 +1,160 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, fireEvent, render, screen } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
+import { fireEvent, screen } from "@testing-library/vue";
+import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import type { AnchorString } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
-import { DecorationEngine, decorationsSlice, DecorationsStore } from "@/decorations";
+import { anchor } from "@/calendar/testing";
+import type { CalendarDecoration, JournalDecoration } from "@/decorations";
+import { decorationsModule } from "@/decorations/module";
+import { decorationsSettingsModule } from "@/decorations/settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale, m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { WorkspaceOpenError, WorkspaceService, type VaultPath } from "@/infrastructure/host";
+import { AsyncResult } from "@/infrastructure/result";
 import {
-  NoteMetadataService,
-  NoteSizeService,
-  NotesService,
-  PluginData,
-  WorkspaceService,
-  type MenuItemSpec,
-  type NotesEvents,
-  type VaultPath,
-  NoticeService,
-  WorkspaceOpenError,
-} from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import {
-  FakeNoteMetadataService,
-  FakeNoteSizeService,
-  FakeNoticeService,
-  FakePluginData,
-} from "@/infrastructure/host/testing";
-import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
-import { RepositoryQuery } from "@/infrastructure/repository";
-import { AsyncResult, Option } from "@/infrastructure/result";
-import {
-  CycleService,
   JournalsIndex,
-  JournalsRepository,
-  FrontmatterService,
-  NotePathService,
-  NumberingService,
   OpenDateFlow,
-  TimelineService,
-  journalDefaultsFor,
   type JournalConfig,
   type JournalEntry,
+  type JournalNavBlock,
   type NavBlockSegment,
 } from "@/journals";
-import { customJournal, fakeRepo } from "@/journals/testing";
-import { SettingsEventsToken, SettingsService, SliceDefinitionToken, type SettingsEvents } from "@/settings";
-import { SnapshotService } from "@/settings/snapshots/snapshot-service";
-import { ShelvesRepository, type ShelfConfig } from "@/shelves";
-import { TemplateEngine } from "@/templates";
+import { journalsCoreModule } from "@/journals/module";
+import { buildNavSegment, customJournal, fixedJournal } from "@/journals/testing";
+import type { ShelfConfig } from "@/shelves";
+import { shelvesCoreModule } from "@/shelves/module";
+import { buildShelf } from "@/shelves/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import NavigationCodeBlock from "./NavigationCodeBlock.vue";
 
-installTestCalendar();
+// Every segment in this suite was authored transparent, predating buildNavSegment's
+// theme-colored default; nothing here asserts on color, so this only keeps the fixtures
+// equal to what they proved before.
+const transparent = { type: "transparent" } as const;
 
-class FakeJournalsIndex {
-  byPath = new Map<string, JournalEntry>();
-  byAnchor = new Map<string, JournalEntry>();
-  nextByAnchor = new Map<string, VaultPath>();
-  prevByAnchor = new Map<string, VaultPath>();
-  events = createNanoEvents();
-
-  entryByPath(path: string) {
-    return Option.fromNullable(this.byPath.get(path));
-  }
-  entryByAnchor(name: string, anchor: string) {
-    return Option.fromNullable(this.byAnchor.get(`${name}::${anchor}`));
-  }
-  pathsAt(names: readonly string[], anchor: string) {
-    const paths: VaultPath[] = [];
-    for (const name of names) {
-      const found = this.entryByAnchor(name, anchor);
-      if (found.isSome()) paths.push(found.value.path);
-    }
-    return paths;
-  }
-  findNext(name: string, anchor: string) {
-    return Option.fromNullable(this.nextByAnchor.get(`${name}::${anchor}`));
-  }
-  findPrevious(name: string, anchor: string) {
-    return Option.fromNullable(this.prevByAnchor.get(`${name}::${anchor}`));
-  }
+interface NavScenario {
+  readonly journals: Record<string, JournalConfig>;
+  readonly shelves?: Record<string, ShelfConfig>;
+  readonly calendarDecorations?: readonly CalendarDecoration[];
+  /** Registered on the live index before mount. Register after mount to exercise a reactivity guard. */
+  readonly entries?: readonly JournalEntry[];
+  /** Notes that must exist in the vault for a real open or file menu to resolve. */
+  readonly notes?: readonly string[];
 }
 
-class FakeWorkspace {
-  openNoteCalls: { path: VaultPath; mode: unknown }[] = [];
-  pathsMenuCalls: { paths: readonly VaultPath[]; extraItems: readonly MenuItemSpec[] }[] = [];
-  previewFirstPathCalls: { paths: readonly VaultPath[] }[] = [];
-  openNote(path: VaultPath, mode?: unknown): AsyncResult<void, WorkspaceOpenError> {
-    this.openNoteCalls.push({ path, mode });
-    return AsyncResult.ok(undefined);
-  }
-  openPathsMenu(paths: readonly VaultPath[], _event?: MouseEvent, extraItems: readonly MenuItemSpec[] = []) {
-    this.pathsMenuCalls.push({ paths, extraItems });
-  }
-  previewFirstPath(paths: readonly VaultPath[]) {
-    this.previewFirstPathCalls.push({ paths });
-  }
-}
-
-class FakeFlows {
-  calls: { flow: unknown; parameters: unknown }[] = [];
-  invoke(flow: unknown, parameters: unknown) {
-    this.calls.push({ flow, parameters });
-    return AsyncResult.ok({ path: "x" as VaultPath, created: false });
-  }
-}
-
-class FakeShelves {
-  shelves: { name: string; journals: string[]; decorations?: ShelfConfig["decorations"] }[] = [];
-  find() {
-    const entries = this.shelves.map((shelf) => [shelf.name, shelf] as [string, (typeof this.shelves)[number]]);
-    return new RepositoryQuery(entries[Symbol.iterator]());
-  }
-  // DecorationsStore reads a shelf's decorations through this, so fixtures that omit the
-  // field (most of them, since this suite predates calendar decorations) default to none.
-  get(name: string) {
-    return Option.fromNullable(this.shelves.find((shelf) => shelf.name === name)).map((shelf) => ({
-      ...shelf,
-      decorations: shelf.decorations ?? [],
-    }));
-  }
-}
-
-interface Harness {
-  container: Container;
-  journalsRepo: JournalsRepository;
-  index: FakeJournalsIndex;
-  workspace: FakeWorkspace;
-  flows: FakeFlows;
-  shelves: FakeShelves;
-  notices: FakeNoticeService;
-  modals: FakeModalService;
-}
-
-function buildHarness(journals: Record<string, JournalConfig>): Harness {
-  const container = new Container();
-  container.addModule(createLoggerTestingModule().module);
-  const journalsRepo = fakeRepo(journals);
-  container.register(JournalsRepository).useValue(journalsRepo);
-  const index = new FakeJournalsIndex();
-  container.register(JournalsIndex).useValue(index as unknown as JournalsIndex);
-  container.register(CycleService).useClass(CycleService);
-  container.register(TimelineService).useClass(TimelineService);
-  container.register(NumberingService).useClass(NumberingService);
-  container.register(FrontmatterService).useClass(FrontmatterService);
-  container.register(NotePathService).useClass(NotePathService);
-  const shelves = new FakeShelves();
-  container.register(ShelvesRepository).useValue(shelves as unknown as ShelvesRepository);
-  const workspace = new FakeWorkspace();
-  container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
-  const modals = new FakeModalService();
-  container.register(ModalService).useValue(modals as unknown as ModalService);
-  const flows = new FakeFlows();
-  const notices = new FakeNoticeService();
-  container.register(NoticeService).useValue(notices);
-  container.register(Flows).useValue(flows as unknown as Flows);
-  container.register(OpenDateFlow).useValue({} as OpenDateFlow);
-  const fakeMetadata = new FakeNoteMetadataService();
-  container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
-  container.register(NoteSizeService).useValue(new FakeNoteSizeService() as unknown as NoteSizeService);
-  container.register(NotesService).useValue({ events: createNanoEvents<NotesEvents>() } as unknown as NotesService);
-  container.register(DecorationEngine).useClass(DecorationEngine);
-  container.register(TemplateEngine).useClass(TemplateEngine);
-  // The segment scope always opts into calendar decorations now, so DecorationsStore's settings
-  // backing must exist even for tests that never save a vault-wide or shelf decoration.
-  container.register(PluginData).useValue(new FakePluginData() as unknown as PluginData);
-  container.register(SnapshotService).useClass(SnapshotService);
-  container.register(SliceDefinitionToken).useValue(decorationsSlice);
-  container.register(SettingsEventsToken).useValue(createNanoEvents<SettingsEvents>());
-  container.register(SettingsService).useClass(SettingsService);
-  container.resolve(SettingsService).getSlice(decorationsSlice).state = { decorations: [] };
-  container.register(DecorationsStore).useClass(DecorationsStore);
-  return { container, journalsRepo, index, workspace, flows, shelves, notices, modals };
-}
-
-function mount(h: Harness, path: string) {
-  return render(NavigationCodeBlock, {
-    props: { path: path as VaultPath, config: {} },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, h.container);
-          },
-        },
-      ],
+async function renderNav(path: string, scenario: NavScenario) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsModule],
+    data: {
+      journals: scenario.journals,
+      shelves: scenario.shelves ?? {},
+      decorations: { decorations: scenario.calendarDecorations ?? [] },
     },
+  });
+  const flows = harness.resolve(Flows);
+  vi.spyOn(flows, "invoke").mockReturnValue({} as never);
+  const index = harness.resolve(JournalsIndex);
+  const entries = scenario.entries ?? [];
+  const notes = scenario.notes ?? [];
+  for (const entry of entries) index.register(entry);
+  for (const note of notes) harness.host.putFile(note);
+  harness.render(NavigationCodeBlock, { props: { path: path as VaultPath, config: {} } });
+  return { harness, flows, index, workspace: harness.resolve(WorkspaceService) };
+}
+
+function journalEntry(journalName: string, anchorDate: string, path: string): JournalEntry {
+  return { journalName, anchor: anchor(anchorDate), path: path as VaultPath };
+}
+
+function cornerDecoration(): JournalDecoration {
+  return buildDecoration({
+    conditions: [buildCondition("date")],
+    styles: [buildStyle("corner", { placement: "top-left" })],
   });
 }
 
-afterEach(() => {
-  cleanup();
-  vi.useRealTimers();
-});
+function dailyWithNavBlock(navBlock: Partial<JournalNavBlock>, overrides: Partial<JournalConfig> = {}): JournalConfig {
+  const base = fixedJournal("daily", { type: "day" }, overrides);
+  return { ...base, navBlock: { ...base.navBlock, ...navBlock } };
+}
+
+function yearlyWithLines(lines: NavBlockSegment[][]): JournalConfig {
+  const base = fixedJournal("yearly", { type: "year" });
+  return { ...base, navBlock: { ...base.navBlock, lines } };
+}
+
+async function renderYearlyNav(
+  lines: NavBlockSegment[][],
+  extra: Record<string, JournalConfig> = {},
+  shelves?: Record<string, ShelfConfig>,
+) {
+  return renderNav("Yearly/2025.md", {
+    journals: { yearly: yearlyWithLines(lines), ...extra },
+    shelves,
+    entries: [journalEntry("yearly", "2025-01-01", "Yearly/2025.md")],
+  });
+}
+
+function renderNavWithSegment(overrides: Partial<NavBlockSegment>) {
+  return renderYearlyNav(
+    [[buildNavSegment({ template: "today", color: transparent, ...overrides })]],
+    { quarterly: fixedJournal("quarterly", { type: "quarter" }) },
+    { main: buildShelf("main", { journals: ["yearly", "quarterly"] }) },
+  );
+}
+
+function registerQuarterlyNote(index: JournalsIndex): void {
+  index.register(journalEntry("quarterly", "2025-04-01", "Quarterly/2025-Q2.md"));
+}
+
+// The real WorkspaceService drives Obsidian's own Menu, so the assertions below read the
+// menu the host actually opened. `openMenus` is empty when a segment contributed neither a
+// path nor an extra item, which is exactly the "no menu at all" outcome.
+function menuItemTitles(): readonly string[] {
+  return __testing.openMenus.at(-1)?.items.map((item) => item.title) ?? [];
+}
+
+// openPathsMenu delegates a lone path to Obsidian's file menu, so the path it resolved shows
+// up as the file the "file-menu" event carried rather than as a menu item title.
+function fileMenuPaths(harness: TestHarness): readonly string[] {
+  return harness.host.workspace.triggerCalls
+    .filter((call) => call.event === "file-menu")
+    .map((call) => (call.arguments_[1] as { path: string }).path);
+}
+
+function hoverPreviewPaths(harness: TestHarness): readonly string[] {
+  return harness.host.workspace.triggerCalls
+    .filter((call) => call.event === "link-hover")
+    .map((call) => String(call.arguments_[2]));
+}
 
 beforeAll(() => initLocale("en"));
 
-function navSegment(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
-  return {
-    template: "today",
-    fontSize: 1,
-    bold: false,
-    italic: false,
-    color: { type: "transparent" },
-    background: { type: "transparent" },
-    link: "none",
-    journal: "",
-    linkDate: "",
-    addDecorations: false,
-    ...overrides,
-  };
-}
+beforeEach(() => {
+  __testing.reset();
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
+});
 
-function mountWithLines(
-  lines: NavBlockSegment[][],
-  extra: Record<string, JournalConfig> = {},
-  configure?: (h: Harness) => void,
-) {
-  const base = journalDefaultsFor({ type: "year" }, "yearly");
-  const yearly: JournalConfig = { ...base, navBlock: { ...base.navBlock, lines } };
-  const h = buildHarness({ yearly, ...extra });
-  const entry = { journalName: "yearly", anchor: "2025-01-01" as AnchorString, path: "Yearly/2025.md" as VaultPath };
-  h.index.byPath.set("Yearly/2025.md", entry);
-  h.index.byAnchor.set("yearly::2025-01-01", entry);
-  configure?.(h);
-  mount(h, "Yearly/2025.md");
-  return h;
-}
-
-function quarterlyWithNote(): Record<string, JournalConfig> {
-  return { quarterly: journalDefaultsFor({ type: "quarter" }, "quarterly") };
-}
-
-// Shelves must be seeded before mount: FakeShelves is plain, non-reactive data, so
-// shelfJournals (a computed) only sees a mutation made ahead of the initial render.
-function renderNavWithSegment(overrides: Partial<NavBlockSegment>) {
-  return mountWithLines([[navSegment(overrides)]], quarterlyWithNote(), (h) => {
-    h.shelves.shelves = [{ name: "main", journals: ["yearly", "quarterly"] }];
-  });
-}
-
-function seedQuarterlyNote(h: Harness): void {
-  h.index.byAnchor.set("quarterly::2025-04-01", {
-    journalName: "quarterly",
-    anchor: "2025-04-01" as AnchorString,
-    path: "Quarterly/2025-Q2.md" as VaultPath,
-  });
-}
-
-function decoratedJournal(base: JournalConfig): JournalConfig {
-  return {
-    ...base,
-    decorations: [
-      buildDecoration({
-        conditions: [buildCondition("date")],
-        styles: [buildStyle("corner", { placement: "top-left" })],
-      }),
-    ],
-  };
-}
-
-function withWholeBlockDecoration(base: JournalConfig): JournalConfig {
-  return {
-    ...base,
-    decorations: [],
-    navBlock: { ...base.navBlock, decorateWholeBlock: true, lines: [[navSegment()]] },
-  };
-}
-
-function withPerRowDecoration(base: JournalConfig): JournalConfig {
-  return {
-    ...base,
-    decorations: [],
-    navBlock: { ...base.navBlock, decorateWholeBlock: false, lines: [[navSegment({ addDecorations: true })]] },
-  };
-}
-
-// Every shipped default's decorated segment is link: "self", so this is the case that must
-// keep reaching same-write-type shelf mates — narrowing it to the host alone would silently
-// change decoration on every existing config with no change to that config (see
-// segment-decoration.ts and CLAUDE.md's "Decorations and nav blocks").
-function withDefaultSelfLinkDecoration(base: JournalConfig): JournalConfig {
-  return {
-    ...base,
-    decorations: [],
-    navBlock: {
-      ...base.navBlock,
-      decorateWholeBlock: false,
-      lines: [[navSegment({ addDecorations: true, link: "self" })]],
-    },
-  };
-}
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("NavigationCodeBlock", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
-  it("renders the not-connected message when the path has no journal entry", () => {
-    const h = buildHarness({});
-    mount(h, "Random/Note.md");
+  it("renders the not-connected message when the path has no journal entry", async () => {
+    await renderNav("Random/Note.md", { journals: {} });
     expect(screen.getByText("Note is not connected to a journal")).toBeTruthy();
   });
 
   it("drops the not-connected message once the index registers the note after mount", async () => {
-    const daily = journalDefaultsFor({ type: "day" }, "daily");
-    const h = buildHarness({ daily });
-    mount(h, "Daily/2026-05-27.md");
+    const { index } = await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+    });
 
-    const entry: JournalEntry = {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    };
-    h.index.byPath.set(entry.path, entry);
-    h.index.events.emit("entryChanged", { entry, kind: "added" });
+    index.register(journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md"));
     await nextTick();
 
     expect(screen.queryByText("Note is not connected to a journal")).toBeNull();
@@ -328,42 +162,28 @@ describe("NavigationCodeBlock", () => {
 });
 
 describe("NavigationCodeBlock columns", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
-  it("leaves the rendered block's segments free of the editor's drag and edit affordance", () => {
-    mountWithLines([[navSegment({ template: "static text" })]]);
+  it("leaves the rendered block's segments free of the editor's drag and edit affordance", async () => {
+    await renderYearlyNav([[buildNavSegment({ template: "static text", color: transparent })]]);
     expect(screen.getAllByText("static text").at(0)?.classList.contains("nav-row--editable")).toBe(false);
   });
 
-  it("renders the current journal date in 'create' mode with prev/next periods from CycleService", () => {
-    const daily = journalDefaultsFor({ type: "day" }, "daily");
-    const h = buildHarness({ daily });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+  it("renders the current journal date in 'create' mode with prev/next periods from CycleService", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const dayNumbers = screen.getAllByText(/^(26|27|28)$/);
     expect(dayNumbers.map((element) => element.textContent).toSorted()).toEqual(["26", "27", "28"]);
   });
 
-  it("renders empty side columns in 'existing' mode when there are no adjacent existing entries", () => {
-    const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
-    daily.navBlock = { ...daily.navBlock, type: "existing" };
-    const h = buildHarness({ daily });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+  it("renders empty side columns in 'existing' mode when there are no adjacent existing entries", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ type: "existing" }) },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     expect(screen.queryByText("26")).toBeNull();
     expect(screen.queryByText("28")).toBeNull();
@@ -372,24 +192,14 @@ describe("NavigationCodeBlock columns", () => {
 });
 
 describe("NavigationCodeBlock segment templates", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
-  it("renders note_name as the connected note's own name, and as the prospective name where no note exists", () => {
-    const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
-    daily.navBlock = { ...daily.navBlock, lines: [[navSegment({ template: "{{note_name}}" })]] };
-    const h = buildHarness({ daily });
-    const entry: JournalEntry = {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/Renamed day.md" as VaultPath,
-    };
-    h.index.byPath.set(entry.path, entry);
-    h.index.byAnchor.set("daily::2026-05-27", entry);
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, entry.path);
+  it("renders note_name as the connected note's own name, and as the prospective name where no note exists", async () => {
+    await renderNav("Daily/Renamed day.md", {
+      journals: {
+        daily: dailyWithNavBlock({ lines: [[buildNavSegment({ template: "{{note_name}}", color: transparent })]] }),
+      },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/Renamed day.md")],
+    });
 
     expect(screen.getByText("Renamed day")).toBeTruthy();
     expect(screen.getByText("2026-05-26")).toBeTruthy();
@@ -398,963 +208,616 @@ describe("NavigationCodeBlock segment templates", () => {
 });
 
 describe("NavigationCodeBlock arrows", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
   it("invokes OpenDateFlow with the previous anchor and existingOnly=false in 'create' mode", async () => {
-    const daily = journalDefaultsFor({ type: "day" }, "daily");
-    const h = buildHarness({ daily });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+    const { flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await user.click(screen.getByRole("button", { name: /previous/i }));
 
-    expect(h.flows.calls).toHaveLength(1);
-    const parameters = h.flows.calls[0]?.parameters as {
-      anchor: string;
-      journalNames: string[];
-      existingOnly?: boolean;
-    };
-    expect(parameters.anchor).toBe("2026-05-26");
-    expect(parameters.journalNames).toEqual(["daily"]);
-    expect(parameters.existingOnly).toBe(false);
+    expect(flows.invoke).toHaveBeenCalledTimes(1);
+    expect(flows.invoke).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ anchor: "2026-05-26", journalNames: ["daily"], existingOnly: false }),
+    );
   });
 
   it("opens the previous entry in a new tab on a middle-click of the arrow", async () => {
-    const daily = journalDefaultsFor({ type: "day" }, "daily");
-    const h = buildHarness({ daily });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+    const { flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const arrow = screen.getByRole("button", { name: /previous/i });
     await fireEvent(arrow, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
 
-    expect(h.flows.calls).toHaveLength(1);
-    const parameters = h.flows.calls[0]?.parameters as { openMode: string };
-    expect(parameters.openMode).toBe("tab");
+    expect(flows.invoke).toHaveBeenCalledTimes(1);
+    expect(flows.invoke).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
   });
 
   it("invokes OpenDateFlow with existingOnly=true in 'existing' mode", async () => {
-    const daily: JournalConfig = { ...journalDefaultsFor({ type: "day" }, "daily") };
-    daily.navBlock = { ...daily.navBlock, type: "existing" };
-    const h = buildHarness({ daily });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+    const { flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ type: "existing" }) },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [
+        journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md"),
+        journalEntry("daily", "2026-05-25", "Daily/2026-05-25.md"),
+      ],
     });
-    h.index.byPath.set("Daily/2026-05-25.md", {
-      journalName: "daily",
-      anchor: "2026-05-25" as AnchorString,
-      path: "Daily/2026-05-25.md" as VaultPath,
-    });
-    h.index.prevByAnchor.set("daily::2026-05-27", "Daily/2026-05-25.md" as VaultPath);
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await user.click(screen.getByRole("button", { name: /previous/i }));
 
-    const parameters = h.flows.calls[0]?.parameters as { existingOnly?: boolean };
-    expect(parameters.existingOnly).toBe(true);
+    expect(flows.invoke).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ existingOnly: true }));
   });
 });
 
-function dailyWithRows(rows: NavBlockSegment[]): JournalConfig {
-  const base = journalDefaultsFor({ type: "day" }, "daily");
-  return { ...base, navBlock: { ...base.navBlock, lines: rows.map((row) => [row]) } };
-}
-
 describe("NavigationCodeBlock segment click routing", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
   it("opens the current entry via WorkspaceService.openNote on a 'self' segment click", async () => {
-    const journal = dailyWithRows([
-      {
-        template: "today",
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        color: { type: "transparent" },
-        background: { type: "transparent" },
-        link: "self",
-        journal: "",
-        linkDate: "",
-        addDecorations: false,
+    const { harness, flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "today", color: transparent, link: "self" })]],
+        }),
       },
-    ]);
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      notes: ["Daily/2026-05-27.md"],
     });
-    h.index.byAnchor.set("daily::2026-05-27", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const target = screen.getAllByText("today")[1];
     if (target) await user.click(target);
-    expect(h.workspace.openNoteCalls.map((c) => c.path)).toEqual(["Daily/2026-05-27.md"]);
-    expect(h.flows.calls).toHaveLength(0);
+    expect(harness.host.workspace.openCalls.map((call) => call.path)).toEqual(["Daily/2026-05-27.md"]);
+    expect(flows.invoke).toHaveBeenCalledTimes(0);
   });
 
   it("opens a segment's note directly once the index registers it", async () => {
     // Rows read the index for their own period, which is registered asynchronously — the
     // neighboring period's note lands after the block has already rendered.
-    const journal = dailyWithRows([navSegment({ template: "{{date}}", link: "self" })]);
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+    const { harness, index } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "{{date}}", color: transparent, link: "self" })]],
+        }),
+      },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      notes: ["Daily/2026-05-27.md", "Daily/2026-05-28.md"],
     });
-    h.index.byAnchor.set("daily::2026-05-27", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
-    const tomorrow: JournalEntry = {
-      journalName: "daily",
-      anchor: "2026-05-28" as AnchorString,
-      path: "Daily/2026-05-28.md" as VaultPath,
-    };
-    h.index.byAnchor.set("daily::2026-05-28", tomorrow);
-    h.index.events.emit("entryChanged", { entry: tomorrow, kind: "added" });
+    index.register(journalEntry("daily", "2026-05-28", "Daily/2026-05-28.md"));
     await nextTick();
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await user.click(screen.getByText("2026-05-28"));
 
-    expect(h.workspace.openNoteCalls.map((c) => c.path)).toEqual(["Daily/2026-05-28.md"]);
+    expect(harness.host.workspace.openCalls.map((call) => call.path)).toEqual(["Daily/2026-05-28.md"]);
   });
 
   it("notifies when the current entry cannot be opened on a 'self' segment click", async () => {
-    const journal = dailyWithRows([
-      {
-        template: "today",
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        color: { type: "transparent" },
-        background: { type: "transparent" },
-        link: "self",
-        journal: "",
-        linkDate: "",
-        addDecorations: false,
+    const { harness, workspace } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "today", color: transparent, link: "self" })]],
+        }),
       },
-    ]);
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.index.byAnchor.set("daily::2026-05-27", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    vi.spyOn(h.workspace, "openNote").mockReturnValue(
+    vi.spyOn(workspace, "openNote").mockReturnValueOnce(
       AsyncResult.err(new WorkspaceOpenError("Daily/2026-05-27.md" as VaultPath, "gone")),
     );
-    mount(h, "Daily/2026-05-27.md");
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const target = screen.getAllByText("today")[1];
     if (target) await user.click(target);
-    await vi.waitFor(() => expect(h.notices.messages).toContain(m.common_note_open_error()));
+    await vi.waitFor(() => expect(harness.notices.messages).toContain(m.common_note_open_error()));
   });
 
   it("opens the current entry in a new tab on a middle-click of a 'self' segment", async () => {
-    const journal = dailyWithRows([
-      {
-        template: "today",
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        color: { type: "transparent" },
-        background: { type: "transparent" },
-        link: "self",
-        journal: "",
-        linkDate: "",
-        addDecorations: false,
+    const { harness } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "today", color: transparent, link: "self" })]],
+        }),
       },
-    ]);
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      notes: ["Daily/2026-05-27.md"],
     });
-    h.index.byAnchor.set("daily::2026-05-27", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent(target, new MouseEvent("auxclick", { bubbles: true, cancelable: true, button: 1 }));
 
-    expect(h.workspace.openNoteCalls).toHaveLength(1);
-    expect(h.workspace.openNoteCalls[0]?.mode).toBe("tab");
+    expect(harness.host.workspace.openCalls).toHaveLength(1);
+    expect(harness.host.workspace.openCalls[0]?.mode).toBe("tab");
   });
 
   it("opens the current entry in a split on a ctrl+alt click of a 'self' segment", async () => {
-    const journal = dailyWithRows([
-      {
-        template: "today",
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        color: { type: "transparent" },
-        background: { type: "transparent" },
-        link: "self",
-        journal: "",
-        linkDate: "",
-        addDecorations: false,
+    const { harness } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "today", color: transparent, link: "self" })]],
+        }),
       },
-    ]);
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      notes: ["Daily/2026-05-27.md"],
     });
-    h.index.byAnchor.set("daily::2026-05-27", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.click(target, { ctrlKey: true, altKey: true });
 
-    expect(h.workspace.openNoteCalls).toHaveLength(1);
-    expect(h.workspace.openNoteCalls[0]?.mode).toBe("split");
+    expect(harness.host.workspace.openCalls).toHaveLength(1);
+    expect(harness.host.workspace.openCalls[0]?.mode).toBe("split");
   });
 
   it("invokes OpenDateFlow with the segment's journal for link 'journal'", async () => {
-    const journal = dailyWithRows([
-      {
-        template: "go",
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        color: { type: "transparent" },
-        background: { type: "transparent" },
-        link: "journal",
-        journal: "weekly",
-        linkDate: "",
-        addDecorations: false,
+    const { flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "go", color: transparent, link: "journal", journal: "weekly" })]],
+        }),
+        weekly: fixedJournal("weekly", { type: "week" }),
       },
-    ]);
-    const h = buildHarness({ daily: journal, weekly: journalDefaultsFor({ type: "week" }, "weekly") });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily", "weekly"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "weekly"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const target = screen.getAllByText("go")[0];
     if (target) await user.click(target);
-    const parameters = h.flows.calls[0]?.parameters as { journalNames: string[] };
-    expect(parameters.journalNames).toEqual(["weekly"]);
+    expect(flows.invoke).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ journalNames: ["weekly"] }));
   });
 
   it("invokes OpenDateFlow with all matching shelf journals for a period kind link", async () => {
-    const journal = dailyWithRows([
-      {
-        template: "wk",
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        color: { type: "transparent" },
-        background: { type: "transparent" },
-        link: "week",
-        journal: "",
-        linkDate: "",
-        addDecorations: false,
+    const { flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "wk", color: transparent, link: "week" })]],
+        }),
+        weekly1: fixedJournal("weekly1", { type: "week" }),
+        weekly2: fixedJournal("weekly2", { type: "week" }),
       },
-    ]);
-    const h = buildHarness({
-      daily: journal,
-      weekly1: journalDefaultsFor({ type: "week" }, "weekly1"),
-      weekly2: journalDefaultsFor({ type: "week" }, "weekly2"),
+      shelves: { main: buildShelf("main", { journals: ["daily", "weekly1", "weekly2"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "weekly1", "weekly2"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const target = screen.getAllByText("wk")[0];
     if (target) await user.click(target);
-    const parameters = h.flows.calls[0]?.parameters as { journalNames: string[] };
-    expect(parameters.journalNames.toSorted()).toEqual(["weekly1", "weekly2"]);
+    expect(flows.invoke).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ journalNames: ["weekly1", "weekly2"] }),
+    );
   });
 
   it("does nothing for a 'none' segment click", async () => {
-    const journal = dailyWithRows([
-      {
-        template: "static",
-        fontSize: 1,
-        bold: false,
-        italic: false,
-        color: { type: "transparent" },
-        background: { type: "transparent" },
-        link: "none",
-        journal: "",
-        linkDate: "",
-        addDecorations: false,
+    const { harness, flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "static", color: transparent })]],
+        }),
       },
-    ]);
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const target = screen.getAllByText("static")[0];
     if (target) await user.click(target);
-    expect(h.workspace.openNoteCalls).toHaveLength(0);
-    expect(h.flows.calls).toHaveLength(0);
+    expect(harness.host.workspace.openCalls).toHaveLength(0);
+    expect(flows.invoke).toHaveBeenCalledTimes(0);
   });
 
   it("invokes OpenDateFlow with the shifted date for a segment carrying a linkDate", async () => {
     // yearly is anchored at 2025-01-01; the segment shows and opens Q2, not the plain Q1.
-    const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
+    const { flows } = await renderNavWithSegment({
+      link: "quarter",
+      linkDate: "+1q",
+      template: "{{date+1q:[Q]Q}}",
+    });
 
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const target = screen.getAllByText("Q2")[1];
     if (target) await user.click(target);
 
-    expect(h.flows.calls).toHaveLength(1);
-    expect(h.flows.calls[0]?.flow).toBe(OpenDateFlow);
-    const parameters = h.flows.calls[0]?.parameters as { anchor: string; journalNames: string[] };
-    expect(parameters.anchor).toBe("2025-04-01");
-    expect(parameters.journalNames).toEqual(["quarterly"]);
+    expect(flows.invoke).toHaveBeenCalledTimes(1);
+    expect(flows.invoke).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ anchor: "2025-04-01", journalNames: ["quarterly"] }),
+    );
   });
 
   it("resolves the shifted date's paths for the context menu", async () => {
-    const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
-    seedQuarterlyNote(h);
+    const { harness, index } = await renderNavWithSegment({
+      link: "quarter",
+      linkDate: "+1q",
+      template: "{{date+1q:[Q]Q}}",
+    });
+    registerQuarterlyNote(index);
+    harness.host.putFile("Quarterly/2025-Q2.md");
 
     const target = screen.getAllByText("Q2")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Quarterly/2025-Q2.md"], extraItems: [] }]);
+    expect(fileMenuPaths(harness)).toEqual(["Quarterly/2025-Q2.md"]);
   });
 
   it("previews the shifted date's note on modifier hover", async () => {
-    const h = renderNavWithSegment({ link: "quarter", linkDate: "+1q", template: "{{date+1q:[Q]Q}}" });
-    seedQuarterlyNote(h);
+    const { harness, index } = await renderNavWithSegment({
+      link: "quarter",
+      linkDate: "+1q",
+      template: "{{date+1q:[Q]Q}}",
+    });
+    registerQuarterlyNote(index);
 
     const target = screen.getAllByText("Q2")[1];
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
 
-    expect(h.workspace.previewFirstPathCalls).toEqual([{ paths: ["Quarterly/2025-Q2.md"] }]);
+    expect(hoverPreviewPaths(harness)).toEqual(["Quarterly/2025-Q2.md"]);
   });
 });
 
 describe("NavigationCodeBlock context menu", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
   it("resolves the single matching path for openPathsMenu", async () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        lines: [
-          [
-            {
-              template: "today",
-              fontSize: 1,
-              bold: false,
-              italic: false,
-              color: { type: "transparent" },
-              background: { type: "transparent" },
-              link: "self",
-              journal: "",
-              linkDate: "",
-              addDecorations: false,
-            },
-          ],
-        ],
+    const { harness } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "today", color: transparent, link: "self" })]],
+        }),
       },
-    };
-    const h = buildHarness({ daily: journal });
-    const entry = {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    };
-    h.index.byPath.set("Daily/2026-05-27.md", entry);
-    h.index.byAnchor.set("daily::2026-05-27", entry);
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      notes: ["Daily/2026-05-27.md"],
+    });
 
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Daily/2026-05-27.md"], extraItems: [] }]);
+    expect(fileMenuPaths(harness)).toEqual(["Daily/2026-05-27.md"]);
   });
 
   it("resolves every matching path for openPathsMenu when there are multiple", async () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        lines: [
-          [
-            {
-              template: "wk",
-              fontSize: 1,
-              bold: false,
-              italic: false,
-              color: { type: "transparent" },
-              background: { type: "transparent" },
-              link: "week",
-              journal: "",
-              linkDate: "",
-              addDecorations: false,
-            },
-          ],
-        ],
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "wk", color: transparent, link: "week" })]],
+        }),
+        weekly1: fixedJournal("weekly1", { type: "week" }),
+        weekly2: fixedJournal("weekly2", { type: "week" }),
       },
-    };
-    const h = buildHarness({
-      daily: journal,
-      weekly1: journalDefaultsFor({ type: "week" }, "weekly1"),
-      weekly2: journalDefaultsFor({ type: "week" }, "weekly2"),
+      shelves: { main: buildShelf("main", { journals: ["daily", "weekly1", "weekly2"] }) },
+      entries: [
+        journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md"),
+        journalEntry("weekly1", "2026-05-27", "Weekly1/W22.md"),
+        journalEntry("weekly2", "2026-05-27", "Weekly2/W22.md"),
+      ],
     });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.index.byAnchor.set("weekly1::2026-05-27", {
-      journalName: "weekly1",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Weekly1/W22.md" as VaultPath,
-    });
-    h.index.byAnchor.set("weekly2::2026-05-27", {
-      journalName: "weekly2",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Weekly2/W22.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "weekly1", "weekly2"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const target = screen.getAllByText("wk")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls).toEqual([{ paths: ["Weekly1/W22.md", "Weekly2/W22.md"], extraItems: [] }]);
+    expect(menuItemTitles()).toEqual(["Weekly1/W22.md", "Weekly2/W22.md"]);
   });
 
   it("contributes the explain item to the context menu of a decorated segment", async () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      decorations: [
-        buildDecoration({
-          conditions: [buildCondition("date")],
-          styles: [buildStyle("corner", { placement: "top-left" })],
-        }),
-      ],
-      navBlock: {
-        ...base.navBlock,
-        lines: [[navSegment({ addDecorations: true })]],
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          { lines: [[buildNavSegment({ template: "today", color: transparent, addDecorations: true })]] },
+          { decorations: [cornerDecoration()] },
+        ),
       },
-    };
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    mount(h, "Daily/2026-05-27.md");
 
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls[0]?.extraItems).toHaveLength(1);
+    expect(menuItemTitles()).toHaveLength(1);
   });
 
   // The per-segment decoration map is scoped to write-type, not to the segment's own addDecorations
   // flag (siblings need it to render their own matches), so the segment itself must filter: a segment
   // that opts out of showing a decoration should not offer to explain one it never renders.
   it("contributes no item to the context menu of a segment that opts out of decorations", async () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      decorations: [
-        buildDecoration({
-          conditions: [buildCondition("date")],
-          styles: [buildStyle("corner", { placement: "top-left" })],
-        }),
-      ],
-      navBlock: {
-        ...base.navBlock,
-        lines: [[navSegment({ addDecorations: false })]],
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          { lines: [[buildNavSegment({ template: "today", color: transparent, addDecorations: false })]] },
+          { decorations: [cornerDecoration()] },
+        ),
       },
-    };
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    mount(h, "Daily/2026-05-27.md");
 
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
+    expect(menuItemTitles()).toEqual([]);
   });
 
   it("contributes no item to the context menu of an undecorated segment", async () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = { ...base, navBlock: { ...base.navBlock, lines: [[navSegment()]] } };
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({ lines: [[buildNavSegment({ template: "today", color: transparent })]] }),
+      },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    mount(h, "Daily/2026-05-27.md");
 
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(h.workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
+    expect(menuItemTitles()).toEqual([]);
   });
 
   it("opens an interval entry from a custom journal's segment", async () => {
-    const base = customJournal("sprint", "week", 2, "2026-05-25");
-    const journal: JournalConfig = {
-      ...base,
-      decorations: [
-        buildDecoration({
-          conditions: [buildCondition("date")],
-          styles: [buildStyle("corner", { placement: "top-left" })],
-        }),
-      ],
-      // "existing" mode avoids CycleService entirely for adjacent-period navigation, which the
-      // fake index in this suite does not support for custom journals — the fixture is not
-      // testing adjacent navigation, only the segment's own context menu.
-      navBlock: {
-        ...base.navBlock,
-        type: "existing",
-        lines: [[navSegment({ template: "sprint", addDecorations: true })]],
+    const sprint = customJournal("sprint", "week", 2, "2026-05-25", { decorations: [cornerDecoration()] });
+    const { harness } = await renderNav("Sprint/2026-05-25.md", {
+      journals: {
+        sprint: {
+          ...sprint,
+          // "existing" mode avoids CycleService entirely for adjacent-period navigation, which no
+          // note in this fixture supports — the fixture is not testing adjacent navigation, only
+          // the segment's own context menu.
+          navBlock: {
+            ...sprint.navBlock,
+            type: "existing",
+            lines: [[buildNavSegment({ template: "sprint", color: transparent, addDecorations: true })]],
+          },
+        },
       },
-    };
-    const h = buildHarness({ sprint: journal });
-    h.index.byPath.set("Sprint/2026-05-25.md", {
-      journalName: "sprint",
-      anchor: "2026-05-25" as AnchorString,
-      path: "Sprint/2026-05-25.md" as VaultPath,
+      entries: [journalEntry("sprint", "2026-05-25", "Sprint/2026-05-25.md")],
     });
-    mount(h, "Sprint/2026-05-25.md");
 
     // With no previous/next existing entries registered, only the current block renders,
     // so its segment is the sole "sprint" match.
     const target = screen.getAllByText("sprint")[0];
     if (target) await fireEvent.contextMenu(target);
 
-    const items = h.workspace.pathsMenuCalls.at(-1)?.extraItems ?? [];
-    items[0]?.onClick();
+    // The declared item shape in env.d.ts carries no `click`, so the cast is how every menu
+    // test in this repo reaches an item's callback (workspace-service.test.ts does the same).
+    (__testing.lastOpenMenu().items[0] as unknown as { click(): void }).click();
 
-    expect(h.modals.lastOpen<{ entry: { kind: string; journalName?: string } }, void>().props.entry).toMatchObject({
-      kind: "interval",
-      journalName: "sprint",
-    });
+    expect(
+      harness.modals.lastOpen<{ entry: { kind: string; journalName?: string } }, void>().props.entry,
+    ).toMatchObject({ kind: "interval", journalName: "sprint" });
   });
 });
 
 describe("NavigationCodeBlock hover preview", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
   it("resolves the target path for previewFirstPath when pointer enters a segment", async () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        lines: [
-          [
-            {
-              template: "today",
-              fontSize: 1,
-              bold: false,
-              italic: false,
-              color: { type: "transparent" },
-              background: { type: "transparent" },
-              link: "self",
-              journal: "",
-              linkDate: "",
-              addDecorations: false,
-            },
-          ],
-        ],
+    const { harness } = await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          lines: [[buildNavSegment({ template: "today", color: transparent, link: "self" })]],
+        }),
       },
-    };
-    const h = buildHarness({ daily: journal });
-    const entry = {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    };
-    h.index.byPath.set("Daily/2026-05-27.md", entry);
-    h.index.byAnchor.set("daily::2026-05-27", entry);
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+    });
 
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.pointerEnter(target, { ctrlKey: true });
 
-    expect(h.workspace.previewFirstPathCalls).toEqual([{ paths: ["Daily/2026-05-27.md"] }]);
+    expect(hoverPreviewPaths(harness)).toEqual(["Daily/2026-05-27.md"]);
   });
 });
 
 describe("NavigationCodeBlock decorations", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-05-27T10:00:00Z"));
-  });
-
-  it("wraps individual segment text with CellDecoration when addDecorations is true", () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        decorateWholeBlock: false,
-        lines: [
-          [
-            {
-              template: "today",
-              fontSize: 1,
-              bold: false,
-              italic: false,
-              color: { type: "transparent" },
-              background: { type: "transparent" },
-              link: "self",
-              journal: "",
-              linkDate: "",
-              addDecorations: true,
-            },
-          ],
-        ],
+  it("wraps individual segment text with CellDecoration when addDecorations is true", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          decorateWholeBlock: false,
+          lines: [[buildNavSegment({ template: "today", color: transparent, link: "self", addDecorations: true })]],
+        }),
       },
-    };
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
     expect(decorations.length).toBe(3);
   });
 
-  it("applies the journal's own decorations when the journal belongs to no shelf", () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      decorations: [
-        buildDecoration({
-          conditions: [buildCondition("date")],
-          styles: [buildStyle("corner", { placement: "top-left" })],
-        }),
-      ],
-      navBlock: {
-        ...base.navBlock,
-        decorateWholeBlock: true,
-        lines: [
-          [
-            {
-              template: "today",
-              fontSize: 1,
-              bold: false,
-              italic: false,
-              color: { type: "transparent" },
-              background: { type: "transparent" },
-              link: "none",
-              journal: "",
-              linkDate: "",
-              addDecorations: false,
-            },
-          ],
-        ],
+  it("applies the journal's own decorations when the journal belongs to no shelf", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          {
+            decorateWholeBlock: true,
+            lines: [[buildNavSegment({ template: "today", color: transparent })]],
+          },
+          { decorations: [cornerDecoration()] },
+        ),
       },
-    };
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    mount(h, "Daily/2026-05-27.md");
 
     expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
   });
 
-  it("excludes a same-type shelf mate's decorations from a whole-block decoration", () => {
-    const daily = withWholeBlockDecoration(journalDefaultsFor({ type: "day" }, "daily"));
-    const other: JournalConfig = {
-      ...journalDefaultsFor({ type: "day" }, "other"),
-      decorations: [
-        buildDecoration({
-          conditions: [buildCondition("date")],
-          styles: [buildStyle("corner", { placement: "top-left" })],
-        }),
-      ],
-    };
-    const h = buildHarness({ daily, other });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+  it("excludes a same-type shelf mate's decorations from a whole-block decoration", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          {
+            decorateWholeBlock: true,
+            lines: [[buildNavSegment({ template: "today", color: transparent })]],
+          },
+          { decorations: [] },
+        ),
+        other: fixedJournal("other", { type: "day" }, { decorations: [cornerDecoration()] }),
+      },
+      shelves: { main: buildShelf("main", { journals: ["daily", "other"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "other"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     expect(document.querySelector(".decoration-corner.top-left")).toBeNull();
   });
 
-  it("includes a same-type shelf mate's decorations in a per-segment decoration", () => {
-    const daily = withPerRowDecoration(journalDefaultsFor({ type: "day" }, "daily"));
-    const other: JournalConfig = {
-      ...journalDefaultsFor({ type: "day" }, "other"),
-      decorations: [
-        buildDecoration({
-          conditions: [buildCondition("date")],
-          styles: [buildStyle("corner", { placement: "top-left" })],
-        }),
-      ],
-    };
-    const h = buildHarness({ daily, other });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "other"] }];
-    mount(h, "Daily/2026-05-27.md");
-
-    expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
-  });
-
-  it("includes a same-type shelf mate's decorations in a default link: self segment", () => {
-    const daily = withDefaultSelfLinkDecoration(journalDefaultsFor({ type: "day" }, "daily"));
-    const workDaily: JournalConfig = {
-      ...journalDefaultsFor({ type: "day" }, "work-daily"),
-      decorations: [
-        buildDecoration({
-          conditions: [buildCondition("date")],
-          styles: [buildStyle("corner", { placement: "top-left" })],
-        }),
-      ],
-    };
-    const h = buildHarness({ daily, "work-daily": workDaily });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
-    });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "work-daily"] }];
-    mount(h, "Daily/2026-05-27.md");
-
-    expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
-  });
-
-  it("excludes a vault-wide date decoration from a custom journal's segment", () => {
-    const base = customJournal("sprint", "week", 2, "2026-05-25");
-    const journal: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        type: "existing",
-        lines: [[navSegment({ template: "sprint", addDecorations: true })]],
+  it("includes a same-type shelf mate's decorations in a per-segment decoration", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          {
+            decorateWholeBlock: false,
+            lines: [[buildNavSegment({ template: "today", color: transparent, addDecorations: true })]],
+          },
+          { decorations: [] },
+        ),
+        other: fixedJournal("other", { type: "day" }, { decorations: [cornerDecoration()] }),
       },
-    };
-    const h = buildHarness({ sprint: journal });
-    h.container.resolve(SettingsService).getSlice(decorationsSlice).state = {
-      decorations: [
+      shelves: { main: buildShelf("main", { journals: ["daily", "other"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+    });
+
+    expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
+  });
+
+  // Every shipped default's decorated segment is link: "self", so this is the case that must
+  // keep reaching same-write-type shelf mates — narrowing it to the host alone would silently
+  // change decoration on every existing config with no change to that config (see
+  // segment-decoration.ts and CLAUDE.md's "Decorations and nav blocks").
+  it("includes a same-type shelf mate's decorations in a default link: self segment", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          {
+            decorateWholeBlock: false,
+            lines: [[buildNavSegment({ template: "today", color: transparent, link: "self", addDecorations: true })]],
+          },
+          { decorations: [] },
+        ),
+        "work-daily": fixedJournal("work-daily", { type: "day" }, { decorations: [cornerDecoration()] }),
+      },
+      shelves: { main: buildShelf("main", { journals: ["daily", "work-daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+    });
+
+    expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
+  });
+
+  it("excludes a vault-wide date decoration from a custom journal's segment", async () => {
+    const sprint = customJournal("sprint", "week", 2, "2026-05-25");
+    await renderNav("Sprint/2026-05-25.md", {
+      journals: {
+        sprint: {
+          ...sprint,
+          navBlock: {
+            ...sprint.navBlock,
+            type: "existing",
+            lines: [[buildNavSegment({ template: "sprint", color: transparent, addDecorations: true })]],
+          },
+        },
+      },
+      calendarDecorations: [
         buildCalendarDecoration({
           conditions: [buildCondition("date")],
           styles: [buildStyle("corner", { placement: "top-left" })],
         }),
       ],
-    };
-    h.index.byPath.set("Sprint/2026-05-25.md", {
-      journalName: "sprint",
-      anchor: "2026-05-25" as AnchorString,
-      path: "Sprint/2026-05-25.md" as VaultPath,
+      entries: [journalEntry("sprint", "2026-05-25", "Sprint/2026-05-25.md")],
     });
-    mount(h, "Sprint/2026-05-25.md");
 
     expect(document.querySelector(".decoration-corner.top-left")).toBeNull();
   });
 
-  it("wraps the entire column with CellDecoration when decorateWholeBlock is true", () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const journal: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        decorateWholeBlock: true,
-        lines: [
-          [
-            {
-              template: "today",
-              fontSize: 1,
-              bold: false,
-              italic: false,
-              color: { type: "transparent" },
-              background: { type: "transparent" },
-              link: "none",
-              journal: "",
-              linkDate: "",
-              addDecorations: false,
-            },
-          ],
-        ],
+  it("wraps the entire column with CellDecoration when decorateWholeBlock is true", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          decorateWholeBlock: true,
+          lines: [[buildNavSegment({ template: "today", color: transparent })]],
+        }),
       },
-    };
-    const h = buildHarness({ daily: journal });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
     expect(decorations.length).toBe(3);
   });
 
-  it("decorates a year-link segment from the year journal, not the host daily journal", () => {
-    const base = journalDefaultsFor({ type: "day" }, "daily");
-    const daily: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        decorateWholeBlock: false,
-        lines: [[navSegment({ template: "{{date:YYYY}}", link: "year", addDecorations: true })]],
+  it("decorates a year-link segment from the year journal, not the host daily journal", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock({
+          decorateWholeBlock: false,
+          lines: [
+            [
+              buildNavSegment({
+                template: "{{date:YYYY}}",
+                color: transparent,
+                link: "year",
+                addDecorations: true,
+              }),
+            ],
+          ],
+        }),
+        yearly: fixedJournal("yearly", { type: "year" }, { decorations: [cornerDecoration()] }),
       },
-    };
-    const yearly = decoratedJournal(journalDefaultsFor({ type: "year" }, "yearly"));
-    const h = buildHarness({ daily, yearly });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily", "yearly"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "yearly"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     expect(document.querySelector(".decoration-corner.top-left")).not.toBeNull();
   });
 
-  it("leaves a year-link segment undecorated when only the host journal has decorations", () => {
-    const base = decoratedJournal(journalDefaultsFor({ type: "day" }, "daily"));
-    const daily: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        decorateWholeBlock: false,
-        lines: [[navSegment({ template: "{{date:YYYY}}", link: "year", addDecorations: true })]],
+  it("leaves a year-link segment undecorated when only the host journal has decorations", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          {
+            decorateWholeBlock: false,
+            lines: [
+              [
+                buildNavSegment({
+                  template: "{{date:YYYY}}",
+                  color: transparent,
+                  link: "year",
+                  addDecorations: true,
+                }),
+              ],
+            ],
+          },
+          { decorations: [cornerDecoration()] },
+        ),
+        yearly: fixedJournal("yearly", { type: "year" }),
       },
-    };
-    const yearly = journalDefaultsFor({ type: "year" }, "yearly");
-    const h = buildHarness({ daily, yearly });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+      shelves: { main: buildShelf("main", { journals: ["daily", "yearly"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    h.shelves.shelves = [{ name: "main", journals: ["daily", "yearly"] }];
-    mount(h, "Daily/2026-05-27.md");
 
     expect(document.querySelector(".decoration-corner.top-left")).toBeNull();
   });
 
-  it("leaves a segment with no resolvable link target undecorated, even though its host period is already decorated", () => {
-    const base = decoratedJournal(journalDefaultsFor({ type: "day" }, "daily"));
-    const daily: JournalConfig = {
-      ...base,
-      navBlock: {
-        ...base.navBlock,
-        decorateWholeBlock: false,
-        lines: [
-          [
-            navSegment({ template: "self", link: "self", addDecorations: true }),
-            navSegment({ template: "orphan", link: "year", addDecorations: true }),
-          ],
-        ],
-      },
-    };
+  it("leaves a segment with no resolvable link target undecorated, even though its host period is already decorated", async () => {
     // No year-type journal exists anywhere, so the second segment's link resolves to nothing.
-    const h = buildHarness({ daily });
-    h.index.byPath.set("Daily/2026-05-27.md", {
-      journalName: "daily",
-      anchor: "2026-05-27" as AnchorString,
-      path: "Daily/2026-05-27.md" as VaultPath,
+    await renderNav("Daily/2026-05-27.md", {
+      journals: {
+        daily: dailyWithNavBlock(
+          {
+            decorateWholeBlock: false,
+            lines: [
+              [
+                buildNavSegment({ template: "self", color: transparent, link: "self", addDecorations: true }),
+                buildNavSegment({ template: "orphan", color: transparent, link: "year", addDecorations: true }),
+              ],
+            ],
+          },
+          { decorations: [cornerDecoration()] },
+        ),
+      },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
-    mount(h, "Daily/2026-05-27.md");
 
     const selfSegment = screen.getAllByText("self")[1];
     expect(selfSegment?.closest("[data-testid=cell-decoration]")).not.toBeNull();
