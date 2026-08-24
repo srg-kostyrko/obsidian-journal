@@ -17,7 +17,7 @@ import { testContainer } from "@/testing";
 
 import DatePickerModal from "./DatePickerModal.vue";
 
-async function renderModal(options: {
+async function resolveModal(options: {
   picking: "day" | "week" | "month" | "quarter" | "year";
   selected?: Period | null;
   bounds?: OpenInterval;
@@ -32,35 +32,35 @@ describe("DatePickerModal", () => {
   describe("initial view", () => {
     it("opens at the month view when picking is day", async () => {
       const selected = DayPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "day", selected });
+      await resolveModal({ picking: "day", selected });
 
       expect(screen.queryAllByTestId("month-cell").length).toBeGreaterThan(0);
     });
 
     it("opens at the week view when picking is week", async () => {
       const selected = WeekPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "week", selected });
+      await resolveModal({ picking: "week", selected });
 
       expect(screen.queryAllByTestId("week-cell").length).toBeGreaterThan(0);
     });
 
     it("opens at the year view when picking is month", async () => {
       const selected = MonthPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "month", selected });
+      await resolveModal({ picking: "month", selected });
 
       expect(screen.queryAllByTestId("year-cell").length).toBeGreaterThan(0);
     });
 
     it("opens at the quarter view when picking is quarter", async () => {
       const selected = QuarterPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "quarter", selected });
+      await resolveModal({ picking: "quarter", selected });
 
       expect(screen.queryAllByTestId("quarter-cell").length).toBeGreaterThan(0);
     });
 
     it("opens at the decade view when picking is year", async () => {
       const selected = YearPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "year", selected });
+      await resolveModal({ picking: "year", selected });
 
       expect(screen.queryAllByTestId("decade-cell").length).toBeGreaterThan(0);
     });
@@ -68,7 +68,7 @@ describe("DatePickerModal", () => {
     it("opens on the bounded period when there is no selection and bounds lie entirely in the past", async () => {
       const end = CalendarDate.today().shift(-2, "y");
       const bounds = OpenInterval.until(end);
-      await renderModal({ picking: "day", selected: null, bounds });
+      await resolveModal({ picking: "day", selected: null, bounds });
 
       expect(screen.getByTestId("modal-title-label").textContent).toBe(end.format("MMMM YYYY"));
     });
@@ -76,7 +76,7 @@ describe("DatePickerModal", () => {
     it("opens on the bounded period when there is no selection and bounds lie entirely in the future", async () => {
       const start = CalendarDate.today().shift(2, "y");
       const bounds = OpenInterval.from(start);
-      await renderModal({ picking: "day", selected: null, bounds });
+      await resolveModal({ picking: "day", selected: null, bounds });
 
       expect(screen.getByTestId("modal-title-label").textContent).toBe(start.format("MMMM YYYY"));
     });
@@ -85,7 +85,7 @@ describe("DatePickerModal", () => {
   describe("target click", () => {
     it("submits the clicked period when in target view", async () => {
       const selected = DayPeriod.containing(date("2025-03-15"));
-      const { submit } = await renderModal({ picking: "day", selected });
+      const { submit } = await resolveModal({ picking: "day", selected });
 
       const cells = screen.getAllByTestId("month-cell");
       const march15 = cells.find((c) => c.dataset.anchor === "2025-03-15")!;
@@ -101,7 +101,7 @@ describe("DatePickerModal", () => {
   describe("descent", () => {
     it("descends from decade to year view for picking=day after a year click", async () => {
       const selected = DayPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "day", selected });
+      await resolveModal({ picking: "day", selected });
 
       // Ascend month → year
       await userEvent.click(screen.getByTestId("modal-title-button"));
@@ -118,7 +118,7 @@ describe("DatePickerModal", () => {
 
     it("descends from year to month view for picking=day after a month click", async () => {
       const selected = DayPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "day", selected });
+      await resolveModal({ picking: "day", selected });
 
       // Ascend month → year
       await userEvent.click(screen.getByTestId("modal-title-button"));
@@ -135,7 +135,7 @@ describe("DatePickerModal", () => {
   describe("drill up", () => {
     it("ascends from month to year on title click", async () => {
       const selected = DayPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "day", selected });
+      await resolveModal({ picking: "day", selected });
 
       await userEvent.click(screen.getByTestId("modal-title-button"));
 
@@ -146,7 +146,7 @@ describe("DatePickerModal", () => {
   describe("navigation", () => {
     it("moves to the previous outer period when prev is clicked", async () => {
       const selected = DayPeriod.containing(date("2025-03-15"));
-      await renderModal({ picking: "day", selected });
+      await resolveModal({ picking: "day", selected });
 
       const titleBefore = screen.getByTestId("modal-title-label").textContent;
       await userEvent.click(screen.getByTestId("modal-prev"));
@@ -159,7 +159,7 @@ describe("DatePickerModal", () => {
       // Bounds start from 2025-03-01, so previous month (Feb 2025) is entirely before bounds
       const selected = DayPeriod.containing(date("2025-03-15"));
       const bounds = OpenInterval.from(date("2025-03-01"));
-      await renderModal({ picking: "day", selected, bounds });
+      await resolveModal({ picking: "day", selected, bounds });
 
       expect(screen.queryByTestId("modal-prev")).toBeNull();
     });

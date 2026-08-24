@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
@@ -10,9 +10,11 @@ import WeekPresetPickerModal from "./WeekPresetPickerModal.vue";
 
 import type { CalendarSliceState } from "../slice";
 
+let localeWeekSpy: MockInstance<Calendar["localeWeek"]> | undefined;
+
 async function resolveModal(current: CalendarSliceState, localeWeek?: { dow: number; doy: number }) {
   const harness = await testContainer();
-  vi.spyOn(harness.resolve(Calendar), "localeWeek").mockReturnValue(localeWeek ?? { dow: 1, doy: 4 });
+  localeWeekSpy = vi.spyOn(harness.resolve(Calendar), "localeWeek").mockReturnValue(localeWeek ?? { dow: 1, doy: 4 });
   return harness.renderModal<typeof WeekPresetPickerModal, CalendarSliceState>(WeekPresetPickerModal, {
     props: { current },
   });
@@ -26,6 +28,10 @@ function rowFor(name: string): HTMLElement {
 }
 
 describe("WeekPresetPickerModal", () => {
+  afterEach(() => {
+    localeWeekSpy?.mockRestore();
+  });
+
   it("submits the ISO 8601 preset when its Use button is clicked then Update is pressed", async () => {
     const { submit } = await resolveModal({ mode: "locale" });
 

@@ -57,6 +57,8 @@ describe("CalendarSettingsBridge", () => {
     let callsAtConstruction = -1;
     await testContainer({
       modules: [calendarSettingsCoreModule],
+      // `overrides` runs before `settings.initialize()`, not just before `autoLoad` — that's
+      // the window this test needs to force construction ahead of initialize.
       overrides: [
         (container) => {
           container.resolve(CalendarSettingsBridge);
