@@ -1,22 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { anchor, installTestCalendar } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService } from "@/infrastructure/host";
+import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
-import { LoggerModule } from "@/infrastructure/logger";
+import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import type { JournalConfig } from "@/journals/config";
-import { CycleService } from "@/journals/cycle";
-import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
-import { NotePathService } from "@/journals/notes/note-path";
-import { NumberingService } from "@/journals/numbering";
+import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
-import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
-import { SettingsService } from "@/settings";
-import { TemplateEngine } from "@/templates";
+import { customJournal, fixedJournal } from "@/journals/testing";
+import { legacyMigrationsModule, pendingNoteMigrationSlice } from "@/settings/legacy";
+import { testContainer } from "@/testing";
 
+import { maintenanceCoreModule } from "./module";
 import { gateCollisions, orphanFindings, pendingOldIdsOf, ScanService } from "./scan-service";
 import { ScannedNoteResolver } from "./scanned-note";
 
@@ -168,59 +163,33 @@ describe("pendingOldIdsOf", () => {
   });
 });
 
-function buildScan(journals: Record<string, JournalConfig>): {
-  service: ScanService;
-  index: JournalsIndex;
-  notes: FakeNotesService;
-  metadata: FakeNoteMetadataService;
-  resolver: ScannedNoteResolver;
-} {
-  const notes = new FakeNotesService();
-  const metadata = new FakeNoteMetadataService();
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(fakeRepo(journals));
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  c.register(TemplateEngine).useClass(TemplateEngine);
-  c.register(NotePathService).useClass(NotePathService);
-  c.register(NotesService).useValue(notes as unknown as NotesService);
-  c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
-  c.register(ScannedNoteResolver).useClass(ScannedNoteResolver);
-  c.register(SettingsService).useValue({ getSlice: () => ({ state: [] }) } as unknown as SettingsService);
-  c.register(ScanService).useClass(ScanService);
+async function buildScan(journals: Record<string, JournalConfig>) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, maintenanceCoreModule, legacyMigrationsModule],
+    // ScanService reads the pending-migration slice, and legacyMigrationsModule is what
+    // registers it — a seed without the key parses as a slice reset rather than an empty list.
+    data: { journals, [pendingNoteMigrationSlice.key]: [] },
+  });
   return {
-    service: c.resolve(ScanService),
-    index: c.resolve(JournalsIndex),
-    notes,
-    metadata,
-    resolver: c.resolve(ScannedNoteResolver),
+    host: harness.host,
+    service: harness.resolve(ScanService),
+    index: harness.resolve(JournalsIndex),
+    repository: harness.resolve(JournalsRepository),
+    resolver: harness.resolve(ScannedNoteResolver),
   };
 }
 
-function seed(
-  notes: FakeNotesService,
-  metadata: FakeNoteMetadataService,
-  path: string,
-  frontmatter: Record<string, unknown>,
-): void {
-  notes.seed(path as VaultPath, "", frontmatter, { size: 100, mtime: 5 });
-  metadata.setMetadata(path as VaultPath, { title: path, tags: [], properties: frontmatter, tasks: [] });
+// A file in the vault that Obsidian has not parsed yet. getFileCache answers null until the
+// metadataCache resolves it, which is what the resolver reads as "unparsed".
+function leaveUnparsed(host: FakeHost, path: string): void {
+  const cache = host.app.metadataCache;
+  const parsed = cache.getFileCache.bind(cache);
+  vi.spyOn(cache, "getFileCache").mockImplementation((file) => (file.path === path ? null : parsed(file)));
 }
 
 describe("ScanService", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    teardown = installTestCalendar({ dow: 1, doy: 4 }).teardown;
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   it("waits for the index before reporting anything", async () => {
-    const { service, index } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    const { service, index } = await buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
     let settled = false;
     const running = service.scan().then((report) => {
       settled = true;
@@ -236,9 +205,10 @@ describe("ScanService", () => {
   });
 
   it("counts notes it could not analyze", async () => {
-    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
-    seed(notes, metadata, "good.md", { journal: "weekly", "journal-date": "2026-01-12" });
-    notes.seed("pending.md" as VaultPath, "", { journal: "weekly" });
+    const { service, index, host } = await buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    host.putFile("good.md", "", { journal: "weekly", "journal-date": "2026-01-12" });
+    host.putFile("pending.md", "", { journal: "weekly" });
+    leaveUnparsed(host, "pending.md");
     index.markReady();
 
     const report = await service.scan();
@@ -249,10 +219,10 @@ describe("ScanService", () => {
   });
 
   it("finds a stranded note and offers a repair", async () => {
-    const { service, index, notes, metadata } = buildScan({
+    const { service, index, host } = await buildScan({
       weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }),
     });
-    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-14" });
+    host.putFile("2026-W03.md", "", { journal: "weekly", "journal-date": "2026-01-14" });
     index.markReady();
 
     const report = await service.scan();
@@ -262,11 +232,11 @@ describe("ScanService", () => {
   });
 
   it("reports a note whose resolution threw without losing the rest of the scan", async () => {
-    const { service, index, notes, metadata, resolver } = buildScan({
+    const { service, index, host, resolver } = await buildScan({
       weekly: fixedJournal("weekly", { type: "week" }),
     });
-    seed(notes, metadata, "good.md", { journal: "weekly", "journal-date": "2026-01-12" });
-    seed(notes, metadata, "bad.md", { journal: "weekly", "journal-date": "2026-01-12" });
+    host.putFile("good.md", "", { journal: "weekly", "journal-date": "2026-01-12" });
+    host.putFile("bad.md", "", { journal: "weekly", "journal-date": "2026-01-12" });
     vi.spyOn(resolver, "resolve").mockImplementationOnce(() => ({ kind: "unreadable", message: "boom" }));
     index.markReady();
 
@@ -277,9 +247,9 @@ describe("ScanService", () => {
   });
 
   it("withdraws two rewrites that would land on the same anchor and reports the collision", async () => {
-    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
-    seed(notes, metadata, "a.md", { journal: "weekly", "journal-date": "2026-01-13" });
-    seed(notes, metadata, "b.md", { journal: "weekly", "journal-date": "2026-01-14" });
+    const { service, index, host } = await buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    host.putFile("a.md", "", { journal: "weekly", "journal-date": "2026-01-13" });
+    host.putFile("b.md", "", { journal: "weekly", "journal-date": "2026-01-14" });
     index.markReady();
 
     const report = await service.scan();
@@ -289,8 +259,8 @@ describe("ScanService", () => {
   });
 
   it("finds a note whose period range collapsed and offers a rewrite at its own anchor", async () => {
-    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
-    seed(notes, metadata, "2026-W03.md", {
+    const { service, index, host } = await buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    host.putFile("2026-W03.md", "", {
       journal: "weekly",
       "journal-date": "2026-01-12",
       "journal-end-date": "2026-01-12",
@@ -305,23 +275,24 @@ describe("ScanService", () => {
   });
 
   it("stops using a stale path inverter after the journal's name template changes between scans", async () => {
-    const weekly = fixedJournal("weekly", { type: "week" }, { nameTemplate: "Nope" });
-    const { service, index, notes, metadata } = buildScan({ weekly });
-    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "not-a-date" });
+    const { service, index, host, repository } = await buildScan({
+      weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "Nope" }),
+    });
+    host.putFile("2026-W03.md", "", { journal: "weekly", "journal-date": "not-a-date" });
     index.markReady();
 
     const first = await service.scan();
     expect(first.findings.at(0)?.repair).toEqual({ kind: "undecidable", reason: "path-not-invertible" });
 
-    weekly.nameTemplate = "{{date:YYYY-[W]ww}}";
+    repository.update("weekly", { nameTemplate: "{{date:YYYY-[W]ww}}" });
     const second = await service.scan();
 
     expect(second.findings.at(0)?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
   });
 
   it("reports a note whose journal no longer exists", async () => {
-    const { service, index, notes, metadata } = buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
-    seed(notes, metadata, "old.md", { journal: "gone", "journal-date": "2026-01-12" });
+    const { service, index, host } = await buildScan({ weekly: fixedJournal("weekly", { type: "week" }) });
+    host.putFile("old.md", "", { journal: "gone", "journal-date": "2026-01-12" });
     index.markReady();
 
     const report = await service.scan();
@@ -331,13 +302,13 @@ describe("ScanService", () => {
   });
 
   it("excludes notes with no journal claim and custom-journal notes from every counter", async () => {
-    const { service, index, notes, metadata } = buildScan({
+    const { service, index, host } = await buildScan({
       weekly: fixedJournal("weekly", { type: "week" }),
       sprint: customJournal("sprint", "day", 14, "2026-01-05"),
     });
-    seed(notes, metadata, "good.md", { journal: "weekly", "journal-date": "2026-01-12" });
-    seed(notes, metadata, "Plain.md", { title: "hello" });
-    seed(notes, metadata, "Sprints/1.md", { journal: "sprint", "journal-date": "2026-01-05" });
+    host.putFile("good.md", "", { journal: "weekly", "journal-date": "2026-01-12" });
+    host.putFile("Plain.md", "", { title: "hello" });
+    host.putFile("Sprints/1.md", "", { journal: "sprint", "journal-date": "2026-01-05" });
     index.markReady();
 
     const report = await service.scan();

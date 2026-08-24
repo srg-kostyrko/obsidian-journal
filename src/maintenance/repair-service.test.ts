@@ -1,75 +1,45 @@
-import { createNanoEvents } from "nanoevents";
-import { describe, expect, it, vi, type Mock } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService } from "@/infrastructure/host";
-import type { NotesEvents, VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
-import { LoggerModule } from "@/infrastructure/logger";
-import { AsyncResult, Err, Ok } from "@/infrastructure/result";
+import type { VaultPath } from "@/infrastructure/host";
+import type { FakeHost } from "@/infrastructure/host/internal/testing";
+import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
-import { FRONTMATTER_NAME_KEY } from "@/journals/config";
-import { JournalNotFoundError } from "@/journals/errors";
+import { FRONTMATTER_NAME_KEY, type JournalConfig } from "@/journals/config";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
+import { journalsCoreModule } from "@/journals/module";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer } from "@/testing";
 
+import { maintenanceCoreModule } from "./module";
 import { RepairService } from "./repair-service";
 
 import type { RepairAction } from "./findings";
 
-function build(): {
-  service: RepairService;
-  index: JournalsIndex;
-  connection: {
-    reanchor: Mock<NoteConnectionService["reanchor"]>;
-    disconnect: Mock<NoteConnectionService["disconnect"]>;
-  };
-  notes: { updateFrontmatter: Mock<NotesService["updateFrontmatter"]> };
-  frontmatter: { clearMutator: Mock<FrontmatterService["clearMutator"]> };
-  emitMetadataChanged: (path: VaultPath) => void;
-  claim: (path: VaultPath, journalName: string | undefined) => void;
-} {
-  const connection = {
-    reanchor: vi.fn<NoteConnectionService["reanchor"]>(() => AsyncResult.ok(undefined)),
-    disconnect: vi.fn<NoteConnectionService["disconnect"]>(() => AsyncResult.ok(undefined)),
-  };
-  const notesEmitter = createNanoEvents<NotesEvents>();
-  const notes = {
-    events: notesEmitter,
-    updateFrontmatter: vi.fn<NotesService["updateFrontmatter"]>(() => AsyncResult.ok(undefined)),
-  };
-  // Defaults to "unknown journal" so every existing strip-claim test (journalName "gone") keeps
-  // exercising the disconnect() fallback unchanged; Fix-8 tests override this per case.
-  const frontmatter = {
-    clearMutator: vi.fn<FrontmatterService["clearMutator"]>(() => new Err(new JournalNotFoundError("gone"))),
-  };
-  const metadata = new FakeNoteMetadataService();
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(NoteConnectionService).useValue(connection as unknown as NoteConnectionService);
-  c.register(NotesService).useValue(notes as unknown as NotesService);
-  c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
-  c.register(FrontmatterService).useValue(frontmatter as unknown as FrontmatterService);
-  c.register(RepairService).useClass(RepairService);
+const WEEKLY = { weekly: fixedJournal("weekly", { type: "week" }) };
+
+async function buildRepairs(journals: Record<string, JournalConfig> = WEEKLY) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, maintenanceCoreModule],
+    data: { journals },
+  });
+  const connection = harness.resolve(NoteConnectionService);
   return {
-    service: c.resolve(RepairService),
-    index: c.resolve(JournalsIndex),
-    connection,
-    notes,
-    frontmatter,
-    emitMetadataChanged: (path) => notesEmitter.emit("metadata-changed", path),
-    claim: (path, journalName) => {
-      metadata.setMetadata(path, {
-        title: path,
-        tags: [],
-        properties: journalName === undefined ? {} : { [FRONTMATTER_NAME_KEY]: journalName },
-        tasks: [],
-      });
-    },
+    host: harness.host,
+    service: harness.resolve(RepairService),
+    index: harness.resolve(JournalsIndex),
+    frontmatter: harness.resolve(FrontmatterService),
+    // Spied through rather than replaced: the default path writes to the fake vault for real,
+    // and only the tests that pin down timing or inject a failure override an implementation.
+    reanchor: vi.spyOn(connection, "reanchor"),
+    disconnect: vi.spyOn(connection, "disconnect"),
   };
+}
+
+function claim(host: FakeHost, path: string, journalName: string | undefined): void {
+  host.putFile(path, "", journalName === undefined ? {} : { [FRONTMATTER_NAME_KEY]: journalName });
 }
 
 function rewrite(path: string, to: string): RepairAction {
@@ -78,9 +48,9 @@ function rewrite(path: string, to: string): RepairAction {
 
 describe("RepairService", () => {
   it("reports a note repaired once it is indexed at the intended anchor", async () => {
-    const { service, index, connection } = build();
-    connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
-      index.register({ journalName, anchor: target.anchor as never, path });
+    const { service, index, reanchor } = await buildRepairs();
+    reanchor.mockImplementation((journalName, path, target) => {
+      index.register({ journalName, anchor: target.anchor, path });
       return AsyncResult.ok(undefined);
     });
 
@@ -92,7 +62,8 @@ describe("RepairService", () => {
 
   it("reports a note that was written but never reached the index", async () => {
     vi.useFakeTimers();
-    const { service } = build();
+    const { service, host } = await buildRepairs();
+    claim(host, "a.md", "weekly");
 
     const running = service.apply([rewrite("a.md", "2026-01-12")]);
     await vi.runAllTimersAsync();
@@ -104,10 +75,10 @@ describe("RepairService", () => {
   });
 
   it("lets a stale-range rewrite reclaim the anchor its own note already occupies", async () => {
-    const { service, index, connection } = build();
+    const { service, index, reanchor } = await buildRepairs();
     index.register({ journalName: "weekly", anchor: anchor("2026-01-12"), path: "a.md" as VaultPath });
-    connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
-      index.register({ journalName, anchor: target.anchor as never, path });
+    reanchor.mockImplementation((journalName, path, target) => {
+      index.register({ journalName, anchor: target.anchor, path });
       return AsyncResult.ok(undefined);
     });
 
@@ -115,88 +86,85 @@ describe("RepairService", () => {
 
     expectOk(result);
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
-    expect(connection.reanchor).toHaveBeenCalledTimes(1);
+    expect(reanchor).toHaveBeenCalledTimes(1);
   });
 
   it("refuses a second write onto an anchor this run already claimed", async () => {
-    const { service, connection } = build();
+    vi.useFakeTimers();
+    const { service, host, reanchor } = await buildRepairs();
+    claim(host, "a.md", "weekly");
+    claim(host, "b.md", "weekly");
 
-    const result = await service.apply([rewrite("a.md", "2026-01-12"), rewrite("b.md", "2026-01-12")]);
+    const running = service.apply([rewrite("a.md", "2026-01-12"), rewrite("b.md", "2026-01-12")]);
+    await vi.runAllTimersAsync();
+    const result = await running;
 
     expectOk(result);
     expect(result.value.at(1)?.outcome).toEqual({ kind: "failed", reason: "contested" });
-    expect(connection.reanchor).toHaveBeenCalledTimes(1);
+    expect(reanchor).toHaveBeenCalledTimes(1);
+    vi.useRealTimers();
   });
 
   it("records a write failure and keeps going", async () => {
-    const { service, connection } = build();
-    connection.reanchor.mockReturnValueOnce(AsyncResult.err(new Error("disk full") as never));
+    vi.useFakeTimers();
+    const { service, host, reanchor } = await buildRepairs();
+    claim(host, "b.md", "weekly");
+    reanchor.mockReturnValueOnce(AsyncResult.err(new Error("disk full") as never));
 
-    const result = await service.apply([rewrite("a.md", "2026-01-12"), rewrite("b.md", "2026-01-19")]);
+    const running = service.apply([rewrite("a.md", "2026-01-12"), rewrite("b.md", "2026-01-19")]);
+    await vi.runAllTimersAsync();
+    const result = await running;
 
     expectOk(result);
     expect(result.value.at(0)?.outcome.kind).toBe("failed");
-    expect(connection.reanchor).toHaveBeenCalledTimes(2);
+    expect(reanchor).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
   });
 
   it("strips a claim through the existing disconnect path", async () => {
-    vi.useFakeTimers();
-    const { service, connection, emitMetadataChanged, claim } = build();
-    claim("old.md" as VaultPath, "gone");
-    connection.disconnect.mockImplementation((path: VaultPath) => {
-      window.setTimeout(() => {
-        claim(path, undefined);
-        emitMetadataChanged(path);
-      }, 0);
-      return AsyncResult.ok(undefined);
-    });
+    const { service, host, disconnect } = await buildRepairs();
+    claim(host, "old.md", "gone");
 
-    const running = service.apply([
+    const result = await service.apply([
       { path: "old.md" as VaultPath, journalName: "gone", repair: { kind: "strip-claim" } },
     ]);
-    await vi.advanceTimersByTimeAsync(0);
-    const result = await running;
 
     expectOk(result);
-    expect(connection.disconnect).toHaveBeenCalledWith("old.md");
+    expect(disconnect).toHaveBeenCalledWith("old.md");
+    expect(host.files.get("old.md")?.frontmatter).toEqual({});
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
-    vi.useRealTimers();
   });
 
   it("strips through the journal's own configured fields when the journal still exists", async () => {
-    vi.useFakeTimers();
-    const { service, connection, notes, frontmatter, emitMetadataChanged, claim } = build();
-    claim("loser.md" as VaultPath, "weekly");
-    const mutator = vi.fn((fm: Record<string, unknown>) => {
-      delete fm["custom-date"];
+    const { service, host, frontmatter, disconnect } = await buildRepairs({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        { frontmatter: { ...WEEKLY.weekly.frontmatter, dateField: "custom-date" } },
+      ),
     });
-    frontmatter.clearMutator.mockReturnValueOnce(new Ok(mutator));
-    notes.updateFrontmatter.mockImplementation((path: VaultPath) => {
-      window.setTimeout(() => {
-        claim(path, undefined);
-        emitMetadataChanged(path);
-      }, 0);
-      return AsyncResult.ok(undefined);
-    });
+    const clearMutator = vi.spyOn(frontmatter, "clearMutator");
+    host.putFile("loser.md", "", { [FRONTMATTER_NAME_KEY]: "weekly", "custom-date": "2026-01-12", keep: "me" });
 
-    const running = service.apply([
+    const result = await service.apply([
       { path: "loser.md" as VaultPath, journalName: "weekly", repair: { kind: "strip-claim" } },
     ]);
-    await vi.advanceTimersByTimeAsync(0);
-    const result = await running;
 
     expectOk(result);
-    expect(frontmatter.clearMutator).toHaveBeenCalledWith("weekly");
-    expect(notes.updateFrontmatter).toHaveBeenCalledWith("loser.md", mutator);
-    expect(connection.disconnect).not.toHaveBeenCalled();
+    expect(clearMutator).toHaveBeenCalledWith("weekly");
+    // The journal's configured date field, not the default "journal-date", is what has to go.
+    expect(host.files.get("loser.md")?.frontmatter).toEqual({ keep: "me" });
+    expect(disconnect).not.toHaveBeenCalled();
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
-    vi.useRealTimers();
   });
 
   it("does not settle a strip until the stripped note's metadata has actually changed", async () => {
     vi.useFakeTimers();
-    const { service, emitMetadataChanged, claim } = build();
-    claim("old.md" as VaultPath, "gone");
+    const { service, host, disconnect } = await buildRepairs();
+    claim(host, "old.md", "gone");
+    // A write that reported success while the claim is still readable — metadataCache lags the
+    // vault, so "the write returned" and "the note stopped claiming the journal" are two moments.
+    disconnect.mockReturnValue(AsyncResult.ok(undefined));
 
     let settled = false;
     const running = service
@@ -211,8 +179,8 @@ describe("RepairService", () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(settled).toBe(false);
 
-    claim("old.md" as VaultPath, undefined);
-    emitMetadataChanged("old.md" as VaultPath);
+    claim(host, "old.md", undefined);
+    host.emitMetadata("old.md");
     await running;
 
     expect(settled).toBe(true);
@@ -221,8 +189,9 @@ describe("RepairService", () => {
 
   it("reports a strip failed when the claim is still in place after the wait", async () => {
     vi.useFakeTimers();
-    const { service, claim } = build();
-    claim("old.md" as VaultPath, "gone");
+    const { service, host, disconnect } = await buildRepairs();
+    claim(host, "old.md", "gone");
+    disconnect.mockReturnValue(AsyncResult.ok(undefined));
 
     const running = service.apply([
       { path: "old.md" as VaultPath, journalName: "gone", repair: { kind: "strip-claim" } },
@@ -237,8 +206,8 @@ describe("RepairService", () => {
 
   it("settles a strip whose metadata already dropped the claim before the listener attached", async () => {
     vi.useFakeTimers();
-    const { service, claim } = build();
-    claim("old.md" as VaultPath, undefined);
+    const { service, host } = await buildRepairs();
+    claim(host, "old.md", undefined);
 
     let settled = false;
     const running = service
@@ -258,7 +227,7 @@ describe("RepairService", () => {
   });
 
   it("does nothing for an undecidable action", async () => {
-    const { service, connection } = build();
+    const { service, reanchor } = await buildRepairs();
 
     await service.apply([
       {
@@ -268,14 +237,14 @@ describe("RepairService", () => {
       },
     ]);
 
-    expect(connection.reanchor).not.toHaveBeenCalled();
+    expect(reanchor).not.toHaveBeenCalled();
   });
 
   it("verifies each entry against its own intent when the same path appears twice in a batch", async () => {
     vi.useFakeTimers();
-    const { service, index, connection } = build();
-    connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
-      index.register({ journalName, anchor: target.anchor as never, path });
+    const { service, index, reanchor } = await buildRepairs();
+    reanchor.mockImplementation((journalName, path, target) => {
+      index.register({ journalName, anchor: target.anchor, path });
       return AsyncResult.ok(undefined);
     });
 
@@ -291,10 +260,10 @@ describe("RepairService", () => {
 
   it("resolves through the entryChanged event without waiting out the settle timeout", async () => {
     vi.useFakeTimers();
-    const { service, index, connection } = build();
-    connection.reanchor.mockImplementation((journalName: string, path: VaultPath, target: { anchor: string }) => {
+    const { service, index, reanchor } = await buildRepairs();
+    reanchor.mockImplementation((journalName, path, target) => {
       window.setTimeout(() => {
-        index.register({ journalName, anchor: target.anchor as never, path });
+        index.register({ journalName, anchor: target.anchor, path });
       }, 0);
       return AsyncResult.ok(undefined);
     });

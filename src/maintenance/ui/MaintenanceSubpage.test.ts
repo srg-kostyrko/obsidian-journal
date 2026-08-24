@@ -1,28 +1,28 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor, within } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor, within } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { localMoment } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
-import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { NoticeService, PluginDataIOError } from "@/infrastructure/host";
+import { PluginDataIOError } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { JournalsIndex } from "@/journals/journals-index";
+import { journalsCoreModule } from "@/journals/module";
 import { CURRENT_VERSION } from "@/settings";
-import { createSettingsService } from "@/settings/testing";
+import { legacyMigrationsModule, pendingNoteMigrationSlice } from "@/settings/legacy";
+import { testContainer, type TestHarness } from "@/testing";
 
+import { maintenanceCoreModule } from "../module";
 import { RepairService } from "../repair-service";
 import { ScanService } from "../scan-service";
+import { maintenanceUiModule } from "../ui-module";
 
 import MaintenanceSubpage from "./MaintenanceSubpage.vue";
 
 import type { RepairAction, ScanReport } from "../findings";
 import type { RepairLogEntry } from "../repair-service";
-
-afterEach(() => cleanup());
 
 function flushPromises(): Promise<void> {
   return new Promise((resolve) => window.setTimeout(resolve, 0));
@@ -30,61 +30,37 @@ function flushPromises(): Promise<void> {
 
 const EMPTY_REPORT: ScanReport = { findings: [], analyzed: 0, unreadable: [], unparsed: 0, pendingMigration: false };
 
-function fakeScanService(scan: () => Promise<ScanReport>): ScanService {
-  return { scan } as unknown as ScanService;
-}
-
-function fakeRepairService(
-  apply: (actions: readonly RepairAction[]) => AsyncResult<RepairLogEntry[], never>,
-): RepairService {
-  return { apply } as unknown as RepairService;
-}
-
-// A ready-by-default index: the maintenance page's own "still indexing" state is exercised at
-// the JournalsIndex level (journals-index.test.ts); these fixtures only need scans to settle
-// promptly so they aren't about proving that behavior.
-function readyIndex(): JournalsIndex {
-  const index = new JournalsIndex();
-  index.markReady();
-  return index;
-}
-
 interface StubOptions {
+  files?: Record<string, string>;
   scan?: ScanReport;
   scanFn?: () => Promise<ScanReport>;
   apply?: (actions: readonly RepairAction[]) => AsyncResult<RepairLogEntry[], never>;
 }
 
-function registerStubs(container: Container, stubs: StubOptions, notices: FakeNoticeService): void {
-  container.register(NoticeService).useValue(notices);
-  container.register(JournalsIndex).useValue(readyIndex());
-  container
-    .register(ScanService)
-    .useValue(fakeScanService(stubs.scanFn ?? (() => Promise.resolve(stubs.scan ?? EMPTY_REPORT))));
-  container.register(RepairService).useValue(fakeRepairService(stubs.apply ?? (() => AsyncResult.ok([]))));
-}
-
-async function setup(files: Record<string, string> = {}, stubs: StubOptions = {}) {
-  const { service: settings, data, container } = createSettingsService({ raw: { version: CURRENT_VERSION } });
-  await settings.initialize();
-  for (const [name, contents] of Object.entries(files)) data.files.set(name, contents);
-  const notices = new FakeNoticeService();
-  registerStubs(container, stubs, notices);
-  return { container, settings, data, notices };
+async function setup(stubs: StubOptions = {}): Promise<TestHarness> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, maintenanceCoreModule, maintenanceUiModule, legacyMigrationsModule],
+    data: { journals: {}, [pendingNoteMigrationSlice.key]: [] },
+  });
+  const files = Object.entries(stubs.files ?? {});
+  for (const [name, contents] of files) harness.data.files.set(name, contents);
+  // A ready-by-default index: the maintenance page's own "still indexing" state is exercised at
+  // the JournalsIndex level (journals-index.test.ts); these fixtures only need scans to settle
+  // promptly so they aren't about proving that behavior.
+  harness.resolve(JournalsIndex).markReady();
+  vi.spyOn(harness.resolve(ScanService), "scan").mockImplementation(
+    stubs.scanFn ?? (() => Promise.resolve(stubs.scan ?? EMPTY_REPORT)),
+  );
+  vi.spyOn(harness.resolve(RepairService), "apply").mockImplementation(stubs.apply ?? (() => AsyncResult.ok([])));
+  return harness;
 }
 
 function makeNav() {
   return { back: vi.fn(), push: vi.fn(), replace: vi.fn() };
 }
 
-function mount(container: Container, nav = makeNav()) {
-  return {
-    ...render(MaintenanceSubpage, {
-      props: { nav },
-      global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-    }),
-    nav,
-  };
+function mount(harness: TestHarness, nav = makeNav()) {
+  return { ...harness.render(MaintenanceSubpage, { props: { nav } }), nav };
 }
 
 function row(label: string): HTMLElement {
@@ -98,11 +74,9 @@ function row(label: string): HTMLElement {
 // component test naturally wants, without pulling in a second test-rendering library. Also
 // hands back the raw DOM root for tests that need to target one row among several identical
 // ones (e.g. two "Keep this one" buttons that read the same but belong to different findings).
-function mountSubpage(stubs: StubOptions = {}) {
-  const { container } = createSettingsService({ raw: { version: CURRENT_VERSION } });
-  registerStubs(container, stubs, new FakeNoticeService());
-
-  const { container: root } = mount(container);
+async function mountSubpage(stubs: StubOptions = {}) {
+  const harness = await setup(stubs);
+  const { container: root } = mount(harness);
 
   const wrapper = {
     text: () => root.textContent ?? "",
@@ -118,36 +92,36 @@ function mountSubpage(stubs: StubOptions = {}) {
 
 describe("MaintenanceSubpage", () => {
   it("lists a snapshot with the version it was taken before", async () => {
-    const { container } = await setup({ "backup-v3-2026-08-16T10-20-30.json": '{"version":3}' });
+    const harness = await setup({ files: { "backup-v3-2026-08-16T10-20-30.json": '{"version":3}' } });
 
-    mount(container);
+    mount(harness);
 
     expect(await screen.findByText(m.maintenance_snapshot_row({ version: 3 }))).toBeTruthy();
   });
 
   it("says so when there are no snapshots", async () => {
-    const { container } = await setup();
+    const harness = await setup();
 
-    mount(container);
+    mount(harness);
 
     expect(await screen.findByText(m.maintenance_snapshots_empty())).toBeTruthy();
   });
 
   it("shows a distinct error state, not the empty state, when snapshots cannot be listed", async () => {
-    const { container, data } = await setup();
-    vi.spyOn(data, "listFiles").mockReturnValueOnce(
+    const harness = await setup();
+    vi.spyOn(harness.data, "listFiles").mockReturnValueOnce(
       AsyncResult.err(new PluginDataIOError("list", new Error("permission denied"))),
     );
 
-    mount(container);
+    mount(harness);
 
     expect(await screen.findByText(m.maintenance_snapshots_load_failed())).toBeTruthy();
     expect(screen.queryByText(m.maintenance_snapshots_empty())).toBeNull();
   });
 
   it("calls nav.back when the back breadcrumb is clicked", async () => {
-    const { container } = await setup();
-    const { nav } = mount(container);
+    const harness = await setup();
+    const { nav } = mount(harness);
 
     await userEvent.click(screen.getByRole("button", { name: m.common_label_back() }));
 
@@ -155,59 +129,61 @@ describe("MaintenanceSubpage", () => {
   });
 
   it("restores settings and shows a notice when Restore is clicked", async () => {
-    const { container, notices } = await setup({
-      "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }),
+    const harness = await setup({
+      files: { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
     });
-    mount(container);
+    mount(harness);
     await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
 
     await userEvent.click(
       within(row("2026-08-16T10:20:30Z")).getByRole("button", { name: m.maintenance_snapshot_restore() }),
     );
 
-    expect(notices.messages).toContain(m.maintenance_snapshot_restored({ takenAt: "2026-08-16T10:20:30Z" }));
+    expect(harness.notices.messages).toContain(m.maintenance_snapshot_restored({ takenAt: "2026-08-16T10:20:30Z" }));
   });
 
   it("shows a failure notice when the snapshot cannot be read", async () => {
-    const { container, notices } = await setup({ "backup-v3-2026-08-16T10-20-30.json": "not json" });
-    mount(container);
+    const harness = await setup({ files: { "backup-v3-2026-08-16T10-20-30.json": "not json" } });
+    mount(harness);
     await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
 
     await userEvent.click(
       within(row("2026-08-16T10:20:30Z")).getByRole("button", { name: m.maintenance_snapshot_restore() }),
     );
 
-    expect(notices.messages).toContain(m.maintenance_snapshot_failed());
+    expect(harness.notices.messages).toContain(m.maintenance_snapshot_failed());
   });
 
   it("shows a failure notice when the snapshot reads fine but cannot be applied", async () => {
-    const { container, data, notices } = await setup({
-      "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }),
+    const harness = await setup({
+      files: { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
     });
-    vi.spyOn(data, "save").mockReturnValueOnce(AsyncResult.err(new PluginDataIOError("save", new Error("disk full"))));
-    mount(container);
+    vi.spyOn(harness.data, "save").mockReturnValueOnce(
+      AsyncResult.err(new PluginDataIOError("save", new Error("disk full"))),
+    );
+    mount(harness);
     await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
 
     await userEvent.click(
       within(row("2026-08-16T10:20:30Z")).getByRole("button", { name: m.maintenance_snapshot_restore() }),
     );
 
-    expect(notices.messages).toContain(m.maintenance_snapshot_failed());
+    expect(harness.notices.messages).toContain(m.maintenance_snapshot_failed());
   });
 
   it("disables the Restore button while a restore is in flight", async () => {
-    const { container, data } = await setup({
-      "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }),
+    const harness = await setup({
+      files: { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
     });
     const { promise: gate, resolve: releaseRead } = Promise.withResolvers<void>();
-    const content = data.files.get("backup-v3-2026-08-16T10-20-30.json") ?? "";
-    vi.spyOn(data, "readFile").mockReturnValueOnce(
+    const content = harness.data.files.get("backup-v3-2026-08-16T10-20-30.json") ?? "";
+    vi.spyOn(harness.data, "readFile").mockReturnValueOnce(
       AsyncResult.fromPromise(
         gate.then(() => content),
         () => new PluginDataIOError("read-file", new Error("unused")),
       ),
     );
-    mount(container);
+    mount(harness);
     await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
 
     const restoreButton = within(row("2026-08-16T10:20:30Z")).getByRole<HTMLButtonElement>("button", {
@@ -243,11 +219,11 @@ describe("MaintenanceSubpage", () => {
       .mockResolvedValueOnce(staleReport)
       .mockResolvedValueOnce(EMPTY_REPORT);
 
-    const { container } = await setup(
-      { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
-      { scanFn: scan },
-    );
-    mount(container);
+    const harness = await setup({
+      files: { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
+      scanFn: scan,
+    });
+    mount(harness);
     await screen.findByText(m.maintenance_check_group_stale({ journal: "weekly" }));
     expect(scan).toHaveBeenCalledTimes(1);
 
@@ -263,7 +239,7 @@ describe("MaintenanceSubpage", () => {
   });
 
   it("shows the completeness line even when nothing is wrong", async () => {
-    const { wrapper } = mountSubpage({
+    const { wrapper } = await mountSubpage({
       scan: { findings: [], analyzed: 12, unreadable: [], unparsed: 0, pendingMigration: false },
     });
     await flushPromises();
@@ -273,7 +249,7 @@ describe("MaintenanceSubpage", () => {
   });
 
   it("offers no fix for a finding it cannot decide", async () => {
-    const { wrapper } = mountSubpage({
+    const { wrapper } = await mountSubpage({
       scan: {
         findings: [
           {
@@ -298,7 +274,7 @@ describe("MaintenanceSubpage", () => {
 
   it("applies only rewrites when fixing everything safe", async () => {
     const apply = vi.fn(() => AsyncResult.ok([]));
-    const { wrapper } = mountSubpage({
+    const { wrapper } = await mountSubpage({
       apply,
       scan: {
         findings: [
@@ -337,7 +313,7 @@ describe("MaintenanceSubpage", () => {
 
   it("keeps two independent duplicate collisions in the same journal as separate groups", async () => {
     const apply = vi.fn(() => AsyncResult.ok([]));
-    const { wrapper, dom } = mountSubpage({
+    const { wrapper, dom } = await mountSubpage({
       apply,
       scan: {
         findings: [
@@ -400,7 +376,7 @@ describe("MaintenanceSubpage", () => {
   });
 
   it("explains why a rewrite withdrawn by the collision gate has no Fix button", async () => {
-    const { wrapper } = mountSubpage({
+    const { wrapper } = await mountSubpage({
       scan: {
         findings: [
           {
@@ -425,7 +401,7 @@ describe("MaintenanceSubpage", () => {
 
   it("formats a duplicate's mtime instead of showing the raw epoch", async () => {
     const mtime = Date.UTC(2026, 5, 15, 8, 30);
-    const { wrapper } = mountSubpage({
+    const { wrapper } = await mountSubpage({
       scan: {
         findings: [
           {
@@ -449,7 +425,7 @@ describe("MaintenanceSubpage", () => {
   });
 
   it("disables fix everything safe when the scan could not read every note", async () => {
-    const { dom } = mountSubpage({
+    const { dom } = await mountSubpage({
       scan: {
         findings: [
           {
@@ -475,7 +451,7 @@ describe("MaintenanceSubpage", () => {
   });
 
   it("disables every fix action while the legacy note migration is pending", async () => {
-    const { dom } = mountSubpage({
+    const { dom } = await mountSubpage({
       scan: {
         findings: [
           {

@@ -1,95 +1,62 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { anchor, installTestCalendar } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService } from "@/infrastructure/host";
+import { anchor } from "@/calendar/testing";
+import { NoteMetadataService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
-import { LoggerModule } from "@/infrastructure/logger";
 import type { JournalConfig } from "@/journals/config";
-import { CycleService } from "@/journals/cycle";
-import { FrontmatterService } from "@/journals/frontmatter";
-import { JournalsIndex } from "@/journals/journals-index";
+import { journalsCoreModule } from "@/journals/module";
 import { NotePathService } from "@/journals/notes/note-path";
-import { NumberingService } from "@/journals/numbering";
-import { JournalsRepository } from "@/journals/repository";
-import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
-import { TemplateEngine } from "@/templates";
+import { customJournal, fixedJournal } from "@/journals/testing";
+import { testContainer } from "@/testing";
 
+import { maintenanceCoreModule } from "./module";
 import { ScannedNoteResolver } from "./scanned-note";
 
-function build(journals: Record<string, JournalConfig>): {
-  resolver: ScannedNoteResolver;
-  notes: FakeNotesService;
-  metadata: FakeNoteMetadataService;
-  notePath: NotePathService;
-} {
-  const notes = new FakeNotesService();
-  const metadata = new FakeNoteMetadataService();
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.register(JournalsRepository).useValue(fakeRepo(journals));
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(NumberingService).useClass(NumberingService);
-  c.register(FrontmatterService).useClass(FrontmatterService);
-  c.register(TemplateEngine).useClass(TemplateEngine);
-  c.register(NotePathService).useClass(NotePathService);
-  c.register(NotesService).useValue(notes as unknown as NotesService);
-  c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
-  c.register(ScannedNoteResolver).useClass(ScannedNoteResolver);
-  const resolver = c.resolve(ScannedNoteResolver);
-  // Same container-scoped instance the resolver injected — resolving it again after
-  // the resolver returns the cached singleton, not a fresh one.
-  const notePath = c.resolve(NotePathService);
-  return { resolver, notes, metadata, notePath };
-}
-
-function seed(
-  notes: FakeNotesService,
-  metadata: FakeNoteMetadataService,
-  path: string,
-  frontmatter: Record<string, unknown>,
-): void {
-  notes.seed(path as VaultPath, "", frontmatter, { size: 100, mtime: 5 });
-  metadata.setMetadata(path as VaultPath, { title: path, tags: [], properties: frontmatter, tasks: [] });
+async function buildResolver(journals: Record<string, JournalConfig>) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, maintenanceCoreModule],
+    data: { journals },
+  });
+  return {
+    host: harness.host,
+    resolver: harness.resolve(ScannedNoteResolver),
+    metadata: harness.resolve(NoteMetadataService),
+    // Same container-scoped instance the resolver injected — resolving it again after
+    // the resolver returns the cached singleton, not a fresh one.
+    notePath: harness.resolve(NotePathService),
+  };
 }
 
 describe("ScannedNoteResolver", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    teardown = installTestCalendar({ dow: 1, doy: 4 }).teardown;
-  });
-  afterEach(() => {
-    teardown();
-  });
-
-  it("ignores a note that claims no journal", () => {
-    const { resolver, notes, metadata } = build({ daily: fixedJournal("daily", { type: "day" }) });
-    seed(notes, metadata, "Plain.md", { title: "hello" });
+  it("ignores a note that claims no journal", async () => {
+    const { resolver, host } = await buildResolver({ daily: fixedJournal("daily", { type: "day" }) });
+    host.putFile("Plain.md", "", { title: "hello" });
 
     expect(resolver.resolve("Plain.md" as VaultPath).kind).toBe("not-a-claim");
   });
 
-  it("reports a note whose metadata has not been parsed yet", () => {
-    const { resolver, notes } = build({ daily: fixedJournal("daily", { type: "day" }) });
-    notes.seed("Unparsed.md" as VaultPath, "", { journal: "daily" });
+  it("reports a note whose metadata has not been parsed yet", async () => {
+    const { resolver, host } = await buildResolver({ daily: fixedJournal("daily", { type: "day" }) });
+    host.putFile("Unparsed.md", "", { journal: "daily" });
+    // A file landing in the vault and Obsidian having parsed it are two separate moments;
+    // only the second one makes its frontmatter readable.
+    vi.spyOn(host.app.metadataCache, "getFileCache").mockReturnValue(null);
 
     expect(resolver.resolve("Unparsed.md" as VaultPath).kind).toBe("unparsed");
   });
 
-  it("skips a note belonging to a custom-interval journal", () => {
-    const { resolver, notes, metadata } = build({
+  it("skips a note belonging to a custom-interval journal", async () => {
+    const { resolver, host } = await buildResolver({
       sprint: customJournal("sprint", "day", 14, "2026-01-05"),
     });
-    seed(notes, metadata, "Sprints/1.md", { journal: "sprint", "journal-date": "2026-01-05" });
+    host.putFile("Sprints/1.md", "", { journal: "sprint", "journal-date": "2026-01-05" });
 
     expect(resolver.resolve("Sprints/1.md" as VaultPath).kind).toBe("custom");
   });
 
-  it("resolves a healthy note without inverting its path", () => {
-    const { resolver, notes, metadata } = build({ weekly: fixedJournal("weekly", { type: "week" }) });
-    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-12" });
+  it("resolves a healthy note without inverting its path", async () => {
+    const { resolver, host } = await buildResolver({ weekly: fixedJournal("weekly", { type: "week" }) });
+    host.putFile("2026-W03.md", "", { journal: "weekly", "journal-date": "2026-01-12" });
 
     const outcome = resolver.resolve("2026-W03.md" as VaultPath);
 
@@ -100,11 +67,11 @@ describe("ScannedNoteResolver", () => {
     expect(outcome.note.pathAnchor).toBeUndefined();
   });
 
-  it("inverts the path of a note whose stored date is not the period's anchor", () => {
-    const { resolver, notes, metadata } = build({
+  it("inverts the path of a note whose stored date is not the period's anchor", async () => {
+    const { resolver, host } = await buildResolver({
       weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }),
     });
-    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-14" });
+    host.putFile("2026-W03.md", "", { journal: "weekly", "journal-date": "2026-01-14" });
 
     const outcome = resolver.resolve("2026-W03.md" as VaultPath);
 
@@ -115,11 +82,11 @@ describe("ScannedNoteResolver", () => {
     expect(outcome.note.pathAnchor).toBe(anchor("2026-01-12"));
   });
 
-  it("inverts the path of a note whose date field holds no readable date", () => {
-    const { resolver, notes, metadata } = build({
+  it("inverts the path of a note whose date field holds no readable date", async () => {
+    const { resolver, host } = await buildResolver({
       weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }),
     });
-    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "[[2026-01-12]]" });
+    host.putFile("2026-W03.md", "", { journal: "weekly", "journal-date": "[[2026-01-12]]" });
 
     const outcome = resolver.resolve("2026-W03.md" as VaultPath);
 
@@ -129,9 +96,9 @@ describe("ScannedNoteResolver", () => {
     expect(outcome.note.pathAnchor).toBe(anchor("2026-01-12"));
   });
 
-  it("marks a note claiming a journal that no longer exists", () => {
-    const { resolver, notes, metadata } = build({ weekly: fixedJournal("weekly", { type: "week" }) });
-    seed(notes, metadata, "Old.md", { journal: "gone", "journal-date": "2026-01-12" });
+  it("marks a note claiming a journal that no longer exists", async () => {
+    const { resolver, host } = await buildResolver({ weekly: fixedJournal("weekly", { type: "week" }) });
+    host.putFile("Old.md", "", { journal: "gone", "journal-date": "2026-01-12" });
 
     const outcome = resolver.resolve("Old.md" as VaultPath);
 
@@ -141,14 +108,14 @@ describe("ScannedNoteResolver", () => {
     expect(outcome.note.claimedJournal).toBe("gone");
   });
 
-  it("prepares a journal's path inverter only once across multiple stranded notes", () => {
-    const { resolver, notes, metadata, notePath } = build({
+  it("prepares a journal's path inverter only once across multiple stranded notes", async () => {
+    const { resolver, host, notePath } = await buildResolver({
       weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }),
     });
     // Both notes must be suspect — a healthy note never calls inverterFor at all,
     // so it would not exercise the cache either way.
-    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-14" });
-    seed(notes, metadata, "2026-W04.md", { journal: "weekly", "journal-date": "2026-01-21" });
+    host.putFile("2026-W03.md", "", { journal: "weekly", "journal-date": "2026-01-14" });
+    host.putFile("2026-W04.md", "", { journal: "weekly", "journal-date": "2026-01-21" });
     const inverterForSpy = vi.spyOn(notePath, "inverterFor");
 
     const first = resolver.resolve("2026-W03.md" as VaultPath);
@@ -164,9 +131,9 @@ describe("ScannedNoteResolver", () => {
     expect(inverterForSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("reports a note as unreadable when a collaborator throws", () => {
-    const { resolver, notes, metadata } = build({ weekly: fixedJournal("weekly", { type: "week" }) });
-    seed(notes, metadata, "2026-W03.md", { journal: "weekly", "journal-date": "2026-01-12" });
+  it("reports a note as unreadable when a collaborator throws", async () => {
+    const { resolver, host, metadata } = await buildResolver({ weekly: fixedJournal("weekly", { type: "week" }) });
+    host.putFile("2026-W03.md", "", { journal: "weekly", "journal-date": "2026-01-12" });
     vi.spyOn(metadata, "get").mockImplementationOnce(() => {
       throw new Error("boom");
     });
