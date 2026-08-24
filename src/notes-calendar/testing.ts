@@ -39,6 +39,8 @@ import { fakeShelvesRepo } from "@/shelves/testing";
 
 import { ActiveEntryViewModel, type ActiveEntryRef } from "./active-entry";
 
+// `src/views/view-leaf.test.ts` still constructs this directly; the views sweep removes that
+// caller. `use-notes-cell.test.ts` also constructs it, unrelated to the harness builder below, and stays.
 export class FakeActiveEntryViewModel implements Pick<ActiveEntryViewModel, "active"> {
   readonly active: ShallowRef<ActiveEntryRef | null> = shallowRef(null);
 
@@ -56,6 +58,8 @@ export interface NotesCalendarHarness {
   readonly active: FakeActiveEntryViewModel;
 }
 
+// Only remaining caller is `src/views/use-follow-active-note.test.ts`; the views sweep removes
+// it when that file converts onto testContainer.
 export function buildNotesCalendarHarness(options: {
   journals?: Record<string, JournalConfig>;
   shelves?: Record<string, ShelfConfig>;
