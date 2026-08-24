@@ -28,7 +28,9 @@ jobs:
       - run: npm run compile:i18n
       - run: npm run check:i18n
       - run: npm run check:types
-      - run: npm test
+      # `coverage` runs the same suite as `npm test` and adds the floor from vitest.config.mts.
+      # Running both would pay for the suite twice to get one signal.
+      - run: npm run coverage
       - run: npm run check:lint
       # The published API types are generated from src/api/public-api.ts and committed,
       # so any change to the public surface shows up as a diff in the PR that caused it.

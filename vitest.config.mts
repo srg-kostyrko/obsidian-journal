@@ -27,7 +27,23 @@ export default defineConfig({
         "**/*.testing.ts",
         "**/*.test.ts",
         "**/*.bench.ts",
+        // DI wiring. `docs/unit-testing-strategy.md` forbids testing it, so counting it measured
+        // lines nobody was permitted to act on — and every module split added a fresh 0% file
+        // that dragged the floor down for reasons unrelated to test quality.
+        "src/**/module.ts",
+        "src/**/ui-module.ts",
       ],
+      // A floor to catch silent deletion during the test-conversion campaign, not a target to
+      // chase. Set at the measured value: a PR that lowers coverage edits these numbers in the
+      // same diff, where a reviewer sees it. Deliberately not `thresholds.autoUpdate` — an
+      // earlier gate in this campaign was deleted because the cheapest route past a failure was
+      // regenerating its baseline, which trains reviewers to dismiss it.
+      thresholds: {
+        statements: 92.25,
+        branches: 87.86,
+        functions: 89.1,
+        lines: 94.38,
+      },
     },
     projects: [
       {
