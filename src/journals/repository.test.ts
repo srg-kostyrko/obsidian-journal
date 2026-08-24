@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { testContainer } from "@/testing";
 
-import { journalConfigCollection, type NavBlockSegment } from "./config";
+import { journalConfigCollection, type JournalConfig, type NavBlockSegment } from "./config";
 import {
   InvalidJournalNameError,
   InvalidJournalUpdateError,
@@ -28,22 +28,28 @@ const addedRow: NavBlockSegment = {
   addDecorations: false,
 };
 
+async function buildRepo(initial: Record<string, JournalConfig> = {}) {
+  const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: initial } });
+  return {
+    repo: harness.resolve(JournalsRepository),
+    storage: harness.settings.recordOf(journalConfigCollection),
+    events: harness.resolve(JournalsEventsToken),
+  };
+}
+
 describe("JournalsRepository", () => {
   describe("create", () => {
     it("inserts a journal with defaults for the given write", async () => {
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo, storage } = await buildRepo();
 
       const result = repo.create("daily", { type: "day" });
 
       expect(result.kind).toBe("ok");
-      expect(harness.settings.recordOf(journalConfigCollection).daily).toEqual(fixedJournal("daily", { type: "day" }));
+      expect(storage.daily).toEqual(fixedJournal("daily", { type: "day" }));
     });
 
     it("emits created with the journal name", async () => {
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
-      const repo = harness.resolve(JournalsRepository);
-      const events = harness.resolve(JournalsEventsToken);
+      const { repo, events } = await buildRepo();
       const spy = vi.fn();
       events.on("created", spy);
 
@@ -53,8 +59,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an empty name with InvalidJournalNameError", async () => {
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo();
 
       const result = repo.create("", { type: "day" });
 
@@ -62,11 +67,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects a name already in use with JournalNameTakenError", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.create("daily", { type: "day" });
 
@@ -76,36 +77,25 @@ describe("JournalsRepository", () => {
 
   describe("rename", () => {
     it("stores the entity under the new key with the updated name field", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const original = fixedJournal("daily", { type: "day" });
+      const { repo, storage } = await buildRepo({ daily: original });
 
       repo.rename("daily", "renamed");
 
-      expect(harness.settings.recordOf(journalConfigCollection).renamed?.name).toBe("renamed");
+      expect(storage.renamed?.name).toBe("renamed");
     });
 
     it("removes the old key on rename", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const original = fixedJournal("daily", { type: "day" });
+      const { repo, storage } = await buildRepo({ daily: original });
 
       repo.rename("daily", "renamed");
 
-      expect(harness.settings.recordOf(journalConfigCollection).daily).toBeUndefined();
+      expect(storage.daily).toBeUndefined();
     });
 
     it("emits renamed with old and new name", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-      const events = harness.resolve(JournalsEventsToken);
+      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const spy = vi.fn();
       events.on("renamed", spy);
 
@@ -115,12 +105,7 @@ describe("JournalsRepository", () => {
     });
 
     it("does not emit created on rename", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-      const events = harness.resolve(JournalsEventsToken);
+      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const created = vi.fn();
       events.on("created", created);
 
@@ -130,12 +115,7 @@ describe("JournalsRepository", () => {
     });
 
     it("does not emit deleted on rename", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-      const events = harness.resolve(JournalsEventsToken);
+      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const deleted = vi.fn();
       events.on("deleted", deleted);
 
@@ -145,11 +125,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an empty new name with InvalidJournalNameError", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.rename("daily", "");
 
@@ -157,11 +133,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects newName equal to oldName with InvalidJournalNameError", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.rename("daily", "daily");
 
@@ -169,8 +141,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an unknown old name with UnknownJournalError", async () => {
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo();
 
       const result = repo.rename("nope", "next");
 
@@ -178,11 +149,10 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects a new name already in use with JournalNameTakenError", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { a: fixedJournal("a", { type: "day" }), b: fixedJournal("b", { type: "day" }) } },
+      const { repo } = await buildRepo({
+        a: fixedJournal("a", { type: "day" }),
+        b: fixedJournal("b", { type: "day" }),
       });
-      const repo = harness.resolve(JournalsRepository);
 
       const result = repo.rename("a", "b");
 
@@ -193,36 +163,26 @@ describe("JournalsRepository", () => {
   describe("clone", () => {
     it("stores a copy of the source config under the new name", async () => {
       const source = fixedJournal("daily", { type: "day" }, { folder: "Daily/", confirmCreation: true });
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: source } } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo, storage } = await buildRepo({ daily: source });
 
       repo.clone("daily", "daily copy");
 
-      expect(harness.settings.recordOf(journalConfigCollection)["daily copy"]).toStrictEqual({
-        ...source,
-        name: "daily copy",
-      });
+      expect(storage["daily copy"]).toStrictEqual({ ...source, name: "daily copy" });
     });
 
     it("leaves the source journal in place", async () => {
       const source = fixedJournal("daily", { type: "day" });
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: source } } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo, storage } = await buildRepo({ daily: source });
 
       repo.clone("daily", "daily copy");
 
-      expect(harness.settings.recordOf(journalConfigCollection).daily).toStrictEqual(source);
+      expect(storage.daily).toStrictEqual(source);
     });
 
     it("detaches nested values so editing the copy leaves the source untouched", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo, storage } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
 
       repo.clone("daily", "daily copy");
-      const storage = harness.settings.recordOf(journalConfigCollection);
       storage["daily copy"]?.navBlock.lines.push([addedRow]);
 
       expect(storage.daily?.navBlock.lines).not.toContainEqual([
@@ -231,11 +191,7 @@ describe("JournalsRepository", () => {
     });
 
     it("returns the stored copy", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.clone("daily", "daily copy");
 
@@ -243,12 +199,7 @@ describe("JournalsRepository", () => {
     });
 
     it("emits cloned with the source and new name", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-      const events = harness.resolve(JournalsEventsToken);
+      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const spy = vi.fn();
       events.on("cloned", spy);
 
@@ -258,12 +209,7 @@ describe("JournalsRepository", () => {
     });
 
     it("emits cloned after created so listeners see the stored copy", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-      const events = harness.resolve(JournalsEventsToken);
+      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const calls: string[] = [];
       events.on("created", () => calls.push("created"));
       events.on("cloned", () => calls.push("cloned"));
@@ -274,11 +220,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an empty new name with InvalidJournalNameError", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.clone("daily", "");
 
@@ -286,8 +228,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an unknown source name with UnknownJournalError", async () => {
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo();
 
       const result = repo.clone("nope", "copy");
 
@@ -295,11 +236,10 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects a new name already in use with JournalNameTakenError", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { a: fixedJournal("a", { type: "day" }), b: fixedJournal("b", { type: "day" }) } },
+      const { repo } = await buildRepo({
+        a: fixedJournal("a", { type: "day" }),
+        b: fixedJournal("b", { type: "day" }),
       });
-      const repo = harness.resolve(JournalsRepository);
 
       const result = repo.clone("a", "b");
 
@@ -308,66 +248,48 @@ describe("JournalsRepository", () => {
 
     it("writes nothing when the new name is taken", async () => {
       const b = fixedJournal("b", { type: "day" });
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { a: fixedJournal("a", { type: "day" }, { folder: "A/" }), b } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo, storage } = await buildRepo({ a: { ...fixedJournal("a", { type: "day" }), folder: "A/" }, b });
 
       repo.clone("a", "b");
 
-      expect(harness.settings.recordOf(journalConfigCollection).b).toStrictEqual(b);
+      expect(storage.b).toStrictEqual(b);
     });
   });
 
   describe("inherited update", () => {
-    it("rejects a name change via update with InvalidJournalUpdateError", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-      const changes = { name: "other" };
+    let harness: Awaited<ReturnType<typeof buildRepo>>;
 
-      const result = repo.update("daily", changes);
+    beforeEach(async () => {
+      harness = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+    });
+
+    it("rejects a name change via update with InvalidJournalUpdateError", () => {
+      const changes: Partial<JournalConfig> = { name: "other" };
+
+      const result = harness.repo.update("daily", changes);
 
       expect(result.isErr() && result.error).toBeInstanceOf(InvalidJournalUpdateError);
     });
 
-    it("accepts updates to non-id fields", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-
-      const result = repo.update("daily", { folder: "Daily/" });
+    it("accepts updates to non-id fields", () => {
+      const result = harness.repo.update("daily", { folder: "Daily/" });
 
       expect(result.kind).toBe("ok");
-      expect(harness.settings.recordOf(journalConfigCollection).daily?.folder).toBe("Daily/");
+      expect(harness.storage.daily?.folder).toBe("Daily/");
     });
   });
 
   describe("inherited delete", () => {
     it("removes the entity", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo, storage } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
 
       repo.delete("daily");
 
-      expect(harness.settings.recordOf(journalConfigCollection).daily).toBeUndefined();
+      expect(storage.daily).toBeUndefined();
     });
 
     it("emits deleted with the journal name", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      const repo = harness.resolve(JournalsRepository);
-      const events = harness.resolve(JournalsEventsToken);
+      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const spy = vi.fn();
       events.on("deleted", spy);
 
@@ -377,8 +299,7 @@ describe("JournalsRepository", () => {
     });
 
     it("returns UnknownJournalError for an unknown name", async () => {
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo();
 
       const result = repo.delete("nope");
 
@@ -389,8 +310,7 @@ describe("JournalsRepository", () => {
   describe("require", () => {
     it("returns Ok with the journal when it exists", async () => {
       const daily = fixedJournal("daily", { type: "day" });
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily } } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo({ daily });
 
       const result = repo.require("daily");
 
@@ -398,8 +318,7 @@ describe("JournalsRepository", () => {
     });
 
     it("returns Err with JournalNotFoundError when the journal is absent", async () => {
-      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
-      const repo = harness.resolve(JournalsRepository);
+      const { repo } = await buildRepo();
 
       const result = repo.require("nope");
 
