@@ -11,7 +11,8 @@ restate it.
 | Document                                                               | Owns                                                                                             |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | [`CONTEXT.md`](CONTEXT.md)                                             | domain vocabulary — periods, journals, shelves, decorations                                      |
-| [`docs/architecture.md`](docs/architecture.md)                         | code layout, DI, `Result`/`Option`, dates and union dispatch, schemas, i18n, testing conventions |
+| [`docs/architecture.md`](docs/architecture.md)                         | code layout, DI, `Result`/`Option`, dates and union dispatch, schemas, i18n, test file locations |
+| [`docs/unit-testing-strategy.md`](docs/unit-testing-strategy.md)       | the unit and component suite — tiers, `testContainer`, fixtures, assertions, lint rules          |
 | [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)         | the e2e layer — runner, fixtures, selectors, execution model                                     |
 | [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces    |
 | [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                     |
@@ -351,26 +352,6 @@ on it.
   domain (`icons.action.edit`, `icons.entity.shelf`), never a bare Lucide
   literal. User-entered icon fields stay free-form strings, and the renderer
   keeps a `(name: string)` signature so it handles both.
-
-### Unit-suite gotchas
-
-- No `simulate*Error` queues in fakes. A test that needs an error path uses
-  `vi.spyOn` with `mockReturnValueOnce`; a baked-in queue adds a parallel state
-  machine — typed buffers, ordering, drain semantics — to every fake.
-- Skip tests whose only assertion is the framework's own contract: `instanceof`
-  on an error subclass that just calls `super()`, Promise thenable behavior, Vue
-  lifecycle, vee-validate, moment locale switching. Ask what application
-  behavior would break the test; if the answer is "only if Vue breaks", delete
-  it.
-- No wrappers around `expect()` chains, and no test-local re-implementations of
-  library factories. A narrowing helper that returns the inner value and prints
-  the actual `Err` earns its place; one that hides a matcher does not.
-- The unit suite runs `isolate: false` in a shared vitest project, so workers
-  reuse one module registry across files. A test that reaches past its own file
-  through a process-global belongs in `*.isolated.test.ts` — `vi.mock`
-  (eslint-enforced) and rewriting moment's global locale are the two known
-  kinds. The resulting flake surfaces as a nondeterministic count in a
-  _different_ file than the polluting one.
 
 ### Performance
 

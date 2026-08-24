@@ -169,34 +169,22 @@ the mistranslations that motivated them.
 ## Testing
 
 Unit tests are colocated as `*.test.ts` beside the implementation they cover.
-Shared test infrastructure lives in a sibling testing/ directory or a
-`testing.ts` file (e.g. `src/journals/testing.ts`), never in a top-level
-mocks/ or fixtures/ folder.
+Vue component tests sit beside their `.vue` file (e.g.
+`src/ui/UiCollapsibleBlock.test.ts`). Shared test infrastructure lives in a
+sibling testing/ directory or a `testing.ts` file (e.g.
+`src/journals/testing.ts`), never in a top-level mocks/ or fixtures/ folder —
+that separation is what keeps test-only code out of the production bundle.
 
-Vue components are tested through `@testing-library/vue` with `user-event`,
-querying by role and text rather than by CSS class or test-only attributes.
+A test that reaches past its own file through a process-global is named
+`*.isolated.test.ts` and runs in its own module registry; see the isolation
+section of the unit testing doc for why.
 
-Assert observable outcomes. Reach for a spy or a call-count assertion only when
-the side effect itself is the contract being tested.
+How to write those tests — tiers, the `testContainer` harness, fixtures,
+assertions, and the lint rules that enforce them — is documented in
+[`docs/unit-testing-strategy.md`](unit-testing-strategy.md).
 
-One behavior per test — a test name with "and" in it is describing two tests.
-Name tests as subject plus verb ("rejects an empty title", not "title
-validation"). Express test scope with nested `describe()` blocks rather than
-dashes, colons, or periods packed into one label.
-
-Use `expectTypeOf` for compile-time type assertions; never `@ts-expect-error`.
-
-Don't test module wiring, barrel shapes, or the fakes/mocks themselves — the
-compiler and the tooling already guarantee those, and a test for a fake tests
-test infrastructure rather than behavior.
-
-`src/testing.ts` is the exception the rule implies rather than contradicts: its guards and options
-have behavior that can fail — a seed silently repaired, a leak undetected, an override applied
-after the service resolved — and a defect there makes every test in the repo lie. Test those; its
-wiring stays untested like any other module's.
-
-The e2e layer — what it covers, how it's structured, and why the mock-based
-unit suite can't reach it — is documented separately in
+The end-to-end layer — what it covers, how it's structured, and why the
+mock-based unit suite can't reach it — is documented in
 [`docs/e2e-testing-strategy.md`](e2e-testing-strategy.md).
 
 ## Further reading
@@ -207,5 +195,7 @@ unit suite can't reach it — is documented separately in
   convention here covers.
 - [`docs/e2e-testing-strategy.md`](e2e-testing-strategy.md) — the end-to-end
   testing layer.
+- [`docs/unit-testing-strategy.md`](unit-testing-strategy.md) — the unit and
+  component testing standard.
 - [`docs/i18n-glossary.md`](i18n-glossary.md) — the internationalization term
   glossary.
