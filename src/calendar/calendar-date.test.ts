@@ -1,23 +1,13 @@
-import { afterEach, beforeEach, describe, expect, expectTypeOf, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { CalendarDate } from "./calendar-date";
-import { anchor, installTestCalendar } from "./testing";
+import { anchor } from "./testing";
 
 import type { AnchorString } from "./types";
 
 describe("CalendarDate", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-
-  afterEach(() => {
-    teardown();
-  });
-
   describe("today", () => {
     it("returns a CalendarDate whose anchor matches the current local date", () => {
       const today = CalendarDate.today();

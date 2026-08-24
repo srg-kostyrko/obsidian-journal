@@ -1,18 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { QuarterPeriod } from "./period-quarter";
-import { date, installTestCalendar } from "./testing";
+import { date } from "./testing";
 
 describe("QuarterPeriod", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("containing", () => {
     it("starts on the first day of the first month of the quarter", () => {
       expect(QuarterPeriod.containing(date("2025-05-15")).start.toAnchor()).toBe("2025-04-01");

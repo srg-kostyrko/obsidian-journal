@@ -1,20 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { OpenInterval } from "./open-interval";
 import { MonthPeriod } from "./period-month";
-import { date, installTestCalendar } from "./testing";
+import { date } from "./testing";
 
 describe("OpenInterval", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("from", () => {
     it("creates an interval with Some start", () => {
       expect(OpenInterval.from(date("2025-03-10")).start.isSome()).toBe(true);

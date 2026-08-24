@@ -1,18 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { YearPeriod } from "./period-year";
-import { date, installTestCalendar } from "./testing";
+import { date } from "./testing";
 
 describe("YearPeriod", () => {
-  let teardown: () => void;
-
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("containing", () => {
     it("starts on January 1", () => {
       expect(YearPeriod.containing(date("2025-05-15")).start.toAnchor()).toBe("2025-01-01");

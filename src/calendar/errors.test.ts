@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { DateTimeError, IntervalError, ParseError } from "./errors";
-import { date, installTestCalendar } from "./testing";
+import { date } from "./testing";
 
 describe("ParseError", () => {
   it("formats the message without a format hint when none is given", () => {
@@ -33,14 +33,6 @@ describe("DateTimeError", () => {
 });
 
 describe("IntervalError", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   it("formats the message with both anchor strings", () => {
     const error = new IntervalError(date("2025-03-15"), date("2025-03-14"));
 

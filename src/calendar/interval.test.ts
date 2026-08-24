@@ -1,19 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { Interval } from "./interval";
-import { date, installTestCalendar } from "./testing";
+import { date } from "./testing";
 
 describe("Interval", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("between", () => {
     it("returns Ok with start preserved when start <= end", () => {
       const result = Interval.between(date("2025-03-10"), date("2025-03-15"));
