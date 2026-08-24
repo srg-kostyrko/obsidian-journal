@@ -111,10 +111,12 @@ function registerQuarterlyNote(index: JournalsIndex): void {
 }
 
 // The real WorkspaceService drives Obsidian's own Menu, so the assertions below read the
-// menu the host actually opened. `openMenus` is empty when a segment contributed neither a
-// path nor an extra item, which is exactly the "no menu at all" outcome.
-function menuItemTitles(): readonly string[] {
-  return __testing.openMenus.at(-1)?.items.map((item) => item.title) ?? [];
+// menu the host actually opened. `undefined` and `[]` are different outcomes and must stay
+// distinguishable: openPathsMenu returns without showing anything when a segment resolved
+// neither a path nor an extra item, whereas a shown menu carrying no items would be a bug a
+// `?? []` fallback would hide.
+function menuItemTitles(): readonly string[] | undefined {
+  return __testing.openMenus.at(-1)?.items.map((item) => item.title);
 }
 
 // openPathsMenu delegates a lone path to Obsidian's file menu, so the path it resolved shows
@@ -308,6 +310,9 @@ describe("NavigationCodeBlock segment click routing", () => {
       },
       shelves: { main: buildShelf("main", { journals: ["daily"] }) },
       entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+      // The note has to exist, or the real WorkspaceService fails on the missing file and the
+      // injected error below stops being what this test proves.
+      notes: ["Daily/2026-05-27.md"],
     });
     vi.spyOn(workspace, "openNote").mockReturnValueOnce(
       AsyncResult.err(new WorkspaceOpenError("Daily/2026-05-27.md" as VaultPath, "gone")),
@@ -447,6 +452,9 @@ describe("NavigationCodeBlock segment click routing", () => {
     if (target) await fireEvent.contextMenu(target);
 
     expect(fileMenuPaths(harness)).toEqual(["Quarterly/2025-Q2.md"]);
+    // Obsidian's own delete entry and nothing ahead of it: extra items are prepended, so this
+    // is the half that proves the segment contributed none.
+    expect(menuItemTitles()).toEqual([m.common_action_delete()]);
   });
 
   it("previews the shifted date's note on modifier hover", async () => {
@@ -481,6 +489,7 @@ describe("NavigationCodeBlock context menu", () => {
     if (target) await fireEvent.contextMenu(target);
 
     expect(fileMenuPaths(harness)).toEqual(["Daily/2026-05-27.md"]);
+    expect(menuItemTitles()).toEqual([m.common_action_delete()]);
   });
 
   it("resolves every matching path for openPathsMenu when there are multiple", async () => {
@@ -503,6 +512,8 @@ describe("NavigationCodeBlock context menu", () => {
     const target = screen.getAllByText("wk")[1];
     if (target) await fireEvent.contextMenu(target);
 
+    // Exactly the paths, in order: an extra item would be prepended, so this asserts both the
+    // resolved paths and that the segment contributed none.
     expect(menuItemTitles()).toEqual(["Weekly1/W22.md", "Weekly2/W22.md"]);
   });
 
@@ -540,7 +551,7 @@ describe("NavigationCodeBlock context menu", () => {
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(menuItemTitles()).toEqual([]);
+    expect(menuItemTitles()).toBeUndefined();
   });
 
   it("contributes no item to the context menu of an undecorated segment", async () => {
@@ -554,7 +565,7 @@ describe("NavigationCodeBlock context menu", () => {
     const target = screen.getAllByText("today")[1];
     if (target) await fireEvent.contextMenu(target);
 
-    expect(menuItemTitles()).toEqual([]);
+    expect(menuItemTitles()).toBeUndefined();
   });
 
   it("opens an interval entry from a custom journal's segment", async () => {
