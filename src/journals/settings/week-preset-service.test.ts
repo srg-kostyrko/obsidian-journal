@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { WeekPeriod, calendarSettingsModule, calendarSlice, type AnchorString } from "@/calendar";
+import { WeekPeriod, calendarSlice, type AnchorString } from "@/calendar";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { date } from "@/calendar/testing";
 import { NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
@@ -19,7 +20,7 @@ import type { JournalConfig } from "../config";
 const ISO = { mode: "custom", dow: 1, doy: 4, global: false } as const;
 const WESTERN = { mode: "custom", dow: 0, doy: 6, global: false } as const;
 
-const MODULES = [journalsCoreModule, journalsSettingsCoreModule, calendarSettingsModule];
+const MODULES = [journalsCoreModule, journalsSettingsCoreModule, calendarSettingsCoreModule];
 
 function weekly(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}): Record<string, JournalConfig> {
   const config = fixedJournal("weekly", { type: "week" });
