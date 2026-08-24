@@ -7,6 +7,7 @@ import { defineComponent, h } from "vue";
 import { Calendar } from "@/calendar";
 import { CUSTOM_LOCALE } from "@/calendar/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
+import { calendarSlice } from "@/calendar/settings/slice";
 import { anchor, installTestCalendar, testCalendar } from "@/calendar/testing";
 import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError, useService } from "@/infrastructure/di";
@@ -28,6 +29,7 @@ import { SettingsService } from "@/settings";
 import {
   TestContainerInvalidSeedError,
   TestContainerLeakedHostStateError,
+  TestContainerUnknownSeedKeyError,
   overrideWith,
   overrideWithClass,
   testContainer,
@@ -248,6 +250,37 @@ describe("seed guard", () => {
         data: { journals: "nonsense" },
       }),
     ).rejects.toThrow(TestContainerInvalidSeedError);
+  });
+
+  it("rejects a seed key that no loaded module registers", async () => {
+    await expect(
+      testContainer({
+        modules: [calendarSettingsCoreModule],
+        data: { calender: { mode: "custom", dow: 1, doy: 4, global: false } },
+      }),
+    ).rejects.toThrow(TestContainerUnknownSeedKeyError);
+  });
+
+  it("names the unknown key in the error", async () => {
+    await expect(
+      testContainer({
+        modules: [calendarSettingsCoreModule],
+        data: { calender: { mode: "custom", dow: 1, doy: 4, global: false } },
+      }),
+    ).rejects.toThrow(
+      expect.objectContaining({
+        keys: ["calender"],
+      } satisfies Partial<TestContainerUnknownSeedKeyError>),
+    );
+  });
+
+  it("accepts a seed key registered by a module the test opted into", async () => {
+    const harness = await testContainer({
+      modules: [calendarSettingsCoreModule],
+      data: { calendar: { mode: "custom", dow: 1, doy: 4, global: false } },
+    });
+
+    expect(harness.settings.getSlice(calendarSlice).state).toEqual({ mode: "custom", dow: 1, doy: 4, global: false });
   });
 
   it("accepts a deliberately broken fixture when the test opts in", async () => {

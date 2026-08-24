@@ -217,7 +217,10 @@ describe("JournalLinkHandler", () => {
     it("leaves the token unresolved when no handler is registered under the token", async () => {
       // Guards the assertions above: without the FunctionHandlerToken binding the engine
       // cannot dispatch, so a passing render proves the wiring, not the grammar alone.
-      const bare = await testContainer({ data: { journals: ALL_JOURNALS } });
+      // No modules, and so no `journals` seed either: journalsCoreModule registers the
+      // collection and the handler together, so "collection without handler" is not a
+      // reachable wiring and a seed here would only have been ignored.
+      const bare = await testContainer();
 
       const rendered = bare.resolve(TemplateEngine).renderString("{{journal_link(yearly)}}", crossYearWeek());
 

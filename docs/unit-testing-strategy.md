@@ -138,7 +138,7 @@ Service tests take core. Component tests take core plus ui. Only a test whose
 subject **is** a host registration passes a full module, with
 `allow: { hostState: true }`.
 
-### The two guards
+### The three guards
 
 `testContainer` throws rather than letting a misconfigured boot pass quietly.
 
@@ -158,6 +158,16 @@ a test asserts against a journal it did not ask for and fails somewhere far away
 **If it fires, your fixture is incomplete; fix the fixture.**
 `allow: { dataRepair: true }` is only for a test whose subject _is_ the repair
 path.
+
+`TestContainerUnknownSeedKeyError` fires when `data` carries a key that no
+loaded module registers. An absent slice or collection key is silent by design —
+a fresh install has none, and the parse answers with the defaults — which leaves
+a **mis-keyed** seed silent too: `calender` for `calendar` would let the test
+assert against the slice's defaults and pass with the seed ignored. The other
+cause is a correctly spelled key whose module was left out of `modules`, which
+is the same "your seed is not reaching the parse" mistake wearing a different
+hat. There is no `allow` for it: a key nothing registers is never what the test
+meant. `version` is always accepted — it is honored by the harness itself.
 
 ## Mounting
 
