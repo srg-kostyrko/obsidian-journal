@@ -78,10 +78,34 @@ export default defineConfig({
         // `#onShelfRenamed` (:265) and `#onShelfDeleted` (:273) was never taken. Both tests now also
         // seed a non-matching command (a different shelf, and a non-shelf target) and assert it is
         // left alone, exercising that arm again and restoring the two branches.
-        statements: 92.19,
+        //
+        // Sweep 2 (calendar) measured each of its nine commits in a scratch worktree rather than
+        // reasoning about the total. Base (db945149): 92.19 / 87.86 / 89.12 / 94.31, matching the
+        // numbers above exactly. The module split (42d61ff8), both `installTestCalendar`-triple
+        // cleanups (a6a95c4b, 5bd27bee), the dead-container deletion (d8bfc762) and the DatePicker
+        // staging (8d134fbb) moved nothing.
+        //
+        // Bridge and CalendarWeekBlock staging (6a94e0d6) -> 92.20 / 87.86 / 89.15 / 94.32. Up:
+        // `CalendarWeekBlock.test.ts` swapped its hand-built `ModalService` stub for
+        // `harness.modals`, the real fake — which actually invokes a modal descriptor's `title`
+        // resolver instead of short-circuiting past it. `weekPresetPickerModal`'s `title` arrow
+        // (calendar/settings/ui/modals.ts:10) goes from 0% to 100% function coverage: +1 function,
+        // +1 statement, +1 line. No branches in it, so branches held.
+        //
+        // Fresh-install carve-out (d3f7f65a) -> 92.20 / 87.86 / 89.15 / 94.32, numerators and
+        // denominators both up: 11062/11997 -> 11064/11999 statements, 4771/5430 -> 4773/5432
+        // branches, 9674/10256 -> 9675/10257 lines. `parseSliceValue`'s new
+        // `if (raw === undefined) return ...` (settings-service.ts:365) adds one statement for the
+        // guard and one for the return, and one branch point with both arms exercised elsewhere in
+        // the suite (the fresh-install arm was already covered before the calendar suite touched
+        // it) — a rise, not the branch-drop pattern to watch for. Percentages hold because the new
+        // code is fully covered. `184da953` (dropping the now-unneeded guard-dodge seeds) and
+        // `8915a293` (lint-selector arming) moved nothing further; the branch was already covered
+        // without them.
+        statements: 92.2,
         branches: 87.86,
-        functions: 89.12,
-        lines: 94.31,
+        functions: 89.15,
+        lines: 94.32,
       },
     },
     projects: [
