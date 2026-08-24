@@ -230,27 +230,24 @@ narrower than the rule itself: eslint's `no-restricted-syntax` flags only a
 `FunctionDeclaration` (not a `const foo = (...) => ...`) whose name matches
 `^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)`. It
 is a naming tripwire, not a general ban — still worth having, because it
-catches the common shape without anyone having to remember it — but it
-matches on a name, not on what the function does, so it also misses names
-outside its six-word alternation. A name escaping the selector is not by
-itself evidence of a violation: inside `src/journals` today, most of the
-functions the selector misses are either compliant helpers that merely happen
-to share the naming shape — `withName`
-(`use-invertibility-check.test.ts`) and `makeParameters`
-(`bulk-add-service.test.ts`) both delegate straight to a feature fixture or
-factory rather than building anything by hand — or arrange/seed helpers that
-were never entity fixtures to begin with, such as `makeSectionComponent`
-(`JournalEditSubpage.test.ts`, a Vue component stub) or `seedWeek`
-(`week-preset-service.test.ts`, which writes and registers a note through the
-harness). One escape is a genuine violation the tripwire fails to catch:
-`baseConfig` (`use-folder-extractor.test.ts`) hand-builds a full
-`JournalConfig` literal restating schema defaults field by field, which is
-exactly what the "no literal that restates a schema default" rule above
-forbids — the selector gap let it through uncaught. Treat the selector as a
-naming-convention aid, not a compliance check: a sweep enabling it elsewhere
-should expect both false negatives (real violations under other names) and
-functions that merely resemble one, and should judge each escapee on what it
-does rather than trust the lint result either way.
+catches the common shape without anyone having to remember it — but matching
+is purely syntactic, so passing lint and violating the rule are independent
+in both directions. A factory can violate the rule and still pass lint
+permanently, by construction of the selector rather than by luck: the
+selector only matches `FunctionDeclaration`, so `const makeJournal = () =>
+buildLiteral(...)` hand-builds an entity and is invisible to it no matter
+what any future sweep fixes, and a `function` whose name lands outside the
+six-word alternation escapes the same way. The converse also holds — a name
+that happens to match the shape says nothing about whether the function
+builds anything by hand at all; some do (a hand-built entity literal
+restating schema defaults, say) and some are compliant one-line delegators to
+a feature fixture, or arrange/seed helpers that were never entity fixtures to
+begin with. Neither a lint pass nor a lint failure is a verdict — only
+reading the function body is. Treat the selector as a naming-convention aid,
+not a compliance check: a sweep enabling it for its own directory should
+expect both false negatives (real violations the selector's shape can't see)
+and escapees that turn out to be fine on inspection, and should judge each
+one by what it does rather than by whether lint flagged it.
 
 The entity alternation (`Journal|Command|View|Shelf|Decoration|Config`) and
 the message ("use fixedJournal/customJournal") are both journals-specific. A
@@ -271,14 +268,18 @@ The path it is retiring still exists. Five `static fromParts` methods —
 `src/shelves/repository.ts:24`, `src/shelves/service.ts:11`,
 `src/views/repository.ts:20` — bypass the schema entirely: each does
 `Object.create(this.prototype)` to skip the constructor, then casts through a
-local `Mutable` interface to write protected fields. Forty-four test files
-still reach one of these methods: 35 call `fromParts` directly and 14 call
-the `fakeRepo` fixture that wraps it (5 files do both). Two of the 44 —
-`src/journals/repository.test.ts` and `src/journals/view-model.test.ts` — sit
-inside `src/journals` itself, so "converted" does not yet mean
-`JournalsRepository.fromParts` is unused; the journals sweep retires it only
-once those two are rewritten onto `testContainer({ data })`. Data seeded
-through `fromParts`/`fakeRepo` never sees the parse defaults or the repair
+local `Mutable` interface to write protected fields. At the time of writing,
+forty-four test files still reach one of these methods: 35 call `fromParts`
+directly and 14 call the `fakeRepo` fixture that wraps it (5 files do both).
+That count is a moving target, not a fixed inventory — check the call sites
+directly rather than trusting a number here, since each feature's Phase 3
+sweep rewrites its own callers onto `testContainer({ data })` as it lands. A
+directory being "converted" does not by itself mean its `fromParts` is
+unused: a leftover `fromParts`/`fakeRepo` caller can sit inside an
+otherwise-converted directory until that feature's own sweep retires the
+method, `src/journals` included — don't assume none remain just from the
+directory name. Data seeded through `fromParts`/`fakeRepo` never sees the
+parse defaults or the repair
 path, and the helpers live in production source, which the
 [file-location rules](architecture.md#testing) forbid. Deleting a feature's
 `fromParts` is the closing step of that feature's Phase 3 sweep — not a
