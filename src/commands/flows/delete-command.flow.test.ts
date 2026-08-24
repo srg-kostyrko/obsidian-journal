@@ -1,47 +1,24 @@
-import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { createSettingsService } from "@/settings/testing";
+import { testContainer } from "@/testing";
 
-import { commandCollection, type CommandConfig } from "../config";
+import { commandsCoreModule } from "../module";
 import { CommandsRepository } from "../repository";
-import { CommandsEventsToken } from "../tokens";
+import { buildCommand } from "../testing";
 
 import { DeleteCommandFlow } from "./delete-command.flow";
 
-function makeConfig(name: string): CommandConfig {
-  return {
-    name,
-    icon: "",
-    showInRibbon: false,
-    openMode: "active",
-    target: { kind: "all", writeType: "day" },
-    type: "same",
-    context: "today",
-  };
-}
-
 async function build() {
-  const raw = { version: 5, commands: { "cmd-1": makeConfig("Doomed") } };
-  const { service: settings, container } = createSettingsService({
-    collections: [commandCollection],
-    raw,
+  const harness = await testContainer({
+    modules: [commandsCoreModule],
+    data: { commands: { "cmd-1": buildCommand({ name: "Doomed" }) } },
   });
-  await settings.initialize();
-  const modals = new FakeModalService();
-  container.register(ModalService).useValue(modals as unknown as ModalService);
-  container.register(CommandsEventsToken).useFactory(() => createNanoEvents());
-  container.register(CommandsRepository).useClass(CommandsRepository);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  container.register(DeleteCommandFlow).useClass(DeleteCommandFlow);
-  const repo = container.resolve(CommandsRepository);
-  return { repo, modals, flows: container.resolve(Flows) };
+  return {
+    repo: harness.resolve(CommandsRepository),
+    modals: harness.modals,
+    flows: harness.resolve(Flows),
+  };
 }
 
 describe("DeleteCommandFlow", () => {

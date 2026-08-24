@@ -42,15 +42,18 @@ export default defineConfig({
       // earlier gate in this campaign was deleted because the cheapest route past a failure was
       // regenerating its baseline, which trains reviewers to dismiss it.
       thresholds: {
-        statements: 92.25,
-        branches: 87.86,
-        // 89.1 -> 89.08: converting the journals repository tests onto testContainer left the two
-        // error-factory arrows that `JournalsRepository.fromParts` hand-assigns (repository.ts:50-51)
-        // with no caller. They are duplicates of the class's own fields, reachable only through the
-        // seeding path this campaign is retiring, so the drop records `fromParts` getting closer to
-        // deletion rather than a test getting weaker.
-        functions: 89.08,
-        lines: 94.39,
+        // 92.25 -> 92.18, 87.86 -> 87.82, 94.39 -> 94.3: converting the commands service tests
+        // onto testContainer left `CommandsRepository.fromParts` (repository.ts:22-42) and
+        // `CommandsViewModel.fromRepository` (view-model.ts:11-13) with no caller at all. Both are
+        // test-only seeding hatches on this campaign's deletion list, so the drop records them
+        // getting closer to deletion rather than a test getting weaker. Same shape as the journals
+        // move that took functions from 89.1 to 89.08 one sweep earlier.
+        statements: 92.18,
+        branches: 87.82,
+        // Back up past that 89.08: booting DynamicCommandRegistry through its real module wiring
+        // reaches the repository's own error factories, which the hand-built container did not.
+        functions: 89.12,
+        lines: 94.3,
       },
     },
     projects: [
