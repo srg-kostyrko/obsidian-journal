@@ -48,12 +48,18 @@ export default defineConfig({
         // test-only seeding hatches on this campaign's deletion list, so the drop records them
         // getting closer to deletion rather than a test getting weaker. Same shape as the journals
         // move that took functions from 89.1 to 89.08 one sweep earlier.
-        statements: 92.18,
+        // Back up past that 89.08: repository.test.ts's two unknown-id tests now run against the
+        // DI-constructed repository instead of a `fromParts` clone, which reaches the previously
+        // uncovered `unknownEntityError` factory at repository.ts:49 (`invalidUpdateError` at :50
+        // stays uncovered, which is why this is +1 function, not +2).
+        // 92.18 -> 92.19, 94.3 -> 94.31: converting `MaintenanceSubpage.test.ts` onto testContainer
+        // (booting `maintenanceUiModule` instead of hand-registered stubs) now executes
+        // `maintenance-subpage.ts:5`'s `defineSubpage(...)` call, which no test reached before —
+        // one statement/line, no branches or functions in it.
+        statements: 92.19,
         branches: 87.82,
-        // Back up past that 89.08: booting DynamicCommandRegistry through its real module wiring
-        // reaches the repository's own error factories, which the hand-built container did not.
         functions: 89.12,
-        lines: 94.3,
+        lines: 94.31,
       },
     },
     projects: [
