@@ -355,3 +355,81 @@ happy-dom, such as `@vueuse/integrations/useSortable` and `obsidian`. Not the
 project's own modules, and never a child component: mocking a child asserts
 which component the parent renders rather than what the user sees. Reach for
 a container override instead.
+
+## Enforcement
+
+All rules use `no-restricted-syntax` selectors — the mechanism the config already
+uses for the `vi.mock` ban. No custom plugin.
+
+| Rule                                                           | What it catches                                               |
+| -------------------------------------------------------------- | ------------------------------------------------------------- |
+| No `new Container()` in a test                                 | Build it with `testContainer()` from `@/testing`              |
+| No `.register(...).use*` inside a test body or hook            | Pass a feature CORE/UI module to `testContainer({ modules })` |
+| No local entity factories                                      | Fixtures live in the feature's `testing.ts`                   |
+| No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector      |
+| `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)       |
+
+**Scope is per-directory, and rolls out as each feature converts.** Today the
+full set is enabled for `src/journals/**/*.test.ts`; the base `vi.mock` rule
+applies to every `**/*.test.ts`. A Phase 3 sweep enables the rest for its own
+directory in the same PR that converts it.
+
+Two mechanics that have already caused a silent failure once each:
+
+- **Flat-config rule options replace, they do not merge.** A per-directory block
+  must sit _after_ the general test-file block and **re-declare the `vi.mock`
+  selector**, or the ban silently lifts for that whole feature.
+- **A selector matching nothing looks identical to one that works.** Verify a new
+  rule by writing a violation and watching it fire, then removing it.
+
+Two selectors are deliberately narrowed, and the narrowing is load-bearing:
+
+- The `.register` ban matches a binding chain **inside a test body or hook**,
+  because a bare `.register(` also names `JournalsIndex.register`, the domain
+  method the suite seeds index entries through.
+- The raw-`render` ban is conditioned on the file already importing `@/testing`,
+  rather than banned outright — a pure-tier component test whose component
+  injects nothing needs no injector. An allowlist of those files was rejected
+  because a stale `ignores` glob that matches nothing is indistinguishable from a
+  working one.
+
+### The coverage floor
+
+`npm run coverage` enforces a floor in `vitest.config.mts`, and `checks.yml` runs
+it in place of `npm test`. It is a floor to catch silent deletion during the
+conversion campaign, not a target to chase.
+
+DI wiring files — `src/**/module.ts` and `src/**/ui-module.ts` — are excluded.
+Module wiring is not testable by this standard's own rules, so counting it
+measured lines nobody was permitted to act on, and every module split added a
+fresh zero-covered file that dragged the floor down.
+
+**The thresholds are never regenerated automatically.** A PR that lowers coverage
+edits the numbers in the same diff, where a reviewer sees the change. An earlier
+gate in this campaign counted assertions against a committed baseline and was
+deleted precisely because the cheapest route past a failure was regenerating the
+baseline, which trains reviewers to dismiss it.
+
+## What not to test
+
+Module wiring, barrel shapes, and the fakes themselves. The compiler and the
+tooling already guarantee those, and a test for a fake tests test infrastructure
+rather than behavior. Wiring is the e2e suite's job: dropping a startup module's
+registration leaves `npm test` fully green while the e2e command-palette journey
+fails immediately.
+
+`src/testing.ts` is the exception the rule implies rather than contradicts. Its
+guards and options have behavior that can fail — a seed silently repaired, a leak
+undetected, an override applied after the service resolved — and a defect there
+makes every test in the repo lie. Test those. Its wiring stays untested like any
+other module's.
+
+## Exemplars
+
+Copy these rather than the prose.
+
+| Tier              | File                                                                                                                      | What it shows                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Pure              | [`src/journals/settings/ui/name-template-collision.test.ts`](../src/journals/settings/ui/name-template-collision.test.ts) | 38 lines, no harness at all — that is the point                 |
+| Service           | [`src/journals/cycle.test.ts`](../src/journals/cycle.test.ts)                                                             | both halves of the arrange rule, at scale                       |
+| Component / modal | [`src/journals/settings/ui/RenameJournalModal.test.ts`](../src/journals/settings/ui/RenameJournalModal.test.ts)           | `renderModal`, a `data` seed, and copy asserted through `m.*()` |
