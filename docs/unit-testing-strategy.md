@@ -161,15 +161,21 @@ path.
 
 `harness.render` and `harness.renderModal` come pre-bound to the harness's
 injector, so it cannot be forgotten and no container is threaded through call
-sites. Importing `@testing-library/vue`'s raw `render` in a file that already
-builds a harness is a lint error.
+sites. Under `src/journals` — the directory converted onto this harness —
+importing `@testing-library/vue`'s raw `render` in a file that already builds
+a harness is a lint error; the guard is scoped to that directory only, so an
+unconverted file elsewhere (`src/shelves/ui/ShelfEditSubpage.test.ts`, for
+example) can still import it directly.
 
 ```ts
-harness.render(ShelfEditSubpage, { props: { shelfName: "Work", nav } });
-const { submit, cancel } = harness.renderModal(RenameJournalModal, { props });
+harness.render(JournalEditSubpage, { props: { journalName: "work", nav: noopNav } });
+const { submit } = harness.renderModal(RenameJournalModal, { props: { currentName: "daily" } });
 ```
 
-Both merge a caller's `global.plugins`, `stubs`, and `provide`.
+Both prepend the harness's own plugin — the one that provides the injector,
+and for `renderModal` also the modal API — ahead of whatever plugins the
+caller passed in `global.plugins`; a caller's `global.stubs` and
+`global.provide` pass through untouched.
 
 **`renderModal` and `modals` are not interchangeable.** `renderModal` mounts a
 component that **is** a modal, wiring its `useModal()` to mock `submit`/`cancel`.
