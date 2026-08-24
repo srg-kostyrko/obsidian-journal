@@ -51,7 +51,7 @@ proceeds.
 
 ## Quality gates
 
-`checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` → `test` →
+`checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` → `coverage` →
 `check:lint` on every pull request and on every push to `main` (`compile:i18n`
 is covered in Development setup above). It reports as the `build` check, which
 — together with `e2e-gate`, the fixed name standing in for the whole e2e matrix
@@ -60,10 +60,10 @@ blocks it too. Run these before opening a pull request anyway; the order
 between them doesn't matter locally:
 
 ```bash
-npm run check:types   # vue-tsc, no emit
-npm test              # vitest, the unit and component suite
-npm run check:lint    # eslint over the whole project
-npm run check:i18n    # guards messages/*.json against reintroducing banned mistranslations
+npm run check:types  # vue-tsc, no emit
+npm run coverage     # vitest, the unit and component suite, gated on a coverage floor
+npm run check:lint   # eslint over the whole project
+npm run check:i18n   # guards messages/*.json against reintroducing banned mistranslations
 ```
 
 The e2e layer drives a real Obsidian binary through WebdriverIO. It's slow, so
@@ -92,7 +92,9 @@ requests actually run in CI.
 
 ## Making a change
 
-Write the test first. Unit tests sit beside the implementation as `*.test.ts`.
+Write the test first. Unit tests sit beside the implementation as `*.test.ts`;
+see [`docs/unit-testing-strategy.md`](docs/unit-testing-strategy.md) for how
+we write them.
 
 No `eslint-disable` comments — the lint config rejects the comment itself, so
 the fix has to be in the code.
@@ -152,7 +154,9 @@ Branch from `main` and open the pull request against `main`.
 
 - [`docs/architecture.md`](docs/architecture.md) — the conventions the code is
   built on: dependency injection, `Result`/`Option`, dates, schemas,
-  internationalization, testing.
+  internationalization, test file locations.
+- [`docs/unit-testing-strategy.md`](docs/unit-testing-strategy.md) — the unit
+  and component testing standard.
 - [`CONTEXT.md`](CONTEXT.md) — the domain vocabulary the codebase reasons in.
 - [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md) — what the
   end-to-end suite covers and why it exists alongside the unit suite.
