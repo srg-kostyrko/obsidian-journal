@@ -352,17 +352,11 @@ describe("journalConfigCollection default item", () => {
 });
 
 describe("journalDefaultsFor identity between journals", () => {
-  it("gives two day journals separate navBlock objects", () => {
+  it("gives two day journals separate navBlock and decorations objects", () => {
     const first = journalDefaultsFor({ type: "day" }, "a");
     const second = journalDefaultsFor({ type: "day" }, "b");
 
     expect(first.navBlock).not.toBe(second.navBlock);
-  });
-
-  it("gives two day journals separate decorations arrays", () => {
-    const first = journalDefaultsFor({ type: "day" }, "a");
-    const second = journalDefaultsFor({ type: "day" }, "b");
-
     expect(first.decorations).not.toBe(second.decorations);
   });
 
@@ -390,19 +384,37 @@ describe("journalDefaultsFor identity between journals", () => {
 
   it("does not leak a mutation to one journal's navBlock into a journal created afterwards", () => {
     const first = journalDefaultsFor({ type: "day" }, "a");
+    const second = journalDefaultsFor({ type: "day" }, "b");
+    const before = second.navBlock.lines.length;
+
     first.navBlock.lines.push([]);
 
-    const second = journalDefaultsFor({ type: "day" }, "b");
-
-    expect(second.navBlock.lines).toHaveLength(6);
+    expect(second.navBlock.lines).toHaveLength(before);
   });
 
   it("does not leak a mutation to one journal's decorations into a journal created afterwards", () => {
     const first = journalDefaultsFor({ type: "day" }, "a");
+    const second = journalDefaultsFor({ type: "day" }, "b");
+    const before = second.decorations.length;
+
     first.decorations.push(first.decorations[0]);
 
-    const second = journalDefaultsFor({ type: "day" }, "b");
+    expect(second.decorations).toHaveLength(before);
+  });
 
-    expect(second.decorations).toHaveLength(1);
+  it("does not leak a mutation to one journal's intervalBlock into a journal created afterwards", () => {
+    const write: JournalWrite = {
+      type: "custom",
+      every: "week",
+      duration: 2,
+      anchorDate: "2024-01-01" as AnchorString,
+    };
+    const first = journalDefaultsFor(write, "a");
+    const second = journalDefaultsFor(write, "b");
+    const before = second.intervalBlock.lines.length;
+
+    first.intervalBlock.lines.push([]);
+
+    expect(second.intervalBlock.lines).toHaveLength(before);
   });
 });
