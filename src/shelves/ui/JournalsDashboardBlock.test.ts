@@ -1,150 +1,95 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import {
-  AddJournalFlow,
-  DeleteJournalFlow,
-  CloneJournalFlow,
-  journalConfigCollection,
-  journalEditSubpage,
-} from "@/journals";
+import { AddJournalFlow, DeleteJournalFlow, CloneJournalFlow, type JournalConfig } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
-import { JournalsRepository } from "@/journals/repository";
-import { JournalsEventsToken } from "@/journals/tokens";
-import { JournalsViewModel } from "@/journals/view-model";
-import { SettingsUiService, SubpageToken } from "@/settings";
-import { createSettingsService } from "@/settings/testing";
+import { journalsSettingsUiModule } from "@/journals/settings/ui-module";
+import { fixedJournal } from "@/journals/testing";
+import { SettingsUiService } from "@/settings";
+import { testContainer } from "@/testing";
 
-import { shelvesCollection } from "../config";
-import { ShelvesRepository } from "../repository";
-import { ShelvesEventsToken } from "../tokens";
-import { ShelvesViewModel } from "../view-model";
+import { shelvesCoreModule } from "../module";
+import { buildShelf } from "../testing";
 
 import JournalsDashboardBlock from "./JournalsDashboardBlock.vue";
 
-afterEach(() => cleanup());
+import type { ShelfConfig } from "../config";
 
-function makeJournal(name: string) {
-  return {
-    name,
-    write: { type: "day" as const },
-    timeline: { start: "2024-01-01", end: { kind: "never" as const } },
-    dateFormat: "YYYY-MM-DD",
-    frontmatter: {
-      dateField: "journal-date",
-      startDateField: "journal-start-date",
-      endDateField: "journal-end-date",
-      addStartDate: false,
-      addEndDate: false,
-    },
-    numbering: { enabled: false, anchorDate: "2024-01-01", allowBefore: false, sources: [] },
-    nameTemplate: "{{date}}",
-    folder: "",
-    templates: [],
-    confirmCreation: false,
-    autoCreate: false,
-  };
-}
-
-async function setup(options: { journals?: string[]; shelves?: Record<string, { name: string; journals: string[] }> }) {
-  const { service: settings, container } = createSettingsService({
-    collections: [journalConfigCollection, shelvesCollection],
-    raw: {
-      version: 5,
-      journals: Object.fromEntries((options.journals ?? []).map((n) => [n, makeJournal(n)])),
-      shelves: options.shelves ?? {},
-    },
+async function setup(options: { journals?: Record<string, JournalConfig>; shelves?: Record<string, ShelfConfig> }) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, journalsSettingsUiModule, shelvesCoreModule],
+    data: { journals: options.journals ?? {}, shelves: options.shelves ?? {} },
   });
-  await settings.initialize();
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
-  container.register(JournalsRepository).useClass(JournalsRepository);
-  container.register(JournalsViewModel).useClass(JournalsViewModel);
-  container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
-  container.register(ShelvesRepository).useClass(ShelvesRepository);
-  container.register(ShelvesViewModel).useClass(ShelvesViewModel);
-  container.register(SubpageToken).useValue(journalEditSubpage);
-  container.register(SettingsUiService).useClass(SettingsUiService);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  const flows = container.resolve(Flows);
+  const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
-  return { container, flows, ui: container.resolve(SettingsUiService) };
-}
-
-function mount(container: Container) {
-  return render(JournalsDashboardBlock, {
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
+  return { harness, flows, ui: harness.resolve(SettingsUiService) };
 }
 
 describe("JournalsDashboardBlock", () => {
   it("lists only journals not on any shelf", async () => {
-    const { container } = await setup({
-      journals: ["daily", "weekly"],
-      shelves: { Work: { name: "Work", journals: ["weekly"] } },
+    const { harness } = await setup({
+      journals: {
+        daily: fixedJournal("daily", { type: "day" }),
+        weekly: fixedJournal("weekly", { type: "week" }),
+      },
+      shelves: { Work: buildShelf("Work", { journals: ["weekly"] }) },
     });
-    mount(container);
+    harness.render(JournalsDashboardBlock);
     expect(screen.getByLabelText(m.journal_dashboard_edit({ name: "daily" }))).toBeTruthy();
     expect(screen.queryByText("weekly")).toBeNull();
   });
 
   it("uses the plain title when no shelves exist", async () => {
-    const { container } = await setup({ journals: ["daily"] });
-    mount(container);
+    const { harness } = await setup({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+    harness.render(JournalsDashboardBlock);
     expect(screen.getByText(m.common_label_journals())).toBeTruthy();
   });
 
   it("uses the not-on-a-shelf title once a shelf exists", async () => {
-    const { container } = await setup({
-      journals: ["daily"],
-      shelves: { Work: { name: "Work", journals: [] } },
+    const { harness } = await setup({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      shelves: { Work: buildShelf("Work") },
     });
-    mount(container);
+    harness.render(JournalsDashboardBlock);
     expect(screen.getByText(m.shelf_journals_block_title_filtered())).toBeTruthy();
   });
 
   it("invokes AddJournalFlow when the add button is clicked", async () => {
-    const { container, flows } = await setup({});
-    mount(container);
+    const { harness, flows } = await setup({});
+    harness.render(JournalsDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.journal_create()));
     expect(flows.invoke).toHaveBeenCalledWith(AddJournalFlow);
   });
 
   it("pushes the journal-edit subpage when Edit is clicked", async () => {
-    const { container, ui } = await setup({ journals: ["daily"] });
-    mount(container);
+    const { harness, ui } = await setup({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+    harness.render(JournalsDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_edit({ name: "daily" })));
     expect(ui.current.value?.subpage.key).toBe("journal-edit");
     expect(ui.current.value?.props).toEqual({ journalName: "daily" });
   });
 
   it("invokes DeleteJournalFlow when Delete is clicked", async () => {
-    const { container, flows } = await setup({ journals: ["daily"] });
-    mount(container);
+    const { harness, flows } = await setup({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+    harness.render(JournalsDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteJournalFlow, { journalName: "daily" });
   });
 
   it("invokes BulkAddFlow when bulk-add is clicked", async () => {
-    const { container, flows } = await setup({ journals: ["daily"] });
-    mount(container);
+    const { harness, flows } = await setup({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+    harness.render(JournalsDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_bulk_add({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(BulkAddFlow, { journalName: "daily" });
   });
 
   it("invokes CloneJournalFlow when clone is clicked", async () => {
-    const { container, flows } = await setup({ journals: ["daily"] });
-    mount(container);
+    const { harness, flows } = await setup({ journals: { daily: fixedJournal("daily", { type: "day" }) } });
+    harness.render(JournalsDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.journal_dashboard_clone({ name: "daily" })));
     expect(flows.invoke).toHaveBeenCalledWith(CloneJournalFlow, { journalName: "daily" });
   });

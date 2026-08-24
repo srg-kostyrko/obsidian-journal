@@ -422,7 +422,14 @@ uses for the `vi.mock` ban. No custom plugin.
 **Scope is per-directory, and rolls out as each feature converts.** Today the
 full set is enabled for `src/journals/**/*.test.ts`; the base `vi.mock` rule
 applies to every `**/*.test.ts`. A Phase 3 sweep enables the rest for its own
-directory in the same PR that converts it.
+directory in the same PR that converts it, by appending one glob to the
+`convertedTestGlobs` array in `eslint.config.mjs`.
+
+**`src/infrastructure/**` is not on that list, and will not be.** Its
+`host`/`di`/`flows` tests are what `testContainer()` itself is built and
+verified against — converting them onto the harness would test the harness
+through itself. This is a permanent boundary, not a directory the campaign
+hasn't reached yet.
 
 Two mechanics that have already caused a silent failure once each:
 

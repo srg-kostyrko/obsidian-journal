@@ -1,53 +1,31 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { SettingsUiService, SubpageToken } from "@/settings";
-import { createSettingsService } from "@/settings/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { SettingsUiService } from "@/settings";
+import { testContainer } from "@/testing";
 
-import { shelvesCollection } from "../config";
 import { DeleteShelfFlow } from "../flows/delete-shelf.flow";
 import { EditShelfNameFlow } from "../flows/edit-shelf-name.flow";
-import { ShelvesRepository } from "../repository";
-import { ShelvesEventsToken } from "../tokens";
-import { ShelvesViewModel } from "../view-model";
+import { shelvesCoreModule } from "../module";
+import { buildShelf } from "../testing";
+import { shelvesUiModule } from "../ui-module";
 
-import { shelfEditSubpage } from "./shelf-edit-subpage";
 import ShelvesDashboardBlock from "./ShelvesDashboardBlock.vue";
 
-afterEach(() => cleanup());
+import type { ShelfConfig } from "../config";
 
-async function setup(shelves: Record<string, { name: string; journals: string[] }> = {}) {
-  const { service: settings, container } = createSettingsService({
-    collections: [shelvesCollection],
-    raw: { version: 5, shelves },
+async function setup(shelves: Record<string, ShelfConfig> = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, shelvesUiModule],
+    data: { shelves },
   });
-  await settings.initialize();
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-  container.register(ShelvesEventsToken).useFactory(() => createNanoEvents());
-  container.register(ShelvesRepository).useClass(ShelvesRepository);
-  container.register(ShelvesViewModel).useClass(ShelvesViewModel);
-  container.register(SubpageToken).useValue(shelfEditSubpage);
-  container.register(SettingsUiService).useClass(SettingsUiService);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  const flows = container.resolve(Flows);
+  const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
-  return { container, flows, ui: container.resolve(SettingsUiService) };
-}
-
-function mount(container: Container) {
-  return render(ShelvesDashboardBlock, {
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
+  return { harness, flows, ui: harness.resolve(SettingsUiService) };
 }
 
 async function expand(): Promise<void> {
@@ -56,49 +34,49 @@ async function expand(): Promise<void> {
 
 describe("ShelvesDashboardBlock", () => {
   it("explains what a shelf is even once shelves exist", async () => {
-    const { container } = await setup({ Work: { name: "Work", journals: ["daily"] } });
-    mount(container);
+    const { harness } = await setup({ Work: buildShelf("Work", { journals: ["daily"] }) });
+    harness.render(ShelvesDashboardBlock);
     expect(screen.getByText(m.shelf_dashboard_description())).toBeTruthy();
   });
 
   it("starts collapsed when no shelves exist", async () => {
-    const { container } = await setup();
-    mount(container);
+    const { harness } = await setup();
+    harness.render(ShelvesDashboardBlock);
     expect(screen.queryByText(m.shelf_dashboard_description())).toBeNull();
   });
 
   it("shows the empty state when no shelves exist", async () => {
-    const { container } = await setup();
-    mount(container);
+    const { harness } = await setup();
+    harness.render(ShelvesDashboardBlock);
     await expand();
     expect(screen.getByText(m.shelf_dashboard_empty())).toBeTruthy();
   });
 
   it("lists each shelf with its member count", async () => {
-    const { container } = await setup({ Work: { name: "Work", journals: ["daily", "weekly"] } });
-    mount(container);
+    const { harness } = await setup({ Work: buildShelf("Work", { journals: ["daily", "weekly"] }) });
+    harness.render(ShelvesDashboardBlock);
     expect(screen.getByText("Work")).toBeTruthy();
     expect(screen.getByText(m.shelf_member_count({ count: 2 }))).toBeTruthy();
   });
 
   it("invokes EditShelfNameFlow when the add button is clicked", async () => {
-    const { container, flows } = await setup();
-    mount(container);
+    const { harness, flows } = await setup();
+    harness.render(ShelvesDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.shelf_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditShelfNameFlow, {});
   });
 
   it("opens the shelf-detail subpage when the organize button is clicked", async () => {
-    const { container, ui } = await setup({ Work: { name: "Work", journals: [] } });
-    mount(container);
+    const { harness, ui } = await setup({ Work: buildShelf("Work") });
+    harness.render(ShelvesDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.shelf_dashboard_open({ name: "Work" })));
     expect(ui.current.value?.subpage.key).toBe("shelf-edit");
     expect(ui.current.value?.props).toEqual({ shelfName: "Work" });
   });
 
   it("invokes DeleteShelfFlow when the delete button is clicked", async () => {
-    const { container, flows } = await setup({ Work: { name: "Work", journals: [] } });
-    mount(container);
+    const { harness, flows } = await setup({ Work: buildShelf("Work") });
+    harness.render(ShelvesDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Work" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteShelfFlow, { shelfName: "Work" });
   });
