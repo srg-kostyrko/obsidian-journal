@@ -230,16 +230,27 @@ narrower than the rule itself: eslint's `no-restricted-syntax` flags only a
 `FunctionDeclaration` (not a `const foo = (...) => ...`) whose name matches
 `^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)`. It
 is a naming tripwire, not a general ban — still worth having, because it
-catches the common shape without anyone having to remember it — but it has
-known gaps even inside `src/journals`, where six local factories currently
-pass lint: `baseConfig` (`use-folder-extractor.test.ts`) and `withName`
-(`use-invertibility-check.test.ts`) don't start with one of the four prefixes
-at all; `buildRepo` (`repository.test.ts`), `makeParameters`
-(`bulk-add-service.test.ts`) and `makeSectionComponent`
-(`JournalEditSubpage.test.ts`) start with a matching prefix but name a noun
-outside the six-word alternation. `baseConfig` also hand-builds a full
-`JournalConfig` literal, which contradicts the "no literal that restates a
-schema default" rule above — the selector gap let it through.
+catches the common shape without anyone having to remember it — but it
+matches on a name, not on what the function does, so it also misses names
+outside its six-word alternation. A name escaping the selector is not by
+itself evidence of a violation: inside `src/journals` today, most of the
+functions the selector misses are either compliant helpers that merely happen
+to share the naming shape — `withName`
+(`use-invertibility-check.test.ts`) and `makeParameters`
+(`bulk-add-service.test.ts`) both delegate straight to a feature fixture or
+factory rather than building anything by hand — or arrange/seed helpers that
+were never entity fixtures to begin with, such as `makeSectionComponent`
+(`JournalEditSubpage.test.ts`, a Vue component stub) or `seedWeek`
+(`week-preset-service.test.ts`, which writes and registers a note through the
+harness). One escape is a genuine violation the tripwire fails to catch:
+`baseConfig` (`use-folder-extractor.test.ts`) hand-builds a full
+`JournalConfig` literal restating schema defaults field by field, which is
+exactly what the "no literal that restates a schema default" rule above
+forbids — the selector gap let it through uncaught. Treat the selector as a
+naming-convention aid, not a compliance check: a sweep enabling it elsewhere
+should expect both false negatives (real violations under other names) and
+functions that merely resemble one, and should judge each escapee on what it
+does rather than trust the lint result either way.
 
 The entity alternation (`Journal|Command|View|Shelf|Decoration|Config`) and
 the message ("use fixedJournal/customJournal") are both journals-specific. A
