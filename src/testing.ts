@@ -169,7 +169,10 @@ export interface TestHarness {
   readonly templater: FakeTemplaterService;
   readonly data: FakePluginData;
   readonly settings: SettingsService;
-  /** Mounts under the harness's own injector. Merges a caller's `global.plugins`/`stubs`/`provide`. */
+  /**
+   * Mounts under the harness's own injector, prepended ahead of a caller's `global.plugins`.
+   * A caller's `global.stubs`/`provide` pass through untouched.
+   */
   render<C>(component: C, options?: RenderOptions<C>): RenderResult;
   /**
    * Mounts a component that IS a modal, wiring its `useModal()` to mock `submit`/`cancel`. For a
