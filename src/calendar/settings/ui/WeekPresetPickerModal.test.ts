@@ -1,39 +1,20 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import type { ModalApi } from "@/infrastructure/host/modals";
-import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
+import { testContainer } from "@/testing";
 
 import WeekPresetPickerModal from "./WeekPresetPickerModal.vue";
 
 import type { CalendarSliceState } from "../slice";
 
-function mountModal(
-  current: CalendarSliceState,
-  api: ModalApi<CalendarSliceState>,
-  localeWeek?: { dow: number; doy: number },
-) {
-  const container = new Container();
-  const calendar = new Calendar();
-  vi.spyOn(calendar, "localeWeek").mockReturnValue(localeWeek ?? { dow: 1, doy: 4 });
-  container.register(Calendar).useValue(calendar);
-
-  return render(WeekPresetPickerModal, {
+async function resolveModal(current: CalendarSliceState, localeWeek?: { dow: number; doy: number }) {
+  const harness = await testContainer();
+  vi.spyOn(harness.resolve(Calendar), "localeWeek").mockReturnValue(localeWeek ?? { dow: 1, doy: 4 });
+  return harness.renderModal<typeof WeekPresetPickerModal, CalendarSliceState>(WeekPresetPickerModal, {
     props: { current },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-            provideModalApiOnApp(app, api as ModalApi<unknown>);
-          },
-        },
-      ],
-    },
   });
 }
 
@@ -44,34 +25,29 @@ function rowFor(name: string): HTMLElement {
   return row as HTMLElement;
 }
 
-afterEach(() => cleanup());
-
 describe("WeekPresetPickerModal", () => {
   it("submits the ISO 8601 preset when its Use button is clicked then Update is pressed", async () => {
-    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
-    mountModal({ mode: "locale" }, api);
+    const { submit } = await resolveModal({ mode: "locale" });
 
     const useButton = rowFor(m.calendar_preset_name({ preset: "iso-8601" })).querySelector("button");
     await userEvent.click(useButton!);
     await userEvent.click(screen.getByText(m.calendar_picker_update_action()));
 
-    expect(api.submit).toHaveBeenCalledWith({ mode: "custom", dow: 1, doy: 4, global: false });
+    expect(submit).toHaveBeenCalledWith({ mode: "custom", dow: 1, doy: 4, global: false });
   });
 
   it('submits { mode: "locale" } when the locale row\'s Use button + Update are clicked', async () => {
-    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
-    mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
+    const { submit } = await resolveModal({ mode: "custom", dow: 1, doy: 4, global: false });
 
     const useButton = rowFor(m.calendar_preset_name({ preset: "locale" })).querySelector("button");
     await userEvent.click(useButton!);
     await userEvent.click(screen.getByText(m.calendar_picker_update_action()));
 
-    expect(api.submit).toHaveBeenCalledWith({ mode: "locale" });
+    expect(submit).toHaveBeenCalledWith({ mode: "locale" });
   });
 
   it("switches into custom mode when the Custom row's Use button is clicked, even from a preset", async () => {
-    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
-    mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
+    await resolveModal({ mode: "custom", dow: 1, doy: 4, global: false });
 
     const useButton = rowFor(m.calendar_preset_name({ preset: "custom" })).querySelector("button");
     await userEvent.click(useButton!);
@@ -81,18 +57,16 @@ describe("WeekPresetPickerModal", () => {
   });
 
   it("prefills the custom fields from the locale week when Custom is opened from locale mode", async () => {
-    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
-    mountModal({ mode: "locale" }, api, { dow: 0, doy: 6 });
+    const { submit } = await resolveModal({ mode: "locale" }, { dow: 0, doy: 6 });
 
     await userEvent.click(rowFor(m.calendar_preset_name({ preset: "custom" })).querySelector("button")!);
     await userEvent.click(screen.getByText(m.calendar_picker_update_action()));
 
-    expect(api.submit).toHaveBeenCalledWith({ mode: "custom", dow: 0, doy: 6, global: false });
+    expect(submit).toHaveBeenCalledWith({ mode: "custom", dow: 0, doy: 6, global: false });
   });
 
   it("submits the custom dow/doy when in custom mode with edited values", async () => {
-    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
-    mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
+    const { submit } = await resolveModal({ mode: "custom", dow: 1, doy: 4, global: false });
     await userEvent.click(rowFor(m.calendar_preset_name({ preset: "custom" })).querySelector("button")!);
 
     const dropdown = rowFor(m.calendar_picker_start_week_on()).querySelector("select");
@@ -103,12 +77,11 @@ describe("WeekPresetPickerModal", () => {
     await userEvent.type(numberInput!, "2");
 
     await userEvent.click(screen.getByText(m.calendar_picker_update_action()));
-    expect(api.submit).toHaveBeenCalledWith({ mode: "custom", dow: 3, doy: 8, global: false });
+    expect(submit).toHaveBeenCalledWith({ mode: "custom", dow: 3, doy: 8, global: false });
   });
 
   it("shows the Currently used marker on the saved row, not the staged row", async () => {
-    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
-    mountModal({ mode: "custom", dow: 1, doy: 4, global: false }, api);
+    await resolveModal({ mode: "custom", dow: 1, doy: 4, global: false });
 
     const isoRow = rowFor(m.calendar_preset_name({ preset: "iso-8601" }));
     expect(isoRow.textContent).toContain(m.calendar_picker_in_use_marker());
@@ -124,10 +97,9 @@ describe("WeekPresetPickerModal", () => {
   });
 
   it("cancels via the api when the Cancel button is clicked", async () => {
-    const api: ModalApi<CalendarSliceState> = { submit: vi.fn(), cancel: vi.fn() };
-    mountModal({ mode: "locale" }, api);
+    const { cancel } = await resolveModal({ mode: "locale" });
 
     await userEvent.click(screen.getByText(m.common_action_cancel()));
-    expect(api.cancel).toHaveBeenCalled();
+    expect(cancel).toHaveBeenCalled();
   });
 });
