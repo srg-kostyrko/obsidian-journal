@@ -34,6 +34,8 @@ const convertedTestGlobs = [
   "src/maintenance/**/*.test.ts",
   "src/api/**/*.test.ts",
   "src/calendar/**/*.test.ts",
+  "src/code-blocks/**/*.test.ts",
+  "src/notes-calendar/**/*.test.ts",
 ];
 
 // `no-restricted-syntax` options replace rather than merge, so this array must carry
@@ -59,7 +61,8 @@ const campaignTestSelectors = [
     message: "Pass a feature CORE/UI module to testContainer({ modules }) instead of registering by hand.",
   },
   {
-    selector: "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)/]",
+    selector:
+      "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config|NavSegment)/]",
     message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal/buildShelf.",
   },
   {

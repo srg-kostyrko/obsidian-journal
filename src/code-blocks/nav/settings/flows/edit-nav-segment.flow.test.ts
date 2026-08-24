@@ -18,7 +18,7 @@ import { navBlockSettingsCoreModule } from "../module";
 
 import { EditNavBlockSegmentFlow } from "./edit-nav-segment.flow";
 
-function buildJournal(name: string, lines: NavBlockSegment[][]): JournalConfig {
+function journalWithNavLines(name: string, lines: NavBlockSegment[][]): JournalConfig {
   const base = fixedJournal(name, { type: "day" });
   return { ...base, navBlock: { ...base.navBlock, lines } };
 }
@@ -61,7 +61,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("errors for a line index out of range", async () => {
-    const { flows } = await build({ daily: buildJournal("daily", [[segA]]) });
+    const { flows } = await build({ daily: journalWithNavLines("daily", [[segA]]) });
     const result = await flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily", lineIndex: 5 });
     expect(result.kind === "err" && result.error).toBeInstanceOf(NavSegmentLifecycleFlowError);
     const cause = result.kind === "err" && (result.error as NavSegmentLifecycleFlowError).cause;
@@ -70,7 +70,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("errors for a segment index out of range", async () => {
-    const { flows } = await build({ daily: buildJournal("daily", [[segA]]) });
+    const { flows } = await build({ daily: journalWithNavLines("daily", [[segA]]) });
     const result = await flows.invoke(EditNavBlockSegmentFlow, {
       journalName: "daily",
       lineIndex: 0,
@@ -83,7 +83,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("returns UserAborted when the modal is cancelled", async () => {
-    const { flows, modals } = await build({ daily: buildJournal("daily", []) });
+    const { flows, modals } = await build({ daily: journalWithNavLines("daily", []) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily" });
     modals.lastOpen().cancel();
     const result = await promise;
@@ -91,7 +91,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("appends a new line when no indices are given", async () => {
-    const { flows, modals, repo } = await build({ daily: buildJournal("daily", [[segA], [segB]]) });
+    const { flows, modals, repo } = await build({ daily: journalWithNavLines("daily", [[segA], [segB]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily" });
     submit(modals, submittedSegment);
     const result = await promise;
@@ -105,7 +105,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("appends a segment to an existing line when only lineIndex is given", async () => {
-    const { flows, modals, repo } = await build({ daily: buildJournal("daily", [[segA], [segB]]) });
+    const { flows, modals, repo } = await build({ daily: journalWithNavLines("daily", [[segA], [segB]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily", lineIndex: 1 });
     submit(modals, submittedSegment);
     const result = await promise;
@@ -119,7 +119,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("replaces a segment in place when both indices are given", async () => {
-    const { flows, modals, repo } = await build({ daily: buildJournal("daily", [[segA, segB]]) });
+    const { flows, modals, repo } = await build({ daily: journalWithNavLines("daily", [[segA, segB]]) });
     const promise = flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily", lineIndex: 0, segmentIndex: 1 });
     submit(modals, submittedSegment);
     const result = await promise;
@@ -145,7 +145,7 @@ describe("EditNavBlockSegmentFlow", () => {
   });
 
   it("passes the existing segment to the modal when editing in place", async () => {
-    const { flows, modals } = await build({ daily: buildJournal("daily", [[segA, segB]]) });
+    const { flows, modals } = await build({ daily: journalWithNavLines("daily", [[segA, segB]]) });
     void flows.invoke(EditNavBlockSegmentFlow, { journalName: "daily", lineIndex: 0, segmentIndex: 1 });
     expect(modals.lastOpen<{ segment?: NavBlockSegment }, unknown>().props.segment).toEqual(segB);
     modals.lastOpen().cancel();
