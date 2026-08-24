@@ -29,7 +29,10 @@ export default defineConfig({
         "**/*.bench.ts",
         // DI wiring. `docs/unit-testing-strategy.md` forbids testing it, so counting it measured
         // lines nobody was permitted to act on — and every module split added a fresh 0% file
-        // that dragged the floor down for reasons unrelated to test quality.
+        // that dragged the floor down for reasons unrelated to test quality. Safe only because a
+        // `module.ts` is assumed to hold wiring only — `src/settings/legacy/module.ts` already
+        // breaks that assumption (its `legacyMigrations` array is real behavior with its own
+        // test), so a file matching this glob still needs checking for non-wiring exports.
         "src/**/module.ts",
         "src/**/ui-module.ts",
       ],
