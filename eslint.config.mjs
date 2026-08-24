@@ -27,7 +27,7 @@ const noStrayDefineModal = {
 // `src/infrastructure/**` is deliberately absent and stays absent: its host/di/flows
 // tests are what testContainer is built from, so converting them onto the harness
 // would test the harness through itself.
-const convertedTestGlobs = ["src/journals/**/*.test.ts", "src/shelves/**/*.test.ts"];
+const convertedTestGlobs = ["src/journals/**/*.test.ts", "src/shelves/**/*.test.ts", "src/commands/**/*.test.ts"];
 
 // `no-restricted-syntax` options replace rather than merge, so this array must carry
 // the vi.mock selector too — a block that omits it lifts the isolation ban for every

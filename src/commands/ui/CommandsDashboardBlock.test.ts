@@ -1,83 +1,49 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { createSettingsService } from "@/settings/testing";
+import { testContainer } from "@/testing";
 
-import { commandCollection, type CommandConfig } from "../config";
 import { DeleteCommandFlow } from "../flows/delete-command.flow";
 import { EditCommandFlow } from "../flows/edit-command.flow";
-import { CommandsRepository } from "../repository";
-import { CommandsEventsToken } from "../tokens";
+import { commandsCoreModule } from "../module";
+import { buildCommand } from "../testing";
 
 import CommandsDashboardBlock from "./CommandsDashboardBlock.vue";
 
-afterEach(() => cleanup());
-
-function makeConfig(name: string, kind: "all" | "journal"): CommandConfig {
-  return {
-    name,
-    icon: "",
-    showInRibbon: false,
-    openMode: "active",
-    target: kind === "all" ? { kind: "all", writeType: "day" } : { kind: "journal", journalName: "daily" },
-    type: "same",
-    context: "today",
-  };
-}
+import type { CommandConfig } from "../config";
 
 async function setup(commands: Record<string, CommandConfig> = {}) {
-  const { service: settings, container } = createSettingsService({
-    collections: [commandCollection],
-    raw: { version: 5, commands },
-  });
-  await settings.initialize();
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-  container.register(CommandsEventsToken).useFactory(() => createNanoEvents());
-  container.register(CommandsRepository).useClass(CommandsRepository);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  const flows = container.resolve(Flows);
+  const harness = await testContainer({ modules: [commandsCoreModule], data: { commands } });
+  const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
-  return { container, flows };
-}
-
-function mount(container: Container) {
-  return render(CommandsDashboardBlock, {
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
+  return { harness, flows };
 }
 
 describe("CommandsDashboardBlock", () => {
   it("shows the empty state when no global commands exist", async () => {
-    const { container } = await setup();
-    mount(container);
+    const { harness } = await setup();
+    harness.render(CommandsDashboardBlock);
     await userEvent.click(screen.getByText(m.command_section_title()));
     expect(screen.getByText(m.command_empty({ scope: "global" }))).toBeTruthy();
   });
 
   it("lists only all-target commands", async () => {
-    const { container } = await setup({
-      "c-1": makeConfig("Global one", "all"),
-      "c-2": makeConfig("Journal one", "journal"),
+    const { harness } = await setup({
+      "c-1": buildCommand({ name: "Global one", target: { kind: "all", writeType: "day" } }),
+      "c-2": buildCommand({ name: "Journal one", target: { kind: "journal", journalName: "daily" } }),
     });
-    mount(container);
+    harness.render(CommandsDashboardBlock);
     await userEvent.click(screen.getByText(m.command_section_title()));
     expect(screen.getByText("Global one")).toBeTruthy();
     expect(screen.queryByText("Journal one")).toBeNull();
   });
 
   it("invokes EditCommandFlow with an all target when add is clicked", async () => {
-    const { container, flows } = await setup();
-    mount(container);
+    const { harness, flows } = await setup();
+    harness.render(CommandsDashboardBlock);
     await userEvent.click(screen.getByLabelText(m.command_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       target: { kind: "all", writeType: "day" },
@@ -85,8 +51,10 @@ describe("CommandsDashboardBlock", () => {
   });
 
   it("invokes EditCommandFlow with the command id when edit is clicked", async () => {
-    const { container, flows } = await setup({ "c-1": makeConfig("Global one", "all") });
-    mount(container);
+    const { harness, flows } = await setup({
+      "c-1": buildCommand({ name: "Global one", target: { kind: "all", writeType: "day" } }),
+    });
+    harness.render(CommandsDashboardBlock);
     await userEvent.click(screen.getByText(m.command_section_title()));
     await userEvent.click(screen.getByLabelText(m.command_edit_tooltip({ name: "Global one" })));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
@@ -96,8 +64,10 @@ describe("CommandsDashboardBlock", () => {
   });
 
   it("invokes DeleteCommandFlow when delete is clicked", async () => {
-    const { container, flows } = await setup({ "c-1": makeConfig("Global one", "all") });
-    mount(container);
+    const { harness, flows } = await setup({
+      "c-1": buildCommand({ name: "Global one", target: { kind: "all", writeType: "day" } }),
+    });
+    harness.render(CommandsDashboardBlock);
     await userEvent.click(screen.getByText(m.command_section_title()));
     await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Global one" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteCommandFlow, { commandId: "c-1" });

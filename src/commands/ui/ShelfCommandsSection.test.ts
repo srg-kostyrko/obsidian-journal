@@ -1,63 +1,35 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { type Container, provideInjectorOnApp } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { createSettingsService } from "@/settings/testing";
-import { shelvesCollection } from "@/shelves";
+import { testContainer } from "@/testing";
 
-import { commandCollection, type CommandConfig } from "../config";
 import { DeleteCommandFlow } from "../flows/delete-command.flow";
 import { EditCommandFlow } from "../flows/edit-command.flow";
-import { CommandsRepository } from "../repository";
-import { CommandsEventsToken } from "../tokens";
+import { commandsCoreModule } from "../module";
+import { buildCommand } from "../testing";
 
 import ShelfCommandsSection from "./ShelfCommandsSection.vue";
 
-afterEach(() => cleanup());
-
-function makeConfig(name: string, target: CommandConfig["target"]): CommandConfig {
-  return { name, icon: "", showInRibbon: false, openMode: "active", target, type: "same", context: "today" };
-}
+import type { CommandConfig } from "../config";
 
 async function setup(commands: Record<string, CommandConfig> = {}) {
-  const { service: settings, container } = createSettingsService({
-    collections: [commandCollection, shelvesCollection],
-    raw: { version: 5, commands, shelves: { work: { name: "work", journals: [] } } },
-  });
-  await settings.initialize();
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-  container.register(CommandsEventsToken).useFactory(() => createNanoEvents());
-  container.register(CommandsRepository).useClass(CommandsRepository);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  const flows = container.resolve(Flows);
+  const harness = await testContainer({ modules: [commandsCoreModule], data: { commands } });
+  const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
-  return { container, flows };
-}
-
-function mount(container: Container) {
-  return render(ShelfCommandsSection, {
-    props: { shelfName: "work" },
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
+  return { harness, flows };
 }
 
 describe("ShelfCommandsSection", () => {
   it("lists only this shelf's commands", async () => {
-    const { container } = await setup({
-      "c-1": makeConfig("Mine", { kind: "shelf", shelfName: "work", writeType: "day" }),
-      "c-2": makeConfig("Other shelf", { kind: "shelf", shelfName: "home", writeType: "day" }),
-      "c-3": makeConfig("Global", { kind: "all", writeType: "day" }),
+    const { harness } = await setup({
+      "c-1": buildCommand({ name: "Mine", target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
+      "c-2": buildCommand({ name: "Other shelf", target: { kind: "shelf", shelfName: "home", writeType: "day" } }),
+      "c-3": buildCommand({ name: "Global", target: { kind: "all", writeType: "day" } }),
     });
-    mount(container);
+    harness.render(ShelfCommandsSection, { props: { shelfName: "work" } });
     await userEvent.click(screen.getByText(m.command_section_title()));
     expect(screen.getByText("Mine")).toBeTruthy();
     expect(screen.queryByText("Other shelf")).toBeNull();
@@ -65,8 +37,8 @@ describe("ShelfCommandsSection", () => {
   });
 
   it("invokes EditCommandFlow with a shelf target when add is clicked", async () => {
-    const { container, flows } = await setup();
-    mount(container);
+    const { harness, flows } = await setup();
+    harness.render(ShelfCommandsSection, { props: { shelfName: "work" } });
     await userEvent.click(screen.getByLabelText(m.command_add()));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
       target: { kind: "shelf", shelfName: "work", writeType: "day" },
@@ -74,10 +46,10 @@ describe("ShelfCommandsSection", () => {
   });
 
   it("invokes EditCommandFlow with the command id when edit is clicked", async () => {
-    const { container, flows } = await setup({
-      "c-1": makeConfig("Mine", { kind: "shelf", shelfName: "work", writeType: "day" }),
+    const { harness, flows } = await setup({
+      "c-1": buildCommand({ name: "Mine", target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
     });
-    mount(container);
+    harness.render(ShelfCommandsSection, { props: { shelfName: "work" } });
     await userEvent.click(screen.getByText(m.command_section_title()));
     await userEvent.click(screen.getByLabelText(m.command_edit_tooltip({ name: "Mine" })));
     expect(flows.invoke).toHaveBeenCalledWith(EditCommandFlow, {
@@ -87,10 +59,10 @@ describe("ShelfCommandsSection", () => {
   });
 
   it("invokes DeleteCommandFlow when delete is clicked", async () => {
-    const { container, flows } = await setup({
-      "c-1": makeConfig("Mine", { kind: "shelf", shelfName: "work", writeType: "day" }),
+    const { harness, flows } = await setup({
+      "c-1": buildCommand({ name: "Mine", target: { kind: "shelf", shelfName: "work", writeType: "day" } }),
     });
-    mount(container);
+    harness.render(ShelfCommandsSection, { props: { shelfName: "work" } });
     await userEvent.click(screen.getByText(m.command_section_title()));
     await userEvent.click(screen.getByLabelText(m.common_delete_name({ name: "Mine" })));
     expect(flows.invoke).toHaveBeenCalledWith(DeleteCommandFlow, { commandId: "c-1" });

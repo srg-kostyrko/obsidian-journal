@@ -1,76 +1,33 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, waitFor } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { screen, waitFor } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService } from "@/infrastructure/host";
-import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
-import type { ModalApi } from "@/infrastructure/host/modals";
-import { provideModalApiOnApp } from "@/infrastructure/host/modals/testing";
-import { journalConfigCollection } from "@/journals";
-import { JournalsRepository } from "@/journals/repository";
-import { JournalsEventsToken } from "@/journals/tokens";
-import { JournalsViewModel } from "@/journals/view-model";
-import { createSettingsService } from "@/settings/testing";
+import type { JournalConfig } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import { testContainer } from "@/testing";
 
-import { commandCollection, type CommandConfig, type CommandTarget } from "../config";
+import { buildCommand } from "../testing";
 
 import EditCommandModal from "./EditCommandModal.vue";
 import { editCommandModal } from "./modals";
 
-afterEach(() => cleanup());
-
-function makeJournal(name: string, writeType: "day" | "week") {
-  return {
-    name,
-    write: { type: writeType },
-    timeline: { start: "", end: { kind: "never" as const } },
-    dateFormat: "YYYY-MM-DD",
-    frontmatter: {
-      dateField: "journal-date",
-      startDateField: "journal-start-date",
-      endDateField: "journal-end-date",
-      addStartDate: false,
-      addEndDate: false,
-    },
-    numbering: { enabled: false, anchorDate: "", allowBefore: false, sources: [] },
-  };
-}
+import type { CommandConfig, CommandTarget } from "../config";
 
 async function mountModal(options: {
   command?: CommandConfig;
   target: CommandTarget;
   takenNames?: string[];
-  journals?: Record<string, unknown>;
+  journals?: Record<string, JournalConfig>;
 }) {
-  const { service: settings, container } = createSettingsService({
-    collections: [commandCollection, journalConfigCollection],
-    raw: { version: 5, journals: options.journals ?? {} },
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: options.journals ?? {} },
   });
-  await settings.initialize();
-  container.register(JournalsEventsToken).useFactory(() => createNanoEvents());
-  container.register(JournalsRepository).useClass(JournalsRepository);
-  container.register(JournalsViewModel).useClass(JournalsViewModel);
-  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
-  const submit = vi.fn();
-  const cancel = vi.fn();
-  const api: ModalApi<CommandConfig> = { submit, cancel };
-  render(EditCommandModal, {
+  return harness.renderModal<typeof EditCommandModal, CommandConfig>(EditCommandModal, {
     props: { command: options.command, target: options.target, takenNames: options.takenNames ?? [] },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-            provideModalApiOnApp(app, api as ModalApi<unknown>);
-          },
-        },
-      ],
-    },
   });
-  return { submit, cancel };
 }
 
 describe("editCommandModal definition", () => {
@@ -85,15 +42,7 @@ describe("editCommandModal definition", () => {
   });
 
   it("uses the edit title when a command is supplied", () => {
-    const command: CommandConfig = {
-      name: "Existing",
-      icon: "",
-      showInRibbon: false,
-      openMode: "active",
-      target: { kind: "all", writeType: "day" },
-      type: "same",
-      context: "today",
-    };
+    const command = buildCommand({ name: "Existing" });
     expect(editCommandModal.title({ command, target: { kind: "all", writeType: "day" }, takenNames: [] })).toBe(
       m.command_edit(),
     );
@@ -121,7 +70,7 @@ describe("EditCommandModal", () => {
   it("shows the auto-prefix hint for a journal-targeted command", async () => {
     await mountModal({
       target: { kind: "journal", journalName: "daily" },
-      journals: { daily: makeJournal("daily", "day") },
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
     });
     expect(screen.getByText(m.command_name_prefix_hint({ kind: "journal" }))).toBeTruthy();
   });
@@ -129,7 +78,7 @@ describe("EditCommandModal", () => {
   it("omits the note type field for a journal-targeted command", async () => {
     await mountModal({
       target: { kind: "journal", journalName: "daily" },
-      journals: { daily: makeJournal("daily", "day") },
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
     });
     expect(screen.queryByText(m.command_modal_write_type_label())).toBeNull();
   });
@@ -180,7 +129,7 @@ describe("EditCommandModal", () => {
   it("offers only the supported types for a weekly journal target", async () => {
     await mountModal({
       target: { kind: "journal", journalName: "weekly" },
-      journals: { weekly: makeJournal("weekly", "week") },
+      journals: { weekly: fixedJournal("weekly", { type: "week" }) },
     });
     const typeSelect = screen.getAllByRole("combobox")[0]; // the type dropdown is the first combobox
     const optionValues = [...typeSelect.querySelectorAll("option")].map((o) => o.getAttribute("value"));
@@ -188,16 +137,7 @@ describe("EditCommandModal", () => {
   });
 
   it("pre-populates the name from an existing command in edit mode", async () => {
-    const command: CommandConfig = {
-      name: "Existing",
-      icon: "",
-      showInRibbon: false,
-      openMode: "active",
-      target: { kind: "all", writeType: "day" },
-      type: "same",
-      context: "today",
-    };
-    await mountModal({ command, target: { kind: "all", writeType: "day" } });
+    await mountModal({ command: buildCommand({ name: "Existing" }), target: { kind: "all", writeType: "day" } });
     expect(screen.getByRole<HTMLInputElement>("textbox").value).toBe("Existing");
   });
 
