@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
-import { journalDefaultsFor, type JournalConfig, type JournalEntry, type NavBlockSegment } from "@/journals";
+import { journalDefaultsFor, type JournalConfig, type JournalEntry } from "@/journals";
+import { buildNavSegment } from "@/journals/testing";
 import type { ShelfConfig } from "@/shelves";
 
 import { resolveLinkCandidates, resolveLinkTarget } from "./link-targets";
@@ -14,18 +15,7 @@ const noteEntry: Option<JournalEntry> = Option.some({
   anchor: "2026-05-27" as AnchorString,
   path: "Daily/2026-05-27.md" as VaultPath,
 });
-const baseRow: NavBlockSegment = {
-  template: "",
-  fontSize: 1,
-  bold: false,
-  italic: false,
-  color: { type: "transparent" },
-  background: { type: "transparent" },
-  link: "none",
-  journal: "",
-  linkDate: "",
-  addDecorations: false,
-};
+const baseRow = buildNavSegment({ color: { type: "transparent" } });
 
 describe("resolveLinkTarget", () => {
   it("returns kind 'none' for link 'none'", () => {

@@ -1,27 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import type { NavBlockSegment } from "@/journals";
+import { buildNavSegment } from "@/journals/testing";
 
 import { applySegmentReorder } from "./line-reorder";
 
-function segment(template: string): NavBlockSegment {
-  return {
-    template,
-    fontSize: 1,
-    bold: false,
-    italic: false,
-    color: { type: "theme", name: "text-normal" },
-    background: { type: "transparent" },
-    link: "none",
-    journal: "",
-    linkDate: "",
-    addDecorations: false,
-  };
-}
-
-const a = segment("a");
-const b = segment("b");
-const c = segment("c");
+const a = buildNavSegment({ template: "a" });
+const b = buildNavSegment({ template: "b" });
+const c = buildNavSegment({ template: "c" });
 
 describe("applySegmentReorder", () => {
   it("reorders within a line", () => {

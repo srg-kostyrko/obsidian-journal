@@ -2,34 +2,16 @@
 import { describe, expect, it } from "vitest";
 
 import { CalendarDate, periodOfKind, type AnchorString } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
 import { Option } from "@/infrastructure/result";
-import type { JournalConfig, JournalEntry, NavBlockSegment } from "@/journals";
+import type { JournalConfig, JournalEntry } from "@/journals";
+import { buildNavSegment } from "@/journals/testing";
 import type { ShelfConfig } from "@/shelves";
 
 import { resolveSegmentDecoration, segmentDecorationCell } from "./segment-decoration";
 
-installTestCalendar();
-
 const REF = "2025-08-15" as AnchorString;
 const DATE = CalendarDate.fromAnchor(REF);
 const SHIFTED = CalendarDate.fromAnchor("2024-08-15" as AnchorString);
-
-function segment(overrides: Partial<NavBlockSegment>): NavBlockSegment {
-  return {
-    template: "",
-    fontSize: 1,
-    bold: false,
-    italic: false,
-    link: "none",
-    journal: "",
-    linkDate: "",
-    color: { type: "theme", name: "text-normal" },
-    background: { type: "transparent" },
-    addDecorations: false,
-    ...overrides,
-  };
-}
 
 function journal(name: string, type: JournalConfig["write"]["type"]): JournalConfig {
   return { name, write: { type } } as JournalConfig;
@@ -62,7 +44,16 @@ const anchorOf = (name: string, date: CalendarDate): Option<AnchorString> =>
 
 describe("segmentDecorationCell", () => {
   it("decorates a self segment as the host period, drawing on the host alone when no shelf mate shares its write type", () => {
-    const cell = segmentDecorationCell(segment({ link: "self" }), daily, [daily], [], anchorOf, DATE, REF, false);
+    const cell = segmentDecorationCell(
+      buildNavSegment({ link: "self" }),
+      daily,
+      [daily],
+      [],
+      anchorOf,
+      DATE,
+      REF,
+      false,
+    );
     expect(cell).toEqual({
       period: dayPeriod("2025-08-15"),
       journalNames: ["daily"],
@@ -74,7 +65,7 @@ describe("segmentDecorationCell", () => {
   it("anchors a host-like segment to the host even when an earlier journal shares its write type", () => {
     const cycles = journal("cycles", "custom");
     const cell = segmentDecorationCell(
-      segment({ link: "self" }),
+      buildNavSegment({ link: "self" }),
       sprint,
       [cycles, sprint],
       [],
@@ -88,7 +79,7 @@ describe("segmentDecorationCell", () => {
 
   it("decorates an unshifted self segment from every same-write-type journal in scope, not just the host", () => {
     const cell = segmentDecorationCell(
-      segment({ link: "self" }),
+      buildNavSegment({ link: "self" }),
       daily,
       [daily, workDaily],
       [],
@@ -102,7 +93,7 @@ describe("segmentDecorationCell", () => {
 
   it("decorates an unlinked segment from every same-write-type journal in scope, at the host period", () => {
     const cell = segmentDecorationCell(
-      segment({ link: "none" }),
+      buildNavSegment({ link: "none" }),
       daily,
       [daily, workDaily],
       [],
@@ -116,7 +107,16 @@ describe("segmentDecorationCell", () => {
   });
 
   it("decorates a year-link segment from the year journals at the year period", () => {
-    const cell = segmentDecorationCell(segment({ link: "year" }), daily, [daily], [yearly], anchorOf, DATE, REF, false);
+    const cell = segmentDecorationCell(
+      buildNavSegment({ link: "year" }),
+      daily,
+      [daily],
+      [yearly],
+      anchorOf,
+      DATE,
+      REF,
+      false,
+    );
     expect(cell).toEqual({
       period: yearPeriod("2025-01-01"),
       journalNames: ["yearly"],
@@ -127,7 +127,7 @@ describe("segmentDecorationCell", () => {
 
   it("routes a custom-journal target into the interval scope", () => {
     const cell = segmentDecorationCell(
-      segment({ link: "journal", journal: "sprint" }),
+      buildNavSegment({ link: "journal", journal: "sprint" }),
       daily,
       [daily],
       [sprint],
@@ -141,7 +141,7 @@ describe("segmentDecorationCell", () => {
 
   it("decorates a shifted link segment at its shifted period", () => {
     const cell = segmentDecorationCell(
-      segment({ link: "year", linkDate: "-1y" }),
+      buildNavSegment({ link: "year", linkDate: "-1y" }),
       daily,
       [daily],
       [yearly],
@@ -155,7 +155,7 @@ describe("segmentDecorationCell", () => {
 
   it("decorates a shifted self segment at its shifted period, not the unshifted host period", () => {
     const cell = segmentDecorationCell(
-      segment({ link: "self", linkDate: "-1y" }),
+      buildNavSegment({ link: "self", linkDate: "-1y" }),
       daily,
       [daily, workDaily],
       [daily],
@@ -173,13 +173,15 @@ describe("segmentDecorationCell", () => {
   });
 
   it("returns null when the target list is empty", () => {
-    expect(segmentDecorationCell(segment({ link: "year" }), daily, [daily], [], anchorOf, DATE, REF, false)).toBeNull();
+    expect(
+      segmentDecorationCell(buildNavSegment({ link: "year" }), daily, [daily], [], anchorOf, DATE, REF, false),
+    ).toBeNull();
   });
 
   it("returns null when the target journal's own anchor lookup resolves to none", () => {
     const monthly = journal("monthly", "month");
     const cell = segmentDecorationCell(
-      segment({ link: "month" }),
+      buildNavSegment({ link: "month" }),
       daily,
       [daily],
       [monthly],
@@ -198,7 +200,7 @@ const noEntry = Option.none<JournalEntry>();
 describe("resolveSegmentDecoration", () => {
   it("decorates a year-link segment from the year journal in shelf scope, not the daily host", () => {
     const cell = resolveSegmentDecoration(
-      segment({ link: "year" }),
+      buildNavSegment({ link: "year" }),
       daily,
       [daily, yearly],
       [{ name: "main", journals: ["daily", "yearly"], decorations: [] } satisfies ShelfConfig],
@@ -216,7 +218,7 @@ describe("resolveSegmentDecoration", () => {
 
   it("decorates an unshifted self segment from every same-write-type shelf mate", () => {
     const cell = resolveSegmentDecoration(
-      segment({ link: "self" }),
+      buildNavSegment({ link: "self" }),
       daily,
       [daily, workDaily],
       [{ name: "main", journals: ["daily", "work-daily"], decorations: [] } satisfies ShelfConfig],
@@ -229,7 +231,7 @@ describe("resolveSegmentDecoration", () => {
 
   it("falls back to every journal when the host is on no shelf", () => {
     const cell = resolveSegmentDecoration(
-      segment({ link: "self" }),
+      buildNavSegment({ link: "self" }),
       daily,
       [daily, workDaily],
       [],
@@ -242,7 +244,7 @@ describe("resolveSegmentDecoration", () => {
 
   it("decorates a shifted self segment at its shifted period", () => {
     const cell = resolveSegmentDecoration(
-      segment({ link: "self", linkDate: "-1y" }),
+      buildNavSegment({ link: "self", linkDate: "-1y" }),
       daily,
       [daily, workDaily],
       [{ name: "main", journals: ["daily", "work-daily"], decorations: [] } satisfies ShelfConfig],
