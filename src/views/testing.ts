@@ -1,12 +1,44 @@
 import { render, type RenderResult } from "@testing-library/vue";
+import * as v from "valibot";
 import { defineComponent, h, ref } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
 
+import { defineToolbarItem, type ToolbarItemDefinition } from "./define-toolbar-item";
+import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
 import { provideViewContext, type RefDateOrigin, type ViewContext } from "./view-context";
 
 import type { BlockInstanceId, ViewId } from "./config";
-import type { ViewBlockDefinition } from "./define-view-block";
+
+const StubComponent = defineComponent({ render: () => null });
+
+export function buildViewBlockDefinition(
+  key: string,
+  overrides: Partial<ViewBlockDefinition> = {},
+): ViewBlockDefinition {
+  return defineViewBlock({
+    key,
+    label: () => key,
+    schema: v.object({}),
+    defaultConfig: {},
+    component: StubComponent,
+    ...overrides,
+  });
+}
+
+export function buildToolbarItemDefinition(
+  key: string,
+  overrides: Partial<ToolbarItemDefinition> = {},
+): ToolbarItemDefinition {
+  return defineToolbarItem({
+    key,
+    label: () => key,
+    schema: v.object({}),
+    defaultConfig: () => ({}),
+    component: StubComponent,
+    ...overrides,
+  });
+}
 
 export function provideViewContextStub(partial: Partial<ViewContext> = {}): ViewContext {
   return {
