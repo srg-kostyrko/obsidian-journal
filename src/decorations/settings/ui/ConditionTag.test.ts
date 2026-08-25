@@ -1,9 +1,9 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { m } from "@/i18n";
@@ -11,8 +11,6 @@ import { m } from "@/i18n";
 import ConditionTag from "./ConditionTag.vue";
 
 const renderConditionTagHost = () => h(ConditionTag, { name: "c" });
-
-afterEach(() => cleanup());
 
 interface InitialTag {
   condition: "contains" | "starts-with" | "ends-with";

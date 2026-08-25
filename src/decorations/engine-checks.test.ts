@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { DayPeriod } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date } from "@/calendar/testing";
 import type { NoteMetadata } from "@/infrastructure/host";
 import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
@@ -30,14 +30,6 @@ function meta(partial: Partial<NoteMetadata>): NoteMetadata {
 }
 
 describe("engine-checks", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("checkTitle", () => {
     it("is false when metadata is null", () => {
       const condition = buildCondition("title", { condition: "contains", value: "foo" });

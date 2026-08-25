@@ -1,9 +1,9 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h, provide, shallowRef } from "vue";
 
 import { DayPeriod } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { date } from "@/calendar/testing";
 
 import { cellKey } from "../engine";
 import { buildStyle } from "../testing";
@@ -26,15 +26,6 @@ function makeHost(period: DayPeriod, cells: ReadonlyMap<string, CellStyleRef>) {
 }
 
 describe("CellDecoration", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
   it("renders slot content unchanged when no decorations are provided", () => {
     const period = DayPeriod.containing(date("2026-05-25"));
     const { getByText } = render(CellDecoration, {

@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
-import { decorationsSettingsModule } from "@/decorations/settings/module";
+import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { initLocale } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import { OpenDateFlow } from "@/journals";
@@ -19,7 +19,7 @@ const MODULES = [
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
-  decorationsSettingsModule,
+  decorationsSettingsCoreModule,
   notesCalendarModule,
 ];
 

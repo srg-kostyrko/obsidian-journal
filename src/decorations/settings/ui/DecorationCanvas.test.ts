@@ -1,22 +1,18 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationSchema, type JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService } from "@/infrastructure/host";
-import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
+import { testContainer } from "@/testing";
 
 import { STYLE_SLOT_KEYS, type StyleSlotKey } from "../../style-slots";
 
 import DecorationCanvas from "./DecorationCanvas.vue";
-
-afterEach(() => cleanup());
 
 function layerChipLabel(type: StyleSlotKey, occupied: boolean): string {
   return m.decoration_layer_chip_label({ type, state: occupied ? "occupied" : "empty" });
@@ -33,10 +29,9 @@ const createStyleIn: Record<StyleSlotKey, () => Promise<void>> = {
   corner: () => userEvent.click(screen.getByRole("button", { name: "Top left" })),
 };
 
-function mount(styles: JournalDecoration["styles"] = []) {
+async function mount(styles: JournalDecoration["styles"] = []) {
   const exposed = {} as { values: JournalDecoration };
-  const container = new Container();
-  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
+  const harness = await testContainer();
   const Host = defineComponent({
     setup() {
       const form = useForm<JournalDecoration>({
@@ -47,23 +42,13 @@ function mount(styles: JournalDecoration["styles"] = []) {
       return () => h(DecorationCanvas, { name: "styles", styles: form.values.styles });
     },
   });
-  render(Host, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  harness.render(Host);
   return exposed;
 }
 
 describe("DecorationCanvas", () => {
-  it("opens an existing decoration on its first occupied layer", () => {
-    mount([{ type: "corner", placement: "top-left", color: { type: "theme", name: "text-accent" } }]);
+  it("opens an existing decoration on its first occupied layer", async () => {
+    await mount([{ type: "corner", placement: "top-left", color: { type: "theme", name: "text-accent" } }]);
     expect(screen.getByRole("tab", { name: layerChipLabel("corner", true) }).getAttribute("aria-selected")).toBe(
       "true",
     );
@@ -71,8 +56,8 @@ describe("DecorationCanvas", () => {
 
   // Strip order, not the order the styles were authored in: the tab that lights up is the
   // leftmost filled one, which is what the user sees rather than what data.json happens to list.
-  it("opens on the leftmost occupied layer rather than the first authored style", () => {
-    mount([
+  it("opens on the leftmost occupied layer rather than the first authored style", async () => {
+    await mount([
       { type: "corner", placement: "top-left", color: { type: "theme", name: "text-accent" } },
       { type: "background", color: { type: "theme", name: "interactive-accent" } },
     ]);
@@ -82,13 +67,13 @@ describe("DecorationCanvas", () => {
   });
 
   it("creates a background when the empty cell is clicked", async () => {
-    const host = mount();
+    const host = await mount();
     await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
     expect(host.values.styles.map((s) => s.type)).toEqual(["background"]);
   });
 
   it("creates a shape at the position that was clicked", async () => {
-    const host = mount();
+    const host = await mount();
     await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     expect(host.values.styles.at(0)).toMatchObject({
@@ -99,7 +84,7 @@ describe("DecorationCanvas", () => {
   });
 
   it("moves an existing shape rather than adding a second", async () => {
-    const host = mount();
+    const host = await mount();
     await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     await userEvent.click(screen.getByRole("button", { name: "Bottom right" }));
@@ -107,7 +92,7 @@ describe("DecorationCanvas", () => {
   });
 
   it("places the moved shape at the new position", async () => {
-    const host = mount();
+    const host = await mount();
     await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     await userEvent.click(screen.getByRole("button", { name: "Bottom right" }));
@@ -115,7 +100,7 @@ describe("DecorationCanvas", () => {
   });
 
   it("moves an existing corner rather than adding a second", async () => {
-    const host = mount();
+    const host = await mount();
     await userEvent.click(screen.getByRole("tab", { name: "Corner" }));
     await userEvent.click(screen.getByRole("button", { name: "Top left" }));
     await userEvent.click(screen.getByRole("button", { name: "Bottom right" }));
@@ -123,34 +108,34 @@ describe("DecorationCanvas", () => {
   });
 
   it("empties the slot when the layer is removed", async () => {
-    const host = mount();
+    const host = await mount();
     await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
     await userEvent.click(screen.getByRole("button", { name: "Remove" }));
     expect(host.values.styles).toEqual([]);
   });
 
   it("shows a hint while the active layer is empty", async () => {
-    mount();
+    await mount();
     await userEvent.click(screen.getByRole("tab", { name: "Icon" }));
     expect(screen.getByText("Click a position to add an icon.")).toBeTruthy();
   });
 
   it("only exposes the active layer's regions", async () => {
-    mount();
+    await mount();
     await userEvent.click(screen.getByRole("tab", { name: "Corner" }));
     expect(screen.queryByRole("button", { name: "Middle left" })).toBeNull();
   });
 
   describe("border", () => {
     it("creates a linked border when the ring is clicked", async () => {
-      const host = mount();
+      const host = await mount();
       await userEvent.click(screen.getByRole("tab", { name: "Border" }));
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
       expect(host.values.styles.at(0)).toMatchObject({ type: "border", border: "uniform" });
     });
 
     it("switches the stored mode when per side is chosen", async () => {
-      const host = mount();
+      const host = await mount();
       await userEvent.click(screen.getByRole("tab", { name: "Border" }));
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
       await userEvent.click(screen.getByRole("radio", { name: "Per side" }));
@@ -158,7 +143,7 @@ describe("DecorationCanvas", () => {
     });
 
     it("turns a hidden side on when its edge is clicked", async () => {
-      const host = mount([
+      const host = await mount([
         {
           type: "border",
           border: "different",
@@ -175,7 +160,7 @@ describe("DecorationCanvas", () => {
     });
 
     it("empties the border slot when the last shown side is removed", async () => {
-      const host = mount([
+      const host = await mount([
         {
           type: "border",
           border: "different",
@@ -195,7 +180,7 @@ describe("DecorationCanvas", () => {
     // only shown side is something else — without first clicking that side's edge — must still
     // reconcile before Remove runs, or Remove silently rewrites the already-hidden "top" side.
     it("removes the only shown side when the layer is opened without selecting it first", async () => {
-      const host = mount([
+      const host = await mount([
         {
           type: "border",
           border: "different",
@@ -213,7 +198,7 @@ describe("DecorationCanvas", () => {
 
   describe("switching layers", () => {
     it("keeps the previous layer's fields after adding a second layer", async () => {
-      const host = mount();
+      const host = await mount();
       await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
       await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
       await userEvent.click(screen.getByRole("button", { name: "Top left" }));
@@ -222,7 +207,7 @@ describe("DecorationCanvas", () => {
     });
 
     it("leaves a decoration that parses cleanly after adding a second layer", async () => {
-      const host = mount();
+      const host = await mount();
       await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
       await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
       await userEvent.click(screen.getByRole("button", { name: "Top left" }));
@@ -230,7 +215,7 @@ describe("DecorationCanvas", () => {
     });
 
     it("keeps the active border side's fields after switching to another layer", async () => {
-      const host = mount();
+      const host = await mount();
       await userEvent.click(screen.getByRole("tab", { name: "Border" }));
       await userEvent.click(screen.getByRole("button", { name: "Cell outline" }));
       await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
@@ -242,7 +227,7 @@ describe("DecorationCanvas", () => {
     // its inspector unmounts on a layer switch. Only exercising a couple of leaves would let the
     // flag silently go missing from the rest, so this covers all six.
     it.each(STYLE_SLOT_KEYS)("keeps a %s style parseable after switching layers", async (layer) => {
-      const host = mount();
+      const host = await mount();
       await userEvent.click(screen.getByRole("tab", { name: layerChipLabel(layer, false) }));
       await createStyleIn[layer]();
       const other = STYLE_SLOT_KEYS.find((key) => key !== layer);
@@ -253,7 +238,7 @@ describe("DecorationCanvas", () => {
     });
 
     it("keeps the second style parseable after removing the first", async () => {
-      const host = mount();
+      const host = await mount();
       await userEvent.click(screen.getByRole("tab", { name: layerChipLabel("background", false) }));
       await createStyleIn.background();
       await userEvent.click(screen.getByRole("tab", { name: layerChipLabel("shape", false) }));

@@ -1,37 +1,35 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
+import { date } from "@/calendar/testing";
 import { NoteMetadataService, NoteSizeService } from "@/infrastructure/host";
 import type { NoteSize, VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
-import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
+import { FakeNoteSizeService } from "@/infrastructure/host/testing";
+import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
-import { customJournal, fakeRepo, fixedJournal } from "@/journals/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { customJournal, fixedJournal } from "@/journals/testing";
+import { shelvesCoreModule } from "@/shelves/module";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { cellKey, DecorationEngine } from "./engine";
+import { decorationsModule } from "./module";
+import { decorationsSettingsCoreModule } from "./settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
 
 import type { JournalDecoration } from "./config";
 
-function buildContainer(journals: Record<string, JournalConfig> = {}): {
-  c: Container;
-  metadata: FakeNoteMetadataService;
-  size: FakeNoteSizeService;
-} {
-  const c = new Container();
-  c.register(JournalsRepository).useValue(fakeRepo(journals));
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(TimelineService).useClass(TimelineService);
-  const metadata = new FakeNoteMetadataService();
-  c.register(NoteMetadataService).useValue(metadata as unknown as NoteMetadataService);
+async function buildHarness(
+  journals: Record<string, JournalConfig> = {},
+): Promise<{ harness: TestHarness; size: FakeNoteSizeService }> {
   const size = new FakeNoteSizeService();
-  c.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
-  c.register(DecorationEngine).useClass(DecorationEngine);
-  return { c, metadata, size };
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    data: { journals, shelves: {}, decorations: { decorations: [] } },
+    overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
+  });
+  return { harness, size };
 }
 
 // A fortnightly journal bounded to a single month. Its intervals start 2026-01-05, 2026-01-19,
@@ -43,14 +41,14 @@ const sprintDecoration = buildDecoration({
   styles: [buildStyle("background")],
 });
 
-function sprintDayCells(day: string): Map<string, unknown> {
-  const { c } = buildContainer({
+async function sprintDayCells(day: string): Promise<Map<string, unknown>> {
+  const { harness } = await buildHarness({
     sprint: customJournal("sprint", "week", 2, "2026-01-05", {
       decorations: [sprintDecoration],
       timeline: { start: "2026-01-05" as AnchorString, end: { kind: "date", date: "2026-02-01" as AnchorString } },
     }),
   });
-  return c
+  return harness
     .resolve(DecorationEngine)
     .evaluateRange(
       [DayPeriod.containing(date(day))],
@@ -60,49 +58,43 @@ function sprintDayCells(day: string): Map<string, unknown> {
 
 const NOTE_PATH = "journals/2026-05-25.md" as VaultPath;
 
-function evaluateDaily(
+async function evaluateDaily(
   decoration: JournalDecoration,
   options: { registerNote: boolean; size?: NoteSize },
-): Map<string, unknown> {
-  const { c, size: sizes } = buildContainer({
+): Promise<Map<string, unknown>> {
+  const { harness, size: sizes } = await buildHarness({
     daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
   });
   const period = DayPeriod.containing(date("2026-05-25"));
   if (options.registerNote) {
-    c.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
   }
   if (options.size !== undefined) sizes.setSize(NOTE_PATH, options.size);
-  return c
+  return harness
     .resolve(DecorationEngine)
     .evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
 }
 
 describe("DecorationEngine", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("evaluateRange", () => {
-    it("returns an empty map for empty inputs", () => {
-      const { c } = buildContainer();
-      const engine = c.resolve(DecorationEngine);
+    it("returns an empty map for empty inputs", async () => {
+      const { harness } = await buildHarness();
+      const engine = harness.resolve(DecorationEngine);
       expect(engine.evaluateRange([], [])).toEqual(new Map());
     });
 
-    it("returns no entries when has-note condition is unmet (no journal entry seeded)", () => {
+    it("returns no entries when has-note condition is unmet (no journal entry seeded)", async () => {
       const decoration = buildDecoration({
         mode: "or",
         conditions: [buildCondition("has-note")],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       const period = DayPeriod.containing(date("2026-05-25"));
       const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
@@ -110,16 +102,16 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(0);
     });
 
-    it("contributes a matching decoration once when the same cell is listed several times", () => {
+    it("contributes a matching decoration once when the same cell is listed several times", async () => {
       const decoration = buildDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [0, 1, 2, 3, 4, 5, 6] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       const period = DayPeriod.containing(date("2026-05-25"));
       const result = engine.evaluateRange(
@@ -130,16 +122,16 @@ describe("DecorationEngine", () => {
       expect(result.get(cellKey(period.kind, period.anchor.toAnchor()))).toHaveLength(1);
     });
 
-    it("returns no entries when period kind mismatches journal write-type", () => {
+    it("returns no entries when period kind mismatches journal write-type", async () => {
       const decoration = buildDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       const dayPeriod = DayPeriod.containing(date("2026-05-25"));
       const result = engine.evaluateRange(
@@ -150,7 +142,7 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(0);
     });
 
-    it("keeps day and week decorations in separate cells when their anchors coincide", () => {
+    it("keeps day and week decorations in separate cells when their anchors coincide", async () => {
       const dayDeco = buildDecoration({
         mode: "or",
         conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
@@ -161,11 +153,11 @@ describe("DecorationEngine", () => {
         conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [dayDeco] }),
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [weekDeco] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
       const dayPeriod = DayPeriod.containing(date(weekPeriod.anchor.toAnchor()));
@@ -187,7 +179,7 @@ describe("DecorationEngine", () => {
     // produce: the condition editor offers date/weekday only for day journals, and the write
     // type is fixed once a journal exists. They guard the anchor the engine evaluates against,
     // not a supported configuration.
-    it("matches a weekday condition naming the week's first day", () => {
+    it("matches a weekday condition naming the week's first day", async () => {
       // A week period evaluates weekday conditions against its anchor, which is its first day
       // (Monday under the ISO test calendar) — not the representative day {{date}} renders.
       const decoration = buildDecoration({
@@ -195,10 +187,10 @@ describe("DecorationEngine", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
       const result = engine.evaluateRange(
@@ -209,16 +201,16 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(1);
     });
 
-    it("does not match a weekday condition naming the week's representative day", () => {
+    it("does not match a weekday condition naming the week's representative day", async () => {
       const decoration = buildDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [4] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       const weekPeriod = WeekPeriod.containing(date("2026-05-25"));
       const result = engine.evaluateRange(
@@ -229,12 +221,12 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(0);
     });
 
-    it("returns no entries when conditions list is empty", () => {
+    it("returns no entries when conditions list is empty", async () => {
       const decoration = buildDecoration({ styles: [buildStyle("background")] });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       const period = DayPeriod.containing(date("2026-05-25"));
       const result = engine.evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
@@ -242,14 +234,14 @@ describe("DecorationEngine", () => {
       expect(result.size).toBe(0);
     });
 
-    it("paints a day cell from a calendar decoration", () => {
+    it("paints a day cell from a calendar decoration", async () => {
       const decoration = buildCalendarDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer();
-      const engine = c.resolve(DecorationEngine);
+      const { harness } = await buildHarness();
+      const engine = harness.resolve(DecorationEngine);
 
       // 2026-05-25 is a Monday.
       const period = DayPeriod.containing(date("2026-05-25"));
@@ -261,14 +253,14 @@ describe("DecorationEngine", () => {
       expect(result.get(cellKey("day", period.anchor.toAnchor()))).toEqual(decoration.styles);
     });
 
-    it("leaves a week cell untouched for a calendar decoration", () => {
+    it("leaves a week cell untouched for a calendar decoration", async () => {
       const decoration = buildCalendarDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer();
-      const engine = c.resolve(DecorationEngine);
+      const { harness } = await buildHarness();
+      const engine = harness.resolve(DecorationEngine);
 
       const period = WeekPeriod.containing(date("2026-05-25"));
       const result = engine.evaluateRange(
@@ -280,16 +272,19 @@ describe("DecorationEngine", () => {
     });
 
     describe("timeline bounds", () => {
-      it("paints an interval's first day inside the timeline", () => {
-        expect(sprintDayCells("2026-01-19").size).toBe(1);
+      it("paints an interval's first day inside the timeline", async () => {
+        const result = await sprintDayCells("2026-01-19");
+        expect(result.size).toBe(1);
       });
 
-      it("leaves an interval's first day past the timeline end undecorated", () => {
-        expect(sprintDayCells("2026-02-02").size).toBe(0);
+      it("leaves an interval's first day past the timeline end undecorated", async () => {
+        const result = await sprintDayCells("2026-02-02");
+        expect(result.size).toBe(0);
       });
 
-      it("leaves an interval's first day before the timeline start undecorated", () => {
-        expect(sprintDayCells("2025-12-22").size).toBe(0);
+      it("leaves an interval's first day before the timeline start undecorated", async () => {
+        const result = await sprintDayCells("2025-12-22");
+        expect(result.size).toBe(0);
       });
     });
 
@@ -300,32 +295,43 @@ describe("DecorationEngine", () => {
         styles: [buildStyle("background")],
       });
 
-      it("does not match a period with no note", () => {
-        expect(evaluateDaily(lessThan100, { registerNote: false }).size).toBe(0);
+      it("does not match a period with no note", async () => {
+        const result = await evaluateDaily(lessThan100, { registerNote: false });
+        expect(result.size).toBe(0);
       });
 
-      it("does not match a note whose size has not been read yet", () => {
-        expect(evaluateDaily(lessThan100, { registerNote: true }).size).toBe(0);
+      it("does not match a note whose size has not been read yet", async () => {
+        const result = await evaluateDaily(lessThan100, { registerNote: true });
+        expect(result.size).toBe(0);
       });
 
-      it("matches once the size is known", () => {
-        expect(evaluateDaily(lessThan100, { registerNote: true, size: { words: 40, characters: 220 } }).size).toBe(1);
+      it("matches once the size is known", async () => {
+        const result = await evaluateDaily(lessThan100, {
+          registerNote: true,
+          size: { words: 40, characters: 220 },
+        });
+        expect(result.size).toBe(1);
       });
 
-      it("does not match when the size is over the threshold", () => {
-        expect(evaluateDaily(lessThan100, { registerNote: true, size: { words: 400, characters: 2200 } }).size).toBe(0);
+      it("does not match when the size is over the threshold", async () => {
+        const result = await evaluateDaily(lessThan100, {
+          registerNote: true,
+          size: { words: 400, characters: 2200 },
+        });
+        expect(result.size).toBe(0);
       });
     });
 
-    it("never reads note metadata for a calendar decoration", () => {
+    it("never reads note metadata for a calendar decoration", async () => {
       const decoration = buildCalendarDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c, metadata } = buildContainer();
+      const { harness } = await buildHarness();
+      const metadata = harness.resolve(NoteMetadataService);
       const spy = vi.spyOn(metadata, "get");
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       engine.evaluateRange(
         [DayPeriod.containing(date("2026-05-25"))],
@@ -337,16 +343,16 @@ describe("DecorationEngine", () => {
   });
 
   describe("explainRange", () => {
-    it("labels a contribution with the decoration that produced it", () => {
+    it("labels a contribution with the decoration that produced it", async () => {
       const decoration = buildDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       // 2026-05-25 is a Monday.
       const period = DayPeriod.containing(date("2026-05-25"));
@@ -357,7 +363,7 @@ describe("DecorationEngine", () => {
       ]);
     });
 
-    it("returns contributions in cascade order", () => {
+    it("returns contributions in cascade order", async () => {
       const calendarDecoration = buildCalendarDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [1] })],
@@ -368,10 +374,10 @@ describe("DecorationEngine", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("corner", { placement: "top-left" })],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [journalDecoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       // 2026-05-25 is a Monday.
       const period = DayPeriod.containing(date("2026-05-25"));
@@ -387,16 +393,16 @@ describe("DecorationEngine", () => {
       expect(contributions?.map((contribution) => contribution.source.owner.kind)).toEqual(["global", "journal"]);
     });
 
-    it("returns no entry for a period nothing matched", () => {
+    it("returns no entry for a period nothing matched", async () => {
       const decoration = buildDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [2] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       // 2026-05-25 is a Monday, so a Tuesday-only weekday condition never matches.
       const period = DayPeriod.containing(date("2026-05-25"));
@@ -405,16 +411,16 @@ describe("DecorationEngine", () => {
       expect(result.has(cellKey("day", period.anchor.toAnchor()))).toBe(false);
     });
 
-    it("omits a decoration that matches with no styles", () => {
+    it("omits a decoration that matches with no styles", async () => {
       const decoration = buildDecoration({
         mode: "or",
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [],
       });
-      const { c } = buildContainer({
+      const { harness } = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
       });
-      const engine = c.resolve(DecorationEngine);
+      const engine = harness.resolve(DecorationEngine);
 
       // 2026-05-25 is a Monday, so the condition matches; the decoration still contributes nothing.
       const period = DayPeriod.containing(date("2026-05-25"));

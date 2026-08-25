@@ -6,7 +6,7 @@ import { nextTick } from "vue";
 import { CalendarDate, MonthPeriod } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
-import { decorationsSettingsModule } from "@/decorations/settings/module";
+import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
@@ -24,7 +24,7 @@ const MODULES = [
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
-  decorationsSettingsModule,
+  decorationsSettingsCoreModule,
   notesCalendarModule,
 ];
 

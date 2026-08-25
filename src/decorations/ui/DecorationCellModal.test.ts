@@ -1,29 +1,23 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { nextTick, reactive } from "vue";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
-import { Calendar, DayPeriod, WeekPeriod } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import {
-  DecorationEngine,
-  DecorationsStore,
-  decorationsSlice,
-  type CalendarDecoration,
-  type JournalDecoration,
-} from "@/decorations";
+import { DayPeriod, WeekPeriod } from "@/calendar";
+import { date } from "@/calendar/testing";
+import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { NoteMetadataService, NoteSizeService, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
-import { CycleService, JournalsIndex, JournalsRepository, TimelineService, type JournalsEvents } from "@/journals";
+import type { VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
-import { createSettingsService } from "@/settings/testing";
-import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
 import type { ShelfConfig } from "@/shelves/config";
+import { shelvesCoreModule } from "@/shelves/module";
+import { buildShelf } from "@/shelves/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
+import { decorationsModule } from "../module";
+import { decorationsSettingsCoreModule } from "../settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "../testing";
 
 import DecorationCellModal from "./DecorationCellModal.vue";
@@ -33,6 +27,10 @@ import type { BreakdownEntry } from "./breakdown-entry";
 interface Note {
   readonly journalName: string;
   readonly anchor: DayPeriod;
+  // Empty by default: has-note/title conditions only need the file to exist. The note-size
+  // test overrides this so the real NoteSizeService's async fill (triggered by the modal's
+  // own first read) has a size to land on.
+  readonly content?: string;
 }
 
 interface MountOptions {
@@ -44,51 +42,27 @@ interface MountOptions {
   shelf?: string | null;
 }
 
-function mount(options: MountOptions) {
-  const { container, service } = createSettingsService({ slices: [decorationsSlice] });
-  service.getSlice(decorationsSlice).state = { decorations: [...(options.globalDecorations ?? [])] };
-
-  const journalStorage = reactive<Record<string, JournalConfig>>({ ...options.journals });
-  const journals = JournalsRepository.fromParts(journalStorage, createNanoEvents<JournalsEvents>());
-
-  const shelfStorage = reactive<Record<string, ShelfConfig>>({ ...options.shelves });
-  const shelves = ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>());
-
-  const fakeMetadata = new FakeNoteMetadataService();
-  const index = new JournalsIndex();
-  const notes = options.notes ?? [];
-  for (const note of notes) {
-    const path = `${note.journalName}/${note.anchor.anchor.toAnchor()}.md` as VaultPath;
-    index.register({ journalName: note.journalName, anchor: note.anchor.anchor.toAnchor(), path });
-    fakeMetadata.setMetadata(path, { title: note.journalName, tags: [], properties: {}, tasks: [] });
-  }
-
-  container.register(JournalsRepository).useValue(journals);
-  container.register(ShelvesRepository).useValue(shelves);
-  container.register(DecorationsStore).useClass(DecorationsStore);
-  container.register(JournalsIndex).useValue(index);
-  container.register(CycleService).useClass(CycleService);
-  container.register(TimelineService).useClass(TimelineService);
-  container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
-  const size = new FakeNoteSizeService();
-  container.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
-  container.register(DecorationEngine).useClass(DecorationEngine);
-  container.register(Calendar).useValue(testCalendar());
-
-  render(DecorationCellModal, {
-    props: { entry: options.entry, shelf: options.shelf },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
+async function mount(options: MountOptions): Promise<{ harness: TestHarness }> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    data: {
+      journals: options.journals ?? {},
+      shelves: options.shelves ?? {},
+      decorations: { decorations: [...(options.globalDecorations ?? [])] },
     },
   });
 
-  return { size };
+  const index = harness.resolve(JournalsIndex);
+  const notes = options.notes ?? [];
+  for (const note of notes) {
+    const path = `${note.journalName}/${note.anchor.anchor.toAnchor()}.md` as VaultPath;
+    harness.host.putFile(path, note.content ?? "");
+    index.register({ journalName: note.journalName, anchor: note.anchor.anchor.toAnchor(), path });
+  }
+
+  harness.render(DecorationCellModal, { props: { entry: options.entry, shelf: options.shelf } });
+
+  return { harness };
 }
 
 const anyDayDecoration: JournalDecoration = buildDecoration({
@@ -116,18 +90,9 @@ const anyDayCalendarDecoration: CalendarDecoration = buildCalendarDecoration({
 });
 
 describe("DecorationCellModal", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
-  it("renders only the clicked cell when the date also belongs to a decorated week cell", () => {
+  it("renders only the clicked cell when the date also belongs to a decorated week cell", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
+    await mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [hasNoteDecoration] }),
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [anyDayDecoration] }),
@@ -140,10 +105,10 @@ describe("DecorationCellModal", () => {
     expect(screen.getAllByTestId("decoration-preview")).toHaveLength(1);
   });
 
-  it("resolves a week entry against the week cell", () => {
+  it("resolves a week entry against the week cell", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
     const week = WeekPeriod.containing(date("2026-05-25"));
-    mount({
+    await mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [hasNoteDecoration] }),
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [anyDayDecoration] }),
@@ -155,9 +120,9 @@ describe("DecorationCellModal", () => {
     expect(screen.getByText(m.decoration_breakdown_owner({ kind: "journal", name: "weekly" }))).toBeTruthy();
   });
 
-  it("resolves an interval entry against the interval's own decorations", () => {
+  it("resolves an interval entry against the interval's own decorations", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
+    await mount({
       journals: {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [hasNoteDecoration] }),
       },
@@ -172,9 +137,9 @@ describe("DecorationCellModal", () => {
     ).toBeTruthy();
   });
 
-  it("resolves a day entry against the day cell when that day starts an interval", () => {
+  it("resolves a day entry against the day cell when that day starts an interval", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
+    await mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }),
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [hasNoteDecoration] }),
@@ -189,13 +154,10 @@ describe("DecorationCellModal", () => {
     ).toBeNull();
   });
 
-  it("resolves against the shelf it was opened under", () => {
+  it("resolves against the shelf it was opened under", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      shelves: {
-        work: { name: "work", journals: [], decorations: [] },
-        home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
-      },
+    await mount({
+      shelves: { work: buildShelf("work"), home: buildShelf("home", { decorations: [anyDayCalendarDecoration] }) },
       entry: { kind: "fixed", period: day },
       shelf: "work",
     });
@@ -205,11 +167,8 @@ describe("DecorationCellModal", () => {
 
   it("re-resolves when the shelf selection changes", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
-      shelves: {
-        work: { name: "work", journals: [], decorations: [] },
-        home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
-      },
+    await mount({
+      shelves: { work: buildShelf("work"), home: buildShelf("home", { decorations: [anyDayCalendarDecoration] }) },
       entry: { kind: "fixed", period: day },
       shelf: "home",
     });
@@ -223,20 +182,21 @@ describe("DecorationCellModal", () => {
 
   it("shows a note-size decoration once its size lands", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    const path = "daily/2026-05-25.md" as VaultPath;
-    const { size } = mount({
+    await mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [noteSizeDecoration] }),
       },
-      notes: [{ journalName: "daily", anchor: day }],
+      // 400 "word"s clears the condition's gt:100 threshold once NoteSizeService reads it.
+      notes: [{ journalName: "daily", anchor: day, content: "word ".repeat(400) }],
       entry: { kind: "fixed", period: day },
     });
 
     expect(screen.getByText(m.decoration_breakdown_cell_empty())).toBeTruthy();
 
-    size.setSize(path, { words: 400, characters: 2200 });
-    await nextTick();
-
-    expect(screen.getByTestId("decoration-preview")).toBeTruthy();
+    // NoteSizeService.get() schedules its own async fill on a miss (note-size-service.ts's
+    // #fill), and DecorationEngine.explainRange's first read during mount already triggers that
+    // fill for any note-size condition in scope, so waiting the fill out is enough — no
+    // FakeNoteSizeService or manual vault event is needed.
+    await vi.waitFor(() => expect(screen.getByTestId("decoration-preview")).toBeTruthy());
   });
 });

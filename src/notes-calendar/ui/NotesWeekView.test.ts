@@ -5,7 +5,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { CalendarDate, WeekPeriod } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
-import { decorationsSettingsModule } from "@/decorations/settings/module";
+import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
 import type { JournalConfig } from "@/journals";
@@ -22,7 +22,7 @@ const MODULES = [
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
-  decorationsSettingsModule,
+  decorationsSettingsCoreModule,
   notesCalendarModule,
 ];
 

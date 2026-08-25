@@ -1,9 +1,9 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationStyleSchema, type JournalDecorationStyle } from "@/decorations";
@@ -15,8 +15,6 @@ import StyleBorder from "./StyleBorder.vue";
 type Border = Extract<JournalDecorationStyle, { type: "border" }>;
 
 const renderStyleBorderHost = () => h(StyleBorder, { name: "s", side: "top" });
-
-afterEach(() => cleanup());
 
 function mount(initial: Border) {
   const exposed: { values: { s: Border } } = { values: { s: initial } };

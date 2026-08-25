@@ -6,7 +6,7 @@ import { CalendarDate, type AnchorString } from "@/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
-import { decorationsSettingsModule } from "@/decorations/settings/module";
+import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { initLocale } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, type JournalConfig, type JournalEntry } from "@/journals";
@@ -25,7 +25,7 @@ const MODULES = [
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
-  decorationsSettingsModule,
+  decorationsSettingsCoreModule,
   notesCalendarModule,
   calendarSettingsCoreModule,
 ];

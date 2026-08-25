@@ -1,12 +1,10 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import { defaultStyle } from "../../defaults";
 
 import CanvasRegionBorder from "./CanvasRegionBorder.vue";
-
-afterEach(() => cleanup());
 
 const linked = defaultStyle("border");
 const perSide = { ...defaultStyle("border"), border: "different" as const };

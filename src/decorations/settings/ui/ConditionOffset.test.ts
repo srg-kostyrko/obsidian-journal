@@ -1,9 +1,9 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
@@ -12,8 +12,6 @@ import { m } from "@/i18n";
 import ConditionOffset from "./ConditionOffset.vue";
 
 const renderConditionOffsetHost = () => h(ConditionOffset, { name: "c" });
-
-afterEach(() => cleanup());
 
 type Offset = Extract<JournalDecorationCondition, { type: "offset" }>;
 
