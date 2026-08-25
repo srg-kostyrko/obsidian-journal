@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
 import { m } from "@/i18n";
-import type { Module } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
@@ -15,6 +14,7 @@ import { AddBlockToViewFlow } from "../flows/add-block-to-view.flow";
 import { RepositionViewFlow } from "../flows/reposition-view.flow";
 import { viewsCoreModule } from "../module";
 import { ViewsRepository } from "../repository";
+import { viewsStartupModule } from "../startup-module";
 import { buildView } from "../testing";
 import { ViewHostService } from "../view-host";
 
@@ -24,23 +24,16 @@ import type { View, ViewId } from "../config";
 
 const viewId = "11111111-1111-1111-1111-111111111111" as ViewId;
 
-function fakeViewHostModule(open: ReturnType<typeof vi.fn>): Module {
-  return {
-    register(c) {
-      c.register(ViewHostService).useValue({ open, isOpen: () => false } as unknown as ViewHostService);
-    },
-  };
-}
-
 async function setup(viewOverrides: Partial<View> = {}) {
-  const open = vi.fn();
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, viewsCoreModule, fakeViewHostModule(open)],
+    modules: [journalsCoreModule, shelvesCoreModule, viewsCoreModule, viewsStartupModule],
     data: {
       views: { [viewId]: buildView(viewId, { name: "Weekly", ...viewOverrides }) },
       shelves: { Personal: buildShelf("Personal") },
     },
+    allow: { hostState: true },
   });
+  const open = vi.spyOn(harness.resolve(ViewHostService), "open").mockResolvedValue(undefined);
   return { harness, open };
 }
 
