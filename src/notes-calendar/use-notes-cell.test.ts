@@ -12,11 +12,9 @@ import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, OpenDateFlow } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
-import { overrideWith, testContainer, type TestHarness } from "@/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
-import { ActiveEntryViewModel } from "./active-entry";
 import { notesCalendarModule } from "./module";
-import { FakeActiveEntryViewModel } from "./testing";
 import { useNotesCell, type NotesCellApi } from "./use-notes-cell";
 
 const MODULES = [journalsCoreModule, notesCalendarModule];
@@ -26,10 +24,8 @@ const dailyPath = "Daily/2026-05-25.md" as VaultPath;
 
 async function bootHarness(): Promise<{
   harness: TestHarness;
-  active: FakeActiveEntryViewModel;
   invokeSpy: MockInstance<Flows["invoke"]>;
 }> {
-  const active = new FakeActiveEntryViewModel();
   const harness = await testContainer({
     modules: MODULES,
     data: {
@@ -41,10 +37,9 @@ async function bootHarness(): Promise<{
         ),
       },
     },
-    overrides: [overrideWith(ActiveEntryViewModel, active as unknown as ActiveEntryViewModel)],
   });
   const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
-  return { harness, active, invokeSpy };
+  return { harness, invokeSpy };
 }
 
 function resolveApi(
@@ -110,17 +105,24 @@ describe("useNotesCell", () => {
 
   describe("isActive", () => {
     it("is true when the active entry's journal + anchor match the period", async () => {
-      const { harness, active } = await bootHarness();
+      const { harness } = await bootHarness();
       const api = resolveApi(harness, () => ["daily"]);
-      active.setActive({ journalName: "daily", anchor: may25.anchor.toAnchor() });
+      harness
+        .resolve(JournalsIndex)
+        .register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
+      harness.host.emitFileOpen(harness.host.putFile(dailyPath));
 
       expect(api.isActive(may25)).toBe(true);
     });
 
     it("is false when the active entry's journal is not in scope", async () => {
-      const { harness, active } = await bootHarness();
+      const { harness } = await bootHarness();
       const api = resolveApi(harness, () => ["daily"]);
-      active.setActive({ journalName: "weekly", anchor: may25.anchor.toAnchor() });
+      const weeklyPath = "Weekly/2026-05-25.md" as VaultPath;
+      harness
+        .resolve(JournalsIndex)
+        .register({ journalName: "weekly", anchor: may25.anchor.toAnchor(), path: weeklyPath });
+      harness.host.emitFileOpen(harness.host.putFile(weeklyPath));
 
       expect(api.isActive(may25)).toBe(false);
     });
