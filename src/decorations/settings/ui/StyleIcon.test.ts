@@ -1,16 +1,14 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, within } from "@testing-library/vue";
+import { screen, within } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useForm } from "vee-validate";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationStyleSchema, type JournalDecorationStyle } from "@/decorations";
 import { m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { InputSuggestService } from "@/infrastructure/host";
-import { FakeInputSuggestService } from "@/infrastructure/host/input-suggests/testing";
+import { testContainer } from "@/testing";
 
 import StyleIcon from "./StyleIcon.vue";
 
@@ -27,12 +25,9 @@ const initialIcon: Icon = {
 
 const renderStyleIconHost = () => h(StyleIcon, { name: "s" });
 
-afterEach(() => cleanup());
-
-function mount(initial: Icon) {
+async function mount(initial: Icon) {
   const exposed: { values: { s: Icon } } = { values: { s: initial } };
-  const container = new Container();
-  container.register(InputSuggestService).useValue(new FakeInputSuggestService() as unknown as InputSuggestService);
+  const harness = await testContainer();
   const Host = defineComponent({
     setup() {
       const form = useForm({
@@ -43,17 +38,7 @@ function mount(initial: Icon) {
       return renderStyleIconHost;
     },
   });
-  render(Host, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  harness.render(Host);
   return exposed;
 }
 
@@ -66,7 +51,7 @@ function rowFor(label: string): HTMLElement {
 
 describe("StyleIcon", () => {
   it("updates the size as the user changes the number", async () => {
-    const host = mount(initialIcon);
+    const host = await mount(initialIcon);
     const sizeRow = rowFor(m.common_label_size());
     const number = within(sizeRow).getByRole("spinbutton");
     await userEvent.clear(number);
