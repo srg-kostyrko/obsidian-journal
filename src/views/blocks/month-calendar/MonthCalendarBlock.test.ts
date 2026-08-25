@@ -1,11 +1,9 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { computed, defineComponent, h, nextTick, ref } from "vue";
 
-import type * as CalendarModule from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import type { AnchorString } from "@/calendar/types";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { testContainer } from "@/testing";
 
 import { provideViewContextStub } from "../../testing";
 import { provideViewContext, type RefDateOrigin, type ViewContext } from "../../view-context";
@@ -14,35 +12,27 @@ import { monthCalendarBlock, type MonthCalendarConfig } from "./month-calendar-b
 
 import type { BlockInstanceId } from "../../config";
 
-vi.mock("@/calendar", async (importOriginal) => {
-  const actual = await importOriginal<typeof CalendarModule>();
-  return { ...actual, useResolvedWeekPlacement: () => ref("left" as const) };
+interface MonthLike {
+  start: { toAnchor(): string };
+}
+
+const NotesMonthViewStub = defineComponent({
+  props: {
+    month: { type: Object, required: true },
+    shelf: { type: [String, null], default: null },
+    outsideDates: { type: String, default: "active" },
+  },
+  setup: (p) => () =>
+    h("div", {
+      "data-testid": "month-stub",
+      "data-month": (p.month as unknown as MonthLike).start.toAnchor(),
+      "data-shelf": p.shelf ?? "",
+      "data-outside-dates": p.outsideDates,
+    }),
 });
 
-vi.mock("@/notes-calendar/ui/NotesMonthView.vue", () => ({
-  default: defineComponent({
-    props: {
-      month: { type: Object, required: true },
-      shelf: { type: [String, null], default: null },
-      outsideDates: { type: String, default: "active" },
-    },
-    setup: (p) => {
-      interface MonthLike {
-        start: { toAnchor(): string };
-      }
-      return () =>
-        h("div", {
-          "data-testid": "month-stub",
-          "data-month": (p.month as unknown as MonthLike).start.toAnchor(),
-          "data-shelf": p.shelf ?? "",
-          "data-outside-dates": p.outsideDates,
-        });
-    },
-  }),
-}));
-
-function mountBlock(config: MonthCalendarConfig, contextOverride: Partial<ViewContext> = {}) {
-  const container = new Container();
+async function mountBlock(config: MonthCalendarConfig, contextOverride: Partial<ViewContext> = {}) {
+  const harness = await testContainer({ modules: [calendarSettingsCoreModule] });
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(monthCalendarBlock.component, { instanceId: "block-1" as BlockInstanceId, config });
   const Wrapper = defineComponent({
@@ -51,9 +41,7 @@ function mountBlock(config: MonthCalendarConfig, contextOverride: Partial<ViewCo
       return renderRoot;
     },
   });
-  return render(Wrapper, {
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
+  return harness.render(Wrapper, { global: { stubs: { NotesMonthView: NotesMonthViewStub } } });
 }
 
 const baseConfig: MonthCalendarConfig = {
@@ -64,57 +52,55 @@ const baseConfig: MonthCalendarConfig = {
   showHeading: true,
 };
 
-beforeAll(() => {
-  installTestCalendar();
-});
-
-afterEach(() => {
-  cleanup();
-});
-
 describe("MonthCalendarBlock", () => {
-  it("renders the calendar when the vault has no journals", () => {
-    const { getAllByTestId } = mountBlock(baseConfig, { shelf: computed(() => null) });
+  it("renders the calendar when the vault has no journals", async () => {
+    const { getAllByTestId } = await mountBlock(baseConfig, { shelf: computed(() => null) });
     expect(getAllByTestId("month-stub").length).toBe(1);
   });
 
-  it("renders a single NotesMonthView when before=0 and after=0", () => {
-    const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
+  it("renders a single NotesMonthView when before=0 and after=0", async () => {
+    const { getAllByTestId } = await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
     expect(getAllByTestId("month-stub").length).toBe(1);
   });
 
-  it("renders before + after + 1 NotesMonthView instances", () => {
-    const { getAllByTestId } = mountBlock(
+  it("renders before + after + 1 NotesMonthView instances", async () => {
+    const { getAllByTestId } = await mountBlock(
       { ...baseConfig, before: 1, after: 1 },
       { refDate: ref("2026-05-15" as AnchorString) },
     );
     expect(getAllByTestId("month-stub").length).toBe(3);
   });
 
-  it("dims outside-month days when a single month is shown", () => {
-    const { getAllByTestId } = mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
+  it("dims outside-month days when a single month is shown", async () => {
+    const { getAllByTestId } = await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
     expect(getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "active")).toBe(true);
   });
 
-  it("blanks outside-month days when more than one month is shown", () => {
-    const { getAllByTestId } = mountBlock({ ...baseConfig, before: 1 }, { refDate: ref("2026-05-15" as AnchorString) });
+  it("blanks outside-month days when more than one month is shown", async () => {
+    const { getAllByTestId } = await mountBlock(
+      { ...baseConfig, before: 1 },
+      { refDate: ref("2026-05-15" as AnchorString) },
+    );
     expect(getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "blank")).toBe(true);
   });
 
-  it("anchors the first NotesMonthView at refDate shifted back by before months", () => {
-    const { getAllByTestId } = mountBlock({ ...baseConfig, before: 2 }, { refDate: ref("2026-05-15" as AnchorString) });
+  it("anchors the first NotesMonthView at refDate shifted back by before months", async () => {
+    const { getAllByTestId } = await mountBlock(
+      { ...baseConfig, before: 2 },
+      { refDate: ref("2026-05-15" as AnchorString) },
+    );
     expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-03-01");
   });
 
-  it("passes the current shelf to each NotesMonthView", () => {
-    const { getAllByTestId } = mountBlock({ ...baseConfig, after: 1 }, { shelf: ref("my-shelf") });
+  it("passes the current shelf to each NotesMonthView", async () => {
+    const { getAllByTestId } = await mountBlock({ ...baseConfig, after: 1 }, { shelf: ref("my-shelf") });
     expect(getAllByTestId("month-stub").every((s) => s.dataset.shelf === "my-shelf")).toBe(true);
   });
 
   it("holds the window on a followed date that is already visible", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
 
     refDateOrigin.value = "follow";
     refDate.value = "2026-04-02" as AnchorString;
@@ -126,7 +112,7 @@ describe("MonthCalendarBlock", () => {
   it("re-centers the window on a navigated date that it already contained", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
 
     refDate.value = "2026-04-02" as AnchorString;
     await nextTick();
@@ -137,7 +123,7 @@ describe("MonthCalendarBlock", () => {
   it("re-lays-out for a followed date whose month it only paints in its margin", async () => {
     const refDate = ref("2026-04-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = mountBlock(baseConfig, { refDate, refDateOrigin });
+    const { getAllByTestId } = await mountBlock(baseConfig, { refDate, refDateOrigin });
 
     refDateOrigin.value = "follow";
     refDate.value = "2026-05-01" as AnchorString;
@@ -149,7 +135,7 @@ describe("MonthCalendarBlock", () => {
   it("holds its layout for a followed date in an adjacent month it displays", async () => {
     const refDate = ref("2026-04-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = mountBlock({ ...baseConfig, after: 1 }, { refDate, refDateOrigin });
+    const { getAllByTestId } = await mountBlock({ ...baseConfig, after: 1 }, { refDate, refDateOrigin });
 
     refDateOrigin.value = "follow";
     refDate.value = "2026-05-01" as AnchorString;
