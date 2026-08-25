@@ -11,6 +11,8 @@ import { TimelineService } from "../timeline";
 
 import { NoteCreationService } from "./note-creation";
 
+const CREATE_BUDGET_MS = 30_000;
+
 export class AutoCreateService {
   readonly #creation = inject(NoteCreationService);
   readonly #frontmatter = inject(FrontmatterService);
@@ -24,14 +26,35 @@ export class AutoCreateService {
   #disposed = false;
 
   async #tick(): Promise<void> {
+    // Armed before the loop, not after it: a createCurrent that never settles would otherwise
+    // leave the timer unset and auto-create dead for the rest of the session. A `finally` is no
+    // help — a never-settling await never reaches one.
+    this.#schedule();
     for (const [name, config] of this.#journals.find().entries()) {
       if (!config.autoCreate) continue;
-      await this.createCurrent(name);
+      await this.#createWithinBudget(name);
     }
+  }
+
+  #schedule(): void {
     if (this.#disposed) return;
     this.#timer = window.setTimeout(() => {
       void this.#tick();
     }, Clock.msUntilNextLocalMidnight());
+  }
+
+  // A journal template that blocks on user input (Templater's tp.system.prompt/suggester) leaves
+  // ensureNote pending until somebody answers, and at local midnight nobody does. The wait is
+  // bounded so the journals after it still get their notes; the call is abandoned, not cancelled,
+  // so a merely slow template still writes its note once it finishes.
+  async #createWithinBudget(name: string): Promise<void> {
+    const budget = Promise.withResolvers<"timed-out">();
+    const budgetTimer = window.setTimeout(() => budget.resolve("timed-out"), CREATE_BUDGET_MS);
+    const outcome = await Promise.race([this.createCurrent(name).then(() => "settled" as const), budget.promise]);
+    window.clearTimeout(budgetTimer);
+    if (outcome === "timed-out") {
+      this.#logger.warn("auto-create: gave up waiting for note creation", { name, budgetMs: CREATE_BUDGET_MS });
+    }
   }
 
   initialize(): AsyncResult<void, never> {
