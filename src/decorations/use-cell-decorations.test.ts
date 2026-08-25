@@ -1,31 +1,24 @@
-import { cleanup, render } from "@testing-library/vue";
-import { createNanoEvents, type Emitter } from "nanoevents";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { defineComponent, h, inject as vInject, nextTick, reactive, ref, type Ref } from "vue";
+import { describe, expect, it, vi } from "vitest";
+import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "vue";
 
-import { CalendarDate, DayPeriod, WeekPeriod } from "@/calendar";
+import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
-import { provideInjectorOnApp, type Container } from "@/infrastructure/di";
-import {
-  NoteMetadataService,
-  NoteSizeService,
-  NotesService,
-  type NotesEvents,
-  type VaultPath,
-} from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
-import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
+import { date } from "@/calendar/testing";
+import { NoteMetadataService, NoteSizeService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteSizeService } from "@/infrastructure/host/testing";
+import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
-import { fakeRepo, fixedJournal } from "@/journals/testing";
-import { createSettingsService } from "@/settings/testing";
-import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
-import type { ShelfConfig } from "@/shelves/config";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import { shelvesCoreModule } from "@/shelves/module";
+import { buildShelf } from "@/shelves/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { DecorationsStore } from "./decorations-store";
-import { cellKey, DecorationEngine } from "./engine";
+import { cellKey } from "./engine";
+import { decorationsModule } from "./module";
 import { resolveCell } from "./resolve-cell";
-import { decorationsSlice } from "./settings/slice";
+import { decorationsSettingsCoreModule } from "./settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
 import { CellDecorationMapKey, CellPaddingKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
 import { useCellDecorations } from "./use-cell-decorations";
@@ -35,62 +28,36 @@ function key(period: Period): string {
   return cellKey(period.kind, period.anchor.toAnchor());
 }
 
-interface Harness {
-  c: Container;
-  notesEmitter: Emitter<NotesEvents>;
-  fakeMetadata: FakeNoteMetadataService;
+interface DecorationsHarness {
+  harness: TestHarness;
   size: FakeNoteSizeService;
   store: DecorationsStore;
 }
 
-function date(s: string): CalendarDate {
-  const r = CalendarDate.parse(s);
-  if (r.kind === "err") throw new Error(`bad date: ${s}`);
-  return r.value;
-}
-
-// Shared setup for the pieces every harness variant needs beyond the journal repository:
+// Shared setup for the pieces every harness variant needs beyond the journal configs:
 // the settings slice backing the vault-wide list, and a "work" shelf to save shelf-owned
-// decorations onto.
-function buildHarnessFrom(journals: JournalsRepository, notesEmitter: Emitter<NotesEvents>): Harness {
-  const { container: c, service } = createSettingsService({ slices: [decorationsSlice] });
-  // createSettingsService does not call initialize(), so the slice's default state is never
-  // hydrated into #root — set it explicitly or a first read is undefined.
-  service.getSlice(decorationsSlice).state = { decorations: [] };
-  c.register(JournalsRepository).useValue(journals);
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(TimelineService).useClass(TimelineService);
-  const fakeMetadata = new FakeNoteMetadataService();
-  c.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
+// decorations onto — DecorationsStore.save({ kind: "shelf" }) writes through
+// ShelvesRepository.update, which is a no-op for a shelf that does not exist, so a
+// shelf-scoped test would otherwise assert an empty cell for the wrong reason.
+async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promise<DecorationsHarness> {
   const size = new FakeNoteSizeService();
-  c.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
-  c.register(NotesService).useValue({ events: notesEmitter } as unknown as NotesService);
-  c.register(DecorationEngine).useClass(DecorationEngine);
-  const shelfStorage = reactive<Record<string, ShelfConfig>>({
-    work: { name: "work", journals: [], decorations: [] },
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    data: { journals, shelves: { work: buildShelf("work") }, decorations: { decorations: [] } },
+    overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
   });
-  c.register(ShelvesRepository).useValue(ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>()));
-  c.register(DecorationsStore).useClass(DecorationsStore);
-  const store = c.resolve(DecorationsStore);
-  return { c, notesEmitter, fakeMetadata, size, store };
+  return { harness, size, store: harness.resolve(DecorationsStore) };
 }
 
-function buildHarness(decorations: JournalConfig["decorations"] = []): Harness {
-  const notesEmitter: Emitter<NotesEvents> = createNanoEvents<NotesEvents>();
-  const journals = fakeRepo({
-    daily: fixedJournal("daily", { type: "day" }, { decorations }),
-  });
-  return buildHarnessFrom(journals, notesEmitter);
+function buildHarness(decorations: JournalConfig["decorations"] = []): Promise<DecorationsHarness> {
+  return buildHarnessFrom({ daily: fixedJournal("daily", { type: "day" }, { decorations }) });
 }
 
-function buildWeeklyHarness(weeklyDecorations: JournalConfig["decorations"]): Harness {
-  const notesEmitter: Emitter<NotesEvents> = createNanoEvents<NotesEvents>();
-  const journals = fakeRepo({
+function buildWeeklyHarness(weeklyDecorations: JournalConfig["decorations"]): Promise<DecorationsHarness> {
+  return buildHarnessFrom({
     daily: fixedJournal("daily", { type: "day" }),
     weekly: fixedJournal("weekly", { type: "week" }, { decorations: weeklyDecorations }),
   });
-  return buildHarnessFrom(journals, notesEmitter);
 }
 
 function makeChild(captured: { value: ReadonlyMap<string, CellStyleRef> | null }) {
@@ -113,7 +80,7 @@ function makeHost(Child: ReturnType<typeof makeChild>, setup: () => unknown) {
 }
 
 function mount(
-  container: Container,
+  harness: TestHarness,
   setup: () => ReadonlyMap<string, CellStyleRef>,
 ): {
   captured: { value: ReadonlyMap<string, CellStyleRef> | null };
@@ -122,27 +89,17 @@ function mount(
   const captured = { value: null as ReadonlyMap<string, CellStyleRef> | null };
   const Child = makeChild(captured);
   const Host = makeHost(Child, setup);
-  const utilities = render(Host, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  const utilities = harness.render(Host);
   return { captured, unmount: () => utilities.unmount() };
 }
 
 function mountCells(
-  container: Container,
+  harness: TestHarness,
   periods: readonly Period[],
   journalNames: readonly string[],
   calendarDecorations?: { shelf: string | null },
 ): ReadonlyMap<string, CellStyleRef> {
-  const { captured } = mount(container, () =>
+  const { captured } = mount(harness, () =>
     useCellDecorations({
       periods: () => periods,
       journalNames: () => journalNames,
@@ -154,7 +111,7 @@ function mountCells(
   return cells;
 }
 
-function mountPadding(container: Container, periods: readonly Period[], journalNames: readonly string[]): Ref<string> {
+function mountPadding(harness: TestHarness, periods: readonly Period[], journalNames: readonly string[]): Ref<string> {
   const captured = { value: null as Ref<string> | null };
   const Child = defineComponent({
     template: "<div />",
@@ -169,44 +126,26 @@ function mountPadding(container: Container, periods: readonly Period[], journalN
       return renderChild;
     },
   });
-  render(Host, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  harness.render(Host);
   const padding = captured.value;
   if (!padding) throw new Error("padding was not provided");
   return padding;
 }
 
-function withHasNote(): { h: Harness; period: DayPeriod; path: VaultPath } {
+async function withHasNote(): Promise<{ harness: TestHarness; period: DayPeriod; path: VaultPath }> {
   const decoration = buildDecoration({
     mode: "or",
     conditions: [buildCondition("has-note")],
     styles: [buildStyle("background")],
   });
-  const h = buildHarness([decoration]);
+  const { harness } = await buildHarness([decoration]);
   const period = DayPeriod.containing(date("2026-05-25"));
   const path = "Daily/2026-05-25.md" as VaultPath;
-  h.c.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
-  h.fakeMetadata.setMetadata(path, { title: "2026-05-25", tags: [], properties: {}, tasks: [] });
-  return { h, period, path };
+  harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
+  // has-note reads NoteMetadataService.get, which needs the file present in the vault.
+  harness.host.putFile(path);
+  return { harness, period, path };
 }
-
-let teardown: () => void;
-beforeEach(() => {
-  ({ teardown } = installTestCalendar());
-});
-afterEach(() => {
-  teardown();
-  cleanup();
-});
 
 describe("useCellDecorations", () => {
   describe("seeding", () => {
@@ -216,10 +155,10 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })], // Mon
         styles: [buildStyle("background")],
       });
-      const { c } = buildHarness([decoration]);
+      const { harness } = await buildHarness([decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const { captured } = mount(c, () =>
+      const { captured } = mount(harness, () =>
         useCellDecorations({
           periods: () => [period],
           journalNames: () => ["daily"],
@@ -243,14 +182,16 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("corner")],
       });
-      const { c } = buildHarness([kept, dropped]);
+      const { harness } = await buildHarness([kept, dropped]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const { captured } = mount(c, () =>
+      const { captured } = mount(harness, () =>
         useCellDecorations({
           periods: () => [period],
           journalNames: () => ["daily"],
-          filter: (binding) => binding.decoration === kept,
+          // A seeded journal's decorations reach the binding as re-parsed copies, so the filter
+          // names `kept` by its position in the journal's list rather than by identity.
+          filter: (binding) => binding.index === 0,
         }),
       );
       await nextTick();
@@ -265,12 +206,14 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c } = buildHarness([decoration]);
+      const { harness } = await buildHarness([decoration]);
       const p1 = DayPeriod.containing(date("2026-05-25"));
       const p2 = DayPeriod.containing(date("2026-05-26"));
       const periodsRef: Ref<DayPeriod[]> = ref([p1]);
 
-      const { captured } = mount(c, () => useCellDecorations({ periods: periodsRef, journalNames: () => ["daily"] }));
+      const { captured } = mount(harness, () =>
+        useCellDecorations({ periods: periodsRef, journalNames: () => ["daily"] }),
+      );
       await nextTick();
       expect(captured.value!.has(key(p1))).toBe(true);
       expect(captured.value!.has(key(p2))).toBe(false);
@@ -284,8 +227,8 @@ describe("useCellDecorations", () => {
 
   describe("event handling", () => {
     it("updates the affected anchor when metadata-changed fires for an in-scope path", async () => {
-      const { h, period, path } = withHasNote();
-      const { captured } = mount(h.c, () =>
+      const { harness, period, path } = await withHasNote();
+      const { captured } = mount(harness, () =>
         useCellDecorations({
           periods: () => [period],
           journalNames: () => ["daily"],
@@ -295,14 +238,14 @@ describe("useCellDecorations", () => {
 
       const slot = captured.value!.get(key(period))!;
       const initial = slot.value;
-      h.notesEmitter.emit("metadata-changed", path);
+      harness.host.emitMetadata(path);
       await nextTick();
       expect(slot.value).not.toBe(initial);
     });
 
     it("does not touch the slot when metadata-changed fires for an out-of-scope path", async () => {
-      const { h, period } = withHasNote();
-      const { captured } = mount(h.c, () =>
+      const { harness, period } = await withHasNote();
+      const { captured } = mount(harness, () =>
         useCellDecorations({
           periods: () => [period],
           journalNames: () => ["daily"],
@@ -312,7 +255,11 @@ describe("useCellDecorations", () => {
 
       const slot = captured.value!.get(key(period))!;
       const initial = slot.value;
-      h.notesEmitter.emit("metadata-changed", "Other/random.md" as VaultPath);
+      // The file has to exist: metadataCache "changed" carries the TFile, and NotesService drops
+      // the event when there is none — without it the composable's handler never runs at all.
+      const outOfScope = "Other/random.md" as VaultPath;
+      harness.host.putFile(outOfScope);
+      harness.host.emitMetadata(outOfScope);
       await nextTick();
       expect(slot.value).toBe(initial);
     });
@@ -323,10 +270,10 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("has-note")],
         styles: [buildStyle("background")],
       });
-      const h = buildHarness([decoration]);
+      const { harness } = await buildHarness([decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const { captured } = mount(h.c, () =>
+      const { captured } = mount(harness, () =>
         useCellDecorations({
           periods: () => [period],
           journalNames: () => ["daily"],
@@ -337,8 +284,8 @@ describe("useCellDecorations", () => {
       const initial = slot.value;
 
       const path = "Daily/2026-05-25.md" as VaultPath;
-      h.fakeMetadata.setMetadata(path, { title: "2026-05-25", tags: [], properties: {}, tasks: [] });
-      h.c.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
+      harness.host.putFile(path);
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
       await nextTick();
 
       expect(slot.value).not.toBe(initial);
@@ -350,14 +297,14 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("has-note")],
         styles: [buildStyle("background")],
       });
-      const h = buildWeeklyHarness([decoration]);
+      const { harness } = await buildWeeklyHarness([decoration]);
       const weekPeriod = WeekPeriod.containing(date("2026-06-10"));
       const weekAnchor = weekPeriod.anchor.toAnchor();
       const dayPeriods = [...weekPeriod.days()].map((d) => DayPeriod.containing(d));
       const collidingDay = dayPeriods.find((d) => d.anchor.toAnchor() === weekAnchor);
       expect(collidingDay).toBeDefined();
 
-      const { captured } = mount(h.c, () =>
+      const { captured } = mount(harness, () =>
         useCellDecorations({
           periods: () => [weekPeriod, ...dayPeriods],
           journalNames: () => ["daily", "weekly"],
@@ -370,8 +317,8 @@ describe("useCellDecorations", () => {
       expect(daySlot.value).toHaveLength(0);
 
       const path = "Weekly/2026-W24.md" as VaultPath;
-      h.fakeMetadata.setMetadata(path, { title: "2026-W24", tags: [], properties: {}, tasks: [] });
-      h.c.resolve(JournalsIndex).register({ journalName: "weekly", anchor: weekAnchor, path });
+      harness.host.putFile(path);
+      harness.resolve(JournalsIndex).register({ journalName: "weekly", anchor: weekAnchor, path });
       await nextTick();
 
       expect(weekSlot.value).toHaveLength(1);
@@ -385,16 +332,25 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("title", { condition: "ends-with", value: "-match" })],
         styles: [buildStyle("background")],
       });
-      const h = buildHarness([decoration]);
+      const { harness } = await buildHarness([decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
       const anchor = period.anchor.toAnchor();
-      const index = h.c.resolve(JournalsIndex);
+      const index = harness.resolve(JournalsIndex);
 
       const oldPath = "Daily/plain.md" as VaultPath;
       index.register({ journalName: "daily", anchor, path: oldPath });
-      h.fakeMetadata.setMetadata(oldPath, { title: "plain", tags: [], properties: {}, tasks: [] });
+      // The title a condition reads is the file's basename, so the path carries it.
+      harness.host.putFile(oldPath);
 
-      const { captured } = mount(h.c, () =>
+      // createFakeHost has no metadataCache "resolved" emitter, so the composable's own
+      // subscription is captured here and driven by hand once the cache has caught up.
+      const resolvedBatches: (() => void)[] = [];
+      vi.spyOn(harness.resolve(NoteMetadataService), "onResolved").mockImplementation((callback) => {
+        resolvedBatches.push(callback);
+        return () => void resolvedBatches.splice(resolvedBatches.indexOf(callback), 1);
+      });
+
+      const { captured } = mount(harness, () =>
         useCellDecorations({
           periods: () => [period],
           journalNames: () => ["daily"],
@@ -412,9 +368,9 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(0);
 
       // Cache catches up, then metadataCache "resolved" lands after the rename event.
-      h.fakeMetadata.setMetadata(newPath, { title: "renamed-match", tags: [], properties: {}, tasks: [] });
-      h.notesEmitter.emit("renamed", { from: oldPath, to: newPath });
-      h.fakeMetadata.emitResolved();
+      const renamed = harness.host.putFile(newPath);
+      harness.host.emitVault("rename", renamed, oldPath);
+      for (const batch of resolvedBatches.splice(0)) batch();
       await nextTick();
 
       expect(slot.value).toHaveLength(1);
@@ -426,12 +382,12 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
         styles: [buildStyle("background")],
       });
-      const h = buildHarness([decoration]);
+      const { harness, size } = await buildHarness([decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
       const path = "Daily/2026-05-25.md" as VaultPath;
-      h.c.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
 
-      const { captured } = mount(h.c, () =>
+      const { captured } = mount(harness, () =>
         useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
       );
       await nextTick();
@@ -440,7 +396,7 @@ describe("useCellDecorations", () => {
       // Absent on first paint by design: the size has not been read yet.
       expect(slot.value).toHaveLength(0);
 
-      h.size.setSize(path, { words: 400, characters: 2200 });
+      size.setSize(path, { words: 400, characters: 2200 });
       await nextTick();
 
       expect(slot.value).toHaveLength(1);
@@ -452,30 +408,30 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("note-size", { condition: "gt", value: 100 })],
         styles: [buildStyle("background")],
       });
-      const h = buildHarness([decoration]);
+      const { harness, size } = await buildHarness([decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
-      h.c.resolve(JournalsIndex).register({
+      harness.resolve(JournalsIndex).register({
         journalName: "daily",
         anchor: period.anchor.toAnchor(),
         path: "Daily/2026-05-25.md" as VaultPath,
       });
 
-      const { captured } = mount(h.c, () =>
+      const { captured } = mount(harness, () =>
         useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
       );
       await nextTick();
 
       const slot = captured.value!.get(key(period))!;
       const initial = slot.value;
-      h.size.setSize("Other/random.md" as VaultPath, { words: 400, characters: 2200 });
+      size.setSize("Other/random.md" as VaultPath, { words: 400, characters: 2200 });
       await nextTick();
 
       expect(slot.value).toBe(initial);
     });
 
     it("detaches subscriptions on unmount", async () => {
-      const { h, period, path } = withHasNote();
-      const { captured, unmount } = mount(h.c, () =>
+      const { harness, period, path } = await withHasNote();
+      const { captured, unmount } = mount(harness, () =>
         useCellDecorations({
           periods: () => [period],
           journalNames: () => ["daily"],
@@ -486,7 +442,7 @@ describe("useCellDecorations", () => {
       const initial = slot.value;
 
       unmount();
-      expect(() => h.notesEmitter.emit("metadata-changed", path)).not.toThrow();
+      expect(() => harness.host.emitMetadata(path)).not.toThrow();
       expect(slot.value).toBe(initial);
     });
   });
@@ -498,11 +454,11 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c, store } = buildHarness();
+      const { harness, store } = await buildHarness();
       store.save({ kind: "global" }, [decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], [], { shelf: null });
+      const cells = mountCells(harness, [period], [], { shelf: null });
       await nextTick();
 
       expect(cells.get(key(period))?.value).toEqual(decoration.styles);
@@ -514,11 +470,11 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c, store } = buildHarness();
+      const { harness, store } = await buildHarness();
       store.save({ kind: "shelf", shelfName: "work" }, [decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], [], { shelf: "personal" });
+      const cells = mountCells(harness, [period], [], { shelf: "personal" });
       await nextTick();
 
       expect(cells.get(key(period))?.value).toEqual([]);
@@ -532,7 +488,7 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [journalStyle],
       });
-      const { c, store } = buildHarness([journalDecoration]);
+      const { harness, store } = await buildHarness([journalDecoration]);
       store.save({ kind: "global" }, [
         buildCalendarDecoration({
           mode: "or",
@@ -542,7 +498,7 @@ describe("useCellDecorations", () => {
       ]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], ["daily"], { shelf: null });
+      const cells = mountCells(harness, [period], ["daily"], { shelf: null });
       await nextTick();
 
       const styles = cells.get(key(period))?.value ?? [];
@@ -564,7 +520,7 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [journalBorder],
       });
-      const { c, store } = buildHarness([journalDecoration]);
+      const { harness, store } = await buildHarness([journalDecoration]);
       store.save({ kind: "global" }, [
         buildCalendarDecoration({
           mode: "or",
@@ -574,7 +530,7 @@ describe("useCellDecorations", () => {
       ]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], ["daily"], { shelf: null });
+      const cells = mountCells(harness, [period], ["daily"], { shelf: null });
       await nextTick();
 
       const styles = cells.get(key(period))?.value ?? [];
@@ -590,7 +546,7 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [journalStyle],
       });
-      const { c, store } = buildHarness([journalDecoration]);
+      const { harness, store } = await buildHarness([journalDecoration]);
       store.save({ kind: "shelf", shelfName: "work" }, [
         buildCalendarDecoration({
           mode: "or",
@@ -600,7 +556,7 @@ describe("useCellDecorations", () => {
       ]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], ["daily"], { shelf: "work" });
+      const cells = mountCells(harness, [period], ["daily"], { shelf: "work" });
       await nextTick();
 
       const styles = cells.get(key(period))?.value ?? [];
@@ -614,11 +570,11 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c, store } = buildHarness();
+      const { harness, store } = await buildHarness();
       store.save({ kind: "global" }, [decoration]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], []); // no calendarDecorations option
+      const cells = mountCells(harness, [period], []); // no calendarDecorations option
       await nextTick();
 
       expect(cells.get(key(period))?.value).toEqual([]);
@@ -630,10 +586,10 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })],
         styles: [buildStyle("background")],
       });
-      const { c, store } = buildHarness();
+      const { harness, store } = await buildHarness();
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], [], { shelf: null });
+      const cells = mountCells(harness, [period], [], { shelf: null });
       await nextTick();
       expect(cells.get(key(period))?.value).toEqual([]);
 
@@ -647,7 +603,7 @@ describe("useCellDecorations", () => {
       const shelfStyle = buildStyle("background", { color: { type: "custom", color: "#333333" } });
       const globalStyle = buildStyle("background", { color: { type: "custom", color: "#444444" } });
       const weekdayCondition = buildCondition("weekday", { weekdays: [1] });
-      const { c, store } = buildHarness();
+      const { harness, store } = await buildHarness();
       store.save({ kind: "shelf", shelfName: "work" }, [
         buildCalendarDecoration({ mode: "or", conditions: [weekdayCondition], styles: [shelfStyle] }),
       ]);
@@ -656,7 +612,7 @@ describe("useCellDecorations", () => {
       ]);
       const period = DayPeriod.containing(date("2026-05-25"));
 
-      const cells = mountCells(c, [period], [], { shelf: "work" });
+      const cells = mountCells(harness, [period], [], { shelf: "work" });
       await nextTick();
 
       expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#333333");
@@ -669,10 +625,10 @@ describe("useCellDecorations", () => {
         conditions: [buildCondition("weekday", { weekdays: [1] })], // Mon
         styles: [buildStyle("shape", { placement_x: "right", placement_y: "middle", size: 0.5 })],
       });
-      const { c } = buildHarness([decoration]);
+      const { harness } = await buildHarness([decoration]);
 
-      const matching = mountPadding(c, [DayPeriod.containing(date("2026-05-25"))], ["daily"]); // Mon
-      const nonMatching = mountPadding(c, [DayPeriod.containing(date("2026-05-26"))], ["daily"]); // Tue
+      const matching = mountPadding(harness, [DayPeriod.containing(date("2026-05-25"))], ["daily"]); // Mon
+      const nonMatching = mountPadding(harness, [DayPeriod.containing(date("2026-05-26"))], ["daily"]); // Tue
       await nextTick();
 
       expect(matching.value).toBe("max(0.1em, 2px) max(0.6em, 2px)");
