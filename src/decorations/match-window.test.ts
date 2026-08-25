@@ -1,18 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { CalendarDate } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
 
 import { fixedWindow, needsNotes, MATCH_HORIZON } from "./match-window";
 import { buildCondition, buildDecoration } from "./testing";
-
-let teardown: () => void;
-beforeEach(() => {
-  ({ teardown } = installTestCalendar());
-});
-afterEach(() => {
-  teardown();
-});
 
 function date(s: string): CalendarDate {
   const r = CalendarDate.parse(s);

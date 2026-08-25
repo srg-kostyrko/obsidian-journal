@@ -1,11 +1,9 @@
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import DecorationPreview from "./DecorationPreview.vue";
 
 import type { JournalDecorationStyle } from "../config";
-
-afterEach(() => cleanup());
 
 describe("DecorationPreview", () => {
   it("renders the slot content", () => {

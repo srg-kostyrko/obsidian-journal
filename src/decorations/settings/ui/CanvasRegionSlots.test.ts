@@ -1,10 +1,8 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import CanvasRegionSlots from "./CanvasRegionSlots.vue";
-
-afterEach(() => cleanup());
 
 describe("CanvasRegionSlots", () => {
   it("offers a region for every placement", () => {
