@@ -139,6 +139,42 @@ export default defineConfig({
         // `useResolvedWeekPlacement` (calendar/week-placement.ts) run for the first time in place of
         // the mocked stand-ins: +6 statements, +2 branches, +4 functions, +4 lines — the one branch
         // rise this sweep produced, not a drop.
+        //
+        // Sweep 4 (decorations) measured its thirteen commits, plus the merge base (e6b38e6f), in a
+        // scratch worktree — base: 92.3 / 87.9 / 89.28 / 94.41 (11076/11999 statements, 4775/5432
+        // branches, 3934/4406 functions, 9684/10257 lines). e6b38e6f is the merge commit that
+        // landed sweep 3, so this is sweep 3's own end state, not an independently-measured match.
+        // Every one of the thirteen commits (417b3b82, 1a3acf43, a5dd2eb3, 8e43c34c, 9a4efd30,
+        // f03bd784, 0085d899, a0e7d475, dfb31bd4, bc76c89a, 1c927395, ff1b68ac, 9a97fb28) measured
+        // the identical numerator and denominator on all four metrics, not merely the same rounded
+        // percentage; f03bd784 and 9a97fb28 were re-measured with the vite transform cache cleared
+        // to rule out a stale-transform artifact, and the numbers held.
+        //
+        // The two moves this sweep's own plan predicted were checked, not assumed, and neither
+        // happened, for reasons found rather than guessed. `f03bd784` ("move core service tests onto
+        // testContainer") was expected to move `NoteMetadataService.get`
+        // (infrastructure/host/internal/note-metadata-service.ts) and `NoteSizeService.#fill`
+        // (infrastructure/host/internal/note-size-service.ts) from cold to warm the way sweep 2's
+        // NavigationCodeBlock step moved `NoteMetadataService.onResolved` — but per-file
+        // coverage-summary.json shows both already at 100%/97.82% lines at the merge base, before
+        // decorations' own conversion touched them: every sweep before this one (journals, calendar,
+        // shelves, commands, code-blocks, notes-calendar) had already driven testContainer through
+        // this shared infrastructure, and decorations, swept last, had nothing left to warm. The
+        // predicted fall from `JournalsRepository.fromParts` / `ShelvesRepository.fromParts` losing
+        // their last decorations callers didn't happen because they never lost their last callers,
+        // full stop: decorations' own call sites (decorations-store.test.ts,
+        // gather-bindings.test.ts, match-service.test.ts, the delete/edit-decoration flow tests,
+        // DecorationsSection.test.ts, and the three modal tests) are gone by 9a97fb28 — `git grep
+        // fromParts -- src/decorations` at the tip returns nothing — but `src/journals/testing.ts`'s
+        // `fakeRepo` and `src/shelves/testing.ts`'s `fakeShelvesRepo` both still call `fromParts`
+        // directly, and both wrappers are themselves still called from outside decorations —
+        // `fakeRepo` from `src/notes-calendar/testing.ts`,
+        // `src/views/blocks/custom-intervals/CustomIntervalsBlock.isolated.test.ts`,
+        // `CustomIntervalsBlock.fixed-scope.isolated.test.ts`, and `src/views/view-leaf.test.ts`.
+        // `JournalsRepository.fromParts`/`ShelvesRepository.fromParts` also have direct callers of
+        // their own under `src/views` — `IntervalBlockSection.test.ts`, `ButtonItemConfig.test.ts`,
+        // `ShelfSelectorItem.test.ts` — so both methods stayed warm regardless of what decorations
+        // itself still calls.
         statements: 92.3,
         branches: 87.9,
         functions: 89.28,
