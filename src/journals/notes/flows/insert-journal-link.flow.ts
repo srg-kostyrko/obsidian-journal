@@ -43,7 +43,7 @@ export class InsertJournalLinkFlow implements Flow<void, void, InsertJournalLink
         })
         .mapErr(() => new UserAborted("insert-journal-link"));
 
-      const path = yield* this.#path.pathForDate(journalName, period.anchor);
+      const path = yield* this.#path.resolvedPathForDate(journalName, period.anchor);
       this.#workspace.insertNoteLinkAtCursor(path);
       return;
     });

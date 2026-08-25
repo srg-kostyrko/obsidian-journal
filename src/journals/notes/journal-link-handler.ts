@@ -53,7 +53,7 @@ export class JournalLinkHandler implements FunctionHandler {
       return new Err(new TemplateRenderError("journal-link-out-of-bounds"));
     }
     return this.#path
-      .pathForDate(input.arg, base)
+      .resolvedPathForDate(input.arg, base)
       .map((path) => path.replace(/\.md$/, ""))
       .mapErr((error) => new TemplateRenderError("journal-link-unresolved", error));
   }

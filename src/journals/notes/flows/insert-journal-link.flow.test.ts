@@ -3,9 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DayPeriod, type OpenInterval, type AnchorString } from "@/calendar";
 import { date } from "@/calendar/testing";
 import { Flows } from "@/infrastructure/flows";
-import { WorkspaceService } from "@/infrastructure/host";
+import { WorkspaceService, type VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { JournalsIndex } from "../../journals-index";
 import { journalsCoreModule } from "../../module";
 import { fixedJournal } from "../../testing";
 
@@ -93,6 +94,26 @@ describe("InsertJournalLinkFlow", () => {
 
       expect(insert).not.toHaveBeenCalled();
     });
+  });
+
+  it("inserts the note's real path when the period's note lives away from its configured path", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }) } },
+    });
+    harness.resolve(JournalsIndex).register({
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Week 34 review.md" as VaultPath,
+    });
+    const insert = captureInsertions(harness);
+    const promise = harness.resolve(Flows).invoke(InsertJournalLinkFlow);
+    await tick();
+
+    harness.modals.lastOpen().submit(DayPeriod.containing(date("2026-08-20")));
+    await promise;
+
+    expect(insert).toHaveBeenCalledWith("Week 34 review.md");
   });
 
   it("bounds the date picker to the journal timeline", async () => {

@@ -8,6 +8,7 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { CycleService } from "../cycle";
 import { JournalNotFoundError } from "../errors";
+import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { customJournal, fixedJournal, unwrap } from "../testing";
 
@@ -924,5 +925,66 @@ describe("NotePathService week_of_month", () => {
     const result = harness.resolve(NotePathService).pathFor("daily", meta);
 
     expect(result.isOk() && result.value).toBe("September week 1.md");
+  });
+});
+
+describe("NotePathService.resolvedPathFor", () => {
+  it("answers with the indexed note's real path when one exists", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }) } },
+    });
+    harness.resolve(JournalsIndex).register({
+      journalName: "weekly",
+      anchor: anchor("2026-08-17"),
+      path: "Week 34 review.md" as VaultPath,
+    });
+    const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2026-08-17") };
+
+    const result = harness.resolve(NotePathService).resolvedPathFor("weekly", meta);
+
+    expect(result.isOk() && result.value).toBe("Week 34 review.md");
+  });
+
+  it("falls back to the rendered path when the period has no note yet", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
+
+    const result = harness.resolve(NotePathService).resolvedPathFor("daily", meta);
+
+    expect(result.isOk() && result.value).toBe("2026-05-19.md");
+  });
+});
+
+describe("NotePathService.resolvedPathForDate", () => {
+  it("resolves a mid-period date to the indexed note of the period it falls in", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { nameTemplate: "{{date:YYYY-[W]ww}}" }) } },
+    });
+    harness.resolve(JournalsIndex).register({
+      journalName: "weekly",
+      anchor: anchor("2026-08-17"),
+      path: "Week 34 review.md" as VaultPath,
+    });
+
+    const result = harness
+      .resolve(NotePathService)
+      .resolvedPathForDate("weekly", CalendarDate.fromAnchor(anchor("2026-08-20")));
+
+    expect(result.isOk() && result.value).toBe("Week 34 review.md");
+  });
+
+  it("reports the journal as missing when it is not configured", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
+
+    const result = harness
+      .resolve(NotePathService)
+      .resolvedPathForDate("nope", CalendarDate.fromAnchor(anchor("2026-05-19")));
+
+    expect(result.isErr() && result.error).toBeInstanceOf(JournalNotFoundError);
   });
 });
