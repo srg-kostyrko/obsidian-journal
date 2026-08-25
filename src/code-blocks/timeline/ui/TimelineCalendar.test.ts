@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
-import { decorationsSettingsModule } from "@/decorations/settings/module";
+import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
@@ -17,7 +17,7 @@ const MODULES = [
   journalsCoreModule,
   shelvesCoreModule,
   decorationsModule,
-  decorationsSettingsModule,
+  decorationsSettingsCoreModule,
   notesCalendarModule,
 ];
 

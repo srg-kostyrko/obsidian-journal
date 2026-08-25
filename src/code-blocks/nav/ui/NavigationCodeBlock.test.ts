@@ -7,7 +7,7 @@ import { nextTick } from "vue";
 import { anchor } from "@/calendar/testing";
 import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { decorationsModule } from "@/decorations/module";
-import { decorationsSettingsModule } from "@/decorations/settings/module";
+import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale, m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
@@ -47,7 +47,7 @@ interface NavScenario {
 
 async function renderNav(path: string, scenario: NavScenario) {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsModule],
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
     data: {
       journals: scenario.journals,
       shelves: scenario.shelves ?? {},
