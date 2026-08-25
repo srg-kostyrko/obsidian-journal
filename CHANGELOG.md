@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Journals created in the same session no longer share one navigation block, interval block, and set of decorations. Editing the navigation block of one daily journal used to change every daily journal created alongside it in that session, and a journal created after such an edit was born carrying it; restarting Obsidian separated them again, so journals created in different sessions were never affected. A journal already changed this way keeps the settings it ended up with — check the navigation blocks and decorations of journals you created together, and set them back by hand where they are wrong.
 - A fresh install no longer logs a repair warning at startup for settings it has never saved. Having no stored value yet was being treated the same as a corrupted one, so a brand-new install's log read as if its settings were already damaged.
+- Auto-create no longer stops for the rest of the session when a journal template waits for input. A template that opens a prompt — Templater's `tp.system.prompt` or `tp.system.suggester`, for instance — never finishes on its own at midnight, when nobody is there to answer it, and that silently took auto-create down until Obsidian was restarted; journals listed after the waiting one never got their notes at all. The midnight check is now scheduled before the notes are written rather than after, and each journal gets a bounded wait before the rest are attended to. A prompt you answer later still writes its note.
 
 ## [3.2.0] - 2026-08-23
 

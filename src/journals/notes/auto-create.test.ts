@@ -13,6 +13,11 @@ import { fixedJournal } from "../testing";
 import { AutoCreateService } from "./auto-create";
 import { NoteCreationService } from "./note-creation";
 
+// A template that blocks on user input — a Templater `<% tp.system.prompt %>` — leaves ensureNote
+// pending forever, and at local midnight there is nobody to answer it.
+const neverSettles = (): ReturnType<NoteCreationService["ensureNote"]> =>
+  AsyncResult.fromPromise(new Promise<never>(() => undefined), () => new JournalNotFoundError("unreachable"));
+
 describe("AutoCreateService", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -75,6 +80,19 @@ describe("AutoCreateService", () => {
       await vi.advanceTimersByTimeAsync(24 * 60 * 60 * 1000);
 
       expect(harness.host.files.has("2026-05-19.md")).toBe(true);
+      expect(harness.host.files.has("2026-05-20.md")).toBe(false);
+    });
+
+    it("arms no midnight timer when disposed before the index is ready", async () => {
+      // The boot tick is chained off whenReady(), so it can land after dispose — and it now arms
+      // the timer up front, where nothing would ever clear it again.
+      const service = harness.resolve(AutoCreateService);
+      await service.initialize();
+      await service[Symbol.asyncDispose]();
+
+      harness.resolve(JournalsIndex).markReady();
+      await vi.advanceTimersByTimeAsync(24 * 60 * 60 * 1000);
+
       expect(harness.host.files.has("2026-05-20.md")).toBe(false);
     });
   });
@@ -178,6 +196,63 @@ describe("AutoCreateService", () => {
     const bExists = harness.host.files.has("B/2026-05-19.md");
     expect(aExists || bExists).toBe(true);
     expect(aExists && bExists).toBe(false);
+  });
+
+  describe("a journal whose creation never settles", () => {
+    it("keeps the midnight timer running, so auto-create survives the session", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) } },
+      });
+      vi.spyOn(harness.resolve(NoteCreationService), "ensureNote").mockImplementationOnce(neverSettles);
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(harness.host.files.has("2026-05-19.md")).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(15 * 60 * 60 * 1000);
+
+      expect(harness.host.files.has("2026-05-20.md")).toBe(true);
+    });
+
+    it("arms the midnight timer before waiting, so a prompt opened near midnight cannot skip a day", async () => {
+      // The budget alone would reschedule once it expires — but a block that starts less than a
+      // budget before midnight would then arm the timer past midnight and lose the day entirely.
+      vi.setSystemTime(new Date(2026, 4, 19, 23, 59, 50));
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) } },
+      });
+      vi.spyOn(harness.resolve(NoteCreationService), "ensureNote").mockImplementationOnce(neverSettles);
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      await vi.advanceTimersByTimeAsync(10 * 1000);
+
+      expect(harness.host.files.has("2026-05-20.md")).toBe(true);
+    });
+
+    it("does not starve the journals after it in the same tick", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            a: fixedJournal("a", { type: "day" }, { autoCreate: true, folder: "A" }),
+            b: fixedJournal("b", { type: "day" }, { autoCreate: true, folder: "B" }),
+          },
+        },
+      });
+      vi.spyOn(harness.resolve(NoteCreationService), "ensureNote").mockImplementationOnce(neverSettles);
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      // Past the per-journal budget, which is well under a minute.
+      await vi.advanceTimersByTimeAsync(60 * 1000);
+
+      expect(harness.host.files.has("B/2026-05-19.md")).toBe(true);
+      expect(harness.host.files.has("A/2026-05-19.md")).toBe(false);
+    });
   });
 
   it("creates the note without opening the confirm modal even when confirmCreation is true", async () => {
