@@ -1,11 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, DayPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
+import { date } from "@/calendar/testing";
 import { defineOpenMode } from "@/infrastructure/host";
 
 import NotesCalendarCell from "./NotesCalendarCell.vue";
@@ -24,32 +23,15 @@ function stubApi(overrides: Partial<NotesCellApi> = {}): NotesCellApi {
 }
 
 function mount(props: { period: Period; cell: NotesCellApi; format?: string }) {
-  const c = new Container();
-  return render(NotesCalendarCell, {
-    props,
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, c);
-          },
-        },
-      ],
-    },
-  });
+  return render(NotesCalendarCell, { props });
 }
 
 const may25 = DayPeriod.containing(date("2026-05-25"));
 
 describe("NotesCalendarCell", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-    teardown();
     cleanup();
   });
 

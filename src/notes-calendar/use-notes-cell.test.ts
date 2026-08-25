@@ -1,163 +1,144 @@
-import { render } from "@testing-library/vue";
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
-import { defineComponent, h, reactive, shallowRef } from "vue";
+import { __testing } from "obsidian";
+import { beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
+import { defineComponent, shallowRef } from "vue";
 
-import { DayPeriod } from "@/calendar";
-import type { AnchorString } from "@/calendar";
-import { date, installTestCalendar } from "@/calendar/testing";
+import { DayPeriod, type AnchorString } from "@/calendar";
+import { date } from "@/calendar/testing";
 import type { CellStyleRef } from "@/decorations";
 import { cellKey } from "@/decorations/engine";
 import { buildStyle } from "@/decorations/testing";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { Flows, FlowsModule } from "@/infrastructure/flows";
-import { WorkspaceService, NoticeService } from "@/infrastructure/host";
+import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeWorkspaceService, FakeNoticeService } from "@/infrastructure/host/testing";
-import { LoggerModule } from "@/infrastructure/logger";
-import { AsyncResult } from "@/infrastructure/result";
-import { CycleService, JournalsIndex, JournalsRepository, OpenDateFlow, TimelineService } from "@/journals";
-import { fakeRepo, fixedJournal } from "@/journals/testing";
+import { JournalsIndex, OpenDateFlow } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { ActiveEntryViewModel } from "./active-entry";
+import { notesCalendarModule } from "./module";
 import { FakeActiveEntryViewModel } from "./testing";
 import { useNotesCell, type NotesCellApi } from "./use-notes-cell";
 
-interface Harness {
-  c: Container;
-  workspace: FakeWorkspaceService;
-  flows: Flows;
-  active: FakeActiveEntryViewModel;
-  index: JournalsIndex;
-  invokeSpy: MockInstance<Flows["invoke"]>;
-}
-
-function renderDiv() {
-  return h("div");
-}
-
-function buildHarness(): Harness {
-  const c = new Container();
-  c.addModule(LoggerModule);
-  c.addModule(FlowsModule);
-  c.register(NoticeService).useValue(new FakeNoticeService());
-
-  const journals = reactive({
-    daily: fixedJournal(
-      "daily",
-      { type: "day" },
-      { timeline: { start: "2026-01-01" as AnchorString, end: { kind: "never" } } },
-    ),
-  });
-  c.register(JournalsRepository).useValue(fakeRepo(journals));
-  c.register(JournalsIndex).useClass(JournalsIndex);
-  c.register(CycleService).useClass(CycleService);
-  c.register(TimelineService).useClass(TimelineService);
-
-  const workspace = new FakeWorkspaceService();
-  c.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
-  c.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-
-  const active = new FakeActiveEntryViewModel();
-  c.register(ActiveEntryViewModel).useValue(active as unknown as ActiveEntryViewModel);
-
-  const flows = c.resolve(Flows);
-  const invokeSpy = vi
-    .spyOn(flows, "invoke")
-    .mockImplementation(() => AsyncResult.ok({ path: "noop" as VaultPath, created: false }));
-  const index = c.resolve(JournalsIndex);
-
-  return { c, workspace, flows, active, index, invokeSpy };
-}
-
-function mountWithApi(
-  c: Container,
-  journalNames: () => readonly string[],
-  decorations?: ReadonlyMap<string, CellStyleRef> | null,
-): { api: NotesCellApi; unmount: () => void } {
-  let captured: NotesCellApi | null = null;
-  const Host = defineComponent({
-    setup() {
-      captured = useNotesCell({ journalNames, decorations });
-      return renderDiv;
-    },
-  });
-  const utilities = render(Host, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, c);
-          },
-        },
-      ],
-    },
-  });
-  if (!captured) throw new Error("api not captured");
-  return { api: captured, unmount: () => utilities.unmount() };
-}
+const MODULES = [journalsCoreModule, notesCalendarModule];
 
 const may25 = DayPeriod.containing(date("2026-05-25"));
 const dailyPath = "Daily/2026-05-25.md" as VaultPath;
 
-describe("useNotesCell", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
+async function bootHarness(): Promise<{
+  harness: TestHarness;
+  active: FakeActiveEntryViewModel;
+  invokeSpy: MockInstance<Flows["invoke"]>;
+}> {
+  const active = new FakeActiveEntryViewModel();
+  const harness = await testContainer({
+    modules: MODULES,
+    data: {
+      journals: {
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { timeline: { start: "2026-01-01" as AnchorString, end: { kind: "never" } } },
+        ),
+      },
+    },
+    overrides: [overrideWith(ActiveEntryViewModel, active as unknown as ActiveEntryViewModel)],
   });
-  afterEach(() => {
-    teardown();
-  });
+  const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+  return { harness, active, invokeSpy };
+}
 
+function resolveApi(
+  harness: TestHarness,
+  journalNames: () => readonly string[],
+  decorations?: ReadonlyMap<string, CellStyleRef> | null,
+): NotesCellApi {
+  let captured: NotesCellApi | undefined;
+  const Probe = defineComponent({
+    setup() {
+      captured = useNotesCell({ journalNames, decorations });
+      return undefined;
+    },
+    template: "<div />",
+  });
+  harness.render(Probe);
+  if (!captured) throw new Error("probe did not capture the notes-cell api");
+  return captured;
+}
+
+// The real WorkspaceService drives Obsidian's own Menu, so these assertions read the menu the
+// host actually opened. `undefined` and `[]` are different outcomes and must stay distinguishable:
+// openPathsMenu returns without showing anything when a period resolved neither a path nor an
+// extra item, whereas a shown menu carrying no items would be a bug a `?? []` fallback would hide.
+function menuItemTitles(): readonly string[] | undefined {
+  return __testing.openMenus.at(-1)?.items.map((item) => item.title);
+}
+
+function hoverPreviewPaths(harness: TestHarness): readonly string[] {
+  return harness.host.workspace.triggerCalls
+    .filter((call) => call.event === "link-hover")
+    .map((call) => String(call.arguments_[2]));
+}
+
+beforeEach(() => {
+  __testing.reset();
+});
+
+describe("useNotesCell", () => {
   describe("isActionable", () => {
-    it("is true when any in-scope journal covers the period's anchor", () => {
-      const { c } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
+    it("is true when any in-scope journal covers the period's anchor", async () => {
+      const { harness } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
+
       expect(api.isActionable(may25)).toBe(true);
     });
 
-    it("is false when no journal is in scope", () => {
-      const { c } = buildHarness();
-      const { api } = mountWithApi(c, () => []);
+    it("is false when no journal is in scope", async () => {
+      const { harness } = await bootHarness();
+      const api = resolveApi(harness, () => []);
+
       expect(api.isActionable(may25)).toBe(false);
     });
 
-    it("is false when the anchor is before every in-scope journal's timeline start", () => {
-      const { c } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
+    it("is false when the anchor is before every in-scope journal's timeline start", async () => {
+      const { harness } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
       const before = DayPeriod.containing(date("2025-12-31"));
+
       expect(api.isActionable(before)).toBe(false);
     });
   });
 
   describe("isActive", () => {
-    it("is true when the active entry's journal + anchor match the period", () => {
-      const { c, active } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
+    it("is true when the active entry's journal + anchor match the period", async () => {
+      const { harness, active } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
       active.setActive({ journalName: "daily", anchor: may25.anchor.toAnchor() });
+
       expect(api.isActive(may25)).toBe(true);
     });
 
-    it("is false when the active entry's journal is not in scope", () => {
-      const { c, active } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
+    it("is false when the active entry's journal is not in scope", async () => {
+      const { harness, active } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
       active.setActive({ journalName: "weekly", anchor: may25.anchor.toAnchor() });
+
       expect(api.isActive(may25)).toBe(false);
     });
 
-    it("is false when active is null", () => {
-      const { c } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
+    it("is false when active is null", async () => {
+      const { harness } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
+
       expect(api.isActive(may25)).toBe(false);
     });
   });
 
   describe("open", () => {
-    it("invokes OpenDateFlow with the period anchor and journal names", () => {
-      const { c, invokeSpy } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
+    it("invokes OpenDateFlow with the period anchor and journal names", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
       const event = new MouseEvent("click");
+
       api.open(may25, event);
 
       expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, {
@@ -168,78 +149,81 @@ describe("useNotesCell", () => {
       });
     });
 
-    it("passes openMode 'tab' when ctrl is held", () => {
-      const { c, invokeSpy } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
+    it("passes openMode 'tab' when ctrl is held", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
+
       api.open(may25, new MouseEvent("click", { ctrlKey: true }));
+
       expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
     });
 
-    it("does not invoke OpenDateFlow when the cell is not actionable", () => {
-      const { c, invokeSpy } = buildHarness();
-      const { api } = mountWithApi(c, () => []);
+    it("does not invoke OpenDateFlow when the cell is not actionable", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const api = resolveApi(harness, () => []);
+
       api.open(may25, new MouseEvent("click"));
+
       expect(invokeSpy).not.toHaveBeenCalled();
     });
   });
 
   describe("openContextMenu", () => {
-    it("resolves no paths when no entry exists at the period's anchor", () => {
-      const { c, workspace } = buildHarness();
-      const { api } = mountWithApi(c, () => ["daily"]);
-      const event = new MouseEvent("contextmenu");
-      api.openContextMenu(may25, event);
-      expect(workspace.pathsMenuCalls).toEqual([{ paths: [], event, extraItems: [] }]);
+    it("resolves no paths when no entry exists at the period's anchor", async () => {
+      const { harness } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
+
+      api.openContextMenu(may25, new MouseEvent("contextmenu"));
+
+      expect(menuItemTitles()).toBeUndefined();
     });
 
-    it("resolves the existing paths across every in-scope journal at the period's anchor", () => {
-      const { c, workspace, index } = buildHarness();
+    it("resolves the existing paths across every in-scope journal at the period's anchor", async () => {
+      const { harness } = await bootHarness();
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
       const secondPath = "Daily2/2026-05-25.md" as VaultPath;
       index.register({ journalName: "secondary", anchor: may25.anchor.toAnchor(), path: secondPath });
-      const { api } = mountWithApi(c, () => ["daily", "secondary"]);
-      const event = new MouseEvent("contextmenu");
+      const api = resolveApi(harness, () => ["daily", "secondary"]);
 
-      api.openContextMenu(may25, event);
+      api.openContextMenu(may25, new MouseEvent("contextmenu"));
 
-      expect(workspace.pathsMenuCalls).toEqual([{ paths: [dailyPath, secondPath], event, extraItems: [] }]);
+      expect(menuItemTitles()).toEqual([dailyPath, secondPath]);
     });
 
-    it("contributes the explain item to the context menu of a decorated cell", () => {
-      const { c, workspace } = buildHarness();
+    it("contributes the explain item to the context menu of a decorated cell", async () => {
+      const { harness } = await bootHarness();
       const decorations: ReadonlyMap<string, CellStyleRef> = new Map([
         [cellKey(may25.kind, may25.anchor.toAnchor()), shallowRef([buildStyle("background")])],
       ]);
-      const { api } = mountWithApi(c, () => ["daily"], decorations);
-      const event = new MouseEvent("contextmenu");
+      const api = resolveApi(harness, () => ["daily"], decorations);
 
-      api.openContextMenu(may25, event);
+      api.openContextMenu(may25, new MouseEvent("contextmenu"));
 
-      expect(workspace.pathsMenuCalls[0]?.extraItems).toHaveLength(1);
+      expect(menuItemTitles()).toHaveLength(1);
     });
 
-    it("contributes no item to the context menu of an undecorated cell", () => {
-      const { c, workspace } = buildHarness();
+    it("contributes no item to the context menu of an undecorated cell", async () => {
+      const { harness } = await bootHarness();
       const decorations = new Map<string, CellStyleRef>();
-      const { api } = mountWithApi(c, () => ["daily"], decorations);
-      const event = new MouseEvent("contextmenu");
+      const api = resolveApi(harness, () => ["daily"], decorations);
 
-      api.openContextMenu(may25, event);
+      api.openContextMenu(may25, new MouseEvent("contextmenu"));
 
-      expect(workspace.pathsMenuCalls[0]?.extraItems).toEqual([]);
+      expect(menuItemTitles()).toBeUndefined();
     });
   });
 
   describe("openPreview", () => {
-    it("delegates the modifier-key gate and existing paths to previewFirstPath", () => {
-      const { c, workspace, index } = buildHarness();
+    it("delegates the modifier-key gate and existing paths to previewFirstPath", async () => {
+      const { harness } = await bootHarness();
+      const index = harness.resolve(JournalsIndex);
       index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
-      const { api } = mountWithApi(c, () => ["daily"]);
-      const event = new MouseEvent("mouseenter", { ctrlKey: true });
+      const api = resolveApi(harness, () => ["daily"]);
 
-      api.openPreview(may25, event);
+      api.openPreview(may25, new MouseEvent("mouseenter", { ctrlKey: true }));
 
-      expect(workspace.previewFirstPathCalls).toEqual([{ paths: [dailyPath], event }]);
+      expect(hoverPreviewPaths(harness)).toEqual([dailyPath]);
     });
   });
 });

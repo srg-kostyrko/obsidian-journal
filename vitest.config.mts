@@ -102,10 +102,47 @@ export default defineConfig({
         // code is fully covered. `184da953` (dropping the now-unneeded guard-dodge seeds) and
         // `8915a293` (lint-selector arming) moved nothing further; the branch was already covered
         // without them.
-        statements: 92.2,
-        branches: 87.86,
-        functions: 89.15,
-        lines: 94.32,
+        //
+        // Sweep 3 (code-blocks, notes-calendar) measured each of its fifteen commits in a scratch
+        // worktree against 56e817b0, the parent of the sweep's first commit. That base measured
+        // 92.23 / 87.86 / 89.15 / 94.35 (11067/11999 statements, 4773/5432 branches, 3928/4406
+        // functions, 9678/10257 lines) — three statements and three lines above the prior sweep's
+        // recorded end state, from 56e817b0 itself rather than from any of the fifteen: its
+        // testing.test.ts loads the full `codeBlocksModule` to prove the leaked-host-state guard
+        // sees a `CodeBlockDefinitionToken`, so `home-block.ts`, `nav-block.ts` and
+        // `timeline-block.ts` each run their module-level `defineCodeBlock(...)` call for the first
+        // time. That guard commit sits outside the fifteen this sweep owns, so the number above is
+        // reported rather than reasoned past.
+        //
+        // All three module splits (b2d84892, 4d0d4448, 23031276) moved nothing: every file each one
+        // touches — `module.ts` and the new `ui-module.ts` alike — is already outside the DI-wiring
+        // exclude glob, so neither half was ever counted regardless of what still loads it. The
+        // buildNavSegment fixture (8e4ac100) moved nothing either: its `v.parse` call lives in the
+        // excluded testing.ts, and the schema object it parses against was already built at import
+        // time. No `Repository.fromParts`/`ViewModel.fromRepository` hatch exists under
+        // src/code-blocks or src/notes-calendar, so the six deleted `Fake*` classes had none of that
+        // shape to retire — where a conversion replaced one with a real service, the code paths that
+        // service now exercises were already covered elsewhere in the suite. c7a07480, 391ca873,
+        // bf98fd9a, d7cfa119, 8dc1975e, 6dbeea60, e7c97b0d, 15a866d6 and e3ecfa93 each measured flat
+        // too, verified per file and not just in aggregate.
+        //
+        // NavigationCodeBlock onto testContainer (0de4fd78) -> 92.25 / 87.86 / 89.19 / 94.37. Up:
+        // deleting the test's six hand-rolled Fake* classes for testContainer's real WorkspaceService
+        // means the test now drives the real `NoteMetadataService.onResolved`
+        // (infrastructure/host/internal/note-metadata-service.ts:36) and disposes it, so the method
+        // and its `offref` disposer arrow both run for the first time: +3 statements, +2 functions,
+        // +2 lines. Neither has a branch in it, so branches held.
+        //
+        // Timeline mode/quarter/calendar onto testContainer (77ec7660) -> 92.30 / 87.90 / 89.28 /
+        // 94.41. Up: this commit drops the `vi.mock` of `@/calendar`, so the real
+        // `useResolvedTimelineNavigation` (calendar/timeline-navigation.ts) and
+        // `useResolvedWeekPlacement` (calendar/week-placement.ts) run for the first time in place of
+        // the mocked stand-ins: +6 statements, +2 branches, +4 functions, +4 lines — the one branch
+        // rise this sweep produced, not a drop.
+        statements: 92.3,
+        branches: 87.9,
+        functions: 89.28,
+        lines: 94.41,
       },
     },
     projects: [

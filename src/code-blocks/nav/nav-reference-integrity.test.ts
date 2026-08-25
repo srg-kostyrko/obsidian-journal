@@ -1,63 +1,50 @@
-import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
-import { reactive } from "vue";
 
-import {
-  journalDefaultsFor,
-  JournalsRepository,
-  type JournalConfig,
-  type JournalsEvents,
-  type NavBlockSegment,
-} from "@/journals";
+import { JournalsEventsToken, JournalsRepository, type JournalConfig, type NavBlockSegment } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
+import { buildNavSegment, fixedJournal } from "@/journals/testing";
+import { testContainer } from "@/testing";
 
-import { NavReferenceIntegrity } from "./nav-reference-integrity";
-
-const emptyTestSegment: NavBlockSegment = {
-  template: "",
-  fontSize: 1,
-  bold: false,
-  italic: false,
-  link: "none",
-  journal: "",
-  linkDate: "",
-  color: { type: "theme", name: "text-normal" },
-  background: { type: "transparent" },
-  addDecorations: false,
-};
+import { codeBlocksCoreModule } from "../module";
 
 function blockLinkingTo(journalName: string, overrides: Partial<NavBlockSegment> = {}): JournalConfig["navBlock"] {
-  const base = journalDefaultsFor({ type: "day" }, "daily").navBlock;
-  return { ...base, lines: [[{ ...emptyTestSegment, link: "journal", journal: journalName, ...overrides }]] };
+  const base = fixedJournal("daily", { type: "day" }).navBlock;
+  return { ...base, lines: [[buildNavSegment({ link: "journal", journal: journalName, ...overrides })]] };
 }
 
 function intervalBlockLinkingTo(
   journalName: string,
   overrides: Partial<NavBlockSegment> = {},
 ): JournalConfig["intervalBlock"] {
-  const base = journalDefaultsFor({ type: "day" }, "sprint").intervalBlock;
-  return { ...base, lines: [[{ ...emptyTestSegment, link: "journal", journal: journalName, ...overrides }]] };
+  const base = fixedJournal("sprint", { type: "day" }).intervalBlock;
+  return { ...base, lines: [[buildNavSegment({ link: "journal", journal: journalName, ...overrides })]] };
 }
 
-function setup(navBlocks: Record<string, JournalConfig["navBlock"]>) {
-  const storage = reactive<Record<string, JournalConfig>>({});
-  for (const [name, navBlock] of Object.entries(navBlocks)) {
-    storage[name] = { ...journalDefaultsFor({ type: "day" }, name), navBlock };
-  }
-  const events = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(storage, events);
-  new NavReferenceIntegrity(repo, events);
-  return { repo, events };
+async function setup(navBlocks: Record<string, JournalConfig["navBlock"]>) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, codeBlocksCoreModule],
+    data: {
+      journals: Object.fromEntries(
+        Object.entries(navBlocks).map(([name, navBlock]) => [name, fixedJournal(name, { type: "day" }, { navBlock })]),
+      ),
+    },
+  });
+  return { repo: harness.resolve(JournalsRepository), events: harness.resolve(JournalsEventsToken) };
 }
 
-function setupInterval(intervalBlocks: Record<string, JournalConfig["intervalBlock"]>) {
-  const storage = reactive<Record<string, JournalConfig>>({});
-  for (const [name, intervalBlock] of Object.entries(intervalBlocks)) {
-    storage[name] = { ...journalDefaultsFor({ type: "day" }, name), intervalBlock };
-  }
-  const events = createNanoEvents<JournalsEvents>();
-  const repo = JournalsRepository.fromParts(storage, events);
-  new NavReferenceIntegrity(repo, events);
-  return { repo, events };
+async function setupInterval(intervalBlocks: Record<string, JournalConfig["intervalBlock"]>) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, codeBlocksCoreModule],
+    data: {
+      journals: Object.fromEntries(
+        Object.entries(intervalBlocks).map(([name, intervalBlock]) => [
+          name,
+          fixedJournal(name, { type: "day" }, { intervalBlock }),
+        ]),
+      ),
+    },
+  });
+  return { repo: harness.resolve(JournalsRepository), events: harness.resolve(JournalsEventsToken) };
 }
 
 const segmentOf = (repo: JournalsRepository, name: string): NavBlockSegment =>
@@ -67,38 +54,38 @@ const intervalSegmentOf = (repo: JournalsRepository, name: string): NavBlockSegm
   repo.get(name).getOrUndefined()!.intervalBlock.lines.at(0)!.at(0)!;
 
 describe("NavReferenceIntegrity", () => {
-  it("rewrites a segment's journal reference when that journal is renamed", () => {
-    const { repo, events } = setup({ daily: blockLinkingTo("weekly") });
+  it("rewrites a segment's journal reference when that journal is renamed", async () => {
+    const { repo, events } = await setup({ daily: blockLinkingTo("weekly") });
     events.emit("renamed", "weekly", "weekly-notes");
     expect(segmentOf(repo, "daily").journal).toBe("weekly-notes");
   });
 
-  it("rewrites references in intervalBlock as well as navBlock", () => {
-    const { repo, events } = setupInterval({ sprint: intervalBlockLinkingTo("weekly") });
+  it("rewrites references in intervalBlock as well as navBlock", async () => {
+    const { repo, events } = await setupInterval({ sprint: intervalBlockLinkingTo("weekly") });
     events.emit("renamed", "weekly", "weekly-notes");
     expect(intervalSegmentOf(repo, "sprint").journal).toBe("weekly-notes");
   });
 
-  it("clears the link when the referenced journal is deleted", () => {
-    const { repo, events } = setup({ daily: blockLinkingTo("weekly") });
+  it("clears the link when the referenced journal is deleted", async () => {
+    const { repo, events } = await setup({ daily: blockLinkingTo("weekly") });
     events.emit("deleted", "weekly");
     expect(segmentOf(repo, "daily")).toMatchObject({ link: "none", journal: "" });
   });
 
-  it("keeps the segment's text when its link is cleared", () => {
-    const { repo, events } = setup({ daily: blockLinkingTo("weekly", { template: "{{date:[W]w}}" }) });
+  it("keeps the segment's text when its link is cleared", async () => {
+    const { repo, events } = await setup({ daily: blockLinkingTo("weekly", { template: "{{date:[W]w}}" }) });
     events.emit("deleted", "weekly");
     expect(segmentOf(repo, "daily").template).toBe("{{date:[W]w}}");
   });
 
-  it("leaves segments alone when a journal is cloned", () => {
-    const { repo, events } = setup({ daily: blockLinkingTo("weekly") });
+  it("leaves segments alone when a journal is cloned", async () => {
+    const { repo, events } = await setup({ daily: blockLinkingTo("weekly") });
     events.emit("cloned", "weekly", "weekly-copy");
     expect(segmentOf(repo, "daily").journal).toBe("weekly");
   });
 
-  it("leaves segments that reference a different journal untouched", () => {
-    const { repo, events } = setup({ daily: blockLinkingTo("monthly") });
+  it("leaves segments that reference a different journal untouched", async () => {
+    const { repo, events } = await setup({ daily: blockLinkingTo("monthly") });
     events.emit("renamed", "weekly", "weekly-notes");
     expect(segmentOf(repo, "daily").journal).toBe("monthly");
   });
