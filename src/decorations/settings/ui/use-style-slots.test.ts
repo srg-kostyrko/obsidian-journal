@@ -1,14 +1,12 @@
-import { cleanup, render } from "@testing-library/vue";
+import { render } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import { useForm } from "vee-validate";
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { decorationSchema, type JournalDecoration } from "@/decorations";
 
 import { useStyleSlots } from "./use-style-slots";
-
-afterEach(() => cleanup());
 
 const renderHost = () => h("div");
 

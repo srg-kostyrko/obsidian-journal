@@ -1,12 +1,10 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import DecorationLayerStrip from "./DecorationLayerStrip.vue";
 
 import type { StyleSlotKey } from "../../style-slots";
-
-afterEach(() => cleanup());
 
 function renderStrip(modelValue: StyleSlotKey, occupied: StyleSlotKey[] = []) {
   return render(DecorationLayerStrip, {
