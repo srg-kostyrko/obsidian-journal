@@ -37,6 +37,7 @@ const convertedTestGlobs = [
   "src/code-blocks/**/*.test.ts",
   "src/notes-calendar/**/*.test.ts",
   "src/decorations/**/*.test.ts",
+  "src/views/**/*.test.ts",
 ];
 
 // `no-restricted-syntax` options replace rather than merge, so this array must carry
@@ -63,7 +64,7 @@ const campaignTestSelectors = [
   },
   {
     selector:
-      "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config|NavSegment)/]",
+      "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem)/]",
     message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal/buildShelf.",
   },
   {
