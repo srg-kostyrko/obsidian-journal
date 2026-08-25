@@ -1,13 +1,8 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 
 import { resolveWindow } from "./window-resolution";
-
-beforeAll(() => {
-  installTestCalendar();
-});
 
 describe("resolveWindow", () => {
   describe("week", () => {

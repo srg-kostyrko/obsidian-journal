@@ -1,44 +1,27 @@
-import { createNanoEvents } from "nanoevents";
 import { describe, expect, it } from "vitest";
 
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { NoticeService } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
-import { createSettingsService } from "@/settings/testing";
-import { ShelvesEventsToken, type ShelvesEvents } from "@/shelves";
+import { journalsCoreModule } from "@/journals/module";
+import { shelvesCoreModule } from "@/shelves/module";
+import { testContainer } from "@/testing";
 
-import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
-import { viewsCollection } from "../config";
+import { viewsCoreModule } from "../module";
 import { ViewsRepository } from "../repository";
-import { ViewsService } from "../service";
-import { ViewsEventsToken } from "../tokens";
-import { ViewsViewModel } from "../view-model";
+import { buildView } from "../testing";
 
 import { EditViewNameFlow } from "./edit-view-name.flow";
 
-import type { ViewId } from "../config";
+import type { View, ViewId } from "../config";
 import type { ViewNameModalResult } from "../ui/modals";
 
-async function build(raw?: unknown) {
-  const { service: settings, container } = createSettingsService({
-    collections: [viewsCollection],
-    raw,
+const VIEW_A = "11111111-1111-4111-8111-111111111111" as ViewId;
+
+async function build(seeds: Record<string, View> = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, viewsCoreModule],
+    data: { views: seeds },
   });
-  await settings.initialize();
-  const modals = new FakeModalService();
-  container.register(ModalService).useValue(modals as unknown as ModalService);
-  container.register(ViewsEventsToken).useFactory(() => createNanoEvents());
-  container.register(ViewsRepository).useClass(ViewsRepository);
-  container.register(ToolbarItemsService).useClass(ToolbarItemsService);
-  container.register(ShelvesEventsToken).useValue(createNanoEvents<ShelvesEvents>());
-  container.register(ViewsService).useClass(ViewsService);
-  container.register(ViewsViewModel).useClass(ViewsViewModel);
-  container.register(NoticeService).useValue(new FakeNoticeService());
-  container.register(Flows).useClass(Flows);
-  container.register(EditViewNameFlow).useClass(EditViewNameFlow);
-  return { repo: container.resolve(ViewsRepository), modals, flows: container.resolve(Flows) };
+  return { repo: harness.resolve(ViewsRepository), modals: harness.modals, flows: harness.resolve(Flows) };
 }
 
 describe("EditViewNameFlow", () => {
@@ -73,33 +56,21 @@ describe("EditViewNameFlow", () => {
   });
 
   it("renames an existing view", async () => {
-    const id = "11111111-1111-1111-1111-111111111111" as ViewId;
-    const raw = {
-      version: 5,
-      views: {
-        [id]: { id, name: "Old", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks: [] },
-      },
-    };
-    const { flows, modals, repo } = await build(raw);
-    const promise = flows.invoke(EditViewNameFlow, { viewId: id });
+    const { flows, modals, repo } = await build({ [VIEW_A]: buildView(VIEW_A, { name: "Old" }) });
+    const promise = flows.invoke(EditViewNameFlow, { viewId: VIEW_A });
     modals.lastOpen<unknown, ViewNameModalResult>().submit({ name: "New", icon: "" });
     await promise;
-    expect(repo.get(id).getOrUndefined()?.name).toBe("New");
+    expect(repo.get(VIEW_A).getOrUndefined()?.name).toBe("New");
   });
 
   it("keeps the existing icon when renaming", async () => {
-    const id = "11111111-1111-1111-1111-111111111111" as ViewId;
-    const raw = {
-      version: 5,
-      views: {
-        [id]: { id, name: "Old", icon: "calendar-days", defaultShelf: null, showInRibbon: false, blocks: [] },
-      },
-    };
-    const { flows, modals, repo } = await build(raw);
-    const promise = flows.invoke(EditViewNameFlow, { viewId: id });
+    const { flows, modals, repo } = await build({
+      [VIEW_A]: buildView(VIEW_A, { name: "Old", icon: "calendar-days" }),
+    });
+    const promise = flows.invoke(EditViewNameFlow, { viewId: VIEW_A });
     modals.lastOpen<unknown, ViewNameModalResult>().submit({ name: "New", icon: "" });
     await promise;
-    expect(repo.get(id).getOrUndefined()?.icon).toBe("calendar-days");
+    expect(repo.get(VIEW_A).getOrUndefined()?.icon).toBe("calendar-days");
   });
 
   it("returns UserAborted when the modal is cancelled", async () => {

@@ -1,11 +1,9 @@
 import { createNanoEvents } from "nanoevents";
 
 import type { Module } from "@/infrastructure/di";
-import { JournalEditSectionToken, defineJournalEditSection } from "@/journals";
-import { CollectionDefinitionToken, DashboardBlockToken, SubpageToken, defineDashboardBlock } from "@/settings";
+import { CollectionDefinitionToken } from "@/settings";
 
 import { customIntervalsBlock } from "./blocks/custom-intervals/custom-intervals-block";
-import IntervalBlockSection from "./blocks/custom-intervals/ui/IntervalBlockSection.vue";
 import { dividerBlock } from "./blocks/divider/divider-block";
 import { markdownTemplateBlock } from "./blocks/markdown-template/markdown-template-block";
 import { monthCalendarBlock } from "./blocks/month-calendar/month-calendar-block";
@@ -20,18 +18,17 @@ import { EditViewNameFlow } from "./flows/edit-view-name.flow";
 import { RepositionViewFlow } from "./flows/reposition-view.flow";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
+import { viewsStartupModule } from "./startup-module";
 import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
 import { buttonItem } from "./toolbar-items/button/button-item";
 import { existingNavigationItem } from "./toolbar-items/existing-navigation/existing-navigation-item";
 import { periodButtonsItem } from "./toolbar-items/period-buttons/period-buttons-item";
 import { shelfSelectorItem } from "./toolbar-items/shelf-selector/shelf-selector-item";
 import { spacerItem } from "./toolbar-items/spacer/spacer-item";
-import { viewEditSubpage } from "./ui/view-edit-subpage";
-import ViewsDashboardBlock from "./ui/ViewsDashboardBlock.vue";
-import { ViewHostService } from "./view-host";
+import { viewsUiModule } from "./ui-module";
 import { ViewsViewModel } from "./view-model";
 
-export const viewsModule: Module = {
+export const viewsCoreModule: Module = {
   register(c) {
     c.register(CollectionDefinitionToken).useValue(viewsCollection);
     c.register(ViewsEventsToken).useFactory(() => createNanoEvents<ViewsEvents>());
@@ -39,7 +36,6 @@ export const viewsModule: Module = {
     c.register(ViewsViewModel).useClass(ViewsViewModel).eager();
     c.register(ViewsService).useClass(ViewsService).eager();
     c.register(ToolbarItemsService).useClass(ToolbarItemsService);
-    c.register(ViewHostService).useClass(ViewHostService).eager();
     c.register(EditViewNameFlow).useClass(EditViewNameFlow);
     c.register(DeleteViewFlow).useClass(DeleteViewFlow);
     c.register(AddBlockToViewFlow).useClass(AddBlockToViewFlow);
@@ -58,13 +54,13 @@ export const viewsModule: Module = {
     c.register(ToolbarItemDefinitionToken).useValue(periodButtonsItem);
     c.register(ToolbarItemDefinitionToken).useValue(existingNavigationItem);
     c.register(ToolbarItemDefinitionToken).useValue(buttonItem);
+  },
+};
 
-    c.register(DashboardBlockToken).useValue(
-      defineDashboardBlock({ key: "views", component: ViewsDashboardBlock, order: 7 }),
-    );
-    c.register(SubpageToken).useValue(viewEditSubpage);
-    c.register(JournalEditSectionToken).useValue(
-      defineJournalEditSection({ key: "interval-block", order: 90, component: IntervalBlockSection }),
-    );
+export const viewsModule: Module = {
+  register(c) {
+    viewsCoreModule.register(c);
+    viewsUiModule.register(c);
+    viewsStartupModule.register(c);
   },
 };

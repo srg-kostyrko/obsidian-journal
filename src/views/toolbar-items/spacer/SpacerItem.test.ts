@@ -1,5 +1,5 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h } from "vue";
 
 import { provideViewContextStub } from "../../testing";
@@ -8,8 +8,6 @@ import { provideViewContext } from "../../view-context";
 import { spacerItem } from "./spacer-item";
 
 import type { BlockInstanceId } from "../../config";
-
-afterEach(() => cleanup());
 
 const renderSpacer = (): ReturnType<typeof h> =>
   h(spacerItem.component, { instanceId: "s-1" as BlockInstanceId, config: {} });

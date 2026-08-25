@@ -165,20 +165,158 @@ export default defineConfig({
         // full stop: decorations' own call sites (decorations-store.test.ts,
         // gather-bindings.test.ts, match-service.test.ts, the delete/edit-decoration flow tests,
         // DecorationsSection.test.ts, and the three modal tests) are gone by 9a97fb28 — `git grep
-        // fromParts -- src/decorations` at the tip returns nothing — but `src/journals/testing.ts`'s
-        // `fakeRepo` and `src/shelves/testing.ts`'s `fakeShelvesRepo` both still call `fromParts`
-        // directly, and both wrappers are themselves still called from outside decorations —
-        // `fakeRepo` from `src/notes-calendar/testing.ts`,
-        // `src/views/blocks/custom-intervals/CustomIntervalsBlock.isolated.test.ts`,
-        // `CustomIntervalsBlock.fixed-scope.isolated.test.ts`, and `src/views/view-leaf.test.ts`.
-        // `JournalsRepository.fromParts`/`ShelvesRepository.fromParts` also have direct callers of
-        // their own under `src/views` — `IntervalBlockSection.test.ts`, `ButtonItemConfig.test.ts`,
-        // `ShelfSelectorItem.test.ts` — so both methods stayed warm regardless of what decorations
-        // itself still calls.
-        statements: 92.3,
+        // fromParts -- src/decorations` at the tip returns nothing — but, as of sweep 4,
+        // `src/journals/testing.ts`'s `fakeRepo` and `src/shelves/testing.ts`'s `fakeShelvesRepo`
+        // both still called `fromParts` directly, and both wrappers were themselves still called
+        // from outside decorations — `fakeRepo` from `src/notes-calendar/testing.ts`,
+        // `src/views/blocks/custom-intervals/CustomIntervalsBlock.test.ts`,
+        // `CustomIntervalsBlock.fixed-scope.test.ts` (both renamed off `.isolated` by sweep 5), and
+        // `src/views/view-leaf.test.ts`. Sweep 5 removed all four of those callers (see the
+        // `18c0d41a` entry below); `git grep -n "fakeRepo\|fakeShelvesRepo" -- src`, excluding the
+        // two fixture definitions themselves, returns nothing at this file's own tip.
+        // `JournalsRepository.fromParts`/`ShelvesRepository.fromParts` also had direct callers of
+        // their own under `src/views` at that point — `IntervalBlockSection.test.ts`,
+        // `ButtonItemConfig.test.ts`, `ShelfSelectorItem.test.ts` — so both methods stayed warm
+        // regardless of what decorations itself still called.
+        //
+        // Sweep 5 (views) measured its seventeen commits in a single scratch worktree, checked out
+        // in sequence from 78340ab8 with one `npm ci`/`compile:i18n` pair. The merge base itself
+        // reproduced exactly: 92.3 / 87.9 / 89.28 / 94.41 (11076/11999 statements, 4775/5432
+        // branches, 3934/4406 functions, 9684/10257 lines), matching this sweep's plan.
+        //
+        // `9390a918` (split viewsModule into core/ui/startup halves) -> 92.29 / 87.9 / 89.26 /
+        // 94.39 (11076/12001, 4775/5432, 3934/4407, 9684/10259). Down, but not a test regression:
+        // the new `src/views/startup-module.ts` holds nothing but a
+        // `.register().useClass().eager()` call — the same shape `module.ts`/`ui-module.ts`
+        // already get excluded for — but its name matches neither pattern in the exclude glob
+        // above, so it starts as two fresh 0%-covered statements/lines and one 0%-covered
+        // function, exactly the "fresh 0% file" cost the sweep-3 paragraph above warns a module
+        // split can add. `module.ts` and `ui-module.ts` themselves stayed excluded and moved
+        // nothing.
+        //
+        // `8d913c14`, `88eee894`, `d6412d31` and `88216c07` (dropping the global-duplicate
+        // afterEach/installTestCalendar boilerplate; moving the config editors and modal tests
+        // onto testContainer; the ButtonItemConfig import fix) each measured identical to the
+        // commit before it.
+        //
+        // `b4410edb` (repository, view-model and toolbar-items-service onto testContainer) -> 92.3
+        // / 87.9 / 89.28 / 94.4 (11077/12001, 4775/5432, 3935/4407, 9685/10259). Up net, but this
+        // is where `ViewsViewModel.fromRepository` (view-model.ts:11-13) loses its last caller:
+        // `view-model.test.ts` used to hand-build a repo via `ViewsRepository.fromParts` and call
+        // `ViewsViewModel.fromRepository(repo)` directly; converted, it resolves `ViewsViewModel`
+        // through `testContainer`, which constructs it directly and never calls the static factory
+        // (-1 statement, -1 line). Two rises outweigh it: `startup-module.ts` goes from 0/2 to 1/2
+        // covered statements — testContainer now boots the eager `ViewHostService` registration
+        // for the first time this sweep (+1 statement, +1 line) — and the real
+        // `ToolbarItemsService` exercises `spacer-item.ts`'s definition for the first time (+1
+        // statement, +1 function, +1 line).
+        //
+        // `9e9f3511` (service.test.ts onto testContainer) -> 92.3 / 87.9 / 89.28 / 94.41
+        // (11078/12001, 4775/5432, 3935/4407, 9686/10259). Up: the real `ViewsService`, resolved
+        // through `testContainer` instead of a hand-built container, drives one more
+        // `ViewsRepository` method body for the first time (repository.ts: 21/27 -> 22/27
+        // statements, 19/21 -> 20/21 lines).
+        //
+        // `dd316484` (view-host onto testContainer) -> 92.31 / 87.9 / 89.31 / 94.42 (11079/12001,
+        // 4775/5432, 3936/4407, 9687/10259). Up: `startup-module.ts` reaches full coverage (1/2 ->
+        // 2/2 statements, 0/1 -> 1/1 functions, 1/2 -> 2/2 lines) once `view-host.test.ts`
+        // resolves the real `ViewHostService` through the startup module instead of registering it
+        // by hand.
+        //
+        // `d23afae6` (view-leaf onto testContainer) measured flat despite replacing five
+        // `ViewsRepository.fromParts` calls and one `ShelvesRepository.fromParts` call with
+        // testContainer: both methods still had other live callers at this point (the
+        // not-yet-converted view flow tests, `IntervalBlockSection.test.ts`,
+        // `ButtonItemConfig.test.ts`, `ShelfSelectorItem.test.ts`), so their bodies kept executing
+        // regardless of what view-leaf itself stopped calling.
+        //
+        // `1b388451` (the five view flows onto testContainer) -> 92.24 / 87.9 / 89.33 / 94.33
+        // (11070/12001, 4775/5432, 3937/4407, 9678/10259). Down net, and this is where
+        // `ViewsRepository.fromParts` (repository.ts:20-40) loses its own last caller: the five
+        // flow tests turn out to have been its only remaining callers repo-wide — `grep -rn
+        // "ViewsRepository.fromParts" src` returns nothing once they convert (-10 statements, -10
+        // lines). A second, smaller fall rides along: two of the converted tests used to call
+        // their local `build()` helper with no `raw` argument, leaving `viewsCollection` with no
+        // persisted "views" key and triggering its `seed` factory (config.ts:66) to populate the
+        // default calendar view; the conversion follows this sweep's seed-explicitly convention
+        // and passes `data: { views: … }` on every call, so `seed` never runs again (-1 statement,
+        // -1 function, -1 line). Two rises partly offset both: `markdown-template-block.ts` and
+        // `period-buttons-item.ts` each gain one statement/function/line as the real block and
+        // toolbar-item definitions `viewsCoreModule` registers run for these flows for the first
+        // time.
+        //
+        // `6080aa3f` and `e561da04` (views/ui component tests onto testContainer; real
+        // ViewHostService in ViewEditSubpage tests) both measured flat.
+        //
+        // `58ade0cb` (blocks and toolbar-item UI tests onto testContainer) -> 92.23 / 87.9 / 89.33
+        // / 94.32 (11069/12001, 4775/5432, 3937/4407, 9677/10259). Down:
+        // `JournalsViewModel.fromRepository` (journals/view-model.ts:11-13) loses its last caller.
+        // `IntervalBlockSection.test.ts` used to build `JournalsRepository`/`ShelvesRepository`
+        // via `fromParts` and call `JournalsViewModel.fromRepository(repo)` directly; converted
+        // alongside `ShelfSelectorItem.test.ts`, `MarkdownTemplateBlock.test.ts` and
+        // `ToolbarBlock.test.ts`, it now resolves `JournalsViewModel` through `testContainer` (-1
+        // statement, -1 line). No caller of `JournalsViewModel.fromRepository` remains anywhere in
+        // `src` after this commit.
+        //
+        // `42b8b064` (the shelf-scope five onto testContainer, dropping `.isolated` from their
+        // filenames) -> 92.29 / 87.9 / 89.49 / 94.34 (11076/12001, 4775/5432, 3944/4407,
+        // 9679/10259). Up: replacing the fake shelf scope with the real one in
+        // `CustomIntervalsBlock.vue`, `ButtonItem.vue`, `ExistingNavigationItem.vue` and
+        // `PeriodButtonsItem.vue` drives statement and function paths inside those components that
+        // the fakes never reached (+7 statements, +7 functions, +2 lines; branches held).
+        //
+        // `f563663e` (un-isolating the four remaining `vi.mock` files, also dropping `.isolated`)
+        // -> 92.35 / 87.9 / 89.65 / 94.39 (11083/12001, 4775/5432, 3951/4407, 9684/10259). Up:
+        // dropping the `vi.mock` lets the real block and toolbar-item definitions run in place of
+        // the mocked stand-ins — `divider-block.ts`, `toolbar-block.ts`, `week-calendar-block.ts`,
+        // `existing-navigation-item.ts`, `MonthCalendarBlock.vue` and `WeekCalendarBlock.vue` each
+        // gain coverage (+7 statements, +7 functions, +5 lines).
+        //
+        // `18c0d41a` (use-follow-active-note onto testContainer, retiring the notes-calendar
+        // fakes) -> 92.18 / 87.9 / 89.65 / 94.2 (11063/12001, 4775/5432, 3951/4407, 9664/10259).
+        // This is the sweep's central predicted fall. The commit deletes
+        // `buildNotesCalendarHarness` from `src/notes-calendar/testing.ts`, which was the last
+        // surviving caller of `JournalsRepository.fromParts` (through `fakeRepo`) and of
+        // `ShelvesRepository.fromParts` (through `fakeShelvesRepo`) anywhere outside the two
+        // fixtures themselves: `journals/repository.ts` drops 51/53 -> 41/53 statements and 40/40
+        // -> 30/40 lines, `shelves/repository.ts` drops 48/50 -> 38/50 statements and 39/39 ->
+        // 29/39 lines — each exactly the ten-line body of its own `fromParts`. Verified, not
+        // assumed: `grep -rn "\.fromParts(" src` at this commit returns only
+        // `src/journals/testing.ts:18` and `src/shelves/testing.ts:13`, and neither `fakeRepo` nor
+        // `fakeShelvesRepo` has any remaining caller, so both bodies are fully dead rather than
+        // merely thinner. One clause of this sweep's own plan does not hold, though: `testing.ts`
+        // files are already excluded from coverage (`"**/testing.ts"` above), so
+        // `notes-calendar/testing.ts` was never counted before its deletion, and deleting it moves
+        // nothing on its own — both repository files keep the same statement/line totals before
+        // and after this commit, and only their covered counts fall. The plan's expectation that
+        // the file deletion itself "moves the denominator" does not hold.
+        //
+        // `0d248459` (arming the campaign lint selectors for `src/views`, the tip of this sweep)
+        // measured flat, as expected for a lint-only change.
+        //
+        // No branch moved at any of the seventeen commits: 4775/5432 held from the merge base
+        // straight through to the tip, so every fall recorded above is a statement/function/line
+        // change with a named, verified cause, never an unattributed branch regression.
+        //
+        // As of this tip, all five `fromParts` methods (`JournalsRepository`, `ShelvesRepository`,
+        // `ViewsRepository`, `CommandsRepository`, `ShelvesService`) and all four `fromRepository`
+        // methods (`JournalsViewModel`, `ShelvesViewModel`, `ViewsViewModel`, `CommandsViewModel`)
+        // have zero executing callers: `grep -rn "\.fromRepository(" src` (excluding the `static
+        // fromRepository` declarations themselves) returns nothing, and `grep -rn "\.fromParts("
+        // src` returns only the two deprecated-fixture call sites named above. Four of the nine —
+        // `CommandsRepository.fromParts`, `ShelvesService.fromParts`,
+        // `CommandsViewModel.fromRepository`, `ShelvesViewModel.fromRepository` — were already
+        // dead before this sweep started, their per-file counts identical at the merge base and at
+        // this tip. This sweep is responsible for killing the other five:
+        // `ViewsRepository.fromParts`/`ViewsViewModel.fromRepository` (by `b4410edb` and
+        // `1b388451`) and
+        // `JournalsRepository.fromParts`/`ShelvesRepository.fromParts`/`JournalsViewModel.fromRepository`
+        // (by `58ade0cb` and `18c0d41a`). All nine remain on the closing PR's deletion list; none
+        // of this sweep's own tests calls any of them any longer.
+        statements: 92.18,
         branches: 87.9,
-        functions: 89.28,
-        lines: 94.41,
+        functions: 89.65,
+        lines: 94.2,
       },
     },
     projects: [

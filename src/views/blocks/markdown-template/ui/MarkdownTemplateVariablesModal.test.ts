@@ -1,35 +1,30 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { screen } from "@testing-library/vue";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
 import { dateModificationsModal } from "@/templates/ui/modals";
+import { testContainer, type TestHarness } from "@/testing";
 
 import MarkdownTemplateVariablesModal from "./MarkdownTemplateVariablesModal.vue";
 
-afterEach(() => cleanup());
-
-function mount() {
-  const modals = new FakeModalService();
-  const container = new Container();
-  container.register(ModalService).useValue(modals as unknown as ModalService);
-  render(MarkdownTemplateVariablesModal, {
-    global: { plugins: [{ install: (app) => provideInjectorOnApp(app, container) }] },
-  });
-  return { modals };
-}
-
 describe("MarkdownTemplateVariablesModal", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer();
+  });
+
   it("lists the journal_link variable", () => {
-    mount();
+    harness.render(MarkdownTemplateVariablesModal);
+
     expect(screen.getByText("{{journal_link(name)}}")).toBeTruthy();
   });
 
   it("opens the date modifications modal from a variable's modifications link", async () => {
-    const { modals } = mount();
+    harness.render(MarkdownTemplateVariablesModal);
+
     await userEvent.click(screen.getAllByRole("link", { name: /additional modifications/i })[0]);
-    expect(modals.lastOpen().definition).toBe(dateModificationsModal);
+
+    expect(harness.modals.lastOpen().definition).toBe(dateModificationsModal);
   });
 });

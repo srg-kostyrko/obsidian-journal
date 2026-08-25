@@ -1,29 +1,23 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import * as v from "valibot";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 import { h } from "vue";
 
 import { m } from "@/i18n";
+
+import { buildToolbarItemDefinition } from "../testing";
 
 import ToolbarItemFrame from "./ToolbarItemFrame.vue";
 
 import type { BlockInstanceId } from "../config";
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
 
-afterEach(() => cleanup());
-
 const itemId = "11111111-1111-1111-1111-aaaaaaaaaaaa" as BlockInstanceId;
 
-const definition = {
-  key: "button",
-  label: () => "Button",
-  schema: v.object({}),
-  defaultConfig: {},
+const definition = buildToolbarItemDefinition("button", {
   component: { render: () => h("span", "PREVIEW") },
   configComponent: { render: () => null },
-  __brand: "toolbar-item",
-} as unknown as ToolbarItemDefinition;
+});
 
 function mount(itemDefinition: ToolbarItemDefinition | undefined) {
   const onEdit = vi.fn();

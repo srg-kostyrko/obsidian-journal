@@ -1,15 +1,10 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
-import { installTestCalendar } from "@/calendar/testing";
 
 import { monthWindowContains, spanContains, weekWindowContains } from "./follow-visibility";
 
 const a = (s: string): AnchorString => s as AnchorString;
-
-beforeAll(() => {
-  installTestCalendar();
-});
 
 describe("spanContains", () => {
   it("includes a date on the start boundary", () => {
