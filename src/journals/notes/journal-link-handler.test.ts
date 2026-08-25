@@ -2,6 +2,7 @@ import { assert, beforeEach, describe, expect, it } from "vitest";
 
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
+import type { VaultPath } from "@/infrastructure/host";
 import {
   FunctionHandlerToken,
   TemplateContext,
@@ -12,6 +13,7 @@ import {
 } from "@/templates";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { customJournal, fixedJournal } from "../testing";
 
@@ -151,6 +153,47 @@ describe("JournalLinkHandler", () => {
     expect(result.isErr()).toBe(true);
   });
 
+  describe("a connected note living away from its configured path", () => {
+    let connectedHarness: TestHarness;
+
+    beforeEach(async () => {
+      connectedHarness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: ALL_JOURNALS },
+      });
+      connectedHarness.resolve(JournalsIndex).register({
+        journalName: "weekly",
+        anchor: anchor("2026-08-17"),
+        path: "Week 34 review.md" as VaultPath,
+      });
+    });
+
+    function renderWeekly(harness: TestHarness, renderDate: string): string {
+      const result = journalLinkHandler(harness).render({
+        arg: "weekly",
+        sourceDate: CalendarDate.fromAnchor(anchor(renderDate)),
+        modifiers: [],
+        context: hostContext("daily", renderDate, renderDate),
+        engine: harness.resolve(TemplateEngine),
+      });
+      if (result.isErr()) throw new Error(`expected ok, got ${result.error.message}`);
+      return result.value;
+    }
+
+    it("links to the note the index holds, not the path the template would render", () => {
+      expect(renderWeekly(connectedHarness, "2026-08-20")).toBe("Week 34 review");
+    });
+
+    it("still renders the configured path for a period with no note yet, which is what linking ahead needs", async () => {
+      const emptyHarness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: ALL_JOURNALS },
+      });
+
+      expect(renderWeekly(emptyHarness, "2026-08-20")).toBe("2026-W34");
+    });
+  });
+
   describe("timeline bounds", () => {
     let boundedHarness: TestHarness;
 
@@ -191,6 +234,21 @@ describe("JournalLinkHandler", () => {
     it("resolves the path when the target date is within the timeline", () => {
       const result = renderResult("2030-06-15");
       expect(result.isOk() && result.value).toBe("2030-06-15");
+    });
+
+    it("links to a note that exists past the timeline end, which the journal still has", () => {
+      // Eligibility is "a note exists OR the date is in timeline": the timeline bounds where a
+      // journal writes, not what it has already written, so a note that outlived a narrowed
+      // timeline is still a real note to link to.
+      boundedHarness.resolve(JournalsIndex).register({
+        journalName: "bounded",
+        anchor: anchor("2030-07-10"),
+        path: "Archive/Old log.md" as VaultPath,
+      });
+
+      const result = renderResult("2030-07-10");
+
+      expect(result.isOk() && result.value).toBe("Archive/Old log");
     });
 
     it("leaves a {{journal_link}} token unresolved when the target is out of bounds", () => {

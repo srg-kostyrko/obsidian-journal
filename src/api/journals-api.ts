@@ -105,7 +105,9 @@ export class JournalsApiService implements JournalsApi {
     return path.kind === "err" ? null : path.value;
   }
 
-  // A connected note the user has since moved keeps its real path; the rendered template
+  // The same rule as NotePathService.resolvedPathFor, spelled out here because the entry lookup
+  // is already done for `file` and the timeline gate applies only to the rendered branch:
+  // a connected note the user has since moved keeps its real path, and the rendered template
   // answers only for a note that does not exist yet.
   #pathOf(name: string, anchor: AnchorString, existingPath: string | null): string | null {
     if (existingPath !== null) return existingPath;

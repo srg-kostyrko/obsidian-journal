@@ -8,10 +8,12 @@ import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
 import { CycleService } from "../cycle";
-import { JournalNotFoundError } from "../errors";
+import { JournalNotFoundError, OutOfTimelineError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
+import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
+import { TimelineService } from "../timeline";
 
 import { EmptyNoteNameError } from "./errors";
 
@@ -33,6 +35,8 @@ export class NotePathService {
   readonly #numbering = inject(NumberingService);
   readonly #frontmatter = inject(FrontmatterService);
   readonly #engine = inject(TemplateEngine);
+  readonly #index = inject(JournalsIndex);
+  readonly #timeline = inject(TimelineService);
 
   #withNoteName(context: TemplateContext, noteName: string): TemplateContext {
     const noteSpec = { kind: "string", value: noteName } as const;
@@ -55,12 +59,57 @@ export class NotePathService {
     return context;
   }
 
-  pathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+  #metadataForDate(name: string, date: CalendarDate): Result<JournalMetadata, JournalNotFoundError> {
     return attempt.in(this, function* (this: NotePathService) {
       const anchor = yield* this.#cycle.anchorOf(name, date).okOrElse(() => new JournalNotFoundError(name));
-      const metadata = yield* this.#frontmatter.buildMetadata(name, anchor);
-      return yield* this.pathFor(name, metadata);
+      return yield* this.#frontmatter.buildMetadata(name, anchor);
     });
+  }
+
+  pathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+    return this.#metadataForDate(name, date).flatMap((metadata) => this.pathFor(name, metadata));
+  }
+
+  /**
+   * Where this journal's note for a period actually is, falling back to where it would be created.
+   *
+   * A connected note the user has since renamed or moved — or connected in place, keeping its own
+   * name — keeps its real path; the rendered template answers only for a note that does not exist
+   * yet. Anything that links to a note rather than creating one wants this, not `pathFor`.
+   */
+  resolvedPathFor(
+    name: string,
+    metadata: JournalMetadata,
+  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+    const entry = this.#index.entryByAnchor(name, metadata.anchor);
+    if (entry.isSome()) return new Ok(entry.value.path);
+    return this.pathFor(name, metadata);
+  }
+
+  resolvedPathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+    return this.#metadataForDate(name, date).flatMap((metadata) => this.resolvedPathFor(name, metadata));
+  }
+
+  /**
+   * Where a link for this date should point, or why there is nothing to point at.
+   *
+   * Eligibility is "a note exists OR the date is in timeline" — the same rule `JournalsApi`
+   * applies. The timeline bounds where a journal *writes*, not what it has already written, so a
+   * note that outlived a narrowed timeline is still a real note to link to.
+   */
+  linkTargetForDate(
+    name: string,
+    date: CalendarDate,
+  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError | OutOfTimelineError> {
+    return this.#metadataForDate(name, date).flatMap(
+      (metadata): Result<VaultPath, EmptyNoteNameError | OutOfTimelineError | JournalNotFoundError> => {
+        const exists = this.#index.entryByAnchor(name, metadata.anchor).isSome();
+        if (!exists && !this.#timeline.contains(name, metadata.anchor)) {
+          return new Err(new OutOfTimelineError(name, metadata.anchor));
+        }
+        return this.resolvedPathFor(name, metadata);
+      },
+    );
   }
 
   pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
