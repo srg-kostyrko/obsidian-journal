@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import * as v from "valibot";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   customIntervalsBlock,
@@ -13,8 +13,6 @@ import CustomIntervalsBlockConfig from "./ui/CustomIntervalsBlockConfig.vue";
 function mountConfig(config: CustomIntervalsConfig, onChange: CustomIntervalsConfigChange) {
   return render(CustomIntervalsBlockConfig, { props: { config, onChange } });
 }
-
-afterEach(() => cleanup());
 
 describe("CustomIntervalsBlockConfig", () => {
   it("emits onChange with the chosen window when the dropdown changes", async () => {

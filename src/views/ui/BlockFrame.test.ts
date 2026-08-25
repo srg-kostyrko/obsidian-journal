@@ -1,12 +1,10 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
 
 import BlockFrame from "./BlockFrame.vue";
-
-afterEach(() => cleanup());
 
 function mount(props: { icon?: string; label: string; summary?: string; editable: boolean }) {
   const onEdit = vi.fn();

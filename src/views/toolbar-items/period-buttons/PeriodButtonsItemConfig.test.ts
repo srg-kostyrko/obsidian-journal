@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 
 import PeriodButtonsItemConfig from "./ui/PeriodButtonsItemConfig.vue";
 
@@ -9,8 +9,6 @@ import type { PeriodButtonsConfig, PeriodButtonsConfigChange } from "./period-bu
 function mountConfig(config: PeriodButtonsConfig, onChange: PeriodButtonsConfigChange) {
   return render(PeriodButtonsItemConfig, { props: { config, onChange } });
 }
-
-afterEach(() => cleanup());
 
 describe("PeriodButtonsItemConfig", () => {
   it("emits onChange when the week period is toggled on", async () => {
