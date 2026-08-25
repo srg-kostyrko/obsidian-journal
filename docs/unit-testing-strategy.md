@@ -306,6 +306,48 @@ uses `vi.spyOn` with `mockReturnValueOnce`. A baked-in queue adds a parallel
 state machine — typed buffers, ordering, drain semantics — to every fake, to
 serve the minority of tests that need one.
 
+### Supplying entries to a DI multi-token registry
+
+A test whose subject reads a multi-token registry via `inject(SomeDefinitionToken)`
+(a feature's own definitions — view blocks, toolbar items, and the like) supplies
+its own entries with a module-scope `Module` literal, or a module-scope factory
+returning one, passed in `testContainer`'s `modules`:
+
+```ts
+function testItemsModule(overrides: Partial<ToolbarItemDefinition> = {}): Module {
+  return {
+    register(c) {
+      c.register(ToolbarItemDefinitionToken).useValue(buildToolbarItemDefinition("test-item", overrides));
+    },
+  };
+}
+
+const harness = await testContainer({
+  modules: [journalsCoreModule, shelvesCoreModule, viewsCoreModule, testItemsModule()],
+  data: { views: {} },
+});
+```
+
+(`src/views/blocks/toolbar/toolbar-items-service.test.ts`.)
+
+Three alternatives look plausible and are all wrong: a hand-built `Container` is
+what this whole standard removes; `register().useValue` inside an `it`/`beforeEach`
+body is banned by a lint selector; and `overrides` **replaces** a binding rather
+than adding to a multi-token, so it cannot express "one more definition".
+
+**Prefer the real registered definitions where they suffice**, and reach for a
+synthetic only for a shape the real ones do not exhibit — a specific schema, a
+preset list, a deliberately unregistered key. Measured in `src/views`: 13 of
+`toolbar-items-service.test.ts`'s 19 tests run against the five real registered
+toolbar items; one whole task (the five view-flow tests) needed zero synthetics,
+because the real registry's own contrasts (a block with no config against one
+with config, and so on) already covered what the tests needed. The bias paid
+for itself: preferring real definitions surfaced three real defects this sweep
+— a `provide()` call made inside a `render()` option that was a silent no-op, a
+synthetic schema too permissive to reject config the real schema rejects, and a
+menu guard (`WorkspaceService.openPathsMenu` skipping `Menu` construction
+entirely) that a fake had no way to express.
+
 ## Assertions
 
 **Spy on a boundary you cannot see past; assert the outcome whenever the

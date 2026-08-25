@@ -165,17 +165,19 @@ export default defineConfig({
         // full stop: decorations' own call sites (decorations-store.test.ts,
         // gather-bindings.test.ts, match-service.test.ts, the delete/edit-decoration flow tests,
         // DecorationsSection.test.ts, and the three modal tests) are gone by 9a97fb28 — `git grep
-        // fromParts -- src/decorations` at the tip returns nothing — but `src/journals/testing.ts`'s
-        // `fakeRepo` and `src/shelves/testing.ts`'s `fakeShelvesRepo` both still call `fromParts`
-        // directly, and both wrappers are themselves still called from outside decorations —
-        // `fakeRepo` from `src/notes-calendar/testing.ts`,
+        // fromParts -- src/decorations` at the tip returns nothing — but, as of sweep 4,
+        // `src/journals/testing.ts`'s `fakeRepo` and `src/shelves/testing.ts`'s `fakeShelvesRepo`
+        // both still called `fromParts` directly, and both wrappers were themselves still called
+        // from outside decorations — `fakeRepo` from `src/notes-calendar/testing.ts`,
         // `src/views/blocks/custom-intervals/CustomIntervalsBlock.test.ts`,
         // `CustomIntervalsBlock.fixed-scope.test.ts` (both renamed off `.isolated` by sweep 5), and
-        // `src/views/view-leaf.test.ts`.
-        // `JournalsRepository.fromParts`/`ShelvesRepository.fromParts` also have direct callers of
-        // their own under `src/views` — `IntervalBlockSection.test.ts`, `ButtonItemConfig.test.ts`,
-        // `ShelfSelectorItem.test.ts` — so both methods stayed warm regardless of what decorations
-        // itself still calls.
+        // `src/views/view-leaf.test.ts`. Sweep 5 removed all four of those callers (see the
+        // `18c0d41a` entry below); `git grep -n "fakeRepo\|fakeShelvesRepo" -- src`, excluding the
+        // two fixture definitions themselves, returns nothing at this file's own tip.
+        // `JournalsRepository.fromParts`/`ShelvesRepository.fromParts` also had direct callers of
+        // their own under `src/views` at that point — `IntervalBlockSection.test.ts`,
+        // `ButtonItemConfig.test.ts`, `ShelfSelectorItem.test.ts` — so both methods stayed warm
+        // regardless of what decorations itself still called.
         //
         // Sweep 5 (views) measured its seventeen commits in a single scratch worktree, checked out
         // in sequence from 78340ab8 with one `npm ci`/`compile:i18n` pair. The merge base itself

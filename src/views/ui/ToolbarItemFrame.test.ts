@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 import { h } from "vue";
 
 import { m } from "@/i18n";
@@ -11,8 +11,6 @@ import ToolbarItemFrame from "./ToolbarItemFrame.vue";
 
 import type { BlockInstanceId } from "../config";
 import type { ToolbarItemDefinition } from "../define-toolbar-item";
-
-afterEach(() => cleanup());
 
 const itemId = "11111111-1111-1111-1111-aaaaaaaaaaaa" as BlockInstanceId;
 
