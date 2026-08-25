@@ -4,13 +4,16 @@ import { defineComponent, h, ref } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
 
+import { viewsCollection, type BlockInstanceId, type View, type ViewId } from "./config";
 import { defineToolbarItem, type ToolbarItemDefinition } from "./define-toolbar-item";
 import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
 import { provideViewContext, type RefDateOrigin, type ViewContext } from "./view-context";
 
-import type { BlockInstanceId, ViewId } from "./config";
-
 const StubComponent = defineComponent({ render: () => null });
+
+export function buildView(id: string, overrides: Partial<View> = {}): View {
+  return { ...viewsCollection.defaultItem(id), ...overrides };
+}
 
 export function buildViewBlockDefinition(
   key: string,
