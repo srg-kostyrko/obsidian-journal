@@ -1,124 +1,143 @@
-import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";
 import { reactive } from "vue";
 
-import { Container } from "@/infrastructure/di";
-import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
+import type { Module } from "@/infrastructure/di";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
-import { ShelvesEventsToken, type ShelvesEvents } from "@/shelves";
+import { journalsCoreModule } from "@/journals/module";
+import { ShelvesRepository } from "@/shelves";
+import { shelvesCoreModule } from "@/shelves/module";
+import { buildShelf } from "@/shelves/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
-import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
-import { defineToolbarItem, type ToolbarItemDefinition } from "./define-toolbar-item";
-import { defineViewBlock, type ViewBlockDefinition } from "./define-view-block";
+import { viewsCoreModule } from "./module";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
-import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken, type ViewsEvents } from "./tokens";
+import { buildToolbarItemDefinition, buildView, buildViewBlockDefinition } from "./testing";
+import { ToolbarItemDefinitionToken, ViewBlockDefinitionToken, ViewsEventsToken } from "./tokens";
 
 import type { BlockInstanceId, View, ViewId } from "./config";
+import type { ToolbarItemDefinition } from "./define-toolbar-item";
+import type { ViewBlockDefinition } from "./define-view-block";
 
-const noop = () => null;
+const SCOPED_VIEW_ID = "33333333-3333-4333-8333-333333333333";
 
-const trivialBlock = defineViewBlock<unknown>({
-  key: "test-block",
-  label: () => "Test Block",
-  schema: v.object({ x: v.number() }),
-  defaultConfig: { x: 0 },
-  component: { setup: () => noop },
-});
-
-function build(
-  options: {
-    seeds?: Record<string, View>;
-    blocks?: readonly ViewBlockDefinition[];
-    items?: readonly ToolbarItemDefinition[];
-  } = {},
-): {
-  service: ViewsService;
-  events: ReturnType<typeof createNanoEvents<ViewsEvents>>;
-  repo: ViewsRepository;
-  shelvesEvents: ReturnType<typeof createNanoEvents<ShelvesEvents>>;
-} {
-  const events = createNanoEvents<ViewsEvents>();
-  const shelvesEvents = createNanoEvents<ShelvesEvents>();
-  const repo = ViewsRepository.fromParts(options.seeds ?? {}, events);
-  const c = new Container();
-  c.register(ViewsRepository).useValue(repo);
-  c.register(ViewsEventsToken).useValue(events);
-  c.register(ShelvesEventsToken).useValue(shelvesEvents);
-  c.addModule(createLoggerTestingModule().module);
-  const blocks = options.blocks ?? [];
-  for (const block of blocks) {
-    c.register(ViewBlockDefinitionToken).useValue(block);
-  }
-  const items = options.items ?? [];
-  for (const item of items) {
-    c.register(ToolbarItemDefinitionToken).useValue(item);
-  }
-  c.register(ToolbarItemsService).useClass(ToolbarItemsService);
-  c.register(ViewsService).useClass(ViewsService);
-  return { service: c.resolve(ViewsService), events, repo, shelvesEvents };
+function testBlockModule(overrides: Partial<ViewBlockDefinition> = {}): Module {
+  return {
+    register(c) {
+      c.register(ViewBlockDefinitionToken).useValue(
+        buildViewBlockDefinition("test-block", {
+          schema: v.object({ x: v.number() }),
+          defaultConfig: { x: 0 },
+          ...overrides,
+        }),
+      );
+    },
+  };
 }
 
-function viewScopedTo(shelf: string | null): View {
+function testItemModule(overrides: Partial<ToolbarItemDefinition> = {}): Module {
   return {
-    id: "v1" as ViewId,
-    name: "Calendar",
-    icon: "",
-    defaultShelf: shelf,
-    showInRibbon: false,
-    leaf: "right",
-    openOnStartup: false,
-    rememberDate: false,
-    followActiveDate: true,
-    blocks: [],
+    register(c) {
+      c.register(ToolbarItemDefinitionToken).useValue(
+        buildToolbarItemDefinition("dummy", {
+          schema: v.object({ x: v.number() }),
+          defaultConfig: () => ({ x: 0 }),
+          ...overrides,
+        }),
+      );
+    },
   };
+}
+
+async function build(
+  options: {
+    seeds?: Record<string, View>;
+    blocks?: readonly Module[];
+    items?: readonly Module[];
+  } = {},
+) {
+  const harness = await testContainer({
+    modules: [
+      journalsCoreModule,
+      shelvesCoreModule,
+      viewsCoreModule,
+      ...(options.blocks ?? []),
+      ...(options.items ?? []),
+    ],
+    data: { views: options.seeds ?? {} },
+  });
+  return {
+    harness,
+    service: harness.resolve(ViewsService),
+    repo: harness.resolve(ViewsRepository),
+    events: harness.resolve(ViewsEventsToken),
+  };
+}
+
+async function buildScopedToShelf(
+  shelf: string,
+): Promise<{ harness: TestHarness; repo: ViewsRepository; shelves: ShelvesRepository }> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, viewsCoreModule],
+    data: {
+      views: { [SCOPED_VIEW_ID]: buildView(SCOPED_VIEW_ID, { defaultShelf: shelf }) },
+      shelves: { work: buildShelf("work") },
+    },
+  });
+  return { harness, repo: harness.resolve(ViewsRepository), shelves: harness.resolve(ShelvesRepository) };
 }
 
 describe("ViewsService", () => {
   describe("shelf reference maintenance", () => {
-    it("follows a renamed shelf so the view stays scoped to it", () => {
-      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("work") } });
-      shelvesEvents.emit("renamed", "work", "office");
-      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe("office");
+    it("follows a renamed shelf so the view stays scoped to it", async () => {
+      const { repo, shelves } = await buildScopedToShelf("work");
+      shelves.rename("work", "office");
+      expect(repo.get(SCOPED_VIEW_ID as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe(
+        "office",
+      );
     });
 
-    it("leaves a view scoped to a different shelf untouched on rename", () => {
-      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("personal") } });
-      shelvesEvents.emit("renamed", "work", "office");
-      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe("personal");
+    it("leaves a view scoped to a different shelf untouched on rename", async () => {
+      const { repo, shelves } = await buildScopedToShelf("personal");
+      shelves.rename("work", "office");
+      expect(repo.get(SCOPED_VIEW_ID as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe(
+        "personal",
+      );
     });
 
-    it("unscopes a view whose shelf was deleted", () => {
-      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("work") } });
-      shelvesEvents.emit("deleted", "work");
-      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBeNull();
+    it("unscopes a view whose shelf was deleted", async () => {
+      const { repo, shelves } = await buildScopedToShelf("work");
+      shelves.deleteWith("work");
+      expect(repo.get(SCOPED_VIEW_ID as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBeNull();
     });
 
-    it("leaves a view scoped to a different shelf untouched on delete", () => {
-      const { repo, shelvesEvents } = build({ seeds: { v1: viewScopedTo("personal") } });
-      shelvesEvents.emit("deleted", "work");
-      expect(repo.get("v1" as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe("personal");
+    it("leaves a view scoped to a different shelf untouched on delete", async () => {
+      const { repo, shelves } = await buildScopedToShelf("personal");
+      shelves.deleteWith("work");
+      expect(repo.get(SCOPED_VIEW_ID as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe(
+        "personal",
+      );
     });
   });
 
   describe("create", () => {
     it("returns Ok with the new view id", async () => {
-      const { service } = build();
+      const { service } = await build();
       const result = await service.create({ name: "Calendar" });
       expectOk(result);
       expect(typeof result.value).toBe("string");
     });
 
     it("persists the new view through the repository", async () => {
-      const { service, repo } = build();
+      const { service, repo } = await build();
       const result = await service.create({ name: "Calendar" });
       expectOk(result);
       expect(repo.get(result.value).match({ some: (v) => v, none: () => null })).not.toBeNull();
     });
 
     it("emits created with the new view id (via BaseRepository.addEntity)", async () => {
-      const { service, events } = build();
+      const { service, events } = await build();
       const listener = vi.fn();
       events.on("created", listener);
       const result = await service.create({ name: "Calendar" });
@@ -127,14 +146,14 @@ describe("ViewsService", () => {
     });
 
     it("rejects an empty name", async () => {
-      const { service } = build();
+      const { service } = await build();
       const result = await service.create({ name: "" });
       expectErr(result);
       expect(result.error.kind).toBe("invalid-view-name");
     });
 
     it("stores a blank icon when none is provided so the view falls back to a generic icon", async () => {
-      const { service, repo } = build();
+      const { service, repo } = await build();
       const result = await service.create({ name: "Calendar" });
       expectOk(result);
       expect(repo.get(result.value).match({ some: (v) => v.icon, none: () => null })).toBe("");
@@ -143,14 +162,14 @@ describe("ViewsService", () => {
 
   describe("clone", () => {
     it("returns UnknownViewError when source view does not exist", async () => {
-      const { service } = build();
+      const { service } = await build();
       const result = await service.clone("missing" as ViewId);
       expectErr(result);
       expect(result.error.kind).toBe("unknown-view");
     });
 
     it("generates a different id from the source", async () => {
-      const { service } = build();
+      const { service } = await build();
       const created = await service.create({ name: "Source" });
       expectOk(created);
       const result = await service.clone(created.value);
@@ -159,7 +178,7 @@ describe("ViewsService", () => {
     });
 
     it("persists the cloned view through the repository", async () => {
-      const { service, repo } = build();
+      const { service, repo } = await build();
       const created = await service.create({ name: "Source" });
       expectOk(created);
       const result = await service.clone(created.value);
@@ -168,7 +187,7 @@ describe("ViewsService", () => {
     });
 
     it("emits created on successful clone", async () => {
-      const { service, events } = build();
+      const { service, events } = await build();
       const created = await service.create({ name: "Source" });
       expectOk(created);
       const listener = vi.fn();
@@ -179,45 +198,36 @@ describe("ViewsService", () => {
     });
 
     it("clones block config that holds a reactive proxy nested at depth", async () => {
-      const sourceId = "11111111-1111-4111-8111-111111111111" as ViewId;
-      const blockId = "22222222-2222-4222-8222-222222222222" as BlockInstanceId;
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "Source" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
       // A config editor spreads the store's reactive config, so a sibling array/object read back
       // out of it stays a reactive proxy embedded at depth. structuredClone rejects proxies and a
       // shallow toRaw only unwraps the top level, so this is the shape that actually breaks cloning.
-      const seeds = reactive<Record<string, View>>({
-        [sourceId]: {
-          id: sourceId,
-          name: "Source",
-          icon: "calendar-days",
-          defaultShelf: null,
-          showInRibbon: false,
-          leaf: "right",
-          openOnStartup: false,
-          rememberDate: false,
-          followActiveDate: true,
-          blocks: [{ id: blockId, key: "test-block", config: { nested: reactive({ count: 1 }) } }],
-        },
-      });
-      const { service, repo } = build({ seeds });
+      // Written through updateBlockConfig (rather than seeded via `data:`) so the reactive nesting
+      // comes from a live SettingsService store, the same way a config editor would produce it.
+      await service.updateBlockConfig(created.value, added.value, { x: 0, nested: reactive({ count: 1 }) });
 
-      const result = await service.clone(sourceId);
+      const result = await service.clone(created.value);
 
       expectOk(result);
       const cloned = repo.get(result.value).match({ some: (view) => view, none: () => null });
-      expect(cloned?.blocks[0]?.config).toEqual({ nested: { count: 1 } });
+      expect(cloned?.blocks[0]?.config).toEqual({ x: 0, nested: { count: 1 } });
     });
   });
 
   describe("update", () => {
     it("returns UnknownViewError for missing view", async () => {
-      const { service } = build();
+      const { service } = await build();
       const result = await service.update("missing" as ViewId, { name: "X" });
       expectErr(result);
       expect(result.error.kind).toBe("unknown-view");
     });
 
     it("applies a partial patch", async () => {
-      const { service, repo } = build();
+      const { service, repo } = await build();
       const created = await service.create({ name: "Old" });
       expectOk(created);
       const result = await service.update(created.value, { name: "New" });
@@ -226,7 +236,7 @@ describe("ViewsService", () => {
     });
 
     it("emits updated with the view id and the patch", async () => {
-      const { service, events } = build();
+      const { service, events } = await build();
       const created = await service.create({ name: "Old" });
       expectOk(created);
       const listener = vi.fn();
@@ -237,7 +247,7 @@ describe("ViewsService", () => {
     });
 
     it("rejects an empty name in the patch", async () => {
-      const { service } = build();
+      const { service } = await build();
       const created = await service.create({ name: "Old" });
       expectOk(created);
       const result = await service.update(created.value, { name: "" });
@@ -246,7 +256,7 @@ describe("ViewsService", () => {
     });
 
     it("persists openOnStartup through a patch", async () => {
-      const { service, repo } = build();
+      const { service, repo } = await build();
       const created = await service.create({ name: "V" });
       expectOk(created);
       const result = await service.update(created.value, { openOnStartup: true });
@@ -257,7 +267,7 @@ describe("ViewsService", () => {
 
   describe("delete", () => {
     it("removes the view from the repository", async () => {
-      const { service, repo } = build();
+      const { service, repo } = await build();
       const created = await service.create({ name: "X" });
       expectOk(created);
       await service.delete(created.value);
@@ -265,7 +275,7 @@ describe("ViewsService", () => {
     });
 
     it("returns UnknownViewError when called twice", async () => {
-      const { service } = build();
+      const { service } = await build();
       const created = await service.create({ name: "X" });
       expectOk(created);
       const first = await service.delete(created.value);
@@ -276,7 +286,7 @@ describe("ViewsService", () => {
     });
 
     it("emits deleted with the view id", async () => {
-      const { service, events } = build();
+      const { service, events } = await build();
       const created = await service.create({ name: "X" });
       expectOk(created);
       const listener = vi.fn();
@@ -288,29 +298,29 @@ describe("ViewsService", () => {
   });
 
   describe("getBlockDefinition", () => {
-    it("returns None for an unknown key", () => {
-      const { service } = build();
+    it("returns None for an unknown key", async () => {
+      const { service } = await build();
       const result = service.getBlockDefinition("nope");
       expect(result.isNone()).toBe(true);
     });
 
-    it("returns Some for a registered block", () => {
-      const { service } = build({ blocks: [trivialBlock] });
-      const result = service.getBlockDefinition("test-block");
+    it("returns Some for a registered block", async () => {
+      const { service } = await build();
+      const result = service.getBlockDefinition("divider");
       expect(result.isNone()).toBe(false);
     });
   });
 
   describe("addBlock", () => {
     it("returns UnknownViewError for missing view", async () => {
-      const { service } = build({ blocks: [trivialBlock] });
+      const { service } = await build();
       const result = await service.addBlock("missing" as ViewId, "test-block");
       expectErr(result);
       expect(result.error.kind).toBe("unknown-view");
     });
 
     it("returns UnknownViewBlockKeyError for an unknown block key", async () => {
-      const { service } = build();
+      const { service } = await build();
       const created = await service.create({ name: "X" });
       expectOk(created);
       const result = await service.addBlock(created.value, "nope");
@@ -319,7 +329,7 @@ describe("ViewsService", () => {
     });
 
     it("generates a fresh BlockInstanceId per call", async () => {
-      const { service } = build({ blocks: [trivialBlock] });
+      const { service } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const first = await service.addBlock(created.value, "test-block");
@@ -330,7 +340,7 @@ describe("ViewsService", () => {
     });
 
     it("appends to the view's blocks list with the block's defaultConfig", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const added = await service.addBlock(created.value, "test-block");
@@ -341,7 +351,7 @@ describe("ViewsService", () => {
     });
 
     it("isolates each added block's config from the shared definition default", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const first = await service.addBlock(created.value, "test-block");
@@ -356,7 +366,7 @@ describe("ViewsService", () => {
     });
 
     it("emits updated with the view id and the new blocks list", async () => {
-      const { service, events } = build({ blocks: [trivialBlock] });
+      const { service, events } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const listener = vi.fn();
@@ -372,7 +382,7 @@ describe("ViewsService", () => {
 
   describe("removeBlock", () => {
     it("removes the matching instance", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const added = await service.addBlock(created.value, "test-block");
@@ -382,7 +392,7 @@ describe("ViewsService", () => {
     });
 
     it("does not emit updated when block id is not present", async () => {
-      const { service, events } = build({ blocks: [trivialBlock] });
+      const { service, events } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const listener = vi.fn();
@@ -392,7 +402,7 @@ describe("ViewsService", () => {
     });
 
     it("leaves the blocks list unchanged when block id is not present", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       await service.removeBlock(created.value, "missing-id" as BlockInstanceId);
@@ -402,7 +412,7 @@ describe("ViewsService", () => {
 
   describe("setBlockOrder", () => {
     it("reorders blocks to the given permutation", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const a = await service.addBlock(created.value, "test-block");
@@ -415,7 +425,7 @@ describe("ViewsService", () => {
     });
 
     it("is an Ok no-op when the ids are not a permutation of the blocks", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const a = await service.addBlock(created.value, "test-block");
@@ -429,7 +439,7 @@ describe("ViewsService", () => {
     });
 
     it("is an Ok no-op when an id is foreign to the view", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const a = await service.addBlock(created.value, "test-block");
@@ -446,7 +456,7 @@ describe("ViewsService", () => {
     });
 
     it("is an Ok no-op when an id is repeated", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const a = await service.addBlock(created.value, "test-block");
@@ -460,7 +470,7 @@ describe("ViewsService", () => {
     });
 
     it("returns UnknownViewError for an unknown view", async () => {
-      const { service } = build({ blocks: [trivialBlock] });
+      const { service } = await build({ blocks: [testBlockModule()] });
       const result = await service.setBlockOrder("nope" as ViewId, []);
       expectErr(result);
       expect(result.error.kind).toBe("unknown-view");
@@ -469,7 +479,7 @@ describe("ViewsService", () => {
 
   describe("updateBlockConfig", () => {
     it("returns InvalidViewBlockConfigError when config fails block schema", async () => {
-      const { service } = build({ blocks: [trivialBlock] });
+      const { service } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const added = await service.addBlock(created.value, "test-block");
@@ -480,7 +490,7 @@ describe("ViewsService", () => {
     });
 
     it("persists the new config on success", async () => {
-      const { service, repo } = build({ blocks: [trivialBlock] });
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const added = await service.addBlock(created.value, "test-block");
@@ -493,35 +503,14 @@ describe("ViewsService", () => {
 });
 
 // ─── Toolbar-item operations ──────────────────────────────────────────────────
-
-const toolbarBlock = defineViewBlock<{ items: { id: string; key: string; config: Record<string, unknown> }[] }>({
-  key: "toolbar",
-  label: () => "Toolbar",
-  schema: v.object({
-    items: v.array(
-      v.object({
-        id: v.pipe(v.string(), v.uuid()),
-        key: v.pipe(v.string(), v.minLength(1)),
-        config: v.record(v.string(), v.unknown()),
-      }),
-    ),
-  }),
-  defaultConfig: { items: [] },
-  component: { setup: () => noop },
-}) as ViewBlockDefinition;
-
-const dummyItem = defineToolbarItem<{ x: number }>({
-  key: "dummy",
-  label: () => "Dummy",
-  schema: v.object({ x: v.number() }),
-  defaultConfig: () => ({ x: 0 }),
-  component: { setup: () => noop },
-}) as ToolbarItemDefinition;
+// The "toolbar" view block is one of the six real blocks viewsCoreModule registers, so these
+// tests use it directly rather than a synthetic — only the toolbar-item key ("dummy") needs a
+// synthetic definition, for its schema/defaultConfig content.
 
 describe("ViewsService – toolbar-item operations", () => {
   describe("addToolbarItem", () => {
     it("appends a new item to the toolbar block's items array", async () => {
-      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service, repo } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const blockAdded = await service.addBlock(created.value, "toolbar");
@@ -537,7 +526,7 @@ describe("ViewsService – toolbar-item operations", () => {
     });
 
     it("isolates each added item's config from the shared definition default", async () => {
-      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service, repo } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const blockAdded = await service.addBlock(created.value, "toolbar");
@@ -557,7 +546,7 @@ describe("ViewsService – toolbar-item operations", () => {
     });
 
     it("returns UnknownToolbarItemKeyError when the key is not registered", async () => {
-      const { service } = build({ blocks: [toolbarBlock] });
+      const { service } = await build();
       const created = await service.create({ name: "X" });
       expectOk(created);
       const blockAdded = await service.addBlock(created.value, "toolbar");
@@ -571,7 +560,7 @@ describe("ViewsService – toolbar-item operations", () => {
 
   describe("removeToolbarItem", () => {
     it("removes the matching item", async () => {
-      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service, repo } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const blockAdded = await service.addBlock(created.value, "toolbar");
@@ -591,7 +580,7 @@ describe("ViewsService – toolbar-item operations", () => {
 
   describe("setToolbarItemOrder", () => {
     it("reorders the toolbar items to the given permutation", async () => {
-      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service, repo } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const block = await service.addBlock(created.value, "toolbar");
@@ -609,7 +598,7 @@ describe("ViewsService – toolbar-item operations", () => {
     });
 
     it("is an Ok no-op when the ids are not a permutation", async () => {
-      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service, repo } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const block = await service.addBlock(created.value, "toolbar");
@@ -628,7 +617,7 @@ describe("ViewsService – toolbar-item operations", () => {
     });
 
     it("returns UnknownViewError for an unknown view", async () => {
-      const { service } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service } = await build();
       const result = await service.setToolbarItemOrder("nope" as ViewId, "b" as BlockInstanceId, []);
       expectErr(result);
       expect(result.error.kind).toBe("unknown-view");
@@ -637,7 +626,7 @@ describe("ViewsService – toolbar-item operations", () => {
 
   describe("updateToolbarItemConfig", () => {
     it("persists a valid config", async () => {
-      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service, repo } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const blockAdded = await service.addBlock(created.value, "toolbar");
@@ -658,7 +647,7 @@ describe("ViewsService – toolbar-item operations", () => {
     });
 
     it("returns InvalidToolbarItemConfigError when the new config fails schema validation", async () => {
-      const { service } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const blockAdded = await service.addBlock(created.value, "toolbar");
@@ -674,7 +663,7 @@ describe("ViewsService – toolbar-item operations", () => {
     });
 
     it("persists without validation and logs when the toolbar-item key is unregistered", async () => {
-      const { service, repo } = build({ blocks: [toolbarBlock], items: [dummyItem] });
+      const { service, repo } = await build({ items: [testItemModule()] });
       const created = await service.create({ name: "X" });
       expectOk(created);
       const blockAdded = await service.addBlock(created.value, "toolbar");
@@ -709,14 +698,14 @@ describe("ViewsService – toolbar-item operations", () => {
   });
 
   describe("getToolbarItemDefinition", () => {
-    it("returns Some with the registered definition for a known key", () => {
-      const { service } = build({ items: [dummyItem] });
-      const definition = service.getToolbarItemDefinition("dummy");
-      expect(definition.match({ some: (d) => d.key, none: () => null })).toBe("dummy");
+    it("returns Some with the registered definition for a known key", async () => {
+      const { service } = await build();
+      const definition = service.getToolbarItemDefinition("spacer");
+      expect(definition.match({ some: (d) => d.key, none: () => null })).toBe("spacer");
     });
 
-    it("returns None for an unknown key", () => {
-      const { service } = build();
+    it("returns None for an unknown key", async () => {
+      const { service } = await build();
       const definition = service.getToolbarItemDefinition("nope");
       expect(definition.isNone()).toBe(true);
     });
