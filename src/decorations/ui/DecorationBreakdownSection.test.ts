@@ -1,20 +1,19 @@
-import { cleanup, render, screen, within } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { screen, within } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { markRaw } from "vue";
 
-import { Calendar, DayPeriod } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
+import { DayPeriod } from "@/calendar";
+import { date } from "@/calendar/testing";
 import { m } from "@/i18n";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { JournalsRepository, type JournalsEvents } from "@/journals";
+import type { JournalConfig } from "@/journals/config";
+import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
-import { createSettingsService } from "@/settings/testing";
-import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
+import { shelvesCoreModule } from "@/shelves/module";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { attributeCell } from "../attribute-cell";
-import { DecorationsStore } from "../decorations-store";
-import { decorationsSlice } from "../settings/slice";
+import { decorationsModule } from "../module";
+import { decorationsSettingsCoreModule } from "../settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "../testing";
 
 import DecorationBreakdownSection from "./DecorationBreakdownSection.vue";
@@ -41,29 +40,32 @@ const anyDayCalendarDecoration: CalendarDecoration = buildCalendarDecoration({
   styles: [buildStyle("background")],
 });
 
+async function buildHarness(
+  options: { journals?: Record<string, JournalConfig>; globalDecorations?: readonly CalendarDecoration[] } = {},
+): Promise<TestHarness> {
+  return testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    data: {
+      journals: options.journals ?? {},
+      shelves: {},
+      decorations: { decorations: [...(options.globalDecorations ?? [])] },
+    },
+  });
+}
+
 // The section reads decorations back out of DecorationsStore by owner + index to render their
 // condition text, so the fixtures must be registered there, not just referenced by the cell.
-function mountSection(options: {
+async function mountSection(options: {
   journalDecorations?: readonly JournalDecoration[];
   globalDecorations?: readonly CalendarDecoration[];
   contributions: readonly Contribution[];
-}) {
-  const { container, service } = createSettingsService({ slices: [decorationsSlice] });
-  service.getSlice(decorationsSlice).state = { decorations: [...(options.globalDecorations ?? [])] };
-
-  const journals = JournalsRepository.fromParts(
-    {
+}): Promise<void> {
+  const harness = await buildHarness({
+    journals: {
       daily: fixedJournal("daily", { type: "day" }, { decorations: [...(options.journalDecorations ?? [])] }),
     },
-    createNanoEvents<JournalsEvents>(),
-  );
-
-  const shelves = ShelvesRepository.fromParts({}, createNanoEvents<ShelvesEvents>());
-
-  container.register(JournalsRepository).useValue(journals);
-  container.register(ShelvesRepository).useValue(shelves);
-  container.register(DecorationsStore).useClass(DecorationsStore);
-  container.register(Calendar).useValue(testCalendar());
+    globalDecorations: options.globalDecorations,
+  });
 
   // @vue/test-utils stores props on a reactive() object, so an unmarked cell would get its
   // Period lazily wrapped in a Proxy on read — and calling a private-field method (e.g.
@@ -76,32 +78,12 @@ function mountSection(options: {
     styles: options.contributions.map((contribution) => contribution.style),
   });
 
-  render(DecorationBreakdownSection, {
-    props: { cell, index: 0 },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
+  harness.render(DecorationBreakdownSection, { props: { cell, index: 0 } });
 }
 
 describe("DecorationBreakdownSection", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-    cleanup();
-  });
-
-  it("names the winning decoration for a resolved property", () => {
-    mountSection({
+  it("names the winning decoration for a resolved property", async () => {
+    await mountSection({
       globalDecorations: [anyDayCalendarDecoration],
       journalDecorations: [hasNoteDecoration],
       contributions: [
@@ -119,8 +101,8 @@ describe("DecorationBreakdownSection", () => {
     ).toBeTruthy();
   });
 
-  it("lists a contribution that lost a property under the overridden heading", () => {
-    mountSection({
+  it("lists a contribution that lost a property under the overridden heading", async () => {
+    await mountSection({
       globalDecorations: [anyDayCalendarDecoration],
       journalDecorations: [hasNoteDecoration],
       contributions: [
@@ -138,13 +120,13 @@ describe("DecorationBreakdownSection", () => {
     expect(within(overriddenGroup).getByText(m.decoration_breakdown_owner({ kind: "global", name: "" }))).toBeTruthy();
   });
 
-  it("interleaves the mode word between an OR decoration's conditions", () => {
+  it("interleaves the mode word between an OR decoration's conditions", async () => {
     const orDecoration: JournalDecoration = buildDecoration({
       mode: "or",
       conditions: [buildCondition("has-note"), buildCondition("date", { day: -1, month: -1, year: null })],
       styles: [buildStyle("background")],
     });
-    mountSection({
+    await mountSection({
       journalDecorations: [orDecoration],
       contributions: [
         { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("background") },
@@ -156,7 +138,7 @@ describe("DecorationBreakdownSection", () => {
     expect(screen.getByText(m.decoration_describe_mode({ kind: "or" }))).toBeTruthy();
   });
 
-  it("lists marks without naming a winner", () => {
+  it("lists marks without naming a winner", async () => {
     const journalMark: JournalDecoration = buildDecoration({
       mode: "or",
       conditions: [buildCondition("has-note")],
@@ -167,7 +149,7 @@ describe("DecorationBreakdownSection", () => {
       conditions: [buildCondition("date", { day: -1, month: -1, year: null })],
       styles: [buildStyle("shape")],
     });
-    mountSection({
+    await mountSection({
       journalDecorations: [journalMark],
       globalDecorations: [globalMark],
       contributions: [
@@ -184,15 +166,8 @@ describe("DecorationBreakdownSection", () => {
     expect(screen.queryByText(m.decoration_breakdown_overridden_heading())).toBeNull();
   });
 
-  it("keeps its accessible name intact for a journal name containing a space", () => {
-    const { container, service } = createSettingsService({ slices: [decorationsSlice] });
-    service.getSlice(decorationsSlice).state = { decorations: [] };
-    const journals = JournalsRepository.fromParts({}, createNanoEvents<JournalsEvents>());
-    const shelves = ShelvesRepository.fromParts({}, createNanoEvents<ShelvesEvents>());
-    container.register(JournalsRepository).useValue(journals);
-    container.register(ShelvesRepository).useValue(shelves);
-    container.register(DecorationsStore).useClass(DecorationsStore);
-    container.register(Calendar).useValue(testCalendar());
+  it("keeps its accessible name intact for a journal name containing a space", async () => {
+    const harness = await buildHarness();
 
     const cell: BreakdownCell = markRaw({
       kind: "interval",
@@ -202,18 +177,7 @@ describe("DecorationBreakdownSection", () => {
       styles: [],
     });
 
-    render(DecorationBreakdownSection, {
-      props: { cell, index: 0 },
-      global: {
-        plugins: [
-          {
-            install(app) {
-              provideInjectorOnApp(app, container);
-            },
-          },
-        ],
-      },
-    });
+    harness.render(DecorationBreakdownSection, { props: { cell, index: 0 } });
 
     // `aria-labelledby` tokenizes on whitespace, so an id built from the raw journal name would
     // resolve to nonexistent ids and the region would lose its accessible name entirely.

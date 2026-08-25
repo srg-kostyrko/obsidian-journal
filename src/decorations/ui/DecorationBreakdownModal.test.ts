@@ -1,31 +1,23 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen, within } from "@testing-library/vue";
-import { createNanoEvents } from "nanoevents";
+import { screen, within } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { nextTick, reactive } from "vue";
 
-import { Calendar, DayPeriod, type AnchorString } from "@/calendar";
-import { date, installTestCalendar, testCalendar } from "@/calendar/testing";
-import {
-  DecorationEngine,
-  DecorationsStore,
-  decorationsSlice,
-  type CalendarDecoration,
-  type JournalDecoration,
-} from "@/decorations";
+import { DayPeriod, type AnchorString } from "@/calendar";
+import { date } from "@/calendar/testing";
+import type { CalendarDecoration, JournalDecoration } from "@/decorations";
 import { m } from "@/i18n";
-import { provideInjectorOnApp } from "@/infrastructure/di";
-import { NoteMetadataService, NoteSizeService, type VaultPath } from "@/infrastructure/host";
-import { ModalService } from "@/infrastructure/host/modals";
-import { FakeModalService } from "@/infrastructure/host/modals/testing";
-import { FakeNoteMetadataService, FakeNoteSizeService } from "@/infrastructure/host/testing";
-import { CycleService, JournalsIndex, JournalsRepository, TimelineService, type JournalsEvents } from "@/journals";
+import type { VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
-import { createSettingsService } from "@/settings/testing";
-import { ShelvesRepository, type ShelvesEvents } from "@/shelves";
 import type { ShelfConfig } from "@/shelves/config";
+import { shelvesCoreModule } from "@/shelves/module";
+import { buildShelf } from "@/shelves/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
+import { decorationsModule } from "../module";
+import { decorationsSettingsCoreModule } from "../settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "../testing";
 
 import DecorationBreakdownModal from "./DecorationBreakdownModal.vue";
@@ -33,6 +25,10 @@ import DecorationBreakdownModal from "./DecorationBreakdownModal.vue";
 interface Note {
   readonly journalName: string;
   readonly anchor: DayPeriod;
+  // Empty by default: has-note/title conditions only need the file to exist. The note-size
+  // test overrides this so the real NoteSizeService's async fill (triggered by the modal's
+  // own first read) has a size to land on.
+  readonly content?: string;
 }
 
 interface MountOptions {
@@ -46,52 +42,39 @@ interface MountOptions {
   notes?: readonly Note[];
 }
 
-function mount(options: MountOptions = {}) {
-  const { container, service } = createSettingsService({ slices: [decorationsSlice] });
-  service.getSlice(decorationsSlice).state = { decorations: [...(options.globalDecorations ?? [])] };
+// NoteSizeService.get() schedules its own async fill on a miss (note-size-service.ts's
+// #fill), and DecorationEngine.explainRange's first read during mount already triggers that
+// fill for any note-size condition in scope, so waiting out the promise chain is enough —
+// the same pattern note-size-service.test.ts's own `settle` uses. Measured: no
+// FakeNoteSizeService or manual vault event is needed; see the report for the evidence this
+// corrects an earlier ruling that assumed the real service could not be driven deterministically.
+async function settle(): Promise<void> {
+  await Promise.resolve();
+  await Promise.resolve();
+  await Promise.resolve();
+}
 
-  const journalStorage = reactive<Record<string, JournalConfig>>({ ...options.journals });
-  const journals = JournalsRepository.fromParts(journalStorage, createNanoEvents<JournalsEvents>());
-
-  const shelfStorage = reactive<Record<string, ShelfConfig>>({ ...options.shelves });
-  const shelves = ShelvesRepository.fromParts(shelfStorage, createNanoEvents<ShelvesEvents>());
-
-  const fakeMetadata = new FakeNoteMetadataService();
-  const index = new JournalsIndex();
-  const notes = options.notes ?? [];
-  for (const note of notes) {
-    const path = `${note.journalName}/${note.anchor.anchor.toAnchor()}.md` as VaultPath;
-    index.register({ journalName: note.journalName, anchor: note.anchor.anchor.toAnchor(), path });
-    fakeMetadata.setMetadata(path, { title: note.journalName, tags: [], properties: {}, tasks: [] });
-  }
-
-  container.register(JournalsRepository).useValue(journals);
-  container.register(ShelvesRepository).useValue(shelves);
-  container.register(DecorationsStore).useClass(DecorationsStore);
-  container.register(JournalsIndex).useValue(index);
-  container.register(CycleService).useClass(CycleService);
-  container.register(TimelineService).useClass(TimelineService);
-  container.register(NoteMetadataService).useValue(fakeMetadata as unknown as NoteMetadataService);
-  const size = new FakeNoteSizeService();
-  container.register(NoteSizeService).useValue(size as unknown as NoteSizeService);
-  container.register(DecorationEngine).useClass(DecorationEngine);
-  container.register(Calendar).useValue(testCalendar());
-  container.register(ModalService).useValue(new FakeModalService() as unknown as ModalService);
-
-  render(DecorationBreakdownModal, {
-    props: { shelf: options.shelf },
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
+async function mount(options: MountOptions = {}): Promise<{ harness: TestHarness }> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    data: {
+      journals: options.journals ?? {},
+      shelves: options.shelves ?? {},
+      decorations: { decorations: [...(options.globalDecorations ?? [])] },
     },
   });
 
-  return { size };
+  const index = harness.resolve(JournalsIndex);
+  const notes = options.notes ?? [];
+  for (const note of notes) {
+    const path = `${note.journalName}/${note.anchor.anchor.toAnchor()}.md` as VaultPath;
+    harness.host.putFile(path, note.content ?? "");
+    index.register({ journalName: note.journalName, anchor: note.anchor.anchor.toAnchor(), path });
+  }
+
+  harness.render(DecorationBreakdownModal, { props: { shelf: options.shelf } });
+
+  return { harness };
 }
 
 const anyDayDecoration: JournalDecoration = buildDecoration({
@@ -119,22 +102,18 @@ const noteSizeDecoration: JournalDecoration = buildDecoration({
 });
 
 describe("DecorationBreakdownModal", () => {
-  let teardown: () => void;
   beforeEach(() => {
     // The explorer defaults its anchor to CalendarDate.today(), so the fixtures' custom-journal
     // intervals (anchored at 2026-05-25) need the system clock pinned there to stay date-stable.
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date("2026-05-25T10:00:00Z"));
-    ({ teardown } = installTestCalendar());
   });
   afterEach(() => {
-    teardown();
-    cleanup();
     vi.useRealTimers();
   });
 
-  it("shows a section for each decorated cell the date belongs to", () => {
-    mount({
+  it("shows a section for each decorated cell the date belongs to", async () => {
+    await mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }),
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [anyDayDecoration] }),
@@ -144,8 +123,8 @@ describe("DecorationBreakdownModal", () => {
     expect(screen.getAllByTestId("decoration-preview")).toHaveLength(2);
   });
 
-  it("omits a cell no decoration matched", () => {
-    mount({
+  it("omits a cell no decoration matched", async () => {
+    await mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [anyDayDecoration] }),
         weekly: fixedJournal("weekly", { type: "week" }, { decorations: [] }),
@@ -155,13 +134,13 @@ describe("DecorationBreakdownModal", () => {
     expect(screen.getAllByTestId("decoration-preview")).toHaveLength(1);
   });
 
-  it("admits a custom journal's offset decoration to the day cell", () => {
+  it("admits a custom journal's offset decoration to the day cell", async () => {
     const offsetDecoration: JournalDecoration = buildDecoration({
       mode: "or",
       conditions: [buildCondition("offset", { offset: 1 })],
       styles: [buildStyle("background")],
     });
-    mount({
+    await mount({
       journals: {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [offsetDecoration] }),
       },
@@ -170,14 +149,14 @@ describe("DecorationBreakdownModal", () => {
     expect(screen.getByText(m.decoration_condition_offset_describe({ side: "start", day: 1 }))).toBeTruthy();
   });
 
-  it("excludes a custom journal's non-offset decoration from the day cell", () => {
+  it("excludes a custom journal's non-offset decoration from the day cell", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
     const nonOffsetDecoration: JournalDecoration = buildDecoration({
       mode: "or",
       conditions: [buildCondition("has-note")],
       styles: [buildStyle("background")],
     });
-    mount({
+    await mount({
       journals: {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [nonOffsetDecoration] }),
       },
@@ -189,9 +168,9 @@ describe("DecorationBreakdownModal", () => {
     expect(screen.queryByText(m.decoration_breakdown_cell_heading({ kind: "day", label: "2026-05-25" }))).toBeNull();
   });
 
-  it("shows an interval section for a custom journal's non-offset decoration", () => {
+  it("shows an interval section for a custom journal's non-offset decoration", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
+    await mount({
       journals: {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", { decorations: [hasNoteDecoration] }),
       },
@@ -206,14 +185,14 @@ describe("DecorationBreakdownModal", () => {
     expect(within(region as HTMLElement).getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
   });
 
-  it("keeps a custom journal's offset decoration out of the interval section", () => {
+  it("keeps a custom journal's offset decoration out of the interval section", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
     const offsetDecoration: JournalDecoration = buildDecoration({
       mode: "or",
       conditions: [buildCondition("offset", { offset: 1 })],
       styles: [buildStyle("background")],
     });
-    mount({
+    await mount({
       journals: {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", {
           decorations: [hasNoteDecoration, offsetDecoration],
@@ -232,9 +211,9 @@ describe("DecorationBreakdownModal", () => {
     ).toBeNull();
   });
 
-  it("omits an interval section for a journal whose timeline excludes the interval", () => {
+  it("omits an interval section for a journal whose timeline excludes the interval", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    mount({
+    await mount({
       journals: {
         sprint: customJournal("sprint", "week", 2, "2026-05-25", {
           decorations: [hasNoteDecoration],
@@ -250,10 +229,10 @@ describe("DecorationBreakdownModal", () => {
   });
 
   it("re-resolves when the shelf selection changes", async () => {
-    mount({
+    await mount({
       shelves: {
-        work: { name: "work", journals: [], decorations: [] },
-        home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
+        work: buildShelf("work"),
+        home: buildShelf("home", { decorations: [anyDayCalendarDecoration] }),
       },
     });
 
@@ -266,10 +245,10 @@ describe("DecorationBreakdownModal", () => {
   });
 
   it("resolves against the shelf it was opened under", async () => {
-    mount({
+    await mount({
       shelves: {
-        work: { name: "work", journals: [], decorations: [] },
-        home: { name: "home", journals: [], decorations: [anyDayCalendarDecoration] },
+        work: buildShelf("work"),
+        home: buildShelf("home", { decorations: [anyDayCalendarDecoration] }),
       },
       shelf: "work",
     });
@@ -283,26 +262,25 @@ describe("DecorationBreakdownModal", () => {
     expect(screen.getByTestId("decoration-preview")).toBeTruthy();
   });
 
-  it("shows the empty state for a date nothing decorates", () => {
-    mount({});
+  it("shows the empty state for a date nothing decorates", async () => {
+    await mount({});
 
     expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
   });
 
   it("shows a note-size decoration once its size lands", async () => {
     const day = DayPeriod.containing(date("2026-05-25"));
-    const path = "daily/2026-05-25.md" as VaultPath;
-    const { size } = mount({
+    await mount({
       journals: {
         daily: fixedJournal("daily", { type: "day" }, { decorations: [noteSizeDecoration] }),
       },
-      notes: [{ journalName: "daily", anchor: day }],
+      // 400 "word"s clears the condition's gt:100 threshold once NoteSizeService reads it.
+      notes: [{ journalName: "daily", anchor: day, content: "word ".repeat(400) }],
     });
 
     expect(screen.getByText(m.decoration_breakdown_empty())).toBeTruthy();
 
-    size.setSize(path, { words: 400, characters: 2200 });
-    await nextTick();
+    await settle();
 
     expect(screen.getByTestId("decoration-preview")).toBeTruthy();
   });
