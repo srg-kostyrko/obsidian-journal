@@ -7,7 +7,7 @@ import type { TemplateContext } from "@/templates";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { CycleService } from "../cycle";
-import { JournalNotFoundError } from "../errors";
+import { JournalNotFoundError, OutOfTimelineError } from "../errors";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { customJournal, fixedJournal, unwrap } from "../testing";
@@ -986,5 +986,50 @@ describe("NotePathService.resolvedPathForDate", () => {
       .resolvedPathForDate("nope", CalendarDate.fromAnchor(anchor("2026-05-19")));
 
     expect(result.isErr() && result.error).toBeInstanceOf(JournalNotFoundError);
+  });
+});
+
+const bounded = (): Record<string, JournalConfig> => ({
+  bounded: fixedJournal(
+    "bounded",
+    { type: "day" },
+    { timeline: { start: anchor("2030-06-01"), end: { kind: "date", date: anchor("2030-06-30") } } },
+  ),
+});
+
+describe("NotePathService.linkTargetForDate", () => {
+  it("refuses a date the journal does not write and has no note for", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: bounded() } });
+
+    const result = harness
+      .resolve(NotePathService)
+      .linkTargetForDate("bounded", CalendarDate.fromAnchor(anchor("2030-07-10")));
+
+    expect(result.isErr() && result.error).toBeInstanceOf(OutOfTimelineError);
+  });
+
+  it("answers with a note that exists past the timeline end", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: bounded() } });
+    harness.resolve(JournalsIndex).register({
+      journalName: "bounded",
+      anchor: anchor("2030-07-10"),
+      path: "Archive/Old log.md" as VaultPath,
+    });
+
+    const result = harness
+      .resolve(NotePathService)
+      .linkTargetForDate("bounded", CalendarDate.fromAnchor(anchor("2030-07-10")));
+
+    expect(result.isOk() && result.value).toBe("Archive/Old log.md");
+  });
+
+  it("renders the configured path for a date the journal writes but has no note for yet", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: bounded() } });
+
+    const result = harness
+      .resolve(NotePathService)
+      .linkTargetForDate("bounded", CalendarDate.fromAnchor(anchor("2030-06-15")));
+
+    expect(result.isOk() && result.value).toBe("2030-06-15.md");
   });
 });

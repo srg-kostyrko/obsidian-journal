@@ -1,3 +1,4 @@
+import type { AnchorString } from "@/calendar";
 import { FlowError } from "@/infrastructure/flows";
 
 export class JournalsError extends Error {
@@ -9,6 +10,17 @@ export class JournalNotFoundError extends JournalsError {
 
   constructor(readonly journalName: string) {
     super(`Journal not found: ${journalName}`);
+  }
+}
+
+export class OutOfTimelineError extends JournalsError {
+  override name = "OutOfTimelineError";
+
+  constructor(
+    readonly journalName: string,
+    readonly anchor: AnchorString,
+  ) {
+    super(`Journal ${journalName} does not write the period at ${anchor}`);
   }
 }
 

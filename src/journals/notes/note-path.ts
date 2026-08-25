@@ -8,11 +8,12 @@ import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
 import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
 
 import { CycleService } from "../cycle";
-import { JournalNotFoundError } from "../errors";
+import { JournalNotFoundError, OutOfTimelineError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
 import { JournalsRepository } from "../repository";
+import { TimelineService } from "../timeline";
 
 import { EmptyNoteNameError } from "./errors";
 
@@ -35,6 +36,7 @@ export class NotePathService {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #engine = inject(TemplateEngine);
   readonly #index = inject(JournalsIndex);
+  readonly #timeline = inject(TimelineService);
 
   #withNoteName(context: TemplateContext, noteName: string): TemplateContext {
     const noteSpec = { kind: "string", value: noteName } as const;
@@ -86,6 +88,28 @@ export class NotePathService {
 
   resolvedPathForDate(name: string, date: CalendarDate): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
     return this.#metadataForDate(name, date).flatMap((metadata) => this.resolvedPathFor(name, metadata));
+  }
+
+  /**
+   * Where a link for this date should point, or why there is nothing to point at.
+   *
+   * Eligibility is "a note exists OR the date is in timeline" — the same rule `JournalsApi`
+   * applies. The timeline bounds where a journal *writes*, not what it has already written, so a
+   * note that outlived a narrowed timeline is still a real note to link to.
+   */
+  linkTargetForDate(
+    name: string,
+    date: CalendarDate,
+  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError | OutOfTimelineError> {
+    return this.#metadataForDate(name, date).flatMap(
+      (metadata): Result<VaultPath, EmptyNoteNameError | OutOfTimelineError | JournalNotFoundError> => {
+        const exists = this.#index.entryByAnchor(name, metadata.anchor).isSome();
+        if (!exists && !this.#timeline.contains(name, metadata.anchor)) {
+          return new Err(new OutOfTimelineError(name, metadata.anchor));
+        }
+        return this.resolvedPathFor(name, metadata);
+      },
+    );
   }
 
   pathFor(name: string, metadata: JournalMetadata): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {

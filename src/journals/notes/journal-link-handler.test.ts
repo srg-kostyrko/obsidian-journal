@@ -236,6 +236,21 @@ describe("JournalLinkHandler", () => {
       expect(result.isOk() && result.value).toBe("2030-06-15");
     });
 
+    it("links to a note that exists past the timeline end, which the journal still has", () => {
+      // Eligibility is "a note exists OR the date is in timeline": the timeline bounds where a
+      // journal writes, not what it has already written, so a note that outlived a narrowed
+      // timeline is still a real note to link to.
+      boundedHarness.resolve(JournalsIndex).register({
+        journalName: "bounded",
+        anchor: anchor("2030-07-10"),
+        path: "Archive/Old log.md" as VaultPath,
+      });
+
+      const result = renderResult("2030-07-10");
+
+      expect(result.isOk() && result.value).toBe("Archive/Old log");
+    });
+
     it("leaves a {{journal_link}} token unresolved when the target is out of bounds", () => {
       const rendered = boundedHarness
         .resolve(TemplateEngine)
