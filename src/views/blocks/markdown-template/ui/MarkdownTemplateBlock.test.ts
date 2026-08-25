@@ -1,14 +1,12 @@
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h, ref } from "vue";
 
-import { installTestCalendar } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { m } from "@/i18n";
-import { Container, provideInjectorOnApp } from "@/infrastructure/di";
-import { MarkdownRenderService, NotesService } from "@/infrastructure/host";
-import { FakeMarkdownRenderService, FakeNotesService } from "@/infrastructure/host/testing";
-import { TemplateEngine } from "@/templates";
+import { MarkdownRenderService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { FakeMarkdownRenderService } from "@/infrastructure/host/testing";
+import { overrideWith, testContainer } from "@/testing";
 
 import { provideViewContextStub } from "../../../testing";
 import { provideViewContext } from "../../../view-context";
@@ -16,24 +14,13 @@ import { markdownTemplateBlock, type MarkdownTemplateConfig } from "../markdown-
 
 import type { BlockInstanceId } from "../../../config";
 
-beforeAll(() => {
-  installTestCalendar();
-});
-
-afterEach(() => cleanup());
-
-function seedAndMount(files: Record<string, string>, config: MarkdownTemplateConfig, refDate: AnchorString) {
-  const notes = new FakeNotesService();
-  for (const [path, content] of Object.entries(files)) notes.seed(path as never, content);
-
-  const container = new Container();
-  container.register(NotesService).useValue(notes as unknown as NotesService);
-  // TemplateEngine resolves FunctionHandlerToken (a multi-token); with none
-  // registered it resolves to an empty handler set — journal_link is not needed here.
-  container.register(TemplateEngine).useClass(TemplateEngine);
-  container
-    .register(MarkdownRenderService)
-    .useValue(new FakeMarkdownRenderService() as unknown as MarkdownRenderService);
+async function seedAndMount(files: Record<string, string>, config: MarkdownTemplateConfig, refDate: AnchorString) {
+  const harness = await testContainer({
+    overrides: [
+      overrideWith(MarkdownRenderService, new FakeMarkdownRenderService() as unknown as MarkdownRenderService),
+    ],
+  });
+  for (const [path, content] of Object.entries(files)) harness.host.putFile(path, content);
 
   const refDateRef = ref(refDate);
   const configRef = ref(config);
@@ -46,23 +33,13 @@ function seedAndMount(files: Record<string, string>, config: MarkdownTemplateCon
       return renderRoot;
     },
   });
-  const result = render(Wrapper, {
-    global: {
-      plugins: [
-        {
-          install(app) {
-            provideInjectorOnApp(app, container);
-          },
-        },
-      ],
-    },
-  });
-  return { ...result, notes, refDateRef, configRef };
+  const result = harness.render(Wrapper);
+  return { ...result, harness, refDateRef, configRef };
 }
 
 describe("MarkdownTemplateBlock", () => {
   it("resolves {{date}} to the view's date", async () => {
-    seedAndMount(
+    await seedAndMount(
       { "templates/today.md": "Today is {{date}}" },
       { templatePath: "templates/today.md" },
       "2026-05-15" as AnchorString,
@@ -70,18 +47,18 @@ describe("MarkdownTemplateBlock", () => {
     expect(await screen.findByText("Today is 2026-05-15")).toBeTruthy();
   });
 
-  it("shows the placeholder when no template path is configured", () => {
-    seedAndMount({}, { templatePath: "" }, "2026-05-15" as AnchorString);
+  it("shows the placeholder when no template path is configured", async () => {
+    await seedAndMount({}, { templatePath: "" }, "2026-05-15" as AnchorString);
     expect(screen.getByText(m.view_block_markdown_template_empty())).toBeTruthy();
   });
 
   it("shows an inline error when the template file cannot be read", async () => {
-    seedAndMount({}, { templatePath: "templates/missing.md" }, "2026-05-15" as AnchorString);
+    await seedAndMount({}, { templatePath: "templates/missing.md" }, "2026-05-15" as AnchorString);
     expect(await screen.findByText(m.view_block_markdown_template_read_error())).toBeTruthy();
   });
 
   it("re-renders when the focused date changes", async () => {
-    const { refDateRef } = seedAndMount(
+    const { refDateRef } = await seedAndMount(
       { "templates/today.md": "Today is {{date}}" },
       { templatePath: "templates/today.md" },
       "2026-05-15" as AnchorString,
@@ -91,18 +68,19 @@ describe("MarkdownTemplateBlock", () => {
   });
 
   it("re-reads the file when it is edited in the vault", async () => {
-    const { notes } = seedAndMount(
+    const { harness } = await seedAndMount(
       { "templates/today.md": "A {{date}}" },
       { templatePath: "templates/today.md" },
       "2026-05-15" as AnchorString,
     );
     expect(await screen.findByText("A 2026-05-15")).toBeTruthy();
-    notes.externalEdit("templates/today.md" as never, "B {{date}}");
+    harness.host.putFile("templates/today.md", "B {{date}}");
+    harness.host.emitMetadata("templates/today.md");
     expect(await screen.findByText("B 2026-05-15")).toBeTruthy();
   });
 
   it("reloads when the configured template path changes", async () => {
-    const { configRef } = seedAndMount(
+    const { configRef } = await seedAndMount(
       { "templates/a.md": "File A", "templates/b.md": "File B" },
       { templatePath: "templates/a.md" },
       "2026-05-15" as AnchorString,
@@ -113,13 +91,13 @@ describe("MarkdownTemplateBlock", () => {
   });
 
   it("shows an inline error when the template file is deleted from the vault", async () => {
-    const { notes } = seedAndMount(
+    const { harness } = await seedAndMount(
       { "templates/today.md": "A {{date}}" },
       { templatePath: "templates/today.md" },
       "2026-05-15" as AnchorString,
     );
     expect(await screen.findByText("A 2026-05-15")).toBeTruthy();
-    await notes.delete("templates/today.md" as never);
+    await harness.resolve(NotesService).delete("templates/today.md" as VaultPath);
     expect(await screen.findByText(m.view_block_markdown_template_read_error())).toBeTruthy();
   });
 });
