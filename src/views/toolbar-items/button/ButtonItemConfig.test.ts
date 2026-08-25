@@ -3,7 +3,7 @@ import { screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { journalsCoreModule } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 import { icons } from "@/ui/icons";
