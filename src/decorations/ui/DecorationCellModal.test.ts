@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { DayPeriod, WeekPeriod } from "@/calendar";
 import { date } from "@/calendar/testing";
@@ -40,18 +40,6 @@ interface MountOptions {
   notes?: readonly Note[];
   entry: BreakdownEntry;
   shelf?: string | null;
-}
-
-// NoteSizeService.get() schedules its own async fill on a miss (note-size-service.ts's
-// #fill), and DecorationEngine.explainRange's first read during mount already triggers that
-// fill for any note-size condition in scope, so waiting out the promise chain is enough —
-// the same pattern note-size-service.test.ts's own `settle` uses. Measured: no
-// FakeNoteSizeService or manual vault event is needed; see the report for the evidence this
-// corrects an earlier ruling that assumed the real service could not be driven deterministically.
-async function settle(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
 }
 
 async function mount(options: MountOptions): Promise<{ harness: TestHarness }> {
@@ -205,8 +193,10 @@ describe("DecorationCellModal", () => {
 
     expect(screen.getByText(m.decoration_breakdown_cell_empty())).toBeTruthy();
 
-    await settle();
-
-    expect(screen.getByTestId("decoration-preview")).toBeTruthy();
+    // NoteSizeService.get() schedules its own async fill on a miss (note-size-service.ts's
+    // #fill), and DecorationEngine.explainRange's first read during mount already triggers that
+    // fill for any note-size condition in scope, so waiting the fill out is enough — no
+    // FakeNoteSizeService or manual vault event is needed.
+    await vi.waitFor(() => expect(screen.getByTestId("decoration-preview")).toBeTruthy());
   });
 });

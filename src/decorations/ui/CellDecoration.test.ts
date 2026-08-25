@@ -1,5 +1,5 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h, provide, shallowRef } from "vue";
 
 import { DayPeriod } from "@/calendar";
@@ -26,10 +26,6 @@ function makeHost(period: DayPeriod, cells: ReadonlyMap<string, CellStyleRef>) {
 }
 
 describe("CellDecoration", () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   it("renders slot content unchanged when no decorations are provided", () => {
     const period = DayPeriod.containing(date("2026-05-25"));
     const { getByText } = render(CellDecoration, {
