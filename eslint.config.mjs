@@ -38,6 +38,11 @@ const convertedTestGlobs = [
   "src/notes-calendar/**/*.test.ts",
   "src/decorations/**/*.test.ts",
   "src/views/**/*.test.ts",
+  "src/settings/**/*.test.ts",
+  "src/templates/**/*.test.ts",
+  "src/ui/**/*.test.ts",
+  "src/logging/**/*.test.ts",
+  "src/i18n/**/*.test.ts",
 ];
 
 // `no-restricted-syntax` options replace rather than merge, so this array must carry
