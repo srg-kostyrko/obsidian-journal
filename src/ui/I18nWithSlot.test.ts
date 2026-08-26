@@ -1,10 +1,8 @@
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { h } from "vue";
 
 import I18nWithSlot from "./I18nWithSlot.vue";
-
-afterEach(() => cleanup());
 
 function surroundMessage(arguments_: { slot: string }): string {
   return `before ${arguments_.slot} after`;

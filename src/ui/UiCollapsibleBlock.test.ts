@@ -1,14 +1,8 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { render } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import UiCollapsibleBlock from "./UiCollapsibleBlock.vue";
-
-afterEach(() => cleanup());
-
-vi.mock("@/infrastructure/host", () => ({
-  renderIcon: vi.fn(() => null),
-}));
 
 describe("UiCollapsibleBlock", () => {
   it("does not render the default slot when expanded is false", () => {
