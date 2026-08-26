@@ -13,24 +13,9 @@ import { testContainer, type FakeHost } from "@/testing";
 import { maintenanceCoreModule } from "./module";
 import { gateCollisions, orphanFindings, pendingOldIdsOf, ScanService } from "./scan-service";
 import { ScannedNoteResolver } from "./scanned-note";
+import { buildScannedNote } from "./testing";
 
 import type { Finding } from "./findings";
-import type { ScannedNote } from "./scanned-note";
-
-function note(path: string, overrides: Partial<ScannedNote> = {}): ScannedNote {
-  return {
-    path: path as VaultPath,
-    claimedJournal: "weekly",
-    journalExists: true,
-    isDayJournal: false,
-    size: 10,
-    mtime: 1,
-    rawDate: "2026-01-12",
-    storedAnchor: anchor("2026-01-12"),
-    canonicalAnchor: anchor("2026-01-12"),
-    ...overrides,
-  };
-}
 
 function rewrite(path: string, to: string): Finding {
   return {
@@ -44,7 +29,13 @@ function rewrite(path: string, to: string): Finding {
 
 describe("gateCollisions", () => {
   it("leaves an uncontested repair alone", () => {
-    const notes = [note("a.md", { storedAnchor: anchor("2026-01-14"), canonicalAnchor: anchor("2026-01-12") })];
+    const notes = [
+      buildScannedNote({
+        path: "a.md" as VaultPath,
+        storedAnchor: anchor("2026-01-14"),
+        canonicalAnchor: anchor("2026-01-12"),
+      }),
+    ];
     const result = gateCollisions(notes, [rewrite("a.md", "2026-01-12")]);
 
     expect(result).toHaveLength(1);
@@ -52,7 +43,7 @@ describe("gateCollisions", () => {
   });
 
   it("does not treat a repair that keeps its own anchor as a collision", () => {
-    const notes = [note("a.md")];
+    const notes = [buildScannedNote({ path: "a.md" as VaultPath })];
     const result = gateCollisions(notes, [rewrite("a.md", "2026-01-12")]);
 
     expect(result.every((f) => f.check !== "duplicate-anchor")).toBe(true);
@@ -60,8 +51,16 @@ describe("gateCollisions", () => {
 
   it("withdraws both repairs when two stranded notes project onto one anchor", () => {
     const notes = [
-      note("a.md", { storedAnchor: anchor("2026-01-14"), canonicalAnchor: anchor("2026-01-12") }),
-      note("b.md", { storedAnchor: anchor("2026-01-15"), canonicalAnchor: anchor("2026-01-12") }),
+      buildScannedNote({
+        path: "a.md" as VaultPath,
+        storedAnchor: anchor("2026-01-14"),
+        canonicalAnchor: anchor("2026-01-12"),
+      }),
+      buildScannedNote({
+        path: "b.md" as VaultPath,
+        storedAnchor: anchor("2026-01-15"),
+        canonicalAnchor: anchor("2026-01-12"),
+      }),
     ];
     const result = gateCollisions(notes, [rewrite("a.md", "2026-01-12"), rewrite("b.md", "2026-01-12")]);
 
@@ -74,8 +73,12 @@ describe("gateCollisions", () => {
 
   it("withdraws a repair that would land on a healthy note's anchor", () => {
     const notes = [
-      note("healthy.md"),
-      note("stranded.md", { storedAnchor: anchor("2026-01-14"), canonicalAnchor: anchor("2026-01-12") }),
+      buildScannedNote({ path: "healthy.md" as VaultPath }),
+      buildScannedNote({
+        path: "stranded.md" as VaultPath,
+        storedAnchor: anchor("2026-01-14"),
+        canonicalAnchor: anchor("2026-01-12"),
+      }),
     ];
     const result = gateCollisions(notes, [rewrite("stranded.md", "2026-01-12")]);
 
@@ -89,22 +92,32 @@ describe("gateCollisions", () => {
   });
 
   it("reports a pre-existing duplicate between two healthy notes", () => {
-    const result = gateCollisions([note("a.md"), note("b.md")], []);
+    const result = gateCollisions(
+      [buildScannedNote({ path: "a.md" as VaultPath }), buildScannedNote({ path: "b.md" as VaultPath })],
+      [],
+    );
 
     expect(result.filter((f) => f.check === "duplicate-anchor")).toHaveLength(2);
     expect(result.at(0)?.detail).toEqual({ kind: "duplicate", anchor: anchor("2026-01-12"), size: 10, mtime: 1 });
   });
 
   it("keeps journals apart", () => {
-    const notes = [note("a.md"), note("b.md", { claimedJournal: "other" })];
+    const notes = [
+      buildScannedNote({ path: "a.md" as VaultPath }),
+      buildScannedNote({ path: "b.md" as VaultPath, claimedJournal: "other" }),
+    ];
 
     expect(gateCollisions(notes, []).filter((f) => f.check === "duplicate-anchor")).toHaveLength(0);
   });
 
   it("contributes nothing for an unhealthy note whose only finding is undecidable", () => {
     const notes = [
-      note("target.md"),
-      note("unplaced.md", { storedAnchor: anchor("2026-01-12"), canonicalAnchor: anchor("2026-01-20") }),
+      buildScannedNote({ path: "target.md" as VaultPath }),
+      buildScannedNote({
+        path: "unplaced.md" as VaultPath,
+        storedAnchor: anchor("2026-01-12"),
+        canonicalAnchor: anchor("2026-01-20"),
+      }),
     ];
     const undecidable: Finding = {
       check: "rejected-anchor",
@@ -130,7 +143,7 @@ describe("gateCollisions", () => {
 
 describe("orphanFindings", () => {
   it("reports a note whose journal no longer exists", () => {
-    const notes = [note("old.md", { journalExists: false, claimedJournal: "gone" })];
+    const notes = [buildScannedNote({ path: "old.md" as VaultPath, journalExists: false, claimedJournal: "gone" })];
 
     const result = orphanFindings(notes, new Set());
 
@@ -141,13 +154,15 @@ describe("orphanFindings", () => {
   });
 
   it("never reports a note still waiting on the legacy note migration", () => {
-    const notes = [note("legacy.md", { journalExists: false, claimedJournal: "legacy-id-7" })];
+    const notes = [
+      buildScannedNote({ path: "legacy.md" as VaultPath, journalExists: false, claimedJournal: "legacy-id-7" }),
+    ];
 
     expect(orphanFindings(notes, new Set(["legacy-id-7"]))).toHaveLength(0);
   });
 
   it("ignores notes whose journal exists", () => {
-    expect(orphanFindings([note("fine.md")], new Set())).toHaveLength(0);
+    expect(orphanFindings([buildScannedNote({ path: "fine.md" as VaultPath })], new Set())).toHaveLength(0);
   });
 });
 
