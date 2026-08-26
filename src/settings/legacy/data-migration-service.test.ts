@@ -191,17 +191,20 @@ describe("DataMigrationService", () => {
       kind: "calendar",
       sectionToName: { month: "My Journal Month" },
     };
-    // "My Journal Month" is deliberately not registered, so the config lookup fails and the
-    // anchor can never resolve.
     const metadata = new FakeNoteMetadataService();
     const harness = await testContainer({
       modules: [journalsCoreModule, legacyMigrationsModule],
-      data: { pendingNoteMigration: [marker] },
+      data: {
+        journals: { "My Journal Month": fixedJournal("My Journal Month", { type: "month" }) },
+        pendingNoteMigration: [marker],
+      },
       overrides: [overrideWith(NoteMetadataService, metadata as unknown as NoteMetadataService)],
     });
     const properties = {
       journal: "cal",
-      "journal-start-date": "2022-01-01",
+      // "My Journal Month" is registered, so the config lookup succeeds — but the month is out
+      // of range, so CalendarDate.parse rejects it and the anchor can never resolve.
+      "journal-start-date": "2022-13-01",
       "journal-end-date": "2022-01-31",
       "journal-section": "month",
       "journal-date": "2022-01-01",

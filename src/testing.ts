@@ -176,8 +176,11 @@ export interface TestContainerOptions {
    *   be dropped — the migrations dereference them.
    *
    * Mutually exclusive with `data`: passing both throws `TestContainerConflictingDataError`. The
-   * seed-key and repair guards do not apply, since neither has a `data` fixture to check — a test
-   * using this option owns what it hands over.
+   * seed-key guard is gated on `options.data` and skips this path, since it has no `data` fixture
+   * to check. The repair guard is not gated on `data` — it filters `logs.records` unconditionally —
+   * so a `pluginData` boot whose migration output field-repairs still throws
+   * `TestContainerInvalidSeedError`; `allow: { dataRepair: true }` is the escape hatch for that
+   * case same as it is for `data`.
    */
   readonly pluginData?: FakePluginData;
   /** Defaults to true. Set false to skip eager construction. */

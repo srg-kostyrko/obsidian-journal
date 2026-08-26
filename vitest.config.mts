@@ -380,8 +380,27 @@ export default defineConfig({
         // `engine.test.ts` onto `installTestEngine` — the real templates engine it now drives was
         // already fully exercised through the pre-conversion hand-rolled harness — and `29b0d568`'s
         // 52-test conversion of `settings-service.test.ts` off two hand-built container helpers.
+        //
+        // A fix-wave commit after this sweep (a final whole-branch review's F2) rebuilt "strips all
+        // journal keys when the anchor cannot be resolved" (`data-migration-service.test.ts`): the
+        // fixture had left "My Journal Month" unregistered, which made `config === undefined` true
+        // at the same time as `anchor === undefined`, so deleting `|| anchor === undefined` from the
+        // guard at `data-migration-service.ts:130` left the test green — `config === undefined` alone
+        // still tripped it. The rebuilt fixture registers the journal and instead gives it a
+        // start date CalendarDate.parse rejects, isolating the anchor disjunct (confirmed: the
+        // mutant now fails exactly this test). That also moves which branches the test reaches.
+        // Up: `#resolveAnchor`'s `!parsed.isOk()` check (`:162`) gains its true arm for the first
+        // time in the suite: +1 statement, +1 branch. Down: registering the journal permanently
+        // removes the only exerciser of two other arms — the
+        // `configOption?.isSome() === true ? configOption.value : undefined` ternary's `undefined`
+        // arm at `:126` (the one `d0b7de56` gained, see above) and the
+        // `anchor.isSome() ? anchor.value : undefined` ternary's `undefined` arm at `:164` — because
+        // the real `CycleService.anchorOf` returns `None` only when the journal itself is
+        // unregistered, which this file no longer does anywhere. Net: +1 statement, -1 branch.
+        //
+        // New tip -> 92.25 / 87.9 / 89.72 / 94.26 (11095/12026, 4782/5440, 3965/4419, 9690/10279).
         statements: 92.25,
-        branches: 87.92,
+        branches: 87.9,
         functions: 89.72,
         lines: 94.26,
       },
