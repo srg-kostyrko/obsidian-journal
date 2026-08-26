@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
@@ -8,10 +8,14 @@ import { installTestEngine } from "@/templates/testing";
 import { renderForPreview } from "./render-for-preview";
 
 describe("renderForPreview", () => {
-  const engine = installTestEngine();
+  let engine: Awaited<ReturnType<typeof installTestEngine>>;
   const context = TemplateContext.empty()
     .string("journal_name", "daily")
     .date("date", CalendarDate.fromAnchor(anchor("2026-05-19")), "YYYY-MM-DD");
+
+  beforeEach(async () => {
+    engine = await installTestEngine();
+  });
 
   it("renders the template with the given context", () => {
     expect(renderForPreview(engine, "{{journal_name}}-{{date}}", context)).toBe("daily-2026-05-19");
