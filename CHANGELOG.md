@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- Shift-click a day in a calendar view to open a vault-notes preview below the calendar. The preview lists notes created on that date, opens cards in new tabs, supports persistent name or modification-time sorting, can include or exclude journal notes, and keeps journal entries scoped to the selected shelf while leaving ordinary vault notes visible.
+- An optional vault notes preview can now be enabled in Calendar settings. Once enabled, Shift-clicking a calendar day shows notes created on that date below the calendar, while ordinary clicks retain their original behavior. Note cards open in new tabs, and the preview remembers the chosen sorting method and order. Journal notes can be shown or hidden and are limited to the selected shelf; ordinary vault notes remain visible regardless of shelf.
 
 ### Bug Fixes
 
