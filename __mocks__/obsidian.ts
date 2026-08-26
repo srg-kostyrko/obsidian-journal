@@ -82,6 +82,55 @@ export function normalizePath(path: string): string {
 
 export type App = unknown;
 
+export function getLanguage(): string {
+  return "en";
+}
+
+export class Plugin {
+  readonly app: App;
+  readonly manifest: { id: string; version: string; dir?: string };
+  readonly settingTabs: PluginSettingTab[] = [];
+  readonly protocolHandlers = new Map<string, (parameters: Record<string, string>) => unknown>();
+
+  constructor(app: App, manifest: { id: string; version: string; dir?: string }) {
+    this.app = app;
+    this.manifest = manifest;
+  }
+
+  register(_callback: () => void): void {}
+
+  registerEvent(_eventRef: unknown): void {}
+
+  registerMarkdownCodeBlockProcessor(
+    _language: string,
+    _handler: (source: string, element: HTMLElement, context: MarkdownPostProcessorContext) => unknown,
+  ): void {}
+
+  addCommand<T>(command: T): T {
+    return command;
+  }
+
+  removeCommand(_id: string): void {}
+
+  registerView(_viewType: string, _viewCreator: (leaf: WorkspaceLeaf) => ItemView): void {}
+
+  addSettingTab(tab: PluginSettingTab): void {
+    this.settingTabs.push(tab);
+  }
+
+  registerObsidianProtocolHandler(action: string, handler: (parameters: Record<string, string>) => unknown): void {
+    this.protocolHandlers.set(action, handler);
+  }
+
+  loadData(): Promise<unknown> {
+    return Promise.resolve(undefined);
+  }
+
+  saveData(_data: unknown): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
 export class PluginSettingTab {
   readonly app: App;
   readonly containerEl: HTMLElement;

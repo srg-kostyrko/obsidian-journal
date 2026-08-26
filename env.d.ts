@@ -10,7 +10,7 @@ declare module "@vue/reactivity" {
 
 // Augment the obsidian module to expose the __testing registry used in unit tests.
 // The actual implementation lives in __mocks__/obsidian.ts (aliased by vitest).
-import type { AbstractInputSuggest, IconName, Modal, SuggestModal } from "obsidian";
+import type { AbstractInputSuggest, IconName, Modal, PluginSettingTab, SuggestModal } from "obsidian";
 
 declare module "obsidian" {
   // `Plugin.addRibbonIcon` has no counterpart for mid-lifetime removal, so the
@@ -24,6 +24,11 @@ declare module "obsidian" {
     readonly items: { title: string; icon: string; section: string; warning: boolean }[];
     showAtMouseEventCalls: MouseEvent[];
     pick(index: number): Promise<void>;
+  }
+
+  interface Plugin {
+    readonly settingTabs: PluginSettingTab[];
+    readonly protocolHandlers: Map<string, (parameters: Record<string, string>) => unknown>;
   }
 
   export const __testing: {
