@@ -3,10 +3,7 @@ import { screen, waitFor } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
-import { journalsCoreModule } from "@/journals/module";
 import { testContainer, type TestHarness } from "@/testing";
-
-import { shelvesCoreModule } from "../module";
 
 import { shelfNameModal } from "./modals";
 import ShelfNameModal from "./ShelfNameModal.vue";
@@ -25,7 +22,7 @@ describe("ShelfNameModal", () => {
   let harness: TestHarness;
 
   beforeEach(async () => {
-    harness = await testContainer({ modules: [journalsCoreModule, shelvesCoreModule] });
+    harness = await testContainer();
   });
 
   it("submits the entered name", async () => {

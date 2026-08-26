@@ -3,10 +3,7 @@ import { screen } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
-import { journalsCoreModule } from "@/journals/module";
 import { testContainer, type TestHarness } from "@/testing";
-
-import { shelvesCoreModule } from "../module";
 
 import DeleteShelfModal from "./DeleteShelfModal.vue";
 
@@ -14,7 +11,7 @@ describe("DeleteShelfModal", () => {
   let harness: TestHarness;
 
   beforeEach(async () => {
-    harness = await testContainer({ modules: [journalsCoreModule, shelvesCoreModule] });
+    harness = await testContainer();
   });
 
   it("lists the other shelves as destinations", () => {
