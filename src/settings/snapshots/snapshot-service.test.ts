@@ -1,23 +1,19 @@
 import { describe, expect, it } from "vitest";
 
-import { Container } from "@/infrastructure/di";
-import { PluginData } from "@/infrastructure/host";
-import { FakePluginData } from "@/infrastructure/host/testing";
+import type { FakePluginData } from "@/infrastructure/host/testing";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
+import { testContainer } from "@/testing";
 
 import { SnapshotService } from "./snapshot-service";
 
-function build(): { service: SnapshotService; data: FakePluginData } {
-  const data = new FakePluginData();
-  const c = new Container();
-  c.register(PluginData).useValue(data as unknown as PluginData);
-  c.register(SnapshotService).useClass(SnapshotService);
-  return { service: c.resolve(SnapshotService), data };
+async function build(): Promise<{ service: SnapshotService; data: FakePluginData }> {
+  const harness = await testContainer();
+  return { service: harness.resolve(SnapshotService), data: harness.data };
 }
 
 describe("SnapshotService", () => {
   it("writes a snapshot under a name carrying its version and timestamp", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
 
     expectOk(await service.write(3, '{"version":3}', "2026-08-16T10:20:30.000Z"));
 
@@ -26,7 +22,7 @@ describe("SnapshotService", () => {
   });
 
   it("lists snapshots newest first, ignoring unrelated files", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("data.json", "{}");
     data.files.set("backup-v3-2026-08-16T10-20-30.json", "{}");
     data.files.set("backup-v2-2026-07-01T09-00-00.json", "{}");
@@ -47,7 +43,7 @@ describe("SnapshotService", () => {
     // strings character-by-character hits "9" vs "1" before the date is even reached, so
     // "backup-v9-…" sorts as the larger string and would be listed first — even though the
     // v10 snapshot (versions only move forward) was taken years later.
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("backup-v9-2020-01-01T00-00-00.json", "{}");
     data.files.set("backup-v10-2026-08-16T10-20-30.json", "{}");
 
@@ -61,7 +57,7 @@ describe("SnapshotService", () => {
   });
 
   it("reads a snapshot back as an object", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("backup-v3-2026-08-16T10-20-30.json", '{"version":3,"journals":{}}');
 
     const result = await service.read("backup-v3-2026-08-16T10-20-30.json");
@@ -71,21 +67,21 @@ describe("SnapshotService", () => {
   });
 
   it("rejects a snapshot whose contents are not a JSON object", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("backup-v3-2026-08-16T10-20-30.json", "not json");
 
     expectErr(await service.read("backup-v3-2026-08-16T10-20-30.json"));
   });
 
   it("rejects a snapshot holding a JSON array", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("backup-v3-2026-08-16T10-20-30.json", "[1,2,3]");
 
     expectErr(await service.read("backup-v3-2026-08-16T10-20-30.json"));
   });
 
   it("writes a pre-restore snapshot under its own name shape", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
 
     expectOk(await service.writePreRestore(5, '{"version":5}', "2026-08-17T11:22:33.000Z"));
 
@@ -93,7 +89,7 @@ describe("SnapshotService", () => {
   });
 
   it("reports which event each snapshot was taken for", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("backup-v3-2026-08-16T10-20-30.json", "{}");
     data.files.set("backup-restore-v5-2026-08-17T11-22-33.json", "{}");
 
@@ -107,7 +103,7 @@ describe("SnapshotService", () => {
   });
 
   it("prunes pre-restore snapshots beyond the keep count, newest first", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("backup-restore-v5-2026-08-01T00-00-00.json", "{}");
     data.files.set("backup-restore-v5-2026-08-02T00-00-00.json", "{}");
     data.files.set("backup-restore-v5-2026-08-03T00-00-00.json", "{}");
@@ -123,7 +119,7 @@ describe("SnapshotService", () => {
   });
 
   it("leaves migration snapshots alone when pruning pre-restore ones", async () => {
-    const { service, data } = build();
+    const { service, data } = await build();
     data.files.set("backup-v3-2026-07-01T00-00-00.json", "{}");
     data.files.set("backup-v4-2026-07-02T00-00-00.json", "{}");
 

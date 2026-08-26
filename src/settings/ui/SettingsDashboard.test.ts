@@ -1,9 +1,10 @@
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 import { defineComponent, h, nextTick } from "vue";
 
 import { m } from "@/i18n";
-import { Container, InjectorToken, provideInjector } from "@/infrastructure/di";
+import type { Module } from "@/infrastructure/di";
+import { testContainer } from "@/testing";
 
 import { ReloadHintService } from "../reload-hint";
 import { DashboardBlockToken, SubpageToken } from "../tokens";
@@ -14,8 +15,6 @@ import SettingsDashboard from "./SettingsDashboard.vue";
 
 import type { DashboardBlock, Subpage } from "./schema";
 
-afterEach(() => cleanup());
-
 function blockComponent(label: string) {
   return defineComponent({ render: () => h("div", { "data-testid": `block-${label}` }, label) });
 }
@@ -24,43 +23,44 @@ function block(key: string, order: number, label = key): DashboardBlock {
   return defineDashboardBlock({ key, component: blockComponent(label), order });
 }
 
-function renderDashboard() {
-  return h(SettingsDashboard);
+function testUiModule(
+  options: {
+    blocks?: readonly DashboardBlock[];
+    subpages?: readonly Subpage<unknown>[];
+  } = {},
+): Module {
+  return {
+    register(c) {
+      const blocks = options.blocks ?? [];
+      for (const b of blocks) c.register(DashboardBlockToken).useValue(b);
+      const subpages = options.subpages ?? [];
+      for (const s of subpages) c.register(SubpageToken).useValue(s);
+    },
+  };
 }
 
-function buildHarness(
+async function buildHarness(
   options: {
     blocks?: readonly DashboardBlock[];
     subpages?: readonly Subpage<unknown>[];
   } = {},
 ) {
-  const c = new Container();
-  const blocks = options.blocks ?? [];
-  for (const b of blocks) c.register(DashboardBlockToken).useValue(b);
-  const subpages = options.subpages ?? [];
-  for (const s of subpages) c.register(SubpageToken).useValue(s);
-  c.register(SettingsUiService).useClass(SettingsUiService);
-  c.register(ReloadHintService).useClass(ReloadHintService);
-  const injector = c.resolve(InjectorToken);
-  const service = c.resolve(SettingsUiService);
-  const reloadHint = c.resolve(ReloadHintService);
-  const Harness = defineComponent({
-    setup() {
-      provideInjector(injector);
-      return renderDashboard;
-    },
-  });
-  return { Harness, service, reloadHint };
+  const harness = await testContainer({ modules: [testUiModule(options)] });
+  return {
+    harness,
+    service: harness.resolve(SettingsUiService),
+    reloadHint: harness.resolve(ReloadHintService),
+  };
 }
 
 describe("SettingsDashboard", () => {
   describe("dashboard view", () => {
-    it("renders blocks in order", () => {
-      const { Harness } = buildHarness({
+    it("renders blocks in order", async () => {
+      const { harness } = await buildHarness({
         blocks: [block("c", 30, "third"), block("a", 10, "first"), block("b", 20, "second")],
       });
 
-      render(Harness);
+      harness.render(SettingsDashboard);
 
       const labels = screen.getAllByTestId(/^block-/).map((node) => node.textContent);
       expect(labels).toEqual(["first", "second", "third"]);
@@ -70,9 +70,9 @@ describe("SettingsDashboard", () => {
   describe("scroll position", () => {
     const sub = defineSubpage({ key: "edit", component: blockComponent("subpage") });
 
-    function renderScrolled(scrollTop: number) {
-      const { Harness, service } = buildHarness({ subpages: [sub] });
-      const { container } = render(Harness);
+    async function renderScrolled(scrollTop: number) {
+      const { harness, service } = await buildHarness({ subpages: [sub] });
+      const { container } = harness.render(SettingsDashboard);
       // Vue mounts into the settings pane, so the rendered root's parent stands in for it.
       const scroller = container.firstElementChild!.parentElement!;
       scroller.scrollTop = scrollTop;
@@ -80,7 +80,7 @@ describe("SettingsDashboard", () => {
     }
 
     it("opens a subpage at its top rather than mid-scroll", async () => {
-      const { service, scroller } = renderScrolled(420);
+      const { service, scroller } = await renderScrolled(420);
       service.push(sub, undefined);
       await nextTick();
       await nextTick();
@@ -88,7 +88,7 @@ describe("SettingsDashboard", () => {
     });
 
     it("returns the dashboard to where the user left it", async () => {
-      const { service, scroller } = renderScrolled(420);
+      const { service, scroller } = await renderScrolled(420);
       service.push(sub, undefined);
       await nextTick();
       await nextTick();
@@ -103,15 +103,15 @@ describe("SettingsDashboard", () => {
   });
 
   describe("reload banner", () => {
-    it("stays hidden until a reload-requiring change is made", () => {
-      const { Harness } = buildHarness();
-      render(Harness);
+    it("stays hidden until a reload-requiring change is made", async () => {
+      const { harness } = await buildHarness();
+      harness.render(SettingsDashboard);
       expect(screen.queryByText(m.settings_reload_required_banner())).toBeNull();
     });
 
     it("appears once a reload is requested", async () => {
-      const { Harness, reloadHint } = buildHarness();
-      render(Harness);
+      const { harness, reloadHint } = await buildHarness();
+      harness.render(SettingsDashboard);
       reloadHint.request();
       await nextTick();
       expect(screen.getByText(m.settings_reload_required_banner())).toBeTruthy();
@@ -129,12 +129,12 @@ describe("SettingsDashboard", () => {
       const editSubpage = defineSubpage<{ name: string }>({ key: "edit", component: EditPage });
       const dashboardBlock = block("only", 0, "dashboard-tile");
 
-      const { Harness, service } = buildHarness({
+      const { harness, service } = await buildHarness({
         blocks: [dashboardBlock],
         subpages: [editSubpage],
       });
 
-      render(Harness);
+      harness.render(SettingsDashboard);
       service.push(editSubpage, { name: "Daily" });
       await Promise.resolve(); // let Vue flush
 
@@ -161,11 +161,11 @@ describe("SettingsDashboard", () => {
       const firstSub = defineSubpage({ key: "first", component: First });
       const secondSub = defineSubpage({ key: "second", component: Second });
 
-      const { Harness, service } = buildHarness({
+      const { harness, service } = await buildHarness({
         subpages: [firstSub, secondSub],
       });
 
-      render(Harness);
+      harness.render(SettingsDashboard);
       service.push(firstSub, undefined);
       await Promise.resolve();
       const _afterFirst = service.current.value;
