@@ -33,8 +33,13 @@ export default defineConfig({
         // `module.ts` is assumed to hold wiring only — `src/settings/legacy/module.ts` already
         // breaks that assumption (its `legacyMigrations` array is real behavior with its own
         // test), so a file matching this glob still needs checking for non-wiring exports.
+        // `src/**/startup-module.ts` joins them for the same reason — a startup module is that
+        // same wiring — and carries the same caveat. Unlike the other two it is not avoiding a
+        // fresh-0% drag: the one such file today, `src/views/startup-module.ts`, is at 100%, so
+        // excluding it removes covered code and nudges the floor down rather than up.
         "src/**/module.ts",
         "src/**/ui-module.ts",
+        "src/**/startup-module.ts",
       ],
       // A floor to catch silent deletion during the test-conversion campaign, not a target to
       // chase. Set at the measured value: a PR that lowers coverage edits these numbers in the
@@ -399,10 +404,47 @@ export default defineConfig({
         // unregistered, which this file no longer does anywhere. Net: +1 statement, -1 branch.
         //
         // New tip -> 92.25 / 87.9 / 89.72 / 94.26 (11095/12026, 4782/5440, 3965/4419, 9690/10279).
-        statements: 92.25,
+        //
+        // Closing PR (merge base 8a63de66, which reproduced the line above exactly) -> 92.66 / 87.9 / 89.86 /
+        // 94.68 (11093/11971, 4782/5440, 3955/4401, 9688/10232). Measured at the tip and diffed per file
+        // against the base; ten files differ and no other file moved by so much as one count.
+        //
+        // Two of the branch's commits move the numbers, and this commit's new exclude removes a tenth file.
+        // `0cfc834f` deleted the five `fromParts` constructors (the four repositories, -12 statements / -10
+        // lines / -3 functions each, and `shelves/service.ts`, -1 / -1 / -1); `c8585787` deleted the four
+        // `fromRepository` view model constructors (-1 / -1 / -1 each). All nine had been dead at the merge
+        // base already, which the counts show directly: covered statements and covered lines are unchanged in
+        // every one of the nine, so nothing that used to run stopped running. Only totals shrink, so all four
+        // percentages rise. `b442f965` and `cbd5a217` touched only `testing.ts` and `*.test.ts` files plus two
+        // barrels, and the per-file diff confirms them neutral.
+        //
+        // Covered functions do fall, by one per file, but that is an artifact of the v8 provider rather than a
+        // weaker test: it had counted each dead static's function entry as covered while marking every
+        // statement inside that static uncovered. Deleting the static takes the phantom covered entry with it,
+        // which is why 18 functions leave the total while only 10 leave the covered count (nine phantoms plus
+        // the startup module's genuine one), and the percentage still goes up. No surviving function changed
+        // verdict — the unchanged covered statement and line counts prove that file by file.
+        //
+        // Branches were expected flat and were measured flat per file, not in aggregate: not one of
+        // the ten files carries a branch delta in either direction, so no pair of opposite movements
+        // is hiding behind the unchanged 4782/5440. Every deleted body was straight-line code.
+        //
+        // `src/views/startup-module.ts` leaves the set through the new `src/**/startup-module.ts`
+        // exclude above. It stood at 100% (2/2 statements, 1/1 functions, 2/2 lines, no branches),
+        // so that exclusion removes covered code and costs a sliver of each percentage instead of
+        // saving one; it is there to match the `module.ts` and `ui-module.ts` excludes, not to head
+        // off a fresh 0% file.
+        //
+        // Left uncovered on purpose, recorded for Phase 4.5 rather than filled (gate 1): the
+        // `invalidUpdateError` arrow bodies in `src/commands/repository.ts:26` and
+        // `src/views/repository.ts:24`, which no test on either repository reaches, since neither
+        // suite pushes an update through the rejecting path. `src/views/repository.ts` also keeps
+        // the pre-existing uncovered `InvalidViewNameError` return at `:31`; this branch did not
+        // touch it.
+        statements: 92.66,
         branches: 87.9,
-        functions: 89.72,
-        lines: 94.26,
+        functions: 89.86,
+        lines: 94.68,
       },
     },
     projects: [
