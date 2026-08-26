@@ -277,27 +277,18 @@ identical to a working one (see [Enforcement](#enforcement)).
 standard, and the only seeding path a new test should use: a name-keyed
 record mirroring on-disk settings, not an array.
 
-The path it is retiring still exists. Five `static fromParts` methods —
-`src/journals/repository.ts:33`, `src/commands/repository.ts:22`,
-`src/shelves/repository.ts:24`, `src/shelves/service.ts:11`,
-`src/views/repository.ts:20` — bypass the schema entirely: each does
-`Object.create(this.prototype)` to skip the constructor, then casts through a
-local `Mutable` interface to write protected fields. At the time of writing,
-forty-four test files still reach one of these methods: 35 call `fromParts`
-directly and 14 call the `fakeRepo` fixture that wraps it (5 files do both).
-That count is a moving target, not a fixed inventory — check the call sites
-directly rather than trusting a number here, since each feature's Phase 3
-sweep rewrites its own callers onto `testContainer({ data })` as it lands. A
-directory being "converted" does not by itself mean its `fromParts` is
-unused: a leftover `fromParts`/`fakeRepo` caller can sit inside an
-otherwise-converted directory until that feature's own sweep retires the
-method, `src/journals` included — don't assume none remain just from the
-directory name. Data seeded through `fromParts`/`fakeRepo` never sees the
-parse defaults or the repair
-path, and the helpers live in production source, which the
-[file-location rules](architecture.md#testing) forbid. Deleting a feature's
-`fromParts` is the closing step of that feature's Phase 3 sweep — not a
-decision to make ahead of the sweep that owns it.
+There is no other seeding path left to reach for. Every repository once
+carried a `static fromParts` that skipped the constructor with
+`Object.create(this.prototype)` and wrote protected fields through a local
+`Mutable` cast, and every view model had a matching `fromRepository`; the
+`fakeRepo`/`fakeShelvesRepo` fixtures that wrapped two of those statics
+existed for the same purpose. All of it is gone, along with every caller. If
+a future change reaches for something shaped like it — a constructor
+bypassed through `Object.create`, a `Mutable`-style cast to reach protected
+fields — that is a regression of the same kind, worth refusing for the same
+two reasons: it bypasses the schema, so seeded data never sees the parse
+defaults or the repair path, and it lives in production source, which the
+[file-location rules](architecture.md#testing) forbid.
 
 ### Fakes do not carry error queues
 
@@ -475,23 +466,28 @@ uses for the `vi.mock` ban. No custom plugin.
 | No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector                        |
 | `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)                         |
 
-**Scope is per-directory, and rolls out as each feature converts.** Today the
-full set is enabled for `src/journals/**/*.test.ts`; the base `vi.mock` rule
-applies to every `**/*.test.ts`. A Phase 3 sweep enables the rest for its own
-directory in the same PR that converts it, by appending one glob to the
-`convertedTestGlobs` array in `eslint.config.mjs`.
+**The full rule set is enabled for all of `src`, minus two carve-outs.** One
+`files: ["src/**/*.test.ts"]` block in `eslint.config.mjs` carries the whole
+`no-restricted-syntax` list; the base `vi.mock` rule alone applies more
+broadly, to every `**/*.test.ts`. Enrollment used to be a hand-maintained
+glob per converted directory; it collapsed into this single block once every
+feature had converted, because a list like that has to grow a line for each
+new feature directory, and a directory nobody remembered to add reads
+identically to one that is enforced.
 
-**`src/infrastructure/**` is not on that list, and will not be.** Its
-`host`/`di`/`flows` tests are what `testContainer()` itself is built and
-verified against — converting them onto the harness would test the harness
-through itself. This is a permanent boundary, not a directory the campaign
-hasn't reached yet.
+**`src/infrastructure/**` is an explicit `ignores` entry on that block, and
+stays one.** Its `host`/`di`/`flows` tests are what `testContainer()` itself
+is built and verified against — converting them onto the harness would test
+the harness through itself. This is a permanent boundary, not a directory
+the campaign hasn't reached yet, and an `ignores` entry says so more clearly
+than a glob list ever could: absence from a list is silent, but an `ignores`
+entry is visible in the config and can carry a comment explaining why.
 
 Two mechanics that have already caused a silent failure once each:
 
-- **Flat-config rule options replace, they do not merge.** A per-directory block
+- **Flat-config rule options replace, they do not merge.** The full-set block
   must sit _after_ the general test-file block and **re-declare the `vi.mock`
-  selector**, or the ban silently lifts for that whole feature.
+  selector**, or the ban silently lifts for every file it covers.
 - **A selector matching nothing looks identical to one that works.** Verify a new
   rule by writing a violation and watching it fire, then removing it.
 
