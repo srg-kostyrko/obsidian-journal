@@ -313,10 +313,77 @@ export default defineConfig({
         // `JournalsRepository.fromParts`/`ShelvesRepository.fromParts`/`JournalsViewModel.fromRepository`
         // (by `58ade0cb` and `18c0d41a`). All nine remain on the closing PR's deletion list; none
         // of this sweep's own tests calls any of them any longer.
-        statements: 92.18,
-        branches: 87.9,
-        functions: 89.65,
-        lines: 94.2,
+        //
+        // Sweep 6 (settings, templates, ui, logging, i18n) measured its thirteen commits by diffing
+        // every file's statement/branch/function/line counts in coverage-summary.json between the
+        // merge base (53d976ae) and the sweep's tip, rather than a step-by-step worktree bisection.
+        // The merge base itself reproduced this sweep's recorded baseline exactly: 92.2 / 87.92 /
+        // 89.7 / 94.22 (11089/12026 statements, 4783/5440 branches, 3964/4419 functions, 9685/10279
+        // lines). Diffing every file between that base and the tip turned up exactly four files with
+        // any change at all, and nothing added to or removed from the coverage set (`only in base`
+        // and `only in tip` both empty, every changed file's own denominator held). That verifies,
+        // rather than assumes, the two things this sweep's plan flagged as open questions: the
+        // `05c99d24` deletion of `createSettingsService` (49 lines from `src/settings/testing.ts`)
+        // moved nothing, because `**/testing.ts` was already excluded before the deletion — there
+        // was never a numerator or denominator counting that body to begin with; and moving
+        // `UiIcon.test.ts` / `UiCollapsibleBlock.test.ts` out of the isolated project into shared
+        // (`b4c95166`) moved nothing on its own either, because `coverage` sits at the top level of
+        // `test:`, outside `projects`, so both projects were already counted together — reassigning
+        // a file between them changes which setup files load, not what gets instrumented.
+        // `0172a4dd`'s split of `loggingModule` into `loggingCoreModule` + `ui-module.ts` also moved
+        // nothing by itself: at that point every logging test still built its own hand-rolled
+        // `Container`, so nothing yet imported the new `module.ts`.
+        //
+        // Final tip -> 92.25 / 87.92 / 89.72 / 94.26 (11094/12026, 4783/5440, 3965/4419, 9690/10279).
+        // Up net, from two files, both touched by `371522aa` ("move dump-logs and bridge tests onto
+        // testContainer()"). First, a deliberate fix: bridge.test.ts's old assertion
+        // (`gate.isEnabled("debug") === true`) passed whether or not `LoggingSettingsBridge` ever
+        // ran, since the harness's `LogLevelGate` already starts at "debug"; seeding a narrower
+        // level and asserting the gate actually narrowed forces the constructor's `watchEffect`
+        // callback (`src/logging/settings/bridge.ts:16-18`) to execute for the first time: +1
+        // statement, +1 function, +1 line, no branch in it. Second, an incidental side effect on
+        // `src/logging/settings/ui/LoggingBlock.vue`: both `dump-logs.flow.test.ts` and
+        // `bridge.test.ts` now `import { loggingCoreModule } from "../module"`, and importing
+        // anything from `module.ts` runs that file's own top-level `import { loggingUiModule } from
+        // "./ui-module"` regardless of which export the test actually uses — `ui-module.ts` imports
+        // `LoggingBlock.vue`, and Vue's compiler hoists the SFC's static template nodes (the four
+        // `<option>` elements at lines 44-47, none of which read a script-setup binding) to module
+        // scope, so they construct once at import time with no mount required: +4 statements, +4
+        // lines, 0 functions (a hoisted vnode isn't a declared function), no branches. Neither test
+        // registers `loggingUiModule` itself, and the component's own `<script setup>` body
+        // (`useService`, the `level` computed, `dump()`) stays at 0% — nothing in this sweep mounts
+        // `LoggingBlock.vue`.
+        //
+        // Branches held in aggregate (4783/5440 at both ends) but not because nothing moved — two
+        // files moved by exactly one branch each, in opposite directions, and cancelled. Up:
+        // `d0b7de56` ("restore metadata-deferral discriminating order in data-migration-service
+        // tests") is this sweep's one deliberate branch gain — routing all nine ordinary migration
+        // tests through the same `FakeNoteMetadataService` the three deferral tests already used
+        // means a test now supplies a `targetName` whose journal lookup misses, exercising the
+        // `undefined` arm of the `configOption?.isSome() === true ? configOption.value : undefined`
+        // ternary at `data-migration-service.ts:126` for the first time (that arm's hit count: 0/5 at
+        // the base, 1/4 at the tip): +1 branch. Down: `b4c95166` ("un-isolate and de-duplicate the
+        // src/ui + src/i18n pure suites") deliberately drops `UiCollapsibleBlock`'s
+        // `vi.mock("@/infrastructure/host", () => ({ renderIcon: vi.fn(() => null) }))` — mocking the
+        // project's own barrel, banned under this campaign's rule — and nothing else in the suite
+        // ever made `renderIcon`/`getIcon` return falsy (the fake obsidian `getIcon` in
+        // `__mocks__/obsidian.ts` always returns a real `<svg>`), so the `if (icon)` false arm in
+        // `UiIcon.vue:27` (`host.append(icon)`) loses its only exerciser anywhere in the suite: -1
+        // branch (5/6 -> 4/6 covered on that file; full-suite hit count on that arm goes 7 -> 0).
+        // This is a real loss of discriminating power, not a wash — the aggregate percentage held
+        // only because `data-migration-service.ts` happened to gain one elsewhere in the same sweep.
+        //
+        // Every other file's four counts matched exactly at both ends, so the remaining commits
+        // (`4f381fdb`, `32e36215`, `c9364561`, `902eccf3`, `1d2d40e8`, `b97e44e5`, `05c99d24`,
+        // `29b0d568`, `d4cc1f2e`, `0172a4dd`, and the eleven files `b4c95166` touched besides
+        // UiIcon.vue) are verified flat, including `32e36215`'s 79-call-site conversion of
+        // `engine.test.ts` onto `installTestEngine` — the real templates engine it now drives was
+        // already fully exercised through the pre-conversion hand-rolled harness — and `29b0d568`'s
+        // 52-test conversion of `settings-service.test.ts` off two hand-built container helpers.
+        statements: 92.25,
+        branches: 87.92,
+        functions: 89.72,
+        lines: 94.26,
       },
     },
     projects: [
