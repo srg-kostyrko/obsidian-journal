@@ -1,127 +1,25 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
-import { Container } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, WorkspaceService } from "@/infrastructure/host";
-import type { NoteMetadata, VaultPath } from "@/infrastructure/host";
-import { FakeWorkspaceService } from "@/infrastructure/host/testing";
-import { createLoggerTestingModule } from "@/infrastructure/logger/testing";
-import { AsyncResult, None, Option, Some } from "@/infrastructure/result";
-import { CycleService, JournalsRepository } from "@/journals";
-import { journalDefaultsFor, type JournalConfig } from "@/journals/config";
-import { SettingsService } from "@/settings";
+import { NoteMetadataService, NotesService } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService } from "@/infrastructure/host/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { customJournal, fixedJournal } from "@/journals/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { DataMigrationService } from "./data-migration-service";
+import { legacyMigrationsModule } from "./module";
+import { pendingNoteMigrationSlice, type PendingNoteMigration } from "./pending-note-migration";
 
-import type { PendingNoteMigration } from "./pending-note-migration";
+const settle = (): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, 0));
 
-interface Stubs {
-  service: DataMigrationService;
-  notesByPath: Map<string, Record<string, unknown>>;
-  updateCalls: VaultPath[];
-  sliceState: { current: PendingNoteMigration[] };
-  workspace: FakeWorkspaceService;
-  resolveMetadata: () => void;
-}
-
-interface BuildOptions {
-  notes: Record<string, Record<string, unknown>>;
-  markers: PendingNoteMigration[];
-  configs?: Record<string, JournalConfig>;
-  anchors?: Record<string, AnchorString | null>;
-}
-
-function build(options: BuildOptions): Stubs {
-  const notesByPath = new Map<string, Record<string, unknown>>(
-    Object.entries(options.notes).map(([path, fm]) => [path, { ...fm }]),
-  );
-  const updateCalls: VaultPath[] = [];
-  const sliceState = { current: options.markers };
-
-  const settings = {
-    getSlice: () => ({
-      get state() {
-        return sliceState.current;
-      },
-      set state(value: PendingNoteMigration[]) {
-        sliceState.current = value;
-      },
-    }),
-  } as unknown as SettingsService;
-
-  const notes = {
-    allMarkdownNotes: (): VaultPath[] => [...notesByPath.keys()] as VaultPath[],
-    updateFrontmatter: (path: VaultPath, mutate: (fm: Record<string, unknown>) => void) => {
-      updateCalls.push(path);
-      const fm = notesByPath.get(path);
-      if (fm) mutate(fm);
-      return AsyncResult.ok();
-    },
-  } as unknown as NotesService;
-
-  // metadataCache resolves incrementally; model that by withholding every note's
-  // metadata until resolveMetadata() signals the cache has caught up.
-  let resolved = false;
-  const resolvedListeners: (() => void)[] = [];
-  const metadata = {
-    get: (path: VaultPath): Option<NoteMetadata> => {
-      const fm = notesByPath.get(path);
-      if (!resolved || !fm) return new None<NoteMetadata>();
-      return new Some<NoteMetadata>({ title: "", tags: [], properties: fm, tasks: [] });
-    },
-    onResolved: (callback: () => void): (() => void) => {
-      resolvedListeners.push(callback);
-      return () => {
-        const index = resolvedListeners.indexOf(callback);
-        if (index !== -1) resolvedListeners.splice(index, 1);
-      };
-    },
-  } as unknown as NoteMetadataService;
-
-  const cycle = {
-    anchorOf: (name: string): Option<AnchorString> => {
-      const anchor = options.anchors?.[name];
-      return anchor === undefined || anchor === null ? new None<AnchorString>() : new Some<AnchorString>(anchor);
-    },
-  } as unknown as CycleService;
-
-  const repository = {
-    get: (name: string): Option<JournalConfig> => Option.fromNullable(options.configs?.[name]),
-  } as unknown as JournalsRepository;
-
-  const workspace = new FakeWorkspaceService();
-
-  const container = new Container();
-  container.register(SettingsService).useValue(settings);
-  container.register(NotesService).useValue(notes);
-  container.register(NoteMetadataService).useValue(metadata);
-  container.register(CycleService).useValue(cycle);
-  container.register(JournalsRepository).useValue(repository);
-  container.register(WorkspaceService).useValue(workspace as unknown as WorkspaceService);
-  container.addModule(createLoggerTestingModule().module);
-  container.register(DataMigrationService).useClass(DataMigrationService);
-
-  const service = container.resolve(DataMigrationService);
-  const resolveMetadata = (): void => {
-    resolved = true;
-    // Drain into a fresh array so a listener disposing itself mid-iteration is safe.
-    for (const listener of resolvedListeners.splice(0)) listener();
-  };
-  return { service, notesByPath, updateCalls, sliceState, workspace, resolveMetadata };
-}
-
-// The walk waits for the layout (vault file list complete) and then for metadataCache
-// to finish parsing; drive both signals, then drain the fire-and-forget walk's microtasks.
-async function migrate(stubs: Pick<Stubs, "service" | "workspace" | "resolveMetadata">): Promise<void> {
-  await stubs.service.initialize();
-  stubs.workspace.setLayoutReady(true);
-  stubs.resolveMetadata();
-  await new Promise((resolve) => window.setTimeout(resolve, 0));
-}
-
-function config(overrides: Partial<JournalConfig["frontmatter"]> = {}): JournalConfig {
-  const base = journalDefaultsFor({ type: "month" }, "irrelevant");
-  return { ...base, frontmatter: { ...base.frontmatter, ...overrides } };
+// The fake host's onLayoutReady/layoutReady default to ready and putFile always populates
+// metadata, so the ordinary tests below need no explicit signalling: initialize() runs the walk
+// to completion once `settle()` drains its fire-and-forget promise chain.
+async function migrate(harness: TestHarness): Promise<void> {
+  await harness.resolve(DataMigrationService).initialize();
+  await settle();
 }
 
 describe("DataMigrationService", () => {
@@ -131,23 +29,23 @@ describe("DataMigrationService", () => {
       kind: "calendar",
       sectionToName: { month: "My Journal Month" },
     };
-    const { service, notesByPath, workspace, resolveMetadata } = build({
-      notes: {
-        "note.md": {
-          journal: "cal",
-          "journal-start-date": "2022-01-01",
-          "journal-end-date": "2022-01-31",
-          "journal-section": "month",
-        },
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: {
+        journals: { "My Journal Month": fixedJournal("My Journal Month", { type: "month" }) },
+        pendingNoteMigration: [marker],
       },
-      markers: [marker],
-      configs: { "My Journal Month": config({ addStartDate: false, addEndDate: false }) },
-      anchors: { "My Journal Month": "2022-01-01" as AnchorString },
+    });
+    harness.host.putFile("note.md", "", {
+      journal: "cal",
+      "journal-start-date": "2022-01-01",
+      "journal-end-date": "2022-01-31",
+      "journal-section": "month",
     });
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(notesByPath.get("note.md")).toEqual({
+    expect(harness.host.files.get("note.md")?.frontmatter).toEqual({
       journal: "My Journal Month",
       "journal-date": "2022-01-01",
     });
@@ -159,43 +57,55 @@ describe("DataMigrationService", () => {
       kind: "calendar",
       sectionToName: { week: "Weekly" },
     };
-    const { service, notesByPath, workspace, resolveMetadata } = build({
-      notes: {
-        "wk.md": { journal: "cal", "journal-start-date": "2022-01-03", "journal-section": "week" },
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: {
+        journals: { Weekly: fixedJournal("Weekly", { type: "week" }) },
+        pendingNoteMigration: [marker],
       },
-      markers: [marker],
-      configs: { Weekly: config({ addStartDate: false, addEndDate: false }) },
-      anchors: { Weekly: "2022-01-06" as AnchorString },
+    });
+    // 2022-01-05 is a Wednesday; the default Monday-start grid's canonical week anchor for it
+    // is 2022-01-03, which is what proves the write goes through the cycle rather than the raw date.
+    harness.host.putFile("wk.md", "", {
+      journal: "cal",
+      "journal-start-date": "2022-01-05",
+      "journal-section": "week",
     });
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(notesByPath.get("wk.md")).toEqual({ journal: "Weekly", "journal-date": "2022-01-06" });
+    expect(harness.host.files.get("wk.md")?.frontmatter).toEqual({ journal: "Weekly", "journal-date": "2022-01-03" });
   });
 
   it("moves the interval index into the journal's configured index field", async () => {
     const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
-    const sprintsConfig = journalDefaultsFor(
-      { type: "custom", every: "week", duration: 2, anchorDate: "2022-02-01" as AnchorString },
-      "Sprints",
-    );
-    sprintsConfig.numbering.sources[0].frontmatterKey = "sprint-number";
-    const { service, notesByPath, workspace, resolveMetadata } = build({
-      notes: {
-        "sprint.md": {
-          journal: "int",
-          "journal-start-date": "2022-02-01",
-          "journal-interval-index": 1,
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: {
+        journals: {
+          Sprints: customJournal("Sprints", "week", 2, "2022-02-01", {
+            numbering: {
+              enabled: true,
+              anchorDate: "2022-02-01" as AnchorString,
+              allowBefore: false,
+              sources: [
+                { variable: "index", frontmatterKey: "sprint-number", anchorValue: 1, reset: { kind: "never" } },
+              ],
+            },
+          }),
         },
+        pendingNoteMigration: [marker],
       },
-      markers: [marker],
-      configs: { Sprints: sprintsConfig },
-      anchors: { Sprints: "2022-02-01" as AnchorString },
+    });
+    harness.host.putFile("sprint.md", "", {
+      journal: "int",
+      "journal-start-date": "2022-02-01",
+      "journal-interval-index": 1,
     });
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    const result = notesByPath.get("sprint.md");
+    const result = harness.host.files.get("sprint.md")?.frontmatter;
     expect(result?.["sprint-number"]).toBe(1);
     expect(result).not.toHaveProperty("journal-interval-index");
     expect(result).not.toHaveProperty("journal-index");
@@ -203,45 +113,53 @@ describe("DataMigrationService", () => {
 
   it("re-canonicalizes a week-anchor journal's note date to the week anchor", async () => {
     const marker: PendingNoteMigration = { kind: "week-anchor", journalName: "Weekly" };
-    const { service, notesByPath, workspace, resolveMetadata } = build({
-      notes: { "wk.md": { journal: "Weekly", "journal-date": "2022-01-03" } },
-      markers: [marker],
-      configs: { Weekly: config() },
-      anchors: { Weekly: "2022-01-06" as AnchorString },
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: {
+        journals: { Weekly: fixedJournal("Weekly", { type: "week" }) },
+        pendingNoteMigration: [marker],
+      },
     });
+    harness.host.putFile("wk.md", "", { journal: "Weekly", "journal-date": "2022-01-05" });
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(notesByPath.get("wk.md")).toEqual({ journal: "Weekly", "journal-date": "2022-01-06" });
+    expect(harness.host.files.get("wk.md")?.frontmatter).toEqual({ journal: "Weekly", "journal-date": "2022-01-03" });
   });
 
   it("leaves an already-canonical week-anchor note untouched", async () => {
     const marker: PendingNoteMigration = { kind: "week-anchor", journalName: "Weekly" };
-    const { service, updateCalls, workspace, resolveMetadata } = build({
-      notes: { "wk.md": { journal: "Weekly", "journal-date": "2022-01-06" } },
-      markers: [marker],
-      configs: { Weekly: config() },
-      anchors: { Weekly: "2022-01-06" as AnchorString },
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: {
+        journals: { Weekly: fixedJournal("Weekly", { type: "week" }) },
+        pendingNoteMigration: [marker],
+      },
     });
+    harness.host.putFile("wk.md", "", { journal: "Weekly", "journal-date": "2022-01-03" });
+    const updateFrontmatter = vi.spyOn(harness.resolve(NotesService), "updateFrontmatter");
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(updateCalls).not.toContain("wk.md");
+    expect(updateFrontmatter).not.toHaveBeenCalled();
   });
 
   it("ignores notes that do not belong to a week-anchor journal", async () => {
     const marker: PendingNoteMigration = { kind: "week-anchor", journalName: "Weekly" };
-    const { service, notesByPath, updateCalls, workspace, resolveMetadata } = build({
-      notes: { "other.md": { journal: "Daily", "journal-date": "2022-01-03" } },
-      markers: [marker],
-      configs: { Weekly: config(), Daily: config() },
-      anchors: { Weekly: "2022-01-06" as AnchorString, Daily: "2022-01-03" as AnchorString },
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: {
+        journals: { Weekly: fixedJournal("Weekly", { type: "week" }), Daily: fixedJournal("Daily", { type: "day" }) },
+        pendingNoteMigration: [marker],
+      },
     });
+    harness.host.putFile("other.md", "", { journal: "Daily", "journal-date": "2022-01-03" });
+    const updateFrontmatter = vi.spyOn(harness.resolve(NotesService), "updateFrontmatter");
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(updateCalls).not.toContain("other.md");
-    expect(notesByPath.get("other.md")).toEqual({ journal: "Daily", "journal-date": "2022-01-03" });
+    expect(updateFrontmatter).not.toHaveBeenCalled();
+    expect(harness.host.files.get("other.md")?.frontmatter).toEqual({ journal: "Daily", "journal-date": "2022-01-03" });
   });
 
   it("strips all journal keys when the anchor cannot be resolved", async () => {
@@ -250,48 +168,49 @@ describe("DataMigrationService", () => {
       kind: "calendar",
       sectionToName: { month: "My Journal Month" },
     };
-    const { service, notesByPath, workspace, resolveMetadata } = build({
-      notes: {
-        "orphan.md": {
-          journal: "cal",
-          "journal-start-date": "2022-01-01",
-          "journal-end-date": "2022-01-31",
-          "journal-section": "month",
-          "journal-date": "2022-01-01",
-          title: "kept",
-        },
-      },
-      markers: [marker],
-      configs: { "My Journal Month": config() },
-      anchors: { "My Journal Month": null },
+    // "My Journal Month" is deliberately not registered, so the config lookup fails and the
+    // anchor can never resolve.
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: { pendingNoteMigration: [marker] },
+    });
+    harness.host.putFile("orphan.md", "", {
+      journal: "cal",
+      "journal-start-date": "2022-01-01",
+      "journal-end-date": "2022-01-31",
+      "journal-section": "month",
+      "journal-date": "2022-01-01",
+      title: "kept",
     });
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(notesByPath.get("orphan.md")).toEqual({ title: "kept" });
+    expect(harness.host.files.get("orphan.md")?.frontmatter).toEqual({ title: "kept" });
   });
 
   it("clears the marker slice after running", async () => {
     const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
-    const { service, sliceState, workspace, resolveMetadata } = build({
-      notes: {},
-      markers: [marker],
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: { pendingNoteMigration: [marker] },
     });
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(sliceState.current).toEqual([]);
+    expect(harness.settings.getSlice(pendingNoteMigrationSlice).state).toEqual([]);
   });
 
   it("does not touch any note when there are no markers", async () => {
-    const { service, updateCalls, workspace, resolveMetadata } = build({
-      notes: { "note.md": { journal: "cal" } },
-      markers: [],
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: { pendingNoteMigration: [] },
     });
+    harness.host.putFile("note.md", "", { journal: "cal" });
+    const updateFrontmatter = vi.spyOn(harness.resolve(NotesService), "updateFrontmatter");
 
-    await migrate({ service, workspace, resolveMetadata });
+    await migrate(harness);
 
-    expect(updateCalls).toEqual([]);
+    expect(updateFrontmatter).not.toHaveBeenCalled();
   });
 
   const calendarMarker: PendingNoteMigration = {
@@ -300,48 +219,77 @@ describe("DataMigrationService", () => {
     sectionToName: { month: "My Journal Month" },
   };
 
-  function deferralStubs(): Stubs {
-    return build({
-      notes: { "note.md": { journal: "cal", "journal-start-date": "2022-01-01", "journal-section": "month" } },
-      markers: [calendarMarker],
-      configs: { "My Journal Month": config() },
-      anchors: { "My Journal Month": "2022-01-01" as AnchorString },
+  // The three deferral tests below need metadata ABSENT while the note exists, which putFile
+  // cannot express — it always populates metadata. FakeNoteMetadataService's emitResolved() is
+  // the only seam that can withhold it, matching the cold-boot metadata race CLAUDE.md documents.
+  async function deferralHarness(): Promise<{ harness: TestHarness; metadata: FakeNoteMetadataService }> {
+    const metadata = new FakeNoteMetadataService();
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: {
+        journals: { "My Journal Month": fixedJournal("My Journal Month", { type: "month" }) },
+        pendingNoteMigration: [calendarMarker],
+      },
+      overrides: [overrideWith(NoteMetadataService, metadata as unknown as NoteMetadataService)],
     });
+    harness.host.putFile("note.md", "", {
+      journal: "cal",
+      "journal-start-date": "2022-01-01",
+      "journal-section": "month",
+    });
+    return { harness, metadata };
   }
 
   it("does not walk before the layout is ready", async () => {
-    const { service, sliceState } = deferralStubs();
+    const { harness } = await deferralHarness();
+    harness.host.workspace.layoutReady = false;
 
-    await service.initialize();
+    await harness.resolve(DataMigrationService).initialize();
 
-    expect(sliceState.current).toEqual([calendarMarker]);
+    expect(harness.settings.getSlice(pendingNoteMigrationSlice).state).toEqual([calendarMarker]);
   });
 
   it("defers the walk until every note has resolved in metadataCache", async () => {
-    const { service, sliceState, workspace, resolveMetadata } = deferralStubs();
+    const { harness, metadata } = await deferralHarness();
+    harness.host.workspace.layoutReady = false;
 
-    await service.initialize();
-    workspace.setLayoutReady(true);
-    expect(sliceState.current).toEqual([calendarMarker]);
+    await harness.resolve(DataMigrationService).initialize();
+    harness.host.setLayoutReady();
+    expect(harness.settings.getSlice(pendingNoteMigrationSlice).state).toEqual([calendarMarker]);
 
-    resolveMetadata();
-    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    metadata.setMetadata("note.md" as VaultPath, {
+      title: "note",
+      tags: [],
+      properties: { journal: "cal", "journal-start-date": "2022-01-01", "journal-section": "month" },
+      tasks: [],
+    });
+    metadata.emitResolved();
+    await settle();
 
-    expect(sliceState.current).toEqual([]);
+    expect(harness.settings.getSlice(pendingNoteMigrationSlice).state).toEqual([]);
   });
 
   it("runs once the layout and metadata are already ready", async () => {
     const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
-    const { service, sliceState, workspace, resolveMetadata } = build({
-      notes: { "note.md": { journal: "other" } },
-      markers: [marker],
+    const metadata = new FakeNoteMetadataService();
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      data: { pendingNoteMigration: [marker] },
+      overrides: [overrideWith(NoteMetadataService, metadata as unknown as NoteMetadataService)],
     });
-    workspace.setLayoutReady(true);
-    resolveMetadata();
+    harness.host.putFile("note.md", "", { journal: "other" });
+    // Both signals — layout ready (the fake host's default) and metadata resolved — are already
+    // true before initialize() runs, so the walk must fire without waiting for either to change.
+    metadata.setMetadata("note.md" as VaultPath, {
+      title: "note",
+      tags: [],
+      properties: { journal: "other" },
+      tasks: [],
+    });
 
-    await service.initialize();
-    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    await harness.resolve(DataMigrationService).initialize();
+    await settle();
 
-    expect(sliceState.current).toEqual([]);
+    expect(harness.settings.getSlice(pendingNoteMigrationSlice).state).toEqual([]);
   });
 });
