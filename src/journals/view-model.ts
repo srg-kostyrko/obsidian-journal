@@ -8,10 +8,6 @@ import { JournalsRepository } from "./repository";
 import type { JournalConfig } from "./config";
 
 export class JournalsViewModel {
-  static fromRepository(repository: JournalsRepository): JournalsViewModel {
-    return new JournalsViewModel(repository);
-  }
-
   readonly #repository: JournalsRepository;
 
   readonly journals: ComputedRef<JournalConfig[]>;

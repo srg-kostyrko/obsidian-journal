@@ -8,10 +8,6 @@ import { ShelvesRepository } from "./repository";
 import type { ShelfConfig } from "./config";
 
 export class ShelvesViewModel {
-  static fromRepository(repository: ShelvesRepository): ShelvesViewModel {
-    return new ShelvesViewModel(repository);
-  }
-
   readonly #repository: ShelvesRepository;
 
   readonly shelves: ComputedRef<ShelfConfig[]>;
