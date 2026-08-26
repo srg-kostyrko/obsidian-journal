@@ -18,7 +18,7 @@ export function createLoggerTestingModule(): { module: Module; sink: MemorySink 
   const module: Module = {
     register(c) {
       c.register(LogSinkMultiToken).useValue(sink);
-      c.register(LogLevelGateToken).useValue(new LogLevelGate("debug"));
+      c.register(LogLevelGateToken).useClass(LogLevelGate);
       c.register(BufferSinkToken).useClass(BufferSink);
       c.register(LoggerFactoryToken).useClass(LoggerFactory);
     },
