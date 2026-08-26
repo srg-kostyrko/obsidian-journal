@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
+import { FakePluginData } from "@/infrastructure/host/testing";
 import { journalConfigCollection } from "@/journals/config";
-import { createSettingsService } from "@/settings/testing";
+import { journalsCoreModule } from "@/journals/module";
+import { testContainer } from "@/testing";
 
-import { pendingNoteMigrationSlice } from "./pending-note-migration";
-
-import { legacyMigrations } from "./index";
+import { legacyMigrationsModule } from "./module";
 
 function v1Raw() {
   return {
@@ -43,19 +43,19 @@ function v1Raw() {
 
 describe("legacy migrations integration", () => {
   it("migrates a v1 interval journal into the journals collection with its custom write interval", async () => {
-    const { service } = createSettingsService({
-      raw: v1Raw(),
-      collections: [journalConfigCollection],
-      slices: [pendingNoteMigrationSlice],
-      migrations: legacyMigrations,
+    const stored = new FakePluginData(v1Raw());
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      pluginData: stored,
     });
-    const init = await service.initialize();
-    expect(init.kind).toBe("ok");
 
-    const journals = service.recordOf(journalConfigCollection);
+    const journals = harness.settings.recordOf(journalConfigCollection);
     const sprints = Object.values(journals).find((journal) => journal.name === "Sprints");
     expect(sprints).toBeDefined();
     // write.type === "custom" proves the journal was reshaped (not reset to a default day journal)
     expect(sprints?.write.type).toBe("custom");
+    // duration/every surviving too rules out the vacuity trap: a journal resolved from some other
+    // "custom" default would not carry the source interval's own values.
+    expect(sprints?.write).toMatchObject({ every: "week", duration: 2 });
   });
 });
