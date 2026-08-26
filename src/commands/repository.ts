@@ -7,8 +7,6 @@ import { commandCollection, type CommandConfig } from "./config";
 import { CommandIdTakenError, InvalidCommandUpdateError, UnknownCommandError } from "./errors";
 import { CommandsEventsToken } from "./tokens";
 
-import type { Emitter } from "nanoevents";
-
 export type CommandsEvents = RepositoryEvents<string, CommandConfig>;
 
 export class CommandsRepository extends BaseRepository<
@@ -19,28 +17,6 @@ export class CommandsRepository extends BaseRepository<
   RepositoryQuery<string, CommandConfig>,
   CommandsEvents
 > {
-  static fromParts(storage: Record<string, CommandConfig>, events: Emitter<CommandsEvents>): CommandsRepository {
-    const repo = Object.create(this.prototype) as CommandsRepository;
-    interface Mutable {
-      idKey: keyof CommandConfig | undefined;
-      nameKey: keyof CommandConfig;
-      QueryConstructor: typeof RepositoryQuery;
-      storage: Record<string, CommandConfig>;
-      events: Emitter<CommandsEvents>;
-      unknownEntityError: (id: string) => UnknownCommandError;
-      invalidUpdateError: (id: string) => InvalidCommandUpdateError;
-    }
-    const w = repo as unknown as Mutable;
-    w.idKey = undefined;
-    w.nameKey = "name";
-    w.QueryConstructor = RepositoryQuery;
-    w.storage = storage;
-    w.events = events;
-    w.unknownEntityError = (id) => new UnknownCommandError(id);
-    w.invalidUpdateError = (id) => new InvalidCommandUpdateError(id);
-    return repo;
-  }
-
   protected idKey: keyof CommandConfig | undefined = undefined;
   protected nameKey: keyof CommandConfig = "name";
   protected QueryConstructor = RepositoryQuery;

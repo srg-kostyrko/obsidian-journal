@@ -7,8 +7,6 @@ import { shelvesCollection, type ShelfConfig } from "./config";
 import { InvalidShelfNameError, InvalidShelfUpdateError, ShelfNameTakenError, UnknownShelfError } from "./errors";
 import { ShelvesEventsToken } from "./tokens";
 
-import type { Emitter } from "nanoevents";
-
 export interface ShelvesEvents extends RepositoryEvents<string, ShelfConfig> {
   renamed: (oldName: string, newName: string) => void;
 }
@@ -21,28 +19,6 @@ export class ShelvesRepository extends BaseRepository<
   RepositoryQuery<string, ShelfConfig>,
   ShelvesEvents
 > {
-  static fromParts(storage: Record<string, ShelfConfig>, events: Emitter<ShelvesEvents>): ShelvesRepository {
-    const repo = Object.create(this.prototype) as ShelvesRepository;
-    interface Mutable {
-      idKey: keyof ShelfConfig;
-      nameKey: keyof ShelfConfig;
-      QueryConstructor: typeof RepositoryQuery;
-      storage: Record<string, ShelfConfig>;
-      events: Emitter<ShelvesEvents>;
-      unknownEntityError: (name: string) => UnknownShelfError;
-      invalidUpdateError: (name: string) => InvalidShelfUpdateError;
-    }
-    const w = repo as unknown as Mutable;
-    w.idKey = "name";
-    w.nameKey = "name";
-    w.QueryConstructor = RepositoryQuery;
-    w.storage = storage;
-    w.events = events;
-    w.unknownEntityError = (name) => new UnknownShelfError(name);
-    w.invalidUpdateError = (name) => new InvalidShelfUpdateError(name);
-    return repo;
-  }
-
   protected idKey: keyof ShelfConfig = "name";
   protected nameKey: keyof ShelfConfig = "name";
   protected QueryConstructor = RepositoryQuery;

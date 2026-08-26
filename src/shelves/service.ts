@@ -8,14 +8,6 @@ import { ShelvesRepository } from "./repository";
 import type { Emitter } from "nanoevents";
 
 export class ShelvesService {
-  static fromParts(
-    shelves: ShelvesRepository,
-    journals: JournalsRepository,
-    journalEvents: Emitter<JournalsEvents>,
-  ): ShelvesService {
-    return new ShelvesService(shelves, journals, journalEvents);
-  }
-
   readonly #shelves: ShelvesRepository;
   readonly #journals: JournalsRepository;
 

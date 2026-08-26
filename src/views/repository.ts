@@ -7,8 +7,6 @@ import { viewsCollection, type View, type ViewId } from "./config";
 import { InvalidViewNameError, InvalidViewUpdateError, UnknownViewError, type ViewsLifecycleError } from "./errors";
 import { ViewsEventsToken, type ViewsEvents } from "./tokens";
 
-import type { Emitter } from "nanoevents";
-
 export class ViewsRepository extends BaseRepository<
   ViewId,
   View,
@@ -17,28 +15,6 @@ export class ViewsRepository extends BaseRepository<
   RepositoryQuery<ViewId, View>,
   ViewsEvents
 > {
-  static fromParts(storage: Record<string, View>, events: Emitter<ViewsEvents>): ViewsRepository {
-    const repo = Object.create(this.prototype) as ViewsRepository;
-    interface Mutable {
-      idKey: keyof View;
-      nameKey: keyof View;
-      QueryConstructor: typeof RepositoryQuery;
-      storage: Record<ViewId, View>;
-      events: Emitter<ViewsEvents>;
-      unknownEntityError: (id: ViewId) => UnknownViewError;
-      invalidUpdateError: (id: ViewId) => InvalidViewUpdateError;
-    }
-    const w = repo as unknown as Mutable;
-    w.idKey = "id";
-    w.nameKey = "name";
-    w.QueryConstructor = RepositoryQuery;
-    w.storage = storage;
-    w.events = events;
-    w.unknownEntityError = (id) => new UnknownViewError(id);
-    w.invalidUpdateError = (id) => new InvalidViewUpdateError(id);
-    return repo;
-  }
-
   protected idKey: keyof View = "id";
   protected nameKey: keyof View = "name";
   protected QueryConstructor = RepositoryQuery<ViewId, View>;
