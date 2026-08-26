@@ -213,18 +213,28 @@ export function fixedJournal(name: string, write: JournalWrite, overrides: Parti
 
 (`src/journals/testing.ts`.)
 
-A feature with no defaults factory of its own parses a minimal object through
-the production schema instead, then applies overrides. No fixture like this
-exists yet for commands — this is the shape a Phase 3 sweep should write, not
-a file to go looking for:
+A feature with no defaults factory of its own delegates to its collection's
+`defaultItem` instead, then applies overrides — `buildCommand` takes this
+form, and `src/shelves/testing.ts`'s `buildShelf` is the same shape against
+`shelvesCollection`:
 
 ```ts
 export function buildCommand(overrides: Partial<CommandConfig> = {}): CommandConfig {
-  return { ...v.parse(commandConfigSchema, MINIMAL_COMMAND), ...overrides };
+  return { ...commandCollection.defaultItem(""), ...overrides };
 }
 ```
 
-The schema-parse form fails loudly when the schema changes and cannot drift.
+(`src/commands/testing.ts`.)
+
+`defineCollection` (`src/settings/schema.ts`) carries `defaultItem` on the
+collection object it returns, and it is the same function production reaches
+when it creates the entity — `EditCommandModal.vue` calls it for a fresh
+command, and the settings parse calls it to repair a corrupt one. Parsing the
+item schema directly is not an option here: `commandConfigSchema` and
+`shelfConfigSchema` are module-local and not exported, so a fixture cannot
+reach them without widening the production surface for a test's convenience.
+Delegating to `defaultItem` satisfies the no-literal rule above more directly
+than parsing a schema would have.
 
 **Naming: `build<Entity>(overrides)`.** The base form takes a single
 `Partial<Entity>` argument — the entity's name passes through `overrides` like
@@ -263,13 +273,15 @@ expect both false negatives (real violations the selector's shape can't see)
 and escapees that turn out to be fine on inspection, and should judge each
 one by what it does rather than by whether lint flagged it.
 
-The entity alternation (`Journal|Command|View|Shelf|Decoration|Config`) and
-the message ("use fixedJournal/customJournal") are both journals-specific. A
-sweep enabling this rule for its own directory must extend the alternation
-with its own entity nouns and rewrite the message for its own fixture names —
-widening only the file glob to cover, say, `src/notes-calendar` or
-`src/code-blocks` turns on a selector that matches nothing there, which looks
-identical to a working one (see [Enforcement](#enforcement)).
+The entity alternation
+(`Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem`) and
+the message ("use fixedJournal/customJournal/buildShelf") are a fixed list,
+not a general pattern. The rule is enrolled for all of `src` in one block
+(see [Enforcement](#enforcement)), but the selector still only fires for a
+fixture name built from one of those nouns: a feature whose entity noun is
+not in the alternation — or a fixture named outside the `make|build|seed|create`
+prefix — is invisible to it, and a directory with such a fixture looks
+identical to one the selector is actually covering.
 
 ### The standard for new tests
 
