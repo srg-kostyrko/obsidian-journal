@@ -38,14 +38,21 @@ export function setTooltip(el: HTMLElement, tooltip: string): void {
   el.dataset.tooltip = tooltip;
 }
 
+// Real Obsidian returns null for a name outside its icon registry, and UiIcon's false arm is
+// only reachable through that. The seeded set is a test-controlled registry, not a copy of
+// Obsidian's — a test that needs a name present seeds it.
+const DEFAULT_ICON_IDS = ["calendar", "calendar-days", "book-open", "file-text", "terminal"];
+let iconIds = new Set(DEFAULT_ICON_IDS);
+
 export function getIcon(name: string): SVGSVGElement | null {
+  if (!iconIds.has(name)) return null;
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("data-icon", name);
   return svg;
 }
 
 export function getIconIds(): string[] {
-  return ["calendar", "calendar-days", "book-open", "file-text", "terminal"];
+  return [...iconIds];
 }
 
 interface TagSourceCache {
@@ -417,5 +424,11 @@ export const __testing = {
     attachedInputSuggests.length = 0;
     for (const m of [...openMenus]) m.hide();
     openMenus.length = 0;
+  },
+  seedIcons(names: readonly string[]): void {
+    for (const name of names) iconIds.add(name);
+  },
+  resetIcons(): void {
+    iconIds = new Set(DEFAULT_ICON_IDS);
   },
 };

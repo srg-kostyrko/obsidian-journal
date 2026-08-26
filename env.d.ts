@@ -36,5 +36,7 @@ declare module "obsidian" {
     readonly openMenus: readonly Menu[];
     lastOpenMenu(): Menu;
     reset(): void;
+    seedIcons(names: readonly string[]): void;
+    resetIcons(): void;
   };
 }
