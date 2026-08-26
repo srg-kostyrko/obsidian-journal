@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, Clock } from "@/calendar";
-import { anchor, installTestCalendar } from "@/calendar/testing";
+import { anchor } from "@/calendar/testing";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import {
@@ -18,14 +18,6 @@ import {
 import type { Modifier, VariableSpec } from "./types";
 
 describe("kinds", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("renderString", () => {
     it("emits the value verbatim", () => {
       expect(renderString({ kind: "string", value: "hello" })).toBe("hello");

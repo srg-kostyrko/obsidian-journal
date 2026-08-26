@@ -1,21 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, Clock } from "@/calendar";
-import { anchor, installTestCalendar } from "@/calendar/testing";
+import { anchor } from "@/calendar/testing";
 
 import { applyModifiers, applyOffsets, unapplyModifiers, unapplyOffsets } from "./modifiers";
 
 import type { Modifier } from "./types";
 
 describe("applyModifiers / unapplyModifiers", () => {
-  let teardown: () => void;
-  beforeEach(() => {
-    ({ teardown } = installTestCalendar());
-  });
-  afterEach(() => {
-    teardown();
-  });
-
   describe("apply", () => {
     it("applies a +1d shift", () => {
       const date = CalendarDate.fromAnchor(anchor("2022-01-01"));
@@ -69,14 +61,10 @@ describe("applyModifiers / unapplyModifiers", () => {
 });
 
 describe("applyModifiers on Clock", () => {
-  let teardown: () => void;
-
   beforeEach(() => {
-    ({ teardown } = installTestCalendar());
     vi.useFakeTimers();
   });
   afterEach(() => {
-    teardown();
     vi.useRealTimers();
   });
 
