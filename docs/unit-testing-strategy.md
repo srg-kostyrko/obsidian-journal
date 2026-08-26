@@ -249,29 +249,29 @@ variant-named wrapper at all only where the variant genuinely changes the
 shape — `fixedJournal` versus `customJournal`.
 
 **Fixtures live in the feature's `testing.ts`**, never as a local factory in a
-test file — that is the rule. What enforces it inside `src/journals` today is
-narrower than the rule itself: eslint's `no-restricted-syntax` flags only a
+test file — that is the rule. What enforces it across `src` is narrower than
+the rule itself: eslint's `no-restricted-syntax` flags only a
 `FunctionDeclaration` (not a `const foo = (...) => ...`) whose name matches
-`^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)`. It
-is a naming tripwire, not a general ban — still worth having, because it
+`^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem)`.
+It is a naming tripwire, not a general ban — still worth having, because it
 catches the common shape without anyone having to remember it — but matching
 is purely syntactic, so passing lint and violating the rule are independent
 in both directions. A factory can violate the rule and still pass lint
 permanently, by construction of the selector rather than by luck: the
 selector only matches `FunctionDeclaration`, so `const makeJournal = () =>
 buildLiteral(...)` hand-builds an entity and is invisible to it no matter
-what any future sweep fixes, and a `function` whose name lands outside the
-six-word alternation escapes the same way. The converse also holds — a name
-that happens to match the shape says nothing about whether the function
-builds anything by hand at all; some do (a hand-built entity literal
+what changes elsewhere in the codebase, and a `function` whose name lands
+outside the eight-noun alternation escapes the same way. The converse also
+holds — a name that happens to match the shape says nothing about whether the
+function builds anything by hand at all; some do (a hand-built entity literal
 restating schema defaults, say) and some are compliant one-line delegators to
 a feature fixture, or arrange/seed helpers that were never entity fixtures to
 begin with. Neither a lint pass nor a lint failure is a verdict — only
 reading the function body is. Treat the selector as a naming-convention aid,
-not a compliance check: a sweep enabling it for its own directory should
-expect both false negatives (real violations the selector's shape can't see)
-and escapees that turn out to be fine on inspection, and should judge each
-one by what it does rather than by whether lint flagged it.
+not a compliance check: expect both false negatives (real violations the
+selector's shape can't see) and escapees that turn out to be fine on
+inspection, and judge each one by what it does rather than by whether lint
+flagged it.
 
 The entity alternation
 (`Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem`) and
