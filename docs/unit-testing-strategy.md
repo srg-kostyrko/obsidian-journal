@@ -177,11 +177,10 @@ meant. `version` is always accepted — it is honored by the harness itself.
 
 `harness.render` and `harness.renderModal` come pre-bound to the harness's
 injector, so it cannot be forgotten and no container is threaded through call
-sites. Under `src/journals` — the directory converted onto this harness —
-importing `@testing-library/vue`'s raw `render` in a file that already builds
-a harness is a lint error; the guard is scoped to that directory only, so an
-unconverted file elsewhere (`src/shelves/ui/ShelfEditSubpage.test.ts`, for
-example) can still import it directly.
+sites. A file that already builds a harness cannot also import
+`@testing-library/vue`'s raw `render` — that combination is a lint error
+across `src`, under the same rule set and the same `src/infrastructure/**`
+carve-out described in [Enforcement](#enforcement).
 
 ```ts
 harness.render(JournalEditSubpage, { props: { journalName: "work", nav: noopNav } });
@@ -474,18 +473,16 @@ uses for the `vi.mock` ban. No custom plugin.
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | No `new Container()` in a test                                 | Build it with `testContainer()` from `@/testing`                                |
 | No `.register(...).use*` inside a test body or hook            | Pass a feature CORE/UI module to `testContainer({ modules })`                   |
-| No local factory matching journals' naming tripwire            | Fixtures live in the feature's `testing.ts` — see [gaps](#fixtures-and-seeding) |
+| No local factory matching the naming tripwire                  | Fixtures live in the feature's `testing.ts` — see [gaps](#fixtures-and-seeding) |
 | No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector                        |
 | `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)                         |
 
 **The full rule set is enabled for all of `src`, minus two carve-outs.** One
 `files: ["src/**/*.test.ts"]` block in `eslint.config.mjs` carries the whole
 `no-restricted-syntax` list; the base `vi.mock` rule alone applies more
-broadly, to every `**/*.test.ts`. Enrollment used to be a hand-maintained
-glob per converted directory; it collapsed into this single block once every
-feature had converted, because a list like that has to grow a line for each
-new feature directory, and a directory nobody remembered to add reads
-identically to one that is enforced.
+broadly, to every `**/*.test.ts`. A hand-maintained glob per directory would
+be fragile: it has to grow a line for each new feature directory, and a
+forgotten line reads identically to an enforced one.
 
 **`src/infrastructure/**` is an explicit `ignores` entry on that block, and
 stays one.** Its `host`/`di`/`flows` tests are what `testContainer()` itself
