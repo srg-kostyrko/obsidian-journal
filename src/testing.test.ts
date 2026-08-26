@@ -15,14 +15,8 @@ import { ContainerDisposedError, useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
 import { FakeNoticeService, FakePluginData } from "@/infrastructure/host/testing";
-import {
-  CycleService,
-  JournalsIndex,
-  JournalsViewModel,
-  VaultSubscriptionService,
-  journalsCoreModule,
-  journalsModule,
-} from "@/journals";
+import { CycleService, JournalsIndex, JournalsViewModel, VaultSubscriptionService, journalsModule } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
 import { CURRENT_VERSION, SettingsService } from "@/settings";

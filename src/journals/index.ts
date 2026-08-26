@@ -13,8 +13,7 @@ export { JournalsIndex } from "./journals-index";
 
 export { useIndexVersion } from "./use-index-version";
 
-export { journalsModule, journalsCoreModule, journalsStartupModule } from "./module";
-export { journalsUiModule } from "./ui-module";
+export { journalsModule } from "./module";
 
 export {
   JournalEditSectionToken,
