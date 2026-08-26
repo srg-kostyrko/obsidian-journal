@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { h, nextTick } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
@@ -239,6 +239,33 @@ describe("JournalViewLeaf", () => {
       const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
       await leaf.onOpen();
       expect(containerEl.textContent).toContain(m.view_block_config_error());
+      await leaf.onClose();
+    });
+  });
+
+  describe("refDate wall clock", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("moves the leaf's ref date when the day changes under an open view", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 2, 9, 23, 0, 0));
+
+      const { block, probe } = contextProbeBlock();
+      const view = buildView(VIEW_A, { blocks: [{ id: BLOCK_STUB, key: "context-probe", config: {} }] });
+      const { leafInstance } = await buildLeaf(view, { modules: [testBlocksModule([block])] });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+
+      expect(probe.context?.refDate.value).toBe("2026-03-09");
+
+      vi.setSystemTime(new Date(2026, 2, 10, 0, 0, 1));
+      await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+      await nextTick();
+
+      expect(probe.context?.refDate.value).toBe("2026-03-10");
+
       await leaf.onClose();
     });
   });
