@@ -41,6 +41,7 @@ async function build(seeds: Record<string, View> = {}, shelves: Record<string, S
     repo: harness.resolve(ViewsRepository),
     storage: harness.settings.recordOf(viewsCollection),
     suggests: harness.suggests,
+    notices: harness.notices,
   };
 }
 
@@ -156,6 +157,17 @@ describe("ViewHostService", () => {
       expect(host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(true)).toBe(false);
     });
 
+    it("opens the picker instead of noticing when no shelves exist but the view is open", async () => {
+      const { host, suggests, notices } = await build({ [VIEW_A]: buildView(VIEW_A) });
+      openVia(host, VIEW_A);
+      await Promise.resolve();
+
+      host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
+
+      expect(suggests.opens).toHaveLength(1);
+      expect(notices.messages).toEqual([]);
+    });
+
     it("hides the command while the view is not open", async () => {
       const { host } = await build({ [VIEW_A]: buildView(VIEW_A) }, { work: buildShelf("work") });
       expect(host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(true)).toBe(false);
@@ -170,6 +182,14 @@ describe("ViewHostService", () => {
       await Promise.resolve();
       host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
       expect(suggests.lastOpen().input).toEqual([m.common_label_all_journals(), "work", "home"]);
+    });
+
+    it("notices instead of doing nothing when invoked with no open view", async () => {
+      const { host, notices } = await build({ [VIEW_A]: buildView(VIEW_A, { name: "Calendar" }) });
+
+      host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
+
+      expect(notices.messages).toContain(m.command_view_shelf_needs_open_view({ name: "Calendar" }));
     });
   });
 
