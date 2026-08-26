@@ -1,10 +1,8 @@
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { render } from "@testing-library/vue";
+import { describe, expect, it, vi } from "vitest";
 import { defineComponent } from "vue";
 
 import { useModifierHoverPreview } from "./use-modifier-hover-preview";
-
-afterEach(() => cleanup());
 
 function mountHover() {
   const fire = vi.fn();

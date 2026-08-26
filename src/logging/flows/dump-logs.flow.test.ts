@@ -1,39 +1,37 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Container } from "@/infrastructure/di";
-import { NoteCreateError, NoticeService, NotesService } from "@/infrastructure/host";
-import type { NoteAlreadyExistsError, Note, VaultPath } from "@/infrastructure/host";
+import { m } from "@/i18n";
+import type { Module } from "@/infrastructure/di";
+import { NoteCreateError, NotesService } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
 import { BufferSink, BufferSinkToken } from "@/infrastructure/logger";
 import type { LogRecord } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
+import { testContainer, type TestHarness } from "@/testing";
+
+import { loggingCoreModule } from "../module";
 
 import { DumpLogsFlow } from "./dump-logs.flow";
 
 const record: LogRecord = { timestamp: Date.parse("2026-06-04T12:30:00Z"), level: "warn", name: "x", message: "hi" };
 
-function makeNote(path: VaultPath): Note {
-  return { path, basename: "", folder: "" as VaultPath, size: 0, mtime: 0 };
-}
-
-function build(records: readonly LogRecord[]) {
-  const buffer = new BufferSink();
-  for (const r of records) buffer.write(r);
-  const notes = {
-    create: vi.fn((path: VaultPath): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> =>
-      AsyncResult.ok(makeNote(path)),
-    ),
-  };
-  const notices: NoticeService = { show: vi.fn() };
-  const c = new Container();
-  c.register(BufferSinkToken).useValue(buffer);
-  c.register(NotesService).useValue(notes as unknown as NotesService);
-  c.register(NoticeService).useValue(notices);
-  c.register(DumpLogsFlow).useClass(DumpLogsFlow);
-  return { flow: c.resolve(DumpLogsFlow), notes, notices };
-}
-
 const NAME = /^journal-log-\d{8}-\d{6}\.md$/;
+
+function bufferSinkModule(): Module {
+  return {
+    register(c) {
+      c.register(BufferSinkToken).useClass(BufferSink);
+    },
+  };
+}
+
+async function build(records: readonly LogRecord[]): Promise<TestHarness> {
+  const harness = await testContainer({ modules: [loggingCoreModule, bufferSinkModule()] });
+  const buffer = harness.resolve(BufferSinkToken);
+  for (const r of records) buffer.write(r);
+  return harness;
+}
 
 describe("DumpLogsFlow", () => {
   describe("with buffered records", () => {
@@ -46,51 +44,52 @@ describe("DumpLogsFlow", () => {
     });
 
     it("creates a timestamped note containing the buffered records", async () => {
-      const { flow, notes } = build([record]);
-      const result = await flow.execute();
+      const harness = await build([record]);
+      const result = await harness.resolve(DumpLogsFlow).execute();
       expectOk(result);
-      expect(notes.create).toHaveBeenCalledWith(expect.stringMatching(NAME), expect.stringContaining("hi"));
+      const path = harness.host.files.keys().find((candidate) => NAME.test(candidate));
+      expect(harness.host.files.get(path!)?.content).toContain("hi");
     });
 
     it("shows a success notice naming the created note", async () => {
-      const { flow, notices } = build([record]);
-      await flow.execute();
-      expect(notices.show).toHaveBeenCalledWith(expect.stringMatching(/journal-log-\d{8}-\d{6}\.md/));
+      const harness = await build([record]);
+      await harness.resolve(DumpLogsFlow).execute();
+      expect(harness.notices.messages).toContainEqual(expect.stringMatching(/journal-log-\d{8}-\d{6}\.md/));
     });
   });
 
   describe("with an empty buffer", () => {
     it("creates no note", async () => {
-      const { flow, notes } = build([]);
-      const result = await flow.execute();
+      const harness = await build([]);
+      const result = await harness.resolve(DumpLogsFlow).execute();
       expectOk(result);
-      expect(notes.create).not.toHaveBeenCalled();
+      expect(harness.host.files.size).toBe(0);
     });
 
     it("shows a notice", async () => {
-      const { flow, notices } = build([]);
-      await flow.execute();
-      expect(notices.show).toHaveBeenCalledWith(expect.stringContaining("No log messages"));
+      const harness = await build([]);
+      await harness.resolve(DumpLogsFlow).execute();
+      expect(harness.notices.messages).toContain(m.logging_dump_empty());
     });
   });
 
   describe("when the note cannot be written", () => {
     it("propagates the create error", async () => {
-      const { flow, notes } = build([record]);
-      notes.create.mockReturnValueOnce(
+      const harness = await build([record]);
+      vi.spyOn(harness.resolve(NotesService), "create").mockReturnValue(
         AsyncResult.err(new NoteCreateError("journal-log.md" as VaultPath, new Error("disk full"))),
       );
-      const result = await flow.execute();
+      const result = await harness.resolve(DumpLogsFlow).execute();
       expectErr(result);
     });
 
     it("shows a failure notice", async () => {
-      const { flow, notes, notices } = build([record]);
-      notes.create.mockReturnValueOnce(
+      const harness = await build([record]);
+      vi.spyOn(harness.resolve(NotesService), "create").mockReturnValue(
         AsyncResult.err(new NoteCreateError("journal-log.md" as VaultPath, new Error("disk full"))),
       );
-      await flow.execute();
-      expect(notices.show).toHaveBeenCalledWith(expect.stringContaining("Failed"));
+      await harness.resolve(DumpLogsFlow).execute();
+      expect(harness.notices.messages).toContain(m.logging_dump_failed());
     });
   });
 });

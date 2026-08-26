@@ -1,10 +1,8 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import UiButtonDropdown from "./UiButtonDropdown.vue";
-
-afterEach(() => cleanup());
 
 const OPTIONS = [
   { value: "a", label: "Alpha" },

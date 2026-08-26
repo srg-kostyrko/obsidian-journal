@@ -1,10 +1,8 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import UiSegmentedControl from "./UiSegmentedControl.vue";
-
-afterEach(() => cleanup());
 
 const options = [
   { value: "alpha", label: "Alpha" },

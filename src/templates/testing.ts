@@ -1,7 +1,8 @@
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
-import { Container } from "@/infrastructure/di";
+import type { Module } from "@/infrastructure/di";
 import { Ok, type Result } from "@/infrastructure/result";
+import { testContainer } from "@/testing";
 
 import { TemplateContext } from "./context";
 import { TemplateEngine } from "./engine";
@@ -19,13 +20,14 @@ export function buildFakeContext(): TemplateContext {
     .derived("day_of_month", CalendarDate.fromAnchor(anchor("2022-01-05")), (value) => value.day);
 }
 
-export function installTestEngine(handlers: FunctionHandler[] = []): TemplateEngine {
-  const container = new Container();
-  for (const handler of handlers) {
-    container.register(FunctionHandlerToken).useValue(handler);
-  }
-  container.register(TemplateEngine).useClass(TemplateEngine);
-  return container.resolve(TemplateEngine);
+export async function installTestEngine(handlers: FunctionHandler[] = []): Promise<TemplateEngine> {
+  const handlerModule: Module = {
+    register(c) {
+      for (const handler of handlers) c.register(FunctionHandlerToken).useValue(handler);
+    },
+  };
+  const harness = await testContainer({ modules: [handlerModule] });
+  return harness.resolve(TemplateEngine);
 }
 
 export class FakeHandler implements FunctionHandler {

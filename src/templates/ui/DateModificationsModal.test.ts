@@ -1,9 +1,7 @@
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import DateModificationsModal from "./DateModificationsModal.vue";
-
-afterEach(() => cleanup());
 
 describe("DateModificationsModal", () => {
   it("renders the format-override example chip", () => {

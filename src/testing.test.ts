@@ -14,7 +14,7 @@ import type { CannotOverrideError } from "@/infrastructure/di";
 import { ContainerDisposedError, useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
-import { FakeNoticeService } from "@/infrastructure/host/testing";
+import { FakeNoticeService, FakePluginData } from "@/infrastructure/host/testing";
 import {
   CycleService,
   JournalsIndex,
@@ -25,9 +25,10 @@ import {
 } from "@/journals";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
-import { SettingsService } from "@/settings";
+import { CURRENT_VERSION, SettingsService } from "@/settings";
 
 import {
+  TestContainerConflictingDataError,
   TestContainerInvalidSeedError,
   TestContainerLeakedHostStateError,
   TestContainerUnknownSeedKeyError,
@@ -302,6 +303,44 @@ describe("seed guard", () => {
     });
 
     expect(harness.resolve(JournalsRepository).get("daily").isSome()).toBe(true);
+  });
+});
+
+describe("pluginData", () => {
+  it("boots from a caller-supplied instance and exposes it as harness.data", async () => {
+    const supplied = new FakePluginData({
+      version: CURRENT_VERSION,
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+    });
+
+    const harness = await testContainer({ modules: [journalsCoreModule], pluginData: supplied });
+
+    expect(harness.data).toBe(supplied);
+    expect(harness.resolve(JournalsRepository).get("daily").isSome()).toBe(true);
+  });
+
+  it("lets a second boot see what the first wrote, which a data fixture cannot", async () => {
+    const shared = new FakePluginData({ version: CURRENT_VERSION });
+    const first = await testContainer({ pluginData: shared });
+    await first.data.writeFile("snapshot.json", "{}");
+
+    const second = await testContainer({ pluginData: shared });
+
+    expect([...second.data.files.keys()]).toEqual(["snapshot.json"]);
+  });
+
+  it("accepts keys no module registers, which the seed guard would reject", async () => {
+    const legacy = new FakePluginData({ version: CURRENT_VERSION, calendar_view: { leaf: "right" } });
+
+    const harness = await testContainer({ pluginData: legacy });
+
+    expect(harness.data).toBe(legacy);
+  });
+
+  it("rejects a test that passes both data and pluginData", async () => {
+    await expect(
+      testContainer({ pluginData: new FakePluginData({ version: CURRENT_VERSION }), data: {} }),
+    ).rejects.toBeInstanceOf(TestContainerConflictingDataError);
   });
 });
 

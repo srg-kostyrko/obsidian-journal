@@ -103,6 +103,22 @@ export class TestContainerUnknownSeedKeyError extends Error {
   }
 }
 
+/**
+ * Thrown when a test passes both `data` and `pluginData`. The two are different seams onto the same
+ * slot — `data` seeds a fixture the harness parses and guards, `pluginData` hands over an instance
+ * the harness must not touch — so silently letting one win would make the ignored one read as
+ * applied.
+ */
+export class TestContainerConflictingDataError extends Error {
+  constructor() {
+    super(
+      "testContainer received both `data` and `pluginData`. `data` seeds a fixture through the " +
+        "settings parse; `pluginData` supplies a FakePluginData instance outright. Pass one.",
+    );
+    this.name = "TestContainerConflictingDataError";
+  }
+}
+
 export type TestOverride = (container: Container) => void;
 
 export function overrideWith<T>(token: TokenLike<T>, value: T): TestOverride {
@@ -148,6 +164,25 @@ export interface TestContainerOptions {
    * treats an absent key as a fresh install and returns defaults, so a typo is otherwise silent.
    */
   readonly data?: Record<string, unknown>;
+  /**
+   * A `FakePluginData` built by the caller, used instead of `data` and returned as `harness.data`.
+   * For the two scenarios `data` cannot express, both in `src/settings`:
+   *
+   * - **Two boots over one stored file.** `data` builds a fresh instance per harness, so a second
+   *   boot cannot see what the first wrote. A test proving a write happens only once needs both
+   *   services reading the same instance.
+   * - **A pre-migration blob.** The seed-key guard below checks the raw keys, which for a v1/v2/v3
+   *   fixture include keys no module registers (`calendar_view`, `useShelves`, …). Those keys cannot
+   *   be dropped — the migrations dereference them.
+   *
+   * Mutually exclusive with `data`: passing both throws `TestContainerConflictingDataError`. The
+   * seed-key guard is gated on `options.data` and skips this path, since it has no `data` fixture
+   * to check. The repair guard is not gated on `data` — it filters `logs.records` unconditionally —
+   * so a `pluginData` boot whose migration output field-repairs still throws
+   * `TestContainerInvalidSeedError`; `allow: { dataRepair: true }` is the escape hatch for that
+   * case same as it is for `data`.
+   */
+  readonly pluginData?: FakePluginData;
   /** Defaults to true. Set false to skip eager construction. */
   readonly autoLoad?: boolean;
   /**
@@ -238,9 +273,12 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   // createFakeHost models, so it is overridden unconditionally rather than only when a test
   // opts in — unlike the five interaction services below, which stand in for a user decision
   // or an absent external plugin.
-  const data = new FakePluginData(
-    options.data === undefined ? undefined : { version: CURRENT_VERSION, ...options.data },
-  );
+  if (options.pluginData !== undefined && options.data !== undefined) {
+    throw new TestContainerConflictingDataError();
+  }
+  const data =
+    options.pluginData ??
+    new FakePluginData(options.data === undefined ? undefined : { version: CURRENT_VERSION, ...options.data });
   container.override(PluginData).useValue(data as unknown as PluginData);
 
   // CalendarModule registers Calendar eager, and its constructor re-seeds CUSTOM_LOCALE's week from

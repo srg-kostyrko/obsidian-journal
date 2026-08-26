@@ -43,6 +43,7 @@ words:
   - unpadded
   - unrenderable
   - unshifted
+  - vnode
   - vueuse
   - wdio
   - wikilinks

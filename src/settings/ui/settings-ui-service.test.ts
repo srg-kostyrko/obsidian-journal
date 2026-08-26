@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { defineComponent } from "vue";
 
-import { Container } from "@/infrastructure/di";
+import type { Module } from "@/infrastructure/di";
+import { testContainer } from "@/testing";
 
 import { DuplicateBlockKeyError, DuplicateSubpageKeyError, UnregisteredSubpageError } from "../errors";
 import { DashboardBlockToken, SubpageToken } from "../tokens";
@@ -21,68 +22,79 @@ function subpage(key: string): Subpage<void> {
   return defineSubpage({ key, component: Stub });
 }
 
-function build(
+function testUiModule(
   options: {
     blocks?: readonly DashboardBlock[];
     subpages?: readonly Subpage<unknown>[];
   } = {},
-): SettingsUiService {
-  const c = new Container();
-  const blocks = options.blocks ?? [];
-  for (const b of blocks) c.register(DashboardBlockToken).useValue(b);
-  const subpages = options.subpages ?? [];
-  for (const s of subpages) c.register(SubpageToken).useValue(s);
-  c.register(SettingsUiService).useClass(SettingsUiService);
-  return c.resolve(SettingsUiService);
+): Module {
+  return {
+    register(c) {
+      const blocks = options.blocks ?? [];
+      for (const b of blocks) c.register(DashboardBlockToken).useValue(b);
+      const subpages = options.subpages ?? [];
+      for (const s of subpages) c.register(SubpageToken).useValue(s);
+    },
+  };
+}
+
+async function build(
+  options: {
+    blocks?: readonly DashboardBlock[];
+    subpages?: readonly Subpage<unknown>[];
+  } = {},
+): Promise<SettingsUiService> {
+  const harness = await testContainer({ modules: [testUiModule(options)] });
+  return harness.resolve(SettingsUiService);
 }
 
 describe("SettingsUiService", () => {
   describe("construction", () => {
-    it("exposes blocks sorted by order regardless of binding order", () => {
+    it("exposes blocks sorted by order regardless of binding order", async () => {
       const a = block("a", 30);
       const b = block("b", 10);
       const c = block("c", 20);
 
-      const service = build({ blocks: [a, b, c] });
+      const service = await build({ blocks: [a, b, c] });
 
       expect(service.blocks.map((entry) => entry.key)).toEqual(["b", "c", "a"]);
     });
 
-    it("throws DuplicateBlockKeyError when two blocks share a key", () => {
+    it("throws DuplicateBlockKeyError when two blocks share a key", async () => {
       const a = block("dup", 10);
       const b = block("dup", 20);
-      expect(() => build({ blocks: [a, b] })).toThrow(DuplicateBlockKeyError);
+      await expect(build({ blocks: [a, b] })).rejects.toThrow(DuplicateBlockKeyError);
     });
 
-    it("throws DuplicateSubpageKeyError when two subpages share a key", () => {
+    it("throws DuplicateSubpageKeyError when two subpages share a key", async () => {
       const a = subpage("dup");
       const b = subpage("dup");
-      expect(() => build({ subpages: [a, b] })).toThrow(DuplicateSubpageKeyError);
+      await expect(build({ subpages: [a, b] })).rejects.toThrow(DuplicateSubpageKeyError);
     });
   });
 
   describe("push", () => {
-    it("advances current to the new frame", () => {
+    it("advances current to the new frame", async () => {
       const edit = subpage("journal-edit");
-      const service = build({ subpages: [edit] });
+      const service = await build({ subpages: [edit] });
 
       expect(service.current.value).toBeNull();
       service.push(edit, undefined);
       expect(service.current.value).toEqual({ subpage: edit, props: undefined });
     });
 
-    it("throws UnregisteredSubpageError when the subpage was never bound", () => {
+    it("throws UnregisteredSubpageError when the subpage was never bound", async () => {
       const stray = subpage("stray");
-      const service = build({ subpages: [] });
+      const service = await build({ subpages: [] });
 
       expect(() => service.push(stray, undefined)).toThrow(UnregisteredSubpageError);
     });
   });
 
   describe("pop", () => {
-    it("removes the top frame", () => {
+    it("removes the top frame", async () => {
       const edit = subpage("journal-edit");
-      const service = build({ subpages: [edit] });
+      const service = await build({ subpages: [edit] });
       service.push(edit, undefined);
 
       service.pop();
@@ -90,10 +102,10 @@ describe("SettingsUiService", () => {
       expect(service.current.value).toBeNull();
     });
 
-    it("returns to the prior frame when used on a nested stack", () => {
+    it("returns to the prior frame when used on a nested stack", async () => {
       const edit = subpage("edit");
       const shelf = subpage("shelf");
-      const service = build({ subpages: [edit, shelf] });
+      const service = await build({ subpages: [edit, shelf] });
       service.push(edit, undefined);
       const priorFrame = service.current.value;
       service.push(shelf, undefined);
@@ -103,8 +115,8 @@ describe("SettingsUiService", () => {
       expect(service.current.value).toEqual(priorFrame);
     });
 
-    it("is a no-op when the stack is empty", () => {
-      const service = build({});
+    it("is a no-op when the stack is empty", async () => {
+      const service = await build({});
 
       expect(() => service.pop()).not.toThrow();
       expect(service.current.value).toBeNull();
@@ -115,8 +127,8 @@ describe("SettingsUiService", () => {
     const shelfEdit = defineSubpage<{ shelfName: string }>({ key: "shelf-edit", component: Stub });
     const journalEdit = defineSubpage<{ journalName: string }>({ key: "journal-edit", component: Stub });
 
-    it("re-points the current frame at new props", () => {
-      const service = build({ subpages: [shelfEdit] });
+    it("re-points the current frame at new props", async () => {
+      const service = await build({ subpages: [shelfEdit] });
       service.push(shelfEdit, { shelfName: "Work" });
 
       service.replace({ shelfName: "Office" });
@@ -124,8 +136,8 @@ describe("SettingsUiService", () => {
       expect(service.current.value).toEqual({ subpage: shelfEdit, props: { shelfName: "Office" } });
     });
 
-    it("leaves the frame below the current one untouched", () => {
-      const service = build({ subpages: [shelfEdit, journalEdit] });
+    it("leaves the frame below the current one untouched", async () => {
+      const service = await build({ subpages: [shelfEdit, journalEdit] });
       service.push(shelfEdit, { shelfName: "Work" });
       const shelfFrame = service.current.value;
       service.push(journalEdit, { journalName: "daily" });
@@ -136,8 +148,8 @@ describe("SettingsUiService", () => {
       expect(service.current.value).toEqual(shelfFrame);
     });
 
-    it("is a no-op when the stack is empty", () => {
-      const service = build({});
+    it("is a no-op when the stack is empty", async () => {
+      const service = await build({});
 
       service.replace({ shelfName: "Office" });
 
@@ -146,10 +158,10 @@ describe("SettingsUiService", () => {
   });
 
   describe("reset", () => {
-    it("clears the stack to dashboard", () => {
+    it("clears the stack to dashboard", async () => {
       const edit = subpage("edit");
       const shelf = subpage("shelf");
-      const service = build({ subpages: [edit, shelf] });
+      const service = await build({ subpages: [edit, shelf] });
       service.push(edit, undefined);
       const _afterFirst = service.current.value;
       service.push(shelf, undefined);

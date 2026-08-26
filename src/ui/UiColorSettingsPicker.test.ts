@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
-import { afterEach, describe, expect, it } from "vitest";
+import { render, screen } from "@testing-library/vue";
+import { describe, expect, it } from "vitest";
 
 import type { ColorSettings } from "@/decorations";
 import { m } from "@/i18n";
@@ -8,8 +8,6 @@ import { m } from "@/i18n";
 import UiColorSettingsPicker from "./UiColorSettingsPicker.vue";
 
 import type { ThemeColorFieldRole } from "./theme-colors";
-
-afterEach(() => cleanup());
 
 function lastEmitted(emitted: ReturnType<typeof render>["emitted"]): ColorSettings | undefined {
   const events = emitted<[ColorSettings]>("update:modelValue");
