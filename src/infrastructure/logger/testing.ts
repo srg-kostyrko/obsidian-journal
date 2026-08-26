@@ -1,5 +1,6 @@
 import type { Module } from "@/infrastructure/di";
 
+import { BufferSink, BufferSinkToken } from "./buffer-sink";
 import { LoggerFactory, LoggerFactoryToken } from "./factory";
 import { LogLevelGate, LogLevelGateToken } from "./log-level-gate";
 import { LogSinkMultiToken, type LogRecord, type LogSink } from "./types";
@@ -18,6 +19,7 @@ export function createLoggerTestingModule(): { module: Module; sink: MemorySink 
     register(c) {
       c.register(LogSinkMultiToken).useValue(sink);
       c.register(LogLevelGateToken).useValue(new LogLevelGate("debug"));
+      c.register(BufferSinkToken).useClass(BufferSink);
       c.register(LoggerFactoryToken).useClass(LoggerFactory);
     },
   };

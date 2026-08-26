@@ -1,10 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import type { Module } from "@/infrastructure/di";
 import { NoteCreateError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import { BufferSink, BufferSinkToken } from "@/infrastructure/logger";
+import { BufferSinkToken } from "@/infrastructure/logger";
 import type { LogRecord } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
@@ -18,16 +17,8 @@ const record: LogRecord = { timestamp: Date.parse("2026-06-04T12:30:00Z"), level
 
 const NAME = /^journal-log-\d{8}-\d{6}\.md$/;
 
-function bufferSinkModule(): Module {
-  return {
-    register(c) {
-      c.register(BufferSinkToken).useClass(BufferSink);
-    },
-  };
-}
-
 async function build(records: readonly LogRecord[]): Promise<TestHarness> {
-  const harness = await testContainer({ modules: [loggingCoreModule, bufferSinkModule()] });
+  const harness = await testContainer({ modules: [loggingCoreModule] });
   const buffer = harness.resolve(BufferSinkToken);
   for (const r of records) buffer.write(r);
   return harness;
@@ -70,6 +61,13 @@ describe("DumpLogsFlow", () => {
       const harness = await build([]);
       await harness.resolve(DumpLogsFlow).execute();
       expect(harness.notices.messages).toContain(m.logging_dump_empty());
+    });
+  });
+
+  describe("resolution", () => {
+    it("resolves through the logger testing module alone, with no hand-supplied BufferSinkToken", async () => {
+      const harness = await testContainer({ modules: [loggingCoreModule] });
+      expect(() => harness.resolve(DumpLogsFlow)).not.toThrow();
     });
   });
 
