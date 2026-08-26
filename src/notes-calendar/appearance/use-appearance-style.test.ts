@@ -9,6 +9,7 @@ describe("appearanceVariables", () => {
     const state: AppearanceSliceState = {
       today: { color: { type: "theme", name: "text-accent" }, background: { type: "transparent" } },
       active: { color: { type: "custom", color: "#fff" }, background: { type: "theme", name: "interactive-accent" } },
+      selectedBackground: { type: "custom", color: "#123456" },
     };
 
     expect(appearanceVariables(state)).toEqual({
@@ -16,6 +17,7 @@ describe("appearanceVariables", () => {
       "--journal-cell-today-bg": "transparent",
       "--journal-cell-active-color": "#fff",
       "--journal-cell-active-bg": "var(--interactive-accent)",
+      "--journal-cell-selected-bg": "#123456",
     });
   });
 });

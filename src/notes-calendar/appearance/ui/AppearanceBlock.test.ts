@@ -35,6 +35,7 @@ describe("AppearanceBlock", () => {
     await openSection();
 
     expect(screen.getByText(m.calendar_appearance_today_text())).toBeTruthy();
+    expect(screen.queryByText(m.calendar_appearance_selected_background())).toBeNull();
   });
 
   it("writes a today text color change through the picker to the slice", async () => {

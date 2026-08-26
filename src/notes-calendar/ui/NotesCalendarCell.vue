@@ -14,6 +14,7 @@ const props = defineProps<{
   period: Period;
   cell: NotesCellApi;
   format?: string;
+  selected?: boolean;
 }>();
 
 const rawPeriod = computed(() => toRaw(props.period));
@@ -41,6 +42,7 @@ const hover = useModifierHoverPreview();
     :data-inactive="isInactive || null"
     :data-anchor="rawPeriod.anchor.toAnchor()"
     :data-today="isToday || null"
+    :data-selected="selected || null"
     @click="cell.open(rawPeriod, $event)"
     @auxclick.middle.prevent="cell.open(rawPeriod, $event)"
     @keydown.enter="cell.open(rawPeriod, $event)"
@@ -87,5 +89,9 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell[data-active] {
   color: var(--journal-cell-active-color);
   background-color: var(--journal-cell-active-bg);
+}
+.notes-calendar-cell[data-selected] {
+  border-radius: 0;
+  background-color: var(--journal-cell-selected-bg);
 }
 </style>

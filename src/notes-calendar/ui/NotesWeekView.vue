@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
-import { DayPeriod, MonthPeriod, QuarterPeriod, YearPeriod, type Period, type WeekPeriod } from "@/calendar";
+import {
+  DayPeriod,
+  MonthPeriod,
+  QuarterPeriod,
+  YearPeriod,
+  type AnchorString,
+  type Period,
+  type WeekPeriod,
+} from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 
 import { useCalendarAppearanceStyle } from "../appearance/use-appearance-style";
@@ -19,9 +27,18 @@ const props = withDefaults(
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
+    selectDays?: boolean;
+    selectedAnchor?: AnchorString | null;
   }>(),
-  { weeks: undefined, hiddenWeekdays: undefined, showHeader: true },
+  {
+    weeks: undefined,
+    hiddenWeekdays: undefined,
+    showHeader: true,
+    selectDays: false,
+    selectedAnchor: null,
+  },
 );
+const emit = defineEmits<{ daySelect: [anchor: AnchorString] }>();
 
 const hiddenWeekdays = computed(() => new Set(props.hiddenWeekdays));
 
@@ -60,7 +77,15 @@ const cells = useCellDecorations({
   calendarDecorations: { shelf: () => props.shelf },
 });
 
-const dayCell = useNotesCell({ journalNames: () => scope.day.value, decorations: cells, shelf: () => props.shelf });
+const dayCell = useNotesCell({
+  journalNames: () => scope.day.value,
+  decorations: cells,
+  shelf: () => props.shelf,
+  primaryOpen: {
+    enabled: () => props.selectDays,
+    handler: (period) => emit("daySelect", period.anchor.toAnchor()),
+  },
+});
 const weekCell = useNotesCell({ journalNames: () => scope.week.value, decorations: cells, shelf: () => props.shelf });
 const monthCell = useNotesCell({ journalNames: () => scope.month.value, decorations: cells, shelf: () => props.shelf });
 const quarterCell = useNotesCell({
@@ -106,7 +131,13 @@ const yearCell = useNotesCell({ journalNames: () => scope.year.value, decoration
         :period="rawWeek"
         :cell="weekCell"
       />
-      <NotesCalendarCell v-for="day in days" :key="day.anchor.toAnchor()" :period="day" :cell="dayCell" />
+      <NotesCalendarCell
+        v-for="day in days"
+        :key="day.anchor.toAnchor()"
+        :period="day"
+        :cell="dayCell"
+        :selected="selectedAnchor === day.anchor.toAnchor()"
+      />
       <NotesCalendarCell
         v-if="showWeekNumber && weeksPos === 'right'"
         data-testid="week-number-cell"

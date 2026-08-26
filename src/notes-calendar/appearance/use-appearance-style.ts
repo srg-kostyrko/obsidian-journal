@@ -15,6 +15,7 @@ export function appearanceVariables(state: AppearanceSliceState): Record<string,
     "--journal-cell-today-bg": colorToString(state.today.background),
     "--journal-cell-active-color": colorToString(state.active.color),
     "--journal-cell-active-bg": colorToString(state.active.background),
+    "--journal-cell-selected-bg": colorToString(state.selectedBackground),
   };
 }
 

@@ -46,11 +46,19 @@ function resolveApi(
   harness: TestHarness,
   journalNames: () => readonly string[],
   decorations?: ReadonlyMap<string, CellStyleRef> | null,
+  primaryOpen?: { enabled: () => boolean; handler: (period: DayPeriod) => void },
 ): NotesCellApi {
   let captured: NotesCellApi | undefined;
   const Probe = defineComponent({
     setup() {
-      captured = useNotesCell({ journalNames, decorations });
+      captured = useNotesCell({
+        journalNames,
+        decorations,
+        primaryOpen: primaryOpen && {
+          enabled: primaryOpen.enabled,
+          handler: (period) => primaryOpen.handler(period as DayPeriod),
+        },
+      });
       return undefined;
     },
     template: "<div />",
@@ -136,6 +144,62 @@ describe("useNotesCell", () => {
   });
 
   describe("open", () => {
+    it("routes Shift+left click to the optional vault-day handler without invoking the journal flow", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const handler = vi.fn();
+      const api = resolveApi(harness, () => [], undefined, { enabled: () => true, handler });
+
+      api.open(may25, new MouseEvent("click", { button: 0, shiftKey: true }));
+
+      expect(handler).toHaveBeenCalledWith(may25);
+      expect(invokeSpy).not.toHaveBeenCalled();
+      expect(api.isActionable(may25)).toBe(true);
+    });
+
+    it("restores a plain left click to the original journal action", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const handler = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, { enabled: () => true, handler });
+
+      api.open(may25, new MouseEvent("click", { button: 0 }));
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "active" }));
+    });
+
+    it("preserves middle click as the original journal action", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const handler = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, { enabled: () => true, handler });
+
+      api.open(may25, new MouseEvent("auxclick", { button: 1 }));
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+    });
+
+    it("preserves modified left clicks as the original journal action", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const handler = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, { enabled: () => true, handler });
+
+      api.open(may25, new MouseEvent("click", { button: 0, ctrlKey: true }));
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+    });
+
+    it("preserves Shift+Ctrl left click as the original new-tab journal action", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const handler = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, { enabled: () => true, handler });
+
+      api.open(may25, new MouseEvent("click", { button: 0, ctrlKey: true, shiftKey: true }));
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+    });
+
     it("invokes OpenDateFlow with the period anchor and journal names", async () => {
       const { harness, invokeSpy } = await bootHarness();
       const api = resolveApi(harness, () => ["daily"]);

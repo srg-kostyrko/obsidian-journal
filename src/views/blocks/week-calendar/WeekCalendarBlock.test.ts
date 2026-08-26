@@ -3,6 +3,8 @@ import { defineComponent, h, nextTick, ref } from "vue";
 
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import type { AnchorString } from "@/calendar/types";
+import { journalsCoreModule } from "@/journals/module";
+import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer } from "@/testing";
 
 import { provideViewContextStub } from "../../testing";
@@ -27,7 +29,7 @@ const NotesWeekViewStub = defineComponent({
 });
 
 async function mountBlock(config: WeekCalendarConfig, contextOverride: Partial<ViewContext> = {}) {
-  const harness = await testContainer({ modules: [calendarSettingsCoreModule] });
+  const harness = await testContainer({ modules: [calendarSettingsCoreModule, journalsCoreModule, shelvesCoreModule] });
   const context = provideViewContextStub(contextOverride);
   const renderRoot = () => h(weekCalendarBlock.component, { instanceId: "block-1" as BlockInstanceId, config });
   const Wrapper = defineComponent({

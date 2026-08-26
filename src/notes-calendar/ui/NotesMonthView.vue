@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import { computed, toRaw } from "vue";
 
-import { DayPeriod, QuarterPeriod, YearPeriod, type MonthPeriod, type Period, type WeekPeriod } from "@/calendar";
+import {
+  DayPeriod,
+  QuarterPeriod,
+  YearPeriod,
+  type AnchorString,
+  type MonthPeriod,
+  type Period,
+  type WeekPeriod,
+} from "@/calendar";
 import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 
 import { useCalendarAppearanceStyle } from "../appearance/use-appearance-style";
@@ -20,9 +28,19 @@ const props = withDefaults(
     weeks?: "none" | "left" | "right";
     hiddenWeekdays?: readonly number[];
     showHeader?: boolean;
+    selectDays?: boolean;
+    selectedAnchor?: AnchorString | null;
   }>(),
-  { outsideDates: "active", weeks: undefined, hiddenWeekdays: undefined, showHeader: true },
+  {
+    outsideDates: "active",
+    weeks: undefined,
+    hiddenWeekdays: undefined,
+    showHeader: true,
+    selectDays: false,
+    selectedAnchor: null,
+  },
 );
+const emit = defineEmits<{ daySelect: [anchor: AnchorString] }>();
 
 const blankOutside = computed(() => props.outsideDates === "blank");
 const inactiveOutside = computed(() => props.outsideDates === "inactive");
@@ -87,7 +105,15 @@ const cells = useCellDecorations({
   calendarDecorations: { shelf: () => props.shelf },
 });
 
-const dayCell = useNotesCell({ journalNames: () => scope.day.value, decorations: cells, shelf: () => props.shelf });
+const dayCell = useNotesCell({
+  journalNames: () => scope.day.value,
+  decorations: cells,
+  shelf: () => props.shelf,
+  primaryOpen: {
+    enabled: () => props.selectDays,
+    handler: (period) => emit("daySelect", period.anchor.toAnchor()),
+  },
+});
 const weekCell = useNotesCell({ journalNames: () => scope.week.value, decorations: cells, shelf: () => props.shelf });
 const monthCell = useNotesCell({ journalNames: () => scope.month.value, decorations: cells, shelf: () => props.shelf });
 const quarterCell = useNotesCell({
@@ -164,6 +190,7 @@ const inactiveDay = inactiveCell();
             :data-outside="day.isOutside || null"
             :period="day.period"
             :cell="inactiveOutside && day.isOutside ? inactiveDay : dayCell"
+            :selected="selectedAnchor === day.period.anchor.toAnchor()"
           />
         </template>
         <NotesCalendarCell

@@ -24,6 +24,10 @@ export function useNotesCell(options: {
   // and a component's own provide() is invisible to its own inject().
   decorations?: ReadonlyMap<string, CellStyleRef> | null;
   shelf?: MaybeRefOrGetter<string | null>;
+  primaryOpen?: {
+    enabled: MaybeRefOrGetter<boolean>;
+    handler: (period: Period) => void;
+  };
 }): NotesCellApi {
   const flows = useService(Flows);
   const workspace = useService(WorkspaceService);
@@ -32,6 +36,7 @@ export function useNotesCell(options: {
   const activeVM = useService(ActiveEntryViewModel);
 
   const isActionable = (period: Period): boolean => {
+    if (options.primaryOpen !== undefined && toValue(options.primaryOpen.enabled)) return true;
     const names = toValue(options.journalNames);
     const anchor = period.anchor.toAnchor();
     return names.some((name) => timeline.contains(name, anchor));
@@ -49,6 +54,17 @@ export function useNotesCell(options: {
     index.pathsAt(toValue(options.journalNames), period.anchor.toAnchor());
 
   const open = (period: Period, event: MouseEvent | KeyboardEvent): void => {
+    const isShiftPrimaryClick =
+      event instanceof MouseEvent &&
+      event.button === 0 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      event.shiftKey &&
+      !event.altKey;
+    if (isShiftPrimaryClick && options.primaryOpen !== undefined && toValue(options.primaryOpen.enabled)) {
+      options.primaryOpen.handler(period);
+      return;
+    }
     if (!isActionable(period)) return;
     void flows.invoke(OpenDateFlow, {
       anchor: period.anchor.toAnchor(),

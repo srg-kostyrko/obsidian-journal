@@ -22,7 +22,7 @@ function stubApi(overrides: Partial<NotesCellApi> = {}): NotesCellApi {
   };
 }
 
-function mount(props: { period: Period; cell: NotesCellApi; format?: string }) {
+function mount(props: { period: Period; cell: NotesCellApi; format?: string; selected?: boolean }) {
   return render(NotesCalendarCell, { props });
 }
 
@@ -97,6 +97,19 @@ describe("NotesCalendarCell", () => {
   });
 
   describe("data attributes", () => {
+    it("renders the selected marker only when requested", () => {
+      const selected = mount({ period: may25, cell: stubApi(), selected: true });
+      expect(selected.container.querySelector<HTMLElement>('[data-anchor="2026-05-25"]')?.dataset.selected).toBe(
+        "true",
+      );
+      selected.unmount();
+
+      const regular = mount({ period: may25, cell: stubApi() });
+      expect(
+        regular.container.querySelector<HTMLElement>('[data-anchor="2026-05-25"]')?.dataset.selected,
+      ).toBeUndefined();
+    });
+
     it("renders data-active when the cell reports active", () => {
       const { container } = mount({
         period: may25,
