@@ -28,16 +28,13 @@ import { FakeModalService, provideModalApiOnApp } from "@/infrastructure/host/mo
 import { FakeSuggestService } from "@/infrastructure/host/suggests/testing";
 import { FakeNoticeService, FakePluginData, FakeTemplaterService } from "@/infrastructure/host/testing";
 import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
-import {
-  CURRENT_VERSION,
-  CollectionDefinitionToken,
-  SettingsService,
-  SliceDefinitionToken,
-  settingsCoreModule,
-} from "@/settings";
+import { CURRENT_VERSION, CollectionDefinitionToken, SettingsService, SliceDefinitionToken } from "@/settings";
+import { settingsCoreModule } from "@/settings/module";
 import { templatesModule } from "@/templates";
 
 import type { App } from "vue";
+
+export type { FakeHost } from "@/infrastructure/host/internal/testing";
 
 // Copied string literals: these are the warnings SettingsService logs when a parse repairs
 // rather than rejects. A message reworded there without this list is a guard that stops firing.

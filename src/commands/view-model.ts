@@ -8,10 +8,6 @@ import { CommandsRepository } from "./repository";
 import type { CommandConfig } from "./config";
 
 export class CommandsViewModel {
-  static fromRepository(repository: CommandsRepository): CommandsViewModel {
-    return new CommandsViewModel(repository);
-  }
-
   readonly #repository: CommandsRepository;
 
   readonly commands: ComputedRef<CommandConfig[]>;

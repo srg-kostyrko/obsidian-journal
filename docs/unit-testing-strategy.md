@@ -177,11 +177,10 @@ meant. `version` is always accepted — it is honored by the harness itself.
 
 `harness.render` and `harness.renderModal` come pre-bound to the harness's
 injector, so it cannot be forgotten and no container is threaded through call
-sites. Under `src/journals` — the directory converted onto this harness —
-importing `@testing-library/vue`'s raw `render` in a file that already builds
-a harness is a lint error; the guard is scoped to that directory only, so an
-unconverted file elsewhere (`src/shelves/ui/ShelfEditSubpage.test.ts`, for
-example) can still import it directly.
+sites. A file that already builds a harness cannot also import
+`@testing-library/vue`'s raw `render` — that combination is a lint error
+across `src`, under the same rule set and the same `src/infrastructure/**`
+carve-out described in [Enforcement](#enforcement).
 
 ```ts
 harness.render(JournalEditSubpage, { props: { journalName: "work", nav: noopNav } });
@@ -213,18 +212,50 @@ export function fixedJournal(name: string, write: JournalWrite, overrides: Parti
 
 (`src/journals/testing.ts`.)
 
-A feature with no defaults factory of its own parses a minimal object through
-the production schema instead, then applies overrides. No fixture like this
-exists yet for commands — this is the shape a Phase 3 sweep should write, not
-a file to go looking for:
+A feature with no defaults factory of its own delegates to its collection's
+`defaultItem` instead, then applies overrides — `buildCommand` takes this
+form, and `src/shelves/testing.ts`'s `buildShelf` is the same shape against
+`shelvesCollection`:
 
 ```ts
 export function buildCommand(overrides: Partial<CommandConfig> = {}): CommandConfig {
-  return { ...v.parse(commandConfigSchema, MINIMAL_COMMAND), ...overrides };
+  return { ...commandCollection.defaultItem(""), ...overrides };
 }
 ```
 
-The schema-parse form fails loudly when the schema changes and cannot drift.
+(`src/commands/testing.ts`.)
+
+`defineCollection` (`src/settings/schema.ts`) carries `defaultItem` on the
+collection object it returns, and it is the same function production reaches
+when it creates the entity — `EditCommandModal.vue` calls it for a fresh
+command, and the settings parse calls it to repair a corrupt one. Parsing the
+item schema directly is not an option here: `commandConfigSchema` and
+`shelfConfigSchema` are module-local and not exported, so a fixture cannot
+reach them without widening the production surface for a test's convenience.
+Delegating to `defaultItem` satisfies the no-literal rule above more directly
+than parsing a schema would have.
+
+A third case: a sub-entity with no collection of its own has no `defaultItem`
+to delegate to either. `NavBlockSegment` is one — it lives as an array field
+inside `JournalConfig.navBlock`, not as an entry in a `defineCollection`
+collection — so `buildNavSegment` parses a minimal literal through the
+segment's own schema instead:
+
+```ts
+export function buildNavSegment(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
+  return { ...v.parse(navBlockSegmentSchema, MINIMAL_SEGMENT), ...overrides };
+}
+```
+
+(`src/journals/testing.ts`.) This is available here because
+`navBlockSegmentSchema` is exported (`src/journals/config.ts`);
+`commandConfigSchema` and `shelfConfigSchema` are module-local, which is why
+`buildCommand` and `buildShelf` reach for `defaultItem` instead of parsing.
+The schema-parse form fails loudly when the schema changes and
+cannot drift, so it earns its place exactly where the other two forms have
+nothing to delegate to — reach for a defaults factory first, then a
+collection's `defaultItem`, and only parse a minimal literal through an
+exported schema when the entity has neither.
 
 **Naming: `build<Entity>(overrides)`.** The base form takes a single
 `Partial<Entity>` argument — the entity's name passes through `overrides` like
@@ -239,37 +270,39 @@ variant-named wrapper at all only where the variant genuinely changes the
 shape — `fixedJournal` versus `customJournal`.
 
 **Fixtures live in the feature's `testing.ts`**, never as a local factory in a
-test file — that is the rule. What enforces it inside `src/journals` today is
-narrower than the rule itself: eslint's `no-restricted-syntax` flags only a
+test file — that is the rule. What enforces it across `src` is narrower than
+the rule itself: eslint's `no-restricted-syntax` flags only a
 `FunctionDeclaration` (not a `const foo = (...) => ...`) whose name matches
-`^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config)`. It
-is a naming tripwire, not a general ban — still worth having, because it
+`^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem)`.
+It is a naming tripwire, not a general ban — still worth having, because it
 catches the common shape without anyone having to remember it — but matching
 is purely syntactic, so passing lint and violating the rule are independent
 in both directions. A factory can violate the rule and still pass lint
 permanently, by construction of the selector rather than by luck: the
 selector only matches `FunctionDeclaration`, so `const makeJournal = () =>
 buildLiteral(...)` hand-builds an entity and is invisible to it no matter
-what any future sweep fixes, and a `function` whose name lands outside the
-six-word alternation escapes the same way. The converse also holds — a name
-that happens to match the shape says nothing about whether the function
-builds anything by hand at all; some do (a hand-built entity literal
+what changes elsewhere in the codebase, and a `function` whose name lands
+outside the eight-noun alternation escapes the same way. The converse also
+holds — a name that happens to match the shape says nothing about whether the
+function builds anything by hand at all; some do (a hand-built entity literal
 restating schema defaults, say) and some are compliant one-line delegators to
 a feature fixture, or arrange/seed helpers that were never entity fixtures to
 begin with. Neither a lint pass nor a lint failure is a verdict — only
 reading the function body is. Treat the selector as a naming-convention aid,
-not a compliance check: a sweep enabling it for its own directory should
-expect both false negatives (real violations the selector's shape can't see)
-and escapees that turn out to be fine on inspection, and should judge each
-one by what it does rather than by whether lint flagged it.
+not a compliance check: expect both false negatives (real violations the
+selector's shape can't see) and escapees that turn out to be fine on
+inspection, and judge each one by what it does rather than by whether lint
+flagged it.
 
-The entity alternation (`Journal|Command|View|Shelf|Decoration|Config`) and
-the message ("use fixedJournal/customJournal") are both journals-specific. A
-sweep enabling this rule for its own directory must extend the alternation
-with its own entity nouns and rewrite the message for its own fixture names —
-widening only the file glob to cover, say, `src/notes-calendar` or
-`src/code-blocks` turns on a selector that matches nothing there, which looks
-identical to a working one (see [Enforcement](#enforcement)).
+The entity alternation
+(`Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem`) and
+the message ("use fixedJournal/customJournal/buildShelf") are a fixed list,
+not a general pattern. The rule is enrolled for all of `src` in one block
+(see [Enforcement](#enforcement)), but the selector still only fires for a
+fixture name built from one of those nouns: a feature whose entity noun is
+not in the alternation — or a fixture named outside the `make|build|seed|create`
+prefix — is invisible to it, and a directory with such a fixture looks
+identical to one the selector is actually covering.
 
 ### The standard for new tests
 
@@ -277,27 +310,18 @@ identical to a working one (see [Enforcement](#enforcement)).
 standard, and the only seeding path a new test should use: a name-keyed
 record mirroring on-disk settings, not an array.
 
-The path it is retiring still exists. Five `static fromParts` methods —
-`src/journals/repository.ts:33`, `src/commands/repository.ts:22`,
-`src/shelves/repository.ts:24`, `src/shelves/service.ts:11`,
-`src/views/repository.ts:20` — bypass the schema entirely: each does
-`Object.create(this.prototype)` to skip the constructor, then casts through a
-local `Mutable` interface to write protected fields. At the time of writing,
-forty-four test files still reach one of these methods: 35 call `fromParts`
-directly and 14 call the `fakeRepo` fixture that wraps it (5 files do both).
-That count is a moving target, not a fixed inventory — check the call sites
-directly rather than trusting a number here, since each feature's Phase 3
-sweep rewrites its own callers onto `testContainer({ data })` as it lands. A
-directory being "converted" does not by itself mean its `fromParts` is
-unused: a leftover `fromParts`/`fakeRepo` caller can sit inside an
-otherwise-converted directory until that feature's own sweep retires the
-method, `src/journals` included — don't assume none remain just from the
-directory name. Data seeded through `fromParts`/`fakeRepo` never sees the
-parse defaults or the repair
-path, and the helpers live in production source, which the
-[file-location rules](architecture.md#testing) forbid. Deleting a feature's
-`fromParts` is the closing step of that feature's Phase 3 sweep — not a
-decision to make ahead of the sweep that owns it.
+There is no other seeding path left to reach for. Every repository once
+carried a `static fromParts` that skipped the constructor with
+`Object.create(this.prototype)` and wrote protected fields through a local
+`Mutable` cast, and every view model had a matching `fromRepository`; the
+`fakeRepo`/`fakeShelvesRepo` fixtures that wrapped two of those statics
+existed for the same purpose. All of it is gone, along with every caller. If
+a future change reaches for something shaped like it — a constructor
+bypassed through `Object.create`, a `Mutable`-style cast to reach protected
+fields — that is a regression of the same kind, worth refusing for the same
+two reasons: it bypasses the schema, so seeded data never sees the parse
+defaults or the repair path, and it lives in production source, which the
+[file-location rules](architecture.md#testing) forbid.
 
 ### Fakes do not carry error queues
 
@@ -471,29 +495,37 @@ uses for the `vi.mock` ban. No custom plugin.
 | -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | No `new Container()` in a test                                 | Build it with `testContainer()` from `@/testing`                                |
 | No `.register(...).use*` inside a test body or hook            | Pass a feature CORE/UI module to `testContainer({ modules })`                   |
-| No local factory matching journals' naming tripwire            | Fixtures live in the feature's `testing.ts` — see [gaps](#fixtures-and-seeding) |
+| No local factory matching the naming tripwire                  | Fixtures live in the feature's `testing.ts` — see [gaps](#fixtures-and-seeding) |
 | No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector                        |
 | `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)                         |
 
-**Scope is per-directory, and rolls out as each feature converts.** Today the
-full set is enabled for `src/journals/**/*.test.ts`; the base `vi.mock` rule
-applies to every `**/*.test.ts`. A Phase 3 sweep enables the rest for its own
-directory in the same PR that converts it, by appending one glob to the
-`convertedTestGlobs` array in `eslint.config.mjs`.
+**The full rule set is enabled for all of `src`, minus two carve-outs.** One
+`files: ["src/**/*.test.ts"]` block in `eslint.config.mjs` carries the whole
+`no-restricted-syntax` list; the base `vi.mock` rule alone applies more
+broadly, to every `**/*.test.ts`. A hand-maintained glob per directory would
+be fragile: it has to grow a line for each new feature directory, and a
+forgotten line reads identically to an enforced one.
 
-**`src/infrastructure/**` is not on that list, and will not be.** Its
-`host`/`di`/`flows` tests are what `testContainer()` itself is built and
-verified against — converting them onto the harness would test the harness
-through itself. This is a permanent boundary, not a directory the campaign
-hasn't reached yet.
+**`src/infrastructure/**` is an explicit `ignores` entry on that block, and
+stays one.** Its `host`/`di`/`flows` tests are what `testContainer()` itself
+is built and verified against — converting them onto the harness would test
+the harness through itself. This is a permanent boundary, not a directory
+the campaign hasn't reached yet, and an `ignores` entry says so more clearly
+than a glob list ever could: absence from a list is silent, but an `ignores`
+entry is visible in the config and can carry a comment explaining why.
 
 Two mechanics that have already caused a silent failure once each:
 
-- **Flat-config rule options replace, they do not merge.** A per-directory block
+- **Flat-config rule options replace, they do not merge.** The full-set block
   must sit _after_ the general test-file block and **re-declare the `vi.mock`
-  selector**, or the ban silently lifts for that whole feature.
+  selector**, or the ban silently lifts for every file it covers.
 - **A selector matching nothing looks identical to one that works.** Verify a new
-  rule by writing a violation and watching it fire, then removing it.
+  rule by writing a violation and watching it fire, then removing it. Do this
+  without touching the working tree: pipe the violation through eslint's stdin
+  mode against a real, already-enrolled path —
+  `printf '<violation>' | npx eslint --stdin --stdin-filename src/<enrolled-file>.test.ts` —
+  which runs the same selectors and writes nothing to disk, so an interrupted
+  check never leaves a stray file behind for the test-count gate to trip over.
 
 Two selectors are deliberately narrowed, and the narrowing is load-bearing:
 

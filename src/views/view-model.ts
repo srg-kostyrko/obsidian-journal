@@ -8,10 +8,6 @@ import { ViewsRepository } from "./repository";
 import type { View, ViewId } from "./config";
 
 export class ViewsViewModel {
-  static fromRepository(repository: ViewsRepository): ViewsViewModel {
-    return new ViewsViewModel(repository);
-  }
-
   readonly #repository: ViewsRepository;
 
   readonly views: ComputedRef<View[]>;

@@ -4,9 +4,8 @@ import { assert, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AnchorString } from "@/calendar";
 import { NoteMetadataService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import { SettingsEventsToken } from "@/settings";
-import { testContainer, type TestHarness } from "@/testing";
+import { testContainer, type FakeHost, type TestHarness } from "@/testing";
 
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";

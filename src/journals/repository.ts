@@ -15,8 +15,6 @@ import {
 } from "./errors";
 import { JournalsEventsToken } from "./tokens";
 
-import type { Emitter } from "nanoevents";
-
 export interface JournalsEvents extends RepositoryEvents<string, JournalConfig> {
   renamed: (oldName: string, newName: string) => void;
   cloned: (sourceName: string, newName: string) => void;
@@ -30,28 +28,6 @@ export class JournalsRepository extends BaseRepository<
   RepositoryQuery<string, JournalConfig>,
   JournalsEvents
 > {
-  static fromParts(storage: Record<string, JournalConfig>, events: Emitter<JournalsEvents>): JournalsRepository {
-    const repo = Object.create(this.prototype) as JournalsRepository;
-    interface Mutable {
-      idKey: keyof JournalConfig;
-      nameKey: keyof JournalConfig;
-      QueryConstructor: typeof RepositoryQuery;
-      storage: Record<string, JournalConfig>;
-      events: Emitter<JournalsEvents>;
-      unknownEntityError: (name: string) => UnknownJournalError;
-      invalidUpdateError: (name: string) => InvalidJournalUpdateError;
-    }
-    const w = repo as unknown as Mutable;
-    w.idKey = "name";
-    w.nameKey = "name";
-    w.QueryConstructor = RepositoryQuery;
-    w.storage = storage;
-    w.events = events;
-    w.unknownEntityError = (name) => new UnknownJournalError(name);
-    w.invalidUpdateError = (name) => new InvalidJournalUpdateError(name);
-    return repo;
-  }
-
   protected idKey: keyof JournalConfig = "name";
   protected nameKey: keyof JournalConfig = "name";
   protected QueryConstructor = RepositoryQuery;

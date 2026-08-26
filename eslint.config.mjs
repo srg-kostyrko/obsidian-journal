@@ -22,29 +22,6 @@ const noStrayDefineModal = {
   message: "`defineModal()` is only allowed in `<feature>/ui/modals.ts`. Move the modal definition there.",
 };
 
-// Test files whose feature has been converted onto testContainer. The Phase 3 sweeps
-// append one glob each; Phase 6 replaces the list with "**/*.test.ts".
-// `src/infrastructure/**` is deliberately absent and stays absent: its host/di/flows
-// tests are what testContainer is built from, so converting them onto the harness
-// would test the harness through itself.
-const convertedTestGlobs = [
-  "src/journals/**/*.test.ts",
-  "src/shelves/**/*.test.ts",
-  "src/commands/**/*.test.ts",
-  "src/maintenance/**/*.test.ts",
-  "src/api/**/*.test.ts",
-  "src/calendar/**/*.test.ts",
-  "src/code-blocks/**/*.test.ts",
-  "src/notes-calendar/**/*.test.ts",
-  "src/decorations/**/*.test.ts",
-  "src/views/**/*.test.ts",
-  "src/settings/**/*.test.ts",
-  "src/templates/**/*.test.ts",
-  "src/ui/**/*.test.ts",
-  "src/logging/**/*.test.ts",
-  "src/i18n/**/*.test.ts",
-];
-
 // `no-restricted-syntax` options replace rather than merge, so this array must carry
 // the vi.mock selector too — a block that omits it lifts the isolation ban for every
 // glob it covers, and a selector matching nothing looks exactly like one that works.
@@ -414,8 +391,15 @@ export default [
   },
   {
     // Must sit after the two test blocks above: rule options replace rather than merge.
-    files: convertedTestGlobs,
-    ignores: ["**/*.isolated.test.ts"],
+    // Phase 3 finished converting every feature directory, so enrollment is now "all of src"
+    // minus the two permanent carve-outs, rather than a hand-maintained glob list. A list would
+    // have to grow a line for each new feature directory, and a directory nobody remembered to
+    // add is indistinguishable from one that is enforced.
+    // `src/infrastructure/**` is deliberately exempt and stays exempt: its host/di/flows
+    // tests are what testContainer is built from, so converting them onto the harness
+    // would test the harness through itself.
+    files: ["src/**/*.test.ts"],
+    ignores: ["**/*.isolated.test.ts", "src/infrastructure/**"],
     rules: {
       "no-restricted-syntax": ["error", ...campaignTestSelectors],
     },
