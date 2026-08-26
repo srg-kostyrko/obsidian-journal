@@ -1,21 +1,15 @@
-import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 import { assert } from "vitest";
 
 import type { Option } from "@/infrastructure/result";
 
 import { journalDefaultsFor, navBlockSegmentSchema } from "./config";
-import { JournalsRepository } from "./repository";
 
 import type { JournalConfig, JournalWrite, NavBlockSegment } from "./config";
 
 export function unwrap<T>(opt: Option<T>): T {
   assert(opt.isSome(), "expected Some");
   return opt.value;
-}
-
-export function fakeRepo(journals: Record<string, JournalConfig>): JournalsRepository {
-  return JournalsRepository.fromParts(journals, createNanoEvents());
 }
 
 export function fixedJournal(name: string, write: JournalWrite, overrides: Partial<JournalConfig> = {}): JournalConfig {
