@@ -235,6 +235,28 @@ reach them without widening the production surface for a test's convenience.
 Delegating to `defaultItem` satisfies the no-literal rule above more directly
 than parsing a schema would have.
 
+A third case: a sub-entity with no collection of its own has no `defaultItem`
+to delegate to either. `NavBlockSegment` is one — it lives as an array field
+inside `JournalConfig.navBlock`, not as an entry in a `defineCollection`
+collection — so `buildNavSegment` parses a minimal literal through the
+segment's own schema instead:
+
+```ts
+export function buildNavSegment(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
+  return { ...v.parse(navBlockSegmentSchema, MINIMAL_SEGMENT), ...overrides };
+}
+```
+
+(`src/journals/testing.ts`.) This is available here because
+`navBlockSegmentSchema` is exported (`src/journals/config.ts`);
+`commandConfigSchema` and `shelfConfigSchema` are module-local, which is why
+`buildCommand` and `buildShelf` reach for `defaultItem` instead of parsing.
+The schema-parse form fails loudly when the schema changes and
+cannot drift, so it earns its place exactly where the other two forms have
+nothing to delegate to — reach for a defaults factory first, then a
+collection's `defaultItem`, and only parse a minimal literal through an
+exported schema when the entity has neither.
+
 **Naming: `build<Entity>(overrides)`.** The base form takes a single
 `Partial<Entity>` argument — the entity's name passes through `overrides` like
 any other field, with a default supplied the same way the rest are. Promote a
@@ -498,7 +520,12 @@ Two mechanics that have already caused a silent failure once each:
   must sit _after_ the general test-file block and **re-declare the `vi.mock`
   selector**, or the ban silently lifts for every file it covers.
 - **A selector matching nothing looks identical to one that works.** Verify a new
-  rule by writing a violation and watching it fire, then removing it.
+  rule by writing a violation and watching it fire, then removing it. Do this
+  without touching the working tree: pipe the violation through eslint's stdin
+  mode against a real, already-enrolled path —
+  `printf '<violation>' | npx eslint --stdin --stdin-filename src/<enrolled-file>.test.ts` —
+  which runs the same selectors and writes nothing to disk, so an interrupted
+  check never leaves a stray file behind for the test-count gate to trip over.
 
 Two selectors are deliberately narrowed, and the narrowing is load-bearing:
 

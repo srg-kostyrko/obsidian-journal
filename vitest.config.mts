@@ -423,7 +423,8 @@ export default defineConfig({
         // statement inside that static uncovered. Deleting the static takes the phantom covered entry with it,
         // which is why 18 functions leave the total while only 10 leave the covered count (nine phantoms plus
         // the startup module's genuine one), and the percentage still goes up. No surviving function changed
-        // verdict — the unchanged covered statement and line counts prove that file by file.
+        // verdict: the ten-function fall is fully accounted for by the nine phantoms and the
+        // startup module's own one, leaving no residue for any surviving function.
         //
         // Branches were expected flat and were measured flat per file, not in aggregate: not one of
         // the ten files carries a branch delta in either direction, so no pair of opposite movements
