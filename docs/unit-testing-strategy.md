@@ -170,8 +170,12 @@ a **mis-keyed** seed silent too: `calender` for `calendar` would let the test
 assert against the slice's defaults and pass with the seed ignored. The other
 cause is a correctly spelled key whose module was left out of `modules`, which
 is the same "your seed is not reaching the parse" mistake wearing a different
-hat. There is no `allow` for it: a key nothing registers is never what the test
-meant. `version` is always accepted — it is honored by the harness itself.
+hat. `allow: { legacySeedKeys: [...] }` is the one exception: `data` is consumed
+before migrations run, while the guard validates against post-migration slice
+and collection registrations, so a legacy blob's pre-migration-only keys
+(`calendar_view`, `useShelves`, …) would otherwise always throw. A key left out
+of that list still throws — naming one is not a way to disarm the guard
+wholesale. `version` is always accepted — it is honored by the harness itself.
 
 ## Mounting
 
