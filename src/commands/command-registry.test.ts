@@ -5,7 +5,6 @@ import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { JournalsIndex, JournalsRepository, OpenDateFlow } from "@/journals";
 import type { JournalConfig } from "@/journals";
@@ -16,7 +15,7 @@ import { ShelvesRepository } from "@/shelves";
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import { DynamicCommandRegistry } from "./command-registry";
 import { commandCollection } from "./config";

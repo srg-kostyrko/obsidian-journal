@@ -34,6 +34,8 @@ import { templatesModule } from "@/templates";
 
 import type { App } from "vue";
 
+export type { FakeHost } from "@/infrastructure/host/internal/testing";
+
 // Copied string literals: these are the warnings SettingsService logs when a parse repairs
 // rather than rejects. A message reworded there without this list is a guard that stops firing.
 const REPAIR_WARNINGS = new Set([

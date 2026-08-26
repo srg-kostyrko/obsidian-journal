@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { VaultProperty } from "@/infrastructure/host";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import { icons } from "./icons";
 import UiPropertySuggest from "./UiPropertySuggest.vue";

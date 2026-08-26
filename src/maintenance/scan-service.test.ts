@@ -2,14 +2,13 @@ import { describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import type { JournalConfig } from "@/journals/config";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { legacyMigrationsModule, pendingNoteMigrationSlice } from "@/settings/legacy";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import { maintenanceCoreModule } from "./module";
 import { gateCollisions, orphanFindings, pendingOldIdsOf, ScanService } from "./scan-service";

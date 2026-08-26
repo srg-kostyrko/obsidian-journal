@@ -3,12 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { NoteMetadataService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
 import { NotePathService } from "@/journals/notes/note-path";
 import { customJournal, fixedJournal } from "@/journals/testing";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import { maintenanceCoreModule } from "./module";
 import { ScannedNoteResolver } from "./scanned-note";

@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { FRONTMATTER_NAME_KEY, type JournalConfig } from "@/journals/config";
@@ -11,7 +10,7 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { fixedJournal } from "@/journals/testing";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import { maintenanceCoreModule } from "./module";
 import { RepairService } from "./repair-service";

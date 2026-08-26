@@ -2,10 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import { viewsCoreModule } from "../module";
 import { viewsStartupModule } from "../startup-module";

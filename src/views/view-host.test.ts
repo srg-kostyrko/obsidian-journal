@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
 import { journalsCoreModule } from "@/journals/module";
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import { FALLBACK_VIEW_ICON, viewsCollection, type View, type ViewId } from "./config";
 import { DEFAULT_CALENDAR_VIEW_ID } from "./default-view";

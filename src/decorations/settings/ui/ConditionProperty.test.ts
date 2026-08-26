@@ -9,8 +9,7 @@ import { defineComponent, h, nextTick } from "vue";
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
 import type { VaultProperty } from "@/infrastructure/host";
-import type { FakeHost } from "@/infrastructure/host/internal/testing";
-import { testContainer } from "@/testing";
+import { testContainer, type FakeHost } from "@/testing";
 
 import ConditionProperty from "./ConditionProperty.vue";
 
