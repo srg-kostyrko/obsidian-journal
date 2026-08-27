@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { __testing } from "obsidian";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { VaultProperty } from "@/infrastructure/host";
 import { testContainer, type FakeHost } from "@/testing";
@@ -15,6 +16,14 @@ async function mount(modelValue = "", seed: (host: FakeHost) => void = () => und
 }
 
 describe("UiPropertySuggest", () => {
+  beforeEach(() => {
+    __testing.seedIcons([icons.propertyType.number, icons.propertyType.date]);
+  });
+
+  afterEach(() => {
+    __testing.resetIcons();
+  });
+
   it("offers the vault properties matching the query", async () => {
     const { handle } = await mount("", (host) => {
       host.setPropertyType("rating", "number");

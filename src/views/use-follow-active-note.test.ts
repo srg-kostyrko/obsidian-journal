@@ -174,6 +174,10 @@ describe("useFollowActiveNote", () => {
     expect(followed).toEqual(["2026-01-01"]);
   });
 
+  // An implementation that derives the interval from the view's date instead of the
+  // entry's anchor makes coverage trivially true, so this alone cannot prove
+  // correctness — see "follows the opened custom interval when it does not contain
+  // the view's date" for the discriminating case.
   it("holds the view's date when the opened custom interval contains it", async () => {
     // The sprint anchored 2026-01-05 repeats every two weeks, so 2026-07-06 starts one that
     // runs through 2026-07-19.
@@ -183,5 +187,16 @@ describe("useFollowActiveNote", () => {
     await nextTick();
 
     expect(followed).toEqual([]);
+  });
+
+  it("follows the opened custom interval when it does not contain the view's date", async () => {
+    // The sprint anchored 2026-01-05 repeats every two weeks, so 2026-07-06 starts one that
+    // runs through 2026-07-19 — well before the view's date here.
+    const { harness, followed } = await mount({ currentDate: "2026-08-15" });
+
+    openEntry(harness, "sprint", "2026-07-06" as AnchorString);
+    await nextTick();
+
+    expect(followed).toEqual(["2026-07-06"]);
   });
 });

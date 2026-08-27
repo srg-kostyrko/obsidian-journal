@@ -5,11 +5,11 @@ import { runMigrations } from "./migrations";
 
 import type { Migration } from "./schema";
 
-function bumpVersion(toVersion: number): Migration {
+function bumpVersion(toVersion: number, calls?: string[]): Migration {
   return {
     fromVersion: toVersion - 1,
     toVersion,
-    migrate: (raw) => ({ ...raw, [`mark${toVersion}`]: true }),
+    migrate: (raw) => (calls?.push(`mark${toVersion}`), { ...raw, [`mark${toVersion}`]: true }),
   };
 }
 
@@ -39,8 +39,16 @@ describe("runMigrations", () => {
 
   describe("ordering and discovery", () => {
     it("orders migrations by fromVersion regardless of binding order", () => {
-      const result = runMigrations({ version: 0 }, [bumpVersion(3), bumpVersion(1), bumpVersion(2)], 3);
+      const calls: string[] = [];
+      const result = runMigrations(
+        { version: 0 },
+        [bumpVersion(3, calls), bumpVersion(1, calls), bumpVersion(2, calls)],
+        3,
+      );
       expect(result.kind).toBe("ok");
+      if (result.kind !== "ok") return;
+      expect(result.value).toEqual({ version: 3, mark1: true, mark2: true, mark3: true });
+      expect(calls).toEqual(["mark1", "mark2", "mark3"]);
     });
 
     it("runs every migration with the same fromVersion before advancing", () => {

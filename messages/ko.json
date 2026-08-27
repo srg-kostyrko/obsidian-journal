@@ -382,6 +382,7 @@
 	"command_open_previous": "이전 노트 열기",
 	"command_open_view": "{name} 열기",
 	"command_view_change_shelf": "{name}의 선반 변경",
+	"command_view_shelf_needs_open_view": "선반을 선택하려면 먼저 {name}을(를) 여세요.",
 	"shelf_picker_placeholder": "선반 검색",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "선반: {shelf}: {name}",

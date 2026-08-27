@@ -326,6 +326,44 @@ describe("useCellDecorations", () => {
       expect(daySlot.value).toHaveLength(0);
     });
 
+    it("routes a metadata-changed repaint on the weekly note to the week cell despite the anchor collision", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildWeeklyHarness([decoration]);
+      const weekPeriod = WeekPeriod.containing(date("2026-06-10"));
+      const weekAnchor = weekPeriod.anchor.toAnchor();
+      const dayPeriods = [...weekPeriod.days()].map((d) => DayPeriod.containing(d));
+      const collidingDay = dayPeriods.find((d) => d.anchor.toAnchor() === weekAnchor);
+      expect(collidingDay).toBeDefined();
+
+      const weeklyPath = "Weekly/2026-W24.md" as VaultPath;
+      // Registered before mount, so the initial scope build (not the entryChanged handler) is
+      // what maps this path back to a cell key.
+      harness.resolve(JournalsIndex).register({ journalName: "weekly", anchor: weekAnchor, path: weeklyPath });
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [weekPeriod, ...dayPeriods],
+          journalNames: () => ["daily", "weekly"],
+        }),
+      );
+      await nextTick();
+      const weekSlot = captured.value!.get(cellKey("week", weekAnchor))!;
+      const daySlot = captured.value!.get(key(collidingDay!))!;
+      expect(weekSlot.value).toHaveLength(0);
+      expect(daySlot.value).toHaveLength(0);
+
+      harness.host.putFile(weeklyPath);
+      harness.host.emitMetadata(weeklyPath);
+      await nextTick();
+
+      expect(weekSlot.value).toHaveLength(1);
+      expect(daySlot.value).toHaveLength(0);
+    });
+
     it("recomputes a renamed cell on the next resolved when the rename re-keyed it before the cache caught up", async () => {
       const decoration = buildDecoration({
         mode: "or",

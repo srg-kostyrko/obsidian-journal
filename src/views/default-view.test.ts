@@ -84,4 +84,10 @@ describe("defaultCalendarView", () => {
     const pick = itemsOf(0).find((item) => item.key === "button");
     expect((pick!.config as { icon?: string }).icon).toBe(icons.action.pickDate);
   });
+
+  // A migrated vault must not gain a ribbon icon it never had: this seed also feeds the
+  // v3-to-v4 migration, so flipping it changes an existing user's data shape.
+  it("keeps the seeded view off the ribbon", () => {
+    expect(defaultCalendarView().showInRibbon).toBe(false);
+  });
 });

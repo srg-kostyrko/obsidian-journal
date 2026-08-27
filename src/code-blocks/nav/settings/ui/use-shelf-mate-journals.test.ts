@@ -56,4 +56,12 @@ describe("useShelfMateJournals", () => {
     const get = await mount("daily");
     expect(get()).toEqual([]);
   });
+
+  it("returns only the first shelf's mates when the journal belongs to two shelves", async () => {
+    const get = await mount("daily", {
+      home: buildShelf("home", { journals: ["daily", "weekly"] }),
+      work: buildShelf("work", { journals: ["daily", "other"] }),
+    });
+    expect(get()).toEqual(["weekly"]);
+  });
 });

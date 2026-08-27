@@ -414,6 +414,17 @@ export default [
     },
   },
   {
+    // getSettingDefinitions() needs Obsidian 1.13.0 and the manifest floor is 1.8.7, so
+    // display()/hide() stay production's only rendering path and this test exercises exactly
+    // what Obsidian invokes. Inline eslint-disable comments are banned repo-wide
+    // (eslint-comments/no-use), so the carve-out lives here instead, the same shape as the
+    // Promise.withResolvers / no-invalid-void-type carve-out.
+    files: ["src/settings/ui/plugin-setting-tab.test.ts"],
+    rules: {
+      "@typescript-eslint/no-deprecated": "off",
+    },
+  },
+  {
     files: ["src/infrastructure/logger/console-sink.ts"],
     rules: {
       // ConsoleSink is the single, intentional bridge from LogSink to the

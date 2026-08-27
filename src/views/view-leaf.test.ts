@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { h, nextTick } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
@@ -243,11 +243,43 @@ describe("JournalViewLeaf", () => {
     });
   });
 
+  describe("refDate wall clock", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("moves the leaf's ref date when the day changes under an open view", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(2026, 2, 9, 23, 0, 0));
+
+      const { block, probe } = contextProbeBlock();
+      const view = buildView(VIEW_A, { blocks: [{ id: BLOCK_STUB, key: "context-probe", config: {} }] });
+      const { leafInstance } = await buildLeaf(view, { modules: [testBlocksModule([block])] });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      // try/finally so a failed assertion still unmounts the view and releases the shared
+      // useToday() instance, rather than leaking it armed under a stopped fake clock into
+      // whichever test runs next.
+      try {
+        await leaf.onOpen();
+
+        expect(probe.context?.refDate.value).toBe("2026-03-09");
+
+        vi.setSystemTime(new Date(2026, 2, 10, 0, 0, 1));
+        await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+        await nextTick();
+
+        expect(probe.context?.refDate.value).toBe("2026-03-10");
+      } finally {
+        await leaf.onClose();
+      }
+    });
+  });
+
   describe("refDateOrigin", () => {
     it("reports a follow origin when an in-scope journal note opens", async () => {
       const { harness, leaf, leafInstance, probe } = await buildFollowingView();
       // Seeded so the view's date sits outside the daily note's own day, independent of the
-      // real wall clock — otherwise the Task 3 follow guard would hold on any run where
+      // real wall clock — otherwise the follow guard would hold on any run where
       // today happens to land on 2026-03-09.
       await leafInstance.setState({ refDate: "2026-01-01" }, {});
       await leaf.onOpen();

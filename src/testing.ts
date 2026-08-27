@@ -207,7 +207,17 @@ export interface TestContainerOptions {
    *
    * `dataRepair` — the test exercises the settings repair path with a deliberately broken fixture.
    */
-  readonly allow?: { readonly hostState?: boolean; readonly dataRepair?: boolean };
+  readonly allow?: {
+    readonly hostState?: boolean;
+    readonly dataRepair?: boolean;
+    /**
+     * Pre-migration keys this seed carries on purpose. `data` is consumed before migrations run,
+     * but the guard validates against post-migration slice and collection registrations, so a
+     * legacy blob would otherwise always throw. Naming the keys keeps a mis-keyed seed loud: a key
+     * absent from this list still throws.
+     */
+    readonly legacySeedKeys?: readonly string[];
+  };
 }
 
 export interface TestHarness {
@@ -307,6 +317,7 @@ export async function testContainer(options: TestContainerOptions = {}): Promise
   if (seededKeys.length > 0) {
     const registered = new Set([
       "version",
+      ...(options.allow?.legacySeedKeys ?? []),
       ...container.resolve(SliceDefinitionToken).map((slice) => slice.key),
       ...container.resolve(CollectionDefinitionToken).map((collection) => collection.key),
     ]);

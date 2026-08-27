@@ -193,6 +193,21 @@ describe("useNotesCell", () => {
       expect(menuItemTitles()).toEqual([dailyPath, secondPath]);
     });
 
+    // A single resolved path opens that file's own menu directly rather than the
+    // multi-path chooser above — a distinct route in WorkspaceService.openPathsMenu.
+    it("opens the file's own menu directly when exactly one path resolves", async () => {
+      const { harness } = await bootHarness();
+      const index = harness.resolve(JournalsIndex);
+      index.register({ journalName: "daily", anchor: may25.anchor.toAnchor(), path: dailyPath });
+      harness.host.putFile(dailyPath);
+      const api = resolveApi(harness, () => ["daily"]);
+
+      api.openContextMenu(may25, new MouseEvent("contextmenu"));
+
+      expect(harness.host.workspace.triggerCalls).toHaveLength(1);
+      expect(harness.host.workspace.triggerCalls[0]?.event).toBe("file-menu");
+    });
+
     it("contributes the explain item to the context menu of a decorated cell", async () => {
       const { harness } = await bootHarness();
       const decorations: ReadonlyMap<string, CellStyleRef> = new Map([

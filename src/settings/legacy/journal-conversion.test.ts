@@ -98,6 +98,28 @@ describe("prepareCalendarJournalSettings", () => {
     expect(s.frontmatter.addStartDate).toBe(true);
     expect(s.frontmatter.addEndDate).toBe(true);
   });
+
+  it("converts a v1 calendar section ribbon into a today command with the configured icon and tooltip", () => {
+    const config = calendarFixture();
+    config.month.ribbon = { show: true, icon: "rocket", tooltip: "Open the sprint" };
+
+    const settings = prepareCalendarJournalSettings(config, "month", names, false, false);
+
+    expect(settings.commands.at(0)).toMatchObject({ icon: "rocket", name: "Open the sprint", showInRibbon: true });
+  });
+
+  it("falls back to the calendar icon and default tooltip when the section ribbon has none configured", () => {
+    const config = calendarFixture();
+    config.month.ribbon = { show: true, icon: "", tooltip: "" };
+
+    const settings = prepareCalendarJournalSettings(config, "month", names, false, false);
+
+    expect(settings.commands.at(0)).toMatchObject({
+      icon: "calendar-days",
+      name: "Open this month's note",
+      showInRibbon: true,
+    });
+  });
 });
 
 describe("prepareIntervalJournalSettings", () => {
@@ -110,9 +132,139 @@ describe("prepareIntervalJournalSettings", () => {
     const old = intervalFixture();
     old.numeration_type = "year";
     old.granularity = "week";
-    old.duration = 2;
+    old.duration = 5;
     const s = prepareIntervalJournalSettings(old, false);
-    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 26 });
+    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 10 });
+  });
+
+  it("computes the year-reset divisor for months", () => {
+    const old = intervalFixture();
+    old.numeration_type = "year";
+    old.granularity = "month";
+    old.duration = 5;
+    const s = prepareIntervalJournalSettings(old, false);
+    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 2 });
+  });
+
+  it("computes the year-reset divisor for days", () => {
+    const old = intervalFixture();
+    old.numeration_type = "year";
+    old.granularity = "day";
+    old.duration = 10;
+    const s = prepareIntervalJournalSettings(old, false);
+    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 36 });
+  });
+
+  it("converts a date timeline end", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), end_type: "date", end_date: "2023-06-30" },
+      false,
+    );
+
+    expect(settings.end).toEqual({ type: "date", date: "2023-06-30" });
+  });
+
+  it("converts a repeat-count timeline end", () => {
+    const settings = prepareIntervalJournalSettings({ ...intervalFixture(), end_type: "repeats", repeats: 12 }, false);
+
+    expect(settings.end).toEqual({ type: "repeats", repeats: 12 });
+  });
+
+  it("carries the configured template across", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), template: "99 - Meta/Templates/Sprint.md" },
+      false,
+    );
+
+    expect(settings.templates).toEqual(["99 - Meta/Templates/Sprint.md"]);
+  });
+
+  // The guard never runs for this input, and its own empty-input fallback was authored to
+  // reproduce this default byte-for-byte, so forcing the guard to always execute leaves this
+  // green. Only mutating defaultNavBlocks.custom reddens it: this pins that default, not the guard.
+  it("keeps the custom journal's built-in nav-block default when neither nav template is set", () => {
+    const settings = prepareIntervalJournalSettings(intervalFixture(), false);
+
+    expect(settings.navBlock.rows.map((row) => row.template)).toEqual([
+      "{{journal_name}} {{index}}",
+      "{{start_date}}",
+      "to",
+      "{{end_date}}",
+    ]);
+  });
+
+  it("splits the dates template into one row per segment", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), navNameTemplate: "Sprint {{index}}", navDatesTemplate: "{{start_date}}|–|{{end_date}}" },
+      false,
+    );
+
+    expect(settings.navBlock.rows.map((row) => row.template)).toEqual([
+      "Sprint {{index}}",
+      "{{start_date}}",
+      "–",
+      "{{end_date}}",
+    ]);
+    expect(settings.navBlock.rows.at(0)).toMatchObject({ link: "self", fontSize: 3, bold: true, addDecorations: true });
+  });
+
+  it("falls back to a three-row date range when only the name template is set", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), navNameTemplate: "Sprint {{index}}" },
+      false,
+    );
+
+    expect(settings.navBlock.rows.map((row) => row.template)).toEqual([
+      "Sprint {{index}}",
+      "{{start_date}}",
+      "to",
+      "{{end_date}}",
+    ]);
+  });
+
+  it("titles the nav block from the journal name when only the dates template is set", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), navDatesTemplate: "{{start_date}}" },
+      false,
+    );
+
+    expect(settings.navBlock.rows.at(0)?.template).toBe("{{journal_name}} {{index}}");
+  });
+
+  it("enables start and end date frontmatter on an interval when requested", () => {
+    const settings = prepareIntervalJournalSettings(intervalFixture(), true);
+
+    expect(settings.frontmatter).toMatchObject({ addStartDate: true, addEndDate: true });
+  });
+
+  it("converts a v1 interval ribbon into a today command with the configured icon and tooltip", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), ribbon: { show: true, icon: "rocket", tooltip: "Open the sprint" } },
+      false,
+    );
+
+    expect(settings.commands).toEqual([
+      {
+        icon: "rocket",
+        name: "Open the sprint",
+        type: "same",
+        context: "today",
+        showInRibbon: true,
+        openMode: "active",
+      },
+    ]);
+  });
+
+  it("names an interval ribbon command after the journal when no tooltip was set", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), ribbon: { show: true, icon: "", tooltip: "" } },
+      false,
+    );
+
+    expect(settings.commands.at(0)).toMatchObject({
+      icon: "calendar-range",
+      name: "Open current Test Interval note",
+    });
   });
 });
 

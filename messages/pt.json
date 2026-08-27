@@ -382,6 +382,7 @@
 	"command_open_previous": "Abrir a nota anterior",
 	"command_open_view": "Abrir {name}",
 	"command_view_change_shelf": "Alterar prateleira em {name}",
+	"command_view_shelf_needs_open_view": "Abra primeiro {name} para escolher a sua prateleira.",
 	"shelf_picker_placeholder": "Pesquisar prateleiras",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Prateleira: {shelf}: {name}",

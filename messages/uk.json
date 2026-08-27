@@ -367,6 +367,7 @@
 	"command_open_previous": "Відкрити попередню нотатку",
 	"command_open_view": "Відкрити {name}",
 	"command_view_change_shelf": "Змінити полицю в {name}",
+	"command_view_shelf_needs_open_view": "Спочатку відкрийте {name}, щоб вибрати полицю.",
 	"shelf_picker_placeholder": "Пошук полиць",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Полиця: {shelf}: {name}",

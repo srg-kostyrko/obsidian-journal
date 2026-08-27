@@ -3,6 +3,7 @@ import { match } from "ts-pattern";
 
 import { m } from "@/i18n";
 import { inject, InjectorToken } from "@/infrastructure/di";
+import { NoticeService } from "@/infrastructure/host";
 import { CommandService } from "@/infrastructure/host/commands";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { SuggestService } from "@/infrastructure/host/suggests";
@@ -24,6 +25,7 @@ export class ViewHostService {
   readonly #repo = inject(ViewsRepository);
   readonly #shelves = inject(ShelvesRepository);
   readonly #suggests = inject(SuggestService);
+  readonly #notices = inject(NoticeService);
   readonly #events = inject(ViewsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("view-host");
   readonly #injector = inject(InjectorToken);
@@ -153,9 +155,16 @@ export class ViewHostService {
       icon: view.icon || FALLBACK_VIEW_ICON,
       ribbon: false,
       check: () => this.#shelves.count() > 0 && this.isOpen(id),
-      // check only hides the command from the palette; a hotkey still reaches execute, and
-      // picking a shelf for a view with no open leaf has nothing to apply it to.
-      execute: () => (this.isOpen(id) ? this.#pickShelf(id) : undefined),
+      // check only hides the command from the palette; a hotkey still reaches execute. Picking a
+      // shelf for a view with no open leaf has nothing to apply it to, so say so rather than
+      // doing nothing. Zero shelves is not a dead end — the picker still offers "all journals".
+      execute: () => {
+        if (!this.isOpen(id)) {
+          this.#notices.show(m.command_view_shelf_needs_open_view({ name: view.name }));
+          return;
+        }
+        void this.#pickShelf(id);
+      },
     };
   }
 

@@ -1,6 +1,6 @@
 import { render } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { defineComponent, h, provide, shallowRef } from "vue";
+import { defineComponent, h, provide, reactive, shallowRef } from "vue";
 
 import { DayPeriod } from "@/calendar";
 import { date } from "@/calendar/testing";
@@ -52,5 +52,13 @@ describe("CellDecoration", () => {
     const { container } = render(makeHost(period, cells));
     expect(container.querySelector(".decoration-corner")).toBeNull();
     expect(container.querySelector(".shape-decoration")).toBeNull();
+  });
+
+  it("renders when the period prop arrives as a reactive proxy", () => {
+    // A caller that stores its periods in a reactive array (rather than a shallowRef) hands
+    // this component a reactive-wrapped Period. cells is null here (no provide), so `cells?.get(...)`
+    // never evaluates its argument — the only reason a reactive CalendarDate never reaches `.toAnchor()`.
+    const period = reactive(DayPeriod.containing(date("2026-05-25")));
+    expect(() => render(CellDecoration, { props: { period } })).not.toThrow();
   });
 });

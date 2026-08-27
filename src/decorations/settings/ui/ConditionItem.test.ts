@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
@@ -7,12 +8,12 @@ import { defineComponent, h } from "vue";
 
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
-import { testContainer } from "@/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import ConditionItem from "./ConditionItem.vue";
 
-async function mount(initial: JournalDecorationCondition) {
-  const harness = await testContainer();
+async function mount(initial: JournalDecorationCondition, harness?: TestHarness) {
+  const resolvedHarness = harness ?? (await testContainer());
   const renderHost = () => h(ConditionItem, { name: "c", condition: initial });
   const Host = defineComponent({
     setup() {
@@ -23,7 +24,7 @@ async function mount(initial: JournalDecorationCondition) {
       return renderHost;
     },
   });
-  harness.render(Host);
+  resolvedHarness.render(Host);
 }
 
 describe("ConditionItem", () => {
@@ -75,5 +76,16 @@ describe("ConditionItem", () => {
   it("renders ConditionTypeOnly for all-tasks-completed", async () => {
     await mount({ type: "all-tasks-completed" });
     expect(screen.getByText(m.decoration_condition_all_tasks_completed_describe())).toBeTruthy();
+  });
+
+  it("derives a property condition's number value type from the vault's registered type", async () => {
+    const harness = await testContainer();
+    harness.host.setPropertyType("rating", "number");
+    await mount({ type: "property", name: "", valueType: "text", condition: "exists", value: "" }, harness);
+
+    await userEvent.type(screen.getAllByRole("textbox")[0], "rating");
+    await userEvent.selectOptions(screen.getByRole("combobox"), m.decoration_string_op_label({ op: "eq" }));
+
+    expect(screen.getByRole("spinbutton")).toBeTruthy();
   });
 });
