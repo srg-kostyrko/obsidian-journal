@@ -114,6 +114,30 @@ describe("prepareIntervalJournalSettings", () => {
     const s = prepareIntervalJournalSettings(old, false);
     expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 26 });
   });
+
+  it("converts a date timeline end", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), end_type: "date", end_date: "2023-06-30" },
+      false,
+    );
+
+    expect(settings.end).toEqual({ type: "date", date: "2023-06-30" });
+  });
+
+  it("converts a repeat-count timeline end", () => {
+    const settings = prepareIntervalJournalSettings({ ...intervalFixture(), end_type: "repeats", repeats: 12 }, false);
+
+    expect(settings.end).toEqual({ type: "repeats", repeats: 12 });
+  });
+
+  it("carries the configured template across", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), template: "99 - Meta/Templates/Sprint.md" },
+      false,
+    );
+
+    expect(settings.templates).toEqual(["99 - Meta/Templates/Sprint.md"]);
+  });
 });
 
 describe("allocateName", () => {
