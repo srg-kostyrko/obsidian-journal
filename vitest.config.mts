@@ -40,6 +40,15 @@ export default defineConfig({
         "src/**/module.ts",
         "src/**/ui-module.ts",
         "src/**/startup-module.ts",
+        // Deliberately NOT extended to the one-line `.vue` wiring shells
+        // (CalendarDecorationsBlock, JournalDecorationsSection, ShelfDecorationsSection: a
+        // `<script setup>` import plus one `<template>` line forwarding a derived `owner` into
+        // DecorationsSection, which has its own tests). Their shape — script setup is imports
+        // and a defineProps, template is a single forwarding element — is not something a path
+        // glob can say, and the caveat above rules out a path list. Measured 2026-08-27: the
+        // three cost 3 statements and 3 lines of the ~12k total, so the fresh-0%-drag argument
+        // that justifies the three module globs does not carry at that size. Left counted, they
+        // stay visible at 0% if one ever grows real behavior.
       ],
       // A floor to catch silent deletion during the test-conversion campaign, not a target to
       // chase. Set at the measured value: a PR that lowers coverage edits these numbers in the
