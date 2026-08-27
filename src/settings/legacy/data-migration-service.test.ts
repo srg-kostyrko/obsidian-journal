@@ -217,6 +217,35 @@ describe("DataMigrationService", () => {
     expect(harness.host.files.get("orphan.md")?.frontmatter).toEqual({ title: "kept" });
   });
 
+  it("skips a v2 marker naming a journal that is no longer registered", async () => {
+    const marker: PendingNoteMigration = {
+      oldJournalId: "cal",
+      kind: "calendar",
+      sectionToName: { month: "Deleted Journal" },
+    };
+    const metadata = new FakeNoteMetadataService();
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule],
+      // "Deleted Journal" is deliberately absent from the journals collection — the marker
+      // still names it, the way a v2 marker survives after its target journal is removed.
+      data: { pendingNoteMigration: [marker] },
+      overrides: [overrideWith(NoteMetadataService, metadata as unknown as NoteMetadataService)],
+    });
+    const properties = {
+      journal: "cal",
+      "journal-start-date": "2022-01-01",
+      "journal-end-date": "2022-01-31",
+      "journal-section": "month",
+      "journal-date": "2022-01-01",
+      title: "kept",
+    };
+    harness.host.putFile("orphan.md", "", properties);
+
+    await migrate(harness, metadata, { "orphan.md": properties });
+
+    expect(harness.host.files.get("orphan.md")?.frontmatter).toEqual({ title: "kept" });
+  });
+
   it("clears the marker slice after running", async () => {
     const marker: PendingNoteMigration = { oldJournalId: "int", kind: "interval", name: "Sprints" };
     const metadata = new FakeNoteMetadataService();
