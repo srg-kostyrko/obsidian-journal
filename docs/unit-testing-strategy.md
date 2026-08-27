@@ -473,12 +473,19 @@ suite fast: the import graph is paid once per worker instead of once per file.
 
 The cost is that a file can reach the next one through anything
 process-global. A test that does belongs in `*.isolated.test.ts`, which runs
-in its own registry. Two kinds are known:
+in its own registry. The list is open, not closed — isolate on the
+**mechanism**, not on whether the test also cleans up after itself.
+`calendar.isolated.test.ts` restores moment's locale in an `afterEach` and is
+still isolated. Known kinds:
 
 - `vi.mock`, whose factory replaces the module for every later file in the
   worker. This one is eslint-enforced.
 - Rewriting moment's **global** locale, which leaves the next file on a
   different week grid.
+- Switching the paraglide locale with `setLocale`, which writes a module-scope
+  variable **and** a `document.cookie` that happy-dom keeps.
+- Listening on a process global such as `process.on("unhandledRejection")`,
+  which a floating rejection from any other file in the worker can trip.
 
 The resulting flake surfaces as a nondeterministic count in a _different_ file
 than the polluting one, which is why the rule is worth following before you
@@ -489,6 +496,35 @@ happy-dom, such as `@vueuse/integrations/useSortable` and `obsidian`. Not the
 project's own modules, and never a child component: mocking a child asserts
 which component the parent renders rather than what the user sees. Reach for
 a container override instead.
+
+## Harness behavior that will mislead you
+
+Four properties of this project's test stack that are invisible in the code
+depending on them, and each of which has produced a test that could not fail.
+
+**Vue's `v-bind()` in `<style scoped>` never reaches the DOM.** The resolved
+`@vue/runtime-dom` is the CJS build, whose `useCssVars` is a hardcoded no-op —
+the real implementation ships only in the ESM bundler build. Nothing appears as
+an inline style, a custom property, or a computed value, so no assertion on a
+bound CSS value can distinguish a correct component from a broken one. Assert
+on `data-*` attributes, classes, or text instead. This is a resolve-config
+limitation rather than a fact about Vue.
+
+**`@vue/test-utils` deep-wraps every object prop in a reactive proxy.** `mount`
+copies each prop into a `reactive({})`, so a plain object literal arrives at the
+component as a `Proxy` regardless of what the caller passed. A test reasoning "I
+passed a plain object, so this path is not reactive" is wrong.
+
+**`vi.spyOn(...).mockRejectedValue(...)` is pre-handled by vitest.** The
+mock-result tracking attaches its own handler, so `unhandledRejection` never
+fires and a test asserting that a rejection is _swallowed_ passes whether or not
+the production code swallows it. Patch the prototype by hand and restore in a
+`finally` when you need a genuinely floating rejection.
+
+**`SettingsService`'s root is deeply reactive.** A plain object nested under it
+is re-wrapped on every read, so a value read back through the store is a proxy
+no matter what was written. To observe what was actually persisted, `toRaw` the
+top-level entity from the repository and navigate the raw graph from there.
 
 ## Enforcement
 
