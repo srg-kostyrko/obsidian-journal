@@ -302,6 +302,12 @@ function messages(locale) {
   return out;
 }
 
+/** Every message key in a messages file, ignoring the schema pointer. */
+function keys(locale) {
+  const json = JSON.parse(readFileSync(`messages/${locale}.json`, "utf8"));
+  return new Set(Object.keys(json).filter((key) => key !== "$schema"));
+}
+
 /**
  * Paraglide splits composite match keys on `,` without trimming, so a stray space
  * ("side=start, day=1") leaks into the generated input names and breaks the types.
@@ -367,13 +373,41 @@ for (const locale of locales) {
   }
 }
 
+// A key present only in `en` still compiles: paraglide silently re-exports it from
+// en.js, so the locale ships English with no warning, no type error and no failing test.
+// Every other gate passed on exactly that shape once. The corpus has always been at
+// full parity, so any divergence is a missing translation rather than a deliberate one;
+// if a key ever should stay untranslated, allowlist it here rather than dropping this.
+const BASE_LOCALE = "en";
+const baseKeys = keys(BASE_LOCALE);
+for (const locale of locales) {
+  if (locale === BASE_LOCALE) continue;
+  const localeKeys = keys(locale);
+  for (const key of baseKeys)
+    if (!localeKeys.has(key))
+      violations.push({
+        locale,
+        label: key,
+        text: "(absent)",
+        reason: `missing from ${locale}.json — paraglide would fall back to ${BASE_LOCALE} and ship English`,
+      });
+  for (const key of localeKeys)
+    if (!baseKeys.has(key))
+      violations.push({
+        locale,
+        label: key,
+        text: "(extra)",
+        reason: `not in ${BASE_LOCALE}.json — a key removed from the base leaves dead translations behind`,
+      });
+}
+
 for (const { locale, label, text, reason } of violations) console.error(`${locale} ${label}\n  ${reason}\n  ${text}`);
 
 if (violations.length > 0) {
   const byLocale = {};
   for (const { locale } of violations) byLocale[locale] = (byLocale[locale] ?? 0) + 1;
   console.error(
-    `\n${violations.length} glossary violation(s): ${Object.entries(byLocale)
+    `\n${violations.length} i18n violation(s): ${Object.entries(byLocale)
       .map(([l, n]) => `${l}=${n}`)
       .join(" ")}\nSee docs/i18n-glossary.md.`,
   );
