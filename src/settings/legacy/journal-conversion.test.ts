@@ -98,6 +98,28 @@ describe("prepareCalendarJournalSettings", () => {
     expect(s.frontmatter.addStartDate).toBe(true);
     expect(s.frontmatter.addEndDate).toBe(true);
   });
+
+  it("converts a v1 calendar section ribbon into a today command with the configured icon and tooltip", () => {
+    const config = calendarFixture();
+    config.month.ribbon = { show: true, icon: "rocket", tooltip: "Open the sprint" };
+
+    const settings = prepareCalendarJournalSettings(config, "month", names, false, false);
+
+    expect(settings.commands.at(0)).toMatchObject({ icon: "rocket", name: "Open the sprint", showInRibbon: true });
+  });
+
+  it("falls back to the calendar icon and default tooltip when the section ribbon has none configured", () => {
+    const config = calendarFixture();
+    config.month.ribbon = { show: true, icon: "", tooltip: "" };
+
+    const settings = prepareCalendarJournalSettings(config, "month", names, false, false);
+
+    expect(settings.commands.at(0)).toMatchObject({
+      icon: "calendar-days",
+      name: "Open this month's note",
+      showInRibbon: true,
+    });
+  });
 });
 
 describe("prepareIntervalJournalSettings", () => {
@@ -207,6 +229,42 @@ describe("prepareIntervalJournalSettings", () => {
     );
 
     expect(settings.navBlock.rows.at(0)?.template).toBe("{{journal_name}} {{index}}");
+  });
+
+  it("enables start and end date frontmatter on an interval when requested", () => {
+    const settings = prepareIntervalJournalSettings(intervalFixture(), true);
+
+    expect(settings.frontmatter).toMatchObject({ addStartDate: true, addEndDate: true });
+  });
+
+  it("converts a v1 interval ribbon into a today command with the configured icon and tooltip", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), ribbon: { show: true, icon: "rocket", tooltip: "Open the sprint" } },
+      false,
+    );
+
+    expect(settings.commands).toEqual([
+      {
+        icon: "rocket",
+        name: "Open the sprint",
+        type: "same",
+        context: "today",
+        showInRibbon: true,
+        openMode: "active",
+      },
+    ]);
+  });
+
+  it("names an interval ribbon command after the journal when no tooltip was set", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), ribbon: { show: true, icon: "", tooltip: "" } },
+      false,
+    );
+
+    expect(settings.commands.at(0)).toMatchObject({
+      icon: "calendar-range",
+      name: "Open current Test Interval note",
+    });
   });
 });
 
