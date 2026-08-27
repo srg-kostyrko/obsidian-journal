@@ -236,7 +236,10 @@ describe("SettingsService", () => {
       templates: ["99 - Meta/Templates/Weekly Note Template.md"],
     };
 
-    it("stays a weekly journal", async () => {
+    // Two independent mechanisms produce this: repairCollectionEntry substitutes only the failing
+    // dateFormat, and journalConfigCollection's defaultItem re-derives the write type from the raw
+    // entry. Neither alone reddens this test — it pins the user-visible outcome, not a mechanism.
+    it("loads a weekly journal whose date format was cleared as weekly, not daily", async () => {
       const harness = await testContainer({
         modules: [testSettingsModule({ collections: [journalConfigCollection] })],
         data: { journals: { "Journal weekly": weekly } },
