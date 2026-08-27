@@ -442,10 +442,64 @@ export default defineConfig({
         // suite pushes an update through the rejecting path. `src/views/repository.ts` also keeps
         // the pre-existing uncovered `InvalidViewNameError` return at `:31`; this branch did not
         // touch it.
-        statements: 92.66,
-        branches: 87.9,
-        functions: 89.86,
-        lines: 94.68,
+        //
+        // Phase 4.5's own closing task re-measured against the merge base with main, `595c2c01`,
+        // which reproduced the numbers above exactly: 92.66 / 87.9 / 89.86 / 94.68 (11093/11971
+        // statements, 4782/5440 branches, 3955/4401 functions, 9688/10232 lines). Diffing every
+        // file's branch numerator and denominator between that base and this tip (`f214a911`)
+        // surfaced twelve files that moved; every other file in the coverage set held identical
+        // branch counts on both sides, not merely the same rounded percentage, so the aggregate
+        // rise below is not hiding a cancellation among files this comment omits.
+        //
+        // `src/main.ts` 0/4 -> 4/4 (`3b447325`, "cover onload failure, api ordering and unload").
+        // `src/api/journals-api.ts` 73/99 -> 82/99, total held (`ade31b23`, probing the three
+        // error codes no prior test asserted). `src/code-blocks/nav/settings/ui/EditNavBlockSegmentModal.vue`
+        // 54/59 -> 55/59, total held (`7e6164eb`, the code-blocks nav/timeline/home sweep).
+        // `src/maintenance/ui/MaintenanceBlock.vue` 0/2 -> 2/2 and
+        // `src/views/ui/ConfirmRepositionModal.vue` 0/4 -> 4/4, both their first tests ever
+        // (`f214a911`, "cover the remaining zero-coverage surfaces"). `src/notes-calendar/ui/NotesWeekView.vue`
+        // 27/28 -> 28/28, total held (`d03fbe68`, the notes-calendar week/cell/timeline sweep).
+        // `src/settings/legacy/data-migration-service.ts` 39/52 -> 41/52, total held (`a9079711`,
+        // "separate the two data-migration undefined arms"). `src/settings/legacy/journal-conversion.ts`
+        // 31/53 -> 52/53, total held — five settings commits (`e771e544`, `20209175`, `e29f011a`,
+        // `d3eed9a4`, `3f007cd6`) added targeted tests for the year-reset divisors, the interval
+        // frontmatter/ribbon paths and nav block row conversion, closing nearly every
+        // previously-untested arm in this one file. `src/ui/UiIcon.vue` 4/6 -> 5/6, total held
+        // (`2fcecee6`/`83c63beb`, the icon-null-append assertion and the fake `getIcon` fix it
+        // needed). `src/views/service.ts` 32/48 -> 42/48, total held (`05678d2f` and `f214a911`).
+        // `src/views/view-host.ts` 28/44 -> 42/44 — branch total held, but this file's own
+        // statement/line totals also grew (135->139, 118->122): `699a67bc` is a real bug fix, not a
+        // test-only change. The shelf-picker command used to no-op silently when its view had no
+        // open leaf; it now shows a notice (`command_view_shelf_needs_open_view` in
+        // `messages/en.json`, this phase's one message-key addition), which is a new, testable
+        // guard branch. `9ce1e116` then closed the rest of this file's pre-existing guard branches,
+        // unrelated to the fix.
+        //
+        // `src/templates/engine.ts` 161/179 -> 159/177 is the one file where *covered* fell, not
+        // just total, and reads differently from "an unreachable branch removed" on a closer look.
+        // `dc34311b` deletes `matched.groups ?? {}` — a nullish-coalescing branch whose both arms
+        // were already exercised, 2/2 covered — and reads `matched.groups` directly, pushing the
+        // one downstream access through `groups?.[...]` instead. That is a real
+        // behavior-preserving simplification (the deleted comment already explained the fallback
+        // never mattered: the loop that would read it never runs when there are no capture
+        // groups), but the optional-chaining replacement does not register as a same-size branch
+        // pair under this project's v8 coverage provider, so the file's branch total *and* covered
+        // count both drop by two — statements and lines on this file are unchanged, 264/282 and
+        // 241/251 on both sides. Nothing that used to be exercised stopped being exercised; the raw
+        // branch numbers just do not show "covered unchanged" the way a first read of "removed an
+        // unreachable branch" suggests — they show covered falling in step with total.
+        //
+        // The aggregate below still rises on every one of the four metrics net of that fall: the
+        // eleven other files' gains outweigh it. That net rise is exactly why per-file reading
+        // matters here — an aggregate-only read would show four clean increases and never surface
+        // that one file's branch coverage fell at all.
+        //
+        // Tip: 93.99 / 89.16 / 90.86 / 95.94 (11256/11975 statements, 4849/5438 branches,
+        // 3998/4400 functions, 9821/10236 lines).
+        statements: 93.99,
+        branches: 89.16,
+        functions: 90.86,
+        lines: 95.94,
       },
     },
     projects: [
