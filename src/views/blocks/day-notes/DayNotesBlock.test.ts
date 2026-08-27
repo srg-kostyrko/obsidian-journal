@@ -1,6 +1,6 @@
 import { fireEvent, screen } from "@testing-library/vue";
 import { __testing as obsidianTesting } from "obsidian";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref, type Ref } from "vue";
 
 import { localMoment, type AnchorString } from "@/calendar";
@@ -12,6 +12,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { testContainer, type TestHarness } from "@/testing";
+import { icons } from "@/ui/icons";
 
 import { viewsCoreModule } from "../../module";
 import { ViewsService } from "../../service";
@@ -103,7 +104,12 @@ function menuItem(title: string): ReturnType<typeof obsidianTesting.lastOpenMenu
   return item;
 }
 
-beforeEach(() => obsidianTesting.reset());
+beforeEach(() => {
+  obsidianTesting.reset();
+  obsidianTesting.seedIcons([icons.nav.prev, icons.nav.next, icons.action.sortAscending, icons.action.sortDescending]);
+});
+
+afterEach(() => obsidianTesting.resetIcons());
 
 describe("DayNotesBlock", () => {
   it("renders only notes created on refDate at day granularity", async () => {

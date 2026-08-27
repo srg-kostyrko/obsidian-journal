@@ -406,6 +406,7 @@
 	"command_open_previous": "Abrir la nota anterior",
 	"command_open_view": "Abrir {name}",
 	"command_view_change_shelf": "Cambiar estante en {name}",
+	"command_view_shelf_needs_open_view": "Abre primero {name} para elegir su estante.",
 	"shelf_picker_placeholder": "Buscar estantes",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Estante: {shelf}: {name}",

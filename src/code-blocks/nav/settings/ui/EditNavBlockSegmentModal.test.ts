@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import type { JournalConfig, NavBlockSegment } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -25,9 +26,11 @@ async function mountModal(options: {
       ...(options.shelves && { shelves: options.shelves }),
     },
   });
-  return harness.renderModal<typeof EditNavBlockSegmentModal, { segment: NavBlockSegment }>(EditNavBlockSegmentModal, {
-    props: { journalName: "daily", segment: options.segment },
-  });
+  const rendered = harness.renderModal<typeof EditNavBlockSegmentModal, { segment: NavBlockSegment }>(
+    EditNavBlockSegmentModal,
+    { props: { journalName: "daily", segment: options.segment } },
+  );
+  return { harness, ...rendered };
 }
 
 describe("EditNavBlockSegmentModal", () => {
@@ -164,5 +167,34 @@ describe("EditNavBlockSegmentModal", () => {
       expect(submit).toHaveBeenCalledTimes(1);
     });
     expect(submit.mock.calls[0]?.[0]).toMatchObject({ segment: { linkDate: "+1q" } });
+  });
+});
+
+describe("EditNavBlockSegmentModal numbering variables", () => {
+  it("passes the journal's numbering variable names to the variable reference modal", async () => {
+    const { harness } = await mountModal({
+      journals: {
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            numbering: {
+              enabled: true,
+              anchorDate: "2024-01-01" as AnchorString,
+              allowBefore: false,
+              sources: [
+                { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+              ],
+            },
+          },
+        ),
+      },
+    });
+
+    await userEvent.click(screen.getByText(m.journal_edit_variable_reference_link()));
+
+    expect(
+      harness.modals.lastOpen<{ numberingVariableNames: readonly string[] }>().props.numberingVariableNames,
+    ).toEqual(["index"]);
   });
 });

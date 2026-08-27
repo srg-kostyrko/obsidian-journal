@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { Container } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import { FakeNoticeService } from "@/infrastructure/host/testing";
+import { LogLevelGate, LogLevelGateToken } from "@/infrastructure/logger/log-level-gate";
 import { createLoggerTestingModule, type MemorySink } from "@/infrastructure/logger/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
@@ -73,6 +74,9 @@ function buildContainer(): { c: Container; sink: MemorySink; notices: FakeNotice
   const notices = new FakeNoticeService();
   const c = new Container();
   c.addModule(module);
+  // This suite asserts the level Flows logs at, including "info", which the testing module's
+  // production-matching "warn" default would filter before it reaches the sink.
+  c.override(LogLevelGateToken).useValue(new LogLevelGate("debug"));
   c.register(NoticeService).useValue(notices);
   c.register(Flows).useClass(Flows);
   return { c, sink, notices };

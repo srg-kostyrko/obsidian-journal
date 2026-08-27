@@ -2,8 +2,8 @@ import { ItemView, type WorkspaceLeaf } from "obsidian";
 import * as v from "valibot";
 import { computed, createApp, defineComponent, h, reactive, shallowRef, type App as VueApp, type VNode } from "vue";
 
-import { CalendarDate } from "@/calendar/calendar-date";
 import type { AnchorString } from "@/calendar/types";
+import { useToday } from "@/calendar/ui/use-today";
 import { m } from "@/i18n";
 import { provideInjectorOnApp, type Injector } from "@/infrastructure/di";
 import { InternalObsidianAppToken } from "@/infrastructure/host/internal/tokens";
@@ -110,10 +110,6 @@ export class JournalViewLeaf extends ItemView {
   }
 }
 
-function todayAnchor(): AnchorString {
-  return CalendarDate.today().toAnchor();
-}
-
 function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, injector: Injector) {
   return defineComponent({
     setup() {
@@ -123,15 +119,16 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
       const logger = injector.resolve(LoggerFactoryToken).named("view-leaf");
 
       const view = computed(() => repo.get(viewId).match({ some: (current) => current, none: () => null }));
+      const today = useToday();
 
-      // Set only by the view-level follow writer (Task 2) and cleared by every explicit
+      // Set only by the view-level follow writer and cleared by every explicit
       // navigation, so refDateOrigin can tell the two apart without a second date.
       const followedAnchor = shallowRef<AnchorString | null>(null);
 
       const context: ViewContext = {
         viewId,
         viewName: computed(() => view.value?.name ?? ""),
-        refDate: computed(() => leafState.refDate ?? todayAnchor()),
+        refDate: computed(() => leafState.refDate ?? today.value.toAnchor()),
         refDateOrigin: computed(() => (leafState.refDate === followedAnchor.value ? "follow" : "navigate")),
         shelf: computed(() =>
           resolveLeafShelf(leafState.shelf, view.value?.defaultShelf ?? null, (name) => shelves.get(name).isSome()),

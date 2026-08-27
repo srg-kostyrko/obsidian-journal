@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
@@ -20,6 +20,7 @@ import type { WorkspaceLeaf } from "obsidian";
 const VIEW_A = "11111111-1111-4111-8111-111111111111" as ViewId;
 const VIEW_B = "22222222-2222-4222-8222-222222222222" as ViewId;
 const VIEW_NEW = "33333333-3333-4333-8333-333333333333" as ViewId;
+const VIEW_UNKNOWN = "44444444-4444-4444-8444-444444444444" as ViewId;
 
 function openVia(host: FakeHost, id: ViewId): void {
   host.commands.get(`open-view:${id}`)?.callback?.();
@@ -41,6 +42,8 @@ async function build(seeds: Record<string, View> = {}, shelves: Record<string, S
     repo: harness.resolve(ViewsRepository),
     storage: harness.settings.recordOf(viewsCollection),
     suggests: harness.suggests,
+    notices: harness.notices,
+    logs: harness.logs,
   };
 }
 
@@ -81,6 +84,19 @@ describe("ViewHostService", () => {
       events.emit("created", VIEW_NEW);
       expect(host.registeredViews.has(`journal-view:${VIEW_NEW}`)).toBe(true);
     });
+
+    it("does not add a second ribbon icon when created fires for a view already registered", async () => {
+      const { host, events } = await build({ [VIEW_A]: buildView(VIEW_A, { showInRibbon: true }) });
+      events.emit("created", VIEW_A);
+      const matches = host.ribbonIcons.filter((r) => r.id === `journal-command:open-view:${VIEW_A}`);
+      expect(matches).toHaveLength(1);
+    });
+
+    it("warns and skips registration when created fires for a view missing from storage", async () => {
+      const { host, events } = await build();
+      events.emit("created", VIEW_NEW);
+      expect(host.registeredViews.has(`journal-view:${VIEW_NEW}`)).toBe(false);
+    });
   });
 
   describe("updated event", () => {
@@ -110,6 +126,19 @@ describe("ViewHostService", () => {
       storage[VIEW_A].icon = "star";
       expect(() => events.emit("updated", VIEW_A, { icon: "star" })).not.toThrow();
     });
+
+    it("skips resync for a view present in storage but never registered", async () => {
+      const { host, events, storage } = await build();
+      storage[VIEW_NEW] = buildView(VIEW_NEW);
+      events.emit("updated", VIEW_NEW, {});
+      expect(host.commands.has(`open-view:${VIEW_NEW}`)).toBe(false);
+    });
+
+    it("does not throw when updated fires after the view's storage entry is removed", async () => {
+      const { events, storage } = await build({ [VIEW_A]: buildView(VIEW_A) });
+      delete storage[VIEW_A];
+      expect(() => events.emit("updated", VIEW_A, {})).not.toThrow();
+    });
   });
 
   describe("deleted event", () => {
@@ -131,6 +160,11 @@ describe("ViewHostService", () => {
       events.emit("deleted", VIEW_A);
       expect(host.ribbonIcons.some((r) => r.id === `journal-command:open-view:${VIEW_A}`)).toBe(false);
     });
+
+    it("does nothing when deleted fires for a view that was never registered", async () => {
+      const { events } = await build();
+      expect(() => events.emit("deleted", VIEW_NEW)).not.toThrow();
+    });
   });
 
   describe("stale viewType", () => {
@@ -141,6 +175,33 @@ describe("ViewHostService", () => {
       const leafStub = { containerEl: document.createElement("div") } as unknown as WorkspaceLeaf;
       const result = factory(leafStub);
       expect(result.getDisplayText()).toBe("Stale view");
+    });
+
+    it("keeps answering the original view type once stale", async () => {
+      const { host, events } = await build({ [VIEW_A]: buildView(VIEW_A) });
+      const factory = host.registeredViews.get(`journal-view:${VIEW_A}`)!.factory;
+      events.emit("deleted", VIEW_A);
+      const leafStub = { containerEl: document.createElement("div") } as unknown as WorkspaceLeaf;
+      const result = factory(leafStub);
+      expect(result.getViewType()).toBe(`journal-view:${VIEW_A}`);
+    });
+
+    it("warns when a stale leaf is actually opened", async () => {
+      const { host, events, logs } = await build({ [VIEW_A]: buildView(VIEW_A) });
+      const factory = host.registeredViews.get(`journal-view:${VIEW_A}`)!.factory;
+      events.emit("deleted", VIEW_A);
+      const leafStub = { containerEl: document.createElement("div") } as unknown as WorkspaceLeaf;
+      const result = factory(leafStub);
+      await (result as unknown as { onOpen: () => Promise<void> }).onOpen();
+      expect(logs.records.some((r) => r.message === "opened stale view")).toBe(true);
+    });
+
+    it("builds a live view leaf for a view type that was never marked stale", async () => {
+      const { host } = await build({ [VIEW_A]: buildView(VIEW_A, { name: "Something" }) });
+      const factory = host.registeredViews.get(`journal-view:${VIEW_A}`)!.factory;
+      const leafStub = { containerEl: document.createElement("div") } as unknown as WorkspaceLeaf;
+      const result = factory(leafStub);
+      expect(result.getDisplayText()).toBe("Something");
     });
   });
 
@@ -154,6 +215,17 @@ describe("ViewHostService", () => {
       const { host } = await build({ [VIEW_A]: buildView(VIEW_A) });
       openVia(host, VIEW_A);
       expect(host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(true)).toBe(false);
+    });
+
+    it("opens the picker instead of noticing when no shelves exist but the view is open", async () => {
+      const { host, suggests, notices } = await build({ [VIEW_A]: buildView(VIEW_A) });
+      openVia(host, VIEW_A);
+      await Promise.resolve();
+
+      host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
+
+      expect(suggests.opens).toHaveLength(1);
+      expect(notices.messages).toEqual([]);
     });
 
     it("hides the command while the view is not open", async () => {
@@ -170,6 +242,59 @@ describe("ViewHostService", () => {
       await Promise.resolve();
       host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
       expect(suggests.lastOpen().input).toEqual([m.common_label_all_journals(), "work", "home"]);
+    });
+
+    it("notices instead of doing nothing when invoked with no open view", async () => {
+      const { host, notices } = await build({ [VIEW_A]: buildView(VIEW_A, { name: "Calendar" }) });
+
+      host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
+
+      expect(notices.messages).toContain(m.command_view_shelf_needs_open_view({ name: "Calendar" }));
+    });
+
+    it("stops at the cancelled picker without looking up the view's leaves", async () => {
+      const { host, suggests } = await build({ [VIEW_A]: buildView(VIEW_A) }, { work: buildShelf("work") });
+      openVia(host, VIEW_A);
+      await Promise.resolve();
+      host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
+      const spy = vi.spyOn(host.app.workspace, "getLeavesOfType");
+
+      suggests.lastOpen().cancel();
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(spy).not.toHaveBeenCalledWith(`journal-view:${VIEW_A}`);
+    });
+
+    it("looks up the view's leaves once a shelf is chosen", async () => {
+      const { host, suggests } = await build({ [VIEW_A]: buildView(VIEW_A) }, { work: buildShelf("work") });
+      openVia(host, VIEW_A);
+      await Promise.resolve();
+      host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
+      const spy = vi.spyOn(host.app.workspace, "getLeavesOfType");
+
+      suggests.lastOpen<string[], string>().choose("work");
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(spy).toHaveBeenCalledWith(`journal-view:${VIEW_A}`);
+    });
+
+    it("looks up the view's leaves once all journals is chosen", async () => {
+      const { host, suggests } = await build({ [VIEW_A]: buildView(VIEW_A) }, { work: buildShelf("work") });
+      openVia(host, VIEW_A);
+      await Promise.resolve();
+      host.commands.get(`change-shelf:${VIEW_A}`)?.checkCallback?.(false);
+      const spy = vi.spyOn(host.app.workspace, "getLeavesOfType");
+
+      suggests.lastOpen<string[], string>().choose(m.common_label_all_journals());
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(spy).toHaveBeenCalledWith(`journal-view:${VIEW_A}`);
     });
   });
 
@@ -308,6 +433,16 @@ describe("ViewHostService", () => {
       expect(host.workspace.viewStateCalls).toEqual([]);
       expect(host.workspace.detachedTypes).toEqual([]);
     });
+
+    it("falls back to the default right placement for a view with no stored config", async () => {
+      const { service, host } = await build();
+      await host.app.workspace.getRightLeaf(false)!.setViewState({ type: `journal-view:${VIEW_UNKNOWN}` });
+      host.workspace.viewStateCalls.length = 0;
+
+      await service.reposition(VIEW_UNKNOWN);
+
+      expect(host.workspace.viewStateCalls).toEqual([{ type: `journal-view:${VIEW_UNKNOWN}`, placement: "right" }]);
+    });
   });
 
   describe("initialize", () => {
@@ -345,6 +480,23 @@ describe("ViewHostService", () => {
       await Promise.resolve();
       expect(host.workspace.viewStateCalls).toEqual([{ type: `journal-view:${VIEW_A}`, placement: "right" }]);
       expect(host.workspace.revealLeafCalls).toBe(0);
+      expect(host.workspace.activatedTypes).toEqual([]);
+    });
+
+    it("logs and continues past a view whose startup placement throws", async () => {
+      const { service, host, storage, logs } = await build({
+        [VIEW_A]: buildView(VIEW_A, { openOnStartup: true }),
+        [VIEW_B]: buildView(VIEW_B, { openOnStartup: true }),
+      });
+      storage[VIEW_A].leaf = "invalid" as unknown as View["leaf"];
+      host.workspace.layoutReady = false;
+      service.initialize();
+      host.setLayoutReady();
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(host.workspace.viewStateCalls).toEqual([{ type: `journal-view:${VIEW_B}`, placement: "right" }]);
+      expect(logs.records.some((r) => r.message === "failed to open view on startup")).toBe(true);
     });
 
     it("leaves a view already restored from the layout untouched on startup", async () => {
@@ -376,6 +528,12 @@ describe("ViewHostService", () => {
       await Promise.resolve();
       expect(host.workspace.activatedTypes).toEqual([]);
     });
+
+    it("falls back to the default right placement for a view with no stored config", async () => {
+      const { service, host } = await build();
+      await service.open(VIEW_UNKNOWN);
+      expect(host.workspace.viewStateCalls).toEqual([{ type: `journal-view:${VIEW_UNKNOWN}`, placement: "right" }]);
+    });
   });
 
   describe("dispose", () => {
@@ -384,6 +542,12 @@ describe("ViewHostService", () => {
       service.dispose();
       expect(host.workspace.detachedTypes).toContain(`journal-view:${VIEW_A}`);
       expect(host.workspace.detachedTypes).toContain(`journal-view:${VIEW_B}`);
+    });
+
+    it("disposes every registration when the plugin unloads", async () => {
+      const { host } = await build({ [VIEW_A]: buildView(VIEW_A) });
+      host.triggerUnload();
+      expect(host.workspace.detachedTypes).toContain(`journal-view:${VIEW_A}`);
     });
   });
 });

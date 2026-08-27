@@ -406,6 +406,7 @@
 	"command_open_previous": "Apri la nota precedente",
 	"command_open_view": "Apri {name}",
 	"command_view_change_shelf": "Cambia scaffale in {name}",
+	"command_view_shelf_needs_open_view": "Apri prima {name} per scegliere il suo scaffale.",
 	"shelf_picker_placeholder": "Cerca scaffali",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Scaffale: {shelf}: {name}",

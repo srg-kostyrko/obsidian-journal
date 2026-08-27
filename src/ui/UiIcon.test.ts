@@ -1,10 +1,19 @@
 import { render } from "@testing-library/vue";
-import { describe, expect, it } from "vitest";
+import { __testing } from "obsidian";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import UiIcon from "./UiIcon.vue";
 
 describe("UiIcon", () => {
+  beforeEach(() => {
+    __testing.seedIcons(["search", "first", "second", "present"]);
+  });
+
+  afterEach(() => {
+    __testing.resetIcons();
+  });
+
   it("appends the icon returned by renderIcon on mount", () => {
     const { container } = render(UiIcon, { props: { name: "search" } });
 
@@ -30,5 +39,17 @@ describe("UiIcon", () => {
     await nextTick();
 
     expect(container.querySelector("svg")).toBeNull();
+  });
+
+  it("renders nothing when the icon name is not registered", () => {
+    const { container } = render(UiIcon, { props: { name: "definitely-not-an-icon" } });
+
+    expect(container.querySelector("svg")).toBeNull();
+  });
+
+  it("leaves the host empty when the icon name is not registered", () => {
+    const { container } = render(UiIcon, { props: { name: "definitely-not-an-icon" } });
+
+    expect(container.querySelector("span")?.childNodes).toHaveLength(0);
   });
 });

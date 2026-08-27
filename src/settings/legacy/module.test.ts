@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { calendarSettingsCoreModule } from "@/calendar/settings/module";
+import { commandCollection } from "@/commands/config";
+import { commandsCoreModule } from "@/commands/module";
 import { FakePluginData } from "@/infrastructure/host/testing";
 import { journalConfigCollection } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
-import { testContainer } from "@/testing";
+import { TestContainerUnknownSeedKeyError, testContainer } from "@/testing";
 
 import { legacyMigrationsModule } from "./module";
 
@@ -57,5 +60,57 @@ describe("legacy migrations integration", () => {
     // duration/every surviving too rules out the vacuity trap: a journal resolved from some other
     // "custom" default would not carry the source interval's own values.
     expect(sprints?.write).toMatchObject({ every: "week", duration: 2 });
+  });
+
+  it("accepts a pre-migration key named in allow.legacySeedKeys", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, legacyMigrationsModule, calendarSettingsCoreModule],
+      data: { version: 0, ...v1Raw() },
+      allow: { legacySeedKeys: ["calendar_view"] },
+    });
+
+    const journals = harness.settings.recordOf(journalConfigCollection);
+    expect(Object.values(journals).find((journal) => journal.name === "Sprints")).toBeDefined();
+  });
+
+  it("still throws for a pre-migration key that is not named in allow.legacySeedKeys", async () => {
+    await expect(
+      testContainer({
+        modules: [journalsCoreModule, legacyMigrationsModule, calendarSettingsCoreModule],
+        data: { version: 0, ...v1Raw(), calender_view: { leaf: "left", weeks: "left" } },
+        allow: { legacySeedKeys: ["calendar_view"] },
+      }),
+    ).rejects.toThrow(TestContainerUnknownSeedKeyError);
+  });
+
+  it("carries an interval ribbon and its dates template through the full migration chain", async () => {
+    const raw = v1Raw();
+    raw.journals.int.navDatesTemplate = "{{start_date}}|through|{{end_date}}";
+    raw.journals.int.ribbon = { show: true, icon: "rocket", tooltip: "Open the sprint" };
+
+    const harness = await testContainer({
+      modules: [journalsCoreModule, commandsCoreModule, legacyMigrationsModule, calendarSettingsCoreModule],
+      data: { version: 0, ...raw },
+      allow: { legacySeedKeys: ["calendar_view"] },
+    });
+
+    const journals = harness.settings.recordOf(journalConfigCollection);
+    const sprints = Object.values(journals).find((journal) => journal.name === "Sprints");
+    expect(sprints).toBeDefined();
+    expect(sprints?.navBlock.lines.map((line) => line.map((segment) => segment.template))).toEqual([
+      ["{{journal_name}} {{index}}"],
+      ["{{start_date}}"],
+      ["through"],
+      ["{{end_date}}"],
+    ]);
+
+    const commands = harness.settings.recordOf(commandCollection);
+    const ribbonCommand = Object.values(commands).find((command) => command.name === "Open the sprint");
+    expect(ribbonCommand).toMatchObject({
+      icon: "rocket",
+      showInRibbon: true,
+      context: "today",
+      target: { kind: "journal", journalName: "Sprints" },
+    });
   });
 });

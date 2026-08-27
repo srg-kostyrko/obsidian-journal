@@ -391,6 +391,7 @@
 	"command_open_previous": "打开上一条笔记",
 	"command_open_view": "打开 {name}",
 	"command_view_change_shelf": "切换 {name} 中的书架",
+	"command_view_shelf_needs_open_view": "请先打开 {name} 以选择其书架。",
 	"shelf_picker_placeholder": "搜索书架",
 	"command_palette_journal_name": "{journal}：{name}",
 	"command_palette_shelf_name": "书架：{shelf}：{name}",

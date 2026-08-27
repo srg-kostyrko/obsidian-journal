@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { fireEvent, screen } from "@testing-library/vue";
 import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { CalendarDate, WeekPeriod } from "@/calendar";
 import { anchor } from "@/calendar/testing";
@@ -9,9 +10,11 @@ import { decorationsModule } from "@/decorations/module";
 import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale } from "@/i18n";
+import type { VaultPath } from "@/infrastructure/host";
 import type { JournalConfig } from "@/journals";
+import { JournalsIndex } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -263,6 +266,69 @@ describe("NotesWeekView", () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
       expect(container.querySelector('[data-testid="header-quarter"]')).toBeNull();
+    });
+  });
+
+  describe("custom interval decorations", () => {
+    // A custom interval is anchored to its start date, which coincides with one day cell's
+    // anchor. The week grid renders fixed-period journals only; a custom interval's
+    // decoration belongs in the interval list, never on the day cell sharing its anchor.
+    it("does not decorate the day cell sharing a custom interval's start anchor", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("has-note")],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        sprint: customJournal("sprint", "week", 2, "2026-05-26", { decorations: [decoration] }),
+      });
+      const path = "sprint/2026-05-26.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "sprint", anchor: anchor("2026-05-26"), path });
+      harness.host.putFile(path);
+
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+      await nextTick();
+
+      const cell = container.querySelector('[data-anchor="2026-05-26"]');
+      expect(cell?.querySelector(".decoration-corner")).toBeNull();
+    });
+
+    // The week grid is otherwise fixed-only, but a custom journal's offset-condition
+    // decorations mark specific days inside an interval, so they belong on the day
+    // cells even though the journal itself renders as intervals.
+    it("paints a custom journal's offset decoration on the matching day cell", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("offset", { offset: 3 })],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        sprint: customJournal("sprint", "week", 2, "2026-05-26", { decorations: [decoration] }),
+      });
+
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+      await nextTick();
+
+      // Day 3 of the interval starting 2026-05-26 is 2026-05-28.
+      const cell = container.querySelector('[data-anchor="2026-05-28"]');
+      expect(cell?.querySelector(".decoration-corner")).not.toBeNull();
+    });
+
+    it("does not paint a custom journal's non-offset decoration on other day cells", async () => {
+      const decoration = buildDecoration({
+        mode: "or",
+        conditions: [buildCondition("weekday", { weekdays: [1, 2, 3, 4, 5, 6, 0] })],
+        styles: [buildStyle("corner")],
+      });
+      const harness = await bootHarness({
+        sprint: customJournal("sprint", "week", 2, "2026-05-26", { decorations: [decoration] }),
+      });
+
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week } });
+      await nextTick();
+
+      const cell = container.querySelector('[data-anchor="2026-05-28"]');
+      expect(cell?.querySelector(".decoration-corner")).toBeNull();
     });
   });
 

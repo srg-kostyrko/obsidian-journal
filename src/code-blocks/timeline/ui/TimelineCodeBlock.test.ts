@@ -2,7 +2,7 @@ import { fireEvent } from "@testing-library/vue";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
-import { CalendarDate, type AnchorString } from "@/calendar";
+import { CalendarDate, type AnchorString, type WeekPlacement } from "@/calendar";
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
 import { anchor } from "@/calendar/testing";
 import { decorationsModule } from "@/decorations/module";
@@ -38,6 +38,7 @@ interface TimelineScenario {
   readonly shelves?: Record<string, ShelfConfig>;
   readonly entries?: readonly JournalEntry[];
   readonly timelineNavigation?: boolean;
+  readonly weekPlacement?: WeekPlacement;
 }
 
 function journalEntry(journalName: string, anchorDate: string): JournalEntry {
@@ -50,7 +51,10 @@ async function renderTimeline(config: TimelineBlockConfig, scenario: TimelineSce
     data: {
       journals: scenario.journals,
       shelves: scenario.shelves ?? {},
-      calendarDisplay: { timelineNavigation: scenario.timelineNavigation ?? false },
+      calendarDisplay: {
+        timelineNavigation: scenario.timelineNavigation ?? false,
+        ...(scenario.weekPlacement !== undefined && { weekPlacement: scenario.weekPlacement }),
+      },
     },
   });
   const index = harness.resolve(JournalsIndex);
@@ -240,6 +244,15 @@ describe("TimelineCodeBlock", () => {
 
     it("positions the week-view week column right when config.weeks is right", async () => {
       const { container } = await renderDaily({ mode: "week", weeks: "right" });
+
+      const row = container.querySelector<HTMLElement>(".notes-week-view__row");
+      expect(row?.dataset.weeks).toBe("right");
+    });
+  });
+
+  describe("global week placement", () => {
+    it("uses the calendar display setting's placement when config.weeks is unset", async () => {
+      const { container } = await renderDaily({ mode: "week" }, { weekPlacement: "right" });
 
       const row = container.querySelector<HTMLElement>(".notes-week-view__row");
       expect(row?.dataset.weeks).toBe("right");

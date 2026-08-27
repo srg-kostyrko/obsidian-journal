@@ -316,11 +316,11 @@ export class TemplateEngine {
     if (!matched) {
       return new Err(new TemplateParseError({ kind: "no-match", input }));
     }
-    // A stream with no variable tokens compiles to a regex with no named groups at
-    // all, so `.groups` is `undefined` even on a successful match (JS regex semantics
-    // key `.groups` off the pattern, not the match) — fall back to {} rather than
-    // treating a matching pure-literal template as a parse failure.
-    const groups = matched.groups ?? {};
+    // A stream with no variable tokens compiles to a regex with no named groups, so `.groups` is
+    // undefined even on a successful match (JS regex semantics key `.groups` off the pattern, not
+    // the match). That is exactly the case where captureTokens is empty, so the loop below never
+    // runs and the optional read never resolves.
+    const groups = matched.groups;
 
     const candidates = new Map<string, BoundValue[]>();
     // Date tokens are resolved together per variable: a date split across tokens
@@ -328,7 +328,7 @@ export class TemplateEngine {
     // rather than have each token parse to a full moment-defaulted date.
     const dateTokens = new Map<string, DateCapture[]>();
     for (const [index, token] of captureTokens.entries()) {
-      const capture = groups[`v_${index}`];
+      const capture = groups?.[`v_${index}`];
       if (capture === undefined) continue;
       const spec = context.get(token.name);
       if (!spec || spec.kind === "derived") continue;

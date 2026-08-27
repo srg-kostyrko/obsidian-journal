@@ -408,6 +408,7 @@
 	"command_open_previous": "Ouvrir la note précédente",
 	"command_open_view": "Ouvrir {name}",
 	"command_view_change_shelf": "Changer d’étagère dans {name}",
+	"command_view_shelf_needs_open_view": "Ouvrez d’abord {name} pour choisir son étagère.",
 	"shelf_picker_placeholder": "Rechercher une étagère",
 	"command_palette_journal_name": "{journal} : {name}",
 	"command_palette_shelf_name": "Étagère : {shelf} : {name}",

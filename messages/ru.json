@@ -410,6 +410,7 @@
 	"command_open_previous": "Открыть предыдущую заметку",
 	"command_open_view": "Открыть {name}",
 	"command_view_change_shelf": "Изменить полку в {name}",
+	"command_view_shelf_needs_open_view": "Сначала откройте {name}, чтобы выбрать полку.",
 	"shelf_picker_placeholder": "Поиск полок",
 	"command_palette_journal_name": "{journal}: {name}",
 	"command_palette_shelf_name": "Полка: {shelf}: {name}",

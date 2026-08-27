@@ -170,8 +170,12 @@ a **mis-keyed** seed silent too: `calender` for `calendar` would let the test
 assert against the slice's defaults and pass with the seed ignored. The other
 cause is a correctly spelled key whose module was left out of `modules`, which
 is the same "your seed is not reaching the parse" mistake wearing a different
-hat. There is no `allow` for it: a key nothing registers is never what the test
-meant. `version` is always accepted — it is honored by the harness itself.
+hat. `allow: { legacySeedKeys: [...] }` is the one exception: `data` is consumed
+before migrations run, while the guard validates against post-migration slice
+and collection registrations, so a legacy blob's pre-migration-only keys
+(`calendar_view`, `useShelves`, …) would otherwise always throw. A key left out
+of that list still throws — naming one is not a way to disarm the guard
+wholesale. `version` is always accepted — it is honored by the harness itself.
 
 ## Mounting
 
@@ -206,11 +210,7 @@ Two delegation forms. Journals has a production defaults factory, which is
 richer than the schema defaults — `journalDefaultsFor` populates `navBlock`
 and a per-type `nameTemplate` that the schema's own defaults do not:
 
-```ts
-export function fixedJournal(name: string, write: JournalWrite, overrides: Partial<JournalConfig> = {}): JournalConfig;
-```
-
-(`src/journals/testing.ts`.)
+`fixedJournal` (`src/journals/testing.ts`) takes this form.
 
 A feature with no defaults factory of its own delegates to its collection's
 `defaultItem` instead, then applies overrides — `buildCommand` takes this
@@ -270,39 +270,14 @@ variant-named wrapper at all only where the variant genuinely changes the
 shape — `fixedJournal` versus `customJournal`.
 
 **Fixtures live in the feature's `testing.ts`**, never as a local factory in a
-test file — that is the rule. What enforces it across `src` is narrower than
-the rule itself: eslint's `no-restricted-syntax` flags only a
-`FunctionDeclaration` (not a `const foo = (...) => ...`) whose name matches
-`^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem)`.
-It is a naming tripwire, not a general ban — still worth having, because it
-catches the common shape without anyone having to remember it — but matching
-is purely syntactic, so passing lint and violating the rule are independent
-in both directions. A factory can violate the rule and still pass lint
-permanently, by construction of the selector rather than by luck: the
-selector only matches `FunctionDeclaration`, so `const makeJournal = () =>
-buildLiteral(...)` hand-builds an entity and is invisible to it no matter
-what changes elsewhere in the codebase, and a `function` whose name lands
-outside the eight-noun alternation escapes the same way. The converse also
-holds — a name that happens to match the shape says nothing about whether the
-function builds anything by hand at all; some do (a hand-built entity literal
-restating schema defaults, say) and some are compliant one-line delegators to
-a feature fixture, or arrange/seed helpers that were never entity fixtures to
-begin with. Neither a lint pass nor a lint failure is a verdict — only
-reading the function body is. Treat the selector as a naming-convention aid,
-not a compliance check: expect both false negatives (real violations the
-selector's shape can't see) and escapees that turn out to be fine on
-inspection, and judge each one by what it does rather than by whether lint
-flagged it.
-
-The entity alternation
-(`Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem`) and
-the message ("use fixedJournal/customJournal/buildShelf") are a fixed list,
-not a general pattern. The rule is enrolled for all of `src` in one block
-(see [Enforcement](#enforcement)), but the selector still only fires for a
-fixture name built from one of those nouns: a feature whose entity noun is
-not in the alternation — or a fixture named outside the `make|build|seed|create`
-prefix — is invisible to it, and a directory with such a fixture looks
-identical to one the selector is actually covering.
+test file. That is the rule; the naming tripwire under
+[Enforcement](#enforcement) is only an aid to it, and is weaker in both
+directions. It matches a `FunctionDeclaration` whose name is one of a closed
+set of prefixes followed by one of a closed set of entity nouns — read the
+selector for the current lists — so `const makeJournal = () => ...`, and any
+noun nobody has added yet, are invisible to it permanently and by construction.
+A match is no more conclusive: plenty are compliant one-line delegators. Read
+the function body. Neither a lint pass nor a lint failure decides this one.
 
 ### The standard for new tests
 
@@ -469,12 +444,19 @@ suite fast: the import graph is paid once per worker instead of once per file.
 
 The cost is that a file can reach the next one through anything
 process-global. A test that does belongs in `*.isolated.test.ts`, which runs
-in its own registry. Two kinds are known:
+in its own registry. The list is open, not closed — isolate on the
+**mechanism**, not on whether the test also cleans up after itself.
+`calendar.isolated.test.ts` restores moment's locale in an `afterEach` and is
+still isolated. Known kinds:
 
 - `vi.mock`, whose factory replaces the module for every later file in the
   worker. This one is eslint-enforced.
 - Rewriting moment's **global** locale, which leaves the next file on a
   different week grid.
+- Switching the paraglide locale with `setLocale`, which writes a module-scope
+  variable **and** a `document.cookie` that happy-dom keeps.
+- Listening on a process global such as `process.on("unhandledRejection")`,
+  which a floating rejection from any other file in the worker can trip.
 
 The resulting flake surfaces as a nondeterministic count in a _different_ file
 than the polluting one, which is why the rule is worth following before you
@@ -485,6 +467,35 @@ happy-dom, such as `@vueuse/integrations/useSortable` and `obsidian`. Not the
 project's own modules, and never a child component: mocking a child asserts
 which component the parent renders rather than what the user sees. Reach for
 a container override instead.
+
+## Harness behavior that will mislead you
+
+Four properties of this project's test stack that are invisible in the code
+depending on them, and each of which has produced a test that could not fail.
+
+**Vue's `v-bind()` in `<style scoped>` never reaches the DOM.** The resolved
+`@vue/runtime-dom` is the CJS build, whose `useCssVars` is a hardcoded no-op —
+the real implementation ships only in the ESM bundler build. Nothing appears as
+an inline style, a custom property, or a computed value, so no assertion on a
+bound CSS value can distinguish a correct component from a broken one. Assert
+on `data-*` attributes, classes, or text instead. This is a resolve-config
+limitation rather than a fact about Vue.
+
+**`@vue/test-utils` deep-wraps every object prop in a reactive proxy.** `mount`
+copies each prop into a `reactive({})`, so a plain object literal arrives at the
+component as a `Proxy` regardless of what the caller passed. A test reasoning "I
+passed a plain object, so this path is not reactive" is wrong.
+
+**`vi.spyOn(...).mockRejectedValue(...)` is pre-handled by vitest.** The
+mock-result tracking attaches its own handler, so `unhandledRejection` never
+fires and a test asserting that a rejection is _swallowed_ passes whether or not
+the production code swallows it. Patch the prototype by hand and restore in a
+`finally` when you need a genuinely floating rejection.
+
+**`SettingsService`'s root is deeply reactive.** A plain object nested under it
+is re-wrapped on every read, so a value read back through the store is a proxy
+no matter what was written. To observe what was actually persisted, `toRaw` the
+top-level entity from the repository and navigate the raw graph from there.
 
 ## Enforcement
 
@@ -499,36 +510,55 @@ uses for the `vi.mock` ban. No custom plugin.
 | No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector                        |
 | `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)                         |
 
-**The full rule set is enabled for all of `src`, minus two carve-outs.** One
-`files: ["src/**/*.test.ts"]` block in `eslint.config.mjs` carries the whole
-`no-restricted-syntax` list; the base `vi.mock` rule alone applies more
-broadly, to every `**/*.test.ts`. A hand-maintained glob per directory would
-be fragile: it has to grow a line for each new feature directory, and a
-forgotten line reads identically to an enforced one.
+**The full rule set is enabled for all of `src`, minus one carve-out.** One
+block in `eslint.config.mjs` carries the whole `no-restricted-syntax` list; the
+`vi.mock` ban alone applies more broadly. Enrolment is a single glob rather than
+a list of feature directories, because a forgotten line in such a list reads
+identically to an enforced one.
 
-**`src/infrastructure/**` is an explicit `ignores` entry on that block, and
-stays one.** Its `host`/`di`/`flows` tests are what `testContainer()` itself
-is built and verified against — converting them onto the harness would test
-the harness through itself. This is a permanent boundary, not a directory
-the campaign hasn't reached yet, and an `ignores` entry says so more clearly
-than a glob list ever could: absence from a list is silent, but an `ignores`
-entry is visible in the config and can carry a comment explaining why.
+**`*.isolated.test.ts` is enrolled in every rule except the `vi.mock` ban.**
+That exemption is the whole point of the suffix: the file runs in its own module
+registry, so what the ban protects against cannot happen there. Everything else
+applies — a file earns the suffix by touching process-global state, the harder
+kind of test, not the kind that needs fewer rules. The config keeps the two
+selector sets under separate names for this reason.
+
+**`src/infrastructure/**` is exempt and stays exempt.** Its `host`/`di`/`flows`
+tests are what `testContainer()` is built and verified against, so converting
+them onto the harness would test the harness through itself. A permanent
+boundary, not a directory the campaign never reached.
 
 Two mechanics that have already caused a silent failure once each:
 
 - **Flat-config rule options replace, they do not merge.** The full-set block
   must sit _after_ the general test-file block and **re-declare the `vi.mock`
   selector**, or the ban silently lifts for every file it covers.
-- **A selector matching nothing looks identical to one that works.** Verify a new
-  rule by writing a violation and watching it fire, then removing it. Do this
-  without touching the working tree: pipe the violation through eslint's stdin
-  mode against a real, already-enrolled path —
+- **A selector matching nothing looks identical to one that works.** Verify a
+  new rule by writing a violation and watching it fire, then removing it. Do
+  this without touching the working tree: pipe the violation through eslint's
+  stdin mode against a real, already-enrolled path —
   `printf '<violation>' | npx eslint --stdin --stdin-filename src/<enrolled-file>.test.ts` —
   which runs the same selectors and writes nothing to disk, so an interrupted
   check never leaves a stray file behind for the test-count gate to trip over.
 
-Two selectors are deliberately narrowed, and the narrowing is load-bearing:
+**An automated gate for the two mechanics above was built and rejected
+(2026-08-27). Do not rebuild it.** It resolved the config for a representative
+path of each kind and compared which selectors reached it. It passed its own
+six-mutation battery, then missed both silent failures this config has actually
+had — `1a82add0`, the modals block re-listing `no-restricted-syntax` without the
+override ban, and its `.vue` sibling `7a92aa77`. Sampling paths cannot be made to
+work here: `**/ui/modals.ts` keys on a filename, so no table of representative
+paths reaches it. **Mutations written by a guard's own author validate nothing** —
+against this file's real history it scored 0 for 2. If a gate is ever wanted,
+iterate the config's own blocks and assert what each glob may never drop.
 
+Three selectors are deliberately narrowed, and the narrowing is load-bearing:
+
+- The fixture-naming tripwire matches a **closed list of entity nouns**, so
+  **widen it when a feature's `testing.ts` gains a fixture**, or that entity is
+  invisible to it. Inverting it to match any capitalised noun was measured and
+  rejected: 23 hits across the suite, every one a legitimate local helper and
+  not one an entity fixture. A rule that loud gets switched off.
 - The `.register` ban matches a binding chain **inside a test body or hook**,
   because a bare `.register(` also names `JournalsIndex.register`, the domain
   method the suite seeds index entries through.

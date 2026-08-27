@@ -94,6 +94,25 @@ describe("DecorationsSection", () => {
     expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
   });
 
+  it("lists only the journal's own decorations when a shelf the journal is not on also has some", async () => {
+    // mount() above seeds one owner's bucket at a time, which cannot tell a scoped lookup from
+    // an additive one when the other buckets are empty. Populating both is what a substitution
+    // (reading the wrong bucket) and a leak (reading every bucket) would actually diverge on.
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+      data: {
+        journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [sampleDecoration] }) },
+        shelves: { work: buildShelf("work", { decorations: [sampleCalendarDecoration] }) },
+        decorations: { decorations: [] },
+      },
+    });
+    vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
+    harness.render(DecorationsSection, { props: { owner: { kind: "journal", journalName: "daily" } } });
+    await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
+
+    expect(screen.getAllByLabelText(m.decoration_edit())).toHaveLength(1);
+  });
+
   it("renders a preview swatch for each decoration", async () => {
     await mount({ kind: "journal", journalName: "daily" }, [sampleDecoration]);
     await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
