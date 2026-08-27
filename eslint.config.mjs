@@ -22,15 +22,16 @@ const noStrayDefineModal = {
   message: "`defineModal()` is only allowed in `<feature>/ui/modals.ts`. Move the modal definition there.",
 };
 
-// `no-restricted-syntax` options replace rather than merge, so this array must carry
-// the vi.mock selector too — a block that omits it lifts the isolation ban for every
-// glob it covers, and a selector matching nothing looks exactly like one that works.
-const campaignTestSelectors = [
-  {
-    selector: "CallExpression[callee.object.name='vi'][callee.property.name='mock']",
-    message:
-      "vi.mock replaces the module for every later file sharing the worker's registry. Rename this file to *.isolated.test.ts so it runs in its own.",
-  },
+export const noViMock = {
+  selector: "CallExpression[callee.object.name='vi'][callee.property.name='mock']",
+  message:
+    "vi.mock replaces the module for every later file sharing the worker's registry. Rename this file to *.isolated.test.ts so it runs in its own.",
+};
+
+// The campaign selectors minus the isolation ban. `*.isolated.test.ts` runs in its own worker,
+// so `vi.mock` is exactly what that suffix buys — but every other campaign rule still applies
+// there, so the two sets have to be nameable apart. See the isolated block below.
+export const harnessTestSelectors = [
   {
     selector: "NewExpression[callee.name='Container']",
     message: "Build the container with testContainer() from @/testing.",
@@ -45,8 +46,14 @@ const campaignTestSelectors = [
     message: "Pass a feature CORE/UI module to testContainer({ modules }) instead of registering by hand.",
   },
   {
+    // The entity list is closed on purpose and has to be widened when a feature's testing.ts
+    // gains a fixture. Inverting it to `[A-Z]` was measured on 2026-08-27: 23 matches across
+    // the suite, every one a legitimate local helper (buildHarness, makeHost, buildContainer)
+    // and not one an entity fixture — a rule that loud gets switched off. The entries here are
+    // derived from what `export function (make|build|seed|create)X` actually exists in a
+    // testing.ts, so the list is checkable rather than guessed.
     selector:
-      "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|Decoration|Config|NavSegment|ToolbarItem)/]",
+      "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|CalendarDecoration|Decoration|Config|Condition|Style|ScannedNote|NavSegment|ToolbarItem)/]",
     message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal/buildShelf.",
   },
   {
@@ -59,6 +66,12 @@ const campaignTestSelectors = [
     message: "This file already builds a harness — mount through harness.render, which binds the injector for you.",
   },
 ];
+
+// `no-restricted-syntax` options replace rather than merge, so any block covering a
+// non-isolated glob must carry the vi.mock selector too — omit it and the block lifts the
+// isolation ban for everything it matches, and a selector matching nothing looks exactly
+// like one that works.
+export const campaignTestSelectors = [noViMock, ...harnessTestSelectors];
 
 // `initLocale()` runs inside `onload()`, long after the import graph has evaluated, so a message
 // resolved at module scope freezes in the base locale for every user. Calls inside a function body
@@ -402,6 +415,20 @@ export default [
     ignores: ["**/*.isolated.test.ts", "src/infrastructure/**"],
     rules: {
       "no-restricted-syntax": ["error", ...campaignTestSelectors],
+    },
+  },
+  {
+    // Must sit after the campaign block, which ignores this glob. A file earns the
+    // `.isolated` suffix by touching process-global state — the harder kind of test, not the
+    // kind that needs fewer rules — so the only campaign selector it is exempt from is the
+    // vi.mock ban that the suffix exists to satisfy. Measured on 2026-08-27: enrolling the
+    // seven non-infrastructure isolated files surfaces zero violations, so this is a ratchet
+    // against future drift rather than a cleanup. `src/infrastructure/**` stays exempt for
+    // the reason given above.
+    files: ["src/**/*.isolated.test.ts"],
+    ignores: ["src/infrastructure/**"],
+    rules: {
+      "no-restricted-syntax": ["error", ...harnessTestSelectors],
     },
   },
   {
