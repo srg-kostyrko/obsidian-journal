@@ -206,10 +206,11 @@ describe("DecorationMatchService", () => {
     });
 
     it("reports silent rather than no notes for a date-only decoration over a note-free window", async () => {
-      // The one test that pins needsNotes into the service: a decoration that never needs a
-      // note must report "silent" over a note-free window, not "no-notes". An implementation
-      // that reports "no-notes" for any note-free window regardless of the decoration would
-      // pass every other evidence test but fail this one.
+      // The counterpart to the has-note tests above and the note-size tests below, which pin needsNotes
+      // returning true: a decoration that never needs a note must report "silent" over a
+      // note-free window, not "no-notes". An implementation that reports "no-notes" for any
+      // note-free window regardless of the decoration would pass every other evidence test but
+      // fail this one.
       const decoration = neverMatches();
       const harness = await buildHarness({
         daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
