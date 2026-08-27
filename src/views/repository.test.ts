@@ -4,6 +4,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { InvalidViewUpdateError } from "./errors";
 import { viewsCoreModule } from "./module";
 import { ViewsRepository } from "./repository";
 import { buildView } from "./testing";
@@ -42,6 +43,17 @@ describe("ViewsRepository", () => {
       const repo = harness.resolve(ViewsRepository);
       const ids = [...repo.find().entries()].map(([id]) => id);
       expect(ids).toEqual([ID_A, ID_B]);
+    });
+  });
+
+  describe("inherited update", () => {
+    it("rejects an id change via update with InvalidViewUpdateError", async () => {
+      const harness = await buildRepo({ [ID_A]: buildView(ID_A) });
+      const repo = harness.resolve(ViewsRepository);
+
+      const result = repo.update(ID_A as ViewId, { id: ID_B as ViewId });
+
+      expect(result.isErr() && result.error).toBeInstanceOf(InvalidViewUpdateError);
     });
   });
 });
