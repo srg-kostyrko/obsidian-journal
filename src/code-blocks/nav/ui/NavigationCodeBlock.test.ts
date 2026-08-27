@@ -193,6 +193,22 @@ describe("NavigationCodeBlock columns", () => {
   });
 });
 
+describe("NavigationCodeBlock adjacent periods in 'existing' mode", () => {
+  it("shows the previous period once the index registers its entry after mount", async () => {
+    const { index } = await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ type: "existing" }) },
+      shelves: { main: buildShelf("main", { journals: ["daily"] }) },
+      entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
+    });
+    expect(screen.queryByText("26")).toBeNull();
+
+    index.register(journalEntry("daily", "2026-05-26", "Daily/2026-05-26.md"));
+    await nextTick();
+
+    expect(screen.getByText("26")).toBeTruthy();
+  });
+});
+
 describe("NavigationCodeBlock segment templates", () => {
   it("renders note_name as the connected note's own name, and as the prospective name where no note exists", async () => {
     await renderNav("Daily/Renamed day.md", {
