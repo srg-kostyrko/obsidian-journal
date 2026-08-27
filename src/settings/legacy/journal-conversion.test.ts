@@ -115,6 +115,24 @@ describe("prepareIntervalJournalSettings", () => {
     expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 26 });
   });
 
+  it("computes the year-reset divisor for months", () => {
+    const old = intervalFixture();
+    old.numeration_type = "year";
+    old.granularity = "month";
+    old.duration = 5;
+    const s = prepareIntervalJournalSettings(old, false);
+    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 2 });
+  });
+
+  it("computes the year-reset divisor for days", () => {
+    const old = intervalFixture();
+    old.numeration_type = "year";
+    old.granularity = "day";
+    old.duration = 10;
+    const s = prepareIntervalJournalSettings(old, false);
+    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 36 });
+  });
+
   it("converts a date timeline end", () => {
     const settings = prepareIntervalJournalSettings(
       { ...intervalFixture(), end_type: "date", end_date: "2023-06-30" },
