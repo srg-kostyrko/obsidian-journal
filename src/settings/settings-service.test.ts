@@ -171,7 +171,9 @@ describe("SettingsService", () => {
       });
     });
 
-    it("derives the repaired value from the entry's own stored fields", async () => {
+    // "keeps the fields that validate..." above tells the whole-reset and field-substitution paths
+    // apart; sound derives only from kind, so this pins just that the stored kind reaches defaultItem.
+    it("passes the stored kind through to the collection's defaultItem", async () => {
       const harness = await testContainer({
         modules: [testSettingsModule({ collections: [petCollection] })],
         data: { pets: { Rex: { name: "Rex", kind: "dog", sound: "" } } },
