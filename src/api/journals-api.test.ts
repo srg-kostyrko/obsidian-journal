@@ -2,8 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { Flows } from "@/infrastructure/flows";
+import { WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
+import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
+import { AsyncResult, Option } from "@/infrastructure/result";
 import type { JournalConfig } from "@/journals/config";
+import { CycleService } from "@/journals/cycle";
 import { EnsureJournalEntryFlow, OpenJournalEntryFlow } from "@/journals/flows";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
@@ -256,6 +260,34 @@ describe("JournalsApiService writes", () => {
     await expect(api.ensureNote("past", "2026-08-18")).rejects.toMatchObject({ code: "outside-timeline" });
   });
 
+  it("maps a cycle miss to the unmappable-date code", async () => {
+    // Every name reaching this point already came from #select(), which only returns
+    // journals JournalsRepository confirms exist — and CycleService.anchorOf returns None
+    // only for a journal that does not exist, so a real config can never produce this state.
+    // The spy forces it anyway: the code string is the one thing a consumer can discriminate
+    // on across the published boundary, and the open `(string & {})` union means a misspelled
+    // literal here still type-checks. This test exists purely to catch that typo, not to
+    // exercise a reachable user path.
+    const { api, harness } = await buildApi({
+      past: fixedJournal(
+        "past",
+        { type: "day" },
+        {
+          timeline: {
+            start: "2020-01-01" as AnchorString,
+            end: { kind: "date", date: "2020-12-31" as AnchorString },
+          },
+        },
+      ),
+    });
+    // Must persist (not *Once*): #resolveOne calls anchorOf twice for this selector — once in
+    // #eligible, once in the mappable fallback — and a one-shot mock would let the second call
+    // fall through to the real implementation, flipping the verdict to outside-timeline.
+    vi.spyOn(harness.resolve(CycleService), "anchorOf").mockReturnValue(Option.none());
+
+    await expect(api.ensureNote("past", "2026-08-18")).rejects.toMatchObject({ code: "unmappable-date" });
+  });
+
   it("still reaches a note that exists outside the timeline", async () => {
     const { api, index, harness } = await buildApi({
       past: fixedJournal(
@@ -280,6 +312,31 @@ describe("JournalsApiService writes", () => {
 
     expect(result.note.path).toBe("Past/2026-08-18.md");
     expect(result.created).toBe(false);
+  });
+
+  it("reports open-failed when the workspace refuses to open the note", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    vi.spyOn(harness.resolve(WorkspaceService), "openNote").mockReturnValueOnce(
+      AsyncResult.err(new WorkspaceOpenError("2026-08-18.md" as VaultPath, new Error("no such view"))),
+    );
+
+    await expect(api.openNote("daily", "2026-08-18")).rejects.toMatchObject({ code: "open-failed" });
+  });
+
+  it("reports creation-failed when the written note cannot be read back", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    vi.spyOn(harness.resolve(NoteFileService), "resolve").mockReturnValueOnce(null);
+
+    await expect(api.ensureNote("daily", "2026-08-18")).rejects.toMatchObject({ code: "creation-failed" });
+  });
+
+  it("falls back to creation-failed for a flow failure that is neither aborted nor open-failed", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    // #toApiError has a second, independent site producing this same code string — its
+    // catch-all for a cause that is neither UserAborted nor WorkspaceOpenError.
+    flows.mockReturnValueOnce(AsyncResult.err(new Error("boom")));
+
+    await expect(api.ensureNote("daily", "2026-08-18")).rejects.toMatchObject({ code: "creation-failed" });
   });
 
   it("shows the picker when several journals match, and uses the choice", async () => {
