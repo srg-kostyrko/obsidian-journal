@@ -156,6 +156,58 @@ describe("prepareIntervalJournalSettings", () => {
 
     expect(settings.templates).toEqual(["99 - Meta/Templates/Sprint.md"]);
   });
+
+  // The guard never runs for this input, and its own empty-input fallback was authored to
+  // reproduce this default byte-for-byte, so forcing the guard to always execute leaves this
+  // green. Only mutating defaultNavBlocks.custom reddens it: this pins that default, not the guard.
+  it("keeps the custom journal's built-in nav-block default when neither nav template is set", () => {
+    const settings = prepareIntervalJournalSettings(intervalFixture(), false);
+
+    expect(settings.navBlock.rows.map((row) => row.template)).toEqual([
+      "{{journal_name}} {{index}}",
+      "{{start_date}}",
+      "to",
+      "{{end_date}}",
+    ]);
+  });
+
+  it("splits the dates template into one row per segment", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), navNameTemplate: "Sprint {{index}}", navDatesTemplate: "{{start_date}}|–|{{end_date}}" },
+      false,
+    );
+
+    expect(settings.navBlock.rows.map((row) => row.template)).toEqual([
+      "Sprint {{index}}",
+      "{{start_date}}",
+      "–",
+      "{{end_date}}",
+    ]);
+    expect(settings.navBlock.rows.at(0)).toMatchObject({ link: "self", fontSize: 3, bold: true, addDecorations: true });
+  });
+
+  it("falls back to a three-row date range when only the name template is set", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), navNameTemplate: "Sprint {{index}}" },
+      false,
+    );
+
+    expect(settings.navBlock.rows.map((row) => row.template)).toEqual([
+      "Sprint {{index}}",
+      "{{start_date}}",
+      "to",
+      "{{end_date}}",
+    ]);
+  });
+
+  it("titles the nav block from the journal name when only the dates template is set", () => {
+    const settings = prepareIntervalJournalSettings(
+      { ...intervalFixture(), navDatesTemplate: "{{start_date}}" },
+      false,
+    );
+
+    expect(settings.navBlock.rows.at(0)?.template).toBe("{{journal_name}} {{index}}");
+  });
 });
 
 describe("allocateName", () => {
