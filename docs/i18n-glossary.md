@@ -252,12 +252,18 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **711/711**. Every locale has had a line-by-line pass
+All eleven locales are complete at **765/765**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 
 Be precise about what that pass was, because "reviewed" overstates it for nine of them:
 
+- `command_view_shelf_needs_open_view` was translated by an agent working from this file,
+  modelled on `command_open_needs_active_note` — the same speech act, so each locale reuses
+  its own rendering of "open X first" and appends the canonical shelf term. Not
+  native-verified. Worth a native eye: whether the purpose clause reads naturally after an
+  imperative in de, it and ko, and whether ko's `을(를)` particle form is acceptable in UI
+  copy where the preceding token is a variable.
 - **uk** was reviewed by a native speaker. It is the only locale where the output was
   verified by someone who reads the language.
 - The 23 `journal_sequence_*` and numbering-warning keys were translated by an agent
