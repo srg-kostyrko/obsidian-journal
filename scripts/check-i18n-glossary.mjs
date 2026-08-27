@@ -383,8 +383,18 @@ const baseKeys = keys(BASE_LOCALE);
 for (const locale of locales) {
   if (locale === BASE_LOCALE) continue;
   const localeKeys = keys(locale);
-  for (const key of baseKeys)
-    if (!localeKeys.has(key))
+  const missing = [...baseKeys].filter((key) => !localeKeys.has(key));
+  // A brand-new locale file is missing every key at once. Listing those one per key runs to
+  // 2,299 lines that bury the summary, and not one of them says more than the count does.
+  if (missing.length > 0 && missing.length === baseKeys.size)
+    violations.push({
+      locale,
+      label: `(all ${baseKeys.size} keys)`,
+      text: "(absent)",
+      reason: `${locale}.json has none of ${BASE_LOCALE}.json's keys — seed it by copying ${BASE_LOCALE}.json, then translate in place`,
+    });
+  else
+    for (const key of missing)
       violations.push({
         locale,
         label: key,
