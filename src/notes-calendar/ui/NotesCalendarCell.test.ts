@@ -18,11 +18,19 @@ function stubApi(overrides: Partial<NotesCellApi> = {}): NotesCellApi {
     openPreview: vi.fn(),
     isActive: () => false,
     isActionable: () => true,
+    isSelectable: () => false,
     ...overrides,
   };
 }
 
-function mount(props: { period: Period; cell: NotesCellApi; format?: string; selected?: boolean }) {
+function mount(props: {
+  period: Period;
+  cell: NotesCellApi;
+  format?: string;
+  role?: "gridcell" | "rowheader";
+  tabIndex?: number;
+  selected?: boolean;
+}) {
   return render(NotesCalendarCell, { props });
 }
 
@@ -94,22 +102,32 @@ describe("NotesCalendarCell", () => {
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.hasAttribute("tabindex")).toBe(false);
     });
+
+    it("remains focusable outside a grid when it can select but cannot open", () => {
+      const { container } = mount({
+        period: may25,
+        cell: stubApi({ isActionable: () => false, isSelectable: () => true }),
+      });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.getAttribute("role")).toBe("button");
+      expect(cell?.tabIndex).toBe(0);
+    });
+
+    it("uses the caller-supplied grid role and roving tabindex", () => {
+      const { container } = mount({
+        period: may25,
+        cell: stubApi({ isActionable: () => false }),
+        role: "gridcell",
+        tabIndex: -1,
+      });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.getAttribute("role")).toBe("gridcell");
+      expect(cell?.tabIndex).toBe(-1);
+      expect(cell?.getAttribute("aria-label")).toBe(may25.format("LL"));
+    });
   });
 
   describe("data attributes", () => {
-    it("renders the selected marker only when requested", () => {
-      const selected = mount({ period: may25, cell: stubApi(), selected: true });
-      expect(selected.container.querySelector<HTMLElement>('[data-anchor="2026-05-25"]')?.dataset.selected).toBe(
-        "true",
-      );
-      selected.unmount();
-
-      const regular = mount({ period: may25, cell: stubApi() });
-      expect(
-        regular.container.querySelector<HTMLElement>('[data-anchor="2026-05-25"]')?.dataset.selected,
-      ).toBeUndefined();
-    });
-
     it("renders data-active when the cell reports active", () => {
       const { container } = mount({
         period: may25,
@@ -138,6 +156,35 @@ describe("NotesCalendarCell", () => {
       const { container } = mount({ period: may25, cell: stubApi() });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.dataset.anchor).toBe("2026-05-25");
+    });
+
+    it("marks an exactly selected cell for styling and assistive technology", () => {
+      const { container } = mount({ period: may25, cell: stubApi(), role: "gridcell", selected: true });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.dataset.selected).toBe("true");
+      expect(cell?.getAttribute("aria-selected")).toBe("true");
+    });
+
+    it("does not expose aria-selected=false on an unselected cell", () => {
+      const { container } = mount({ period: may25, cell: stubApi(), role: "gridcell", selected: false });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+      expect(cell?.hasAttribute("data-selected")).toBe(false);
+      expect(cell?.hasAttribute("aria-selected")).toBe(false);
+    });
+
+    it("can carry selected, today, and active markers at the same time", () => {
+      vi.spyOn(CalendarDate, "today").mockReturnValue(date("2026-05-25"));
+      const { container } = mount({
+        period: may25,
+        cell: stubApi({ isActive: () => true }),
+        role: "gridcell",
+        selected: true,
+      });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
+
+      expect(cell?.dataset.selected).toBe("true");
+      expect(cell?.dataset.today).toBe("true");
+      expect(cell?.dataset.active).toBe("true");
     });
   });
 
@@ -212,6 +259,30 @@ describe("NotesCalendarCell", () => {
       expect(open).toHaveBeenCalled();
       const firstCall = open.mock.calls[0] as [Period, KeyboardEvent];
       expect(firstCall[0]).toBe(may25);
+    });
+
+    it("passes Shift+Enter through to the cell action", async () => {
+      const open = vi.fn();
+      const { container } = mount({ period: may25, cell: stubApi({ open }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      cell.focus();
+
+      await userEvent.keyboard("{Shift>}{Enter}{/Shift}");
+
+      const event = open.mock.calls[0]?.[1] as KeyboardEvent | undefined;
+      expect(event?.key).toBe("Enter");
+      expect(event?.shiftKey).toBe(true);
+    });
+
+    it("invokes cell.open on Space when focused", async () => {
+      const open = vi.fn();
+      const { container } = mount({ period: may25, cell: stubApi({ open }) });
+      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell")!;
+      cell.focus();
+
+      await userEvent.keyboard(" ");
+
+      expect(open).toHaveBeenCalledWith(may25, expect.objectContaining({ key: " " }));
     });
   });
 

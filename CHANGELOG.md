@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- An optional vault notes preview can now be enabled in Calendar settings. Once enabled, Shift-clicking a calendar day shows notes created on that date below the calendar, while ordinary clicks retain their original behavior. Note cards open in new tabs, and the preview remembers the chosen sorting method and order. Journal notes can be shown or hidden and are limited to the selected shelf; ordinary vault notes remain visible regardless of shelf.
+- A new **Notes by date** view block lists every vault note created in the period containing the view's selected date. Choose the period from day through decade, sort by name, creation date, or last modification, and configure which Frontmatter property records creation dates. Calendar blocks now let you select their date with Shift-click or Shift+Enter without opening or creating a journal note, their calendar grids support arrow-key navigation, and view toolbar buttons can step the selected date one day at a time.
 
 ### Bug Fixes
 

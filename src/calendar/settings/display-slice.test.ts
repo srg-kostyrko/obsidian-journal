@@ -22,25 +22,6 @@ describe("calendarDisplaySlice", () => {
     expect(parsed.timelineNavigation).toBe(false);
   });
 
-  it("keeps vault day notes off on upgrade and defaults to newest modified first", () => {
-    const parsed = v.parse(calendarDisplaySliceSchema, {});
-    expect(parsed.vaultDayNotes).toBe(false);
-    expect(parsed.vaultDayNotesSort).toBe("modified-desc");
-    expect(parsed.vaultDayNotesIncludeJournals).toBe(true);
-    expect(calendarDisplaySlice.defaults).toMatchObject({
-      vaultDayNotes: false,
-      vaultDayNotesSort: "modified-desc",
-      vaultDayNotesIncludeJournals: true,
-    });
-  });
-
-  it("accepts every supported vault-note sort and rejects unknown values", () => {
-    for (const value of ["modified-desc", "modified-asc", "name-asc", "name-desc"]) {
-      expect(v.safeParse(calendarDisplaySliceSchema, { vaultDayNotesSort: value }).success).toBe(true);
-    }
-    expect(v.safeParse(calendarDisplaySliceSchema, { vaultDayNotesSort: "created-desc" }).success).toBe(false);
-  });
-
   it("rejects an unknown placement value", () => {
     const parsed = v.safeParse(calendarDisplaySliceSchema, { weekPlacement: "middle" });
     expect(parsed.success).toBe(false);

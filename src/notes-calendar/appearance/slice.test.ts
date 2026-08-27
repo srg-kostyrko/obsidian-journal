@@ -11,7 +11,7 @@ describe("appearanceSlice", () => {
         color: { type: "theme", name: "text-on-accent" },
         background: { type: "theme", name: "interactive-accent" },
       },
-      selectedBackground: { type: "theme", name: "background-modifier-hover" },
+      selectedRing: { type: "theme", name: "interactive-accent" },
     });
   });
 
@@ -19,16 +19,9 @@ describe("appearanceSlice", () => {
     const parsed = v.parse(appearanceSliceSchema, {
       today: { color: { type: "custom", color: "#ff0000" }, background: { type: "transparent" } },
       active: { color: { type: "transparent" }, background: { type: "transparent" } },
-      selectedBackground: { type: "custom", color: "#00ff00" },
+      selectedRing: { type: "custom", color: "#00ff00" },
     });
     expect(parsed.today.color).toEqual({ type: "custom", color: "#ff0000" });
-  });
-
-  it("fills the selected-date background when older settings omit it", () => {
-    const parsed = v.parse(appearanceSliceSchema, {
-      today: { color: { type: "transparent" }, background: { type: "transparent" } },
-      active: { color: { type: "transparent" }, background: { type: "transparent" } },
-    });
-    expect(parsed.selectedBackground).toEqual({ type: "theme", name: "background-modifier-hover" });
+    expect(parsed.selectedRing).toEqual({ type: "custom", color: "#00ff00" });
   });
 });

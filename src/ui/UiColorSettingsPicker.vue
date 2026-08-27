@@ -8,7 +8,7 @@ import { themeColorGroupsFor, themeColorLabel, type ThemeColorFieldRole } from "
 import UiColorPicker from "./UiColorPicker.vue";
 import UiDropdown from "./UiDropdown.vue";
 
-const { role, disabled } = defineProps<{ role: ThemeColorFieldRole; disabled?: boolean }>();
+const { role } = defineProps<{ role: ThemeColorFieldRole }>();
 const model = defineModel<ColorSettings>({ required: true });
 
 const groups = computed(() => themeColorGroupsFor(role));
@@ -40,7 +40,7 @@ const customColor = computed<string>({
 
 <template>
   <span class="ui-color-settings-picker">
-    <UiDropdown v-model="kind" :disabled="disabled">
+    <UiDropdown v-model="kind">
       <option value="transparent">{{ m.ui_color_kind_label({ kind: "transparent" }) }}</option>
       <option value="theme">{{ m.ui_color_kind_label({ kind: "theme" }) }}</option>
       <option value="custom">{{ m.ui_color_kind_label({ kind: "custom" }) }}</option>
@@ -49,7 +49,6 @@ const customColor = computed<string>({
       <UiDropdown
         v-model="themeName"
         class="ui-color-settings-picker__theme"
-        :disabled="disabled"
         :aria-label="m.ui_color_theme_variable_label()"
       >
         <option value="">{{ m.ui_color_theme_variable_label() }}</option>
@@ -79,7 +78,7 @@ const customColor = computed<string>({
         :style="{ backgroundColor: `var(--${themeName})` }"
       />
     </template>
-    <UiColorPicker v-if="model.type === 'custom'" v-model="customColor" :disabled="disabled" />
+    <UiColorPicker v-if="model.type === 'custom'" v-model="customColor" />
   </span>
 </template>
 

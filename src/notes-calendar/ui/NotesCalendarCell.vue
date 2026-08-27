@@ -14,6 +14,8 @@ const props = defineProps<{
   period: Period;
   cell: NotesCellApi;
   format?: string;
+  role?: "gridcell" | "rowheader";
+  tabIndex?: number;
   selected?: boolean;
 }>();
 
@@ -21,12 +23,13 @@ const rawPeriod = computed(() => toRaw(props.period));
 const label = computed(() => rawPeriod.value.format(props.format ?? defaultFormatPattern(rawPeriod.value.kind)));
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
+const isControl = computed(() => props.role !== undefined || !isInactive.value || props.cell.isSelectable());
+const resolvedRole = computed(() => props.role ?? (isControl.value ? "button" : undefined));
+const resolvedTabIndex = computed(() => props.tabIndex ?? (isControl.value ? 0 : undefined));
 const today = useToday();
 const isToday = computed(() => rawPeriod.value.contains(today.value));
-// Only an actionable cell is a control; an inert one is decoration and naming it would add
-// noise to the announcement without offering anything to activate.
 const accessibleName = computed(() =>
-  isInactive.value ? undefined : rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)),
+  isControl.value ? rawPeriod.value.format(accessibleFormatPattern(rawPeriod.value.kind)) : undefined,
 );
 
 const hover = useModifierHoverPreview();
@@ -35,9 +38,10 @@ const hover = useModifierHoverPreview();
 <template>
   <span
     class="notes-calendar-cell"
-    :role="isInactive ? undefined : 'button'"
-    :tabindex="isInactive ? undefined : 0"
+    :role="resolvedRole"
+    :tabindex="resolvedTabIndex"
     :aria-label="accessibleName"
+    :aria-selected="selected || undefined"
     :data-active="isActive || null"
     :data-inactive="isInactive || null"
     :data-anchor="rawPeriod.anchor.toAnchor()"
@@ -91,7 +95,6 @@ const hover = useModifierHoverPreview();
   background-color: var(--journal-cell-active-bg);
 }
 .notes-calendar-cell[data-selected] {
-  border-radius: 0;
-  background-color: var(--journal-cell-selected-bg);
+  box-shadow: inset 0 0 0 2px var(--journal-cell-selected-ring);
 }
 </style>

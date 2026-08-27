@@ -205,12 +205,14 @@ export class AbstractInputSuggest<T> {
 export interface FakeMenuItemConfig {
   title?: string;
   icon?: string;
+  checked?: boolean | null;
   onClick?: (event: MouseEvent | KeyboardEvent) => void;
 }
 
 export class MenuItem {
   title = "";
   icon = "";
+  checked: boolean | null = null;
   section = "";
   warning = false;
   #onClick: (event: MouseEvent | KeyboardEvent) => void = () => {};
@@ -221,6 +223,10 @@ export class MenuItem {
   }
   setIcon(icon: string): this {
     this.icon = icon;
+    return this;
+  }
+  setChecked(checked: boolean | null): this {
+    this.checked = checked;
     return this;
   }
   setSection(section: string): this {

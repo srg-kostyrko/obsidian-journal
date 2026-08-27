@@ -16,10 +16,9 @@ export const icons = {
     dragHandle: "grip-vertical",
     reset: "rotate-ccw",
     search: "search",
-    close: "x",
     sort: "arrow-up-down",
-    sortAscending: "arrow-up-narrow-wide",
-    sortDescending: "arrow-down-wide-narrow",
+    sortAscending: "arrow-up",
+    sortDescending: "arrow-down",
   },
   nav: {
     prev: "chevron-left",
@@ -39,6 +38,7 @@ export const icons = {
     navBlock: "signpost-big",
   },
   block: {
+    dayNotes: "files",
     divider: "minus",
     toolbar: "panel-top",
     markdownTemplate: "file-text",
@@ -74,7 +74,6 @@ export const icons = {
     templates: "notepad-text-dashed",
     timeline: "calendar-range",
     maintenance: "wrench",
-    notePreview: "panel-bottom",
   },
 } as const;
 

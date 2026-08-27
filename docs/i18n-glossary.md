@@ -252,14 +252,18 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **711/711**. Every locale has had a line-by-line pass
+All eleven locales are complete at **787/787**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 
 Be precise about what that pass was, because "reviewed" overstates it for nine of them:
 
-- **uk** was reviewed by a native speaker. It is the only locale where the output was
-  verified by someone who reads the language.
+- **uk** was reviewed by a native speaker, apart from the agent-translated additions
+  noted below. It is the only locale where the rest of the output was verified by
+  someone who reads the language.
+- The `view_block_day_notes_*`, `day_notes_settings_*` and selected-date ring keys were
+  translated by an agent working from this file and the surrounding feature design.
+  They are context-aware but not native-verified.
 - The 23 `journal_sequence_*` and numbering-warning keys were translated by an agent
   working from this file — the same standard as the sweep below, not native-verified.
   Its choices worth a native eye: the word for an odometer **digit** (de `Stelle`, ru

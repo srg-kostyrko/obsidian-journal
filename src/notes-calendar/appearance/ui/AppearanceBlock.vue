@@ -29,6 +29,9 @@ function setActiveColor(color: ColorSettings): void {
 function setActiveBackground(background: ColorSettings): void {
   slice.state = { ...slice.state, active: { ...slice.state.active, background } };
 }
+function setSelectedRing(selectedRing: ColorSettings): void {
+  slice.state = { ...slice.state, selectedRing };
+}
 </script>
 
 <template>
@@ -62,6 +65,14 @@ function setActiveBackground(background: ColorSettings): void {
         :model-value="slice.state.active.background"
         role="background"
         @update:model-value="setActiveBackground"
+      />
+    </UiSettingRow>
+    <UiSettingRow :name="m.calendar_appearance_selected_ring()">
+      <template #description>{{ m.calendar_appearance_selected_ring_description() }}</template>
+      <UiColorSettingsPicker
+        :model-value="slice.state.selectedRing"
+        role="border"
+        @update:model-value="setSelectedRing"
       />
     </UiSettingRow>
   </UiCollapsibleBlock>

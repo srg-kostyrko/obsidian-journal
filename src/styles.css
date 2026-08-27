@@ -44,10 +44,3 @@
   border: 1px solid var(--text-warning);
   margin-bottom: var(--size-2-2);
 }
-
-.journal-view-root {
-  display: flex;
-  height: 100%;
-  min-height: 0;
-  flex-direction: column;
-}

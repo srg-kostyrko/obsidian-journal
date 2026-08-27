@@ -55,6 +55,169 @@ afterEach(() => {
 });
 
 describe("NotesMonthView", () => {
+  describe("accessible grid", () => {
+    it("provides the grid, row, column-header, row-header, and grid-cell structure", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+      const grid = container.querySelector('[role="grid"]');
+
+      expect(grid?.getAttribute("aria-label")).toBe(month.format("MMMM YYYY"));
+      expect(grid?.querySelectorAll(':scope > [role="row"]').length).toBe(7);
+      expect(grid?.querySelectorAll('[role="columnheader"]').length).toBe(7);
+      expect(grid?.querySelectorAll('[role="rowheader"]').length).toBe(6);
+      expect(grid?.querySelectorAll('[role="gridcell"]').length).toBe(42);
+    });
+
+    it("keeps blank outside-month cells hidden from the accessibility tree", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, outsideDates: "blank" },
+      });
+
+      const blanks = container.querySelectorAll(".notes-month-view__day--blank");
+      expect(blanks.length).toBeGreaterThan(0);
+      for (const blank of blanks) expect(blank.getAttribute("aria-hidden")).toBe("true");
+    });
+
+    it("gives exactly one period cell a tab stop and prefers the selected day", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, selectedDate: anchor("2026-08-20") },
+      });
+      const tabbable = container.querySelectorAll('[role="gridcell"][tabindex="0"], [role="rowheader"][tabindex="0"]');
+
+      expect(tabbable.length).toBe(1);
+      expect((tabbable[0] as HTMLElement | undefined)?.dataset.anchor).toBe("2026-08-20");
+    });
+
+    it("preserves the last focused cell while the grid remains mounted", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const view = harness.render(NotesMonthView, {
+        props: { shelf: null, month, selectedDate: anchor("2026-08-15") },
+      });
+      const focused = view.container.querySelector<HTMLElement>('[data-grid-key="day:2026-08-20"]')!;
+      focused.focus();
+
+      await view.rerender({ shelf: null, month, selectedDate: anchor("2026-08-21") });
+
+      expect(focused.tabIndex).toBe(0);
+      expect(
+        view.container.querySelectorAll('[role="gridcell"][tabindex="0"], [role="rowheader"][tabindex="0"]'),
+      ).toHaveLength(1);
+    });
+
+    it("falls back from selected date to today, then to the first non-blank period", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const todayView = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      expect(todayView.container.querySelector<HTMLElement>('[tabindex="0"]')?.dataset.anchor).toBe("2026-08-15");
+      todayView.unmount();
+
+      vi.setSystemTime(new Date("2026-01-01T10:00:00Z"));
+      const firstView = harness.render(NotesMonthView, {
+        props: { shelf: null, month, outsideDates: "blank", weeks: "none" },
+      });
+      expect(firstView.container.querySelector<HTMLElement>('[tabindex="0"]')?.dataset.anchor).toBe("2026-08-01");
+    });
+
+    it("moves with arrows and Home/End while preserving week-number participation", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, selectedDate: anchor("2026-08-15"), weeks: "left" },
+      });
+      const cell = (value: string): HTMLElement =>
+        [...container.querySelectorAll<HTMLElement>("[data-grid-key]")].find(
+          (element) => element.dataset.gridKey === value,
+        )!;
+      const selected = cell("day:2026-08-15");
+
+      selected.focus();
+      await fireEvent.keyDown(selected, { key: "ArrowLeft" });
+      expect(document.activeElement).toBe(cell("day:2026-08-14"));
+      await fireEvent.keyDown(document.activeElement!, { key: "ArrowRight" });
+      expect(document.activeElement).toBe(selected);
+      await fireEvent.keyDown(document.activeElement!, { key: "ArrowUp" });
+      expect(document.activeElement).toBe(cell("day:2026-08-08"));
+      await fireEvent.keyDown(document.activeElement!, { key: "ArrowDown" });
+      expect(document.activeElement).toBe(selected);
+      await fireEvent.keyDown(document.activeElement!, { key: "Home" });
+      expect((document.activeElement as HTMLElement).getAttribute("role")).toBe("rowheader");
+      await fireEvent.keyDown(document.activeElement!, { key: "End" });
+      expect(document.activeElement).toBe(cell("day:2026-08-16"));
+    });
+
+    it("stops at month-grid boundaries instead of wrapping", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, weeks: "left" } });
+      const cells = [...container.querySelectorAll<HTMLElement>("[data-grid-key]")];
+      const first = cells[0];
+      const last = cells.at(-1);
+      if (!first || !last) throw new Error("calendar grid rendered no period cells");
+
+      first.focus();
+      await fireEvent.keyDown(first, { key: "ArrowLeft" });
+      expect(document.activeElement).toBe(first);
+      last.focus();
+      await fireEvent.keyDown(last, { key: "ArrowRight" });
+      expect(document.activeElement).toBe(last);
+    });
+
+    it("navigates hidden-weekday rows as regular compact rows", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: {
+          shelf: null,
+          month,
+          weeks: "none",
+          hiddenWeekdays: [0, 6],
+          selectedDate: anchor("2026-08-14"),
+        },
+      });
+      const friday = container.querySelector<HTMLElement>('[data-grid-key="day:2026-08-14"]')!;
+
+      friday.focus();
+      await fireEvent.keyDown(friday, { key: "ArrowRight" });
+      expect((document.activeElement as HTMLElement).dataset.gridKey).toBe("day:2026-08-17");
+    });
+
+    it("places the right-side week number at the End of its row", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, weeks: "right", selectedDate: anchor("2026-08-15") },
+      });
+      const selected = container.querySelector<HTMLElement>('[data-grid-key="day:2026-08-15"]')!;
+
+      selected.focus();
+      await fireEvent.keyDown(selected, { key: "End" });
+      expect((document.activeElement as HTMLElement).getAttribute("role")).toBe("rowheader");
+    });
+  });
+
+  describe("date selection", () => {
+    it("marks only cells whose representative exactly matches selectedDate", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, selectedDate: anchor("2026-08-15") },
+      });
+      const selected = container.querySelectorAll('[aria-selected="true"]');
+
+      expect(selected.length).toBe(1);
+      expect((selected[0] as HTMLElement | undefined)?.dataset.anchor).toBe("2026-08-15");
+    });
+
+    it("selects an inactive outside date on Shift+primary click without opening it", async () => {
+      const selectDate = vi.fn();
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesMonthView, {
+        props: { shelf: null, month, outsideDates: "inactive", selectDate },
+      });
+      const outside = container.querySelector<HTMLElement>(".notes-month-view__day[data-outside]")!;
+
+      await fireEvent.click(outside, { shiftKey: true, button: 0 });
+
+      expect(selectDate).toHaveBeenCalledWith(outside.dataset.anchor);
+    });
+  });
+
   describe("day grid", () => {
     it("renders one cell per day across the month's weeks", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });

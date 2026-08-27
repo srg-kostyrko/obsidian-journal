@@ -3,7 +3,7 @@ import { JournalEditSectionToken, defineJournalEditSection } from "@/journals";
 import { DashboardBlockToken, SubpageToken, defineDashboardBlock } from "@/settings";
 
 import IntervalBlockSection from "./blocks/custom-intervals/ui/IntervalBlockSection.vue";
-import VaultNotesPreviewSettingsBlock from "./blocks/day-notes/ui/VaultNotesPreviewSettingsBlock.vue";
+import DayNotesSettingsBlock from "./blocks/day-notes/ui/DayNotesSettingsBlock.vue";
 import { viewEditSubpage } from "./ui/view-edit-subpage";
 import ViewsDashboardBlock from "./ui/ViewsDashboardBlock.vue";
 
@@ -13,7 +13,7 @@ export const viewsUiModule: Module = {
       defineDashboardBlock({ key: "views", component: ViewsDashboardBlock, order: 7 }),
     );
     c.register(DashboardBlockToken).useValue(
-      defineDashboardBlock({ key: "vault-notes-preview", component: VaultNotesPreviewSettingsBlock, order: 21 }),
+      defineDashboardBlock({ key: "day-notes", component: DayNotesSettingsBlock, order: 8 }),
     );
     c.register(SubpageToken).useValue(viewEditSubpage);
     c.register(JournalEditSectionToken).useValue(

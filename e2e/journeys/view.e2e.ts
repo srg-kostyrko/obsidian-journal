@@ -15,6 +15,7 @@ import {
 } from "../support/settings.js";
 import {
   activeNotePath,
+  closePopoutWindows,
   noteExists,
   openNote,
   renameNote,
@@ -48,6 +49,8 @@ import {
 } from "./decorations.js";
 import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, openSeededCalendarView, TOOLBAR } from "./view.js";
 
+import type { WorkspaceLeaf } from "obsidian";
+
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
 // click drives OpenDateFlow -> note create+open. None of this is reachable through
@@ -63,6 +66,132 @@ async function freeDayAnchor(): Promise<string> {
     if (!(await noteExists(`day/${candidate}.md`))) return candidate;
   }
   throw new NoFreeDayError();
+}
+
+async function freeRenderedDayAnchor(): Promise<string> {
+  const cells = await $$(`${MONTH_VIEW} .notes-month-view__day[data-anchor]`).getElements();
+  for (const cell of cells) {
+    const candidate = await cell.getAttribute("data-anchor");
+    if (candidate && !(await noteExists(`day/${candidate}.md`))) return candidate;
+  }
+  throw new NoFreeDayError();
+}
+
+async function shiftClickMainCalendarCell(anchor: string): Promise<void> {
+  await browser.execute((selectedAnchor) => {
+    const cell = document.querySelector<HTMLElement>(
+      `.notes-month-view__day[data-anchor="${CSS.escape(selectedAnchor)}"]`,
+    );
+    if (!cell) return;
+    cell.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, shiftKey: true }));
+  }, anchor);
+}
+
+async function openCalendarInPopout(): Promise<void> {
+  const opened = await browser.executeObsidian(async ({ app }) => {
+    const workspace = app.workspace as typeof app.workspace & {
+      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+    };
+    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+    let source: WorkspaceLeaf | undefined;
+    workspace.iterateAllLeaves((leaf) => {
+      if (
+        leaf.view.containerEl.ownerDocument.defaultView === mainWindow &&
+        leaf.view.getViewType().startsWith("journal-view:")
+      ) {
+        source = leaf;
+      }
+    });
+    if (!source) return false;
+    const popout = workspace.openPopoutLeaf();
+    await popout.setViewState(source.getViewState());
+    return true;
+  });
+  expect(opened).toBe(true);
+  await browser.waitUntil(
+    () =>
+      browser.executeObsidian(({ app }) => {
+        const workspace = app.workspace as typeof app.workspace & {
+          iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+        };
+        const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+        let rendered = false;
+        workspace.iterateAllLeaves((leaf) => {
+          if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
+          rendered ||= leaf.view.containerEl.querySelector(".notes-month-view") !== null;
+        });
+        return rendered;
+      }),
+    { timeoutMsg: "calendar view did not render in the popout window" },
+  );
+}
+
+function shiftClickPopoutCalendarCell(anchor: string): Promise<boolean> {
+  return browser.executeObsidian(({ app }, selectedAnchor) => {
+    const workspace = app.workspace as typeof app.workspace & {
+      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+    };
+    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+    let clicked = false;
+    workspace.iterateAllLeaves((leaf) => {
+      if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
+      const cell = leaf.view.containerEl.querySelector<HTMLElement>(
+        `.notes-month-view__day[data-anchor="${CSS.escape(selectedAnchor)}"]`,
+      );
+      const ownerWindow = cell?.ownerDocument.defaultView;
+      if (!cell || !ownerWindow) return;
+      cell.dispatchEvent(
+        new ownerWindow.MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          shiftKey: true,
+        }),
+      );
+      clicked = true;
+    });
+    return clicked;
+  }, anchor);
+}
+
+async function freePopoutDayAnchor(): Promise<string> {
+  const anchors = await browser.executeObsidian(({ app }) => {
+    const workspace = app.workspace as typeof app.workspace & {
+      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+    };
+    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+    const rendered: string[] = [];
+    workspace.iterateAllLeaves((leaf) => {
+      if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
+      for (const cell of leaf.view.containerEl.querySelectorAll<HTMLElement>(".notes-month-view__day[data-anchor]")) {
+        const anchor = cell.dataset.anchor;
+        if (anchor) rendered.push(anchor);
+      }
+    });
+    return rendered;
+  });
+  for (const candidate of anchors) {
+    if (!(await noteExists(`day/${candidate}.md`))) return candidate;
+  }
+  throw new NoFreeDayError();
+}
+
+function popoutCellSelected(anchor: string): Promise<boolean> {
+  return browser.executeObsidian(({ app }, selectedAnchor) => {
+    const workspace = app.workspace as typeof app.workspace & {
+      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+    };
+    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+    let selected = false;
+    workspace.iterateAllLeaves((leaf) => {
+      if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
+      const cell = leaf.view.containerEl.querySelector<HTMLElement>(
+        `.notes-month-view__day[data-anchor="${CSS.escape(selectedAnchor)}"]`,
+      );
+      selected ||= cell?.getAttribute("aria-selected") === "true";
+    });
+    return selected;
+  }, anchor);
 }
 
 const headerMonthAnchor = async (): Promise<string | undefined> =>
@@ -146,6 +275,41 @@ describe("calendar view", () => {
       await waitForJournalFrontmatter(path, { journal: "daily", date: anchor });
       await calendar.waitForActive(anchor);
       expect(await activeNotePath()).toBe(path);
+    });
+
+    describe("date selection", () => {
+      afterEach(closePopoutWindows);
+
+      it("selects a day on Shift+primary click without creating or opening its note", async () => {
+        await openCalendarView();
+        const anchor = await freeRenderedDayAnchor();
+        const path = `day/${anchor}.md`;
+        const activeBefore = await activeNotePath();
+
+        await shiftClickMainCalendarCell(anchor);
+
+        await browser.waitUntil(async () => (await calendar.cell(anchor).getAttribute("aria-selected")) === "true", {
+          timeoutMsg: "Shift+primary click did not mark the selected calendar cell",
+        });
+        expect(await noteExists(path)).toBe(false);
+        expect(await activeNotePath()).toBe(activeBefore);
+      });
+
+      it("selects from a popout realm without falling through to note opening", async () => {
+        await openCalendarView();
+        await openCalendarInPopout();
+        const anchor = await freePopoutDayAnchor();
+        const path = `day/${anchor}.md`;
+        const activeBefore = await activeNotePath();
+
+        expect(await shiftClickPopoutCalendarCell(anchor)).toBe(true);
+
+        await browser.waitUntil(() => popoutCellSelected(anchor), {
+          timeoutMsg: "popout Shift+primary click did not mark the selected calendar cell",
+        });
+        expect(await noteExists(path)).toBe(false);
+        expect(await activeNotePath()).toBe(activeBefore);
+      });
     });
 
     it("creates and opens a week note when the week-number cell is clicked", async () => {

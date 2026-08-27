@@ -1,6 +1,6 @@
 import { toValue, type MaybeRefOrGetter } from "vue";
 
-import type { Period } from "@/calendar";
+import type { AnchorString, Period } from "@/calendar";
 import { useDecorationMenuItems, type CellStyleRef } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -16,6 +16,17 @@ export interface NotesCellApi {
   openPreview(period: Period, event: MouseEvent): void;
   isActive(period: Period): boolean;
   isActionable(period: Period): boolean;
+  isSelectable(): boolean;
+}
+
+export type NotesDateSelect = (date: AnchorString) => void;
+
+// MouseEvent and KeyboardEvent come from a different realm in an Obsidian popout. Property
+// checks work in every realm; instanceof MouseEvent does not.
+function isSelectionGesture(event: MouseEvent | KeyboardEvent): boolean {
+  if (!event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return false;
+  if ("button" in event) return event.button === 0;
+  return event.key === "Enter";
 }
 
 export function useNotesCell(options: {
@@ -24,10 +35,7 @@ export function useNotesCell(options: {
   // and a component's own provide() is invisible to its own inject().
   decorations?: ReadonlyMap<string, CellStyleRef> | null;
   shelf?: MaybeRefOrGetter<string | null>;
-  primaryOpen?: {
-    enabled: MaybeRefOrGetter<boolean>;
-    handler: (period: Period) => void;
-  };
+  onSelect?: NotesDateSelect;
 }): NotesCellApi {
   const flows = useService(Flows);
   const workspace = useService(WorkspaceService);
@@ -36,7 +44,6 @@ export function useNotesCell(options: {
   const activeVM = useService(ActiveEntryViewModel);
 
   const isActionable = (period: Period): boolean => {
-    if (options.primaryOpen !== undefined && toValue(options.primaryOpen.enabled)) return true;
     const names = toValue(options.journalNames);
     const anchor = period.anchor.toAnchor();
     return names.some((name) => timeline.contains(name, anchor));
@@ -53,16 +60,11 @@ export function useNotesCell(options: {
   const existingPathsAt = (period: Period): readonly VaultPath[] =>
     index.pathsAt(toValue(options.journalNames), period.anchor.toAnchor());
 
+  const isSelectable = (): boolean => options.onSelect !== undefined;
+
   const open = (period: Period, event: MouseEvent | KeyboardEvent): void => {
-    const isShiftPrimaryClick =
-      event instanceof MouseEvent &&
-      event.button === 0 &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      event.shiftKey &&
-      !event.altKey;
-    if (isShiftPrimaryClick && options.primaryOpen !== undefined && toValue(options.primaryOpen.enabled)) {
-      options.primaryOpen.handler(period);
+    if (isSelectionGesture(event)) {
+      options.onSelect?.(period.representative.toAnchor());
       return;
     }
     if (!isActionable(period)) return;
@@ -70,7 +72,7 @@ export function useNotesCell(options: {
       anchor: period.anchor.toAnchor(),
       journalNames: [...toValue(options.journalNames)],
       openMode: defineOpenMode(event),
-      ...(event instanceof MouseEvent && { pickAt: event }),
+      ...("button" in event && { pickAt: event }),
     });
   };
 
@@ -84,5 +86,5 @@ export function useNotesCell(options: {
     workspace.openPathsMenu(existingPathsAt(period), event, decorationItems({ kind: "fixed", period }));
   };
 
-  return { open, openContextMenu, openPreview, isActive, isActionable };
+  return { open, openContextMenu, openPreview, isActive, isActionable, isSelectable };
 }

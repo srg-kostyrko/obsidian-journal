@@ -1,3 +1,4 @@
+import userEvent from "@testing-library/user-event";
 import { fireEvent, screen } from "@testing-library/vue";
 import { __testing } from "obsidian";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -53,6 +54,107 @@ afterEach(() => {
 });
 
 describe("NotesWeekView", () => {
+  describe("accessible grid", () => {
+    it("provides the grid, row, column-header, row-header, and grid-cell structure", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, weeks: "left" } });
+      const grid = container.querySelector('[role="grid"]');
+
+      expect(grid?.getAttribute("aria-label")).toBe(week.format("[W]w gggg"));
+      expect(grid?.querySelectorAll(':scope > [role="row"]').length).toBe(2);
+      expect(grid?.querySelectorAll('[role="columnheader"]').length).toBe(7);
+      expect(grid?.querySelectorAll('[role="rowheader"]').length).toBe(1);
+      expect(grid?.querySelectorAll('[role="gridcell"]').length).toBe(7);
+    });
+
+    it("gives exactly one period cell a tab stop and prefers the selected day", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, {
+        props: { shelf: null, week, selectedDate: anchor("2026-05-28") },
+      });
+      const tabbable = container.querySelectorAll('[role="gridcell"][tabindex="0"], [role="rowheader"][tabindex="0"]');
+
+      expect(tabbable.length).toBe(1);
+      expect((tabbable[0] as HTMLElement | undefined)?.dataset.anchor).toBe("2026-05-28");
+    });
+
+    it("moves horizontally and sends Home/End to visual row boundaries", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, {
+        props: { shelf: null, week, weeks: "left", selectedDate: anchor("2026-05-27") },
+      });
+      const selected = container.querySelector<HTMLElement>('[data-grid-key="day:2026-05-27"]')!;
+      const lastDayKey = [...container.querySelectorAll<HTMLElement>('.notes-week-view__row [role="gridcell"]')].at(-1)
+        ?.dataset.gridKey;
+
+      selected.focus();
+      await fireEvent.keyDown(selected, { key: "ArrowRight" });
+      expect((document.activeElement as HTMLElement).dataset.gridKey).toBe("day:2026-05-28");
+      await fireEvent.keyDown(document.activeElement!, { key: "Home" });
+      expect((document.activeElement as HTMLElement).getAttribute("role")).toBe("rowheader");
+      await fireEvent.keyDown(document.activeElement!, { key: "End" });
+      expect((document.activeElement as HTMLElement).dataset.gridKey).toBe(lastDayKey);
+    });
+
+    it("keeps right-side week numbers at the visual End boundary", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, {
+        props: { shelf: null, week, weeks: "right", selectedDate: anchor("2026-05-27") },
+      });
+      const selected = container.querySelector<HTMLElement>('[data-grid-key="day:2026-05-27"]')!;
+
+      selected.focus();
+      await fireEvent.keyDown(selected, { key: "End" });
+      expect((document.activeElement as HTMLElement).getAttribute("role")).toBe("rowheader");
+    });
+
+    it("uses regular horizontal navigation after hidden weekdays are removed", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, {
+        props: {
+          shelf: null,
+          week,
+          weeks: "none",
+          hiddenWeekdays: [0, 6],
+          selectedDate: anchor("2026-05-29"),
+        },
+      });
+      const friday = container.querySelector<HTMLElement>('[data-grid-key="day:2026-05-29"]')!;
+
+      friday.focus();
+      await fireEvent.keyDown(friday, { key: "ArrowRight" });
+      expect(document.activeElement).toBe(friday);
+    });
+  });
+
+  describe("date selection", () => {
+    it("marks the cell whose representative exactly matches selectedDate", async () => {
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, {
+        props: { shelf: null, week, selectedDate: anchor("2026-05-27") },
+      });
+      const selected = container.querySelector<HTMLElement>('[data-grid-key="day:2026-05-27"]');
+
+      expect(selected?.getAttribute("aria-selected")).toBe("true");
+      expect(selected?.dataset.selected).toBe("true");
+    });
+
+    it("selects a date on Shift+Enter", async () => {
+      vi.useRealTimers();
+      const selectDate = vi.fn();
+      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const { container } = harness.render(NotesWeekView, {
+        props: { shelf: null, week, selectDate, selectedDate: anchor("2026-05-27") },
+      });
+      const selected = container.querySelector<HTMLElement>('[data-grid-key="day:2026-05-27"]')!;
+
+      selected.focus();
+      await userEvent.keyboard("{Shift>}{Enter}{/Shift}");
+
+      expect(selectDate).toHaveBeenCalledWith(anchor("2026-05-27"));
+    });
+  });
+
   describe("day cells", () => {
     it("renders one cell per day of the week", async () => {
       const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
