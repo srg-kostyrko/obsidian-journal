@@ -12,6 +12,7 @@
 	"view_block_day_notes_sort_ascending": "오름차순",
 	"view_block_day_notes_sort_descending": "내림차순",
 	"view_block_day_notes_show_heading_label": "기간 제목 표시",
+	"view_block_day_notes_show_navigation_label": "기간 탐색 표시",
 	"view_block_day_notes_last_modified": "마지막 수정: {date}",
 	"view_block_day_notes_created": "생성: {date}",
 	"view_block_day_notes_empty": "이 기간에 생성된 노트가 없습니다.",
@@ -1667,7 +1668,8 @@
 				"unit=week": "이전 주",
 				"unit=month": "이전 달",
 				"unit=quarter": "이전 분기",
-				"unit=year": "이전 연도"
+				"unit=year": "이전 연도",
+				"unit=decade": "이전 10년"
 			}
 		}
 	],
@@ -1684,7 +1686,8 @@
 				"unit=week": "다음 주",
 				"unit=month": "다음 달",
 				"unit=quarter": "다음 분기",
-				"unit=year": "다음 연도"
+				"unit=year": "다음 연도",
+				"unit=decade": "다음 10년"
 			}
 		}
 	],

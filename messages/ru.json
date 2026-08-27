@@ -12,6 +12,7 @@
 	"view_block_day_notes_sort_ascending": "По возрастанию",
 	"view_block_day_notes_sort_descending": "По убыванию",
 	"view_block_day_notes_show_heading_label": "Показывать заголовок периода",
+	"view_block_day_notes_show_navigation_label": "Показывать навигацию по периоду",
 	"view_block_day_notes_last_modified": "Последнее изменение: {date}",
 	"view_block_day_notes_created": "Создана: {date}",
 	"view_block_day_notes_empty": "В этом периоде не было создано ни одной заметки.",
@@ -1714,7 +1715,8 @@
 				"unit=week": "Предыдущая неделя",
 				"unit=month": "Предыдущий месяц",
 				"unit=quarter": "Предыдущий квартал",
-				"unit=year": "Предыдущий год"
+				"unit=year": "Предыдущий год",
+				"unit=decade": "Предыдущее десятилетие"
 			}
 		}
 	],
@@ -1731,7 +1733,8 @@
 				"unit=week": "Следующая неделя",
 				"unit=month": "Следующий месяц",
 				"unit=quarter": "Следующий квартал",
-				"unit=year": "Следующий год"
+				"unit=year": "Следующий год",
+				"unit=decade": "Следующее десятилетие"
 			}
 		}
 	],

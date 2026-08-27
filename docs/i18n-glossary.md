@@ -252,7 +252,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **787/787**. Every locale has had a line-by-line pass
+All eleven locales are complete at **788/788**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 

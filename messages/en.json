@@ -12,6 +12,7 @@
   "view_block_day_notes_sort_ascending": "Ascending",
   "view_block_day_notes_sort_descending": "Descending",
   "view_block_day_notes_show_heading_label": "Show period heading",
+  "view_block_day_notes_show_navigation_label": "Show period navigation",
   "view_block_day_notes_last_modified": "Last modified: {date}",
   "view_block_day_notes_created": "Created: {date}",
   "view_block_day_notes_empty": "No notes were created in this period.",
@@ -1197,7 +1198,8 @@
         "unit=week": "Previous week",
         "unit=month": "Previous month",
         "unit=quarter": "Previous quarter",
-        "unit=year": "Previous year"
+        "unit=year": "Previous year",
+        "unit=decade": "Previous decade"
       }
     }
   ],
@@ -1210,7 +1212,8 @@
         "unit=week": "Next week",
         "unit=month": "Next month",
         "unit=quarter": "Next quarter",
-        "unit=year": "Next year"
+        "unit=year": "Next year",
+        "unit=decade": "Next decade"
       }
     }
   ],

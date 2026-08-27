@@ -12,6 +12,7 @@
 	"view_block_day_notes_sort_ascending": "За зростанням",
 	"view_block_day_notes_sort_descending": "За спаданням",
 	"view_block_day_notes_show_heading_label": "Показувати заголовок періоду",
+	"view_block_day_notes_show_navigation_label": "Показувати навігацію періодом",
 	"view_block_day_notes_last_modified": "Остання зміна: {date}",
 	"view_block_day_notes_created": "Створено: {date}",
 	"view_block_day_notes_empty": "У цьому періоді не створено жодної нотатки.",
@@ -1521,7 +1522,8 @@
 				"unit=week": "Попередній тиждень",
 				"unit=month": "Попередній місяць",
 				"unit=quarter": "Попередній квартал",
-				"unit=year": "Попередній рік"
+				"unit=year": "Попередній рік",
+				"unit=decade": "Попереднє десятиліття"
 			}
 		}
 	],
@@ -1538,7 +1540,8 @@
 				"unit=week": "Наступний тиждень",
 				"unit=month": "Наступний місяць",
 				"unit=quarter": "Наступний квартал",
-				"unit=year": "Наступний рік"
+				"unit=year": "Наступний рік",
+				"unit=decade": "Наступне десятиліття"
 			}
 		}
 	],

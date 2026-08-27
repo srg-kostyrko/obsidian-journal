@@ -24,6 +24,7 @@ describe("dayNotesBlock", () => {
       sortField: "modified",
       sortDirection: "desc",
       showHeading: true,
+      showNavigation: false,
     });
   });
 
@@ -36,6 +37,7 @@ describe("dayNotesBlock", () => {
             sortField,
             sortDirection: "asc",
             showHeading: false,
+            showNavigation: true,
           }).success,
         ).toBe(true);
       }

@@ -12,6 +12,7 @@
 	"view_block_day_notes_sort_ascending": "升序",
 	"view_block_day_notes_sort_descending": "降序",
 	"view_block_day_notes_show_heading_label": "显示期间标题",
+	"view_block_day_notes_show_navigation_label": "显示期间导航",
 	"view_block_day_notes_last_modified": "最后修改：{date}",
 	"view_block_day_notes_created": "创建于：{date}",
 	"view_block_day_notes_empty": "此期间内没有创建笔记。",
@@ -1478,7 +1479,8 @@
 				"unit=week": "上一周",
 				"unit=month": "上个月",
 				"unit=quarter": "上一季度",
-				"unit=year": "上一年"
+				"unit=year": "上一年",
+				"unit=decade": "上一个十年"
 			}
 		}
 	],
@@ -1495,7 +1497,8 @@
 				"unit=week": "下一周",
 				"unit=month": "下个月",
 				"unit=quarter": "下一季度",
-				"unit=year": "下一年"
+				"unit=year": "下一年",
+				"unit=decade": "下一个十年"
 			}
 		}
 	],

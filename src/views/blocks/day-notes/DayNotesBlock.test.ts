@@ -30,6 +30,7 @@ const defaultConfig: DayNotesBlockConfig = {
   sortField: "modified",
   sortDirection: "desc",
   showHeading: true,
+  showNavigation: false,
 };
 
 interface NoteSeed {
@@ -185,6 +186,55 @@ describe("DayNotesBlock", () => {
     config.value = { ...config.value, showHeading: false };
     await nextTick();
     expect(container.querySelector(".journal-view-day-notes__heading")).toBeNull();
+  });
+
+  it("keeps period navigation opt-in and independent of the heading", async () => {
+    await mountBlock();
+    expect(
+      screen.queryByRole("button", { name: m.view_toolbar_button_default_tooltip_prev_unit({ unit: "day" }) }),
+    ).toBeNull();
+
+    const { container: navigationContainer } = await mountBlock({
+      config: { ...defaultConfig, showHeading: false, showNavigation: true },
+    });
+    expect(navigationContainer.querySelector(".journal-view-day-notes__heading")).toBeNull();
+    const previous = screen.getByRole("button", {
+      name: m.view_toolbar_button_default_tooltip_prev_unit({ unit: "day" }),
+    });
+    const next = screen.getByRole("button", {
+      name: m.view_toolbar_button_default_tooltip_next_unit({ unit: "day" }),
+    });
+    expect(previous.querySelector("svg")?.dataset.icon).toBe("chevron-left");
+    expect(next.querySelector("svg")?.dataset.icon).toBe("chevron-right");
+  });
+
+  it("steps by the block's live granularity through navigate-step controls", async () => {
+    const setRefDate = vi.fn();
+    const { config } = await mountBlock({
+      config: { ...defaultConfig, showNavigation: true },
+      context: { setRefDate },
+    });
+
+    await fireEvent.click(
+      screen.getByRole("button", { name: m.view_toolbar_button_default_tooltip_next_unit({ unit: "day" }) }),
+    );
+    expect(setRefDate).toHaveBeenLastCalledWith("2026-05-16");
+
+    config.value = { ...config.value, granularity: "month" };
+    await nextTick();
+    await fireEvent.click(
+      screen.getByRole("button", { name: m.view_toolbar_button_default_tooltip_next_unit({ unit: "month" }) }),
+    );
+    expect(setRefDate).toHaveBeenLastCalledWith("2026-06-15");
+
+    config.value = { ...config.value, granularity: "decade" };
+    await nextTick();
+    const previousDecade = screen.getByRole("button", {
+      name: m.view_toolbar_button_default_tooltip_prev_unit({ unit: "decade" }),
+    });
+    expect(previousDecade.querySelector("svg")?.dataset.icon).toBe("chevron-left");
+    await fireEvent.click(previousDecade);
+    expect(setRefDate).toHaveBeenLastCalledWith("2016-05-15");
   });
 
   it("shows the empty state", async () => {

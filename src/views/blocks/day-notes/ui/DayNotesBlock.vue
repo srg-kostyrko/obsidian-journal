@@ -15,6 +15,8 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import { vTooltip } from "@/ui/v-tooltip";
 
 import { ViewsService } from "../../../service";
+import { buttonConfigFor, type ButtonAction, type ButtonConfig } from "../../../toolbar-items/button/button-config";
+import ButtonItem from "../../../toolbar-items/button/ui/ButtonItem.vue";
 import { useViewContext } from "../../../view-context";
 import { useDayNotesQuery, type CreatedNote } from "../day-notes";
 import { useDayNotesVersion } from "../use-day-notes-version";
@@ -54,6 +56,27 @@ function headingOf(value: Period): string {
 }
 
 const heading = computed(() => headingOf(period.value));
+
+function navigationConfig(direction: "prev" | "next"): ButtonConfig {
+  const granularity = props.config.granularity;
+  const action: ButtonAction = {
+    type: "navigate-step",
+    direction,
+    unit: granularity === "decade" ? "year" : granularity,
+    amount: granularity === "decade" ? 10 : 1,
+  };
+  return {
+    ...buttonConfigFor(action),
+    icon: direction === "prev" ? icons.nav.prev : icons.nav.next,
+    tooltip:
+      direction === "prev"
+        ? m.view_toolbar_button_default_tooltip_prev_unit({ unit: granularity })
+        : m.view_toolbar_button_default_tooltip_next_unit({ unit: granularity }),
+  };
+}
+
+const previousNavigationConfig = computed(() => navigationConfig("prev"));
+const nextNavigationConfig = computed(() => navigationConfig("next"));
 
 const cards = computed<readonly DayNoteCard[]>(() => {
   void queryVersion.value;
@@ -166,7 +189,21 @@ const sortDirectionLabel = computed(() =>
 <template>
   <section class="journal-view-day-notes" :aria-label="m.view_block_day_notes_label()">
     <header class="journal-view-day-notes__header">
-      <h3 v-if="config.showHeading" class="journal-view-day-notes__heading">{{ heading }}</h3>
+      <div v-if="config.showHeading || config.showNavigation" class="journal-view-day-notes__period">
+        <ButtonItem
+          v-if="config.showNavigation"
+          class="journal-view-day-notes__navigation"
+          :instance-id="instanceId"
+          :config="previousNavigationConfig"
+        />
+        <h3 v-if="config.showHeading" class="journal-view-day-notes__heading">{{ heading }}</h3>
+        <ButtonItem
+          v-if="config.showNavigation"
+          class="journal-view-day-notes__navigation"
+          :instance-id="instanceId"
+          :config="nextNavigationConfig"
+        />
+      </div>
       <div class="journal-view-day-notes__toolbar">
         <UiIconButton
           :icon="icons.action.calendar"
@@ -242,6 +279,15 @@ const sortDirectionLabel = computed(() =>
   font-size: var(--font-ui-medium);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.journal-view-day-notes__period {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--size-2-1);
+}
+.journal-view-day-notes__navigation {
+  flex: none;
 }
 .journal-view-day-notes__toolbar {
   display: flex;

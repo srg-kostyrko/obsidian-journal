@@ -12,6 +12,7 @@
 	"view_block_day_notes_sort_ascending": "昇順",
 	"view_block_day_notes_sort_descending": "降順",
 	"view_block_day_notes_show_heading_label": "期間の見出しを表示",
+	"view_block_day_notes_show_navigation_label": "期間ナビゲーションを表示",
 	"view_block_day_notes_last_modified": "最終更新：{date}",
 	"view_block_day_notes_created": "作成日：{date}",
 	"view_block_day_notes_empty": "この期間に作成されたノートはありません。",
@@ -1478,7 +1479,8 @@
 				"unit=week": "前の週",
 				"unit=month": "前の月",
 				"unit=quarter": "前の四半期",
-				"unit=year": "前の年"
+				"unit=year": "前の年",
+				"unit=decade": "前の10年間"
 			}
 		}
 	],
@@ -1495,7 +1497,8 @@
 				"unit=week": "次の週",
 				"unit=month": "次の月",
 				"unit=quarter": "次の四半期",
-				"unit=year": "次の年"
+				"unit=year": "次の年",
+				"unit=decade": "次の10年間"
 			}
 		}
 	],

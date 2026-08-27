@@ -12,6 +12,7 @@
 	"view_block_day_notes_sort_ascending": "Crescente",
 	"view_block_day_notes_sort_descending": "Decrescente",
 	"view_block_day_notes_show_heading_label": "Mostra intestazione del periodo",
+	"view_block_day_notes_show_navigation_label": "Mostra navigazione del periodo",
 	"view_block_day_notes_last_modified": "Ultima modifica: {date}",
 	"view_block_day_notes_created": "Creata: {date}",
 	"view_block_day_notes_empty": "Nessuna nota è stata creata in questo periodo.",
@@ -1667,7 +1668,8 @@
 				"unit=week": "Settimana precedente",
 				"unit=month": "Mese precedente",
 				"unit=quarter": "Trimestre precedente",
-				"unit=year": "Anno precedente"
+				"unit=year": "Anno precedente",
+				"unit=decade": "Decennio precedente"
 			}
 		}
 	],
@@ -1684,7 +1686,8 @@
 				"unit=week": "Settimana successiva",
 				"unit=month": "Mese successivo",
 				"unit=quarter": "Trimestre successivo",
-				"unit=year": "Anno successivo"
+				"unit=year": "Anno successivo",
+				"unit=decade": "Decennio successivo"
 			}
 		}
 	],

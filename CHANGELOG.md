@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- A new **Notes by date** view block lists every vault note created in the period containing the view's selected date. Choose the period from day through decade, sort by name, creation date, or last modification, and configure which Frontmatter property records creation dates. Calendar blocks now let you select their date with Shift-click or Shift+Enter without opening or creating a journal note, their calendar grids support arrow-key navigation, and view toolbar buttons can step the selected date one day at a time.
+- A new **Notes by date** view block lists every vault note created in the period containing the view's selected date. Choose the period from day through decade, sort by name, creation date, or last modification, and configure which Frontmatter property records creation dates. The block can optionally show previous and next controls that follow its chosen period. Calendar blocks now let you select their date with Shift-click or Shift+Enter without opening or creating a journal note, their calendar grids support arrow-key navigation, and view toolbar buttons can step the selected date one day at a time.
 
 ### Bug Fixes
 
