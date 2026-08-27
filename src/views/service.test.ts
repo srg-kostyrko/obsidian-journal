@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";
-import { reactive } from "vue";
+import { isReactive, reactive, toRaw } from "vue";
 
 import type { Module } from "@/infrastructure/di";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
@@ -197,7 +197,7 @@ describe("ViewsService", () => {
       expect(listener).toHaveBeenCalledWith(result.value);
     });
 
-    it("clones block config that holds a reactive proxy nested at depth", async () => {
+    it("strips a reactive proxy nested in block config when cloning a view", async () => {
       const { service, repo } = await build({ blocks: [testBlockModule()] });
       const created = await service.create({ name: "Source" });
       expectOk(created);
@@ -213,8 +213,15 @@ describe("ViewsService", () => {
       const result = await service.clone(created.value);
 
       expectOk(result);
-      const cloned = repo.get(result.value).match({ some: (view) => view, none: () => null });
-      expect(cloned?.blocks[0]?.config).toEqual({ x: 0, nested: { count: 1 } });
+      // repo.get() reads through SettingsService's own deeply-reactive record, which re-wraps
+      // any nested plain object into a proxy on access -- that would mask a shallow toRaw just
+      // as readily as it hides behind cloneFnJSON. toRaw() on the returned view bypasses that
+      // read-time re-wrap and exposes exactly what clone() persisted.
+      const cloned = toRaw(repo.get(result.value).match({ some: (view) => view, none: () => null }));
+      const config = cloned?.blocks[0]?.config as { nested?: unknown } | undefined;
+      expect(config).toEqual({ x: 0, nested: { count: 1 } });
+      expect(isReactive(config?.nested)).toBe(false);
+      expect(() => structuredClone(config)).not.toThrow();
     });
   });
 
