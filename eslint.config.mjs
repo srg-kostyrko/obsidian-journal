@@ -28,49 +28,35 @@ export const noViMock = {
     "vi.mock replaces the module for every later file sharing the worker's registry. Rename this file to *.isolated.test.ts so it runs in its own.",
 };
 
-// The campaign selectors minus the isolation ban. `*.isolated.test.ts` runs in its own worker,
-// so `vi.mock` is exactly what that suffix buys — but every other campaign rule still applies
-// there, so the two sets have to be nameable apart. See the isolated block below.
+// The campaign selectors minus the isolation ban, for `*.isolated.test.ts`. Why the sets split,
+// and what each selector below is narrowed against, is in docs/unit-testing-strategy.md#enforcement.
 export const harnessTestSelectors = [
   {
     selector: "NewExpression[callee.name='Container']",
     message: "Build the container with testContainer() from @/testing.",
   },
   {
-    // Narrowed to a binding chain inside a test body. A bare `.register(` also names
-    // JournalsIndex.register, the domain method the suite seeds index entries through.
-    // The second branch covers the `it.each(...)(...)` / `describe.each(...)(...)` shape,
+    // Second branch covers the `it.each(...)(...)` / `describe.each(...)(...)` shape,
     // where the hook name sits one call deeper.
     selector:
       ":matches(CallExpression[callee.name=/^(it|test|beforeEach|beforeAll|afterEach|afterAll)$/], CallExpression[callee.callee.property.name='each']) MemberExpression[object.callee.property.name='register'][property.name=/^use(Value|Class|Factory|Existing)$/]",
     message: "Pass a feature CORE/UI module to testContainer({ modules }) instead of registering by hand.",
   },
   {
-    // The entity list is closed on purpose and has to be widened when a feature's testing.ts
-    // gains a fixture. Inverting it to `[A-Z]` was measured on 2026-08-27: 23 matches across
-    // the suite, every one a legitimate local helper (buildHarness, makeHost, buildContainer)
-    // and not one an entity fixture — a rule that loud gets switched off. The entries here are
-    // derived from what `export function (make|build|seed|create)X` actually exists in a
-    // testing.ts, so the list is checkable rather than guessed.
+    // Closed on purpose: widen the entity list when a feature's testing.ts gains a fixture.
     selector:
       "FunctionDeclaration[id.name=/^(make|build|seed|create)(Journal|Command|View|Shelf|CalendarDecoration|Decoration|Config|Condition|Style|ScannedNote|NavSegment|ToolbarItem)/]",
     message: "Entity fixtures live in the feature's testing.ts — use fixedJournal/customJournal/buildShelf.",
   },
   {
-    // Conditioned on the file already building a harness, rather than banning the raw import
-    // outright: a pure-tier component test whose component injects nothing needs no injector,
-    // and an allowlist of those files would go stale silently (a stale `ignores` glob that
-    // matches nothing is indistinguishable from a working one).
     selector:
       "Program:has(ImportDeclaration[source.value='@/testing']) ImportDeclaration[source.value='@testing-library/vue'] ImportSpecifier[imported.name='render']",
     message: "This file already builds a harness — mount through harness.render, which binds the injector for you.",
   },
 ];
 
-// `no-restricted-syntax` options replace rather than merge, so any block covering a
-// non-isolated glob must carry the vi.mock selector too — omit it and the block lifts the
-// isolation ban for everything it matches, and a selector matching nothing looks exactly
-// like one that works.
+// Rule options replace rather than merge, so a block covering a non-isolated glob has to carry
+// the isolation ban itself. `check:lint-selectors` is what holds every block to that.
 export const campaignTestSelectors = [noViMock, ...harnessTestSelectors];
 
 // `initLocale()` runs inside `onload()`, long after the import graph has evaluated, so a message
@@ -180,8 +166,7 @@ export default [
       },
     },
     rules: {
-      // Shell.vue is an intentional single-word architectural name; all other SFCs are multi-word.
-      "vue/multi-word-component-names": ["error", { ignores: ["Shell"] }],
+      "vue/multi-word-component-names": "error",
     },
   },
   {
@@ -297,14 +282,9 @@ export default [
     },
   },
   {
-    // `.vue` files get the override ban too — nothing stops a component importing a
-    // `Container` and calling `.override(...)` — but not `noEagerMessage`: a `<script setup>`
-    // body reads as module scope in the AST but executes per component instance, so the rule
-    // would be a guaranteed false positive here (see the exemption note above `noEagerMessage`).
-    // `noRawError`/`noStrayDefineModal` are already enforced for `.vue` through the base rules
-    // block above (it carries no `files` filter); repeating them here just keeps this block's
-    // `no-restricted-syntax` array from silently dropping that enforcement, since flat config
-    // rule values replace rather than merge.
+    // `noEagerMessage` is omitted deliberately: a `<script setup>` body reads as module scope
+    // in the AST but executes per component instance, so it would be a guaranteed false
+    // positive here. The rest is re-listed because rule options replace rather than merge.
     files: ["src/**/*.vue"],
     ignores: ["src/infrastructure/di/**"],
     rules: {
@@ -403,14 +383,8 @@ export default [
     },
   },
   {
-    // Must sit after the two test blocks above: rule options replace rather than merge.
-    // Phase 3 finished converting every feature directory, so enrollment is now "all of src"
-    // minus the two permanent carve-outs, rather than a hand-maintained glob list. A list would
-    // have to grow a line for each new feature directory, and a directory nobody remembered to
-    // add is indistinguishable from one that is enforced.
-    // `src/infrastructure/**` is deliberately exempt and stays exempt: its host/di/flows
-    // tests are what testContainer is built from, so converting them onto the harness
-    // would test the harness through itself.
+    // Must sit after the two test blocks above. Enrollment, and why `src/infrastructure/**`
+    // is permanently exempt, are in docs/unit-testing-strategy.md#enforcement.
     files: ["src/**/*.test.ts"],
     ignores: ["**/*.isolated.test.ts", "src/infrastructure/**"],
     rules: {
@@ -418,13 +392,7 @@ export default [
     },
   },
   {
-    // Must sit after the campaign block, which ignores this glob. A file earns the
-    // `.isolated` suffix by touching process-global state — the harder kind of test, not the
-    // kind that needs fewer rules — so the only campaign selector it is exempt from is the
-    // vi.mock ban that the suffix exists to satisfy. Measured on 2026-08-27: enrolling the
-    // seven non-infrastructure isolated files surfaces zero violations, so this is a ratchet
-    // against future drift rather than a cleanup. `src/infrastructure/**` stays exempt for
-    // the reason given above.
+    // Must sit after the campaign block, which ignores this glob.
     files: ["src/**/*.isolated.test.ts"],
     ignores: ["src/infrastructure/**"],
     rules: {
@@ -487,9 +455,8 @@ export default [
     },
   },
   {
-    // Modal definitions are what `noStrayDefineModal` exists to allow here, so this array drops it
-    // — but flat-config rule values replace rather than merge, so every other selector has to be
-    // repeated or it silently stops applying to these files.
+    // Drops `noStrayDefineModal` — this is where modal definitions belong. The rest is
+    // re-listed because rule options replace rather than merge.
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
     rules: {
       "no-restricted-syntax": ["error", noRawError, noEagerMessage, noProductionOverride],
