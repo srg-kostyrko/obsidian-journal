@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { isReactive, reactive, toRaw } from "vue";
 
 import type { Module } from "@/infrastructure/di";
+import { Err } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { journalsCoreModule } from "@/journals/module";
 import { ShelvesRepository } from "@/shelves";
@@ -10,6 +11,7 @@ import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { UnknownViewError } from "./errors";
 import { viewsCoreModule } from "./module";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
@@ -117,6 +119,22 @@ describe("ViewsService", () => {
       shelves.deleteWith("work");
       expect(repo.get(SCOPED_VIEW_ID as ViewId).match({ some: (v) => v.defaultShelf, none: () => "gone" })).toBe(
         "personal",
+      );
+    });
+
+    it("logs the failure when persisting a shelf reference update fails", async () => {
+      const { harness, repo, shelves } = await buildScopedToShelf("work");
+      const failure = new UnknownViewError(SCOPED_VIEW_ID as ViewId);
+      vi.spyOn(repo, "update").mockReturnValueOnce(new Err(failure));
+
+      shelves.rename("work", "office");
+
+      expect(harness.logs.records).toContainEqual(
+        expect.objectContaining({
+          level: "error",
+          message: "failed to update a view's shelf reference",
+          fields: { view: SCOPED_VIEW_ID, error: failure },
+        }),
       );
     });
   });
@@ -385,6 +403,17 @@ describe("ViewsService", () => {
       expect(calledId).toBe(created.value);
       expect(Array.isArray(calledView.blocks)).toBe(true);
     });
+
+    it("surfaces UnknownViewError when the repository rejects the persisted blocks", async () => {
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      vi.spyOn(repo, "update").mockReturnValueOnce(new Err(new UnknownViewError(created.value)));
+
+      const result = await service.addBlock(created.value, "test-block");
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view");
+    });
   });
 
   describe("removeBlock", () => {
@@ -414,6 +443,19 @@ describe("ViewsService", () => {
       expectOk(created);
       await service.removeBlock(created.value, "missing-id" as BlockInstanceId);
       expect(repo.get(created.value).match({ some: (v) => v.blocks, none: () => null })).toEqual([]);
+    });
+
+    it("surfaces UnknownViewError when the repository rejects the persisted blocks", async () => {
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      vi.spyOn(repo, "update").mockReturnValueOnce(new Err(new UnknownViewError(created.value)));
+
+      const result = await service.removeBlock(created.value, added.value);
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view");
     });
   });
 
@@ -482,6 +524,21 @@ describe("ViewsService", () => {
       expectErr(result);
       expect(result.error.kind).toBe("unknown-view");
     });
+
+    it("surfaces UnknownViewError when the repository rejects the reordered blocks", async () => {
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const a = await service.addBlock(created.value, "test-block");
+      const b = await service.addBlock(created.value, "test-block");
+      expectOk(a);
+      expectOk(b);
+      vi.spyOn(repo, "update").mockReturnValueOnce(new Err(new UnknownViewError(created.value)));
+
+      const result = await service.setBlockOrder(created.value, [b.value, a.value]);
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view");
+    });
   });
 
   describe("updateBlockConfig", () => {
@@ -505,6 +562,58 @@ describe("ViewsService", () => {
       await service.updateBlockConfig(created.value, added.value, { x: 42 });
       const config = repo.get(created.value).match({ some: (v) => v.blocks[0]?.config, none: () => null });
       expect(config).toEqual({ x: 42 });
+    });
+
+    it("is an Ok no-op when the block instance id does not exist", async () => {
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const result = await service.updateBlockConfig(created.value, "missing-id" as BlockInstanceId, { x: 1 });
+      expectOk(result);
+      expect(repo.get(created.value).match({ some: (v) => v.blocks, none: () => null })).toEqual([]);
+    });
+
+    it("persists without validation and logs when the block key is unregistered", async () => {
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      const view = repo.get(created.value).match({ some: (v) => v, none: () => null })!;
+      repo.update(created.value, { blocks: view.blocks.map((b) => ({ ...b, key: "unregistered-key" })) });
+
+      const result = await service.updateBlockConfig(created.value, added.value, { anything: true });
+      expectOk(result);
+      const config = repo.get(created.value).match({ some: (v) => v.blocks[0]?.config, none: () => null });
+      expect(config).toEqual({ anything: true });
+    });
+
+    it("leaves the other blocks in the view unchanged", async () => {
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const first = await service.addBlock(created.value, "test-block");
+      const second = await service.addBlock(created.value, "test-block");
+      expectOk(first);
+      expectOk(second);
+      await service.updateBlockConfig(created.value, first.value, { x: 42 });
+      const secondConfig = repo
+        .get(created.value)
+        .match({ some: (v) => v.blocks.find((b) => b.id === second.value)?.config, none: () => null });
+      expect(secondConfig).toEqual({ x: 0 });
+    });
+
+    it("surfaces UnknownViewError when the repository rejects the persisted config", async () => {
+      const { service, repo } = await build({ blocks: [testBlockModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const added = await service.addBlock(created.value, "test-block");
+      expectOk(added);
+      vi.spyOn(repo, "update").mockReturnValueOnce(new Err(new UnknownViewError(created.value)));
+
+      const result = await service.updateBlockConfig(created.value, added.value, { x: 1 });
+      expectErr(result);
+      expect(result.error.kind).toBe("unknown-view");
     });
   });
 });
@@ -563,6 +672,16 @@ describe("ViewsService – toolbar-item operations", () => {
       expectErr(result);
       expect(result.error.kind).toBe("unknown-toolbar-item-key");
     });
+
+    it("returns Ok(null) when the block id does not belong to the view", async () => {
+      const { service } = await build({ items: [testItemModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+
+      const result = await service.addToolbarItem(created.value, "missing-block" as BlockInstanceId, "dummy");
+      expectOk(result);
+      expect(result.value).toBeNull();
+    });
   });
 
   describe("removeToolbarItem", () => {
@@ -582,6 +701,28 @@ describe("ViewsService – toolbar-item operations", () => {
         .get(created.value)
         .match({ some: (v) => (v.blocks[0]?.config as { items: unknown[] }).items, none: () => null });
       expect(items).toHaveLength(0);
+    });
+
+    it("is an Ok no-op when the item id does not exist in the block", async () => {
+      const { service, repo } = await build({ items: [testItemModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      const result = await service.removeToolbarItem(
+        created.value,
+        blockAdded.value,
+        "missing-item" as BlockInstanceId,
+      );
+      expectOk(result);
+
+      const items = repo
+        .get(created.value)
+        .match({ some: (v) => (v.blocks[0]?.config as { items: unknown[] }).items, none: () => null });
+      expect(items).toHaveLength(1);
     });
   });
 
@@ -701,6 +842,30 @@ describe("ViewsService – toolbar-item operations", () => {
         none: () => null,
       });
       expect(config).toEqual({ anything: true });
+    });
+
+    it("is an Ok no-op when the item id does not exist in the block", async () => {
+      const { service, repo } = await build({ items: [testItemModule()] });
+      const created = await service.create({ name: "X" });
+      expectOk(created);
+      const blockAdded = await service.addBlock(created.value, "toolbar");
+      expectOk(blockAdded);
+      const itemAdded = await service.addToolbarItem(created.value, blockAdded.value, "dummy");
+      expectOk(itemAdded);
+
+      const result = await service.updateToolbarItemConfig(
+        created.value,
+        blockAdded.value,
+        "missing-item" as BlockInstanceId,
+        { x: 1 },
+      );
+      expectOk(result);
+
+      const config = repo.get(created.value).match({
+        some: (v) => (v.blocks[0]?.config as { items: { config: unknown }[] }).items[0]?.config,
+        none: () => null,
+      });
+      expect(config).toEqual({ x: 0 });
     });
   });
 
