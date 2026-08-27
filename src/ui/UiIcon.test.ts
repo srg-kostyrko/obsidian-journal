@@ -46,4 +46,10 @@ describe("UiIcon", () => {
 
     expect(container.querySelector("svg")).toBeNull();
   });
+
+  it("leaves the host empty when the icon name is not registered", () => {
+    const { container } = render(UiIcon, { props: { name: "definitely-not-an-icon" } });
+
+    expect(container.querySelector("span")?.childNodes).toHaveLength(0);
+  });
 });
