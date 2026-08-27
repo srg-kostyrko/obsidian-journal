@@ -539,12 +539,21 @@ uses for the `vi.mock` ban. No custom plugin.
 | No raw `render` import in a file that already builds a harness | Mount through `harness.render`, which binds the injector                        |
 | `vi.mock` only in `*.isolated.test.ts`                         | The shared module registry, see [Isolation](#isolation)                         |
 
-**The full rule set is enabled for all of `src`, minus two carve-outs.** One
+**The full rule set is enabled for all of `src`, minus one carve-out.** One
 `files: ["src/**/*.test.ts"]` block in `eslint.config.mjs` carries the whole
 `no-restricted-syntax` list; the base `vi.mock` rule alone applies more
 broadly, to every `**/*.test.ts`. A hand-maintained glob per directory would
 be fragile: it has to grow a line for each new feature directory, and a
 forgotten line reads identically to an enforced one.
+
+**`*.isolated.test.ts` is enrolled in every rule except the `vi.mock` ban.**
+That one exemption is the whole point of the suffix — the file runs in its own
+module registry, so the thing the ban protects against cannot happen. Every
+other rule still applies: a file earns the suffix by touching process-global
+state, which is the harder kind of test, not the kind that needs fewer rules.
+The config names the two sets apart (`campaignTestSelectors` is
+`harnessTestSelectors` plus the ban) because rule options replace rather than
+merge — see the mechanics below.
 
 **`src/infrastructure/**` is an explicit `ignores` entry on that block, and
 stays one.** Its `host`/`di`/`flows` tests are what `testContainer()` itself
@@ -559,16 +568,29 @@ Two mechanics that have already caused a silent failure once each:
 - **Flat-config rule options replace, they do not merge.** The full-set block
   must sit _after_ the general test-file block and **re-declare the `vi.mock`
   selector**, or the ban silently lifts for every file it covers.
-- **A selector matching nothing looks identical to one that works.** Verify a new
-  rule by writing a violation and watching it fire, then removing it. Do this
-  without touching the working tree: pipe the violation through eslint's stdin
+- **A selector matching nothing looks identical to one that works.**
+  `npm run check:lint-selectors` (`scripts/check-lint-selectors.mjs`, gated in
+  CI) is where that gets settled. It asserts both halves that `check:lint`
+  cannot: which selectors the _resolved_ config reaches for a representative
+  path of each kind, and whether each selector fires on the syntax it names
+  while staying quiet on the nearest syntax it must leave alone. **Add a row
+  for every new selector** — the quiet case is the half that earns its keep,
+  because it catches a widened selector that has started firing on legitimate
+  code. For an ad-hoc probe mid-edit, pipe a violation through eslint's stdin
   mode against a real, already-enrolled path —
   `printf '<violation>' | npx eslint --stdin --stdin-filename src/<enrolled-file>.test.ts` —
   which runs the same selectors and writes nothing to disk, so an interrupted
   check never leaves a stray file behind for the test-count gate to trip over.
 
-Two selectors are deliberately narrowed, and the narrowing is load-bearing:
+Three selectors are deliberately narrowed, and the narrowing is load-bearing:
 
+- The fixture-naming tripwire matches
+  `(make|build|seed|create)` followed by a **closed list of entity names**, so
+  **widen the list when a feature's `testing.ts` gains a fixture** or the new
+  entity is invisible to it. Inverting it to `(make|build|seed|create)[A-Z]`
+  was measured on 2026-08-27 and rejected: 23 matches across the suite, every
+  one a legitimate local helper (`buildHarness`, `makeHost`, `buildContainer`)
+  and not one an entity fixture. A rule that loud gets switched off.
 - The `.register` ban matches a binding chain **inside a test body or hook**,
   because a bare `.register(` also names `JournalsIndex.register`, the domain
   method the suite seeds index entries through.

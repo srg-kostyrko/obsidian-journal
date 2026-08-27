@@ -32,6 +32,7 @@ jobs:
       # Running both would pay for the suite twice to get one signal.
       - run: npm run coverage
       - run: npm run check:lint
+      - run: npm run check:lint-selectors
       # The published API types are generated from src/api/public-api.ts and committed,
       # so any change to the public surface shows up as a diff in the PR that caused it.
       - run: npm run build:api
