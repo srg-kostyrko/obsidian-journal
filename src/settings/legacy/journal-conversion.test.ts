@@ -110,9 +110,9 @@ describe("prepareIntervalJournalSettings", () => {
     const old = intervalFixture();
     old.numeration_type = "year";
     old.granularity = "week";
-    old.duration = 2;
+    old.duration = 5;
     const s = prepareIntervalJournalSettings(old, false);
-    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 26 });
+    expect(s.index).toMatchObject({ type: "reset_after", resetAfter: 10 });
   });
 
   it("computes the year-reset divisor for months", () => {
