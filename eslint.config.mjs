@@ -22,7 +22,7 @@ const noStrayDefineModal = {
   message: "`defineModal()` is only allowed in `<feature>/ui/modals.ts`. Move the modal definition there.",
 };
 
-export const noViMock = {
+const noViMock = {
   selector: "CallExpression[callee.object.name='vi'][callee.property.name='mock']",
   message:
     "vi.mock replaces the module for every later file sharing the worker's registry. Rename this file to *.isolated.test.ts so it runs in its own.",
@@ -30,7 +30,7 @@ export const noViMock = {
 
 // The campaign selectors minus the isolation ban, for `*.isolated.test.ts`. Why the sets split,
 // and what each selector below is narrowed against, is in docs/unit-testing-strategy.md#enforcement.
-export const harnessTestSelectors = [
+const harnessTestSelectors = [
   {
     selector: "NewExpression[callee.name='Container']",
     message: "Build the container with testContainer() from @/testing.",
@@ -56,8 +56,9 @@ export const harnessTestSelectors = [
 ];
 
 // Rule options replace rather than merge, so a block covering a non-isolated glob has to carry
-// the isolation ban itself. `check:lint-selectors` is what holds every block to that.
-export const campaignTestSelectors = [noViMock, ...harnessTestSelectors];
+// the isolation ban itself, and a block that re-lists some selectors must re-list them all.
+// Dropping one here is silent: see the modals regression cited in docs/unit-testing-strategy.md.
+const campaignTestSelectors = [noViMock, ...harnessTestSelectors];
 
 // `initLocale()` runs inside `onload()`, long after the import graph has evaluated, so a message
 // resolved at module scope freezes in the base locale for every user. Calls inside a function body

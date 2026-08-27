@@ -11,7 +11,6 @@
     "compile:i18n": "paraglide-js compile --project ./project.inlang --outdir ./src/i18n/paraglide --output-structure locale-modules",
     "check:i18n": "node scripts/check-i18n-glossary.mjs",
     "check:api": "node scripts/check-api-package.mjs",
-    "check:lint-selectors": "node scripts/check-lint-selectors.mjs",
     "version": "node version-bump.mjs && git add manifest.json manifest-beta.json versions.json CHANGELOG.md",
     "check:lint": "eslint . --cache --cache-location node_modules/.cache/eslint/",
     "test": "vitest run",

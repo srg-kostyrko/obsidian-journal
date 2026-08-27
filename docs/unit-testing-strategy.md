@@ -568,19 +568,32 @@ Two mechanics that have already caused a silent failure once each:
 - **Flat-config rule options replace, they do not merge.** The full-set block
   must sit _after_ the general test-file block and **re-declare the `vi.mock`
   selector**, or the ban silently lifts for every file it covers.
-- **A selector matching nothing looks identical to one that works.**
-  `npm run check:lint-selectors` (`scripts/check-lint-selectors.mjs`, gated in
-  CI) is where that gets settled. It asserts both halves that `check:lint`
-  cannot: which selectors the _resolved_ config reaches for a representative
-  path of each kind, and whether each selector fires on the syntax it names
-  while staying quiet on the nearest syntax it must leave alone. **Add a row
-  for every new selector** — the quiet case is the half that earns its keep,
-  because it catches a widened selector that has started firing on legitimate
-  code. For an ad-hoc probe mid-edit, pipe a violation through eslint's stdin
-  mode against a real, already-enrolled path —
+- **A selector matching nothing looks identical to one that works.** Verify a
+  new rule by writing a violation and watching it fire, then removing it. Do
+  this without touching the working tree: pipe the violation through eslint's
+  stdin mode against a real, already-enrolled path —
   `printf '<violation>' | npx eslint --stdin --stdin-filename src/<enrolled-file>.test.ts` —
   which runs the same selectors and writes nothing to disk, so an interrupted
   check never leaves a stray file behind for the test-count gate to trip over.
+
+**An automated gate for the two mechanics above was built and rejected
+(2026-08-27). Do not rebuild it.** `scripts/check-lint-selectors.mjs` resolved
+the config for a representative path of each kind and compared which selectors
+reached it, plus a fires/stays-quiet table per selector. It passed its own
+six-mutation battery — and then failed the only test that counted. This file has
+had exactly one silent selector failure in 71 commits, `1a82add0`: the modals
+block re-listed `no-restricted-syntax` without `noProductionOverride`, dropping
+the override ban for 13 `ui/modals.ts` files and 10 under
+`src/infrastructure/host/modals/`. Reintroducing that bug, and its `.vue`
+sibling `7a92aa77`, left the gate green both times. Two reasons, and neither is
+fixable by sampling harder: the path table was hand-picked and missed both globs
+— and cannot be densified into them, since `**/ui/modals.ts` keys on a filename,
+not a directory — and the comparison filtered to campaign selectors, discarding
+every production selector before it looked. **The mutations that "validated" it
+were written by the same person who wrote it, knowing what it checked.** Drawn
+from this file's actual history instead, it scored 0 for 2. If you do want a
+gate here, the only shape worth trying iterates the config's own blocks and
+asserts what each glob may never drop — sampling paths cannot work.
 
 Three selectors are deliberately narrowed, and the narrowing is load-bearing:
 
