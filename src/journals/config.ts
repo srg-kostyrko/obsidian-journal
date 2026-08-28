@@ -4,6 +4,8 @@ import type { AnchorString } from "@/calendar";
 import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
 
+import { promptsSchema } from "./prompts/config";
+
 export const FRONTMATTER_NAME_KEY = "journal";
 
 // Frontmatter keys an orphaned note may still carry when no journal config exists.
@@ -139,6 +141,7 @@ export const journalConfigSchema = v.object({
   confirmCreation: v.optional(v.boolean(), false),
   autoCreate: v.optional(v.boolean(), false),
   decorations: v.optional(v.array(decorationSchema), []),
+  prompts: v.optional(promptsSchema, () => []),
   navBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
     lines: [] as NavBlockSegment[][],
@@ -354,6 +357,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     nameTemplate: NAME_TEMPLATES[write.type],
     folder: "",
     templates: [],
+    prompts: [],
     confirmCreation: false,
     autoCreate: false,
     decorations: structuredClone(isCustom ? customDecorations : fixedDecorations),

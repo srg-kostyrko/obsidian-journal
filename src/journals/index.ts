@@ -39,6 +39,8 @@ export type {
   JournalNavBlock,
 } from "./config";
 
+export type { Prompt, PromptOption, PromptType, PromptAnswer } from "./prompts/config";
+
 export type { JournalEntry, JournalMetadata, JournalsIndexEvents } from "./types";
 
 export { JournalsError, JournalNotFoundError } from "./errors";

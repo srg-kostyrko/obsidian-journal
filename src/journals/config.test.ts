@@ -32,6 +32,10 @@ describe("journalDefaultsFor", () => {
     const cfg = journalDefaultsFor({ type: "day" }, "daily");
     expect(cfg.autoCreate).toBe(false);
   });
+
+  it("defaults a journal to no prompts", () => {
+    expect(journalDefaultsFor({ type: "day" }, "daily").prompts).toEqual([]);
+  });
 });
 
 describe("journalConfigSchema", () => {
@@ -49,6 +53,13 @@ describe("journalConfigSchema", () => {
     );
     const parsed = v.safeParse(journalConfigSchema, cfg);
     expect(parsed.success).toBe(true);
+  });
+
+  it("parses a stored journal that predates prompts", () => {
+    const stored = { ...journalDefaultsFor({ type: "day" }, "daily") } as Record<string, unknown>;
+    delete stored.prompts;
+    const parsed = v.safeParse(journalConfigSchema, stored);
+    expect(parsed.success && parsed.output.prompts).toEqual([]);
   });
 
   it("accepts an unset end date, so a half-configured timeline survives a reload", () => {
