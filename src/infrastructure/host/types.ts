@@ -7,6 +7,7 @@ export interface Note {
   readonly basename: string;
   readonly folder: VaultPath;
   readonly size: number;
+  readonly ctime: number;
   readonly mtime: number;
 }
 

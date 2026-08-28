@@ -167,5 +167,14 @@ describe("ButtonItemConfig", () => {
         action: { type: "navigate-step", direction: "next", unit: "quarter", amount: 1 },
       });
     });
+
+    it("offers day as a navigate-step granularity", async () => {
+      const onChange = vi.fn();
+      await mountConfig(stepConfig, onChange);
+      await userEvent.selectOptions(screen.getByLabelText(m.view_toolbar_button_config_granularity_label()), "day");
+      expect(onChange).toHaveBeenLastCalledWith({
+        action: { type: "navigate-step", direction: "next", unit: "day", amount: 1 },
+      });
+    });
   });
 });

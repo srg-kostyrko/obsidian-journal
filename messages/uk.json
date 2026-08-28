@@ -1,5 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"view_block_day_notes_label": "Нотатки за датою",
+	"view_block_day_notes_description": "Показує нотатки, створені в періоді, що містить вибрану дату представлення.",
+	"view_block_day_notes_granularity_label": "Період",
+	"view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"День","kind=week":"Тиждень","kind=month":"Місяць","kind=quarter":"Квартал","kind=year":"Рік","kind=decade":"Десятиліття"}}],
+	"view_block_day_notes_sort_field_label": "Сортувати нотатки за",
+	"view_block_day_notes_sort_direction_label": "Напрямок сортування",
+	"view_block_day_notes_sort_name": "Назва",
+	"view_block_day_notes_sort_modified": "Остання зміна",
+	"view_block_day_notes_sort_created": "Дата створення",
+	"view_block_day_notes_sort_ascending": "За зростанням",
+	"view_block_day_notes_sort_descending": "За спаданням",
+	"view_block_day_notes_show_heading_label": "Показувати заголовок періоду",
+	"view_block_day_notes_show_navigation_label": "Показувати навігацію періодом",
+	"view_block_day_notes_last_modified": "Остання зміна: {date}",
+	"view_block_day_notes_created": "Створено: {date}",
+	"view_block_day_notes_empty": "У цьому періоді не створено жодної нотатки.",
+	"view_block_day_notes_update_error": "Не вдалося оновити блок «Нотатки за датою».",
+	"day_notes_settings_title": "Нотатки за датою",
+	"day_notes_settings_property_label": "Властивість дати створення",
+	"day_notes_settings_property_description": "Властивість Фронтматеру, що використовується як дата створення. Для нотаток без припустимого значення використовується час створення файлу.",
+	"day_notes_settings_format_label": "Формат дати створення",
+	"day_notes_settings_format_description": "Формат дати, що використовується для розбору властивості дати створення.",
+	"calendar_appearance_selected_ring": "Вибрана дата — контур",
+	"calendar_appearance_selected_ring_description": "Колір контуру комірки календаря, що відповідає вибраній даті представлення.",
 	"calendar_apply_globally_desc": "Якщо вимкнено, налаштування конфігурації тижня застосовуються лише до дат у журналах і не впливають на дати, створені іншими плагінами або самим Obsidian.",
 	"calendar_apply_globally_restart_hint": "Можливо, вам доведеться перезапустити Obsidian, щоб зміни набули чинності.",
 	"calendar_apply_globally_title": "Застосувати конфігурацію тижня до всіх дат у сховищі",
@@ -1495,10 +1519,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Попередній день",
 				"unit=week": "Попередній тиждень",
 				"unit=month": "Попередній місяць",
 				"unit=quarter": "Попередній квартал",
-				"unit=year": "Попередній рік"
+				"unit=year": "Попередній рік",
+				"unit=decade": "Попереднє десятиліття"
 			}
 		}
 	],
@@ -1511,10 +1537,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Наступний день",
 				"unit=week": "Наступний тиждень",
 				"unit=month": "Наступний місяць",
 				"unit=quarter": "Наступний квартал",
-				"unit=year": "Наступний рік"
+				"unit=year": "Наступний рік",
+				"unit=decade": "Наступне десятиліття"
 			}
 		}
 	],

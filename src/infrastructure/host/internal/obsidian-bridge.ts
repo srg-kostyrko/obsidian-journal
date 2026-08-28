@@ -7,6 +7,7 @@ export function toNote(file: TFile): Note {
     basename: file.basename,
     folder: (file.parent?.path ?? "") as VaultPath,
     size: file.stat.size,
+    ctime: file.stat.ctime,
     mtime: file.stat.mtime,
   };
 }

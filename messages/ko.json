@@ -1,5 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"view_block_day_notes_label": "날짜별 노트",
+	"view_block_day_notes_description": "뷰에서 선택한 날짜가 포함된 기간에 생성된 노트를 나열합니다.",
+	"view_block_day_notes_granularity_label": "기간",
+	"view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"일","kind=week":"주","kind=month":"월","kind=quarter":"분기","kind=year":"년","kind=decade":"10년"}}],
+	"view_block_day_notes_sort_field_label": "노트 정렬 기준",
+	"view_block_day_notes_sort_direction_label": "정렬 방향",
+	"view_block_day_notes_sort_name": "이름",
+	"view_block_day_notes_sort_modified": "마지막 수정",
+	"view_block_day_notes_sort_created": "생성 날짜",
+	"view_block_day_notes_sort_ascending": "오름차순",
+	"view_block_day_notes_sort_descending": "내림차순",
+	"view_block_day_notes_show_heading_label": "기간 제목 표시",
+	"view_block_day_notes_show_navigation_label": "기간 탐색 표시",
+	"view_block_day_notes_last_modified": "마지막 수정: {date}",
+	"view_block_day_notes_created": "생성: {date}",
+	"view_block_day_notes_empty": "이 기간에 생성된 노트가 없습니다.",
+	"view_block_day_notes_update_error": "날짜별 노트 블록을 업데이트할 수 없습니다.",
+	"day_notes_settings_title": "날짜별 노트",
+	"day_notes_settings_property_label": "생성 날짜 속성",
+	"day_notes_settings_property_description": "생성 날짜로 사용하는 프런트매터 속성입니다. 유효한 값이 없는 노트는 파일 생성 시간을 사용합니다.",
+	"day_notes_settings_format_label": "생성 날짜 형식",
+	"day_notes_settings_format_description": "생성 날짜 속성을 분석하는 데 사용하는 날짜 형식입니다.",
+	"calendar_appearance_selected_ring": "선택한 날짜 — 테두리",
+	"calendar_appearance_selected_ring_description": "뷰에서 선택한 날짜와 일치하는 달력 셀의 테두리 색상입니다.",
 	"calendar_apply_globally_desc": "이 옵션을 끄면 주 구성 설정이 저널 안의 날짜에만 적용되며, 다른 플러그인이나 Obsidian 자체가 만든 날짜에는 영향을 주지 않습니다.",
 	"calendar_apply_globally_restart_hint": "변경 사항을 적용하려면 Obsidian을 다시 시작해야 할 수 있습니다.",
 	"calendar_apply_globally_title": "보관함의 모든 날짜에 주 구성 적용",
@@ -1641,10 +1665,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "이전 날",
 				"unit=week": "이전 주",
 				"unit=month": "이전 달",
 				"unit=quarter": "이전 분기",
-				"unit=year": "이전 연도"
+				"unit=year": "이전 연도",
+				"unit=decade": "이전 10년"
 			}
 		}
 	],
@@ -1657,10 +1683,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "다음 날",
 				"unit=week": "다음 주",
 				"unit=month": "다음 달",
 				"unit=quarter": "다음 분기",
-				"unit=year": "다음 연도"
+				"unit=year": "다음 연도",
+				"unit=decade": "다음 10년"
 			}
 		}
 	],

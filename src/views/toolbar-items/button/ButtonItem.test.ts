@@ -185,6 +185,17 @@ describe("ButtonItem", () => {
   });
 
   describe("click — navigate-step", () => {
+    it("walks refDate by one day without opening a note", async () => {
+      const setRefDate = vi.fn();
+      const { result, flows } = await mountItem(
+        buttonConfigFor({ type: "navigate-step", direction: "next", unit: "day", amount: 1 }),
+        { refDate: ref("2026-05-15" as AnchorString), setRefDate },
+      );
+      await userEvent.click(result.getByRole("button"));
+      expect(setRefDate).toHaveBeenCalledWith("2026-05-16");
+      expect(flows).not.toHaveBeenCalled();
+    });
+
     it("walks refDate forward by amount×unit, preserving the day within the period", async () => {
       const setRefDate = vi.fn();
       const { result } = await mountItem(

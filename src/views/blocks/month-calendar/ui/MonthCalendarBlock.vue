@@ -50,6 +50,8 @@ const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
       :hidden-weekdays="config.hiddenWeekdays"
       :show-header="config.showHeading"
       :outside-dates="outsideDates"
+      :selected-date="viewContext.refDate.value"
+      :select-date="viewContext.setRefDate"
     />
   </div>
 </template>

@@ -19,6 +19,12 @@ function buildFile(path: string, parentPath: string, basename: string): TFile {
 }
 
 describe("toNote", () => {
+  it("maps creation and modification times from TFile.stat", () => {
+    const file = buildFile("Daily/2026-05-13.md", "Daily", "2026-05-13");
+    file.stat = { ctime: 1_700_000_000_000, mtime: 1_800_000_000_000, size: 12 };
+    expect(toNote(file)).toMatchObject({ ctime: 1_700_000_000_000, mtime: 1_800_000_000_000 });
+  });
+
   it("maps path from TFile.path", () => {
     expect(toNote(buildFile("Daily/2026-05-13.md", "Daily", "2026-05-13")).path).toBe("Daily/2026-05-13.md");
   });

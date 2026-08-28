@@ -57,7 +57,7 @@ describe("timeline bounds", () => {
 
       const cell = timelineCalendar.cell("2030-05-20");
       await expect(cell).toHaveAttribute("data-inactive", "true");
-      expect(await cell.getAttribute("role")).toBe(null);
+      await expect(cell).toHaveAttribute("role", "gridcell");
     });
 
     it("marks a day after the timeline end as inactive", async () => {
@@ -69,7 +69,7 @@ describe("timeline bounds", () => {
 
       const cell = timelineCalendar.cell("2030-07-10");
       await expect(cell).toHaveAttribute("data-inactive", "true");
-      expect(await cell.getAttribute("role")).toBe(null);
+      await expect(cell).toHaveAttribute("role", "gridcell");
     });
 
     it("opens a note when an in-bounds day is clicked", async () => {
@@ -81,7 +81,7 @@ describe("timeline bounds", () => {
 
       const cell = timelineCalendar.cell("2030-06-20");
       expect(await cell.getAttribute("data-inactive")).toBe(null);
-      await expect(cell).toHaveAttribute("role", "button");
+      await expect(cell).toHaveAttribute("role", "gridcell");
 
       await clickCell("2030-06-20");
       await waitForJournalFrontmatter("window/2030-06-20.md", { journal: JOURNAL, date: "2030-06-20" });
@@ -110,7 +110,7 @@ describe("timeline bounds", () => {
 
       const cell = timelineCalendar.cell("2030-09-05");
       expect(await cell.getAttribute("data-inactive")).toBe(null);
-      await expect(cell).toHaveAttribute("role", "button");
+      await expect(cell).toHaveAttribute("role", "gridcell");
     });
 
     it("marks a day past the repeats-count end as inactive", async () => {
@@ -122,7 +122,7 @@ describe("timeline bounds", () => {
 
       const cell = timelineCalendar.cell("2030-09-06");
       await expect(cell).toHaveAttribute("data-inactive", "true");
-      expect(await cell.getAttribute("role")).toBe(null);
+      await expect(cell).toHaveAttribute("role", "gridcell");
     });
   });
 
