@@ -228,6 +228,28 @@ describe("CustomIntervalsBlock", () => {
       expect(entry?.querySelector(".decoration-corner")).toBeNull();
     });
 
+    it("keeps one custom journal's decoration off a co-anchored interval of another", async () => {
+      const journals = {
+        foo: customJournal("foo", "week", 1, "2026-01-05", { decorations: [cornerHasNote()] }),
+        bar: customJournal("bar", "week", 1, "2026-01-05"),
+      };
+      const { harness, container } = await mountBlock(
+        journals,
+        { window: "month" },
+        { refDate: ref("2026-05-15" as AnchorString) },
+      );
+
+      const path = "foo/2026-05-11.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "foo", anchor: "2026-05-11" as AnchorString, path });
+      harness.host.putFile(path);
+      await nextTick();
+
+      const decorated = '[data-journal="foo"] .journal-view-custom-intervals__entry[data-anchor="2026-05-11"]';
+      const bare = '[data-journal="bar"] .journal-view-custom-intervals__entry[data-anchor="2026-05-11"]';
+      expect(container.querySelector(decorated)?.querySelector(".decoration-corner")).not.toBeNull();
+      expect(container.querySelector(bare)?.querySelector(".decoration-corner")).toBeNull();
+    });
+
     it("leaves an interval entry without a note undecorated", async () => {
       const journals = { foo: customJournal("foo", "day", 1, "2026-01-01", { decorations: [cornerHasNote()] }) };
       const { harness, container } = await mountBlock(

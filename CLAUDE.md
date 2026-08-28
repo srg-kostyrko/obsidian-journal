@@ -442,8 +442,21 @@ on it.
   scope to match it — the shelf-grouped same-write-type set is deliberate and
   still applies. `NavBlock` is shared with the custom-interval view, so the
   scope reaching its `CellDecoration` for the block-level draw arrives as a
-  `blockScope` prop (`navSegmentIntervalScope`, for `CustomIntervalsBlock`)
-  and is never hardcoded inside it.
+  `blockScope` prop and is never hardcoded inside it — always
+  `navBlockDecorationScope`, since the block-level draw is the host journal's
+  own everywhere it appears.
+- The whole-block map for a custom-interval row is **provided per section**, by
+  `CustomIntervalsSection.vue`, not once for the block. Cells are keyed by
+  `(kind, anchor)` alone and an interval is a "day"-kind period at its start
+  anchor, so one map spanning several custom journals gives two journals whose
+  intervals begin on the same date a single shared cell — each then paints the
+  other's rows (#306, a journal with no decorations of its own drew its
+  neighbor's). Every rendering surface that lists more than one custom
+  journal's intervals needs a map per journal; `DecorationCellModal` and
+  `DecorationBreakdownModal` already model an interval cell that way, gathering
+  through `gatherIntervalBindings({ journalName })`. The per-segment interval
+  map stays block-wide on purpose — a host-like segment's same-write-type set
+  above is what it is for.
 - A segment's decoration period comes from `segmentDecorationCell`
   (`src/code-blocks/nav/segment-decoration.ts`), and any period it can return
   must also be registered in the matching `useCellDecorations` call for that
