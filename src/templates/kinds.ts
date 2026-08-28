@@ -53,12 +53,11 @@ export function renderClock(
 }
 
 export function patternForKind(spec: VariableSpec, format?: string): string {
-  const natural = naturalPatternForKind(spec, format);
   const alternatives = "alternatives" in spec ? spec.alternatives : undefined;
-  if (!alternatives || alternatives.length === 0) return natural;
+  if (!alternatives || alternatives.length === 0) return naturalPatternForKind(spec, format);
   // A bound string's natural pattern is its own value, which is already one of the
   // alternatives when the value is the placeholder — the Set drops that duplicate.
-  const branches = new Set([natural, ...alternatives.map((a) => escapeRegexLiteral(a))]);
+  const branches = new Set([naturalPatternForKind(spec, format), ...alternatives.map((a) => escapeRegexLiteral(a))]);
   return [...branches].join("|");
 }
 

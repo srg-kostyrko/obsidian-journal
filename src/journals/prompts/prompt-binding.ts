@@ -59,14 +59,13 @@ export function answersFromBindings(prompts: readonly Prompt[], bindings: Bindin
   for (const prompt of prompts) {
     const bound = bindings.get(prompt.variable);
     if (bound === undefined) continue;
-    if (bound.kind === "string") {
-      if (bound.value === PROMPT_PLACEHOLDER) continue;
-      answers[prompt.variable] = bound.value;
-    } else if (bound.kind === "number") {
-      answers[prompt.variable] = bound.value;
-    } else {
-      answers[prompt.variable] = bound.value.toAnchor();
-    }
+    const answer = match(bound)
+      .with({ kind: "string" }, (value) => (value.value === PROMPT_PLACEHOLDER ? undefined : value.value))
+      .with({ kind: "number" }, (value) => value.value)
+      .with({ kind: "date" }, (value) => value.value.toAnchor())
+      .exhaustive();
+    if (answer === undefined) continue;
+    answers[prompt.variable] = answer;
   }
   return answers;
 }
