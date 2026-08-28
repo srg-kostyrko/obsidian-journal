@@ -320,7 +320,7 @@ describe("AutoAttachService — a note Obsidian created from a link carrying the
     });
   });
 
-  it("does not attach when the prompt is cancelled, leaving the file unclaimed", async () => {
+  it("trashes the empty placeholder file when the prompt is cancelled", async () => {
     const harness = await promptingHarness();
 
     void harness.resolve(NotesService).create("2026-05-19 (unanswered).md" as VaultPath, "");
@@ -328,8 +328,31 @@ describe("AutoAttachService — a note Obsidian created from a link carrying the
     harness.modals.lastOpen().cancel();
     await settle();
 
-    expect(harness.host.files.get("2026-05-19 (unanswered).md")?.frontmatter).toEqual({});
+    expect(harness.host.files.has("2026-05-19 (unanswered).md")).toBe(false);
     expect(harness.host.files.has("2026-05-19 .md")).toBe(false);
+  });
+
+  it("keeps a placeholder file the user has already typed into when the prompt is cancelled", async () => {
+    const harness = await promptingHarness();
+
+    void harness.resolve(NotesService).create("2026-05-19 (unanswered).md" as VaultPath, "already writing");
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen().cancel();
+    await settle();
+
+    expect(harness.host.files.get("2026-05-19 (unanswered).md")?.content).toBe("already writing");
+  });
+
+  it("takes the emptied placeholder folder with the cancelled file", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}}", folder: "{{mood}}" });
+
+    void harness.resolve(NotesService).create("(unanswered)/2026-05-19.md" as VaultPath, "");
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen().cancel();
+    await settle();
+
+    expect(harness.host.files.has("(unanswered)/2026-05-19.md")).toBe(false);
+    expect(harness.host.folders.has("(unanswered)")).toBe(false);
   });
 
   it("suppresses its own rename so the renamed handler does not re-enter", async () => {

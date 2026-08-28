@@ -112,8 +112,10 @@ export class AutoAttachService {
         { journalName: match.name, anchor: metadata.anchor, confirming: false },
         { notify: false },
       );
-      // Cancel claims nothing: the file stays where Obsidian put it, unclaimed and user-fixable.
-      if (gathered.isErr()) return;
+      if (gathered.isErr()) {
+        await this.#discardCancelledPlaceholderNote(path);
+        return;
+      }
       // The modal is the only long await in this handler, so it is the only window in which a
       // rename of this same note can re-enter and move it out from under this pass. Whichever
       // pass then held the stale path would rename from a file that is no longer there.
@@ -139,6 +141,20 @@ export class AutoAttachService {
     } else {
       this.#logger.info("auto-attach succeeded", { path: target, journal: match.name });
     }
+  }
+
+  // Obsidian created this file the instant the link was clicked, and the prompt is the only
+  // thing that would have given it a real name. Cancelling has to leave the user where they
+  // started, so the plugin takes back what it caused to exist — but only a file that is still
+  // empty and still carries the placeholder, the same two-part predicate the folder cleanup
+  // below uses, and for the same reason: anything else is the user's. Trashed, not erased.
+  async #discardCancelledPlaceholderNote(path: VaultPath): Promise<void> {
+    if (!path.includes(PROMPT_PLACEHOLDER)) return;
+    const content = await this.#notes.read(path);
+    if (content.isErr() || content.value.trim() !== "") return;
+    const removed = await this.#notes.delete(path);
+    if (removed.isErr()) return;
+    await this.#removeEmptyPlaceholderFolder(path);
   }
 
   async #removeEmptyPlaceholderFolder(from: VaultPath): Promise<void> {
