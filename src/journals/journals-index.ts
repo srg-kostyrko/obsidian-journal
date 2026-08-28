@@ -15,9 +15,14 @@ function samePayload(a: JournalEntry, b: JournalEntry): boolean {
   if (a.endDate !== b.endDate) return false;
   const aNumbers = a.numbers ?? {};
   const bNumbers = b.numbers ?? {};
-  const keys = Object.keys(aNumbers);
-  if (keys.length !== Object.keys(bNumbers).length) return false;
-  return keys.every((key) => aNumbers[key] === bNumbers[key]);
+  const numberKeys = Object.keys(aNumbers);
+  if (numberKeys.length !== Object.keys(bNumbers).length) return false;
+  if (numberKeys.some((key) => aNumbers[key] !== bNumbers[key])) return false;
+  const aAnswers = a.answers ?? {};
+  const bAnswers = b.answers ?? {};
+  const answerKeys = Object.keys(aAnswers);
+  if (answerKeys.length !== Object.keys(bAnswers).length) return false;
+  return answerKeys.every((key) => aAnswers[key] === bAnswers[key]);
 }
 
 export class JournalsIndex {
