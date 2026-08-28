@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest"
 import { CalendarDate, type AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
-import type { TemplateContext } from "@/templates";
+import { TemplateEngine, type TemplateContext } from "@/templates";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { CycleService } from "../cycle";
@@ -1031,5 +1031,163 @@ describe("NotePathService.linkTargetForDate", () => {
       .linkTargetForDate("bounded", CalendarDate.fromAnchor(anchor("2030-06-15")));
 
     expect(result.isOk() && result.value).toBe("2030-06-15.md");
+  });
+});
+
+const promptedDaily = (): Record<string, JournalConfig> => ({
+  daily: fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      nameTemplate: "{{date}} {{mood}}",
+      prompts: [
+        {
+          variable: "mood",
+          question: "?",
+          type: "select",
+          frontmatterKey: "mood",
+          required: true,
+          options: [
+            { label: "Good", value: "good" },
+            { label: "Bad", value: "bad" },
+          ],
+        },
+      ],
+    },
+  ),
+});
+
+describe("NotePathService prompt answers", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({ modules: [journalsCoreModule], data: { journals: promptedDaily() } });
+  });
+
+  it("renders the placeholder into the note name when unanswered", () => {
+    const paths = harness.resolve(NotePathService);
+
+    const path = paths.pathFor("daily", { journalName: "daily", anchor: anchor("2024-01-01") });
+
+    expect(path.isOk() && path.value).toBe("2024-01-01 (unanswered).md");
+  });
+
+  it("renders the answer into the note name when answered", () => {
+    const paths = harness.resolve(NotePathService);
+
+    const path = paths.pathFor("daily", {
+      journalName: "daily",
+      anchor: anchor("2024-01-01"),
+      answers: { mood: "good" },
+    });
+
+    expect(path.isOk() && path.value).toBe("2024-01-01 good.md");
+  });
+
+  it("renders an unanswered prompt as empty in the body, not as the placeholder", () => {
+    const paths = harness.resolve(NotePathService);
+    const engine = harness.resolve(TemplateEngine);
+    const config = paths.configFor("daily");
+    assert(config, "expected the journal config");
+
+    const context = paths.bodyContextFor(config, { journalName: "daily", anchor: anchor("2024-01-01") }, "n");
+
+    expect(engine.renderString("mood: {{mood}}", context)).toBe("mood: ");
+  });
+
+  it("keeps an answered prompt in the body", () => {
+    const paths = harness.resolve(NotePathService);
+    const engine = harness.resolve(TemplateEngine);
+    const config = paths.configFor("daily");
+    assert(config, "expected the journal config");
+    const metadata: JournalMetadata = {
+      journalName: "daily",
+      anchor: anchor("2024-01-01"),
+      answers: { mood: "good" },
+    };
+
+    const context = paths.bodyContextFor(config, metadata, "n");
+
+    expect(engine.renderString("mood: {{mood}}", context)).toBe("mood: good");
+  });
+
+  it("inverts an answered name and recovers the answer", () => {
+    const candidate = harness.resolve(NotePathService).candidateFor("daily", "2024-01-01 good.md" as VaultPath);
+
+    expect(unwrap(candidate).answers).toEqual({ mood: "good" });
+    expect(unwrap(candidate).anchor).toBe("2024-01-01");
+  });
+
+  it("inverts a placeholder name and recovers no answer", () => {
+    const candidate = harness.resolve(NotePathService).candidateFor("daily", "2024-01-01 (unanswered).md" as VaultPath);
+
+    expect(unwrap(candidate).anchor).toBe("2024-01-01");
+    expect(unwrap(candidate).answers).toBeUndefined();
+  });
+
+  it("does not claim a name whose slot is neither the placeholder nor a select value", () => {
+    const candidate = harness.resolve(NotePathService).candidateFor("daily", "2024-01-01 whatever.md" as VaultPath);
+
+    expect(candidate.isNone()).toBe(true);
+  });
+
+  it("recovers an answer that reached the folder rather than the name", async () => {
+    const journals = promptedDaily();
+    const daily = { ...journals.daily, nameTemplate: "{{date}}", folder: "Journal/{{mood}}" } as JournalConfig;
+    const scoped = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily } } });
+
+    const candidate = scoped.resolve(NotePathService).candidateFor("daily", "Journal/bad/2024-01-01.md" as VaultPath);
+
+    expect(unwrap(candidate).answers).toEqual({ mood: "bad" });
+  });
+});
+
+const promptedSprints = (): Record<string, JournalConfig> => ({
+  sprints: customJournal("sprints", "week", 2, "2026-01-05", {
+    nameTemplate: "{{date:YYYY}}-S{{sprint}} {{mood}}",
+    prompts: [
+      {
+        variable: "mood",
+        question: "?",
+        type: "select",
+        frontmatterKey: "mood",
+        required: true,
+        options: [
+          { label: "Good", value: "good" },
+          { label: "Bad", value: "bad" },
+        ],
+      },
+    ],
+    numbering: {
+      enabled: true,
+      anchorDate: "2026-01-05" as AnchorString,
+      allowBefore: false,
+      sources: [
+        { variable: "sprint", frontmatterKey: "journal-sprint", anchorValue: 1, reset: { kind: "after", count: 3 } },
+      ],
+    },
+  }),
+});
+
+// A custom cycle whose date variable is too coarse to name its period relies on the
+// re-render walk in `inverterFor`. That walk renders through `pathFor`, so it only agrees
+// with the path it is inverting if the recovered answers are rendered back into it.
+describe("NotePathService.candidateFor on a numbered custom cycle carrying a prompt", () => {
+  it("finds the period a coarse answered name belongs to", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: promptedSprints() } });
+
+    const candidate = harness.resolve(NotePathService).candidateFor("sprints", "2026-S2 good.md" as VaultPath);
+
+    expect(unwrap(candidate).anchor).toBe("2026-01-19");
+    expect(unwrap(candidate).answers).toEqual({ mood: "good" });
+  });
+
+  it("finds the same period when the name is unanswered", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: promptedSprints() } });
+
+    const candidate = harness.resolve(NotePathService).candidateFor("sprints", "2026-S2 (unanswered).md" as VaultPath);
+
+    expect(unwrap(candidate).anchor).toBe("2026-01-19");
+    expect(unwrap(candidate).answers).toBeUndefined();
   });
 });

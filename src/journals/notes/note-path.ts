@@ -12,12 +12,14 @@ import { JournalNotFoundError, OutOfTimelineError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
+import { answersFromBindings, parseSpecFor, renderSpecFor } from "../prompts/prompt-binding";
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
 import { EmptyNoteNameError } from "./errors";
 
 import type { JournalConfig } from "../config";
+import type { PromptAnswer } from "../prompts/config";
 import type { JournalMetadata } from "../types";
 
 // A date variable names at most a year of periods on any cycle this plugin writes; the cap is
@@ -55,6 +57,9 @@ export class NotePathService {
       .string("journal_name", config.name);
     for (const source of config.numbering.sources) {
       context = context.number(source.variable, 0);
+    }
+    for (const prompt of config.prompts) {
+      context = context.withSpec(prompt.variable, parseSpecFor(prompt, config.dateFormat));
     }
     return context;
   }
@@ -145,12 +150,21 @@ export class NotePathService {
     const engine = this.#engine;
     const cycle = this.#cycle;
     const numbering = this.#numbering;
+    // The answers travel with the numbers: a prompted name re-renders to the path it was
+    // inverted from only if the recovered answer goes back into it. Drop them and the
+    // named-period search below never matches, silently falling back to the seed anchor.
     const rendersAs = (
       anchor: AnchorString,
       numbers: Readonly<Record<string, number>> | undefined,
+      answers: Readonly<Record<string, PromptAnswer>> | undefined,
       path: VaultPath,
     ) => {
-      const rendered = this.pathFor(name, { journalName: name, anchor, ...(numbers && { numbers }) });
+      const rendered = this.pathFor(name, {
+        journalName: name,
+        anchor,
+        ...(numbers && { numbers }),
+        ...(answers && { answers }),
+      });
       return rendered.isOk() && rendered.value === path;
     };
     // Which period a name belongs to is not always a formula: a date variable can be too coarse
@@ -162,6 +176,7 @@ export class NotePathService {
       seed: AnchorString,
       path: VaultPath,
       captured: Readonly<Record<string, number>>,
+      answers: Readonly<Record<string, PromptAnswer>> | undefined,
     ): AnchorString | undefined => {
       let anchor = seed;
       let digits = numbering.sequenceNumbersFor(name, anchor).getOrUndefined();
@@ -170,11 +185,11 @@ export class NotePathService {
         // Holding the captured digits fixed leaves only the date tokens free, so this asks
         // whether the period is one of those the name's date can mean. The window is contiguous:
         // once past it, no later period can name this date.
-        if (rendersAs(anchor, captured, path)) {
+        if (rendersAs(anchor, captured, answers, path)) {
           named = true;
           // Ties go to the earliest period. A journal that names two periods identically, digits
           // and all, has no answer to give; the date's own reading picked the earliest too.
-          if (rendersAs(anchor, digits, path)) return anchor;
+          if (rendersAs(anchor, digits, answers, path)) return anchor;
         } else if (named) break;
         const next = cycle.nextAnchor(name, anchor);
         if (next.isNone() || next.value <= anchor) break;
@@ -198,10 +213,13 @@ export class NotePathService {
           const captured = bindings.get(source.variable);
           if (captured?.kind === "number") numbers[source.variable] = captured.value;
         }
+        const recovered = answersFromBindings(config.prompts, bindings);
+        const answers = Object.keys(recovered).length > 0 ? recovered : undefined;
         const metadataFor = (anchor: AnchorString): JournalMetadata => ({
           journalName: name,
           anchor,
           ...(Object.keys(numbers).length > 0 && { numbers }),
+          ...(answers && { answers }),
         });
         // The date variable is the canonical anchor source; start_date/end_date fall inside the
         // same period, so a note named by its bounds recovers the anchor too. A template with no
@@ -219,9 +237,9 @@ export class NotePathService {
           // these digits — and answering from it keeps the walk below off the common path.
           const outright = numbering
             .anchorForNumbers(name, numbers)
-            .filter((candidate) => rendersAs(candidate, numbers, path));
+            .filter((candidate) => rendersAs(candidate, numbers, answers, path));
           if (outright.isSome()) return Option.some(metadataFor(outright.value));
-          return Option.some(metadataFor(searchNamedPeriod(seed.value, path, numbers) ?? seed.value));
+          return Option.some(metadataFor(searchNamedPeriod(seed.value, path, numbers, answers) ?? seed.value));
         }
         const inverted = numbering.anchorForNumbers(name, numbers);
         if (inverted.isNone()) return Option.none();
@@ -258,6 +276,10 @@ export class NotePathService {
       // disabled) rather than leaking the literal `{{index}}` token.
       context = value === undefined ? context.string(source.variable, "") : context.number(source.variable, value);
     }
+    for (const prompt of config.prompts) {
+      const spec = renderSpecFor(prompt, metadata.answers?.[prompt.variable], config.dateFormat);
+      context = context.withSpec(prompt.variable, spec);
+    }
     // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.
     context = context.date("current_date", CalendarDate.today(), "YYYY-MM-DD", { invertible: false });
     const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
@@ -271,6 +293,13 @@ export class NotePathService {
   }
 
   bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {
-    return this.#withNoteName(this.contextFor(config, metadata), noteName);
+    let context = this.#withNoteName(this.contextFor(config, metadata), noteName);
+    // The placeholder is a file-name device. In prose it would be an unrepairable token, and
+    // every unattended attach path renders a template — so an unanswered prompt renders empty
+    // here, the way a declared-but-unresolved numbering variable already does.
+    for (const prompt of config.prompts) {
+      if (metadata.answers?.[prompt.variable] === undefined) context = context.string(prompt.variable, "");
+    }
+    return context;
   }
 }
