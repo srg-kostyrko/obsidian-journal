@@ -171,6 +171,7 @@ failure — no note for a period is `file: null`.
 | `creation-failed`     | the note could not be created or written                                  |
 | `open-failed`         | the note could not be opened                                              |
 | `aborted`             | the user dismissed the confirmation prompt or the journal picker          |
+| `prompts-required`    | the journal has creation prompts and `prompt: false` was passed           |
 | `plugin-unloaded`     | Journals was unloaded while the call was in flight                        |
 
 ```ts
@@ -291,6 +292,24 @@ Two behaviours with no equivalent, worth knowing before you port:
   `ensureNote` shows that prompt. Pass `{ confirm: false }` when you are
   backfilling a range or running in the background, or you will produce one
   dialog per note.
+- **A journal can also ask its own creation questions.** This is separate from
+  _Confirm creation_ above: a journal can define questions (a mood, a rating, a
+  free-text field) that it asks when a note is created, and the answers land in
+  the note's frontmatter. `ensureNote` and `openNote` ask them by default —
+  `prompt` defaults to `true` — because in practice these calls are
+  user-triggered (a QuickAdd macro, a Templater script, a command), so asking
+  is what makes the call behave like clicking the calendar cell would. Pass
+  `{ prompt: false }` for a call that must not block on a modal — a backfill, a
+  background sync — and a journal that cannot proceed without an answer fails
+  with `prompts-required` instead of hanging one open.
+
+  **There is no way to supply answers programmatically.** The API exposes
+  selectors and notes, never journal configuration, so a caller has no way to
+  discover that a journal even has a `mood` prompt, let alone that it is a
+  `select` with values `😀`/`😐`. An answers bag with no way to discover what
+  it expects would be unusable. A discovery API — reading a journal's prompts
+  before calling — is a separate, additive change this one does not attempt.
+
 - **Custom journals exist.** A journal can write every N days/weeks/months rather
   than on a calendar boundary. They appear as `write.type === "custom"` with
   `every` and `duration`, and they are reachable by name — no `writeType` maps

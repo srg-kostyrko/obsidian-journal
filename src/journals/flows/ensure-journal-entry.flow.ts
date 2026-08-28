@@ -14,6 +14,7 @@ export interface EnsureJournalEntryParameters {
   journalName: string;
   anchor: AnchorString;
   skipConfirmation?: boolean;
+  unattended?: boolean;
 }
 
 /**
@@ -33,6 +34,7 @@ export class EnsureJournalEntryFlow implements Flow<
       const metadata = yield* this.#frontmatter.buildMetadata(p.journalName, p.anchor);
       return yield* this.#creation.ensureNote(p.journalName, metadata, {
         skipConfirmation: p.skipConfirmation,
+        unattended: p.unattended,
       });
     });
   }

@@ -12,6 +12,7 @@ import type { ApplicableJournal } from "@/journals/flows";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
 import { NotePathService } from "@/journals/notes/note-path";
+import { PromptsUnansweredError } from "@/journals/prompts/errors";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
 import { JournalsEventsToken } from "@/journals/tokens";
@@ -219,9 +220,14 @@ export class JournalsApiService implements JournalsApi {
     return options?.confirm === undefined ? undefined : !options.confirm;
   }
 
+  #unattended(options: EnsureNoteOptions | undefined): boolean | undefined {
+    return options?.prompt === false;
+  }
+
   #toApiError(cause: unknown, journal: string): ApiError {
     if (cause instanceof UserAborted) return new ApiError("aborted", "The operation was cancelled", journal);
     if (cause instanceof WorkspaceOpenError) return new ApiError("open-failed", cause.message, journal);
+    if (cause instanceof PromptsUnansweredError) return new ApiError("prompts-required", cause.message, journal);
     return new ApiError("creation-failed", cause instanceof Error ? cause.message : String(cause), journal);
   }
 
@@ -253,7 +259,12 @@ export class JournalsApiService implements JournalsApi {
     return this.#dedupe(name, anchor, async () => {
       const result = await this.#flows.invoke(
         EnsureJournalEntryFlow,
-        { journalName: name, anchor, skipConfirmation: this.#skipConfirmation(options) },
+        {
+          journalName: name,
+          anchor,
+          skipConfirmation: this.#skipConfirmation(options),
+          unattended: this.#unattended(options),
+        },
         { notify: false, context: { via: "api" } },
       );
       if (result.isErr()) throw this.#toApiError(result.error, name);
@@ -272,6 +283,7 @@ export class JournalsApiService implements JournalsApi {
           anchor,
           openMode: options?.openMode,
           skipConfirmation: this.#skipConfirmation(options),
+          unattended: this.#unattended(options),
         },
         { notify: false, context: { via: "api" } },
       );

@@ -11,6 +11,7 @@ import { CycleService } from "@/journals/cycle";
 import { EnsureJournalEntryFlow, OpenJournalEntryFlow } from "@/journals/flows";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import type { Prompt, PromptAnswer } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
@@ -402,6 +403,56 @@ describe("JournalsApiService writes", () => {
     await Promise.all([api.ensureNote("daily", "2026-08-18"), api.ensureNote("daily", "2026-08-19")]);
 
     expect(flows).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("JournalsApiService creation prompts", () => {
+  const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+
+  it("asks by default on a prompting journal", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }),
+    });
+
+    const pending = api.ensureNote("daily", "2026-08-18");
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit({ mood: "good" });
+
+    const result = await pending;
+    expect(result.created).toBe(true);
+  });
+
+  it("fails with prompts-required when prompt:false and an answer reaches the note name", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], nameTemplate: "{{date}} {{mood}}" }),
+    });
+
+    await expect(api.ensureNote("daily", "2026-08-18", { prompt: false })).rejects.toMatchObject({
+      code: "prompts-required",
+    });
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("fails with prompts-required when prompt:false and a prompt is required", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...mood, required: true }] }),
+    });
+
+    await expect(api.ensureNote("daily", "2026-08-18", { prompt: false })).rejects.toMatchObject({
+      code: "prompts-required",
+    });
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("creates the note unattended when only optional, out-of-path prompts remain", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }),
+    });
+
+    const result = await api.ensureNote("daily", "2026-08-18", { prompt: false });
+
+    expect(result.created).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
   });
 });
 
