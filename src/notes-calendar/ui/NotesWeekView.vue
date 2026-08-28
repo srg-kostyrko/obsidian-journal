@@ -135,7 +135,15 @@ const isSelected = (period: Period): boolean =>
 </script>
 
 <template>
-  <div class="notes-week-view" :style="appearanceStyle">
+  <div
+    ref="grid"
+    class="notes-week-view"
+    :style="appearanceStyle"
+    role="grid"
+    :aria-label="rawWeek.format(accessibleFormatPattern('week'))"
+    @focusin="navigation.onFocusIn"
+    @keydown.capture="navigation.onKeyDown"
+  >
     <div v-if="showHeader" class="notes-week-view__header">
       <slot name="header">
         <NotesCalendarCell
@@ -159,63 +167,54 @@ const isSelected = (period: Period): boolean =>
         />
       </slot>
     </div>
-    <div
-      ref="grid"
-      class="notes-week-view__grid"
-      role="grid"
-      :aria-label="rawWeek.format(accessibleFormatPattern('week'))"
-      @focusin="navigation.onFocusIn"
-      @keydown.capture="navigation.onKeyDown"
-    >
-      <div class="notes-week-view__weekdays" role="row" :data-weeks="showWeekNumber ? weeksPos : null">
-        <div
-          v-if="showWeekNumber && weeksPos === 'left'"
-          class="notes-week-view__weekday-spacer"
-          aria-hidden="true"
-        ></div>
-        <span v-for="(day, i) in weekdayNames" :key="i" class="notes-week-view__weekday" role="columnheader">
-          {{ day }}
-        </span>
-        <div
-          v-if="showWeekNumber && weeksPos === 'right'"
-          class="notes-week-view__weekday-spacer"
-          aria-hidden="true"
-        ></div>
-      </div>
-      <div class="notes-week-view__row" role="row" :data-weeks="showWeekNumber ? weeksPos : null">
-        <NotesCalendarCell
-          v-if="showWeekNumber && weeksPos === 'left'"
-          data-testid="week-number-cell"
-          class="notes-week-view__week-number"
-          :period="rawWeek"
-          :cell="weekCell"
-          role="rowheader"
-          :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
-          :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
-          :selected="isSelected(rawWeek)"
-        />
-        <NotesCalendarCell
-          v-for="day in days"
-          :key="day.anchor.toAnchor()"
-          :period="day"
-          :cell="dayCell"
-          role="gridcell"
-          :data-grid-key="`day:${day.anchor.toAnchor()}`"
-          :tab-index="navigation.tabIndex(`day:${day.anchor.toAnchor()}`)"
-          :selected="isSelected(day)"
-        />
-        <NotesCalendarCell
-          v-if="showWeekNumber && weeksPos === 'right'"
-          data-testid="week-number-cell"
-          class="notes-week-view__week-number"
-          :period="rawWeek"
-          :cell="weekCell"
-          role="rowheader"
-          :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
-          :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
-          :selected="isSelected(rawWeek)"
-        />
-      </div>
+    <div class="notes-week-view__weekdays" role="row" :data-weeks="showWeekNumber ? weeksPos : null">
+      <div
+        v-if="showWeekNumber && weeksPos === 'left'"
+        class="notes-week-view__weekday-spacer"
+        aria-hidden="true"
+      ></div>
+      <span v-for="(day, i) in weekdayNames" :key="i" class="notes-week-view__weekday" role="columnheader">
+        {{ day }}
+      </span>
+      <div
+        v-if="showWeekNumber && weeksPos === 'right'"
+        class="notes-week-view__weekday-spacer"
+        aria-hidden="true"
+      ></div>
+    </div>
+    <div class="notes-week-view__row" role="row" :data-weeks="showWeekNumber ? weeksPos : null">
+      <NotesCalendarCell
+        v-if="showWeekNumber && weeksPos === 'left'"
+        data-testid="week-number-cell"
+        class="notes-week-view__week-number"
+        :period="rawWeek"
+        :cell="weekCell"
+        role="rowheader"
+        :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
+        :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
+        :selected="isSelected(rawWeek)"
+      />
+      <NotesCalendarCell
+        v-for="day in days"
+        :key="day.anchor.toAnchor()"
+        :period="day"
+        :cell="dayCell"
+        role="gridcell"
+        :data-grid-key="`day:${day.anchor.toAnchor()}`"
+        :tab-index="navigation.tabIndex(`day:${day.anchor.toAnchor()}`)"
+        :selected="isSelected(day)"
+      />
+      <NotesCalendarCell
+        v-if="showWeekNumber && weeksPos === 'right'"
+        data-testid="week-number-cell"
+        class="notes-week-view__week-number"
+        :period="rawWeek"
+        :cell="weekCell"
+        role="rowheader"
+        :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
+        :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
+        :selected="isSelected(rawWeek)"
+      />
     </div>
   </div>
 </template>
@@ -229,11 +228,6 @@ const isSelected = (period: Period): boolean =>
 .notes-week-view__header {
   display: flex;
   justify-content: space-around;
-  gap: var(--size-2-2);
-}
-.notes-week-view__grid {
-  display: flex;
-  flex-direction: column;
   gap: var(--size-2-2);
 }
 .notes-week-view__weekdays {

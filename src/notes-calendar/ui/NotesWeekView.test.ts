@@ -63,6 +63,8 @@ describe("NotesWeekView", () => {
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, weeks: "left" } });
       const grid = container.querySelector('[role="grid"]');
 
+      expect(grid?.classList.contains("notes-week-view")).toBe(true);
+      expect(container.querySelector(".notes-week-view__grid")).toBeNull();
       expect(grid?.getAttribute("aria-label")).toBe(week.format("[W]w gggg"));
       expect(grid?.querySelectorAll(':scope > [role="row"]').length).toBe(2);
       expect(grid?.querySelectorAll('[role="columnheader"]').length).toBe(7);
@@ -142,10 +144,10 @@ describe("NotesWeekView", () => {
       expect(selected?.dataset.selected).toBe("true");
     });
 
-    it("selects a date on Shift+Enter", async () => {
+    it("selects an inactive grid date on Shift+Enter", async () => {
       vi.useRealTimers();
       const selectDate = vi.fn();
-      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+      const harness = await bootHarness({});
       const { container } = harness.render(NotesWeekView, {
         props: { shelf: null, week, selectDate, selectedDate: anchor("2026-05-27") },
       });

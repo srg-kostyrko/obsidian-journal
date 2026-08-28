@@ -23,7 +23,7 @@ const rawPeriod = computed(() => toRaw(props.period));
 const label = computed(() => rawPeriod.value.format(props.format ?? defaultFormatPattern(rawPeriod.value.kind)));
 const isActive = computed(() => props.cell.isActive(rawPeriod.value));
 const isInactive = computed(() => !props.cell.isActionable(rawPeriod.value));
-const isControl = computed(() => props.role !== undefined || !isInactive.value || props.cell.isSelectable());
+const isControl = computed(() => props.role !== undefined || !isInactive.value);
 const resolvedRole = computed(() => props.role ?? (isControl.value ? "button" : undefined));
 const resolvedTabIndex = computed(() => props.tabIndex ?? (isControl.value ? 0 : undefined));
 const today = useToday();

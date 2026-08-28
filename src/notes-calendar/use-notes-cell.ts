@@ -16,7 +16,6 @@ export interface NotesCellApi {
   openPreview(period: Period, event: MouseEvent): void;
   isActive(period: Period): boolean;
   isActionable(period: Period): boolean;
-  isSelectable(): boolean;
 }
 
 export type NotesDateSelect = (date: AnchorString) => void;
@@ -60,8 +59,6 @@ export function useNotesCell(options: {
   const existingPathsAt = (period: Period): readonly VaultPath[] =>
     index.pathsAt(toValue(options.journalNames), period.anchor.toAnchor());
 
-  const isSelectable = (): boolean => options.onSelect !== undefined;
-
   const open = (period: Period, event: MouseEvent | KeyboardEvent): void => {
     if (isSelectionGesture(event)) {
       options.onSelect?.(period.representative.toAnchor());
@@ -86,5 +83,5 @@ export function useNotesCell(options: {
     workspace.openPathsMenu(existingPathsAt(period), event, decorationItems({ kind: "fixed", period }));
   };
 
-  return { open, openContextMenu, openPreview, isActive, isActionable, isSelectable };
+  return { open, openContextMenu, openPreview, isActive, isActionable };
 }

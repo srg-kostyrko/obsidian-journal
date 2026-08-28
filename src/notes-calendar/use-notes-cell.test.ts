@@ -170,10 +170,10 @@ describe("useNotesCell", () => {
       expect(invokeSpy).not.toHaveBeenCalled();
     });
 
-    it("selects the period representative on Shift+primary click without opening", async () => {
+    it("selects an inactive period representative on Shift+primary click without opening", async () => {
       const { harness, invokeSpy } = await bootHarness();
       const onSelect = vi.fn();
-      const api = resolveApi(harness, () => ["daily"], undefined, onSelect);
+      const api = resolveApi(harness, () => [], undefined, onSelect);
 
       api.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
 
@@ -232,15 +232,6 @@ describe("useNotesCell", () => {
 
       expect(onSelect).not.toHaveBeenCalled();
       expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
-    });
-  });
-
-  describe("isSelectable", () => {
-    it("reports whether a selection callback was supplied", async () => {
-      const { harness } = await bootHarness();
-
-      expect(resolveApi(harness, () => []).isSelectable()).toBe(false);
-      expect(resolveApi(harness, () => [], undefined, vi.fn()).isSelectable()).toBe(true);
     });
   });
 

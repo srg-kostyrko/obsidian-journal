@@ -5,7 +5,7 @@ import { defineComponent, h, nextTick, ref, type Ref } from "vue";
 
 import { localMoment, type AnchorString } from "@/calendar";
 import { m } from "@/i18n";
-import { WorkspaceService, type OpenMode, type VaultPath } from "@/infrastructure/host";
+import { WorkspaceOpenError, WorkspaceService, type OpenMode, type VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { JournalsIndex } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -14,6 +14,7 @@ import { buildShelf } from "@/shelves/testing";
 import { testContainer, type TestHarness } from "@/testing";
 import { icons } from "@/ui/icons";
 
+import { UnknownViewError } from "../../errors";
 import { viewsCoreModule } from "../../module";
 import { ViewsService } from "../../service";
 import { buildView, provideViewContextStub } from "../../testing";
@@ -316,6 +317,17 @@ describe("DayNotesBlock", () => {
     expect(update).toHaveBeenLastCalledWith(VIEW_ID, BLOCK_ID, { ...defaultConfig, sortDirection: "asc" });
   });
 
+  it("notifies when a live control cannot persist its config", async () => {
+    const { harness } = await mountBlock();
+    vi.spyOn(harness.resolve(ViewsService), "updateBlockConfig").mockReturnValue(
+      AsyncResult.err(new UnknownViewError(VIEW_ID)),
+    );
+
+    await fireEvent.click(screen.getByRole("button", { name: m.view_block_day_notes_sort_descending() }));
+
+    await vi.waitFor(() => expect(harness.notices.messages).toContain(m.view_block_day_notes_update_error()));
+  });
+
   it("uses native checked states for the selected period and sort field", async () => {
     await mountBlock();
 
@@ -374,5 +386,16 @@ describe("DayNotesBlock", () => {
     expect(open).toHaveBeenLastCalledWith("Note.md", "tab");
     void fireEvent(card, new MouseEvent("auxclick", { button: 1, bubbles: true }));
     expect(open).toHaveBeenLastCalledWith("Note.md", "tab");
+  });
+
+  it("notifies when a card cannot be opened", async () => {
+    const { harness } = await mountBlock({ notes: [{ path: "Note.md", created: "2026-05-15" }] });
+    vi.spyOn(harness.resolve(WorkspaceService), "openNote").mockReturnValueOnce(
+      AsyncResult.err(new WorkspaceOpenError("Note.md" as VaultPath, "gone")),
+    );
+
+    await fireEvent.click(screen.getByRole("button", { name: /Note/ }));
+
+    await vi.waitFor(() => expect(harness.notices.messages).toContain(m.common_note_open_error()));
   });
 });

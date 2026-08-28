@@ -73,6 +73,14 @@ describe("resolveCreationDate", () => {
       expect(resolveCreationDate(target, metadata({ created: value }), settings).toAnchor()).toBe("2026-05-21");
     },
   );
+
+  it("rejects a note when neither its configured property nor ctime is a valid date", () => {
+    const target = note("Notes/broken.md", NaN);
+
+    expect(() => resolveCreationDate(target, metadata({ created: "not-a-date" }), settings)).toThrow(
+      new RangeError("Invalid note creation timestamp for Notes/broken.md"),
+    );
+  });
 });
 
 describe("createDayNotesQuery", () => {
