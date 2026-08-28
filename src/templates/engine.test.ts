@@ -421,6 +421,32 @@ describe("TemplateEngine.parse", () => {
     expectOk(result);
     expect(result.value.get("index")).toEqual({ kind: "number", value: 7 });
   });
+
+  it("parses an alternative literal back as a string, not as the spec's own kind", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().withSpec("meeting", {
+      kind: "date",
+      value: CalendarDate.fromAnchor("2026-08-28" as AnchorString),
+      defaultFormat: "YYYY-MM-DD",
+      alternatives: ["(unanswered)"],
+    });
+    const result = engine.parse(tokenize("Log {{meeting}}"), "Log (unanswered)", context);
+    expectOk(result);
+    expect(result.value.get("meeting")).toEqual({ kind: "string", value: "(unanswered)" });
+  });
+
+  it("still parses a real value as the spec's own kind", async () => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().withSpec("meeting", {
+      kind: "date",
+      value: CalendarDate.fromAnchor("2026-08-28" as AnchorString),
+      defaultFormat: "YYYY-MM-DD",
+      alternatives: ["(unanswered)"],
+    });
+    const result = engine.parse(tokenize("Log {{meeting}}"), "Log 2026-01-02", context);
+    expectOk(result);
+    expect(result.value.get("meeting")?.kind).toBe("date");
+  });
 });
 
 describe("TemplateEngine.validate", () => {

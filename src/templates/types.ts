@@ -15,9 +15,9 @@ export type Token =
 export type TokenStream = readonly Token[];
 
 export type VariableSpec =
-  | { kind: "string"; value: string }
-  | { kind: "number"; value: number }
-  | { kind: "date"; value: CalendarDate; defaultFormat: string; invertible?: boolean }
+  | { kind: "string"; value: string; alternatives?: readonly string[] }
+  | { kind: "number"; value: number; alternatives?: readonly string[] }
+  | { kind: "date"; value: CalendarDate; defaultFormat: string; invertible?: boolean; alternatives?: readonly string[] }
   | { kind: "clock"; value: Clock; defaultFormat: string }
   // A number read off a date: it takes the date modifiers and the number offsets alike, and it
   // never binds on inversion — the date it is computed from is what a template has to recover.

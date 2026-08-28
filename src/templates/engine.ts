@@ -132,6 +132,11 @@ export class TemplateEngine {
     spec: Exclude<VariableSpec, { kind: "derived" }>,
     token: Extract<Token, { kind: "variable" }>,
   ): Result<BoundValue, TemplateParseError> {
+    // An alternative is a literal the slot admits in place of a real value — the creation-prompt
+    // placeholder, or a select prompt's own values. It is never the spec's own kind, so parsing it
+    // as one would fail; hand it back as text and let the caller decide what it means.
+    const alternatives = "alternatives" in spec ? spec.alternatives : undefined;
+    if (alternatives?.includes(capture)) return new Ok({ kind: "string", value: capture });
     const ok = (value: BoundValue): Result<BoundValue, TemplateParseError> => new Ok(value);
     const err = (error: TemplateParseError): Result<BoundValue, TemplateParseError> => new Err(error);
     return match(spec)

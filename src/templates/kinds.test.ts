@@ -188,4 +188,39 @@ describe("kinds", () => {
       expect(result.error.detail.kind).toBe("invalid-date");
     });
   });
+
+  describe("patternForKind with alternatives", () => {
+    it("admits a literal alongside a date's format pattern", () => {
+      const spec = {
+        kind: "date",
+        value: CalendarDate.fromAnchor(anchor("2026-08-28")),
+        defaultFormat: "YYYY-MM-DD",
+        alternatives: ["(unanswered)"],
+      } as const;
+      const pattern = new RegExp(`^${patternForKind(spec)}$`);
+      expect(pattern.test("2026-08-28")).toBe(true);
+      expect(pattern.test("(unanswered)")).toBe(true);
+      expect(pattern.test("anything else")).toBe(false);
+    });
+
+    // cSpell:ignore Xunanswered
+    it("escapes regex metacharacters in an alternative", () => {
+      const spec = { kind: "number", value: 1, alternatives: ["(unanswered)"] } as const;
+      const pattern = new RegExp(`^${patternForKind(spec)}$`);
+      expect(pattern.test("(unanswered)")).toBe(true);
+      expect(pattern.test("Xunanswered)")).toBe(false);
+    });
+
+    it("offers only the alternatives when a bound string has them", () => {
+      const spec = { kind: "string", value: "(unanswered)", alternatives: ["(unanswered)", "happy", "sad"] } as const;
+      const pattern = new RegExp(`^${patternForKind(spec)}$`);
+      expect(pattern.test("happy")).toBe(true);
+      expect(pattern.test("(unanswered)")).toBe(true);
+      expect(pattern.test("elated")).toBe(false);
+    });
+
+    it("is unchanged when alternatives is absent", () => {
+      expect(patternForKind({ kind: "number", value: 1 })).toBe(String.raw`-?\d+`);
+    });
+  });
 });
