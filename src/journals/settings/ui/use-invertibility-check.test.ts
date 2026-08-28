@@ -383,7 +383,18 @@ describe("useInvertibilityCheck", () => {
       data: { journals: { [config.name]: config } },
     });
 
-    expect(probe(harness, config.name).value).toEqual({ kind: "text-prompt-in-name", offending: "mood" });
+    expect(probe(harness, config.name).value).toEqual({ kind: "text-prompt-in-path", offending: "mood" });
+  });
+
+  it("reports a text prompt in the folder, not just the note name, as non-invertible", async () => {
+    const config = fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date}}", folder: "{{mood}}" });
+    config.prompts = [moodPrompt];
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "text-prompt-in-path", offending: "mood" });
   });
 
   it("accepts a select prompt in the note name", async () => {

@@ -209,6 +209,38 @@ describe("EditPromptModal", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("rejects a frontmatter key that collides with the journal's own name key", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("mood");
+    await userEvent.type(textInputs().at(-1)!, "journal");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "journal" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a frontmatter key that collides with the journal's configured date field", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("mood");
+    await userEvent.type(textInputs().at(-1)!, "journal-date");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "journal-date" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
   it("allows several questions to share the empty frontmatter key", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

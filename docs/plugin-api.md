@@ -245,6 +245,11 @@ template or folder invalidates every path previously returned — do not cache t
 `path` is `null` when Journals will not place a note there at all: outside the
 timeline, or a name template that renders to nothing.
 
+If the journal has creation prompts and the note does not exist yet, an
+unanswered prompt's variable renders as the literal placeholder `(unanswered)`
+in `path` — the same value the note would actually be created with. This is
+read-only, like everything else in this section.
+
 ## Versioning
 
 `apiVersion` is an integer, bumped **only** on a breaking change. The package's

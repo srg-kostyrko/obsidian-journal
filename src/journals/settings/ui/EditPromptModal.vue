@@ -18,6 +18,8 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { reservedFrontmatterKeys } from "../../config";
+
 import type { Prompt } from "../../prompts/config";
 
 const props = withDefaults(defineProps<{ journalName: string; promptIndex?: number }>(), { promptIndex: undefined });
@@ -36,6 +38,7 @@ const takenKeys = computed(() =>
   [
     ...prompts.value.filter((_, i) => i !== props.promptIndex).map((prompt) => prompt.frontmatterKey),
     ...(config.value?.numbering.sources.map((source) => source.frontmatterKey) ?? []),
+    ...(config.value ? reservedFrontmatterKeys(config.value) : []),
   ].filter((key) => key !== ""),
 );
 

@@ -18,7 +18,7 @@ export type InvertibilityWarning =
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
   | { kind: "unused-digits"; missing: readonly string[] }
-  | { kind: "text-prompt-in-name"; offending: string };
+  | { kind: "text-prompt-in-path"; offending: string };
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
 
@@ -69,11 +69,11 @@ export function useInvertibilityCheck(
         return { kind: "non-invertible", reason: detail.reason, offending: detail.offending };
       }
     }
-    // A text answer has no bounded pattern, so a name carrying one matches only while it is
-    // unanswered. Every real note of this journal is then invisible to path inversion — worth
-    // its own verdict rather than passing silently as a template that "compiles".
-    const textInName = promptsInPath(value).find((prompt) => prompt.type === "text");
-    if (textInName) return { kind: "text-prompt-in-name", offending: textInName.variable };
+    // A text answer has no bounded pattern, so a name or folder carrying one matches only while
+    // it is unanswered. Every real note of this journal is then invisible to path inversion —
+    // worth its own verdict rather than passing silently as a template that "compiles".
+    const textInPath = promptsInPath(value).find((prompt) => prompt.type === "text");
+    if (textInPath) return { kind: "text-prompt-in-path", offending: textInPath.variable };
     // The template compiles, but auto-attach still needs to recover an anchor from the path.
     // Two adjacent periods, because a coarse date variable pins one period of its own range —
     // a year on a two-week cycle names every note of the year alike, yet the interval holding

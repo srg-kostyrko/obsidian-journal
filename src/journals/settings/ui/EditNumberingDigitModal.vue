@@ -15,13 +15,16 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
+import { reservedFrontmatterKeys } from "../../config";
+
 import type { NumberingDigitDraft } from "./modals";
 
 const props = withDefaults(defineProps<{ journalName: string; sourceIndex?: number }>(), { sourceIndex: undefined });
 const api = useModal<NumberingDigitDraft>();
 const journalsVM = useService(JournalsViewModel);
 
-const sources = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined()?.numbering.sources ?? []);
+const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
+const sources = computed(() => config.value?.numbering.sources ?? []);
 const current = computed(() => (props.sourceIndex === undefined ? undefined : sources.value[props.sourceIndex]));
 // A new digit is appended, so it is the top digit only when the list is empty.
 const isTopDigit = computed(() =>
@@ -31,7 +34,7 @@ const parentVariable = computed(() => {
   const index = props.sourceIndex ?? sources.value.length;
   return sources.value[index - 1]?.variable ?? "";
 });
-const prompts = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined()?.prompts ?? []);
+const prompts = computed(() => config.value?.prompts ?? []);
 // Symmetric with EditPromptModal's own takenVariables: a digit and a question share one
 // variable namespace, so checking only one direction lets whichever is created second win.
 const takenVariables = computed(() => [
@@ -42,6 +45,7 @@ const takenKeys = computed(() =>
   [
     ...sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.frontmatterKey),
     ...prompts.value.map((prompt) => prompt.frontmatterKey),
+    ...(config.value ? reservedFrontmatterKeys(config.value) : []),
   ].filter((key) => key !== ""),
 );
 

@@ -1131,6 +1131,18 @@ describe("NotePathService prompt answers", () => {
     expect(candidate.isNone()).toBe(true);
   });
 
+  it("renders the placeholder into the folder when unanswered", async () => {
+    const journals = promptedDaily();
+    const daily = { ...journals.daily, nameTemplate: "{{date}}", folder: "Journal/{{mood}}" } as JournalConfig;
+    const scoped = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily } } });
+
+    const path = scoped
+      .resolve(NotePathService)
+      .pathFor("daily", { journalName: "daily", anchor: anchor("2024-01-01") });
+
+    expect(path.isOk() && path.value).toBe("Journal/(unanswered)/2024-01-01.md");
+  });
+
   it("recovers an answer that reached the folder rather than the name", async () => {
     const journals = promptedDaily();
     const daily = { ...journals.daily, nameTemplate: "{{date}}", folder: "Journal/{{mood}}" } as JournalConfig;

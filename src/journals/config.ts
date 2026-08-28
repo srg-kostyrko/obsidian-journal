@@ -165,6 +165,18 @@ export type NumberingSource = v.InferOutput<typeof numberingSource>;
 export type JournalNumberingConfig = v.InferOutput<typeof numberingSchema>;
 export type JournalConfig = v.InferOutput<typeof journalConfigSchema>;
 
+// A prompt or numbering digit keyed to one of these overwrites the note's own journal claim or
+// date fields, since frontmatter.ts writes them after — see EditPromptModal and
+// EditNumberingDigitModal's takenKeys.
+export function reservedFrontmatterKeys(config: Pick<JournalConfig, "frontmatter">): readonly string[] {
+  return [
+    FRONTMATTER_NAME_KEY,
+    config.frontmatter.dateField,
+    config.frontmatter.startDateField,
+    config.frontmatter.endDateField,
+  ];
+}
+
 // --- Defaults ---
 
 const DATE_FORMATS: Record<JournalWrite["type"], string> = {
