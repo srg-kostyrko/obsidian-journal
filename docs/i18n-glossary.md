@@ -55,6 +55,8 @@ everything below. Adding a locale or a new domain noun means extending it there.
 | **maintenance** | Wartung     | mantenimiento | maintenance | manutenzione | メンテナンス     | 유지관리   | manutenção   | обслуживание  | обслуговування | 维护        |
 | **word**        | Wort        | palabra       | mot         | parola       | 単語             | 단어       | palavra      | слово         | слово          | 单词        |
 | **character**   | Zeichen     | carácter      | caractère   | carattere    | 文字             | 문자       | caractere    | символ        | символ         | 字符        |
+| **prompt**      | Frage       | pregunta      | question    | domanda      | 質問             | 질문       | pergunta     | вопрос        | запитання      | 问题        |
+| **answer**      | Antwort     | respuesta     | réponse     | risposta     | 回答             | 답변       | resposta     | ответ         | відповідь      | 回答        |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
@@ -101,6 +103,18 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   for a spreadsheet/table row, and Korean has a separate, more colloquial word for "a line
   of text" (`줄`); this pairing needs a native check the way uk got one. The `nav-row` CSS
   class stays as a legacy styling hook and is intentionally not part of this pair.
+- **`prompt`.** New with creation prompts (a `Prompt` is a question the plugin asks
+  before creating a note). The second sense the term risks is the command-line/OS input
+  prompt (de `Eingabeaufforderung`, the literal Windows term) and the unrelated adjective
+  "prompt" meaning quick. Neither reading is what a `Prompt` is, and the feature's own
+  English copy never says "prompt" to the user — it says "question" (`journal_prompt_answer_reserved`'s
+  "reserved for an unanswered question"). Every locale renders the term the same way:
+  as its plain word for "question", which is exactly what the object is and sidesteps
+  both wrong senses entirely.
+- **`answer`.** The response entered for a prompt. The second sense to avoid is a
+  quiz/exam "correct answer" (zh 答案, ja/ko share the same risk) rather than a form
+  response — 回答/답변 are the words Japanese and Korean forms and surveys use for "a
+  reply to a question" and carry no correctness connotation.
 
 ## Literal tokens
 
