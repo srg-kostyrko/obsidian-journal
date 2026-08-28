@@ -2,7 +2,7 @@
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useFieldArray, useForm } from "vee-validate";
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -76,6 +76,21 @@ function reachesPath(entered: FormValues): boolean {
   );
 }
 
+// valibot's own `v.forward` only accepts a fixed path, so a per-row choice error (an
+// unknown number of rows) is built the same way `forward` builds its own path items.
+function pathTo(
+  root: FormValues,
+  keys: readonly [string | number, ...(string | number)[]],
+): [v.IssuePathItem, ...v.IssuePathItem[]] {
+  let input: unknown = root;
+  return keys.map((key) => {
+    const value = (input as Record<string | number, unknown>)[key];
+    const item: v.IssuePathItem = { type: "unknown", origin: "value", input, key, value };
+    input = value;
+    return item;
+  }) as [v.IssuePathItem, ...v.IssuePathItem[]];
+}
+
 const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
   initialValues: {
     variable: current.value?.variable ?? "",
@@ -134,16 +149,28 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
         ),
         ["variable"],
       ),
-      v.forward(
-        v.check(
-          (entered) =>
-            entered.type !== "select" ||
-            (entered.options.length > 0 &&
-              entered.options.every((option) => option.label.trim() !== "" && option.value.trim() !== "")),
-          m.journal_prompt_options_required(),
-        ),
-        ["options"],
-      ),
+      v.rawCheck(({ dataset, addIssue }) => {
+        const entered = dataset.value as FormValues;
+        if (entered.type !== "select") return;
+        if (entered.options.length === 0) {
+          addIssue({ message: m.journal_prompt_options_required(), path: pathTo(entered, ["options"]) });
+          return;
+        }
+        for (const [index, option] of entered.options.entries()) {
+          if (option.label.trim() === "") {
+            addIssue({
+              message: m.journal_prompt_option_label_required(),
+              path: pathTo(entered, ["options", index, "label"]),
+            });
+          }
+          if (option.value.trim() === "") {
+            addIssue({
+              message: m.journal_prompt_option_value_required(),
+              path: pathTo(entered, ["options", index, "value"]),
+            });
+          }
+        }
+      }),
     ),
   ),
 });
@@ -168,6 +195,18 @@ function addOption(): void {
   options.push({ label: "", value: "" });
 }
 
+// Only a new question's key auto-fills, and only until the user edits it themselves — an
+// existing question's key is never overwritten from a variable rename.
+const keyTouched = ref(current.value !== undefined);
+function onFrontmatterKeyInput(value: string | undefined): void {
+  keyTouched.value = true;
+  frontmatterKey.value = value ?? "";
+}
+watch(variable, (value) => {
+  if (keyTouched.value) return;
+  frontmatterKey.value = value ? `journal-${value}` : "";
+});
+
 const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
 </script>
 
@@ -178,13 +217,6 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
         <span v-for="error of errorBag.question" :key="error" class="prompt-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="question" v-bind="questionAttrs" />
-    </UiSettingRow>
-
-    <UiSettingRow :name="m.journal_sequence_variable_label()">
-      <template #description>
-        <span v-for="error of errorBag.variable" :key="error" class="prompt-form-error">{{ error }}</span>
-      </template>
-      <UiTextInput v-model="variable" v-bind="variableAttrs" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.journal_prompt_type_label()">
@@ -198,6 +230,13 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
       </UiDropdown>
     </UiSettingRow>
 
+    <UiSettingRow :name="m.journal_sequence_variable_label()">
+      <template #description>
+        <span v-for="error of errorBag.variable" :key="error" class="prompt-form-error">{{ error }}</span>
+      </template>
+      <UiTextInput v-model="variable" v-bind="variableAttrs" />
+    </UiSettingRow>
+
     <template v-if="values.type === 'select'">
       <UiSettingRow no-controls>
         <template #description>
@@ -205,8 +244,18 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
         </template>
       </UiSettingRow>
       <div v-for="(field, i) of options.fields.value" :key="field.key" class="prompt-option-row">
-        <UiTextInput v-model="field.value.label" :aria-label="m.journal_prompt_option_label()" />
-        <UiTextInput v-model="field.value.value" :aria-label="m.journal_prompt_option_value()" />
+        <div class="prompt-option-field">
+          <UiTextInput v-model="field.value.label" :aria-label="m.journal_prompt_option_label()" />
+          <span v-for="error of errorBag[`options[${i}].label`]" :key="error" class="prompt-form-error">{{
+            error
+          }}</span>
+        </div>
+        <div class="prompt-option-field">
+          <UiTextInput v-model="field.value.value" :aria-label="m.journal_prompt_option_value()" />
+          <span v-for="error of errorBag[`options[${i}].value`]" :key="error" class="prompt-form-error">{{
+            error
+          }}</span>
+        </div>
         <UiIconButton
           :icon="icons.action.delete"
           :tooltip="m.journal_prompt_option_delete()"
@@ -222,7 +271,11 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
       <template #description>
         <span v-for="error of errorBag.frontmatterKey" :key="error" class="prompt-form-error">{{ error }}</span>
       </template>
-      <UiTextInput v-model="frontmatterKey" v-bind="frontmatterKeyAttrs" />
+      <UiTextInput
+        :model-value="frontmatterKey"
+        v-bind="frontmatterKeyAttrs"
+        @update:model-value="onFrontmatterKeyInput"
+      />
     </UiSettingRow>
 
     <UiSettingRow :name="m.journal_prompt_required_label()">
@@ -243,8 +296,12 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
 }
 .prompt-option-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--size-4-2);
   padding-block: var(--size-2-2);
+}
+.prompt-option-field {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 </style>

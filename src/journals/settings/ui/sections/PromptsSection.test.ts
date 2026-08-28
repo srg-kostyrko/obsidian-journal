@@ -54,6 +54,39 @@ describe("PromptsSection", () => {
     expect(await screen.findByText("sleep")).toBeTruthy();
   });
 
+  it("shows an empty state when the journal has no questions", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    harness.render(PromptsSection, { props: { journalName: "daily" } });
+
+    await userEvent.click(screen.getByText(m.journal_prompt_section_title()));
+
+    expect(await screen.findByText(m.journal_prompt_section_empty())).toBeTruthy();
+  });
+
+  it("leads each row with the question and shows the answer type the way the journal list shows a write type", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...moodPrompt, type: "date" }] }) },
+      },
+    });
+    harness.render(PromptsSection, { props: { journalName: "daily" } });
+
+    await userEvent.click(screen.getByText(m.journal_prompt_section_title()));
+
+    const questionEl = await screen.findByText(moodPrompt.question);
+    const row = questionEl.closest(".prompt-row");
+    expect(row).toBeTruthy();
+    const typeFlair = row?.querySelector(".flair");
+    expect(typeFlair?.textContent).toBe(m.journal_prompt_type_option({ type: "date" }));
+    const rowText = row?.textContent ?? "";
+    expect(rowText.indexOf(moodPrompt.question)).toBeGreaterThanOrEqual(0);
+    expect(rowText.indexOf(moodPrompt.question)).toBeLessThan(rowText.indexOf(moodPrompt.variable));
+  });
+
   it("invokes the prompt flow with no index when adding", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

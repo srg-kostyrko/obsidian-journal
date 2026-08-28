@@ -136,6 +136,7 @@ describe("EditPromptModal", () => {
     });
     const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
     await fillRequiredFields("mood");
+    await userEvent.clear(textInputs().at(-1)!);
     await submitForm();
 
     await waitFor(() => {
@@ -151,6 +152,7 @@ describe("EditPromptModal", () => {
     });
     const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
     await fillRequiredFields("mood");
+    await userEvent.clear(textInputs().at(-1)!);
     await submitForm();
 
     await waitFor(() => {
@@ -167,6 +169,7 @@ describe("EditPromptModal", () => {
     });
     const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
     await fillRequiredFields("sleep");
+    await userEvent.clear(textInputs().at(-1)!);
     await userEvent.type(textInputs().at(-1)!, "journal-mood");
     await submitForm();
 
@@ -200,6 +203,7 @@ describe("EditPromptModal", () => {
     });
     const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
     await fillRequiredFields("mood");
+    await userEvent.clear(textInputs().at(-1)!);
     await userEvent.type(textInputs().at(-1)!, "journal-index");
     await submitForm();
 
@@ -216,6 +220,7 @@ describe("EditPromptModal", () => {
     });
     const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
     await fillRequiredFields("mood");
+    await userEvent.clear(textInputs().at(-1)!);
     await userEvent.type(textInputs().at(-1)!, "journal");
     await submitForm();
 
@@ -232,6 +237,7 @@ describe("EditPromptModal", () => {
     });
     const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
     await fillRequiredFields("mood");
+    await userEvent.clear(textInputs().at(-1)!);
     await userEvent.type(textInputs().at(-1)!, "journal-date");
     await submitForm();
 
@@ -252,6 +258,7 @@ describe("EditPromptModal", () => {
     });
     const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
     await fillRequiredFields("sleep");
+    await userEvent.clear(textInputs().at(-1)!);
     await submitForm();
 
     await waitFor(() => {
@@ -334,15 +341,32 @@ describe("EditPromptModal", () => {
       const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
       await fillRequiredFields("mood");
       await userEvent.selectOptions(screen.getByRole("combobox"), "select");
-      const labelInput = screen.getByLabelText(m.journal_prompt_option_label());
-      const valueInput = screen.getByLabelText(m.journal_prompt_option_value());
-      await userEvent.clear(labelInput);
-      await userEvent.clear(valueInput);
+      // Delete the row switching to "select" auto-added, so the list is genuinely empty.
+      await userEvent.click(screen.getByLabelText(m.journal_prompt_option_delete()));
       await submitForm();
 
       await waitFor(() => {
         expect(screen.getByText(m.journal_prompt_options_required())).toBeTruthy();
       });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("points at the incomplete row's own fields, not the list, when a choice is left blank", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+      await fillRequiredFields("mood");
+      await userEvent.selectOptions(screen.getByRole("combobox"), "select");
+      // The row switching to "select" auto-added is left blank.
+      await submitForm();
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_option_label_required())).toBeTruthy();
+        expect(screen.getByText(m.journal_prompt_option_value_required())).toBeTruthy();
+      });
+      expect(screen.queryByText(m.journal_prompt_options_required())).toBeNull();
       expect(submit).not.toHaveBeenCalled();
     });
 
@@ -392,9 +416,56 @@ describe("EditPromptModal", () => {
       await submitForm();
 
       await waitFor(() => {
-        expect(screen.getByText(m.journal_prompt_options_required())).toBeTruthy();
+        expect(screen.getByText(m.journal_prompt_option_label_required())).toBeTruthy();
+        expect(screen.getByText(m.journal_prompt_option_value_required())).toBeTruthy();
       });
+      expect(screen.queryByText(m.journal_prompt_options_required())).toBeNull();
       expect(submit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("frontmatter key autofill", () => {
+    it("fills the frontmatter key from the variable for a new question", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      const [, variableInput] = textInputs();
+      await userEvent.type(variableInput, "mood");
+
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("journal-mood");
+    });
+
+    it("stops auto-filling once the key has been edited by hand", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      const [, variableInput] = textInputs();
+      await userEvent.type(variableInput, "mood");
+      const keyInput = textInputs().at(-1) as HTMLInputElement;
+      await userEvent.clear(keyInput);
+      await userEvent.type(keyInput, "custom-key");
+      await userEvent.type(variableInput, "2");
+
+      expect(keyInput.value).toBe("custom-key");
+    });
+
+    it("does not autofill the key when editing an existing question", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [moodPrompt] }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily", promptIndex: 0 } });
+
+      const [, variableInput] = textInputs();
+      await userEvent.type(variableInput, "2");
+
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe(moodPrompt.frontmatterKey);
     });
   });
 

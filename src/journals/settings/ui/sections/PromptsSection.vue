@@ -8,6 +8,7 @@ import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { JournalsViewModel } from "../../../view-model";
 import { EditPromptFlow } from "../../flows/edit-prompt.flow";
@@ -50,13 +51,24 @@ function deletePrompt(promptIndex: number): void {
       <UiIconButton :icon="icons.action.add" :tooltip="m.journal_prompt_add()" @click="addPrompt" />
     </template>
 
+    <UiSettingRow no-controls>
+      <template #description>{{ m.journal_prompt_section_description() }}</template>
+    </UiSettingRow>
+
+    <UiSettingRow v-if="prompts.length === 0" no-controls>
+      <template #description>{{ m.journal_prompt_section_empty() }}</template>
+    </UiSettingRow>
+
     <div v-if="hasRequiredWithAutoCreate" class="journal-hint">
       {{ m.journal_prompt_autocreate_required_warning() }}
     </div>
 
     <div v-for="(prompt, promptIndex) of prompts" :key="prompt.variable" class="prompt-row">
+      <span class="prompt-row__main">
+        <span class="prompt-row__question">{{ prompt.question }}</span>
+        <span class="flair">{{ m.journal_prompt_type_option({ type: prompt.type }) }}</span>
+      </span>
       <span class="prompt-row__variable">{{ prompt.variable }}</span>
-      <span class="prompt-row__question">{{ prompt.question }}</span>
       <span class="prompt-row__actions">
         <UiIconButton
           :icon="icons.action.configure"
@@ -87,18 +99,23 @@ function deletePrompt(promptIndex: number): void {
 .prompt-row:last-of-type {
   border-bottom: 0;
 }
-.prompt-row__variable {
-  font-family: var(--font-monospace);
-  font-weight: var(--font-semibold);
-}
-.prompt-row__question {
+.prompt-row__main {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-4-2);
   flex: 1 1 auto;
   min-width: 0;
-  color: var(--text-muted);
-  font-size: var(--font-ui-small);
+}
+.prompt-row__question {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.prompt-row__variable {
+  font-family: var(--font-monospace);
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
 }
 .prompt-row__actions {
   display: inline-flex;
