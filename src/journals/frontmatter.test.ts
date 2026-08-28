@@ -419,4 +419,96 @@ describe("FrontmatterService", () => {
       expect(out["journal-end-date"]).toBe("2024-01-07");
     });
   });
+
+  describe("prompt answers", () => {
+    let harness: TestHarness;
+
+    const prompted = fixedJournal(
+      "daily",
+      { type: "day" },
+      {
+        prompts: [
+          { variable: "mood", question: "How?", type: "text", frontmatterKey: "mood", required: false },
+          { variable: "note", question: "Why?", type: "text", frontmatterKey: "", required: false },
+        ],
+      },
+    );
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: prompted } },
+      });
+    });
+
+    it("reads a stored answer off its frontmatter key", () => {
+      const fm = harness.resolve(FrontmatterService);
+      const entry = fm.parseEntry("D/2024-01-01.md" as VaultPath, {
+        journal: "daily",
+        "journal-date": "2024-01-01",
+        mood: "great",
+      });
+      expect(entry.isSome() && entry.value.answers).toEqual({ mood: "great" });
+    });
+
+    it("omits answers entirely when no prompt key is present", () => {
+      const fm = harness.resolve(FrontmatterService);
+      const entry = fm.parseEntry("D/2024-01-01.md" as VaultPath, { journal: "daily", "journal-date": "2024-01-01" });
+      expect(entry.isSome() && "answers" in entry.value).toBe(false);
+    });
+
+    it("writes an answer to its frontmatter key", () => {
+      const fm = harness.resolve(FrontmatterService);
+      const mutator = fm.writeMutator("daily", {
+        journalName: "daily",
+        anchor: "2024-01-01" as AnchorString,
+        answers: { mood: "great" },
+      });
+      const target: Record<string, unknown> = {};
+      expect(mutator.isOk()).toBe(true);
+      if (mutator.isOk()) mutator.value(target);
+      expect(target.mood).toBe("great");
+    });
+
+    it("leaves an existing answer alone when metadata carries none", () => {
+      const fm = harness.resolve(FrontmatterService);
+      const mutator = fm.writeMutator("daily", { journalName: "daily", anchor: "2024-01-01" as AnchorString });
+      const target: Record<string, unknown> = { mood: "hand-edited" };
+      if (mutator.isOk()) mutator.value(target);
+      expect(target.mood).toBe("hand-edited");
+    });
+
+    it("writes nothing for a prompt with no frontmatter key", () => {
+      const fm = harness.resolve(FrontmatterService);
+      const mutator = fm.writeMutator("daily", {
+        journalName: "daily",
+        anchor: "2024-01-01" as AnchorString,
+        answers: { note: "body only" },
+      });
+      const target: Record<string, unknown> = {};
+      if (mutator.isOk()) mutator.value(target);
+      expect(Object.values(target)).not.toContain("body only");
+    });
+
+    it("clears every prompt key on disconnect", () => {
+      const fm = harness.resolve(FrontmatterService);
+      const mutator = fm.clearMutator("daily");
+      const target: Record<string, unknown> = { journal: "daily", mood: "great" };
+      if (mutator.isOk()) mutator.value(target);
+      expect(target.mood).toBeUndefined();
+    });
+
+    it("lifts a stored answer into metadata built for that anchor", () => {
+      const index = harness.resolve(JournalsIndex);
+      index.register({
+        journalName: "daily",
+        anchor: "2024-01-01" as AnchorString,
+        path: "D/2024-01-01.md" as VaultPath,
+        answers: { mood: "great" },
+      });
+      const fm = harness.resolve(FrontmatterService);
+      const built = fm.buildMetadata("daily", "2024-01-01" as AnchorString);
+      expect(built.isOk() && built.value.answers).toEqual({ mood: "great" });
+    });
+  });
 });
