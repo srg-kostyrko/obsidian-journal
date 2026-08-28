@@ -1,0 +1,58 @@
+{
+  "version": 4,
+  "journals": {
+    "prompted": {
+      "name": "prompted",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}} {{mood}}",
+      "templates": ["Templates/prompted.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        {
+          "variable": "mood",
+          "question": "How was today?",
+          "type": "select",
+          "options": [
+            { "label": "Great", "value": "great" },
+            { "label": "Okay", "value": "okay" }
+          ],
+          "frontmatterKey": "mood",
+          "required": true
+        }
+      ]
+    },
+    "confirmed": {
+      "name": "confirmed",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "confirmCreation": true,
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        {
+          "variable": "note",
+          "question": "Anything to add?",
+          "type": "text",
+          "frontmatterKey": "note",
+          "required": false
+        }
+      ]
+    }
+  }
+}
