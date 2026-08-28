@@ -53,3 +53,10 @@ export class NativeMenuItemMissingError extends Error {
     this.name = "NativeMenuItemMissingError";
   }
 }
+
+export class UpdateLinksDialogButtonMissingError extends Error {
+  constructor() {
+    super('Obsidian\'s "Update links?" dialog did not render its expected three-button layout');
+    this.name = "UpdateLinksDialogButtonMissingError";
+  }
+}

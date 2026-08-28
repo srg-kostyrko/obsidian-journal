@@ -1,8 +1,10 @@
 import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
+import { confirmUpdateLinksDialog } from "../support/rename-links-dialog.js";
 import {
   clickDialogButton,
+  clickModalCta,
   modalText,
   selectModalOption,
   submitModal,
@@ -13,6 +15,7 @@ import { openViaUri } from "../support/uri.js";
 import {
   createNote,
   noteExists,
+  resolvedLinksFrom,
   waitForActiveNote,
   waitForContent,
   waitForFrontmatter,
@@ -77,10 +80,27 @@ describe("clicking an unresolved journal link to a prompted journal", () => {
 
     await waitForModalOpen();
     await selectModalOption("okay");
-    await submitModal();
+
+    // Submitting renames the placeholder file, and links.md holds a real link pointing at it, so
+    // Obsidian's own fileManager.renameFile opens its native "Update links?" dialog before the
+    // rename settles — the plugin's answer modal is already gone by then, so a plain submitModal
+    // (which waits for "no modal at all") would instead wait on this second, unrelated dialog.
+    await clickModalCta();
+    await confirmUpdateLinksDialog();
 
     await waitForJournalFrontmatter("2030-07-20 okay.md", { journal: "prompted", date: "2030-07-20" });
     expect(await noteExists("2030-07-20 (unanswered).md")).toBe(false);
+
+    // The whole point of renaming through fileManager.renameFile (rather than vault.rename) is
+    // that it repairs links pointing at the renamed file. Assert the repair itself, not just the
+    // rename: links.md's link must resolve to the note's new name, not sit broken on the old one.
+    await browser.waitUntil(
+      async () => {
+        const resolved = await resolvedLinksFrom("links.md");
+        return resolved?.["2030-07-20 okay.md"] === 1;
+      },
+      { timeoutMsg: "expected the link in links.md to resolve to the renamed note" },
+    );
   });
 });
 
