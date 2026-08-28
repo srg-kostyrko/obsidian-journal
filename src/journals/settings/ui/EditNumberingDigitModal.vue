@@ -7,7 +7,7 @@ import { computed, ref, watch } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { NUMBERING_VARIABLE_RE, RESERVED_VARIABLE_NAMES } from "@/journals/numbering-variables";
+import { isReservedVariable, TEMPLATE_VARIABLE_RE } from "@/journals/reserved-variables";
 import { JournalsViewModel } from "@/journals/view-model";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -61,9 +61,9 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
         variable: v.pipe(
           v.string(),
           v.nonEmpty(m.journal_sequence_variable_required()),
-          v.regex(NUMBERING_VARIABLE_RE, m.journal_sequence_variable_invalid()),
+          v.regex(TEMPLATE_VARIABLE_RE, m.journal_sequence_variable_invalid()),
           v.check(
-            (value) => !RESERVED_VARIABLE_NAMES.includes(value),
+            (value) => !isReservedVariable(value),
             (issue) => m.journal_sequence_variable_reserved({ name: issue.input }),
           ),
           v.check(

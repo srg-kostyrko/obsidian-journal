@@ -2,15 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import { tokenize } from "@/templates";
 
-import { NUMBERING_VARIABLE_RE, RESERVED_VARIABLE_NAMES } from "./numbering-variables";
+import { isReservedVariable, RESERVED_VARIABLE_NAMES, TEMPLATE_VARIABLE_RE } from "./reserved-variables";
 
-describe("numbering variable rules", () => {
+describe("reserved variable rules", () => {
   it.each(["index", "sprint", "_private", "pi24", "Release", "спринт", "реліз", "спринт2"])("accepts %s", (name) => {
-    expect(NUMBERING_VARIABLE_RE.test(name)).toBe(true);
+    expect(TEMPLATE_VARIABLE_RE.test(name)).toBe(true);
   });
 
   it.each(["", "2fast", "with space", "with-dash", "with.dot"])("rejects %s", (name) => {
-    expect(NUMBERING_VARIABLE_RE.test(name)).toBe(false);
+    expect(TEMPLATE_VARIABLE_RE.test(name)).toBe(false);
   });
 
   // A name the tokenizer cannot parse renders as a literal `{{...}}` in the note filename
@@ -39,7 +39,17 @@ describe("numbering variable rules", () => {
         "start_date",
         "time",
         "title",
+        "week_of_month",
       ].toSorted(),
     );
+  });
+
+  it("reserves week_of_month, which contextFor seeds as a derived variable", () => {
+    expect(isReservedVariable("week_of_month")).toBe(true);
+  });
+
+  it("reserves a name that differs only in case, because the context lookup falls back to it", () => {
+    expect(isReservedVariable("Date")).toBe(true);
+    expect(isReservedVariable("START_DATE")).toBe(true);
   });
 });

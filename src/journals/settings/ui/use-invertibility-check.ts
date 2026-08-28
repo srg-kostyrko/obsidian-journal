@@ -3,7 +3,7 @@ import { computed, type ComputedRef, type Ref } from "vue";
 import { CalendarDate, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
-import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
+import { TemplateContext, TemplateEngine, tokenize, variableNames } from "@/templates";
 
 import { CycleService } from "../../cycle";
 import { NotePathService } from "../../notes/note-path";
@@ -18,14 +18,6 @@ export type InvertibilityWarning =
   | { kind: "unused-digits"; missing: readonly string[] };
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
-
-function variableNames(template: string): Set<string> {
-  const names = new Set<string>();
-  for (const token of tokenize(template)) {
-    if (token.kind === "variable") names.add(token.name);
-  }
-  return names;
-}
 
 export function useInvertibilityCheck(
   config: Ref<JournalConfig | undefined>,
