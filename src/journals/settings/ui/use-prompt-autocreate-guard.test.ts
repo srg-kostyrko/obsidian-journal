@@ -77,6 +77,47 @@ describe("usePromptAutocreateGuard", () => {
     expect(harness.notices.messages).toHaveLength(0);
   });
 
+  it("reverts autoCreate when the name template starts using a question", async () => {
+    harness = await testContainer({ modules: [journalsCoreModule] });
+    const config = ref<JournalConfig>(
+      fixedJournal("Daily", { type: "day" }, { autoCreate: true, prompts: [moodPrompt] }),
+    );
+    mount(config);
+
+    config.value.nameTemplate = "{{date}} {{mood}}";
+    await nextTick();
+
+    expect(config.value.autoCreate).toBe(false);
+    expect(harness.notices.messages).toContain(m.journal_prompt_autocreate_conflict());
+  });
+
+  it("reverts autoCreate when the folder starts using a question", async () => {
+    harness = await testContainer({ modules: [journalsCoreModule] });
+    const config = ref<JournalConfig>(
+      fixedJournal("Daily", { type: "day" }, { autoCreate: true, prompts: [moodPrompt] }),
+    );
+    mount(config);
+
+    config.value.folder = "Journal/{{mood}}";
+    await nextTick();
+
+    expect(config.value.autoCreate).toBe(false);
+  });
+
+  it("leaves autoCreate on while the name template holds no question", async () => {
+    harness = await testContainer({ modules: [journalsCoreModule] });
+    const config = ref<JournalConfig>(
+      fixedJournal("Daily", { type: "day" }, { autoCreate: true, prompts: [moodPrompt] }),
+    );
+    mount(config);
+
+    config.value.nameTemplate = "{{date}} log";
+    await nextTick();
+
+    expect(config.value.autoCreate).toBe(true);
+    expect(harness.notices.messages).toHaveLength(0);
+  });
+
   it("does nothing when the toggle switches off", async () => {
     harness = await testContainer({ modules: [journalsCoreModule] });
     const config = ref<JournalConfig>(
