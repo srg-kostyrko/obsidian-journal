@@ -114,6 +114,10 @@ export class AutoAttachService {
       );
       // Cancel claims nothing: the file stays where Obsidian put it, unclaimed and user-fixable.
       if (gathered.isErr()) return;
+      // The modal is the only long await in this handler, so it is the only window in which a
+      // rename of this same note can re-enter and move it out from under this pass. Whichever
+      // pass then held the stale path would rename from a file that is no longer there.
+      if (this.#notes.find(path).isNone()) return;
       metadata = { ...metadata, answers: { ...metadata.answers, ...gathered.value } };
       const renamed = this.#path.pathFor(match.name, metadata);
       if (renamed.isOk() && renamed.value !== path) {

@@ -1,9 +1,9 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
-import { NoteMetadataService, NotesService } from "@/infrastructure/host";
+import { NoteMetadataService, NoteRenameError, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
-import { None } from "@/infrastructure/result";
+import { AsyncResult, None } from "@/infrastructure/result";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../journals-index";
@@ -433,5 +433,43 @@ describe("AutoAttachService — a note Obsidian created from a link carrying the
     expect(harness.host.files.has("Diary/2026-05-19 good.md")).toBe(true);
     expect(deleteFolder).not.toHaveBeenCalled();
     expect(harness.host.folders.has("Diary")).toBe(true);
+  });
+
+  it("does not rename from a path that moved while the prompt was open", async () => {
+    const harness = await promptingHarness();
+    const notes = harness.resolve(NotesService);
+    const rename = notes.rename.bind(notes);
+    const renamed: string[] = [];
+    vi.spyOn(notes, "rename").mockImplementation((from, to) => {
+      renamed.push(`${from} -> ${to}`);
+      return rename(from, to);
+    });
+
+    void notes.create("2026-05-19 (unanswered).md" as VaultPath, "");
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    await notes.rename("2026-05-19 (unanswered).md" as VaultPath, "Inbox/moved.md" as VaultPath);
+    harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit({ mood: "good" });
+    await settle();
+
+    expect(renamed).toEqual(["2026-05-19 (unanswered).md -> Inbox/moved.md"]);
+  });
+
+  it("releases its suppression guard when the rename fails", async () => {
+    const harness = await promptingHarness();
+    const notes = harness.resolve(NotesService);
+    vi.spyOn(notes, "rename").mockReturnValue(
+      AsyncResult.err(
+        new NoteRenameError(
+          "2026-05-19 (unanswered).md" as VaultPath,
+          "2026-05-19 good.md" as VaultPath,
+          new Error("disk full"),
+        ),
+      ),
+    );
+
+    void notes.create("2026-05-19 (unanswered).md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(harness.resolve(SelfWriteGuard).suppresses("2026-05-19 good.md" as VaultPath)).toBe(false);
   });
 });
