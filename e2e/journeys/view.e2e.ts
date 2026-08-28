@@ -115,6 +115,13 @@ const openViewTabIconClass = async (): Promise<string | null> =>
     return iconClass;
   });
 
+// The raw computed value rather than the parsed hex: an idle entry paints no background at all,
+// and hex drops the alpha that says so.
+async function cssValue(selector: string, property: string): Promise<string> {
+  const prop = await $(selector).getCSSProperty(property);
+  return prop.value ?? "";
+}
+
 const pad2 = (n: number): string => String(n).padStart(2, "0");
 
 // The sprint runs in 2-week intervals anchored at 2026-01-05 (see the fixture). The first start
@@ -687,6 +694,23 @@ describe("calendar view", () => {
         async () => (await entry.getAttribute("data-active")) ?? undefined,
         (value) => value === "true",
         "the open custom-interval note's entry did not become active",
+      );
+
+      // The attribute above only says the component marked the entry; these two say the
+      // highlight is actually painted. Both rules live in the section component's `<style
+      // scoped>` while the entries are rendered by that same component, so a scope-id mismatch
+      // (styles owned by one component, markup by another) leaves the attribute set and the
+      // highlight invisible — which nothing in the unit suite can see, since jsdom applies no
+      // stylesheet. Compared against an idle sibling rather than a fixed hex: the colors come
+      // from the theme by default, so only the difference between the two is stable.
+      const activeEntry = `${sprintSection} [data-anchor="${anchor}"]`;
+      const idleEntry = `${sprintSection} .journal-view-custom-intervals__entry:not([data-active])`;
+      await $(idleEntry).waitForExist({ timeoutMsg: "no idle interval entry to compare the highlight against" });
+      expect(await cssValue(activeEntry, "background-color")).not.toBe(await cssValue(idleEntry, "background-color"));
+      // The nested rows set their own per-row color, so the highlight forces its color through
+      // `:deep(*)`; without it the row keeps the segment's color and the two match.
+      expect(await cssValue(`${activeEntry} .nav-row`, "color")).not.toBe(
+        await cssValue(`${idleEntry} .nav-row`, "color"),
       );
     });
 
