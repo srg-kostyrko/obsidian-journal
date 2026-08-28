@@ -1,6 +1,6 @@
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { basenameOf, NotesService } from "@/infrastructure/host";
+import { basenameOf, NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type {
   FrontmatterError,
   NoteCreateError,
@@ -13,10 +13,13 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, Err, attempt } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
+import { FRONTMATTER_NAME_KEY } from "../config";
+import { JournalNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { PromptsUnansweredError } from "../prompts/errors";
 import { GatherPromptAnswersFlow } from "../prompts/flows/gather-prompt-answers.flow";
+import { promptsInPath } from "../prompts/prompts-in-path";
 import { unattendedOutcome } from "../prompts/unattended-rule";
 import { JournalsRepository } from "../repository";
 
@@ -26,7 +29,6 @@ import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 import { confirmCreationModal } from "./ui/modals";
 
-import type { JournalNotFoundError } from "../errors";
 import type { PromptAnswer } from "../prompts/config";
 import type { JournalMetadata } from "../types";
 
@@ -45,6 +47,7 @@ export type NoteCreationError =
 
 export class NoteCreationService {
   readonly #notes = inject(NotesService);
+  readonly #metadata = inject(NoteMetadataService);
   readonly #index = inject(JournalsIndex);
   readonly #path = inject(NotePathService);
   readonly #journals = inject(JournalsRepository);
@@ -54,14 +57,20 @@ export class NoteCreationService {
   readonly #guard = inject(SelfWriteGuard);
   readonly #flows = inject(Flows);
 
+  // Whether a file already at the journal's derived path is one of this plugin's notes rather
+  // than a stray the journal is about to adopt. Same test AutoAttachService makes before it
+  // touches a file: the claim key is what this plugin writes, so its presence means the note
+  // has been through creation once already — prompts and all.
+  #carriesJournalClaim(path: VaultPath): boolean {
+    const metadata = this.#metadata.get(path);
+    return metadata.isSome() && typeof metadata.value.properties[FRONTMATTER_NAME_KEY] === "string";
+  }
+
   ensureNote(
     name: string,
     metadata: JournalMetadata,
     options?: { skipConfirmation?: boolean; unattended?: boolean },
   ): AsyncResult<{ path: VaultPath; created: boolean }, NoteCreationError> {
-    const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
-    if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
-
     // A connected note may live away from the config-derived path (renamed, moved,
     // or connected in place); the index knows its real location — reuse it instead
     // of spawning a duplicate at the derived path. It stays ahead of the prompt:
@@ -69,6 +78,8 @@ export class NoteCreationService {
     const indexed = this.#index.entryByAnchor(name, metadata.anchor);
     if (indexed.isSome() && this.#notes.find(indexed.value.path).isSome()) {
       const indexedPath = indexed.value.path;
+      const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
+      if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
       return this.#notes
         .updateFrontmatter(indexedPath, mutatorResult.value)
         .map(() => ({ path: indexedPath, created: false as const }));
@@ -77,6 +88,22 @@ export class NoteCreationService {
     return attempt.in(this, async function* () {
       const config = this.#journals.get(name).getOrUndefined();
       const confirming = !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
+
+      // With an answer reaching the note name or folder the path genuinely cannot be known
+      // before asking, so those journals keep the prompt-then-derive order below. Everywhere
+      // else the path is knowable up front, and deriving it here is what lets a real journal
+      // note that fell out of the index — a rejected anchor, mangled frontmatter, a cold-boot
+      // race — be recognized by its claim and returned without re-asking questions it has
+      // already answered and stored.
+      const derived =
+        config === undefined || promptsInPath(config).length === 0
+          ? yield* this.#path.pathFor(name, metadata)
+          : undefined;
+      if (derived !== undefined && this.#notes.find(derived).isSome() && this.#carriesJournalClaim(derived)) {
+        const claimedMutator = yield* this.#frontmatter.writeMutator(name, metadata);
+        yield* this.#notes.updateFrontmatter(derived, claimedMutator);
+        return { path: derived, created: false as const };
+      }
 
       // The unattended rule is a pure function; only the attended path opens a modal, and it
       // does so through a flow so aborts, timing and failure notices match every other modal.
@@ -94,21 +121,23 @@ export class NoteCreationService {
               { journalName: name, anchor: metadata.anchor, confirming },
               { notify: false },
             )
-            .mapErr((error) => error as NoteCreationError);
+            .mapErr((error) => (error instanceof UserAborted ? error : new JournalNotFoundError(name)));
         }
       }
       const answered: JournalMetadata =
         Object.keys(answers).length > 0 ? { ...metadata, answers: { ...metadata.answers, ...answers } } : metadata;
 
-      // Rebuilt from the answered metadata. The mutator above closes over the pre-prompt
-      // metadata, so reusing it here would drop every answer on the floor with nothing failing.
+      // Built from the answered metadata. One built before the prompt closes over the
+      // pre-prompt metadata, so reusing it here would drop every answer on the floor with
+      // nothing failing.
       const mutator = yield* this.#frontmatter.writeMutator(name, answered);
 
       // A connected note is reachable above without ever needing a resolvable
       // configured path, so the empty-name guard must gate creation only — deriving
-      // it any earlier would block opening a note this journal already has. It also
-      // has to follow the prompt, because an answer can reach the note name.
-      const path = yield* this.#path.pathFor(name, answered);
+      // it any earlier would block opening a note this journal already has. Only a
+      // prompt in the path leaves the derivation to here, and that one has to follow
+      // the answers.
+      const path = derived ?? (yield* this.#path.pathFor(name, answered));
 
       if (this.#notes.find(path).isSome()) {
         yield* this.#notes.updateFrontmatter(path, mutator);

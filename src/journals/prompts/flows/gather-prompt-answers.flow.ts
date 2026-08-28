@@ -1,19 +1,21 @@
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
+import { UserAborted, type Flow } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
-import { toFlowError, UnknownJournalError } from "@/journals/errors";
+import { toFlowError, UnknownJournalError, type JournalLifecycleFlowError } from "@/journals/errors";
 import { JournalsRepository } from "@/journals/repository";
 
 import { promptAnswersModal } from "../ui/modals";
 
 import type { PromptAnswer } from "../config";
 
+export type GatherPromptAnswersError = UserAborted | JournalLifecycleFlowError;
+
 export class GatherPromptAnswersFlow implements Flow<
   { journalName: string; anchor: AnchorString; confirming: boolean },
   Record<string, PromptAnswer>,
-  FlowError
+  GatherPromptAnswersError
 > {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
@@ -22,7 +24,7 @@ export class GatherPromptAnswersFlow implements Flow<
     journalName: string;
     anchor: AnchorString;
     confirming: boolean;
-  }): AsyncResult<Record<string, PromptAnswer>, FlowError> {
+  }): AsyncResult<Record<string, PromptAnswer>, GatherPromptAnswersError> {
     if (this.#repository.get(parameters.journalName).isNone()) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }

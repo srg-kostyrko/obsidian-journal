@@ -112,7 +112,13 @@ describe("NoteCreationService.ensureNote", () => {
 
     it("creates the file when confirmCreation is true and the modal is submitted", async () => {
       const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
-      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+      // Ordering, not just the outcome: the modal is open and nothing is on disk yet, which is
+      // what "confirm before creating" means. Asserting only the created flag afterwards would
+      // pass just as well against a service that wrote the note and then asked.
+      await vi.waitFor(() => {
+        expect(harness.modals.opens).toHaveLength(1);
+        expect(harness.host.files.has("2026-05-19.md")).toBe(false);
+      });
       harness.modals.lastOpen<{ journalName: string; noteName: string }, boolean>().submit(true);
 
       const result = await promise;
@@ -514,5 +520,64 @@ describe("NoteCreationService.ensureNote — creation prompts", () => {
 
     expect(result.isOk() && result.value.created).toBe(true);
     expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  describe("a note at the derived path that the index does not know", () => {
+    it("does not re-ask a note that already carries this journal's claim", async () => {
+      const harness = await promptingHarness();
+      harness.host.putFile("2026-05-19.md", "", {
+        journal: "daily",
+        "journal-date": "2026-05-19",
+        mood: "great",
+      });
+
+      const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+      expectOk(result);
+      expect(result.value.created).toBe(false);
+      expect(harness.modals.opens).toHaveLength(0);
+    });
+
+    it("keeps the stored answers of a note that already carries this journal's claim", async () => {
+      const harness = await promptingHarness();
+      harness.host.putFile("2026-05-19.md", "", {
+        journal: "daily",
+        "journal-date": "2026-05-19",
+        mood: "great",
+      });
+
+      expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
+
+      expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ mood: "great" });
+    });
+
+    it("asks and adopts an unclaimed file sitting at the derived path", async () => {
+      const harness = await promptingHarness();
+      harness.host.putFile("2026-05-19.md", "hand-made");
+
+      const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+      await answerPrompt(harness, { mood: "good" });
+      const result = await promise;
+
+      expectOk(result);
+      expect(result.value.created).toBe(false);
+      expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ journal: "daily", mood: "good" });
+    });
+
+    it("still asks a journal whose note name carries an answer", async () => {
+      const harness = await promptingHarness({ nameTemplate: "{{date}} {{mood}}" });
+      harness.host.putFile("2026-05-19 great.md", "", {
+        journal: "daily",
+        "journal-date": "2026-05-19",
+        mood: "great",
+      });
+
+      const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+      await answerPrompt(harness, { mood: "good" });
+      const result = await promise;
+
+      expectOk(result);
+      expect(result.value.path).toBe("2026-05-19 good.md");
+    });
   });
 });
