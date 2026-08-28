@@ -673,6 +673,8 @@
 	"common_action_create": "Создать",
 	"common_action_delete": "Удалить",
 	"common_action_submit": "Сохранить",
+	"common_yes": "Да",
+	"common_no": "Нет",
 	"confirm_note_creation_body": "Создать «{noteName}» в журнале «{journalName}»?",
 	"confirm_note_creation_confirm": "Создать",
 	"confirm_note_creation_title": "Создать новую заметку журнала?",

@@ -420,6 +420,8 @@
   "common_action_create": "Create",
   "common_action_delete": "Delete",
   "common_action_submit": "Save",
+  "common_yes": "Yes",
+  "common_no": "No",
 
   "confirm_note_creation_body": "Create '{noteName}' in journal '{journalName}'?",
   "confirm_note_creation_confirm": "Create",

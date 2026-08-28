@@ -1,11 +1,17 @@
 import { match } from "ts-pattern";
 
 import { CalendarDate } from "@/calendar";
+import { m } from "@/i18n";
 import type { Bindings, VariableSpec } from "@/templates";
 
 import { PROMPT_PLACEHOLDER } from "./placeholder";
 
 import type { Prompt, PromptAnswer } from "./config";
+
+export interface PromptRender {
+  readonly spec: VariableSpec;
+  readonly answered: boolean;
+}
 
 function alternativesFor(prompt: Prompt): readonly string[] {
   return prompt.type === "select"
@@ -13,26 +19,53 @@ function alternativesFor(prompt: Prompt): readonly string[] {
     : [PROMPT_PLACEHOLDER];
 }
 
-function unanswered(prompt: Prompt): VariableSpec {
-  return { kind: "string", value: PROMPT_PLACEHOLDER, alternatives: alternativesFor(prompt) };
+function unanswered(prompt: Prompt): PromptRender {
+  return {
+    spec: { kind: "string", value: PROMPT_PLACEHOLDER, alternatives: alternativesFor(prompt) },
+    answered: false,
+  };
 }
 
-/** How an answer renders into a note name or folder. */
-export function renderSpecFor(prompt: Prompt, answer: PromptAnswer | undefined, dateFormat: string): VariableSpec {
+/**
+ * A prompt's binding, and whether the answer behind it was usable.
+ *
+ * `answered: false` means `spec` is the placeholder stand-in — the answer was missing, or it
+ * was present but unusable (a date that does not parse, a number that is not one). The note
+ * name wants the placeholder either way; the body wants an empty string for both. They stay
+ * one decision here because two spellings of "is this answered" drift apart silently.
+ */
+export function renderBindingFor(prompt: Prompt, answer: PromptAnswer | undefined, dateFormat: string): PromptRender {
   if (answer === undefined) return unanswered(prompt);
   const alternatives = alternativesFor(prompt);
-  return match(prompt)
-    .with({ type: "date" }, () => {
-      const parsed = typeof answer === "string" ? CalendarDate.parse(answer) : undefined;
-      if (!parsed || parsed.isErr()) return unanswered(prompt);
-      // A real date spec, not a bound string: renderDate applies modifiers before formatting,
-      // so the full {{date}} vocabulary — formats, shifts, boundaries — works on the answer.
-      return { kind: "date", value: parsed.value, defaultFormat: dateFormat, alternatives } as const;
-    })
-    .with({ type: "number" }, () =>
-      typeof answer === "number" ? ({ kind: "number", value: answer, alternatives } as const) : unanswered(prompt),
-    )
-    .otherwise(() => ({ kind: "string", value: String(answer), alternatives }) as const);
+  return (
+    match(prompt)
+      .with({ type: "date" }, () => {
+        const parsed = typeof answer === "string" ? CalendarDate.parse(answer) : undefined;
+        if (!parsed || parsed.isErr()) return unanswered(prompt);
+        // A real date spec, not a bound string: renderDate applies modifiers before formatting,
+        // so the full {{date}} vocabulary — formats, shifts, boundaries — works on the answer.
+        return {
+          spec: { kind: "date", value: parsed.value, defaultFormat: dateFormat, alternatives } as const,
+          answered: true,
+        };
+      })
+      .with({ type: "number" }, () =>
+        typeof answer === "number"
+          ? ({ spec: { kind: "number", value: answer, alternatives }, answered: true } as const)
+          : unanswered(prompt),
+      )
+      // A yes/no answer is a fact with two states, and `String(true)` puts a programmer's word
+      // into the user's prose. Both states stay visible, in the reader's own language.
+      .with({ type: "toggle" }, () =>
+        typeof answer === "boolean"
+          ? ({
+              spec: { kind: "string", value: answer ? m.common_yes() : m.common_no(), alternatives },
+              answered: true,
+            } as const)
+          : unanswered(prompt),
+      )
+      .otherwise(() => ({ spec: { kind: "string", value: String(answer), alternatives }, answered: true }) as const)
+  );
 }
 
 /**
@@ -50,7 +83,7 @@ export function parseSpecFor(prompt: Prompt, dateFormat: string): VariableSpec {
       .with({ type: "number" }, () => ({ kind: "number", value: 0, alternatives }) as const)
       // Free text has no bounded pattern, so it matches only the placeholder: an answered text
       // name does not invert, and nothing may be captured in its place.
-      .otherwise(() => unanswered(prompt))
+      .otherwise(() => unanswered(prompt).spec)
   );
 }
 

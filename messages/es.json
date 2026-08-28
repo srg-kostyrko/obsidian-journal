@@ -663,6 +663,8 @@
 	"common_action_create": "Crear",
 	"common_action_delete": "Eliminar",
 	"common_action_submit": "Guardar",
+	"common_yes": "Sí",
+	"common_no": "No",
 	"confirm_note_creation_body": "¿Crear «{noteName}» en el diario «{journalName}»?",
 	"confirm_note_creation_confirm": "Crear",
 	"confirm_note_creation_title": "¿Crear una nueva nota en el diario?",

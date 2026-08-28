@@ -2,15 +2,17 @@ import { describe, expect, it } from "vitest";
 
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import type { Bindings, BoundValue } from "@/templates";
 
 import { PROMPT_PLACEHOLDER } from "./placeholder";
-import { answersFromBindings, parseSpecFor, renderSpecFor } from "./prompt-binding";
+import { answersFromBindings, parseSpecFor, renderBindingFor } from "./prompt-binding";
 
 import type { Prompt } from "./config";
 
 const dated: Prompt = { variable: "m", question: "?", type: "date", frontmatterKey: "m", required: true };
 const counted: Prompt = { variable: "n", question: "?", type: "number", frontmatterKey: "n", required: true };
+const flagged: Prompt = { variable: "done", question: "?", type: "toggle", frontmatterKey: "done", required: false };
 const free: Prompt = { variable: "note", question: "?", type: "text", frontmatterKey: "note", required: false };
 const mood: Prompt = {
   variable: "mood",
@@ -24,53 +26,62 @@ const mood: Prompt = {
   ],
 };
 
-describe("renderSpecFor", () => {
+describe("renderBindingFor", () => {
   it("binds a date answer as a date spec so formats and shifts work", () => {
-    expect(renderSpecFor(dated, "2026-08-28", "YYYY-MM-DD")).toEqual({
-      kind: "date",
-      value: CalendarDate.fromAnchor(anchor("2026-08-28")),
-      defaultFormat: "YYYY-MM-DD",
-      alternatives: [PROMPT_PLACEHOLDER],
+    expect(renderBindingFor(dated, "2026-08-28", "YYYY-MM-DD")).toEqual({
+      spec: {
+        kind: "date",
+        value: CalendarDate.fromAnchor(anchor("2026-08-28")),
+        defaultFormat: "YYYY-MM-DD",
+        alternatives: [PROMPT_PLACEHOLDER],
+      },
+      answered: true,
     });
   });
 
   it("binds a number answer as a number spec so offsets work", () => {
-    expect(renderSpecFor(counted, 7, "YYYY-MM-DD")).toEqual({
-      kind: "number",
-      value: 7,
-      alternatives: [PROMPT_PLACEHOLDER],
+    expect(renderBindingFor(counted, 7, "YYYY-MM-DD")).toEqual({
+      spec: { kind: "number", value: 7, alternatives: [PROMPT_PLACEHOLDER] },
+      answered: true,
     });
   });
 
-  it("falls back to the placeholder string when unanswered", () => {
-    expect(renderSpecFor(dated, undefined, "YYYY-MM-DD")).toEqual({
-      kind: "string",
-      value: PROMPT_PLACEHOLDER,
-      alternatives: [PROMPT_PLACEHOLDER],
+  it("falls back to the placeholder when unanswered", () => {
+    expect(renderBindingFor(dated, undefined, "YYYY-MM-DD")).toEqual({
+      spec: { kind: "string", value: PROMPT_PLACEHOLDER, alternatives: [PROMPT_PLACEHOLDER] },
+      answered: false,
     });
   });
 
-  it("falls back to the placeholder when a date answer does not parse", () => {
-    expect(renderSpecFor(dated, "not a date", "YYYY-MM-DD")).toEqual({
-      kind: "string",
-      value: PROMPT_PLACEHOLDER,
-      alternatives: [PROMPT_PLACEHOLDER],
+  it("reports a date answer that does not parse as unanswered", () => {
+    expect(renderBindingFor(dated, "not a date", "YYYY-MM-DD")).toEqual({
+      spec: { kind: "string", value: PROMPT_PLACEHOLDER, alternatives: [PROMPT_PLACEHOLDER] },
+      answered: false,
     });
   });
 
-  it("falls back to the placeholder when a number prompt holds a non-number answer", () => {
-    expect(renderSpecFor(counted, "seven", "YYYY-MM-DD")).toEqual({
-      kind: "string",
-      value: PROMPT_PLACEHOLDER,
-      alternatives: [PROMPT_PLACEHOLDER],
+  it("reports a number prompt holding a non-number answer as unanswered", () => {
+    expect(renderBindingFor(counted, "seven", "YYYY-MM-DD")).toEqual({
+      spec: { kind: "string", value: PROMPT_PLACEHOLDER, alternatives: [PROMPT_PLACEHOLDER] },
+      answered: false,
     });
   });
 
   it("binds a select answer as a string beside its own values", () => {
-    expect(renderSpecFor(mood, "😀", "YYYY-MM-DD")).toEqual({
-      kind: "string",
-      value: "😀",
-      alternatives: [PROMPT_PLACEHOLDER, "😀", "😶"],
+    expect(renderBindingFor(mood, "😀", "YYYY-MM-DD")).toEqual({
+      spec: { kind: "string", value: "😀", alternatives: [PROMPT_PLACEHOLDER, "😀", "😶"] },
+      answered: true,
+    });
+  });
+
+  it("binds a yes/no answer as words, never as a raw boolean", () => {
+    expect(renderBindingFor(flagged, true, "YYYY-MM-DD")).toEqual({
+      spec: { kind: "string", value: m.common_yes(), alternatives: [PROMPT_PLACEHOLDER] },
+      answered: true,
+    });
+    expect(renderBindingFor(flagged, false, "YYYY-MM-DD")).toEqual({
+      spec: { kind: "string", value: m.common_no(), alternatives: [PROMPT_PLACEHOLDER] },
+      answered: true,
     });
   });
 });

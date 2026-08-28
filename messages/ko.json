@@ -663,6 +663,8 @@
 	"common_action_create": "만들기",
 	"common_action_delete": "삭제",
 	"common_action_submit": "저장",
+	"common_yes": "예",
+	"common_no": "아니요",
 	"confirm_note_creation_body": "'{journalName}' 저널에 '{noteName}' 노트를 만들까요?",
 	"confirm_note_creation_confirm": "만들기",
 	"confirm_note_creation_title": "새 저널 노트를 만들까요?",

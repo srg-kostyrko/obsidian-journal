@@ -648,6 +648,8 @@
 	"common_action_create": "创建",
 	"common_action_delete": "删除",
 	"common_action_submit": "保存",
+	"common_yes": "是",
+	"common_no": "否",
 	"confirm_note_creation_body": "在日记“{journalName}”中创建“{noteName}”？",
 	"confirm_note_creation_confirm": "创建",
 	"confirm_note_creation_title": "创建一条新的日记笔记？",

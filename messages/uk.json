@@ -654,6 +654,8 @@
 	"common_action_create": "Створити",
 	"common_action_delete": "Видалити",
 	"common_action_submit": "Зберегти",
+	"common_yes": "Так",
+	"common_no": "Ні",
 	"confirm_note_creation_body": "Створити «{noteName}» у журналі «{journalName}»?",
 	"confirm_note_creation_confirm": "Створити",
 	"confirm_note_creation_title": "Створити нову нотатку в журналі?",

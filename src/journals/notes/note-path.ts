@@ -12,7 +12,7 @@ import { JournalNotFoundError, OutOfTimelineError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { NumberingService } from "../numbering";
-import { answersFromBindings, parseSpecFor, renderSpecFor } from "../prompts/prompt-binding";
+import { answersFromBindings, parseSpecFor, renderBindingFor } from "../prompts/prompt-binding";
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
@@ -277,7 +277,7 @@ export class NotePathService {
       context = value === undefined ? context.string(source.variable, "") : context.number(source.variable, value);
     }
     for (const prompt of config.prompts) {
-      const spec = renderSpecFor(prompt, metadata.answers?.[prompt.variable], config.dateFormat);
+      const { spec } = renderBindingFor(prompt, metadata.answers?.[prompt.variable], config.dateFormat);
       context = context.withSpec(prompt.variable, spec);
     }
     // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.
@@ -296,9 +296,12 @@ export class NotePathService {
     let context = this.#withNoteName(this.contextFor(config, metadata), noteName);
     // The placeholder is a file-name device. In prose it would be an unrepairable token, and
     // every unattended attach path renders a template — so an unanswered prompt renders empty
-    // here, the way a declared-but-unresolved numbering variable already does.
+    // here, the way a declared-but-unresolved numbering variable already does. "Unanswered" is
+    // the binding's own verdict, not a second reading of the answer: an answer that exists but
+    // does not bind (a date that fails to parse) is a placeholder in the name and empty here too.
     for (const prompt of config.prompts) {
-      if (metadata.answers?.[prompt.variable] === undefined) context = context.string(prompt.variable, "");
+      const { answered } = renderBindingFor(prompt, metadata.answers?.[prompt.variable], config.dateFormat);
+      if (!answered) context = context.string(prompt.variable, "");
     }
     return context;
   }

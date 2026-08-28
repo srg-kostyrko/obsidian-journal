@@ -648,6 +648,8 @@
 	"common_action_create": "作成",
 	"common_action_delete": "削除",
 	"common_action_submit": "保存",
+	"common_yes": "はい",
+	"common_no": "いいえ",
 	"confirm_note_creation_body": "ジャーナル「{journalName}」に「{noteName}」を作成しますか？",
 	"confirm_note_creation_confirm": "作成",
 	"confirm_note_creation_title": "新しいジャーナルノートを作成しますか？",

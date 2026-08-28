@@ -663,6 +663,8 @@
 	"common_action_create": "Erstellen",
 	"common_action_delete": "Löschen",
 	"common_action_submit": "Speichern",
+	"common_yes": "Ja",
+	"common_no": "Nein",
 	"confirm_note_creation_body": "„{noteName}“ im Journal „{journalName}“ erstellen?",
 	"confirm_note_creation_confirm": "Erstellen",
 	"confirm_note_creation_title": "Eine neue Journalnotiz erstellen?",

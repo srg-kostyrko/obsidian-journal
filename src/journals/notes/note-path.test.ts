@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest"
 
 import { CalendarDate, type AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { TemplateEngine, type TemplateContext } from "@/templates";
 import { testContainer, type TestHarness } from "@/testing";
@@ -1210,5 +1211,62 @@ describe("NotePathService.candidateFor on a numbered custom cycle carrying a pro
 
     expect(unwrap(candidate).anchor).toBe("2026-01-19");
     expect(unwrap(candidate).answers).toBeUndefined();
+  });
+});
+
+const bodyPrompts = (): Record<string, JournalConfig> => ({
+  daily: fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      dateFormat: "DD/MM/YYYY",
+      prompts: [
+        { variable: "visited", question: "?", type: "date", frontmatterKey: "visited", required: false },
+        { variable: "pages", question: "?", type: "number", frontmatterKey: "pages", required: false },
+        { variable: "done", question: "?", type: "toggle", frontmatterKey: "done", required: false },
+      ],
+    },
+  ),
+});
+
+describe("NotePathService.bodyContextFor with unusable prompt answers", () => {
+  let harness: TestHarness;
+  let engine: TemplateEngine;
+  let paths: NotePathService;
+  let config: JournalConfig;
+
+  beforeEach(async () => {
+    harness = await testContainer({ modules: [journalsCoreModule], data: { journals: bodyPrompts() } });
+    paths = harness.resolve(NotePathService);
+    engine = harness.resolve(TemplateEngine);
+    const found = paths.configFor("daily");
+    assert(found, "expected the journal config");
+    config = found;
+  });
+
+  function body(template: string, answers: JournalMetadata["answers"]): string {
+    const metadata: JournalMetadata = {
+      journalName: "daily",
+      anchor: anchor("2024-01-01"),
+      ...(answers && { answers }),
+    };
+    return engine.renderString(template, paths.bodyContextFor(config, metadata, "n"));
+  }
+
+  it("renders a date answer that does not parse as empty, not as the placeholder", () => {
+    expect(body("visited: {{visited}}", { visited: "last tuesday" })).toBe("visited: ");
+  });
+
+  it("renders a number prompt holding a non-number answer as empty", () => {
+    expect(body("pages: {{pages}}", { pages: "seven" })).toBe("pages: ");
+  });
+
+  it("renders a date answer in the journal's own date format", () => {
+    expect(body("visited: {{visited}}", { visited: "2026-08-28" })).toBe("visited: 28/08/2026");
+  });
+
+  it("renders a yes/no answer as words rather than a raw boolean", () => {
+    expect(body("done: {{done}}", { done: true })).toBe(`done: ${m.common_yes()}`);
+    expect(body("done: {{done}}", { done: false })).toBe(`done: ${m.common_no()}`);
   });
 });
