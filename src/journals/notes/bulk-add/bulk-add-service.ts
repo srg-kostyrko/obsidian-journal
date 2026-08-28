@@ -10,6 +10,7 @@ import { AsyncResult, InvariantError, attempt } from "@/infrastructure/result";
 
 import { CycleService } from "../../cycle";
 import { JournalsIndex } from "../../journals-index";
+import { promptsInTemplate } from "../../prompts/prompts-in-path";
 import { TimelineService } from "../../timeline";
 import { NoteConnectionService } from "../note-connection";
 import { NotePathService } from "../note-path";
@@ -34,8 +35,8 @@ export interface PlannedAction {
   occupant?: VaultPath;
   targetPath: VaultPath;
   existing: "none" | "skip" | "override" | "merge" | "ask";
-  folder: "n/a" | "keep" | "move" | "ask";
-  name: "n/a" | "keep" | "rename" | "ask";
+  folder: "n/a" | "keep" | "move" | "ask" | "refused-prompt";
+  name: "n/a" | "keep" | "rename" | "ask" | "refused-prompt";
 }
 
 export type PlannedNote = PlannedSkip | PlannedAction;
@@ -50,6 +51,10 @@ export interface ResolvedAction {
   existing: "none" | "skip" | "override" | "merge";
   move: boolean;
   rename: boolean;
+  // Set when the plan already refused this half of the path for carrying an unanswered prompt
+  // placeholder — #applyOne logs the refusal instead of treating a false move/rename as silence.
+  moveRefused?: boolean;
+  renameRefused?: boolean;
 }
 
 export interface BulkAddDecisions {
@@ -66,7 +71,9 @@ export type BulkLogAction =
   | { kind: "merged"; anchor: AnchorString }
   | { kind: "replaced"; anchor: AnchorString }
   | { kind: "moved" }
+  | { kind: "move-refused-prompt" }
   | { kind: "renamed" }
+  | { kind: "rename-refused-prompt" }
   | { kind: "connected"; journalName: string; anchor: AnchorString }
   | { kind: "merge-occupant-missing" }
   | { kind: "failed"; message: string };
@@ -74,6 +81,19 @@ export type BulkLogAction =
 export interface BulkLogEntry {
   path: VaultPath;
   actions: BulkLogAction[];
+}
+
+// A nested ternary here reads fine but Prettier and the nested-ternary lint rule fight over
+// where the parens go, so the three-way choice (unaffected / refused / the caller's own
+// decision) is spelled out as branches instead.
+function pathDecision<T extends string>(
+  needsChange: boolean,
+  refused: boolean,
+  otherwise: T,
+): "n/a" | "refused-prompt" | T {
+  if (!needsChange) return "n/a";
+  if (refused) return "refused-prompt";
+  return otherwise;
 }
 
 export class BulkAddService {
@@ -131,15 +151,29 @@ export class BulkAddService {
     const [currentFolder, currentName] = splitVaultPath(path);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
 
+    const config = this.#path.configFor(journalName);
+    const nameRefused =
+      configuredName !== currentName &&
+      config !== undefined &&
+      promptsInTemplate(config.nameTemplate, config.prompts).length > 0;
+    const folderRefused =
+      configuredFolder !== currentFolder &&
+      config !== undefined &&
+      promptsInTemplate(config.folder, config.prompts).length > 0;
+    // A refused half must not leak the placeholder into the shown target path — fall back to
+    // the note's own name/folder for whichever half is refused.
+    const targetName = nameRefused ? currentName : configuredName;
+    const targetFolder = folderRefused ? currentFolder : configuredFolder;
+
     return {
       kind: "action",
       path,
       anchor,
       ...(occupant !== undefined && { occupant }),
-      targetPath: configured,
+      targetPath: (targetFolder ? `${targetFolder}/${targetName}` : targetName) as VaultPath,
       existing: occupant === undefined ? "none" : parameters.existingNote,
-      folder: configuredFolder === currentFolder ? "n/a" : parameters.otherFolder,
-      name: configuredName === currentName ? "n/a" : parameters.otherName,
+      folder: pathDecision(configuredFolder !== currentFolder, folderRefused, parameters.otherFolder),
+      name: pathDecision(configuredName !== currentName, nameRefused, parameters.otherName),
     };
   }
 
@@ -191,8 +225,10 @@ export class BulkAddService {
 
     const override = action.existing === "override";
     if (override) actions.push({ kind: "replaced", anchor: action.anchor });
-    if (action.move) actions.push({ kind: "moved" });
-    if (action.rename) actions.push({ kind: "renamed" });
+    if (action.moveRefused) actions.push({ kind: "move-refused-prompt" });
+    else if (action.move) actions.push({ kind: "moved" });
+    if (action.renameRefused) actions.push({ kind: "rename-refused-prompt" });
+    else if (action.rename) actions.push({ kind: "renamed" });
     actions.push({ kind: "connected", journalName, anchor: action.anchor });
 
     if (!dryRun) {
@@ -213,6 +249,8 @@ export class BulkAddService {
       existing: a.existing === "ask" ? (decisions.existing[a.path] ?? "skip") : a.existing,
       move: a.folder === "ask" ? decisions.folder[a.path] === "move" : a.folder === "move",
       rename: a.name === "ask" ? decisions.name[a.path] === "rename" : a.name === "rename",
+      moveRefused: a.folder === "refused-prompt",
+      renameRefused: a.name === "refused-prompt",
     }));
   }
 

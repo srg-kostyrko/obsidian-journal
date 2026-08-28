@@ -476,6 +476,8 @@
 	"connect_note_modal_rename_description": "Название заметки ({current}) отличается от заданного названия журнала ({configured}).",
 	"connect_note_modal_rename_label": "Переименовать файл в соответствии с журналом",
 	"connect_note_modal_move_label": "Переместить файл в папку журнала",
+	"connect_note_modal_rename_prompt_refused": "Этот журнал задаёт вопрос, ответ на который входит в название заметки, поэтому заметка сохраняет своё название.",
+	"connect_note_modal_move_prompt_refused": "Этот журнал задаёт вопрос, ответ на который входит в папку, поэтому заметка остаётся в своей текущей папке.",
 	"connect_note_modal_connect": "Связать",
 	"connect_note_modal_connected_to": "Эта заметка связана с «{journalName}».",
 	"connect_note_modal_disconnect": "Отвязать",
@@ -629,6 +631,7 @@
 			}
 		}
 	],
+	"bulk_add_log_move_refused_prompt": "Не перемещено: этот журнал задаёт вопрос, ответ на который входит в папку.",
 	"bulk_add_log_renamed": [
 		{
 			"declarations": [
@@ -643,6 +646,7 @@
 			}
 		}
 	],
+	"bulk_add_log_rename_refused_prompt": "Не переименовано: этот журнал задаёт вопрос, ответ на который входит в название заметки.",
 	"bulk_add_log_connected": [
 		{
 			"declarations": [

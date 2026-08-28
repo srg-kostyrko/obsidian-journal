@@ -21,3 +21,15 @@ export function promptsInPath(owner: PromptOwner): readonly Prompt[] {
   );
   return owner.prompts.filter((prompt) => used.has(prompt.variable.toLowerCase()));
 }
+
+/**
+ * The prompts whose answers reach one specific template (the name OR the folder, not both).
+ *
+ * `promptsInPath` unions both halves, which is right for "is this owner unattended-safe at
+ * all" but wrong for a caller that can honor one half of a path while refusing the other —
+ * a rename and a move touch different templates, so each needs its own refusal check.
+ */
+export function promptsInTemplate(template: string, prompts: readonly Prompt[]): readonly Prompt[] {
+  const used = new Set([...variableNames(template)].map((name) => name.toLowerCase()));
+  return prompts.filter((prompt) => used.has(prompt.variable.toLowerCase()));
+}

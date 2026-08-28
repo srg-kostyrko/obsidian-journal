@@ -472,6 +472,8 @@
 	"connect_note_modal_rename_description": "O nome da nota ({current}) difere do nome configurado do diário ({configured}).",
 	"connect_note_modal_rename_label": "Renomear o arquivo para corresponder ao diário",
 	"connect_note_modal_move_label": "Mover o arquivo para a pasta do diário",
+	"connect_note_modal_rename_prompt_refused": "Este diário faz uma pergunta cuja resposta vai para o nome da nota, então a nota mantém o próprio nome.",
+	"connect_note_modal_move_prompt_refused": "Este diário faz uma pergunta cuja resposta vai para a pasta, então a nota permanece na pasta atual.",
 	"connect_note_modal_connect": "Conectar",
 	"connect_note_modal_connected_to": "Esta nota está conectada a \"{journalName}\".",
 	"connect_note_modal_disconnect": "Desconectar",
@@ -619,6 +621,7 @@
 			}
 		}
 	],
+	"bulk_add_log_move_refused_prompt": "Não movida: este diário faz uma pergunta cuja resposta vai para a pasta.",
 	"bulk_add_log_renamed": [
 		{
 			"declarations": [
@@ -633,6 +636,7 @@
 			}
 		}
 	],
+	"bulk_add_log_rename_refused_prompt": "Não renomeada: este diário faz uma pergunta cuja resposta vai para o nome da nota.",
 	"bulk_add_log_connected": [
 		{
 			"declarations": [

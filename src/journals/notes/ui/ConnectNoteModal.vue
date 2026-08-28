@@ -16,6 +16,7 @@ import { CycleService } from "../../cycle";
 import { FrontmatterService } from "../../frontmatter";
 import { JournalsIndex } from "../../journals-index";
 import { pickingForWrite } from "../../picking";
+import { promptsInTemplate } from "../../prompts/prompts-in-path";
 import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
 import { NotePathService } from "../note-path";
@@ -98,6 +99,17 @@ const configuredFolder = computed(() =>
   configuredPath.value ? folderLabel(splitVaultPath(configuredPath.value)[0]) : "",
 );
 
+const nameBlocked = computed(() =>
+  selectedConfig.value
+    ? promptsInTemplate(selectedConfig.value.nameTemplate, selectedConfig.value.prompts).length > 0
+    : false,
+);
+const folderBlocked = computed(() =>
+  selectedConfig.value
+    ? promptsInTemplate(selectedConfig.value.folder, selectedConfig.value.prompts).length > 0
+    : false,
+);
+
 const outOfBounds = computed(() => {
   const a = anchor.value;
   if (!a) return false;
@@ -171,16 +183,22 @@ function connect(): void {
     <UiSettingRow v-if="needRename">
       <template #name>{{ m.connect_note_modal_rename_label() }}</template>
       <template #description>
-        {{ m.connect_note_modal_rename_description({ current: currentName, configured: configuredName }) }}
+        <span v-if="nameBlocked">{{ m.connect_note_modal_rename_prompt_refused() }}</span>
+        <template v-else>
+          {{ m.connect_note_modal_rename_description({ current: currentName, configured: configuredName }) }}
+        </template>
       </template>
-      <UiToggle v-model="rename" :tooltip="m.connect_note_modal_rename_label()" />
+      <UiToggle v-model="rename" :disabled="nameBlocked" :tooltip="m.connect_note_modal_rename_label()" />
     </UiSettingRow>
     <UiSettingRow v-if="needMove">
       <template #name>{{ m.connect_note_modal_move_label() }}</template>
       <template #description>
-        {{ m.connect_note_modal_move_description({ current: currentFolder, configured: configuredFolder }) }}
+        <span v-if="folderBlocked">{{ m.connect_note_modal_move_prompt_refused() }}</span>
+        <template v-else>
+          {{ m.connect_note_modal_move_description({ current: currentFolder, configured: configuredFolder }) }}
+        </template>
       </template>
-      <UiToggle v-model="move" :tooltip="m.connect_note_modal_move_label()" />
+      <UiToggle v-model="move" :disabled="folderBlocked" :tooltip="m.connect_note_modal_move_label()" />
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>

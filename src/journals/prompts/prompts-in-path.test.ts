@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { PROMPT_PLACEHOLDER } from "./placeholder";
-import { promptsInPath } from "./prompts-in-path";
+import { promptsInPath, promptsInTemplate } from "./prompts-in-path";
 
 import type { Prompt } from "./config";
 
@@ -32,6 +32,25 @@ describe("promptsInPath", () => {
   it("ignores a prompt named inside a literal", () => {
     const owner = { nameTemplate: "{{date:[mood]}}", folder: "", prompts: [mood] };
     expect(promptsInPath(owner)).toEqual([]);
+  });
+});
+
+describe("promptsInTemplate", () => {
+  it("finds a prompt used in the given template", () => {
+    expect(promptsInTemplate("{{date}} {{mood}}", [mood, project])).toEqual([mood]);
+  });
+
+  it("ignores a prompt used only in a different template", () => {
+    // project is used in the folder, not this (name) template, so a name-only check must miss it.
+    expect(promptsInTemplate("{{date}} {{mood}}", [mood, project])).not.toContain(project);
+  });
+
+  it("is empty when the template names no prompt", () => {
+    expect(promptsInTemplate("{{date}}", [mood, project])).toEqual([]);
+  });
+
+  it("matches case-insensitively, because the context lookup does", () => {
+    expect(promptsInTemplate("{{date}} {{Mood}}", [mood])).toEqual([mood]);
   });
 });
 

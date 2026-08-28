@@ -457,6 +457,8 @@
 	"connect_note_modal_rename_description": "Назва нотатки ({current}) відрізняється від налаштованої назви журналу ({configured}).",
 	"connect_note_modal_rename_label": "Перейменувати файл відповідно до журналу",
 	"connect_note_modal_move_label": "Перемістити файл до папки журналу",
+	"connect_note_modal_rename_prompt_refused": "Цей журнал ставить запитання, відповідь на яке входить до назви нотатки, тому нотатка зберігає свою назву.",
+	"connect_note_modal_move_prompt_refused": "Цей журнал ставить запитання, відповідь на яке входить до папки, тому нотатка залишається у своїй поточній папці.",
 	"connect_note_modal_connect": "Підключити",
 	"connect_note_modal_connected_to": "Ця нотатка пов’язана з «{journalName}».",
 	"connect_note_modal_disconnect": "Від’єднати",
@@ -610,6 +612,7 @@
 			}
 		}
 	],
+	"bulk_add_log_move_refused_prompt": "Не переміщено: цей журнал ставить запитання, відповідь на яке входить до папки.",
 	"bulk_add_log_renamed": [
 		{
 			"declarations": [
@@ -624,6 +627,7 @@
 			}
 		}
 	],
+	"bulk_add_log_rename_refused_prompt": "Не перейменовано: цей журнал ставить запитання, відповідь на яке входить до назви нотатки.",
 	"bulk_add_log_connected": [
 		{
 			"declarations": [

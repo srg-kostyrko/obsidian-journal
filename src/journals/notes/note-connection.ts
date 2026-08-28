@@ -15,6 +15,8 @@ import { DEFAULT_FRONTMATTER_KEYS, FRONTMATTER_NAME_KEY } from "../config";
 import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { promptsInTemplate } from "../prompts/prompts-in-path";
+import { JournalsRepository } from "../repository";
 
 import { AnchorOccupiedError } from "./errors";
 import { NoteCreationService } from "./note-creation";
@@ -66,6 +68,7 @@ export class NoteConnectionService {
   readonly #creation = inject(NoteCreationService);
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
+  readonly #journals = inject(JournalsRepository);
   readonly #logger = inject(LoggerFactoryToken).named("note-connection");
 
   readonly #defaultClear = (fm: Record<string, unknown>): void => {
@@ -145,7 +148,17 @@ export class NoteConnectionService {
       let target = path;
       if (options.rename || options.move) {
         const configured = yield* this.#path.pathFor(journalName, metadata);
-        target = this.#combine(path, configured, options) as VaultPath;
+        // A prompt reaching one half of the path renders the placeholder there — nobody is
+        // being asked on this route, and a renamed/moved file carrying it has no repair path.
+        // Each half refuses independently: a prompt in the name template leaves the note's own
+        // name in place without blocking a move, and vice versa for the folder.
+        const config = this.#journals.get(journalName).getOrUndefined();
+        const nameRefused = config !== undefined && promptsInTemplate(config.nameTemplate, config.prompts).length > 0;
+        const folderRefused = config !== undefined && promptsInTemplate(config.folder, config.prompts).length > 0;
+        target = this.#combine(path, configured, {
+          rename: options.rename && !nameRefused,
+          move: options.move && !folderRefused,
+        }) as VaultPath;
       }
 
       const occupant = this.#index.entryByAnchor(journalName, anchor);
