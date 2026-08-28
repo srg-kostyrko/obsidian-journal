@@ -1894,6 +1894,7 @@
 	"journal_prompt_option_label": "显示名称",
 	"journal_prompt_option_value": "存储值",
 	"journal_prompt_options_required": "请至少添加一个选项。",
+	"journal_prompt_property_duplicate": "另一个问题或编号位已经写入“{name}”。",
 	"journal_prompt_question_label": "问题",
 	"journal_prompt_question_required": "请输入问题。",
 	"journal_prompt_required_label": "必填",

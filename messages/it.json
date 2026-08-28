@@ -2091,6 +2091,7 @@
 	"journal_prompt_option_label": "Etichetta",
 	"journal_prompt_option_value": "Valore",
 	"journal_prompt_options_required": "Aggiungi almeno una scelta.",
+	"journal_prompt_property_duplicate": "Un'altra domanda o cifra di numerazione scrive già in \"{name}\".",
 	"journal_prompt_question_label": "Domanda",
 	"journal_prompt_question_required": "Inserisci una domanda.",
 	"journal_prompt_required_label": "Obbligatoria",

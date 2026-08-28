@@ -1941,6 +1941,7 @@
 	"journal_prompt_option_label": "Підпис",
 	"journal_prompt_option_value": "Значення",
 	"journal_prompt_options_required": "Додайте хоча б один варіант.",
+	"journal_prompt_property_duplicate": "Інше запитання або розряд нумерації вже записується в «{name}».",
 	"journal_prompt_question_label": "Запитання",
 	"journal_prompt_question_required": "Введіть запитання.",
 	"journal_prompt_required_label": "Обов'язкове",

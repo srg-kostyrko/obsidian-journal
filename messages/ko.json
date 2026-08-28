@@ -2083,6 +2083,7 @@
 	"journal_prompt_option_label": "표시 이름",
 	"journal_prompt_option_value": "값",
 	"journal_prompt_options_required": "선택지를 하나 이상 추가하세요.",
+	"journal_prompt_property_duplicate": "다른 질문 또는 번호 매기기 자리가 이미 \"{name}\"에 기록합니다.",
 	"journal_prompt_question_label": "질문",
 	"journal_prompt_question_required": "질문을 입력하세요.",
 	"journal_prompt_required_label": "필수",

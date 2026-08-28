@@ -114,6 +114,21 @@ describe("EditPromptModal", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("rejects a variable that differs only in case from another question's", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [moodPrompt] }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("Mood");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_variable_duplicate({ name: "Mood" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
   it("errors when a prompt used in the note name has no frontmatter key", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
@@ -142,6 +157,73 @@ describe("EditPromptModal", () => {
       expect(submit).toHaveBeenCalledWith(
         expect.objectContaining({ variable: "mood", frontmatterKey: "", type: "text" }),
       );
+    });
+  });
+
+  it("rejects a frontmatter key already used by another question", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [moodPrompt] }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("sleep");
+    await userEvent.type(textInputs().at(-1)!, "journal-mood");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "journal-mood" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a frontmatter key already used by a numbering digit", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              numbering: {
+                enabled: true,
+                anchorDate: anchor("2024-01-01"),
+                allowBefore: false,
+                sources: [
+                  { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+                ],
+              },
+            },
+          ),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("mood");
+    await userEvent.type(textInputs().at(-1)!, "journal-index");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "journal-index" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("allows several questions to share the empty frontmatter key", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...moodPrompt, frontmatterKey: "" }] }),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("sleep");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ variable: "sleep", frontmatterKey: "" }));
     });
   });
 
@@ -262,6 +344,25 @@ describe("EditPromptModal", () => {
       await userEvent.click(screen.getByText(m.journal_prompt_option_add()));
 
       expect(screen.getAllByLabelText(m.journal_prompt_option_label())).toHaveLength(2);
+    });
+
+    it("blocks submission when a choice row added after a complete one is left blank", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+      await fillRequiredFields("mood");
+      await userEvent.selectOptions(screen.getByRole("combobox"), "select");
+      await userEvent.type(screen.getByLabelText(m.journal_prompt_option_label()), "Happy");
+      await userEvent.type(screen.getByLabelText(m.journal_prompt_option_value()), "happy");
+      await userEvent.click(screen.getByText(m.journal_prompt_option_add()));
+      await submitForm();
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_options_required())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
     });
   });
 

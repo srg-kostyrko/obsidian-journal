@@ -2083,6 +2083,7 @@
 	"journal_prompt_option_label": "Etiqueta",
 	"journal_prompt_option_value": "Valor",
 	"journal_prompt_options_required": "Añade al menos una opción.",
+	"journal_prompt_property_duplicate": "Otra pregunta o dígito de numeración ya escribe en «{name}».",
 	"journal_prompt_question_label": "Pregunta",
 	"journal_prompt_question_required": "Introduce una pregunta.",
 	"journal_prompt_required_label": "Obligatoria",

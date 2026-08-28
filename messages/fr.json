@@ -2100,6 +2100,7 @@
 	"journal_prompt_option_label": "Libellé",
 	"journal_prompt_option_value": "Valeur",
 	"journal_prompt_options_required": "Ajoutez au moins un choix.",
+	"journal_prompt_property_duplicate": "Une autre question ou un autre chiffre de numérotation écrit déjà dans « {name} ».",
 	"journal_prompt_question_label": "Question",
 	"journal_prompt_question_required": "Saisissez une question.",
 	"journal_prompt_required_label": "Obligatoire",

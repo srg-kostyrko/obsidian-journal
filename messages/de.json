@@ -2093,6 +2093,7 @@
 	"journal_prompt_option_label": "Beschriftung",
 	"journal_prompt_option_value": "Wert",
 	"journal_prompt_options_required": "Füge mindestens eine Auswahl hinzu.",
+	"journal_prompt_property_duplicate": "Eine andere Frage oder Nummernstelle schreibt bereits in „{name}“.",
 	"journal_prompt_question_label": "Frage",
 	"journal_prompt_question_required": "Gib eine Frage ein.",
 	"journal_prompt_required_label": "Erforderlich",

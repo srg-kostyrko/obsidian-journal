@@ -2091,6 +2091,7 @@
 	"journal_prompt_option_label": "Rótulo",
 	"journal_prompt_option_value": "Valor",
 	"journal_prompt_options_required": "Adicione pelo menos uma opção.",
+	"journal_prompt_property_duplicate": "Outra pergunta ou dígito de numeração já grava em \"{name}\".",
 	"journal_prompt_question_label": "Pergunta",
 	"journal_prompt_question_required": "Informe uma pergunta.",
 	"journal_prompt_required_label": "Obrigatória",

@@ -1894,6 +1894,7 @@
 	"journal_prompt_option_label": "表示名",
 	"journal_prompt_option_value": "値",
 	"journal_prompt_options_required": "少なくとも1つの選択肢を追加してください。",
+	"journal_prompt_property_duplicate": "別の質問または番号の桁がすでに「{name}」に書き込んでいます。",
 	"journal_prompt_question_label": "質問",
 	"journal_prompt_question_required": "質問を入力してください。",
 	"journal_prompt_required_label": "必須",

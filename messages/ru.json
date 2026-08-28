@@ -2142,6 +2142,7 @@
 	"journal_prompt_option_label": "Подпись",
 	"journal_prompt_option_value": "Значение",
 	"journal_prompt_options_required": "Добавьте хотя бы один вариант.",
+	"journal_prompt_property_duplicate": "Другой вопрос или разряд нумерации уже записывается в «{name}».",
 	"journal_prompt_question_label": "Вопрос",
 	"journal_prompt_question_required": "Введите вопрос.",
 	"journal_prompt_required_label": "Обязательный",

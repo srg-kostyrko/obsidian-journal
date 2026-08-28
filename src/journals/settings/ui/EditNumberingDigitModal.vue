@@ -39,7 +39,10 @@ const takenVariables = computed(() => [
   ...prompts.value.map((prompt) => prompt.variable),
 ]);
 const takenKeys = computed(() =>
-  sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.frontmatterKey),
+  [
+    ...sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.frontmatterKey),
+    ...prompts.value.map((prompt) => prompt.frontmatterKey),
+  ].filter((key) => key !== ""),
 );
 
 // isTopDigit gates only which control renders — a non-top digit's resetKind field can still
@@ -71,7 +74,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
             (issue) => m.journal_sequence_variable_reserved({ name: issue.input }),
           ),
           v.check(
-            (value) => !takenVariables.value.includes(value),
+            (value) => takenVariables.value.every((taken) => taken.toLowerCase() !== value.toLowerCase()),
             (issue) => m.journal_sequence_variable_duplicate({ name: issue.input }),
           ),
         ),
@@ -80,7 +83,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
           v.nonEmpty(m.journal_property_name_required()),
           v.check(
             (value) => !takenKeys.value.includes(value),
-            (issue) => m.journal_sequence_property_duplicate({ name: issue.input }),
+            (issue) => m.journal_prompt_property_duplicate({ name: issue.input }),
           ),
         ),
         anchorValue: v.pipe(v.number(), v.integer()),

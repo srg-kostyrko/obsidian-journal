@@ -32,6 +32,12 @@ const takenVariables = computed(() => [
   ...prompts.value.filter((_, i) => i !== props.promptIndex).map((prompt) => prompt.variable),
   ...(config.value?.numbering.sources.map((source) => source.variable) ?? []),
 ]);
+const takenKeys = computed(() =>
+  [
+    ...prompts.value.filter((_, i) => i !== props.promptIndex).map((prompt) => prompt.frontmatterKey),
+    ...(config.value?.numbering.sources.map((source) => source.frontmatterKey) ?? []),
+  ].filter((key) => key !== ""),
+);
 
 const PROMPT_TYPES = ["text", "number", "date", "toggle", "select"] as const;
 interface FormValues {
@@ -88,13 +94,19 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
             (issue) => m.journal_sequence_variable_reserved({ name: issue.input }),
           ),
           v.check(
-            (value) => !takenVariables.value.includes(value),
+            (value) => takenVariables.value.every((taken) => taken.toLowerCase() !== value.toLowerCase()),
             (issue) => m.journal_prompt_variable_duplicate({ name: issue.input }),
           ),
         ),
         question: v.pipe(v.string(), v.nonEmpty(m.journal_prompt_question_required())),
         type: v.picklist(PROMPT_TYPES),
-        frontmatterKey: v.optional(v.string(), ""),
+        frontmatterKey: v.pipe(
+          v.optional(v.string(), ""),
+          v.check(
+            (value) => value === "" || !takenKeys.value.includes(value),
+            (issue) => m.journal_prompt_property_duplicate({ name: issue.input }),
+          ),
+        ),
         required: v.boolean(),
         options: v.array(v.object({ label: v.string(), value: v.string() })),
       }),
@@ -123,7 +135,8 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
         v.check(
           (entered) =>
             entered.type !== "select" ||
-            entered.options.some((option) => option.label.trim() !== "" && option.value.trim() !== ""),
+            (entered.options.length > 0 &&
+              entered.options.every((option) => option.label.trim() !== "" && option.value.trim() !== "")),
           m.journal_prompt_options_required(),
         ),
         ["options"],

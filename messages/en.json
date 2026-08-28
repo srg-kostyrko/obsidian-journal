@@ -1523,6 +1523,7 @@
   "journal_prompt_option_label": "Label",
   "journal_prompt_option_value": "Value",
   "journal_prompt_options_required": "Add at least one choice.",
+  "journal_prompt_property_duplicate": "Another question or numbering digit already writes to \"{name}\".",
   "journal_prompt_question_label": "Question",
   "journal_prompt_question_required": "Enter a question.",
   "journal_prompt_required_label": "Required",
