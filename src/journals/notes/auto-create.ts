@@ -88,7 +88,7 @@ export class AutoCreateService {
       this.#logger.debug("auto-create: build metadata failed", { name, error: metadata.error });
       return;
     }
-    const result = await this.#creation.ensureNote(name, metadata.value, { skipConfirmation: true });
+    const result = await this.#creation.ensureNote(name, metadata.value, { skipConfirmation: true, unattended: true });
     if (result.isErr()) {
       this.#logger.error("auto-create: ensureNote failed", { name, error: result.error });
     }

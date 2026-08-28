@@ -10,12 +10,15 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
+import { PromptsUnansweredError } from "../prompts/errors";
 import { fixedJournal } from "../testing";
 
 import { AnchorOccupiedError, EmptyNoteNameError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { SelfWriteGuard } from "./self-write-guard";
 
+import type { JournalConfig } from "../config";
+import type { Prompt, PromptAnswer } from "../prompts/config";
 import type { JournalMetadata } from "../types";
 
 const meta: JournalMetadata = { journalName: "daily", anchor: anchor("2026-05-19") };
@@ -97,8 +100,7 @@ describe("NoteCreationService.ensureNote", () => {
 
     it("opens confirm modal when confirmCreation is true and returns UserAborted on cancel", async () => {
       const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
-      await Promise.resolve();
-      await Promise.resolve();
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
       harness.modals.lastOpen<{ journalName: string; noteName: string }, boolean>().cancel();
 
       const result = await promise;
@@ -110,8 +112,7 @@ describe("NoteCreationService.ensureNote", () => {
 
     it("creates the file when confirmCreation is true and the modal is submitted", async () => {
       const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
-      await Promise.resolve();
-      await Promise.resolve();
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
       harness.modals.lastOpen<{ journalName: string; noteName: string }, boolean>().submit(true);
 
       const result = await promise;
@@ -395,5 +396,123 @@ describe("NoteCreationService.ensureNote — suppression guard cleanup", () => {
       expect(result.isErr()).toBe(true);
       expect(harness.resolve(SelfWriteGuard).suppresses("2026-05-19.md" as VaultPath)).toBe(false);
     });
+  });
+});
+
+async function answerPrompt(harness: TestHarness, answers: Record<string, PromptAnswer>): Promise<void> {
+  await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+  harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit(answers);
+}
+
+describe("NoteCreationService.ensureNote — creation prompts", () => {
+  const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+
+  async function promptingHarness(overrides: Partial<JournalConfig> = {}): Promise<TestHarness> {
+    return testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], ...overrides }) } },
+    });
+  }
+
+  it("names the new note from the answers", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}} {{mood}}" });
+
+    const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+    await answerPrompt(harness, { mood: "good" });
+    const result = await promise;
+
+    expectOk(result);
+    expect(result.value.path).toBe("2026-05-19 good.md");
+  });
+
+  it("writes the answers into the new note's frontmatter", async () => {
+    const harness = await promptingHarness();
+
+    const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+    await answerPrompt(harness, { mood: "good" });
+    expectOk(await promise);
+
+    expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ mood: "good" });
+  });
+
+  it("renders the answers into the note body", async () => {
+    const harness = await promptingHarness({ templates: ["Templates/daily.md"] });
+    harness.host.putFile("Templates/daily.md", "mood: {{mood}}");
+
+    const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+    await answerPrompt(harness, { mood: "good" });
+    expectOk(await promise);
+
+    expect(harness.host.files.get("2026-05-19.md")?.content).toBe("mood: good");
+  });
+
+  it("does not prompt when a note already exists at the anchor", async () => {
+    const harness = await promptingHarness();
+    harness.host.putFile("2026-05-19.md", "existing");
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: meta.anchor, path: "2026-05-19.md" as VaultPath });
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+    expectOk(result);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("does not create a note when the prompt is cancelled", async () => {
+    const harness = await promptingHarness();
+
+    const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen().cancel();
+    const result = await promise;
+
+    expect(result.isErr() && result.error instanceof UserAborted).toBe(true);
+    expect(harness.host.files.has("2026-05-19.md")).toBe(false);
+  });
+
+  it("asks the prompt as the confirmation when confirmCreation is on", async () => {
+    const harness = await promptingHarness({ confirmCreation: true });
+
+    const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    expect(harness.modals.lastOpen<{ confirming: boolean }>().props.confirming).toBe(true);
+    harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit({ mood: "good" });
+    expectOk(await promise);
+
+    expect(harness.modals.opens).toHaveLength(1);
+  });
+
+  it("fails unattended when a prompt reaches the note name", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}} {{mood}}" });
+
+    const result = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta, { skipConfirmation: true, unattended: true });
+
+    expect(result.isErr() && result.error instanceof PromptsUnansweredError).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("fails unattended when a prompt is required", async () => {
+    const harness = await promptingHarness({ prompts: [{ ...mood, required: true }] });
+
+    const result = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta, { skipConfirmation: true, unattended: true });
+
+    expect(result.isErr() && result.error instanceof PromptsUnansweredError).toBe(true);
+    expect(harness.host.files.has("2026-05-19.md")).toBe(false);
+  });
+
+  it("creates unattended without asking when no prompt is required or in the note name", async () => {
+    const harness = await promptingHarness();
+
+    const result = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta, { skipConfirmation: true, unattended: true });
+
+    expect(result.isOk() && result.value.created).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
   });
 });

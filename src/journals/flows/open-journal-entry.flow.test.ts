@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
@@ -58,8 +58,7 @@ describe("OpenJournalEntryFlow", () => {
     const promise = harness
       .resolve(Flows)
       .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });
-    await Promise.resolve();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
     harness.modals.lastOpen<{ journalName: string; noteName: string }, boolean>().cancel();
     const result = await promise;
 
