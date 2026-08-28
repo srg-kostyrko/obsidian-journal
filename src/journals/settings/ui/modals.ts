@@ -75,6 +75,7 @@ export interface VariableReferenceModalProps {
   dateFormat: string;
   hasCycle: boolean;
   numberingVariableNames: readonly string[];
+  promptVariableNames: readonly string[];
   openModifications: () => void;
 }
 

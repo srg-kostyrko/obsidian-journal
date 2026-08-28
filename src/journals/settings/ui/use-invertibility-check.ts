@@ -7,6 +7,8 @@ import { TemplateContext, TemplateEngine, tokenize, variableNames } from "@/temp
 
 import { CycleService } from "../../cycle";
 import { NotePathService } from "../../notes/note-path";
+import { parseSpecFor } from "../../prompts/prompt-binding";
+import { promptsInPath } from "../../prompts/prompts-in-path";
 
 import type { JournalConfig } from "../../config";
 
@@ -15,7 +17,8 @@ export type InvertibilityWarning =
   | { kind: "coarse-date" }
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
-  | { kind: "unused-digits"; missing: readonly string[] };
+  | { kind: "unused-digits"; missing: readonly string[] }
+  | { kind: "text-prompt-in-name"; offending: string };
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
 
@@ -54,6 +57,9 @@ export function useInvertibilityCheck(
     for (const source of numbering.sources) {
       context = context.number(source.variable, 0);
     }
+    for (const prompt of value.prompts) {
+      context = context.withSpec(prompt.variable, parseSpecFor(prompt, value.dateFormat));
+    }
     // A failure to match the sample path is expected; only a compile-time not-invertible
     // error means the template can't be reverse-parsed at all.
     const parsed = engine.parse(tokenize(value.nameTemplate), "preview", context);
@@ -63,6 +69,11 @@ export function useInvertibilityCheck(
         return { kind: "non-invertible", reason: detail.reason, offending: detail.offending };
       }
     }
+    // A text answer has no bounded pattern, so a name carrying one matches only while it is
+    // unanswered. Every real note of this journal is then invisible to path inversion — worth
+    // its own verdict rather than passing silently as a template that "compiles".
+    const textInName = promptsInPath(value).find((prompt) => prompt.type === "text");
+    if (textInName) return { kind: "text-prompt-in-name", offending: textInName.variable };
     // The template compiles, but auto-attach still needs to recover an anchor from the path.
     // Two adjacent periods, because a coarse date variable pins one period of its own range —
     // a year on a two-week cycle names every note of the year alike, yet the interval holding

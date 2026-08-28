@@ -7,14 +7,14 @@ import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
-import { useCollisionCheck } from "./use-collision-check";
+import { useCollisionCheck, type JournalPathCollision } from "./use-collision-check";
 
-import type { PathCollision } from "./name-template-collision";
 import type { JournalConfig } from "../../config";
+import type { Prompt } from "../../prompts/config";
 
-function probe(harness: TestHarness, journalName: string): ComputedRef<PathCollision | null> {
+function probe(harness: TestHarness, journalName: string): ComputedRef<JournalPathCollision | null> {
   const config = ref(harness.resolve(JournalsRepository).get(journalName).getOrUndefined());
-  let captured: ComputedRef<PathCollision | null> | undefined;
+  let captured: ComputedRef<JournalPathCollision | null> | undefined;
   const Probe = defineComponent({
     setup() {
       captured = useCollisionCheck(config);
@@ -26,6 +26,8 @@ function probe(harness: TestHarness, journalName: string): ComputedRef<PathColli
   if (!captured) throw new Error("probe did not capture the collision ref");
   return captured;
 }
+
+const moodPrompt: Prompt = { variable: "mood", question: "?", type: "text", frontmatterKey: "mood", required: false };
 
 function dayJournal(overrides: Partial<JournalConfig> = {}): JournalConfig {
   return fixedJournal(
@@ -130,5 +132,27 @@ describe("useCollisionCheck", () => {
     });
 
     expect(probe(harness, "daily").value).toMatchObject({ first: "2026-01-01", second: "2026-02-01", path: "01.md" });
+  });
+
+  it("flags a collision as prompted when a prompt answer reaches the name", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: dayJournal({ nameTemplate: "{{date:YYYY-MM}}-{{mood}}", prompts: [moodPrompt] }),
+        },
+      },
+    });
+
+    expect(probe(harness, "daily").value).toMatchObject({ prompted: true });
+  });
+
+  it("does not flag a collision as prompted when no prompt reaches the path", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: dayJournal({ nameTemplate: "{{date:YYYY-MM}}" }) } },
+    });
+
+    expect(probe(harness, "daily").value).toMatchObject({ prompted: false });
   });
 });

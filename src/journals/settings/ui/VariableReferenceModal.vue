@@ -111,6 +111,11 @@ function handleModificationsClick(event: Event): void {
         </dd>
       </div>
 
+      <div v-for="promptName in promptVariableNames" :key="promptName" class="variable-reference__row">
+        <dt><VariableChip :name="promptName" /></dt>
+        <dd>{{ m.journal_edit_variable_prompt_description() }}</dd>
+      </div>
+
       <div class="variable-reference__row">
         <dt><VariableChip name="current_date" /></dt>
         <dd>

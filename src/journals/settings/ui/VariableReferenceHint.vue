@@ -14,6 +14,7 @@ const props = defineProps<{
   dateFormat: string;
   hasCycle: boolean;
   numberingVariableNames: readonly string[];
+  promptVariableNames: readonly string[];
 }>();
 
 const modals = useService(ModalService);
@@ -26,6 +27,7 @@ function show(event: Event): void {
     dateFormat: props.dateFormat,
     hasCycle: props.hasCycle,
     numberingVariableNames: props.numberingVariableNames,
+    promptVariableNames: props.promptVariableNames,
     openModifications: () => {
       void modals.open(dateModificationsModal, {});
     },

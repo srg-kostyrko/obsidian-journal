@@ -10,6 +10,34 @@ import { testContainer, type TestHarness } from "@/testing";
 import { useInvertibilityCheck } from "./use-invertibility-check";
 
 import type { JournalConfig } from "../../config";
+import type { Prompt } from "../../prompts/config";
+
+const moodPrompt: Prompt = { variable: "mood", question: "?", type: "text", frontmatterKey: "mood", required: false };
+const ratingPrompt: Prompt = {
+  variable: "rating",
+  question: "?",
+  type: "number",
+  frontmatterKey: "rating",
+  required: false,
+};
+const loggedAtPrompt: Prompt = {
+  variable: "logged_at",
+  question: "?",
+  type: "date",
+  frontmatterKey: "logged_at",
+  required: false,
+};
+const weatherPrompt: Prompt = {
+  variable: "weather",
+  question: "?",
+  type: "select",
+  frontmatterKey: "weather",
+  required: false,
+  options: [
+    { label: "Sunny", value: "sunny" },
+    { label: "Rainy", value: "rainy" },
+  ],
+};
 
 function probe(harness: TestHarness, journalName: string): Ref<unknown> {
   const journal = ref(harness.resolve(JournalsRepository).get(journalName).getOrUndefined());
@@ -325,6 +353,64 @@ describe("useInvertibilityCheck", () => {
       nameTemplate: "static-note",
       numbering: { enabled: false, anchorDate: "2026-01-05" as AnchorString, allowBefore: false, sources: [] },
     });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
+  });
+
+  it("does not report a prompted template as having an unknown variable", async () => {
+    const config = withName("{{date}}-{{mood}}");
+    config.prompts = [moodPrompt];
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).not.toMatchObject({
+      kind: "non-invertible",
+      reason: "unknown-variable",
+    });
+  });
+
+  it("reports a text prompt in the note name as non-invertible", async () => {
+    const config = withName("{{date}}-{{mood}}");
+    config.prompts = [moodPrompt];
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "text-prompt-in-name", offending: "mood" });
+  });
+
+  it("accepts a select prompt in the note name", async () => {
+    const config = withName("{{date}}-{{weather}}");
+    config.prompts = [weatherPrompt];
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
+  });
+
+  it("accepts a number prompt in the note name", async () => {
+    const config = withName("{{date}}-{{rating}}");
+    config.prompts = [ratingPrompt];
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
+  });
+
+  it("accepts a date prompt in the note name", async () => {
+    const config = withName("{{date}}-{{logged_at}}");
+    config.prompts = [loggedAtPrompt];
     const harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { [config.name]: config } },
