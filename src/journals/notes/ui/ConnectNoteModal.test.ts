@@ -249,7 +249,7 @@ describe("ConnectNoteModal", () => {
 
         await pickDate(harness, "2026-06-15");
 
-        expect(screen.getByText(m.connect_note_modal_rename_prompt_refused())).toBeTruthy();
+        expect(screen.getByText(m.connect_note_modal_rename_refused_prompt())).toBeTruthy();
       });
 
       it("leaves the move toggle enabled", async () => {
@@ -294,7 +294,7 @@ describe("ConnectNoteModal", () => {
 
         await pickDate(harness, "2026-06-15");
 
-        expect(screen.getByText(m.connect_note_modal_move_prompt_refused())).toBeTruthy();
+        expect(screen.getByText(m.connect_note_modal_move_refused_prompt())).toBeTruthy();
       });
 
       it("leaves the rename toggle enabled", async () => {

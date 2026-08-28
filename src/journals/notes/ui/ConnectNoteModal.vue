@@ -183,7 +183,7 @@ function connect(): void {
     <UiSettingRow v-if="needRename">
       <template #name>{{ m.connect_note_modal_rename_label() }}</template>
       <template #description>
-        <span v-if="nameBlocked">{{ m.connect_note_modal_rename_prompt_refused() }}</span>
+        <span v-if="nameBlocked">{{ m.connect_note_modal_rename_refused_prompt() }}</span>
         <template v-else>
           {{ m.connect_note_modal_rename_description({ current: currentName, configured: configuredName }) }}
         </template>
@@ -193,7 +193,7 @@ function connect(): void {
     <UiSettingRow v-if="needMove">
       <template #name>{{ m.connect_note_modal_move_label() }}</template>
       <template #description>
-        <span v-if="folderBlocked">{{ m.connect_note_modal_move_prompt_refused() }}</span>
+        <span v-if="folderBlocked">{{ m.connect_note_modal_move_refused_prompt() }}</span>
         <template v-else>
           {{ m.connect_note_modal_move_description({ current: currentFolder, configured: configuredFolder }) }}
         </template>
