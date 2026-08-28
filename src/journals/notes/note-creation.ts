@@ -57,13 +57,15 @@ export class NoteCreationService {
   readonly #guard = inject(SelfWriteGuard);
   readonly #flows = inject(Flows);
 
-  // Whether a file already at the journal's derived path is one of this plugin's notes rather
-  // than a stray the journal is about to adopt. Same test AutoAttachService makes before it
-  // touches a file: the claim key is what this plugin writes, so its presence means the note
-  // has been through creation once already — prompts and all.
-  #carriesJournalClaim(path: VaultPath): boolean {
+  // Whether a file already at the journal's derived path is THIS journal's own note rather
+  // than a stray the journal is about to adopt, or a note a different journal already claims.
+  // The claim key is what this plugin writes, so a match means the note has been through this
+  // journal's creation once already — prompts and all. A claim naming another journal must not
+  // match: that path belongs to a different journal's note sitting at a coincident derived
+  // path, and short-circuiting on it would let this journal overwrite that journal's claim.
+  #carriesJournalClaim(name: string, path: VaultPath): boolean {
     const metadata = this.#metadata.get(path);
-    return metadata.isSome() && typeof metadata.value.properties[FRONTMATTER_NAME_KEY] === "string";
+    return metadata.isSome() && metadata.value.properties[FRONTMATTER_NAME_KEY] === name;
   }
 
   ensureNote(
@@ -91,15 +93,17 @@ export class NoteCreationService {
 
       // With an answer reaching the note name or folder the path genuinely cannot be known
       // before asking, so those journals keep the prompt-then-derive order below. Everywhere
-      // else the path is knowable up front, and deriving it here is what lets a real journal
-      // note that fell out of the index — a rejected anchor, mangled frontmatter, a cold-boot
-      // race — be recognized by its claim and returned without re-asking questions it has
-      // already answered and stored.
+      // else the path is knowable up front, and deriving it here is what lets this journal's
+      // own note that fell out of the index — a rejected anchor, mangled frontmatter, a
+      // cold-boot race — be recognized by its claim and returned without re-asking questions
+      // it has already answered and stored. A file claimed by a *different* journal is not
+      // this case: it falls through to the prompt-then-adopt path below, same as an unclaimed
+      // file, so the user still sees the prompt and can cancel before it is overwritten.
       const derived =
         config === undefined || promptsInPath(config).length === 0
           ? yield* this.#path.pathFor(name, metadata)
           : undefined;
-      if (derived !== undefined && this.#notes.find(derived).isSome() && this.#carriesJournalClaim(derived)) {
+      if (derived !== undefined && this.#notes.find(derived).isSome() && this.#carriesJournalClaim(name, derived)) {
         const claimedMutator = yield* this.#frontmatter.writeMutator(name, metadata);
         yield* this.#notes.updateFrontmatter(derived, claimedMutator);
         return { path: derived, created: false as const };

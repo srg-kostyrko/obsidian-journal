@@ -511,6 +511,19 @@ describe("NoteCreationService.ensureNote — creation prompts", () => {
     expect(harness.host.files.has("2026-05-19.md")).toBe(false);
   });
 
+  it("fails on the empty-name check before the unattended refusal when the path can't be derived", async () => {
+    // A required prompt outside the path would normally refuse unattended creation, but the
+    // path is derived before that check runs, so an empty-name failure reaches the caller
+    // first. Harmless — both are refusals — but pinned so a reorder is a visible decision.
+    const harness = await promptingHarness({ nameTemplate: "", prompts: [{ ...mood, required: true }] });
+
+    const result = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta, { skipConfirmation: true, unattended: true });
+
+    expect(result.isErr() && result.error instanceof EmptyNoteNameError).toBe(true);
+  });
+
   it("creates unattended without asking when no prompt is required or in the note name", async () => {
     const harness = await promptingHarness();
 
@@ -549,6 +562,22 @@ describe("NoteCreationService.ensureNote — creation prompts", () => {
       expectOk(await harness.resolve(NoteCreationService).ensureNote("daily", meta));
 
       expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ mood: "great" });
+    });
+
+    it("still asks when the file at the derived path carries a different journal's claim", async () => {
+      const harness = await promptingHarness();
+      harness.host.putFile("2026-05-19.md", "", {
+        journal: "other",
+        "journal-date": "2026-05-19",
+      });
+
+      const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta);
+      await answerPrompt(harness, { mood: "good" });
+      const result = await promise;
+
+      expectOk(result);
+      expect(result.value.created).toBe(false);
+      expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ journal: "daily", mood: "good" });
     });
 
     it("asks and adopts an unclaimed file sitting at the derived path", async () => {
