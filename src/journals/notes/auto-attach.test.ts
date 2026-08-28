@@ -393,6 +393,36 @@ describe("AutoAttachService — a note Obsidian created from a link carrying the
     expect(harness.host.folders.has("(unanswered)/nested")).toBe(true);
   });
 
+  // The source folder is where the user's file actually sits, not where the unanswered render
+  // would have put it: #handle matches by inversion, and a select prompt inverts its own option
+  // values. So a folder that ends up empty after the rename is not necessarily one this plugin
+  // ever created.
+  it("leaves a user's own folder the note was moved into, whose name carries no placeholder", async () => {
+    const harness = await promptingHarness({
+      nameTemplate: "{{date}} {{weather}}",
+      folder: "{{mood}}",
+      prompts: [
+        {
+          ...mood,
+          type: "select",
+          options: [
+            { label: "Good", value: "good" },
+            { label: "Sad", value: "sad" },
+          ],
+        },
+        { variable: "weather", question: "Weather?", type: "text", frontmatterKey: "weather", required: false },
+      ],
+    });
+    const deleteFolder = vi.spyOn(harness.resolve(NotesService), "deleteFolder");
+
+    void harness.resolve(NotesService).create("sad/2026-05-19 (unanswered).md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good", weather: "sun" });
+
+    expect(harness.host.files.has("good/2026-05-19 sun.md")).toBe(true);
+    expect(deleteFolder).not.toHaveBeenCalled();
+    expect(harness.host.folders.has("sad")).toBe(true);
+  });
+
   it("leaves a source directory whose own name carries no placeholder", async () => {
     const harness = await promptingHarness({ folder: "Diary" });
     const deleteFolder = vi.spyOn(harness.resolve(NotesService), "deleteFolder");
