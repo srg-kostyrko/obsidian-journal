@@ -356,10 +356,24 @@ export function createFakeHost(): FakeHost {
         metadata: metadataWithFrontmatter(existing.metadata, next),
       });
     },
-    async trashFile(file: TFile): Promise<void> {
+    async trashFile(file: TFile | TFolder): Promise<void> {
       detachChild(file);
-      files.delete(file.path);
-      fileObjects.delete(file.path);
+      if (file instanceof TFolder) {
+        const prefix = `${file.path}/`;
+        for (const path of folders) {
+          if (path !== file.path && !path.startsWith(prefix)) continue;
+          folders.delete(path);
+          folderObjects.delete(path);
+        }
+        for (const path of fileObjects.keys()) {
+          if (!path.startsWith(prefix)) continue;
+          files.delete(path);
+          fileObjects.delete(path);
+        }
+      } else {
+        files.delete(file.path);
+        fileObjects.delete(file.path);
+      }
       vault.emit("delete", file);
     },
   };

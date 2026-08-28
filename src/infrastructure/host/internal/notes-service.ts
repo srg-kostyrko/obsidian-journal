@@ -189,6 +189,15 @@ export class NotesService {
     );
   }
 
+  deleteFolder(path: VaultPath): AsyncResult<void, FolderNotFoundError | NoteDeleteError> {
+    const folder = this.#app.vault.getFolderByPath(path);
+    if (!folder) return AsyncResult.err(new FolderNotFoundError(path));
+    return AsyncResult.fromPromise(
+      this.#app.fileManager.trashFile(folder),
+      (cause) => new NoteDeleteError(path, cause),
+    );
+  }
+
   updateFrontmatter(
     path: VaultPath,
     mutate: (fm: Record<string, unknown>) => void,

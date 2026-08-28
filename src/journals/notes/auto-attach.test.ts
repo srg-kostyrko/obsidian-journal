@@ -12,6 +12,10 @@ import { customJournal, fixedJournal } from "../testing";
 
 import { AutoAttachService } from "./auto-attach";
 import { NoteCreationService } from "./note-creation";
+import { SelfWriteGuard } from "./self-write-guard";
+
+import type { JournalConfig } from "../config";
+import type { Prompt, PromptAnswer } from "../prompts/config";
 
 const TIMELINE_OPEN = { start: anchor("2020-01-01"), end: { kind: "never" as const } };
 
@@ -258,5 +262,146 @@ describe("AutoAttachService", () => {
     await settle();
 
     expect(harness.host.files.get("2026-08-03.md")?.frontmatter).toEqual({});
+  });
+});
+
+async function answerPrompt(harness: TestHarness, answers: Record<string, PromptAnswer>): Promise<void> {
+  await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+  harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit(answers);
+  await settle();
+}
+
+describe("AutoAttachService — a note Obsidian created from a link carrying the placeholder", () => {
+  const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+
+  async function promptingHarness(overrides: Partial<JournalConfig> = {}): Promise<TestHarness> {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { nameTemplate: "{{date}} {{mood}}", prompts: [mood], timeline: TIMELINE_OPEN, ...overrides },
+          ),
+        },
+      },
+    });
+    await harness.resolve(AutoAttachService).initialize();
+    return harness;
+  }
+
+  it("prompts, renames and attaches a file whose name carries the placeholder", async () => {
+    const harness = await promptingHarness();
+
+    void harness.resolve(NotesService).create("2026-05-19 (unanswered).md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(harness.host.files.has("2026-05-19 (unanswered).md")).toBe(false);
+    expect(harness.host.files.get("2026-05-19 good.md")?.frontmatter).toMatchObject({
+      journal: "daily",
+      "journal-date": "2026-05-19",
+      mood: "good",
+    });
+  });
+
+  it("does not prompt for a pre-existing file adopted by pattern", async () => {
+    const harness = await promptingHarness({
+      prompts: [{ ...mood, type: "select", options: [{ label: "Good", value: "good" }] }],
+    });
+
+    await harness.resolve(NotesService).create("2026-05-19 good.md" as VaultPath, "");
+    await settle();
+
+    expect(harness.modals.opens).toHaveLength(0);
+    expect(harness.host.files.get("2026-05-19 good.md")?.frontmatter).toMatchObject({
+      journal: "daily",
+      "journal-date": "2026-05-19",
+    });
+  });
+
+  it("does not attach when the prompt is cancelled, leaving the file unclaimed", async () => {
+    const harness = await promptingHarness();
+
+    void harness.resolve(NotesService).create("2026-05-19 (unanswered).md" as VaultPath, "");
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen().cancel();
+    await settle();
+
+    expect(harness.host.files.get("2026-05-19 (unanswered).md")?.frontmatter).toEqual({});
+    expect(harness.host.files.has("2026-05-19 .md")).toBe(false);
+  });
+
+  it("suppresses its own rename so the renamed handler does not re-enter", async () => {
+    const harness = await promptingHarness();
+    const guard = harness.resolve(SelfWriteGuard);
+    const notes = harness.resolve(NotesService);
+    const rename = notes.rename.bind(notes);
+    let suppressedWhenRenaming: boolean | undefined;
+    vi.spyOn(notes, "rename").mockImplementation((from, to) => {
+      suppressedWhenRenaming = guard.suppresses(to);
+      return rename(from, to);
+    });
+
+    void notes.create("2026-05-19 (unanswered).md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(suppressedWhenRenaming).toBe(true);
+    expect(harness.modals.opens).toHaveLength(1);
+  });
+
+  it("renders the template with the answers, not with the placeholder", async () => {
+    const harness = await promptingHarness({ templates: ["Templates/daily.md"] });
+    harness.host.putFile("Templates/daily.md", "mood: {{mood}}");
+
+    void harness.resolve(NotesService).create("2026-05-19 (unanswered).md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(harness.host.files.get("2026-05-19 good.md")?.content).toBe("mood: good");
+  });
+
+  it("removes the source directory when it carried the placeholder and is now empty", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}}", folder: "{{mood}}" });
+
+    void harness.resolve(NotesService).create("(unanswered)/2026-05-19.md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(harness.host.files.has("good/2026-05-19.md")).toBe(true);
+    expect(harness.host.folders.has("(unanswered)")).toBe(false);
+  });
+
+  it("leaves a source directory that still holds other files", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}}", folder: "{{mood}}" });
+    harness.host.putFile("(unanswered)/keep.md", "");
+
+    void harness.resolve(NotesService).create("(unanswered)/2026-05-19.md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(harness.host.files.has("good/2026-05-19.md")).toBe(true);
+    expect(harness.host.folders.has("(unanswered)")).toBe(true);
+    expect(harness.host.files.has("(unanswered)/keep.md")).toBe(true);
+  });
+
+  it("leaves a source directory holding nothing but a subfolder", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}}", folder: "{{mood}}" });
+    harness.host.putFolder("(unanswered)/nested");
+
+    void harness.resolve(NotesService).create("(unanswered)/2026-05-19.md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(harness.host.files.has("good/2026-05-19.md")).toBe(true);
+    expect(harness.host.folders.has("(unanswered)/nested")).toBe(true);
+  });
+
+  it("leaves a source directory whose own name carries no placeholder", async () => {
+    const harness = await promptingHarness({ folder: "Diary" });
+    const deleteFolder = vi.spyOn(harness.resolve(NotesService), "deleteFolder");
+
+    void harness.resolve(NotesService).create("Diary/2026-05-19 (unanswered).md" as VaultPath, "");
+    await answerPrompt(harness, { mood: "good" });
+
+    expect(harness.host.files.has("Diary/2026-05-19 good.md")).toBe(true);
+    expect(deleteFolder).not.toHaveBeenCalled();
+    expect(harness.host.folders.has("Diary")).toBe(true);
   });
 });

@@ -279,6 +279,32 @@ describe("NotesService", () => {
     });
   });
 
+  describe("deleteFolder", () => {
+    it("removes the folder from the vault", async () => {
+      const { service, host } = build();
+      host.putFolder("Daily/2026");
+      await service.deleteFolder("Daily/2026" as VaultPath);
+      expect(host.folders.has("Daily/2026")).toBe(false);
+      expect(host.folders.has("Daily")).toBe(true);
+    });
+
+    it("returns FolderNotFoundError when the folder does not exist", async () => {
+      const { service } = build();
+      const result = await service.deleteFolder("Nope" as VaultPath);
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(FolderNotFoundError);
+    });
+
+    it("wraps an underlying delete failure in NoteDeleteError", async () => {
+      const { service, host } = build();
+      host.putFolder("Daily/2026");
+      vi.spyOn(host.app.fileManager, "trashFile").mockRejectedValueOnce(new Error("io"));
+      const result = await service.deleteFolder("Daily/2026" as VaultPath);
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(NoteDeleteError);
+    });
+  });
+
   describe("updateFrontmatter", () => {
     it("applies the mutate function to the frontmatter", async () => {
       const { service, host } = build();
