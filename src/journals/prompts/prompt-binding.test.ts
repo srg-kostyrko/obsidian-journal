@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { CalendarDate } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
-import type { Bindings, BoundValue } from "@/templates";
+import { expectOk } from "@/infrastructure/result/testing";
+import { TemplateContext, tokenize, type Bindings, type BoundValue } from "@/templates";
+import { installTestEngine } from "@/templates/testing";
 
 import { PROMPT_PLACEHOLDER } from "./placeholder";
 import { answersFromBindings, parseSpecFor, renderBindingFor } from "./prompt-binding";
@@ -102,6 +104,30 @@ describe("renderBindingFor", () => {
     expect(renderBindingFor(flagged, false)).toEqual({
       spec: { kind: "string", value: m.common_no(), alternatives: [PROMPT_PLACEHOLDER] },
       answered: true,
+    });
+  });
+});
+
+describe("empty date format falls back to YYYY-MM-DD", () => {
+  it("renders an empty format as YYYY-MM-DD, not moment's bare-call fallback", async () => {
+    const engine = await installTestEngine();
+    const emptyFormat: Prompt = { ...dated, format: "" };
+    const binding = renderBindingFor(emptyFormat, "2026-08-28");
+    const context = TemplateContext.empty().withSpec("answer", binding.spec);
+    expect(engine.renderString("{{answer}}", context)).toBe("2026-08-28");
+  });
+
+  it("still inverts a note name when the date prompt's format is empty", async () => {
+    const engine = await installTestEngine();
+    const emptyFormat: Prompt = { ...dated, format: "" };
+    const spec = parseSpecFor(emptyFormat);
+    const context = TemplateContext.empty().withSpec("answer", spec);
+    const result = engine.parse(tokenize("Log {{answer}}"), "Log 2026-01-02", context);
+    expectOk(result);
+    expect(result.value.get("answer")?.kind).toBe("date");
+    expect(result.value.get("answer")).toEqual({
+      kind: "date",
+      value: CalendarDate.fromAnchor(anchor("2026-01-02")),
     });
   });
 });

@@ -4,9 +4,8 @@ import { CalendarDate } from "@/calendar";
 import { m } from "@/i18n";
 import type { Bindings, VariableSpec } from "@/templates";
 
+import { dateFormatFor, type Prompt, type PromptAnswer } from "./config";
 import { PROMPT_PLACEHOLDER } from "./placeholder";
-
-import type { Prompt, PromptAnswer } from "./config";
 
 export interface PromptRender {
   readonly spec: VariableSpec;
@@ -47,7 +46,7 @@ export function renderBindingFor(prompt: Prompt, answer: PromptAnswer | undefine
         // The prompt's own format, never the host journal's period format — a date the user
         // picked is not the journal's period, so it must not inherit config.dateFormat.
         return {
-          spec: { kind: "date", value: parsed.value, defaultFormat: datePrompt.format, alternatives } as const,
+          spec: { kind: "date", value: parsed.value, defaultFormat: dateFormatFor(datePrompt), alternatives } as const,
           answered: true,
         };
       })
@@ -81,7 +80,12 @@ export function parseSpecFor(prompt: Prompt): VariableSpec {
       .with(
         { type: "date" },
         (datePrompt) =>
-          ({ kind: "date", value: CalendarDate.today(), defaultFormat: datePrompt.format, alternatives }) as const,
+          ({
+            kind: "date",
+            value: CalendarDate.today(),
+            defaultFormat: dateFormatFor(datePrompt),
+            alternatives,
+          }) as const,
       )
       .with({ type: "number" }, () => ({ kind: "number", value: 0, alternatives }) as const)
       // Free text has no bounded pattern, so it matches only the placeholder: an answered text

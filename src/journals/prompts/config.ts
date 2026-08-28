@@ -1,5 +1,7 @@
 import * as v from "valibot";
 
+const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
+
 const promptOptionSchema = v.object({
   label: v.pipe(v.string(), v.minLength(1)),
   value: v.pipe(v.string(), v.minLength(1)),
@@ -23,7 +25,10 @@ export const promptSchema = v.variant("type", [
     type: v.literal("date"),
     // Clearable, so no minLength: a validation issue under `prompts` makes
     // repairCollectionEntry substitute the whole array with `[]`, wiping every question.
-    format: v.optional(v.string(), "YYYY-MM-DD"),
+    // The schema default only covers an absent key; a present-but-empty value must fall
+    // back on read (dateFormatFor), because moment().format("") is not "YYYY-MM-DD" and
+    // formatToRegexp("") does not invert a note name.
+    format: v.optional(v.string(), DEFAULT_DATE_FORMAT),
   }),
   v.object({ ...promptBase.entries, type: v.literal("toggle") }),
   v.object({
@@ -44,6 +49,10 @@ export const promptsSchema = v.pipe(
     return new Set(keys).size === keys.length;
   }, "prompt `frontmatterKey` values must be unique"),
 );
+
+export function dateFormatFor(prompt: Extract<Prompt, { type: "date" }>): string {
+  return prompt.format.trim() === "" ? DEFAULT_DATE_FORMAT : prompt.format;
+}
 
 export type PromptOption = v.InferOutput<typeof promptOptionSchema>;
 export type Prompt = v.InferOutput<typeof promptSchema>;
