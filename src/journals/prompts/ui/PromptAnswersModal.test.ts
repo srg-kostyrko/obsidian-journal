@@ -109,6 +109,18 @@ describe("PromptAnswersModal", () => {
       expect(screen.getByText(/2024-01-01/).textContent).toBe(before);
     });
 
+    it("accepts a blank answer when nothing about it reaches the note name", async () => {
+      const { submit } = harness.renderModal(PromptAnswersModal, {
+        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false },
+      });
+
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ mood: "" });
+      });
+    });
+
     it("shows no name at all when not confirming", () => {
       harness.renderModal(PromptAnswersModal, {
         props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false },

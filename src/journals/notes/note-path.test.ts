@@ -1125,10 +1125,19 @@ describe("NotePathService prompt answers", () => {
     expect(unwrap(candidate).answers).toBeUndefined();
   });
 
-  it("does not claim a name whose slot is neither the placeholder nor a select value", () => {
-    const candidate = harness.resolve(NotePathService).candidateFor("daily", "2024-01-01 whatever.md" as VaultPath);
+  // Both halves, because the negative one alone proves nothing about the seeding: with the
+  // prompt slot unseeded the name holds an unknown variable, the parse fails, and "whatever"
+  // yields the same none. The positive half reds when #parseContext stops seeding prompts; the
+  // negative half reds when the seeded slot stops being bounded to its own option values and
+  // starts capturing arbitrary text as an answer.
+  it("claims a name whose slot holds a select value, and none whose slot holds anything else", () => {
+    const paths = harness.resolve(NotePathService);
 
-    expect(candidate.isNone()).toBe(true);
+    const known = paths.candidateFor("daily", "2024-01-01 bad.md" as VaultPath);
+    const unknown = paths.candidateFor("daily", "2024-01-01 whatever.md" as VaultPath);
+
+    expect(unwrap(known).answers).toEqual({ mood: "bad" });
+    expect(unknown.isNone()).toBe(true);
   });
 
   it("renders the placeholder into the folder when unanswered", async () => {
