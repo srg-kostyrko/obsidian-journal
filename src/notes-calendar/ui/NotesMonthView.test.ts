@@ -216,6 +216,25 @@ describe("NotesMonthView", () => {
 
       expect(selectDate).toHaveBeenCalledWith(outside.dataset.anchor);
     });
+
+    it("reacts when a selection callback becomes available after mount", async () => {
+      const harness = await bootHarness({});
+      const view = harness.render(NotesMonthView, { props: { shelf: null, month } });
+      const header = view.container.querySelector<HTMLElement>('[data-testid="header-month"]')!;
+
+      expect(header.hasAttribute("role")).toBe(false);
+      expect(header.hasAttribute("tabindex")).toBe(false);
+      expect(header.hasAttribute("aria-label")).toBe(false);
+
+      const selectDate = vi.fn();
+      await view.rerender({ shelf: null, month, selectDate });
+
+      expect(header.getAttribute("role")).toBe("button");
+      expect(header.tabIndex).toBe(0);
+      expect(header.getAttribute("aria-label")).toBe(month.format("MMMM YYYY"));
+      await fireEvent.click(header, { shiftKey: true, button: 0 });
+      expect(selectDate).toHaveBeenCalledWith(month.representative.toAnchor());
+    });
   });
 
   describe("day grid", () => {

@@ -72,7 +72,7 @@ describe("dayNotesBlock", () => {
     expect(harness.resolve(DashboardBlockToken)).toContainEqual({
       key: "day-notes",
       component: DayNotesSettingsBlock,
-      order: 8,
+      order: 9,
     });
   });
 });

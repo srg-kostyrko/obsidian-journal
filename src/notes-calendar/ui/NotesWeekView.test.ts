@@ -63,8 +63,8 @@ describe("NotesWeekView", () => {
       const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, weeks: "left" } });
       const grid = container.querySelector('[role="grid"]');
 
-      expect(grid?.classList.contains("notes-week-view")).toBe(true);
-      expect(container.querySelector(".notes-week-view__grid")).toBeNull();
+      expect(grid?.classList.contains("notes-week-view__grid")).toBe(true);
+      expect(container.querySelector(".notes-week-view")?.getAttribute("role")).toBeNull();
       expect(grid?.getAttribute("aria-label")).toBe(week.format("[W]w gggg"));
       expect(grid?.querySelectorAll(':scope > [role="row"]').length).toBe(2);
       expect(grid?.querySelectorAll('[role="columnheader"]').length).toBe(7);
@@ -157,6 +157,23 @@ describe("NotesWeekView", () => {
       await userEvent.keyboard("{Shift>}{Enter}{/Shift}");
 
       expect(selectDate).toHaveBeenCalledWith(anchor("2026-05-27"));
+    });
+
+    it("reacts when a selection callback becomes unavailable after mount", async () => {
+      const selectDate = vi.fn();
+      const harness = await bootHarness({});
+      const view = harness.render(NotesWeekView, { props: { shelf: null, week, selectDate } });
+      const header = view.container.querySelector<HTMLElement>('[data-testid="header-month"]')!;
+
+      expect(header.getAttribute("role")).toBe("button");
+      expect(header.tabIndex).toBe(0);
+      expect(header.hasAttribute("aria-label")).toBe(true);
+
+      await view.rerender({ shelf: null, week, selectDate: undefined });
+
+      expect(header.hasAttribute("role")).toBe(false);
+      expect(header.hasAttribute("tabindex")).toBe(false);
+      expect(header.hasAttribute("aria-label")).toBe(false);
     });
   });
 

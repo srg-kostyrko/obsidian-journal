@@ -458,11 +458,11 @@ so cells are populated.
 
 ### View blocks
 
-Setup: edit a view → add each block type via **Add block**. Six block types are
+Setup: edit a view → add each block type via **Add block**. Seven block types are
 registered: `toolbar`, `month-calendar`, `week-calendar`, `custom-intervals`,
-`divider`, `markdown-template` — add every one at least once.
+`divider`, `markdown-template`, `day-notes` — add every one at least once.
 
-- [x] **Add block** picker lists all six types.
+- [x] **Add block** picker lists all seven types.
 - [x] **toolbar** block adds and renders as an empty strip ("No toolbar items yet").
 - [ ] **Reorder blocks** by drag → the new order renders and survives a reload.
 - [x] **Remove a block** → it disappears; siblings keep their order.

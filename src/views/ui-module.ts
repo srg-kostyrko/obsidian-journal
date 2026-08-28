@@ -13,7 +13,7 @@ export const viewsUiModule: Module = {
       defineDashboardBlock({ key: "views", component: ViewsDashboardBlock, order: 7 }),
     );
     c.register(DashboardBlockToken).useValue(
-      defineDashboardBlock({ key: "day-notes", component: DayNotesSettingsBlock, order: 8 }),
+      defineDashboardBlock({ key: "day-notes", component: DayNotesSettingsBlock, order: 9 }),
     );
     c.register(SubpageToken).useValue(viewEditSubpage);
     c.register(JournalEditSectionToken).useValue(

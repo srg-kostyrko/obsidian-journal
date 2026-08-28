@@ -15,7 +15,7 @@ import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { notesCalendarModule } from "./module";
-import { useNotesCell, type NotesCellApi } from "./use-notes-cell";
+import { useNotesCell, type NotesCellApi, type NotesDateSelect } from "./use-notes-cell";
 
 const MODULES = [journalsCoreModule, notesCalendarModule];
 
@@ -51,7 +51,7 @@ function resolveApi(
   let captured: NotesCellApi | undefined;
   const Probe = defineComponent({
     setup() {
-      captured = useNotesCell({ journalNames, decorations, onSelect });
+      captured = useNotesCell({ journalNames, decorations, onSelect: () => onSelect });
       return undefined;
     },
     template: "<div />",
@@ -232,6 +232,35 @@ describe("useNotesCell", () => {
 
       expect(onSelect).not.toHaveBeenCalled();
       expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+    });
+  });
+
+  describe("isSelectable", () => {
+    it("reads the current selection callback after setup", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      let onSelect: NotesDateSelect | undefined;
+      let captured: NotesCellApi | undefined;
+      const Probe = defineComponent({
+        setup() {
+          captured = useNotesCell({ journalNames: () => [], onSelect: () => onSelect });
+          return undefined;
+        },
+        template: "<div />",
+      });
+      harness.render(Probe);
+      if (!captured) throw new Error("probe did not capture the notes-cell api");
+
+      expect(captured.isSelectable()).toBe(false);
+
+      const select = vi.fn();
+      onSelect = select;
+      expect(captured.isSelectable()).toBe(true);
+      captured.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
+      expect(select).toHaveBeenCalledWith(may25.representative.toAnchor());
+      expect(invokeSpy).not.toHaveBeenCalled();
+
+      onSelect = undefined;
+      expect(captured.isSelectable()).toBe(false);
     });
   });
 

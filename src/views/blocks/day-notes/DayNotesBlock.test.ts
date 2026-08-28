@@ -107,7 +107,14 @@ function menuItem(title: string): ReturnType<typeof obsidianTesting.lastOpenMenu
 
 beforeEach(() => {
   obsidianTesting.reset();
-  obsidianTesting.seedIcons([icons.nav.prev, icons.nav.next, icons.action.sortAscending, icons.action.sortDescending]);
+  obsidianTesting.seedIcons([
+    icons.nav.prev,
+    icons.nav.next,
+    icons.nav.prevLeap,
+    icons.nav.nextLeap,
+    icons.action.sortAscending,
+    icons.action.sortDescending,
+  ]);
 });
 
 afterEach(() => obsidianTesting.resetIcons());
@@ -239,7 +246,11 @@ describe("DayNotesBlock", () => {
     const previousDecade = screen.getByRole("button", {
       name: m.view_toolbar_button_default_tooltip_prev_unit({ unit: "decade" }),
     });
-    expect(previousDecade.querySelector("svg")?.dataset.icon).toBe("chevron-left");
+    const nextDecade = screen.getByRole("button", {
+      name: m.view_toolbar_button_default_tooltip_next_unit({ unit: "decade" }),
+    });
+    expect(previousDecade.querySelector("svg")?.dataset.icon).toBe("chevrons-left");
+    expect(nextDecade.querySelector("svg")?.dataset.icon).toBe("chevrons-right");
     await fireEvent.click(previousDecade);
     expect(setRefDate).toHaveBeenLastCalledWith("2016-05-15");
   });

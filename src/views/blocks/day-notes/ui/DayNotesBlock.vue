@@ -67,7 +67,6 @@ function navigationConfig(direction: "prev" | "next"): ButtonConfig {
   };
   return {
     ...buttonConfigFor(action),
-    icon: direction === "prev" ? icons.nav.prev : icons.nav.next,
     tooltip:
       direction === "prev"
         ? m.view_toolbar_button_default_tooltip_prev_unit({ unit: granularity })

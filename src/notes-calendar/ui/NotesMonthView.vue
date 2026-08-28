@@ -110,7 +110,7 @@ const cells = useCellDecorations({
   calendarDecorations: { shelf: () => props.shelf },
 });
 
-const selection = { onSelect: props.selectDate };
+const selection = { onSelect: () => props.selectDate };
 const dayCell = useNotesCell({
   journalNames: () => scope.day.value,
   decorations: cells,
@@ -287,6 +287,11 @@ const isSelected = (period: Period): boolean =>
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
   gap: var(--size-2-1);
+}
+@supports not (grid-template-columns: subgrid) {
+  .notes-month-view__row {
+    display: contents;
+  }
 }
 .notes-month-view__weekday {
   font-size: 0.6em;
