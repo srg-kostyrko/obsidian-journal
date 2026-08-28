@@ -70,6 +70,7 @@ export const icons = {
     templates: "notepad-text-dashed",
     timeline: "calendar-range",
     maintenance: "wrench",
+    prompts: "lucide-circle-help",
   },
 } as const;
 

@@ -31,9 +31,13 @@ const parentVariable = computed(() => {
   const index = props.sourceIndex ?? sources.value.length;
   return sources.value[index - 1]?.variable ?? "";
 });
-const takenVariables = computed(() =>
-  sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.variable),
-);
+const prompts = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined()?.prompts ?? []);
+// Symmetric with EditPromptModal's own takenVariables: a digit and a question share one
+// variable namespace, so checking only one direction lets whichever is created second win.
+const takenVariables = computed(() => [
+  ...sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.variable),
+  ...prompts.value.map((prompt) => prompt.variable),
+]);
 const takenKeys = computed(() =>
   sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.frontmatterKey),
 );

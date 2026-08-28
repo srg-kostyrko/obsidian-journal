@@ -3,6 +3,7 @@ import type { Module } from "@/infrastructure/di";
 import { JournalEditSectionToken, defineJournalEditSection } from "./settings/ui/journal-edit-section";
 import FrontmatterSection from "./settings/ui/sections/FrontmatterSection.vue";
 import NoteCreationSection from "./settings/ui/sections/NoteCreationSection.vue";
+import PromptsSection from "./settings/ui/sections/PromptsSection.vue";
 import SequenceSection from "./settings/ui/sections/SequenceSection.vue";
 import TemplatesSection from "./settings/ui/sections/TemplatesSection.vue";
 import TimelineSection from "./settings/ui/sections/TimelineSection.vue";
@@ -11,6 +12,9 @@ export const journalsUiModule: Module = {
   register(c) {
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({ key: "note-creation", order: 20, component: NoteCreationSection }),
+    );
+    c.register(JournalEditSectionToken).useValue(
+      defineJournalEditSection({ key: "prompts", order: 25, component: PromptsSection }),
     );
     c.register(JournalEditSectionToken).useValue(
       defineJournalEditSection({ key: "templates", order: 30, component: TemplatesSection }),

@@ -168,6 +168,40 @@ describe("EditNumberingDigitModal", () => {
     });
   });
 
+  it("rejects a numbering digit whose variable is already a prompt", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              numbering: {
+                enabled: true,
+                anchorDate: anchor("2024-01-01"),
+                allowBefore: false,
+                sources: [twoDigits[0]],
+              },
+              prompts: [
+                { variable: "mood", question: "How do you feel?", type: "text", frontmatterKey: "", required: false },
+              ],
+            },
+          ),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditNumberingDigitModal, { props: { journalName: "daily" } });
+    const [variableInput] = screen.getAllByRole("textbox");
+    await userEvent.type(variableInput, "mood");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_sequence_variable_duplicate({ name: "mood" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
   it("rejects a reserved variable name", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

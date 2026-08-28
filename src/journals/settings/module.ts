@@ -6,6 +6,7 @@ import { CloneJournalFlow } from "./flows/clone-journal.flow";
 import { DeleteJournalFlow } from "./flows/delete-journal.flow";
 import { EditFrontmatterFieldFlow } from "./flows/edit-frontmatter-field.flow";
 import { EditNumberingDigitFlow } from "./flows/edit-numbering-digit.flow";
+import { EditPromptFlow } from "./flows/edit-prompt.flow";
 import { RenameJournalFlow } from "./flows/rename-journal.flow";
 import { journalsSettingsUiModule } from "./ui-module";
 import { WeekPresetService } from "./week-preset-service";
@@ -18,6 +19,7 @@ export const journalsSettingsCoreModule: Module = {
     c.register(CloneJournalFlow).useClass(CloneJournalFlow);
     c.register(EditFrontmatterFieldFlow).useClass(EditFrontmatterFieldFlow);
     c.register(EditNumberingDigitFlow).useClass(EditNumberingDigitFlow);
+    c.register(EditPromptFlow).useClass(EditPromptFlow);
     // Eager: it subscribes to the settings reload seam, which fires whether or not anyone has
     // opened the preset picker that resolves it through WeekPresetApplierToken.
     c.register(WeekPresetService).useClass(WeekPresetService).eager();

@@ -7,12 +7,14 @@ import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
 import EditNumberingDigitModal from "./EditNumberingDigitModal.vue";
+import EditPromptModal from "./EditPromptModal.vue";
 import RenameJournalModal from "./RenameJournalModal.vue";
 import TemplaterSupportModal from "./TemplaterSupportModal.vue";
 import VariableReferenceModal from "./VariableReferenceModal.vue";
 
 import type { VariableModalContext } from "./variable-context";
 import type { JournalWrite, NumberingReset } from "../../config";
+import type { Prompt } from "../../prompts/config";
 
 export const addJournalModal = defineModal<{ name: string; write: JournalWrite }>()({
   component: AddJournalModal,
@@ -49,6 +51,12 @@ export const editNumberingDigitModal = defineModal<NumberingDigitDraft>()({
   component: EditNumberingDigitModal,
   title: ({ sourceIndex }: { journalName: string; sourceIndex?: number }) =>
     m.journal_sequence_digit_modal_title({ mode: sourceIndex === undefined ? "add" : "edit" }),
+});
+
+export const editPromptModal = defineModal<Prompt>()({
+  component: EditPromptModal,
+  title: ({ promptIndex }: { journalName: string; promptIndex?: number }) =>
+    m.journal_prompt_modal_title({ mode: promptIndex === undefined ? "add" : "edit" }),
 });
 
 export const renameJournalModal = defineModal<{ newName: string }>()({
