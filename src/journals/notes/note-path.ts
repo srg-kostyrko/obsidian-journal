@@ -287,6 +287,11 @@ export class NotePathService {
     return context;
   }
 
+  /** What this journal calls the period itself, in its own date format. */
+  periodLabelFor(config: JournalConfig, metadata: JournalMetadata): string {
+    return this.#engine.renderString("{{date}}", this.contextFor(config, metadata));
+  }
+
   /** What this journal calls the note for a period, whether or not that note exists yet. */
   noteNameFor(config: JournalConfig, metadata: JournalMetadata): string {
     return this.#engine.renderString(config.nameTemplate, this.contextFor(config, metadata));

@@ -12,7 +12,6 @@ import {
 import { openViaUri } from "../support/uri.js";
 import {
   createNote,
-  frontmatterOf,
   noteExists,
   waitForActiveNote,
   waitForContent,
@@ -24,11 +23,11 @@ import {
 // required Choice question saved to the "mood" property, so every scenario below that creates
 // a note goes through the answer dialog before a path can even be derived. "confirmed" has
 // confirmCreation on and a text question ("note") that reaches neither the name nor the folder,
-// which is the one combination where the answer dialog's note-name preview is not driven by any
+// which is the one combination where the answer dialog's note-path preview is not driven by any
 // answer at all — it exists solely because confirmCreation is on.
-function noteNamePreviewRow(): ReturnType<typeof $> {
+function notePathPreviewRow(): ReturnType<typeof $> {
   return $(
-    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][normalize-space(.)="${m.journal_prompt_note_name_label()}"]]`,
+    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][normalize-space(.)="${m.journal_prompt_note_path_label()}"]]`,
   );
 }
 
@@ -40,10 +39,10 @@ describe("creating a note on a prompting journal", () => {
   it("names the note, fills its frontmatter and renders the answers into the body", async () => {
     await openViaUri({ journal: "prompted", date: "2030-07-19" });
     await waitForModalOpen();
-    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title());
+    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title({ period: "2030-07-19" }));
 
     await selectModalOption("okay");
-    await expect(noteNamePreviewRow()).toHaveText("2030-07-19 okay", { containing: true });
+    await expect(notePathPreviewRow()).toHaveText("2030-07-19 okay.md", { containing: true });
     await submitModal();
 
     await waitForActiveNote("2030-07-19 okay.md");
@@ -90,7 +89,7 @@ describe("cancelling the creation prompt for an unresolved journal link", () => 
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
   });
 
-  it("leaves the file on disk, unclaimed", async () => {
+  it("takes back the empty file Obsidian created for the link", async () => {
     await createNote("links.md", "see [[2030-07-21 (unanswered)]]\n");
     await browser.executeObsidian(
       async ({ app }, linkText, source) => {
@@ -104,10 +103,12 @@ describe("cancelling the creation prompt for an unresolved journal link", () => 
     await clickDialogButton(m.common_action_cancel());
     await waitForDialogClosed();
 
-    // Cancel claims nothing: the file stays exactly where Obsidian's own link-click create put
-    // it, under its placeholder name, with no journal frontmatter written.
-    expect(await noteExists("2030-07-21 (unanswered).md")).toBe(true);
-    expect(await frontmatterOf("2030-07-21 (unanswered).md")).toBeNull();
+    // The link click is what made the file, and its name is a placeholder no rename will ever
+    // fill now. Cancelling puts the user back where they started rather than leaving a file
+    // named "(unanswered)" behind.
+    await browser.waitUntil(async () => !(await noteExists("2030-07-21 (unanswered).md")), {
+      timeoutMsg: "expected the placeholder file to be trashed",
+    });
   });
 });
 
@@ -123,8 +124,8 @@ describe("confirming a note whose name carries no prompt answer", () => {
     // The answer dialog is standing in for the creation-confirmation dialog here — the "note"
     // question never touches the name template, so nothing renders it live, but the name must
     // still be shown or confirmCreation's whole purpose (see what you're about to create) is lost.
-    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title());
-    await expect(noteNamePreviewRow()).toHaveText("2030-07-22", { containing: true });
+    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title({ period: "2030-07-22" }));
+    await expect(notePathPreviewRow()).toHaveText("2030-07-22.md", { containing: true });
 
     await clickDialogButton(m.common_action_cancel());
     await waitForDialogClosed();

@@ -10,9 +10,10 @@ export interface PromptAnswersModalProps {
   journalName: string;
   anchor: AnchorString;
   confirming: boolean;
+  periodLabel: string;
 }
 
 export const promptAnswersModal = defineModal<Record<string, PromptAnswer>>()({
   component: PromptAnswersModal,
-  title: (_: PromptAnswersModalProps) => m.journal_prompt_answers_modal_title(),
+  title: ({ periodLabel }: PromptAnswersModalProps) => m.journal_prompt_answers_modal_title({ period: periodLabel }),
 });

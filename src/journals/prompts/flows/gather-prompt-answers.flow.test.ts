@@ -28,7 +28,7 @@ describe("GatherPromptAnswersFlow", () => {
     expect(result.isOk() && result.value).toEqual({ mood: "good" });
   });
 
-  it("passes journalName, anchor, and confirming through as the modal's props", async () => {
+  it("passes journalName, anchor, confirming and the period's own label as the modal's props", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { mood: fixedJournal("mood", { type: "day" }, { prompts: [mood] }) } },
@@ -42,6 +42,7 @@ describe("GatherPromptAnswersFlow", () => {
       journalName: "mood",
       anchor: anchor("2024-01-01"),
       confirming: true,
+      periodLabel: "2024-01-01",
     });
   });
 

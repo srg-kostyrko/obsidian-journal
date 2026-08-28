@@ -24,8 +24,9 @@ import { promptsInPath } from "../prompts-in-path";
 
 import type { JournalMetadata } from "../../types";
 import type { Prompt, PromptAnswer, PromptOption } from "../config";
+import type { PromptAnswersModalProps } from "./modals";
 
-const props = defineProps<{ journalName: string; anchor: AnchorString; confirming: boolean }>();
+const props = defineProps<PromptAnswersModalProps>();
 const api = useModal<Record<string, PromptAnswer>>();
 const journalsVM = useService(JournalsViewModel);
 const paths = useService(NotePathService);
@@ -38,40 +39,58 @@ const prompts = config.value?.prompts ?? [];
 const metadata: JournalMetadata = { journalName: props.journalName, anchor: props.anchor };
 
 const inPath = computed(() => (config.value ? promptsInPath(config.value) : []));
-const inPathVariables = computed(() => new Set(inPath.value.map((prompt) => prompt.variable)));
-const showName = computed(() => inPath.value.length > 0 || props.confirming);
+const inPathVariables = new Set(inPath.value.map((prompt) => prompt.variable));
+const showPath = computed(() => inPath.value.length > 0 || props.confirming);
 const isLive = computed(() => inPath.value.length > 0);
 
-function initialValueFor(prompt: Prompt): PromptAnswer {
-  return match(prompt)
-    .with({ type: "number" }, () => 0)
-    .with({ type: "toggle" }, () => false)
-    .with({ type: "select" }, (select) => select.options.at(0)?.value ?? "")
-    .otherwise(() => "");
+// Two independent reasons an answer cannot be left blank, and the form owes the user the one
+// that applies: a prompt the path spells would otherwise write the placeholder into the file
+// name, and a prompt the journal marks required is required wherever its answer lands.
+function requirementOf(prompt: Prompt): { required: boolean; message: () => string } {
+  if (inPathVariables.has(prompt.variable)) {
+    return { required: true, message: m.journal_prompt_answer_required_in_path };
+  }
+  return { required: prompt.required, message: m.journal_prompt_answer_required };
 }
 
-function schemaFor(prompt: Prompt, requiredInPath: boolean): v.GenericSchema<unknown, PromptAnswer> {
+function isRequired(prompt: Prompt): boolean {
+  return requirementOf(prompt).required;
+}
+
+function initialValueFor(prompt: Prompt): PromptAnswer {
+  return (
+    match(prompt)
+      .with({ type: "number" }, () => 0)
+      .with({ type: "toggle" }, () => false)
+      // An optional choice opens on no choice, so leaving it alone means "not answered"; a
+      // required one opens on its first option, which is already a valid answer.
+      .with({ type: "select" }, (select) => (isRequired(select) ? (select.options.at(0)?.value ?? "") : ""))
+      .otherwise(() => "")
+  );
+}
+
+function schemaFor(prompt: Prompt): v.GenericSchema<unknown, PromptAnswer> {
+  // A number input and a toggle always hold a value, so neither has a blank state to refuse.
   if (prompt.type === "number") return v.number();
   if (prompt.type === "toggle") return v.boolean();
+  const { required, message } = requirementOf(prompt);
   if (prompt.type === "text") {
     const reserved = v.check(
       (value: string) => !isPlaceholder(value),
       (issue) => m.journal_prompt_answer_reserved({ name: issue.input }),
     );
-    return requiredInPath
-      ? v.pipe(v.string(), v.minLength(1, m.journal_prompt_answer_required()), reserved)
-      : v.pipe(v.string(), reserved);
+    return required ? v.pipe(v.string(), v.minLength(1, message()), reserved) : v.pipe(v.string(), reserved);
   }
   // date and select answers are never typed freely, so the placeholder-reservation check that
   // guards free text does not apply to them.
-  return requiredInPath ? v.pipe(v.string(), v.minLength(1, m.journal_prompt_answer_required())) : v.string();
+  return required ? v.pipe(v.string(), v.minLength(1, message())) : v.string();
 }
 
 const initialValues: Record<string, PromptAnswer> = {};
 const schemaShape: Record<string, v.GenericSchema<unknown, PromptAnswer>> = {};
 for (const prompt of prompts) {
   initialValues[prompt.variable] = initialValueFor(prompt);
-  schemaShape[prompt.variable] = schemaFor(prompt, inPathVariables.value.has(prompt.variable));
+  schemaShape[prompt.variable] = schemaFor(prompt);
 }
 
 // v.object's inferred output collapses to `Record<string, unknown>` for an entries record built
@@ -123,22 +142,26 @@ function setDate(field: PromptField, period: Period | null | undefined): void {
   field.value.value = period ? period.anchor.toAnchor() : "";
 }
 
-// A live preview only earns its place when an answer can move it. When it cannot, the name is
-// still shown if this modal is standing in for the creation confirmation — the note name is
-// that confirmation's entire content, so suppressing it would delete what the setting is for.
-const previewName = computed(() =>
-  config.value === undefined
-    ? ""
-    : paths.noteNameFor(config.value, { ...metadata, answers: isLive.value ? values : {} }),
-);
+// The whole path, not just the name: a prompt can reach the folder template too, and an
+// answer that moves the note into a different folder is exactly what the user is confirming.
+//
+// A live preview only earns its place when an answer can move it. When it cannot, the path is
+// still shown if this modal is standing in for the creation confirmation — the path is that
+// confirmation's entire content, so suppressing it would delete what the setting is for.
+const previewPath = computed(() => {
+  if (config.value === undefined) return "";
+  const answered = { ...metadata, answers: isLive.value ? values : {} };
+  const path = paths.pathFor(props.journalName, answered);
+  return path.isOk() ? path.value : "";
+});
 
 const onSubmit = handleSubmit((entered) => api.submit(entered));
 </script>
 
 <template>
   <form @submit.prevent="onSubmit">
-    <UiSettingRow v-if="showName" :name="m.journal_prompt_note_name_label()">
-      <span>{{ previewName }}</span>
+    <UiSettingRow v-if="showPath" :name="m.journal_prompt_note_path_label()">
+      <span>{{ previewPath }}</span>
     </UiSettingRow>
 
     <UiSettingRow v-for="field in fields" :key="field.prompt.variable" :name="field.prompt.question">
@@ -174,6 +197,7 @@ const onSubmit = handleSubmit((entered) => api.submit(entered));
         v-bind="field.attrs"
         @update:model-value="(value) => (field.value.value = value ?? '')"
       >
+        <option v-if="!isRequired(field.prompt)" value="">{{ m.journal_prompt_select_none() }}</option>
         <option v-for="option in selectOptionsOf(field.prompt)" :key="option.value" :value="option.value">
           {{ option.label }}
         </option>

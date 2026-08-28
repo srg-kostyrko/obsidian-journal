@@ -45,7 +45,7 @@ describe("PromptAnswersModal", () => {
 
     it("shows a live preview that updates as the answer changes", async () => {
       harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false },
+        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
       });
       const before = screen.getByText(/2024-01-01/).textContent;
 
@@ -60,20 +60,20 @@ describe("PromptAnswersModal", () => {
 
     it("refuses a blank submit for the prompt in the path", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false },
+        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
       });
 
       await userEvent.click(screen.getByText(m.journal_prompt_submit()));
 
       await waitFor(() => {
-        expect(screen.getByText(m.journal_prompt_answer_required())).toBeTruthy();
+        expect(screen.getByText(m.journal_prompt_answer_required_in_path())).toBeTruthy();
       });
       expect(submit).not.toHaveBeenCalled();
     });
 
     it("rejects an answer equal to the placeholder", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false },
+        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
       });
 
       await userEvent.type(screen.getByRole("textbox"), PROMPT_PLACEHOLDER);
@@ -100,7 +100,7 @@ describe("PromptAnswersModal", () => {
 
     it("shows the note name statically when confirming, and typing does not move it", async () => {
       harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: true },
+        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: true, periodLabel: "2024-01-01" },
       });
       const before = screen.getByText(/2024-01-01/).textContent;
 
@@ -111,7 +111,7 @@ describe("PromptAnswersModal", () => {
 
     it("accepts a blank answer when nothing about it reaches the note name", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false },
+        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
       });
 
       await userEvent.click(screen.getByText(m.journal_prompt_submit()));
@@ -121,13 +121,66 @@ describe("PromptAnswersModal", () => {
       });
     });
 
-    it("shows no name at all when not confirming", () => {
+    it("shows no path at all when not confirming", () => {
       harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false },
+        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
       });
 
-      expect(screen.queryByText(m.journal_prompt_note_name_label())).toBeNull();
+      expect(screen.queryByText(m.journal_prompt_note_path_label())).toBeNull();
       expect(screen.queryByText(/2024-01-01/)).toBeNull();
+    });
+  });
+
+  describe("when a required prompt does not reach the note name", () => {
+    const requiredText: Prompt = { ...moodBodyOnly, frontmatterKey: "mood", required: true };
+    const optionalPick: Prompt = {
+      variable: "pick",
+      question: "Pick?",
+      type: "select",
+      frontmatterKey: "pick",
+      required: false,
+      options: [
+        { label: "One", value: "one" },
+        { label: "Two", value: "two" },
+      ],
+    };
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            asked: fixedJournal("asked", { type: "day" }, { prompts: [requiredText, optionalPick] }),
+          },
+        },
+      });
+    });
+
+    it("refuses a blank submit for a required prompt", async () => {
+      const { submit } = harness.renderModal(PromptAnswersModal, {
+        props: { journalName: "asked", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+      });
+
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_answer_required())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("lets an optional choice be left unpicked", async () => {
+      const { submit } = harness.renderModal(PromptAnswersModal, {
+        props: { journalName: "asked", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+      });
+      expect(screen.getByText(m.journal_prompt_select_none())).toBeTruthy();
+
+      await userEvent.type(screen.getByRole("textbox"), "happy");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ mood: "happy", pick: "" });
+      });
     });
   });
 });

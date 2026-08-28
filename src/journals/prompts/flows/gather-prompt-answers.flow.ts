@@ -4,6 +4,7 @@ import { UserAborted, type Flow } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError, type JournalLifecycleFlowError } from "@/journals/errors";
+import { NotePathService } from "@/journals/notes/note-path";
 import { JournalsRepository } from "@/journals/repository";
 
 import { promptAnswersModal } from "../ui/modals";
@@ -19,15 +20,21 @@ export class GatherPromptAnswersFlow implements Flow<
 > {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
+  readonly #paths = inject(NotePathService);
 
   execute(parameters: {
     journalName: string;
     anchor: AnchorString;
     confirming: boolean;
   }): AsyncResult<Record<string, PromptAnswer>, GatherPromptAnswersError> {
-    if (this.#repository.get(parameters.journalName).isNone()) {
+    const config = this.#repository.get(parameters.journalName);
+    if (config.isNone()) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
+    const periodLabel = this.#paths.periodLabelFor(config.value, {
+      journalName: parameters.journalName,
+      anchor: parameters.anchor,
+    });
 
     return attempt.in(this, async function* (this: GatherPromptAnswersFlow) {
       return yield* this.#modals
@@ -35,6 +42,7 @@ export class GatherPromptAnswersFlow implements Flow<
           journalName: parameters.journalName,
           anchor: parameters.anchor,
           confirming: parameters.confirming,
+          periodLabel,
         })
         .mapErr(() => new UserAborted("prompt-answers"));
     });
