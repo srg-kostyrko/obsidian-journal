@@ -218,10 +218,10 @@ export class FakeNotesService implements Pick<
     for (const folder of this.#folders) {
       if (folder === path || folder.startsWith(`${path}/`)) this.#folders.delete(folder);
     }
+    // No per-file "deleted": the real service trashes the folder in one call and only relays
+    // vault "delete" events for a TFile, and Obsidian raises that event for the folder alone.
     for (const file of this.#files.keys()) {
-      if (!file.startsWith(`${path}/`)) continue;
-      this.#files.delete(file);
-      this.#emitter.emit("deleted", file);
+      if (file.startsWith(`${path}/`)) this.#files.delete(file);
     }
     return AsyncResult.ok(undefined);
   }
