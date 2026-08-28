@@ -244,10 +244,29 @@ describe("NotesService", () => {
       expect(result.error).toBeInstanceOf(NoteAlreadyExistsError);
     });
 
+    it("repairs links that pointed at the old name", async () => {
+      const { service, host } = build();
+      host.putFile(path, "body");
+      host.putFile("Index.md", "see [[2026-05-13]] for details");
+
+      expectOk(await service.rename(path, otherPath));
+
+      expect(host.files.get("Index.md")?.content).toBe("see [[2026-05-14]] for details");
+    });
+
+    it("creates a missing destination folder", async () => {
+      const { service, host } = build();
+      host.putFile(path, "body");
+
+      expectOk(await service.rename(path, "Archive/2026/2026-05-13.md" as VaultPath));
+
+      expect(host.folders.has("Archive/2026")).toBe(true);
+    });
+
     it("wraps an underlying rename failure in NoteRenameError", async () => {
       const { service, host } = build();
       host.putFile(path);
-      vi.spyOn(host.app.vault, "rename").mockRejectedValueOnce(new Error("io"));
+      vi.spyOn(host.app.fileManager, "renameFile").mockRejectedValueOnce(new Error("io"));
       const result = await service.rename(path, otherPath);
       expectErr(result);
       expect(result.error).toBeInstanceOf(NoteRenameError);

@@ -73,8 +73,11 @@ export class NotesService {
   }
 
   async #rename(file: TFile, newPath: VaultPath): Promise<Note> {
+    // The folder still has to exist first: renameFile is vault.rename wrapped in a link
+    // update, and vault.rename bottoms out in fsPromises.rename, which fails on a missing
+    // destination directory rather than creating it.
     await this.#ensureFolderExists(newPath);
-    await this.#app.vault.rename(file, newPath);
+    await this.#app.fileManager.renameFile(file, newPath);
     return toNote(file);
   }
 
