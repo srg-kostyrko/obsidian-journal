@@ -70,7 +70,13 @@ describe("PromptsSection", () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
       data: {
-        journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...moodPrompt, type: "date" }] }) },
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { prompts: [{ ...moodPrompt, type: "date", format: "YYYY-MM-DD" }] },
+          ),
+        },
       },
     });
     harness.render(PromptsSection, { props: { journalName: "daily" } });

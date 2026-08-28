@@ -2095,6 +2095,7 @@
 	"journal_prompt_add": "Ajouter une question",
 	"journal_prompt_autocreate_conflict": "Ce journal crée des notes automatiquement, personne ne peut donc répondre à une question qui apparaît dans le nom de la note. Désactivez l'une des deux options.",
 	"journal_prompt_autocreate_required_warning": "Une question obligatoire n'est jamais posée lorsque les notes sont créées automatiquement.",
+	"journal_prompt_date_format_label": "Format de date",
 	"journal_prompt_delete": "Supprimer la question",
 	"journal_prompt_edit": "Modifier la question",
 	"journal_prompt_key_required_in_path": "Une réponse utilisée dans le nom de la note ou le dossier doit être enregistrée dans une propriété.",

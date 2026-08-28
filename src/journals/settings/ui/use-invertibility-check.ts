@@ -58,7 +58,7 @@ export function useInvertibilityCheck(
       context = context.number(source.variable, 0);
     }
     for (const prompt of value.prompts) {
-      context = context.withSpec(prompt.variable, parseSpecFor(prompt, value.dateFormat));
+      context = context.withSpec(prompt.variable, parseSpecFor(prompt));
     }
     // A failure to match the sample path is expected; only a compile-time not-invertible
     // error means the template can't be reverse-parsed at all.

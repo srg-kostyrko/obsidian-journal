@@ -2078,6 +2078,7 @@
 	"journal_prompt_add": "Añadir pregunta",
 	"journal_prompt_autocreate_conflict": "Este diario crea notas automáticamente, así que nadie puede responder a una pregunta que forme parte del nombre de la nota. Desactiva una de las dos opciones.",
 	"journal_prompt_autocreate_required_warning": "Una pregunta obligatoria nunca se formula cuando las notas se crean automáticamente.",
+	"journal_prompt_date_format_label": "Formato de fecha",
 	"journal_prompt_delete": "Eliminar pregunta",
 	"journal_prompt_edit": "Editar pregunta",
 	"journal_prompt_key_required_in_path": "Una respuesta usada en el nombre de la nota o en la carpeta debe guardarse en una propiedad.",

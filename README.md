@@ -166,7 +166,9 @@ you do.
 A journal can ask questions when a note is created, and turn the answers into a property, part of
 the note's content, or part of where the note lives. Each question has:
 
-- **Type** — text, number, date, yes/no, or a choice from a fixed list of options
+- **Type** — text, number, date, yes/no, or a choice from a fixed list of options. A date
+  question has its own format (`YYYY-MM-DD` by default, editable in Moment.js syntax) — it is
+  never rendered using the journal's own date format
 - **Question**: the prompt text shown in the answer dialog
 - **Property**: the frontmatter key the answer is saved under, left blank to not save it at all
 - **Required**: refuses to create the note until this one is answered

@@ -1889,6 +1889,7 @@
 	"journal_prompt_add": "添加问题",
 	"journal_prompt_autocreate_conflict": "此日记会自动创建笔记，因此没有人能够回答会出现在笔记名称中的问题。请关闭其中一项。",
 	"journal_prompt_autocreate_required_warning": "自动创建笔记时，绝不会询问必填问题。",
+	"journal_prompt_date_format_label": "日期格式",
 	"journal_prompt_delete": "删除问题",
 	"journal_prompt_edit": "编辑问题",
 	"journal_prompt_key_required_in_path": "在笔记名称或文件夹中使用的回答必须保存到属性中。",

@@ -1936,6 +1936,7 @@
 	"journal_prompt_add": "Додати запитання",
 	"journal_prompt_autocreate_conflict": "Цей журнал створює нотатки автоматично, тому ніхто не зможе відповісти на запитання, яке входить у назву нотатки. Вимкніть щось одне.",
 	"journal_prompt_autocreate_required_warning": "Обов'язкове запитання ніколи не задається під час автоматичного створення нотаток.",
+	"journal_prompt_date_format_label": "Формат дати",
 	"journal_prompt_delete": "Видалити запитання",
 	"journal_prompt_edit": "Редагувати запитання",
 	"journal_prompt_key_required_in_path": "Відповідь, яка використовується в назві нотатки або папці, потрібно зберегти у властивість.",

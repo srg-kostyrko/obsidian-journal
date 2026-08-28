@@ -18,7 +18,13 @@ const promptBase = v.object({
 export const promptSchema = v.variant("type", [
   v.object({ ...promptBase.entries, type: v.literal("text") }),
   v.object({ ...promptBase.entries, type: v.literal("number") }),
-  v.object({ ...promptBase.entries, type: v.literal("date") }),
+  v.object({
+    ...promptBase.entries,
+    type: v.literal("date"),
+    // Clearable, so no minLength: a validation issue under `prompts` makes
+    // repairCollectionEntry substitute the whole array with `[]`, wiping every question.
+    format: v.optional(v.string(), "YYYY-MM-DD"),
+  }),
   v.object({ ...promptBase.entries, type: v.literal("toggle") }),
   v.object({
     ...promptBase.entries,

@@ -2137,6 +2137,7 @@
 	"journal_prompt_add": "Добавить вопрос",
 	"journal_prompt_autocreate_conflict": "Этот журнал создаёт заметки автоматически, поэтому никто не сможет ответить на вопрос, который входит в название заметки. Отключите что-то одно.",
 	"journal_prompt_autocreate_required_warning": "Обязательный вопрос никогда не задаётся при автоматическом создании заметок.",
+	"journal_prompt_date_format_label": "Формат даты",
 	"journal_prompt_delete": "Удалить вопрос",
 	"journal_prompt_edit": "Изменить вопрос",
 	"journal_prompt_key_required_in_path": "Ответ, используемый в названии заметки или папке, нужно сохранить в свойство.",

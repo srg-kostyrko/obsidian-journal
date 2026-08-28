@@ -59,7 +59,7 @@ export class NotePathService {
       context = context.number(source.variable, 0);
     }
     for (const prompt of config.prompts) {
-      context = context.withSpec(prompt.variable, parseSpecFor(prompt, config.dateFormat));
+      context = context.withSpec(prompt.variable, parseSpecFor(prompt));
     }
     return context;
   }
@@ -277,7 +277,7 @@ export class NotePathService {
       context = value === undefined ? context.string(source.variable, "") : context.number(source.variable, value);
     }
     for (const prompt of config.prompts) {
-      const { spec } = renderBindingFor(prompt, metadata.answers?.[prompt.variable], config.dateFormat);
+      const { spec } = renderBindingFor(prompt, metadata.answers?.[prompt.variable]);
       context = context.withSpec(prompt.variable, spec);
     }
     // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.
@@ -305,7 +305,7 @@ export class NotePathService {
     // the binding's own verdict, not a second reading of the answer: an answer that exists but
     // does not bind (a date that fails to parse) is a placeholder in the name and empty here too.
     for (const prompt of config.prompts) {
-      const { answered } = renderBindingFor(prompt, metadata.answers?.[prompt.variable], config.dateFormat);
+      const { answered } = renderBindingFor(prompt, metadata.answers?.[prompt.variable]);
       if (!answered) context = context.string(prompt.variable, "");
     }
     return context;

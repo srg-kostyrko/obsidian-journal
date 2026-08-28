@@ -1518,6 +1518,7 @@
   "journal_prompt_add": "Add question",
   "journal_prompt_autocreate_conflict": "This journal creates notes automatically, so nobody can answer a question that goes into the note name. Turn one of them off.",
   "journal_prompt_autocreate_required_warning": "A required question is never asked when notes are created automatically.",
+  "journal_prompt_date_format_label": "Date format",
   "journal_prompt_delete": "Delete question",
   "journal_prompt_edit": "Edit question",
   "journal_prompt_key_required_in_path": "An answer used in the note name or folder must be saved to a property.",

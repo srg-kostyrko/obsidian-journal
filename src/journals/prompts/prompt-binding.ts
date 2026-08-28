@@ -34,18 +34,20 @@ function unanswered(prompt: Prompt): PromptRender {
  * name wants the placeholder either way; the body wants an empty string for both. They stay
  * one decision here because two spellings of "is this answered" drift apart silently.
  */
-export function renderBindingFor(prompt: Prompt, answer: PromptAnswer | undefined, dateFormat: string): PromptRender {
+export function renderBindingFor(prompt: Prompt, answer: PromptAnswer | undefined): PromptRender {
   if (answer === undefined) return unanswered(prompt);
   const alternatives = alternativesFor(prompt);
   return (
     match(prompt)
-      .with({ type: "date" }, () => {
+      .with({ type: "date" }, (datePrompt) => {
         const parsed = typeof answer === "string" ? CalendarDate.parse(answer) : undefined;
         if (!parsed || parsed.isErr()) return unanswered(prompt);
         // A real date spec, not a bound string: renderDate applies modifiers before formatting,
         // so the full {{date}} vocabulary — formats, shifts, boundaries — works on the answer.
+        // The prompt's own format, never the host journal's period format — a date the user
+        // picked is not the journal's period, so it must not inherit config.dateFormat.
         return {
-          spec: { kind: "date", value: parsed.value, defaultFormat: dateFormat, alternatives } as const,
+          spec: { kind: "date", value: parsed.value, defaultFormat: datePrompt.format, alternatives } as const,
           answered: true,
         };
       })
@@ -72,13 +74,14 @@ export function renderBindingFor(prompt: Prompt, answer: PromptAnswer | undefine
  * How a slot matches when inverting a path. The seeded value is unused — only the kind and the
  * alternatives drive the compiled pattern, exactly as `#parseContext` already seeds numbering.
  */
-export function parseSpecFor(prompt: Prompt, dateFormat: string): VariableSpec {
+export function parseSpecFor(prompt: Prompt): VariableSpec {
   const alternatives = alternativesFor(prompt);
   return (
     match(prompt)
       .with(
         { type: "date" },
-        () => ({ kind: "date", value: CalendarDate.today(), defaultFormat: dateFormat, alternatives }) as const,
+        (datePrompt) =>
+          ({ kind: "date", value: CalendarDate.today(), defaultFormat: datePrompt.format, alternatives }) as const,
       )
       .with({ type: "number" }, () => ({ kind: "number", value: 0, alternatives }) as const)
       // Free text has no bounded pattern, so it matches only the placeholder: an answered text

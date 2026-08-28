@@ -424,6 +424,51 @@ describe("EditPromptModal", () => {
     });
   });
 
+  describe("date type", () => {
+    it("shows a format field for the date type", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "date");
+
+      expect(screen.getByText(m.journal_prompt_date_format_label())).toBeTruthy();
+    });
+
+    it("hides the format field for every other type", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      for (const type of ["text", "number", "toggle", "select"]) {
+        await userEvent.selectOptions(screen.getByRole("combobox"), type);
+        expect(screen.queryByText(m.journal_prompt_date_format_label())).toBeNull();
+      }
+    });
+
+    it("submits the entered format", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+      await fillRequiredFields("visited");
+      await userEvent.selectOptions(screen.getByRole("combobox"), "date");
+      const formatInput = screen.getByDisplayValue("YYYY-MM-DD");
+      await userEvent.clear(formatInput);
+      await userEvent.type(formatInput, "DD/MM/YYYY");
+      await submitForm();
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ type: "date", format: "DD/MM/YYYY" }));
+      });
+    });
+  });
+
   describe("frontmatter key autofill", () => {
     it("fills the frontmatter key from the variable for a new question", async () => {
       const harness = await testContainer({

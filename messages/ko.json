@@ -2078,6 +2078,7 @@
 	"journal_prompt_add": "질문 추가",
 	"journal_prompt_autocreate_conflict": "이 저널은 노트를 자동으로 생성하므로 노트 이름에 들어가는 질문에 아무도 답할 수 없습니다. 둘 중 하나를 끄세요.",
 	"journal_prompt_autocreate_required_warning": "필수 질문은 노트가 자동으로 생성될 때는 표시되지 않습니다.",
+	"journal_prompt_date_format_label": "날짜 형식",
 	"journal_prompt_delete": "질문 삭제",
 	"journal_prompt_edit": "질문 편집",
 	"journal_prompt_key_required_in_path": "노트 이름이나 폴더에 사용되는 답변은 속성에 저장해야 합니다.",

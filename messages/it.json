@@ -2086,6 +2086,7 @@
 	"journal_prompt_add": "Aggiungi domanda",
 	"journal_prompt_autocreate_conflict": "Questo diario crea note automaticamente, quindi nessuno può rispondere a una domanda che finisce nel nome della nota. Disattiva una delle due opzioni.",
 	"journal_prompt_autocreate_required_warning": "Una domanda obbligatoria non viene mai posta quando le note vengono create automaticamente.",
+	"journal_prompt_date_format_label": "Formato data",
 	"journal_prompt_delete": "Elimina domanda",
 	"journal_prompt_edit": "Modifica domanda",
 	"journal_prompt_key_required_in_path": "Una risposta usata nel nome della nota o nella cartella deve essere salvata in una proprietà.",

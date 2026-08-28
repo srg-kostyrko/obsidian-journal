@@ -1889,6 +1889,7 @@
 	"journal_prompt_add": "質問を追加",
 	"journal_prompt_autocreate_conflict": "このジャーナルはノートを自動作成するため、ノート名に含まれる質問に誰も答えられません。どちらか一方をオフにしてください。",
 	"journal_prompt_autocreate_required_warning": "必須の質問は、ノートが自動作成される場合には表示されません。",
+	"journal_prompt_date_format_label": "日付形式",
 	"journal_prompt_delete": "質問を削除",
 	"journal_prompt_edit": "質問を編集",
 	"journal_prompt_key_required_in_path": "ノート名やフォルダに使われる回答は、プロパティに保存する必要があります。",

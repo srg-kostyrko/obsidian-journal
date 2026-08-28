@@ -20,6 +20,8 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { reservedFrontmatterKeys } from "../../config";
 
+import DateFormatPreview from "./DateFormatPreview.vue";
+
 import type { Prompt } from "../../prompts/config";
 
 const props = withDefaults(defineProps<{ journalName: string; promptIndex?: number }>(), { promptIndex: undefined });
@@ -43,10 +45,12 @@ const takenKeys = computed(() =>
 );
 
 const PROMPT_TYPES = ["text", "number", "date", "toggle", "select"] as const;
+const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
 interface FormValues {
   variable: string;
   question: string;
   type: (typeof PROMPT_TYPES)[number];
+  format: string;
   frontmatterKey: string;
   required: boolean;
   options: { label: string; value: string }[];
@@ -62,6 +66,7 @@ function candidateFrom(entered: FormValues): Prompt {
     required: entered.required,
   };
   if (entered.type === "select") return { ...base, type: "select", options: entered.options };
+  if (entered.type === "date") return { ...base, type: "date", format: entered.format };
   return { ...base, type: entered.type };
 }
 
@@ -96,6 +101,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
     variable: current.value?.variable ?? "",
     question: current.value?.question ?? "",
     type: current.value?.type ?? "text",
+    format: current.value?.type === "date" ? current.value.format : DEFAULT_DATE_FORMAT,
     frontmatterKey: current.value?.frontmatterKey ?? "",
     required: current.value?.required ?? false,
     options: current.value?.type === "select" ? current.value.options.map((option) => ({ ...option })) : [],
@@ -118,6 +124,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
         ),
         question: v.pipe(v.string(), v.nonEmpty(m.journal_prompt_question_required())),
         type: v.picklist(PROMPT_TYPES),
+        format: v.string(),
         frontmatterKey: v.pipe(
           v.optional(v.string(), ""),
           v.check(
@@ -178,6 +185,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
 const [variable, variableAttrs] = defineField("variable");
 const [question, questionAttrs] = defineField("question");
 const [type] = defineField("type");
+const [format] = defineField("format");
 const [frontmatterKey, frontmatterKeyAttrs] = defineField("frontmatterKey");
 const [required] = defineField("required");
 
@@ -228,6 +236,17 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
           {{ m.journal_prompt_type_option({ type: promptType }) }}
         </option>
       </UiDropdown>
+    </UiSettingRow>
+
+    <UiSettingRow v-if="values.type === 'date'" :name="m.journal_prompt_date_format_label()">
+      <template #description>
+        <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">
+          {{ m.common_moment_format_reference() }}
+        </a>
+        <DateFormatPreview :format="format" />
+        <span v-for="error of errorBag.format" :key="error" class="prompt-form-error">{{ error }}</span>
+      </template>
+      <UiTextInput v-model="format" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.journal_sequence_variable_label()">

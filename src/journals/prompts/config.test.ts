@@ -47,4 +47,25 @@ describe("promptsSchema", () => {
     expect(parsed.success).toBe(false);
     expect(parsed.issues?.[0]?.path?.map((p) => p.key)).toEqual([0, "variable"]);
   });
+
+  describe("a date prompt's format", () => {
+    const dated = { ...text, type: "date" };
+
+    it("defaults to YYYY-MM-DD when the stored prompt has no format key", () => {
+      const parsed = v.safeParse(promptsSchema, [dated]);
+      expect(parsed.success && parsed.output[0]).toMatchObject({ type: "date", format: "YYYY-MM-DD" });
+    });
+
+    it("keeps a custom format", () => {
+      const parsed = v.safeParse(promptsSchema, [{ ...dated, format: "DD/MM/YYYY" }]);
+      expect(parsed.success && parsed.output[0]).toMatchObject({ type: "date", format: "DD/MM/YYYY" });
+    });
+
+    it("accepts an empty format rather than failing validation", () => {
+      // No minLength on purpose: a validation issue under `prompts` makes
+      // repairCollectionEntry substitute the whole array with `[]`, wiping every question.
+      const parsed = v.safeParse(promptsSchema, [{ ...dated, format: "" }]);
+      expect(parsed.success).toBe(true);
+    });
+  });
 });

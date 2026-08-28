@@ -26,6 +26,7 @@ const loggedAtPrompt: Prompt = {
   type: "date",
   frontmatterKey: "logged_at",
   required: false,
+  format: "YYYY-MM-DD",
 };
 const weatherPrompt: Prompt = {
   variable: "weather",

@@ -2088,6 +2088,7 @@
 	"journal_prompt_add": "Frage hinzufügen",
 	"journal_prompt_autocreate_conflict": "Dieses Journal erstellt Notizen automatisch, daher kann niemand eine Frage beantworten, die in den Notiznamen einfließt. Schalte eines von beidem aus.",
 	"journal_prompt_autocreate_required_warning": "Eine Pflichtfrage wird bei automatisch erstellten Notizen nie gestellt.",
+	"journal_prompt_date_format_label": "Datumsformat",
 	"journal_prompt_delete": "Frage löschen",
 	"journal_prompt_edit": "Frage bearbeiten",
 	"journal_prompt_key_required_in_path": "Eine Antwort, die im Notiznamen oder Ordner verwendet wird, muss in einer Eigenschaft gespeichert werden.",
