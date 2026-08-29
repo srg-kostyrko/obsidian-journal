@@ -81,9 +81,7 @@
         "allowBefore": false,
         "sources": []
       },
-      "templates": [
-        "uri-weekly-template"
-      ]
+      "templates": ["uri-weekly-template"]
     }
   }
 }

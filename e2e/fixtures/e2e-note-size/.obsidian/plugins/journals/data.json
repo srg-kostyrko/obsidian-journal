@@ -18,16 +18,12 @@
         {
           "mode": "and",
           "conditions": [{ "type": "note-size", "unit": "words", "condition": "gt", "value": 5 }],
-          "styles": [
-            { "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }
-          ]
+          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
         },
         {
           "mode": "and",
           "conditions": [{ "type": "note-size", "unit": "words", "condition": "lt", "value": 1 }],
-          "styles": [
-            { "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }
-          ]
+          "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
         }
       ]
     }

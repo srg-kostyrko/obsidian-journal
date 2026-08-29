@@ -962,18 +962,11 @@
   "shelves": {
     "core": {
       "name": "core",
-      "journals": [
-        "daily",
-        "weekly"
-      ]
+      "journals": ["daily", "weekly"]
     },
     "extra": {
       "name": "extra",
-      "journals": [
-        "monthly",
-        "quarterly",
-        "yearly"
-      ]
+      "journals": ["monthly", "quarterly", "yearly"]
     },
     "rename-me": {
       "name": "rename-me",
@@ -985,9 +978,7 @@
     },
     "spill-me": {
       "name": "spill-me",
-      "journals": [
-        "sprint"
-      ]
+      "journals": ["sprint"]
     },
     "catch-me": {
       "name": "catch-me",
@@ -995,10 +986,7 @@
     },
     "nav-dates": {
       "name": "nav-dates",
-      "journals": [
-        "year-nav",
-        "quarter-nav"
-      ]
+      "journals": ["year-nav", "quarter-nav"]
     }
   },
   "commands": {
@@ -1071,9 +1059,7 @@
                   "action": {
                     "type": "pick-date",
                     "mode": "navigate",
-                    "levels": [
-                      "day"
-                    ]
+                    "levels": ["day"]
                   },
                   "icon": "crosshair",
                   "tooltip": "Pick a date"
@@ -1086,9 +1072,7 @@
                   "action": {
                     "type": "current",
                     "mode": "create",
-                    "levels": [
-                      "day"
-                    ]
+                    "levels": ["day"]
                   },
                   "label": "Today",
                   "tooltip": "Today"
@@ -1101,9 +1085,7 @@
                   "action": {
                     "type": "current",
                     "mode": "create",
-                    "levels": [
-                      "week"
-                    ],
+                    "levels": ["week"],
                     "journal": "monthly"
                   },
                   "label": "This week",

@@ -525,18 +525,11 @@
   "shelves": {
     "core": {
       "name": "core",
-      "journals": [
-        "daily",
-        "weekly"
-      ]
+      "journals": ["daily", "weekly"]
     },
     "extra": {
       "name": "extra",
-      "journals": [
-        "monthly",
-        "quarterly",
-        "yearly"
-      ]
+      "journals": ["monthly", "quarterly", "yearly"]
     },
     "rename-me": {
       "name": "rename-me",
