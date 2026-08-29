@@ -1649,6 +1649,7 @@
 	"journal_colliding_heading": "ジャーナル設定の衝突",
 	"journal_colliding_warning": "ジャーナル {names} の設定が競合しているため、ノートが互いに上書きされます。いずれかのフォルダまたは名前テンプレートを変更してください。",
 	"journal_note_name_empty_notice": "ジャーナル「{journalName}」の名前テンプレートはノート名が空になるため、ノートを作成できません。ジャーナル設定で名前テンプレートを設定してください。",
+	"journal_note_path_claimed_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成しようとしましたが、そのノートはすでにジャーナル「{claimedBy}」のものです。何も変更していません。いずれかのフォルダまたは名前テンプレートを変更してください。",
 	"journal_dashboard_bulk_add": "{name}にノートを一括追加",
 	"journal_dashboard_clone": "{name}を複製",
 	"journal_dashboard_edit": "{name}を設定",

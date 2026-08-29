@@ -1853,6 +1853,7 @@
 	"journal_colliding_heading": "Paramètres de journaux en conflit",
 	"journal_colliding_warning": "Les journaux {names} ont des configurations conflictuelles, leurs notes s’écraseront donc mutuellement. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
 	"journal_note_name_empty_notice": "Le journal « {journalName} » possède un modèle de nom qui aboutit à un nom de note vide, aucune note ne peut donc être créée. Définissez un modèle de nom dans les paramètres du journal.",
+	"journal_note_path_claimed_notice": "Le journal « {journalName} » placerait sa note dans « {path} », mais cette note appartient déjà au journal « {claimedBy} », rien n’a donc été modifié. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
 	"journal_dashboard_bulk_add": "Ajouter des notes en masse à {name}",
 	"journal_dashboard_clone": "Cloner {name}",
 	"journal_dashboard_edit": "Configurer {name}",

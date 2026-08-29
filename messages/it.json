@@ -1846,6 +1846,7 @@
 	"journal_colliding_heading": "Impostazioni dei diari in conflitto",
 	"journal_colliding_warning": "I diari {names} hanno configurazioni in conflitto, quindi le loro note si sovrascriveranno a vicenda. Modifica il modello di cartella o di nome in uno di essi.",
 	"journal_note_name_empty_notice": "Il diario \"{journalName}\" ha un modello di nome che produce un nome di nota vuoto, quindi non è possibile creare alcuna nota. Imposta un modello di nome nelle impostazioni del diario.",
+	"journal_note_path_claimed_notice": "Il diario \"{journalName}\" collocherebbe la sua nota in \"{path}\", ma quella nota appartiene già al diario \"{claimedBy}\", quindi non è stato modificato nulla. Modifica la cartella o il modello di nome in uno di essi.",
 	"journal_dashboard_bulk_add": "Aggiungi note in blocco a {name}",
 	"journal_dashboard_clone": "Clona {name}",
 	"journal_dashboard_edit": "Configura {name}",

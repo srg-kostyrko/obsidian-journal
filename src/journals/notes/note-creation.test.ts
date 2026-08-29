@@ -13,7 +13,7 @@ import { journalsCoreModule } from "../module";
 import { PromptsUnansweredError } from "../prompts/errors";
 import { fixedJournal } from "../testing";
 
-import { AnchorOccupiedError, EmptyNoteNameError } from "./errors";
+import { AnchorOccupiedError, EmptyNoteNameError, NotePathClaimedError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { SelfWriteGuard } from "./self-write-guard";
 
@@ -608,5 +608,82 @@ describe("NoteCreationService.ensureNote — creation prompts", () => {
       expectOk(result);
       expect(result.value.path).toBe("2026-05-19 good.md");
     });
+  });
+});
+
+describe("NoteCreationService.ensureNote — a derived path another journal already owns", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }),
+          logbook: fixedJournal("logbook", { type: "day" }),
+        },
+      },
+    });
+  });
+
+  function seedLogbookNote(): void {
+    harness.host.putFile("2026-05-19.md", "logbook body", { journal: "logbook", "journal-date": "2026-05-19" });
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "logbook", anchor: meta.anchor, path: "2026-05-19.md" as VaultPath });
+  }
+
+  it("refuses rather than adopting the other journal's note", async () => {
+    seedLogbookNote();
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+    expect(result.isErr() && result.error instanceof NotePathClaimedError).toBe(true);
+  });
+
+  it("leaves the other journal's claim on disk untouched", async () => {
+    seedLogbookNote();
+
+    await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+    expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ journal: "logbook" });
+  });
+
+  it("refuses a note the other journal claims in frontmatter but the index has not parsed", async () => {
+    harness.host.putFile("2026-05-19.md", "logbook body", { journal: "logbook", "journal-date": "2026-05-19" });
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+    expect(result.isErr() && result.error instanceof NotePathClaimedError).toBe(true);
+  });
+
+  it("refuses a note the index attributes to the other journal after its frontmatter claim was stripped", async () => {
+    harness.host.putFile("2026-05-19.md", "logbook body");
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "logbook", anchor: meta.anchor, path: "2026-05-19.md" as VaultPath });
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+    expect(result.isErr() && result.error instanceof NotePathClaimedError).toBe(true);
+  });
+
+  it("still adopts an unclaimed file sitting at the derived path", async () => {
+    harness.host.putFile("2026-05-19.md", "hand-made");
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+    expectOk(result);
+    expect(result.value.created).toBe(false);
+    expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ journal: "daily" });
+  });
+
+  it("still adopts a file this journal already claims", async () => {
+    harness.host.putFile("2026-05-19.md", "own body", { journal: "daily", "journal-date": "2026-05-19" });
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+    expectOk(result);
+    expect(result.value.created).toBe(false);
   });
 });
