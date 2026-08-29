@@ -6,7 +6,7 @@ import { DayPeriod } from "@/calendar";
 import { anchor, date } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { PROMPT_PLACEHOLDER } from "../placeholder";
@@ -25,9 +25,18 @@ const moodInName: Prompt = {
 
 const moodBodyOnly: Prompt = { ...moodInName, frontmatterKey: "" };
 
+function pathText(): string {
+  const label = screen.getByText(m.journal_prompt_note_path_label());
+  return label.closest(".setting-item")?.querySelector(".setting-item-control")?.textContent ?? "";
+}
+
 function renderMisc(harness: TestHarness): ReturnType<TestHarness["renderModal"]> {
   return harness.renderModal(PromptAnswersModal, {
-    props: { journalName: "misc", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+    props: {
+      metadata: { journalName: "misc", anchor: anchor("2024-01-01") },
+      confirming: false,
+      periodLabel: "2024-01-01",
+    },
   });
 }
 
@@ -52,14 +61,18 @@ describe("PromptAnswersModal", () => {
 
     it("shows a live preview that updates as the answer changes", async () => {
       harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "named", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
-      const before = screen.getByText(/2024-01-01/).textContent;
+      const before = pathText();
 
       await userEvent.type(screen.getByRole("textbox"), "happy");
 
       await waitFor(() => {
-        const after = screen.getByText(/2024-01-01/).textContent;
+        const after = pathText();
         expect(after).not.toBe(before);
         expect(after).toContain("happy");
       });
@@ -67,7 +80,11 @@ describe("PromptAnswersModal", () => {
 
     it("refuses a blank submit for the prompt in the path", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "named", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
 
       await userEvent.click(screen.getByText(m.journal_prompt_submit()));
@@ -80,7 +97,11 @@ describe("PromptAnswersModal", () => {
 
     it("rejects an answer equal to the placeholder", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "named", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "named", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
 
       await userEvent.type(screen.getByRole("textbox"), PROMPT_PLACEHOLDER);
@@ -107,18 +128,26 @@ describe("PromptAnswersModal", () => {
 
     it("shows the note name statically when confirming, and typing does not move it", async () => {
       harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: true, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "plain", anchor: anchor("2024-01-01") },
+          confirming: true,
+          periodLabel: "2024-01-01",
+        },
       });
-      const before = screen.getByText(/2024-01-01/).textContent;
+      const before = pathText();
 
       await userEvent.type(screen.getByRole("textbox"), "happy");
 
-      expect(screen.getByText(/2024-01-01/).textContent).toBe(before);
+      expect(pathText()).toBe(before);
     });
 
     it("accepts a blank answer when nothing about it reaches the note name", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "plain", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
 
       await userEvent.click(screen.getByText(m.journal_prompt_submit()));
@@ -130,11 +159,15 @@ describe("PromptAnswersModal", () => {
 
     it("shows no path at all when not confirming", () => {
       harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "plain", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "plain", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
 
       expect(screen.queryByText(m.journal_prompt_note_path_label())).toBeNull();
-      expect(screen.queryByText(/2024-01-01/)).toBeNull();
+      expect(screen.queryByText(/2024-01-01\.md/)).toBeNull();
     });
   });
 
@@ -165,7 +198,11 @@ describe("PromptAnswersModal", () => {
 
     it("refuses a blank submit for a required prompt", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "asked", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "asked", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
 
       await userEvent.click(screen.getByText(m.journal_prompt_submit()));
@@ -178,7 +215,11 @@ describe("PromptAnswersModal", () => {
 
     it("lets an optional choice be left unpicked", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "asked", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "asked", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
       expect(screen.getByText(m.journal_prompt_select_none())).toBeTruthy();
 
@@ -336,12 +377,15 @@ describe("PromptAnswersModal", () => {
     // path row, just with nothing in it.
     it("renders no fields and an empty path when confirming a journal that no longer exists", async () => {
       const { submit } = harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "ghost", anchor: anchor("2024-01-01"), confirming: true, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "ghost", anchor: anchor("2024-01-01") },
+          confirming: true,
+          periodLabel: "2024-01-01",
+        },
       });
 
       expect(screen.queryByRole("textbox")).toBeNull();
-      const label = screen.getByText(m.journal_prompt_note_path_label());
-      expect(label.closest(".setting-item")?.querySelector(".setting-item-control")?.textContent).toBe("");
+      expect(pathText()).toBe("");
 
       await userEvent.click(screen.getByText(m.journal_prompt_submit()));
 
@@ -367,11 +411,55 @@ describe("PromptAnswersModal", () => {
     // that refusal into an empty string instead of throwing while the user has not typed yet.
     it("shows an empty preview instead of crashing", () => {
       harness.renderModal(PromptAnswersModal, {
-        props: { journalName: "onlyMood", anchor: anchor("2024-01-01"), confirming: false, periodLabel: "2024-01-01" },
+        props: {
+          metadata: { journalName: "onlyMood", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
       });
 
-      const label = screen.getByText(m.journal_prompt_note_path_label());
-      expect(label.closest(".setting-item")?.querySelector(".setting-item-control")?.textContent).toBe("");
+      expect(pathText()).toBe("");
+    });
+  });
+
+  describe("the period the note is being created for", () => {
+    it("names the period even when no path is shown", async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { plain: fixedJournal("plain", { type: "day" }, { prompts: [moodBodyOnly] }) } },
+      });
+
+      harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "plain", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-15 – 2024-01-28",
+        },
+      });
+
+      const label = screen.getByText(m.journal_prompt_period_label());
+      expect(label.closest(".setting-item")?.querySelector(".setting-item-control")?.textContent).toBe(
+        "2024-01-15 – 2024-01-28",
+      );
+    });
+
+    // The preview is only worth showing if it is the path creation will use, and on a numbered
+    // journal {{index}} renders from the metadata's numbers — dropping them previews "sprint .md".
+    it("previews the path with the period's assigned numbers", async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { sprint: customJournal("sprint", "week", 2, "2024-01-01", { prompts: [moodBodyOnly] }) } },
+      });
+
+      harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "sprint", anchor: anchor("2024-01-15"), numbers: { index: 2 } },
+          confirming: true,
+          periodLabel: "2024-01-15 – 2024-01-28",
+        },
+      });
+
+      expect(pathText()).toBe("sprint 2.md");
     });
   });
 });

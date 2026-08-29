@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import { GatherPromptAnswersFlow } from "./gather-prompt-answers.flow";
@@ -28,7 +29,7 @@ describe("GatherPromptAnswersFlow", () => {
     expect(result.isOk() && result.value).toEqual({ mood: "good" });
   });
 
-  it("passes journalName, anchor, confirming and the period's own label as the modal's props", async () => {
+  it("passes the period's metadata, confirming and the period's own label as the modal's props", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
       data: { journals: { mood: fixedJournal("mood", { type: "day" }, { prompts: [mood] }) } },
@@ -39,11 +40,38 @@ describe("GatherPromptAnswersFlow", () => {
       .invoke(GatherPromptAnswersFlow, { journalName: "mood", anchor: anchor("2024-01-01"), confirming: true });
 
     expect(harness.modals.lastOpen().props).toEqual({
-      journalName: "mood",
-      anchor: anchor("2024-01-01"),
+      metadata: { journalName: "mood", anchor: anchor("2024-01-01") },
       confirming: true,
       periodLabel: "2024-01-01",
     });
+  });
+
+  it("titles the modal by the journal being written to", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { mood: fixedJournal("mood", { type: "day" }, { prompts: [mood] }) } },
+    });
+
+    void harness
+      .resolve(Flows)
+      .invoke(GatherPromptAnswersFlow, { journalName: "mood", anchor: anchor("2024-01-01"), confirming: false });
+
+    expect(harness.modals.lastOpen().resolvedTitle).toBe(m.journal_prompt_answers_modal_title({ journal: "mood" }));
+  });
+
+  // The numbers are what the note name renders {{index}} from, so a metadata rebuilt without
+  // them leaves the modal previewing a path the creation will not use.
+  it("carries the period's assigned numbers into the modal", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { sprint: customJournal("sprint", "week", 2, "2024-01-01", { prompts: [mood] }) } },
+    });
+
+    void harness
+      .resolve(Flows)
+      .invoke(GatherPromptAnswersFlow, { journalName: "sprint", anchor: anchor("2024-01-15"), confirming: false });
+
+    expect(harness.modals.lastOpen().props).toMatchObject({ metadata: { numbers: { index: 2 } } });
   });
 
   it("returns UserAborted when the modal is cancelled", async () => {

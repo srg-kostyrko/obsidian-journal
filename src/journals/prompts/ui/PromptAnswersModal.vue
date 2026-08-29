@@ -22,7 +22,6 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { isPlaceholder } from "../placeholder";
 import { promptsInPath } from "../prompts-in-path";
 
-import type { JournalMetadata } from "../../types";
 import type { Prompt, PromptAnswer, PromptOption } from "../config";
 import type { PromptAnswersModalProps } from "./modals";
 
@@ -31,12 +30,10 @@ const api = useModal<Record<string, PromptAnswer>>();
 const journalsVM = useService(JournalsViewModel);
 const paths = useService(NotePathService);
 
-const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
+const config = computed(() => journalsVM.getJournal(props.metadata.journalName).getOrUndefined());
 // The journal a creation prompt belongs to does not change while this modal is open, so the
 // prompt list is read once here rather than kept reactive — only the answers need to be.
 const prompts = config.value?.prompts ?? [];
-
-const metadata: JournalMetadata = { journalName: props.journalName, anchor: props.anchor };
 
 const inPath = computed(() => (config.value ? promptsInPath(config.value) : []));
 const inPathVariables = new Set(inPath.value.map((prompt) => prompt.variable));
@@ -150,8 +147,8 @@ function setDate(field: PromptField, period: Period | null | undefined): void {
 // confirmation's entire content, so suppressing it would delete what the setting is for.
 const previewPath = computed(() => {
   if (config.value === undefined) return "";
-  const answered = { ...metadata, answers: isLive.value ? values : {} };
-  const path = paths.pathFor(props.journalName, answered);
+  const answered = { ...props.metadata, answers: isLive.value ? values : {} };
+  const path = paths.pathFor(props.metadata.journalName, answered);
   return path.isOk() ? path.value : "";
 });
 
@@ -160,6 +157,10 @@ const onSubmit = handleSubmit((entered) => api.submit(entered));
 
 <template>
   <form @submit.prevent="onSubmit">
+    <UiSettingRow :name="m.journal_prompt_period_label()">
+      <span>{{ periodLabel }}</span>
+    </UiSettingRow>
+
     <UiSettingRow v-if="showPath" :name="m.journal_prompt_note_path_label()">
       <span>{{ previewPath }}</span>
     </UiSettingRow>

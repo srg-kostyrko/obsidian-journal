@@ -2,6 +2,7 @@ import { normalizePath } from "obsidian";
 
 import { CalendarDate, Clock, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
+import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { attempt, Err, Ok, Option, type Result } from "@/infrastructure/result";
@@ -287,9 +288,20 @@ export class NotePathService {
     return context;
   }
 
-  /** What this journal calls the period itself, in its own date format. */
+  /**
+   * What this journal calls the period itself, in its own date format.
+   *
+   * A custom interval is named by its extent rather than by `{{date}}`: that renders the start
+   * day alone, which on a journal whose format is a plain date says nothing about which
+   * interval — or how long an interval even is.
+   */
   periodLabelFor(config: JournalConfig, metadata: JournalMetadata): string {
-    return this.#engine.renderString("{{date}}", this.contextFor(config, metadata));
+    const context = this.contextFor(config, metadata);
+    if (config.write.type !== "custom") return this.#engine.renderString("{{date}}", context);
+    return m.journal_period_range({
+      start: this.#engine.renderString("{{start_date}}", context),
+      end: this.#engine.renderString("{{end_date}}", context),
+    });
   }
 
   /** What this journal calls the note for a period, whether or not that note exists yet. */

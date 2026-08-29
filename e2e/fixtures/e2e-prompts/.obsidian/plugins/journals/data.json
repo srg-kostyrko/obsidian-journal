@@ -68,6 +68,39 @@
           "required": false
         }
       ]
+    },
+    "sprint": {
+      "name": "sprint",
+      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2030-07-01" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{journal_name}} {{index}}",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2030-07-01",
+        "allowBefore": false,
+        "sources": [
+          { "variable": "index", "frontmatterKey": "journal-index", "anchorValue": 1, "reset": { "kind": "never" } }
+        ]
+      },
+      "confirmCreation": true,
+      "prompts": [
+        {
+          "variable": "goal",
+          "question": "What is the goal?",
+          "type": "text",
+          "frontmatterKey": "goal",
+          "required": false
+        }
+      ]
     }
   }
 }

@@ -33,10 +33,18 @@ import {
 // confirmCreation on and a text question ("note") that reaches neither the name nor the folder,
 // which is the one combination where the answer dialog's note-path preview is not driven by any
 // answer at all — it exists solely because confirmCreation is on.
-function notePathPreviewRow(): ReturnType<typeof $> {
+function settingRow(name: string): ReturnType<typeof $> {
   return $(
-    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][normalize-space(.)="${m.journal_prompt_note_path_label()}"]]`,
+    `//div[contains(@class,"setting-item")][.//div[contains(@class,"setting-item-name")][normalize-space(.)="${name}"]]`,
   );
+}
+
+function notePathPreviewRow(): ReturnType<typeof $> {
+  return settingRow(m.journal_prompt_note_path_label());
+}
+
+function periodRow(): ReturnType<typeof $> {
+  return settingRow(m.journal_prompt_period_label());
 }
 
 describe("creating a note on a prompting journal", () => {
@@ -47,7 +55,8 @@ describe("creating a note on a prompting journal", () => {
   it("names the note, fills its frontmatter and renders the answers into the body", async () => {
     await openViaUri({ journal: "prompted", date: "2030-07-19" });
     await waitForModalOpen();
-    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title({ period: "2030-07-19" }));
+    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title({ journal: "prompted" }));
+    await expect(periodRow()).toHaveText("2030-07-19", { containing: true });
 
     await selectModalOption("okay");
     await expect(notePathPreviewRow()).toHaveText("2030-07-19 okay.md", { containing: true });
@@ -149,12 +158,37 @@ describe("confirming a note whose name carries no prompt answer", () => {
     // The answer dialog is standing in for the creation-confirmation dialog here — the "note"
     // question never touches the name template, so nothing renders it live, but the name must
     // still be shown or confirmCreation's whole purpose (see what you're about to create) is lost.
-    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title({ period: "2030-07-22" }));
+    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title({ journal: "confirmed" }));
     await expect(notePathPreviewRow()).toHaveText("2030-07-22.md", { containing: true });
 
     await clickDialogButton(m.common_action_cancel());
     await waitForDialogClosed();
     expect(await noteExists("2030-07-22.md")).toBe(false);
+  });
+});
+
+// A custom-interval journal is where the title's old period label failed: {{date}} renders the
+// interval's start day alone, which names neither the interval nor its length. It is also the
+// only write type whose note name renders {{index}}, so it is what proves the assigned numbers
+// reach the dialog's path preview.
+describe("creating a note on a custom-interval journal", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
+  });
+
+  it("titles the dialog by the journal and names the interval by its extent", async () => {
+    await openViaUri({ journal: "sprint", date: "2030-07-15" });
+    await waitForModalOpen();
+
+    expect(await modalText()).toContain(m.journal_prompt_answers_modal_title({ journal: "sprint" }));
+    await expect(periodRow()).toHaveText(m.journal_period_range({ start: "2030-07-15", end: "2030-07-28" }), {
+      containing: true,
+    });
+    await expect(notePathPreviewRow()).toHaveText("sprint 2.md", { containing: true });
+
+    await clickDialogButton(m.common_action_cancel());
+    await waitForDialogClosed();
+    expect(await noteExists("sprint 2.md")).toBe(false);
   });
 });
 

@@ -240,6 +240,40 @@ function sprintJournal(anchorDate: string): JournalConfig {
   });
 }
 
+describe("NotePathService.periodLabelFor", () => {
+  it("names a fixed period through the journal's own date format", async () => {
+    const config = fixedJournal("weekly", { type: "week" });
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { weekly: config } } });
+    const meta: JournalMetadata = { journalName: "weekly", anchor: anchor("2026-05-18") };
+
+    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toBe("2026-W21");
+  });
+
+  it("names a custom interval by its extent, which its start day alone does not give", async () => {
+    const config = customJournal("sprint", "week", 2, "2024-01-01");
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { sprint: config } } });
+    const meta: JournalMetadata = { journalName: "sprint", anchor: anchor("2024-01-15") };
+
+    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toBe(
+      m.journal_period_range({ start: "2024-01-15", end: "2024-01-28" }),
+    );
+  });
+
+  it("prefers a stored end date over the one the cycle would compute", async () => {
+    const config = customJournal("sprint", "week", 2, "2024-01-01");
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { sprint: config } } });
+    const meta: JournalMetadata = {
+      journalName: "sprint",
+      anchor: anchor("2024-01-15"),
+      endDate: anchor("2024-01-21"),
+    };
+
+    expect(harness.resolve(NotePathService).periodLabelFor(config, meta)).toBe(
+      m.journal_period_range({ start: "2024-01-15", end: "2024-01-21" }),
+    );
+  });
+});
+
 describe("NotePathService.candidateFor", () => {
   describe("a plain daily journal", () => {
     let harness: TestHarness;
