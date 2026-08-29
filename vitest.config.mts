@@ -505,10 +505,41 @@ export default defineConfig({
         //
         // Tip: 93.99 / 89.16 / 90.86 / 95.94 (11256/11975 statements, 4849/5438 branches,
         // 3998/4400 functions, 9821/10236 lines).
-        statements: 93.99,
-        branches: 89.16,
-        functions: 90.86,
-        lines: 95.94,
+        //
+        // `feat/creation-prompts` landed a whole feature across many commits without ever running
+        // this gate, so the jump from the tip above to this branch's pre-fix measurement — 94.02 /
+        // 88.77 / 90.88 / 95.99 (11742/12488, 5172/5826, 4188/4608, 10229/10656) — is that feature's
+        // net effect, not attributed file-by-file the way earlier sweeps were: unlike those, it was
+        // never measured as it went, so there is no per-commit trail left to diff against. What is
+        // diffed precisely is the commit that closes this gate, which touches only
+        // `PromptAnswersModal.test.ts` — no production line changes — so every count it moves is
+        // this one file closing coverage on branches its late fixes (honouring `required`, an empty
+        // choice for an optional select, the localized toggle rendering, the whole note path) had
+        // left untested: 80.00 / 73.17 / 50.74 (64/80 statements, 30/41 functions, 34/67 branches)
+        // -> 98.75 / 97.56 / 86.56 (79/80, 40/41, 58/67), lines 66/66. The new tests cover: every
+        // non-text prompt type (number, toggle, date, and a required select) actually rendering and
+        // submitting; a required select's first-option default and its missing blank choice; a
+        // missing journal config surviving to render without crashing (the flow that opens this
+        // modal checks the journal exists, but not atomically with this component's own mount); and
+        // a blank in-path answer whose empty note name resolves to an empty preview instead of
+        // throwing.
+        //
+        // Left uncovered, all defensive fallbacks a closed union or a component's own contract makes
+        // unreachable rather than merely untested: `selectOptionsOf`'s `: []` (:121 — every call
+        // site already gates on `type === 'select'`), `asText`'s `: ""` (:125) and `asBoolean`'s
+        // `: false` (:133 — text/select values and UiToggle's own model are never anything else),
+        // `select.options.at(0)?.value ?? ""` (:67 — `promptOptionSchema` guarantees at least one
+        // option), `setDate`'s `: ""` (:142 — DatePicker's `update:model-value` only ever fires with
+        // a real picked `Period`), and the four `value ?? <default>` update handlers for
+        // text/number/toggle/select (:175, :181, :192, :198 — none of UiTextInput/UiNumberInput/
+        // UiToggle/UiDropdown ever emits null or undefined).
+        //
+        // New tip: 94.14 / 89.18 / 91.1 / 96.09 (11757/12488 statements, 5196/5826 branches,
+        // 4198/4608 functions, 10240/10656 lines).
+        statements: 94.14,
+        branches: 89.18,
+        functions: 91.1,
+        lines: 96.09,
       },
     },
     projects: [

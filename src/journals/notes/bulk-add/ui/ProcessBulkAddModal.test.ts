@@ -168,6 +168,58 @@ describe("ProcessBulkAddModal", () => {
     expect(screen.getByText(m.bulk_add_skip_reason_no_date())).toBeTruthy();
   });
 
+  it("explains a refused rename in the plan instead of showing nothing", () => {
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "refused-prompt",
+            },
+          ],
+        },
+        parameters: defaultBulkAddParameters(),
+      },
+    });
+
+    expect(screen.getByText(m.bulk_add_log_rename_refused_prompt())).toBeTruthy();
+  });
+
+  it("logs a refused rename after running instead of dropping it silently", async () => {
+    harness.host.putFile("src/a.md", "content");
+    harness.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "move",
+              name: "refused-prompt",
+            },
+          ],
+        },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false },
+      },
+    });
+
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+
+    expect(await screen.findByText(m.bulk_add_log_rename_refused_prompt())).toBeTruthy();
+    expect(harness.host.files.has("Daily/a.md")).toBe(true);
+  });
+
   it("resolves a per-note folder ask decision into the apply call", async () => {
     harness.host.putFile("src/a.md", "content");
     harness.renderModal(ProcessBulkAddModal, {

@@ -1,4 +1,5 @@
 import { inject } from "@/infrastructure/di";
+import { Flows } from "@/infrastructure/flows";
 import { NoteMetadataService, NotesService, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
@@ -7,12 +8,16 @@ import { AsyncResult } from "@/infrastructure/result";
 import { FRONTMATTER_NAME_KEY } from "../config";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { GatherPromptAnswersFlow } from "../prompts/flows/gather-prompt-answers.flow";
+import { PROMPT_PLACEHOLDER } from "../prompts/placeholder";
+import { promptsInPath } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
+import { splitVaultPath } from "./vault-path";
 
 import type { JournalMetadata } from "../types";
 
@@ -27,6 +32,7 @@ export class AutoAttachService {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #index = inject(JournalsIndex);
   readonly #journals = inject(JournalsRepository);
+  readonly #flows = inject(Flows);
   readonly #logger = inject(LoggerFactoryToken).named("auto-attach");
   readonly #unsubscribes: (() => void)[] = [];
   readonly #awaitingParse = new Set<VaultPath>();
@@ -95,12 +101,72 @@ export class AutoAttachService {
     }
     const [match] = matches;
     if (!match) return;
-    const result = await this.#creation.attachNote(match.name, path, match.metadata);
-    if (result.isErr()) {
-      this.#logger.error("auto-attach failed", { path, error: result.error });
-    } else {
-      this.#logger.info("auto-attach succeeded", { path, journal: match.name });
+    // Only a plugin-authored link produces a name carrying the placeholder, so this is the one
+    // unattended path that may ask. A pre-existing file adopted by pattern must never prompt.
+    const config = this.#journals.get(match.name).getOrUndefined();
+    let metadata = match.metadata;
+    let target = path;
+    if (config && promptsInPath(config).length > 0 && path.includes(PROMPT_PLACEHOLDER)) {
+      const gathered = await this.#flows.invoke(
+        GatherPromptAnswersFlow,
+        { journalName: match.name, anchor: metadata.anchor, confirming: false },
+        { notify: false },
+      );
+      if (gathered.isErr()) {
+        await this.#discardCancelledPlaceholderNote(path);
+        return;
+      }
+      // The modal is the only long await in this handler, so it is the only window in which a
+      // rename of this same note can re-enter and move it out from under this pass. Whichever
+      // pass then held the stale path would rename from a file that is no longer there.
+      if (this.#notes.find(path).isNone()) return;
+      metadata = { ...metadata, answers: { ...metadata.answers, ...gathered.value } };
+      const renamed = this.#path.pathFor(match.name, metadata);
+      if (renamed.isOk() && renamed.value !== path) {
+        // Marked before the rename, not after: the rename re-enters #handle through the renamed
+        // handler, and the filled name failing to invert is not a guarantee, only a coincidence.
+        this.#guard.mark(renamed.value);
+        const moved = await this.#notes.rename(path, renamed.value);
+        if (moved.isErr()) {
+          this.#guard.release(renamed.value);
+          return;
+        }
+        target = renamed.value;
+        await this.#removeEmptyPlaceholderFolder(path);
+      }
     }
+    const result = await this.#creation.attachNote(match.name, target, metadata);
+    if (result.isErr()) {
+      this.#logger.error("auto-attach failed", { path: target, error: result.error });
+    } else {
+      this.#logger.info("auto-attach succeeded", { path: target, journal: match.name });
+    }
+  }
+
+  // Obsidian created this file the instant the link was clicked, and the prompt is the only
+  // thing that would have given it a real name. Cancelling has to leave the user where they
+  // started, so the plugin takes back what it caused to exist — but only a file that is still
+  // empty and still carries the placeholder, the same two-part predicate the folder cleanup
+  // below uses, and for the same reason: anything else is the user's. Trashed, not erased.
+  async #discardCancelledPlaceholderNote(path: VaultPath): Promise<void> {
+    if (!path.includes(PROMPT_PLACEHOLDER)) return;
+    const content = await this.#notes.read(path);
+    if (content.isErr() || content.value.trim() !== "") return;
+    const removed = await this.#notes.delete(path);
+    if (removed.isErr()) return;
+    await this.#removeEmptyPlaceholderFolder(path);
+  }
+
+  async #removeEmptyPlaceholderFolder(from: VaultPath): Promise<void> {
+    const [folder] = splitVaultPath(from);
+    if (folder === "" || !folder.includes(PROMPT_PLACEHOLDER)) return;
+    const contents = await this.#notes.listInFolder(folder as VaultPath);
+    if (contents.isErr() || contents.value.length > 0) return;
+    // listInFolder walks the whole subtree but only reports TFile, so a folder holding
+    // nothing but an empty subfolder reads as empty here. Deleting it would take that
+    // subfolder with it, which is not ours to remove.
+    if (this.#notes.listFolders().some((candidate) => candidate.startsWith(`${folder}/`))) return;
+    await this.#notes.deleteFolder(folder as VaultPath);
   }
 
   initialize(): AsyncResult<void, never> {

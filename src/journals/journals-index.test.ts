@@ -75,6 +75,19 @@ describe("JournalsIndex", () => {
       expect(result.value.numbers).toEqual({ index: 7 });
     });
 
+    it("re-registering an unmoved path with a changed answer stores it and announces the change", () => {
+      const index = new JournalsIndex();
+      const path = "Custom/2022-01-01.md";
+      index.register({ ...entry("custom", "2022-01-01", path), answers: { mood: "good" } });
+      const captured = capture(index);
+      const updated: JournalEntry = { ...entry("custom", "2022-01-01", path), answers: { mood: "sad" } };
+      index.register(updated);
+      const result = index.entryByPath(p(path));
+      assert(result.isSome());
+      expect(result.value.answers).toEqual({ mood: "sad" });
+      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added" }]);
+    });
+
     it("a payload-only change announces the new entry without removing the old", () => {
       const index = new JournalsIndex();
       const path = "Custom/2022-01-01.md";

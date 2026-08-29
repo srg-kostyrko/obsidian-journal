@@ -38,7 +38,9 @@ function actionLabel(action: BulkLogAction): string {
     .with({ kind: "merged" }, (a) => m.bulk_add_log_merged({ mood, anchor: a.anchor }))
     .with({ kind: "replaced" }, (a) => m.bulk_add_log_replaced({ mood, anchor: a.anchor }))
     .with({ kind: "moved" }, () => m.bulk_add_log_moved({ mood }))
+    .with({ kind: "move-refused-prompt" }, () => m.bulk_add_log_move_refused_prompt())
     .with({ kind: "renamed" }, () => m.bulk_add_log_renamed({ mood }))
+    .with({ kind: "rename-refused-prompt" }, () => m.bulk_add_log_rename_refused_prompt())
     .with({ kind: "connected" }, (a) =>
       m.bulk_add_log_connected({ mood, journalName: a.journalName, anchor: a.anchor }),
     )
@@ -118,9 +120,19 @@ function close(): void {
     <template v-if="log === null">
       <UiSettingRow v-for="action of actions" :key="action.path">
         <template #name>{{ action.path }} → {{ action.anchor }}</template>
-        <template v-if="action.occupant !== undefined || action.targetPath !== action.path" #description>
+        <template
+          v-if="
+            action.occupant !== undefined ||
+            action.targetPath !== action.path ||
+            action.name === 'refused-prompt' ||
+            action.folder === 'refused-prompt'
+          "
+          #description
+        >
           <div v-if="action.occupant !== undefined">{{ m.bulk_add_occupant({ path: action.occupant }) }}</div>
           <div v-if="action.targetPath !== action.path">{{ m.bulk_add_target({ path: action.targetPath }) }}</div>
+          <div v-if="action.name === 'refused-prompt'">{{ m.bulk_add_log_rename_refused_prompt() }}</div>
+          <div v-if="action.folder === 'refused-prompt'">{{ m.bulk_add_log_move_refused_prompt() }}</div>
         </template>
         <UiDropdown
           v-if="action.occupant !== undefined && action.existing === 'ask'"

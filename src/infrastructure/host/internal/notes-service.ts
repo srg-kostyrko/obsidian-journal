@@ -73,8 +73,11 @@ export class NotesService {
   }
 
   async #rename(file: TFile, newPath: VaultPath): Promise<Note> {
+    // The folder still has to exist first: renameFile is vault.rename wrapped in a link
+    // update, and vault.rename bottoms out in fsPromises.rename, which fails on a missing
+    // destination directory rather than creating it.
     await this.#ensureFolderExists(newPath);
-    await this.#app.vault.rename(file, newPath);
+    await this.#app.fileManager.renameFile(file, newPath);
     return toNote(file);
   }
 
@@ -185,6 +188,15 @@ export class NotesService {
     if (!file.isOk()) return AsyncResult.err(file.error);
     return AsyncResult.fromPromise(
       this.#app.fileManager.trashFile(file.value),
+      (cause) => new NoteDeleteError(path, cause),
+    );
+  }
+
+  deleteFolder(path: VaultPath): AsyncResult<void, FolderNotFoundError | NoteDeleteError> {
+    const folder = this.#app.vault.getFolderByPath(path);
+    if (!folder) return AsyncResult.err(new FolderNotFoundError(path));
+    return AsyncResult.fromPromise(
+      this.#app.fileManager.trashFile(folder),
       (cause) => new NoteDeleteError(path, cause),
     );
   }

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { Flows } from "@/infrastructure/flows";
@@ -60,9 +60,7 @@ describe("EnsureJournalEntryFlow", () => {
         journalName: "daily",
         anchor: anchor("2026-05-19"),
       });
-      await Promise.resolve();
-      await Promise.resolve();
-      expect(harness.modals.opens).toHaveLength(1);
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
 
       harness.modals.lastOpen<unknown, boolean>().submit(true);
       const settled = await pending;

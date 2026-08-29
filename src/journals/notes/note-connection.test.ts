@@ -14,6 +14,10 @@ import { customJournal, fixedJournal } from "../testing";
 import { AnchorOccupiedError, EmptyNoteNameError } from "./errors";
 import { NoteConnectionService } from "./note-connection";
 
+import type { Prompt } from "../prompts/config";
+
+const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+
 function dailyWithFrontmatter(patch: { addStartDate?: boolean; addEndDate?: boolean }) {
   const daily = fixedJournal("daily", { type: "day" });
   return { daily: { ...daily, frontmatter: { ...daily.frontmatter, ...patch } } };
@@ -566,6 +570,120 @@ describe("NoteConnectionService", () => {
 
         expect(harness.host.files.has(sourcePath)).toBe(true);
       });
+    });
+
+    describe("a journal with a prompt in its name template", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { folder: "Journal", nameTemplate: "{{date}} {{mood}}", prompts: [mood] },
+              ),
+            },
+          },
+        });
+      });
+
+      it("keeps the note's own name when the target journal has a prompt in its name template", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
+
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+        expectOk(result);
+        expect(harness.host.files.has("Journal/note.md")).toBe(true);
+        expect(harness.host.files.has("Journal/2026-06-01 (unanswered).md")).toBe(false);
+      });
+
+      it("still moves the note into the journal's configured folder", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
+
+        await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+        expect(harness.host.files.has("inbox/note.md")).toBe(false);
+        expect(harness.host.files.has("Journal/note.md")).toBe(true);
+      });
+
+      it("still connects the note despite refusing the rename", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
+
+        await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+        expect(harness.host.files.get("Journal/note.md")?.frontmatter.journal).toBe("daily");
+      });
+    });
+
+    describe("a journal with a prompt in its folder template", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { folder: "Journal/{{mood}}", nameTemplate: "{{date}}", prompts: [mood] },
+              ),
+            },
+          },
+        });
+      });
+
+      it("keeps the note's own folder when the target journal has a prompt in its folder template", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
+
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+        expectOk(result);
+        expect(harness.host.files.has("inbox/2026-06-01.md")).toBe(true);
+      });
+
+      it("still renames the note to the journal's configured name", async () => {
+        const sourcePath = "inbox/note.md" as VaultPath;
+        harness.host.putFile(sourcePath, "");
+
+        await harness
+          .resolve(NoteConnectionService)
+          .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+        expect(harness.host.files.has("inbox/note.md")).toBe(false);
+        expect(harness.host.files.has("inbox/2026-06-01.md")).toBe(true);
+      });
+    });
+
+    it("renames normally when no prompt reaches the path", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "Journal" }) } },
+      });
+      const sourcePath = "inbox/note.md" as VaultPath;
+      harness.host.putFile(sourcePath, "");
+
+      const result = await harness
+        .resolve(NoteConnectionService)
+        .connect("daily", sourcePath, anchor("2026-06-01"), { rename: true, move: true });
+
+      expectOk(result);
+      expect(harness.host.files.has("Journal/2026-06-01.md")).toBe(true);
     });
 
     it("does not derive a path when neither rename nor move is requested", async () => {

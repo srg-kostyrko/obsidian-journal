@@ -37,6 +37,7 @@ const isWeekly = computed(() => config.value?.write.type === "week");
 const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
 );
+const promptVariables = computed(() => config.value?.prompts ?? []);
 
 const invertibility = useInvertibilityCheck(config);
 const collision = useCollisionCheck(config);
@@ -66,13 +67,22 @@ function applyDateFormatRecommendation(): void {
           :date-format="config.dateFormat"
           :has-cycle="hasCycle"
           :numbering-variable-names="numberingVariableNames"
+          :prompt-variables="promptVariables"
         />
         <div v-if="collision" class="journal-hint">
-          {{ m.journal_edit_name_template_collision_warning(collision) }}
+          <template v-if="collision.prompted">
+            {{ m.journal_edit_name_template_collision_prompt_warning(collision) }}
+          </template>
+          <template v-else>
+            {{ m.journal_edit_name_template_collision_warning(collision) }}
+          </template>
         </div>
         <div v-if="invertibility" class="journal-hint">
           <template v-if="invertibility.kind === 'non-invertible'">
             {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
+          </template>
+          <template v-else-if="invertibility.kind === 'prompt-in-path'">
+            {{ m.journal_invertibility_prompt_in_path(invertibility) }}
           </template>
           <template v-else-if="invertibility.kind === 'coarse-date'">
             {{ m.journal_edit_name_template_coarse_date_warning() }}
@@ -108,6 +118,7 @@ function applyDateFormatRecommendation(): void {
           :date-format="config.dateFormat"
           :has-cycle="hasCycle"
           :numbering-variable-names="numberingVariableNames"
+          :prompt-variables="promptVariables"
         />
         <WrongWeekWarning v-if="templateHasWrongWeek(config.folder)" />
       </template>

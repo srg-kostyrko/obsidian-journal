@@ -16,6 +16,7 @@ export interface OpenJournalEntryParameters {
   anchor: AnchorString;
   openMode?: OpenMode;
   skipConfirmation?: boolean;
+  unattended?: boolean;
 }
 
 export interface OpenJournalEntryResult {
@@ -38,6 +39,7 @@ export class OpenJournalEntryFlow implements Flow<
       const metadata = yield* this.#frontmatter.buildMetadata(p.journalName, p.anchor);
       const { path, created } = yield* this.#creation.ensureNote(p.journalName, metadata, {
         skipConfirmation: p.skipConfirmation,
+        unattended: p.unattended,
       });
       yield* this.#workspace.openNote(path, p.openMode ?? "active");
       if (created) yield* this.#templater.cursorJump(path);

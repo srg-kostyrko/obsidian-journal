@@ -3,29 +3,25 @@ import { computed, type ComputedRef, type Ref } from "vue";
 import { CalendarDate, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
-import { TemplateContext, TemplateEngine, tokenize } from "@/templates";
+import { TemplateContext, TemplateEngine, tokenize, variableNames } from "@/templates";
 
 import { CycleService } from "../../cycle";
 import { NotePathService } from "../../notes/note-path";
+import { parseSpecFor } from "../../prompts/prompt-binding";
+import { promptsInPath } from "../../prompts/prompts-in-path";
 
 import type { JournalConfig } from "../../config";
+import type { Prompt } from "../../prompts/config";
 
 export type InvertibilityWarning =
   | { kind: "non-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string }
   | { kind: "coarse-date" }
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
-  | { kind: "unused-digits"; missing: readonly string[] };
+  | { kind: "unused-digits"; missing: readonly string[] }
+  | { kind: "prompt-in-path"; reason: "text" | "toggle"; offending: string };
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
-
-function variableNames(template: string): Set<string> {
-  const names = new Set<string>();
-  for (const token of tokenize(template)) {
-    if (token.kind === "variable") names.add(token.name);
-  }
-  return names;
-}
 
 export function useInvertibilityCheck(
   config: Ref<JournalConfig | undefined>,
@@ -62,6 +58,9 @@ export function useInvertibilityCheck(
     for (const source of numbering.sources) {
       context = context.number(source.variable, 0);
     }
+    for (const prompt of value.prompts) {
+      context = context.withSpec(prompt.variable, parseSpecFor(prompt));
+    }
     // A failure to match the sample path is expected; only a compile-time not-invertible
     // error means the template can't be reverse-parsed at all.
     const parsed = engine.parse(tokenize(value.nameTemplate), "preview", context);
@@ -71,6 +70,18 @@ export function useInvertibilityCheck(
         return { kind: "non-invertible", reason: detail.reason, offending: detail.offending };
       }
     }
+    // Neither a text nor a yes/no answer has a bounded pattern — parseSpecFor gives both only
+    // the placeholder as an alternative — so a name or folder carrying one matches only while it
+    // is unanswered. Every real note of this journal is then invisible to path inversion, worth
+    // its own verdict rather than passing silently as a template that "compiles". The round-trip
+    // probe below cannot stand in for this: it renders the unanswered path, which does match.
+    // A yes/no reaches a template only by being added to it after the fact — EditPromptModal
+    // refuses the reverse order — so this is the only place that catches it.
+    const promptInPath = promptsInPath(value).find(
+      (prompt): prompt is Extract<Prompt, { type: "text" | "toggle" }> =>
+        prompt.type === "text" || prompt.type === "toggle",
+    );
+    if (promptInPath) return { kind: "prompt-in-path", reason: promptInPath.type, offending: promptInPath.variable };
     // The template compiles, but auto-attach still needs to recover an anchor from the path.
     // Two adjacent periods, because a coarse date variable pins one period of its own range —
     // a year on a two-week cycle names every note of the year alike, yet the interval holding

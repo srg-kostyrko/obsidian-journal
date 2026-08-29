@@ -14,6 +14,9 @@ import { defaultBulkAddParameters } from "./config";
 
 import type { PlannedAction } from "./bulk-add-service";
 import type { BulkAddParameters } from "./config";
+import type { Prompt } from "../../prompts/config";
+
+const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
 function plannedAction(overrides: Partial<PlannedAction> = {}): PlannedAction {
   return {
@@ -168,6 +171,104 @@ describe("BulkAddService", () => {
       expect(note?.kind === "action" && note.targetPath).toBe("src/2026-06-01.md");
     });
 
+    describe("with a journal that has a prompt in its name template", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { folder: "Journal", nameTemplate: "{{date}} {{mood}}", prompts: [mood] },
+              ),
+            },
+          },
+        });
+      });
+
+      it("reports a refused rename in the bulk plan rather than dropping it silently", async () => {
+        harness.host.putFile("src/2026-06-01.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "src", otherName: "rename" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+        expect(note?.kind === "action" && note.name).toBe("refused-prompt");
+      });
+
+      it("still honors the move decision when only the name template carries a prompt", async () => {
+        harness.host.putFile("src/2026-06-01.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "src", otherFolder: "move" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+        expect(note?.kind === "action" && note.folder).toBe("move");
+      });
+
+      it("keeps the note's own name in the shown target path", async () => {
+        harness.host.putFile("src/2026-06-01.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "src", otherFolder: "move", otherName: "rename" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+        expect(note?.kind === "action" && note.targetPath).toBe("Journal/2026-06-01.md");
+      });
+    });
+
+    describe("with a journal that has a prompt in its folder template", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { folder: "Journal/{{mood}}", nameTemplate: "{{date}}", prompts: [mood] },
+              ),
+            },
+          },
+        });
+      });
+
+      it("reports a refused move in the bulk plan rather than dropping it silently", async () => {
+        harness.host.putFile("src/2026-06-01.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "src", otherFolder: "move" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+        expect(note?.kind === "action" && note.folder).toBe("refused-prompt");
+      });
+
+      it("still honors the rename decision when only the folder template carries a prompt", async () => {
+        harness.host.putFile("src/journal-2026-06-01.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "src", otherName: "rename" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "src/journal-2026-06-01.md");
+        expect(note?.kind === "action" && note.name).toBe("rename");
+      });
+    });
+
     it("skips a note whose date is outside the journal's timeline", async () => {
       const harness = await testContainer({
         modules: [journalsCoreModule],
@@ -307,6 +408,54 @@ describe("BulkAddService", () => {
       expect(harness.host.files.has("src/note.md")).toBe(false);
       expect(harness.host.files.has("Journal/2026-06-01.md")).toBe(true);
       expect(log[0]?.path).toBe("src/note.md");
+    });
+
+    it("moves but does not rename a note whose rename was refused for a prompt in its name template", async () => {
+      harness.host.putFile("src/note.md", "body");
+
+      const logResult = await harness.resolve(BulkAddService).apply(
+        "daily",
+        [
+          {
+            path: "src/note.md" as VaultPath,
+            anchor: anchor("2026-06-01"),
+            existing: "none",
+            move: true,
+            rename: false,
+            renameRefused: true,
+          },
+        ],
+        false,
+      );
+
+      expectOk(logResult);
+      expect(harness.host.files.has("src/note.md")).toBe(false);
+      expect(harness.host.files.has("Journal/note.md")).toBe(true);
+      expect(logResult.value[0]?.actions).toContainEqual({ kind: "rename-refused-prompt" });
+    });
+
+    it("renames but does not move a note whose move was refused for a prompt in its folder template", async () => {
+      harness.host.putFile("src/note.md", "body");
+
+      const logResult = await harness.resolve(BulkAddService).apply(
+        "daily",
+        [
+          {
+            path: "src/note.md" as VaultPath,
+            anchor: anchor("2026-06-01"),
+            existing: "none",
+            move: false,
+            moveRefused: true,
+            rename: true,
+          },
+        ],
+        false,
+      );
+
+      expectOk(logResult);
+      expect(harness.host.files.has("src/note.md")).toBe(false);
+      expect(harness.host.files.has("src/2026-06-01.md")).toBe(true);
+      expect(logResult.value[0]?.actions).toContainEqual({ kind: "move-refused-prompt" });
     });
 
     it("reports progress after each note as it is applied", async () => {

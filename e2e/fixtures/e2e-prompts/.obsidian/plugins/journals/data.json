@@ -1,0 +1,105 @@
+{
+  "version": 4,
+  "journals": {
+    "prompted": {
+      "name": "prompted",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}} {{mood}}",
+      "templates": ["Templates/prompted.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        {
+          "variable": "mood",
+          "question": "How was today?",
+          "type": "select",
+          "options": [
+            { "label": "Great", "value": "great" },
+            { "label": "Okay", "value": "okay" }
+          ],
+          "frontmatterKey": "mood",
+          "required": true
+        }
+      ]
+    },
+    "confirmed": {
+      "name": "confirmed",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "confirmCreation": true,
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        {
+          "variable": "note",
+          "question": "Anything to add?",
+          "type": "text",
+          "frontmatterKey": "note",
+          "required": false
+        },
+        {
+          "variable": "due",
+          "question": "When is it due?",
+          "type": "date",
+          "format": "YYYY-MM-DD",
+          "frontmatterKey": "due",
+          "required": false
+        },
+        {
+          "variable": "pinned",
+          "question": "Pin it?",
+          "type": "toggle",
+          "frontmatterKey": "pinned"
+        }
+      ]
+    },
+    "sprint": {
+      "name": "sprint",
+      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2030-07-01" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{journal_name}} {{index}}",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2030-07-01",
+        "allowBefore": false,
+        "sources": [
+          { "variable": "index", "frontmatterKey": "journal-index", "anchorValue": 1, "reset": { "kind": "never" } }
+        ]
+      },
+      "confirmCreation": true,
+      "prompts": [
+        {
+          "variable": "goal",
+          "question": "What is the goal?",
+          "type": "text",
+          "frontmatterKey": "goal",
+          "required": false
+        }
+      ]
+    }
+  }
+}

@@ -79,6 +79,7 @@ export class FakeNotesService implements Pick<
   | "append"
   | "rename"
   | "delete"
+  | "deleteFolder"
   | "updateFrontmatter"
   | "events"
 > {
@@ -224,6 +225,19 @@ export class FakeNotesService implements Pick<
     if (!this.#files.has(path)) return AsyncResult.err(new NoteNotFoundError(path));
     this.#files.delete(path);
     this.#emitter.emit("deleted", path);
+    return AsyncResult.ok(undefined);
+  }
+
+  deleteFolder(path: VaultPath): AsyncResult<void, FolderNotFoundError | NoteDeleteError> {
+    if (!this.#folders.has(path)) return AsyncResult.err(new FolderNotFoundError(path));
+    for (const folder of this.#folders) {
+      if (folder === path || folder.startsWith(`${path}/`)) this.#folders.delete(folder);
+    }
+    // No per-file "deleted": the real service trashes the folder in one call and only relays
+    // vault "delete" events for a TFile, and Obsidian raises that event for the folder alone.
+    for (const file of this.#files.keys()) {
+      if (file.startsWith(`${path}/`)) this.#files.delete(file);
+    }
     return AsyncResult.ok(undefined);
   }
 

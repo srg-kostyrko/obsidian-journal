@@ -240,6 +240,13 @@ export async function submitModal(): Promise<void> {
   await activeModal().waitForExist({ reverse: true, timeoutMsg: "modal did not close after submit" });
 }
 
+// Like submitModal, but does not wait for the dialog to close afterward. Needed when the submit
+// can trigger a second, Obsidian-native dialog (e.g. the "Update links?" rename prompt) before
+// this one is gone — waiting for "no modal" here would wait on the wrong dialog to disappear.
+export async function clickModalCta(): Promise<void> {
+  await activeModal().$("button.mod-cta").click();
+}
+
 // Submit a config editor that a picker auto-opened. The view's icon-suggest input retains focus
 // after the picker closes and its dropdown overlays the CTA, so a physical click lands on the
 // overlay; fire the click programmatically to bypass it.

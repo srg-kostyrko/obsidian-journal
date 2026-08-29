@@ -13,10 +13,14 @@ import { fixedJournal } from "../testing";
 import { AutoCreateService } from "./auto-create";
 import { NoteCreationService } from "./note-creation";
 
+import type { Prompt } from "../prompts/config";
+
 // A template that blocks on user input — a Templater `<% tp.system.prompt %>` — leaves ensureNote
 // pending forever, and at local midnight there is nobody to answer it.
 const neverSettles = (): ReturnType<NoteCreationService["ensureNote"]> =>
   AsyncResult.fromPromise(new Promise<never>(() => undefined), () => new JournalNotFoundError("unreachable"));
+
+const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
 describe("AutoCreateService", () => {
   beforeEach(() => {
@@ -252,6 +256,46 @@ describe("AutoCreateService", () => {
 
       expect(harness.host.files.has("B/2026-05-19.md")).toBe(true);
       expect(harness.host.files.has("A/2026-05-19.md")).toBe(false);
+    });
+  });
+
+  describe("a journal that auto-creates and prompts", () => {
+    it("asks nobody and creates nothing when an answer reaches the note name", async () => {
+      // A modal opened by the midnight tick has no one at the keyboard, and ensureNote would
+      // wait on it forever — the same hazard neverSettles models above.
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { autoCreate: true, prompts: [mood], nameTemplate: "{{date}} {{mood}}" },
+            ),
+          },
+        },
+      });
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.modals.opens).toHaveLength(0);
+      expect([...harness.host.files.keys()]).toEqual([]);
+    });
+
+    it("creates the note unasked when every prompt is optional and stays out of the note name", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true, prompts: [mood] }) } },
+      });
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.files.has("2026-05-19.md")).toBe(true);
+      expect(harness.modals.opens).toHaveLength(0);
     });
   });
 

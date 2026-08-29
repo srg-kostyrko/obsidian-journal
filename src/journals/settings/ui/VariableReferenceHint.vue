@@ -7,6 +7,7 @@ import { dateModificationsModal } from "@/templates/ui/modals";
 import { variableReferenceModal } from "./modals";
 
 import type { VariableModalContext } from "./variable-context";
+import type { Prompt } from "../../prompts/config";
 
 const props = defineProps<{
   context: VariableModalContext;
@@ -14,6 +15,7 @@ const props = defineProps<{
   dateFormat: string;
   hasCycle: boolean;
   numberingVariableNames: readonly string[];
+  promptVariables: readonly Pick<Prompt, "variable" | "question" | "type">[];
 }>();
 
 const modals = useService(ModalService);
@@ -26,6 +28,7 @@ function show(event: Event): void {
     dateFormat: props.dateFormat,
     hasCycle: props.hasCycle,
     numberingVariableNames: props.numberingVariableNames,
+    promptVariables: props.promptVariables,
     openModifications: () => {
       void modals.open(dateModificationsModal, {});
     },

@@ -52,19 +52,31 @@ proceeds.
 ## Quality gates
 
 `checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` → `coverage` →
-`check:lint` on every pull request and on every push to `main` (`compile:i18n`
-is covered in Development setup above). It reports as the `build` check, which
-— together with `e2e-gate`, the fixed name standing in for the whole e2e matrix
-— blocks the merge button until both are green. A check that is still running
-blocks it too. Run these before opening a pull request anyway; the order
-between them doesn't matter locally:
+`check:lint` → `build:api` → `check:api` on every pull request and on every push
+to `main` (`compile:i18n` is covered in Development setup above). It reports as
+the `build` check, which — together with `e2e-gate`, the fixed name standing in
+for the whole e2e matrix — blocks the merge button until both are green. A check
+that is still running blocks it too. Run these before opening a pull request
+anyway; the order between them doesn't matter locally:
 
 ```bash
 npm run check:types  # vue-tsc, no emit
 npm run coverage     # vitest, the unit and component suite, gated on a coverage floor
 npm run check:lint   # eslint over the whole project
 npm run check:i18n   # guards messages/*.json against reintroducing banned mistranslations
+npm run build:api    # regenerates packages/api/index.d.ts — commit the result
+npm run check:api    # proves the published package compiles for a consumer
 ```
+
+`npm test` is not one of the gates. `coverage` runs the same suite and adds the
+floor, so CI pays for the suite once; a green `npm test` says nothing about the
+floor.
+
+`build:api` generates `packages/api/index.d.ts` from `src/api/public-api.ts` and
+CI then runs `git diff --exit-code` on it, so **a change to the public API
+surface fails until the regenerated file is committed alongside it**. That is
+deliberate: it puts the published surface in the same diff as the change that
+moved it, where a reviewer sees it.
 
 The e2e layer drives a real Obsidian binary through WebdriverIO. It's slow, so
 run it locally when your change touches runtime behavior — note creation,

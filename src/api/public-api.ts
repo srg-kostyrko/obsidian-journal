@@ -65,6 +65,14 @@ export interface ExistingJournalNote extends JournalNote {
 export interface EnsureNoteOptions {
   /** Show the journal's creation-confirmation prompt. Defaults to the journal's own setting. */
   readonly confirm?: boolean;
+  /**
+   * Ask the journal's creation prompts. Defaults to true, since a caller is typically
+   * user-triggered and asking is what makes this behave like the UI. Pass false when the
+   * call must not block on a modal; a journal that cannot proceed without an answer then
+   * fails with `prompts-required` instead of hanging. There is no way to supply answers
+   * programmatically — see the Errors section.
+   */
+  readonly prompt?: boolean;
 }
 
 export interface OpenNoteOptions extends EnsureNoteOptions {
@@ -84,6 +92,7 @@ export type JournalsApiErrorCode =
   | "unmappable-date"
   | "outside-timeline"
   | "creation-failed"
+  | "prompts-required"
   | "open-failed"
   | "aborted"
   | "plugin-unloaded"

@@ -11,6 +11,7 @@ import { JournalsIndex } from "./journals-index";
 import { JournalNavigationCommands } from "./navigation-commands";
 import { journalNotesCoreModule, journalNotesStartupModule } from "./notes/module";
 import { NumberingService } from "./numbering";
+import { promptsModule } from "./prompts/module";
 import { JournalsRepository, type JournalsEvents } from "./repository";
 import { TimelineService } from "./timeline";
 import { JournalsEventsToken } from "./tokens";
@@ -34,6 +35,7 @@ export const journalsCoreModule: Module = {
     journalNotesCoreModule.register(c);
     journalFlowsModule.register(c);
     journalUriModule.register(c);
+    promptsModule.register(c);
   },
 };
 

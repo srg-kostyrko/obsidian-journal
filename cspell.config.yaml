@@ -1,6 +1,7 @@
 version: "0.2"
 language: en
 words:
+  - asar
   - bivariance
   - bivariant
   - callsite
@@ -29,6 +30,7 @@ words:
   - reanchor
   - recentered
   - recenters
+  - recomputable
   - renderable
   - rescan
   - реліз

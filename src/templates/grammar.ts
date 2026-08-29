@@ -138,3 +138,11 @@ function parseTokenInner(inner: string, raw: string): Token | undefined {
   }
   return { kind: "variable", name, modifiers, format, raw };
 }
+
+export function variableNames(template: string): Set<string> {
+  const names = new Set<string>();
+  for (const token of tokenize(template)) {
+    if (token.kind === "variable") names.add(token.name);
+  }
+  return names;
+}

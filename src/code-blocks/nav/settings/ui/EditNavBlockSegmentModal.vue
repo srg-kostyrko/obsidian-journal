@@ -120,6 +120,7 @@ const shelfMates = useShelfMateJournals(props.journalName);
 const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((s) => s.variable) : [],
 );
+const promptVariables = computed(() => config.value?.prompts ?? []);
 
 const hasCycle = computed(() => config.value !== undefined && config.value.write.type !== "day");
 
@@ -172,6 +173,7 @@ const onSubmit = handleSubmit((segment) => {
           :date-format="config.dateFormat"
           :has-cycle="hasCycle"
           :numbering-variable-names="numberingVariableNames"
+          :prompt-variables="promptVariables"
         />
         <div>{{ m.nav_block_segment_resolved_preview({ text: resolved }) }}</div>
         <WrongWeekWarning v-if="wrongWeek" />

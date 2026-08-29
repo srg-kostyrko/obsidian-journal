@@ -12,6 +12,7 @@ import { NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
 
 import type { JournalNotFoundError } from "./errors";
+import type { PromptAnswer } from "./prompts/config";
 import type { JournalEntry, JournalMetadata } from "./types";
 
 export class FrontmatterService {
@@ -57,12 +58,22 @@ export class FrontmatterService {
       }
     }
 
+    const answers: Record<string, PromptAnswer> = {};
+    for (const prompt of config.prompts) {
+      if (prompt.frontmatterKey === "") continue;
+      const value = frontmatter[prompt.frontmatterKey];
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        answers[prompt.variable] = value;
+      }
+    }
+
     const entry: JournalEntry = {
       journalName,
       anchor,
       path,
       ...(endDate !== undefined && { endDate }),
       ...(Object.keys(numbers).length > 0 && { numbers }),
+      ...(Object.keys(answers).length > 0 && { answers }),
     };
     return Option.some(entry);
   }
@@ -72,12 +83,14 @@ export class FrontmatterService {
       const numbers = this.#numbering.assignNumbers(name, anchor);
       const storedEntry = this.#index.entryByAnchor(name, anchor);
       const endDate = storedEntry.isSome() ? storedEntry.value.endDate : undefined;
+      const answers = storedEntry.isSome() ? storedEntry.value.answers : undefined;
 
       const metadata: JournalMetadata = {
         journalName: name,
         anchor,
         ...(endDate !== undefined && { endDate }),
         ...(numbers.isSome() && { numbers: numbers.value }),
+        ...(answers !== undefined && { answers }),
       };
       return metadata;
     });
@@ -93,6 +106,9 @@ export class FrontmatterService {
         delete fm[fields.startDateField];
         delete fm[fields.endDateField];
         for (const source of config.numbering.sources) delete fm[source.frontmatterKey];
+        for (const prompt of config.prompts) {
+          if (prompt.frontmatterKey !== "") delete fm[prompt.frontmatterKey];
+        }
       };
     });
   }
@@ -140,6 +156,15 @@ export class FrontmatterService {
           const value = metadata.numbers?.[source.variable];
           if (value === undefined) delete fm[source.frontmatterKey];
           else fm[source.frontmatterKey] = value;
+        }
+
+        // Unlike a numbering digit, an answer is not recomputable — and ensureNote runs this
+        // mutator on every open of an existing note. Deleting on absence would wipe a
+        // hand-edited answer the next time the user opened the note.
+        for (const prompt of config.prompts) {
+          if (prompt.frontmatterKey === "") continue;
+          const value = metadata.answers?.[prompt.variable];
+          if (value !== undefined) fm[prompt.frontmatterKey] = value;
         }
       };
     });

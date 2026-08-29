@@ -14,6 +14,10 @@ import { fixedJournal } from "../../testing";
 
 import ConnectNoteModal from "./ConnectNoteModal.vue";
 
+import type { Prompt } from "../../prompts/config";
+
+const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+
 async function pickDate(harness: TestHarness, when: string): Promise<void> {
   await userEvent.click(screen.getByText(m.common_pick_a_date()));
   harness.modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date(when)));
@@ -210,6 +214,96 @@ describe("ConnectNoteModal", () => {
             m.connect_note_modal_move_description({ current: m.common_vault_root(), configured: "journals" }),
           ),
         ).toBeTruthy();
+      });
+    });
+
+    describe("with a journal that has a prompt in its name template", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { folder: "journals", nameTemplate: "{{date}} {{mood}}", prompts: [mood] },
+              ),
+            },
+          },
+        });
+      });
+
+      it("disables the rename toggle", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
+        await pickDate(harness, "2026-06-15");
+
+        const toggle = screen.getByRole("checkbox", { name: m.connect_note_modal_rename_label() });
+        expect(toggle.getAttribute("aria-disabled")).toBe("true");
+      });
+
+      it("explains why the rename toggle is disabled", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
+        await pickDate(harness, "2026-06-15");
+
+        expect(screen.getByText(m.connect_note_modal_rename_refused_prompt())).toBeTruthy();
+      });
+
+      it("leaves the move toggle enabled", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
+        await pickDate(harness, "2026-06-15");
+
+        const toggle = screen.getByRole("checkbox", { name: m.connect_note_modal_move_label() });
+        expect(toggle.getAttribute("aria-disabled")).toBe("false");
+      });
+    });
+
+    describe("with a journal that has a prompt in its folder template", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { folder: "journals/{{mood}}", nameTemplate: "{{date}}", prompts: [mood] },
+              ),
+            },
+          },
+        });
+      });
+
+      it("disables the move toggle", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
+        await pickDate(harness, "2026-06-15");
+
+        const toggle = screen.getByRole("checkbox", { name: m.connect_note_modal_move_label() });
+        expect(toggle.getAttribute("aria-disabled")).toBe("true");
+      });
+
+      it("explains why the move toggle is disabled", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
+        await pickDate(harness, "2026-06-15");
+
+        expect(screen.getByText(m.connect_note_modal_move_refused_prompt())).toBeTruthy();
+      });
+
+      it("leaves the rename toggle enabled", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
+
+        await pickDate(harness, "2026-06-15");
+
+        const toggle = screen.getByRole("checkbox", { name: m.connect_note_modal_rename_label() });
+        expect(toggle.getAttribute("aria-disabled")).toBe("false");
       });
     });
 

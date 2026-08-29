@@ -9,8 +9,15 @@ import type { VariableReferenceModalProps } from "./modals";
 
 const props = defineProps<VariableReferenceModalProps>();
 
-const NON_INVERTIBLE_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["name-template", "folder-path"]);
-const showInvertibilityWarning = computed(() => NON_INVERTIBLE_CONTEXTS.has(props.context));
+// The two templates that become part of the note's own path, so what they render has to be
+// readable back out of it. Both the clock warning and the yes/no omission below follow from that.
+const PATH_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["name-template", "folder-path"]);
+const showInvertibilityWarning = computed(() => PATH_CONTEXTS.has(props.context));
+// A yes/no answer renders a localized "Yes"/"No" that no path pattern matches, so the question
+// editor refuses one in a name or folder. Listing it here would advertise what cannot be saved.
+const promptRows = computed(() =>
+  props.promptVariables.filter((prompt) => !(prompt.type === "toggle" && PATH_CONTEXTS.has(props.context))),
+);
 const showNavRowVariables = computed(() => props.context === "nav-row");
 const showTemplateContentVariables = computed(() => props.context === "template-path");
 // note_name/title are bound after the filename renders, so the name template can't use them.
@@ -106,6 +113,17 @@ function handleModificationsClick(event: Event): void {
         <dd>
           {{ m.journal_edit_variable_numbering_description() }}
           <a href="#" @click="handleModificationsClick">
+            {{ m.journal_edit_variable_additional_modifications_link() }}
+          </a>
+        </dd>
+      </div>
+
+      <div v-for="prompt in promptRows" :key="prompt.variable" class="variable-reference__row">
+        <dt><VariableChip :name="prompt.variable" /></dt>
+        <dd>
+          {{ m.journal_edit_variable_prompt_description({ question: prompt.question }) }}
+          <!-- A date answer binds as a date spec, so it takes the whole {{date}} vocabulary. -->
+          <a v-if="prompt.type === 'date'" href="#" @click="handleModificationsClick">
             {{ m.journal_edit_variable_additional_modifications_link() }}
           </a>
         </dd>

@@ -153,6 +153,9 @@ function summaryFor(sourceIndex: number): string {
         <template v-if="invertibility.kind === 'non-invertible'">
           {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
         </template>
+        <template v-else-if="invertibility.kind === 'prompt-in-path'">
+          {{ m.journal_invertibility_prompt_in_path(invertibility) }}
+        </template>
         <template v-else-if="invertibility.kind === 'coarse-date'">
           {{ m.journal_edit_name_template_coarse_date_warning() }}
         </template>

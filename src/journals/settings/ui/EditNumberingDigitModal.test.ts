@@ -168,6 +168,167 @@ describe("EditNumberingDigitModal", () => {
     });
   });
 
+  it("rejects a numbering digit whose variable is already a prompt", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              numbering: {
+                enabled: true,
+                anchorDate: anchor("2024-01-01"),
+                allowBefore: false,
+                sources: [twoDigits[0]],
+              },
+              prompts: [
+                { variable: "mood", question: "How do you feel?", type: "text", frontmatterKey: "", required: false },
+              ],
+            },
+          ),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditNumberingDigitModal, { props: { journalName: "daily" } });
+    const [variableInput] = screen.getAllByRole("textbox");
+    await userEvent.type(variableInput, "mood");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_sequence_variable_duplicate({ name: "mood" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a numbering digit whose variable differs only in case from a prompt's", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              numbering: {
+                enabled: true,
+                anchorDate: anchor("2024-01-01"),
+                allowBefore: false,
+                sources: [twoDigits[0]],
+              },
+              prompts: [
+                { variable: "mood", question: "How do you feel?", type: "text", frontmatterKey: "", required: false },
+              ],
+            },
+          ),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditNumberingDigitModal, { props: { journalName: "daily" } });
+    const [variableInput] = screen.getAllByRole("textbox");
+    await userEvent.type(variableInput, "Mood");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_sequence_variable_duplicate({ name: "Mood" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a numbering digit's property key when a prompt already writes to it", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              numbering: { enabled: true, anchorDate: anchor("2024-01-01"), allowBefore: false, sources: [] },
+              prompts: [
+                {
+                  variable: "mood",
+                  question: "How do you feel?",
+                  type: "text",
+                  frontmatterKey: "journal-mood",
+                  required: false,
+                },
+              ],
+            },
+          ),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditNumberingDigitModal, { props: { journalName: "daily" } });
+    const [variableInput, keyInput] = screen.getAllByRole<HTMLInputElement>("textbox");
+    await userEvent.type(variableInput, "index");
+    await userEvent.clear(keyInput);
+    await userEvent.type(keyInput, "journal-mood");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "journal-mood" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a numbering digit's property key when it collides with the journal's own name key", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              numbering: { enabled: true, anchorDate: anchor("2024-01-01"), allowBefore: false, sources: [] },
+            },
+          ),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditNumberingDigitModal, { props: { journalName: "daily" } });
+    const [variableInput, keyInput] = screen.getAllByRole<HTMLInputElement>("textbox");
+    await userEvent.type(variableInput, "index");
+    await userEvent.clear(keyInput);
+    await userEvent.type(keyInput, "journal");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "journal" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("rejects a numbering digit's property key when it collides with the journal's configured date field", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              numbering: { enabled: true, anchorDate: anchor("2024-01-01"), allowBefore: false, sources: [] },
+            },
+          ),
+        },
+      },
+    });
+    const { submit } = harness.renderModal(EditNumberingDigitModal, { props: { journalName: "daily" } });
+    const [variableInput, keyInput] = screen.getAllByRole<HTMLInputElement>("textbox");
+    await userEvent.type(variableInput, "index");
+    await userEvent.clear(keyInput);
+    await userEvent.type(keyInput, "journal-date");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "journal-date" }))).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
   it("rejects a reserved variable name", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

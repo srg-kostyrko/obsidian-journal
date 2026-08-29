@@ -345,6 +345,20 @@ export function createFakeHost(): FakeHost {
     promptForFileDeletion(file: TFile): void {
       promptedDeletions.push(file);
     },
+    // Obsidian's own renameFile is `runAsyncLinkUpdate(() => vault.rename(...))`: the rename
+    // itself is identical, and repairing every reference to the old name is the whole of what
+    // it adds. Only the `[[...]]` link form is modelled — enough to tell the two APIs apart.
+    async renameFile(file: TFile | TFolder, newPath: string): Promise<void> {
+      if (!(file instanceof TFile)) throw new Error(`not a file: ${file.path}`);
+      const oldBasename = file.basename;
+      await vaultApi.rename(file, newPath);
+      const newBasename = file.basename;
+      if (oldBasename === newBasename) return;
+      for (const [path, entry] of files) {
+        const repaired = entry.content.split(`[[${oldBasename}]]`).join(`[[${newBasename}]]`);
+        if (repaired !== entry.content) files.set(path, { ...entry, content: repaired });
+      }
+    },
     async processFrontMatter(file: TFile, mutate: (fm: Record<string, unknown>) => void): Promise<void> {
       const existing = files.get(file.path);
       if (!existing) throw new Error(`missing: ${file.path}`);
@@ -356,10 +370,24 @@ export function createFakeHost(): FakeHost {
         metadata: metadataWithFrontmatter(existing.metadata, next),
       });
     },
-    async trashFile(file: TFile): Promise<void> {
+    async trashFile(file: TFile | TFolder): Promise<void> {
       detachChild(file);
-      files.delete(file.path);
-      fileObjects.delete(file.path);
+      if (file instanceof TFolder) {
+        const prefix = `${file.path}/`;
+        for (const path of folders) {
+          if (path !== file.path && !path.startsWith(prefix)) continue;
+          folders.delete(path);
+          folderObjects.delete(path);
+        }
+        for (const path of fileObjects.keys()) {
+          if (!path.startsWith(prefix)) continue;
+          files.delete(path);
+          fileObjects.delete(path);
+        }
+      } else {
+        files.delete(file.path);
+        fileObjects.delete(file.path);
+      }
       vault.emit("delete", file);
     },
   };

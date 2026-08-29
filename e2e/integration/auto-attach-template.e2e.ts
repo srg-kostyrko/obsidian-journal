@@ -7,12 +7,18 @@ import { createNote, waitForContent, waitForJournalFrontmatter } from "../suppor
 // frontmatter; the regression this guards is that writing frontmatter fills the file, so a
 // naive emptiness check skips the template. Only real Obsidian embeds frontmatter into the
 // file body, so this seam is unreachable against __mocks__/obsidian.ts.
+//
+// `daily` defines no creation prompts, so AutoAttachService's detect -> prompt -> rename ->
+// attach branch never triggers here and this stays the direct attach path: a link click still
+// goes straight from "created" to attached frontmatter with no dialog in between. The prompted
+// branch — a placeholder-named file that has to be answered, renamed and only then attached —
+// is covered separately in e2e/journeys/creation-prompts.e2e.ts.
 describe("auto-attach template", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-daily-template", plugins: ["journals"] });
   });
 
-  it("applies the journal template to a note created by clicking an unresolved date link", async () => {
+  it("applies the journal template immediately, with no creation prompt in the way", async () => {
     await createNote("links.md", "see [[2024-02-20]]\n");
     await browser.executeObsidian(
       async ({ app }, linkText, source) => {

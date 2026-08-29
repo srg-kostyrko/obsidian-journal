@@ -7,7 +7,7 @@ import { computed, ref, watch } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { NUMBERING_VARIABLE_RE, RESERVED_VARIABLE_NAMES } from "@/journals/numbering-variables";
+import { isReservedVariable, TEMPLATE_VARIABLE_RE } from "@/journals/reserved-variables";
 import { JournalsViewModel } from "@/journals/view-model";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -15,13 +15,16 @@ import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
+import { reservedFrontmatterKeys } from "../../config";
+
 import type { NumberingDigitDraft } from "./modals";
 
 const props = withDefaults(defineProps<{ journalName: string; sourceIndex?: number }>(), { sourceIndex: undefined });
 const api = useModal<NumberingDigitDraft>();
 const journalsVM = useService(JournalsViewModel);
 
-const sources = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined()?.numbering.sources ?? []);
+const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
+const sources = computed(() => config.value?.numbering.sources ?? []);
 const current = computed(() => (props.sourceIndex === undefined ? undefined : sources.value[props.sourceIndex]));
 // A new digit is appended, so it is the top digit only when the list is empty.
 const isTopDigit = computed(() =>
@@ -31,11 +34,19 @@ const parentVariable = computed(() => {
   const index = props.sourceIndex ?? sources.value.length;
   return sources.value[index - 1]?.variable ?? "";
 });
-const takenVariables = computed(() =>
-  sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.variable),
-);
+const prompts = computed(() => config.value?.prompts ?? []);
+// Symmetric with EditPromptModal's own takenVariables: a digit and a question share one
+// variable namespace, so checking only one direction lets whichever is created second win.
+const takenVariables = computed(() => [
+  ...sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.variable),
+  ...prompts.value.map((prompt) => prompt.variable),
+]);
 const takenKeys = computed(() =>
-  sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.frontmatterKey),
+  [
+    ...sources.value.filter((_, i) => i !== props.sourceIndex).map((source) => source.frontmatterKey),
+    ...prompts.value.map((prompt) => prompt.frontmatterKey),
+    ...(config.value ? reservedFrontmatterKeys(config.value) : []),
+  ].filter((key) => key !== ""),
 );
 
 // isTopDigit gates only which control renders — a non-top digit's resetKind field can still
@@ -61,13 +72,13 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
         variable: v.pipe(
           v.string(),
           v.nonEmpty(m.journal_sequence_variable_required()),
-          v.regex(NUMBERING_VARIABLE_RE, m.journal_sequence_variable_invalid()),
+          v.regex(TEMPLATE_VARIABLE_RE, m.journal_sequence_variable_invalid()),
           v.check(
-            (value) => !RESERVED_VARIABLE_NAMES.includes(value),
+            (value) => !isReservedVariable(value),
             (issue) => m.journal_sequence_variable_reserved({ name: issue.input }),
           ),
           v.check(
-            (value) => !takenVariables.value.includes(value),
+            (value) => takenVariables.value.every((taken) => taken.toLowerCase() !== value.toLowerCase()),
             (issue) => m.journal_sequence_variable_duplicate({ name: issue.input }),
           ),
         ),
@@ -76,7 +87,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
           v.nonEmpty(m.journal_property_name_required()),
           v.check(
             (value) => !takenKeys.value.includes(value),
-            (issue) => m.journal_sequence_property_duplicate({ name: issue.input }),
+            (issue) => m.journal_prompt_property_duplicate({ name: issue.input }),
           ),
         ),
         anchorValue: v.pipe(v.number(), v.integer()),

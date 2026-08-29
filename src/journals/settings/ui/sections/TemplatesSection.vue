@@ -27,6 +27,7 @@ const hasCycle = computed(() => config.value !== undefined && config.value.write
 const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
 );
+const promptVariables = computed(() => config.value?.prompts ?? []);
 
 function addTemplate(): void {
   if (!config.value) return;
@@ -61,6 +62,7 @@ function removeTemplate(index: number): void {
             :date-format="config.dateFormat"
             :has-cycle="hasCycle"
             :numbering-variable-names="numberingVariableNames"
+            :prompt-variables="promptVariables"
           />
         </div>
         <div><CodeBlockReferenceHint :journal-name="journalName" /></div>

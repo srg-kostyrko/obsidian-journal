@@ -58,6 +58,17 @@ export class UnknownSequenceSourceError extends Error {
   }
 }
 
+export class UnknownPromptError extends Error {
+  readonly kind = "unknown-prompt" as const;
+  constructor(
+    public readonly journalName: string,
+    public readonly promptIndex: number,
+  ) {
+    super(`Unknown prompt ${promptIndex} on journal ${journalName}`);
+    this.name = "UnknownPromptError";
+  }
+}
+
 export class InvalidJournalUpdateError extends Error {
   readonly kind = "invalid-update" as const;
   constructor(public readonly journalName: string) {
@@ -71,6 +82,7 @@ export type JournalLifecycleError =
   | JournalNameTakenError
   | UnknownJournalError
   | UnknownSequenceSourceError
+  | UnknownPromptError
   | InvalidJournalUpdateError;
 
 export class JournalLifecycleFlowError extends FlowError {

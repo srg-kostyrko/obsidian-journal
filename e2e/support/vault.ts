@@ -60,6 +60,14 @@ export function frontmatterOf(path: string): Promise<Frontmatter | undefined> {
   }, path);
 }
 
+// The resolved-links map Obsidian's own metadataCache maintains for a note: destination path to
+// reference count. This is what "the link still works after a rename" means in practice — a link
+// whose *text* survived a rewrite but whose *target* did not resolve would read as broken to the
+// user despite any raw-content assertion passing.
+export function resolvedLinksFrom(path: string): Promise<Record<string, number> | undefined> {
+  return browser.executeObsidian(({ app }, notePath) => app.metadataCache.resolvedLinks[notePath], path);
+}
+
 // Reads what Obsidian has parsed, not raw bytes — consistent with frontmatterOf.
 export async function contentOf(path: string): Promise<string | undefined> {
   return browser.executeObsidian(async ({ app, obsidian }, notePath) => {

@@ -14,6 +14,7 @@ const baseProps = {
   dateFormat: "YYYY-MM-DD",
   hasCycle: false,
   numberingVariableNames: [] as readonly string[],
+  promptVariables: [] as readonly { variable: string; question: string; type: "text" }[],
 };
 
 describe("VariableReferenceHint", () => {
@@ -50,5 +51,14 @@ describe("VariableReferenceHint", () => {
     await userEvent.click(screen.getByRole("link"));
 
     expect(harness.modals.lastOpen().props).toMatchObject({ numberingVariableNames: ["week_no"] });
+  });
+
+  it("forwards promptVariables when provided", async () => {
+    const promptVariables = [{ variable: "mood", question: "How do you feel?", type: "text" as const }];
+    harness.render(VariableReferenceHint, { props: { ...baseProps, promptVariables } });
+
+    await userEvent.click(screen.getByRole("link"));
+
+    expect(harness.modals.lastOpen().props).toMatchObject({ promptVariables });
   });
 });
