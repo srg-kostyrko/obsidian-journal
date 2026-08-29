@@ -102,6 +102,6 @@
   },
   "nano-staged": {
     "*.{ts,vue}": "eslint",
-    "*.{ts,mjs,js,css,md,vue}": "prettier --write"
+    "*.{ts,mjs,js,json,css,md,vue}": "prettier --write"
   }
 }

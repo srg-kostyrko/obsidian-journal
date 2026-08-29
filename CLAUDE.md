@@ -215,9 +215,17 @@ on it.
   module per message, which dominates unit-suite wall clock through every test
   file that touches `@/i18n`. A bare `npx paraglide-js compile` silently
   restores it.
-- Never reformat `messages/*.json` — edit them line-wise. They sit outside the
-  prettier glob on purpose, so a `JSON.stringify` round-trip rewrites all eleven
-  files end to end. Check `git diff --stat -- messages/` before committing.
+- JSON is in the nano-staged prettier glob, `messages/*.json` included, so the
+  old "never reformat, edit line-wise" rule is retired — prettier owns the shape
+  and a round-trip is no longer destructive. What survives is the release script:
+  `version-bump.mjs` rewrites `manifest.json`, `manifest-beta.json` and
+  `versions.json` on every `npm version`, and its `writeJson` helper has to keep
+  matching prettier exactly — two spaces **and** a trailing newline, which bare
+  `JSON.stringify` does not emit. Restoring the Obsidian sample-plugin `"\t"`
+  convention there reopens a three-file diff that nano-staged then silently
+  rewrites under the next commit. Note also that prettier reflows the inlang
+  variant objects against `printWidth`, collapsing and expanding them, so a
+  one-message edit's diff is not always line-local.
 - `Promise.withResolvers<void>()` fails `no-invalid-void-type` in production
   source — the rule permits `void` on type-reference generics but its matcher
   does not cover call-expression type arguments. Use the

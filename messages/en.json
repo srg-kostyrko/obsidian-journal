@@ -3,7 +3,20 @@
   "view_block_day_notes_label": "Notes by date",
   "view_block_day_notes_description": "Lists notes created in the period containing the view's selected date.",
   "view_block_day_notes_granularity_label": "Period",
-  "view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"Day","kind=week":"Week","kind=month":"Month","kind=quarter":"Quarter","kind=year":"Year","kind=decade":"Decade"}}],
+  "view_block_day_notes_granularity_option": [
+    {
+      "declarations": ["input kind"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=day": "Day",
+        "kind=week": "Week",
+        "kind=month": "Month",
+        "kind=quarter": "Quarter",
+        "kind=year": "Year",
+        "kind=decade": "Decade"
+      }
+    }
+  ],
   "view_block_day_notes_sort_field_label": "Sort notes by",
   "view_block_day_notes_sort_direction_label": "Sort direction",
   "view_block_day_notes_sort_name": "Name",
@@ -101,7 +114,13 @@
   "calendar_week_config_change": "Change",
   "calendar_week_config_description": "Define which day starts the week and how the first week of the year is determined — this affects week numbers.",
 
-  "code_blocks_unknown_keys": [{"declarations": ["input count", "input keys"], "selectors": ["count"], "match": {"count=1": "Unrecognized option ignored: {keys}.", "count=*": "Unrecognized options ignored: {keys}."}}],
+  "code_blocks_unknown_keys": [
+    {
+      "declarations": ["input count", "input keys"],
+      "selectors": ["count"],
+      "match": { "count=1": "Unrecognized option ignored: {keys}.", "count=*": "Unrecognized options ignored: {keys}." }
+    }
+  ],
   "code_blocks_yaml_error": "Could not read the options in this {key} block.",
   "code_blocks_schema_error": "Some options in this {key} block are not valid.",
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
@@ -425,14 +444,65 @@
   "bulk_add_skip_reason_no_date": "No date found",
   "bulk_add_skip_reason_invalid_date": "Date could not be parsed",
   "bulk_add_skip_reason_out_of_bounds": "Outside the journal's timeline",
-  "bulk_add_log_skipped_occupied": [{"declarations": ["input mood", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will skip: a note is already connected to {anchor}.", "mood=done": "Skipped: a note is already connected to {anchor}."}}],
-  "bulk_add_log_merged": [{"declarations": ["input mood", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will merge into the note already connected to {anchor} and delete this note.", "mood=done": "Merged into the note already connected to {anchor}; this note was deleted."}}],
-  "bulk_add_log_replaced": [{"declarations": ["input mood", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will replace the note already connected to {anchor}.", "mood=done": "Replaced the note already connected to {anchor}."}}],
-  "bulk_add_log_moved": [{"declarations": ["input mood"], "selectors": ["mood"], "match": {"mood=planned": "Will move into the journal's folder.", "mood=done": "Moved into the journal's folder."}}],
+  "bulk_add_log_skipped_occupied": [
+    {
+      "declarations": ["input mood", "input anchor"],
+      "selectors": ["mood"],
+      "match": {
+        "mood=planned": "Will skip: a note is already connected to {anchor}.",
+        "mood=done": "Skipped: a note is already connected to {anchor}."
+      }
+    }
+  ],
+  "bulk_add_log_merged": [
+    {
+      "declarations": ["input mood", "input anchor"],
+      "selectors": ["mood"],
+      "match": {
+        "mood=planned": "Will merge into the note already connected to {anchor} and delete this note.",
+        "mood=done": "Merged into the note already connected to {anchor}; this note was deleted."
+      }
+    }
+  ],
+  "bulk_add_log_replaced": [
+    {
+      "declarations": ["input mood", "input anchor"],
+      "selectors": ["mood"],
+      "match": {
+        "mood=planned": "Will replace the note already connected to {anchor}.",
+        "mood=done": "Replaced the note already connected to {anchor}."
+      }
+    }
+  ],
+  "bulk_add_log_moved": [
+    {
+      "declarations": ["input mood"],
+      "selectors": ["mood"],
+      "match": {
+        "mood=planned": "Will move into the journal's folder.",
+        "mood=done": "Moved into the journal's folder."
+      }
+    }
+  ],
   "bulk_add_log_move_refused_prompt": "Not moved: this journal asks a question that goes into the folder.",
-  "bulk_add_log_renamed": [{"declarations": ["input mood"], "selectors": ["mood"], "match": {"mood=planned": "Will rename to match the journal.", "mood=done": "Renamed to match the journal."}}],
+  "bulk_add_log_renamed": [
+    {
+      "declarations": ["input mood"],
+      "selectors": ["mood"],
+      "match": { "mood=planned": "Will rename to match the journal.", "mood=done": "Renamed to match the journal." }
+    }
+  ],
   "bulk_add_log_rename_refused_prompt": "Not renamed: this journal asks a question that goes into the note name.",
-  "bulk_add_log_connected": [{"declarations": ["input mood", "input journalName", "input anchor"], "selectors": ["mood"], "match": {"mood=planned": "Will connect to {journalName} at {anchor}.", "mood=done": "Connected to {journalName} at {anchor}."}}],
+  "bulk_add_log_connected": [
+    {
+      "declarations": ["input mood", "input journalName", "input anchor"],
+      "selectors": ["mood"],
+      "match": {
+        "mood=planned": "Will connect to {journalName} at {anchor}.",
+        "mood=done": "Connected to {journalName} at {anchor}."
+      }
+    }
+  ],
   "bulk_add_log_merge_occupant_missing": "Failed: the note already connected to that date disappeared before the merge.",
   "bulk_add_log_failed": "Failed: {message}",
   "bulk_add_dry_run_banner": "Dry run — nothing in your vault was changed.",
@@ -452,10 +522,66 @@
   "confirm_note_creation_title": "Create a new journal note?",
 
   "decoration_add": "Add decoration",
-  "decoration_badge_matched_past": [{"declarations":["input matched","input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched {matched} of the last {total} days","unit=week":"Matched {matched} of the last {total} weeks","unit=month":"Matched {matched} of the last {total} months","unit=quarter":"Matched {matched} of the last {total} quarters","unit=year":"Matched {matched} of the last {total} years","unit=decade":"Matched {matched} of the last {total} decades","unit=interval":"Matched {matched} of the last {total} intervals"}}],
-  "decoration_badge_matched_future": [{"declarations":["input matched","input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched {matched} of the next {total} days","unit=week":"Matched {matched} of the next {total} weeks","unit=month":"Matched {matched} of the next {total} months","unit=quarter":"Matched {matched} of the next {total} quarters","unit=year":"Matched {matched} of the next {total} years","unit=decade":"Matched {matched} of the next {total} decades","unit=interval":"Matched {matched} of the next {total} intervals"}}],
-  "decoration_badge_silent_past": [{"declarations":["input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched nothing in the last {total} days","unit=week":"Matched nothing in the last {total} weeks","unit=month":"Matched nothing in the last {total} months","unit=quarter":"Matched nothing in the last {total} quarters","unit=year":"Matched nothing in the last {total} years","unit=decade":"Matched nothing in the last {total} decades","unit=interval":"Matched nothing in the last {total} intervals"}}],
-  "decoration_badge_silent_future": [{"declarations":["input total","input unit"],"selectors":["unit"],"match":{"unit=day":"Matched nothing in the next {total} days","unit=week":"Matched nothing in the next {total} weeks","unit=month":"Matched nothing in the next {total} months","unit=quarter":"Matched nothing in the next {total} quarters","unit=year":"Matched nothing in the next {total} years","unit=decade":"Matched nothing in the next {total} decades","unit=interval":"Matched nothing in the next {total} intervals"}}],
+  "decoration_badge_matched_past": [
+    {
+      "declarations": ["input matched", "input total", "input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "Matched {matched} of the last {total} days",
+        "unit=week": "Matched {matched} of the last {total} weeks",
+        "unit=month": "Matched {matched} of the last {total} months",
+        "unit=quarter": "Matched {matched} of the last {total} quarters",
+        "unit=year": "Matched {matched} of the last {total} years",
+        "unit=decade": "Matched {matched} of the last {total} decades",
+        "unit=interval": "Matched {matched} of the last {total} intervals"
+      }
+    }
+  ],
+  "decoration_badge_matched_future": [
+    {
+      "declarations": ["input matched", "input total", "input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "Matched {matched} of the next {total} days",
+        "unit=week": "Matched {matched} of the next {total} weeks",
+        "unit=month": "Matched {matched} of the next {total} months",
+        "unit=quarter": "Matched {matched} of the next {total} quarters",
+        "unit=year": "Matched {matched} of the next {total} years",
+        "unit=decade": "Matched {matched} of the next {total} decades",
+        "unit=interval": "Matched {matched} of the next {total} intervals"
+      }
+    }
+  ],
+  "decoration_badge_silent_past": [
+    {
+      "declarations": ["input total", "input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "Matched nothing in the last {total} days",
+        "unit=week": "Matched nothing in the last {total} weeks",
+        "unit=month": "Matched nothing in the last {total} months",
+        "unit=quarter": "Matched nothing in the last {total} quarters",
+        "unit=year": "Matched nothing in the last {total} years",
+        "unit=decade": "Matched nothing in the last {total} decades",
+        "unit=interval": "Matched nothing in the last {total} intervals"
+      }
+    }
+  ],
+  "decoration_badge_silent_future": [
+    {
+      "declarations": ["input total", "input unit"],
+      "selectors": ["unit"],
+      "match": {
+        "unit=day": "Matched nothing in the next {total} days",
+        "unit=week": "Matched nothing in the next {total} weeks",
+        "unit=month": "Matched nothing in the next {total} months",
+        "unit=quarter": "Matched nothing in the next {total} quarters",
+        "unit=year": "Matched nothing in the next {total} years",
+        "unit=decade": "Matched nothing in the next {total} decades",
+        "unit=interval": "Matched nothing in the next {total} intervals"
+      }
+    }
+  ],
   "decoration_badge_no_history": "No history yet",
   "decoration_badge_no_notes": "No notes yet",
   "decoration_border_mode_label": [
@@ -503,10 +629,62 @@
   "decoration_breakdown_marks_heading": "Marks",
   "decoration_breakdown_overridden_heading": "Overridden here",
   "decoration_breakdown_overridden_for": "Overridden here — {property}",
-  "decoration_breakdown_owner": [{"declarations":["input kind","input name"],"selectors":["kind"],"match":{"kind=journal":"Journal: {name}","kind=shelf":"Shelf: {name}","kind=global":"Vault-wide"}}],
-  "decoration_breakdown_property": [{"declarations":["input property"],"selectors":["property"],"match":{"property=background":"Background","property=textColor":"Text color","property=border.top":"Border top","property=border.right":"Border right","property=border.bottom":"Border bottom","property=border.left":"Border left","property=corner.top-left":"Corner top left","property=corner.top-right":"Corner top right","property=corner.bottom-left":"Corner bottom left","property=corner.bottom-right":"Corner bottom right"}}],
-  "decoration_breakdown_slot": [{"declarations":["input slot"],"selectors":["slot"],"match":{"slot=left_top":"Left top","slot=left_middle":"Left middle","slot=left_bottom":"Left bottom","slot=center_top":"Center top","slot=center_middle":"Center middle","slot=center_bottom":"Center bottom","slot=right_top":"Right top","slot=right_middle":"Right middle","slot=right_bottom":"Right bottom"}}],
-  "decoration_breakdown_cell_heading": [{"declarations":["input kind","input label"],"selectors":["kind"],"match":{"kind=day":"Day — {label}","kind=week":"Week — {label}","kind=month":"Month — {label}","kind=quarter":"Quarter — {label}","kind=year":"Year — {label}","kind=decade":"Decade — {label}"}}],
+  "decoration_breakdown_owner": [
+    {
+      "declarations": ["input kind", "input name"],
+      "selectors": ["kind"],
+      "match": { "kind=journal": "Journal: {name}", "kind=shelf": "Shelf: {name}", "kind=global": "Vault-wide" }
+    }
+  ],
+  "decoration_breakdown_property": [
+    {
+      "declarations": ["input property"],
+      "selectors": ["property"],
+      "match": {
+        "property=background": "Background",
+        "property=textColor": "Text color",
+        "property=border.top": "Border top",
+        "property=border.right": "Border right",
+        "property=border.bottom": "Border bottom",
+        "property=border.left": "Border left",
+        "property=corner.top-left": "Corner top left",
+        "property=corner.top-right": "Corner top right",
+        "property=corner.bottom-left": "Corner bottom left",
+        "property=corner.bottom-right": "Corner bottom right"
+      }
+    }
+  ],
+  "decoration_breakdown_slot": [
+    {
+      "declarations": ["input slot"],
+      "selectors": ["slot"],
+      "match": {
+        "slot=left_top": "Left top",
+        "slot=left_middle": "Left middle",
+        "slot=left_bottom": "Left bottom",
+        "slot=center_top": "Center top",
+        "slot=center_middle": "Center middle",
+        "slot=center_bottom": "Center bottom",
+        "slot=right_top": "Right top",
+        "slot=right_middle": "Right middle",
+        "slot=right_bottom": "Right bottom"
+      }
+    }
+  ],
+  "decoration_breakdown_cell_heading": [
+    {
+      "declarations": ["input kind", "input label"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=day": "Day — {label}",
+        "kind=week": "Week — {label}",
+        "kind=month": "Month — {label}",
+        "kind=quarter": "Quarter — {label}",
+        "kind=year": "Year — {label}",
+        "kind=decade": "Decade — {label}"
+      }
+    }
+  ],
   "decoration_breakdown_interval_heading": "Interval — {journal} — {label}",
   "decoration_explain_menu_item": "Explain decorations",
   "decoration_condition_all_tasks_completed_describe": "all tasks are completed",
@@ -865,36 +1043,36 @@
       }
     }
   ],
-	"ui_theme_color_background_primary": "Primary background",
-	"ui_theme_color_background_primary_alt": "Background for surfaces on top of primary background",
-	"ui_theme_color_background_secondary": "Secondary background",
-	"ui_theme_color_background_secondary_alt": "Background for surfaces on top of secondary background",
-	"ui_theme_color_background_modifier_hover": "Hovered elements",
-	"ui_theme_color_background_modifier_active_hover": "Active hovered elements",
-	"ui_theme_color_background_modifier_border": "Border color",
-	"ui_theme_color_background_modifier_border_hover": "Border color (hover)",
-	"ui_theme_color_background_modifier_border_focus": "Border color (focus)",
-	"ui_theme_color_background_modifier_error": "Error background",
-	"ui_theme_color_background_modifier_error_hover": "Error background (hover)",
-	"ui_theme_color_background_modifier_success": "Success background",
-	"ui_theme_color_background_modifier_message": "Messages background",
-	"ui_theme_color_interactive_normal": "Background for standard interactive elements",
-	"ui_theme_color_interactive_hover": "Background for standard interactive elements (hover)",
-	"ui_theme_color_interactive_accent": "Background for accented interactive elements",
-	"ui_theme_color_interactive_accent_hover": "Background for accented interactive elements (hover)",
-	"ui_theme_color_text_normal": "Normal text",
-	"ui_theme_color_text_muted": "Muted text",
-	"ui_theme_color_text_faint": "Faint text",
-	"ui_theme_color_text_on_accent": "Text on accent background when accent is dark",
-	"ui_theme_color_text_on_accent_inverted": "Text on accent background when accent is light",
-	"ui_theme_color_text_success": "Success text",
-	"ui_theme_color_text_warning": "Warning text",
-	"ui_theme_color_text_error": "Error text",
-	"ui_theme_color_text_accent": "Accent text",
-	"ui_theme_color_text_accent_hover": "Accent text (hover)",
-	"ui_theme_color_text_selection": "Selected text background",
-	"ui_theme_color_text_highlight_bg": "Highlighted text background",
-	"ui_theme_color_caret_color": "Caret color",
+  "ui_theme_color_background_primary": "Primary background",
+  "ui_theme_color_background_primary_alt": "Background for surfaces on top of primary background",
+  "ui_theme_color_background_secondary": "Secondary background",
+  "ui_theme_color_background_secondary_alt": "Background for surfaces on top of secondary background",
+  "ui_theme_color_background_modifier_hover": "Hovered elements",
+  "ui_theme_color_background_modifier_active_hover": "Active hovered elements",
+  "ui_theme_color_background_modifier_border": "Border color",
+  "ui_theme_color_background_modifier_border_hover": "Border color (hover)",
+  "ui_theme_color_background_modifier_border_focus": "Border color (focus)",
+  "ui_theme_color_background_modifier_error": "Error background",
+  "ui_theme_color_background_modifier_error_hover": "Error background (hover)",
+  "ui_theme_color_background_modifier_success": "Success background",
+  "ui_theme_color_background_modifier_message": "Messages background",
+  "ui_theme_color_interactive_normal": "Background for standard interactive elements",
+  "ui_theme_color_interactive_hover": "Background for standard interactive elements (hover)",
+  "ui_theme_color_interactive_accent": "Background for accented interactive elements",
+  "ui_theme_color_interactive_accent_hover": "Background for accented interactive elements (hover)",
+  "ui_theme_color_text_normal": "Normal text",
+  "ui_theme_color_text_muted": "Muted text",
+  "ui_theme_color_text_faint": "Faint text",
+  "ui_theme_color_text_on_accent": "Text on accent background when accent is dark",
+  "ui_theme_color_text_on_accent_inverted": "Text on accent background when accent is light",
+  "ui_theme_color_text_success": "Success text",
+  "ui_theme_color_text_warning": "Warning text",
+  "ui_theme_color_text_error": "Error text",
+  "ui_theme_color_text_accent": "Accent text",
+  "ui_theme_color_text_accent_hover": "Accent text (hover)",
+  "ui_theme_color_text_selection": "Selected text background",
+  "ui_theme_color_text_highlight_bg": "Highlighted text background",
+  "ui_theme_color_caret_color": "Caret color",
 
   "journal_add_modal_anchor_description": "This date is used to count custom intervals from. It cannot be changed after creating the journal.",
 
@@ -1341,7 +1519,17 @@
   "journal_dashboard_edit": "Configure {name}",
   "journal_dashboard_empty": "No journals created yet.",
   "journal_delete_modal_title": "Delete {name}",
-  "journal_delete_connected_count": [{"declarations": ["input count"], "selectors": ["count"], "match": {"count=0": "This journal has no connected notes.", "count=1": "This journal has 1 connected note.", "count=*": "This journal has {count} connected notes."}}],
+  "journal_delete_connected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "This journal has no connected notes.",
+        "count=1": "This journal has 1 connected note.",
+        "count=*": "This journal has {count} connected notes."
+      }
+    }
+  ],
   "journal_delete_mode_label": "What to do with connected notes",
   "journal_delete_mode_option": [
     {
@@ -1424,13 +1612,32 @@
   "journal_edit_name_template_empty_warning": "This name template resolves to an empty note name, so no note can be created. Add a variable or some text to it.",
   "journal_edit_name_template_collision_warning": "Entries for {first} and {second} both resolve to {path}. They will share one note.",
   "journal_edit_colliding_warning": "This journal resolves to the same note path as {names}, so their notes will overwrite each other. Change the folder or name template to give it a distinct path.",
-  "journal_edit_name_template_invertibility_warning": [{"declarations": ["input reason", "input offending"], "selectors": ["reason"], "match": {"reason=unknown-variable": "The name template uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.", "reason=function-token": "The name template uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.", "reason=clock-variable": "The name template uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."}}],
+  "journal_edit_name_template_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "The name template uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.",
+        "reason=function-token": "The name template uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.",
+        "reason=clock-variable": "The name template uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "The name template has no date variable, so every numbering variable must appear in the note name or folder. Add {missing}, or add a date variable, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_no_carry_warning": "\"{offending}\" never resets, so the digits above it never change and the numbers cannot be turned back into a date. Set it to reset after a count, or add a date variable, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_cyclic_top_warning": "The first numbering digit resets, so the numbers repeat and cannot be turned back into a date. Add a date variable to the name template, or set the first digit to continuous, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_coarse_date_warning": "The date variable in the name template is not precise enough to tell this journal's periods apart, so more than one period gets the same note name. Use a date format that changes every period, or turn on sequential numbers and put every digit in the name or folder, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_collision_prompt_warning": "Entries for {first} and {second} both resolve to {path} because a question in the name hasn't been answered yet — once answered, each note's name will be unique.",
-  "journal_invertibility_prompt_in_path": [{"declarations": ["input reason", "input offending"], "selectors": ["reason"], "match": {"reason=text": "\"{offending}\" is a free-text answer, so notes carrying it in their name or folder can't be matched back to this journal by their path alone.", "reason=toggle": "\"{offending}\" is a yes/no answer, so notes carrying it in their name or folder can't be matched back to this journal by their path alone. Use a choice question instead."}}],
+  "journal_invertibility_prompt_in_path": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=text": "\"{offending}\" is a free-text answer, so notes carrying it in their name or folder can't be matched back to this journal by their path alone.",
+        "reason=toggle": "\"{offending}\" is a yes/no answer, so notes carrying it in their name or folder can't be matched back to this journal by their path alone. Use a choice question instead."
+      }
+    }
+  ],
   "journal_edit_name_template_label": "Note name template",
   "journal_edit_note_path_preview_label": "Resolved note path:",
   "journal_edit_rename_tooltip": "Rename journal",
@@ -1553,7 +1760,13 @@
   "journal_prompt_edit": "Edit question",
   "journal_prompt_key_required_in_path": "An answer used in the note name or folder must be saved to a property.",
   "journal_prompt_toggle_not_in_path": "A yes/no answer can't be part of a note name or folder. Use a choice question instead.",
-  "journal_prompt_modal_title": [{"declarations": ["input mode"], "selectors": ["mode"], "match": {"mode=add": "Add question", "mode=edit": "Edit question"}}],
+  "journal_prompt_modal_title": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": { "mode=add": "Add question", "mode=edit": "Edit question" }
+    }
+  ],
   "journal_prompt_note_path_label": "Note path",
   "journal_prompt_period_label": "Period",
   "journal_prompt_select_none": "(none)",
@@ -1573,7 +1786,19 @@
   "journal_prompt_section_title": "Questions",
   "journal_prompt_submit": "Create",
   "journal_prompt_type_label": "Answer type",
-  "journal_prompt_type_option": [{"declarations": ["input type"], "selectors": ["type"], "match": {"type=text": "Text", "type=number": "Number", "type=date": "Date", "type=toggle": "Yes/No", "type=select": "Choice"}}],
+  "journal_prompt_type_option": [
+    {
+      "declarations": ["input type"],
+      "selectors": ["type"],
+      "match": {
+        "type=text": "Text",
+        "type=number": "Number",
+        "type=date": "Date",
+        "type=toggle": "Yes/No",
+        "type=select": "Choice"
+      }
+    }
+  ],
   "journal_prompt_variable_duplicate": "Another question or numbering digit already uses \"{name}\".",
   "journal_property_modal_current_label": "Current name",
   "common_label_new_name": "New name",
@@ -1585,8 +1810,23 @@
   "journal_sequence_digit_add": "Add digit",
   "journal_sequence_digit_delete": "Delete digit",
   "journal_sequence_digit_edit": "Edit digit",
-  "journal_sequence_digit_modal_title": [{"declarations": ["input mode"], "selectors": ["mode"], "match": {"mode=add": "Add numbering digit", "mode=edit": "Edit numbering digit"}}],
-  "journal_sequence_digit_summary": [{"declarations": ["input kind", "input start", "input count", "input parent"], "selectors": ["kind"], "match": {"kind=never": "starts at {start} · never resets", "kind=after": "starts at {start} · {count} per {parent}"}}],
+  "journal_sequence_digit_modal_title": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": { "mode=add": "Add numbering digit", "mode=edit": "Edit numbering digit" }
+    }
+  ],
+  "journal_sequence_digit_summary": [
+    {
+      "declarations": ["input kind", "input start", "input count", "input parent"],
+      "selectors": ["kind"],
+      "match": {
+        "kind=never": "starts at {start} · never resets",
+        "kind=after": "starts at {start} · {count} per {parent}"
+      }
+    }
+  ],
   "journal_sequence_digit_summary_cyclic": "starts at {start} · resets after {count}",
   "journal_sequence_fastest_label": "Fastest — advances every note",
   "journal_sequence_per_parent_description": "After this many, {name} restarts and {parent} goes up by one.",
