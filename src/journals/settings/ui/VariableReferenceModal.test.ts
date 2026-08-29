@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { render, screen } from "@testing-library/vue";
+import { render, screen, within } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
@@ -17,7 +17,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -32,7 +32,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -47,7 +47,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -62,7 +62,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -78,7 +78,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: true,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -94,7 +94,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: ["week_no", "page_no"],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -103,20 +103,29 @@ describe("VariableReferenceModal — rules table", () => {
       expect(screen.getByText("{{page_no}}")).toBeTruthy();
     });
 
-    it("renders one row per prompt variable name", () => {
+    it("renders one row per prompt variable, describing it with its question", () => {
       render(VariableReferenceModal, {
         props: {
           journalName: "daily",
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: ["mood", "weather"],
+          promptVariables: [
+            { variable: "mood", question: "How do you feel?", type: "text" },
+            { variable: "weather", question: "What is the weather like?", type: "select" },
+          ],
           openModifications: vi.fn(),
           context,
         },
       });
       expect(screen.getByText("{{mood}}")).toBeTruthy();
       expect(screen.getByText("{{weather}}")).toBeTruthy();
+      expect(
+        screen.getByText(m.journal_edit_variable_prompt_description({ question: "How do you feel?" })),
+      ).toBeTruthy();
+      expect(
+        screen.getByText(m.journal_edit_variable_prompt_description({ question: "What is the weather like?" })),
+      ).toBeTruthy();
     });
 
     it("renders a modifications link on each numbering row", () => {
@@ -126,13 +135,41 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: ["week_no", "page_no"],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
       });
       const links = screen.getAllByRole("link", { name: /additional modifications/i });
       expect(links.length).toBe(7);
+    });
+
+    it("offers date modifications on a date answer and on no other answer type", async () => {
+      const openModifications = vi.fn();
+      render(VariableReferenceModal, {
+        props: {
+          journalName: "daily",
+          dateFormat: "YYYY-MM-DD",
+          hasCycle: false,
+          numberingVariableNames: [],
+          promptVariables: [
+            { variable: "due", question: "When is it due?", type: "date" },
+            { variable: "mood", question: "How do you feel?", type: "text" },
+          ],
+          openModifications,
+          context,
+        },
+      });
+
+      // The row is the unit: a date answer binds as a date spec and takes shifts and formats,
+      // while a text answer is a bare string that none of them apply to.
+      const dateRow = screen.getByText("{{due}}").closest(".variable-reference__row");
+      const textRow = screen.getByText("{{mood}}").closest(".variable-reference__row");
+      expect(within(dateRow as HTMLElement).getByRole("link", { name: /additional modifications/i })).toBeTruthy();
+      expect(within(textRow as HTMLElement).queryByRole("link", { name: /additional modifications/i })).toBeNull();
+
+      await userEvent.click(within(dateRow as HTMLElement).getByRole("link", { name: /additional modifications/i }));
+      expect(openModifications).toHaveBeenCalledTimes(1);
     });
 
     it("renders current_date", () => {
@@ -142,7 +179,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -157,7 +194,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -172,7 +209,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -191,7 +228,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context: "name-template",
         },
@@ -207,7 +244,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context,
         },
@@ -225,7 +262,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context: "name-template",
         },
@@ -240,7 +277,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context: "folder-path",
         },
@@ -255,7 +292,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context: "template-path",
         },
@@ -272,7 +309,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications: vi.fn(),
           context: "name-template",
         },
@@ -289,7 +326,7 @@ describe("VariableReferenceModal — rules table", () => {
           dateFormat: "YYYY-MM-DD",
           hasCycle: false,
           numberingVariableNames: [],
-          promptVariableNames: [],
+          promptVariables: [],
           openModifications,
           context: "name-template",
         },
@@ -297,6 +334,45 @@ describe("VariableReferenceModal — rules table", () => {
       await userEvent.click(screen.getAllByRole("link", { name: /additional modifications/i })[0]);
       expect(openModifications).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("VariableReferenceModal yes/no answers", () => {
+  const promptVariables = [
+    { variable: "done", question: "Done?", type: "toggle" as const },
+    { variable: "mood", question: "How do you feel?", type: "text" as const },
+  ];
+
+  function renderIn(context: VariableModalContext): void {
+    render(VariableReferenceModal, {
+      props: {
+        journalName: "daily",
+        dateFormat: "YYYY-MM-DD",
+        hasCycle: false,
+        numberingVariableNames: [],
+        promptVariables,
+        openModifications: vi.fn(),
+        context,
+      },
+    });
+  }
+
+  // A yes/no answer renders a localized "Yes"/"No" that no path pattern matches, so the question
+  // editor refuses one in a name or folder. Advertising it in the two path contexts would offer
+  // the user a variable that cannot be saved there.
+  it.each(["name-template", "folder-path"] as const)("omits a yes/no answer in %s", (context) => {
+    renderIn(context);
+
+    expect(screen.queryByText("{{done}}")).toBeNull();
+    expect(screen.getByText("{{mood}}")).toBeTruthy();
+  });
+
+  // Neither template becomes part of the note's path, so nothing there has to invert.
+  it.each(["template-path", "nav-row"] as const)("still lists a yes/no answer in %s", (context) => {
+    renderIn(context);
+
+    expect(screen.getByText("{{done}}")).toBeTruthy();
+    expect(screen.getByText("{{mood}}")).toBeTruthy();
   });
 });
 
@@ -308,7 +384,7 @@ describe("VariableReferenceModal template-path context", () => {
         dateFormat: "YYYY-MM-DD",
         hasCycle: false,
         numberingVariableNames: [],
-        promptVariableNames: [],
+        promptVariables: [],
         openModifications: vi.fn(),
         context: "template-path",
       },
@@ -323,7 +399,7 @@ describe("VariableReferenceModal template-path context", () => {
         dateFormat: "YYYY-MM-DD",
         hasCycle: false,
         numberingVariableNames: [],
-        promptVariableNames: [],
+        promptVariables: [],
         openModifications: vi.fn(),
         context: "name-template",
       },
@@ -338,7 +414,7 @@ describe("VariableReferenceModal template-path context", () => {
         dateFormat: "YYYY-MM-DD",
         hasCycle: false,
         numberingVariableNames: [],
-        promptVariableNames: [],
+        promptVariables: [],
         openModifications: vi.fn(),
         context: "folder-path",
       },
@@ -355,7 +431,7 @@ describe("VariableReferenceModal nav-row context", () => {
         dateFormat: "YYYY-MM-DD",
         hasCycle: true,
         numberingVariableNames: [],
-        promptVariableNames: [],
+        promptVariables: [],
         openModifications: vi.fn(),
         context: "nav-row",
       },
@@ -371,7 +447,7 @@ describe("VariableReferenceModal nav-row context", () => {
         dateFormat: "YYYY-MM-DD",
         hasCycle: false,
         numberingVariableNames: [],
-        promptVariableNames: [],
+        promptVariables: [],
         openModifications: vi.fn(),
         context: "name-template",
       },
@@ -386,7 +462,7 @@ describe("VariableReferenceModal nav-row context", () => {
         dateFormat: "YYYY-MM-DD",
         hasCycle: false,
         numberingVariableNames: ["sprint"],
-        promptVariableNames: [],
+        promptVariables: [],
         openModifications: vi.fn(),
         context: "nav-row",
       },

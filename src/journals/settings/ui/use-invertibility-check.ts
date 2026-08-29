@@ -11,6 +11,7 @@ import { parseSpecFor } from "../../prompts/prompt-binding";
 import { promptsInPath } from "../../prompts/prompts-in-path";
 
 import type { JournalConfig } from "../../config";
+import type { Prompt } from "../../prompts/config";
 
 export type InvertibilityWarning =
   | { kind: "non-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string }
@@ -18,7 +19,7 @@ export type InvertibilityWarning =
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
   | { kind: "unused-digits"; missing: readonly string[] }
-  | { kind: "text-prompt-in-path"; offending: string };
+  | { kind: "prompt-in-path"; reason: "text" | "toggle"; offending: string };
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
 
@@ -69,11 +70,18 @@ export function useInvertibilityCheck(
         return { kind: "non-invertible", reason: detail.reason, offending: detail.offending };
       }
     }
-    // A text answer has no bounded pattern, so a name or folder carrying one matches only while
-    // it is unanswered. Every real note of this journal is then invisible to path inversion —
-    // worth its own verdict rather than passing silently as a template that "compiles".
-    const textInPath = promptsInPath(value).find((prompt) => prompt.type === "text");
-    if (textInPath) return { kind: "text-prompt-in-path", offending: textInPath.variable };
+    // Neither a text nor a yes/no answer has a bounded pattern — parseSpecFor gives both only
+    // the placeholder as an alternative — so a name or folder carrying one matches only while it
+    // is unanswered. Every real note of this journal is then invisible to path inversion, worth
+    // its own verdict rather than passing silently as a template that "compiles". The round-trip
+    // probe below cannot stand in for this: it renders the unanswered path, which does match.
+    // A yes/no reaches a template only by being added to it after the fact — EditPromptModal
+    // refuses the reverse order — so this is the only place that catches it.
+    const promptInPath = promptsInPath(value).find(
+      (prompt): prompt is Extract<Prompt, { type: "text" | "toggle" }> =>
+        prompt.type === "text" || prompt.type === "toggle",
+    );
+    if (promptInPath) return { kind: "prompt-in-path", reason: promptInPath.type, offending: promptInPath.variable };
     // The template compiles, but auto-attach still needs to recover an anchor from the path.
     // Two adjacent periods, because a coarse date variable pins one period of its own range —
     // a year on a two-week cycle names every note of the year alike, yet the interval holding

@@ -51,6 +51,21 @@
           "type": "text",
           "frontmatterKey": "note",
           "required": false
+        },
+        {
+          "variable": "due",
+          "question": "When is it due?",
+          "type": "date",
+          "format": "YYYY-MM-DD",
+          "frontmatterKey": "due",
+          "required": false
+        },
+        {
+          "variable": "pinned",
+          "question": "Pin it?",
+          "type": "toggle",
+          "frontmatterKey": "pinned",
+          "required": false
         }
       ]
     }

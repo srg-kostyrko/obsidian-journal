@@ -4,8 +4,13 @@ import { m } from "../../src/i18n/paraglide/messages.js";
 import { confirmUpdateLinksDialog } from "../support/rename-links-dialog.js";
 import {
   clickDialogButton,
+  clickIcon,
   clickModalCta,
+  closeSettings,
+  dismissDialogs,
+  goBack,
   modalText,
+  openSettings,
   selectModalOption,
   submitModal,
   waitForDialogClosed,
@@ -150,5 +155,69 @@ describe("confirming a note whose name carries no prompt answer", () => {
     await clickDialogButton(m.common_action_cancel());
     await waitForDialogClosed();
     expect(await noteExists("2030-07-22.md")).toBe(false);
+  });
+});
+
+async function openVariableReference(journal: string): Promise<void> {
+  await clickIcon(m.journal_dashboard_edit({ name: journal }));
+  // The Note creation section is expanded on arrival, so its name-template row's hint is the
+  // first "Supported variables." link on the page.
+  await $(`a=${m.journal_edit_variable_reference_link()}`).click();
+  await waitForModalOpen();
+}
+
+// Every variable row in the open reference, as "<chip>:<carries a modifications link>". Read
+// per row rather than by counting links page-wide: the count cannot say which row grew one.
+function modificationsByRow(): Promise<string> {
+  return browser.execute(() =>
+    [...document.querySelectorAll(".variable-reference__row")]
+      .map((row) => `${row.querySelector("dt")?.textContent?.trim()}:${row.querySelector("dd a") !== null}`)
+      .join(" "),
+  );
+}
+
+describe("the variable reference of a prompting journal", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
+    await openSettings();
+  });
+
+  after(closeSettings);
+
+  afterEach(async () => {
+    await dismissDialogs();
+    await goBack();
+  });
+
+  it("lists a question's variable beside the question it answers", async () => {
+    await openVariableReference("prompted");
+
+    // The chip alone proves the row rendered; the description proves it carries the question,
+    // which is the only thing telling two questions' variables apart in a list of them.
+    const text = await modalText();
+    expect(text).toContain("{{mood}}");
+    expect(text).toContain(m.journal_edit_variable_prompt_description({ question: "How was today?" }));
+  });
+
+  it("offers date modifications on a date answer and on no other answer type", async () => {
+    await openVariableReference("confirmed");
+
+    // A date answer binds as a date spec, so shifts and formats apply to it exactly as they do
+    // to {{date}}; a text answer is a bare string that none of them reach.
+    const rows = await modificationsByRow();
+    expect(rows).toContain("{{due}}:true");
+    expect(rows).toContain("{{note}}:false");
+  });
+
+  it("omits a yes/no answer from the note name reference", async () => {
+    await openVariableReference("confirmed");
+
+    // The question editor refuses a yes/no answer in a name or folder, so offering it here would
+    // advertise a variable that cannot be saved. The other two answers pin the omission to this
+    // question rather than to a reference that failed to list any of them.
+    const rows = await modificationsByRow();
+    expect(rows).not.toContain("{{pinned}}");
+    expect(rows).toContain("{{note}}");
+    expect(rows).toContain("{{due}}");
   });
 });
