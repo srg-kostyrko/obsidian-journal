@@ -81,15 +81,18 @@ describe("WeekCalendarBlock", () => {
   });
 
   it("passes refDate and selection through to each NotesWeekView", async () => {
+    const selectRefDate = vi.fn();
     const setRefDate = vi.fn();
     const { getAllByTestId, getByTestId } = await mountBlock(baseConfig, {
       refDate: ref("2026-05-15" as AnchorString),
+      selectRefDate,
       setRefDate,
     });
 
     expect(getAllByTestId("week-stub")[0]?.dataset.selectedDate).toBe("2026-05-15");
     getByTestId("select-date").click();
-    expect(setRefDate).toHaveBeenCalledWith("2026-05-25");
+    expect(selectRefDate).toHaveBeenCalledWith("2026-05-25");
+    expect(setRefDate).not.toHaveBeenCalled();
   });
 
   it("holds the window on a followed date that is already visible", async () => {

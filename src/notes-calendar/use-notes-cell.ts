@@ -16,7 +16,6 @@ export interface NotesCellApi {
   openPreview(period: Period, event: MouseEvent): void;
   isActive(period: Period): boolean;
   isActionable(period: Period): boolean;
-  isSelectable(): boolean;
 }
 
 export type NotesDateSelect = (date: AnchorString) => void;
@@ -27,7 +26,8 @@ type NotesDateSelectSource = () => NotesDateSelect | undefined;
 function isSelectionGesture(event: MouseEvent | KeyboardEvent): boolean {
   if (!event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return false;
   if ("button" in event) return event.button === 0;
-  return event.key === "Enter";
+  // Both halves of the standard activation pair, since the cell binds both.
+  return event.key === "Enter" || event.key === " ";
 }
 
 export function useNotesCell(options: {
@@ -62,11 +62,13 @@ export function useNotesCell(options: {
     index.pathsAt(toValue(options.journalNames), period.anchor.toAnchor());
 
   const selectDate = (): NotesDateSelect | undefined => options.onSelect?.();
-  const isSelectable = (): boolean => selectDate() !== undefined;
 
   const open = (period: Period, event: MouseEvent | KeyboardEvent): void => {
-    if (isSelectionGesture(event)) {
-      selectDate()?.(period.representative.toAnchor());
+    // Claimed only where a caller wired selection: surfaces that did not — the timeline code
+    // blocks — keep opening on Shift+click rather than swallowing it.
+    const select = selectDate();
+    if (select && isSelectionGesture(event)) {
+      select(period.representative.toAnchor());
       return;
     }
     if (!isActionable(period)) return;
@@ -88,5 +90,5 @@ export function useNotesCell(options: {
     workspace.openPathsMenu(existingPathsAt(period), event, decorationItems({ kind: "fixed", period }));
   };
 
-  return { open, openContextMenu, openPreview, isActive, isActionable, isSelectable };
+  return { open, openContextMenu, openPreview, isActive, isActionable };
 }

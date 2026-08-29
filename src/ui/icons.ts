@@ -19,6 +19,9 @@ export const icons = {
     sort: "arrow-up-down",
     sortAscending: "arrow-up",
     sortDescending: "arrow-down",
+    sortByName: "text",
+    sortByModified: "clock",
+    sortByCreated: "calendar-plus",
   },
   nav: {
     prev: "chevron-left",

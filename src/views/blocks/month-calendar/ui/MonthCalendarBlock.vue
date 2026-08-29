@@ -51,7 +51,7 @@ const weekPlacement = useResolvedWeekPlacement(() => props.config.weeks);
       :show-header="config.showHeading"
       :outside-dates="outsideDates"
       :selected-date="viewContext.refDate.value"
-      :select-date="viewContext.setRefDate"
+      :select-date="viewContext.selectRefDate"
     />
   </div>
 </template>

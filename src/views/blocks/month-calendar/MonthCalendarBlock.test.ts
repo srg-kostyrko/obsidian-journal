@@ -109,15 +109,42 @@ describe("MonthCalendarBlock", () => {
   });
 
   it("passes refDate and selection through to each NotesMonthView", async () => {
+    const selectRefDate = vi.fn();
     const setRefDate = vi.fn();
     const { getAllByTestId, getByTestId } = await mountBlock(baseConfig, {
       refDate: ref("2026-05-15" as AnchorString),
+      selectRefDate,
       setRefDate,
     });
 
     expect(getAllByTestId("month-stub")[0]?.dataset.selectedDate).toBe("2026-05-15");
     getByTestId("select-date").click();
-    expect(setRefDate).toHaveBeenCalledWith("2026-05-25");
+    expect(selectRefDate).toHaveBeenCalledWith("2026-05-25");
+    expect(setRefDate).not.toHaveBeenCalled();
+  });
+
+  it("holds the window on a selected date that is already visible", async () => {
+    const refDate = ref("2026-05-15" as AnchorString);
+    const refDateOrigin = ref<RefDateOrigin>("navigate");
+    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+
+    refDateOrigin.value = "select";
+    refDate.value = "2026-06-03" as AnchorString;
+    await nextTick();
+
+    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
+  });
+
+  it("re-lays-out for a selected date the window does not show", async () => {
+    const refDate = ref("2026-05-15" as AnchorString);
+    const refDateOrigin = ref<RefDateOrigin>("navigate");
+    const { getAllByTestId } = await mountBlock(baseConfig, { refDate, refDateOrigin });
+
+    refDateOrigin.value = "select";
+    refDate.value = "2026-06-03" as AnchorString;
+    await nextTick();
+
+    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-06-01");
   });
 
   it("holds the window on a followed date that is already visible", async () => {

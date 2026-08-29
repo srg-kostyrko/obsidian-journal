@@ -52,6 +52,7 @@ export function provideViewContextStub(partial: Partial<ViewContext> = {}): View
     shelf: ref(null),
     preview: false,
     setRefDate: () => undefined,
+    selectRefDate: () => undefined,
     setShelf: () => undefined,
     ...partial,
   };

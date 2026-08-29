@@ -305,6 +305,33 @@ describe("JournalViewLeaf", () => {
       await leaf.onClose();
     });
 
+    it("reports a select origin after selectRefDate overrides a followed date", async () => {
+      const { harness, leaf, leafInstance, probe } = await buildFollowingView();
+      // Same seeding as above: keeps the initial follow independent of the real wall clock.
+      await leafInstance.setState({ refDate: "2026-01-01" }, {});
+      await leaf.onOpen();
+      openDailyNote(harness);
+      await nextTick();
+
+      probe.context?.selectRefDate("2026-04-01" as AnchorString);
+
+      expect(probe.context?.refDate.value).toBe("2026-04-01");
+      expect(probe.context?.refDateOrigin.value).toBe("select");
+      await leaf.onClose();
+    });
+
+    it("reports a navigate origin after setRefDate overrides a selected date", async () => {
+      const { leaf, leafInstance, probe } = await buildFollowingView();
+      await leafInstance.setState({ refDate: "2026-01-01" }, {});
+      await leaf.onOpen();
+
+      probe.context?.selectRefDate("2026-04-01" as AnchorString);
+      probe.context?.setRefDate("2026-04-01" as AnchorString);
+
+      expect(probe.context?.refDateOrigin.value).toBe("navigate");
+      await leaf.onClose();
+    });
+
     it("leaves the view's date unchanged when the view has follow active date turned off", async () => {
       const { harness, leaf, probe } = await buildFollowingView({ followActiveDate: false });
       await leaf.onOpen();

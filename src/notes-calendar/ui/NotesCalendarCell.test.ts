@@ -18,7 +18,6 @@ function stubApi(overrides: Partial<NotesCellApi> = {}): NotesCellApi {
     openPreview: vi.fn(),
     isActive: () => false,
     isActionable: () => true,
-    isSelectable: () => false,
     ...overrides,
   };
 }
@@ -101,16 +100,6 @@ describe("NotesCalendarCell", () => {
       const { container } = mount({ period: may25, cell: stubApi({ isActionable: () => false }) });
       const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
       expect(cell?.hasAttribute("tabindex")).toBe(false);
-    });
-
-    it("remains focusable outside a grid when it can select but cannot open", () => {
-      const { container } = mount({
-        period: may25,
-        cell: stubApi({ isActionable: () => false, isSelectable: () => true }),
-      });
-      const cell = container.querySelector<HTMLElement>(".notes-calendar-cell");
-      expect(cell?.getAttribute("role")).toBe("button");
-      expect(cell?.tabIndex).toBe(0);
     });
 
     it("uses the caller-supplied grid role and roving tabindex", () => {

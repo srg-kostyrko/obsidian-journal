@@ -193,15 +193,23 @@ describe("NotesMonthView", () => {
   });
 
   describe("date selection", () => {
-    it("marks only cells whose representative exactly matches selectedDate", async () => {
-      const harness = await bootHarness({ daily: fixedJournal("daily", { type: "day" }) });
+    // The month header and the week-number cells share their representative with a day cell —
+    // the month's with the 1st, a week's with its week-year day — so a date that collides is the
+    // only one that can catch a coarse cell ringing alongside the day the user selected.
+    it("marks only the day cell matching selectedDate", async () => {
+      const harness = await bootHarness({
+        daily: fixedJournal("daily", { type: "day" }),
+        monthly: fixedJournal("monthly", { type: "month" }),
+        weekly: fixedJournal("weekly", { type: "week" }),
+      });
       const { container } = harness.render(NotesMonthView, {
-        props: { shelf: null, month, selectedDate: anchor("2026-08-15") },
+        props: { shelf: null, month, selectedDate: anchor("2026-08-01") },
       });
       const selected = container.querySelectorAll('[aria-selected="true"]');
 
       expect(selected.length).toBe(1);
-      expect((selected[0] as HTMLElement | undefined)?.dataset.anchor).toBe("2026-08-15");
+      expect((selected[0] as HTMLElement | undefined)?.getAttribute("role")).toBe("gridcell");
+      expect((selected[0] as HTMLElement | undefined)?.dataset.anchor).toBe("2026-08-01");
     });
 
     it("selects an inactive outside date on Shift+primary click without opening it", async () => {
@@ -217,23 +225,37 @@ describe("NotesMonthView", () => {
       expect(selectDate).toHaveBeenCalledWith(outside.dataset.anchor);
     });
 
-    it("reacts when a selection callback becomes available after mount", async () => {
+    it("leaves a header cell with no journal of its kind out of the tab order", async () => {
+      const selectDate = vi.fn();
       const harness = await bootHarness({});
-      const view = harness.render(NotesMonthView, { props: { shelf: null, month } });
-      const header = view.container.querySelector<HTMLElement>('[data-testid="header-month"]')!;
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, selectDate } });
+      const header = container.querySelector<HTMLElement>('[data-testid="header-month"]')!;
 
       expect(header.hasAttribute("role")).toBe(false);
       expect(header.hasAttribute("tabindex")).toBe(false);
       expect(header.hasAttribute("aria-label")).toBe(false);
+    });
 
+    it("does not select from a header cell", async () => {
       const selectDate = vi.fn();
-      await view.rerender({ shelf: null, month, selectDate });
+      const harness = await bootHarness({ monthly: fixedJournal("monthly", { type: "month" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, selectDate } });
+      const header = container.querySelector<HTMLElement>('[data-testid="header-month"]')!;
 
-      expect(header.getAttribute("role")).toBe("button");
-      expect(header.tabIndex).toBe(0);
-      expect(header.getAttribute("aria-label")).toBe(month.format("MMMM YYYY"));
       await fireEvent.click(header, { shiftKey: true, button: 0 });
-      expect(selectDate).toHaveBeenCalledWith(month.representative.toAnchor());
+
+      expect(selectDate).not.toHaveBeenCalled();
+    });
+
+    it("does not select from a week-number cell", async () => {
+      const selectDate = vi.fn();
+      const harness = await bootHarness({ weekly: fixedJournal("weekly", { type: "week" }) });
+      const { container } = harness.render(NotesMonthView, { props: { shelf: null, month, selectDate } });
+      const weekCell = container.querySelector<HTMLElement>('[data-testid="week-number-cell"]')!;
+
+      await fireEvent.click(weekCell, { shiftKey: true, button: 0 });
+
+      expect(selectDate).not.toHaveBeenCalled();
     });
   });
 

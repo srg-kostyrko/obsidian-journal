@@ -16,9 +16,10 @@ export function useWindowAnchor(options: WindowAnchorOptions): ComputedRef<Ancho
   watch(
     () => toValue(options.refDate),
     (next) => {
-      // A note opening moves the selection but should not scroll a grid that already shows it;
-      // navigation is an explicit request to move, so it always re-lays-out the window.
-      if (toValue(options.origin) === "follow" && options.contains(next, anchor.value)) return;
+      // A note opening and a date picked out of a grid both move the selection without asking
+      // the window to scroll away from what already shows it; navigation is an explicit request
+      // to move, so it always re-lays-out the window.
+      if (toValue(options.origin) !== "navigate" && options.contains(next, anchor.value)) return;
       anchor.value = next;
     },
   );
