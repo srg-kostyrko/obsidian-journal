@@ -63,6 +63,12 @@ describe("resolveButtonAppearance", () => {
   });
 
   describe("navigate-step prev", () => {
+    it("uses chevron-left for day", () => {
+      expect(resolveButtonAppearance({ type: "navigate-step", direction: "prev", unit: "day", amount: 1 }).icon).toBe(
+        "chevron-left",
+      );
+    });
+
     it("uses chevron-left for week", () => {
       expect(resolveButtonAppearance({ type: "navigate-step", direction: "prev", unit: "week", amount: 1 }).icon).toBe(
         "chevron-left",
@@ -89,6 +95,12 @@ describe("resolveButtonAppearance", () => {
   });
 
   describe("navigate-step next", () => {
+    it("uses chevron-right for day", () => {
+      expect(resolveButtonAppearance({ type: "navigate-step", direction: "next", unit: "day", amount: 1 }).icon).toBe(
+        "chevron-right",
+      );
+    });
+
     it("uses chevron-right for week", () => {
       expect(resolveButtonAppearance({ type: "navigate-step", direction: "next", unit: "week", amount: 1 }).icon).toBe(
         "chevron-right",

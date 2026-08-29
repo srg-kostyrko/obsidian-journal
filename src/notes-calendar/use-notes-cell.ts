@@ -1,6 +1,6 @@
 import { toValue, type MaybeRefOrGetter } from "vue";
 
-import type { Period } from "@/calendar";
+import type { AnchorString, Period } from "@/calendar";
 import { useDecorationMenuItems, type CellStyleRef } from "@/decorations";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -16,6 +16,18 @@ export interface NotesCellApi {
   openPreview(period: Period, event: MouseEvent): void;
   isActive(period: Period): boolean;
   isActionable(period: Period): boolean;
+  isSelectable(): boolean;
+}
+
+export type NotesDateSelect = (date: AnchorString) => void;
+type NotesDateSelectSource = () => NotesDateSelect | undefined;
+
+// MouseEvent and KeyboardEvent come from a different realm in an Obsidian popout. Property
+// checks work in every realm; instanceof MouseEvent does not.
+function isSelectionGesture(event: MouseEvent | KeyboardEvent): boolean {
+  if (!event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return false;
+  if ("button" in event) return event.button === 0;
+  return event.key === "Enter";
 }
 
 export function useNotesCell(options: {
@@ -24,6 +36,7 @@ export function useNotesCell(options: {
   // and a component's own provide() is invisible to its own inject().
   decorations?: ReadonlyMap<string, CellStyleRef> | null;
   shelf?: MaybeRefOrGetter<string | null>;
+  onSelect?: NotesDateSelectSource;
 }): NotesCellApi {
   const flows = useService(Flows);
   const workspace = useService(WorkspaceService);
@@ -48,13 +61,20 @@ export function useNotesCell(options: {
   const existingPathsAt = (period: Period): readonly VaultPath[] =>
     index.pathsAt(toValue(options.journalNames), period.anchor.toAnchor());
 
+  const selectDate = (): NotesDateSelect | undefined => options.onSelect?.();
+  const isSelectable = (): boolean => selectDate() !== undefined;
+
   const open = (period: Period, event: MouseEvent | KeyboardEvent): void => {
+    if (isSelectionGesture(event)) {
+      selectDate()?.(period.representative.toAnchor());
+      return;
+    }
     if (!isActionable(period)) return;
     void flows.invoke(OpenDateFlow, {
       anchor: period.anchor.toAnchor(),
       journalNames: [...toValue(options.journalNames)],
       openMode: defineOpenMode(event),
-      ...(event instanceof MouseEvent && { pickAt: event }),
+      ...("button" in event && { pickAt: event }),
     });
   };
 
@@ -68,5 +88,5 @@ export function useNotesCell(options: {
     workspace.openPathsMenu(existingPathsAt(period), event, decorationItems({ kind: "fixed", period }));
   };
 
-  return { open, openContextMenu, openPreview, isActive, isActionable };
+  return { open, openContextMenu, openPreview, isActive, isActionable, isSelectable };
 }

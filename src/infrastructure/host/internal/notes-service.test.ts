@@ -44,6 +44,7 @@ describe("NotesService", () => {
         basename: "2026-05-13",
         folder: "Daily" as VaultPath,
         size: 0,
+        ctime: 0,
         mtime: 0,
       });
     });

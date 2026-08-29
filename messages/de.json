@@ -1,5 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"view_block_day_notes_label": "Notizen nach Datum",
+	"view_block_day_notes_description": "Listet Notizen auf, die in dem Zeitraum erstellt wurden, der das ausgewählte Datum der Ansicht enthält.",
+	"view_block_day_notes_granularity_label": "Zeitraum",
+	"view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"Tag","kind=week":"Woche","kind=month":"Monat","kind=quarter":"Quartal","kind=year":"Jahr","kind=decade":"Jahrzehnt"}}],
+	"view_block_day_notes_sort_field_label": "Notizen sortieren nach",
+	"view_block_day_notes_sort_direction_label": "Sortierrichtung",
+	"view_block_day_notes_sort_name": "Name",
+	"view_block_day_notes_sort_modified": "Zuletzt geändert",
+	"view_block_day_notes_sort_created": "Erstellungsdatum",
+	"view_block_day_notes_sort_ascending": "Aufsteigend",
+	"view_block_day_notes_sort_descending": "Absteigend",
+	"view_block_day_notes_show_heading_label": "Zeitraumüberschrift anzeigen",
+	"view_block_day_notes_show_navigation_label": "Zeitraumnavigation anzeigen",
+	"view_block_day_notes_last_modified": "Zuletzt geändert: {date}",
+	"view_block_day_notes_created": "Erstellt: {date}",
+	"view_block_day_notes_empty": "In diesem Zeitraum wurden keine Notizen erstellt.",
+	"view_block_day_notes_update_error": "Der Block „Notizen nach Datum“ konnte nicht aktualisiert werden.",
+	"day_notes_settings_title": "Notizen nach Datum",
+	"day_notes_settings_property_label": "Eigenschaft für das Erstellungsdatum",
+	"day_notes_settings_property_description": "Frontmatter-Eigenschaft, die als Erstellungsdatum verwendet wird. Notizen ohne gültigen Wert verwenden ihre Dateierstellungszeit.",
+	"day_notes_settings_format_label": "Format des Erstellungsdatums",
+	"day_notes_settings_format_description": "Datumsformat zum Auslesen der Eigenschaft für das Erstellungsdatum.",
+	"calendar_appearance_selected_ring": "Ausgewähltes Datum – Ring",
+	"calendar_appearance_selected_ring_description": "Ringfarbe der Kalenderzelle, die dem ausgewählten Datum der Ansicht entspricht.",
 	"calendar_apply_globally_desc": "Wenn diese Option deaktiviert ist, gilt die Wochenkonfiguration nur für Datumsangaben innerhalb von Journalen und wirkt sich nicht auf Datumsangaben aus, die von anderen Plugins oder von Obsidian selbst erstellt werden.",
 	"calendar_apply_globally_restart_hint": "Möglicherweise musst du Obsidian neu starten, damit die Änderungen wirksam werden.",
 	"calendar_apply_globally_title": "Wochenkonfiguration auf alle Datumsangaben im Vault anwenden",
@@ -1647,10 +1671,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Vorheriger Tag",
 				"unit=week": "Vorherige Woche",
 				"unit=month": "Vorheriger Monat",
 				"unit=quarter": "Vorheriges Quartal",
-				"unit=year": "Vorheriges Jahr"
+				"unit=year": "Vorheriges Jahr",
+				"unit=decade": "Vorheriges Jahrzehnt"
 			}
 		}
 	],
@@ -1663,10 +1689,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Nächster Tag",
 				"unit=week": "Nächste Woche",
 				"unit=month": "Nächster Monat",
 				"unit=quarter": "Nächstes Quartal",
-				"unit=year": "Nächstes Jahr"
+				"unit=year": "Nächstes Jahr",
+				"unit=decade": "Nächstes Jahrzehnt"
 			}
 		}
 	],

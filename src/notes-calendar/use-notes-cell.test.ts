@@ -15,7 +15,7 @@ import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { notesCalendarModule } from "./module";
-import { useNotesCell, type NotesCellApi } from "./use-notes-cell";
+import { useNotesCell, type NotesCellApi, type NotesDateSelect } from "./use-notes-cell";
 
 const MODULES = [journalsCoreModule, notesCalendarModule];
 
@@ -46,11 +46,12 @@ function resolveApi(
   harness: TestHarness,
   journalNames: () => readonly string[],
   decorations?: ReadonlyMap<string, CellStyleRef> | null,
+  onSelect?: (date: AnchorString) => void,
 ): NotesCellApi {
   let captured: NotesCellApi | undefined;
   const Probe = defineComponent({
     setup() {
-      captured = useNotesCell({ journalNames, decorations });
+      captured = useNotesCell({ journalNames, decorations, onSelect: () => onSelect });
       return undefined;
     },
     template: "<div />",
@@ -167,6 +168,99 @@ describe("useNotesCell", () => {
       api.open(may25, new MouseEvent("click"));
 
       expect(invokeSpy).not.toHaveBeenCalled();
+    });
+
+    it("selects an inactive period representative on Shift+primary click without opening", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const onSelect = vi.fn();
+      const api = resolveApi(harness, () => [], undefined, onSelect);
+
+      api.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
+
+      expect(onSelect).toHaveBeenCalledWith(may25.representative.toAnchor());
+      expect(invokeSpy).not.toHaveBeenCalled();
+    });
+
+    it("selects the period representative on Shift+Enter without opening", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const onSelect = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, onSelect);
+
+      api.open(may25, { shiftKey: true, key: "Enter" } as KeyboardEvent);
+
+      expect(onSelect).toHaveBeenCalledWith(may25.representative.toAnchor());
+      expect(invokeSpy).not.toHaveBeenCalled();
+    });
+
+    it("leaves Shift+Space on the ordinary activation path", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const onSelect = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, onSelect);
+
+      api.open(may25, new KeyboardEvent("keydown", { shiftKey: true, key: " " }));
+
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.anything());
+    });
+
+    it("does not fall through to opening when Shift+primary click has no selection callback", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
+
+      api.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
+
+      expect(invokeSpy).not.toHaveBeenCalled();
+    });
+
+    it("does not claim Shift+middle click", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const onSelect = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, onSelect);
+
+      api.open(may25, new MouseEvent("auxclick", { shiftKey: true, button: 1 }));
+
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+    });
+
+    it("does not claim a primary click carrying Shift plus an open-mode modifier", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      const onSelect = vi.fn();
+      const api = resolveApi(harness, () => ["daily"], undefined, onSelect);
+
+      api.open(may25, new MouseEvent("click", { shiftKey: true, ctrlKey: true, button: 0 }));
+
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+    });
+  });
+
+  describe("isSelectable", () => {
+    it("reads the current selection callback after setup", async () => {
+      const { harness, invokeSpy } = await bootHarness();
+      let onSelect: NotesDateSelect | undefined;
+      let captured: NotesCellApi | undefined;
+      const Probe = defineComponent({
+        setup() {
+          captured = useNotesCell({ journalNames: () => [], onSelect: () => onSelect });
+          return undefined;
+        },
+        template: "<div />",
+      });
+      harness.render(Probe);
+      if (!captured) throw new Error("probe did not capture the notes-cell api");
+
+      expect(captured.isSelectable()).toBe(false);
+
+      const select = vi.fn();
+      onSelect = select;
+      expect(captured.isSelectable()).toBe(true);
+      captured.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
+      expect(select).toHaveBeenCalledWith(may25.representative.toAnchor());
+      expect(invokeSpy).not.toHaveBeenCalled();
+
+      onSelect = undefined;
+      expect(captured.isSelectable()).toBe(false);
     });
   });
 

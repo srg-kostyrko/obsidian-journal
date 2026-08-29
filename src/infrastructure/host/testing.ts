@@ -40,6 +40,7 @@ interface FakeEntry {
   content: string;
   frontmatter: Record<string, unknown>;
   size: number;
+  ctime: number;
   mtime: number;
 }
 
@@ -53,8 +54,15 @@ function folderOf(path: VaultPath): VaultPath {
   return (index === -1 ? "" : path.slice(0, index)) as VaultPath;
 }
 
-function noteOf(path: VaultPath, stat: { size: number; mtime: number }): Note {
-  return { path, basename: basename(path), folder: folderOf(path), size: stat.size, mtime: stat.mtime };
+function noteOf(path: VaultPath, stat: { size: number; ctime: number; mtime: number }): Note {
+  return {
+    path,
+    basename: basename(path),
+    folder: folderOf(path),
+    size: stat.size,
+    ctime: stat.ctime,
+    mtime: stat.mtime,
+  };
 }
 
 export class FakeNotesService implements Pick<
@@ -95,9 +103,15 @@ export class FakeNotesService implements Pick<
     path: VaultPath,
     content = "",
     frontmatter: Record<string, unknown> = {},
-    stat: { size?: number; mtime?: number } = {},
+    stat: { size?: number; ctime?: number; mtime?: number } = {},
   ): void {
-    this.#files.set(path, { content, frontmatter, size: stat.size ?? 0, mtime: stat.mtime ?? 0 });
+    this.#files.set(path, {
+      content,
+      frontmatter,
+      size: stat.size ?? 0,
+      ctime: stat.ctime ?? 0,
+      mtime: stat.mtime ?? 0,
+    });
     this.#registerParentFolders(path);
   }
 
@@ -119,6 +133,7 @@ export class FakeNotesService implements Pick<
       content,
       frontmatter: entry?.frontmatter ?? {},
       size: entry?.size ?? 0,
+      ctime: entry?.ctime ?? 0,
       mtime: entry?.mtime ?? 0,
     });
     this.#emitter.emit("modified", path);
@@ -157,8 +172,8 @@ export class FakeNotesService implements Pick<
   create(path: VaultPath, content: string): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> {
     if (this.#files.has(path)) return AsyncResult.err(new NoteAlreadyExistsError(path));
     this.#registerParentFolders(path);
-    this.#files.set(path, { content, frontmatter: {}, size: 0, mtime: 0 });
-    const note = noteOf(path, { size: 0, mtime: 0 });
+    this.#files.set(path, { content, frontmatter: {}, size: 0, ctime: 0, mtime: 0 });
+    const note = noteOf(path, { size: 0, ctime: 0, mtime: 0 });
     this.#emitter.emit("created", note);
     return AsyncResult.ok(note);
   }

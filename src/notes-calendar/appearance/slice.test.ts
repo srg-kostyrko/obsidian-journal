@@ -11,6 +11,7 @@ describe("appearanceSlice", () => {
         color: { type: "theme", name: "text-on-accent" },
         background: { type: "theme", name: "interactive-accent" },
       },
+      selectedRing: { type: "theme", name: "interactive-accent" },
     });
   });
 
@@ -18,7 +19,9 @@ describe("appearanceSlice", () => {
     const parsed = v.parse(appearanceSliceSchema, {
       today: { color: { type: "custom", color: "#ff0000" }, background: { type: "transparent" } },
       active: { color: { type: "transparent" }, background: { type: "transparent" } },
+      selectedRing: { type: "custom", color: "#00ff00" },
     });
     expect(parsed.today.color).toEqual({ type: "custom", color: "#ff0000" });
+    expect(parsed.selectedRing).toEqual({ type: "custom", color: "#00ff00" });
   });
 });

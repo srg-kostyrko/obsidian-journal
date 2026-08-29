@@ -1,5 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"view_block_day_notes_label": "Notas por data",
+	"view_block_day_notes_description": "Lista as notas criadas no período que contém a data selecionada da visualização.",
+	"view_block_day_notes_granularity_label": "Período",
+	"view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"Dia","kind=week":"Semana","kind=month":"Mês","kind=quarter":"Trimestre","kind=year":"Ano","kind=decade":"Década"}}],
+	"view_block_day_notes_sort_field_label": "Ordenar notas por",
+	"view_block_day_notes_sort_direction_label": "Direção da ordenação",
+	"view_block_day_notes_sort_name": "Nome",
+	"view_block_day_notes_sort_modified": "Última modificação",
+	"view_block_day_notes_sort_created": "Data de criação",
+	"view_block_day_notes_sort_ascending": "Ascendente",
+	"view_block_day_notes_sort_descending": "Descendente",
+	"view_block_day_notes_show_heading_label": "Exibir cabeçalho do período",
+	"view_block_day_notes_show_navigation_label": "Exibir navegação do período",
+	"view_block_day_notes_last_modified": "Última modificação: {date}",
+	"view_block_day_notes_created": "Criada: {date}",
+	"view_block_day_notes_empty": "Nenhuma nota foi criada neste período.",
+	"view_block_day_notes_update_error": "Não foi possível atualizar o bloco «Notas por data».",
+	"day_notes_settings_title": "Notas por data",
+	"day_notes_settings_property_label": "Propriedade da data de criação",
+	"day_notes_settings_property_description": "Propriedade Frontmatter usada como data de criação. Notas sem um valor válido usam a hora de criação do arquivo.",
+	"day_notes_settings_format_label": "Formato da data de criação",
+	"day_notes_settings_format_description": "Formato de data usado para interpretar a propriedade da data de criação.",
+	"calendar_appearance_selected_ring": "Data selecionada — contorno",
+	"calendar_appearance_selected_ring_description": "Cor do contorno da célula do calendário correspondente à data selecionada da visualização.",
 	"calendar_apply_globally_desc": "Se desativada, a configuração da semana se aplica apenas às datas dentro dos diários e não afeta as datas criadas por outros plugins ou pelo próprio Obsidian.",
 	"calendar_apply_globally_restart_hint": "Talvez seja necessário reiniciar o Obsidian para que as alterações entrem em vigor.",
 	"calendar_apply_globally_title": "Aplicar a configuração da semana a todas as datas do cofre",
@@ -1647,10 +1671,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Dia anterior",
 				"unit=week": "Semana anterior",
 				"unit=month": "Mês anterior",
 				"unit=quarter": "Trimestre anterior",
-				"unit=year": "Ano anterior"
+				"unit=year": "Ano anterior",
+				"unit=decade": "Década anterior"
 			}
 		}
 	],
@@ -1663,10 +1689,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Dia seguinte",
 				"unit=week": "Próxima semana",
 				"unit=month": "Próximo mês",
 				"unit=quarter": "Próximo trimestre",
-				"unit=year": "Próximo ano"
+				"unit=year": "Próximo ano",
+				"unit=decade": "Década seguinte"
 			}
 		}
 	],

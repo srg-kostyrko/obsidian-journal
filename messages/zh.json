@@ -1,5 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"view_block_day_notes_label": "按日期查看笔记",
+	"view_block_day_notes_description": "列出在视图所选日期所属期间内创建的笔记。",
+	"view_block_day_notes_granularity_label": "期间",
+	"view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"日","kind=week":"周","kind=month":"月","kind=quarter":"季度","kind=year":"年","kind=decade":"十年"}}],
+	"view_block_day_notes_sort_field_label": "笔记排序依据",
+	"view_block_day_notes_sort_direction_label": "排序方向",
+	"view_block_day_notes_sort_name": "名称",
+	"view_block_day_notes_sort_modified": "最后修改",
+	"view_block_day_notes_sort_created": "创建日期",
+	"view_block_day_notes_sort_ascending": "升序",
+	"view_block_day_notes_sort_descending": "降序",
+	"view_block_day_notes_show_heading_label": "显示期间标题",
+	"view_block_day_notes_show_navigation_label": "显示期间导航",
+	"view_block_day_notes_last_modified": "最后修改：{date}",
+	"view_block_day_notes_created": "创建于：{date}",
+	"view_block_day_notes_empty": "此期间内没有创建笔记。",
+	"view_block_day_notes_update_error": "无法更新“按日期查看笔记”区块。",
+	"day_notes_settings_title": "按日期查看笔记",
+	"day_notes_settings_property_label": "创建日期属性",
+	"day_notes_settings_property_description": "用作创建日期的 Frontmatter 属性。没有有效值的笔记将使用文件创建时间。",
+	"day_notes_settings_format_label": "创建日期格式",
+	"day_notes_settings_format_description": "用于解析创建日期属性的日期格式。",
+	"calendar_appearance_selected_ring": "所选日期 — 边框",
+	"calendar_appearance_selected_ring_description": "与视图所选日期匹配的日历单元格边框颜色。",
 	"calendar_apply_globally_desc": "如果禁用，周配置设置仅适用于日记中的日期，不会影响其他插件或 Obsidian 本身创建的日期。",
 	"calendar_apply_globally_restart_hint": "您可能需要重启 Obsidian 才能使更改生效。",
 	"calendar_apply_globally_title": "将周配置应用于库中的所有日期",
@@ -1458,10 +1482,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "前一天",
 				"unit=week": "上一周",
 				"unit=month": "上个月",
 				"unit=quarter": "上一季度",
-				"unit=year": "上一年"
+				"unit=year": "上一年",
+				"unit=decade": "上一个十年"
 			}
 		}
 	],
@@ -1474,10 +1500,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "后一天",
 				"unit=week": "下一周",
 				"unit=month": "下个月",
 				"unit=quarter": "下一季度",
-				"unit=year": "下一年"
+				"unit=year": "下一年",
+				"unit=decade": "下一个十年"
 			}
 		}
 	],

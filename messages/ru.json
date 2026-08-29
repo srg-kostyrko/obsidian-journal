@@ -1,5 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"view_block_day_notes_label": "Заметки по дате",
+	"view_block_day_notes_description": "Показывает заметки, созданные в период, содержащий выбранную дату представления.",
+	"view_block_day_notes_granularity_label": "Период",
+	"view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"День","kind=week":"Неделя","kind=month":"Месяц","kind=quarter":"Квартал","kind=year":"Год","kind=decade":"Десятилетие"}}],
+	"view_block_day_notes_sort_field_label": "Сортировать заметки по",
+	"view_block_day_notes_sort_direction_label": "Направление сортировки",
+	"view_block_day_notes_sort_name": "Имя",
+	"view_block_day_notes_sort_modified": "Последнее изменение",
+	"view_block_day_notes_sort_created": "Дата создания",
+	"view_block_day_notes_sort_ascending": "По возрастанию",
+	"view_block_day_notes_sort_descending": "По убыванию",
+	"view_block_day_notes_show_heading_label": "Показывать заголовок периода",
+	"view_block_day_notes_show_navigation_label": "Показывать навигацию по периоду",
+	"view_block_day_notes_last_modified": "Последнее изменение: {date}",
+	"view_block_day_notes_created": "Создана: {date}",
+	"view_block_day_notes_empty": "В этом периоде не было создано ни одной заметки.",
+	"view_block_day_notes_update_error": "Не удалось обновить блок «Заметки по дате».",
+	"day_notes_settings_title": "Заметки по дате",
+	"day_notes_settings_property_label": "Свойство даты создания",
+	"day_notes_settings_property_description": "Свойство Frontmatter, используемое как дата создания. Для заметок без допустимого значения используется время создания файла.",
+	"day_notes_settings_format_label": "Формат даты создания",
+	"day_notes_settings_format_description": "Формат даты, используемый для разбора свойства даты создания.",
+	"calendar_appearance_selected_ring": "Выбранная дата — контур",
+	"calendar_appearance_selected_ring_description": "Цвет контура ячейки календаря, соответствующей выбранной дате представления.",
 	"calendar_apply_globally_desc": "Если эта функция отключена, параметры настройки недели применяются только к датам внутри журналов и не влияют на даты, созданные другими плагинами или самой Obsidian.",
 	"calendar_apply_globally_restart_hint": "Возможно, потребуется перезапустить Obsidian, чтобы изменения вступили в силу.",
 	"calendar_apply_globally_title": "Применять конфигурацию недели ко всем датам в хранилище",
@@ -1694,10 +1718,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Предыдущий день",
 				"unit=week": "Предыдущая неделя",
 				"unit=month": "Предыдущий месяц",
 				"unit=quarter": "Предыдущий квартал",
-				"unit=year": "Предыдущий год"
+				"unit=year": "Предыдущий год",
+				"unit=decade": "Предыдущее десятилетие"
 			}
 		}
 	],
@@ -1710,10 +1736,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Следующий день",
 				"unit=week": "Следующая неделя",
 				"unit=month": "Следующий месяц",
 				"unit=quarter": "Следующий квартал",
-				"unit=year": "Следующий год"
+				"unit=year": "Следующий год",
+				"unit=decade": "Следующее десятилетие"
 			}
 		}
 	],

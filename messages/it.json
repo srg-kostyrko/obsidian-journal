@@ -1,5 +1,29 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"view_block_day_notes_label": "Note per data",
+	"view_block_day_notes_description": "Elenca le note create nel periodo che contiene la data selezionata della vista.",
+	"view_block_day_notes_granularity_label": "Periodo",
+	"view_block_day_notes_granularity_option": [{"declarations":["input kind"],"selectors":["kind"],"match":{"kind=day":"Giorno","kind=week":"Settimana","kind=month":"Mese","kind=quarter":"Trimestre","kind=year":"Anno","kind=decade":"Decennio"}}],
+	"view_block_day_notes_sort_field_label": "Ordina note per",
+	"view_block_day_notes_sort_direction_label": "Direzione ordinamento",
+	"view_block_day_notes_sort_name": "Nome",
+	"view_block_day_notes_sort_modified": "Ultima modifica",
+	"view_block_day_notes_sort_created": "Data di creazione",
+	"view_block_day_notes_sort_ascending": "Crescente",
+	"view_block_day_notes_sort_descending": "Decrescente",
+	"view_block_day_notes_show_heading_label": "Mostra intestazione del periodo",
+	"view_block_day_notes_show_navigation_label": "Mostra navigazione del periodo",
+	"view_block_day_notes_last_modified": "Ultima modifica: {date}",
+	"view_block_day_notes_created": "Creata: {date}",
+	"view_block_day_notes_empty": "Nessuna nota è stata creata in questo periodo.",
+	"view_block_day_notes_update_error": "Impossibile aggiornare il blocco «Note per data».",
+	"day_notes_settings_title": "Note per data",
+	"day_notes_settings_property_label": "Proprietà della data di creazione",
+	"day_notes_settings_property_description": "Proprietà Frontmatter usata come data di creazione. Le note senza un valore valido usano l’ora di creazione del file.",
+	"day_notes_settings_format_label": "Formato della data di creazione",
+	"day_notes_settings_format_description": "Formato della data usato per analizzare la proprietà della data di creazione.",
+	"calendar_appearance_selected_ring": "Data selezionata — contorno",
+	"calendar_appearance_selected_ring_description": "Colore del contorno della cella del calendario corrispondente alla data selezionata della vista.",
 	"calendar_apply_globally_desc": "Se disattivata, le impostazioni della configurazione settimanale si applicano solo alle date all'interno dei diari e non influiscono sulle date create da altri plugin o da Obsidian stesso.",
 	"calendar_apply_globally_restart_hint": "Potrebbe essere necessario riavviare Obsidian affinché le modifiche abbiano effetto.",
 	"calendar_apply_globally_title": "Applica la configurazione settimanale a tutte le date presenti nel vault",
@@ -1647,10 +1671,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Giorno precedente",
 				"unit=week": "Settimana precedente",
 				"unit=month": "Mese precedente",
 				"unit=quarter": "Trimestre precedente",
-				"unit=year": "Anno precedente"
+				"unit=year": "Anno precedente",
+				"unit=decade": "Decennio precedente"
 			}
 		}
 	],
@@ -1663,10 +1689,12 @@
 				"unit"
 			],
 			"match": {
+				"unit=day": "Giorno successivo",
 				"unit=week": "Settimana successiva",
 				"unit=month": "Mese successivo",
 				"unit=quarter": "Trimestre successivo",
-				"unit=year": "Anno successivo"
+				"unit=year": "Anno successivo",
+				"unit=decade": "Decennio successivo"
 			}
 		}
 	],

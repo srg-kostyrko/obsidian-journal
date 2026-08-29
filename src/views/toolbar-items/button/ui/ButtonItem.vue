@@ -20,7 +20,7 @@ import { useViewContext } from "../../../view-context";
 import type { BlockInstanceId } from "../../../config";
 import type { ButtonAction, ButtonConfig, ButtonLevel } from "../button-config";
 
-const STEP_SHIFT_UNIT = { week: "w", month: "m", quarter: "q", year: "y" } as const;
+const STEP_SHIFT_UNIT = { day: "d", week: "w", month: "m", quarter: "q", year: "y" } as const;
 
 const props = defineProps<{
   instanceId: BlockInstanceId;

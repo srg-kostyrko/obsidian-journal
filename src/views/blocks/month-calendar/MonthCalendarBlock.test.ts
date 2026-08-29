@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { computed, defineComponent, h, nextTick, ref } from "vue";
+import { describe, expect, it, vi } from "vitest";
+import { computed, defineComponent, h, nextTick, ref, type PropType } from "vue";
 
 import { calendarSettingsCoreModule } from "@/calendar/settings/module";
+import { anchor } from "@/calendar/testing";
 import type { AnchorString } from "@/calendar/types";
 import { testContainer } from "@/testing";
 
@@ -21,14 +22,24 @@ const NotesMonthViewStub = defineComponent({
     month: { type: Object, required: true },
     shelf: { type: [String, null], default: null },
     outsideDates: { type: String, default: "active" },
+    selectedDate: { type: String, default: undefined },
+    selectDate: { type: Function as PropType<(date: AnchorString) => void>, default: undefined },
   },
   setup: (p) => () =>
-    h("div", {
-      "data-testid": "month-stub",
-      "data-month": (p.month as unknown as MonthLike).start.toAnchor(),
-      "data-shelf": p.shelf ?? "",
-      "data-outside-dates": p.outsideDates,
-    }),
+    h(
+      "div",
+      {
+        "data-testid": "month-stub",
+        "data-month": (p.month as unknown as MonthLike).start.toAnchor(),
+        "data-shelf": p.shelf ?? "",
+        "data-outside-dates": p.outsideDates,
+        "data-selected-date": p.selectedDate,
+      },
+      h("button", {
+        "data-testid": "select-date",
+        onClick: () => p.selectDate?.(anchor("2026-05-25")),
+      }),
+    ),
 });
 
 async function mountBlock(config: MonthCalendarConfig, contextOverride: Partial<ViewContext> = {}) {
@@ -95,6 +106,18 @@ describe("MonthCalendarBlock", () => {
   it("passes the current shelf to each NotesMonthView", async () => {
     const { getAllByTestId } = await mountBlock({ ...baseConfig, after: 1 }, { shelf: ref("my-shelf") });
     expect(getAllByTestId("month-stub").every((s) => s.dataset.shelf === "my-shelf")).toBe(true);
+  });
+
+  it("passes refDate and selection through to each NotesMonthView", async () => {
+    const setRefDate = vi.fn();
+    const { getAllByTestId, getByTestId } = await mountBlock(baseConfig, {
+      refDate: ref("2026-05-15" as AnchorString),
+      setRefDate,
+    });
+
+    expect(getAllByTestId("month-stub")[0]?.dataset.selectedDate).toBe("2026-05-15");
+    getByTestId("select-date").click();
+    expect(setRefDate).toHaveBeenCalledWith("2026-05-25");
   });
 
   it("holds the window on a followed date that is already visible", async () => {

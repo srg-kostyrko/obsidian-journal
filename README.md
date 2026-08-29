@@ -13,7 +13,8 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 
 ### Visual & Navigation
 
-- **Configurable Views**: Build your own views by composing blocks — month calendars, week calendars, custom-interval lists, toolbars, dividers, and rendered markdown templates — and fill each toolbar with items (shelf selector, period buttons, existing-note navigation, buttons, spacers); open each view in the left or right sidebar or as a tab
+- **Configurable Views**: Build your own views by composing blocks — month calendars, week calendars, notes-by-date lists, custom-interval lists, toolbars, dividers, and rendered markdown templates — and fill each toolbar with items (shelf selector, period buttons, existing-note navigation, buttons, spacers); open each view in the left or right sidebar or as a tab
+- **Notes by Date**: Browse every note created during the selected day, week, month, quarter, year, or decade, with configurable sorting and optional period navigation
 - **Timeline View**: Navigate through time periods with customizable code blocks
 - **Note Decorations**: Visually highlight notes based on contents, dates, or status, vault-wide, per shelf, or per journal
 - **Navigation Blocks**: Quick links to related journal entries
@@ -59,6 +60,7 @@ The Journals plugin offers extensive configuration options to customize your jou
   - Manage related journals together
 
 - **Open on startup**: Pick one journal whose current note opens whenever you open the vault. Views carry their own, separate _Open on startup_ toggle.
+- **Notes by date**: Choose the frontmatter property and date format used to determine when vault notes were created. Notes without a valid property value fall back to their file creation time.
 - **Calendar decorations**: Decorations that apply to every calendar, whatever journals are on screen. See the decoration system below.
 - **Week numbers**: Set the global default for where the week-number column appears (before weekdays, after weekdays, or hidden — the default is before); individual view blocks and the `calendar-timeline` code block can override it.
 - **Timeline navigation**: Set the global default for whether `calendar-timeline` code blocks carry previous/next controls (off by default); an individual block can override it with its `navigation` option.
@@ -70,6 +72,7 @@ The Journals plugin offers extensive configuration options to customize your jou
 - **Calendar highlighting**:
   - Customize today's date highlight (text and background colors)
   - Customize active note highlight (text and background colors)
+  - Customize the ring around the date selected by a view
 
 ### View & Block Settings
 
@@ -77,6 +80,7 @@ A view is a list of blocks. The available blocks are:
 
 - **Month calendar** — one or more month grids around the selected date
 - **Week calendar** — one or more week strips around the selected date
+- **Notes by date** — lists all vault notes created during the selected day, week, month, quarter, year, or decade, with configurable sorting, heading, and period navigation
 - **Custom intervals** — the entries of your custom journals that fall inside a chosen window (current week, month, quarter, or year)
 - **Toolbar** — a container for toolbar items: a shelf selector, period buttons, previous/next existing-note buttons, custom buttons, and flexible spacers
 - **Divider** — a horizontal rule between blocks
@@ -97,6 +101,8 @@ Calendar blocks add:
 - **Week numbers**: Use the global default, or force before weekdays, after weekdays, or hidden
 - **Days of the week**: Hide specific weekdays (e.g., weekends) from the grid
 - **Show month/year heading**: Show or hide the heading above the grid
+
+In a view's calendar grid, use the arrow keys to move between cells; Home and End move to the first and last cell in the current row. Enter performs the cell's normal open or create action where one is available. Shift+click selects a date or period without opening or creating a journal note, and Shift+Enter does the same on keyboard-reachable cells. The selected date drives blocks that read the view's date, including **Notes by date**.
 
 ### Journal Configuration
 

@@ -42,7 +42,7 @@ const stepAction = computed(() => {
   return action.type === "navigate-step" ? action : null;
 });
 
-const stepUnits: readonly ButtonStepUnit[] = ["week", "month", "quarter", "year"];
+const stepUnits: readonly ButtonStepUnit[] = ["day", "week", "month", "quarter", "year"];
 
 function setDirection(direction: "prev" | "next"): void {
   const action = stepAction.value;
@@ -131,9 +131,7 @@ function setLevels(levels: ButtonLevel[]): void {
     <UiDropdown
       :model-value="stepAction.unit"
       :aria-label="m.view_toolbar_button_config_granularity_label()"
-      @update:model-value="
-        (value: string | undefined) => value && setUnit(value as 'week' | 'month' | 'quarter' | 'year')
-      "
+      @update:model-value="(value: string | undefined) => value && setUnit(value as ButtonStepUnit)"
     >
       <option v-for="unit of stepUnits" :key="unit" :value="unit">
         {{ m.view_toolbar_button_config_level_option({ level: unit }) }}

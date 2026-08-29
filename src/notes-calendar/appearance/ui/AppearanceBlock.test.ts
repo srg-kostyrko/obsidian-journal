@@ -46,4 +46,17 @@ describe("AppearanceBlock", () => {
 
     expect(harness.settings.getSlice(appearanceSlice).state.today.color).toEqual({ type: "transparent" });
   });
+
+  it("writes the selected-date ring through the picker", async () => {
+    harness.render(AppearanceBlock);
+    await openSection();
+
+    const row = screen.getByText(m.calendar_appearance_selected_ring()).closest(".setting-item");
+    if (!(row instanceof HTMLElement)) throw new Error("selected ring row not found");
+    const kind = row.querySelector("select");
+    if (!(kind instanceof HTMLSelectElement)) throw new Error("selected ring picker not found");
+    await userEvent.selectOptions(kind, "transparent");
+
+    expect(harness.settings.getSlice(appearanceSlice).state.selectedRing).toEqual({ type: "transparent" });
+  });
 });

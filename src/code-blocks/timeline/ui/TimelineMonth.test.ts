@@ -40,7 +40,7 @@ describe("TimelineMonth", () => {
     const outsideDay = container.querySelector<HTMLElement>(".notes-month-view__day[data-outside]");
     expect(outsideDay).not.toBeNull();
     expect(outsideDay?.dataset.inactive).toBeUndefined();
-    expect(outsideDay?.getAttribute("role")).toBe("button");
+    expect(outsideDay?.getAttribute("role")).toBe("gridcell");
 
     const outsideAnchor = outsideDay?.dataset.anchor;
     if (outsideDay) await fireEvent.click(outsideDay);
@@ -49,5 +49,19 @@ describe("TimelineMonth", () => {
       OpenDateFlow,
       expect.objectContaining({ anchor: outsideAnchor, journalNames: ["daily"] }),
     );
+  });
+
+  it("does not open a note for Shift+primary click when the timeline has no writable date", async () => {
+    const harness = await testContainer({
+      modules: MODULES,
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+    const { container } = harness.render(TimelineMonth, { props: { refDate: anchor("2026-05-15"), shelf: null } });
+    const day = container.querySelector<HTMLElement>('.notes-month-view__day[data-anchor="2026-05-15"]');
+
+    if (day) await fireEvent.click(day, { shiftKey: true, button: 0 });
+
+    expect(harness.resolve(Flows).invoke).not.toHaveBeenCalled();
   });
 });
