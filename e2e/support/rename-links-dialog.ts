@@ -5,12 +5,17 @@ import { UpdateLinksDialogButtonMissingError } from "./errors.js";
 // Obsidian's own confirm dialog, opened by `fileManager.renameFile` whenever the vault's
 // `alwaysUpdateLinks` config is off (the default) AND the renamed file has at least one link
 // pointing at it.
-// It is a real `ConfirmModal`, not a plugin dialog, so it is a SECOND `.modal-container` distinct
-// from the one `e2e/support/settings.ts` scopes plugin dialogs to (that one excludes only the
-// settings panel, so it would otherwise match this dialog too). `mod-confirmation` is the class
-// Obsidian's own FileManager stamps on this dialog's containerEl — unique to it in this codebase,
-// so there is nothing to disambiguate against.
-const UPDATE_LINKS_DIALOG = ".modal-container.mod-confirmation";
+// It is not a plugin dialog, so it is a SECOND `.modal-container` distinct from the one
+// `e2e/support/settings.ts` scopes plugin dialogs to (that one excludes only the settings panel,
+// so it would otherwise match this dialog too). `.modal-button-container` is the discriminator:
+// Obsidian's own FileManager builds this dialog's button row into one, and no plugin dialog in
+// this codebase emits that class — every plugin modal composes from `UiSettingRow` instead.
+// Do NOT narrow this to `.mod-confirmation`. That class comes from the confirmation-modal
+// subclass, which FileManager only started building this dialog from after the supported floor:
+// at `manifest.minAppVersion` (1.8.7) it is a bare `Modal` that hand-rolls the same row
+// (`modalEl.createDiv("modal-button-container")`), so a `.mod-confirmation` selector matches
+// nothing there and the wait times out on every `earliest` combo while `latest` stays green.
+const UPDATE_LINKS_DIALOG = ".modal-container:has(.modal-button-container)";
 
 function updateLinksDialog(): ReturnType<typeof $> {
   return $(UPDATE_LINKS_DIALOG);
