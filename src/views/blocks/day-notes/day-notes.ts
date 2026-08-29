@@ -17,7 +17,7 @@ export interface CreatedNote {
 }
 
 export interface DayNotesQuery {
-  createdOn(note: Note): CalendarDate;
+  createdOn(note: Note): CalendarDate | null;
   notesCreatedIn(period: Period): readonly CreatedNote[];
 }
 
@@ -41,20 +41,18 @@ export function resolveCreationDate(
   note: Note,
   metadata: NoteMetadata | undefined,
   settings: DayNotesSliceState,
-): CalendarDate {
+): CalendarDate | null {
   const configured = propertyDate(metadata?.properties[settings.property], settings.format);
   if (configured) return configured;
 
-  // Note.ctime is Obsidian's filesystem birth time. Host notes always provide a valid value;
-  // the assertion makes the invariant explicit while keeping malformed frontmatter on the
-  // documented fallback path above.
-  const fallback = calendarDateOf(note.ctime);
-  if (!fallback) throw new RangeError(`Invalid note creation timestamp for ${note.path}`);
-  return fallback;
+  // Note.ctime is Obsidian's filesystem birth time and mtime its modification time. A host
+  // that reports neither as a usable timestamp leaves nothing to date the note by, so it drops
+  // out of the listing rather than taking the block's whole render down with it.
+  return calendarDateOf(note.ctime) ?? calendarDateOf(note.mtime);
 }
 
 export function createDayNotesQuery(dependencies: DayNotesDependencies): DayNotesQuery {
-  const createdOn = (note: Note): CalendarDate => {
+  const createdOn = (note: Note): CalendarDate | null => {
     const metadata = dependencies.metadata.get(note.path).getOrUndefined();
     return resolveCreationDate(note, metadata, dependencies.settings());
   };
@@ -65,7 +63,7 @@ export function createDayNotesQuery(dependencies: DayNotesDependencies): DayNote
       const note = dependencies.notes.find(path);
       if (note.isNone()) continue;
       const created = createdOn(note.value);
-      if (period.contains(created)) matches.push({ note: note.value, created });
+      if (created && period.contains(created)) matches.push({ note: note.value, created });
     }
     return matches;
   };

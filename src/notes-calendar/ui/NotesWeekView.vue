@@ -82,36 +82,31 @@ const cells = useCellDecorations({
   calendarDecorations: { shelf: () => props.shelf },
 });
 
-const selection = { onSelect: () => props.selectDate };
 const dayCell = useNotesCell({
   journalNames: () => scope.day.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
+  onSelect: () => props.selectDate,
 });
 const weekCell = useNotesCell({
   journalNames: () => scope.week.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 const monthCell = useNotesCell({
   journalNames: () => scope.month.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 const quarterCell = useNotesCell({
   journalNames: () => scope.quarter.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 const yearCell = useNotesCell({
   journalNames: () => scope.year.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 
 const navigationRows = computed<CalendarGridRows>(() => {
@@ -138,25 +133,14 @@ const isSelected = (period: Period): boolean =>
   <div class="notes-week-view" :style="appearanceStyle">
     <div v-if="showHeader" class="notes-week-view__header">
       <slot name="header">
-        <NotesCalendarCell
-          data-testid="header-month"
-          :period="monthPeriod"
-          :cell="monthCell"
-          :selected="isSelected(monthPeriod)"
-        />
+        <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
         <NotesCalendarCell
           v-if="showQuarter"
           data-testid="header-quarter"
           :period="quarterPeriod"
           :cell="quarterCell"
-          :selected="isSelected(quarterPeriod)"
         />
-        <NotesCalendarCell
-          data-testid="header-year"
-          :period="yearPeriod"
-          :cell="yearCell"
-          :selected="isSelected(yearPeriod)"
-        />
+        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
     </div>
     <div
@@ -192,7 +176,6 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
-          :selected="isSelected(rawWeek)"
         />
         <NotesCalendarCell
           v-for="day in days"
@@ -213,7 +196,6 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${rawWeek.anchor.toAnchor()}`"
           :tab-index="navigation.tabIndex(`week:${rawWeek.anchor.toAnchor()}`)"
-          :selected="isSelected(rawWeek)"
         />
       </div>
     </div>

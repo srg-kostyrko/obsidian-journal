@@ -51,7 +51,7 @@ describe("TimelineMonth", () => {
     );
   });
 
-  it("does not open a note for Shift+primary click when the timeline has no writable date", async () => {
+  it("opens a note for Shift+primary click, where no date selection is wired", async () => {
     const harness = await testContainer({
       modules: MODULES,
       data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
@@ -62,6 +62,9 @@ describe("TimelineMonth", () => {
 
     if (day) await fireEvent.click(day, { shiftKey: true, button: 0 });
 
-    expect(harness.resolve(Flows).invoke).not.toHaveBeenCalled();
+    expect(harness.resolve(Flows).invoke).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ anchor: "2026-05-15", openMode: "active" }),
+    );
   });
 });

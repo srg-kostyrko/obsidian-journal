@@ -159,21 +159,28 @@ describe("NotesWeekView", () => {
       expect(selectDate).toHaveBeenCalledWith(anchor("2026-05-27"));
     });
 
-    it("reacts when a selection callback becomes unavailable after mount", async () => {
+    it("leaves a header cell with no journal of its kind out of the tab order", async () => {
       const selectDate = vi.fn();
       const harness = await bootHarness({});
-      const view = harness.render(NotesWeekView, { props: { shelf: null, week, selectDate } });
-      const header = view.container.querySelector<HTMLElement>('[data-testid="header-month"]')!;
-
-      expect(header.getAttribute("role")).toBe("button");
-      expect(header.tabIndex).toBe(0);
-      expect(header.hasAttribute("aria-label")).toBe(true);
-
-      await view.rerender({ shelf: null, week, selectDate: undefined });
+      const { container } = harness.render(NotesWeekView, { props: { shelf: null, week, selectDate } });
+      const header = container.querySelector<HTMLElement>('[data-testid="header-month"]')!;
 
       expect(header.hasAttribute("role")).toBe(false);
       expect(header.hasAttribute("tabindex")).toBe(false);
       expect(header.hasAttribute("aria-label")).toBe(false);
+    });
+
+    it("does not select from the week-number cell", async () => {
+      const selectDate = vi.fn();
+      const harness = await bootHarness({ weekly: fixedJournal("weekly", { type: "week" }) });
+      const { container } = harness.render(NotesWeekView, {
+        props: { shelf: null, week, weeks: "left", selectDate },
+      });
+      const weekCell = container.querySelector<HTMLElement>('[role="rowheader"]')!;
+
+      await fireEvent.click(weekCell, { shiftKey: true, button: 0 });
+
+      expect(selectDate).not.toHaveBeenCalled();
     });
   });
 

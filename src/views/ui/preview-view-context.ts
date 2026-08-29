@@ -23,6 +23,7 @@ export function provideViewPreviewContext(viewId: ViewId): void {
     shelf: computed(() => view.value?.defaultShelf ?? null),
     preview: true,
     setRefDate: noop,
+    selectRefDate: noop,
     setShelf: noop,
   });
 }

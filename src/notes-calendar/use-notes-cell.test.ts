@@ -192,24 +192,24 @@ describe("useNotesCell", () => {
       expect(invokeSpy).not.toHaveBeenCalled();
     });
 
-    it("leaves Shift+Space on the ordinary activation path", async () => {
+    it("selects the period representative on Shift+Space without opening", async () => {
       const { harness, invokeSpy } = await bootHarness();
       const onSelect = vi.fn();
       const api = resolveApi(harness, () => ["daily"], undefined, onSelect);
 
       api.open(may25, new KeyboardEvent("keydown", { shiftKey: true, key: " " }));
 
-      expect(onSelect).not.toHaveBeenCalled();
-      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.anything());
+      expect(onSelect).toHaveBeenCalledWith(may25.representative.toAnchor());
+      expect(invokeSpy).not.toHaveBeenCalled();
     });
 
-    it("does not fall through to opening when Shift+primary click has no selection callback", async () => {
+    it("opens on Shift+primary click where no selection callback is wired", async () => {
       const { harness, invokeSpy } = await bootHarness();
       const api = resolveApi(harness, () => ["daily"]);
 
       api.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
 
-      expect(invokeSpy).not.toHaveBeenCalled();
+      expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "active" }));
     });
 
     it("does not claim Shift+middle click", async () => {
@@ -235,8 +235,8 @@ describe("useNotesCell", () => {
     });
   });
 
-  describe("isSelectable", () => {
-    it("reads the current selection callback after setup", async () => {
+  describe("late selection wiring", () => {
+    it("reads the current selection callback at gesture time", async () => {
       const { harness, invokeSpy } = await bootHarness();
       let onSelect: NotesDateSelect | undefined;
       let captured: NotesCellApi | undefined;
@@ -250,17 +250,15 @@ describe("useNotesCell", () => {
       harness.render(Probe);
       if (!captured) throw new Error("probe did not capture the notes-cell api");
 
-      expect(captured.isSelectable()).toBe(false);
-
       const select = vi.fn();
       onSelect = select;
-      expect(captured.isSelectable()).toBe(true);
       captured.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
       expect(select).toHaveBeenCalledWith(may25.representative.toAnchor());
       expect(invokeSpy).not.toHaveBeenCalled();
 
       onSelect = undefined;
-      expect(captured.isSelectable()).toBe(false);
+      captured.open(may25, { shiftKey: true, button: 0 } as MouseEvent);
+      expect(select).toHaveBeenCalledTimes(1);
     });
   });
 

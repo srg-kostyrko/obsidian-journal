@@ -121,21 +121,32 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
       const view = computed(() => repo.get(viewId).match({ some: (current) => current, none: () => null }));
       const today = useToday();
 
-      // Set only by the view-level follow writer and cleared by every explicit
-      // navigation, so refDateOrigin can tell the two apart without a second date.
+      // Set only by the view-level follow writer and by the calendars' selection gesture, and
+      // cleared by every explicit navigation, so refDateOrigin can tell the three apart
+      // without a second date.
       const followedAnchor = shallowRef<AnchorString | null>(null);
+      const selectedAnchor = shallowRef<AnchorString | null>(null);
 
       const context: ViewContext = {
         viewId,
         viewName: computed(() => view.value?.name ?? ""),
         refDate: computed(() => leafState.refDate ?? today.value.toAnchor()),
-        refDateOrigin: computed(() => (leafState.refDate === followedAnchor.value ? "follow" : "navigate")),
+        refDateOrigin: computed(() => {
+          if (leafState.refDate === followedAnchor.value) return "follow";
+          return leafState.refDate === selectedAnchor.value ? "select" : "navigate";
+        }),
         shelf: computed(() =>
           resolveLeafShelf(leafState.shelf, view.value?.defaultShelf ?? null, (name) => shelves.get(name).isSome()),
         ),
         preview: false,
         setRefDate: (date) => {
           followedAnchor.value = null;
+          selectedAnchor.value = null;
+          leafState.refDate = date;
+        },
+        selectRefDate: (date) => {
+          followedAnchor.value = null;
+          selectedAnchor.value = date;
           leafState.refDate = date;
         },
         setShelf: (shelf) => {
@@ -151,6 +162,7 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
         currentDate: () => context.refDate.value,
         onFollow: (date) => {
           followedAnchor.value = date;
+          selectedAnchor.value = null;
           leafState.refDate = date;
         },
       });

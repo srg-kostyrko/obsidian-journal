@@ -33,7 +33,7 @@ function metadata(properties: Record<string, unknown>): NoteMetadata {
 describe("resolveCreationDate", () => {
   it("uses a configured string property", () => {
     const resolved = resolveCreationDate(note(), metadata({ created: "2026-05-25" }), settings);
-    expect(resolved.toAnchor()).toBe("2026-05-25");
+    expect(resolved?.toAnchor()).toBe("2026-05-25");
   });
 
   it("uses the configured date format strictly", () => {
@@ -41,45 +41,49 @@ describe("resolveCreationDate", () => {
       property: "created",
       format: "DD/MM/YYYY",
     });
-    expect(resolved.toAnchor()).toBe("2026-05-25");
+    expect(resolved?.toAnchor()).toBe("2026-05-25");
   });
 
   it("uses a Date property as the local calendar day it represents", () => {
     const resolved = resolveCreationDate(note(), metadata({ created: new Date(2026, 4, 25, 23, 30) }), settings);
-    expect(resolved.toAnchor()).toBe("2026-05-25");
+    expect(resolved?.toAnchor()).toBe("2026-05-25");
   });
 
   it("accepts a date-time string by retrying the configured-length prefix", () => {
     const resolved = resolveCreationDate(note(), metadata({ created: "2026-05-25T10:30:00Z" }), settings);
-    expect(resolved.toAnchor()).toBe("2026-05-25");
+    expect(resolved?.toAnchor()).toBe("2026-05-25");
   });
 
   it("falls back to ctime when metadata or the configured property is absent", () => {
     const target = note("Notes/fallback.md", timestamp(2026, 5, 21));
-    expect(resolveCreationDate(target, undefined, settings).toAnchor()).toBe("2026-05-21");
-    expect(resolveCreationDate(target, metadata({ other: "2026-05-25" }), settings).toAnchor()).toBe("2026-05-21");
+    expect(resolveCreationDate(target, undefined, settings)?.toAnchor()).toBe("2026-05-21");
+    expect(resolveCreationDate(target, metadata({ other: "2026-05-25" }), settings)?.toAnchor()).toBe("2026-05-21");
   });
 
   it("falls back to ctime when the configured string is invalid or uses a different format", () => {
     const target = note("Notes/fallback.md", timestamp(2026, 5, 21));
-    expect(resolveCreationDate(target, metadata({ created: "not-a-date" }), settings).toAnchor()).toBe("2026-05-21");
-    expect(resolveCreationDate(target, metadata({ created: "03/04/2026" }), settings).toAnchor()).toBe("2026-05-21");
+    expect(resolveCreationDate(target, metadata({ created: "not-a-date" }), settings)?.toAnchor()).toBe("2026-05-21");
+    expect(resolveCreationDate(target, metadata({ created: "03/04/2026" }), settings)?.toAnchor()).toBe("2026-05-21");
   });
 
   it.each([42, ["2026-05-25"], { date: "2026-05-25" }, new Date(NaN)])(
     "falls back to ctime for unsupported property value %j",
     (value) => {
       const target = note("Notes/fallback.md", timestamp(2026, 5, 21));
-      expect(resolveCreationDate(target, metadata({ created: value }), settings).toAnchor()).toBe("2026-05-21");
+      expect(resolveCreationDate(target, metadata({ created: value }), settings)?.toAnchor()).toBe("2026-05-21");
     },
   );
 
-  it("rejects a note when neither its configured property nor ctime is a valid date", () => {
-    const target = note("Notes/broken.md", NaN);
+  it("falls back to mtime when ctime is not a usable timestamp", () => {
+    const target = { ...note("Notes/broken.md", NaN), mtime: timestamp(2026, 5, 21) };
 
-    expect(() => resolveCreationDate(target, metadata({ created: "not-a-date" }), settings)).toThrow(
-      new RangeError("Invalid note creation timestamp for Notes/broken.md"),
-    );
+    expect(resolveCreationDate(target, metadata({ created: "not-a-date" }), settings)?.toAnchor()).toBe("2026-05-21");
+  });
+
+  it("dates a note by nothing when neither its property, ctime, nor mtime is usable", () => {
+    const target = { ...note("Notes/broken.md", NaN), mtime: NaN };
+
+    expect(resolveCreationDate(target, metadata({ created: "not-a-date" }), settings)).toBeNull();
   });
 });
 
@@ -120,5 +124,19 @@ describe("createDayNotesQuery", () => {
 
     expect(entries).toHaveLength(1);
     expect(entries[0]?.created.toAnchor()).toBe("2026-05-25");
+  });
+
+  it("drops a note it cannot date rather than failing the whole listing", () => {
+    const notes = new FakeNotesService();
+    const noteMetadata = new FakeNoteMetadataService();
+    const good = "Notes/good.md" as VaultPath;
+    const broken = "Notes/broken.md" as VaultPath;
+    notes.seed(good, "", {}, { ctime: timestamp(2026, 5, 25) });
+    notes.seed(broken, "", {}, { ctime: NaN, mtime: NaN });
+    const query = createDayNotesQuery({ notes, metadata: noteMetadata, settings: () => settings });
+
+    const entries = query.notesCreatedIn(periodOfKind("month", CalendarDate.fromAnchor("2026-05-15" as AnchorString)));
+
+    expect(entries.map((entry) => entry.note.path)).toEqual([good]);
   });
 });

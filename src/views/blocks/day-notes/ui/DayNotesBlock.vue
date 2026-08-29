@@ -6,7 +6,7 @@ import { CalendarDate, periodKinds, periodOfKind, type Period } from "@/calendar
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { defineOpenMode, NoticeService, WorkspaceService, type Note } from "@/infrastructure/host";
-import { JournalsIndex, useIndexVersion } from "@/journals";
+import { JournalsIndex } from "@/journals";
 import { accessibleFormatPattern } from "@/notes-calendar/cell-format";
 import { ShelvesService } from "@/shelves";
 import { icons } from "@/ui/icons";
@@ -37,7 +37,6 @@ const props = defineProps<{
 const viewContext = useViewContext();
 const query = useDayNotesQuery();
 const queryVersion = useDayNotesVersion();
-const indexVersion = useIndexVersion();
 const index = useService(JournalsIndex);
 const shelves = useService(ShelvesService);
 const views = useService(ViewsService);
@@ -79,7 +78,6 @@ const nextNavigationConfig = computed(() => navigationConfig("next"));
 
 const cards = computed<readonly DayNoteCard[]>(() => {
   void queryVersion.value;
-  void indexVersion.value;
 
   const result = query.notesCreatedIn(period.value).map((createdNote): DayNoteCard => {
     const entry = index.entryByPath(createdNote.note.path).getOrUndefined();
@@ -137,9 +135,9 @@ function openGranularityMenu(event: MouseEvent): void {
 
 function openSortMenu(event: MouseEvent): void {
   const fields: readonly { field: DayNotesBlockConfig["sortField"]; label: string; icon: string }[] = [
-    { field: "name", label: m.view_block_day_notes_sort_name(), icon: "text" },
-    { field: "modified", label: m.view_block_day_notes_sort_modified(), icon: "clock" },
-    { field: "created", label: m.view_block_day_notes_sort_created(), icon: "calendar-plus" },
+    { field: "name", label: m.view_block_day_notes_sort_name(), icon: icons.action.sortByName },
+    { field: "modified", label: m.view_block_day_notes_sort_modified(), icon: icons.action.sortByModified },
+    { field: "created", label: m.view_block_day_notes_sort_created(), icon: icons.action.sortByCreated },
   ];
   const menu = new Menu();
   for (const { field, label, icon } of fields) {

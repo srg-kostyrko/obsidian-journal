@@ -18,6 +18,7 @@ function buildContext(overrides: Partial<ViewContext> = {}): ViewContext {
     shelf: ref(null),
     preview: false,
     setRefDate: vi.fn(),
+    selectRefDate: vi.fn(),
     setShelf: vi.fn(),
     ...overrides,
   };

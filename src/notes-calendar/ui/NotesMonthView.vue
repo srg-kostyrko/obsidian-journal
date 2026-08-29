@@ -121,25 +121,21 @@ const weekCell = useNotesCell({
   journalNames: () => scope.week.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 const monthCell = useNotesCell({
   journalNames: () => scope.month.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 const quarterCell = useNotesCell({
   journalNames: () => scope.quarter.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 const yearCell = useNotesCell({
   journalNames: () => scope.year.value,
   decorations: cells,
   shelf: () => props.shelf,
-  ...selection,
 });
 const inactiveDay = useNotesCell({ journalNames: () => [], ...selection });
 
@@ -168,25 +164,14 @@ const isSelected = (period: Period): boolean =>
   <div class="notes-month-view" :style="appearanceStyle">
     <div v-if="showHeader" class="notes-month-view__header">
       <slot name="header">
-        <NotesCalendarCell
-          data-testid="header-month"
-          :period="monthPeriod"
-          :cell="monthCell"
-          :selected="isSelected(monthPeriod)"
-        />
+        <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
         <NotesCalendarCell
           v-if="showQuarter"
           data-testid="header-quarter"
           :period="quarterPeriod"
           :cell="quarterCell"
-          :selected="isSelected(quarterPeriod)"
         />
-        <NotesCalendarCell
-          data-testid="header-year"
-          :period="yearPeriod"
-          :cell="yearCell"
-          :selected="isSelected(yearPeriod)"
-        />
+        <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
     </div>
     <div
@@ -224,7 +209,6 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
-          :selected="isSelected(row.weekPeriod)"
         />
         <template v-for="day in row.days" :key="day.period.anchor.toAnchor()">
           <span
@@ -253,7 +237,6 @@ const isSelected = (period: Period): boolean =>
           role="rowheader"
           :data-grid-key="`week:${row.key}`"
           :tab-index="navigation.tabIndex(`week:${row.key}`)"
-          :selected="isSelected(row.weekPeriod)"
         />
       </div>
     </div>

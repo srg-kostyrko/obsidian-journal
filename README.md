@@ -102,7 +102,7 @@ Calendar blocks add:
 - **Days of the week**: Hide specific weekdays (e.g., weekends) from the grid
 - **Show month/year heading**: Show or hide the heading above the grid
 
-In a view's calendar grid, use the arrow keys to move between cells; Home and End move to the first and last cell in the current row. Enter performs the cell's normal open or create action where one is available. Shift+click selects a date or period without opening or creating a journal note, and Shift+Enter does the same on keyboard-reachable cells. The selected date drives blocks that read the view's date, including **Notes by date**.
+In a view's calendar grid, use the arrow keys to move between cells; Home and End move to the first and last cell in the current row. Enter and Space perform the cell's normal open or create action where one is available. Holding Shift selects instead: Shift+click a day, or Shift+Enter or Shift+Space on a focused one, sets the view's date without opening or creating a journal note. Only day cells select — the week number and the month, quarter and year headings keep their ordinary open action, and a `calendar-timeline` code block in a note has no view date to set, so Shift there opens as usual. The selected date drives blocks that read the view's date, including **Notes by date**, and the grid keeps its current layout when you select a date it is already showing.
 
 ### Journal Configuration
 

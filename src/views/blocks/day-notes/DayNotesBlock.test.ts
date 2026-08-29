@@ -291,11 +291,14 @@ describe("DayNotesBlock", () => {
       journalName: "daily",
       anchor: "2026-05-15" as AnchorString,
     });
-    await nextTick();
+    // The index feeds the cards through the same debounce as vault events, so the badges land
+    // a window after the entry is registered rather than on the next tick.
+    await vi.waitFor(() => {
+      expect(screen.getByLabelText("daily")).toBeTruthy();
+      expect(screen.getByLabelText("Personal")).toBeTruthy();
+    });
 
     expect(cardTitles(container).toSorted()).toEqual(["Daily", "Ordinary"]);
-    expect(screen.getByLabelText("daily")).toBeTruthy();
-    expect(screen.getByLabelText("Personal")).toBeTruthy();
     expect(screen.queryByRole("button", { name: /journal notes/i })).toBeNull();
   });
 
@@ -372,12 +375,11 @@ describe("DayNotesBlock", () => {
       journalName: "daily",
       anchor: "2026-05-15" as AnchorString,
     });
-    await nextTick();
+    await vi.waitFor(() =>
+      expect(container.querySelector<HTMLElement>(".journal-view-day-notes__badges")).not.toBeNull(),
+    );
 
-    const card = container.querySelector<HTMLElement>(".journal-view-day-notes__card");
-    const badges = container.querySelector<HTMLElement>(".journal-view-day-notes__badges");
-    expect(card).not.toBeNull();
-    expect(badges).not.toBeNull();
+    expect(container.querySelector<HTMLElement>(".journal-view-day-notes__card")).not.toBeNull();
     expect(dayNotesBlockSource).toContain("min-height: 84px;");
     expect(dayNotesBlockSource).toContain(".journal-view-day-notes__created");
     expect(dayNotesBlockSource).toContain("overflow: visible;");
