@@ -298,6 +298,39 @@ describe("EditPromptModal", () => {
     });
   });
 
+  it("offers no required control for a yes/no question", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    expect(screen.queryByText(m.journal_prompt_required_label())).toBeTruthy();
+
+    await userEvent.selectOptions(screen.getByRole("combobox"), "toggle");
+
+    expect(screen.queryByText(m.journal_prompt_required_label())).toBeNull();
+  });
+
+  it("submits a yes/no question with no required flag on it", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("mood");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "toggle");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalledWith({
+        variable: "mood",
+        question: "q",
+        type: "toggle",
+        frontmatterKey: "journal-mood",
+      });
+    });
+  });
+
   it("errors when a prompt would reach the note name on a journal with autoCreate on", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

@@ -1266,7 +1266,7 @@ const bodyPrompts = (): Record<string, JournalConfig> => ({
           format: "DD/MM/YYYY",
         },
         { variable: "pages", question: "?", type: "number", frontmatterKey: "pages", required: false },
-        { variable: "done", question: "?", type: "toggle", frontmatterKey: "done", required: false },
+        { variable: "done", question: "?", type: "toggle", frontmatterKey: "done" },
       ],
     },
   ),

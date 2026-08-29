@@ -1,7 +1,9 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { promptsSchema } from "./config";
+import { isRequired, promptsSchema } from "./config";
+
+import type { Prompt } from "./config";
 
 describe("promptsSchema", () => {
   const text = { variable: "mood", question: "How was today?", type: "text" };
@@ -14,6 +16,19 @@ describe("promptsSchema", () => {
       type: "text",
       frontmatterKey: "",
       required: false,
+    });
+  });
+
+  // A yes/no answer always has one of its two values, so "required" can never refuse it. The
+  // flag is off the toggle variant entirely, which means a stored one is dropped on read
+  // rather than left behind to keep refusing unattended creation with no control to clear it.
+  it("drops a stored required flag from a yes/no prompt", () => {
+    const parsed = v.safeParse(promptsSchema, [{ ...text, type: "toggle", required: true }]);
+    expect(parsed.success && parsed.output[0]).toEqual({
+      variable: "mood",
+      question: "How was today?",
+      type: "toggle",
+      frontmatterKey: "",
     });
   });
 
@@ -67,5 +82,21 @@ describe("promptsSchema", () => {
       const parsed = v.safeParse(promptsSchema, [{ ...dated, format: "" }]);
       expect(parsed.success).toBe(true);
     });
+  });
+});
+
+describe("isRequired", () => {
+  const done: Prompt = { variable: "done", question: "Done?", type: "toggle", frontmatterKey: "done" };
+
+  it("is true for a question marked required", () => {
+    expect(isRequired({ ...done, type: "text", required: true })).toBe(true);
+  });
+
+  it("is false for a question left optional", () => {
+    expect(isRequired({ ...done, type: "text", required: false })).toBe(false);
+  });
+
+  it("is false for a yes/no question even when the stored object still carries the flag", () => {
+    expect(isRequired({ ...done, required: true } as Prompt)).toBe(false);
   });
 });

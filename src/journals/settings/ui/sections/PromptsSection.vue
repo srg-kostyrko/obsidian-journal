@@ -10,6 +10,7 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { isRequired } from "../../../prompts/config";
 import { JournalsViewModel } from "../../../view-model";
 import { EditPromptFlow } from "../../flows/edit-prompt.flow";
 import { usePromptAutocreateGuard } from "../use-prompt-autocreate-guard";
@@ -24,9 +25,7 @@ usePromptAutocreateGuard(config);
 const expanded = ref(false);
 
 const prompts = computed(() => config.value?.prompts ?? []);
-const hasRequiredWithAutoCreate = computed(
-  () => (config.value?.autoCreate ?? false) && prompts.value.some((prompt) => prompt.required),
-);
+const hasRequiredWithAutoCreate = computed(() => (config.value?.autoCreate ?? false) && prompts.value.some(isRequired));
 
 function addPrompt(): void {
   void flows.invoke(EditPromptFlow, { journalName });

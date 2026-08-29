@@ -64,8 +64,7 @@
           "variable": "pinned",
           "question": "Pin it?",
           "type": "toggle",
-          "frontmatterKey": "pinned",
-          "required": false
+          "frontmatterKey": "pinned"
         }
       ]
     },

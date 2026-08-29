@@ -28,7 +28,7 @@ const loggedAtPrompt: Prompt = {
   required: false,
   format: "YYYY-MM-DD",
 };
-const donePrompt: Prompt = { variable: "done", question: "?", type: "toggle", frontmatterKey: "done", required: true };
+const donePrompt: Prompt = { variable: "done", question: "?", type: "toggle", frontmatterKey: "done" };
 const weatherPrompt: Prompt = {
   variable: "weather",
   question: "?",

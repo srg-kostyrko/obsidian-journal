@@ -40,6 +40,16 @@ function renderMisc(harness: TestHarness): ReturnType<TestHarness["renderModal"]
   });
 }
 
+function renderLogged(harness: TestHarness): ReturnType<TestHarness["renderModal"]> {
+  return harness.renderModal(PromptAnswersModal, {
+    props: {
+      metadata: { journalName: "logged", anchor: anchor("2024-01-01") },
+      confirming: false,
+      periodLabel: "2024-01-01",
+    },
+  });
+}
+
 describe("PromptAnswersModal", () => {
   let harness: TestHarness;
 
@@ -245,7 +255,6 @@ describe("PromptAnswersModal", () => {
       question: "Remind?",
       type: "toggle",
       frontmatterKey: "remind",
-      required: false,
     };
     const whenPrompt: Prompt = {
       variable: "when",
@@ -266,7 +275,7 @@ describe("PromptAnswersModal", () => {
         { label: "Two", value: "two" },
       ],
     };
-    const defaults = { count: 0, remind: false, when: "", priority: "one" };
+    const defaults = { remind: false, when: "", priority: "one" };
 
     beforeEach(async () => {
       harness = await testContainer({
@@ -285,11 +294,14 @@ describe("PromptAnswersModal", () => {
 
     // A required select opens on its first option rather than a blank one, so there is never a
     // moment where its answer is missing; this pins that default choice and the absence of the
-    // "none" option that would let the user undo it.
+    // "none" option that would let the user undo it. An optional number is the opposite case:
+    // it opens blank and stays out of the answers entirely, because a 0 nobody typed would be
+    // stored as an answer and written to the note's property.
     it("defaults every prompt type to its own initial value and offers no blank choice on a required select", async () => {
       const { submit } = renderMisc(harness);
 
       expect(screen.queryByText(m.journal_prompt_select_none())).toBeNull();
+      expect(screen.getByRole<HTMLInputElement>("spinbutton").value).toBe("");
 
       await userEvent.click(screen.getByText(m.journal_prompt_submit()));
 
@@ -298,7 +310,7 @@ describe("PromptAnswersModal", () => {
       });
     });
 
-    it("submits a typed number instead of the default", async () => {
+    it("submits a typed number", async () => {
       const { submit } = renderMisc(harness);
 
       await userEvent.type(screen.getByRole("spinbutton"), "7");
@@ -309,19 +321,20 @@ describe("PromptAnswersModal", () => {
       });
     });
 
-    // asNumber falls back to 0 whenever the field's live value is not a number, which is
-    // exactly what a cleared number input holds for an instant — losing that fallback would
-    // leave the input showing the answer's last string remnant instead of a clean 0.
-    it("shows 0 again once a typed number is cleared back to blank", async () => {
-      renderMisc(harness);
-      const input = screen.getByRole("spinbutton");
+    // A cleared number input reports the empty string, not undefined, and reading that back as
+    // a number would put the answer's last remnant — or a 0 — into a field the user emptied.
+    it("stays blank once a typed number is cleared, and leaves the answer out", async () => {
+      const { submit } = renderMisc(harness);
+      const input = screen.getByRole<HTMLInputElement>("spinbutton");
 
       await userEvent.type(input, "5");
       await userEvent.clear(input);
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
 
       await waitFor(() => {
-        expect((input as HTMLInputElement).value).toBe("0");
+        expect(submit).toHaveBeenCalledWith(defaults);
       });
+      expect(input.value).toBe("");
     });
 
     it("submits the toggled boolean instead of the default", async () => {
@@ -362,6 +375,92 @@ describe("PromptAnswersModal", () => {
 
       await waitFor(() => {
         expect(submit).toHaveBeenCalledWith({ ...defaults, priority: "two" });
+      });
+    });
+  });
+
+  // A number can spell part of the note name, and a blank one there would write the placeholder
+  // into it — so the path's own reason for refusing outranks the question's own optionality.
+  describe("an optional number prompt that reaches the note name", () => {
+    const countPrompt: Prompt = {
+      variable: "count",
+      question: "Count?",
+      type: "number",
+      frontmatterKey: "count",
+      required: false,
+    };
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            counted: fixedJournal(
+              "counted",
+              { type: "day" },
+              { nameTemplate: "{{date:YYYY-MM-DD}} {{count}}", prompts: [countPrompt] },
+            ),
+          },
+        },
+      });
+    });
+
+    it("refuses a blank answer, naming the note name as the reason", async () => {
+      const { submit } = harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "counted", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
+      });
+
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_answer_required_in_path())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("a required number prompt", () => {
+    const hoursPrompt: Prompt = {
+      variable: "hours",
+      question: "Hours?",
+      type: "number",
+      frontmatterKey: "hours",
+      required: true,
+    };
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { logged: fixedJournal("logged", { type: "day" }, { prompts: [hoursPrompt] }) },
+        },
+      });
+    });
+
+    it("refuses a blank answer", async () => {
+      const { submit } = renderLogged(harness);
+
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_answer_required())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    // Zero is an answer like any other — only an untouched field is unanswered.
+    it("accepts a typed zero", async () => {
+      const { submit } = renderLogged(harness);
+
+      await userEvent.type(screen.getByRole("spinbutton"), "0");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ hours: 0 });
       });
     });
   });

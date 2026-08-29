@@ -14,14 +14,18 @@ const promptBase = v.object({
   // then gone. A prompt reaching the note name or folder must carry a real key — enforced in
   // settings, because fill state is a frontmatter question and never a filename parse.
   frontmatterKey: v.optional(v.string(), ""),
-  required: v.optional(v.boolean(), false),
 });
 
+// Only the types with a blank state carry it: a yes/no answer is always one of its two values,
+// so there is nothing for "required" to refuse there.
+const requiredFlag = { required: v.optional(v.boolean(), false) };
+
 export const promptSchema = v.variant("type", [
-  v.object({ ...promptBase.entries, type: v.literal("text") }),
-  v.object({ ...promptBase.entries, type: v.literal("number") }),
+  v.object({ ...promptBase.entries, ...requiredFlag, type: v.literal("text") }),
+  v.object({ ...promptBase.entries, ...requiredFlag, type: v.literal("number") }),
   v.object({
     ...promptBase.entries,
+    ...requiredFlag,
     type: v.literal("date"),
     // Clearable, so no minLength: a validation issue under `prompts` makes
     // repairCollectionEntry substitute the whole array with `[]`, wiping every question.
@@ -33,6 +37,7 @@ export const promptSchema = v.variant("type", [
   v.object({ ...promptBase.entries, type: v.literal("toggle") }),
   v.object({
     ...promptBase.entries,
+    ...requiredFlag,
     type: v.literal("select"),
     options: v.pipe(v.array(promptOptionSchema), v.minLength(1)),
   }),
@@ -49,6 +54,17 @@ export const promptsSchema = v.pipe(
     return new Set(keys).size === keys.length;
   }, "prompt `frontmatterKey` values must be unique"),
 );
+
+/**
+ * Whether an answer has to be given before the note can be created.
+ *
+ * The type check is not redundant with the schema: a `required` left on a yes/no question by a
+ * hand-edited config would otherwise read as a standing refusal of unattended creation, and the
+ * editor offers no control to clear it.
+ */
+export function isRequired(prompt: Prompt): boolean {
+  return prompt.type !== "toggle" && prompt.required;
+}
 
 export function dateFormatFor(prompt: Extract<Prompt, { type: "date" }>): string {
   return prompt.format.trim() === "" ? DEFAULT_DATE_FORMAT : prompt.format;

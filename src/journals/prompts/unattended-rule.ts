@@ -1,3 +1,4 @@
+import { isRequired } from "./config";
 import { promptsInPath, type PromptOwner } from "./prompts-in-path";
 
 export type UnattendedOutcome = { kind: "proceed" } | { kind: "refuse"; reason: "in-path" | "required" };
@@ -9,6 +10,6 @@ export type UnattendedOutcome = { kind: "proceed" } | { kind: "refuse"; reason: 
  */
 export function unattendedOutcome(owner: PromptOwner): UnattendedOutcome {
   if (promptsInPath(owner).length > 0) return { kind: "refuse", reason: "in-path" };
-  if (owner.prompts.some((prompt) => prompt.required)) return { kind: "refuse", reason: "required" };
+  if (owner.prompts.some(isRequired)) return { kind: "refuse", reason: "required" };
   return { kind: "proceed" };
 }

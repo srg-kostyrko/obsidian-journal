@@ -7,6 +7,7 @@ import { computed, ref, watch } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
+import { isRequired } from "@/journals/prompts/config";
 import { promptsInPath } from "@/journals/prompts/prompts-in-path";
 import { isReservedVariable, TEMPLATE_VARIABLE_RE } from "@/journals/reserved-variables";
 import { JournalsViewModel } from "@/journals/view-model";
@@ -63,11 +64,14 @@ function candidateFrom(entered: FormValues): Prompt {
     variable: entered.variable,
     question: entered.question,
     frontmatterKey: entered.frontmatterKey,
-    required: entered.required,
   };
-  if (entered.type === "select") return { ...base, type: "select", options: entered.options };
-  if (entered.type === "date") return { ...base, type: "date", format: entered.format };
-  return { ...base, type: entered.type };
+  // A yes/no question has no blank answer to refuse, so it carries no required flag at all —
+  // the form still holds one, so that switching type and back does not forget the user's pick.
+  if (entered.type === "toggle") return { ...base, type: "toggle" };
+  const withRequired = { ...base, required: entered.required };
+  if (entered.type === "select") return { ...withRequired, type: "select", options: entered.options };
+  if (entered.type === "date") return { ...withRequired, type: "date", format: entered.format };
+  return { ...withRequired, type: entered.type };
 }
 
 function reachesPath(entered: FormValues): boolean {
@@ -103,7 +107,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
     type: current.value?.type ?? "text",
     format: current.value?.type === "date" ? current.value.format : DEFAULT_DATE_FORMAT,
     frontmatterKey: current.value?.frontmatterKey ?? "",
-    required: current.value?.required ?? false,
+    required: current.value !== undefined && isRequired(current.value),
     options: current.value?.type === "select" ? current.value.options.map((option) => ({ ...option })) : [],
   },
   validationSchema: toTypedSchema(
@@ -297,7 +301,7 @@ const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));
       />
     </UiSettingRow>
 
-    <UiSettingRow :name="m.journal_prompt_required_label()">
+    <UiSettingRow v-if="values.type !== 'toggle'" :name="m.journal_prompt_required_label()">
       <UiToggle v-model="required" />
     </UiSettingRow>
 

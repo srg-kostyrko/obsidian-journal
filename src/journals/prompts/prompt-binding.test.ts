@@ -21,7 +21,7 @@ const dated: Prompt = {
   format: "YYYY-MM-DD",
 };
 const counted: Prompt = { variable: "n", question: "?", type: "number", frontmatterKey: "n", required: true };
-const flagged: Prompt = { variable: "done", question: "?", type: "toggle", frontmatterKey: "done", required: false };
+const flagged: Prompt = { variable: "done", question: "?", type: "toggle", frontmatterKey: "done" };
 const free: Prompt = { variable: "note", question: "?", type: "text", frontmatterKey: "note", required: false };
 const mood: Prompt = {
   variable: "mood",

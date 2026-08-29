@@ -19,6 +19,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { isRequired } from "../config";
 import { isPlaceholder } from "../placeholder";
 import { promptsInPath } from "../prompts-in-path";
 
@@ -47,30 +48,34 @@ function requirementOf(prompt: Prompt): { required: boolean; message: () => stri
   if (inPathVariables.has(prompt.variable)) {
     return { required: true, message: m.journal_prompt_answer_required_in_path };
   }
-  return { required: prompt.required, message: m.journal_prompt_answer_required };
+  return { required: isRequired(prompt), message: m.journal_prompt_answer_required };
 }
 
-function isRequired(prompt: Prompt): boolean {
+function mustAnswer(prompt: Prompt): boolean {
   return requirementOf(prompt).required;
 }
 
-function initialValueFor(prompt: Prompt): PromptAnswer {
+// A number opens blank rather than at 0, so an untouched one is unanswered like every other
+// blank field — a 0 nobody typed would otherwise be stored and written to the note's property.
+function initialValueFor(prompt: Prompt): PromptAnswer | undefined {
+  if (prompt.type === "number") return undefined;
   return (
     match(prompt)
-      .with({ type: "number" }, () => 0)
       .with({ type: "toggle" }, () => false)
       // An optional choice opens on no choice, so leaving it alone means "not answered"; a
       // required one opens on its first option, which is already a valid answer.
-      .with({ type: "select" }, (select) => (isRequired(select) ? (select.options.at(0)?.value ?? "") : ""))
+      .with({ type: "select" }, (select) => (mustAnswer(select) ? (select.options.at(0)?.value ?? "") : ""))
       .otherwise(() => "")
   );
 }
 
-function schemaFor(prompt: Prompt): v.GenericSchema<unknown, PromptAnswer> {
-  // A number input and a toggle always hold a value, so neither has a blank state to refuse.
-  if (prompt.type === "number") return v.number();
+function schemaFor(prompt: Prompt): v.GenericSchema<unknown, PromptAnswer | undefined> {
+  // A toggle always holds one of its two values, so it has no blank state to refuse.
   if (prompt.type === "toggle") return v.boolean();
   const { required, message } = requirementOf(prompt);
+  // An unanswered number is undefined, never 0 — the required check is what refuses it, and a
+  // typed 0 is an answer like any other.
+  if (prompt.type === "number") return required ? v.number(message()) : v.optional(v.number());
   if (prompt.type === "text") {
     const reserved = v.check(
       (value: string) => !isPlaceholder(value),
@@ -83,8 +88,8 @@ function schemaFor(prompt: Prompt): v.GenericSchema<unknown, PromptAnswer> {
   return required ? v.pipe(v.string(), v.minLength(1, message())) : v.string();
 }
 
-const initialValues: Record<string, PromptAnswer> = {};
-const schemaShape: Record<string, v.GenericSchema<unknown, PromptAnswer>> = {};
+const initialValues: Record<string, PromptAnswer | undefined> = {};
+const schemaShape: Record<string, v.GenericSchema<unknown, PromptAnswer | undefined>> = {};
 for (const prompt of prompts) {
   initialValues[prompt.variable] = initialValueFor(prompt);
   schemaShape[prompt.variable] = schemaFor(prompt);
@@ -94,10 +99,11 @@ for (const prompt of prompts) {
 // from a runtime loop rather than a literal — valibot's typed-key mapping has nothing to map
 // over when the object's key set is not known statically. Each entry's own schema is still the
 // correctly typed one built above, so the object's real runtime output is Record<string,
-// PromptAnswer>; only the static inference falls short, hence the cast at this one boundary.
-const validationSchema: TypedSchema<Record<string, PromptAnswer>, Record<string, PromptAnswer>> = toTypedSchema(
-  v.object(schemaShape),
-);
+// PromptAnswer | undefined>; only the static inference falls short, hence the cast here.
+const validationSchema: TypedSchema<
+  Record<string, PromptAnswer | undefined>,
+  Record<string, PromptAnswer | undefined>
+> = toTypedSchema(v.object(schemaShape));
 
 const { defineField, errorBag, handleSubmit, values } = useForm({ initialValues, validationSchema });
 
@@ -105,12 +111,12 @@ interface PromptField {
   readonly prompt: Prompt;
   // Path<Record<string, PromptAnswer>> can't resolve a literal key from a runtime loop either,
   // so defineField falls back to Ref<unknown> — cast for the same reason as the schema above.
-  readonly value: Ref<PromptAnswer>;
+  readonly value: Ref<PromptAnswer | undefined>;
   readonly attrs: Ref<BaseFieldProps>;
 }
 
 const fields: PromptField[] = prompts.map((prompt) => {
-  const [value, attrs] = defineField(prompt.variable) as [Ref<PromptAnswer>, Ref<BaseFieldProps>];
+  const [value, attrs] = defineField(prompt.variable) as [Ref<PromptAnswer | undefined>, Ref<BaseFieldProps>];
   return { prompt, value, attrs };
 });
 
@@ -118,25 +124,38 @@ function selectOptionsOf(prompt: Prompt): readonly PromptOption[] {
   return prompt.type === "select" ? prompt.options : [];
 }
 
-function asText(value: PromptAnswer): string {
+function asText(value: PromptAnswer | undefined): string {
   return typeof value === "string" ? value : "";
 }
 
-function asNumber(value: PromptAnswer): number {
-  return typeof value === "number" ? value : 0;
+// A cleared number input reports the empty string rather than undefined, so the blank state is
+// read back as "anything that is not a number", never as a falsy check that would swallow 0.
+function asNumber(value: PromptAnswer | undefined): number | undefined {
+  return typeof value === "number" ? value : undefined;
 }
 
-function asBoolean(value: PromptAnswer): boolean {
+function asBoolean(value: PromptAnswer | undefined): boolean {
   return typeof value === "boolean" ? value : false;
 }
 
-function asDate(value: PromptAnswer): Period | null {
+function asDate(value: PromptAnswer | undefined): Period | null {
   if (typeof value !== "string" || value === "") return null;
   return periodOfKind("day", CalendarDate.fromAnchor(value as AnchorString));
 }
 
 function setDate(field: PromptField, period: Period | null | undefined): void {
   field.value.value = period ? period.anchor.toAnchor() : "";
+}
+
+// A blank answer leaves its variable out rather than carrying undefined through: every
+// consumer downstream — the note name, the body, the frontmatter — already reads a missing
+// key as unanswered, and an undefined value would be written as an empty property instead.
+function given(entered: Record<string, PromptAnswer | undefined>): Record<string, PromptAnswer> {
+  const answers: Record<string, PromptAnswer> = {};
+  for (const [variable, answer] of Object.entries(entered)) {
+    if (answer !== undefined) answers[variable] = answer;
+  }
+  return answers;
 }
 
 // The whole path, not just the name: a prompt can reach the folder template too, and an
@@ -147,12 +166,12 @@ function setDate(field: PromptField, period: Period | null | undefined): void {
 // confirmation's entire content, so suppressing it would delete what the setting is for.
 const previewPath = computed(() => {
   if (config.value === undefined) return "";
-  const answered = { ...props.metadata, answers: isLive.value ? values : {} };
-  const path = paths.pathFor(props.metadata.journalName, answered);
+  const previewed = { ...props.metadata, answers: isLive.value ? given(values) : {} };
+  const path = paths.pathFor(props.metadata.journalName, previewed);
   return path.isOk() ? path.value : "";
 });
 
-const onSubmit = handleSubmit((entered) => api.submit(entered));
+const onSubmit = handleSubmit((entered) => api.submit(given(entered)));
 </script>
 
 <template>
@@ -179,7 +198,7 @@ const onSubmit = handleSubmit((entered) => api.submit(entered));
         v-else-if="field.prompt.type === 'number'"
         :model-value="asNumber(field.value.value)"
         v-bind="field.attrs"
-        @update:model-value="(value) => (field.value.value = value ?? 0)"
+        @update:model-value="(value) => (field.value.value = typeof value === 'number' ? value : undefined)"
       />
       <DatePicker
         v-else-if="field.prompt.type === 'date'"
@@ -198,7 +217,7 @@ const onSubmit = handleSubmit((entered) => api.submit(entered));
         v-bind="field.attrs"
         @update:model-value="(value) => (field.value.value = value ?? '')"
       >
-        <option v-if="!isRequired(field.prompt)" value="">{{ m.journal_prompt_select_none() }}</option>
+        <option v-if="!mustAnswer(field.prompt)" value="">{{ m.journal_prompt_select_none() }}</option>
         <option v-for="option in selectOptionsOf(field.prompt)" :key="option.value" :value="option.value">
           {{ option.label }}
         </option>
