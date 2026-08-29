@@ -23,7 +23,7 @@ import { promptsInPath } from "../prompts/prompts-in-path";
 import { unattendedOutcome } from "../prompts/unattended-rule";
 import { JournalsRepository } from "../repository";
 
-import { AnchorOccupiedError, type EmptyNoteNameError } from "./errors";
+import { AnchorOccupiedError, NotePathClaimedError, type EmptyNoteNameError } from "./errors";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
@@ -42,6 +42,7 @@ export type NoteCreationError =
   | NoteNotFoundError
   | FrontmatterError
   | AnchorOccupiedError
+  | NotePathClaimedError
   | PromptsUnansweredError
   | UserAborted;
 
@@ -66,6 +67,25 @@ export class NoteCreationService {
   #carriesJournalClaim(name: string, path: VaultPath): boolean {
     const metadata = this.#metadata.get(path);
     return metadata.isSome() && metadata.value.properties[FRONTMATTER_NAME_KEY] === name;
+  }
+
+  // The other half of that question: a file at the derived path that a *different* journal owns
+  // is that journal's note sitting at a coincident path, not a stray to adopt. Writing this
+  // journal's claim over it drops the note out of its own journal's index — it no longer parses
+  // for either journal — and AutoAttachService will not take it back, so the owner loses a note
+  // with nothing on screen. The index is what the rest of the plugin treats as ownership; the
+  // raw claim covers a note whose entry never made it in (a rejected anchor, a read before the
+  // boot walk lands). An unresolvable claim is deliberately not this case — a legacy id the note
+  // migration still has to rewrite, or a journal deleted in "keep notes" mode, has no journal
+  // left to lose the note — and keeps falling through to adoption as it always has.
+  #claimedByOtherJournal(name: string, path: VaultPath): string | undefined {
+    const indexed = this.#index.entryByPath(path);
+    if (indexed.isSome() && indexed.value.journalName !== name) return indexed.value.journalName;
+    const metadata = this.#metadata.get(path);
+    if (metadata.isNone()) return undefined;
+    const claimed = metadata.value.properties[FRONTMATTER_NAME_KEY];
+    if (typeof claimed !== "string" || claimed === name) return undefined;
+    return this.#journals.get(claimed).isSome() ? claimed : undefined;
   }
 
   ensureNote(
@@ -97,8 +117,8 @@ export class NoteCreationService {
       // own note that fell out of the index — a rejected anchor, mangled frontmatter, a
       // cold-boot race — be recognized by its claim and returned without re-asking questions
       // it has already answered and stored. A file claimed by a *different* journal is not
-      // this case: it falls through to the prompt-then-adopt path below, same as an unclaimed
-      // file, so the user still sees the prompt and can cancel before it is overwritten.
+      // this case: it falls through to the path below, where an unclaimed file is adopted and
+      // one another journal owns is refused.
       const derived =
         config === undefined || promptsInPath(config).length === 0
           ? yield* this.#path.pathFor(name, metadata)
@@ -144,6 +164,8 @@ export class NoteCreationService {
       const path = derived ?? (yield* this.#path.pathFor(name, answered));
 
       if (this.#notes.find(path).isSome()) {
+        const owner = this.#claimedByOtherJournal(name, path);
+        if (owner !== undefined) return yield* new Err(new NotePathClaimedError(name, path, owner));
         yield* this.#notes.updateFrontmatter(path, mutator);
         return { path, created: false as const };
       }

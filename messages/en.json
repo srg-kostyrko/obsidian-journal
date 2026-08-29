@@ -1335,6 +1335,7 @@
   "journal_colliding_heading": "Colliding journal settings",
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
   "journal_note_name_empty_notice": "Journal \"{journalName}\" has a name template that resolves to an empty note name, so no note can be created. Set a name template for it in journal settings.",
+  "journal_note_path_claimed_notice": "Journal \"{journalName}\" would put its note at \"{path}\", but that note already belongs to journal \"{claimedBy}\", so nothing was changed. Change the folder or name template in one of them.",
   "journal_dashboard_bulk_add": "Bulk add notes to {name}",
   "journal_dashboard_clone": "Clone {name}",
   "journal_dashboard_edit": "Configure {name}",

@@ -37,6 +37,26 @@ export class AnchorOccupiedError extends JournalsError {
   }
 }
 
+export class NotePathClaimedError extends JournalsError implements UserFacingFlowError {
+  override name = "NotePathClaimedError";
+
+  constructor(
+    readonly journalName: string,
+    readonly path: string,
+    readonly claimedBy: string,
+  ) {
+    super(`Path ${path} derived for journal ${journalName} is already claimed by journal ${claimedBy}`);
+  }
+
+  get userNotice(): string {
+    return m.journal_note_path_claimed_notice({
+      journalName: this.journalName,
+      path: this.path,
+      claimedBy: this.claimedBy,
+    });
+  }
+}
+
 export class EmptyNoteNameError extends JournalsError implements UserFacingFlowError {
   override name = "EmptyNoteNameError";
 
