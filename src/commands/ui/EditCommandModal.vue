@@ -18,7 +18,7 @@ import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { commandCollection, type CommandConfig, type CommandTarget } from "../config";
-import { supportedTypes } from "../resolve";
+import { supportedTypesFor } from "../resolve";
 
 import { commandTypeLabel } from "./command-type-label";
 
@@ -36,12 +36,12 @@ const journalsVM = useService(JournalsViewModel);
 const validIcons = new Set(getIconIds());
 
 function journalWriteType(): JournalWrite["type"] {
-  if (props.target.kind !== "journal") return "day";
+  if (props.target.kind !== "journal" && props.target.kind !== "notelet") return "day";
   return journalsVM.getJournal(props.target.journalName).getOrUndefined()?.write.type ?? "day";
 }
 
 const writeType = ref<JournalWrite["type"]>(
-  props.target.kind === "journal" ? journalWriteType() : props.target.writeType,
+  props.target.kind === "journal" || props.target.kind === "notelet" ? journalWriteType() : props.target.writeType,
 );
 
 const initial = props.command ?? commandCollection.defaultItem("");
@@ -100,15 +100,18 @@ const [showInRibbon, showInRibbonAttrs] = defineField("showInRibbon");
 const [icon, iconAttrs] = defineField("icon");
 const [openMode, openModeAttrs] = defineField("openMode");
 
+// A notelet command shares the journal's palette prefix, so its hint reads the same way.
+const namePrefixHintKind = computed<"journal" | "shelf">(() => (props.target.kind === "shelf" ? "shelf" : "journal"));
+
 const typeOptions = computed(() =>
-  supportedTypes(writeType.value).map((value) => ({
+  supportedTypesFor(props.target, writeType.value).map((value) => ({
     value,
     label: commandTypeLabel(writeType.value, value, context.value ?? "today"),
   })),
 );
 
 watch(writeType, () => {
-  const supported = supportedTypes(writeType.value);
+  const supported = supportedTypesFor(props.target, writeType.value);
   if (type.value === undefined || !supported.includes(type.value)) {
     type.value = "same";
   }
@@ -125,6 +128,11 @@ const onSubmit = handleSubmit((values) => {
       kind: "shelf" as const,
       shelfName: t.shelfName,
       writeType: writeType.value as Exclude<JournalWrite["type"], "custom">,
+    }))
+    .with({ kind: "notelet" }, (t) => ({
+      kind: "notelet" as const,
+      journalName: t.journalName,
+      typeId: t.typeId,
     }))
     .exhaustive();
   api.submit({
@@ -143,13 +151,16 @@ const onSubmit = handleSubmit((values) => {
   <form @submit.prevent="onSubmit">
     <UiSettingRow :name="m.common_label_name()">
       <template #description>
-        <span v-if="props.target.kind !== 'all'">{{ m.command_name_prefix_hint({ kind: props.target.kind }) }}</span>
+        <span v-if="props.target.kind !== 'all'">{{ m.command_name_prefix_hint({ kind: namePrefixHintKind }) }}</span>
         <span v-for="error of errorBag.name" :key="error" class="command-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="name" v-bind="nameAttrs" />
     </UiSettingRow>
 
-    <UiSettingRow v-if="props.target.kind !== 'journal'" :name="m.command_modal_write_type_label()">
+    <UiSettingRow
+      v-if="props.target.kind !== 'journal' && props.target.kind !== 'notelet'"
+      :name="m.command_modal_write_type_label()"
+    >
       <UiDropdown v-model="writeType">
         <option value="day">{{ m.command_write_type_option({ writeType: "day" }) }}</option>
         <option value="week">{{ m.command_write_type_option({ writeType: "week" }) }}</option>

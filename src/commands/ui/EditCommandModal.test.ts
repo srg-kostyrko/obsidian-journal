@@ -3,13 +3,14 @@ import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
-import type { JournalConfig } from "@/journals";
+import type { JournalConfig, TypeId } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import { buildCommand } from "../testing";
 
+import { commandTypeLabel } from "./command-type-label";
 import EditCommandModal from "./EditCommandModal.vue";
 import { editCommandModal } from "./modals";
 
@@ -174,5 +175,44 @@ describe("EditCommandModal", () => {
         expect.objectContaining({ target: { kind: "shelf", shelfName: "work", writeType: "week" } }),
       ),
     );
+  });
+
+  describe("notelet target", () => {
+    const target = { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" } as const;
+
+    const journals: Record<string, JournalConfig> = {
+      Work: fixedJournal(
+        "Work",
+        { type: "week" },
+        {
+          notelets: { nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup" }) },
+        },
+      ),
+    };
+
+    it("offers no available-note types", async () => {
+      await mountModal({ target, journals });
+
+      const typeSelect = screen.getAllByRole("combobox")[0];
+      const optionValues = [...typeSelect.querySelectorAll("option")].map((option) => option.getAttribute("value"));
+
+      expect(optionValues).not.toContain("previous_available");
+    });
+
+    it("takes its period labels from the owning journal's write type", async () => {
+      await mountModal({ target, journals });
+
+      const typeSelect = screen.getAllByRole("combobox")[0];
+      const optionLabels = [...typeSelect.querySelectorAll("option")].map((option) => option.textContent);
+
+      expect(optionLabels).toContain(commandTypeLabel("week", "next", "today"));
+    });
+
+    it("submits the notelet target unchanged", async () => {
+      const { submit } = await mountModal({ target, journals });
+      await userEvent.type(screen.getByRole("textbox"), "New standup");
+      await userEvent.click(screen.getByText(m.common_action_create()));
+      await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ target })));
+    });
   });
 });
