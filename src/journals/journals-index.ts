@@ -96,7 +96,8 @@ export class JournalsIndex {
   }
 
   // `owner` is the path whose claim on the slot is being checked: a collision loser never owned
-  // the anchor slot, so releasing it must not delete the incumbent's.
+  // the anchor slot, so releasing it must not delete the incumbent's — the notelet arm ignores
+  // `owner` because a notelet anchor has no single owner to protect.
   #releaseSlot(existing: IndexedNote, owner: VaultPath): void {
     if (isNotelet(existing)) {
       this.#notelets.get(existing.journalName)?.remove(existing);
@@ -202,6 +203,8 @@ export class JournalsIndex {
     } else {
       const journalIndex = this.#journals.get(existing.journalName);
       const slot = journalIndex?.get(existing.anchor);
+      // Only move the anchor slot if `from` actually owned it — a collision loser being renamed
+      // must not seize the incumbent's slot.
       if (slot !== undefined && slot.isSome() && slot.value === from) journalIndex?.set(existing.anchor, to);
     }
     this.#byPath.delete(from);
