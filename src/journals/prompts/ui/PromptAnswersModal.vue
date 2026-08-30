@@ -12,6 +12,7 @@ import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { NoteletPathService } from "@/journals/notelets/notelet-path";
 import { NotePathService } from "@/journals/notes/note-path";
+import { isNoteletMetadata } from "@/journals/types";
 import { JournalsViewModel } from "@/journals/view-model";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -35,14 +36,14 @@ const noteletPaths = useService(NoteletPathService);
 
 const config = computed(() => journalsVM.getJournal(props.metadata.journalName).getOrUndefined());
 const noteletType = computed(() =>
-  "kind" in props.metadata ? config.value?.notelets[props.metadata.typeId] : undefined,
+  isNoteletMetadata(props.metadata) ? config.value?.notelets[props.metadata.typeId] : undefined,
 );
 // The journal a creation prompt belongs to does not change while this modal is open, so the
 // prompt list is read once here rather than kept reactive — only the answers need to be.
 //
 // The prompts asked belong to whatever owns this note: a notelet asks its type's questions, and
 // the journal's — authored for the period note — are neither inherited nor asked.
-const owner = computed(() => ("kind" in props.metadata ? noteletType.value : config.value));
+const owner = computed(() => (isNoteletMetadata(props.metadata) ? noteletType.value : config.value));
 const prompts = owner.value?.prompts ?? [];
 
 const inPath = computed(() => (owner.value ? promptsInPath(owner.value) : []));
@@ -176,7 +177,7 @@ function given(entered: Record<string, PromptAnswer | undefined>): Record<string
 const previewPath = computed(() => {
   if (config.value === undefined) return "";
   const answers = isLive.value ? given(values) : {};
-  if ("kind" in props.metadata) {
+  if (isNoteletMetadata(props.metadata)) {
     const type = noteletType.value;
     if (type === undefined) return "";
     const path = noteletPaths.availablePathFor(config.value, type, { ...props.metadata, answers });

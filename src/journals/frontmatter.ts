@@ -11,6 +11,7 @@ import { NoteletTypeNotFoundError } from "./errors";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
+import { isNoteletMetadata } from "./types";
 
 import type { JournalConfig } from "./config";
 import type { JournalNotFoundError } from "./errors";
@@ -260,7 +261,7 @@ export class FrontmatterService {
     metadata: JournalMetadata | NoteletMetadata,
   ): Result<(fm: Record<string, unknown>) => void, JournalNotFoundError | NoteletTypeNotFoundError> {
     return this.#journals.require(name).flatMap((config) => {
-      if ("kind" in metadata) return this.#noteletWriteMutator(config, name, metadata);
+      if (isNoteletMetadata(metadata)) return this.#noteletWriteMutator(config, name, metadata);
       return new Ok(this.#periodWriteMutator(config, name, metadata));
     });
   }
