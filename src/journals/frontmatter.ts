@@ -11,9 +11,10 @@ import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
 
+import type { JournalConfig } from "./config";
 import type { JournalNotFoundError } from "./errors";
 import type { PromptAnswer } from "./prompts/config";
-import type { JournalEntry, JournalMetadata } from "./types";
+import type { IndexedNote, JournalEntry, JournalMetadata, NoteletEntry } from "./types";
 
 export class FrontmatterService {
   readonly #journals = inject(JournalsRepository);
@@ -21,7 +22,46 @@ export class FrontmatterService {
   readonly #numbering = inject(NumberingService);
   readonly #index = inject(JournalsIndex);
 
-  parseEntry(path: VaultPath, frontmatter: Record<string, unknown>): Option<JournalEntry> {
+  // Only a non-empty string can name a type; anything else stays an unresolvable notelet rather
+  // than being promoted to a period note, so a damaged note is visible and repairable.
+  #parseNotelet(
+    path: VaultPath,
+    frontmatter: Record<string, unknown>,
+    config: JournalConfig,
+    journalName: string,
+    anchor: AnchorString,
+    rawType: unknown,
+  ): NoteletEntry {
+    const typeName = typeof rawType === "string" ? rawType : String(rawType);
+    const type =
+      typeName === "" ? undefined : Object.values(config.notelets).find((candidate) => candidate.name === typeName);
+
+    const counterValue = type === undefined ? undefined : frontmatter[type.counter.frontmatterKey];
+    const counter = typeof counterValue === "number" && Number.isFinite(counterValue) ? counterValue : undefined;
+
+    const answers: Record<string, PromptAnswer> = {};
+    const prompts = type?.prompts ?? [];
+    for (const prompt of prompts) {
+      if (prompt.frontmatterKey === "") continue;
+      const value = frontmatter[prompt.frontmatterKey];
+      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+        answers[prompt.variable] = value;
+      }
+    }
+
+    return {
+      kind: "notelet",
+      journalName,
+      anchor,
+      path,
+      typeName,
+      typeId: type?.id ?? null,
+      ...(counter !== undefined && { counter }),
+      ...(Object.keys(answers).length > 0 && { answers }),
+    };
+  }
+
+  parseEntry(path: VaultPath, frontmatter: Record<string, unknown>): Option<IndexedNote> {
     const journalName = frontmatter[FRONTMATTER_NAME_KEY];
     if (typeof journalName !== "string") return Option.none();
     const configOpt = this.#journals.get(journalName);
@@ -41,6 +81,11 @@ export class FrontmatterService {
     if (config.write.type !== "custom") {
       const canonical = this.#cycle.isCanonicalAnchor(journalName, anchor);
       if (!(canonical.isSome() && canonical.value)) return Option.none();
+    }
+
+    const rawType = frontmatter[config.frontmatter.noteletField];
+    if (rawType !== undefined && rawType !== null) {
+      return Option.some(this.#parseNotelet(path, frontmatter, config, journalName, anchor, rawType));
     }
 
     const rawEnd = frontmatter[config.frontmatter.endDateField];

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { assert, beforeEach, describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
@@ -7,9 +7,17 @@ import { testContainer, type TestHarness } from "@/testing";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { journalsCoreModule } from "./module";
-import { customJournal, fixedJournal } from "./testing";
+import { buildNoteletType, customJournal, fixedJournal, unwrap } from "./testing";
+import { isNotelet } from "./types";
 
 import type { JournalConfig } from "./config";
+
+const dailyWithStandupNotelet = () =>
+  fixedJournal(
+    "daily",
+    { type: "day" },
+    { notelets: { nt_1: buildNoteletType({ id: "nt_1" as never, name: "Standup" }) } },
+  );
 
 describe("FrontmatterService", () => {
   describe("parseEntry", () => {
@@ -87,7 +95,9 @@ describe("FrontmatterService", () => {
         "journal-date": "2024-01-01",
         "journal-end-date": "2024-01-14",
       });
-      expect(result.isSome() && result.value.endDate).toBe("2024-01-14");
+      const entry = unwrap(result);
+      assert(!isNotelet(entry));
+      expect(entry.endDate).toBe("2024-01-14");
     });
 
     describe("custom weekly journal", () => {
@@ -107,7 +117,9 @@ describe("FrontmatterService", () => {
           "journal-date": "2024-01-01",
           "journal-end-date": "not-a-date",
         });
-        expect(result.isSome() && result.value.endDate).toBeUndefined();
+        const entry = unwrap(result);
+        assert(!isNotelet(entry));
+        expect(entry.endDate).toBeUndefined();
       });
 
       it("includes the numbers dictionary keyed by source variable", () => {
@@ -117,7 +129,9 @@ describe("FrontmatterService", () => {
           "journal-date": "2024-01-01",
           "journal-index": 5,
         });
-        expect(result.isSome() && result.value.numbers).toEqual({ index: 5 });
+        const entry = unwrap(result);
+        assert(!isNotelet(entry));
+        expect(entry.numbers).toEqual({ index: 5 });
       });
 
       it("still adopts an off-grid custom note at parse time (validated later)", () => {
@@ -157,7 +171,9 @@ describe("FrontmatterService", () => {
         "journal-date": "2024-01-01",
         "journal-sprint": 3,
       });
-      expect(result.isSome() && result.value.numbers).toEqual({ sprint: 3 });
+      const entry = unwrap(result);
+      assert(!isNotelet(entry));
+      expect(entry.numbers).toEqual({ sprint: 3 });
     });
 
     describe("fixed monthly journal", () => {
@@ -195,6 +211,170 @@ describe("FrontmatterService", () => {
       const out: Record<string, unknown> = {};
       written.value(out);
       expect(fm.parseEntry("W/x.md" as VaultPath, out).isSome()).toBe(true);
+    });
+  });
+
+  describe("parseEntry on a notelet", () => {
+    it("parses a note carrying the type key as a notelet", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupNotelet() } },
+      });
+
+      const parsed = harness
+        .resolve(FrontmatterService)
+        .parseEntry("a.md" as VaultPath, {
+          journal: "daily",
+          "journal-date": "2026-01-01",
+          "journal-notelet": "Standup",
+        });
+
+      const entry = unwrap(parsed);
+      assert(isNotelet(entry));
+      expect(entry.typeName).toBe("Standup");
+      expect(entry.typeId).toBe("nt_1");
+    });
+
+    it("parses an unresolvable type name as an orphaned notelet", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupNotelet() } },
+      });
+
+      const entry = unwrap(
+        harness
+          .resolve(FrontmatterService)
+          .parseEntry("a.md" as VaultPath, {
+            journal: "daily",
+            "journal-date": "2026-01-01",
+            "journal-notelet": "Gone",
+          }),
+      );
+
+      assert(isNotelet(entry));
+      expect(entry.typeName).toBe("Gone");
+      expect(entry.typeId).toBeNull();
+    });
+
+    it("parses an empty type key as an orphaned notelet, not a period note", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupNotelet() } },
+      });
+
+      const entry = unwrap(
+        harness
+          .resolve(FrontmatterService)
+          .parseEntry("a.md" as VaultPath, { journal: "daily", "journal-date": "2026-01-01", "journal-notelet": "" }),
+      );
+
+      expect(isNotelet(entry)).toBe(true);
+    });
+
+    it("parses a non-string type key as an orphaned notelet", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupNotelet() } },
+      });
+
+      const entry = unwrap(
+        harness
+          .resolve(FrontmatterService)
+          .parseEntry("a.md" as VaultPath, { journal: "daily", "journal-date": "2026-01-01", "journal-notelet": 7 }),
+      );
+
+      assert(isNotelet(entry));
+      expect(entry.typeId).toBeNull();
+    });
+
+    it("treats a null type key as absent", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupNotelet() } },
+      });
+
+      const entry = unwrap(
+        harness
+          .resolve(FrontmatterService)
+          .parseEntry("a.md" as VaultPath, { journal: "daily", "journal-date": "2026-01-01", "journal-notelet": null }),
+      );
+
+      expect(isNotelet(entry)).toBe(false);
+    });
+
+    it("reads the type's counter and prompt answers", async () => {
+      const config = fixedJournal(
+        "daily",
+        { type: "day" },
+        {
+          notelets: {
+            nt_1: buildNoteletType({
+              id: "nt_1" as never,
+              name: "Standup",
+              counter: { enabled: true, frontmatterKey: "standup-no" },
+              prompts: [
+                {
+                  type: "text",
+                  variable: "who",
+                  question: "Who?",
+                  frontmatterKey: "with",
+                  required: false,
+                },
+              ],
+            }),
+          },
+        },
+      );
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
+
+      const entry = unwrap(
+        harness.resolve(FrontmatterService).parseEntry("a.md" as VaultPath, {
+          journal: "daily",
+          "journal-date": "2026-01-01",
+          "journal-notelet": "Standup",
+          "standup-no": 3,
+          with: "Alice",
+        }),
+      );
+
+      assert(isNotelet(entry));
+      expect(entry.counter).toBe(3);
+      expect(entry.answers).toEqual({ who: "Alice" });
+    });
+
+    it("rejects a notelet whose stored date is not the period's canonical anchor", async () => {
+      const config = fixedJournal(
+        "weekly",
+        { type: "week" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as never, name: "Standup" }) } },
+      );
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { weekly: config } } });
+
+      const parsed = harness.resolve(FrontmatterService).parseEntry("a.md" as VaultPath, {
+        journal: "weekly",
+        "journal-date": "2026-01-07",
+        "journal-notelet": "Standup",
+      });
+
+      expect(parsed.isNone()).toBe(true);
+    });
+
+    it("honors a renamed type key", async () => {
+      const base = fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as never, name: "Standup" }) } },
+      );
+      const config = { ...base, frontmatter: { ...base.frontmatter, noteletField: "kind" } };
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
+
+      const entry = unwrap(
+        harness
+          .resolve(FrontmatterService)
+          .parseEntry("a.md" as VaultPath, { journal: "daily", "journal-date": "2026-01-01", kind: "Standup" }),
+      );
+
+      expect(isNotelet(entry)).toBe(true);
     });
   });
 
