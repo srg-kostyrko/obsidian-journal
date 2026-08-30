@@ -9,6 +9,7 @@ import { journalFlowsModule } from "./flows/module";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { JournalNavigationCommands } from "./navigation-commands";
+import { noteletsCoreModule } from "./notelets/module";
 import { journalNotesCoreModule, journalNotesStartupModule } from "./notes/module";
 import { NumberingService } from "./numbering";
 import { promptsModule } from "./prompts/module";
@@ -36,6 +37,7 @@ export const journalsCoreModule: Module = {
     journalFlowsModule.register(c);
     journalUriModule.register(c);
     promptsModule.register(c);
+    noteletsCoreModule.register(c);
   },
 };
 

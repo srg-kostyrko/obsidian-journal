@@ -17,6 +17,7 @@ const FRONTMATTER = {
   dateField: "journal-date",
   startDateField: "journal-start-date",
   endDateField: "journal-end-date",
+  noteletField: "journal-notelet",
   addStartDate: false,
   addEndDate: false,
 } as const;

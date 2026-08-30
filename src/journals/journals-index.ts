@@ -6,28 +6,47 @@ import type { VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 
 import { JournalIndex } from "./journal-index";
+import { NoteletIndex } from "./notelet-index";
+import { isNotelet, periodEntryOf } from "./types";
 
-import type { JournalEntry, JournalsIndexEvents } from "./types";
+import type { IndexedNote, JournalEntry, JournalsIndexEvents, NoteletEntry } from "./types";
+
+function sameAnswers(a: IndexedNote, b: IndexedNote): boolean {
+  const aAnswers = a.answers ?? {};
+  const bAnswers = b.answers ?? {};
+  const keys = Object.keys(aAnswers);
+  if (keys.length !== Object.keys(bAnswers).length) return false;
+  return keys.every((key) => aAnswers[key] === bAnswers[key]);
+}
 
 // Everything an entry carries beyond the (journalName, anchor) slot it occupies. A custom cycle
 // steps from the stored endDate, so a stale payload silently freezes the sequence for the session.
-function samePayload(a: JournalEntry, b: JournalEntry): boolean {
+function samePayload(a: IndexedNote, b: IndexedNote): boolean {
+  if (isNotelet(a) || isNotelet(b)) {
+    if (!isNotelet(a) || !isNotelet(b)) return false;
+    return a.typeName === b.typeName && a.typeId === b.typeId && a.counter === b.counter && sameAnswers(a, b);
+  }
   if (a.endDate !== b.endDate) return false;
   const aNumbers = a.numbers ?? {};
   const bNumbers = b.numbers ?? {};
   const numberKeys = Object.keys(aNumbers);
   if (numberKeys.length !== Object.keys(bNumbers).length) return false;
   if (numberKeys.some((key) => aNumbers[key] !== bNumbers[key])) return false;
-  const aAnswers = a.answers ?? {};
-  const bAnswers = b.answers ?? {};
-  const answerKeys = Object.keys(aAnswers);
-  if (answerKeys.length !== Object.keys(bAnswers).length) return false;
-  return answerKeys.every((key) => aAnswers[key] === bAnswers[key]);
+  return sameAnswers(a, b);
+}
+
+// A notelet's slot includes its type name because `NoteletIndex.#byType` is keyed by it, so a
+// retype has to leave the old bucket.
+function sameSlot(a: IndexedNote, b: IndexedNote): boolean {
+  if (a.journalName !== b.journalName || a.anchor !== b.anchor) return false;
+  if (isNotelet(a) !== isNotelet(b)) return false;
+  return !isNotelet(a) || !isNotelet(b) || a.typeName === b.typeName;
 }
 
 export class JournalsIndex {
   readonly #journals = new Map<string, JournalIndex>();
-  readonly #byPath = new Map<VaultPath, JournalEntry>();
+  readonly #notelets = new Map<string, NoteletIndex>();
+  readonly #byPath = new Map<VaultPath, IndexedNote>();
   readonly #emitter: TypedEmitter<JournalsIndexEvents> = createNanoEvents();
   readonly #dirty = new Set<string>();
   #flushScheduled = false;
@@ -57,6 +76,38 @@ export class JournalsIndex {
     });
   }
 
+  #resolveNotelets(paths: readonly VaultPath[] | undefined): readonly NoteletEntry[] {
+    if (paths === undefined) return [];
+    const out: NoteletEntry[] = [];
+    for (const path of paths) {
+      const entry = this.#byPath.get(path);
+      if (entry !== undefined && isNotelet(entry)) out.push(entry);
+    }
+    return out;
+  }
+
+  #noteletIndexFor(journalName: string): NoteletIndex {
+    let noteletIndex = this.#notelets.get(journalName);
+    if (!noteletIndex) {
+      noteletIndex = new NoteletIndex();
+      this.#notelets.set(journalName, noteletIndex);
+    }
+    return noteletIndex;
+  }
+
+  // `owner` is the path whose claim on the slot is being checked: a collision loser never owned
+  // the anchor slot, so releasing it must not delete the incumbent's — the notelet arm ignores
+  // `owner` because a notelet anchor has no single owner to protect.
+  #releaseSlot(existing: IndexedNote, owner: VaultPath): void {
+    if (isNotelet(existing)) {
+      this.#notelets.get(existing.journalName)?.remove(existing);
+      return;
+    }
+    const journalIndex = this.#journals.get(existing.journalName);
+    const slot = journalIndex?.get(existing.anchor);
+    if (slot !== undefined && slot.isSome() && slot.value === owner) journalIndex?.delete(existing.anchor);
+  }
+
   whenReady(): Promise<void> {
     return this.#ready;
   }
@@ -70,37 +121,49 @@ export class JournalsIndex {
     this.#resolveReady?.();
   }
 
-  entryByPath(path: VaultPath): Option<JournalEntry> {
+  entryByPath(path: VaultPath): Option<IndexedNote> {
     return Option.fromNullable(this.#byPath.get(path));
   }
 
   entryByAnchor(journalName: string, anchor: AnchorString): Option<JournalEntry> {
     const journalIndex = this.#journals.get(journalName);
     if (!journalIndex) return Option.none();
-    return journalIndex.get(anchor).flatMap((path) => Option.fromNullable(this.#byPath.get(path)));
+    return journalIndex
+      .get(anchor)
+      .flatMap((path) => Option.fromNullable(this.#byPath.get(path)))
+      .flatMap(periodEntryOf);
   }
 
-  register(entry: JournalEntry): "registered" | "collision" {
+  noteletsAt(journalName: string, anchor: AnchorString): readonly NoteletEntry[] {
+    return this.#resolveNotelets(this.#notelets.get(journalName)?.atAnchor(anchor));
+  }
+
+  noteletsOfType(journalName: string, typeName: string): readonly NoteletEntry[] {
+    return this.#resolveNotelets(this.#notelets.get(journalName)?.ofType(typeName));
+  }
+
+  register(entry: IndexedNote): "registered" | "collision" {
     const existing = this.#byPath.get(entry.path);
-    if (existing?.journalName === entry.journalName && existing?.anchor === entry.anchor) {
-      // The note has not moved, so the anchor slot and the collision verdict below are settled —
-      // but the payload can still have changed and must not be skipped along with them.
+    if (existing !== undefined && sameSlot(existing, entry)) {
+      // The note has not moved, so the slot and the collision verdict below are settled — but
+      // the payload can still have changed and must not be skipped along with them.
       if (samePayload(existing, entry)) return "registered";
       this.#byPath.set(entry.path, entry);
       this.#emitter.emit("entryChanged", { entry, kind: "added" });
       this.#markDirty(entry.journalName);
       return "registered";
     }
-    if (existing) {
-      // Only free the old slot if this path actually owned it — a collision loser being re-anchored
-      // must not delete the incumbent's slot.
-      const oldIndex = this.#journals.get(existing.journalName);
-      const oldSlot = oldIndex?.get(existing.anchor);
-      if (oldSlot !== undefined && oldSlot.isSome() && oldSlot.value === entry.path) {
-        oldIndex?.delete(existing.anchor);
-      }
+    if (existing !== undefined) {
+      this.#releaseSlot(existing, entry.path);
       this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
       this.#markDirty(existing.journalName);
+    }
+    if (isNotelet(entry)) {
+      this.#noteletIndexFor(entry.journalName).add(entry);
+      this.#byPath.set(entry.path, entry);
+      this.#emitter.emit("entryChanged", { entry, kind: "added" });
+      this.#markDirty(entry.journalName);
+      return "registered";
     }
     let journalIndex = this.#journals.get(entry.journalName);
     if (!journalIndex) {
@@ -124,12 +187,7 @@ export class JournalsIndex {
   unregister(path: VaultPath): void {
     const existing = this.#byPath.get(path);
     if (!existing) return;
-    const journalIndex = this.#journals.get(existing.journalName);
-    // Only free the anchor slot if it still points at this path: a collision newcomer never owned
-    // the slot (so this leaves the incumbent's slot intact), and we must never delete a slot
-    // another note owns.
-    const slot = journalIndex?.get(existing.anchor);
-    if (slot !== undefined && slot.isSome() && slot.value === path) journalIndex?.delete(existing.anchor);
+    this.#releaseSlot(existing, path);
     this.#byPath.delete(path);
     this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
     this.#markDirty(existing.journalName);
@@ -139,12 +197,16 @@ export class JournalsIndex {
     if (from === to) return;
     const existing = this.#byPath.get(from);
     if (!existing) return;
-    const next: JournalEntry = { ...existing, path: to };
-    const journalIndex = this.#journals.get(existing.journalName);
-    // Only move the anchor slot if `from` actually owned it — a collision loser being renamed
-    // must not seize the incumbent's slot.
-    const slot = journalIndex?.get(existing.anchor);
-    if (slot !== undefined && slot.isSome() && slot.value === from) journalIndex?.set(existing.anchor, to);
+    const next: IndexedNote = { ...existing, path: to };
+    if (isNotelet(existing)) {
+      this.#notelets.get(existing.journalName)?.transferPath(existing, to);
+    } else {
+      const journalIndex = this.#journals.get(existing.journalName);
+      const slot = journalIndex?.get(existing.anchor);
+      // Only move the anchor slot if `from` actually owned it — a collision loser being renamed
+      // must not seize the incumbent's slot.
+      if (slot !== undefined && slot.isSome() && slot.value === from) journalIndex?.set(existing.anchor, to);
+    }
     this.#byPath.delete(from);
     this.#byPath.set(to, next);
     this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
@@ -154,20 +216,25 @@ export class JournalsIndex {
 
   clearJournal(journalName: string): void {
     const journalIndex = this.#journals.get(journalName);
-    if (!journalIndex) return;
+    const noteletIndex = this.#notelets.get(journalName);
+    if (!journalIndex && !noteletIndex) return;
     for (const [path, entry] of this.#byPath) {
       if (entry.journalName === journalName) this.#byPath.delete(path);
     }
-    journalIndex.clear();
+    journalIndex?.clear();
     this.#journals.delete(journalName);
+    noteletIndex?.clear();
+    this.#notelets.delete(journalName);
     this.#markDirty(journalName);
   }
 
   clear(): void {
-    const names = [...this.#journals.keys()];
+    const names = new Set([...this.#journals.keys(), ...this.#notelets.keys()]);
     this.#byPath.clear();
     for (const journalIndex of this.#journals.values()) journalIndex.clear();
     this.#journals.clear();
+    for (const noteletIndex of this.#notelets.values()) noteletIndex.clear();
+    this.#notelets.clear();
     for (const name of names) this.#markDirty(name);
   }
 
@@ -203,7 +270,10 @@ export class JournalsIndex {
     let best: AnchorString | undefined;
     for (const name of journalNames) {
       const path = direction === "previous" ? this.findPrevious(name, from) : this.findNext(name, from);
-      const anchor = path.flatMap((found) => this.entryByPath(found)).map((found) => found.anchor);
+      const anchor = path
+        .flatMap((found) => this.entryByPath(found))
+        .flatMap(periodEntryOf)
+        .map((found) => found.anchor);
       if (anchor.isNone()) continue;
       const candidate = anchor.value;
       if (best === undefined || (direction === "previous" ? candidate > best : candidate < best)) {

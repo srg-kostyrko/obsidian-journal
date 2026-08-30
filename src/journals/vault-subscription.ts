@@ -13,7 +13,7 @@ import { JournalsIndex } from "./journals-index";
 import { JournalsRepository } from "./repository";
 import { JournalsEventsToken } from "./tokens";
 
-import type { JournalEntry } from "./types";
+import type { IndexedNote } from "./types";
 
 export class VaultSubscriptionService {
   readonly #notes = inject(NotesService);
@@ -82,7 +82,7 @@ export class VaultSubscriptionService {
 
   // Custom-cycle anchors depend on the whole index (extension chain), so a custom note can only be
   // validated once the index is complete: inline on metadata-changed, or in the rebuild's second pass.
-  #reconcileEntry(entry: JournalEntry): void {
+  #reconcileEntry(entry: IndexedNote): void {
     const config = this.#journals.get(entry.journalName);
     if (config.isNone() || config.value.write.type !== "custom") return;
     const canonical = this.#cycle.isCanonicalAnchor(entry.journalName, entry.anchor);

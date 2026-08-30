@@ -4,8 +4,10 @@ import { assert } from "vitest";
 import type { Option } from "@/infrastructure/result";
 
 import { journalDefaultsFor, navBlockSegmentSchema } from "./config";
+import { noteletTypeDefaults } from "./notelets/config";
 
 import type { JournalConfig, JournalWrite, NavBlockSegment } from "./config";
+import type { NoteletType } from "./notelets/config";
 
 export function unwrap<T>(opt: Option<T>): T {
   assert(opt.isSome(), "expected Some");
@@ -43,4 +45,8 @@ const MINIMAL_SEGMENT = {
 
 export function buildNavSegment(overrides: Partial<NavBlockSegment> = {}): NavBlockSegment {
   return { ...v.parse(navBlockSegmentSchema, MINIMAL_SEGMENT), ...overrides };
+}
+
+export function buildNoteletType(overrides: Partial<NoteletType> = {}): NoteletType {
+  return { ...noteletTypeDefaults(overrides.id ?? "nt_test"), ...overrides };
 }
