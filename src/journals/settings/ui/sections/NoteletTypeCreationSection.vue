@@ -12,24 +12,18 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
-import { NoteletPathService } from "../../../notelets/notelet-path";
-import { EmptyNoteNameError } from "../../../notes/errors";
 import { JournalsViewModel } from "../../../view-model";
 import { EditNoteletCounterKeyFlow } from "../../flows/edit-notelet-counter-key.flow";
 import FolderInput from "../FolderInput.vue";
-import { useTodayMetadata } from "../use-today-metadata";
+import NotePathPreview from "../NotePathPreview.vue";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
 import { templateHasWrongWeek } from "../wrong-week";
 import WrongWeekWarning from "../WrongWeekWarning.vue";
-
-import type { TypeId } from "../../../notelets/config";
 
 const props = defineProps<{ journalName: string; typeId: string }>();
 
 const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
-const paths = useService(NoteletPathService);
-const metadata = useTodayMetadata(props.journalName);
 
 const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
 const type = computed(() => config.value?.notelets[props.typeId]);
@@ -42,25 +36,6 @@ const numberingVariableNames = computed<readonly string[]>(() =>
 );
 const promptVariables = computed(() => type.value?.prompts ?? []);
 
-type Resolved = { kind: "path"; path: string } | { kind: "empty" } | undefined;
-
-const previewPath = computed<Resolved>(() => {
-  const period = metadata.value;
-  const journal = config.value;
-  const noteletType = type.value;
-  if (!period || !journal || !noteletType) return;
-  const result = paths.availablePathFor(journal, noteletType, {
-    kind: "notelet",
-    journalName: journal.name,
-    anchor: period.anchor,
-    typeId: props.typeId as TypeId,
-  });
-  if (result.isErr()) {
-    return result.error instanceof EmptyNoteNameError ? { kind: "empty" } : undefined;
-  }
-  return { kind: "path", path: result.value };
-});
-
 function editCounterKey(): void {
   void flows.invoke(EditNoteletCounterKeyFlow, { journalName: props.journalName, typeId: props.typeId });
 }
@@ -72,13 +47,7 @@ function editCounterKey(): void {
       <UiIconedRow :icon="icons.action.addFile">{{ m.journal_edit_section_note_creation() }}</UiIconedRow>
     </template>
 
-    <div v-if="previewPath?.kind === 'empty'" class="journal-hint">
-      {{ m.journal_edit_name_template_empty_warning() }}
-    </div>
-    <div v-else-if="previewPath?.kind === 'path'" class="notelet-path-preview">
-      {{ m.journal_edit_note_path_preview_label() }}
-      <b class="u-pop">{{ previewPath.path }}</b>
-    </div>
+    <NotePathPreview :journal-name="props.journalName" :type-id="props.typeId" />
 
     <UiSettingRow :name="m.journal_notelet_name_template_label()">
       <template #description>
@@ -126,18 +95,3 @@ function editCounterKey(): void {
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
-
-<style scoped>
-.journal-hint {
-  color: var(--text-warning);
-}
-.notelet-path-preview {
-  padding-bottom: var(--size-4-2);
-}
-/* Preserve significant whitespace in a resolved path so spaces render literally,
-   while still letting a deep path wrap instead of overflowing the pane. */
-b {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-</style>
