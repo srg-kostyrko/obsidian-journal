@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { m } from "@/i18n";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import type { TypeId } from "@/journals/notelets/config";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import TemplatesSection from "./TemplatesSection.vue";
@@ -76,6 +77,44 @@ describe("TemplatesSection", () => {
       await waitFor(() => {
         expect(screen.getByText("2026-template.md")).toBeTruthy();
       });
+    });
+  });
+
+  describe("addressing a notelet type", () => {
+    const seed = {
+      journals: {
+        Work: fixedJournal(
+          "Work",
+          { type: "day" },
+          {
+            templates: ["journal-template.md"],
+            notelets: {
+              nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup", templates: [] }),
+            },
+          },
+        ),
+      },
+    };
+
+    it("adds a template onto the type's list, leaving the journal's untouched", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.render(TemplatesSection, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+
+      await userEvent.click(screen.getByLabelText(m.journal_edit_template_add_button()));
+
+      const config = harness.resolve(JournalsRepository).get("Work").getOrUndefined();
+      expect(config?.notelets.nt_7f3a?.templates).toEqual([""]);
+      expect(config?.templates).toEqual(["journal-template.md"]);
+    });
+
+    it("still edits the journal's templates with no type", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.render(TemplatesSection, { props: { journalName: "Work" } });
+
+      await userEvent.click(screen.getByLabelText(m.journal_edit_template_add_button()));
+
+      const config = harness.resolve(JournalsRepository).get("Work").getOrUndefined();
+      expect(config?.templates).toEqual(["journal-template.md", ""]);
     });
   });
 });

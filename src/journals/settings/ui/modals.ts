@@ -55,7 +55,7 @@ export const editNumberingDigitModal = defineModal<NumberingDigitDraft>()({
 
 export const editPromptModal = defineModal<Prompt>()({
   component: EditPromptModal,
-  title: ({ promptIndex }: { journalName: string; promptIndex?: number }) =>
+  title: ({ promptIndex }: { journalName: string; typeId?: string; promptIndex?: number }) =>
     m.journal_prompt_modal_title({ mode: promptIndex === undefined ? "add" : "edit" }),
 });
 

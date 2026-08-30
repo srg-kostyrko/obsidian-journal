@@ -16,10 +16,11 @@ import TemplaterSupportHint from "../TemplaterSupportHint.vue";
 import TemplateStringPreview from "../TemplateStringPreview.vue";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
 
-const { journalName } = defineProps<{ journalName: string }>();
+const { journalName, typeId } = defineProps<{ journalName: string; typeId?: string }>();
 
 const journalsVM = useService(JournalsViewModel);
 const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
+const owner = computed(() => (typeId === undefined ? config.value : config.value?.notelets[typeId]));
 
 const expanded = ref(false);
 
@@ -27,25 +28,26 @@ const hasCycle = computed(() => config.value !== undefined && config.value.write
 const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
 );
-const promptVariables = computed(() => config.value?.prompts ?? []);
+// A notelet's render context carries the journal's numbering digits but the type's own answers.
+const promptVariables = computed(() => owner.value?.prompts ?? []);
 
 function addTemplate(): void {
-  if (!config.value) return;
-  config.value.templates.push("");
+  if (!owner.value) return;
+  owner.value.templates.push("");
   expanded.value = true;
 }
 function removeTemplate(index: number): void {
-  if (!config.value) return;
-  config.value.templates.splice(index, 1);
+  if (!owner.value) return;
+  owner.value.templates.splice(index, 1);
 }
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="owner && config" v-model:expanded="expanded">
     <template #trigger>
       <UiIconedRow :icon="icons.section.templates">
         {{ m.journal_edit_section_templates() }}
-        <span class="flair">{{ config.templates.length }}</span>
+        <span class="flair">{{ owner.templates.length }}</span>
       </UiIconedRow>
     </template>
     <template #controls>
@@ -70,10 +72,10 @@ function removeTemplate(index: number): void {
       </template>
     </UiSettingRow>
 
-    <template v-for="(_path, index) in config.templates" :key="index">
+    <template v-for="(_path, index) in owner.templates" :key="index">
       <UiSettingRow controls-only class="template-row">
         <UiTemplateInput
-          v-model="config.templates[index]"
+          v-model="owner.templates[index]"
           class="grow"
           :placeholder="m.journal_edit_template_path_placeholder()"
         />
@@ -86,7 +88,7 @@ function removeTemplate(index: number): void {
       <div class="template-path-preview">
         <TemplateStringPreview
           :journal-name="journalName"
-          :value="config.templates[index] ?? ''"
+          :value="owner.templates[index] ?? ''"
           :label="m.journal_edit_template_path_preview_label()"
         />
       </div>

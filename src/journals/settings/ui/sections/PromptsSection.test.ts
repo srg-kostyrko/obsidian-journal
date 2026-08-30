@@ -7,8 +7,9 @@ import { Flows } from "@/infrastructure/flows";
 import { AsyncResult } from "@/infrastructure/result";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import type { Prompt } from "@/journals/prompts/config";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { EditPromptFlow } from "../../flows/edit-prompt.flow";
@@ -196,6 +197,74 @@ describe("PromptsSection", () => {
       await userEvent.click(screen.getByText(m.journal_prompt_section_title()));
 
       expect(screen.queryByText(m.journal_prompt_autocreate_required_warning())).toBeNull();
+    });
+  });
+
+  describe("addressing a notelet type", () => {
+    const seed = {
+      journals: {
+        Work: fixedJournal(
+          "Work",
+          { type: "day" },
+          {
+            prompts: [
+              {
+                type: "text",
+                variable: "mood",
+                question: "Journal question?",
+                frontmatterKey: "mood",
+                required: false,
+              },
+            ],
+            notelets: {
+              nt_7f3a: buildNoteletType({
+                id: "nt_7f3a" as TypeId,
+                name: "Standup",
+                prompts: [
+                  {
+                    type: "text",
+                    variable: "attendee",
+                    question: "Type question?",
+                    frontmatterKey: "with",
+                    required: false,
+                  },
+                ],
+              }),
+            },
+          },
+        ),
+      },
+    };
+
+    it("lists the type's questions", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.render(PromptsSection, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+      await userEvent.click(screen.getByText(m.journal_prompt_section_title()));
+
+      expect(await screen.findByText("Type question?")).toBeTruthy();
+      expect(screen.queryByText("Journal question?")).toBeNull();
+    });
+
+    it("deletes from the type, not the journal", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.render(PromptsSection, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+      await userEvent.click(screen.getByText(m.journal_prompt_section_title()));
+
+      await userEvent.click(await screen.findByLabelText(m.journal_prompt_delete()));
+
+      await waitFor(() => {
+        const config = harness.resolve(JournalsRepository).get("Work").getOrUndefined();
+        expect(config?.notelets.nt_7f3a?.prompts).toHaveLength(0);
+        expect(config?.prompts).toHaveLength(1);
+      });
+    });
+
+    it("still lists the journal's questions with no type", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.render(PromptsSection, { props: { journalName: "Work" } });
+      await userEvent.click(screen.getByText(m.journal_prompt_section_title()));
+
+      expect(await screen.findByText("Journal question?")).toBeTruthy();
     });
   });
 });
