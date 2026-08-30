@@ -1,8 +1,10 @@
 export {
   defineCollection,
+  defineNestedCollection,
   defineSlice,
   type CollectionDefinition,
   type Migration,
+  type NestedCollectionDefinition,
   type SliceDefinition,
 } from "./schema";
 export {
