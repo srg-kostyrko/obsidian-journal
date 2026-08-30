@@ -5,20 +5,24 @@ import type { NoteletEntry } from "./types";
 
 const EMPTY: readonly VaultPath[] = [];
 
+interface Placement {
+  readonly anchor: AnchorString;
+  readonly typeName: string;
+}
+
 export class NoteletIndex {
   readonly #byAnchor = new Map<AnchorString, VaultPath[]>();
   readonly #byType = new Map<string, VaultPath[]>();
-  #size = 0;
+  readonly #placements = new Map<VaultPath, Placement>();
 
-  #push<K>(map: Map<K, VaultPath[]>, key: K, path: VaultPath): boolean {
+  #push<K>(map: Map<K, VaultPath[]>, key: K, path: VaultPath): void {
     const bucket = map.get(key);
     if (bucket === undefined) {
       map.set(key, [path]);
-      return true;
+      return;
     }
-    if (bucket.includes(path)) return false;
+    if (bucket.includes(path)) return;
     bucket.push(path);
-    return true;
   }
 
   #drop<K>(map: Map<K, VaultPath[]>, key: K, path: VaultPath): void {
@@ -27,20 +31,27 @@ export class NoteletIndex {
     const at = bucket.indexOf(path);
     if (at === -1) return;
     bucket.splice(at, 1);
+    // Otherwise a churning vault retains one empty array per anchor it has ever touched.
     if (bucket.length === 0) map.delete(key);
   }
 
   add(entry: NoteletEntry): void {
-    const added = this.#push(this.#byAnchor, entry.anchor, entry.path);
+    const prior = this.#placements.get(entry.path);
+    if (prior !== undefined) {
+      this.#drop(this.#byAnchor, prior.anchor, entry.path);
+      this.#drop(this.#byType, prior.typeName, entry.path);
+    }
+    this.#push(this.#byAnchor, entry.anchor, entry.path);
     this.#push(this.#byType, entry.typeName, entry.path);
-    if (added) this.#size++;
+    this.#placements.set(entry.path, { anchor: entry.anchor, typeName: entry.typeName });
   }
 
   remove(entry: NoteletEntry): void {
-    const had = this.#byAnchor.get(entry.anchor)?.includes(entry.path) ?? false;
-    this.#drop(this.#byAnchor, entry.anchor, entry.path);
-    this.#drop(this.#byType, entry.typeName, entry.path);
-    if (had) this.#size--;
+    const placement = this.#placements.get(entry.path);
+    if (placement === undefined) return;
+    this.#drop(this.#byAnchor, placement.anchor, entry.path);
+    this.#drop(this.#byType, placement.typeName, entry.path);
+    this.#placements.delete(entry.path);
   }
 
   transferPath(entry: NoteletEntry, to: VaultPath): void {
@@ -59,10 +70,6 @@ export class NoteletIndex {
   clear(): void {
     this.#byAnchor.clear();
     this.#byType.clear();
-    this.#size = 0;
-  }
-
-  get size(): number {
-    return this.#size;
+    this.#placements.clear();
   }
 }

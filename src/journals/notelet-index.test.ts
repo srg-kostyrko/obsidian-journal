@@ -66,13 +66,30 @@ describe("NoteletIndex", () => {
     expect([...index.ofType("Standup")]).toEqual([p("moved.md")]);
   });
 
-  it("drops an empty bucket rather than keeping it", () => {
+  it("re-adding a path under a different type name leaves it only in the new type's bucket", () => {
     const index = new NoteletIndex();
-    const entry = notelet("2026-01-01", "a.md", "Standup");
-    index.add(entry);
-    index.remove(entry);
+    index.add(notelet("2026-01-01", "a.md", "Standup"));
+    index.add(notelet("2026-01-01", "a.md", "Meeting"));
 
-    expect(index.size).toBe(0);
+    expect([...index.ofType("Standup")]).toEqual([]);
+    expect([...index.ofType("Meeting")]).toEqual([p("a.md")]);
+  });
+
+  it("re-adding a path under a different anchor leaves it only at the new anchor", () => {
+    const index = new NoteletIndex();
+    index.add(notelet("2026-01-01", "a.md", "Standup"));
+    index.add(notelet("2026-01-02", "a.md", "Standup"));
+
     expect([...index.atAnchor(a("2026-01-01"))]).toEqual([]);
+    expect([...index.atAnchor(a("2026-01-02"))]).toEqual([p("a.md")]);
+  });
+
+  it("removes from the type bucket the path was actually added under, even if the entry's typeName has since changed", () => {
+    const index = new NoteletIndex();
+    index.add(notelet("2026-01-01", "a.md", "Standup"));
+
+    index.remove(notelet("2026-01-01", "a.md", "Meeting"));
+
+    expect([...index.ofType("Standup")]).toEqual([]);
   });
 });
