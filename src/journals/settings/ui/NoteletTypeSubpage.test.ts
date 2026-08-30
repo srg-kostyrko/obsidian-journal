@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { commandsCoreModule } from "@/commands/module";
 import { m } from "@/i18n";
@@ -101,6 +102,29 @@ describe("NoteletTypeSubpage", () => {
     await waitFor(() => {
       expect(back).toHaveBeenCalled();
     });
+  });
+
+  // The route key carries the journal's name, which a rename makes stale — the missing-type
+  // guard would then read that as a deletion and pop the page.
+  it("follows the journal's new name instead of popping the page", async () => {
+    const harness = await setup();
+    const back = vi.fn();
+    const nav: SubpageNav<{ journalName: string; typeId: string }> = {
+      back,
+      push: () => undefined,
+      // The dashboard re-renders the subpage with the frame's replaced props; stand in for it.
+      replace: (props) => void utilities.rerender(props),
+    };
+    const utilities = harness.render(NoteletTypeSubpage, {
+      props: { journalName: "Work", typeId: "nt_7f3a", nav },
+    });
+
+    harness.resolve(JournalsRepository).rename("Work", "Job");
+
+    await nextTick();
+    await nextTick();
+    expect(back).not.toHaveBeenCalled();
+    expect(screen.getByText("Standup")).toBeTruthy();
   });
 
   it("stays open while the type is renamed, because the route is keyed by id", async () => {

@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, watchEffect } from "vue";
+import { computed, onUnmounted, watchEffect } from "vue";
 
 import NoteletCommandsSection from "@/commands/ui/NoteletCommandsSection.vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
@@ -25,11 +26,18 @@ const { journalName, typeId, nav } = defineProps<{
 }>();
 
 const flows = useService(Flows);
+const journalsEvents = useService(JournalsEventsToken);
 const journalsVM = useService(JournalsViewModel);
 const type = computed(() => journalsVM.getJournal(journalName).getOrUndefined()?.notelets[typeId]);
 
-// Routed by id, so no rename subscription is needed — the key never goes stale. Only an actual
-// deletion pops the page.
+// The type half of the route key is an id, so renaming the type never makes it stale — but the
+// journal half is a name: follow it before the missing-type guard below reads it as a deletion.
+onUnmounted(
+  journalsEvents.on("renamed", (oldName, newName) => {
+    if (oldName === journalName) nav.replace({ journalName: newName, typeId });
+  }),
+);
+
 watchEffect(() => {
   if (!type.value) nav.back();
 });
