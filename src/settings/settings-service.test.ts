@@ -319,6 +319,29 @@ describe("SettingsService", () => {
         treats: {},
       });
     });
+
+    it("names the repaired nested entry and field in the warning", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [nestedPetCollection] })],
+        data: {
+          pets: {
+            Rex: {
+              name: "Rex",
+              kind: "dog",
+              sound: "woof",
+              treats: { t1: { label: "", crunchy: true } },
+            },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      const resets = harness.logs.records.filter(
+        (record) => record.message === "collection entry fields reset to defaults",
+      );
+      expect(resets).toHaveLength(1);
+      expect(resets[0]?.fields).toMatchObject({ fields: ["treats.t1.label"] });
+    });
   });
 
   // A v2 vault whose journals cleared the date format loaded every journal as a *day*
