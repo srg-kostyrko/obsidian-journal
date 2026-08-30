@@ -149,6 +149,27 @@ const mismatchedNestedPetCollection = defineCollection(
   { nested: { treats: defineNestedCollection(checkedTreatSchema, brokenNestedTreatDefaults) } },
 );
 
+// A container-level check (spanning the whole "treats" record, not one entry) reports an
+// issue with no entry id, alongside a genuine per-entry issue, in the same parse.
+const treatsNoEmptyLabelsSchema = v.pipe(
+  v.record(v.string(), treatSchema),
+  v.check((treats) => Object.values(treats).every((treat) => treat.label !== ""), "no treat may have an empty label"),
+);
+
+const cappedTreatsPetSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(1)),
+  kind: v.picklist(["cat", "dog"]),
+  sound: v.pipe(v.string(), v.minLength(1)),
+  treats: treatsNoEmptyLabelsSchema,
+});
+
+const cappedTreatsPetCollection = defineCollection(
+  "pets",
+  cappedTreatsPetSchema,
+  (id, raw) => ({ name: id, kind: storedKind(raw), sound: sounds[storedKind(raw)], treats: {} }),
+  { nested: { treats: defineNestedCollection(treatSchema, treatDefaults) } },
+);
+
 // Supplies this file's synthetic slice/collection/migration definitions to testContainer's
 // `modules`. A bare testContainer() registers zero slices and zero collections, so these
 // deliberately shadow-named keys (`calendar`, `journals`, `pets`) collide with nothing real.
@@ -387,6 +408,40 @@ describe("SettingsService", () => {
       expect(resets[0]?.fields).toMatchObject({ fields: ["treats.t1.label"] });
     });
 
+    it("repairs both bad fields of one nested entry, leaving the other entry alone", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [nestedPetCollection] })],
+        data: {
+          pets: {
+            Rex: {
+              name: "Rex",
+              kind: "dog",
+              sound: "woof",
+              treats: { t1: { label: "", crunchy: "x" }, t2: { label: "Bone", crunchy: false } },
+            },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(nestedPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "woof",
+        treats: { t1: { label: "t1", crunchy: false }, t2: { label: "Bone", crunchy: false } },
+      });
+
+      // Both bad fields land under the same nested key ("treats") and the same entry ("t1"),
+      // so a merge line that drops the second issue instead of accumulating it still converges
+      // on the same final value here (t1 falls back to its whole-entry default either way) — the
+      // dropped issue only shows up in what gets reported as repaired.
+      const resets = harness.logs.records.filter(
+        (record) => record.message === "collection entry fields reset to defaults",
+      );
+      expect(resets).toHaveLength(1);
+      expect(resets[0]?.fields).toMatchObject({ fields: ["treats.t1.label", "treats.t1.crunchy"] });
+    });
+
     it("retries with the whole nested field reset when a partial nested repair still fails an item-level check", async () => {
       // sound is customized away from what defaultItem would derive from kind ("woof"), so a
       // whole-entity reset (the pre-fix behavior when the final safeParse fails) is distinguishable
@@ -426,6 +481,30 @@ describe("SettingsService", () => {
       });
 
       expect(harness.settings.recordOf(mismatchedNestedPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "woof",
+        treats: {},
+      });
+    });
+
+    it("resets the whole nested field when one of its issues names no entry, even alongside a repairable entry", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [cappedTreatsPetCollection] })],
+        data: {
+          pets: {
+            Rex: {
+              name: "Rex",
+              kind: "dog",
+              sound: "woof",
+              treats: { t1: { label: "", crunchy: true }, t2: { label: "Bone", crunchy: false } },
+            },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(cappedTreatsPetCollection).Rex).toEqual({
         name: "Rex",
         kind: "dog",
         sound: "woof",
