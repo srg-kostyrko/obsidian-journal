@@ -221,13 +221,11 @@ describe("FrontmatterService", () => {
         data: { journals: { daily: dailyWithStandupNotelet() } },
       });
 
-      const parsed = harness
-        .resolve(FrontmatterService)
-        .parseEntry("a.md" as VaultPath, {
-          journal: "daily",
-          "journal-date": "2026-01-01",
-          "journal-notelet": "Standup",
-        });
+      const parsed = harness.resolve(FrontmatterService).parseEntry("a.md" as VaultPath, {
+        journal: "daily",
+        "journal-date": "2026-01-01",
+        "journal-notelet": "Standup",
+      });
 
       const entry = unwrap(parsed);
       assert(isNotelet(entry));
@@ -242,13 +240,11 @@ describe("FrontmatterService", () => {
       });
 
       const entry = unwrap(
-        harness
-          .resolve(FrontmatterService)
-          .parseEntry("a.md" as VaultPath, {
-            journal: "daily",
-            "journal-date": "2026-01-01",
-            "journal-notelet": "Gone",
-          }),
+        harness.resolve(FrontmatterService).parseEntry("a.md" as VaultPath, {
+          journal: "daily",
+          "journal-date": "2026-01-01",
+          "journal-notelet": "Gone",
+        }),
       );
 
       assert(isNotelet(entry));
@@ -284,6 +280,25 @@ describe("FrontmatterService", () => {
       );
 
       assert(isNotelet(entry));
+      expect(entry.typeId).toBeNull();
+    });
+
+    it("does not resolve a non-string type key even when its stringified value names a real type", async () => {
+      const config = fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as never, name: "7" }) } },
+      );
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
+
+      const entry = unwrap(
+        harness
+          .resolve(FrontmatterService)
+          .parseEntry("a.md" as VaultPath, { journal: "daily", "journal-date": "2026-01-01", "journal-notelet": 7 }),
+      );
+
+      assert(isNotelet(entry));
+      expect(entry.typeName).toBe("7");
       expect(entry.typeId).toBeNull();
     });
 

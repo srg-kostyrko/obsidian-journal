@@ -34,7 +34,9 @@ export class FrontmatterService {
   ): NoteletEntry {
     const typeName = typeof rawType === "string" ? rawType : String(rawType);
     const type =
-      typeName === "" ? undefined : Object.values(config.notelets).find((candidate) => candidate.name === typeName);
+      typeof rawType === "string" && rawType !== ""
+        ? Object.values(config.notelets).find((candidate) => candidate.name === rawType)
+        : undefined;
 
     const counterValue = type === undefined ? undefined : frontmatter[type.counter.frontmatterKey];
     const counter = typeof counterValue === "number" && Number.isFinite(counterValue) ? counterValue : undefined;
