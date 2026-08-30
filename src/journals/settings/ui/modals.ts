@@ -10,6 +10,7 @@ import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
 import EditNumberingDigitModal from "./EditNumberingDigitModal.vue";
 import EditPromptModal from "./EditPromptModal.vue";
 import RenameJournalModal from "./RenameJournalModal.vue";
+import RenameNoteletTypeModal from "./RenameNoteletTypeModal.vue";
 import TemplaterSupportModal from "./TemplaterSupportModal.vue";
 import VariableReferenceModal from "./VariableReferenceModal.vue";
 
@@ -68,6 +69,12 @@ export const editPromptModal = defineModal<Prompt>()({
 export const renameJournalModal = defineModal<{ newName: string }>()({
   component: RenameJournalModal,
   title: ({ currentName }: { currentName: string }) => m.journal_rename_modal_title({ name: currentName }),
+});
+
+export const renameNoteletTypeModal = defineModal<{ newName: string }>()({
+  component: RenameNoteletTypeModal,
+  title: ({ currentName }: { journalName: string; typeId: string; currentName: string }) =>
+    m.journal_notelet_rename_modal_title({ name: currentName }),
 });
 
 export const templaterSupportModal = defineModal()({

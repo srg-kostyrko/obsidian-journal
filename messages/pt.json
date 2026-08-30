@@ -1752,6 +1752,8 @@
   "journal_notelet_name_description": "É salvo em cada nota breve. Renomeá-lo aqui o altera em todos os lugares.",
   "journal_notelet_name_required_error": "Informe um nome para este tipo de nota breve.",
   "journal_notelet_name_unique_error": "Este diário já tem um tipo de nota breve com esse nome.",
+  "journal_notelet_rename_modal_title": "Renomear {name}",
+  "journal_notelet_rename_tooltip": "Renomear tipo de nota breve",
   "journal_notelet_folder_label": "Pasta",
   "journal_notelet_name_template_label": "Nome da nota",
   "journal_notelet_counter_label": "Numerar cada nota breve",

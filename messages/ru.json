@@ -1790,6 +1790,8 @@
   "journal_notelet_name_description": "Сохраняется в каждой подзаметке. Переименование здесь меняет его везде.",
   "journal_notelet_name_required_error": "Введите название для этого типа подзаметки.",
   "journal_notelet_name_unique_error": "В этом журнале уже есть тип подзаметки с таким названием.",
+  "journal_notelet_rename_modal_title": "Переименовать {name}",
+  "journal_notelet_rename_tooltip": "Переименовать тип подзаметки",
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Название заметки",
   "journal_notelet_counter_label": "Нумеровать каждую подзаметку",

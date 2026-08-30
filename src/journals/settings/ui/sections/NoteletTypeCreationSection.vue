@@ -72,11 +72,6 @@ const previewPath = computed<Resolved>(() => {
       <b class="u-pop">{{ previewPath.path }}</b>
     </div>
 
-    <UiSettingRow :name="m.journal_notelet_name_label()">
-      <template #description>{{ m.journal_notelet_name_description() }}</template>
-      <UiTextInput v-model="type.name" />
-    </UiSettingRow>
-
     <UiSettingRow :name="m.journal_notelet_name_template_label()">
       <template #description>
         <VariableReferenceHint

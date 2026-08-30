@@ -1635,6 +1635,8 @@
   "journal_notelet_name_description": "Зберігається в кожній піднотатці. Перейменування тут змінює її всюди.",
   "journal_notelet_name_required_error": "Введіть назву для цього типу піднотатки.",
   "journal_notelet_name_unique_error": "У цьому журналі вже є тип піднотатки з такою назвою.",
+  "journal_notelet_rename_modal_title": "Перейменувати {name}",
+  "journal_notelet_rename_tooltip": "Перейменувати тип піднотатки",
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Назва нотатки",
   "journal_notelet_counter_label": "Нумерувати кожну піднотатку",

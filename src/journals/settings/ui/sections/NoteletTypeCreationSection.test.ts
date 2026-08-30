@@ -51,16 +51,12 @@ async function setup(overrides: Partial<NoteletType> = {}): Promise<TestHarness>
 }
 
 describe("NoteletTypeCreationSection", () => {
-  it("writes the edited name onto the type", async () => {
-    const harness = await setup();
+  // The name is an identity: frontmatter stores it and parseEntry resolves a type by matching
+  // it, so it is only editable behind the rename modal's uniqueness check.
+  it("offers no inline name field", async () => {
+    await setup();
 
-    const input = within(rowNamed(m.journal_notelet_name_label())).getByRole("textbox");
-    await userEvent.clear(input);
-    await userEvent.type(input, "Retro");
-
-    await waitFor(() => {
-      expect(typeOf(harness)?.name).toBe("Retro");
-    });
+    expect(screen.queryByText(m.journal_notelet_name_label())).toBeNull();
   });
 
   it("writes the edited note name template onto the type", async () => {

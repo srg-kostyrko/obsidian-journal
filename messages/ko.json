@@ -1744,6 +1744,8 @@
   "journal_notelet_name_description": "각 서브노트에 저장되며, 여기서 이름을 바꾸면 모든 곳에 적용됩니다.",
   "journal_notelet_name_required_error": "이 서브노트 유형의 이름을 입력하세요.",
   "journal_notelet_name_unique_error": "이 저널에는 같은 이름의 서브노트 유형이 이미 있습니다.",
+  "journal_notelet_rename_modal_title": "{name} 이름 변경",
+  "journal_notelet_rename_tooltip": "서브노트 유형 이름 변경",
   "journal_notelet_folder_label": "폴더",
   "journal_notelet_name_template_label": "노트 이름",
   "journal_notelet_counter_label": "각 서브노트에 번호 매기기",

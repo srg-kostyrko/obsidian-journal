@@ -1752,6 +1752,8 @@
   "journal_notelet_name_description": "Enregistré dans chaque note brève. Le renommer ici le change partout.",
   "journal_notelet_name_required_error": "Saisissez un nom pour ce type de note brève.",
   "journal_notelet_name_unique_error": "Ce journal a déjà un type de note brève portant ce nom.",
+  "journal_notelet_rename_modal_title": "Renommer {name}",
+  "journal_notelet_rename_tooltip": "Renommer le type de note brève",
   "journal_notelet_folder_label": "Dossier",
   "journal_notelet_name_template_label": "Nom de la note",
   "journal_notelet_counter_label": "Numéroter chaque note brève",

@@ -1744,6 +1744,8 @@
   "journal_notelet_name_description": "Se guarda en cada nota breve. Al cambiarlo aquí, cambia en todas partes.",
   "journal_notelet_name_required_error": "Introduce un nombre para este tipo de nota breve.",
   "journal_notelet_name_unique_error": "Este diario ya tiene un tipo de nota breve con ese nombre.",
+  "journal_notelet_rename_modal_title": "Cambiar el nombre de {name}",
+  "journal_notelet_rename_tooltip": "Cambiar el nombre del tipo de nota breve",
   "journal_notelet_folder_label": "Carpeta",
   "journal_notelet_name_template_label": "Nombre de la nota",
   "journal_notelet_counter_label": "Numerar cada nota breve",

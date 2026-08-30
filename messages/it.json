@@ -1752,6 +1752,8 @@
   "journal_notelet_name_description": "Viene salvato in ogni nota breve. Rinominarlo qui lo cambia ovunque.",
   "journal_notelet_name_required_error": "Inserisci un nome per questo tipo di nota breve.",
   "journal_notelet_name_unique_error": "Questo diario ha già un tipo di nota breve con questo nome.",
+  "journal_notelet_rename_modal_title": "Rinomina {name}",
+  "journal_notelet_rename_tooltip": "Rinomina tipo di nota breve",
   "journal_notelet_folder_label": "Cartella",
   "journal_notelet_name_template_label": "Nome della nota",
   "journal_notelet_counter_label": "Numera ogni nota breve",

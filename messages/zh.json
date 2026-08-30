@@ -1599,6 +1599,8 @@
   "journal_notelet_name_description": "会保存在每条子笔记中；在此重命名即可全局更改。",
   "journal_notelet_name_required_error": "请输入该子笔记类型的名称。",
   "journal_notelet_name_unique_error": "本日记中已存在同名的子笔记类型。",
+  "journal_notelet_rename_modal_title": "重命名{name}",
+  "journal_notelet_rename_tooltip": "重命名子笔记类型",
   "journal_notelet_folder_label": "文件夹",
   "journal_notelet_name_template_label": "笔记名称",
   "journal_notelet_counter_label": "为每条子笔记编号",

@@ -1,13 +1,18 @@
+import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
+import { Flows } from "@/infrastructure/flows";
+import { AsyncResult } from "@/infrastructure/result";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import { JournalsRepository } from "@/journals/repository";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import type { SubpageNav } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
+
+import { RenameNoteletTypeFlow } from "../flows/rename-notelet-type.flow";
 
 import NoteletTypeSubpage from "./NoteletTypeSubpage.vue";
 
@@ -57,6 +62,17 @@ describe("NoteletTypeSubpage", () => {
     expect(screen.getByText(m.journal_edit_section_note_creation())).toBeTruthy();
     expect(screen.getByText(m.journal_edit_section_templates())).toBeTruthy();
     expect(screen.getByText(m.journal_prompt_section_title())).toBeTruthy();
+  });
+
+  it("invokes the rename flow from the heading's edit button", async () => {
+    const harness = await setup();
+    const flows = harness.resolve(Flows);
+    vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
+    harness.render(NoteletTypeSubpage, { props: { journalName: "Work", typeId: "nt_7f3a", nav: noopNav } });
+
+    await userEvent.click(screen.getByLabelText(m.journal_notelet_rename_tooltip()));
+
+    expect(flows.invoke).toHaveBeenCalledWith(RenameNoteletTypeFlow, { journalName: "Work", typeId: "nt_7f3a" });
   });
 
   it("leaves out the journal's own sections", async () => {

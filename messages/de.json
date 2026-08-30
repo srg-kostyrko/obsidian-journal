@@ -1754,6 +1754,8 @@
   "journal_notelet_name_description": "Wird in jeder Kurznotiz gespeichert. Eine Umbenennung hier ändert ihn überall.",
   "journal_notelet_name_required_error": "Gib einen Namen für diesen Kurznotiz-Typ ein.",
   "journal_notelet_name_unique_error": "Dieses Journal hat bereits einen Kurznotiz-Typ mit diesem Namen.",
+  "journal_notelet_rename_modal_title": "{name} umbenennen",
+  "journal_notelet_rename_tooltip": "Kurznotiz-Typ umbenennen",
   "journal_notelet_folder_label": "Ordner",
   "journal_notelet_name_template_label": "Notizname",
   "journal_notelet_counter_label": "Jede Kurznotiz nummerieren",

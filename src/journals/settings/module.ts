@@ -9,6 +9,7 @@ import { EditFrontmatterFieldFlow } from "./flows/edit-frontmatter-field.flow";
 import { EditNumberingDigitFlow } from "./flows/edit-numbering-digit.flow";
 import { EditPromptFlow } from "./flows/edit-prompt.flow";
 import { RenameJournalFlow } from "./flows/rename-journal.flow";
+import { RenameNoteletTypeFlow } from "./flows/rename-notelet-type.flow";
 import { journalsSettingsUiModule } from "./ui-module";
 import { WeekPresetService } from "./week-preset-service";
 
@@ -22,6 +23,7 @@ export const journalsSettingsCoreModule: Module = {
     c.register(EditNumberingDigitFlow).useClass(EditNumberingDigitFlow);
     c.register(EditPromptFlow).useClass(EditPromptFlow);
     c.register(AddNoteletTypeFlow).useClass(AddNoteletTypeFlow);
+    c.register(RenameNoteletTypeFlow).useClass(RenameNoteletTypeFlow);
     // Eager: it subscribes to the settings reload seam, which fires whether or not anyone has
     // opened the preset picker that resolves it through WeekPresetApplierToken.
     c.register(WeekPresetService).useClass(WeekPresetService).eager();
