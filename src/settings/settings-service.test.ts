@@ -301,6 +301,24 @@ describe("SettingsService", () => {
         treats: { t1: { label: "t1", crunchy: false }, t2: { label: "Bone", crunchy: false } },
       });
     });
+
+    it.each([
+      ["a string", "nonsense"],
+      ["null", null],
+    ])("resets a nested field stored as %s without touching the rest of the item", async (_label, stored) => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [nestedPetCollection] })],
+        data: { pets: { Rex: { name: "Rex", kind: "dog", sound: "woof", treats: stored } } },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(nestedPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "woof",
+        treats: {},
+      });
+    });
   });
 
   // A v2 vault whose journals cleared the date format loaded every journal as a *day*
