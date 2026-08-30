@@ -14,6 +14,7 @@ import { JournalsRepository } from "./repository";
 
 import type { JournalConfig } from "./config";
 import type { JournalNotFoundError } from "./errors";
+import type { TypeId } from "./notelets/config";
 import type { PromptAnswer } from "./prompts/config";
 import type { IndexedNote, JournalEntry, JournalMetadata, NoteletEntry, NoteletMetadata } from "./types";
 
@@ -34,10 +35,13 @@ export class FrontmatterService {
     rawType: unknown,
   ): NoteletEntry {
     const typeName = typeof rawType === "string" ? rawType : String(rawType);
-    const type =
+    // The record key is the identity writeMutator resolves by; the stored `id` field is only a
+    // copy that can disagree with it, so typeId must come from the matching entry's key.
+    const match =
       typeof rawType === "string" && rawType !== ""
-        ? Object.values(config.notelets).find((candidate) => candidate.name === rawType)
+        ? Object.entries(config.notelets).find(([, candidate]) => candidate.name === rawType)
         : undefined;
+    const type = match?.[1];
 
     const counterValue = type === undefined ? undefined : frontmatter[type.counter.frontmatterKey];
     const counter = typeof counterValue === "number" && Number.isFinite(counterValue) ? counterValue : undefined;
@@ -58,7 +62,7 @@ export class FrontmatterService {
       anchor,
       path,
       typeName,
-      typeId: type?.id ?? null,
+      typeId: match === undefined ? null : (match[0] as TypeId),
       ...(counter !== undefined && { counter }),
       ...(Object.keys(answers).length > 0 && { answers }),
     };
@@ -76,6 +80,10 @@ export class FrontmatterService {
       fm[FRONTMATTER_NAME_KEY] = name;
       fm[fields.dateField] = metadata.anchor;
       fm[fields.noteletField] = type.name;
+      // A notelet never carries a start or end date — a manually extended end is a period
+      // concept a notelet has no claim on.
+      delete fm[fields.startDateField];
+      delete fm[fields.endDateField];
       if (metadata.counter !== undefined) fm[type.counter.frontmatterKey] = metadata.counter;
       // Unlike a numbering digit, an answer is not recomputable, and this mutator runs on every
       // open of an existing note — deleting on absence would wipe a hand-edited answer.

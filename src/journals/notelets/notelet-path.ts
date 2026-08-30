@@ -15,7 +15,7 @@ import { renderBindingFor } from "../prompts/prompt-binding";
 import type { NoteletType } from "./config";
 import type { JournalConfig } from "../config";
 import type { JournalNotFoundError } from "../errors";
-import type { NoteletMetadata } from "../types";
+import type { JournalMetadata, NoteletMetadata } from "../types";
 
 export class NoteletPathService {
   readonly #paths = inject(NotePathService);
@@ -29,6 +29,39 @@ export class NoteletPathService {
   #pathFrom(type: NoteletType, context: TemplateContext, noteName: string): VaultPath {
     const folder = type.folder ? this.#engine.renderString(type.folder, withNoteName(context, noteName)) : "";
     return normalizePath(folder ? `${folder}/${noteName}.md` : `${noteName}.md`) as VaultPath;
+  }
+
+  #contextFromPeriod(
+    config: JournalConfig,
+    type: NoteletType,
+    metadata: NoteletMetadata,
+    period: JournalMetadata,
+  ): TemplateContext {
+    let context = this.#paths.periodContextFor(config, period);
+    // The journal's own prompt answers are deliberately absent: they live only on the period
+    // note, so binding them would make one type render different names depending on whether a
+    // period note happened to exist yet. The variable name is still declared, empty, so a
+    // template referencing it renders blank rather than leaking the literal `{{token}}`.
+    for (const prompt of config.prompts) {
+      context = context.string(prompt.variable, "");
+    }
+    for (const prompt of type.prompts) {
+      const { spec } = renderBindingFor(prompt, metadata.answers?.[prompt.variable]);
+      context = context.withSpec(prompt.variable, spec);
+    }
+    const counter = metadata.counter ?? this.nextIndex(config.name, metadata.anchor, type.name);
+    return context.number("notelet_index", counter);
+  }
+
+  // A note named "" becomes the dotfile ".md", which is invisible in the vault. Shared by
+  // nameFor and availablePathFor so there is one rendering rule, not two.
+  #renderedName(
+    config: JournalConfig,
+    type: NoteletType,
+    context: TemplateContext,
+  ): Result<string, EmptyNoteNameError> {
+    const name = this.#engine.renderString(type.nameTemplate, context);
+    return name.trim() === "" ? new Err(new EmptyNoteNameError(config.name)) : new Ok(name);
   }
 
   /**
@@ -51,22 +84,9 @@ export class NoteletPathService {
     type: NoteletType,
     metadata: NoteletMetadata,
   ): Result<TemplateContext, JournalNotFoundError> {
-    return this.#frontmatter.buildMetadata(config.name, metadata.anchor).map((period) => {
-      let context = this.#paths.periodContextFor(config, period);
-      // The journal's own prompt answers are deliberately absent: they live only on the period
-      // note, so binding them would make one type render different names depending on whether a
-      // period note happened to exist yet. The variable name is still declared, empty, so a
-      // template referencing it renders blank rather than leaking the literal `{{token}}`.
-      for (const prompt of config.prompts) {
-        context = context.string(prompt.variable, "");
-      }
-      for (const prompt of type.prompts) {
-        const { spec } = renderBindingFor(prompt, metadata.answers?.[prompt.variable]);
-        context = context.withSpec(prompt.variable, spec);
-      }
-      const counter = metadata.counter ?? this.nextIndex(config.name, metadata.anchor, type.name);
-      return context.number("notelet_index", counter);
-    });
+    return this.#frontmatter
+      .buildMetadata(config.name, metadata.anchor)
+      .map((period) => this.#contextFromPeriod(config, type, metadata, period));
   }
 
   nameFor(
@@ -74,11 +94,7 @@ export class NoteletPathService {
     type: NoteletType,
     metadata: NoteletMetadata,
   ): Result<string, JournalNotFoundError | EmptyNoteNameError> {
-    return this.contextFor(config, type, metadata).flatMap((context) => {
-      const name = this.#engine.renderString(type.nameTemplate, context);
-      // A note named "" becomes the dotfile ".md", which is invisible in the vault.
-      return name.trim() === "" ? new Err(new EmptyNoteNameError(config.name)) : new Ok(name);
-    });
+    return this.contextFor(config, type, metadata).flatMap((context) => this.#renderedName(config, type, context));
   }
 
   bodyContextFor(
@@ -111,21 +127,19 @@ export class NoteletPathService {
     type: NoteletType,
     metadata: NoteletMetadata,
   ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
-    return this.contextFor(config, type, metadata).flatMap((context) => {
-      const base = this.#engine.renderString(type.nameTemplate, context);
-      // A note named "" becomes the dotfile ".md", which is invisible in the vault.
-      if (base.trim() === "") return new Err(new EmptyNoteNameError(config.name));
-      const reservedResult = this.#frontmatter
-        .buildMetadata(config.name, metadata.anchor)
-        .flatMap((period) => this.#paths.pathFor(config.name, period));
-      const reserved = reservedResult.isOk() ? reservedResult.value : undefined;
-      const taken = (candidate: VaultPath): boolean => candidate === reserved || this.#notes.find(candidate).isSome();
+    return this.#frontmatter.buildMetadata(config.name, metadata.anchor).flatMap((period) => {
+      const context = this.#contextFromPeriod(config, type, metadata, period);
+      return this.#renderedName(config, type, context).flatMap((base) => {
+        const reservedResult = this.#paths.pathFor(config.name, period);
+        const reserved = reservedResult.isOk() ? reservedResult.value : undefined;
+        const taken = (candidate: VaultPath): boolean => candidate === reserved || this.#notes.find(candidate).isSome();
 
-      let candidate = this.#pathFrom(type, context, base);
-      for (let suffix = 1; taken(candidate); suffix++) {
-        candidate = this.#pathFrom(type, context, `${base} ${suffix}`);
-      }
-      return new Ok(candidate);
+        let candidate = this.#pathFrom(type, context, base);
+        for (let suffix = 1; taken(candidate); suffix++) {
+          candidate = this.#pathFrom(type, context, `${base} ${suffix}`);
+        }
+        return new Ok(candidate);
+      });
     });
   }
 }

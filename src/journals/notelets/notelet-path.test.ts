@@ -215,4 +215,28 @@ describe("NoteletPathService", () => {
 
     expect(path.isErr()).toBe(true);
   });
+
+  describe("nameFor", () => {
+    it("renders the same name availablePathFor derives its base name from", async () => {
+      const harness = await harnessWith({ nameTemplate: "Standup {{date:YYYY-MM-DD}}" });
+      const config = unwrap(harness.resolve(JournalsRepository).get("daily"));
+      const type = config.notelets.nt_1;
+      assert(type !== undefined);
+
+      const name = harness.resolve(NoteletPathService).nameFor(config, type, meta());
+
+      expect(name.isOk() && name.value).toBe("Standup 2026-01-01");
+    });
+
+    it("rejects a name template that renders empty", async () => {
+      const harness = await harnessWith({ nameTemplate: "  " });
+      const config = unwrap(harness.resolve(JournalsRepository).get("daily"));
+      const type = config.notelets.nt_1;
+      assert(type !== undefined);
+
+      const name = harness.resolve(NoteletPathService).nameFor(config, type, meta());
+
+      expect(name.isErr()).toBe(true);
+    });
+  });
 });

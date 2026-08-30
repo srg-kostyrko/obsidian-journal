@@ -787,6 +787,32 @@ describe("FrontmatterService", () => {
       expect(mutator.isErr() && mutator.error).toBeInstanceOf(NoteletTypeNotFoundError);
     });
 
+    it("deletes existing start and end date keys since a notelet never carries either", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupType() } },
+      });
+      const mutator = harness.resolve(FrontmatterService).writeMutator("daily", {
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-01-01"),
+        typeId: "nt_1" as never,
+      });
+      const fm: Record<string, unknown> = {
+        "journal-start-date": "2025-12-29",
+        "journal-end-date": "2026-01-04",
+      };
+
+      assert(mutator.isOk());
+      mutator.value(fm);
+
+      expect(fm).toEqual({
+        journal: "daily",
+        "journal-date": "2026-01-01",
+        "journal-notelet": "Standup",
+      });
+    });
+
     it("clearMutator strips the type key and every type's counter and prompt keys", async () => {
       const base = dailyWithStandupType();
       const config: JournalConfig = {
@@ -820,6 +846,46 @@ describe("FrontmatterService", () => {
       mutator.value(fm);
 
       expect(fm).toEqual({ keep: "me" });
+    });
+  });
+
+  describe("notelet typeId round-trip", () => {
+    it("writes a notelet then parses it back to the same typeId and typeName, and that typeId writes again", async () => {
+      // The record key ("nt_1") disagrees with the stored id field ("nt_9") on purpose: typeId
+      // must come from the record key, not the id field, or this round trip fails.
+      const config = fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_9" as never, name: "Standup" }) } },
+      );
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
+      const service = harness.resolve(FrontmatterService);
+
+      const mutator = service.writeMutator("daily", {
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-01-01"),
+        typeId: "nt_1" as never,
+      });
+      assert(mutator.isOk());
+      const fm: Record<string, unknown> = {};
+      mutator.value(fm);
+
+      const parsed = service.parseEntry("a.md" as VaultPath, fm);
+      assert(parsed.isSome());
+      const entry = parsed.value;
+      assert(isNotelet(entry));
+      expect(entry.typeId).toBe("nt_1");
+      expect(entry.typeName).toBe("Standup");
+
+      assert(entry.typeId !== null);
+      const rewritten = service.writeMutator("daily", {
+        kind: "notelet",
+        journalName: "daily",
+        anchor: entry.anchor,
+        typeId: entry.typeId,
+      });
+      expect(rewritten.isOk()).toBe(true);
     });
   });
 });
