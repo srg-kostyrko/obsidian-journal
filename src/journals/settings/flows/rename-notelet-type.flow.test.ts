@@ -82,6 +82,16 @@ describe("RenameNoteletTypeFlow", () => {
     expect(typeOf("nt_7f3a")?.name).toBe("Standup");
   });
 
+  it("writes nothing when the type is deleted while the modal is open", async () => {
+    const promise = harness.resolve(Flows).invoke(RenameNoteletTypeFlow, { journalName: "Work", typeId: "nt_7f3a" });
+    harness.resolve(JournalsRepository).update("Work", { notelets: {} });
+    harness.modals.lastOpen<{ currentName: string }, { newName: string }>().submit({ newName: "Daily sync" });
+    const result = await promise;
+
+    expect(result.kind).toBe("err");
+    expect(harness.resolve(JournalsRepository).get("Work").getOrUndefined()?.notelets).toEqual({});
+  });
+
   it("refuses a type the journal does not have", async () => {
     const result = await harness
       .resolve(Flows)

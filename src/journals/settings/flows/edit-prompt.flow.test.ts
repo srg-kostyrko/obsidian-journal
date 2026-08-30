@@ -168,6 +168,22 @@ describe("EditPromptFlow addressing a notelet type", () => {
     expect(config?.prompts.map((p) => p.variable)).toEqual(["mood"]);
   });
 
+  // Once type deletion exists, spreading the pre-modal type would write it back as a partial
+  // object — and `noUncheckedIndexedAccess` is off, so it typechecks.
+  it("writes nothing when the type is deleted while the modal is open", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithType } },
+    });
+    const promise = harness.resolve(Flows).invoke(EditPromptFlow, { journalName: "j", typeId: "nt_7f3a" });
+    harness.resolve(JournalsRepository).update("j", { notelets: {} });
+    harness.modals.lastOpen<unknown, Prompt>().submit(draft({ variable: "sleep", frontmatterKey: "journal-sleep" }));
+    const result = await promise;
+
+    expect(result.kind).toBe("err");
+    expect(harness.resolve(JournalsRepository).get("j").getOrUndefined()?.notelets).toEqual({});
+  });
+
   it("does not rename fields when a type prompt's frontmatter key changes", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule, journalsSettingsCoreModule],

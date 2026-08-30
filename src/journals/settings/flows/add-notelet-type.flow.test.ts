@@ -88,6 +88,17 @@ describe("AddNoteletTypeFlow", () => {
     expect(harness.resolve(CommandsRepository).count()).toBe(0);
   });
 
+  it("creates nothing when the journal is deleted while the modal is open", async () => {
+    const promise = harness.resolve(Flows).invoke(AddNoteletTypeFlow, { journalName: "Work" });
+    harness.resolve(JournalsRepository).delete("Work");
+    submitName("Standup");
+    const result = await promise;
+
+    expect(result.kind).toBe("err");
+    expect(harness.resolve(JournalsRepository).get("Work").isNone()).toBe(true);
+    expect(harness.resolve(CommandsRepository).count()).toBe(0);
+  });
+
   it("refuses a journal that does not exist", async () => {
     const result = await harness.resolve(Flows).invoke(AddNoteletTypeFlow, { journalName: "Missing" });
 

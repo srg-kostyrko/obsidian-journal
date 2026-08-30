@@ -1,7 +1,7 @@
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
-import { AsyncResult, attempt } from "@/infrastructure/result";
+import { AsyncResult, attempt, Err } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError, UnknownPromptError } from "@/journals/errors";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 import type { Prompt } from "@/journals/prompts/config";
@@ -31,9 +31,8 @@ export class EditPromptFlow implements Flow<
     if (configOpt.isNone()) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
-    const config = configOpt.value;
     const owner: PromptOwner | undefined =
-      parameters.typeId === undefined ? config : config.notelets[parameters.typeId];
+      parameters.typeId === undefined ? configOpt.value : configOpt.value.notelets[parameters.typeId];
     if (owner === undefined) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
@@ -46,18 +45,27 @@ export class EditPromptFlow implements Flow<
         .open(editPromptModal, { journalName: parameters.journalName, typeId: parameters.typeId, promptIndex })
         .mapErr(() => new UserAborted("edit-prompt-modal"));
 
-      const oldKey = promptIndex === undefined ? undefined : owner.prompts[promptIndex]?.frontmatterKey;
+      // Re-read across the await: the journal or the type may be gone by the time the modal
+      // closes, and a spread of the stale type would resurrect it as a partial object.
+      const typeId = parameters.typeId;
+      const config = this.#repository.get(parameters.journalName).getOrUndefined();
+      const type = typeId === undefined ? undefined : config?.notelets[typeId];
+      const current: PromptOwner | undefined = typeId === undefined ? config : type;
+      if (config === undefined || current === undefined) {
+        return yield* new Err(toFlowError(new UnknownJournalError(parameters.journalName)));
+      }
+
+      const oldKey = promptIndex === undefined ? undefined : current.prompts[promptIndex]?.frontmatterKey;
       const updatedPrompts =
         promptIndex === undefined
-          ? [...owner.prompts, prompt]
-          : owner.prompts.map((existing, i) => (i === promptIndex ? prompt : existing));
+          ? [...current.prompts, prompt]
+          : current.prompts.map((existing, i) => (i === promptIndex ? prompt : existing));
 
-      const typeId = parameters.typeId;
-      if (typeId === undefined) {
+      if (typeId === undefined || type === undefined) {
         this.#repository.update(parameters.journalName, { prompts: updatedPrompts });
       } else {
         this.#repository.update(parameters.journalName, {
-          notelets: { ...config.notelets, [typeId]: { ...config.notelets[typeId], prompts: updatedPrompts } },
+          notelets: { ...config.notelets, [typeId]: { ...type, prompts: updatedPrompts } },
         });
       }
 
