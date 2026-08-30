@@ -19,7 +19,13 @@ import { SnapshotService } from "./snapshots/snapshot-service";
 import { CollectionDefinitionToken, MigrationToken, SettingsEventsToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
 
-import type { AnyCollectionDefinition, AnySliceDefinition, CollectionDefinition, SliceDefinition } from "./schema";
+import type {
+  AnyCollectionDefinition,
+  AnyNestedCollectionDefinition,
+  AnySliceDefinition,
+  CollectionDefinition,
+  SliceDefinition,
+} from "./schema";
 import type { SliceHandle } from "./types";
 import type { BaseIssue, BaseSchema, InferOutput } from "valibot";
 
@@ -340,16 +346,95 @@ function repairCollectionEntry<TItem extends AnySchema>(
 ): { value: InferOutput<TItem>; fields: string[] } | undefined {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
 
-  const fields = new Set<string>();
+  const plain = new Set<string>();
+  const nested = new Map<string, { definition: AnyNestedCollectionDefinition; issues: BaseIssue<unknown>[] }>();
   for (const issue of issues) {
     // A root-level check reports no path, so there is no field to swap out.
     const key = issue.path?.[0]?.key;
+    if (typeof key !== "string") return undefined;
+    const nestedDefinition = definition.nested?.[key];
+    if (nestedDefinition === undefined) {
+      plain.add(key);
+      continue;
+    }
+    const existing = nested.get(key);
+    if (existing) existing.issues.push(issue);
+    else nested.set(key, { definition: nestedDefinition, issues: [issue] });
+  }
+  if (plain.size === 0 && nested.size === 0) return undefined;
+
+  const defaults = definition.defaultItem(id, value) as Record<string, unknown>;
+  const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
+  const fields: string[] = [];
+  for (const field of plain) {
+    candidate[field] = defaults[field];
+    fields.push(field);
+  }
+  for (const [field, entry] of nested) {
+    const repaired = repairNestedCollection(entry.definition, candidate[field], entry.issues);
+    if (repaired === undefined) {
+      candidate[field] = defaults[field];
+      fields.push(field);
+      continue;
+    }
+    candidate[field] = repaired.value;
+    fields.push(...repaired.fields.map((nestedField) => `${field}.${nestedField}`));
+  }
+
+  const parsed = v.safeParse(definition.itemSchema, candidate);
+  return parsed.success ? { value: parsed.output, fields } : undefined;
+}
+
+function repairNestedCollection(
+  definition: AnyNestedCollectionDefinition,
+  container: unknown,
+  issues: readonly BaseIssue<unknown>[],
+): { value: Record<string, unknown>; fields: string[] } | undefined {
+  if (container === null || typeof container !== "object" || Array.isArray(container)) return undefined;
+
+  const byEntry = new Map<string, BaseIssue<unknown>[]>();
+  for (const issue of issues) {
+    // An issue on the container itself names no entry, so there is nothing to repair inside it.
+    const entryId = issue.path?.[1]?.key;
+    if (typeof entryId !== "string") return undefined;
+    const existing = byEntry.get(entryId);
+    if (existing) existing.push(issue);
+    else byEntry.set(entryId, [issue]);
+  }
+
+  const out: Record<string, unknown> = { ...(container as Record<string, unknown>) };
+  const fields: string[] = [];
+  for (const [entryId, entryIssues] of byEntry) {
+    const entryValue = out[entryId];
+    const repaired = repairNestedEntry(definition, entryId, entryValue, entryIssues);
+    if (repaired === undefined) {
+      out[entryId] = definition.defaultItem(entryId, entryValue);
+      fields.push(entryId);
+      continue;
+    }
+    out[entryId] = repaired.value;
+    fields.push(...repaired.fields.map((field) => `${entryId}.${field}`));
+  }
+  return { value: out, fields };
+}
+
+function repairNestedEntry(
+  definition: AnyNestedCollectionDefinition,
+  entryId: string,
+  value: unknown,
+  issues: readonly BaseIssue<unknown>[],
+): { value: unknown; fields: string[] } | undefined {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
+
+  const fields = new Set<string>();
+  for (const issue of issues) {
+    const key = issue.path?.[2]?.key;
     if (typeof key !== "string") return undefined;
     fields.add(key);
   }
   if (fields.size === 0) return undefined;
 
-  const defaults = definition.defaultItem(id, value) as Record<string, unknown>;
+  const defaults = definition.defaultItem(entryId, value) as Record<string, unknown>;
   const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
   for (const field of fields) candidate[field] = defaults[field];
 

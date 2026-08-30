@@ -14,6 +14,7 @@ import { SliceKeyConflictError, MigrationFailedError, SettingsSaveError, Unregis
 import { v4ToV5Migration } from "./legacy/v4-to-v5";
 import {
   defineCollection,
+  defineNestedCollection,
   defineSlice,
   type AnyCollectionDefinition,
   type AnySliceDefinition,
@@ -55,6 +56,27 @@ const petDefaults = (id: string, raw: unknown): v.InferOutput<typeof petSchema> 
 });
 
 const petCollection = defineCollection("pets", petSchema, petDefaults);
+
+const treatSchema = v.object({
+  label: v.pipe(v.string(), v.minLength(1)),
+  crunchy: v.boolean(),
+});
+
+const treatDefaults = (id: string): v.InferOutput<typeof treatSchema> => ({ label: id, crunchy: false });
+
+const nestedPetSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(1)),
+  kind: v.picklist(["cat", "dog"]),
+  sound: v.pipe(v.string(), v.minLength(1)),
+  treats: v.optional(v.record(v.string(), treatSchema), {}),
+});
+
+const nestedPetCollection = defineCollection(
+  "pets",
+  nestedPetSchema,
+  (id, raw) => ({ name: id, kind: storedKind(raw), sound: sounds[storedKind(raw)], treats: {} }),
+  { nested: { treats: defineNestedCollection(treatSchema, treatDefaults) } },
+);
 
 const checkedPetCollection = defineCollection(
   "pets",
@@ -210,6 +232,30 @@ describe("SettingsService", () => {
         kind: "dog",
         sound: "woof",
         toys: [],
+      });
+    });
+
+    it("repairs one field of one nested entry, leaving its siblings alone", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [nestedPetCollection] })],
+        data: {
+          pets: {
+            Rex: {
+              name: "Rex",
+              kind: "dog",
+              sound: "woof",
+              treats: { t1: { label: "", crunchy: true }, t2: { label: "Bone", crunchy: false } },
+            },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(nestedPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "woof",
+        treats: { t1: { label: "t1", crunchy: true }, t2: { label: "Bone", crunchy: false } },
       });
     });
   });
