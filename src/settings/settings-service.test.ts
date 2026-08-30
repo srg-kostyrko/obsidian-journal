@@ -106,6 +106,49 @@ const checkedPetCollection = defineCollection(
   petDefaults,
 );
 
+// A nested repair can produce an entry that is individually valid but collides with a
+// sibling field once composed back into the whole item — here a repaired treat's label
+// (the nested defaultItem falls back to the entry id) equals the pet's own name.
+const clashTreatPetSchema = v.pipe(
+  v.object({
+    name: v.pipe(v.string(), v.minLength(1)),
+    kind: v.picklist(["cat", "dog"]),
+    sound: v.pipe(v.string(), v.minLength(1)),
+    treats: v.optional(v.record(v.string(), treatSchema), {}),
+  }),
+  v.check(
+    (pet) => Object.values(pet.treats).every((treat) => treat.label !== pet.name),
+    "no treat may share the pet's own name",
+  ),
+);
+
+const clashTreatPetCollection = defineCollection(
+  "pets",
+  clashTreatPetSchema,
+  (id, raw) => ({ name: id, kind: storedKind(raw), sound: sounds[storedKind(raw)], treats: {} }),
+  { nested: { treats: defineNestedCollection(treatSchema, treatDefaults) } },
+);
+
+// The parent object's own "treats" field is validated against the loose, unchecked treatSchema,
+// while the nested collection declares the stricter checkedTreatSchema for repair — a mismatch
+// the type system cannot catch (see the `why` comment on CollectionNested in schema.ts). Its
+// defaultItem deliberately returns a value the strict schema rejects.
+const brokenNestedTreatDefaults = (): v.InferOutput<typeof treatSchema> => ({ label: "forbidden", crunchy: false });
+
+const mismatchedNestedPetSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(1)),
+  kind: v.picklist(["cat", "dog"]),
+  sound: v.pipe(v.string(), v.minLength(1)),
+  treats: v.optional(v.record(v.string(), treatSchema), {}),
+});
+
+const mismatchedNestedPetCollection = defineCollection(
+  "pets",
+  mismatchedNestedPetSchema,
+  (id, raw) => ({ name: id, kind: storedKind(raw), sound: sounds[storedKind(raw)], treats: {} }),
+  { nested: { treats: defineNestedCollection(checkedTreatSchema, brokenNestedTreatDefaults) } },
+);
+
 // Supplies this file's synthetic slice/collection/migration definitions to testContainer's
 // `modules`. A bare testContainer() registers zero slices and zero collections, so these
 // deliberately shadow-named keys (`calendar`, `journals`, `pets`) collide with nothing real.
@@ -342,6 +385,52 @@ describe("SettingsService", () => {
       );
       expect(resets).toHaveLength(1);
       expect(resets[0]?.fields).toMatchObject({ fields: ["treats.t1.label"] });
+    });
+
+    it("retries with the whole nested field reset when a partial nested repair still fails an item-level check", async () => {
+      // sound is customized away from what defaultItem would derive from kind ("woof"), so a
+      // whole-entity reset (the pre-fix behavior when the final safeParse fails) is distinguishable
+      // from the correct whole-*field* reset, which must leave it untouched.
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [clashTreatPetCollection] })],
+        data: {
+          pets: {
+            Rex: { name: "Rex", kind: "dog", sound: "arf", treats: { Rex: { label: "", crunchy: true } } },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(clashTreatPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "arf",
+        treats: {},
+      });
+    });
+
+    it("discards a whole nested field rather than write an entry fallback default that fails its own schema", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [mismatchedNestedPetCollection] })],
+        data: {
+          pets: {
+            Rex: {
+              name: "Rex",
+              kind: "dog",
+              sound: "woof",
+              treats: { t1: { label: "Bone", crunchy: false }, t2: { label: "", crunchy: false } },
+            },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(mismatchedNestedPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "woof",
+        treats: {},
+      });
     });
   });
 

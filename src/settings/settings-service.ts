@@ -346,13 +346,18 @@ function repairCollectionEntry<TItem extends AnySchema>(
 ): { value: InferOutput<TItem>; fields: string[] } | undefined {
   if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
 
+  // `definition.nested` is keyed on the item schema's own field names (see CollectionNested in
+  // schema.ts) so authors get a compile error for a stray key; that key set is generic here, so
+  // widen to look it up by the runtime string an issue path actually names.
+  const nestedMap = definition.nested as Readonly<Record<string, AnyNestedCollectionDefinition>> | undefined;
+
   const plain = new Set<string>();
   const nested = new Map<string, { definition: AnyNestedCollectionDefinition; issues: BaseIssue<unknown>[] }>();
   for (const issue of issues) {
     // A root-level check reports no path, so there is no field to swap out.
     const key = issue.path?.[0]?.key;
     if (typeof key !== "string") return undefined;
-    const nestedDefinition = definition.nested?.[key];
+    const nestedDefinition = nestedMap?.[key];
     if (nestedDefinition === undefined) {
       plain.add(key);
       continue;
@@ -366,6 +371,7 @@ function repairCollectionEntry<TItem extends AnySchema>(
   const defaults = definition.defaultItem(id, value) as Record<string, unknown>;
   const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
   const fields: string[] = [];
+  const partiallyRepaired = new Set<string>();
   for (const field of plain) {
     candidate[field] = defaults[field];
     fields.push(field);
@@ -379,10 +385,21 @@ function repairCollectionEntry<TItem extends AnySchema>(
     }
     candidate[field] = repaired.value;
     fields.push(...repaired.fields.map((nestedField) => `${field}.${nestedField}`));
+    partiallyRepaired.add(field);
   }
 
   const parsed = v.safeParse(definition.itemSchema, candidate);
-  return parsed.success ? { value: parsed.output, fields } : undefined;
+  if (parsed.success) return { value: parsed.output, fields };
+  if (partiallyRepaired.size === 0) return undefined;
+
+  // A repair that only touched one entry inside a nested field can still fail a check spanning
+  // the whole item (a nested default colliding with a sibling field, say). Retry with the old
+  // whole-field reset for every field a nested repair touched, and only give up if that also
+  // fails — never widen the loss past what the pre-nested-repair code discarded.
+  for (const field of partiallyRepaired) candidate[field] = defaults[field];
+  const retryFields = [...plain, ...nested.keys()];
+  const retried = v.safeParse(definition.itemSchema, candidate);
+  return retried.success ? { value: retried.output, fields: retryFields } : undefined;
 }
 
 function repairNestedCollection(
@@ -408,7 +425,12 @@ function repairNestedCollection(
     const entryValue = out[entryId];
     const repaired = repairNestedEntry(definition, entryId, entryValue, entryIssues);
     if (repaired === undefined) {
-      out[entryId] = definition.defaultItem(entryId, entryValue);
+      const fallback = definition.defaultItem(entryId, entryValue);
+      // defaultItem's contract only promises it keeps what still parses, not that its result
+      // does — a lenient default here would silently escalate this per-entry reset into the
+      // whole-field reset the caller falls back to, so verify before writing it into the container.
+      if (!v.safeParse(definition.itemSchema, fallback).success) return undefined;
+      out[entryId] = fallback;
       fields.push(entryId);
       continue;
     }
@@ -438,8 +460,11 @@ function repairNestedEntry(
   const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
   for (const field of fields) candidate[field] = defaults[field];
 
+  // Store the pre-parse candidate, not parsed.output: repairNestedCollection's caller re-parses
+  // the whole item, so returning the already-transformed output would run any v.transform in
+  // the entry schema twice for a repaired entry while its untouched siblings run it once.
   const parsed = v.safeParse(definition.itemSchema, candidate);
-  return parsed.success ? { value: parsed.output, fields: [...fields] } : undefined;
+  return parsed.success ? { value: candidate, fields: [...fields] } : undefined;
 }
 
 function parseSliceValue<TSchema extends AnySchema>(
