@@ -2,6 +2,7 @@ import { m } from "@/i18n";
 import { defineModal } from "@/infrastructure/host/modals";
 
 import AddJournalModal from "./AddJournalModal.vue";
+import AddNoteletTypeModal from "./AddNoteletTypeModal.vue";
 import CloneJournalModal from "./CloneJournalModal.vue";
 import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
@@ -19,6 +20,11 @@ import type { Prompt } from "../../prompts/config";
 export const addJournalModal = defineModal<{ name: string; write: JournalWrite }>()({
   component: AddJournalModal,
   title: () => m.journal_add_modal_title(),
+});
+
+export const addNoteletTypeModal = defineModal<{ name: string }>()({
+  component: AddNoteletTypeModal,
+  title: (_props: { journalName: string }) => m.journal_notelet_add_modal_title(),
 });
 
 export const deleteJournalModal = defineModal<{ mode: "keep" | "clear" | "delete" }>()({
