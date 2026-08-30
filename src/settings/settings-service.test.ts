@@ -78,6 +78,25 @@ const nestedPetCollection = defineCollection(
   { nested: { treats: defineNestedCollection(treatSchema, treatDefaults) } },
 );
 
+const checkedTreatSchema = v.pipe(
+  v.object({ label: v.pipe(v.string(), v.minLength(1)), crunchy: v.boolean() }),
+  v.check((treat) => treat.label !== "forbidden", "label must not be forbidden"),
+);
+
+const checkedTreatPetSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(1)),
+  kind: v.picklist(["cat", "dog"]),
+  sound: v.pipe(v.string(), v.minLength(1)),
+  treats: v.optional(v.record(v.string(), checkedTreatSchema), {}),
+});
+
+const checkedTreatPetCollection = defineCollection(
+  "pets",
+  checkedTreatPetSchema,
+  (id, raw) => ({ name: id, kind: storedKind(raw), sound: sounds[storedKind(raw)], treats: {} }),
+  { nested: { treats: defineNestedCollection(checkedTreatSchema, treatDefaults) } },
+);
+
 const checkedPetCollection = defineCollection(
   "pets",
   v.pipe(
@@ -256,6 +275,30 @@ describe("SettingsService", () => {
         kind: "dog",
         sound: "woof",
         treats: { t1: { label: "t1", crunchy: true }, t2: { label: "Bone", crunchy: false } },
+      });
+    });
+
+    it("resets a nested entry whose issue names no field, keeping its siblings", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [checkedTreatPetCollection] })],
+        data: {
+          pets: {
+            Rex: {
+              name: "Rex",
+              kind: "dog",
+              sound: "woof",
+              treats: { t1: { label: "forbidden", crunchy: true }, t2: { label: "Bone", crunchy: false } },
+            },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(checkedTreatPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "woof",
+        treats: { t1: { label: "t1", crunchy: false }, t2: { label: "Bone", crunchy: false } },
       });
     });
   });
