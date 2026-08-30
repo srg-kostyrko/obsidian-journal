@@ -8,6 +8,7 @@ import { Option } from "@/infrastructure/result";
 import { CycleService } from "./cycle";
 import { JournalsIndex } from "./journals-index";
 import { JournalsRepository } from "./repository";
+import { periodEntryOf } from "./types";
 
 import type { JournalConfig, JournalNumberingConfig, NumberingSource } from "./config";
 
@@ -82,6 +83,7 @@ export class NumberingService {
   ): Option<Readonly<Record<string, number>>> {
     const basis = pathOpt
       .flatMap((path) => this.#index.entryByPath(path))
+      .flatMap(periodEntryOf)
       .flatMap((entry) => Option.fromNullable(entry.numbers).map((numbers) => ({ anchor: entry.anchor, numbers })))
       // A note written before a digit was added carries the old digits only. Cascading from
       // it would anchor the new digit's phase to whichever neighbor the index happened to

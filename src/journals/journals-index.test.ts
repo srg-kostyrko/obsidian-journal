@@ -4,8 +4,9 @@ import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 
 import { JournalsIndex } from "./journals-index";
+import { periodEntryOf } from "./types";
 
-import type { JournalEntry, JournalsIndexEvents } from "./types";
+import type { JournalEntry, JournalsIndexEvents, NoteletEntry } from "./types";
 
 const a = (s: string) => s as AnchorString;
 const p = (s: string) => s as VaultPath;
@@ -13,6 +14,21 @@ const entry = (journalName: string, anchor: string, path: string): JournalEntry 
   journalName,
   anchor: a(anchor),
   path: p(path),
+});
+const notelet = (
+  journalName: string,
+  anchor: string,
+  path: string,
+  typeName: string,
+  extra: Partial<NoteletEntry> = {},
+): NoteletEntry => ({
+  kind: "notelet",
+  journalName,
+  anchor: a(anchor),
+  path: p(path),
+  typeName,
+  typeId: null,
+  ...extra,
 });
 
 interface CapturedEvents {
@@ -60,7 +76,7 @@ describe("JournalsIndex", () => {
       const path = "Custom/2022-01-01.md";
       index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-14") });
       index.register({ ...entry("custom", "2022-01-01", path), endDate: a("2022-01-21") });
-      const result = index.entryByPath(p(path));
+      const result = index.entryByPath(p(path)).flatMap(periodEntryOf);
       assert(result.isSome());
       expect(result.value.endDate).toBe(a("2022-01-21"));
     });
@@ -70,7 +86,7 @@ describe("JournalsIndex", () => {
       const path = "Custom/2022-01-01.md";
       index.register({ ...entry("custom", "2022-01-01", path), numbers: { index: 1 } });
       index.register({ ...entry("custom", "2022-01-01", path), numbers: { index: 7 } });
-      const result = index.entryByPath(p(path));
+      const result = index.entryByPath(p(path)).flatMap(periodEntryOf);
       assert(result.isSome());
       expect(result.value.numbers).toEqual({ index: 7 });
     });
@@ -639,6 +655,134 @@ describe("JournalsIndex", () => {
       expect(index.isReady()).toBe(false);
       index.markReady();
       expect(index.isReady()).toBe(true);
+    });
+  });
+
+  describe("notelets", () => {
+    it("registers several notelets at one anchor", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+      index.register(notelet("daily", "2026-01-01", "b.md", "Standup"));
+
+      expect(index.noteletsAt("daily", a("2026-01-01")).map((note) => note.path)).toEqual([p("a.md"), p("b.md")]);
+    });
+
+    it("never reports a collision for a shared notelet anchor", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+
+      expect(index.register(notelet("daily", "2026-01-01", "b.md", "Standup"))).toBe("registered");
+    });
+
+    it("keeps a notelet out of the period anchor lookup", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+
+      expect(index.entryByAnchor("daily", a("2026-01-01")).isNone()).toBe(true);
+      expect(index.has("daily", a("2026-01-01"))).toBe(false);
+      expect(index.get("daily", a("2026-01-01")).isNone()).toBe(true);
+      expect([...index.getRange("daily", a("2026-01-01"), a("2026-12-31"))]).toEqual([]);
+      expect(index.findNext("daily", a("2025-12-31")).isNone()).toBe(true);
+      expect(index.findPrevious("daily", a("2026-12-31")).isNone()).toBe(true);
+      expect(index.findClosestAnchor("daily", a("2026-01-01")).isNone()).toBe(true);
+    });
+
+    it("a notelet and a period note share an anchor without displacing each other", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2026-01-01", "period.md"));
+      index.register(notelet("daily", "2026-01-01", "note.md", "Standup"));
+
+      const period = index.entryByAnchor("daily", a("2026-01-01"));
+      assert(period.isSome());
+      expect(period.value.path).toBe(p("period.md"));
+      expect(index.noteletsAt("daily", a("2026-01-01")).map((note) => note.path)).toEqual([p("note.md")]);
+    });
+
+    it("groups notelets by their stored type name", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+      index.register(notelet("daily", "2026-01-02", "b.md", "Meeting"));
+
+      expect(index.noteletsOfType("daily", "Standup").map((note) => note.path)).toEqual([p("a.md")]);
+    });
+
+    it("re-registering a notelet under a new type re-keys the type projection", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+      index.register(notelet("daily", "2026-01-01", "a.md", "Meeting"));
+
+      expect(index.noteletsOfType("daily", "Standup")).toEqual([]);
+      expect(index.noteletsOfType("daily", "Meeting").map((note) => note.path)).toEqual([p("a.md")]);
+    });
+
+    it("emits entryChanged when only the counter changed", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup", { counter: 1 }));
+      const events = capture(index);
+
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup", { counter: 2 }));
+
+      expect(events.entryChanged).toHaveLength(1);
+    });
+
+    it("identical notelet re-registration emits nothing", () => {
+      const index = new JournalsIndex();
+      const first = notelet("daily", "2026-01-01", "a.md", "Standup", { counter: 1 });
+      index.register(first);
+      const events = capture(index);
+
+      index.register({ ...first });
+
+      expect(events.entryChanged).toEqual([]);
+    });
+
+    it("unregister removes a notelet from both projections", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+
+      index.unregister(p("a.md"));
+
+      expect(index.noteletsAt("daily", a("2026-01-01"))).toEqual([]);
+      expect(index.noteletsOfType("daily", "Standup")).toEqual([]);
+      expect(index.entryByPath(p("a.md")).isNone()).toBe(true);
+    });
+
+    it("transferPath moves a notelet to its new path", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+
+      index.transferPath(p("a.md"), p("moved.md"));
+
+      expect(index.noteletsAt("daily", a("2026-01-01")).map((note) => note.path)).toEqual([p("moved.md")]);
+    });
+
+    it("clearJournal drops the journal's notelets", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+
+      index.clearJournal("daily");
+
+      expect(index.noteletsAt("daily", a("2026-01-01"))).toEqual([]);
+      expect(index.entryByPath(p("a.md")).isNone()).toBe(true);
+    });
+
+    it("clear drops every notelet", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+
+      index.clear();
+
+      expect(index.noteletsAt("daily", a("2026-01-01"))).toEqual([]);
+    });
+
+    it("marks a notelet-only journal dirty on registration", async () => {
+      const index = new JournalsIndex();
+      const events = capture(index);
+
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+      await Promise.resolve();
+
+      expect(events.journalDirty).toEqual([{ journalName: "daily" }]);
     });
   });
 });

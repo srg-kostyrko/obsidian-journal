@@ -5,6 +5,7 @@ import { LoggerFactoryToken } from "@/infrastructure/logger";
 import type { Option } from "@/infrastructure/result";
 
 import { JournalsIndex } from "./journals-index";
+import { periodEntryOf } from "./types";
 
 import type { JournalEntry } from "./types";
 
@@ -37,7 +38,10 @@ export class JournalNavigationCommands {
   }
 
   #activeEntry(): Option<JournalEntry> {
-    return this.#workspace.activeNote().flatMap((path) => this.#index.entryByPath(path));
+    return this.#workspace
+      .activeNote()
+      .flatMap((path) => this.#index.entryByPath(path))
+      .flatMap(periodEntryOf);
   }
 
   #open(direction: Direction): void {

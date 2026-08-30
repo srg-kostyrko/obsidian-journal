@@ -16,6 +16,7 @@ import { PromptsUnansweredError } from "@/journals/prompts/errors";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
 import { JournalsEventsToken } from "@/journals/tokens";
+import { isNotelet, periodEntryOf } from "@/journals/types";
 import { ShelvesService } from "@/shelves/service";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
@@ -294,7 +295,7 @@ export class JournalsApiService implements JournalsApi {
 
   async journalOf(file: { path: string }): Promise<ExistingJournalNote | null> {
     await this.#readyForNotes();
-    const entry = this.#index.entryByPath(file.path as VaultPath);
+    const entry = this.#index.entryByPath(file.path as VaultPath).flatMap(periodEntryOf);
     if (entry.isNone()) return null;
     const note = this.#noteAtAnchor(entry.value.journalName, entry.value.anchor);
     if (note === null) return null;
@@ -325,7 +326,7 @@ export class JournalsApiService implements JournalsApi {
       )
       .with("noteAdded", () =>
         this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "added") return;
+          if (kind !== "added" || isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteAdded"])({
             journal: entry.journalName,
             date: entry.anchor,
@@ -335,7 +336,7 @@ export class JournalsApiService implements JournalsApi {
       )
       .with("noteRemoved", () =>
         this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "removed") return;
+          if (kind !== "removed" || isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteRemoved"])({
             journal: entry.journalName,
             date: entry.anchor,

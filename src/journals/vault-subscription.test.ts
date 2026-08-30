@@ -12,6 +12,7 @@ import { JournalsIndex } from "./journals-index";
 import { journalsCoreModule } from "./module";
 import { JournalsRepository } from "./repository";
 import { customJournal, fixedJournal, unwrap } from "./testing";
+import { periodEntryOf } from "./types";
 import { VaultSubscriptionService } from "./vault-subscription";
 
 function requireFile(host: FakeHost, path: VaultPath): TFile {
@@ -189,7 +190,14 @@ describe("VaultSubscriptionService", () => {
       });
       harness.host.emitMetadata("C/1.md");
 
-      expect(unwrap(harness.resolve(JournalsIndex).entryByPath("C/1.md" as VaultPath)).endDate).toBe("2026-08-23");
+      expect(
+        unwrap(
+          harness
+            .resolve(JournalsIndex)
+            .entryByPath("C/1.md" as VaultPath)
+            .flatMap(periodEntryOf),
+        ).endDate,
+      ).toBe("2026-08-23");
     });
 
     it("updates the indexed numbering when a note's number is edited", async () => {
@@ -199,7 +207,14 @@ describe("VaultSubscriptionService", () => {
       harness.host.putFile("C/1.md", "", { journal: "custom", "journal-date": "2026-08-03", "journal-index": 7 });
       harness.host.emitMetadata("C/1.md");
 
-      expect(unwrap(harness.resolve(JournalsIndex).entryByPath("C/1.md" as VaultPath)).numbers).toEqual({ index: 7 });
+      expect(
+        unwrap(
+          harness
+            .resolve(JournalsIndex)
+            .entryByPath("C/1.md" as VaultPath)
+            .flatMap(periodEntryOf),
+        ).numbers,
+      ).toEqual({ index: 7 });
     });
 
     it("moves the next interval's anchor when an interval's end date is edited", async () => {
