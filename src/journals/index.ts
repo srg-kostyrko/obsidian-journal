@@ -55,6 +55,9 @@ export { JournalsError, JournalNotFoundError, NoteletTypeNotFoundError } from ".
 
 export { NoteletPathService } from "./notelets/notelet-path";
 
+export { NoteletCreationService } from "./notelets/notelet-creation";
+export type { CreateNoteletOptions, NoteletCreationError } from "./notelets/notelet-creation";
+
 export { noteletTypeSchema, noteletTypeDefaults, DEFAULT_NOTELET_FIELD } from "./notelets/config";
 export type { NoteletType, TypeId } from "./notelets/config";
 
