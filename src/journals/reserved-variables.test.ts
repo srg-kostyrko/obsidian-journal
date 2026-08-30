@@ -35,6 +35,7 @@ describe("reserved variable rules", () => {
         "end_date",
         "journal_name",
         "note_name",
+        "notelet_index",
         "relative_date",
         "start_date",
         "time",
@@ -42,6 +43,10 @@ describe("reserved variable rules", () => {
         "week_of_month",
       ].toSorted(),
     );
+  });
+
+  it("reserves notelet_index", () => {
+    expect(isReservedVariable("notelet_index")).toBe(true);
   });
 
   it("reserves week_of_month, which contextFor seeds as a derived variable", () => {
