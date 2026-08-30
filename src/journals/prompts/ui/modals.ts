@@ -3,11 +3,11 @@ import { defineModal } from "@/infrastructure/host/modals";
 
 import PromptAnswersModal from "./PromptAnswersModal.vue";
 
-import type { JournalMetadata } from "../../types";
+import type { JournalMetadata, NoteletMetadata } from "../../types";
 import type { PromptAnswer } from "../config";
 
 export interface PromptAnswersModalProps {
-  metadata: JournalMetadata;
+  metadata: JournalMetadata | NoteletMetadata;
   confirming: boolean;
   periodLabel: string;
 }

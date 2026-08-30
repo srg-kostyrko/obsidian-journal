@@ -6,7 +6,8 @@ import { DayPeriod } from "@/calendar";
 import { anchor, date } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
-import { customJournal, fixedJournal } from "@/journals/testing";
+import type { TypeId } from "@/journals/notelets/config";
+import { buildNoteletMetadata, buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { PROMPT_PLACEHOLDER } from "../placeholder";
@@ -559,6 +560,75 @@ describe("PromptAnswersModal", () => {
       });
 
       expect(pathText()).toBe("sprint 2.md");
+    });
+  });
+
+  describe("notelet metadata", () => {
+    const seed = {
+      journals: {
+        Work: fixedJournal(
+          "Work",
+          { type: "day" },
+          {
+            prompts: [
+              {
+                type: "text",
+                variable: "mood",
+                question: "Journal question?",
+                frontmatterKey: "mood",
+                required: false,
+              },
+            ],
+            notelets: {
+              nt_7f3a: buildNoteletType({
+                id: "nt_7f3a" as TypeId,
+                name: "Standup",
+                nameTemplate: "Standup {{attendee}}",
+                prompts: [
+                  {
+                    type: "text",
+                    variable: "attendee",
+                    question: "Who with?",
+                    frontmatterKey: "with",
+                    required: false,
+                  },
+                ],
+              }),
+            },
+          },
+        ),
+      },
+    };
+
+    it("asks the type's questions, not the journal's", async () => {
+      harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: buildNoteletMetadata({ journalName: "Work", typeId: "nt_7f3a" as TypeId }),
+          confirming: false,
+          periodLabel: "30 August 2026",
+        },
+      });
+
+      expect(screen.getByText("Who with?")).toBeTruthy();
+      expect(screen.queryByText("Journal question?")).toBeNull();
+    });
+
+    it("previews the notelet's own path", async () => {
+      harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: buildNoteletMetadata({ journalName: "Work", typeId: "nt_7f3a" as TypeId }),
+          confirming: false,
+          periodLabel: "30 August 2026",
+        },
+      });
+
+      await userEvent.type(screen.getByRole("textbox"), "Alice");
+
+      await waitFor(() => {
+        expect(pathText()).toBe("Standup Alice.md");
+      });
     });
   });
 });

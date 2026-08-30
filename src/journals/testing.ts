@@ -1,13 +1,15 @@
 import * as v from "valibot";
 import { assert } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import type { Option } from "@/infrastructure/result";
 
 import { journalDefaultsFor, navBlockSegmentSchema } from "./config";
 import { noteletTypeDefaults } from "./notelets/config";
 
 import type { JournalConfig, JournalWrite, NavBlockSegment } from "./config";
-import type { NoteletType } from "./notelets/config";
+import type { NoteletType, TypeId } from "./notelets/config";
+import type { NoteletMetadata } from "./types";
 
 export function unwrap<T>(opt: Option<T>): T {
   assert(opt.isSome(), "expected Some");
@@ -49,4 +51,14 @@ export function buildNavSegment(overrides: Partial<NavBlockSegment> = {}): NavBl
 
 export function buildNoteletType(overrides: Partial<NoteletType> = {}): NoteletType {
   return { ...noteletTypeDefaults(overrides.id ?? "nt_test"), ...overrides };
+}
+
+export function buildNoteletMetadata(overrides: Partial<NoteletMetadata> = {}): NoteletMetadata {
+  return {
+    kind: "notelet",
+    journalName: "Work",
+    anchor: "2026-08-30" as AnchorString,
+    typeId: "nt_test" as TypeId,
+    ...overrides,
+  };
 }

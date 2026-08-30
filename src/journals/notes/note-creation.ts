@@ -140,11 +140,7 @@ export class NoteCreationService {
           }
         } else {
           answers = yield* this.#flows
-            .invoke(
-              GatherPromptAnswersFlow,
-              { journalName: name, anchor: metadata.anchor, confirming },
-              { notify: false },
-            )
+            .invoke(GatherPromptAnswersFlow, { metadata, confirming }, { notify: false })
             .mapErr((error) => (error instanceof UserAborted ? error : new JournalNotFoundError(name)));
         }
       }

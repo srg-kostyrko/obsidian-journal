@@ -10,6 +10,7 @@ import { DatePicker } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
+import { NoteletPathService } from "@/journals/notelets/notelet-path";
 import { NotePathService } from "@/journals/notes/note-path";
 import { JournalsViewModel } from "@/journals/view-model";
 import UiButton from "@/ui/UiButton.vue";
@@ -30,13 +31,21 @@ const props = defineProps<PromptAnswersModalProps>();
 const api = useModal<Record<string, PromptAnswer>>();
 const journalsVM = useService(JournalsViewModel);
 const paths = useService(NotePathService);
+const noteletPaths = useService(NoteletPathService);
 
 const config = computed(() => journalsVM.getJournal(props.metadata.journalName).getOrUndefined());
+const noteletType = computed(() =>
+  "kind" in props.metadata ? config.value?.notelets[props.metadata.typeId] : undefined,
+);
 // The journal a creation prompt belongs to does not change while this modal is open, so the
 // prompt list is read once here rather than kept reactive — only the answers need to be.
-const prompts = config.value?.prompts ?? [];
+//
+// The prompts asked belong to whatever owns this note: a notelet asks its type's questions, and
+// the journal's — authored for the period note — are neither inherited nor asked.
+const owner = computed(() => ("kind" in props.metadata ? noteletType.value : config.value));
+const prompts = owner.value?.prompts ?? [];
 
-const inPath = computed(() => (config.value ? promptsInPath(config.value) : []));
+const inPath = computed(() => (owner.value ? promptsInPath(owner.value) : []));
 const inPathVariables = new Set(inPath.value.map((prompt) => prompt.variable));
 const showPath = computed(() => inPath.value.length > 0 || props.confirming);
 const isLive = computed(() => inPath.value.length > 0);
@@ -166,8 +175,14 @@ function given(entered: Record<string, PromptAnswer | undefined>): Record<string
 // confirmation's entire content, so suppressing it would delete what the setting is for.
 const previewPath = computed(() => {
   if (config.value === undefined) return "";
-  const previewed = { ...props.metadata, answers: isLive.value ? given(values) : {} };
-  const path = paths.pathFor(props.metadata.journalName, previewed);
+  const answers = isLive.value ? given(values) : {};
+  if ("kind" in props.metadata) {
+    const type = noteletType.value;
+    if (type === undefined) return "";
+    const path = noteletPaths.availablePathFor(config.value, type, { ...props.metadata, answers });
+    return path.isOk() ? path.value : "";
+  }
+  const path = paths.pathFor(props.metadata.journalName, { ...props.metadata, answers });
   return path.isOk() ? path.value : "";
 });
 
