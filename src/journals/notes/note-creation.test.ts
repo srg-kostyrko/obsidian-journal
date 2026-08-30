@@ -737,6 +737,26 @@ describe("a notelet at the derived period path", () => {
     expect(harness.host.files.get("Standup.md")?.frontmatter).not.toHaveProperty("journal-start-date");
   });
 
+  // Cross-journal is #claimedByOtherJournal's job: naming the wrong journal in the refusal
+  // would point the user at their own notelets when the note is someone else's entirely.
+  it("names the owning journal when the notelet belongs to a different one", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { ...seed.journals, Other: fixedJournal("Other", { type: "day" }) } },
+    });
+    harness.host.putFile("Standup.md", "", {
+      journal: "Other",
+      "journal-date": "2026-08-30",
+      "journal-notelet": "Standup",
+    });
+
+    const ensured = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("Work", { journalName: "Work", anchor: "2026-08-30" as AnchorString });
+
+    expect(ensured.kind === "err" && ensured.error).toBeInstanceOf(NotePathClaimedError);
+  });
+
   it("still adopts this journal's own period note", async () => {
     const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
     harness.host.putFile("Standup.md", "", { journal: "Work", "journal-date": "2026-08-30" });

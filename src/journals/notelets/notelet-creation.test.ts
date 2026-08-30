@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import { expectOk } from "@/infrastructure/result/testing";
@@ -13,6 +13,7 @@ import { NoteletCreationService } from "./notelet-creation";
 
 import type { NoteletType, TypeId } from "./config";
 import type { JournalConfig } from "../config";
+import type { Prompt, PromptAnswer } from "../prompts/config";
 
 const ANCHOR = "2026-08-30" as AnchorString;
 const TYPE = "nt_7f3a" as TypeId;
@@ -174,6 +175,61 @@ describe("NoteletCreationService", () => {
       .createNotelet("Work", TYPE, ANCHOR, { unattended: true });
 
     expect(created.isErr()).toBe(true);
+  });
+});
+
+async function answering(harness: TestHarness, answers: Record<string, PromptAnswer>): Promise<void> {
+  await vi.waitFor(() => {
+    expect(harness.modals.opens).toHaveLength(1);
+  });
+  harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit(answers);
+}
+
+describe("NoteletCreationService — a question the note name spells", () => {
+  const attendee: Prompt = {
+    type: "text",
+    variable: "attendee",
+    question: "Who with?",
+    frontmatterKey: "standup-with",
+    required: false,
+  };
+
+  // The whole slice is built around this order: questions run before the name renders, because
+  // an answer can reach the filename and a placeholder must never be persisted into one.
+  it("renders the answer into the path it creates", async () => {
+    const harness = await boot(workWith({ nameTemplate: "Standup {{attendee}}", prompts: [attendee] }));
+
+    const promise = harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    await answering(harness, { attendee: "Dana" });
+    const created = await promise;
+
+    expectOk(created);
+    expect(created.value.path).toBe("Standup Dana.md");
+  });
+
+  it("stores the answer under its own property on the created note", async () => {
+    const harness = await boot(workWith({ nameTemplate: "Standup {{attendee}}", prompts: [attendee] }));
+
+    const promise = harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    await answering(harness, { attendee: "Dana" });
+    const created = await promise;
+
+    expectOk(created);
+    expect(harness.host.files.get(created.value.path)?.frontmatter).toMatchObject({ "standup-with": "Dana" });
+  });
+
+  it("creates nothing when the questions are cancelled", async () => {
+    const harness = await boot(workWith({ nameTemplate: "Standup {{attendee}}", prompts: [attendee] }));
+
+    const promise = harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    await vi.waitFor(() => {
+      expect(harness.modals.opens).toHaveLength(1);
+    });
+    harness.modals.lastOpen().cancel();
+    const created = await promise;
+
+    expect(created.isErr()).toBe(true);
+    expect(harness.host.files.get("Standup Dana.md")).toBeUndefined();
   });
 });
 
