@@ -691,20 +691,20 @@ describe("NoteCreationService.ensureNote — a derived path another journal alre
 });
 
 describe("a notelet at the derived period path", () => {
-  const seed = {
-    journals: {
-      Work: fixedJournal(
-        "Work",
-        { type: "day" },
-        {
-          nameTemplate: "Standup",
-          notelets: {
-            nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup", nameTemplate: "Standup" }),
-          },
-        },
-      ),
+  const work = fixedJournal(
+    "Work",
+    { type: "day" },
+    {
+      nameTemplate: "Standup",
+      notelets: {
+        nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup", nameTemplate: "Standup" }),
+      },
     },
-  };
+  );
+  // addStartDate: true makes an unguarded adoption visibly write journal-start-date into the
+  // notelet's frontmatter, so "leaves the notelet's frontmatter untouched" below actually
+  // falsifies a missing guard instead of trivially passing either way.
+  const seed = { journals: { Work: { ...work, frontmatter: { ...work.frontmatter, addStartDate: true } } } };
 
   it("refuses rather than adopting it", async () => {
     const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
