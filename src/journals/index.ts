@@ -43,7 +43,7 @@ export type { Prompt, PromptOption, PromptType, PromptAnswer } from "./prompts/c
 
 export type { JournalEntry, JournalMetadata, JournalsIndexEvents } from "./types";
 
-export { JournalsError, JournalNotFoundError } from "./errors";
+export { JournalsError, JournalNotFoundError, NoteletTypeNotFoundError } from "./errors";
 
 export {
   InvalidJournalNameError,

@@ -2,11 +2,12 @@ import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
-import { Option } from "@/infrastructure/result";
+import { Err, Ok, Option } from "@/infrastructure/result";
 import type { Result } from "@/infrastructure/result";
 
 import { FRONTMATTER_NAME_KEY } from "./config";
 import { CycleService } from "./cycle";
+import { NoteletTypeNotFoundError } from "./errors";
 import { JournalsIndex } from "./journals-index";
 import { NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
@@ -14,7 +15,7 @@ import { JournalsRepository } from "./repository";
 import type { JournalConfig } from "./config";
 import type { JournalNotFoundError } from "./errors";
 import type { PromptAnswer } from "./prompts/config";
-import type { IndexedNote, JournalEntry, JournalMetadata, NoteletEntry } from "./types";
+import type { IndexedNote, JournalEntry, JournalMetadata, NoteletEntry, NoteletMetadata } from "./types";
 
 export class FrontmatterService {
   readonly #journals = inject(JournalsRepository);
@@ -60,6 +61,85 @@ export class FrontmatterService {
       typeId: type?.id ?? null,
       ...(counter !== undefined && { counter }),
       ...(Object.keys(answers).length > 0 && { answers }),
+    };
+  }
+
+  #noteletWriteMutator(
+    config: JournalConfig,
+    name: string,
+    metadata: NoteletMetadata,
+  ): Result<(fm: Record<string, unknown>) => void, NoteletTypeNotFoundError> {
+    const type = config.notelets[metadata.typeId];
+    if (type === undefined) return new Err(new NoteletTypeNotFoundError(name, metadata.typeId));
+    const fields = config.frontmatter;
+    return new Ok((fm: Record<string, unknown>) => {
+      fm[FRONTMATTER_NAME_KEY] = name;
+      fm[fields.dateField] = metadata.anchor;
+      fm[fields.noteletField] = type.name;
+      if (metadata.counter !== undefined) fm[type.counter.frontmatterKey] = metadata.counter;
+      // Unlike a numbering digit, an answer is not recomputable, and this mutator runs on every
+      // open of an existing note — deleting on absence would wipe a hand-edited answer.
+      for (const prompt of type.prompts) {
+        if (prompt.frontmatterKey === "") continue;
+        const value = metadata.answers?.[prompt.variable];
+        if (value !== undefined) fm[prompt.frontmatterKey] = value;
+      }
+    });
+  }
+
+  #periodWriteMutator(
+    config: JournalConfig,
+    name: string,
+    metadata: JournalMetadata,
+  ): (fm: Record<string, unknown>) => void {
+    const fields = config.frontmatter;
+    const cycle = this.#cycle;
+
+    return (fm: Record<string, unknown>) => {
+      fm[FRONTMATTER_NAME_KEY] = name;
+      fm[fields.dateField] = metadata.anchor;
+
+      if (fields.addStartDate) {
+        const start = cycle.startOf(name, metadata.anchor);
+        if (start.isSome()) fm[fields.startDateField] = start.value.toAnchor();
+      } else {
+        delete fm[fields.startDateField];
+      }
+
+      // An end equal to the auto-derived period end is redundant metadata, not a
+      // manual extension, so it is persisted only when the end-date field is enabled. A genuine
+      // extension (end differs from the default period end) is always kept.
+      const isManualExtension =
+        metadata.endDate !== undefined &&
+        !cycle
+          .defaultEndOf(name, metadata.anchor)
+          .map((end) => end.toAnchor() === metadata.endDate)
+          .getOr(false);
+      if (fields.addEndDate || isManualExtension) {
+        if (metadata.endDate === undefined) {
+          const computed = cycle.endOf(name, metadata.anchor);
+          if (computed.isSome()) fm[fields.endDateField] = computed.value.toAnchor();
+        } else {
+          fm[fields.endDateField] = metadata.endDate;
+        }
+      } else {
+        delete fm[fields.endDateField];
+      }
+
+      for (const source of config.numbering.sources) {
+        const value = metadata.numbers?.[source.variable];
+        if (value === undefined) delete fm[source.frontmatterKey];
+        else fm[source.frontmatterKey] = value;
+      }
+
+      // Unlike a numbering digit, an answer is not recomputable — and ensureNote runs this
+      // mutator on every open of an existing note. Deleting on absence would wipe a
+      // hand-edited answer the next time the user opened the note.
+      for (const prompt of config.prompts) {
+        if (prompt.frontmatterKey === "") continue;
+        const value = metadata.answers?.[prompt.variable];
+        if (value !== undefined) fm[prompt.frontmatterKey] = value;
+      }
     };
   }
 
@@ -152,9 +232,16 @@ export class FrontmatterService {
         delete fm[fields.dateField];
         delete fm[fields.startDateField];
         delete fm[fields.endDateField];
+        delete fm[fields.noteletField];
         for (const source of config.numbering.sources) delete fm[source.frontmatterKey];
         for (const prompt of config.prompts) {
           if (prompt.frontmatterKey !== "") delete fm[prompt.frontmatterKey];
+        }
+        for (const type of Object.values(config.notelets)) {
+          delete fm[type.counter.frontmatterKey];
+          for (const prompt of type.prompts) {
+            if (prompt.frontmatterKey !== "") delete fm[prompt.frontmatterKey];
+          }
         }
       };
     });
@@ -162,58 +249,11 @@ export class FrontmatterService {
 
   writeMutator(
     name: string,
-    metadata: JournalMetadata,
-  ): Result<(fm: Record<string, unknown>) => void, JournalNotFoundError> {
-    return this.#journals.require(name).map((config) => {
-      const fields = config.frontmatter;
-      const cycle = this.#cycle;
-
-      return (fm: Record<string, unknown>) => {
-        fm[FRONTMATTER_NAME_KEY] = name;
-        fm[fields.dateField] = metadata.anchor;
-
-        if (fields.addStartDate) {
-          const start = cycle.startOf(name, metadata.anchor);
-          if (start.isSome()) fm[fields.startDateField] = start.value.toAnchor();
-        } else {
-          delete fm[fields.startDateField];
-        }
-
-        // An end equal to the auto-derived period end is redundant metadata, not a
-        // manual extension, so it is persisted only when the end-date field is enabled. A genuine
-        // extension (end differs from the default period end) is always kept.
-        const isManualExtension =
-          metadata.endDate !== undefined &&
-          !cycle
-            .defaultEndOf(name, metadata.anchor)
-            .map((end) => end.toAnchor() === metadata.endDate)
-            .getOr(false);
-        if (fields.addEndDate || isManualExtension) {
-          if (metadata.endDate === undefined) {
-            const computed = cycle.endOf(name, metadata.anchor);
-            if (computed.isSome()) fm[fields.endDateField] = computed.value.toAnchor();
-          } else {
-            fm[fields.endDateField] = metadata.endDate;
-          }
-        } else {
-          delete fm[fields.endDateField];
-        }
-
-        for (const source of config.numbering.sources) {
-          const value = metadata.numbers?.[source.variable];
-          if (value === undefined) delete fm[source.frontmatterKey];
-          else fm[source.frontmatterKey] = value;
-        }
-
-        // Unlike a numbering digit, an answer is not recomputable — and ensureNote runs this
-        // mutator on every open of an existing note. Deleting on absence would wipe a
-        // hand-edited answer the next time the user opened the note.
-        for (const prompt of config.prompts) {
-          if (prompt.frontmatterKey === "") continue;
-          const value = metadata.answers?.[prompt.variable];
-          if (value !== undefined) fm[prompt.frontmatterKey] = value;
-        }
-      };
+    metadata: JournalMetadata | NoteletMetadata,
+  ): Result<(fm: Record<string, unknown>) => void, JournalNotFoundError | NoteletTypeNotFoundError> {
+    return this.#journals.require(name).flatMap((config) => {
+      if ("kind" in metadata) return this.#noteletWriteMutator(config, name, metadata);
+      return new Ok(this.#periodWriteMutator(config, name, metadata));
     });
   }
 }

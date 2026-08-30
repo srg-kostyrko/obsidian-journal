@@ -1,9 +1,11 @@
 import { assert, beforeEach, describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { NoteletTypeNotFoundError } from "./errors";
 import { FrontmatterService } from "./frontmatter";
 import { JournalsIndex } from "./journals-index";
 import { journalsCoreModule } from "./module";
@@ -17,6 +19,37 @@ const dailyWithStandupNotelet = () =>
     "daily",
     { type: "day" },
     { notelets: { nt_1: buildNoteletType({ id: "nt_1" as never, name: "Standup" }) } },
+  );
+
+const dailyWithStandupType = () =>
+  fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      frontmatter: {
+        dateField: "journal-date",
+        startDateField: "journal-start-date",
+        endDateField: "journal-end-date",
+        noteletField: "journal-notelet",
+        addStartDate: true,
+        addEndDate: true,
+      },
+      numbering: {
+        enabled: true,
+        anchorDate: anchor("2026-01-01"),
+        allowBefore: false,
+        sources: [{ variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } }],
+      },
+      prompts: [{ type: "text", variable: "mood", question: "Mood?", frontmatterKey: "mood", required: false }],
+      notelets: {
+        nt_1: buildNoteletType({
+          id: "nt_1" as never,
+          name: "Standup",
+          counter: { enabled: true, frontmatterKey: "standup-no" },
+          prompts: [{ type: "text", variable: "who", question: "Who?", frontmatterKey: "with", required: false }],
+        }),
+      },
+    },
   );
 
 describe("FrontmatterService", () => {
@@ -707,6 +740,72 @@ describe("FrontmatterService", () => {
       const fm = harness.resolve(FrontmatterService);
       const built = fm.buildMetadata("daily", "2024-01-01" as AnchorString);
       expect(built.isOk() && built.value.answers).toEqual({ mood: "great" });
+    });
+  });
+
+  describe("notelet mutators", () => {
+    it("writes only the journal claim, the anchor, the type name, the counter and the answers", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupType() } },
+      });
+      const mutator = harness.resolve(FrontmatterService).writeMutator("daily", {
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-01-01"),
+        typeId: "nt_1" as never,
+        counter: 2,
+        answers: { who: "Alice" },
+      });
+      const fm: Record<string, unknown> = {};
+
+      assert(mutator.isOk());
+      mutator.value(fm);
+
+      expect(fm).toEqual({
+        journal: "daily",
+        "journal-date": "2026-01-01",
+        "journal-notelet": "Standup",
+        "standup-no": 2,
+        with: "Alice",
+      });
+    });
+
+    it("refuses to write a notelet whose type no longer exists", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupType() } },
+      });
+
+      const mutator = harness.resolve(FrontmatterService).writeMutator("daily", {
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-01-01"),
+        typeId: "nt_gone" as never,
+      });
+
+      expect(mutator.isErr() && mutator.error).toBeInstanceOf(NoteletTypeNotFoundError);
+    });
+
+    it("clearMutator strips the type key and every type's counter and prompt keys", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: dailyWithStandupType() } },
+      });
+      const mutator = harness.resolve(FrontmatterService).clearMutator("daily");
+      const fm: Record<string, unknown> = {
+        journal: "daily",
+        "journal-date": "2026-01-01",
+        "journal-notelet": "Standup",
+        "standup-no": 2,
+        with: "Alice",
+        keep: "me",
+      };
+
+      assert(mutator.isOk());
+      mutator.value(fm);
+
+      expect(fm).toEqual({ keep: "me" });
     });
   });
 });

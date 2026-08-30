@@ -13,6 +13,17 @@ export class JournalNotFoundError extends JournalsError {
   }
 }
 
+export class NoteletTypeNotFoundError extends JournalsError {
+  override name = "NoteletTypeNotFoundError";
+
+  constructor(
+    readonly journalName: string,
+    readonly typeId: string,
+  ) {
+    super(`Notelet type not found in ${journalName}: ${typeId}`);
+  }
+}
+
 export class OutOfTimelineError extends JournalsError {
   override name = "OutOfTimelineError";
 
