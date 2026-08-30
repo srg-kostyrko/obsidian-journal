@@ -92,6 +92,14 @@ describe("NoteletPathService", () => {
     const config = unwrap(harness.resolve(JournalsRepository).get("daily"));
     const type = config.notelets.nt_1;
     assert(type !== undefined);
+    // A period note actually carrying a stored answer, so the assertion below distinguishes
+    // "the answer was excluded" from "there was no answer to exclude in the first place".
+    harness.resolve(JournalsIndex).register({
+      journalName: "daily",
+      anchor: anchor("2026-01-01"),
+      path: "period.md" as VaultPath,
+      answers: { mood: "great" },
+    });
 
     const path = harness.resolve(NoteletPathService).availablePathFor(config, type, meta());
 
