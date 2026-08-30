@@ -232,7 +232,7 @@
         "scope=global": "No global commands created yet.",
         "scope=journal": "No commands created for this journal yet.",
         "scope=shelf": "No commands created for this shelf yet.",
-        "scope=notelet": "No commands for this notelet type yet."
+        "scope=notelet": "No commands created for this notelet type yet."
       }
     }
   ],
@@ -1515,7 +1515,7 @@
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
   "journal_note_name_empty_notice": "Journal \"{journalName}\" has a name template that resolves to an empty note name, so no note can be created. Set a name template for it in journal settings.",
   "journal_note_path_claimed_notice": "Journal \"{journalName}\" would put its note at \"{path}\", but that note already belongs to journal \"{claimedBy}\", so nothing was changed. Change the folder or name template in one of them.",
-  "journal_note_path_notelet_notice": "{journalName} can't create its note at {path} — one of its own notelets is already there. Change the journal's note name or folder, or move that notelet.",
+  "journal_note_path_notelet_notice": "Journal \"{journalName}\" can't create its note at \"{path}\" — one of its own notelets is already there. Change the journal's note name or folder, or move that notelet.",
   "journal_dashboard_bulk_add": "Bulk add notes to {name}",
   "journal_dashboard_clone": "Clone {name}",
   "journal_dashboard_edit": "Configure {name}",
