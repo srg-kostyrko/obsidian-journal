@@ -4,6 +4,7 @@ import type { AnchorString } from "@/calendar";
 import { expectOk } from "@/infrastructure/result/testing";
 import { testContainer, type TestContainerOptions, type TestHarness } from "@/testing";
 
+import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { buildNoteletType, fixedJournal } from "../testing";
 import { VaultSubscriptionService } from "../vault-subscription";
@@ -173,5 +174,29 @@ describe("NoteletCreationService", () => {
       .createNotelet("Work", TYPE, ANCHOR, { unattended: true });
 
     expect(created.isErr()).toBe(true);
+  });
+});
+
+describe("the slice end to end", () => {
+  it("indexes the created notelet under both lookups", async () => {
+    const harness = await boot(workWith());
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    expectOk(created);
+    harness.host.emitMetadata(created.value.path);
+
+    const index = harness.resolve(JournalsIndex);
+    expect(index.noteletsAt("Work", ANCHOR).map((entry) => entry.path)).toContain(created.value.path);
+    expect(index.noteletsOfType("Work", "Standup").map((entry) => entry.path)).toContain(created.value.path);
+  });
+
+  it("keeps the notelet out of the period lookups", async () => {
+    const harness = await boot(workWith());
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    expectOk(created);
+    harness.host.emitMetadata(created.value.path);
+
+    expect(harness.resolve(JournalsIndex).entryByAnchor("Work", ANCHOR).isNone()).toBe(true);
   });
 });
