@@ -6,7 +6,7 @@ import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { JournalsIndex, JournalsRepository, OpenDateFlow } from "@/journals";
+import { JournalsIndex, JournalsRepository, OpenDateFlow, VaultSubscriptionService } from "@/journals";
 import type { JournalConfig, TypeId } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
@@ -43,7 +43,7 @@ async function buildRegistry(seed: RegistrySeed = {}) {
       commands: seed.commands ?? {},
     },
     allow: { hostState: true },
-    initialize: [DynamicCommandRegistry],
+    initialize: [DynamicCommandRegistry, VaultSubscriptionService],
   });
   return {
     host: harness.host,
@@ -782,6 +782,38 @@ describe("DynamicCommandRegistry notelet targets", () => {
       kind: "notelet",
       journalName: "Job",
       typeId: "nt_7f3a",
+    });
+  });
+
+  it("creates a notelet rather than a period note", async () => {
+    const { host } = await buildRegistry({
+      journals: {
+        Work: fixedJournal(
+          "Work",
+          { type: "day" },
+          {
+            notelets: {
+              nt_7f3a: buildNoteletType({
+                id: "nt_7f3a" as TypeId,
+                name: "Standup",
+                nameTemplate: "Standup {{notelet_index}}",
+              }),
+            },
+          },
+        ),
+      },
+      commands: {
+        c1: buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    host.commands.get("c1")?.checkCallback?.(false);
+
+    await vi.waitFor(() => {
+      expect(host.files.get("Standup 1.md")?.frontmatter).toMatchObject({ "journal-notelet": "Standup" });
     });
   });
 });

@@ -58,6 +58,9 @@ export { NoteletPathService } from "./notelets/notelet-path";
 export { NoteletCreationService } from "./notelets/notelet-creation";
 export type { CreateNoteletOptions, NoteletCreationError } from "./notelets/notelet-creation";
 
+export { CreateNoteletFlow } from "./notelets/flows/create-notelet.flow";
+export type { CreateNoteletParameters } from "./notelets/flows/create-notelet.flow";
+
 export { noteletTypeSchema, noteletTypeDefaults, DEFAULT_NOTELET_FIELD } from "./notelets/config";
 export type { NoteletType, TypeId } from "./notelets/config";
 

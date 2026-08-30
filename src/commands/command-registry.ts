@@ -10,6 +10,7 @@ import { CommandService, NoticeService, WorkspaceService } from "@/infrastructur
 import type { CommandRegistration } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 import {
+  CreateNoteletFlow,
   CycleService,
   JournalsIndex,
   JournalsEventsToken,
@@ -17,7 +18,7 @@ import {
   OpenDateFlow,
   TimelineService,
 } from "@/journals";
-import type { JournalEntry } from "@/journals";
+import type { JournalEntry, TypeId } from "@/journals";
 import { periodEntryOf } from "@/journals/types";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
@@ -233,6 +234,20 @@ export class DynamicCommandRegistry {
     const plan = this.#plan(command);
     if (!plan.isSome()) {
       this.#notices.show(this.#unavailableNotice(command));
+      return;
+    }
+    const target = command.target;
+    if (target.kind === "notelet") {
+      await this.#flows.invoke(
+        CreateNoteletFlow,
+        {
+          journalName: target.journalName,
+          typeId: target.typeId as TypeId,
+          anchor: plan.value.anchor,
+          openMode: command.openMode,
+        },
+        { context: { command: command.name } },
+      );
       return;
     }
     await this.#flows.invoke(
