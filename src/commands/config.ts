@@ -17,6 +17,11 @@ const commandTargetSchema = v.union([
     shelfName: v.pipe(v.string(), v.minLength(1)),
     writeType: v.picklist(["day", "week", "month", "quarter", "year"]),
   }),
+  v.object({
+    kind: v.literal("notelet"),
+    journalName: v.pipe(v.string(), v.minLength(1)),
+    typeId: v.pipe(v.string(), v.minLength(1)),
+  }),
 ]);
 
 const commandTypeSchema = v.picklist([
@@ -57,6 +62,7 @@ export function sameCommandOwner(a: CommandTarget, b: CommandTarget): boolean {
     .with([{ kind: "journal" }, { kind: "journal" }], ([x, y]) => x.journalName === y.journalName)
     .with([{ kind: "shelf" }, { kind: "shelf" }], ([x, y]) => x.shelfName === y.shelfName)
     .with([{ kind: "all" }, { kind: "all" }], () => true)
+    .with([{ kind: "notelet" }, { kind: "notelet" }], ([x, y]) => x.journalName === y.journalName)
     .otherwise(() => false);
 }
 
