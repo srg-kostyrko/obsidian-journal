@@ -7,6 +7,7 @@ import CloneJournalModal from "./CloneJournalModal.vue";
 import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
+import EditNoteletCounterKeyModal from "./EditNoteletCounterKeyModal.vue";
 import EditNumberingDigitModal from "./EditNumberingDigitModal.vue";
 import EditPromptModal from "./EditPromptModal.vue";
 import RenameJournalModal from "./RenameJournalModal.vue";
@@ -45,6 +46,11 @@ export const editFrontmatterFieldModal = defineModal<{ newValue: string }>()({
   component: EditFrontmatterFieldModal,
   title: ({ fieldName }: { journalName: string; fieldName: FrontmatterFieldName }) =>
     m.journal_fm_field_modal_title({ field: fieldName }),
+});
+
+export const editNoteletCounterKeyModal = defineModal<{ newValue: string }>()({
+  component: EditNoteletCounterKeyModal,
+  title: (_props: { journalName: string; typeId: string }) => m.journal_notelet_counter_key_modal_title(),
 });
 
 export interface NumberingDigitDraft {

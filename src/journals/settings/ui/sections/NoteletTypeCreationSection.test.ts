@@ -9,6 +9,9 @@ import type { NoteletType, TypeId } from "@/journals/notelets/config";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { journalsSettingsCoreModule } from "../../module";
+import { journalsSettingsUiModule } from "../../ui-module";
+
 import NoteletTypeCreationSection from "./NoteletTypeCreationSection.vue";
 
 beforeEach(() => {
@@ -81,16 +84,48 @@ describe("NoteletTypeCreationSection", () => {
     });
   });
 
-  it("shows the counter property field while the counter is on", async () => {
-    await setup({ counter: { enabled: true, frontmatterKey: "journal-notelet-index" } });
+  it("shows the counter property row while the counter is on", async () => {
+    await setup({ counter: { enabled: true, frontmatterKey: "standup-number" } });
 
-    expect(screen.getByText(m.journal_notelet_counter_key_label())).toBeTruthy();
+    expect(within(rowNamed(m.common_label_property_name())).getByText("standup-number")).toBeTruthy();
+  });
+
+  // The key is written after the claim, the date and the type key, so a free-text field could
+  // silently overwrite one of them — it is only editable behind the validating modal.
+  it("offers no inline counter property field", async () => {
+    await setup({ counter: { enabled: true, frontmatterKey: "standup-number" } });
+
+    expect(within(rowNamed(m.common_label_property_name())).queryByRole("textbox")).toBeNull();
+  });
+
+  it("opens the counter property modal from the row's edit button", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      data: {
+        journals: {
+          Work: fixedJournal(
+            "Work",
+            { type: "day" },
+            { notelets: { nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup" }) } },
+          ),
+        },
+      },
+    });
+    harness.render(NoteletTypeCreationSection, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+
+    await userEvent.click(
+      within(rowNamed(m.common_label_property_name())).getByLabelText(m.journal_notelet_counter_key_modal_title()),
+    );
+
+    await waitFor(() => {
+      expect(harness.modals.lastOpen().props).toMatchObject({ journalName: "Work", typeId: "nt_7f3a" });
+    });
   });
 
   it("hides the counter property field while the counter is off", async () => {
     await setup({ counter: { enabled: false, frontmatterKey: "journal-notelet-index" } });
 
-    expect(screen.queryByText(m.journal_notelet_counter_key_label())).toBeNull();
+    expect(screen.queryByText(m.common_label_property_name())).toBeNull();
   });
 
   it("previews the path the type's own name template resolves to", async () => {

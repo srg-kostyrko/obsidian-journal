@@ -3,8 +3,10 @@ import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
@@ -13,6 +15,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { NoteletPathService } from "../../../notelets/notelet-path";
 import { EmptyNoteNameError } from "../../../notes/errors";
 import { JournalsViewModel } from "../../../view-model";
+import { EditNoteletCounterKeyFlow } from "../../flows/edit-notelet-counter-key.flow";
 import FolderInput from "../FolderInput.vue";
 import { useTodayMetadata } from "../use-today-metadata";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
@@ -23,6 +26,7 @@ import type { TypeId } from "../../../notelets/config";
 
 const props = defineProps<{ journalName: string; typeId: string }>();
 
+const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
 const paths = useService(NoteletPathService);
 const metadata = useTodayMetadata(props.journalName);
@@ -56,6 +60,10 @@ const previewPath = computed<Resolved>(() => {
   }
   return { kind: "path", path: result.value };
 });
+
+function editCounterKey(): void {
+  void flows.invoke(EditNoteletCounterKeyFlow, { journalName: props.journalName, typeId: props.typeId });
+}
 </script>
 
 <template>
@@ -108,8 +116,13 @@ const previewPath = computed<Resolved>(() => {
       <UiToggle v-model="type.counter.enabled" />
     </UiSettingRow>
 
-    <UiSettingRow v-if="type.counter.enabled" :name="m.journal_notelet_counter_key_label()">
-      <UiTextInput v-model="type.counter.frontmatterKey" />
+    <UiSettingRow v-if="type.counter.enabled" :name="m.common_label_property_name()">
+      {{ type.counter.frontmatterKey }}
+      <UiIconButton
+        :icon="icons.action.edit"
+        :tooltip="m.journal_notelet_counter_key_modal_title()"
+        @click="editCounterKey"
+      />
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>

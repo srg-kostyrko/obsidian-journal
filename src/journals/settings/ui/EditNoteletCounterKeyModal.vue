@@ -14,32 +14,23 @@ import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { reservedFrontmatterKeys } from "../../config";
 
-import type { FrontmatterFieldName } from "./modals";
-
-const { journalName, fieldName } = defineProps<{ journalName: string; fieldName: FrontmatterFieldName }>();
+const { journalName, typeId } = defineProps<{ journalName: string; typeId: string }>();
 const api = useModal<{ newValue: string }>();
 const journalsVM = useService(JournalsViewModel);
 
 const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
+const type = computed(() => config.value?.notelets[typeId]);
+const currentValue = computed(() => type.value?.counter.frontmatterKey ?? "");
 
-const currentValue = computed(() => config.value?.frontmatter[fieldName] ?? "");
-
-// Everything else this journal writes to a note it owns — its other fields, its numbering
-// digits and questions, and every notelet type's counter and answers. The period mutator and
-// the notelet mutator both write these fields last, so a collision silently overwrites one.
-const takenKeys = computed(() => {
-  const journal = config.value;
-  if (!journal) return [];
-  return [
-    ...reservedFrontmatterKeys(journal).filter((key) => key !== currentValue.value),
-    ...journal.numbering.sources.map((source) => source.frontmatterKey),
-    ...journal.prompts.map((prompt) => prompt.frontmatterKey),
-    ...Object.values(journal.notelets).flatMap((type) => [
-      type.counter.frontmatterKey,
-      ...type.prompts.map((prompt) => prompt.frontmatterKey),
-    ]),
-  ].filter((key) => key !== "");
-});
+// The counter is written after the claim, the date and the type key, so a collision destroys
+// one of them silently. The set is the notelet's own: a notelet never carries the journal's
+// numbering or question keys, and never another type's, so those stay free to reuse.
+const takenKeys = computed(() =>
+  [
+    ...(config.value ? reservedFrontmatterKeys(config.value) : []),
+    ...(type.value?.prompts.map((prompt) => prompt.frontmatterKey) ?? []),
+  ].filter((key) => key !== ""),
+);
 
 const { defineField, errorBag, handleSubmit } = useForm({
   initialValues: { newValue: currentValue.value },
@@ -67,7 +58,7 @@ const onSubmit = handleSubmit((vs) => api.submit({ newValue: vs.newValue }));
     <UiSettingRow :name="m.journal_property_modal_current_label()">{{ currentValue }}</UiSettingRow>
     <UiSettingRow :name="m.common_label_new_name()">
       <template #description>
-        <span v-for="error of errorBag.newValue" :key="error" class="journal-form-error">{{ error }}</span>
+        <span v-for="error of errorBag.newValue" :key="error" class="notelet-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="newValue" v-bind="newValueAttrs" />
     </UiSettingRow>
@@ -79,7 +70,7 @@ const onSubmit = handleSubmit((vs) => api.submit({ newValue: vs.newValue }));
 </template>
 
 <style scoped>
-.journal-form-error {
+.notelet-form-error {
   color: var(--text-error);
   display: block;
 }
