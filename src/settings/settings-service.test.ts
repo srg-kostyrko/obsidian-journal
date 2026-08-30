@@ -305,6 +305,7 @@ describe("SettingsService", () => {
     it.each([
       ["a string", "nonsense"],
       ["null", null],
+      ["a non-empty array", [{ label: "", crunchy: true }]],
     ])("resets a nested field stored as %s without touching the rest of the item", async (_label, stored) => {
       const harness = await testContainer({
         modules: [testSettingsModule({ collections: [nestedPetCollection] })],
