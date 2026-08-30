@@ -1510,6 +1510,7 @@
   "journal_colliding_warning": "Die Journale {names} haben kollidierende Konfigurationen, sodass sich ihre Notizen gegenseitig überschreiben. Ändere in einem davon den Ordner oder die Namensvorlage.",
   "journal_note_name_empty_notice": "Das Journal „{journalName}“ hat eine Namensvorlage, die zu einem leeren Notiznamen führt, daher kann keine Notiz erstellt werden. Lege in den Journal-Einstellungen eine Namensvorlage dafür fest.",
   "journal_note_path_claimed_notice": "Das Journal „{journalName}“ würde seine Notiz unter „{path}“ ablegen, doch diese Notiz gehört bereits zum Journal „{claimedBy}“, daher wurde nichts geändert. Ändere in einem davon den Ordner oder die Namensvorlage.",
+  "journal_note_path_notelet_notice": "Das Journal „{journalName}“ kann seine Notiz nicht unter „{path}“ ablegen, da sich dort bereits eine seiner eigenen Kurznotizen befindet. Ändere die Namensvorlage oder den Ordner des Journals, oder verschiebe diese Kurznotiz.",
   "journal_dashboard_bulk_add": "Mehrere Notizen zu {name} hinzufügen",
   "journal_dashboard_clone": "{name} klonen",
   "journal_dashboard_edit": "{name} konfigurieren",

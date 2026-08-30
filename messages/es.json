@@ -1500,6 +1500,7 @@
   "journal_colliding_warning": "Los diarios {names} tienen configuraciones conflictivas, por lo que sus notas se sobrescribirán entre sí. Cambia la carpeta o la plantilla de nombre en uno de ellos.",
   "journal_note_name_empty_notice": "El diario «{journalName}» tiene una plantilla de nombre que da como resultado un nombre de nota vacío, por lo que no se puede crear ninguna nota. Define una plantilla de nombre en los ajustes del diario.",
   "journal_note_path_claimed_notice": "El diario «{journalName}» pondría su nota en «{path}», pero esa nota ya pertenece al diario «{claimedBy}», así que no se cambió nada. Cambia la carpeta o la plantilla de nombre en uno de ellos.",
+  "journal_note_path_notelet_notice": "El diario «{journalName}» no puede crear su nota en «{path}»: allí ya hay una de sus propias notas breves. Cambia la plantilla de nombre o la carpeta del diario, o mueve esa nota breve.",
   "journal_dashboard_bulk_add": "Agregar notas en bloque a {name}",
   "journal_dashboard_clone": "Clonar {name}",
   "journal_dashboard_edit": "Configurar {name}",

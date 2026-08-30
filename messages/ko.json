@@ -1500,6 +1500,7 @@
   "journal_colliding_warning": "{names} 저널의 구성이 서로 충돌해 노트가 덮어써집니다. 그중 한 저널의 폴더나 이름 템플릿을 변경하세요.",
   "journal_note_name_empty_notice": "\"{journalName}\" 저널의 이름 템플릿이 빈 노트 이름으로 확정되어 노트를 만들 수 없습니다. 저널 설정에서 이름 템플릿을 지정하세요.",
   "journal_note_path_claimed_notice": "\"{journalName}\" 저널은 노트를 \"{path}\"에 두려 하지만 그 노트는 이미 \"{claimedBy}\" 저널의 것이므로 아무것도 변경하지 않았습니다. 그중 한 저널의 폴더나 이름 템플릿을 변경하세요.",
+  "journal_note_path_notelet_notice": "\"{journalName}\" 저널은 노트를 \"{path}\"에 만들 수 없습니다. 이미 그 저널 자신의 서브노트가 그곳에 있습니다. 저널의 이름 템플릿이나 폴더를 변경하거나 그 서브노트를 이동하세요.",
   "journal_dashboard_bulk_add": "{name}에 노트 일괄 추가",
   "journal_dashboard_clone": "{name} 복제",
   "journal_dashboard_edit": "{name} 구성",

@@ -1,5 +1,6 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { UserAborted } from "@/infrastructure/flows";
 import { FrontmatterError, NoteCreateError, NoteReadError, NoteWriteError, NotesService } from "@/infrastructure/host";
@@ -11,13 +12,14 @@ import { testContainer, type TestHarness } from "@/testing";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { PromptsUnansweredError } from "../prompts/errors";
-import { fixedJournal } from "../testing";
+import { buildNoteletType, fixedJournal } from "../testing";
 
 import { AnchorOccupiedError, EmptyNoteNameError, NotePathClaimedError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { SelfWriteGuard } from "./self-write-guard";
 
 import type { JournalConfig } from "../config";
+import type { TypeId } from "../notelets/config";
 import type { Prompt, PromptAnswer } from "../prompts/config";
 import type { JournalMetadata } from "../types";
 
@@ -685,5 +687,65 @@ describe("NoteCreationService.ensureNote — a derived path another journal alre
 
     expectOk(result);
     expect(result.value.created).toBe(false);
+  });
+});
+
+describe("a notelet at the derived period path", () => {
+  const seed = {
+    journals: {
+      Work: fixedJournal(
+        "Work",
+        { type: "day" },
+        {
+          nameTemplate: "Standup",
+          notelets: {
+            nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup", nameTemplate: "Standup" }),
+          },
+        },
+      ),
+    },
+  };
+
+  it("refuses rather than adopting it", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+    harness.host.putFile("Standup.md", "", {
+      journal: "Work",
+      "journal-date": "2026-08-30",
+      "journal-notelet": "Standup",
+    });
+
+    const ensured = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("Work", { journalName: "Work", anchor: "2026-08-30" as AnchorString });
+
+    expect(ensured.isErr()).toBe(true);
+  });
+
+  it("leaves the notelet's frontmatter untouched", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+    harness.host.putFile("Standup.md", "", {
+      journal: "Work",
+      "journal-date": "2026-08-30",
+      "journal-notelet": "Standup",
+    });
+
+    await harness
+      .resolve(NoteCreationService)
+      .ensureNote("Work", { journalName: "Work", anchor: "2026-08-30" as AnchorString });
+
+    expect(harness.host.files.get("Standup.md")?.frontmatter).toMatchObject({ "journal-notelet": "Standup" });
+    expect(harness.host.files.get("Standup.md")?.frontmatter).not.toHaveProperty("journal-start-date");
+  });
+
+  it("still adopts this journal's own period note", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+    harness.host.putFile("Standup.md", "", { journal: "Work", "journal-date": "2026-08-30" });
+
+    const ensured = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("Work", { journalName: "Work", anchor: "2026-08-30" as AnchorString });
+
+    expectOk(ensured);
+    expect(ensured.value).toMatchObject({ created: false });
   });
 });

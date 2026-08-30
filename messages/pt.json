@@ -1508,6 +1508,7 @@
   "journal_colliding_warning": "Os diários {names} têm configurações conflitantes, portanto suas notas se sobrescreverão. Altere a pasta ou o modelo de nome em um deles.",
   "journal_note_name_empty_notice": "O diário \"{journalName}\" tem um modelo de nome que resulta em um nome de nota vazio, portanto nenhuma nota pode ser criada. Defina um modelo de nome nas configurações do diário.",
   "journal_note_path_claimed_notice": "O diário \"{journalName}\" colocaria sua nota em \"{path}\", mas essa nota já pertence ao diário \"{claimedBy}\", portanto nada foi alterado. Altere a pasta ou o modelo de nome em um deles.",
+  "journal_note_path_notelet_notice": "O diário \"{journalName}\" não pode criar sua nota em \"{path}\": uma de suas próprias notas breves já está lá. Altere o modelo de nome ou a pasta do diário, ou mova essa nota breve.",
   "journal_dashboard_bulk_add": "Adicionar notas em massa a {name}",
   "journal_dashboard_clone": "Clonar {name}",
   "journal_dashboard_edit": "Configurar {name}",

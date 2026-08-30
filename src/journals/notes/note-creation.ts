@@ -23,7 +23,7 @@ import { promptsInPath } from "../prompts/prompts-in-path";
 import { unattendedOutcome } from "../prompts/unattended-rule";
 import { JournalsRepository } from "../repository";
 
-import { AnchorOccupiedError, NotePathClaimedError, type EmptyNoteNameError } from "./errors";
+import { AnchorOccupiedError, NoteletHoldsPathError, NotePathClaimedError, type EmptyNoteNameError } from "./errors";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
@@ -43,6 +43,7 @@ export type NoteCreationError =
   | FrontmatterError
   | AnchorOccupiedError
   | NotePathClaimedError
+  | NoteletHoldsPathError
   | PromptsUnansweredError
   | UserAborted;
 
@@ -67,6 +68,21 @@ export class NoteCreationService {
   #carriesJournalClaim(name: string, path: VaultPath): boolean {
     const metadata = this.#metadata.get(path);
     return metadata.isSome() && metadata.value.properties[FRONTMATTER_NAME_KEY] === name;
+  }
+
+  // A notelet of this journal carries the same claim key a period note does, so
+  // #carriesJournalClaim would adopt it and write the period mutator over it — silently, and
+  // permanently, since writeMutator leaves the type key in place. Read frontmatter rather than
+  // the index: a notelet not yet indexed must refuse too.
+  #holdsOwnNotelet(name: string, path: VaultPath): boolean {
+    const config = this.#journals.get(name).getOrUndefined();
+    if (config === undefined) return false;
+    const metadata = this.#metadata.get(path);
+    if (metadata.isNone()) return false;
+    const properties = metadata.value.properties;
+    if (properties[FRONTMATTER_NAME_KEY] !== name) return false;
+    const claimed = properties[config.frontmatter.noteletField];
+    return claimed !== undefined && claimed !== null;
   }
 
   // The other half of that question: a file at the derived path that a *different* journal owns
@@ -123,10 +139,15 @@ export class NoteCreationService {
         config === undefined || promptsInPath(config).length === 0
           ? yield* this.#path.pathFor(name, metadata)
           : undefined;
-      if (derived !== undefined && this.#notes.find(derived).isSome() && this.#carriesJournalClaim(name, derived)) {
-        const claimedMutator = yield* this.#frontmatter.writeMutator(name, metadata);
-        yield* this.#notes.updateFrontmatter(derived, claimedMutator);
-        return { path: derived, created: false as const };
+      if (derived !== undefined && this.#notes.find(derived).isSome()) {
+        if (this.#holdsOwnNotelet(name, derived)) {
+          return yield* new Err(new NoteletHoldsPathError(name, derived));
+        }
+        if (this.#carriesJournalClaim(name, derived)) {
+          const claimedMutator = yield* this.#frontmatter.writeMutator(name, metadata);
+          yield* this.#notes.updateFrontmatter(derived, claimedMutator);
+          return { path: derived, created: false as const };
+        }
       }
 
       // The unattended rule is a pure function; only the attended path opens a modal, and it
@@ -160,6 +181,9 @@ export class NoteCreationService {
       const path = derived ?? (yield* this.#path.pathFor(name, answered));
 
       if (this.#notes.find(path).isSome()) {
+        if (this.#holdsOwnNotelet(name, path)) {
+          return yield* new Err(new NoteletHoldsPathError(name, path));
+        }
         const owner = this.#claimedByOtherJournal(name, path);
         if (owner !== undefined) return yield* new Err(new NotePathClaimedError(name, path, owner));
         yield* this.#notes.updateFrontmatter(path, mutator);
