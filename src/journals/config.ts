@@ -4,6 +4,7 @@ import type { AnchorString } from "@/calendar";
 import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
 
+import { DEFAULT_NOTELET_FIELD, noteletTypeCollection, noteletTypeSchema } from "./notelets/config";
 import { promptsSchema } from "./prompts/config";
 
 export const FRONTMATTER_NAME_KEY = "journal";
@@ -17,6 +18,7 @@ export const DEFAULT_FRONTMATTER_KEYS = [
   "journal-start-date",
   "journal-end-date",
   "journal-index",
+  DEFAULT_NOTELET_FIELD,
 ] as const;
 
 const anchorString = v.pipe(
@@ -60,6 +62,7 @@ const frontmatterFieldsSchema = v.object({
   dateField: v.pipe(v.string(), v.minLength(1)),
   startDateField: v.pipe(v.string(), v.minLength(1)),
   endDateField: v.pipe(v.string(), v.minLength(1)),
+  noteletField: v.optional(v.pipe(v.string(), v.minLength(1)), DEFAULT_NOTELET_FIELD),
   addStartDate: v.boolean(),
   addEndDate: v.boolean(),
 });
@@ -142,6 +145,7 @@ export const journalConfigSchema = v.object({
   autoCreate: v.optional(v.boolean(), false),
   decorations: v.optional(v.array(decorationSchema), []),
   prompts: v.optional(promptsSchema, () => []),
+  notelets: v.optional(v.record(v.string(), noteletTypeSchema), () => ({})),
   navBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
     lines: [] as NavBlockSegment[][],
@@ -174,6 +178,7 @@ export function reservedFrontmatterKeys(config: Pick<JournalConfig, "frontmatter
     config.frontmatter.dateField,
     config.frontmatter.startDateField,
     config.frontmatter.endDateField,
+    config.frontmatter.noteletField,
   ];
 }
 
@@ -362,6 +367,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
       dateField: "journal-date",
       startDateField: "journal-start-date",
       endDateField: "journal-end-date",
+      noteletField: DEFAULT_NOTELET_FIELD,
       addStartDate: false,
       addEndDate: false,
     },
@@ -370,6 +376,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     folder: "",
     templates: [],
     prompts: [],
+    notelets: {},
     confirmCreation: false,
     autoCreate: false,
     decorations: structuredClone(isCustom ? customDecorations : fixedDecorations),
@@ -383,6 +390,9 @@ function storedWrite(raw: unknown): JournalWrite {
   return parsed.success ? parsed.output : { type: "day" };
 }
 
-export const journalConfigCollection = defineCollection("journals", journalConfigSchema, (id, raw) =>
-  journalDefaultsFor(storedWrite(raw), id),
+export const journalConfigCollection = defineCollection(
+  "journals",
+  journalConfigSchema,
+  (id, raw) => journalDefaultsFor(storedWrite(raw), id),
+  { nested: { notelets: noteletTypeCollection } },
 );
