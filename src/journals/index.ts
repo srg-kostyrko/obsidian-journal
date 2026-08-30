@@ -41,9 +41,22 @@ export type {
 
 export type { Prompt, PromptOption, PromptType, PromptAnswer } from "./prompts/config";
 
-export type { JournalEntry, JournalMetadata, JournalsIndexEvents } from "./types";
+export { isNotelet, periodEntryOf } from "./types";
+export type {
+  JournalEntry,
+  JournalMetadata,
+  JournalsIndexEvents,
+  IndexedNote,
+  NoteletEntry,
+  NoteletMetadata,
+} from "./types";
 
 export { JournalsError, JournalNotFoundError, NoteletTypeNotFoundError } from "./errors";
+
+export { NoteletPathService } from "./notelets/notelet-path";
+
+export { noteletTypeSchema, noteletTypeDefaults, DEFAULT_NOTELET_FIELD } from "./notelets/config";
+export type { NoteletType, TypeId } from "./notelets/config";
 
 export {
   InvalidJournalNameError,
