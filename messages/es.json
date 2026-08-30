@@ -294,7 +294,8 @@
       "match": {
         "scope=global": "Aún no se han creado comandos globales.",
         "scope=journal": "Aún no se han creado comandos para este diario.",
-        "scope=shelf": "Aún no se han creado comandos para este estante."
+        "scope=shelf": "Aún no se han creado comandos para este estante.",
+        "scope=notelet": "Aún no se han creado comandos para este tipo de nota breve."
       }
     }
   ],

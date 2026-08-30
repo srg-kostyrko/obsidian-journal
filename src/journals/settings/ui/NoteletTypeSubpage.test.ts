@@ -2,6 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { commandsCoreModule } from "@/commands/module";
 import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import { AsyncResult } from "@/infrastructure/result";
@@ -32,7 +33,7 @@ const noopNav: SubpageNav<{ journalName: string; typeId: string }> = {
 
 async function setup(): Promise<TestHarness> {
   return testContainer({
-    modules: [journalsCoreModule],
+    modules: [journalsCoreModule, commandsCoreModule],
     data: {
       journals: {
         Work: fixedJournal(

@@ -294,7 +294,8 @@
       "match": {
         "scope=global": "Es wurden noch keine globalen Befehle erstellt.",
         "scope=journal": "Für dieses Journal wurden noch keine Befehle erstellt.",
-        "scope=shelf": "Für dieses Regal wurden noch keine Befehle erstellt."
+        "scope=shelf": "Für dieses Regal wurden noch keine Befehle erstellt.",
+        "scope=notelet": "Für diesen Kurznotiz-Typ wurden noch keine Befehle erstellt."
       }
     }
   ],

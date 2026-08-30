@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watchEffect } from "vue";
 
+import NoteletCommandsSection from "@/commands/ui/NoteletCommandsSection.vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
@@ -50,5 +51,6 @@ function rename(): void {
     <NoteletTypeCreationSection :journal-name="journalName" :type-id="typeId" />
     <TemplatesSection :journal-name="journalName" :type-id="typeId" />
     <PromptsSection :journal-name="journalName" :type-id="typeId" />
+    <NoteletCommandsSection :journal-name="journalName" :type-id="typeId" />
   </div>
 </template>

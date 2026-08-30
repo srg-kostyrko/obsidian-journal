@@ -283,7 +283,8 @@
       "match": {
         "scope=global": "尚未创建任何全局命令。",
         "scope=journal": "目前还没有为该日记创建任何命令。",
-        "scope=shelf": "目前还没有为该书架创建任何命令。"
+        "scope=shelf": "目前还没有为该书架创建任何命令。",
+        "scope=notelet": "目前还没有为该子笔记类型创建任何命令。"
       }
     }
   ],

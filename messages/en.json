@@ -231,7 +231,8 @@
       "match": {
         "scope=global": "No global commands created yet.",
         "scope=journal": "No commands created for this journal yet.",
-        "scope=shelf": "No commands created for this shelf yet."
+        "scope=shelf": "No commands created for this shelf yet.",
+        "scope=notelet": "No commands for this notelet type yet."
       }
     }
   ],
