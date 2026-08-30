@@ -1554,6 +1554,7 @@
   "journal_edit_variable_non_invertible_warning": "在此处使用它会导致日记无法从文件名中还原日期。",
   "journal_edit_variable_note_name_description": "本周期笔记的名称。",
   "journal_edit_variable_note_title_description": "笔记名称的别名，支持核心插件“模板”的变量。",
+  "journal_edit_variable_notelet_index_description": "该子笔记在其周期中的编号；编号在每个周期重新开始，因此第一个始终为 1。",
   "journal_edit_variable_numbering_description": "配置的编号变量（参见“顺序编号”部分）。",
   "journal_edit_variable_prompt_description": "“{question}”的答案（参见“问题”部分）。",
   "journal_edit_variable_reference_intro": "可用变量。当未指定显式格式时，日期格式默认为{dateFormat}。",

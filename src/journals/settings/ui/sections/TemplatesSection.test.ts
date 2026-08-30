@@ -107,6 +107,36 @@ describe("TemplatesSection", () => {
       expect(config?.templates).toEqual(["journal-template.md"]);
     });
 
+    it("previews a type template through the type's own render context", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            Work: fixedJournal(
+              "Work",
+              { type: "day" },
+              {
+                notelets: {
+                  nt_7f3a: buildNoteletType({
+                    id: "nt_7f3a" as TypeId,
+                    name: "Standup",
+                    templates: ["Standup {{notelet_index}}.md"],
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      harness.render(TemplatesSection, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+
+      await userEvent.click(screen.getByText(m.journal_edit_section_templates()));
+
+      await waitFor(() => {
+        expect(screen.getByText("Standup 1.md")).toBeTruthy();
+      });
+    });
+
     it("still edits the journal's templates with no type", async () => {
       const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
       harness.render(TemplatesSection, { props: { journalName: "Work" } });

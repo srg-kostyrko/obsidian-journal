@@ -1590,6 +1590,7 @@
   "journal_edit_variable_non_invertible_warning": "Використання цього тут запобігає відновленню дати з імені файлу журналом.",
   "journal_edit_variable_note_name_description": "Назва нотатки за цей період.",
   "journal_edit_variable_note_title_description": "Псевдонім імені нотатки, що підтримує змінну основного плагіна «Шаблони».",
+  "journal_edit_variable_notelet_index_description": "Номер цієї піднотатки в межах її періоду; нумерація починається заново в кожному періоді, тому перша — завжди 1.",
   "journal_edit_variable_numbering_description": "Налаштована змінна нумерації (див. розділ «Послідовність»).",
   "journal_edit_variable_prompt_description": "Відповідь на «{question}» (див. розділ «Запитання»).",
   "journal_edit_variable_reference_intro": "Доступні змінні. Формат дати за замовчуванням має значення {dateFormat} якщо явний формат не вказано.",

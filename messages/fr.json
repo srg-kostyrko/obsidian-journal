@@ -1707,6 +1707,7 @@
   "journal_edit_variable_non_invertible_warning": "Son utilisation ici empêche le journal de récupérer la date à partir du nom du fichier.",
   "journal_edit_variable_note_name_description": "Le nom de la note de cette période.",
   "journal_edit_variable_note_title_description": "Alias du nom de la note, prenant en charge la variable du plugin principal « Modèles ».",
+  "journal_edit_variable_notelet_index_description": "Le numéro de cette note brève dans sa période ; la numérotation recommence à chaque période, la première est donc toujours 1.",
   "journal_edit_variable_numbering_description": "La variable de numérotation configurée (voir la section Numéros séquentiels).",
   "journal_edit_variable_prompt_description": "La réponse à « {question} » (voir la section Questions).",
   "journal_edit_variable_reference_intro": "Variables disponibles. Le format de date par défaut est {dateFormat} lorsqu’aucun format explicite n’est spécifié.",

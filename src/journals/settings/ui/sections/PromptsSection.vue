@@ -15,14 +15,14 @@ import { JournalsViewModel } from "../../../view-model";
 import { EditPromptFlow } from "../../flows/edit-prompt.flow";
 import { usePromptAutocreateGuard } from "../use-prompt-autocreate-guard";
 
-const { journalName, typeId } = defineProps<{ journalName: string; typeId?: string }>();
+const props = withDefaults(defineProps<{ journalName: string; typeId?: string }>(), { typeId: undefined });
 
 const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
-const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
+const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
 // A notelet type owns its own questions; the journal's were authored for the period note and are
 // neither inherited nor asked on a notelet.
-const owner = computed(() => (typeId === undefined ? config.value : config.value?.notelets[typeId]));
+const owner = computed(() => (props.typeId === undefined ? config.value : config.value?.notelets[props.typeId]));
 usePromptAutocreateGuard(config);
 
 const expanded = ref(false);
@@ -30,14 +30,14 @@ const expanded = ref(false);
 const prompts = computed(() => owner.value?.prompts ?? []);
 // A type has no auto-create, so the conflict the guard warns about cannot arise on one.
 const hasRequiredWithAutoCreate = computed(
-  () => typeId === undefined && (config.value?.autoCreate ?? false) && prompts.value.some(isRequired),
+  () => props.typeId === undefined && (config.value?.autoCreate ?? false) && prompts.value.some(isRequired),
 );
 
 function addPrompt(): void {
-  void flows.invoke(EditPromptFlow, { journalName, typeId });
+  void flows.invoke(EditPromptFlow, { journalName: props.journalName, typeId: props.typeId });
 }
 function editPrompt(promptIndex: number): void {
-  void flows.invoke(EditPromptFlow, { journalName, typeId, promptIndex });
+  void flows.invoke(EditPromptFlow, { journalName: props.journalName, typeId: props.typeId, promptIndex });
 }
 function deletePrompt(promptIndex: number): void {
   owner.value?.prompts.splice(promptIndex, 1);

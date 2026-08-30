@@ -76,6 +76,7 @@ export interface VariableReferenceModalProps {
   hasCycle: boolean;
   numberingVariableNames: readonly string[];
   promptVariables: readonly Pick<Prompt, "variable" | "question" | "type">[];
+  notelet?: boolean;
   openModifications: () => void;
 }
 

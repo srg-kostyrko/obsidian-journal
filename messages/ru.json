@@ -1745,6 +1745,7 @@
   "journal_edit_variable_non_invertible_warning": "Использование этого здесь не позволит журналу восстановить дату из имени файла.",
   "journal_edit_variable_note_name_description": "Название заметки за этот период.",
   "journal_edit_variable_note_title_description": "Псевдоним названия заметки, поддерживающий переменную основного плагина «Шаблоны».",
+  "journal_edit_variable_notelet_index_description": "Номер этой подзаметки в пределах её периода; нумерация начинается заново в каждом периоде, поэтому первая — всегда 1.",
   "journal_edit_variable_numbering_description": "Настраиваемая переменная нумерации (см. раздел «Последовательность»).",
   "journal_edit_variable_prompt_description": "Ответ на «{question}» (см. раздел «Вопросы»).",
   "journal_edit_variable_reference_intro": "Доступные переменные. Формат даты по умолчанию равен {dateFormat}, если явный формат не указан.",

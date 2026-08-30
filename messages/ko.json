@@ -1699,6 +1699,7 @@
   "journal_edit_variable_non_invertible_warning": "여기에 이 변수를 쓰면 저널이 파일 이름에서 날짜를 되찾지 못하게 됩니다.",
   "journal_edit_variable_note_name_description": "이 기간에 해당하는 노트의 이름입니다.",
   "journal_edit_variable_note_title_description": "노트 이름의 별칭으로, 코어 템플릿(Templates) 플러그인의 변수를 지원합니다.",
+  "journal_edit_variable_notelet_index_description": "해당 기간 내 이 서브노트의 번호입니다. 번호는 기간마다 다시 시작되므로 첫 번째는 항상 1입니다.",
   "journal_edit_variable_numbering_description": "설정한 번호 매기기 변수입니다(순차 번호 섹션 참조).",
   "journal_edit_variable_prompt_description": "\"{question}\"에 대한 답변입니다(질문 섹션 참조).",
   "journal_edit_variable_reference_intro": "사용할 수 있는 변수입니다. 형식을 따로 지정하지 않으면 날짜 형식은 {dateFormat}입니다.",

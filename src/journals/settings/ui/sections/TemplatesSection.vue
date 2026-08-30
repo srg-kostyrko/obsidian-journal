@@ -16,11 +16,11 @@ import TemplaterSupportHint from "../TemplaterSupportHint.vue";
 import TemplateStringPreview from "../TemplateStringPreview.vue";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
 
-const { journalName, typeId } = defineProps<{ journalName: string; typeId?: string }>();
+const props = withDefaults(defineProps<{ journalName: string; typeId?: string }>(), { typeId: undefined });
 
 const journalsVM = useService(JournalsViewModel);
-const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
-const owner = computed(() => (typeId === undefined ? config.value : config.value?.notelets[typeId]));
+const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
+const owner = computed(() => (props.typeId === undefined ? config.value : config.value?.notelets[props.typeId]));
 
 const expanded = ref(false);
 
@@ -60,14 +60,15 @@ function removeTemplate(index: number): void {
         <div>
           <VariableReferenceHint
             context="template-path"
-            :journal-name="journalName"
+            :journal-name="props.journalName"
             :date-format="config.dateFormat"
             :has-cycle="hasCycle"
             :numbering-variable-names="numberingVariableNames"
             :prompt-variables="promptVariables"
+            :notelet="props.typeId !== undefined"
           />
         </div>
-        <div><CodeBlockReferenceHint :journal-name="journalName" /></div>
+        <div><CodeBlockReferenceHint :journal-name="props.journalName" /></div>
         <div><TemplaterSupportHint /></div>
       </template>
     </UiSettingRow>
@@ -87,7 +88,8 @@ function removeTemplate(index: number): void {
       </UiSettingRow>
       <div class="template-path-preview">
         <TemplateStringPreview
-          :journal-name="journalName"
+          :journal-name="props.journalName"
+          :type-id="props.typeId"
           :value="owner.templates[index] ?? ''"
           :label="m.journal_edit_template_path_preview_label()"
         />

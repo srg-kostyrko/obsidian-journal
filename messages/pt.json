@@ -1707,6 +1707,7 @@
   "journal_edit_variable_non_invertible_warning": "Usar isso aqui impede que o diário recupere a data a partir do nome do arquivo.",
   "journal_edit_variable_note_name_description": "O nome da nota deste período.",
   "journal_edit_variable_note_title_description": "Alias do nome da nota, compatível com a variável do plugin principal Modelos.",
+  "journal_edit_variable_notelet_index_description": "O número desta nota breve dentro do seu período; a numeração recomeça em cada período, portanto a primeira é sempre 1.",
   "journal_edit_variable_numbering_description": "A variável de numeração configurada (consulte a seção Sequência).",
   "journal_edit_variable_prompt_description": "A resposta a \"{question}\" (consulte a seção Perguntas).",
   "journal_edit_variable_reference_intro": "Variáveis disponíveis. O formato de data padrão é {dateFormat} quando nenhum formato explícito é fornecido.",

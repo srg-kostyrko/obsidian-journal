@@ -1713,6 +1713,7 @@
   "journal_edit_variable_non_invertible_warning": "Using this here prevents the journal from recovering the date from the filename.",
   "journal_edit_variable_note_name_description": "The name of the note for this period.",
   "journal_edit_variable_note_title_description": "Alias of the note name, supporting the core Templates plugin's variable.",
+  "journal_edit_variable_notelet_index_description": "The number of this notelet within its period; numbering restarts each period, so the first is always 1.",
   "journal_edit_variable_numbering_description": "The configured numbering variable (see the Sequence section).",
   "journal_edit_variable_prompt_description": "The answer to \"{question}\" (see the Questions section).",
   "journal_edit_variable_reference_intro": "Available variables. Date format defaults to {dateFormat} when no explicit format is given.",

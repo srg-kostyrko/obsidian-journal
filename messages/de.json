@@ -1709,6 +1709,7 @@
   "journal_edit_variable_non_invertible_warning": "Wenn du das hier verwendest, kann das Journal das Datum nicht mehr aus dem Dateinamen ermitteln.",
   "journal_edit_variable_note_name_description": "Der Name der Notiz für diesen Zeitraum.",
   "journal_edit_variable_note_title_description": "Alias des Notiznamens, der die Variable des Kern-Plugins „Vorlagen“ unterstützt.",
+  "journal_edit_variable_notelet_index_description": "Die Nummer dieser Kurznotiz innerhalb ihres Zeitraums; die Nummerierung beginnt in jedem Zeitraum neu, die erste ist also immer 1.",
   "journal_edit_variable_numbering_description": "Die konfigurierte Nummerierungsvariable (siehe Abschnitt „Fortlaufende Nummern“).",
   "journal_edit_variable_prompt_description": "Die Antwort auf „{question}“ (siehe Abschnitt „Fragen“).",
   "journal_edit_variable_reference_intro": "Verfügbare Variablen. Das Datumsformat ist standardmäßig {dateFormat}, wenn kein eigenes Format angegeben ist.",

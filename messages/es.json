@@ -1699,6 +1699,7 @@
   "journal_edit_variable_non_invertible_warning": "Usar esto aquí impide que el diario recupere la fecha a partir del nombre del archivo.",
   "journal_edit_variable_note_name_description": "El nombre de la nota de este período.",
   "journal_edit_variable_note_title_description": "Alias del nombre de la nota, compatible con la variable del complemento principal «Plantillas».",
+  "journal_edit_variable_notelet_index_description": "El número de esta nota breve dentro de su período; la numeración se reinicia en cada período, por lo que la primera siempre es 1.",
   "journal_edit_variable_numbering_description": "La variable de numeración configurada (consulta la sección Números secuenciales).",
   "journal_edit_variable_prompt_description": "La respuesta a «{question}» (consulta la sección Preguntas).",
   "journal_edit_variable_reference_intro": "Variables disponibles. El formato de fecha predeterminado es {dateFormat} cuando no se proporciona un formato explícito.",
