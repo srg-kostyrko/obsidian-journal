@@ -788,10 +788,22 @@ describe("FrontmatterService", () => {
     });
 
     it("clearMutator strips the type key and every type's counter and prompt keys", async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: { journals: { daily: dailyWithStandupType() } },
-      });
+      const base = dailyWithStandupType();
+      const config: JournalConfig = {
+        ...base,
+        notelets: {
+          ...base.notelets,
+          nt_2: buildNoteletType({
+            id: "nt_2" as never,
+            name: "Retro",
+            counter: { enabled: true, frontmatterKey: "retro-no" },
+            prompts: [
+              { type: "text", variable: "notes", question: "Notes?", frontmatterKey: "retro-notes", required: false },
+            ],
+          }),
+        },
+      };
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
       const mutator = harness.resolve(FrontmatterService).clearMutator("daily");
       const fm: Record<string, unknown> = {
         journal: "daily",
@@ -799,6 +811,8 @@ describe("FrontmatterService", () => {
         "journal-notelet": "Standup",
         "standup-no": 2,
         with: "Alice",
+        "retro-no": 5,
+        "retro-notes": "went well",
         keep: "me",
       };
 
