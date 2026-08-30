@@ -71,6 +71,29 @@ describe("EditCommandFlow", () => {
       await promise;
     });
 
+    // A journal and its notelet types share the palette's journal-name prefix, so a name held
+    // by either would render identically under the other.
+    it("marks a notelet type's command names as taken for the journal's own command", async () => {
+      const { flows, modals } = await build({
+        n: buildCommand({ name: "New standup", target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }),
+        ...owners,
+      });
+      const promise = flows.invoke(EditCommandFlow, { target: { kind: "journal", journalName: "daily" } });
+      expect((modals.lastOpen().props as { takenNames: string[] }).takenNames).toEqual(["New standup", "Daily open"]);
+      modals.lastOpen().cancel();
+      await promise;
+    });
+
+    it("marks the journal's own command names as taken for one of its notelet types", async () => {
+      const { flows, modals } = await build(owners);
+      const promise = flows.invoke(EditCommandFlow, {
+        target: { kind: "notelet", journalName: "daily", typeId: "nt_1" },
+      });
+      expect((modals.lastOpen().props as { takenNames: string[] }).takenNames).toEqual(["Daily open"]);
+      modals.lastOpen().cancel();
+      await promise;
+    });
+
     it("marks plugin-level command names as taken regardless of write type", async () => {
       const { flows, modals } = await build(owners);
       const promise = flows.invoke(EditCommandFlow, { target: { kind: "all", writeType: "day" } });

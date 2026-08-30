@@ -765,6 +765,23 @@ describe("DynamicCommandRegistry notelet targets", () => {
     );
   });
 
+  // Why sameCommandOwner spans a journal and its types: both render through the journal-name
+  // prefix, so two same-named commands are indistinguishable in the palette.
+  it("renders a notelet command and its journal's own command identically on a shared name", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+        "cmd-2": buildCommand({ name: "New standup", target: { kind: "journal", journalName: "Work" } }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.name).toBe(host.commands.get("cmd-2")?.name);
+  });
+
   it("re-points a notelet command when its journal is renamed", async () => {
     const { commandsRepo, journalsRepo } = await buildRegistry({
       journals: { Work: workWithType() },

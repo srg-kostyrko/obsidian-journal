@@ -73,11 +73,22 @@ describe("commandCollection", () => {
       expect(sameCommandOwner(work, home)).toBe(false);
     });
 
-    it("treats a notelet command and its journal's own command as different owners", () => {
+    // Both render through the journal-name prefix, so a shared name is byte-identical in the
+    // palette — the uniqueness check has to span the two.
+    it("treats a notelet command and its journal's own command as the same owner", () => {
       const notelet = { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" } as const;
       const journal = { kind: "journal", journalName: "Work" } as const;
 
+      expect(sameCommandOwner(notelet, journal)).toBe(true);
+      expect(sameCommandOwner(journal, notelet)).toBe(true);
+    });
+
+    it("treats a notelet command and another journal's own command as different owners", () => {
+      const notelet = { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" } as const;
+      const journal = { kind: "journal", journalName: "Home" } as const;
+
       expect(sameCommandOwner(notelet, journal)).toBe(false);
+      expect(sameCommandOwner(journal, notelet)).toBe(false);
     });
   });
 });

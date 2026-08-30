@@ -83,16 +83,13 @@ export class DynamicCommandRegistry {
   // prefix is what disambiguates same-named commands across owners.
   #paletteName(command: CommandConfig): string {
     return match(command.target)
-      .with({ kind: "journal" }, (target) =>
+      .with({ kind: "journal" }, { kind: "notelet" }, (target) =>
         m.command_palette_journal_name({ journal: target.journalName, name: command.name }),
       )
       .with({ kind: "shelf" }, (target) =>
         m.command_palette_shelf_name({ shelf: target.shelfName, name: command.name }),
       )
       .with({ kind: "all" }, () => command.name)
-      .with({ kind: "notelet" }, (target) =>
-        m.command_palette_journal_name({ journal: target.journalName, name: command.name }),
-      )
       .exhaustive();
   }
 
