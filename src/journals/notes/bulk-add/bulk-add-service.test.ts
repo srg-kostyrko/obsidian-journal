@@ -682,6 +682,65 @@ describe("BulkAddService", () => {
       expect(plan.value.notes.at(0)).toMatchObject({ targetPath: "Standups/Standup 1.md" });
     });
 
+    // The index cannot advance during planning either, so a per-note nextIndex would preview
+    // every note of a period at the same number — and dryRun is on by default, making that
+    // wrong report the first thing anyone sees.
+    it("previews a distinct number for each note of one period, and writes the ones it previewed", async () => {
+      harness.host.putFile("inbox/first 2026-06-01.md", "");
+      harness.host.putFile("inbox/second 2026-06-01.md", "");
+      harness.host.putFile("inbox/third 2026-06-01.md", "");
+      const service = harness.resolve(BulkAddService);
+
+      const plan = await service.plan("daily", parameters({ otherFolder: "move", otherName: "rename" }));
+
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+      expect(actions.map((action) => action.targetPath)).toEqual([
+        "Standups/Standup 1.md",
+        "Standups/Standup 2.md",
+        "Standups/Standup 3.md",
+      ]);
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, TYPE);
+
+      for (const [index, action] of actions.entries()) {
+        expect(harness.host.files.get(action.targetPath)?.frontmatter).toMatchObject({
+          "journal-notelet-index": index + 1,
+        });
+      }
+    });
+
+    // Plan and apply only agree while both allocate for exactly the notes that become actions.
+    it("spends no number on a note the plan skips", async () => {
+      harness.host.putFile("inbox/connected 2026-06-01.md", "", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": "Standup",
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: "inbox/connected 2026-06-01.md" as VaultPath,
+        typeName: "Standup",
+        typeId: TYPE as TypeId,
+      });
+      harness.host.putFile("inbox/fresh 2026-06-01.md", "");
+      const service = harness.resolve(BulkAddService);
+
+      const plan = await service.plan("daily", parameters({ otherFolder: "move", otherName: "rename" }));
+
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+      expect(actions.map((action) => action.targetPath)).toEqual(["Standups/Standup 1.md"]);
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, TYPE);
+
+      expect(harness.host.files.get("Standups/Standup 1.md")?.frontmatter).toMatchObject({
+        "journal-notelet-index": 1,
+      });
+    });
+
     it("refuses the rename for a type whose name template asks a question", async () => {
       const prompting = await testContainer({
         modules: [journalsCoreModule],

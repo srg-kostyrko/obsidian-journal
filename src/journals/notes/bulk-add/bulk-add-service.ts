@@ -150,11 +150,16 @@ export class BulkAddService {
   // The configured target for one note, plus which halves of it are refused for carrying an
   // unanswered prompt. A bulk run is unattended by definition, so a prompt in either template
   // refuses that half rather than rendering the placeholder into a file name.
+  //
+  // `nextCounter` is the run's own allocator, threaded from plan() so the preview walks the
+  // same numbers the apply will: the index cannot advance during either pass, so a per-note
+  // nextIndex would show every note of a period as the same number and the same name.
   #targetFor(
     journalName: string,
     path: VaultPath,
     anchor: AnchorString,
     typeId: string | undefined,
+    nextCounter: ((anchor: AnchorString) => number) | undefined,
   ): { configured: VaultPath; nameRefused: boolean; folderRefused: boolean } {
     if (typeId === undefined) {
       const configuredResult = this.#path.pathFor(journalName, { journalName, anchor });
@@ -175,7 +180,7 @@ export class BulkAddService {
       journalName,
       anchor,
       typeId: typeId as TypeId,
-      ...(type.counter.enabled && { counter: this.#noteletPaths.nextIndex(journalName, anchor, type.name) }),
+      ...(nextCounter !== undefined && { counter: nextCounter(anchor) }),
     });
     return {
       configured: configuredResult.isOk() ? configuredResult.value : path,
@@ -184,7 +189,13 @@ export class BulkAddService {
     };
   }
 
-  #planNote(journalName: string, path: VaultPath, parameters: BulkAddParameters, dateRegexp: RegExp): PlannedNote {
+  #planNote(
+    journalName: string,
+    path: VaultPath,
+    parameters: BulkAddParameters,
+    dateRegexp: RegExp,
+    nextCounter: ((anchor: AnchorString) => number) | undefined,
+  ): PlannedNote {
     if (this.#index.entryByPath(path).isSome()) return { kind: "skip", path, reason: "already-connected" };
 
     const metadataOption = this.#metadata.get(path);
@@ -218,7 +229,7 @@ export class BulkAddService {
       configured,
       nameRefused: nameHasPrompt,
       folderRefused: folderHasPrompt,
-    } = this.#targetFor(journalName, path, anchor, parameters.noteletTypeId);
+    } = this.#targetFor(journalName, path, anchor, parameters.noteletTypeId, nextCounter);
     const [currentFolder, currentName] = splitVaultPath(path);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
     const nameRefused = configuredName !== currentName && nameHasPrompt;
@@ -334,7 +345,11 @@ export class BulkAddService {
       // downstream reads an extension, so connect would write journal frontmatter into a binary.
       const paths = files.filter((path) => path.endsWith(".md"));
       const dateRegexp = formatToRegexp(parameters.dateFormat);
-      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp));
+      // Every path that reaches #targetFor becomes an action, and every action consumes exactly
+      // one number in #applyAll — a note skipped here never reaches either — so the two passes
+      // walk the same allocation over the same unmoved index.
+      const nextCounter = this.#counterFor(journalName, parameters.noteletTypeId);
+      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp, nextCounter));
       return { notes };
     });
   }
