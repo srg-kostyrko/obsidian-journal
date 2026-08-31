@@ -1,8 +1,12 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { anchor } from "@/calendar/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import type { VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
 import type { NoteletType, TypeId } from "@/journals/notelets/config";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsRepository } from "@/journals/repository";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
@@ -91,5 +95,64 @@ describe("EditNoteletCounterKeyFlow", () => {
 
     expect(result.kind).toBe("err");
     expect(typeOf("nt_7f3a")).toBeUndefined();
+  });
+
+  it("moves the stored counter to the new key on that type's notelets", async () => {
+    const noteletPath = "Standup 1.md" as VaultPath;
+    harness.host.putFile(noteletPath, "content", {
+      journal: "Work",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+      "journal-notelet-index": 1,
+    });
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "Work",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Standup",
+      typeId: "nt_7f3a" as TypeId,
+      counter: 1,
+    });
+    const promise = invoke();
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "standup-number" });
+    await promise;
+
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ "standup-number": 1 });
+    expect(harness.host.files.get(noteletPath)?.frontmatter["journal-notelet-index"]).toBeUndefined();
+  });
+
+  it("leaves another type's notelets alone when one type's counter key is renamed", async () => {
+    const retroPath = "Retro 1.md" as VaultPath;
+    harness.host.putFile(retroPath, "content", {
+      journal: "Work",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Retro",
+      "journal-notelet-index": 1,
+    });
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "Work",
+      anchor: anchor("2026-06-01"),
+      path: retroPath,
+      typeName: "Retro",
+      typeId: "nt_91cc" as TypeId,
+      counter: 1,
+    });
+    const promise = invoke();
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "standup-number" });
+    await promise;
+
+    expect(harness.host.files.get(retroPath)?.frontmatter).toMatchObject({ "journal-notelet-index": 1 });
+  });
+
+  it("does not cascade a rename when the key is unchanged", async () => {
+    const connection = harness.resolve(NoteConnectionService);
+    const spy = vi.spyOn(connection, "renameNoteletFieldForType");
+    const promise = invoke();
+    harness.modals.lastOpen<unknown, { newValue: string }>().submit({ newValue: "journal-notelet-index" });
+    await promise;
+
+    expect(spy).not.toHaveBeenCalled();
   });
 });
