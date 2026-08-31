@@ -1584,10 +1584,13 @@
       "match": {
         "field=dateField": "日付プロパティ名を編集",
         "field=startDateField": "開始日プロパティ名を編集",
-        "field=endDateField": "終了日プロパティ名を編集"
+        "field=endDateField": "終了日プロパティ名を編集",
+        "field=noteletField": "サブノートの種類プロパティ名を編集"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "ノートがどのサブノートの種類であるかを記録するプロパティです。",
+  "journal_fm_notelet_field_label": "サブノートの種類プロパティ",
   "journal_name_required_error": "ジャーナル名は必須です。",
   "journal_name_unique_error": "ジャーナル名は一意である必要があります。",
   "journal_notelet_section_title": "サブノートの種類",

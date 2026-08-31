@@ -1737,10 +1737,13 @@
       "match": {
         "field=dateField": "Modifier le nom de la propriété Date",
         "field=startDateField": "Modifier le nom de la propriété Date de début",
-        "field=endDateField": "Modifier le nom de la propriété Date de fin"
+        "field=endDateField": "Modifier le nom de la propriété Date de fin",
+        "field=noteletField": "Modifier le nom de la propriété Type de note brève"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "La propriété qui enregistre le type de note brève d'une note.",
+  "journal_fm_notelet_field_label": "Propriété Type de note brève",
   "journal_name_required_error": "Le nom du journal est obligatoire.",
   "journal_name_unique_error": "Le nom du journal doit être unique.",
   "journal_notelet_section_title": "Types de note brève",

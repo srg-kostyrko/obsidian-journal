@@ -1743,10 +1743,13 @@
       "match": {
         "field=dateField": "Edit date property name",
         "field=startDateField": "Edit start date property name",
-        "field=endDateField": "Edit end date property name"
+        "field=endDateField": "Edit end date property name",
+        "field=noteletField": "Edit notelet type property name"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "The property that records which notelet type a note is.",
+  "journal_fm_notelet_field_label": "Notelet type property",
   "journal_name_required_error": "Journal name is required.",
   "journal_name_unique_error": "Journal name must be unique.",
   "journal_notelet_section_title": "Notelet types",

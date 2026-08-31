@@ -1620,10 +1620,13 @@
       "match": {
         "field=dateField": "Змінити назву властивості дати",
         "field=startDateField": "Змінити назву властивості дати початку",
-        "field=endDateField": "Змінити назву властивості дати завершення"
+        "field=endDateField": "Змінити назву властивості дати завершення",
+        "field=noteletField": "Змінити назву властивості типу піднотатки"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "Властивість, яка фіксує, до якого типу піднотатки належить нотатка.",
+  "journal_fm_notelet_field_label": "Властивість типу піднотатки",
   "journal_name_required_error": "Назва журналу обов’язкова.",
   "journal_name_unique_error": "Назва журналу має бути унікальною.",
   "journal_notelet_section_title": "Типи піднотаток",

@@ -1584,10 +1584,13 @@
       "match": {
         "field=dateField": "编辑日期属性名称",
         "field=startDateField": "编辑开始日期属性名称",
-        "field=endDateField": "编辑结束日期属性名称"
+        "field=endDateField": "编辑结束日期属性名称",
+        "field=noteletField": "编辑子笔记类型属性名称"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "记录笔记属于哪种子笔记类型的属性。",
+  "journal_fm_notelet_field_label": "子笔记类型属性",
   "journal_name_required_error": "日记名称为必填项。",
   "journal_name_unique_error": "日记名称必须唯一。",
   "journal_notelet_section_title": "子笔记类型",

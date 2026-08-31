@@ -40,7 +40,7 @@ export const cloneJournalModal = defineModal<{ newName: string }>()({
     m.journal_clone_modal_title({ name: sourceName }),
 });
 
-export type FrontmatterFieldName = "dateField" | "startDateField" | "endDateField";
+export type FrontmatterFieldName = "dateField" | "startDateField" | "endDateField" | "noteletField";
 
 export const editFrontmatterFieldModal = defineModal<{ newValue: string }>()({
   component: EditFrontmatterFieldModal,

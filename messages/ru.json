@@ -1775,10 +1775,13 @@
       "match": {
         "field=dateField": "Изменить название свойства даты",
         "field=startDateField": "Изменить название свойства даты начала",
-        "field=endDateField": "Изменить название свойства даты окончания"
+        "field=endDateField": "Изменить название свойства даты окончания",
+        "field=noteletField": "Изменить название свойства типа подзаметки"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "Свойство, которое указывает, к какому типу подзаметки относится заметка.",
+  "journal_fm_notelet_field_label": "Свойство типа подзаметки",
   "journal_name_required_error": "Название журнала обязательно.",
   "journal_name_unique_error": "Название журнала должно быть уникальным.",
   "journal_notelet_section_title": "Типы подзаметок",

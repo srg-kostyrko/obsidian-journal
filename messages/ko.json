@@ -1729,10 +1729,13 @@
       "match": {
         "field=dateField": "날짜 속성 이름 편집",
         "field=startDateField": "시작일 속성 이름 편집",
-        "field=endDateField": "종료일 속성 이름 편집"
+        "field=endDateField": "종료일 속성 이름 편집",
+        "field=noteletField": "서브노트 유형 속성 이름 편집"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "노트가 어떤 서브노트 유형인지 기록하는 속성입니다.",
+  "journal_fm_notelet_field_label": "서브노트 유형 속성",
   "journal_name_required_error": "저널 이름을 입력하세요.",
   "journal_name_unique_error": "저널 이름은 고유해야 합니다.",
   "journal_notelet_section_title": "서브노트 유형",
