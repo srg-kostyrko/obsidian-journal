@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
-import { AsyncResult, attempt } from "@/infrastructure/result";
+import { AsyncResult, attempt, Err } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import type { TypeId } from "@/journals/notelets/config";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
@@ -19,14 +19,25 @@ export class DeleteNoteletTypeFlow implements Flow<{ journalName: string; typeId
   readonly #ui = inject(SettingsUiService);
 
   execute(parameters: { journalName: string; typeId: string }): AsyncResult<void, FlowError> {
-    const type = this.#repository.get(parameters.journalName).getOrUndefined()?.notelets[parameters.typeId];
-    if (type === undefined) {
+    const openingType = this.#repository.get(parameters.journalName).getOrUndefined()?.notelets[parameters.typeId];
+    if (openingType === undefined) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
     }
     return attempt.in(this, async function* (this: DeleteNoteletTypeFlow) {
       const { mode } = yield* this.#modals
-        .open(deleteNoteletTypeModal, { ...parameters, typeName: type.name })
+        .open(deleteNoteletTypeModal, { ...parameters, typeName: openingType.name })
         .mapErr(() => new UserAborted("delete-notelet-type-modal"));
+
+      // Re-read across the await: disconnectNoteletsOfType/deleteNoteletsOfType match notelets by
+      // the type's *stored* name, and the settings store can change while the modal is open (a
+      // sync merge, or any other write reaching JournalsRepository from outside this flow) — the
+      // same hazard RenameNoteletTypeFlow re-reads for. Purging by the pre-modal name would target
+      // a name no notelet carries any more, leaving every one of them still wearing the type's
+      // counter and question keys.
+      const type = this.#repository.get(parameters.journalName).getOrUndefined()?.notelets[parameters.typeId];
+      if (type === undefined) {
+        return yield* new Err(toFlowError(new UnknownJournalError(parameters.journalName)));
+      }
 
       // Purge before removing the type from config: clearMutator enumerates the journal's
       // current types to know which counter and question keys a notelet can carry, so a type

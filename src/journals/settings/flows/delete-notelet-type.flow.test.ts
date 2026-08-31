@@ -87,6 +87,32 @@ describe("DeleteNoteletTypeFlow", () => {
     expect(harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.notelets).toEqual({});
   });
 
+  it("purges by the type's name as of when the modal closes, not the name it opened with", async () => {
+    const promise = invoke();
+    // Simulate the type having been renamed (config and index both moved to the new name — what
+    // RenameNoteletTypeFlow's frontmatter cascade produces) while this confirmation modal is
+    // still open. disconnectNoteletsOfType/deleteNoteletsOfType match by stored name, so purging
+    // by the stale pre-modal name would find nothing under the new one.
+    harness.resolve(JournalsRepository).update("daily", {
+      notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Daily standup" }) },
+    });
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Daily standup",
+      typeId: "nt_1" as TypeId,
+      counter: 1,
+      answers: { mood: "great" },
+    });
+
+    openModal().submit({ mode: "delete" });
+    await promise;
+
+    expect(harness.host.files.has(noteletPath)).toBe(false);
+  });
+
   it("clear strips the whole claim, not just the type key", async () => {
     const promise = invoke();
     openModal().submit({ mode: "clear" });

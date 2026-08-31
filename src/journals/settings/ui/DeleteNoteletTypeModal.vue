@@ -18,8 +18,10 @@ const api = useModal<{ mode: "keep" | "clear" | "delete" }>();
 const mode = ref<"keep" | "clear" | "delete">("keep");
 
 const journalsVM = useService(JournalsViewModel);
-// The prop is the name at the moment the flow opened this modal; reading it live keeps the
-// count correct if the type is renamed while the modal stays open.
+// The prop is the name at the moment the flow opened this modal. The flow itself re-reads the
+// type's stored name after this modal closes (it has to: disconnectNoteletsOfType/
+// deleteNoteletsOfType match by that name), so this computed keeps the displayed count in step
+// with whatever name the flow will actually purge by, rather than freezing on the pre-open value.
 const typeName = computed(
   () => journalsVM.getJournal(props.journalName).getOrUndefined()?.notelets[props.typeId]?.name ?? props.typeName,
 );
