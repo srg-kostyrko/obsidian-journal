@@ -639,6 +639,22 @@ describe("ConnectNoteModal", () => {
         });
       });
 
+      it("offers to replace a period note that lands in the index after mount", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+        expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
+
+        harness.resolve(JournalsIndex).register({
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: "Journal/2026-06-01.md" as VaultPath,
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText(m.connect_note_modal_override_label())).toBeTruthy();
+        });
+      });
+
       it("describes the rename against the type's name, not the journal's", async () => {
         harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
         await pickDate(harness, "2026-06-01");

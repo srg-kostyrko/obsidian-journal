@@ -91,6 +91,9 @@ const occupant = computed(() => {
   if (activeType.value) return;
   const a = anchor.value;
   if (!a) return;
+  // JournalsIndex is not Vue-reactive: without this the answer freezes as of mount, and the
+  // period this dialog is open over is often still being indexed.
+  void indexVersion.value;
   const found = index.entryByAnchor(selected.value, a);
   if (found.isNone() || found.value.path === props.path) return;
   return found.value.path;
