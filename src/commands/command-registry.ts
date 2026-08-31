@@ -279,9 +279,9 @@ export class DynamicCommandRegistry {
 
   #onJournalDeleted(journalName: string): void {
     for (const [id, command] of this.#commandsRepo.find().entries()) {
-      if (command.target.kind === "journal" && command.target.journalName === journalName) {
-        this.#commandsRepo.delete(id);
-      }
+      if (command.target.kind !== "journal" && command.target.kind !== "notelet") continue;
+      if (command.target.journalName !== journalName) continue;
+      this.#commandsRepo.delete(id);
     }
   }
 

@@ -6,6 +6,7 @@ import AddNoteletTypeModal from "./AddNoteletTypeModal.vue";
 import CloneJournalModal from "./CloneJournalModal.vue";
 import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
+import DeleteNoteletTypeModal from "./DeleteNoteletTypeModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
 import EditNoteletCounterKeyModal from "./EditNoteletCounterKeyModal.vue";
 import EditNumberingDigitModal from "./EditNumberingDigitModal.vue";
@@ -34,13 +35,19 @@ export const deleteJournalModal = defineModal<{ mode: "keep" | "clear" | "delete
   title: ({ journalName }: { journalName: string }) => m.journal_delete_modal_title({ name: journalName }),
 });
 
-export const cloneJournalModal = defineModal<{ newName: string }>()({
+export const deleteNoteletTypeModal = defineModal<{ mode: "keep" | "clear" | "delete" }>()({
+  component: DeleteNoteletTypeModal,
+  title: ({ typeName }: { journalName: string; typeId: string; typeName: string }) =>
+    m.journal_notelet_delete_modal_title({ name: typeName }),
+});
+
+export const cloneJournalModal = defineModal<{ newName: string; cloneNoteletTypes: boolean }>()({
   component: CloneJournalModal,
   title: ({ sourceName }: { sourceName: string; suggestedName: string }) =>
     m.journal_clone_modal_title({ name: sourceName }),
 });
 
-export type FrontmatterFieldName = "dateField" | "startDateField" | "endDateField";
+export type FrontmatterFieldName = "dateField" | "startDateField" | "endDateField" | "noteletField";
 
 export const editFrontmatterFieldModal = defineModal<{ newValue: string }>()({
   component: EditFrontmatterFieldModal,

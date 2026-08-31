@@ -516,6 +516,20 @@ describe("DynamicCommandRegistry journal cascade", () => {
     expect(host.commands.get("cmd-1")).toBeUndefined();
   });
 
+  it("deletes a journal's notelet commands when the journal is deleted", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "journal", journalName: "daily" } }),
+        "cmd-2": buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }),
+      },
+    });
+
+    journalsRepo.delete("daily");
+
+    expect([...commandsRepo.find().entries()]).toEqual([]);
+  });
+
   it("leaves an all-target command untouched when a journal is deleted", async () => {
     const { commandsRepo, journalsRepo } = await buildRegistry({
       journals: { daily: fixedJournal("daily", { type: "day" }) },
@@ -612,6 +626,25 @@ describe("DynamicCommandRegistry journal cloning", () => {
     journalsRepo.clone("daily", "daily copy");
 
     expect(commandsRepo.count()).toBe(before);
+  });
+
+  it("does not copy a notelet-target command onto the clone", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    journalsRepo.clone("Work", "Work copy");
+
+    const copiedNotelets = [...commandsRepo.find().entries()].filter(
+      ([, command]) => command.target.kind === "notelet" && command.target.journalName === "Work copy",
+    );
+    expect(copiedNotelets).toHaveLength(0);
   });
 });
 

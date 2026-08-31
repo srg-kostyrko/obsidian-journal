@@ -1401,6 +1401,8 @@
   "journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
   "journal_clone_modal_name_label": "新しいジャーナル名",
   "journal_clone_modal_title": "{name}を複製",
+  "journal_clone_notelet_types_description": "種類ごとにコマンドを追加します。オフにすると、それらなしで複製します。",
+  "journal_clone_notelet_types_label": "サブノートの種類をコピー",
   "journal_edit_allow_before_description": "アンカー日より前の日付にも番号を付けます。負の数になる場合があります。",
   "journal_edit_allow_before_label": "アンカー日より前を許可",
   "journal_edit_anchor_description": "この日付から番号付けが始まります。この日付のノートに開始番号が付き、以降のノートは順に加算されます。",
@@ -1584,10 +1586,13 @@
       "match": {
         "field=dateField": "日付プロパティ名を編集",
         "field=startDateField": "開始日プロパティ名を編集",
-        "field=endDateField": "終了日プロパティ名を編集"
+        "field=endDateField": "終了日プロパティ名を編集",
+        "field=noteletField": "サブノートの種類プロパティ名を編集"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "ノートがどのサブノートの種類であるかを記録するプロパティです。",
+  "journal_fm_notelet_field_label": "サブノートの種類プロパティ",
   "journal_name_required_error": "ジャーナル名は必須です。",
   "journal_name_unique_error": "ジャーナル名は一意である必要があります。",
   "journal_notelet_section_title": "サブノートの種類",
@@ -1602,8 +1607,46 @@
   "journal_notelet_name_unique_error": "このジャーナルには、同じ名前のサブノートの種類がすでにあります。",
   "journal_notelet_rename_modal_title": "{name}の名前を変更",
   "journal_notelet_rename_tooltip": "サブノートの種類の名前を変更",
+  "journal_notelet_delete_tooltip": "サブノートの種類を削除",
+  "journal_notelet_delete_modal_title": "{name}を削除",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "このサブノートの種類に接続されたサブノートはありません。",
+        "count=1": "このサブノートの種類には接続されたサブノートが1件あります。",
+        "count=*": "このサブノートの種類には接続されたサブノートが{count}件あります。"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "接続されたサブノートの扱い",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "サブノートを残す",
+        "mode=clear": "サブノートの種類のデータを消去",
+        "mode=delete": "サブノートを削除"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "サブノートは保管庫にそのまま残ります。",
+        "mode=clear": "サブノートは保管庫に残りますが、フロントマターからジャーナルとサブノートの種類のプロパティがすべて削除されます。",
+        "mode=delete": "このサブノートの種類に接続されたすべてのサブノートが保管庫から削除されます。"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "フォルダ",
   "journal_notelet_name_template_label": "ノート名",
+  "journal_notelet_no_within_period_variable_warning": "この名前テンプレートには期間内で変化する要素がないため、最初のサブノート以降はすべて名前に番号が追加されます。",
+  "journal_notelet_period_path_collision_warning": "このタイプはジャーナル自体と同じノートパスに解決されます。サブノートには自動的に別の名前が付けられますが、両者は混同しやすくなります。",
   "journal_notelet_counter_label": "各サブノートに番号を付ける",
   "journal_notelet_counter_description": "番号は期間ごとに振り直されるため、その日の最初のサブノートは常に 1 です。",
   "journal_notelet_counter_key_modal_title": "番号プロパティ名を編集",
@@ -1627,7 +1670,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "質問を追加", "mode=edit": "質問を編集" }
+      "match": {
+        "mode=add": "質問を追加",
+        "mode=edit": "質問を編集"
+      }
     }
   ],
   "journal_prompt_note_path_label": "ノートのパス",
@@ -1677,7 +1723,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "番号の桁を追加", "mode=edit": "番号の桁を編集" }
+      "match": {
+        "mode=add": "番号の桁を追加",
+        "mode=edit": "番号の桁を編集"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1974,6 +2023,7 @@
   "maintenance_check_group_stale": "{journal}: これらのノートは誤った期間をカバーしています",
   "maintenance_check_group_duplicate": "{journal}: {anchor} に2件のノート",
   "maintenance_check_group_orphaned": "{journal}: このジャーナルはもう存在しません",
+  "maintenance_check_group_orphaned_type": "{journal}: 不明なサブノートの種類",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: 読み取れる日付がありません。ファイル名は {to} を示しています。",
   "maintenance_detail_path_overrides_date": "{path}: ファイル名は {pathAnchor}、ノートは {dateAnchor} を示しています。ノートを開いて判断してください。",
@@ -1982,6 +2032,7 @@
   "maintenance_detail_start_mismatch": "{path}: 開始日は {storedStart} ですが、本来は {expectedStart} で始まるはずです。",
   "maintenance_detail_duplicate": "{path}: {size} バイト、更新日時 {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: 「{typeName}」という名前のサブノートの種類はこのジャーナルにもう存在しません。",
   "maintenance_reason_anchor_contested": "別のノートがすでに同じ期間を主張しているため、この修復は取り下げられました。",
   "maintenance_reason_path_and_date_disagree": "ファイル名とノートの内容が一致しないため、自動的な変更は行われませんでした。",
   "maintenance_reason_path_not_invertible": "自動的に修復することができませんでした。",

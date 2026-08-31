@@ -1546,6 +1546,8 @@
   "journal_clone_modal_description": "설정과 명령은 복사됩니다. 노트는 복사되지 않습니다.",
   "journal_clone_modal_name_label": "새 저널 이름",
   "journal_clone_modal_title": "{name} 복제",
+  "journal_clone_notelet_types_description": "유형마다 명령을 추가합니다. 끄면 유형 없이 복제합니다.",
+  "journal_clone_notelet_types_label": "서브노트 유형 복사",
   "journal_edit_allow_before_description": "기준일 이전에도 번호를 매길 수 있게 합니다. 음수가 나올 수 있습니다.",
   "journal_edit_allow_before_label": "기준일 이전 허용",
   "journal_edit_anchor_description": "이 날짜부터 번호가 시작됩니다. 이 날짜의 노트가 시작 번호를 받고, 이후 노트는 거기서부터 하나씩 올라갑니다.",
@@ -1729,10 +1731,13 @@
       "match": {
         "field=dateField": "날짜 속성 이름 편집",
         "field=startDateField": "시작일 속성 이름 편집",
-        "field=endDateField": "종료일 속성 이름 편집"
+        "field=endDateField": "종료일 속성 이름 편집",
+        "field=noteletField": "서브노트 유형 속성 이름 편집"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "노트가 어떤 서브노트 유형인지 기록하는 속성입니다.",
+  "journal_fm_notelet_field_label": "서브노트 유형 속성",
   "journal_name_required_error": "저널 이름을 입력하세요.",
   "journal_name_unique_error": "저널 이름은 고유해야 합니다.",
   "journal_notelet_section_title": "서브노트 유형",
@@ -1747,8 +1752,46 @@
   "journal_notelet_name_unique_error": "이 저널에는 같은 이름의 서브노트 유형이 이미 있습니다.",
   "journal_notelet_rename_modal_title": "{name} 이름 변경",
   "journal_notelet_rename_tooltip": "서브노트 유형 이름 변경",
+  "journal_notelet_delete_tooltip": "서브노트 유형 삭제",
+  "journal_notelet_delete_modal_title": "{name} 삭제",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "이 서브노트 유형에는 연결된 서브노트가 없습니다.",
+        "count=1": "이 서브노트 유형에는 연결된 서브노트가 1개 있습니다.",
+        "count=*": "이 서브노트 유형에는 연결된 서브노트가 {count}개 있습니다."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "연결된 서브노트 처리 방식",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "서브노트 유지",
+        "mode=clear": "서브노트 유형 데이터 삭제",
+        "mode=delete": "서브노트 삭제"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "서브노트는 보관함에 그대로 남습니다.",
+        "mode=clear": "서브노트는 보관함에 남지만, 프런트매터에서 저널과 서브노트 유형 속성이 모두 제거됩니다.",
+        "mode=delete": "이 유형에 연결된 모든 서브노트를 보관함에서 삭제합니다."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "폴더",
   "journal_notelet_name_template_label": "노트 이름",
+  "journal_notelet_no_within_period_variable_warning": "이 이름 템플릿에는 기간 안에서 달라지는 요소가 없어서, 첫 번째 이후의 모든 서브노트는 이름에 번호가 추가됩니다.",
+  "journal_notelet_period_path_collision_warning": "이 유형은 저널 자체와 같은 노트 경로로 확정됩니다. 서브노트에는 자동으로 다른 이름이 붙지만, 둘을 혼동하기 쉽습니다.",
   "journal_notelet_counter_label": "각 서브노트에 번호 매기기",
   "journal_notelet_counter_description": "번호는 기간마다 다시 시작되므로 하루의 첫 서브노트는 항상 1입니다.",
   "journal_notelet_counter_key_modal_title": "번호 속성 이름 편집",
@@ -1772,7 +1815,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "질문 추가", "mode=edit": "질문 편집" }
+      "match": {
+        "mode=add": "질문 추가",
+        "mode=edit": "질문 편집"
+      }
     }
   ],
   "journal_prompt_note_path_label": "노트 경로",
@@ -1822,7 +1868,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "번호 자리 추가", "mode=edit": "번호 자리 편집" }
+      "match": {
+        "mode=add": "번호 자리 추가",
+        "mode=edit": "번호 자리 편집"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1974,6 +2023,7 @@
   "maintenance_check_group_stale": "{journal}: 이 노트는 잘못된 기간을 다룹니다",
   "maintenance_check_group_duplicate": "{journal}: {anchor}에 대한 노트 2개",
   "maintenance_check_group_orphaned": "{journal}: 이 저널은 더 이상 존재하지 않습니다",
+  "maintenance_check_group_orphaned_type": "{journal}: 알 수 없는 서브노트 유형",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: 읽을 수 있는 날짜가 없습니다. 파일 이름은 {to}을(를) 나타냅니다.",
   "maintenance_detail_path_overrides_date": "{path}: 파일 이름은 {pathAnchor}, 노트는 {dateAnchor}를 나타냅니다. 노트를 열어 결정하세요.",
@@ -1982,6 +2032,7 @@
   "maintenance_detail_start_mismatch": "{path}: 시작일이 {storedStart}이지만, {expectedStart}에 시작해야 합니다.",
   "maintenance_detail_duplicate": "{path}: {size} 바이트, 수정됨 {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: \"{typeName}\"라는 이름의 서브노트 유형이 이 저널에 더 이상 없습니다.",
   "maintenance_reason_anchor_contested": "다른 노트가 이미 같은 기간을 사용하고 있어 이 복구가 철회되었습니다.",
   "maintenance_reason_path_and_date_disagree": "파일 이름과 노트 내용이 일치하지 않아 자동으로 변경되지 않았습니다.",
   "maintenance_reason_path_not_invertible": "자동으로 복구할 수 없습니다.",

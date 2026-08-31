@@ -1437,6 +1437,8 @@
   "journal_clone_modal_description": "Налаштування та команди копіюються. Нотатки — ні.",
   "journal_clone_modal_name_label": "Нова назва журналу",
   "journal_clone_modal_title": "Клонувати {name}",
+  "journal_clone_notelet_types_description": "Додає команду для кожного типу. Вимкніть, щоб клонувати без них.",
+  "journal_clone_notelet_types_label": "Копіювати типи піднотаток",
   "journal_edit_allow_before_description": "Дозволити індексацію до дати прив’язки. Може видавати від’ємні числа.",
   "journal_edit_allow_before_label": "Дозволити перед прив’язкою",
   "journal_edit_anchor_description": "Нумерація починається з цієї дати. Нотатка за цю дату отримує початковий номер, а наступні нотатки нумеруються далі.",
@@ -1620,10 +1622,13 @@
       "match": {
         "field=dateField": "Змінити назву властивості дати",
         "field=startDateField": "Змінити назву властивості дати початку",
-        "field=endDateField": "Змінити назву властивості дати завершення"
+        "field=endDateField": "Змінити назву властивості дати завершення",
+        "field=noteletField": "Змінити назву властивості типу піднотатки"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "Властивість, яка фіксує, до якого типу піднотатки належить нотатка.",
+  "journal_fm_notelet_field_label": "Властивість типу піднотатки",
   "journal_name_required_error": "Назва журналу обов’язкова.",
   "journal_name_unique_error": "Назва журналу має бути унікальною.",
   "journal_notelet_section_title": "Типи піднотаток",
@@ -1638,8 +1643,48 @@
   "journal_notelet_name_unique_error": "У цьому журналі вже є тип піднотатки з такою назвою.",
   "journal_notelet_rename_modal_title": "Перейменувати {name}",
   "journal_notelet_rename_tooltip": "Перейменувати тип піднотатки",
+  "journal_notelet_delete_tooltip": "Видалити тип піднотатки",
+  "journal_notelet_delete_modal_title": "Видалити {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=0,countPlural=*": "З цим типом піднотатки не пов’язано жодної піднотатки.",
+        "count=*,countPlural=one": "З цим типом піднотатки пов’язана {count} піднотатка.",
+        "count=*,countPlural=few": "З цим типом піднотатки пов’язані {count} піднотатки.",
+        "count=*,countPlural=many": "З цим типом піднотатки пов’язано {count} піднотаток.",
+        "count=*,countPlural=*": "З цим типом піднотатки пов’язано {count} піднотатки."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Що робити зі зв’язаними піднотатками",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Залишити піднотатки",
+        "mode=clear": "Очистити дані типу піднотатки",
+        "mode=delete": "Видалити піднотатки"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Піднотатки залишаються у вашому сховищі без змін.",
+        "mode=clear": "Піднотатки залишаються у вашому сховищі, але властивості журналу та типу піднотатки видаляються з їхньої вхідної сторінки.",
+        "mode=delete": "Усі піднотатки цього типу видаляються з вашого сховища."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Назва нотатки",
+  "journal_notelet_no_within_period_variable_warning": "У цьому шаблоні назви немає нічого, що змінювалося б у межах періоду, тому кожна піднотатка після першої отримує доданий до назви номер.",
+  "journal_notelet_period_path_collision_warning": "Цей тип піднотатки дає такий самий шлях до нотатки, як і сам журнал. Піднотаткам автоматично надається інша назва, але їх легко сплутати.",
   "journal_notelet_counter_label": "Нумерувати кожну піднотатку",
   "journal_notelet_counter_description": "Нумерація починається заново в кожному періоді, тому перша піднотатка дня — завжди 1.",
   "journal_notelet_counter_key_modal_title": "Змінити назву властивості номера",
@@ -1663,7 +1708,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Додати запитання", "mode=edit": "Редагувати запитання" }
+      "match": {
+        "mode=add": "Додати запитання",
+        "mode=edit": "Редагувати запитання"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Шлях до нотатки",
@@ -1713,7 +1761,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Додати розряд нумерації", "mode=edit": "Редагувати розряд нумерації" }
+      "match": {
+        "mode=add": "Додати розряд нумерації",
+        "mode=edit": "Редагувати розряд нумерації"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -2037,6 +2088,7 @@
   "maintenance_check_group_stale": "{journal} — ці нотатки стосуються неправильного періоду",
   "maintenance_check_group_duplicate": "{journal} — дві нотатки для {anchor}",
   "maintenance_check_group_orphaned": "{journal} — цього журналу більше не існує",
+  "maintenance_check_group_orphaned_type": "{journal} — невідомий тип піднотатки",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: немає придатної для читання дати. Ім'я файлу вказує на {to}.",
   "maintenance_detail_path_overrides_date": "{path}: ім'я файлу вказує на {pathAnchor}, а нотатка — на {dateAnchor}. Відкрийте нотатку й вирішіть.",
@@ -2045,6 +2097,7 @@
   "maintenance_detail_start_mismatch": "{path}: починається {storedStart}, а повинен — {expectedStart}.",
   "maintenance_detail_duplicate": "{path} — {size} байт, змінено {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: тип піднотатки «{typeName}» більше не існує в цьому журналі.",
   "maintenance_reason_anchor_contested": "Це виправлення було скасовано, оскільки інша нотатка вже претендує на той самий період.",
   "maintenance_reason_path_and_date_disagree": "Нічого не було змінено автоматично, оскільки ім'я файлу та нотатка не збігаються.",
   "maintenance_reason_path_not_invertible": "Це не вдалося виправити автоматично.",

@@ -15,6 +15,8 @@ import {
 } from "./errors";
 import { JournalsEventsToken } from "./tokens";
 
+import type { NoteletType, TypeId } from "./notelets/config";
+
 export interface JournalsEvents extends RepositoryEvents<string, JournalConfig> {
   renamed: (oldName: string, newName: string) => void;
   cloned: (sourceName: string, newName: string) => void;
@@ -77,5 +79,22 @@ export class JournalsRepository extends BaseRepository<
     this.storage[newName] = existing;
     this.events.emit("renamed", oldName, newName);
     return new Ok(undefined);
+  }
+
+  addNoteletType(journalName: string, type: NoteletType): Result<void, UnknownJournalError> {
+    return this.get(journalName)
+      .okOrElse(() => new UnknownJournalError(journalName))
+      .map((config) => {
+        this.update(journalName, { notelets: { ...config.notelets, [type.id]: type } });
+      });
+  }
+
+  deleteNoteletType(journalName: string, typeId: TypeId): Result<void, UnknownJournalError> {
+    return this.get(journalName)
+      .okOrElse(() => new UnknownJournalError(journalName))
+      .map((config) => {
+        const { [typeId]: _removed, ...rest } = config.notelets;
+        this.update(journalName, { notelets: rest });
+      });
   }
 }

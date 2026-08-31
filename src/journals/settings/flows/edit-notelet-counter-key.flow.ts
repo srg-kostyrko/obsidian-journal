@@ -3,6 +3,7 @@ import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt, Err } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsRepository } from "@/journals/repository";
 
 import { editNoteletCounterKeyModal } from "../ui/modals";
@@ -14,6 +15,7 @@ export class EditNoteletCounterKeyFlow implements Flow<
 > {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
+  readonly #connection = inject(NoteConnectionService);
 
   execute(parameters: { journalName: string; typeId: string }): AsyncResult<{ newValue: string }, FlowError> {
     const configOpt = this.#repository.get(parameters.journalName);
@@ -36,14 +38,25 @@ export class EditNoteletCounterKeyFlow implements Flow<
         return yield* new Err(toFlowError(new UnknownJournalError(parameters.journalName)));
       }
 
-      // Notelets already written keep the counter under its old key: rewriting them is the
-      // cascade seam a later slice owns.
+      const oldKey = type.counter.frontmatterKey;
       this.#repository.update(parameters.journalName, {
         notelets: {
           ...config.notelets,
           [parameters.typeId]: { ...type, counter: { ...type.counter, frontmatterKey: submitted.newValue } },
         },
       });
+
+      // Notelets already written keep their counter under the old key; #parseNotelet reads it
+      // by key, so a config-only rename strands every existing count and reapplyAll cannot
+      // recover it (with no counter in the metadata, the old key is never removed).
+      if (oldKey !== submitted.newValue) {
+        yield* this.#connection.renameNoteletFieldForType(
+          parameters.journalName,
+          type.name,
+          oldKey,
+          submitted.newValue,
+        );
+      }
       return { newValue: submitted.newValue };
     });
   }

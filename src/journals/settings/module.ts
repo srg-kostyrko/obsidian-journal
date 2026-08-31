@@ -5,6 +5,7 @@ import { AddJournalFlow } from "./flows/add-journal.flow";
 import { AddNoteletTypeFlow } from "./flows/add-notelet-type.flow";
 import { CloneJournalFlow } from "./flows/clone-journal.flow";
 import { DeleteJournalFlow } from "./flows/delete-journal.flow";
+import { DeleteNoteletTypeFlow } from "./flows/delete-notelet-type.flow";
 import { EditFrontmatterFieldFlow } from "./flows/edit-frontmatter-field.flow";
 import { EditNoteletCounterKeyFlow } from "./flows/edit-notelet-counter-key.flow";
 import { EditNumberingDigitFlow } from "./flows/edit-numbering-digit.flow";
@@ -25,6 +26,7 @@ export const journalsSettingsCoreModule: Module = {
     c.register(EditPromptFlow).useClass(EditPromptFlow);
     c.register(AddNoteletTypeFlow).useClass(AddNoteletTypeFlow);
     c.register(RenameNoteletTypeFlow).useClass(RenameNoteletTypeFlow);
+    c.register(DeleteNoteletTypeFlow).useClass(DeleteNoteletTypeFlow);
     c.register(EditNoteletCounterKeyFlow).useClass(EditNoteletCounterKeyFlow);
     // Eager: it subscribes to the settings reload seam, which fires whether or not anyone has
     // opened the preset picker that resolves it through WeekPresetApplierToken.

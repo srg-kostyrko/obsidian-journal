@@ -12,8 +12,10 @@ import {
 } from "./errors";
 import { journalsCoreModule } from "./module";
 import { JournalsRepository } from "./repository";
-import { fixedJournal } from "./testing";
+import { buildNoteletType, fixedJournal } from "./testing";
 import { JournalsEventsToken } from "./tokens";
+
+import type { TypeId } from "./notelets/config";
 
 const addedRow: NavBlockSegment = {
   template: "added to the copy",
@@ -303,6 +305,49 @@ describe("JournalsRepository", () => {
 
       const result = repo.delete("nope");
 
+      expect(result.isErr() && result.error).toBeInstanceOf(UnknownJournalError);
+    });
+  });
+
+  describe("notelet types", () => {
+    it("adds a type under its own id", async () => {
+      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const type = buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" });
+
+      const result = repo.addNoteletType("daily", type);
+
+      expect(result.isOk()).toBe(true);
+      expect(repo.get("daily").getOrUndefined()?.notelets).toMatchObject({ nt_1: type });
+    });
+
+    it("removes only the deleted type from the record", async () => {
+      const seeded = buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" });
+      const kept = buildNoteletType({ id: "nt_2" as TypeId, name: "Retro" });
+      const { repo } = await buildRepo({
+        daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_1: seeded, nt_2: kept } }),
+      });
+
+      const result = repo.deleteNoteletType("daily", "nt_1" as TypeId);
+
+      expect(result.isOk()).toBe(true);
+      expect(repo.get("daily").getOrUndefined()?.notelets).toEqual({ nt_2: kept });
+    });
+
+    it("refuses to add a type to a journal that does not exist", async () => {
+      const { repo } = await buildRepo();
+
+      const result = repo.addNoteletType("gone", buildNoteletType());
+
+      expect(result.isErr()).toBe(true);
+      expect(result.isErr() && result.error).toBeInstanceOf(UnknownJournalError);
+    });
+
+    it("refuses to delete a type from a journal that does not exist", async () => {
+      const { repo } = await buildRepo();
+
+      const result = repo.deleteNoteletType("gone", "nt_1" as TypeId);
+
+      expect(result.isErr()).toBe(true);
       expect(result.isErr() && result.error).toBeInstanceOf(UnknownJournalError);
     });
   });

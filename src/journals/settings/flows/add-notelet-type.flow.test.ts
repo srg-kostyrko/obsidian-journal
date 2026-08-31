@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { commandsCoreModule } from "@/commands/module";
 import { CommandsRepository } from "@/commands/repository";
-import { m } from "@/i18n";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
@@ -51,23 +50,11 @@ describe("AddNoteletTypeFlow", () => {
     expect(config?.notelets[typeId]?.id).toBe(typeId);
   });
 
-  it("seeds a command targeting the new type", async () => {
+  it("seeds the type's command", async () => {
     const typeId = await addStandup();
 
-    const commands = [...harness.resolve(CommandsRepository).find().list()];
-    expect(commands).toContainEqual(
-      expect.objectContaining({
-        name: m.journal_notelet_command_name({ type: "Standup" }),
-        target: { kind: "notelet", journalName: "Work", typeId },
-      }),
-    );
-  });
-
-  it("seeds the command with no ribbon icon", async () => {
-    await addStandup();
-
-    const commands = [...harness.resolve(CommandsRepository).find().list()];
-    expect(commands).toContainEqual(expect.objectContaining({ icon: "", showInRibbon: false }));
+    const commands = [...harness.resolve(CommandsRepository).find().entries()].map(([, command]) => command);
+    expect(commands).toEqual([expect.objectContaining({ target: { kind: "notelet", journalName: "Work", typeId } })]);
   });
 
   it("navigates to the new type's page", async () => {

@@ -14,6 +14,7 @@ import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import type { SubpageNav } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { DeleteNoteletTypeFlow } from "../flows/delete-notelet-type.flow";
 import { RenameNoteletTypeFlow } from "../flows/rename-notelet-type.flow";
 
 import NoteletTypeSubpage from "./NoteletTypeSubpage.vue";
@@ -75,6 +76,17 @@ describe("NoteletTypeSubpage", () => {
     await userEvent.click(screen.getByLabelText(m.journal_notelet_rename_tooltip()));
 
     expect(flows.invoke).toHaveBeenCalledWith(RenameNoteletTypeFlow, { journalName: "Work", typeId: "nt_7f3a" });
+  });
+
+  it("invokes the delete flow from the heading's delete button", async () => {
+    const harness = await setup();
+    const flows = harness.resolve(Flows);
+    vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
+    harness.render(NoteletTypeSubpage, { props: { journalName: "Work", typeId: "nt_7f3a", nav: noopNav } });
+
+    await userEvent.click(screen.getByLabelText(m.journal_notelet_delete_tooltip()));
+
+    expect(flows.invoke).toHaveBeenCalledWith(DeleteNoteletTypeFlow, { journalName: "Work", typeId: "nt_7f3a" });
   });
 
   it("leaves out the journal's own sections", async () => {

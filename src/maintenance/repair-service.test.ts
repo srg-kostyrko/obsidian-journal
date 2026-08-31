@@ -8,8 +8,9 @@ import { FRONTMATTER_NAME_KEY, type JournalConfig } from "@/journals/config";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type FakeHost } from "@/testing";
 
 import { maintenanceCoreModule } from "./module";
@@ -222,6 +223,70 @@ describe("RepairService", () => {
     const result = await running;
     expectOk(result);
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
+    vi.useRealTimers();
+  });
+
+  it("rewrites a repaired notelet with the notelet mutator", async () => {
+    vi.useFakeTimers();
+    const { service, host } = await buildRepairs({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+      ),
+    });
+    const path = "standup.md" as VaultPath;
+    host.putFile(path, "", { journal: "daily", "journal-date": "2026-01-11", "journal-end-date": "2026-01-11" });
+
+    const running = service.apply([
+      {
+        path,
+        journalName: "daily",
+        noteletTypeName: "Standup",
+        repair: { kind: "rewrite", anchor: anchor("2026-01-12") },
+      },
+    ]);
+    await vi.runAllTimersAsync();
+    const result = await running;
+
+    expectOk(result);
+    const frontmatter = host.files.get(path)?.frontmatter ?? {};
+    expect(frontmatter).toMatchObject({ "journal-notelet": "Standup" });
+    expect(frontmatter).not.toHaveProperty("journal-end-date");
+    vi.useRealTimers();
+  });
+
+  it("never claims a period anchor for a notelet, so a period rewrite there is not contested", async () => {
+    vi.useFakeTimers();
+    const { service, host, reanchor } = await buildRepairs({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+      ),
+    });
+    claim(host, "period.md", "daily");
+    host.putFile("standup.md", "", { journal: "daily", "journal-date": "2026-01-11" });
+
+    const running = service.apply([
+      {
+        path: "standup.md" as VaultPath,
+        journalName: "daily",
+        noteletTypeName: "Standup",
+        repair: { kind: "rewrite", anchor: anchor("2026-01-12") },
+      },
+      {
+        path: "period.md" as VaultPath,
+        journalName: "daily",
+        repair: { kind: "rewrite", anchor: anchor("2026-01-12") },
+      },
+    ]);
+    await vi.runAllTimersAsync();
+    const result = await running;
+
+    expectOk(result);
+    expect(result.value.at(1)?.outcome).not.toEqual({ kind: "failed", reason: "contested" });
+    expect(reanchor).toHaveBeenCalledTimes(2);
     vi.useRealTimers();
   });
 

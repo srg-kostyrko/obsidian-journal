@@ -1556,6 +1556,8 @@
   "journal_clone_modal_description": "Einstellungen und Befehle werden kopiert, Notizen nicht.",
   "journal_clone_modal_name_label": "Neuer Journalname",
   "journal_clone_modal_title": "{name} klonen",
+  "journal_clone_notelet_types_description": "Fügt für jeden Typ einen Befehl hinzu. Deaktivieren, um ohne sie zu klonen.",
+  "journal_clone_notelet_types_label": "Kurznotiz-Typen kopieren",
   "journal_edit_allow_before_description": "Indizierung vor dem Ankerdatum zulassen. Kann zu negativen Zahlen führen.",
   "journal_edit_allow_before_label": "Vor dem Ankerdatum zulassen",
   "journal_edit_anchor_description": "Die Nummerierung beginnt an diesem Datum. Die Notiz für dieses Datum erhält die Startnummer, spätere Notizen zählen von dort aufwärts.",
@@ -1739,10 +1741,13 @@
       "match": {
         "field=dateField": "Name der Datumseigenschaft bearbeiten",
         "field=startDateField": "Name der Startdatums-Eigenschaft bearbeiten",
-        "field=endDateField": "Name der Enddatums-Eigenschaft bearbeiten"
+        "field=endDateField": "Name der Enddatums-Eigenschaft bearbeiten",
+        "field=noteletField": "Name der Kurznotiz-Typ-Eigenschaft bearbeiten"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "Die Eigenschaft, die angibt, zu welchem Kurznotiz-Typ eine Notiz gehört.",
+  "journal_fm_notelet_field_label": "Kurznotiz-Typ-Eigenschaft",
   "journal_name_required_error": "Journalname ist erforderlich.",
   "journal_name_unique_error": "Journalname muss eindeutig sein.",
   "journal_notelet_section_title": "Kurznotiz-Typen",
@@ -1757,8 +1762,46 @@
   "journal_notelet_name_unique_error": "Dieses Journal hat bereits einen Kurznotiz-Typ mit diesem Namen.",
   "journal_notelet_rename_modal_title": "{name} umbenennen",
   "journal_notelet_rename_tooltip": "Kurznotiz-Typ umbenennen",
+  "journal_notelet_delete_tooltip": "Kurznotiz-Typ löschen",
+  "journal_notelet_delete_modal_title": "{name} löschen",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "Dieser Kurznotiz-Typ hat keine verknüpften Kurznotizen.",
+        "count=1": "Dieser Kurznotiz-Typ hat 1 verknüpfte Kurznotiz.",
+        "count=*": "Dieser Kurznotiz-Typ hat {count} verknüpfte Kurznotizen."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Was mit verknüpften Kurznotizen geschehen soll",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Kurznotizen behalten",
+        "mode=clear": "Daten des Kurznotiz-Typs löschen",
+        "mode=delete": "Kurznotizen löschen"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Die Kurznotizen bleiben unverändert in deinem Vault.",
+        "mode=clear": "Die Kurznotizen bleiben in deinem Vault, aber alle Eigenschaften des Journals und des Kurznotiz-Typs werden aus ihrem Frontmatter entfernt.",
+        "mode=delete": "Alle Kurznotizen dieses Typs werden aus deinem Vault gelöscht."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Ordner",
   "journal_notelet_name_template_label": "Notizname",
+  "journal_notelet_no_within_period_variable_warning": "Diese Namensvorlage enthält nichts, das sich innerhalb eines Zeitraums ändert, daher erhält jede Kurznotiz nach der ersten eine an den Namen angehängte Zahl.",
+  "journal_notelet_period_path_collision_warning": "Dieser Typ ergibt denselben Notizpfad wie das Journal selbst. Kurznotizen erhalten automatisch einen anderen Namen, aber die beiden lassen sich leicht verwechseln.",
   "journal_notelet_counter_label": "Jede Kurznotiz nummerieren",
   "journal_notelet_counter_description": "Die Nummerierung beginnt in jedem Zeitraum neu, die erste Kurznotiz eines Tages ist also immer 1.",
   "journal_notelet_counter_key_modal_title": "Name der Nummerneigenschaft bearbeiten",
@@ -1782,7 +1825,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Frage hinzufügen", "mode=edit": "Frage bearbeiten" }
+      "match": {
+        "mode=add": "Frage hinzufügen",
+        "mode=edit": "Frage bearbeiten"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Notizpfad",
@@ -1832,7 +1878,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Nummernstelle hinzufügen", "mode=edit": "Nummernstelle bearbeiten" }
+      "match": {
+        "mode=add": "Nummernstelle hinzufügen",
+        "mode=edit": "Nummernstelle bearbeiten"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1984,6 +2033,7 @@
   "maintenance_check_group_stale": "{journal} – diese Notizen decken den falschen Zeitraum ab",
   "maintenance_check_group_duplicate": "{journal} – zwei Notizen für {anchor}",
   "maintenance_check_group_orphaned": "{journal} – dieses Journal existiert nicht mehr",
+  "maintenance_check_group_orphaned_type": "{journal} – unbekannter Kurznotiz-Typ",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: kein lesbares Datum. Der Dateiname besagt {to}.",
   "maintenance_detail_path_overrides_date": "{path}: der Dateiname besagt {pathAnchor}, die Notiz besagt {dateAnchor}. Öffne die Notiz und entscheide.",
@@ -1992,6 +2042,7 @@
   "maintenance_detail_start_mismatch": "{path}: beginnt am {storedStart}, sollte am {expectedStart} beginnen.",
   "maintenance_detail_duplicate": "{path} – {size} Bytes, geändert {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: Es gibt in diesem Journal keinen Kurznotiz-Typ namens „{typeName}“ mehr.",
   "maintenance_reason_anchor_contested": "Diese Reparatur wurde zurückgezogen, weil eine andere Notiz bereits denselben Zeitraum beansprucht.",
   "maintenance_reason_path_and_date_disagree": "Es wurde nichts automatisch geändert, da der Dateiname und die Notiz nicht übereinstimmen.",
   "maintenance_reason_path_not_invertible": "Dies konnte nicht automatisch repariert werden.",

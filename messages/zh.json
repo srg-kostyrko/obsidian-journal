@@ -1401,6 +1401,8 @@
   "journal_clone_modal_description": "设置和命令会被复制，笔记不会。",
   "journal_clone_modal_name_label": "新日记名称",
   "journal_clone_modal_title": "克隆{name}",
+  "journal_clone_notelet_types_description": "为每种类型添加一个命令。关闭此项以在不复制这些类型的情况下克隆。",
+  "journal_clone_notelet_types_label": "复制子笔记类型",
   "journal_edit_allow_before_description": "允许在锚定日期之前进行索引。可能会产生负数。",
   "journal_edit_allow_before_label": "允许早于锚定日期",
   "journal_edit_anchor_description": "编号从此日期开始计算。此日期的笔记获得起始编号，之后的笔记依次递增。",
@@ -1584,10 +1586,13 @@
       "match": {
         "field=dateField": "编辑日期属性名称",
         "field=startDateField": "编辑开始日期属性名称",
-        "field=endDateField": "编辑结束日期属性名称"
+        "field=endDateField": "编辑结束日期属性名称",
+        "field=noteletField": "编辑子笔记类型属性名称"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "记录笔记属于哪种子笔记类型的属性。",
+  "journal_fm_notelet_field_label": "子笔记类型属性",
   "journal_name_required_error": "日记名称为必填项。",
   "journal_name_unique_error": "日记名称必须唯一。",
   "journal_notelet_section_title": "子笔记类型",
@@ -1602,8 +1607,46 @@
   "journal_notelet_name_unique_error": "本日记中已存在同名的子笔记类型。",
   "journal_notelet_rename_modal_title": "重命名{name}",
   "journal_notelet_rename_tooltip": "重命名子笔记类型",
+  "journal_notelet_delete_tooltip": "删除子笔记类型",
+  "journal_notelet_delete_modal_title": "删除{name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "此子笔记类型没有已连接的子笔记。",
+        "count=1": "此子笔记类型有 1 条已连接的子笔记。",
+        "count=*": "此子笔记类型有 {count} 条已连接的子笔记。"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "如何处理已连接的子笔记",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "保留子笔记",
+        "mode=clear": "清除子笔记类型数据",
+        "mode=delete": "删除子笔记"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "子笔记原样保留在库中。",
+        "mode=clear": "子笔记保留在库中，但会从其 frontmatter 中移除日记和子笔记类型的所有属性。",
+        "mode=delete": "与此类型关联的所有子笔记都将从库中删除。"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "文件夹",
   "journal_notelet_name_template_label": "笔记名称",
+  "journal_notelet_no_within_period_variable_warning": "此名称模板中没有会在一个周期内变化的内容，因此除第一条之外，每条子笔记的名称都会被添加编号。",
+  "journal_notelet_period_path_collision_warning": "此类型解析出的笔记路径与日记本身相同。子笔记会自动获得不同的名称，但两者容易混淆。",
   "journal_notelet_counter_label": "为每条子笔记编号",
   "journal_notelet_counter_description": "编号在每个周期重新开始，因此一天中的第一条子笔记始终为 1。",
   "journal_notelet_counter_key_modal_title": "编辑编号属性名称",
@@ -1627,7 +1670,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "添加问题", "mode=edit": "编辑问题" }
+      "match": {
+        "mode=add": "添加问题",
+        "mode=edit": "编辑问题"
+      }
     }
   ],
   "journal_prompt_note_path_label": "笔记路径",
@@ -1677,7 +1723,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "添加编号位", "mode=edit": "编辑编号位" }
+      "match": {
+        "mode=add": "添加编号位",
+        "mode=edit": "编辑编号位"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1974,6 +2023,7 @@
   "maintenance_check_group_stale": "{journal}——这些笔记覆盖了错误的周期",
   "maintenance_check_group_duplicate": "{journal}——{anchor} 有两篇笔记",
   "maintenance_check_group_orphaned": "{journal}——此日记已不存在",
+  "maintenance_check_group_orphaned_type": "{journal}——未知子笔记类型",
   "maintenance_detail_moved": "{path}：{from} → {to}",
   "maintenance_detail_no_usable_date": "{path}：没有可读取的日期。文件名显示为 {to}。",
   "maintenance_detail_path_overrides_date": "{path}：文件名显示为 {pathAnchor}，笔记内容显示为 {dateAnchor}。请打开笔记并决定。",
@@ -1982,6 +2032,7 @@
   "maintenance_detail_start_mismatch": "{path}：开始于 {storedStart}，应开始于 {expectedStart}。",
   "maintenance_detail_duplicate": "{path}——{size} 字节，修改于 {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}：此日记中已不存在名为“{typeName}”的子笔记类型。",
   "maintenance_reason_anchor_contested": "由于另一篇笔记已声明相同的周期，此修复已被撤回。",
   "maintenance_reason_path_and_date_disagree": "由于文件名与笔记内容不一致，未自动进行任何更改。",
   "maintenance_reason_path_not_invertible": "无法自动修复此项。",

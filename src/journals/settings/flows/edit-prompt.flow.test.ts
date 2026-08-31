@@ -201,4 +201,90 @@ describe("EditPromptFlow addressing a notelet type", () => {
     const config = harness.resolve(JournalsRepository).get("j").getOrUndefined();
     expect(config?.notelets.nt_7f3a?.prompts[0]?.frontmatterKey).toBe("guest");
   });
+
+  const typeMoodPrompt: Prompt = {
+    variable: "mood",
+    question: "How was standup?",
+    type: "text",
+    frontmatterKey: "mood",
+    required: false,
+  };
+
+  const journalWithTypeQuestion = fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      notelets: {
+        nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup", prompts: [typeMoodPrompt] }),
+      },
+    },
+  );
+
+  it("moves a type question's answers to the new key on that type's notelets", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { daily: journalWithTypeQuestion } },
+    });
+    const noteletPath = "Standup 1.md" as VaultPath;
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+      mood: "ok",
+    });
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 1,
+    });
+    const promise = harness
+      .resolve(Flows)
+      .invoke(EditPromptFlow, { journalName: "daily", typeId: "nt_1", promptIndex: 0 });
+    harness.modals.lastOpen<unknown, Prompt>().submit({ ...typeMoodPrompt, frontmatterKey: "feeling" });
+    await promise;
+
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ feeling: "ok" });
+  });
+
+  it("leaves period notes alone when a type question's key is renamed", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { daily: journalWithTypeQuestion } },
+    });
+    const noteletPath = "Standup 1.md" as VaultPath;
+    const periodPath = "2026-06-01.md" as VaultPath;
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+      mood: "ok",
+    });
+    harness.host.putFile(periodPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      mood: "period answer",
+    });
+    const index = harness.resolve(JournalsIndex);
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 1,
+    });
+    index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: periodPath });
+    const promise = harness
+      .resolve(Flows)
+      .invoke(EditPromptFlow, { journalName: "daily", typeId: "nt_1", promptIndex: 0 });
+    harness.modals.lastOpen<unknown, Prompt>().submit({ ...typeMoodPrompt, frontmatterKey: "feeling" });
+    await promise;
+
+    expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ mood: "period answer" });
+  });
 });

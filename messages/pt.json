@@ -1554,6 +1554,8 @@
   "journal_clone_modal_description": "As configurações e os comandos são copiados. As notas não.",
   "journal_clone_modal_name_label": "Novo nome do diário",
   "journal_clone_modal_title": "Clonar {name}",
+  "journal_clone_notelet_types_description": "Adiciona um comando para cada tipo. Desative para clonar sem eles.",
+  "journal_clone_notelet_types_label": "Copiar tipos de nota breve",
   "journal_edit_allow_before_description": "Permitir indexação antes da data de ancoragem. Pode gerar números negativos.",
   "journal_edit_allow_before_label": "Permitir antes da data de ancoragem",
   "journal_edit_anchor_description": "A numeração começa nesta data. A nota desta data recebe o número inicial, e as notas seguintes contam a partir dela.",
@@ -1737,10 +1739,13 @@
       "match": {
         "field=dateField": "Editar nome da propriedade de data",
         "field=startDateField": "Editar nome da propriedade de data de início",
-        "field=endDateField": "Editar nome da propriedade de data de término"
+        "field=endDateField": "Editar nome da propriedade de data de término",
+        "field=noteletField": "Editar nome da propriedade de tipo de nota breve"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "A propriedade que registra a qual tipo de nota breve uma nota pertence.",
+  "journal_fm_notelet_field_label": "Propriedade de tipo de nota breve",
   "journal_name_required_error": "O nome do diário é obrigatório.",
   "journal_name_unique_error": "O nome do diário deve ser único.",
   "journal_notelet_section_title": "Tipos de nota breve",
@@ -1755,8 +1760,46 @@
   "journal_notelet_name_unique_error": "Este diário já tem um tipo de nota breve com esse nome.",
   "journal_notelet_rename_modal_title": "Renomear {name}",
   "journal_notelet_rename_tooltip": "Renomear tipo de nota breve",
+  "journal_notelet_delete_tooltip": "Excluir tipo de nota breve",
+  "journal_notelet_delete_modal_title": "Excluir {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "Este tipo de nota breve não tem notas breves conectadas.",
+        "count=1": "Este tipo de nota breve tem 1 nota breve conectada.",
+        "count=*": "Este tipo de nota breve tem {count} notas breves conectadas."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "O que fazer com notas breves conectadas",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Manter as notas breves",
+        "mode=clear": "Limpar os dados do tipo de nota breve",
+        "mode=delete": "Excluir as notas breves"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "As notas breves permanecem inalteradas no seu cofre.",
+        "mode=clear": "As notas breves permanecem no seu cofre, mas todas as propriedades do diário e do tipo de nota breve são removidas do frontmatter delas.",
+        "mode=delete": "Todas as notas breves deste tipo serão excluídas do seu cofre."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Pasta",
   "journal_notelet_name_template_label": "Nome da nota",
+  "journal_notelet_no_within_period_variable_warning": "Este modelo de nome não tem nada que varie dentro de um período, então toda nota breve após a primeira recebe um número adicionado ao nome.",
+  "journal_notelet_period_path_collision_warning": "Este tipo resolve para o mesmo caminho de nota que o próprio diário. As notas breves recebem um nome diferente automaticamente, mas os dois são fáceis de confundir.",
   "journal_notelet_counter_label": "Numerar cada nota breve",
   "journal_notelet_counter_description": "A numeração recomeça em cada período, portanto a primeira nota breve de um dia é sempre 1.",
   "journal_notelet_counter_key_modal_title": "Editar nome da propriedade de número",
@@ -1780,7 +1823,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Adicionar pergunta", "mode=edit": "Editar pergunta" }
+      "match": {
+        "mode=add": "Adicionar pergunta",
+        "mode=edit": "Editar pergunta"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Caminho da nota",
@@ -1830,7 +1876,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Adicionar dígito de numeração", "mode=edit": "Editar dígito de numeração" }
+      "match": {
+        "mode=add": "Adicionar dígito de numeração",
+        "mode=edit": "Editar dígito de numeração"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1982,6 +2031,7 @@
   "maintenance_check_group_stale": "{journal} — essas notas cobrem o período errado",
   "maintenance_check_group_duplicate": "{journal} — duas notas para {anchor}",
   "maintenance_check_group_orphaned": "{journal} — esse diário não existe mais",
+  "maintenance_check_group_orphaned_type": "{journal} — tipo de nota breve desconhecido",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: nenhuma data legível. O nome do arquivo indica {to}.",
   "maintenance_detail_path_overrides_date": "{path}: o nome do arquivo indica {pathAnchor}, a nota indica {dateAnchor}. Abra a nota e decida.",
@@ -1990,6 +2040,7 @@
   "maintenance_detail_start_mismatch": "{path}: começa em {storedStart}, deveria começar em {expectedStart}.",
   "maintenance_detail_duplicate": "{path} — {size} bytes, modificado {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: não existe mais nenhum tipo de nota breve chamado \"{typeName}\" neste diário.",
   "maintenance_reason_anchor_contested": "Este reparo foi retirado porque outra nota já reivindica o mesmo período.",
   "maintenance_reason_path_and_date_disagree": "Nada foi alterado automaticamente porque o nome do arquivo e a nota não coincidem.",
   "maintenance_reason_path_not_invertible": "Não foi possível reparar isso automaticamente.",

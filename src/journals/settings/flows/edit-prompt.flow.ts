@@ -73,16 +73,18 @@ export class EditPromptFlow implements Flow<
       // rename instead of being stranded under the old key. "" is the sentinel for "not
       // stored" on either side, so there is nothing to move when either key is empty.
       //
-      // A type's questions are not swept here: renameFieldAll walks the journal's period notes,
-      // and the type-scoped walk belongs with the rest of the cascade seam.
-      if (
-        typeId === undefined &&
-        oldKey !== undefined &&
-        oldKey !== "" &&
-        prompt.frontmatterKey !== "" &&
-        prompt.frontmatterKey !== oldKey
-      ) {
-        yield* this.#connection.renameFieldAll(parameters.journalName, oldKey, prompt.frontmatterKey);
+      // A type's questions live on its notelets, and its key set is narrower than the
+      // journal's — the same key on a period note is the journal's own answer, not this
+      // type's, so the two walks must stay scoped apart.
+      if (oldKey !== undefined && oldKey !== "" && prompt.frontmatterKey !== "" && prompt.frontmatterKey !== oldKey) {
+        yield* type === undefined
+          ? this.#connection.renameFieldAll(parameters.journalName, oldKey, prompt.frontmatterKey)
+          : this.#connection.renameNoteletFieldForType(
+              parameters.journalName,
+              type.name,
+              oldKey,
+              prompt.frontmatterKey,
+            );
       }
       return { variable: prompt.variable };
     });

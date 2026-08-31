@@ -17,6 +17,12 @@ describe("editFrontmatterFieldModal definition", () => {
       m.journal_fm_field_modal_title({ field: "dateField" }),
     );
   });
+
+  it("titles the modal for the notelet type field with its own copy, not the unmatched-variant fallback", () => {
+    const title = editFrontmatterFieldModal.title({ journalName: "daily", fieldName: "noteletField" });
+    expect(title).toBe(m.journal_fm_field_modal_title({ field: "noteletField" }));
+    expect(title).not.toBe("journal_fm_field_modal_title");
+  });
 });
 
 describe("EditFrontmatterFieldModal", () => {

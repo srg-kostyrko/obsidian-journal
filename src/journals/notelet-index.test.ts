@@ -92,4 +92,24 @@ describe("NoteletIndex", () => {
 
     expect([...index.ofType("Standup")]).toEqual([]);
   });
+
+  describe("paths", () => {
+    it("lists every indexed notelet once, across anchors and types", () => {
+      const index = new NoteletIndex();
+      index.add(notelet("2026-06-01", "a.md", "Standup"));
+      index.add(notelet("2026-06-01", "b.md", "Recipe"));
+      index.add(notelet("2026-06-02", "c.md", "Standup"));
+
+      expect([...index.paths()].toSorted()).toEqual(["a.md", "b.md", "c.md"]);
+    });
+
+    it("drops a removed notelet", () => {
+      const index = new NoteletIndex();
+      const entry = notelet("2026-01-01", "a.md", "Standup");
+      index.add(entry);
+      index.remove(entry);
+
+      expect(index.paths()).toEqual([]);
+    });
+  });
 });
