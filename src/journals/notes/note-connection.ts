@@ -16,6 +16,8 @@ import { CycleService } from "../cycle";
 import { NoteletTypeNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { NoteletCreationService } from "../notelets/notelet-creation";
+import { NoteletPathService } from "../notelets/notelet-path";
 import { promptsInTemplate } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
 import { isNotelet } from "../types";
@@ -37,7 +39,8 @@ export type ConnectError =
   | NoteAlreadyExistsError
   | NoteNotFoundError
   | NoteDeleteError
-  | FrontmatterError;
+  | FrontmatterError
+  | NoteletTypeNotFoundError;
 
 export type DisconnectError = NoteNotFoundError | FrontmatterError;
 
@@ -67,6 +70,11 @@ export interface ConnectOptions {
   override?: boolean;
   rename?: boolean;
   move?: boolean;
+  // Present ⇒ connect as a notelet of this type rather than as the period note.
+  typeId?: TypeId;
+  // Bulk add's scan-order allocation. connect on its own reads the index for the next counter,
+  // which cannot advance mid-run because the index only learns of a write once vault events land.
+  counter?: number;
 }
 
 export class NoteConnectionService {
@@ -77,6 +85,8 @@ export class NoteConnectionService {
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
   readonly #journals = inject(JournalsRepository);
+  readonly #noteletCreation = inject(NoteletCreationService);
+  readonly #noteletPaths = inject(NoteletPathService);
   readonly #logger = inject(LoggerFactoryToken).named("note-connection");
 
   readonly #defaultClear = (fm: Record<string, unknown>): void => {
@@ -199,6 +209,36 @@ export class NoteConnectionService {
     });
   }
 
+  #connectNotelet(
+    journalName: string,
+    path: VaultPath,
+    anchor: AnchorString,
+    typeId: TypeId,
+    options: ConnectOptions,
+  ): AsyncResult<{ path: VaultPath }, ConnectError> {
+    return attempt.in(this, async function* (this: NoteConnectionService) {
+      const config = yield* this.#journals.require(journalName);
+      const type = config.notelets[typeId];
+      if (type === undefined) return yield* new Err(new NoteletTypeNotFoundError(journalName, typeId));
+
+      // Assigned whether or not the note is renamed: listing order has to stay total across
+      // notelets that kept their own names.
+      const counter = type.counter.enabled
+        ? (options.counter ?? this.#noteletPaths.nextIndex(journalName, anchor, type.name))
+        : undefined;
+      const metadata: NoteletMetadata = {
+        kind: "notelet",
+        journalName,
+        anchor,
+        typeId,
+        ...(counter !== undefined && { counter }),
+      };
+
+      yield* this.#noteletCreation.attachNotelet(journalName, path, metadata);
+      return { path };
+    });
+  }
+
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
     const [currentFolder, currentName] = splitVaultPath(current);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
@@ -231,6 +271,10 @@ export class NoteConnectionService {
     options: ConnectOptions = {},
   ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
+      if (options.typeId !== undefined) {
+        return yield* this.#connectNotelet(journalName, path, anchor, options.typeId, options);
+      }
+
       // Metadata is resolved from the anchor's stored entry (incl. any endDate), so an
       // overridden slot's period metadata transfers to the new note.
       const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);

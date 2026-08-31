@@ -1359,4 +1359,118 @@ describe("NoteConnectionService", () => {
       expect(harness.host.files.has(recipePath)).toBe(true);
     });
   });
+
+  describe("connect as a notelet", () => {
+    const SOURCE = "inbox/n.md" as VaultPath;
+    const TYPE = "nt_1" as TypeId;
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  [TYPE]: buildNoteletType({ id: TYPE, name: "Standup", nameTemplate: "Standup {{notelet_index}}" }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      harness.host.putFile(SOURCE, "content");
+    });
+
+    it("writes the type key rather than a period claim", async () => {
+      const connected = await harness
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE });
+
+      expectOk(connected);
+      expect(harness.host.files.get(SOURCE)?.frontmatter).toMatchObject({
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": "Standup",
+      });
+    });
+
+    it("assigns the next counter for the period even when nothing is renamed", async () => {
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: "other.md" as VaultPath,
+        typeName: "Standup",
+        typeId: TYPE,
+        counter: 4,
+      });
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE });
+
+      expect(harness.host.files.get(SOURCE)?.frontmatter).toMatchObject({ "journal-notelet-index": 5 });
+    });
+
+    it("writes no counter for a type that does not number its notelets", async () => {
+      const withoutCounter = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  [TYPE]: buildNoteletType({
+                    id: TYPE,
+                    name: "Standup",
+                    counter: { enabled: false, frontmatterKey: "journal-notelet-index" },
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      withoutCounter.host.putFile(SOURCE, "content");
+
+      await withoutCounter
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE });
+
+      expect(withoutCounter.host.files.get(SOURCE)?.frontmatter).not.toHaveProperty("journal-notelet-index");
+    });
+
+    // The period arm refuses an occupied anchor unless override is set. A notelet has no such
+    // exclusivity, so the same call must go through with no override and no occupant trashed.
+    it("connects onto an anchor a period note already holds, without an override", async () => {
+      harness.host.putFile("Journal/2026-06-01.md", "period", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.resolve(JournalsIndex).register({
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: "Journal/2026-06-01.md" as VaultPath,
+      });
+
+      const connected = await harness
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE });
+
+      expectOk(connected);
+      expect(harness.host.files.get("Journal/2026-06-01.md")?.frontmatter).toMatchObject({
+        journal: "daily",
+        "journal-date": "2026-06-01",
+      });
+    });
+
+    it("refuses a type the journal does not have", async () => {
+      const connected = await harness
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: "nt_missing" as TypeId });
+
+      expect(connected.isErr()).toBe(true);
+    });
+  });
 });
