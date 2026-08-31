@@ -195,8 +195,9 @@ function connect(): void {
 
 <template>
   <!-- Nothing to connect to on a fresh install: the form would render an empty picker above a
-       permanently disabled button, which states the situation to nobody. -->
-  <div v-if="journalNames.length === 0">
+       permanently disabled button, which states the situation to nobody. A note still carrying a
+       claim is not that case — it needs its Disconnect, whether or not its journal survived. -->
+  <div v-if="journalNames.length === 0 && existing.isNone()">
     <UiSettingRow>
       <template #description>{{ m.common_no_journals_yet() }}</template>
     </UiSettingRow>

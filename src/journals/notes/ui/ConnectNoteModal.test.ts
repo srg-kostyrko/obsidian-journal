@@ -282,6 +282,20 @@ describe("ConnectNoteModal", () => {
 
       expect(screen.queryByRole("combobox")).toBeNull();
     });
+
+    // A note whose journal was deleted keeps its claim in frontmatter, and this dialog is the
+    // only place to shed it.
+    it("still offers Disconnect for a note claimed by a journal that is gone", () => {
+      harness.resolve(JournalsIndex).register({
+        journalName: "gone",
+        anchor: anchor("2026-06-01"),
+        path: "inbox/orphan.md" as VaultPath,
+      });
+
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/orphan.md" as VaultPath } });
+
+      expect(screen.getByText(m.connect_note_modal_disconnect())).toBeTruthy();
+    });
   });
 
   describe("when the note is not connected", () => {
