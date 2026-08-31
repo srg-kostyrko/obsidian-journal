@@ -117,6 +117,17 @@ export class NoteConnectionService {
     };
   }
 
+  #forEachOfType(
+    journalName: string,
+    typeName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
+    return this.#forEach(
+      this.#index.noteletsOfType(journalName, typeName).map((entry) => entry.path),
+      op,
+    );
+  }
+
   #reanchorOne(journalName: string, path: VaultPath, target: ReanchorTarget): AsyncResult<void, ReanchorError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
       const built = yield* this.#frontmatter.buildMetadata(journalName, target.anchor);
@@ -258,6 +269,46 @@ export class NoteConnectionService {
     return this.#forEachConnected(journalName, (path) =>
       this.#notes.updateFrontmatter(path, this.#moveKey(oldKey, newKey)),
     );
+  }
+
+  // The stored type name is what parseEntry resolves a type by, so a config-only rename would
+  // orphan every notelet already written under the old one.
+  renameNoteletTypeAll(journalName: string, oldTypeName: string, newTypeName: string): AsyncResult<void, never> {
+    const field = this.#journals.get(journalName).getOrUndefined()?.frontmatter.noteletField;
+    if (field === undefined) return AsyncResult.ok();
+    return this.#forEachOfType(journalName, oldTypeName, (path) =>
+      this.#notes.updateFrontmatter(path, (fm) => {
+        fm[field] = newTypeName;
+      }),
+    );
+  }
+
+  renameNoteletFieldForType(
+    journalName: string,
+    typeName: string,
+    oldKey: string,
+    newKey: string,
+  ): AsyncResult<void, never> {
+    return this.#forEachOfType(journalName, typeName, (path) =>
+      this.#notes.updateFrontmatter(path, this.#moveKey(oldKey, newKey)),
+    );
+  }
+
+  // disconnect()'s clearMutator only drops the journal-config's known field names, and a type's
+  // own question keys are config, not something this best-effort walk can trust to still be
+  // registered (a type-delete flow calls this after the type is already gone from config). A
+  // notelet has no existence outside its type's claim, so there is no other bucket a leftover
+  // key could belong to — clearing the whole file is the only scoping that is exact.
+  disconnectNoteletsOfType(journalName: string, typeName: string): AsyncResult<void, never> {
+    return this.#forEachOfType(journalName, typeName, (path) =>
+      this.#notes.updateFrontmatter(path, (fm) => {
+        for (const key of Object.keys(fm)) delete fm[key];
+      }),
+    );
+  }
+
+  deleteNoteletsOfType(journalName: string, typeName: string): AsyncResult<void, never> {
+    return this.#forEachOfType(journalName, typeName, (path) => this.#notes.delete(path));
   }
 
   reapplyAll(journalName: string): AsyncResult<void, never> {

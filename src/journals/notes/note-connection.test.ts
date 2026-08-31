@@ -1098,3 +1098,76 @@ describe("journal-wide cascades over notelets", () => {
     });
   });
 });
+
+describe("type-scoped walks", () => {
+  let harness: TestHarness;
+
+  const standupPath = "Standup 1.md" as VaultPath;
+  const recipePath = "Recipe 1.md" as VaultPath;
+
+  beforeEach(async () => {
+    const daily = fixedJournal("daily", { type: "day" });
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: {
+            ...daily,
+            notelets: {
+              nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }),
+              nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Recipe" }),
+            },
+          },
+        },
+      },
+    });
+    const index = harness.resolve(JournalsIndex);
+    for (const [path, typeName, typeId] of [
+      [standupPath, "Standup", "nt_1"],
+      [recipePath, "Recipe", "nt_2"],
+    ] as const) {
+      harness.host.putFile(path, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": typeName,
+        mood: "kept",
+      });
+      index.register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path,
+        typeName,
+        typeId: typeId as TypeId,
+      });
+    }
+  });
+
+  it("renameNoteletTypeAll rewrites only that type's stored type name", async () => {
+    await harness.resolve(NoteConnectionService).renameNoteletTypeAll("daily", "Standup", "Daily standup");
+
+    expect(harness.host.files.get(standupPath)?.frontmatter).toMatchObject({ "journal-notelet": "Daily standup" });
+    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ "journal-notelet": "Recipe" });
+  });
+
+  it("renameNoteletFieldForType moves the key on that type's notelets only", async () => {
+    await harness.resolve(NoteConnectionService).renameNoteletFieldForType("daily", "Standup", "mood", "feeling");
+
+    expect(harness.host.files.get(standupPath)?.frontmatter).toMatchObject({ feeling: "kept" });
+    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ mood: "kept" });
+  });
+
+  it("disconnectNoteletsOfType strips only that type's claims", async () => {
+    await harness.resolve(NoteConnectionService).disconnectNoteletsOfType("daily", "Standup");
+
+    expect(harness.host.files.get(standupPath)?.frontmatter).toEqual({});
+    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ journal: "daily" });
+  });
+
+  it("deleteNoteletsOfType trashes only that type's files", async () => {
+    await harness.resolve(NoteConnectionService).deleteNoteletsOfType("daily", "Standup");
+
+    expect(harness.host.files.has(standupPath)).toBe(false);
+    expect(harness.host.files.has(recipePath)).toBe(true);
+  });
+});
