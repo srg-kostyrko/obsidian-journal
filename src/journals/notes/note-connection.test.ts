@@ -887,6 +887,130 @@ describe("NoteConnectionService", () => {
 
       expect(harness.host.files.get("week/2026-W23.md")?.frontmatter["journal-end-date"]).toBe("2026-05-31");
     });
+
+    describe("notelets", () => {
+      let harness: TestHarness;
+      const noteletPath = "notelet.md" as VaultPath;
+
+      beforeEach(async () => {
+        const weekly = fixedJournal("weekly", { type: "week" });
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              weekly: { ...weekly, notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+            },
+          },
+        });
+      });
+
+      it("moves a notelet with the notelet mutator and writes no end date", async () => {
+        harness.host.putFile(noteletPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Standup",
+        });
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: noteletPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+        });
+
+        await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll(
+            "weekly",
+            new Map([[noteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Standup" }]]),
+          );
+
+        const frontmatter = harness.host.files.get(noteletPath)?.frontmatter ?? {};
+        expect(frontmatter).toMatchObject({ "journal-date": "2026-06-01", "journal-notelet": "Standup" });
+        expect(frontmatter).not.toHaveProperty("journal-end-date");
+      });
+
+      it("never blocks a notelet on an anchor a period note holds", async () => {
+        const periodPath = "week/2026-W23.md" as VaultPath;
+        harness.host.putFile(periodPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: periodPath });
+
+        harness.host.putFile(noteletPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Standup",
+        });
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: noteletPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+        });
+
+        // The period note above stays put (no target of its own), which claims 2026-06-01 in the
+        // period loop's slot bookkeeping. The notelet loop must never consult that bookkeeping.
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll(
+            "weekly",
+            new Map([[noteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Standup" }]]),
+          );
+
+        expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
+        expectOk(result);
+        expect(result.value.failed).toBe(0);
+      });
+
+      it("never blocks two notelets landing on one anchor", async () => {
+        const firstPath = "notelet-1.md" as VaultPath;
+        const secondPath = "notelet-2.md" as VaultPath;
+        harness.host.putFile(firstPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Standup",
+        });
+        harness.host.putFile(secondPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Standup",
+        });
+        const index = harness.resolve(JournalsIndex);
+        index.register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: firstPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+        });
+        index.register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: secondPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+        });
+
+        const result = await harness.resolve(NoteConnectionService).reanchorAll(
+          "weekly",
+          new Map([
+            [firstPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Standup" }],
+            [secondPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Standup" }],
+          ]),
+        );
+
+        expectOk(result);
+        expect(result.value.failed).toBe(0);
+        expect(harness.host.files.get(firstPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
+        expect(harness.host.files.get(secondPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
+      });
+    });
   });
 
   describe("reanchor", () => {

@@ -10,12 +10,13 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
-import { customJournal, fixedJournal } from "../testing";
+import { buildNoteletType, customJournal, fixedJournal } from "../testing";
 
 import { journalsSettingsCoreModule } from "./module";
 import { WeekPresetService } from "./week-preset-service";
 
 import type { JournalConfig } from "../config";
+import type { TypeId } from "../notelets/config";
 
 const ISO = { mode: "custom", dow: 1, doy: 4, global: false } as const;
 const WESTERN = { mode: "custom", dow: 0, doy: 6, global: false } as const;
@@ -25,6 +26,11 @@ const MODULES = [journalsCoreModule, journalsSettingsCoreModule, calendarSetting
 function weekly(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}): Record<string, JournalConfig> {
   const config = fixedJournal("weekly", { type: "week" });
   return { weekly: { ...config, frontmatter: { ...config.frontmatter, ...patch } } };
+}
+
+function weeklyWithNotelet(): Record<string, JournalConfig> {
+  const config = fixedJournal("weekly", { type: "week" });
+  return { weekly: { ...config, notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } } };
 }
 
 function seedWeek(harness: TestHarness, path: string, anchorDate: string, endDate?: string): void {
@@ -39,6 +45,23 @@ function seedWeek(harness: TestHarness, path: string, anchorDate: string, endDat
     anchor: anchorDate as AnchorString,
     path: vaultPath,
     ...(endDate !== undefined && { endDate: endDate as AnchorString }),
+  });
+}
+
+function seedNotelet(harness: TestHarness, path: string, anchorDate: string): void {
+  const vaultPath = path as VaultPath;
+  harness.host.putFile(vaultPath, "", {
+    journal: "weekly",
+    "journal-date": anchorDate,
+    "journal-notelet": "Standup",
+  });
+  harness.resolve(JournalsIndex).register({
+    kind: "notelet",
+    journalName: "weekly",
+    anchor: anchorDate as AnchorString,
+    path: vaultPath,
+    typeName: "Standup",
+    typeId: "nt_1" as TypeId,
   });
 }
 
@@ -217,6 +240,20 @@ describe("WeekPresetService", () => {
     await harness.resolve(WeekPresetService).apply(WESTERN);
 
     expect(frontmatterOf(harness, "sprints/1.md")?.["journal-date"]).toBe("2026-06-01");
+  });
+
+  it("re-anchors a weekly journal's notelets when the grid moves", async () => {
+    const harness = await testContainer({
+      modules: MODULES,
+      data: { journals: weeklyWithNotelet(), calendar: ISO, calendarDisplay: {} },
+    });
+    seedNotelet(harness, "week/standup.md", "2026-06-01");
+
+    await harness.resolve(WeekPresetService).apply(WESTERN);
+
+    const frontmatter = frontmatterOf(harness, "week/standup.md") ?? {};
+    expect(frontmatter).toMatchObject({ "journal-date": "2026-05-31", "journal-notelet": "Standup" });
+    expect(frontmatter).not.toHaveProperty("journal-end-date");
   });
 
   // A week grid can also arrive from Obsidian Sync, which never passes through apply(): reload()

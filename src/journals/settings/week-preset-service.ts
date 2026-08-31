@@ -25,6 +25,9 @@ interface WeekSnapshot {
     // Undefined means "no manual extension" — resolved against the OLD grid, below, because
     // this is the last point in the flow where the old grid is still the live one.
     readonly endDate: AnchorString | undefined;
+    // Present for a notelet. A notelet has no end date to go stale, and its type name is what
+    // routes the write to the notelet mutator.
+    readonly noteletTypeName?: string;
   }[];
 }
 
@@ -84,12 +87,24 @@ export class WeekPresetService implements WeekPresetApplier {
     ];
     return weekly.map((config) => ({
       journalName: config.name,
-      notes: [...this.#index.entriesFor(config.name)].map(([anchor, path]) => {
-        const week = WeekPeriod.containing(CalendarDate.fromAnchor(anchor));
-        const entry = this.#index.entryByAnchor(config.name, anchor);
-        const endDate = this.#survivingEndDate(config.name, anchor, entry.isSome() ? entry.value.endDate : undefined);
-        return { path, weekYear: week.year, weekOfYear: week.weekOfYear, endDate };
-      }),
+      notes: [
+        ...[...this.#index.entriesFor(config.name)].map(([anchor, path]) => {
+          const week = WeekPeriod.containing(CalendarDate.fromAnchor(anchor));
+          const entry = this.#index.entryByAnchor(config.name, anchor);
+          const endDate = this.#survivingEndDate(config.name, anchor, entry.isSome() ? entry.value.endDate : undefined);
+          return { path, weekYear: week.year, weekOfYear: week.weekOfYear, endDate };
+        }),
+        ...this.#index.noteletsFor(config.name).map((entry) => {
+          const week = WeekPeriod.containing(CalendarDate.fromAnchor(entry.anchor));
+          return {
+            path: entry.path,
+            weekYear: week.year,
+            weekOfYear: week.weekOfYear,
+            endDate: undefined,
+            noteletTypeName: entry.typeName,
+          };
+        }),
+      ],
     }));
   }
 
@@ -101,9 +116,13 @@ export class WeekPresetService implements WeekPresetApplier {
       let failed = 0;
       for (const { journalName, notes } of snapshots) {
         const targets = new Map<VaultPath, ReanchorTarget>(
-          notes.map(({ path, weekYear, weekOfYear, endDate }) => [
+          notes.map(({ path, weekYear, weekOfYear, endDate, noteletTypeName }) => [
             path,
-            { anchor: WeekPeriod.ofWeek(weekYear, weekOfYear).anchor.toAnchor(), endDate },
+            {
+              anchor: WeekPeriod.ofWeek(weekYear, weekOfYear).anchor.toAnchor(),
+              endDate,
+              ...(noteletTypeName !== undefined && { noteletTypeName }),
+            },
           ]),
         );
         const report = yield* this.#connection.reanchorAll(journalName, targets);
