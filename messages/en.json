@@ -382,6 +382,7 @@
   "connect_note_notice_disconnected": "Note disconnected from \"{journalName}\".",
 
   "bulk_add_notes_to_title": "Add notes to {journalName}",
+  "bulk_add_notelets_to_title": "Add {type} notelets",
   "bulk_add_folder_label": "Source folder",
   "bulk_add_folder_description": "Select the folder with existing notes you want to process.",
   "bulk_add_folder_not_found": "This folder does not exist in your vault.",
@@ -1771,6 +1772,7 @@
   "journal_notelet_name_required_error": "Enter a name for this notelet type.",
   "journal_notelet_name_unique_error": "This journal already has a notelet type with that name.",
   "journal_notelet_rename_modal_title": "Rename {name}",
+  "journal_notelet_bulk_add_tooltip": "Bulk add notelets of this type",
   "journal_notelet_rename_tooltip": "Rename notelet type",
   "journal_notelet_delete_tooltip": "Delete notelet type",
   "journal_notelet_delete_modal_title": "Delete {name}",

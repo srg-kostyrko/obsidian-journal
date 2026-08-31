@@ -95,9 +95,15 @@ async function run(): Promise<void> {
     name: nameDecision.value,
   });
   progress.value = { done: 0, total: resolved.length };
-  const result = await service.apply(props.journalName, resolved, props.parameters.dryRun, (done, total) => {
-    progress.value = { done, total };
-  });
+  const result = await service.apply(
+    props.journalName,
+    resolved,
+    props.parameters.dryRun,
+    (done, total) => {
+      progress.value = { done, total };
+    },
+    props.parameters.noteletTypeId,
+  );
   progress.value = null;
   if (result.kind === "ok") log.value = result.value;
 }
