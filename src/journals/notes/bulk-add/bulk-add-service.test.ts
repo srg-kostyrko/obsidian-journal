@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
@@ -8,6 +8,7 @@ import { testContainer, type TestHarness } from "@/testing";
 import { JournalsIndex } from "../../journals-index";
 import { journalsCoreModule } from "../../module";
 import { buildNoteletType, fixedJournal } from "../../testing";
+import { NoteConnectionService } from "../note-connection";
 
 import { BulkAddService } from "./bulk-add-service";
 import { defaultBulkAddParameters } from "./config";
@@ -613,6 +614,7 @@ describe("BulkAddService", () => {
 
   describe("bulk adding notelets", () => {
     const TYPE = "nt_1";
+    const NO_COUNTER_TYPE = "nt_2";
     const EMPTY_DECISIONS = { existing: {}, folder: {}, name: {} };
     let harness: TestHarness;
 
@@ -631,6 +633,13 @@ describe("BulkAddService", () => {
                     name: "Standup",
                     folder: "Standups",
                     nameTemplate: "Standup {{notelet_index}}",
+                  }),
+                  [NO_COUNTER_TYPE]: buildNoteletType({
+                    id: NO_COUNTER_TYPE as TypeId,
+                    name: "Uncounted",
+                    folder: "Standups",
+                    nameTemplate: "Uncounted",
+                    counter: { enabled: false, frontmatterKey: "journal-notelet-index" },
                   }),
                 },
               },
@@ -755,8 +764,10 @@ describe("BulkAddService", () => {
 
       await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, TYPE);
 
-      const counters = actions.map((a) => harness.host.files.get(a.path)?.frontmatter?.["journal-notelet-index"]);
-      expect(counters.toSorted()).toEqual([1, 2]);
+      const first = actions.at(0)?.path ?? ("" as VaultPath);
+      const second = actions.at(1)?.path ?? ("" as VaultPath);
+      expect(harness.host.files.get(first)?.frontmatter).toMatchObject({ "journal-notelet-index": 1 });
+      expect(harness.host.files.get(second)?.frontmatter).toMatchObject({ "journal-notelet-index": 2 });
     });
 
     it("continues the period's existing numbering", async () => {
@@ -810,6 +821,24 @@ describe("BulkAddService", () => {
       await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), true, undefined, TYPE);
 
       expect(harness.host.files.get("inbox/2026-06-01.md")?.frontmatter).toEqual({});
+    });
+
+    it("gives no counter key to a type whose counter is disabled", async () => {
+      harness.host.putFile("inbox/2026-06-01.md", "");
+      const service = harness.resolve(BulkAddService);
+      const connectSpy = vi.spyOn(harness.resolve(NoteConnectionService), "connect");
+      const plan = await service.plan("daily", parameters({ noteletTypeId: NO_COUNTER_TYPE }));
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, NO_COUNTER_TYPE);
+
+      // connect() itself also refuses to honor a stray counter for a disabled-counter type, so
+      // the frontmatter alone can't tell apart "never offered one" from "offered and ignored" —
+      // assert on the options bulk-add itself builds, not just their downstream effect.
+      expect(connectSpy).toHaveBeenCalledTimes(1);
+      expect(connectSpy.mock.calls.at(0)?.at(3)).not.toHaveProperty("counter");
+      expect(harness.host.files.get("inbox/2026-06-01.md")?.frontmatter).not.toHaveProperty("journal-notelet-index");
     });
   });
 });
