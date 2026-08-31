@@ -17,6 +17,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { promptsInTemplate } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
+import { isNotelet } from "../types";
 
 import { AnchorOccupiedError } from "./errors";
 import { NoteCreationService } from "./note-creation";
@@ -25,7 +26,7 @@ import { splitVaultPath } from "./vault-path";
 
 import type { NoteCreationError } from "./note-creation";
 import type { JournalNotFoundError } from "../errors";
-import type { JournalMetadata } from "../types";
+import type { JournalMetadata, NoteletMetadata } from "../types";
 
 export type ConnectError =
   | NoteCreationError
@@ -263,6 +264,22 @@ export class NoteConnectionService {
     return this.#forEachConnected(journalName, (path) =>
       attempt.in(this, async function* (this: NoteConnectionService) {
         const entry = yield* this.#index.entryByPath(path).okOrElse(() => new NoteNotFoundError(path));
+        if (isNotelet(entry)) {
+          // An orphaned notelet has no type config, so there are no counter or prompt keys to
+          // write, and its claim and date are already correct — a rewrite could only guess.
+          if (entry.typeId === null) return;
+          const metadata: NoteletMetadata = {
+            kind: "notelet",
+            journalName,
+            anchor: entry.anchor,
+            typeId: entry.typeId,
+            ...(entry.counter !== undefined && { counter: entry.counter }),
+            ...(entry.answers !== undefined && { answers: entry.answers }),
+          };
+          const noteletMutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+          yield* this.#notes.updateFrontmatter(path, noteletMutator);
+          return;
+        }
         const metadata = yield* this.#frontmatter.buildMetadata(journalName, entry.anchor);
         const mutator = yield* this.#frontmatter.writeMutator(
           journalName,

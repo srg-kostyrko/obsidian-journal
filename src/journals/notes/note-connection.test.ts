@@ -1015,4 +1015,77 @@ describe("journal-wide cascades over notelets", () => {
 
     expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ mood: "type answer" });
   });
+
+  it("reapplyAll rewrites a notelet without period-note keys", async () => {
+    const daily = fixedJournal("daily", { type: "day" });
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: {
+            ...daily,
+            frontmatter: { ...daily.frontmatter, addStartDate: true, addEndDate: true },
+            notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
+          },
+        },
+      },
+    });
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+    });
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 3,
+    });
+
+    await harness.resolve(NoteConnectionService).reapplyAll("daily");
+
+    const frontmatter = harness.host.files.get(noteletPath)?.frontmatter ?? {};
+    expect(frontmatter).toMatchObject({ "journal-notelet": "Standup", "journal-notelet-index": 3 });
+    expect(frontmatter).not.toHaveProperty("journal-start-date");
+    expect(frontmatter).not.toHaveProperty("journal-end-date");
+  });
+
+  it("reapplyAll skips a notelet whose type is gone", async () => {
+    // addStartDate/addEndDate on makes the period-note mutator write bytes onto the notelet if
+    // reapplyAll ever mistakes it for a period note — without this, the two mutators write the
+    // same journal/journal-date pair and the exact-equality assertion below would pass either way.
+    const daily = fixedJournal("daily", { type: "day" });
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: { ...daily, frontmatter: { ...daily.frontmatter, addStartDate: true, addEndDate: true } },
+        },
+      },
+    });
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Retired",
+    });
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Retired",
+      typeId: null,
+    });
+
+    await harness.resolve(NoteConnectionService).reapplyAll("daily");
+
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toEqual({
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Retired",
+    });
+  });
 });
