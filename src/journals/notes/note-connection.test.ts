@@ -1126,237 +1126,237 @@ describe("NoteConnectionService", () => {
       expect(fm?.["journal-end-date"]).toBe("2026-01-18");
     });
   });
-});
 
-describe("journal-wide cascades over notelets", () => {
-  let harness: TestHarness;
+  describe("journal-wide cascades over notelets", () => {
+    let harness: TestHarness;
 
-  const periodPath = "2026-06-01.md" as VaultPath;
-  const noteletPath = "Standup 1.md" as VaultPath;
+    const periodPath = "2026-06-01.md" as VaultPath;
+    const noteletPath = "Standup 1.md" as VaultPath;
 
-  beforeEach(async () => {
-    const daily = fixedJournal("daily", { type: "day" });
-    harness = await testContainer({
-      modules: [journalsCoreModule],
-      data: {
-        journals: {
-          daily: {
-            ...daily,
-            notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
-          },
-        },
-      },
-    });
-    harness.host.putFile(periodPath, "content", { journal: "daily", "journal-date": "2026-06-01" });
-    harness.host.putFile(noteletPath, "content", {
-      journal: "daily",
-      "journal-date": "2026-06-01",
-      "journal-notelet": "Standup",
-      "journal-notelet-index": 1,
-    });
-    const index = harness.resolve(JournalsIndex);
-    index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: periodPath });
-    index.register({
-      kind: "notelet",
-      journalName: "daily",
-      anchor: anchor("2026-06-01"),
-      path: noteletPath,
-      typeName: "Standup",
-      typeId: "nt_1" as TypeId,
-      counter: 1,
-    });
-  });
-
-  it("disconnectAll strips a notelet's whole claim", async () => {
-    await harness.resolve(NoteConnectionService).disconnectAll("daily");
-
-    expect(harness.host.files.get(noteletPath)?.frontmatter).toEqual({});
-  });
-
-  it("deleteAll trashes a notelet's file", async () => {
-    await harness.resolve(NoteConnectionService).deleteAll("daily");
-
-    expect(harness.host.files.has(noteletPath)).toBe(false);
-  });
-
-  it("reconnectAll rewrites a notelet's journal claim", async () => {
-    await harness.resolve(NoteConnectionService).reconnectAll("daily", "journal");
-
-    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ journal: "journal" });
-  });
-
-  it("renameJournalFieldAll moves the key on both kinds", async () => {
-    await harness.resolve(NoteConnectionService).renameJournalFieldAll("daily", "journal-date", "on");
-
-    expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ on: "2026-06-01" });
-    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ on: "2026-06-01" });
-  });
-
-  it("renameFieldAll leaves notelets alone, so a journal question's key rename cannot strand a type answer", async () => {
-    harness.host.putFile(noteletPath, "content", {
-      journal: "daily",
-      "journal-date": "2026-06-01",
-      "journal-notelet": "Standup",
-      mood: "type answer",
-    });
-
-    await harness.resolve(NoteConnectionService).renameFieldAll("daily", "mood", "feeling");
-
-    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ mood: "type answer" });
-  });
-
-  it("reapplyAll rewrites a notelet without period-note keys", async () => {
-    const daily = fixedJournal("daily", { type: "day" });
-    harness = await testContainer({
-      modules: [journalsCoreModule],
-      data: {
-        journals: {
-          daily: {
-            ...daily,
-            frontmatter: { ...daily.frontmatter, addStartDate: true, addEndDate: true },
-            notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
-          },
-        },
-      },
-    });
-    harness.host.putFile(noteletPath, "content", {
-      journal: "daily",
-      "journal-date": "2026-06-01",
-      "journal-notelet": "Standup",
-    });
-    harness.resolve(JournalsIndex).register({
-      kind: "notelet",
-      journalName: "daily",
-      anchor: anchor("2026-06-01"),
-      path: noteletPath,
-      typeName: "Standup",
-      typeId: "nt_1" as TypeId,
-      counter: 3,
-    });
-
-    await harness.resolve(NoteConnectionService).reapplyAll("daily");
-
-    const frontmatter = harness.host.files.get(noteletPath)?.frontmatter ?? {};
-    expect(frontmatter).toMatchObject({ "journal-notelet": "Standup", "journal-notelet-index": 3 });
-    expect(frontmatter).not.toHaveProperty("journal-start-date");
-    expect(frontmatter).not.toHaveProperty("journal-end-date");
-  });
-
-  it("reapplyAll skips a notelet whose type is gone", async () => {
-    // addStartDate/addEndDate on makes the period-note mutator write bytes onto the notelet if
-    // reapplyAll ever mistakes it for a period note — without this, the two mutators write the
-    // same journal/journal-date pair and the exact-equality assertion below would pass either way.
-    const daily = fixedJournal("daily", { type: "day" });
-    harness = await testContainer({
-      modules: [journalsCoreModule],
-      data: {
-        journals: {
-          daily: { ...daily, frontmatter: { ...daily.frontmatter, addStartDate: true, addEndDate: true } },
-        },
-      },
-    });
-    harness.host.putFile(noteletPath, "content", {
-      journal: "daily",
-      "journal-date": "2026-06-01",
-      "journal-notelet": "Retired",
-    });
-    harness.resolve(JournalsIndex).register({
-      kind: "notelet",
-      journalName: "daily",
-      anchor: anchor("2026-06-01"),
-      path: noteletPath,
-      typeName: "Retired",
-      typeId: null,
-    });
-    // Building a NoteletMetadata with typeId: null and calling writeMutator would also leave
-    // the note unwritten — config.notelets[null] misses, writeMutator errors, and #forEach's
-    // best-effort handling swallows it. That's attempted-then-discarded, not skipped, and reads
-    // identically on updateFrontmatter (never called) and on the resulting frontmatter (also
-    // unchanged) — outcome alone can't tell the two apart. Spying on writeMutator pins the
-    // mechanism instead: a deliberate skip never calls it for this entry at all.
-    const writeMutatorSpy = vi.spyOn(harness.resolve(FrontmatterService), "writeMutator");
-
-    await harness.resolve(NoteConnectionService).reapplyAll("daily");
-
-    expect(writeMutatorSpy).not.toHaveBeenCalled();
-    expect(harness.host.files.get(noteletPath)?.frontmatter).toEqual({
-      journal: "daily",
-      "journal-date": "2026-06-01",
-      "journal-notelet": "Retired",
-    });
-  });
-});
-
-describe("type-scoped walks", () => {
-  let harness: TestHarness;
-
-  const standupPath = "Standup 1.md" as VaultPath;
-  const recipePath = "Recipe 1.md" as VaultPath;
-
-  beforeEach(async () => {
-    const daily = fixedJournal("daily", { type: "day" });
-    harness = await testContainer({
-      modules: [journalsCoreModule],
-      data: {
-        journals: {
-          daily: {
-            ...daily,
-            notelets: {
-              nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup", prompts: [mood] }),
-              nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Recipe" }),
+    beforeEach(async () => {
+      const daily = fixedJournal("daily", { type: "day" });
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: {
+              ...daily,
+              notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
             },
           },
         },
-      },
-    });
-    const index = harness.resolve(JournalsIndex);
-    for (const [path, typeName, typeId] of [
-      [standupPath, "Standup", "nt_1"],
-      [recipePath, "Recipe", "nt_2"],
-    ] as const) {
-      harness.host.putFile(path, "content", {
+      });
+      harness.host.putFile(periodPath, "content", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.host.putFile(noteletPath, "content", {
         journal: "daily",
         "journal-date": "2026-06-01",
-        "journal-notelet": typeName,
-        mood: "kept",
-        title: "keep",
+        "journal-notelet": "Standup",
+        "journal-notelet-index": 1,
       });
+      const index = harness.resolve(JournalsIndex);
+      index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: periodPath });
       index.register({
         kind: "notelet",
         journalName: "daily",
         anchor: anchor("2026-06-01"),
-        path,
-        typeName,
-        typeId: typeId as TypeId,
+        path: noteletPath,
+        typeName: "Standup",
+        typeId: "nt_1" as TypeId,
+        counter: 1,
       });
-    }
+    });
+
+    it("disconnectAll strips a notelet's whole claim", async () => {
+      await harness.resolve(NoteConnectionService).disconnectAll("daily");
+
+      expect(harness.host.files.get(noteletPath)?.frontmatter).toEqual({});
+    });
+
+    it("deleteAll trashes a notelet's file", async () => {
+      await harness.resolve(NoteConnectionService).deleteAll("daily");
+
+      expect(harness.host.files.has(noteletPath)).toBe(false);
+    });
+
+    it("reconnectAll rewrites a notelet's journal claim", async () => {
+      await harness.resolve(NoteConnectionService).reconnectAll("daily", "journal");
+
+      expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ journal: "journal" });
+    });
+
+    it("renameJournalFieldAll moves the key on both kinds", async () => {
+      await harness.resolve(NoteConnectionService).renameJournalFieldAll("daily", "journal-date", "on");
+
+      expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ on: "2026-06-01" });
+      expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ on: "2026-06-01" });
+    });
+
+    it("renameFieldAll leaves notelets alone, so a journal question's key rename cannot strand a type answer", async () => {
+      harness.host.putFile(noteletPath, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": "Standup",
+        mood: "type answer",
+      });
+
+      await harness.resolve(NoteConnectionService).renameFieldAll("daily", "mood", "feeling");
+
+      expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ mood: "type answer" });
+    });
+
+    it("reapplyAll rewrites a notelet without period-note keys", async () => {
+      const daily = fixedJournal("daily", { type: "day" });
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: {
+              ...daily,
+              frontmatter: { ...daily.frontmatter, addStartDate: true, addEndDate: true },
+              notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
+            },
+          },
+        },
+      });
+      harness.host.putFile(noteletPath, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": "Standup",
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: noteletPath,
+        typeName: "Standup",
+        typeId: "nt_1" as TypeId,
+        counter: 3,
+      });
+
+      await harness.resolve(NoteConnectionService).reapplyAll("daily");
+
+      const frontmatter = harness.host.files.get(noteletPath)?.frontmatter ?? {};
+      expect(frontmatter).toMatchObject({ "journal-notelet": "Standup", "journal-notelet-index": 3 });
+      expect(frontmatter).not.toHaveProperty("journal-start-date");
+      expect(frontmatter).not.toHaveProperty("journal-end-date");
+    });
+
+    it("reapplyAll skips a notelet whose type is gone", async () => {
+      // addStartDate/addEndDate on makes the period-note mutator write bytes onto the notelet if
+      // reapplyAll ever mistakes it for a period note — without this, the two mutators write the
+      // same journal/journal-date pair and the exact-equality assertion below would pass either way.
+      const daily = fixedJournal("daily", { type: "day" });
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: { ...daily, frontmatter: { ...daily.frontmatter, addStartDate: true, addEndDate: true } },
+          },
+        },
+      });
+      harness.host.putFile(noteletPath, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": "Retired",
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: noteletPath,
+        typeName: "Retired",
+        typeId: null,
+      });
+      // Building a NoteletMetadata with typeId: null and calling writeMutator would also leave
+      // the note unwritten — config.notelets[null] misses, writeMutator errors, and #forEach's
+      // best-effort handling swallows it. That's attempted-then-discarded, not skipped, and reads
+      // identically on updateFrontmatter (never called) and on the resulting frontmatter (also
+      // unchanged) — outcome alone can't tell the two apart. Spying on writeMutator pins the
+      // mechanism instead: a deliberate skip never calls it for this entry at all.
+      const writeMutatorSpy = vi.spyOn(harness.resolve(FrontmatterService), "writeMutator");
+
+      await harness.resolve(NoteConnectionService).reapplyAll("daily");
+
+      expect(writeMutatorSpy).not.toHaveBeenCalled();
+      expect(harness.host.files.get(noteletPath)?.frontmatter).toEqual({
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": "Retired",
+      });
+    });
   });
 
-  it("renameNoteletTypeAll rewrites only that type's stored type name", async () => {
-    await harness.resolve(NoteConnectionService).renameNoteletTypeAll("daily", "Standup", "Daily standup");
+  describe("type-scoped walks", () => {
+    let harness: TestHarness;
 
-    expect(harness.host.files.get(standupPath)?.frontmatter).toMatchObject({ "journal-notelet": "Daily standup" });
-    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ "journal-notelet": "Recipe" });
-  });
+    const standupPath = "Standup 1.md" as VaultPath;
+    const recipePath = "Recipe 1.md" as VaultPath;
 
-  it("renameNoteletFieldForType moves the key on that type's notelets only", async () => {
-    await harness.resolve(NoteConnectionService).renameNoteletFieldForType("daily", "Standup", "mood", "feeling");
+    beforeEach(async () => {
+      const daily = fixedJournal("daily", { type: "day" });
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: {
+              ...daily,
+              notelets: {
+                nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup", prompts: [mood] }),
+                nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Recipe" }),
+              },
+            },
+          },
+        },
+      });
+      const index = harness.resolve(JournalsIndex);
+      for (const [path, typeName, typeId] of [
+        [standupPath, "Standup", "nt_1"],
+        [recipePath, "Recipe", "nt_2"],
+      ] as const) {
+        harness.host.putFile(path, "content", {
+          journal: "daily",
+          "journal-date": "2026-06-01",
+          "journal-notelet": typeName,
+          mood: "kept",
+          title: "keep",
+        });
+        index.register({
+          kind: "notelet",
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path,
+          typeName,
+          typeId: typeId as TypeId,
+        });
+      }
+    });
 
-    expect(harness.host.files.get(standupPath)?.frontmatter).toMatchObject({ feeling: "kept" });
-    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ mood: "kept" });
-  });
+    it("renameNoteletsOfType rewrites only that type's stored type name", async () => {
+      await harness.resolve(NoteConnectionService).renameNoteletsOfType("daily", "Standup", "Daily standup");
 
-  it("disconnectNoteletsOfType strips only that type's claims", async () => {
-    await harness.resolve(NoteConnectionService).disconnectNoteletsOfType("daily", "Standup");
+      expect(harness.host.files.get(standupPath)?.frontmatter).toMatchObject({ "journal-notelet": "Daily standup" });
+      expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ "journal-notelet": "Recipe" });
+    });
 
-    expect(harness.host.files.get(standupPath)?.frontmatter).toEqual({ title: "keep" });
-    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ journal: "daily", mood: "kept" });
-  });
+    it("renameNoteletFieldForType moves the key on that type's notelets only", async () => {
+      await harness.resolve(NoteConnectionService).renameNoteletFieldForType("daily", "Standup", "mood", "feeling");
 
-  it("deleteNoteletsOfType trashes only that type's files", async () => {
-    await harness.resolve(NoteConnectionService).deleteNoteletsOfType("daily", "Standup");
+      expect(harness.host.files.get(standupPath)?.frontmatter).toMatchObject({ feeling: "kept" });
+      expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ mood: "kept" });
+    });
 
-    expect(harness.host.files.has(standupPath)).toBe(false);
-    expect(harness.host.files.has(recipePath)).toBe(true);
+    it("disconnectNoteletsOfType strips only that type's claims", async () => {
+      await harness.resolve(NoteConnectionService).disconnectNoteletsOfType("daily", "Standup");
+
+      expect(harness.host.files.get(standupPath)?.frontmatter).toEqual({ title: "keep" });
+      expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ journal: "daily", mood: "kept" });
+    });
+
+    it("deleteNoteletsOfType trashes only that type's files", async () => {
+      await harness.resolve(NoteConnectionService).deleteNoteletsOfType("daily", "Standup");
+
+      expect(harness.host.files.has(standupPath)).toBe(false);
+      expect(harness.host.files.has(recipePath)).toBe(true);
+    });
   });
 });

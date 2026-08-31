@@ -324,7 +324,7 @@ export class NoteConnectionService {
 
   // The stored type name is what parseEntry resolves a type by, so a config-only rename would
   // orphan every notelet already written under the old one.
-  renameNoteletTypeAll(journalName: string, oldTypeName: string, newTypeName: string): AsyncResult<void, never> {
+  renameNoteletsOfType(journalName: string, oldTypeName: string, newTypeName: string): AsyncResult<void, never> {
     const field = this.#journals.get(journalName).getOrUndefined()?.frontmatter.noteletField;
     if (field === undefined) return AsyncResult.ok();
     return this.#forEachOfType(journalName, oldTypeName, (path) =>

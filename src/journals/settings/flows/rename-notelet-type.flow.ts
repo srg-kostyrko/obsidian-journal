@@ -52,7 +52,7 @@ export class RenameNoteletTypeFlow implements Flow<
       });
       // The stored type name is the reference parseEntry resolves by, so notelets written under
       // the old one have to move with it or they orphan.
-      yield* this.#connection.renameNoteletTypeAll(parameters.journalName, oldName, submitted.newName);
+      yield* this.#connection.renameNoteletsOfType(parameters.journalName, oldName, submitted.newName);
       return { newName: submitted.newName };
     });
   }
