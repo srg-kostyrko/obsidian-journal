@@ -148,7 +148,7 @@ export class ScanService {
       if (rejected) classified.push(rejected);
       const stale = tagged(checkStaleRange(note));
       if (stale) classified.push(stale);
-      const orphanedType = checkOrphanedType(note);
+      const orphanedType = tagged(checkOrphanedType(note));
       if (orphanedType) classified.push(orphanedType);
     }
 

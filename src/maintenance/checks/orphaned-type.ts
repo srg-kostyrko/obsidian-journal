@@ -11,7 +11,6 @@ export function checkOrphanedType(note: ScannedNote): Finding | undefined {
     check: "orphaned-type",
     path: note.path,
     journalName: note.claimedJournal,
-    noteletTypeName: note.noteletTypeName,
     detail: { kind: "orphaned-type", typeName: note.noteletTypeName },
     repair: { kind: "strip-claim" },
   };
