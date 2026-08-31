@@ -148,25 +148,33 @@ export class NoteletCreationService {
    * The period twin refuses an occupied anchor; this one cannot, because several notelets per
    * anchor is the design. Emptiness is judged against the note's original body — writing
    * frontmatter fills the file, so the read has to come first.
+   *
+   * `beforeWrite` runs inside the same frontmatter write, immediately before the claim — a
+   * caller stripping an old claim gets one write, so nothing that fails here can leave the note
+   * claimed by nobody.
    */
   attachNotelet(
     journalName: string,
     path: VaultPath,
     metadata: NoteletMetadata,
+    beforeWrite?: (fm: Record<string, unknown>) => void,
   ): AsyncResult<void, NoteletAttachError> {
     return attempt.in(this, async function* (this: NoteletCreationService) {
       const config = yield* this.#journals.require(journalName);
       const type = config.notelets[metadata.typeId];
       if (type === undefined) return yield* new Err(new NoteletTypeNotFoundError(journalName, metadata.typeId));
 
-      const mutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+      const claim = yield* this.#frontmatter.writeMutator(journalName, metadata);
       const existing = yield* this.#notes.read(path);
       if (existing.trim() === "") {
         const context = yield* this.#paths.bodyContextFor(config, type, metadata, basenameOf(path));
         const content = yield* this.#content.renderTemplates(type.templates, context, path);
         if (content !== "") yield* this.#notes.write(path, content);
       }
-      yield* this.#notes.updateFrontmatter(path, mutator);
+      yield* this.#notes.updateFrontmatter(path, (fm) => {
+        beforeWrite?.(fm);
+        claim(fm);
+      });
     });
   }
 }

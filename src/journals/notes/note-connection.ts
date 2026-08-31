@@ -93,6 +93,13 @@ export class NoteConnectionService {
     for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
   };
 
+  // A journal that no longer resolves still owns keys on the note, so fall back to the default
+  // set rather than refusing: the note is losing that claim either way.
+  #clearMutatorFor(journalName: string): (fm: Record<string, unknown>) => void {
+    const mutator = this.#frontmatter.clearMutator(journalName);
+    return mutator.isOk() ? mutator.value : this.#defaultClear;
+  }
+
   #periodPathsOf(journalName: string): VaultPath[] {
     return [...this.#index.entriesFor(journalName)].map(([, path]) => path);
   }
@@ -215,6 +222,7 @@ export class NoteConnectionService {
     anchor: AnchorString,
     typeId: TypeId,
     options: ConnectOptions,
+    clearStale: ((fm: Record<string, unknown>) => void) | undefined,
   ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
       const config = yield* this.#journals.require(journalName);
@@ -248,7 +256,8 @@ export class NoteConnectionService {
       }
 
       if (target !== path) yield* this.#notes.rename(path, target);
-      yield* this.#noteletCreation.attachNotelet(journalName, target, metadata);
+      if (clearStale !== undefined) this.#dropStaleEntry(path, target);
+      yield* this.#noteletCreation.attachNotelet(journalName, target, metadata, clearStale);
       return { path: target };
     });
   }
@@ -265,15 +274,25 @@ export class NoteConnectionService {
     return typeId === undefined ? undefined : journalName;
   }
 
-  #stripStaleClaim(path: VaultPath, journalName: string, typeId: TypeId | undefined): AsyncResult<void, ConnectError> {
+  // The clear rides into the attach's own frontmatter write rather than being written first:
+  // everything a connect can fail on — the type lookup, the path render, a rename collision —
+  // runs before that single write, so a failed connect leaves the note claimed by whoever
+  // claimed it before instead of by nobody.
+  #staleClearFor(
+    path: VaultPath,
+    journalName: string,
+    typeId: TypeId | undefined,
+  ): ((fm: Record<string, unknown>) => void) | undefined {
     const stale = this.#staleClaimOn(path, journalName, typeId);
-    if (stale === undefined) return AsyncResult.ok();
-    return attempt.in(this, async function* (this: NoteConnectionService) {
-      const clear = yield* this.#frontmatter.clearMutator(stale);
-      yield* this.#notes.updateFrontmatter(path, clear);
-      // The strip has happened; the index only hears about it once the vault events land.
-      this.#index.unregister(path);
-    });
+    return stale === undefined ? undefined : this.#clearMutatorFor(stale);
+  }
+
+  // The clear lands with the attach that follows this call, but the index only hears about it
+  // once the vault events do. A rename may already have transferred the entry onto its new
+  // path, so drop it under both.
+  #dropStaleEntry(path: VaultPath, target: VaultPath): void {
+    this.#index.unregister(path);
+    if (target !== path) this.#index.unregister(target);
   }
 
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
@@ -308,10 +327,10 @@ export class NoteConnectionService {
     options: ConnectOptions = {},
   ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
-      yield* this.#stripStaleClaim(path, journalName, options.typeId);
+      const clearStale = this.#staleClearFor(path, journalName, options.typeId);
 
       if (options.typeId !== undefined) {
-        return yield* this.#connectNotelet(journalName, path, anchor, options.typeId, options);
+        return yield* this.#connectNotelet(journalName, path, anchor, options.typeId, options, clearStale);
       }
 
       // Metadata is resolved from the anchor's stored entry (incl. any endDate), so an
@@ -352,20 +371,15 @@ export class NoteConnectionService {
       }
 
       if (target !== path) yield* this.#notes.rename(path, target);
-      yield* this.#creation.attachNote(journalName, target, metadata);
+      if (clearStale !== undefined) this.#dropStaleEntry(path, target);
+      yield* this.#creation.attachNote(journalName, target, metadata, clearStale);
       return { path: target };
     });
   }
 
   disconnect(path: VaultPath): AsyncResult<void, DisconnectError> {
     const entry = this.#index.entryByPath(path);
-    let mutator: (fm: Record<string, unknown>) => void;
-    if (entry.isSome()) {
-      const mutatorResult = this.#frontmatter.clearMutator(entry.value.journalName);
-      mutator = mutatorResult.isOk() ? mutatorResult.value : this.#defaultClear;
-    } else {
-      mutator = this.#defaultClear;
-    }
+    const mutator = entry.isSome() ? this.#clearMutatorFor(entry.value.journalName) : this.#defaultClear;
     return this.#notes.updateFrontmatter(path, mutator);
   }
 

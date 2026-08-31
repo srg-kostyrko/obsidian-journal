@@ -1788,6 +1788,26 @@ describe("NoteConnectionService", () => {
       });
     });
 
+    // pathFor deliberately does not suffix past a taken path, so a rendered target that is
+    // already on disk fails at the rename — with the old claim still the only one the note has.
+    it("leaves the note's original claim in place when the rename collides", async () => {
+      seedNotelet("Standup", "standup-index");
+      // The name the Retro type renders for this period, beside the note's own folder — the
+      // exact path the rename would take, occupied before the connect runs.
+      harness.host.putFile("inbox/daily 1.md", "taken");
+
+      const connected = await harness
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: OTHER, rename: true });
+
+      expect(connected.isErr()).toBe(true);
+      expect(harness.host.files.get(SOURCE)?.frontmatter).toMatchObject({
+        journal: "daily",
+        "journal-notelet": "Standup",
+        "standup-index": 2,
+      });
+    });
+
     // The index only learns of the strip once vault events land. Leaving the stale entry behind
     // lets ensureNote find the note at its old anchor and write the wrong kind back over it.
     it("drops the stale index entry as soon as the claim is stripped", async () => {

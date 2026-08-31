@@ -215,10 +215,22 @@ export class NoteCreationService {
     });
   }
 
-  attachNote(name: string, path: VaultPath, metadata: JournalMetadata): AsyncResult<void, NoteCreationError> {
+  /**
+   * Claims an existing note as this journal's note for `metadata.anchor`.
+   *
+   * `beforeWrite` runs inside the same frontmatter write, immediately before the claim — a
+   * caller stripping an old claim gets one write, so nothing that fails here can leave the note
+   * claimed by nobody.
+   */
+  attachNote(
+    name: string,
+    path: VaultPath,
+    metadata: JournalMetadata,
+    beforeWrite?: (fm: Record<string, unknown>) => void,
+  ): AsyncResult<void, NoteCreationError> {
     const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
     if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
-    const mutator = mutatorResult.value;
+    const claim = mutatorResult.value;
 
     return attempt.in(this, async function* () {
       // One note per anchor: a stray file whose name parses to a date inside an occupied
@@ -240,7 +252,10 @@ export class NoteCreationService {
         const content = yield* this.#content.renderFor(name, metadata, basenameOf(path), path);
         if (content !== "") yield* this.#notes.write(path, content);
       }
-      yield* this.#notes.updateFrontmatter(path, mutator);
+      yield* this.#notes.updateFrontmatter(path, (fm) => {
+        beforeWrite?.(fm);
+        claim(fm);
+      });
     });
   }
 }
