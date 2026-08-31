@@ -115,13 +115,36 @@ export class BulkAddService {
     actions: ResolvedAction[],
     dryRun: boolean,
     onProgress?: (done: number, total: number) => void,
+    noteletTypeId?: string,
   ): Promise<BulkLogEntry[]> {
     const log: BulkLogEntry[] = [];
+    const nextCounter = this.#counterFor(journalName, noteletTypeId);
     for (const action of actions) {
-      log.push(await this.#applyOne(journalName, action, dryRun));
+      log.push(await this.#applyOne(journalName, action, dryRun, noteletTypeId, nextCounter));
       onProgress?.(log.length, actions.length);
     }
     return log;
+  }
+
+  // The index does not advance mid-run — it only learns of a write once vault events land — so
+  // the run allocates its own counters, seeded once per anchor from whatever is already there.
+  #counterAllocator(journalName: string, typeName: string): (anchor: AnchorString) => number {
+    const next = new Map<AnchorString, number>();
+    return (anchor) => {
+      const value = next.get(anchor) ?? this.#noteletPaths.nextIndex(journalName, anchor, typeName);
+      next.set(anchor, value + 1);
+      return value;
+    };
+  }
+
+  // undefined both for a period run and for a notelet type whose counter is disabled — in
+  // either case connect must receive no counter key at all.
+  #counterFor(journalName: string, noteletTypeId: string | undefined): ((anchor: AnchorString) => number) | undefined {
+    if (noteletTypeId === undefined) return undefined;
+    const config = this.#journals.get(journalName).getOrUndefined();
+    const type = config?.notelets[noteletTypeId];
+    if (!type?.counter.enabled) return undefined;
+    return this.#counterAllocator(journalName, type.name);
   }
 
   // The configured target for one note, plus which halves of it are refused for carrying an
@@ -237,7 +260,13 @@ export class BulkAddService {
     return typeof raw === "string" ? raw : undefined;
   }
 
-  async #applyOne(journalName: string, action: ResolvedAction, dryRun: boolean): Promise<BulkLogEntry> {
+  async #applyOne(
+    journalName: string,
+    action: ResolvedAction,
+    dryRun: boolean,
+    typeId: string | undefined,
+    nextCounter: ((anchor: AnchorString) => number) | undefined,
+  ): Promise<BulkLogEntry> {
     const actions: BulkLogAction[] = [];
     if (action.existing === "skip") {
       actions.push({ kind: "skipped-occupied", anchor: action.anchor });
@@ -276,6 +305,10 @@ export class BulkAddService {
         override,
         move: action.move,
         rename: action.rename,
+        ...(typeId !== undefined && {
+          typeId: typeId as TypeId,
+          ...(nextCounter !== undefined && { counter: nextCounter(action.anchor) }),
+        }),
       });
       if (result.kind === "err") actions.push({ kind: "failed", message: result.error.message });
     }
@@ -311,8 +344,9 @@ export class BulkAddService {
     actions: ResolvedAction[],
     dryRun: boolean,
     onProgress?: (done: number, total: number) => void,
+    noteletTypeId?: string,
   ): AsyncResult<BulkLogEntry[], never> {
-    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress), () => {
+    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress, noteletTypeId), () => {
       throw new InvariantError("bulk apply never rejects");
     });
   }

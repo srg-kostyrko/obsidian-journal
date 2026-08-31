@@ -611,8 +611,9 @@ describe("BulkAddService", () => {
     });
   });
 
-  describe("planning for a notelet type", () => {
+  describe("bulk adding notelets", () => {
     const TYPE = "nt_1";
+    const EMPTY_DECISIONS = { existing: {}, folder: {}, name: {} };
     let harness: TestHarness;
 
     beforeEach(async () => {
@@ -725,6 +726,90 @@ describe("BulkAddService", () => {
 
       expectOk(plan);
       expect(plan.value.notes.at(0)).toMatchObject({ kind: "skip", reason: "already-connected" });
+    });
+
+    it("connects each note as a notelet of the type", async () => {
+      harness.host.putFile("inbox/2026-06-01.md", "");
+      const service = harness.resolve(BulkAddService);
+      const plan = await service.plan("daily", parameters());
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, TYPE);
+
+      expect(harness.host.files.get("inbox/2026-06-01.md")?.frontmatter).toMatchObject({
+        journal: "daily",
+        "journal-notelet": "Standup",
+      });
+    });
+
+    // The index cannot advance mid-run, so a per-note nextIndex would hand every note the same
+    // number — and, with the counter in the name template, the same name.
+    it("numbers notes of one period in scan order", async () => {
+      harness.host.putFile("inbox/first 2026-06-01.md", "");
+      harness.host.putFile("inbox/second 2026-06-01.md", "");
+      const service = harness.resolve(BulkAddService);
+      const plan = await service.plan("daily", parameters());
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, TYPE);
+
+      const counters = actions.map((a) => harness.host.files.get(a.path)?.frontmatter?.["journal-notelet-index"]);
+      expect(counters.toSorted()).toEqual([1, 2]);
+    });
+
+    it("continues the period's existing numbering", async () => {
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: "elsewhere.md" as VaultPath,
+        typeName: "Standup",
+        typeId: TYPE as TypeId,
+        counter: 7,
+      });
+      harness.host.putFile("inbox/2026-06-01.md", "");
+      const service = harness.resolve(BulkAddService);
+      const plan = await service.plan("daily", parameters());
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, TYPE);
+
+      expect(harness.host.files.get("inbox/2026-06-01.md")?.frontmatter).toMatchObject({
+        "journal-notelet-index": 8,
+      });
+    });
+
+    it("restarts numbering in each period", async () => {
+      harness.host.putFile("inbox/2026-06-01.md", "");
+      harness.host.putFile("inbox/2026-06-02.md", "");
+      const service = harness.resolve(BulkAddService);
+      const plan = await service.plan("daily", parameters());
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), false, undefined, TYPE);
+
+      expect(harness.host.files.get("inbox/2026-06-01.md")?.frontmatter).toMatchObject({
+        "journal-notelet-index": 1,
+      });
+      expect(harness.host.files.get("inbox/2026-06-02.md")?.frontmatter).toMatchObject({
+        "journal-notelet-index": 1,
+      });
+    });
+
+    it("writes nothing on a dry run", async () => {
+      harness.host.putFile("inbox/2026-06-01.md", "");
+      const service = harness.resolve(BulkAddService);
+      const plan = await service.plan("daily", parameters());
+      expectOk(plan);
+      const actions = plan.value.notes.filter((n): n is PlannedAction => n.kind === "action");
+
+      await service.apply("daily", service.resolve(actions, EMPTY_DECISIONS), true, undefined, TYPE);
+
+      expect(harness.host.files.get("inbox/2026-06-01.md")?.frontmatter).toEqual({});
     });
   });
 });
