@@ -97,6 +97,23 @@ export class NoteletPathService {
     return this.contextFor(config, type, metadata).flatMap((context) => this.#renderedName(config, type, context));
   }
 
+  /**
+   * Where this type's templates say the notelet goes, with no suffixing.
+   *
+   * `availablePathFor` steps past a taken path because it is about to create a file there.
+   * Connect and bulk add only compare — a suffix would describe a name they will not write.
+   */
+  pathFor(
+    config: JournalConfig,
+    type: NoteletType,
+    metadata: NoteletMetadata,
+  ): Result<VaultPath, JournalNotFoundError | EmptyNoteNameError> {
+    return this.#frontmatter.buildMetadata(config.name, metadata.anchor).flatMap((period) => {
+      const context = this.#contextFromPeriod(config, type, metadata, period);
+      return this.#renderedName(config, type, context).map((name) => this.#pathFrom(type, context, name));
+    });
+  }
+
   bodyContextFor(
     config: JournalConfig,
     type: NoteletType,
