@@ -15,7 +15,7 @@ import { JournalsRepository } from "./repository";
 import { buildNoteletType, fixedJournal } from "./testing";
 import { JournalsEventsToken } from "./tokens";
 
-import type { NoteletType, TypeId } from "./notelets/config";
+import type { TypeId } from "./notelets/config";
 
 const addedRow: NavBlockSegment = {
   template: "added to the copy",
@@ -310,36 +310,27 @@ describe("JournalsRepository", () => {
   });
 
   describe("notelet types", () => {
-    it("adds a type and announces it", async () => {
-      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
-      const seen: { journalName: string; type: NoteletType }[] = [];
-      events.on("noteletTypeAdded", (journalName, type) => {
-        seen.push({ journalName, type });
-      });
+    it("adds a type under its own id", async () => {
+      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
       const type = buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" });
 
       const result = repo.addNoteletType("daily", type);
 
       expect(result.isOk()).toBe(true);
       expect(repo.get("daily").getOrUndefined()?.notelets).toMatchObject({ nt_1: type });
-      expect(seen).toEqual([{ journalName: "daily", type }]);
     });
 
-    it("deletes a type and announces it", async () => {
+    it("removes only the deleted type from the record", async () => {
       const seeded = buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" });
-      const { repo, events } = await buildRepo({
-        daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_1: seeded } }),
-      });
-      const seen: { journalName: string; typeId: TypeId }[] = [];
-      events.on("noteletTypeDeleted", (journalName, typeId) => {
-        seen.push({ journalName, typeId });
+      const kept = buildNoteletType({ id: "nt_2" as TypeId, name: "Retro" });
+      const { repo } = await buildRepo({
+        daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_1: seeded, nt_2: kept } }),
       });
 
       const result = repo.deleteNoteletType("daily", "nt_1" as TypeId);
 
       expect(result.isOk()).toBe(true);
-      expect(repo.get("daily").getOrUndefined()?.notelets).toEqual({});
-      expect(seen).toEqual([{ journalName: "daily", typeId: "nt_1" }]);
+      expect(repo.get("daily").getOrUndefined()?.notelets).toEqual({ nt_2: kept });
     });
 
     it("refuses to add a type to a journal that does not exist", async () => {

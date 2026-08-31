@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
+import { commandsCoreModule } from "@/commands/module";
+import { CommandsRepository } from "@/commands/repository";
+import { buildCommand } from "@/commands/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalLifecycleFlowError, UnknownJournalError } from "@/journals/errors";
@@ -10,7 +13,6 @@ import type { TypeId } from "@/journals/notelets/config";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsRepository } from "@/journals/repository";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
-import { JournalsEventsToken } from "@/journals/tokens";
 import { SettingsUiService } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -26,7 +28,7 @@ describe("DeleteNoteletTypeFlow", () => {
 
   beforeEach(async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: {
         journals: {
           daily: fixedJournal(
@@ -131,7 +133,7 @@ describe("DeleteNoteletTypeFlow", () => {
 
   it.each(["keep", "clear", "delete"] as const)("leaves another type's notelets untouched in mode=%s", async (mode) => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: {
         journals: {
           daily: fixedJournal(
@@ -184,16 +186,17 @@ describe("DeleteNoteletTypeFlow", () => {
     expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ "journal-notelet": "Recipe" });
   });
 
-  it("emits noteletTypeDeleted, the event the command registry retires the type's command on", async () => {
-    const events = harness.resolve(JournalsEventsToken);
-    const seen: [string, string][] = [];
-    events.on("noteletTypeDeleted", (journalName, typeId) => seen.push([journalName, typeId]));
+  it("retires the type's command, whose typeId would otherwise resolve to nothing", async () => {
+    const commands = harness.resolve(CommandsRepository);
+    commands.create("cmd-1", buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }));
+    commands.create("cmd-2", buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_2" } }));
 
     const promise = invoke();
     openModal().submit({ mode: "keep" });
     await promise;
 
-    expect(seen).toEqual([["daily", "nt_1"]]);
+    expect(commands.get("cmd-1").isNone()).toBe(true);
+    expect(commands.get("cmd-2").isSome()).toBe(true);
   });
 
   it("returns UserAborted('delete-notelet-type-modal') when the modal is cancelled", async () => {
@@ -229,7 +232,7 @@ describe("DeleteNoteletTypeFlow", () => {
 
   it("leaves another type's subpage on the stack untouched", async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: {
         journals: {
           daily: fixedJournal(

@@ -6,6 +6,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt, Err } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import type { TypeId } from "@/journals/notelets/config";
+import { NoteletCommandService } from "@/journals/notelets/notelet-commands";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsUiService } from "@/settings";
@@ -16,6 +17,7 @@ export class DeleteNoteletTypeFlow implements Flow<{ journalName: string; typeId
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
   readonly #connection = inject(NoteConnectionService);
+  readonly #noteletCommands = inject(NoteletCommandService);
   readonly #ui = inject(SettingsUiService);
 
   execute(parameters: { journalName: string; typeId: string }): AsyncResult<void, FlowError> {
@@ -51,6 +53,8 @@ export class DeleteNoteletTypeFlow implements Flow<{ journalName: string; typeId
       yield* this.#repository
         .deleteNoteletType(parameters.journalName, parameters.typeId as TypeId)
         .mapErr(toFlowError);
+      // The command's typeId would otherwise resolve to nothing, in all three modes.
+      this.#noteletCommands.retire(parameters.journalName, parameters.typeId as TypeId);
       const current = this.#ui.current.value;
       if (
         current?.subpage.key === "notelet-type-edit" &&

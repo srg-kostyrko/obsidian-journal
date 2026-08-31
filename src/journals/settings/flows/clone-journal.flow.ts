@@ -7,6 +7,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import type { TypeId } from "@/journals/notelets/config";
+import { NoteletCommandService } from "@/journals/notelets/notelet-commands";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsUiService } from "@/settings";
 
@@ -16,6 +17,7 @@ import { cloneJournalModal } from "../ui/modals";
 export class CloneJournalFlow implements Flow<{ journalName: string }, { name: string }, FlowError> {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
+  readonly #noteletCommands = inject(NoteletCommandService);
   readonly #ui = inject(SettingsUiService);
 
   #suggestName(sourceName: string): string {
@@ -43,13 +45,14 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
       yield* this.#repository.clone(parameters.journalName, submitted.newName).mapErr(toFlowError);
 
       // clone() copies the notelets record verbatim, ids included, and ids are unique. Clear it,
-      // then re-add each type through addNoteletType so a cloned type is indistinguishable from a
-      // hand-created one, seeded command included.
+      // then re-add each type with a fresh id and its own seeded command, so a cloned type is
+      // indistinguishable from a hand-created one.
       this.#repository.update(submitted.newName, { notelets: {} });
       if (submitted.cloneNoteletTypes && source !== undefined) {
         for (const type of Object.values(source.notelets)) {
-          const id = crypto.randomUUID() as TypeId;
-          this.#repository.addNoteletType(submitted.newName, { ...cloneFnJSON(type), id });
+          const cloned = { ...cloneFnJSON(type), id: crypto.randomUUID() as TypeId };
+          this.#repository.addNoteletType(submitted.newName, cloned);
+          this.#noteletCommands.seed(submitted.newName, cloned);
         }
       }
 

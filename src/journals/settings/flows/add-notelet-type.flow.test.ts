@@ -6,7 +6,6 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
 import { fixedJournal } from "@/journals/testing";
-import { JournalsEventsToken } from "@/journals/tokens";
 import { SettingsUiService } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -51,14 +50,11 @@ describe("AddNoteletTypeFlow", () => {
     expect(config?.notelets[typeId]?.id).toBe(typeId);
   });
 
-  it("announces the new type instead of writing a command itself", async () => {
-    const seen: string[] = [];
-    harness.resolve(JournalsEventsToken).on("noteletTypeAdded", (_journalName, type) => seen.push(type.name));
+  it("seeds the type's command", async () => {
+    const typeId = await addStandup();
 
-    await addStandup();
-
-    expect(seen).toEqual(["Standup"]);
-    expect([...harness.resolve(CommandsRepository).find().entries()]).toEqual([]);
+    const commands = [...harness.resolve(CommandsRepository).find().entries()].map(([, command]) => command);
+    expect(commands).toEqual([expect.objectContaining({ target: { kind: "notelet", journalName: "Work", typeId } })]);
   });
 
   it("navigates to the new type's page", async () => {

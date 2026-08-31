@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { CommandsRepository, commandsModule } from "@/commands";
 import { DynamicCommandRegistry } from "@/commands/command-registry";
+import { commandsCoreModule } from "@/commands/module";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { JournalLifecycleFlowError, JournalNameTakenError, UnknownJournalError } from "@/journals/errors";
 import { journalsCoreModule } from "@/journals/module";
@@ -24,7 +25,7 @@ describe("CloneJournalFlow", () => {
 
   beforeEach(async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: { journals: { daily: daily() } },
     });
   });
@@ -64,7 +65,7 @@ describe("CloneJournalFlow", () => {
 
   it("numbers the suggested name past copies that already exist", async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: {
         journals: {
           daily: daily(),
@@ -89,7 +90,7 @@ describe("CloneJournalFlow", () => {
 
   it("maps a name-taken error to JournalLifecycleFlowError", async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: { journals: { daily: daily(), weekly: fixedJournal("weekly", { type: "week" }) } },
     });
     const promise = harness.resolve(Flows).invoke(CloneJournalFlow, { journalName: "daily" });
@@ -103,7 +104,7 @@ describe("CloneJournalFlow", () => {
 
   it("fails without opening a modal when the source journal is gone", async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
     });
     const result = await harness.resolve(Flows).invoke(CloneJournalFlow, { journalName: "daily" });
     expect(result.kind === "err" && (result.error as JournalLifecycleFlowError).cause).toBeInstanceOf(
@@ -114,7 +115,7 @@ describe("CloneJournalFlow", () => {
 
   it("clones notelet types with fresh ids when the toggle is on", async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
       data: {
         journals: {
           daily: fixedJournal(

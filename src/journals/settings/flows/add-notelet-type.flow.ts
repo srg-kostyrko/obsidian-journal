@@ -4,6 +4,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { attempt, AsyncResult, Err } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import { noteletTypeDefaults, type TypeId } from "@/journals/notelets/config";
+import { NoteletCommandService } from "@/journals/notelets/notelet-commands";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsUiService } from "@/settings";
 
@@ -13,6 +14,7 @@ import { noteletTypeSubpage } from "../ui/notelet-type-subpage";
 export class AddNoteletTypeFlow implements Flow<{ journalName: string }, { typeId: TypeId }, FlowError> {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
+  readonly #noteletCommands = inject(NoteletCommandService);
   readonly #ui = inject(SettingsUiService);
 
   execute(parameters: { journalName: string }): AsyncResult<{ typeId: TypeId }, FlowError> {
@@ -34,6 +36,7 @@ export class AddNoteletTypeFlow implements Flow<{ journalName: string }, { typeI
       const typeId = crypto.randomUUID() as TypeId;
       const type = { ...noteletTypeDefaults(typeId), name: submitted.name };
       yield* this.#repository.addNoteletType(parameters.journalName, type).mapErr(toFlowError);
+      this.#noteletCommands.seed(parameters.journalName, type);
 
       this.#ui.push(noteletTypeSubpage, { journalName: parameters.journalName, typeId });
       return { typeId };
