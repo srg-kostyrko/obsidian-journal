@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { anchor } from "@/calendar/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import type { VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
 import type { NoteletType, TypeId } from "@/journals/notelets/config";
 import { JournalsRepository } from "@/journals/repository";
@@ -99,5 +102,48 @@ describe("RenameNoteletTypeFlow", () => {
 
     expect(result.kind).toBe("err");
     expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  describe("cascading notelets", () => {
+    const standupPath = "Standup 1.md" as VaultPath;
+    const retroPath = "Retro 1.md" as VaultPath;
+
+    beforeEach(() => {
+      const index = harness.resolve(JournalsIndex);
+      for (const [path, typeName, typeId] of [
+        [standupPath, "Standup", "nt_7f3a"],
+        [retroPath, "Retro", "nt_91cc"],
+      ] as const) {
+        harness.host.putFile(path, "content", {
+          journal: "Work",
+          "journal-date": "2026-06-01",
+          "journal-notelet": typeName,
+        });
+        index.register({
+          kind: "notelet",
+          journalName: "Work",
+          anchor: anchor("2026-06-01"),
+          path,
+          typeName,
+          typeId: typeId as TypeId,
+        });
+      }
+    });
+
+    it("rewrites the stored type name on every notelet of the renamed type", async () => {
+      const promise = harness.resolve(Flows).invoke(RenameNoteletTypeFlow, { journalName: "Work", typeId: "nt_7f3a" });
+      harness.modals.lastOpen<{ currentName: string }, { newName: string }>().submit({ newName: "Daily sync" });
+      await promise;
+
+      expect(harness.host.files.get(standupPath)?.frontmatter).toMatchObject({ "journal-notelet": "Daily sync" });
+    });
+
+    it("leaves a different type's notelets under their own stored name", async () => {
+      const promise = harness.resolve(Flows).invoke(RenameNoteletTypeFlow, { journalName: "Work", typeId: "nt_7f3a" });
+      harness.modals.lastOpen<{ currentName: string }, { newName: string }>().submit({ newName: "Daily sync" });
+      await promise;
+
+      expect(harness.host.files.get(retroPath)?.frontmatter).toMatchObject({ "journal-notelet": "Retro" });
+    });
   });
 });

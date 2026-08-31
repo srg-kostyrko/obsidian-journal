@@ -3,6 +3,7 @@ import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt, Err } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
+import { NoteConnectionService } from "@/journals/notes/note-connection";
 import { JournalsRepository } from "@/journals/repository";
 
 import { renameNoteletTypeModal } from "../ui/modals";
@@ -14,6 +15,7 @@ export class RenameNoteletTypeFlow implements Flow<
 > {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
+  readonly #connection = inject(NoteConnectionService);
 
   execute(parameters: { journalName: string; typeId: string }): AsyncResult<{ newName: string }, FlowError> {
     const configOpt = this.#repository.get(parameters.journalName);
@@ -41,11 +43,16 @@ export class RenameNoteletTypeFlow implements Flow<
         return yield* new Err(toFlowError(new UnknownJournalError(parameters.journalName)));
       }
 
-      // Notelets already written keep the old name in their frontmatter: rewriting them is the
-      // cascade seam a later slice owns, not this rename.
+      // type.name is read from the re-read config above, before this update — it is still the
+      // old name. Capture it now so the rename call below doesn't need the reader to reason
+      // about ordering.
+      const oldName = type.name;
       this.#repository.update(parameters.journalName, {
         notelets: { ...config.notelets, [parameters.typeId]: { ...type, name: submitted.newName } },
       });
+      // The stored type name is the reference parseEntry resolves by, so notelets written under
+      // the old one have to move with it or they orphan.
+      yield* this.#connection.renameNoteletTypeAll(parameters.journalName, oldName, submitted.newName);
       return { newName: submitted.newName };
     });
   }
