@@ -7,6 +7,7 @@ import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { buildNoteletType, customJournal, fixedJournal } from "../testing";
@@ -1079,9 +1080,17 @@ describe("journal-wide cascades over notelets", () => {
       typeName: "Retired",
       typeId: null,
     });
+    // Building a NoteletMetadata with typeId: null and calling writeMutator would also leave
+    // the note unwritten — config.notelets[null] misses, writeMutator errors, and #forEach's
+    // best-effort handling swallows it. That's attempted-then-discarded, not skipped, and reads
+    // identically on updateFrontmatter (never called) and on the resulting frontmatter (also
+    // unchanged) — outcome alone can't tell the two apart. Spying on writeMutator pins the
+    // mechanism instead: a deliberate skip never calls it for this entry at all.
+    const writeMutatorSpy = vi.spyOn(harness.resolve(FrontmatterService), "writeMutator");
 
     await harness.resolve(NoteConnectionService).reapplyAll("daily");
 
+    expect(writeMutatorSpy).not.toHaveBeenCalled();
     expect(harness.host.files.get(noteletPath)?.frontmatter).toEqual({
       journal: "daily",
       "journal-date": "2026-06-01",
