@@ -1638,7 +1638,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=keep": "子笔记原样保留在库中。",
-        "mode=clear": "子笔记保留在库中，但会从其 frontmatter 中移除子笔记类型属性。",
+        "mode=clear": "子笔记保留在库中，但会从其 frontmatter 中移除日记和子笔记类型的所有属性。",
         "mode=delete": "与此类型关联的所有子笔记都将从库中删除。"
       }
     }

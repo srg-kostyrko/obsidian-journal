@@ -1793,7 +1793,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=keep": "Die Kurznotizen bleiben unverändert in deinem Vault.",
-        "mode=clear": "Die Kurznotizen bleiben in deinem Vault, die Eigenschaften des Kurznotiz-Typs werden jedoch aus ihrem Frontmatter entfernt.",
+        "mode=clear": "Die Kurznotizen bleiben in deinem Vault, aber alle Eigenschaften des Journals und des Kurznotiz-Typs werden aus ihrem Frontmatter entfernt.",
         "mode=delete": "Alle Kurznotizen dieses Typs werden aus deinem Vault gelöscht."
       }
     }

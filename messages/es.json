@@ -1783,7 +1783,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=keep": "Las notas breves permanecen en tu bóveda sin cambios.",
-        "mode=clear": "Las notas breves permanecen en tu bóveda, pero las propiedades del tipo de nota breve se eliminan de su frontmatter.",
+        "mode=clear": "Las notas breves permanecen en tu bóveda, pero todas las propiedades del diario y del tipo de nota breve se eliminan de su frontmatter.",
         "mode=delete": "Todas las notas breves de este tipo se eliminan de tu bóveda."
       }
     }

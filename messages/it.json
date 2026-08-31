@@ -1791,7 +1791,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=keep": "Le note brevi restano invariate nel tuo vault.",
-        "mode=clear": "Le note brevi restano nel tuo vault, ma le proprietà del tipo di nota breve vengono rimosse dal loro frontmatter.",
+        "mode=clear": "Le note brevi restano nel tuo vault, ma tutte le proprietà del diario e del tipo di nota breve vengono rimosse dal loro frontmatter.",
         "mode=delete": "Tutte le note brevi di questo tipo vengono eliminate dal tuo vault."
       }
     }

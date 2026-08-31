@@ -1791,7 +1791,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=keep": "As notas breves permanecem inalteradas no seu cofre.",
-        "mode=clear": "As notas breves permanecem no seu cofre, mas as propriedades do tipo de nota breve são removidas do frontmatter delas.",
+        "mode=clear": "As notas breves permanecem no seu cofre, mas todas as propriedades do diário e do tipo de nota breve são removidas do frontmatter delas.",
         "mode=delete": "Todas as notas breves deste tipo serão excluídas do seu cofre."
       }
     }

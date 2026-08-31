@@ -1797,7 +1797,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=keep": "Notelets stay in your vault unchanged.",
-        "mode=clear": "Notelets stay in your vault, but the notelet type properties are removed from their frontmatter.",
+        "mode=clear": "Notelets stay in your vault, but all journal and notelet type properties are removed from their frontmatter.",
         "mode=delete": "All notelets of this type are deleted from your vault."
       }
     }

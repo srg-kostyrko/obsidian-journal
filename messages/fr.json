@@ -1791,7 +1791,7 @@
       "selectors": ["mode"],
       "match": {
         "mode=keep": "Vos notes brèves restent inchangées dans votre coffre-fort.",
-        "mode=clear": "Les notes brèves restent dans votre coffre-fort, mais les propriétés du type de note brève sont retirées de leur frontmatter.",
+        "mode=clear": "Les notes brèves restent dans votre coffre-fort, mais toutes les propriétés du journal et du type de note brève sont retirées de leur frontmatter.",
         "mode=delete": "Toutes les notes brèves de ce type sont supprimées de votre coffre-fort."
       }
     }
