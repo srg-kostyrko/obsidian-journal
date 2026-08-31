@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { screen, waitFor } from "@testing-library/vue";
+import { screen, waitFor, within } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { DayPeriod, type OpenInterval } from "@/calendar";
@@ -10,10 +10,11 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../../journals-index";
 import { journalsCoreModule } from "../../module";
-import { fixedJournal } from "../../testing";
+import { buildNoteletType, fixedJournal } from "../../testing";
 
 import ConnectNoteModal from "./ConnectNoteModal.vue";
 
+import type { TypeId } from "../../notelets/config";
 import type { Prompt } from "../../prompts/config";
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
@@ -321,6 +322,97 @@ describe("ConnectNoteModal", () => {
           m.connect_note_modal_move_description({ current: "inbox", configured: m.common_vault_root() }),
         ),
       ).toBeTruthy();
+    });
+
+    describe("with a journal that has notelet types", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                {
+                  notelets: {
+                    nt_1: buildNoteletType({
+                      id: "nt_1" as TypeId,
+                      name: "Standup",
+                      nameTemplate: "Standup {{notelet_index}}",
+                    }),
+                  },
+                },
+              ),
+            },
+          },
+        });
+      });
+
+      it("offers the journal's types beside the period note", () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+
+        const kind = screen.getByLabelText(m.connect_note_modal_kind_label());
+        expect(within(kind).getByText(m.connect_note_modal_kind_period())).toBeTruthy();
+        expect(within(kind).getByText("Standup")).toBeTruthy();
+      });
+
+      it("submits the chosen type", async () => {
+        const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+        await userEvent.click(screen.getByText(m.connect_note_modal_connect()));
+
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", typeId: "nt_1" }));
+      });
+
+      it("submits no type for the period note", async () => {
+        const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.click(screen.getByText(m.connect_note_modal_connect()));
+
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect" }));
+        expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
+      });
+
+      // Several notelets per anchor is the design, so there is no occupant to replace.
+      it("hides the override row for a type even when the date is taken", async () => {
+        harness.resolve(JournalsIndex).register({
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: "Journal/2026-06-01.md" as VaultPath,
+        });
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+
+        expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
+      });
+
+      it("describes the rename against the type's name, not the journal's", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+
+        expect(
+          screen.getByText(m.connect_note_modal_rename_description({ current: "n.md", configured: "Standup 1.md" })),
+        ).toBeTruthy();
+      });
+    });
+
+    it("offers no kind row for a journal with no notelet types", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+
+      expect(screen.queryByLabelText(m.connect_note_modal_kind_label())).toBeNull();
     });
   });
 });

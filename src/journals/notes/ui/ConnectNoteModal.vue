@@ -15,14 +15,18 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { CycleService } from "../../cycle";
 import { FrontmatterService } from "../../frontmatter";
 import { JournalsIndex } from "../../journals-index";
+import { NoteletPathService } from "../../notelets/notelet-path";
 import { pickingForWrite } from "../../picking";
 import { promptsInTemplate } from "../../prompts/prompts-in-path";
 import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
+import { useIndexVersion } from "../../use-index-version";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
 
 import type { ConnectNoteResult } from "./modals";
+import type { NoteletType, TypeId } from "../../notelets/config";
+import type { NoteletMetadata } from "../../types";
 
 const props = defineProps<{ path: VaultPath }>();
 const api = useModal<ConnectNoteResult>();
@@ -33,6 +37,8 @@ const cycle = useService(CycleService);
 const timeline = useService(TimelineService);
 const frontmatter = useService(FrontmatterService);
 const paths = useService(NotePathService);
+const noteletPaths = useService(NoteletPathService);
+const indexVersion = useIndexVersion();
 
 const existing = index.entryByPath(props.path);
 const existingJournal = existing.isSome() ? existing.value.journalName : "";
@@ -43,16 +49,26 @@ const dateAnchor = ref<AnchorString>("" as AnchorString);
 const override = ref(false);
 const rename = ref(false);
 const move = ref(false);
+const selectedType = ref<string>("");
 
 const selectedConfig = computed(() => journals.get(selected.value).getOrUndefined());
 const picking = computed<Picking>(() => (selectedConfig.value ? pickingForWrite(selectedConfig.value.write) : "day"));
 const bounds = computed(() => timeline.boundsOf(selected.value));
 const dateModel = useAnchorField({ anchor: dateAnchor, picking });
 
+const types = computed<readonly [string, NoteletType][]>(() =>
+  Object.entries(selectedConfig.value?.notelets ?? {}).toSorted((a, b) => a[1].name.localeCompare(b[1].name)),
+);
+
+const activeType = computed(() =>
+  selectedType.value ? selectedConfig.value?.notelets[selectedType.value] : undefined,
+);
+
 watch([dateAnchor, selected], () => {
   override.value = false;
   rename.value = false;
   move.value = false;
+  selectedType.value = "";
 });
 
 const anchor = computed(() => {
@@ -62,6 +78,8 @@ const anchor = computed(() => {
 });
 
 const occupant = computed(() => {
+  // Several notelets per anchor is the design, so a notelet type has no occupant to replace.
+  if (activeType.value) return;
   const a = anchor.value;
   if (!a) return;
   const found = index.entryByAnchor(selected.value, a);
@@ -71,7 +89,22 @@ const occupant = computed(() => {
 
 const configuredPath = computed(() => {
   const a = anchor.value;
-  if (!a) return;
+  if (!a || !selectedConfig.value) return;
+  const type = activeType.value;
+  if (type) {
+    // Reading the index inside a computed needs useIndexVersion(): JournalsIndex is not
+    // Vue-reactive, and without this the previewed counter would freeze as of mount.
+    void indexVersion.value;
+    const metadata: NoteletMetadata = {
+      kind: "notelet",
+      journalName: selected.value,
+      anchor: a,
+      typeId: selectedType.value as TypeId,
+      counter: type.counter.enabled ? noteletPaths.nextIndex(selected.value, a, type.name) : undefined,
+    };
+    const path = noteletPaths.pathFor(selectedConfig.value, type, metadata);
+    return path.isOk() ? path.value : undefined;
+  }
   const meta = frontmatter.buildMetadata(selected.value, a);
   if (!meta.isOk()) return;
   const path = paths.pathFor(selected.value, meta.value);
@@ -99,16 +132,18 @@ const configuredFolder = computed(() =>
   configuredPath.value ? folderLabel(splitVaultPath(configuredPath.value)[0]) : "",
 );
 
-const nameBlocked = computed(() =>
-  selectedConfig.value
+const nameBlocked = computed(() => {
+  if (activeType.value) return promptsInTemplate(activeType.value.nameTemplate, activeType.value.prompts).length > 0;
+  return selectedConfig.value
     ? promptsInTemplate(selectedConfig.value.nameTemplate, selectedConfig.value.prompts).length > 0
-    : false,
-);
-const folderBlocked = computed(() =>
-  selectedConfig.value
+    : false;
+});
+const folderBlocked = computed(() => {
+  if (activeType.value) return promptsInTemplate(activeType.value.folder, activeType.value.prompts).length > 0;
+  return selectedConfig.value
     ? promptsInTemplate(selectedConfig.value.folder, selectedConfig.value.prompts).length > 0
-    : false,
-);
+    : false;
+});
 
 const outOfBounds = computed(() => {
   const a = anchor.value;
@@ -132,6 +167,7 @@ function connect(): void {
     override: override.value,
     rename: rename.value,
     move: move.value,
+    ...(selectedType.value && { typeId: selectedType.value as TypeId }),
   });
 }
 </script>
@@ -168,6 +204,13 @@ function connect(): void {
         <option v-for="name in journalNames" :key="name" :value="name">{{ name }}</option>
       </UiDropdown>
     </UiSettingRow>
+    <UiSettingRow v-if="types.length > 0">
+      <template #name>{{ m.connect_note_modal_kind_label() }}</template>
+      <UiDropdown v-model="selectedType" :aria-label="m.connect_note_modal_kind_label()">
+        <option value="">{{ m.connect_note_modal_kind_period() }}</option>
+        <option v-for="[id, type] in types" :key="id" :value="id">{{ type.name }}</option>
+      </UiDropdown>
+    </UiSettingRow>
     <UiSettingRow>
       <template #name>{{ m.connect_note_modal_date_label() }}</template>
       <DatePicker v-model="dateModel" :picking="picking" :bounds="bounds" />
@@ -183,7 +226,11 @@ function connect(): void {
     <UiSettingRow v-if="needRename">
       <template #name>{{ m.connect_note_modal_rename_label() }}</template>
       <template #description>
-        <span v-if="nameBlocked">{{ m.connect_note_modal_rename_refused_prompt() }}</span>
+        <span v-if="nameBlocked">{{
+          activeType
+            ? m.connect_note_modal_rename_refused_prompt_notelet()
+            : m.connect_note_modal_rename_refused_prompt()
+        }}</span>
         <template v-else>
           {{ m.connect_note_modal_rename_description({ current: currentName, configured: configuredName }) }}
         </template>
@@ -193,7 +240,9 @@ function connect(): void {
     <UiSettingRow v-if="needMove">
       <template #name>{{ m.connect_note_modal_move_label() }}</template>
       <template #description>
-        <span v-if="folderBlocked">{{ m.connect_note_modal_move_refused_prompt() }}</span>
+        <span v-if="folderBlocked">{{
+          activeType ? m.connect_note_modal_move_refused_prompt_notelet() : m.connect_note_modal_move_refused_prompt()
+        }}</span>
         <template v-else>
           {{ m.connect_note_modal_move_description({ current: currentFolder, configured: configuredFolder }) }}
         </template>

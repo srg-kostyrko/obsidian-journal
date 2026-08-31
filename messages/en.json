@@ -360,6 +360,8 @@
 
   "command_connect_note": "Connect note to a journal",
   "connect_note_modal_date_label": "Date",
+  "connect_note_modal_kind_label": "Connect as",
+  "connect_note_modal_kind_period": "The journal's own note",
   "connect_note_modal_move_description": "The note's folder ({current}) differs from the journal's configured folder ({configured}).",
   "connect_note_modal_override_description": "Another note ({path}) is connected to this date. It will be disconnected if you enable this.",
   "connect_note_modal_override_label": "Replace the note already connected to this date",
@@ -367,7 +369,9 @@
   "connect_note_modal_rename_label": "Rename file to match the journal",
   "connect_note_modal_move_label": "Move file into the journal's folder",
   "connect_note_modal_rename_refused_prompt": "This journal asks a question that goes into the note name, so the note keeps its own name.",
+  "connect_note_modal_rename_refused_prompt_notelet": "This notelet type asks a question that goes into the note name, so the note keeps its own name.",
   "connect_note_modal_move_refused_prompt": "This journal asks a question that goes into the folder, so the note stays in its current folder.",
+  "connect_note_modal_move_refused_prompt_notelet": "This notelet type asks a question that goes into the folder, so the note stays in its current folder.",
   "connect_note_modal_connect": "Connect",
   "connect_note_modal_connected_to": "This note is connected to \"{journalName}\".",
   "connect_note_modal_disconnect": "Disconnect",
