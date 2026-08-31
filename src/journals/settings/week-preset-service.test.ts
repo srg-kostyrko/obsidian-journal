@@ -30,7 +30,16 @@ function weekly(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}): R
 
 function weeklyWithNotelet(): Record<string, JournalConfig> {
   const config = fixedJournal("weekly", { type: "week" });
-  return { weekly: { ...config, notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } } };
+  return {
+    weekly: {
+      ...config,
+      // addEndDate on: a period note's mutator would otherwise clear journal-end-date on both
+      // the correct notelet path and a fallen-through period-mutator path alike, so "writes no
+      // end date" couldn't tell the two apart.
+      frontmatter: { ...config.frontmatter, addEndDate: true },
+      notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
+    },
+  };
 }
 
 function seedWeek(harness: TestHarness, path: string, anchorDate: string, endDate?: string): void {
@@ -242,17 +251,22 @@ describe("WeekPresetService", () => {
     expect(frontmatterOf(harness, "sprints/1.md")?.["journal-date"]).toBe("2026-06-01");
   });
 
-  it("re-anchors a weekly journal's notelets when the grid moves", async () => {
+  // 2026's ISO and Western week numbers coincide, so a seed there can't tell "carry the note's
+  // week identity forward" apart from "re-read its old anchor under the new grid" — the two
+  // answers only diverge for a boundary anchor like this one; see the period test right below
+  // this describe block for the same shape.
+  it("preserves a notelet's week identity rather than re-reading its old anchor under the new grid", async () => {
     const harness = await testContainer({
       modules: MODULES,
-      data: { journals: weeklyWithNotelet(), calendar: ISO, calendarDisplay: {} },
+      data: { journals: weeklyWithNotelet(), calendar: WESTERN, calendarDisplay: {} },
     });
-    seedNotelet(harness, "week/standup.md", "2026-06-01");
+    seedNotelet(harness, "week/standup.md", "2025-11-02");
 
-    await harness.resolve(WeekPresetService).apply(WESTERN);
+    await harness.resolve(WeekPresetService).apply(ISO);
 
+    // 2025-10-27 is the containment answer — the ISO week holding the old Sunday anchor.
     const frontmatter = frontmatterOf(harness, "week/standup.md") ?? {};
-    expect(frontmatter).toMatchObject({ "journal-date": "2026-05-31", "journal-notelet": "Standup" });
+    expect(frontmatter).toMatchObject({ "journal-date": "2025-11-03", "journal-notelet": "Standup" });
     expect(frontmatter).not.toHaveProperty("journal-end-date");
   });
 

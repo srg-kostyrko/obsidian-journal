@@ -95,6 +95,9 @@ export class WeekPresetService implements WeekPresetApplier {
           return { path, weekYear: week.year, weekOfYear: week.weekOfYear, endDate };
         }),
         ...this.#index.noteletsFor(config.name).map((entry) => {
+          // Same old-grid discipline as the period arm above: this read has to happen here,
+          // before #reanchor's nextTick() installs the new grid, or the week it derives answers
+          // for the wrong grid.
           const week = WeekPeriod.containing(CalendarDate.fromAnchor(entry.anchor));
           return {
             path: entry.path,

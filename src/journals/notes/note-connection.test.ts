@@ -898,7 +898,14 @@ describe("NoteConnectionService", () => {
           modules: [journalsCoreModule],
           data: {
             journals: {
-              weekly: { ...weekly, notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+              weekly: {
+                ...weekly,
+                // addEndDate on: with it off, the period mutator also clears journal-end-date,
+                // so "writes no end date" would pass whether or not a notelet actually used the
+                // notelet mutator — this is what makes the assertion mean something.
+                frontmatter: { ...weekly.frontmatter, addEndDate: true },
+                notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
+              },
             },
           },
         });
@@ -1009,6 +1016,45 @@ describe("NoteConnectionService", () => {
         expect(result.value.failed).toBe(0);
         expect(harness.host.files.get(firstPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
         expect(harness.host.files.get(secondPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
+      });
+
+      it("keeps a notelet write failure out of both failed and rewritten", async () => {
+        const periodPath = "week/2026-W23.md" as VaultPath;
+        harness.host.putFile(periodPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
+        harness
+          .resolve(JournalsIndex)
+          .register({ journalName: "weekly", anchor: anchor("2026-06-01"), path: periodPath });
+
+        harness.host.putFile(noteletPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Retired",
+        });
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: noteletPath,
+          typeName: "Retired",
+          typeId: null,
+        });
+
+        // "Retired" matches no configured type, so #noteletMetadataAt yields
+        // NoteletTypeNotFoundError and this write fails — logged, never counted. The period
+        // note's clean move is the only thing failed/rewritten may see.
+        const result = await harness.resolve(NoteConnectionService).reanchorAll(
+          "weekly",
+          new Map([
+            [periodPath, { anchor: anchor("2026-06-08") }],
+            [noteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Retired" }],
+          ]),
+        );
+
+        expectOk(result);
+        expect(result.value.failed).toBe(0);
+        expect(result.value.rewritten).toBe(1);
+        expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-08" });
+        expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-05-31" });
       });
     });
   });
