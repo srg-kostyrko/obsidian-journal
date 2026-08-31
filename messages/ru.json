@@ -1796,6 +1796,44 @@
   "journal_notelet_name_unique_error": "В этом журнале уже есть тип подзаметки с таким названием.",
   "journal_notelet_rename_modal_title": "Переименовать {name}",
   "journal_notelet_rename_tooltip": "Переименовать тип подзаметки",
+  "journal_notelet_delete_tooltip": "Удалить тип подзаметки",
+  "journal_notelet_delete_modal_title": "Удалить {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=0,countPlural=*": "С этим типом подзаметки не связано ни одной подзаметки.",
+        "count=*,countPlural=one": "С этим типом подзаметки связана {count} подзаметка.",
+        "count=*,countPlural=few": "С этим типом подзаметки связаны {count} подзаметки.",
+        "count=*,countPlural=many": "С этим типом подзаметки связано {count} подзаметок.",
+        "count=*,countPlural=*": "С этим типом подзаметки связано {count} подзаметки."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Что делать со связанными подзаметками",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Оставить подзаметки",
+        "mode=clear": "Очистить данные типа подзаметки",
+        "mode=delete": "Удалить подзаметки"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Подзаметки остаются в вашем хранилище без изменений.",
+        "mode=clear": "Подзаметки остаются в вашем хранилище, но свойства типа подзаметки удаляются из их frontmatter.",
+        "mode=delete": "Все подзаметки этого типа удаляются из вашего хранилища."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Название заметки",
   "journal_notelet_counter_label": "Нумеровать каждую подзаметку",
@@ -1821,7 +1859,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Добавить вопрос", "mode=edit": "Изменить вопрос" }
+      "match": {
+        "mode=add": "Добавить вопрос",
+        "mode=edit": "Изменить вопрос"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Путь к заметке",
@@ -1871,7 +1912,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Добавить разряд нумерации", "mode=edit": "Редактировать разряд нумерации" }
+      "match": {
+        "mode=add": "Добавить разряд нумерации",
+        "mode=edit": "Редактировать разряд нумерации"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

@@ -1760,6 +1760,42 @@
   "journal_notelet_name_unique_error": "Dieses Journal hat bereits einen Kurznotiz-Typ mit diesem Namen.",
   "journal_notelet_rename_modal_title": "{name} umbenennen",
   "journal_notelet_rename_tooltip": "Kurznotiz-Typ umbenennen",
+  "journal_notelet_delete_tooltip": "Kurznotiz-Typ löschen",
+  "journal_notelet_delete_modal_title": "{name} löschen",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "Dieser Kurznotiz-Typ hat keine verknüpften Kurznotizen.",
+        "count=1": "Dieser Kurznotiz-Typ hat 1 verknüpfte Kurznotiz.",
+        "count=*": "Dieser Kurznotiz-Typ hat {count} verknüpfte Kurznotizen."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Was mit verknüpften Kurznotizen geschehen soll",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Kurznotizen behalten",
+        "mode=clear": "Daten des Kurznotiz-Typs löschen",
+        "mode=delete": "Kurznotizen löschen"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Die Kurznotizen bleiben unverändert in deinem Vault.",
+        "mode=clear": "Die Kurznotizen bleiben in deinem Vault, die Eigenschaften des Kurznotiz-Typs werden jedoch aus ihrem Frontmatter entfernt.",
+        "mode=delete": "Alle Kurznotizen dieses Typs werden aus deinem Vault gelöscht."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Ordner",
   "journal_notelet_name_template_label": "Notizname",
   "journal_notelet_counter_label": "Jede Kurznotiz nummerieren",
@@ -1785,7 +1821,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Frage hinzufügen", "mode=edit": "Frage bearbeiten" }
+      "match": {
+        "mode=add": "Frage hinzufügen",
+        "mode=edit": "Frage bearbeiten"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Notizpfad",
@@ -1835,7 +1874,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Nummernstelle hinzufügen", "mode=edit": "Nummernstelle bearbeiten" }
+      "match": {
+        "mode=add": "Nummernstelle hinzufügen",
+        "mode=edit": "Nummernstelle bearbeiten"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

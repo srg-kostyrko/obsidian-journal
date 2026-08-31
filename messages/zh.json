@@ -1605,6 +1605,42 @@
   "journal_notelet_name_unique_error": "本日记中已存在同名的子笔记类型。",
   "journal_notelet_rename_modal_title": "重命名{name}",
   "journal_notelet_rename_tooltip": "重命名子笔记类型",
+  "journal_notelet_delete_tooltip": "删除子笔记类型",
+  "journal_notelet_delete_modal_title": "删除{name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "此子笔记类型没有已连接的子笔记。",
+        "count=1": "此子笔记类型有 1 条已连接的子笔记。",
+        "count=*": "此子笔记类型有 {count} 条已连接的子笔记。"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "如何处理已连接的子笔记",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "保留子笔记",
+        "mode=clear": "清除子笔记类型数据",
+        "mode=delete": "删除子笔记"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "子笔记原样保留在库中。",
+        "mode=clear": "子笔记保留在库中，但会从其 frontmatter 中移除子笔记类型属性。",
+        "mode=delete": "与此类型关联的所有子笔记都将从库中删除。"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "文件夹",
   "journal_notelet_name_template_label": "笔记名称",
   "journal_notelet_counter_label": "为每条子笔记编号",
@@ -1630,7 +1666,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "添加问题", "mode=edit": "编辑问题" }
+      "match": {
+        "mode=add": "添加问题",
+        "mode=edit": "编辑问题"
+      }
     }
   ],
   "journal_prompt_note_path_label": "笔记路径",
@@ -1680,7 +1719,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "添加编号位", "mode=edit": "编辑编号位" }
+      "match": {
+        "mode=add": "添加编号位",
+        "mode=edit": "编辑编号位"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

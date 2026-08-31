@@ -1750,6 +1750,42 @@
   "journal_notelet_name_unique_error": "Este diario ya tiene un tipo de nota breve con ese nombre.",
   "journal_notelet_rename_modal_title": "Cambiar el nombre de {name}",
   "journal_notelet_rename_tooltip": "Cambiar el nombre del tipo de nota breve",
+  "journal_notelet_delete_tooltip": "Eliminar tipo de nota breve",
+  "journal_notelet_delete_modal_title": "Eliminar {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "Este tipo de nota breve no tiene notas breves conectadas.",
+        "count=1": "Este tipo de nota breve tiene 1 nota breve conectada.",
+        "count=*": "Este tipo de nota breve tiene {count} notas breves conectadas."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Qué hacer con las notas breves conectadas",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Conservar las notas breves",
+        "mode=clear": "Borrar los datos del tipo de nota breve",
+        "mode=delete": "Eliminar las notas breves"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Las notas breves permanecen en tu bóveda sin cambios.",
+        "mode=clear": "Las notas breves permanecen en tu bóveda, pero las propiedades del tipo de nota breve se eliminan de su frontmatter.",
+        "mode=delete": "Todas las notas breves de este tipo se eliminan de tu bóveda."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Carpeta",
   "journal_notelet_name_template_label": "Nombre de la nota",
   "journal_notelet_counter_label": "Numerar cada nota breve",
@@ -1775,7 +1811,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Añadir pregunta", "mode=edit": "Editar pregunta" }
+      "match": {
+        "mode=add": "Añadir pregunta",
+        "mode=edit": "Editar pregunta"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Ruta de la nota",
@@ -1825,7 +1864,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Agregar dígito de numeración", "mode=edit": "Editar dígito de numeración" }
+      "match": {
+        "mode=add": "Agregar dígito de numeración",
+        "mode=edit": "Editar dígito de numeración"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

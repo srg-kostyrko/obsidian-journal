@@ -6,6 +6,7 @@ import AddNoteletTypeModal from "./AddNoteletTypeModal.vue";
 import CloneJournalModal from "./CloneJournalModal.vue";
 import CodeBlockReferenceModal from "./CodeBlockReferenceModal.vue";
 import DeleteJournalModal from "./DeleteJournalModal.vue";
+import DeleteNoteletTypeModal from "./DeleteNoteletTypeModal.vue";
 import EditFrontmatterFieldModal from "./EditFrontmatterFieldModal.vue";
 import EditNoteletCounterKeyModal from "./EditNoteletCounterKeyModal.vue";
 import EditNumberingDigitModal from "./EditNumberingDigitModal.vue";
@@ -32,6 +33,12 @@ export const addNoteletTypeModal = defineModal<{ name: string }>()({
 export const deleteJournalModal = defineModal<{ mode: "keep" | "clear" | "delete" }>()({
   component: DeleteJournalModal,
   title: ({ journalName }: { journalName: string }) => m.journal_delete_modal_title({ name: journalName }),
+});
+
+export const deleteNoteletTypeModal = defineModal<{ mode: "keep" | "clear" | "delete" }>()({
+  component: DeleteNoteletTypeModal,
+  title: ({ typeName }: { journalName: string; typeId: string; typeName: string }) =>
+    m.journal_notelet_delete_modal_title({ name: typeName }),
 });
 
 export const cloneJournalModal = defineModal<{ newName: string }>()({

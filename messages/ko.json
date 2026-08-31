@@ -1750,6 +1750,42 @@
   "journal_notelet_name_unique_error": "이 저널에는 같은 이름의 서브노트 유형이 이미 있습니다.",
   "journal_notelet_rename_modal_title": "{name} 이름 변경",
   "journal_notelet_rename_tooltip": "서브노트 유형 이름 변경",
+  "journal_notelet_delete_tooltip": "서브노트 유형 삭제",
+  "journal_notelet_delete_modal_title": "{name} 삭제",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "이 서브노트 유형에는 연결된 서브노트가 없습니다.",
+        "count=1": "이 서브노트 유형에는 연결된 서브노트가 1개 있습니다.",
+        "count=*": "이 서브노트 유형에는 연결된 서브노트가 {count}개 있습니다."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "연결된 서브노트 처리 방식",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "서브노트 유지",
+        "mode=clear": "서브노트 유형 데이터 삭제",
+        "mode=delete": "서브노트 삭제"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "서브노트는 보관함에 그대로 남습니다.",
+        "mode=clear": "서브노트는 보관함에 남지만, 프런트매터에서 서브노트 유형 속성이 제거됩니다.",
+        "mode=delete": "이 유형에 연결된 모든 서브노트를 보관함에서 삭제합니다."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "폴더",
   "journal_notelet_name_template_label": "노트 이름",
   "journal_notelet_counter_label": "각 서브노트에 번호 매기기",
@@ -1775,7 +1811,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "질문 추가", "mode=edit": "질문 편집" }
+      "match": {
+        "mode=add": "질문 추가",
+        "mode=edit": "질문 편집"
+      }
     }
   ],
   "journal_prompt_note_path_label": "노트 경로",
@@ -1825,7 +1864,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "번호 자리 추가", "mode=edit": "번호 자리 편집" }
+      "match": {
+        "mode=add": "번호 자리 추가",
+        "mode=edit": "번호 자리 편집"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

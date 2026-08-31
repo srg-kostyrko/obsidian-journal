@@ -13,6 +13,7 @@ import UiBackLink from "@/ui/UiBackLink.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { DeleteNoteletTypeFlow } from "../flows/delete-notelet-type.flow";
 import { RenameNoteletTypeFlow } from "../flows/rename-notelet-type.flow";
 
 import NoteletTypeCreationSection from "./sections/NoteletTypeCreationSection.vue";
@@ -45,6 +46,10 @@ watchEffect(() => {
 function rename(): void {
   void flows.invoke(RenameNoteletTypeFlow, { journalName, typeId });
 }
+
+function remove(): void {
+  void flows.invoke(DeleteNoteletTypeFlow, { journalName, typeId });
+}
 </script>
 
 <template>
@@ -54,6 +59,7 @@ function rename(): void {
     <UiSettingRow heading>
       <template #name>{{ type.name }}</template>
       <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_notelet_rename_tooltip()" @click="rename" />
+      <UiIconButton :icon="icons.action.delete" :tooltip="m.journal_notelet_delete_tooltip()" @click="remove" />
     </UiSettingRow>
 
     <NoteletTypeCreationSection :journal-name="journalName" :type-id="typeId" />

@@ -1764,6 +1764,42 @@
   "journal_notelet_name_unique_error": "This journal already has a notelet type with that name.",
   "journal_notelet_rename_modal_title": "Rename {name}",
   "journal_notelet_rename_tooltip": "Rename notelet type",
+  "journal_notelet_delete_tooltip": "Delete notelet type",
+  "journal_notelet_delete_modal_title": "Delete {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "This notelet type has no connected notelets.",
+        "count=1": "This notelet type has 1 connected notelet.",
+        "count=*": "This notelet type has {count} connected notelets."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "What to do with connected notelets",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Keep notelets",
+        "mode=clear": "Clear notelet type data",
+        "mode=delete": "Delete notelets"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Notelets stay in your vault unchanged.",
+        "mode=clear": "Notelets stay in your vault, but the notelet type properties are removed from their frontmatter.",
+        "mode=delete": "All notelets of this type are deleted from your vault."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Folder",
   "journal_notelet_name_template_label": "Note name",
   "journal_notelet_counter_label": "Number each notelet",

@@ -1758,6 +1758,42 @@
   "journal_notelet_name_unique_error": "Questo diario ha già un tipo di nota breve con questo nome.",
   "journal_notelet_rename_modal_title": "Rinomina {name}",
   "journal_notelet_rename_tooltip": "Rinomina tipo di nota breve",
+  "journal_notelet_delete_tooltip": "Elimina tipo di nota breve",
+  "journal_notelet_delete_modal_title": "Elimina {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "Questo tipo di nota breve non ha note brevi collegate.",
+        "count=1": "Questo tipo di nota breve ha 1 nota breve collegata.",
+        "count=*": "Questo tipo di nota breve ha {count} note brevi collegate."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Cosa fare con le note brevi collegate",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Mantieni le note brevi",
+        "mode=clear": "Cancella i dati del tipo di nota breve",
+        "mode=delete": "Elimina le note brevi"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Le note brevi restano invariate nel tuo vault.",
+        "mode=clear": "Le note brevi restano nel tuo vault, ma le proprietà del tipo di nota breve vengono rimosse dal loro frontmatter.",
+        "mode=delete": "Tutte le note brevi di questo tipo vengono eliminate dal tuo vault."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Cartella",
   "journal_notelet_name_template_label": "Nome della nota",
   "journal_notelet_counter_label": "Numera ogni nota breve",
@@ -1783,7 +1819,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Aggiungi domanda", "mode=edit": "Modifica domanda" }
+      "match": {
+        "mode=add": "Aggiungi domanda",
+        "mode=edit": "Modifica domanda"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Percorso della nota",
@@ -1833,7 +1872,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Aggiungi cifra di numerazione", "mode=edit": "Modifica cifra di numerazione" }
+      "match": {
+        "mode=add": "Aggiungi cifra di numerazione",
+        "mode=edit": "Modifica cifra di numerazione"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

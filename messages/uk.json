@@ -1641,6 +1641,44 @@
   "journal_notelet_name_unique_error": "У цьому журналі вже є тип піднотатки з такою назвою.",
   "journal_notelet_rename_modal_title": "Перейменувати {name}",
   "journal_notelet_rename_tooltip": "Перейменувати тип піднотатки",
+  "journal_notelet_delete_tooltip": "Видалити тип піднотатки",
+  "journal_notelet_delete_modal_title": "Видалити {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=0,countPlural=*": "З цим типом піднотатки не пов’язано жодної піднотатки.",
+        "count=*,countPlural=one": "З цим типом піднотатки пов’язана {count} піднотатка.",
+        "count=*,countPlural=few": "З цим типом піднотатки пов’язані {count} піднотатки.",
+        "count=*,countPlural=many": "З цим типом піднотатки пов’язано {count} піднотаток.",
+        "count=*,countPlural=*": "З цим типом піднотатки пов’язано {count} піднотатки."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Що робити зі зв’язаними піднотатками",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Залишити піднотатки",
+        "mode=clear": "Очистити дані типу піднотатки",
+        "mode=delete": "Видалити піднотатки"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Піднотатки залишаються у вашому сховищі без змін.",
+        "mode=clear": "Піднотатки залишаються у вашому сховищі, але властивості типу піднотатки видаляються з їхньої вхідної сторінки.",
+        "mode=delete": "Усі піднотатки цього типу видаляються з вашого сховища."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Назва нотатки",
   "journal_notelet_counter_label": "Нумерувати кожну піднотатку",
@@ -1666,7 +1704,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Додати запитання", "mode=edit": "Редагувати запитання" }
+      "match": {
+        "mode=add": "Додати запитання",
+        "mode=edit": "Редагувати запитання"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Шлях до нотатки",
@@ -1716,7 +1757,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Додати розряд нумерації", "mode=edit": "Редагувати розряд нумерації" }
+      "match": {
+        "mode=add": "Додати розряд нумерації",
+        "mode=edit": "Редагувати розряд нумерації"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

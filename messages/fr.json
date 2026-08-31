@@ -1758,6 +1758,42 @@
   "journal_notelet_name_unique_error": "Ce journal a déjà un type de note brève portant ce nom.",
   "journal_notelet_rename_modal_title": "Renommer {name}",
   "journal_notelet_rename_tooltip": "Renommer le type de note brève",
+  "journal_notelet_delete_tooltip": "Supprimer le type de note brève",
+  "journal_notelet_delete_modal_title": "Supprimer {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=0,countPlural=*": "Ce type de note brève n’a aucune note brève connectée.",
+        "count=*,countPlural=one": "Ce type de note brève a {count} note brève connectée.",
+        "count=*,countPlural=*": "Ce type de note brève a {count} notes brèves connectées."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Que faire des notes brèves connectées ?",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Conserver les notes brèves",
+        "mode=clear": "Effacer les données du type de note brève",
+        "mode=delete": "Supprimer les notes brèves"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Vos notes brèves restent inchangées dans votre coffre-fort.",
+        "mode=clear": "Les notes brèves restent dans votre coffre-fort, mais les propriétés du type de note brève sont retirées de leur frontmatter.",
+        "mode=delete": "Toutes les notes brèves de ce type sont supprimées de votre coffre-fort."
+      }
+    }
+  ],
   "journal_notelet_folder_label": "Dossier",
   "journal_notelet_name_template_label": "Nom de la note",
   "journal_notelet_counter_label": "Numéroter chaque note brève",
@@ -1783,7 +1819,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Ajouter une question", "mode=edit": "Modifier la question" }
+      "match": {
+        "mode=add": "Ajouter une question",
+        "mode=edit": "Modifier la question"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Chemin de la note",
@@ -1833,7 +1872,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Ajouter un chiffre de numérotation", "mode=edit": "Modifier le chiffre de numérotation" }
+      "match": {
+        "mode=add": "Ajouter un chiffre de numérotation",
+        "mode=edit": "Modifier le chiffre de numérotation"
+      }
     }
   ],
   "journal_sequence_digit_summary": [

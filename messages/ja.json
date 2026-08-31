@@ -1605,6 +1605,42 @@
   "journal_notelet_name_unique_error": "このジャーナルには、同じ名前のサブノートの種類がすでにあります。",
   "journal_notelet_rename_modal_title": "{name}の名前を変更",
   "journal_notelet_rename_tooltip": "サブノートの種類の名前を変更",
+  "journal_notelet_delete_tooltip": "サブノートの種類を削除",
+  "journal_notelet_delete_modal_title": "{name}を削除",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "このサブノートの種類に接続されたサブノートはありません。",
+        "count=1": "このサブノートの種類には接続されたサブノートが1件あります。",
+        "count=*": "このサブノートの種類には接続されたサブノートが{count}件あります。"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "接続されたサブノートの扱い",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "サブノートを残す",
+        "mode=clear": "サブノートの種類のデータを消去",
+        "mode=delete": "サブノートを削除"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "サブノートは保管庫にそのまま残ります。",
+        "mode=clear": "サブノートは保管庫に残りますが、フロントマターからサブノートの種類のプロパティが削除されます。",
+        "mode=delete": "このサブノートの種類に接続されたすべてのサブノートが保管庫から削除されます。"
+      }
+    }
+  ],
   "journal_notelet_folder_label": "フォルダ",
   "journal_notelet_name_template_label": "ノート名",
   "journal_notelet_counter_label": "各サブノートに番号を付ける",
@@ -1630,7 +1666,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "質問を追加", "mode=edit": "質問を編集" }
+      "match": {
+        "mode=add": "質問を追加",
+        "mode=edit": "質問を編集"
+      }
     }
   ],
   "journal_prompt_note_path_label": "ノートのパス",
@@ -1680,7 +1719,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "番号の桁を追加", "mode=edit": "番号の桁を編集" }
+      "match": {
+        "mode=add": "番号の桁を追加",
+        "mode=edit": "番号の桁を編集"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
