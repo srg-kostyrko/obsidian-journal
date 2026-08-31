@@ -3,6 +3,8 @@ import * as v from "valibot";
 import { filterConditionSchema, type FilterCondition } from "@/decorations/config";
 import { m } from "@/i18n";
 
+import { typeIdSchema, type TypeId } from "../../notelets/config";
+
 export type DatePlace = "title" | "property";
 export type FilterCombinator = "no" | "and" | "or";
 export type ExistingNoteParameter = "skip" | "override" | "merge" | "ask";
@@ -23,7 +25,7 @@ export interface BulkAddParameters {
   // Present ⇒ every planned note is connected as a notelet of this type rather than as the
   // journal's period note. `existingNote` is then meaningless and ignored: notelets have no
   // anchor to be occupied.
-  noteletTypeId?: string;
+  noteletTypeId?: TypeId;
 }
 
 export const bulkAddParametersSchema = v.pipe(
@@ -41,7 +43,7 @@ export const bulkAddParametersSchema = v.pipe(
     otherFolder: v.picklist(["keep", "move", "ask"]),
     otherName: v.picklist(["keep", "rename", "ask"]),
     dryRun: v.boolean(),
-    noteletTypeId: v.optional(v.string()),
+    noteletTypeId: v.optional(typeIdSchema),
   }),
   v.forward(
     v.partialCheck(

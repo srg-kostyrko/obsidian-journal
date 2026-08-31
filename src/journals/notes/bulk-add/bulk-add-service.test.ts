@@ -613,8 +613,8 @@ describe("BulkAddService", () => {
   });
 
   describe("bulk adding notelets", () => {
-    const TYPE = "nt_1";
-    const NO_COUNTER_TYPE = "nt_2";
+    const TYPE = "nt_1" as TypeId;
+    const NO_COUNTER_TYPE = "nt_2" as TypeId;
     const EMPTY_DECISIONS = { existing: {}, folder: {}, name: {} };
     let harness: TestHarness;
 
@@ -629,13 +629,13 @@ describe("BulkAddService", () => {
               {
                 notelets: {
                   [TYPE]: buildNoteletType({
-                    id: TYPE as TypeId,
+                    id: TYPE,
                     name: "Standup",
                     folder: "Standups",
                     nameTemplate: "Standup {{notelet_index}}",
                   }),
                   [NO_COUNTER_TYPE]: buildNoteletType({
-                    id: NO_COUNTER_TYPE as TypeId,
+                    id: NO_COUNTER_TYPE,
                     name: "Uncounted",
                     folder: "Standups",
                     nameTemplate: "Uncounted",
@@ -723,7 +723,7 @@ describe("BulkAddService", () => {
         anchor: anchor("2026-06-01"),
         path: "inbox/connected 2026-06-01.md" as VaultPath,
         typeName: "Standup",
-        typeId: TYPE as TypeId,
+        typeId: TYPE,
       });
       harness.host.putFile("inbox/fresh 2026-06-01.md", "");
       const service = harness.resolve(BulkAddService);
@@ -752,7 +752,7 @@ describe("BulkAddService", () => {
               {
                 notelets: {
                   [TYPE]: buildNoteletType({
-                    id: TYPE as TypeId,
+                    id: TYPE,
                     name: "Standup",
                     folder: "inbox",
                     nameTemplate: "{{who}}",
@@ -787,7 +787,7 @@ describe("BulkAddService", () => {
         anchor: anchor("2026-06-01"),
         path: "inbox/2026-06-01.md" as VaultPath,
         typeName: "Standup",
-        typeId: TYPE as TypeId,
+        typeId: TYPE,
       });
 
       const plan = await harness.resolve(BulkAddService).plan("daily", parameters());
@@ -836,7 +836,7 @@ describe("BulkAddService", () => {
         anchor: anchor("2026-06-01"),
         path: "elsewhere.md" as VaultPath,
         typeName: "Standup",
-        typeId: TYPE as TypeId,
+        typeId: TYPE,
         counter: 7,
       });
       harness.host.putFile("inbox/2026-06-01.md", "");

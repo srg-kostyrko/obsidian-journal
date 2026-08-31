@@ -115,7 +115,7 @@ export class BulkAddService {
     actions: ResolvedAction[],
     dryRun: boolean,
     onProgress?: (done: number, total: number) => void,
-    noteletTypeId?: string,
+    noteletTypeId?: TypeId,
   ): Promise<BulkLogEntry[]> {
     const log: BulkLogEntry[] = [];
     const nextCounter = this.#counterFor(journalName, noteletTypeId);
@@ -139,7 +139,7 @@ export class BulkAddService {
 
   // undefined both for a period run and for a notelet type whose counter is disabled — in
   // either case connect must receive no counter key at all.
-  #counterFor(journalName: string, noteletTypeId: string | undefined): ((anchor: AnchorString) => number) | undefined {
+  #counterFor(journalName: string, noteletTypeId: TypeId | undefined): ((anchor: AnchorString) => number) | undefined {
     if (noteletTypeId === undefined) return undefined;
     const config = this.#journals.get(journalName).getOrUndefined();
     const type = config?.notelets[noteletTypeId];
@@ -158,7 +158,7 @@ export class BulkAddService {
     journalName: string,
     path: VaultPath,
     anchor: AnchorString,
-    typeId: string | undefined,
+    typeId: TypeId | undefined,
     nextCounter: ((anchor: AnchorString) => number) | undefined,
   ): { configured: VaultPath; nameRefused: boolean; folderRefused: boolean } {
     if (typeId === undefined) {
@@ -179,7 +179,7 @@ export class BulkAddService {
       kind: "notelet",
       journalName,
       anchor,
-      typeId: typeId as TypeId,
+      typeId,
       ...(nextCounter !== undefined && { counter: nextCounter(anchor) }),
     });
     return {
@@ -275,7 +275,7 @@ export class BulkAddService {
     journalName: string,
     action: ResolvedAction,
     dryRun: boolean,
-    typeId: string | undefined,
+    typeId: TypeId | undefined,
     nextCounter: ((anchor: AnchorString) => number) | undefined,
   ): Promise<BulkLogEntry> {
     const actions: BulkLogAction[] = [];
@@ -317,7 +317,7 @@ export class BulkAddService {
         move: action.move,
         rename: action.rename,
         ...(typeId !== undefined && {
-          typeId: typeId as TypeId,
+          typeId,
           ...(nextCounter !== undefined && { counter: nextCounter(action.anchor) }),
         }),
       });
@@ -359,7 +359,7 @@ export class BulkAddService {
     actions: ResolvedAction[],
     dryRun: boolean,
     onProgress?: (done: number, total: number) => void,
-    noteletTypeId?: string,
+    noteletTypeId?: TypeId,
   ): AsyncResult<BulkLogEntry[], never> {
     return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress, noteletTypeId), () => {
       throw new InvariantError("bulk apply never rejects");

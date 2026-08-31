@@ -23,6 +23,8 @@ import UiToggle from "@/ui/UiToggle.vue";
 
 import { bulkAddParametersSchema, defaultBulkAddParameters, type BulkAddParameters } from "../config";
 
+import type { TypeId } from "../../../notelets/config";
+
 const { journalName, typeId } = defineProps<{ journalName: string; typeId: string; typeName: string }>();
 const api = useModal<BulkAddParameters>();
 const journalsVM = useService(JournalsViewModel);
@@ -39,7 +41,9 @@ const { values, defineField, handleSubmit, errorBag } = useForm<BulkAddParameter
   initialValues: {
     ...defaultBulkAddParameters(),
     ...(journalDateFormat && { dateFormat: journalDateFormat }),
-    noteletTypeId: typeId,
+    // The settings route carries the id as a plain string; this is where it re-enters typed
+    // config.
+    noteletTypeId: typeId as TypeId,
   },
   validationSchema: toTypedSchema(
     v.pipe(

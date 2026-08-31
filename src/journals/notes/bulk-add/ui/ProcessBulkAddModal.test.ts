@@ -84,7 +84,7 @@ describe("ProcessBulkAddModal", () => {
             },
           ],
         },
-        parameters: { ...defaultBulkAddParameters(), dryRun: false, noteletTypeId: "nt_1" },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false, noteletTypeId: "nt_1" as TypeId },
       },
     });
 
