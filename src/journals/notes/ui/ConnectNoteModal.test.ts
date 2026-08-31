@@ -21,11 +21,11 @@ const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontm
 
 async function pickDate(harness: TestHarness, when: string): Promise<void> {
   const trigger = document.querySelector<HTMLElement>(".date-picker-trigger");
-  expect(trigger).toBeTruthy();
-  await userEvent.click(trigger!);
+  if (!trigger) throw new Error("date picker trigger not found");
+  await userEvent.click(trigger);
   harness.modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date(when)));
   await waitFor(() => {
-    expect(trigger?.textContent).toContain(when);
+    expect(trigger.textContent).toContain(when);
   });
 }
 
@@ -107,6 +107,13 @@ describe("ConnectNoteModal", () => {
               { type: "day" },
               { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
             ),
+            // Its own type, distinct from "daily"'s, so switching to it is observable: an
+            // incoming journal with no types at all would just hide the kind row.
+            abacus: fixedJournal(
+              "abacus",
+              { type: "day" },
+              { notelets: { nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Ledger" }) } },
+            ),
           },
         },
       });
@@ -135,11 +142,79 @@ describe("ConnectNoteModal", () => {
       expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
     });
 
+    it("keeps its type when only the date changes", async () => {
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+      await pickDate(harness, "2026-06-05");
+
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("nt_1");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", typeId: "nt_1" }));
+    });
+
+    it("clears the type when the journal is switched", async () => {
+      // A stale ref (rather than a DOM read) is what actually reaches the submitted payload: an
+      // unmatched <select> value silently renders blank even when the underlying ref still holds
+      // the old type id, so the meaningful assertion is on what gets submitted, not on the DOM.
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      await userEvent.selectOptions(screen.getByLabelText(m.common_label_journal()), "abacus");
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
+    });
+
     // The note is its own occupant only in the period sense; a notelet has none at all.
     it("does not offer to replace anything", () => {
       harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
 
       expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
+    });
+  });
+
+  describe("when the note is connected as an orphaned notelet", () => {
+    let harness: TestHarness;
+    const ORPHAN = "Standups/orphan.md" as VaultPath;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+            ),
+          },
+        },
+      });
+      // typeId: null is what the index records once a notelet's stored type name no longer
+      // resolves to any configured type — the type itself was renamed away or deleted.
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: ORPHAN,
+        typeName: "Retired",
+        typeId: null,
+      });
+    });
+
+    it("falls back to the period option when the connected type no longer resolves", async () => {
+      // A DOM read alone can't tell "" from any other value that fails to match a <select>
+      // option — the browser blanks the display either way. The submitted payload is what
+      // actually carries the seed, so that's the load-bearing assertion here.
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: ORPHAN } });
+
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
     });
   });
 

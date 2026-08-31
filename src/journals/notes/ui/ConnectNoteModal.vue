@@ -72,6 +72,11 @@ watch([dateAnchor, selected], () => {
   override.value = false;
   rename.value = false;
   move.value = false;
+});
+
+// A notelet type belongs to the journal it's configured on, not the date, so only a journal
+// change invalidates the current pick; re-dating a connected notelet must keep its type.
+watch(selected, () => {
   selectedType.value = "";
 });
 
