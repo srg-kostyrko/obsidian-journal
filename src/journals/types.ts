@@ -40,6 +40,11 @@ export function isNotelet(entry: IndexedNote): entry is NoteletEntry {
   return "kind" in entry;
 }
 
+/** The metadata union's notelet arm. `kind` is the only field a period's metadata never carries. */
+export function isNoteletMetadata(metadata: JournalMetadata | NoteletMetadata): metadata is NoteletMetadata {
+  return "kind" in metadata;
+}
+
 // The union's period arm, for a `.flatMap` chain that has ruled notelets out.
 export function periodEntryOf(entry: IndexedNote): Option<JournalEntry> {
   return isNotelet(entry) ? Option.none() : Option.some(entry);

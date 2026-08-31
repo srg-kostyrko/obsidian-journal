@@ -6,10 +6,10 @@ import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { JournalsIndex, JournalsRepository, OpenDateFlow } from "@/journals";
-import type { JournalConfig } from "@/journals";
+import { JournalsIndex, JournalsRepository, OpenDateFlow, VaultSubscriptionService } from "@/journals";
+import type { JournalConfig, TypeId } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesRepository } from "@/shelves";
 import type { ShelfConfig } from "@/shelves";
@@ -43,7 +43,7 @@ async function buildRegistry(seed: RegistrySeed = {}) {
       commands: seed.commands ?? {},
     },
     allow: { hostState: true },
-    initialize: [DynamicCommandRegistry],
+    initialize: [DynamicCommandRegistry, VaultSubscriptionService],
   });
   return {
     host: harness.host,
@@ -692,5 +692,145 @@ describe("DynamicCommandRegistry shelf targets", () => {
     shelvesRepo.rename("work", "office");
     expect(host.commands.get("cmd-1")).toBeDefined();
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
+});
+
+function workWithType(): JournalConfig {
+  return fixedJournal(
+    "Work",
+    { type: "day" },
+    {
+      notelets: { nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup" }) },
+    },
+  );
+}
+
+describe("DynamicCommandRegistry notelet targets", () => {
+  it("lists a command whose type resolves", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
+
+  it("does not list a command whose type is gone", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: fixedJournal("Work", { type: "day" }) },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
+  });
+
+  it("does not list a stored available-note type on a notelet target", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          type: "previous_available",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
+  });
+
+  it("prefixes the palette entry with the owning journal", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.name).toBe(
+      m.command_palette_journal_name({ journal: "Work", name: "New standup" }),
+    );
+  });
+
+  // Why sameCommandOwner spans a journal and its types: both render through the journal-name
+  // prefix, so two same-named commands are indistinguishable in the palette.
+  it("renders a notelet command and its journal's own command identically on a shared name", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+        "cmd-2": buildCommand({ name: "New standup", target: { kind: "journal", journalName: "Work" } }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.name).toBe(host.commands.get("cmd-2")?.name);
+  });
+
+  it("re-points a notelet command when its journal is renamed", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    journalsRepo.rename("Work", "Job");
+
+    expect(commandsRepo.get("cmd-1").getOr(buildCommand())?.target).toEqual({
+      kind: "notelet",
+      journalName: "Job",
+      typeId: "nt_7f3a",
+    });
+  });
+
+  it("creates a notelet rather than a period note", async () => {
+    const { host } = await buildRegistry({
+      journals: {
+        Work: fixedJournal(
+          "Work",
+          { type: "day" },
+          {
+            notelets: {
+              nt_7f3a: buildNoteletType({
+                id: "nt_7f3a" as TypeId,
+                name: "Standup",
+                nameTemplate: "Standup {{notelet_index}}",
+              }),
+            },
+          },
+        ),
+      },
+      commands: {
+        c1: buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    host.commands.get("c1")?.checkCallback?.(false);
+
+    await vi.waitFor(() => {
+      expect(host.files.get("Standup 1.md")?.frontmatter).toMatchObject({ "journal-notelet": "Standup" });
+    });
   });
 });

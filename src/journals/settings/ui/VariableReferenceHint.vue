@@ -9,14 +9,18 @@ import { variableReferenceModal } from "./modals";
 import type { VariableModalContext } from "./variable-context";
 import type { Prompt } from "../../prompts/config";
 
-const props = defineProps<{
-  context: VariableModalContext;
-  journalName: string;
-  dateFormat: string;
-  hasCycle: boolean;
-  numberingVariableNames: readonly string[];
-  promptVariables: readonly Pick<Prompt, "variable" | "question" | "type">[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    context: VariableModalContext;
+    journalName: string;
+    dateFormat: string;
+    hasCycle: boolean;
+    numberingVariableNames: readonly string[];
+    promptVariables: readonly Pick<Prompt, "variable" | "question" | "type">[];
+    notelet?: boolean;
+  }>(),
+  { notelet: false },
+);
 
 const modals = useService(ModalService);
 
@@ -29,6 +33,7 @@ function show(event: Event): void {
     hasCycle: props.hasCycle,
     numberingVariableNames: props.numberingVariableNames,
     promptVariables: props.promptVariables,
+    notelet: props.notelet,
     openModifications: () => {
       void modals.open(dateModificationsModal, {});
     },

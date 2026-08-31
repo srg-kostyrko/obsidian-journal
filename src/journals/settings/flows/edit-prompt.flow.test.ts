@@ -5,10 +5,11 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 import type { Prompt } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsSettingsCoreModule } from "../module";
@@ -133,5 +134,71 @@ describe("EditPromptFlow", () => {
     const result = await harness.resolve(Flows).invoke(EditPromptFlow, { journalName: "j", promptIndex: 9 });
 
     expect(result.isErr()).toBe(true);
+  });
+});
+
+describe("EditPromptFlow addressing a notelet type", () => {
+  const journalWithType = fixedJournal(
+    "j",
+    { type: "day" },
+    {
+      prompts: [moodPrompt],
+      notelets: {
+        nt_7f3a: buildNoteletType({
+          id: "nt_7f3a" as TypeId,
+          name: "Standup",
+          prompts: [{ ...moodPrompt, variable: "attendee", frontmatterKey: "with" }],
+        }),
+      },
+    },
+  );
+
+  it("appends a type prompt to the type, leaving the journal's prompts alone", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithType } },
+    });
+    const promise = harness.resolve(Flows).invoke(EditPromptFlow, { journalName: "j", typeId: "nt_7f3a" });
+    harness.modals.lastOpen<unknown, Prompt>().submit(draft({ variable: "sleep", frontmatterKey: "journal-sleep" }));
+    const result = await promise;
+
+    expect(result.isOk()).toBe(true);
+    const config = harness.resolve(JournalsRepository).get("j").getOrUndefined();
+    expect(config?.notelets.nt_7f3a?.prompts.map((p) => p.variable)).toEqual(["attendee", "sleep"]);
+    expect(config?.prompts.map((p) => p.variable)).toEqual(["mood"]);
+  });
+
+  // Once type deletion exists, spreading the pre-modal type would write it back as a partial
+  // object — and `noUncheckedIndexedAccess` is off, so it typechecks.
+  it("writes nothing when the type is deleted while the modal is open", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithType } },
+    });
+    const promise = harness.resolve(Flows).invoke(EditPromptFlow, { journalName: "j", typeId: "nt_7f3a" });
+    harness.resolve(JournalsRepository).update("j", { notelets: {} });
+    harness.modals.lastOpen<unknown, Prompt>().submit(draft({ variable: "sleep", frontmatterKey: "journal-sleep" }));
+    const result = await promise;
+
+    expect(result.kind).toBe("err");
+    expect(harness.resolve(JournalsRepository).get("j").getOrUndefined()?.notelets).toEqual({});
+  });
+
+  it("does not rename fields when a type prompt's frontmatter key changes", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithType } },
+    });
+    const connection = harness.resolve(NoteConnectionService);
+    const spy = vi.spyOn(connection, "renameFieldAll");
+    const promise = harness
+      .resolve(Flows)
+      .invoke(EditPromptFlow, { journalName: "j", typeId: "nt_7f3a", promptIndex: 0 });
+    harness.modals.lastOpen<unknown, Prompt>().submit(draft({ variable: "attendee", frontmatterKey: "guest" }));
+    await promise;
+
+    expect(spy).not.toHaveBeenCalled();
+    const config = harness.resolve(JournalsRepository).get("j").getOrUndefined();
+    expect(config?.notelets.nt_7f3a?.prompts[0]?.frontmatterKey).toBe("guest");
   });
 });

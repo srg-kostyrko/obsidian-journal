@@ -3,6 +3,7 @@ import { beforeEach, describe, it, expect } from "vitest";
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import { expectOk } from "@/infrastructure/result/testing";
+import { TemplateContext } from "@/templates";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsCoreModule } from "../module";
@@ -217,5 +218,35 @@ describe("TemplateContentService.renderFor — Templater", () => {
     await harness.resolve(TemplateContentService).renderFor("daily", meta, "2026-05-19", "2026-05-19.md" as VaultPath);
 
     expect(harness.templater.applyCalls).toEqual([]);
+  });
+});
+
+describe("renderTemplates", () => {
+  it("renders the first template that has content", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule] });
+    harness.host.putFile("Templates/Empty.md", "");
+    harness.host.putFile("Templates/Standup.md", "# {{note_name}}");
+    const content = harness.resolve(TemplateContentService);
+    const context = TemplateContext.empty().string("note_name", "Standup 1");
+
+    const rendered = await content.renderTemplates(
+      ["Templates/Empty", "Templates/Standup"],
+      context,
+      "Meetings/Standup 1.md" as VaultPath,
+    );
+
+    expectOk(rendered);
+    expect(rendered.value).toBe("# Standup 1");
+  });
+
+  it("renders nothing when no template matches", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule] });
+    const content = harness.resolve(TemplateContentService);
+    const context = TemplateContext.empty();
+
+    const rendered = await content.renderTemplates(["Templates/Gone"], context, "x.md" as VaultPath);
+
+    expectOk(rendered);
+    expect(rendered.value).toBe("");
   });
 });

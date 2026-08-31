@@ -109,7 +109,7 @@ export class AutoAttachService {
     if (config && promptsInPath(config).length > 0 && path.includes(PROMPT_PLACEHOLDER)) {
       const gathered = await this.#flows.invoke(
         GatherPromptAnswersFlow,
-        { journalName: match.name, anchor: metadata.anchor, confirming: false },
+        { metadata, confirming: false },
         { notify: false },
       );
       if (gathered.isErr()) {

@@ -39,6 +39,7 @@ export const icons = {
     week: "calendar-range",
     customInterval: "list",
     navBlock: "signpost-big",
+    notelet: "sticky-note",
   },
   block: {
     dayNotes: "files",
@@ -78,6 +79,7 @@ export const icons = {
     timeline: "calendar-range",
     maintenance: "wrench",
     prompts: "lucide-circle-help",
+    notelets: "sticky-note",
   },
 } as const;
 

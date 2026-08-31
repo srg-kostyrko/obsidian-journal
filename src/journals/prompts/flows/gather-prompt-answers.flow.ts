@@ -1,4 +1,3 @@
-import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -7,6 +6,7 @@ import { toFlowError, UnknownJournalError, type JournalLifecycleFlowError } from
 import { FrontmatterService } from "@/journals/frontmatter";
 import { NotePathService } from "@/journals/notes/note-path";
 import { JournalsRepository } from "@/journals/repository";
+import type { JournalMetadata, NoteletMetadata } from "@/journals/types";
 
 import { promptAnswersModal } from "../ui/modals";
 
@@ -14,8 +14,13 @@ import type { PromptAnswer } from "../config";
 
 export type GatherPromptAnswersError = UserAborted | JournalLifecycleFlowError;
 
+export interface GatherPromptAnswersParameters {
+  metadata: JournalMetadata | NoteletMetadata;
+  confirming: boolean;
+}
+
 export class GatherPromptAnswersFlow implements Flow<
-  { journalName: string; anchor: AnchorString; confirming: boolean },
+  GatherPromptAnswersParameters,
   Record<string, PromptAnswer>,
   GatherPromptAnswersError
 > {
@@ -24,25 +29,23 @@ export class GatherPromptAnswersFlow implements Flow<
   readonly #paths = inject(NotePathService);
   readonly #frontmatter = inject(FrontmatterService);
 
-  execute(parameters: {
-    journalName: string;
-    anchor: AnchorString;
-    confirming: boolean;
-  }): AsyncResult<Record<string, PromptAnswer>, GatherPromptAnswersError> {
-    // Metadata is built rather than assembled from the two parameters: the assigned numbers and
-    // any stored end date belong to the period, and the modal previews the note name from them.
-    // Both lookups answer the same question, so one guard covers them.
-    const config = this.#repository.get(parameters.journalName);
-    const metadata = this.#frontmatter.buildMetadata(parameters.journalName, parameters.anchor);
-    if (config.isNone() || metadata.isErr()) {
-      return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
+  execute(
+    parameters: GatherPromptAnswersParameters,
+  ): AsyncResult<Record<string, PromptAnswer>, GatherPromptAnswersError> {
+    const { journalName, anchor } = parameters.metadata;
+    // The period label is the journal's, for either kind: a notelet is anchored to a period even
+    // though it is not the period's note.
+    const config = this.#repository.get(journalName);
+    const period = this.#frontmatter.buildMetadata(journalName, anchor);
+    if (config.isNone() || period.isErr()) {
+      return AsyncResult.err(toFlowError(new UnknownJournalError(journalName)));
     }
-    const periodLabel = this.#paths.periodLabelFor(config.value, metadata.value);
+    const periodLabel = this.#paths.periodLabelFor(config.value, period.value);
 
     return attempt.in(this, async function* (this: GatherPromptAnswersFlow) {
       return yield* this.#modals
         .open(promptAnswersModal, {
-          metadata: metadata.value,
+          metadata: parameters.metadata,
           confirming: parameters.confirming,
           periodLabel,
         })

@@ -57,6 +57,7 @@ everything below. Adding a locale or a new domain noun means extending it there.
 | **character**   | Zeichen     | carácter      | caractère   | carattere    | 文字             | 문자       | caractere    | символ        | символ         | 字符        |
 | **prompt**      | Frage       | pregunta      | question    | domanda      | 質問             | 질문       | pergunta     | вопрос        | запитання      | 问题        |
 | **answer**      | Antwort     | respuesta     | réponse     | risposta     | 回答             | 답변       | resposta     | ответ         | відповідь      | 回答        |
+| **notelet**     | Kurznotiz   | nota breve    | note brève  | nota breve   | サブノート       | 서브노트   | nota breve   | подзаметка    | піднотатка     | 子笔记      |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
@@ -115,6 +116,15 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   quiz/exam "correct answer" (zh 答案, ja/ko share the same risk) rather than a form
   response — 回答/답변 are the words Japanese and Korean forms and surveys use for "a
   reply to a question" and carry no correctness connotation.
+- **`notelet`.** A coined English diminutive: a note the plugin owns that hangs off a
+  journal's period rather than being the period's note. The second sense to avoid is a
+  physical notelet (a small folded greeting card), which is the dictionary's primary
+  meaning and what a context-free translator reaches for. Every locale renders it as a
+  qualified form of its canonical `note` term rather than as that object. **These eleven
+  picks are unverified** and want a native check the way `ko 행` does — de `Kurznotiz` is
+  an established word and ja/ko `サブノート` / `서브노트` follow Obsidian's own katakana
+  register, but the Romance locales' `nota breve` and the Slavic `подзаметка` /
+  `піднотатка` are constructions, not idiom.
 
 ## Literal tokens
 

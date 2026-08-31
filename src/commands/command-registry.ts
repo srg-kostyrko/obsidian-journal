@@ -10,6 +10,7 @@ import { CommandService, NoticeService, WorkspaceService } from "@/infrastructur
 import type { CommandRegistration } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 import {
+  CreateNoteletFlow,
   CycleService,
   JournalsIndex,
   JournalsEventsToken,
@@ -17,13 +18,13 @@ import {
   OpenDateFlow,
   TimelineService,
 } from "@/journals";
-import type { JournalEntry } from "@/journals";
+import type { JournalEntry, TypeId } from "@/journals";
 import { periodEntryOf } from "@/journals/types";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 
 import { CommandsRepository } from "./repository";
-import { compoundShift, isAvailableType, supportedTypes } from "./resolve";
+import { compoundShift, isAvailableType, supportedTypesFor } from "./resolve";
 import { CommandsEventsToken } from "./tokens";
 
 import type { CommandConfig } from "./config";
@@ -82,7 +83,7 @@ export class DynamicCommandRegistry {
   // prefix is what disambiguates same-named commands across owners.
   #paletteName(command: CommandConfig): string {
     return match(command.target)
-      .with({ kind: "journal" }, (target) =>
+      .with({ kind: "journal" }, { kind: "notelet" }, (target) =>
         m.command_palette_journal_name({ journal: target.journalName, name: command.name }),
       )
       .with({ kind: "shelf" }, (target) =>
@@ -98,7 +99,7 @@ export class DynamicCommandRegistry {
     if (rep === undefined) return Option.none();
     return this.#journalsRepo
       .get(rep)
-      .filter((config) => supportedTypes(config.write.type).includes(command.type))
+      .filter((config) => supportedTypesFor(command.target, config.write.type).includes(command.type))
       .map(() => journalNames);
   }
 
@@ -157,6 +158,12 @@ export class DynamicCommandRegistry {
                 .getOr(false),
             ),
           )
+          .getOr([] as string[]),
+      )
+      .with({ kind: "notelet" }, (target) =>
+        this.#journalsRepo
+          .get(target.journalName)
+          .map((journal) => (journal.notelets[target.typeId] === undefined ? [] : [target.journalName]))
           .getOr([] as string[]),
       )
       .exhaustive();
@@ -226,6 +233,20 @@ export class DynamicCommandRegistry {
       this.#notices.show(this.#unavailableNotice(command));
       return;
     }
+    const target = command.target;
+    if (target.kind === "notelet") {
+      await this.#flows.invoke(
+        CreateNoteletFlow,
+        {
+          journalName: target.journalName,
+          typeId: target.typeId as TypeId,
+          anchor: plan.value.anchor,
+          openMode: command.openMode,
+        },
+        { context: { command: command.name } },
+      );
+      return;
+    }
     await this.#flows.invoke(
       OpenDateFlow,
       {
@@ -240,9 +261,9 @@ export class DynamicCommandRegistry {
 
   #onJournalRenamed(oldName: string, newName: string): void {
     for (const [id, command] of this.#commandsRepo.find().entries()) {
-      if (command.target.kind === "journal" && command.target.journalName === oldName) {
-        this.#commandsRepo.update(id, { target: { ...command.target, journalName: newName } });
-      }
+      if (command.target.kind !== "journal" && command.target.kind !== "notelet") continue;
+      if (command.target.journalName !== oldName) continue;
+      this.#commandsRepo.update(id, { target: { ...command.target, journalName: newName } });
     }
   }
 

@@ -7,7 +7,7 @@ import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 
 import type { VariableReferenceModalProps } from "./modals";
 
-const props = defineProps<VariableReferenceModalProps>();
+const props = withDefaults(defineProps<VariableReferenceModalProps>(), { notelet: false });
 
 // The two templates that become part of the note's own path, so what they render has to be
 // readable back out of it. Both the clock warning and the yes/no omission below follow from that.
@@ -62,6 +62,11 @@ function handleModificationsClick(event: Event): void {
       <div class="variable-reference__row">
         <dt><VariableChip name="journal_name" /></dt>
         <dd>{{ m.journal_edit_variable_journal_name_description({ name: journalName }) }}</dd>
+      </div>
+
+      <div v-if="notelet" class="variable-reference__row">
+        <dt><VariableChip name="notelet_index" /></dt>
+        <dd>{{ m.journal_edit_variable_notelet_index_description() }}</dd>
       </div>
 
       <div v-if="showTemplateContentVariables" class="variable-reference__row">
