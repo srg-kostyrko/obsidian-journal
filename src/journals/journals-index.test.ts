@@ -785,4 +785,24 @@ describe("JournalsIndex", () => {
       expect(events.journalDirty).toEqual([{ journalName: "daily" }]);
     });
   });
+
+  describe("noteletsFor", () => {
+    it("returns every notelet of the journal and none of another journal's", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+      index.register(notelet("daily", "2026-01-02", "b.md", "Recipe"));
+      index.register(notelet("weekly", "2026-W01", "c.md", "Standup"));
+
+      expect(
+        index
+          .noteletsFor("daily")
+          .map((note) => note.path)
+          .toSorted(),
+      ).toEqual([p("a.md"), p("b.md")]);
+    });
+
+    it("returns empty for a journal with no notelets", () => {
+      expect(new JournalsIndex().noteletsFor("daily")).toEqual([]);
+    });
+  });
 });

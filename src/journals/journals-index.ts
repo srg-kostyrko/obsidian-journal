@@ -142,6 +142,10 @@ export class JournalsIndex {
     return this.#resolveNotelets(this.#notelets.get(journalName)?.ofType(typeName));
   }
 
+  noteletsFor(journalName: string): readonly NoteletEntry[] {
+    return this.#resolveNotelets(this.#notelets.get(journalName)?.paths());
+  }
+
   register(entry: IndexedNote): "registered" | "collision" {
     const existing = this.#byPath.get(entry.path);
     if (existing !== undefined && sameSlot(existing, entry)) {

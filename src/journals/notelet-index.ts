@@ -67,6 +67,10 @@ export class NoteletIndex {
     return this.#byType.get(typeName) ?? EMPTY;
   }
 
+  paths(): readonly VaultPath[] {
+    return [...this.#placements.keys()];
+  }
+
   clear(): void {
     this.#byAnchor.clear();
     this.#byType.clear();
