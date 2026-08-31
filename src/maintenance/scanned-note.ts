@@ -94,6 +94,10 @@ export class ScannedNoteResolver {
     const rawType = properties[fields.noteletField];
     // Presence decides, exactly as parseEntry does: a malformed value is an unresolvable notelet,
     // never a period note promoted by accident.
+    //
+    // Re-reading properties[...] rather than calling String(rawType) works around
+    // no-base-to-string: the rule cannot see that the null check above already excludes the
+    // bare-object case it is guarding against.
     const noteletTypeName =
       rawType === undefined || rawType === null ? undefined : String(properties[fields.noteletField]);
     const noteletTypeExists =
