@@ -373,6 +373,7 @@
   "connect_note_modal_disconnect": "Disconnect",
   "connect_note_modal_out_of_bounds": "This date is outside the journal's active timeline.",
   "connect_note_notice_connected": "Note connected to \"{journalName}\".",
+  "connect_note_notice_connected_notelet": "Note connected to \"{journalName}\" as a {type} notelet.",
   "connect_note_notice_disconnected": "Note disconnected from \"{journalName}\".",
 
   "bulk_add_notes_to_title": "Add notes to {journalName}",

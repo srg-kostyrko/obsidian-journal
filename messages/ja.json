@@ -423,6 +423,7 @@
   "connect_note_modal_disconnect": "切断",
   "connect_note_modal_out_of_bounds": "この日付はジャーナルの有効期間外です。",
   "connect_note_notice_connected": "ノートを「{journalName}」に接続しました。",
+  "connect_note_notice_connected_notelet": "ノートを「{journalName}」に{type}のサブノートとして接続しました。",
   "connect_note_notice_disconnected": "ノートを「{journalName}」から切断しました。",
   "bulk_add_notes_to_title": "{journalName}にノートを追加",
   "bulk_add_folder_label": "読み込み元のフォルダ",

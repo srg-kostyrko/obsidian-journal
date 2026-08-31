@@ -423,6 +423,7 @@
   "connect_note_modal_disconnect": "Від’єднати",
   "connect_note_modal_out_of_bounds": "Ця дата знаходиться поза межами активної часової шкали журналу.",
   "connect_note_notice_connected": "Нотатку пов’язано з «{journalName}».",
+  "connect_note_notice_connected_notelet": "Нотатку підключено до «{journalName}» як піднотатку типу «{type}».",
   "connect_note_notice_disconnected": "Нотатку від’єднано від «{journalName}».",
   "bulk_add_notes_to_title": "Додати нотатки до {journalName}",
   "bulk_add_folder_label": "Вихідна папка",

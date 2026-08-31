@@ -423,6 +423,7 @@
   "connect_note_modal_disconnect": "断开",
   "connect_note_modal_out_of_bounds": "该日期不在此日记的有效时间范围内。",
   "connect_note_notice_connected": "笔记已连接到“{journalName}”。",
+  "connect_note_notice_connected_notelet": "笔记已作为 {type} 子笔记连接到“{journalName}”。",
   "connect_note_notice_disconnected": "笔记已从“{journalName}”断开连接。",
   "bulk_add_notes_to_title": "将笔记添加到 {journalName}",
   "bulk_add_folder_label": "源文件夹",

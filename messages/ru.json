@@ -436,6 +436,7 @@
   "connect_note_modal_disconnect": "Отвязать",
   "connect_note_modal_out_of_bounds": "Эта дата вне активной шкалы времени журнала.",
   "connect_note_notice_connected": "Заметка связана с «{journalName}».",
+  "connect_note_notice_connected_notelet": "Заметка подключена к «{journalName}» как подзаметка типа «{type}».",
   "connect_note_notice_disconnected": "Заметка отвязана от «{journalName}».",
   "bulk_add_notes_to_title": "Добавить заметки в {journalName}",
   "bulk_add_folder_label": "Исходная папка",

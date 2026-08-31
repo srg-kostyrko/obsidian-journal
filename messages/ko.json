@@ -434,6 +434,7 @@
   "connect_note_modal_disconnect": "연결 해제",
   "connect_note_modal_out_of_bounds": "이 날짜는 저널의 활성 타임라인을 벗어납니다.",
   "connect_note_notice_connected": "노트를 \"{journalName}\"에 연결했습니다.",
+  "connect_note_notice_connected_notelet": "노트를 \"{journalName}\"에 {type} 서브노트로 연결했습니다.",
   "connect_note_notice_disconnected": "노트의 \"{journalName}\" 연결을 해제했습니다.",
   "bulk_add_notes_to_title": "{journalName}에 노트 추가",
   "bulk_add_folder_label": "원본 폴더",
