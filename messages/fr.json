@@ -434,7 +434,7 @@
   "connect_note_modal_disconnect": "Déconnecter",
   "connect_note_modal_out_of_bounds": "Cette date se situe en dehors de la période active du journal.",
   "connect_note_notice_connected": "Note connectée à « {journalName} ».",
-  "connect_note_notice_connected_notelet": "Note connectée à \"{journalName}\" en tant que note brève {type}.",
+  "connect_note_notice_connected_notelet": "Note connectée à « {journalName} » en tant que note brève {type}.",
   "connect_note_notice_disconnected": "Note déconnectée de « {journalName} ».",
   "bulk_add_notes_to_title": "Ajouter des notes à {journalName}",
   "bulk_add_folder_label": "Dossier source",

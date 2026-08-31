@@ -434,7 +434,7 @@
   "connect_note_modal_disconnect": "Desconectar",
   "connect_note_modal_out_of_bounds": "Esta fecha está fuera de la línea de tiempo activa del diario.",
   "connect_note_notice_connected": "Nota conectada a «{journalName}».",
-  "connect_note_notice_connected_notelet": "Nota conectada a \"{journalName}\" como nota breve de {type}.",
+  "connect_note_notice_connected_notelet": "Nota conectada a «{journalName}» como nota breve de {type}.",
   "connect_note_notice_disconnected": "Nota desconectada de «{journalName}».",
   "bulk_add_notes_to_title": "Agregar notas a {journalName}",
   "bulk_add_folder_label": "Carpeta de origen",
