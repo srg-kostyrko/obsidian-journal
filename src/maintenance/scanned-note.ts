@@ -24,6 +24,11 @@ export interface ScannedNote {
   readonly storedStart?: string;
   readonly storedEnd?: string;
   readonly expectedStart?: AnchorString;
+  // Presence is the discriminator, matching parseEntry's rule: the journal's type key was found
+  // on the note at all, coerced to a string. Absence means a period note, never a malformed one.
+  readonly noteletTypeName?: string;
+  // Only meaningful alongside noteletTypeName — whether that name still matches a configured type.
+  readonly noteletTypeExists?: boolean;
 }
 
 export type ResolveOutcome =
@@ -86,6 +91,16 @@ export class ScannedNoteResolver {
     const storedEnd =
       typeof properties[fields.endDateField] === "string" ? (properties[fields.endDateField] as string) : undefined;
 
+    const rawType = properties[fields.noteletField];
+    // Presence decides, exactly as parseEntry does: a malformed value is an unresolvable notelet,
+    // never a period note promoted by accident.
+    const noteletTypeName =
+      rawType === undefined || rawType === null ? undefined : String(properties[fields.noteletField]);
+    const noteletTypeExists =
+      noteletTypeName === undefined
+        ? undefined
+        : Object.values(config.notelets).some((type) => type.name === noteletTypeName);
+
     let storedAnchor: AnchorString | undefined;
     if (typeof rawDate === "string") {
       const parsed = CalendarDate.parse(rawDate);
@@ -120,6 +135,8 @@ export class ScannedNoteResolver {
         ...(storedStart !== undefined && { storedStart }),
         ...(storedEnd !== undefined && { storedEnd }),
         ...(expectedStart !== undefined && { expectedStart }),
+        ...(noteletTypeName !== undefined && { noteletTypeName }),
+        ...(noteletTypeExists !== undefined && { noteletTypeExists }),
       },
     };
   }

@@ -7,6 +7,7 @@ import { SettingsService } from "@/settings";
 import { pendingNoteMigrationSlice } from "@/settings/legacy/pending-note-migration";
 import type { PendingNoteMigration } from "@/settings/legacy/pending-note-migration";
 
+import { checkOrphanedType } from "./checks/orphaned-type";
 import { checkRejectedAnchor } from "./checks/rejected-anchor";
 import { checkStaleRange } from "./checks/stale-range";
 import { ScannedNoteResolver } from "./scanned-note";
@@ -32,6 +33,9 @@ export function gateCollisions(notes: readonly ScannedNote[], findings: readonly
   const byAnchor = new Map<string, { anchor: AnchorString; notes: ScannedNote[] }>();
   for (const note of notes) {
     if (!note.journalExists) continue;
+    // Several notelets per anchor is the design. Bucketing them would make every period that has
+    // notelets look like a duplicate group — the exclusion has to be here, not at reporting time.
+    if (note.noteletTypeName !== undefined) continue;
     const target =
       rewriteByPath.get(note.path) ??
       (note.storedAnchor !== undefined && note.storedAnchor === note.canonicalAnchor ? note.storedAnchor : undefined);
@@ -136,10 +140,16 @@ export class ScanService {
 
     const classified: Finding[] = [];
     for (const note of resolved) {
-      const rejected = checkRejectedAnchor(note);
+      const tagged = (finding: Finding | undefined): Finding | undefined =>
+        finding === undefined
+          ? undefined
+          : { ...finding, ...(note.noteletTypeName !== undefined && { noteletTypeName: note.noteletTypeName }) };
+      const rejected = tagged(checkRejectedAnchor(note));
       if (rejected) classified.push(rejected);
-      const stale = checkStaleRange(note);
+      const stale = tagged(checkStaleRange(note));
       if (stale) classified.push(stale);
+      const orphanedType = checkOrphanedType(note);
+      if (orphanedType) classified.push(orphanedType);
     }
 
     const pendingOldIds = pendingOldIdsOf(this.#pending.state);

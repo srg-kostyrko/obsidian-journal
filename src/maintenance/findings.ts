@@ -1,7 +1,7 @@
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 
-export type CheckKey = "rejected-anchor" | "stale-range" | "duplicate-anchor" | "orphaned-claim";
+export type CheckKey = "rejected-anchor" | "stale-range" | "duplicate-anchor" | "orphaned-claim" | "orphaned-type";
 
 export type UndecidableReason = "path-not-invertible" | "path-and-date-disagree" | "anchor-contested" | "needs-choice";
 
@@ -21,7 +21,8 @@ export type FindingDetail =
   | { kind: "zero-length-range"; anchor: AnchorString }
   | { kind: "start-mismatch"; anchor: AnchorString; storedStart: string; expectedStart: AnchorString }
   | { kind: "duplicate"; anchor: AnchorString; size: number; mtime: number }
-  | { kind: "orphaned" };
+  | { kind: "orphaned" }
+  | { kind: "orphaned-type"; typeName: string };
 
 export interface Finding {
   readonly check: CheckKey;
@@ -29,6 +30,8 @@ export interface Finding {
   readonly journalName: string;
   readonly detail: FindingDetail;
   readonly repair: Repair;
+  // Presence routes a rewrite repair to the notelet mutator instead of the period one.
+  readonly noteletTypeName?: string;
 }
 
 // What the user chose to do, which is not always what the finding suggested: a duplicate group
@@ -37,6 +40,8 @@ export interface RepairAction {
   readonly path: VaultPath;
   readonly journalName: string;
   readonly repair: Repair;
+  // Presence routes a rewrite repair to the notelet mutator instead of the period one.
+  readonly noteletTypeName?: string;
 }
 
 export interface UnreadableNote {

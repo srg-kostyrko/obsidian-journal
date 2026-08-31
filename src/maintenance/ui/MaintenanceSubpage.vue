@@ -125,6 +125,9 @@ function groupTitle(group: FindingGroup): string {
     case "orphaned-claim": {
       return m.maintenance_check_group_orphaned({ journal: group.journalName });
     }
+    case "orphaned-type": {
+      return m.maintenance_check_group_orphaned_type({ journal: group.journalName });
+    }
   }
 }
 
@@ -173,6 +176,9 @@ function detailText(finding: Finding): string {
     }
     case "orphaned": {
       return m.maintenance_detail_orphaned({ path });
+    }
+    case "orphaned-type": {
+      return m.maintenance_detail_orphaned_type({ path, typeName: detail.typeName });
     }
   }
 }
@@ -330,7 +336,7 @@ onMounted(runScan);
             {{ m.maintenance_duplicate_keep() }}
           </UiButton>
           <UiButton
-            v-else-if="group.check === 'orphaned-claim'"
+            v-else-if="group.check === 'orphaned-claim' || group.check === 'orphaned-type'"
             :disabled="fixDisabled"
             @click="applyAndRescan([stripOf(finding)])"
           >
