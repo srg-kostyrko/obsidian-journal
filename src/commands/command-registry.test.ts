@@ -627,6 +627,25 @@ describe("DynamicCommandRegistry journal cloning", () => {
 
     expect(commandsRepo.count()).toBe(before);
   });
+
+  it("does not copy a notelet-target command onto the clone", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    journalsRepo.clone("Work", "Work copy");
+
+    const copiedNotelets = [...commandsRepo.find().entries()].filter(
+      ([, command]) => command.target.kind === "notelet" && command.target.journalName === "Work copy",
+    );
+    expect(copiedNotelets).toHaveLength(0);
+  });
 });
 
 describe("DynamicCommandRegistry shelf targets", () => {
@@ -892,6 +911,33 @@ describe("DynamicCommandRegistry notelet targets", () => {
 
     expect(commandsRepo.get("cmd-1").isNone()).toBe(true);
     expect(commandsRepo.get("cmd-2").isSome()).toBe(true);
+  });
+
+  it("leaves another journal's command untouched when its type shares an id with the deleted one", async () => {
+    const { host, commandsRepo, journalsRepo } = await buildRegistry({
+      journals: {
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+        ),
+        weekly: fixedJournal(
+          "weekly",
+          { type: "week" },
+          { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Retro" }) } },
+        ),
+      },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }),
+        "cmd-2": buildCommand({ target: { kind: "notelet", journalName: "weekly", typeId: "nt_1" } }),
+      },
+    });
+
+    journalsRepo.deleteNoteletType("daily", "nt_1" as TypeId);
+
+    expect(commandsRepo.get("cmd-1").isNone()).toBe(true);
+    expect(commandsRepo.get("cmd-2").isSome()).toBe(true);
+    expect(host.commands.get("cmd-2")).toBeDefined();
   });
 
   it("creates a notelet rather than a period note", async () => {
