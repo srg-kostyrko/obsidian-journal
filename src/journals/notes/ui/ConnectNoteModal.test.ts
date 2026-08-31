@@ -36,7 +36,14 @@ describe("ConnectNoteModal", () => {
     beforeEach(async () => {
       harness = await testContainer({
         modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+        data: {
+          journals: {
+            // "abacus" sorts and inserts before "daily", so journalNames[0] !== the connected
+            // journal: a pre-selection test that used journalNames[0] as its fallback would fail.
+            abacus: fixedJournal("abacus", { type: "day" }),
+            daily: fixedJournal("daily", { type: "day" }),
+          },
+        },
       });
       harness.resolve(JournalsIndex).register({
         journalName: "daily",
