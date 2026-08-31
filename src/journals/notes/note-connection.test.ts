@@ -1472,5 +1472,140 @@ describe("NoteConnectionService", () => {
 
       expect(connected.isErr()).toBe(true);
     });
+
+    it("renames the note to the type's rendered name", async () => {
+      const connected = await harness
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE, rename: true });
+
+      expectOk(connected);
+      expect(connected.value.path).toBe("inbox/Standup 1.md");
+      expect(harness.host.files.get("inbox/Standup 1.md")?.frontmatter).toMatchObject({
+        "journal-notelet": "Standup",
+      });
+    });
+
+    it("moves the note into the type's folder, keeping its own name", async () => {
+      const inFolder = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { notelets: { [TYPE]: buildNoteletType({ id: TYPE, name: "Standup", folder: "Standups" }) } },
+            ),
+          },
+        },
+      });
+      inFolder.host.putFile(SOURCE, "content");
+
+      const connected = await inFolder
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE, move: true });
+
+      expectOk(connected);
+      expect(connected.value.path).toBe("Standups/n.md");
+    });
+
+    // The journal's own name template is irrelevant on this route; reading it would rename the
+    // notelet onto the period note's name.
+    it("ignores the journal's name template", async () => {
+      const differing = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                nameTemplate: "{{date}}",
+                notelets: {
+                  [TYPE]: buildNoteletType({ id: TYPE, name: "Standup", nameTemplate: "Standup {{notelet_index}}" }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      differing.host.putFile(SOURCE, "content");
+
+      const connected = await differing
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE, rename: true });
+
+      expectOk(connected);
+      expect(connected.value.path).toBe("inbox/Standup 1.md");
+    });
+
+    it("refuses the rename when the type's name template asks a question, but still moves", async () => {
+      const prompting = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  [TYPE]: buildNoteletType({
+                    id: TYPE,
+                    name: "Standup",
+                    folder: "Standups",
+                    nameTemplate: "{{who}}",
+                    prompts: [
+                      { variable: "who", question: "Who?", type: "text", frontmatterKey: "who", required: false },
+                    ],
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      prompting.host.putFile(SOURCE, "content");
+
+      const connected = await prompting
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE, rename: true, move: true });
+
+      expectOk(connected);
+      expect(connected.value.path).toBe("Standups/n.md");
+    });
+
+    it("refuses the move when the type's folder asks a question, but still renames", async () => {
+      const prompting = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  [TYPE]: buildNoteletType({
+                    id: TYPE,
+                    name: "Standup",
+                    folder: "{{who}}",
+                    nameTemplate: "Standup {{notelet_index}}",
+                    prompts: [
+                      { variable: "who", question: "Who?", type: "text", frontmatterKey: "who", required: false },
+                    ],
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      prompting.host.putFile(SOURCE, "content");
+
+      const connected = await prompting
+        .resolve(NoteConnectionService)
+        .connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE, rename: true, move: true });
+
+      expectOk(connected);
+      expect(connected.value.path).toBe("inbox/Standup 1.md");
+    });
   });
 });

@@ -234,8 +234,22 @@ export class NoteConnectionService {
         ...(counter !== undefined && { counter }),
       };
 
-      yield* this.#noteletCreation.attachNotelet(journalName, path, metadata);
-      return { path };
+      let target = path;
+      if (options.rename === true || options.move === true) {
+        const configured = yield* this.#noteletPaths.pathFor(config, type, metadata);
+        // Each half refuses independently and for the same reason as the period route: nobody is
+        // being asked on this path, and a file renamed to a rendered placeholder has no repair.
+        const nameRefused = promptsInTemplate(type.nameTemplate, type.prompts).length > 0;
+        const folderRefused = promptsInTemplate(type.folder, type.prompts).length > 0;
+        target = this.#combine(path, configured, {
+          rename: options.rename === true && !nameRefused,
+          move: options.move === true && !folderRefused,
+        }) as VaultPath;
+      }
+
+      if (target !== path) yield* this.#notes.rename(path, target);
+      yield* this.#noteletCreation.attachNotelet(journalName, target, metadata);
+      return { path: target };
     });
   }
 
