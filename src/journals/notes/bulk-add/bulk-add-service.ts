@@ -6,11 +6,13 @@ import { checkProperty, checkTag, checkTitle } from "@/decorations/engine-checks
 import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { FolderNotFoundError, NoteMetadata, VaultPath } from "@/infrastructure/host";
-import { AsyncResult, InvariantError, attempt } from "@/infrastructure/result";
+import { AsyncResult, InvariantError, Option, attempt } from "@/infrastructure/result";
 
 import { CycleService } from "../../cycle";
 import { JournalsIndex } from "../../journals-index";
+import { NoteletPathService } from "../../notelets/notelet-path";
 import { promptsInTemplate } from "../../prompts/prompts-in-path";
+import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
 import { NoteConnectionService } from "../note-connection";
 import { NotePathService } from "../note-path";
@@ -19,6 +21,7 @@ import { splitVaultPath } from "../vault-path";
 import { formatToRegexp } from "./format-to-regexp";
 
 import type { BulkAddParameters } from "./config";
+import type { TypeId } from "../../notelets/config";
 
 export type SkipReason = "already-connected" | "filtered" | "no-date" | "invalid-date" | "out-of-bounds";
 
@@ -104,6 +107,8 @@ export class BulkAddService {
   readonly #timeline = inject(TimelineService);
   readonly #path = inject(NotePathService);
   readonly #connection = inject(NoteConnectionService);
+  readonly #journals = inject(JournalsRepository);
+  readonly #noteletPaths = inject(NoteletPathService);
 
   async #applyAll(
     journalName: string,
@@ -117,6 +122,43 @@ export class BulkAddService {
       onProgress?.(log.length, actions.length);
     }
     return log;
+  }
+
+  // The configured target for one note, plus which halves of it are refused for carrying an
+  // unanswered prompt. A bulk run is unattended by definition, so a prompt in either template
+  // refuses that half rather than rendering the placeholder into a file name.
+  #targetFor(
+    journalName: string,
+    path: VaultPath,
+    anchor: AnchorString,
+    typeId: string | undefined,
+  ): { configured: VaultPath; nameRefused: boolean; folderRefused: boolean } {
+    if (typeId === undefined) {
+      const configuredResult = this.#path.pathFor(journalName, { journalName, anchor });
+      const config = this.#path.configFor(journalName);
+      return {
+        configured: configuredResult.isOk() ? configuredResult.value : path,
+        nameRefused: config !== undefined && promptsInTemplate(config.nameTemplate, config.prompts).length > 0,
+        folderRefused: config !== undefined && promptsInTemplate(config.folder, config.prompts).length > 0,
+      };
+    }
+    const config = this.#journals.get(journalName).getOrUndefined();
+    const type = config?.notelets[typeId];
+    if (config === undefined || type === undefined) {
+      return { configured: path, nameRefused: false, folderRefused: false };
+    }
+    const configuredResult = this.#noteletPaths.pathFor(config, type, {
+      kind: "notelet",
+      journalName,
+      anchor,
+      typeId: typeId as TypeId,
+      ...(type.counter.enabled && { counter: this.#noteletPaths.nextIndex(journalName, anchor, type.name) }),
+    });
+    return {
+      configured: configuredResult.isOk() ? configuredResult.value : path,
+      nameRefused: promptsInTemplate(type.nameTemplate, type.prompts).length > 0,
+      folderRefused: promptsInTemplate(type.folder, type.prompts).length > 0,
+    };
   }
 
   #planNote(journalName: string, path: VaultPath, parameters: BulkAddParameters, dateRegexp: RegExp): PlannedNote {
@@ -142,24 +184,22 @@ export class BulkAddService {
     const anchor = anchorOption.value;
     if (!this.#timeline.contains(journalName, anchor)) return { kind: "skip", path, reason: "out-of-bounds" };
 
-    const occupantOption = this.#index.entryByAnchor(journalName, anchor);
+    // A notelet has no anchor exclusivity, so there is no occupant and the existing-note
+    // parameter has nothing to decide.
+    const occupantOption =
+      parameters.noteletTypeId === undefined ? this.#index.entryByAnchor(journalName, anchor) : Option.none();
     const occupant =
       occupantOption.isSome() && occupantOption.value.path !== path ? occupantOption.value.path : undefined;
 
-    const configuredResult = this.#path.pathFor(journalName, { journalName, anchor });
-    const configured = configuredResult.isOk() ? configuredResult.value : path;
+    const {
+      configured,
+      nameRefused: nameHasPrompt,
+      folderRefused: folderHasPrompt,
+    } = this.#targetFor(journalName, path, anchor, parameters.noteletTypeId);
     const [currentFolder, currentName] = splitVaultPath(path);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
-
-    const config = this.#path.configFor(journalName);
-    const nameRefused =
-      configuredName !== currentName &&
-      config !== undefined &&
-      promptsInTemplate(config.nameTemplate, config.prompts).length > 0;
-    const folderRefused =
-      configuredFolder !== currentFolder &&
-      config !== undefined &&
-      promptsInTemplate(config.folder, config.prompts).length > 0;
+    const nameRefused = configuredName !== currentName && nameHasPrompt;
+    const folderRefused = configuredFolder !== currentFolder && folderHasPrompt;
     // A refused half must not leak the placeholder into the shown target path — fall back to
     // the note's own name/folder for whichever half is refused.
     const targetName = nameRefused ? currentName : configuredName;

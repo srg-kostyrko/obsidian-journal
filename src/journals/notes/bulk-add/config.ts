@@ -20,6 +20,10 @@ export interface BulkAddParameters {
   otherFolder: OtherFolderParameter;
   otherName: OtherNameParameter;
   dryRun: boolean;
+  // Present ⇒ every planned note is connected as a notelet of this type rather than as the
+  // journal's period note. `existingNote` is then meaningless and ignored: notelets have no
+  // anchor to be occupied.
+  noteletTypeId?: string;
 }
 
 export const bulkAddParametersSchema = v.pipe(
@@ -37,6 +41,7 @@ export const bulkAddParametersSchema = v.pipe(
     otherFolder: v.picklist(["keep", "move", "ask"]),
     otherName: v.picklist(["keep", "rename", "ask"]),
     dryRun: v.boolean(),
+    noteletTypeId: v.optional(v.string()),
   }),
   v.forward(
     v.partialCheck(

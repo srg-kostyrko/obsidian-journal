@@ -7,13 +7,14 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../../journals-index";
 import { journalsCoreModule } from "../../module";
-import { fixedJournal } from "../../testing";
+import { buildNoteletType, fixedJournal } from "../../testing";
 
 import { BulkAddService } from "./bulk-add-service";
 import { defaultBulkAddParameters } from "./config";
 
 import type { PlannedAction } from "./bulk-add-service";
 import type { BulkAddParameters } from "./config";
+import type { TypeId } from "../../notelets/config";
 import type { Prompt } from "../../prompts/config";
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
@@ -607,6 +608,123 @@ describe("BulkAddService", () => {
       const log = logResult.value;
       expect(log).toHaveLength(2);
       expect(log[1]?.path).toBe("src/ok.md");
+    });
+  });
+
+  describe("planning for a notelet type", () => {
+    const TYPE = "nt_1";
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  [TYPE]: buildNoteletType({
+                    id: TYPE as TypeId,
+                    name: "Standup",
+                    folder: "Standups",
+                    nameTemplate: "Standup {{notelet_index}}",
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      harness.host.putFolder("inbox");
+    });
+
+    function parameters(overrides: Partial<BulkAddParameters> = {}): BulkAddParameters {
+      return { ...defaultBulkAddParameters(), folder: "inbox", noteletTypeId: TYPE, ...overrides };
+    }
+
+    it("never reports an occupant, even where a period note holds the anchor", async () => {
+      harness.host.putFile("Journal/2026-06-01.md", "period", { journal: "daily", "journal-date": "2026-06-01" });
+      harness.resolve(JournalsIndex).register({
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: "Journal/2026-06-01.md" as VaultPath,
+      });
+      harness.host.putFile("inbox/2026-06-01.md", "");
+
+      const plan = await harness.resolve(BulkAddService).plan("daily", parameters());
+
+      expectOk(plan);
+      const action = plan.value.notes.at(0);
+      expect(action).toMatchObject({ kind: "action", existing: "none" });
+      expect(action).not.toHaveProperty("occupant");
+    });
+
+    it("targets the type's folder and name", async () => {
+      harness.host.putFile("inbox/2026-06-01.md", "");
+
+      const plan = await harness
+        .resolve(BulkAddService)
+        .plan("daily", parameters({ otherFolder: "move", otherName: "rename" }));
+
+      expectOk(plan);
+      expect(plan.value.notes.at(0)).toMatchObject({ targetPath: "Standups/Standup 1.md" });
+    });
+
+    it("refuses the rename for a type whose name template asks a question", async () => {
+      const prompting = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  [TYPE]: buildNoteletType({
+                    id: TYPE as TypeId,
+                    name: "Standup",
+                    folder: "inbox",
+                    nameTemplate: "{{who}}",
+                    prompts: [
+                      { variable: "who", question: "Who?", type: "text", frontmatterKey: "who", required: false },
+                    ],
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      prompting.host.putFolder("inbox");
+      prompting.host.putFile("inbox/2026-06-01.md", "");
+
+      const plan = await prompting.resolve(BulkAddService).plan("daily", parameters({ otherName: "rename" }));
+
+      expectOk(plan);
+      expect(plan.value.notes.at(0)).toMatchObject({ name: "refused-prompt", targetPath: "inbox/2026-06-01.md" });
+    });
+
+    it("skips a note either kind of claim already owns", async () => {
+      harness.host.putFile("inbox/2026-06-01.md", "", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": "Standup",
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: "inbox/2026-06-01.md" as VaultPath,
+        typeName: "Standup",
+        typeId: TYPE as TypeId,
+      });
+
+      const plan = await harness.resolve(BulkAddService).plan("daily", parameters());
+
+      expectOk(plan);
+      expect(plan.value.notes.at(0)).toMatchObject({ kind: "skip", reason: "already-connected" });
     });
   });
 });
