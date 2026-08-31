@@ -175,6 +175,52 @@ describe("ConnectNoteModal", () => {
     });
   });
 
+  describe("when the note is already connected as a numbered notelet", () => {
+    let harness: TestHarness;
+    const NOTELET = "Standups/Standup 2.md" as VaultPath;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  nt_1: buildNoteletType({
+                    id: "nt_1" as TypeId,
+                    name: "Standup",
+                    folder: "Standups",
+                    nameTemplate: "Standup {{notelet_index}}",
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: NOTELET,
+        typeName: "Standup",
+        typeId: "nt_1" as TypeId,
+        counter: 2,
+      });
+    });
+
+    // nextIndex counts this note too, so previewing against it would offer to rename the note
+    // to a number connect will not write.
+    it("offers no rename when its journal, date and type are all unchanged", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      expect(screen.queryByText(m.connect_note_modal_rename_label())).toBeNull();
+    });
+  });
+
   describe("when the note is connected as an orphaned notelet", () => {
     let harness: TestHarness;
     const ORPHAN = "Standups/orphan.md" as VaultPath;
@@ -549,6 +595,34 @@ describe("ConnectNoteModal", () => {
         await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
 
         expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
+      });
+
+      // The index is not Vue-reactive: without the version bridge this preview freezes as of
+      // mount, and the note the dialog is open over is exactly the one whose period is still
+      // being indexed.
+      it("re-previews the number when another notelet lands in the index after mount", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+        expect(
+          screen.getByText(m.connect_note_modal_rename_description({ current: "n.md", configured: "Standup 1.md" })),
+        ).toBeTruthy();
+
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: "Standup 1.md" as VaultPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+          counter: 1,
+        });
+
+        await waitFor(() => {
+          expect(
+            screen.getByText(m.connect_note_modal_rename_description({ current: "n.md", configured: "Standup 2.md" })),
+          ).toBeTruthy();
+        });
       });
 
       it("describes the rename against the type's name, not the journal's", async () => {

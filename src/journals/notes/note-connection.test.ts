@@ -1680,6 +1680,48 @@ describe("NoteConnectionService", () => {
       expect(frontmatter).toMatchObject({ journal: "daily", "journal-date": "2026-06-01" });
     });
 
+    it("keeps the notelet's own number when journal, date and type all stay put", async () => {
+      seedNotelet("Standup", "standup-index");
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE });
+
+      expect(harness.host.files.get(SOURCE)?.frontmatter).toMatchObject({ "standup-index": 2 });
+    });
+
+    it("takes the new period's next number when the date changes", async () => {
+      seedNotelet("Standup", "standup-index");
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-02"),
+        path: "other.md" as VaultPath,
+        typeName: "Standup",
+        typeId: TYPE,
+        counter: 4,
+      });
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-02"), { typeId: TYPE });
+
+      expect(harness.host.files.get(SOURCE)?.frontmatter).toMatchObject({ "standup-index": 5 });
+    });
+
+    it("takes the new type's next number when the type changes", async () => {
+      seedNotelet("Standup", "standup-index");
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: "retro.md" as VaultPath,
+        typeName: "Retro",
+        typeId: OTHER,
+        counter: 3,
+      });
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-01"), { typeId: OTHER });
+
+      expect(harness.host.files.get(SOURCE)?.frontmatter).toMatchObject({ "retro-index": 4 });
+    });
+
     it("strips the losing type's counter when a notelet is retyped", async () => {
       seedNotelet("Standup", "standup-index");
 

@@ -104,12 +104,24 @@ const configuredPath = computed(() => {
     // Reading the index inside a computed needs useIndexVersion(): JournalsIndex is not
     // Vue-reactive, and without this the previewed counter would freeze as of mount.
     void indexVersion.value;
+    // nextIndex counts this note too, so a notelet staying on its own journal, date and type
+    // keeps the number it already has — previewing one higher would promise a rename that
+    // connect does not perform.
+    const current = index.entryByPath(props.path).getOrUndefined();
+    const carried =
+      current !== undefined &&
+      isNotelet(current) &&
+      current.journalName === selected.value &&
+      current.anchor === a &&
+      current.typeId === selectedType.value
+        ? current.counter
+        : undefined;
     const metadata: NoteletMetadata = {
       kind: "notelet",
       journalName: selected.value,
       anchor: a,
       typeId: selectedType.value as TypeId,
-      counter: type.counter.enabled ? noteletPaths.nextIndex(selected.value, a, type.name) : undefined,
+      counter: type.counter.enabled ? (carried ?? noteletPaths.nextIndex(selected.value, a, type.name)) : undefined,
     };
     const path = noteletPaths.pathFor(selectedConfig.value, type, metadata);
     return path.isOk() ? path.value : undefined;

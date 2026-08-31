@@ -232,7 +232,9 @@ export class NoteConnectionService {
       // Assigned whether or not the note is renamed: listing order has to stay total across
       // notelets that kept their own names.
       const counter = type.counter.enabled
-        ? (options.counter ?? this.#noteletPaths.nextIndex(journalName, anchor, type.name))
+        ? (options.counter ??
+          this.#carriedCounterAt(path, journalName, anchor, typeId) ??
+          this.#noteletPaths.nextIndex(journalName, anchor, type.name))
         : undefined;
       const metadata: NoteletMetadata = {
         kind: "notelet",
@@ -260,6 +262,16 @@ export class NoteConnectionService {
       yield* this.#noteletCreation.attachNotelet(journalName, target, metadata, clearStale);
       return { path: target };
     });
+  }
+
+  // nextIndex counts the note being connected along with the rest of the period, so a notelet
+  // whose journal, anchor and type all stay put would be renumbered one higher every time its
+  // dialog is confirmed. Only a move off that tuple earns a new number.
+  #carriedCounterAt(path: VaultPath, journalName: string, anchor: AnchorString, typeId: TypeId): number | undefined {
+    const existing = this.#index.entryByPath(path).getOrUndefined();
+    if (existing === undefined || !isNotelet(existing)) return undefined;
+    const unchanged = existing.journalName === journalName && existing.anchor === anchor && existing.typeId === typeId;
+    return unchanged ? existing.counter : undefined;
   }
 
   // The journal whose keys this note has to lose before it takes a new claim, if any. Neither
