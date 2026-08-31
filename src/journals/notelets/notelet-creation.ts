@@ -45,6 +45,15 @@ export type NoteletCreationError =
   | PromptsUnansweredError
   | UserAborted;
 
+export type NoteletAttachError =
+  | JournalNotFoundError
+  | NoteletTypeNotFoundError
+  | TemplateRenderError
+  | NoteReadError
+  | NoteWriteError
+  | NoteNotFoundError
+  | FrontmatterError;
+
 export interface CreateNoteletOptions {
   readonly unattended?: boolean;
 }
@@ -130,6 +139,34 @@ export class NoteletCreationService {
       }
       yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#guard.release(path));
       return { path };
+    });
+  }
+
+  /**
+   * Claims an existing note as a notelet of `metadata.typeId`.
+   *
+   * The period twin refuses an occupied anchor; this one cannot, because several notelets per
+   * anchor is the design. Emptiness is judged against the note's original body — writing
+   * frontmatter fills the file, so the read has to come first.
+   */
+  attachNotelet(
+    journalName: string,
+    path: VaultPath,
+    metadata: NoteletMetadata,
+  ): AsyncResult<void, NoteletAttachError> {
+    return attempt.in(this, async function* (this: NoteletCreationService) {
+      const config = yield* this.#journals.require(journalName);
+      const type = config.notelets[metadata.typeId];
+      if (type === undefined) return yield* new Err(new NoteletTypeNotFoundError(journalName, metadata.typeId));
+
+      const mutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+      const existing = yield* this.#notes.read(path);
+      if (existing.trim() === "") {
+        const context = yield* this.#paths.bodyContextFor(config, type, metadata, basenameOf(path));
+        const content = yield* this.#content.renderTemplates(type.templates, context, path);
+        if (content !== "") yield* this.#notes.write(path, content);
+      }
+      yield* this.#notes.updateFrontmatter(path, mutator);
     });
   }
 }
