@@ -1710,6 +1710,50 @@ describe("NoteConnectionService", () => {
       expect(frontmatter).not.toHaveProperty("day-index");
     });
 
+    it("strips journal A's keys and takes journal B's claim on a cross-journal reconnect", async () => {
+      const crossing = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            acme: fixedJournal(
+              "acme",
+              { type: "day" },
+              {
+                prompts: [
+                  { variable: "note", question: "Note?", type: "text", frontmatterKey: "acme-note", required: false },
+                ],
+              },
+            ),
+            beta: fixedJournal(
+              "beta",
+              { type: "day" },
+              {
+                prompts: [
+                  { variable: "note", question: "Note?", type: "text", frontmatterKey: "beta-note", required: false },
+                ],
+              },
+            ),
+          },
+        },
+      });
+      crossing.host.putFile(SOURCE, "content", {
+        journal: "acme",
+        "journal-date": "2026-06-01",
+        "acme-note": "kept while on A",
+      });
+      crossing.resolve(JournalsIndex).register({
+        journalName: "acme",
+        anchor: anchor("2026-06-01"),
+        path: SOURCE,
+      });
+
+      await crossing.resolve(NoteConnectionService).connect("beta", SOURCE, anchor("2026-06-02"));
+
+      const frontmatter = crossing.host.files.get(SOURCE)?.frontmatter ?? {};
+      expect(frontmatter).not.toHaveProperty("acme-note");
+      expect(frontmatter).toMatchObject({ journal: "beta", "journal-date": "2026-06-02" });
+    });
+
     // A re-date is not a re-claim. Clearing here would take an answer the user typed with it.
     it("keeps a stored answer when only the date changes", async () => {
       const answering = await testContainer({
