@@ -253,6 +253,29 @@ export class NoteConnectionService {
     });
   }
 
+  // The journal whose keys this note has to lose before it takes a new claim, if any. Neither
+  // write mutator removes the other kind's keys — the period one leaves the type key in place on
+  // purpose — so a note that changed journal, kind or type would keep parsing as what it was.
+  // A plain re-date is not a re-claim: clearing there would take a hand-typed answer with it.
+  #staleClaimOn(path: VaultPath, journalName: string, typeId: TypeId | undefined): string | undefined {
+    const existing = this.#index.entryByPath(path).getOrUndefined();
+    if (existing === undefined) return undefined;
+    if (existing.journalName !== journalName) return existing.journalName;
+    if (isNotelet(existing)) return typeId === undefined || existing.typeId !== typeId ? journalName : undefined;
+    return typeId === undefined ? undefined : journalName;
+  }
+
+  #stripStaleClaim(path: VaultPath, journalName: string, typeId: TypeId | undefined): AsyncResult<void, ConnectError> {
+    const stale = this.#staleClaimOn(path, journalName, typeId);
+    if (stale === undefined) return AsyncResult.ok();
+    return attempt.in(this, async function* (this: NoteConnectionService) {
+      const clear = yield* this.#frontmatter.clearMutator(stale);
+      yield* this.#notes.updateFrontmatter(path, clear);
+      // The strip has happened; the index only hears about it once the vault events land.
+      this.#index.unregister(path);
+    });
+  }
+
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
     const [currentFolder, currentName] = splitVaultPath(current);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
@@ -285,6 +308,8 @@ export class NoteConnectionService {
     options: ConnectOptions = {},
   ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
+      yield* this.#stripStaleClaim(path, journalName, options.typeId);
+
       if (options.typeId !== undefined) {
         return yield* this.#connectNotelet(journalName, path, anchor, options.typeId, options);
       }

@@ -1608,4 +1608,150 @@ describe("NoteConnectionService", () => {
       expect(connected.value.path).toBe("inbox/Standup 1.md");
     });
   });
+
+  describe("retype", () => {
+    const SOURCE = "inbox/n.md" as VaultPath;
+    const TYPE = "nt_1" as TypeId;
+    const OTHER = "nt_2" as TypeId;
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                numbering: {
+                  enabled: true,
+                  anchorDate: anchor("2026-01-01"),
+                  allowBefore: false,
+                  sources: [
+                    { variable: "day_index", frontmatterKey: "day-index", anchorValue: 1, reset: { kind: "never" } },
+                  ],
+                },
+                notelets: {
+                  [TYPE]: buildNoteletType({
+                    id: TYPE,
+                    name: "Standup",
+                    counter: { enabled: true, frontmatterKey: "standup-index" },
+                  }),
+                  [OTHER]: buildNoteletType({
+                    id: OTHER,
+                    name: "Retro",
+                    counter: { enabled: true, frontmatterKey: "retro-index" },
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+    });
+
+    function seedNotelet(typeName: string, counterKey: string): void {
+      harness.host.putFile(SOURCE, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "journal-notelet": typeName,
+        [counterKey]: 2,
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: SOURCE,
+        typeName,
+        typeId: typeName === "Standup" ? TYPE : OTHER,
+        counter: 2,
+      });
+    }
+
+    it("strips the type key when a notelet becomes the period note", async () => {
+      seedNotelet("Standup", "standup-index");
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-01"));
+
+      const frontmatter = harness.host.files.get(SOURCE)?.frontmatter ?? {};
+      expect(frontmatter).not.toHaveProperty("journal-notelet");
+      expect(frontmatter).not.toHaveProperty("standup-index");
+      expect(frontmatter).toMatchObject({ journal: "daily", "journal-date": "2026-06-01" });
+    });
+
+    it("strips the losing type's counter when a notelet is retyped", async () => {
+      seedNotelet("Standup", "standup-index");
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-01"), { typeId: OTHER });
+
+      const frontmatter = harness.host.files.get(SOURCE)?.frontmatter ?? {};
+      expect(frontmatter).toMatchObject({ "journal-notelet": "Retro", "retro-index": 1 });
+      expect(frontmatter).not.toHaveProperty("standup-index");
+    });
+
+    it("strips the journal's numbering digits when a period note becomes a notelet", async () => {
+      harness.host.putFile(SOURCE, "content", {
+        journal: "daily",
+        "journal-date": "2026-06-01",
+        "day-index": 12,
+      });
+      harness.resolve(JournalsIndex).register({
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: SOURCE,
+        numbers: { day_index: 12 },
+      });
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-01"), { typeId: TYPE });
+
+      const frontmatter = harness.host.files.get(SOURCE)?.frontmatter ?? {};
+      expect(frontmatter).toMatchObject({ "journal-notelet": "Standup" });
+      expect(frontmatter).not.toHaveProperty("day-index");
+    });
+
+    // A re-date is not a re-claim. Clearing here would take an answer the user typed with it.
+    it("keeps a stored answer when only the date changes", async () => {
+      const answering = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                prompts: [
+                  { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false },
+                ],
+              },
+            ),
+          },
+        },
+      });
+      answering.host.putFile(SOURCE, "content", { journal: "daily", "journal-date": "2026-06-01", mood: "good" });
+      answering.resolve(JournalsIndex).register({
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: SOURCE,
+        answers: { mood: "good" },
+      });
+
+      await answering.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-02"));
+
+      expect(answering.host.files.get(SOURCE)?.frontmatter).toMatchObject({
+        "journal-date": "2026-06-02",
+        mood: "good",
+      });
+    });
+
+    // The index only learns of the strip once vault events land. Leaving the stale entry behind
+    // lets ensureNote find the note at its old anchor and write the wrong kind back over it.
+    it("drops the stale index entry as soon as the claim is stripped", async () => {
+      seedNotelet("Standup", "standup-index");
+
+      await harness.resolve(NoteConnectionService).connect("daily", SOURCE, anchor("2026-06-01"));
+
+      expect(harness.resolve(JournalsIndex).noteletsAt("daily", anchor("2026-06-01"))).toHaveLength(0);
+    });
+  });
 });
