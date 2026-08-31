@@ -20,6 +20,7 @@ import { pickingForWrite } from "../../picking";
 import { promptsInTemplate } from "../../prompts/prompts-in-path";
 import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
+import { isNotelet } from "../../types";
 import { useIndexVersion } from "../../use-index-version";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
@@ -44,12 +45,15 @@ const existing = index.entryByPath(props.path);
 const existingJournal = existing.isSome() ? existing.value.journalName : "";
 const journalNames = [...journals.find().ids()];
 
-const selected = ref(journalNames[0] ?? "");
-const dateAnchor = ref<AnchorString>("" as AnchorString);
+const existingEntry = existing.getOrUndefined();
+const selected = ref(existingEntry?.journalName ?? journalNames[0] ?? "");
+const dateAnchor = ref<AnchorString>((existingEntry?.anchor ?? "") as AnchorString);
 const override = ref(false);
 const rename = ref(false);
 const move = ref(false);
-const selectedType = ref<string>("");
+const selectedType = ref<string>(
+  existingEntry !== undefined && isNotelet(existingEntry) ? (existingEntry.typeId ?? "") : "",
+);
 
 const selectedConfig = computed(() => journals.get(selected.value).getOrUndefined());
 const picking = computed<Picking>(() => (selectedConfig.value ? pickingForWrite(selectedConfig.value.write) : "day"));
@@ -173,20 +177,9 @@ function connect(): void {
 </script>
 
 <template>
-  <div v-if="existing.isSome()">
-    <UiSettingRow>
-      <template #description>
-        {{ m.connect_note_modal_connected_to({ journalName: existingJournal }) }}
-      </template>
-    </UiSettingRow>
-    <UiSettingRow controls-only>
-      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta @click="disconnect">{{ m.connect_note_modal_disconnect() }}</UiButton>
-    </UiSettingRow>
-  </div>
   <!-- Nothing to connect to on a fresh install: the form would render an empty picker above a
        permanently disabled button, which states the situation to nobody. -->
-  <div v-else-if="journalNames.length === 0">
+  <div v-if="journalNames.length === 0">
     <UiSettingRow>
       <template #description>{{ m.common_no_journals_yet() }}</template>
     </UiSettingRow>
@@ -195,12 +188,17 @@ function connect(): void {
     </UiSettingRow>
   </div>
   <div v-else>
-    <UiSettingRow>
+    <UiSettingRow v-if="existing.isSome()">
+      <template #description>
+        {{ m.connect_note_modal_connected_to({ journalName: existingJournal }) }}
+      </template>
+    </UiSettingRow>
+    <UiSettingRow v-else>
       <template #description>{{ path }}</template>
     </UiSettingRow>
     <UiSettingRow>
       <template #name>{{ m.common_label_journal() }}</template>
-      <UiDropdown v-model="selected">
+      <UiDropdown v-model="selected" :aria-label="m.common_label_journal()">
         <option v-for="name in journalNames" :key="name" :value="name">{{ name }}</option>
       </UiDropdown>
     </UiSettingRow>
@@ -251,7 +249,10 @@ function connect(): void {
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta :disabled="!canConnect" @click="connect">{{ m.connect_note_modal_connect() }}</UiButton>
+      <UiButton v-if="existing.isSome()" @click="disconnect">{{ m.connect_note_modal_disconnect() }}</UiButton>
+      <UiButton cta :disabled="!canConnect" @click="connect">
+        {{ existing.isSome() ? m.connect_note_modal_update() : m.connect_note_modal_connect() }}
+      </UiButton>
     </UiSettingRow>
   </div>
 </template>

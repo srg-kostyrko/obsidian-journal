@@ -423,6 +423,7 @@
   "connect_note_modal_move_refused_prompt": "Цей журнал ставить запитання, відповідь на яке входить до папки, тому нотатка залишається у своїй поточній папці.",
   "connect_note_modal_move_refused_prompt_notelet": "Цей тип піднотатки ставить запитання, відповідь на яке входить до папки, тому нотатка залишається у своїй поточній папці.",
   "connect_note_modal_connect": "Підключити",
+  "connect_note_modal_update": "Оновити",
   "connect_note_modal_connected_to": "Ця нотатка пов’язана з «{journalName}».",
   "connect_note_modal_disconnect": "Від’єднати",
   "connect_note_modal_out_of_bounds": "Ця дата знаходиться поза межами активної часової шкали журналу.",

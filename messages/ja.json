@@ -423,6 +423,7 @@
   "connect_note_modal_move_refused_prompt": "このジャーナルはフォルダに反映される質問をするため、ノートは現在のフォルダのままになります。",
   "connect_note_modal_move_refused_prompt_notelet": "このサブノートの種類はフォルダに反映される質問をするため、ノートは現在のフォルダのままになります。",
   "connect_note_modal_connect": "接続",
+  "connect_note_modal_update": "更新",
   "connect_note_modal_connected_to": "このノートは「{journalName}」に接続されています。",
   "connect_note_modal_disconnect": "切断",
   "connect_note_modal_out_of_bounds": "この日付はジャーナルの有効期間外です。",

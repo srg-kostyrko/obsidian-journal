@@ -434,6 +434,7 @@
   "connect_note_modal_move_refused_prompt": "Este diario hace una pregunta cuya respuesta se incluye en la carpeta, así que la nota permanece en su carpeta actual.",
   "connect_note_modal_move_refused_prompt_notelet": "Este tipo de nota breve hace una pregunta cuya respuesta se incluye en la carpeta, así que la nota permanece en su carpeta actual.",
   "connect_note_modal_connect": "Conectar",
+  "connect_note_modal_update": "Actualizar",
   "connect_note_modal_connected_to": "Esta nota está conectada a «{journalName}».",
   "connect_note_modal_disconnect": "Desconectar",
   "connect_note_modal_out_of_bounds": "Esta fecha está fuera de la línea de tiempo activa del diario.",

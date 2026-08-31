@@ -434,6 +434,7 @@
   "connect_note_modal_move_refused_prompt": "Este diário faz uma pergunta cuja resposta vai para a pasta, então a nota permanece na pasta atual.",
   "connect_note_modal_move_refused_prompt_notelet": "Este tipo de nota breve faz uma pergunta cuja resposta vai para a pasta, então a nota permanece na pasta atual.",
   "connect_note_modal_connect": "Conectar",
+  "connect_note_modal_update": "Atualizar",
   "connect_note_modal_connected_to": "Esta nota está conectada a \"{journalName}\".",
   "connect_note_modal_disconnect": "Desconectar",
   "connect_note_modal_out_of_bounds": "Esta data está fora da linha do tempo ativa do diário.",

@@ -436,6 +436,7 @@
   "connect_note_modal_move_refused_prompt": "Этот журнал задаёт вопрос, ответ на который входит в папку, поэтому заметка остаётся в своей текущей папке.",
   "connect_note_modal_move_refused_prompt_notelet": "Этот тип подзаметки задаёт вопрос, ответ на который входит в папку, поэтому заметка остаётся в своей текущей папке.",
   "connect_note_modal_connect": "Связать",
+  "connect_note_modal_update": "Обновить",
   "connect_note_modal_connected_to": "Эта заметка связана с «{journalName}».",
   "connect_note_modal_disconnect": "Отвязать",
   "connect_note_modal_out_of_bounds": "Эта дата вне активной шкалы времени журнала.",

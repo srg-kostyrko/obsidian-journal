@@ -423,6 +423,7 @@
   "connect_note_modal_move_refused_prompt": "此日记会提出一个问题，其答案会用于文件夹，因此笔记将保留在当前文件夹中。",
   "connect_note_modal_move_refused_prompt_notelet": "此子笔记类型会提出一个问题，其答案会用于文件夹，因此笔记将保留在当前文件夹中。",
   "connect_note_modal_connect": "连接",
+  "connect_note_modal_update": "更新",
   "connect_note_modal_connected_to": "此笔记已连接到“{journalName}”。",
   "connect_note_modal_disconnect": "断开",
   "connect_note_modal_out_of_bounds": "该日期不在此日记的有效时间范围内。",

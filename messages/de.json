@@ -434,6 +434,7 @@
   "connect_note_modal_move_refused_prompt": "Dieses Journal stellt eine Frage, deren Antwort in den Ordner einfließt, daher bleibt die Notiz in ihrem aktuellen Ordner.",
   "connect_note_modal_move_refused_prompt_notelet": "Dieser Kurznotiz-Typ stellt eine Frage, deren Antwort in den Ordner einfließt, daher bleibt die Notiz in ihrem aktuellen Ordner.",
   "connect_note_modal_connect": "Verknüpfen",
+  "connect_note_modal_update": "Aktualisieren",
   "connect_note_modal_connected_to": "Diese Notiz ist mit „{journalName}“ verknüpft.",
   "connect_note_modal_disconnect": "Trennen",
   "connect_note_modal_out_of_bounds": "Dieses Datum liegt außerhalb des aktiven Zeitrahmens des Journals.",

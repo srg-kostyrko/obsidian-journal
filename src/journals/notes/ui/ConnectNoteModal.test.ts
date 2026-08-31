@@ -20,10 +20,12 @@ import type { Prompt } from "../../prompts/config";
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
 async function pickDate(harness: TestHarness, when: string): Promise<void> {
-  await userEvent.click(screen.getByText(m.common_pick_a_date()));
+  const trigger = document.querySelector<HTMLElement>(".date-picker-trigger");
+  expect(trigger).toBeTruthy();
+  await userEvent.click(trigger!);
   harness.modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date(when)));
   await waitFor(() => {
-    expect(screen.queryByText(m.common_pick_a_date())).toBeNull();
+    expect(trigger?.textContent).toContain(when);
   });
 }
 
@@ -53,10 +55,84 @@ describe("ConnectNoteModal", () => {
       expect(submit).toHaveBeenCalledWith({ action: "disconnect", journalName: "daily" });
     });
 
-    it("does not render the journal select when the note is connected", () => {
+    it("pre-selects the journal the note is connected to", () => {
       harness.renderModal(ConnectNoteModal, { props: { path: "Journal/2026-06-01.md" as VaultPath } });
 
-      expect(screen.queryByRole("combobox")).toBeNull();
+      expect(screen.getByLabelText<HTMLSelectElement>(m.common_label_journal()).value).toBe("daily");
+    });
+
+    it("pre-selects the note's own date", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: "Journal/2026-06-01.md" as VaultPath } });
+
+      expect(screen.queryByText(m.common_pick_a_date())).toBeNull();
+    });
+
+    it("still offers Disconnect beside the update button", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: "Journal/2026-06-01.md" as VaultPath } });
+
+      expect(screen.getByText(m.connect_note_modal_disconnect())).toBeTruthy();
+      expect(screen.getByText(m.connect_note_modal_update())).toBeTruthy();
+    });
+
+    it("re-dates the note to the newly picked period", async () => {
+      const { submit } = harness.renderModal(ConnectNoteModal, {
+        props: { path: "Journal/2026-06-01.md" as VaultPath },
+      });
+      await pickDate(harness, "2026-06-05");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", anchor: "2026-06-05" }));
+    });
+  });
+
+  describe("when the note is already connected as a notelet", () => {
+    let harness: TestHarness;
+    const NOTELET = "Standups/standup.md" as VaultPath;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+            ),
+          },
+        },
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: NOTELET,
+        typeName: "Standup",
+        typeId: "nt_1" as TypeId,
+      });
+    });
+
+    it("pre-selects the type it is connected as", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("nt_1");
+    });
+
+    it("submits the period note when the kind is changed back", async () => {
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "");
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
+    });
+
+    // The note is its own occupant only in the period sense; a notelet has none at all.
+    it("does not offer to replace anything", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
     });
   });
 

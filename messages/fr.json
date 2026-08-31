@@ -434,6 +434,7 @@
   "connect_note_modal_move_refused_prompt": "Ce journal pose une question dont la réponse entre dans le dossier, donc la note reste dans son dossier actuel.",
   "connect_note_modal_move_refused_prompt_notelet": "Ce type de note brève pose une question dont la réponse entre dans le dossier, donc la note reste dans son dossier actuel.",
   "connect_note_modal_connect": "Connecter",
+  "connect_note_modal_update": "Mettre à jour",
   "connect_note_modal_connected_to": "Cette note est connectée à « {journalName} ».",
   "connect_note_modal_disconnect": "Déconnecter",
   "connect_note_modal_out_of_bounds": "Cette date se situe en dehors de la période active du journal.",

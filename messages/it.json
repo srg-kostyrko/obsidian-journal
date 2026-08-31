@@ -434,6 +434,7 @@
   "connect_note_modal_move_refused_prompt": "Questo diario pone una domanda la cui risposta confluisce nella cartella, quindi la nota rimane nella sua cartella attuale.",
   "connect_note_modal_move_refused_prompt_notelet": "Questo tipo di nota breve pone una domanda la cui risposta confluisce nella cartella, quindi la nota rimane nella sua cartella attuale.",
   "connect_note_modal_connect": "Collega",
+  "connect_note_modal_update": "Aggiorna",
   "connect_note_modal_connected_to": "Questa nota è collegata a \"{journalName}\".",
   "connect_note_modal_disconnect": "Scollega",
   "connect_note_modal_out_of_bounds": "Questa data non rientra nella cronologia attiva del diario.",

@@ -434,6 +434,7 @@
   "connect_note_modal_move_refused_prompt": "이 저널은 폴더에 반영되는 질문을 하므로 노트는 현재 폴더에 유지됩니다.",
   "connect_note_modal_move_refused_prompt_notelet": "이 서브노트 유형은 폴더에 반영되는 질문을 하므로 노트는 현재 폴더에 유지됩니다.",
   "connect_note_modal_connect": "연결",
+  "connect_note_modal_update": "업데이트",
   "connect_note_modal_connected_to": "이 노트는 \"{journalName}\"에 연결되어 있습니다.",
   "connect_note_modal_disconnect": "연결 해제",
   "connect_note_modal_out_of_bounds": "이 날짜는 저널의 활성 타임라인을 벗어납니다.",
