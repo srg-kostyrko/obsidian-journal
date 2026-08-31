@@ -1560,6 +1560,8 @@
   "journal_clone_modal_description": "Settings and commands are copied. Notes are not.",
   "journal_clone_modal_name_label": "New journal name",
   "journal_clone_modal_title": "Clone {name}",
+  "journal_clone_notelet_types_description": "Adds a command for each type. Turn off to clone without them.",
+  "journal_clone_notelet_types_label": "Copy notelet types",
   "journal_edit_allow_before_description": "Allow indexing before the anchor date. May produce negative numbers.",
   "journal_edit_allow_before_label": "Allow before anchor",
   "journal_edit_anchor_description": "Numbering starts from this date. The note for this date gets the start number, and later notes count up from it.",

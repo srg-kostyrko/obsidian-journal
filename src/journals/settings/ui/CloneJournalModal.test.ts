@@ -40,7 +40,24 @@ describe("CloneJournalModal", () => {
       });
       await userEvent.click(screen.getByText(m.common_action_submit()));
       await waitFor(() => {
-        expect(submit).toHaveBeenCalledWith({ newName: "daily (copy)" });
+        expect(submit).toHaveBeenCalledWith({ newName: "daily (copy)", cloneNoteletTypes: true });
+      });
+    });
+
+    it("shows a checkbox for cloning notelet types, on by default", () => {
+      harness.renderModal(CloneJournalModal, { props: { sourceName: "daily", suggestedName: "daily (copy)" } });
+      const checkbox = screen.getByRole("checkbox", { name: m.journal_clone_notelet_types_label() });
+      expect(checkbox.getAttribute("aria-checked")).toBe("true");
+    });
+
+    it("submits false when the notelet types checkbox is turned off", async () => {
+      const { submit } = harness.renderModal(CloneJournalModal, {
+        props: { sourceName: "daily", suggestedName: "daily (copy)" },
+      });
+      await userEvent.click(screen.getByRole("checkbox", { name: m.journal_clone_notelet_types_label() }));
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ newName: "daily (copy)", cloneNoteletTypes: false });
       });
     });
 
@@ -53,7 +70,7 @@ describe("CloneJournalModal", () => {
       await userEvent.type(input, "mornings");
       await userEvent.click(screen.getByText(m.common_action_submit()));
       await waitFor(() => {
-        expect(submit).toHaveBeenCalledWith({ newName: "mornings" });
+        expect(submit).toHaveBeenCalledWith({ newName: "mornings", cloneNoteletTypes: true });
       });
     });
 

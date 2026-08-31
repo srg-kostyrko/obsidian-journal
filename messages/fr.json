@@ -1554,6 +1554,8 @@
   "journal_clone_modal_description": "Les paramètres et les commandes sont copiés. Les notes ne le sont pas.",
   "journal_clone_modal_name_label": "Nouveau nom du journal",
   "journal_clone_modal_title": "Cloner {name}",
+  "journal_clone_notelet_types_description": "Ajoute une commande pour chaque type. Désactivez cette option pour cloner sans eux.",
+  "journal_clone_notelet_types_label": "Copier les types de note brève",
   "journal_edit_allow_before_description": "Autoriser l’indexation avant la date d’ancrage. Peut produire des nombres négatifs.",
   "journal_edit_allow_before_label": "Autoriser avant l’ancrage",
   "journal_edit_anchor_description": "La numérotation commence à cette date. La note de cette date reçoit le numéro de départ, et les notes suivantes sont numérotées à partir de là.",

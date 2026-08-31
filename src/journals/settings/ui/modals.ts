@@ -41,7 +41,7 @@ export const deleteNoteletTypeModal = defineModal<{ mode: "keep" | "clear" | "de
     m.journal_notelet_delete_modal_title({ name: typeName }),
 });
 
-export const cloneJournalModal = defineModal<{ newName: string }>()({
+export const cloneJournalModal = defineModal<{ newName: string; cloneNoteletTypes: boolean }>()({
   component: CloneJournalModal,
   title: ({ sourceName }: { sourceName: string; suggestedName: string }) =>
     m.journal_clone_modal_title({ name: sourceName }),

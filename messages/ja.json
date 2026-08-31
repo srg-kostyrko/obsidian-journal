@@ -1401,6 +1401,8 @@
   "journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
   "journal_clone_modal_name_label": "新しいジャーナル名",
   "journal_clone_modal_title": "{name}を複製",
+  "journal_clone_notelet_types_description": "種類ごとにコマンドを追加します。オフにすると、それらなしで複製します。",
+  "journal_clone_notelet_types_label": "サブノートの種類をコピー",
   "journal_edit_allow_before_description": "アンカー日より前の日付にも番号を付けます。負の数になる場合があります。",
   "journal_edit_allow_before_label": "アンカー日より前を許可",
   "journal_edit_anchor_description": "この日付から番号付けが始まります。この日付のノートに開始番号が付き、以降のノートは順に加算されます。",

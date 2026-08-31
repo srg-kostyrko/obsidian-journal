@@ -1554,6 +1554,8 @@
   "journal_clone_modal_description": "Le impostazioni e i comandi vengono copiati. Le note no.",
   "journal_clone_modal_name_label": "Nuovo nome del diario",
   "journal_clone_modal_title": "Clona {name}",
+  "journal_clone_notelet_types_description": "Aggiunge un comando per ogni tipo. Disattiva per clonare senza di essi.",
+  "journal_clone_notelet_types_label": "Copia i tipi di nota breve",
   "journal_edit_allow_before_description": "Consenti l'indicizzazione prima della data di ancoraggio. Potrebbe produrre numeri negativi.",
   "journal_edit_allow_before_label": "Consenti prima dell'ancoraggio",
   "journal_edit_anchor_description": "La numerazione parte da questa data. La nota di questa data riceve il numero iniziale e le note successive proseguono il conteggio.",

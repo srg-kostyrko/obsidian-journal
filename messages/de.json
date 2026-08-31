@@ -1556,6 +1556,8 @@
   "journal_clone_modal_description": "Einstellungen und Befehle werden kopiert, Notizen nicht.",
   "journal_clone_modal_name_label": "Neuer Journalname",
   "journal_clone_modal_title": "{name} klonen",
+  "journal_clone_notelet_types_description": "Fügt für jeden Typ einen Befehl hinzu. Deaktivieren, um ohne sie zu klonen.",
+  "journal_clone_notelet_types_label": "Kurznotiz-Typen kopieren",
   "journal_edit_allow_before_description": "Indizierung vor dem Ankerdatum zulassen. Kann zu negativen Zahlen führen.",
   "journal_edit_allow_before_label": "Vor dem Ankerdatum zulassen",
   "journal_edit_anchor_description": "Die Nummerierung beginnt an diesem Datum. Die Notiz für dieses Datum erhält die Startnummer, spätere Notizen zählen von dort aufwärts.",

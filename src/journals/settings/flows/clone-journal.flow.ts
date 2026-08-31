@@ -1,9 +1,12 @@
+import { cloneFnJSON } from "@vueuse/core";
+
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
+import type { TypeId } from "@/journals/notelets/config";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsUiService } from "@/settings";
 
@@ -34,7 +37,22 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
       const submitted = yield* this.#modals
         .open(cloneJournalModal, { sourceName: parameters.journalName, suggestedName })
         .mapErr(() => new UserAborted("clone-journal-modal"));
+
+      // Re-read across the modal's await: the source's notelet types are what gets re-added below.
+      const source = this.#repository.get(parameters.journalName).getOrUndefined();
       yield* this.#repository.clone(parameters.journalName, submitted.newName).mapErr(toFlowError);
+
+      // clone() copies the notelets record verbatim, ids included, and ids are unique. Clear it,
+      // then re-add each type through addNoteletType so a cloned type is indistinguishable from a
+      // hand-created one, seeded command included.
+      this.#repository.update(submitted.newName, { notelets: {} });
+      if (submitted.cloneNoteletTypes && source !== undefined) {
+        for (const type of Object.values(source.notelets)) {
+          const id = crypto.randomUUID() as TypeId;
+          this.#repository.addNoteletType(submitted.newName, { ...cloneFnJSON(type), id });
+        }
+      }
+
       this.#ui.push(journalEditSubpage, { journalName: submitted.newName });
       return { name: submitted.newName };
     });

@@ -1592,6 +1592,8 @@
   "journal_clone_modal_description": "Настройки и команды копируются. Заметки — нет.",
   "journal_clone_modal_name_label": "Новое название журнала",
   "journal_clone_modal_title": "Клонировать {name}",
+  "journal_clone_notelet_types_description": "Добавляет команду для каждого типа. Отключите, чтобы клонировать без них.",
+  "journal_clone_notelet_types_label": "Копировать типы подзаметок",
   "journal_edit_allow_before_description": "Разрешить индексацию до даты привязки. Может давать отрицательные номера.",
   "journal_edit_allow_before_label": "Разрешить до даты привязки",
   "journal_edit_anchor_description": "Нумерация начинается с этой даты. Заметка за эту дату получает начальный номер, а следующие нумеруются дальше.",

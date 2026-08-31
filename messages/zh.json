@@ -1401,6 +1401,8 @@
   "journal_clone_modal_description": "设置和命令会被复制，笔记不会。",
   "journal_clone_modal_name_label": "新日记名称",
   "journal_clone_modal_title": "克隆{name}",
+  "journal_clone_notelet_types_description": "为每种类型添加一个命令。关闭此项以在不复制这些类型的情况下克隆。",
+  "journal_clone_notelet_types_label": "复制子笔记类型",
   "journal_edit_allow_before_description": "允许在锚定日期之前进行索引。可能会产生负数。",
   "journal_edit_allow_before_label": "允许早于锚定日期",
   "journal_edit_anchor_description": "编号从此日期开始计算。此日期的笔记获得起始编号，之后的笔记依次递增。",
