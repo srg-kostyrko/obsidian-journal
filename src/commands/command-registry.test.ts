@@ -516,6 +516,20 @@ describe("DynamicCommandRegistry journal cascade", () => {
     expect(host.commands.get("cmd-1")).toBeUndefined();
   });
 
+  it("deletes a journal's notelet commands when the journal is deleted", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "journal", journalName: "daily" } }),
+        "cmd-2": buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }),
+      },
+    });
+
+    journalsRepo.delete("daily");
+
+    expect([...commandsRepo.find().entries()]).toEqual([]);
+  });
+
   it("leaves an all-target command untouched when a journal is deleted", async () => {
     const { commandsRepo, journalsRepo } = await buildRegistry({
       journals: { daily: fixedJournal("daily", { type: "day" }) },
@@ -800,6 +814,84 @@ describe("DynamicCommandRegistry notelet targets", () => {
       journalName: "Job",
       typeId: "nt_7f3a",
     });
+  });
+
+  it("seeds a command when a notelet type is added", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+    });
+
+    journalsRepo.addNoteletType("daily", buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }));
+
+    const commands = [...commandsRepo.find().entries()].map(([, command]) => command);
+    expect(commands).toEqual([
+      expect.objectContaining({
+        name: m.journal_notelet_command_name({ type: "Standup" }),
+        icon: "",
+        showInRibbon: false,
+        openMode: "tab",
+        target: { kind: "notelet", journalName: "daily", typeId: "nt_1" },
+        type: "same",
+        context: "today",
+      }),
+    ]);
+  });
+
+  it("registers the seeded command with the host", async () => {
+    const { host, commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+    });
+
+    journalsRepo.addNoteletType("daily", buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }));
+
+    const [id] = [...commandsRepo.find().entries()].at(0) ?? [];
+    expect(id).toBeDefined();
+    expect(host.commands.get(id ?? "")?.checkCallback?.(true)).toBe(true);
+  });
+
+  it("deletes a type's command when the type is deleted", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: {
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+        ),
+      },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }),
+      },
+    });
+
+    journalsRepo.deleteNoteletType("daily", "nt_1" as TypeId);
+
+    expect([...commandsRepo.find().entries()]).toEqual([]);
+  });
+
+  it("leaves a different type's command untouched when a type is deleted", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: {
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            notelets: {
+              nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }),
+              nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Retro" }),
+            },
+          },
+        ),
+      },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }),
+        "cmd-2": buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_2" } }),
+      },
+    });
+
+    journalsRepo.deleteNoteletType("daily", "nt_1" as TypeId);
+
+    expect(commandsRepo.get("cmd-1").isNone()).toBe(true);
+    expect(commandsRepo.get("cmd-2").isSome()).toBe(true);
   });
 
   it("creates a notelet rather than a period note", async () => {

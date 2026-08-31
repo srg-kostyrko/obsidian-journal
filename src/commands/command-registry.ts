@@ -18,7 +18,7 @@ import {
   OpenDateFlow,
   TimelineService,
 } from "@/journals";
-import type { JournalEntry, TypeId } from "@/journals";
+import type { JournalEntry, NoteletType, TypeId } from "@/journals";
 import { periodEntryOf } from "@/journals/types";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
@@ -279,9 +279,31 @@ export class DynamicCommandRegistry {
 
   #onJournalDeleted(journalName: string): void {
     for (const [id, command] of this.#commandsRepo.find().entries()) {
-      if (command.target.kind === "journal" && command.target.journalName === journalName) {
-        this.#commandsRepo.delete(id);
-      }
+      if (command.target.kind !== "journal" && command.target.kind !== "notelet") continue;
+      if (command.target.journalName !== journalName) continue;
+      this.#commandsRepo.delete(id);
+    }
+  }
+
+  // Every type has a command from the moment it exists, so no later flow has to handle a
+  // command-less one. Everything but the target is the user's from here.
+  #onNoteletTypeAdded(journalName: string, type: NoteletType): void {
+    this.#commandsRepo.create(nanoid(), {
+      name: m.journal_notelet_command_name({ type: type.name }),
+      icon: "",
+      showInRibbon: false,
+      openMode: "tab",
+      target: { kind: "notelet", journalName, typeId: type.id },
+      type: "same",
+      context: "today",
+    });
+  }
+
+  #onNoteletTypeDeleted(journalName: string, typeId: TypeId): void {
+    for (const [id, command] of this.#commandsRepo.find().entries()) {
+      if (command.target.kind !== "notelet") continue;
+      if (command.target.journalName !== journalName || command.target.typeId !== typeId) continue;
+      this.#commandsRepo.delete(id);
     }
   }
 
@@ -309,6 +331,10 @@ export class DynamicCommandRegistry {
     this.#journalsEvents.on("renamed", (oldName, newName) => this.#onJournalRenamed(oldName, newName));
     this.#journalsEvents.on("deleted", (journalName) => this.#onJournalDeleted(journalName));
     this.#journalsEvents.on("cloned", (sourceName, newName) => this.#onJournalCloned(sourceName, newName));
+    this.#journalsEvents.on("noteletTypeAdded", (journalName, type) => this.#onNoteletTypeAdded(journalName, type));
+    this.#journalsEvents.on("noteletTypeDeleted", (journalName, typeId) =>
+      this.#onNoteletTypeDeleted(journalName, typeId),
+    );
     this.#shelvesEvents.on("renamed", (oldName, newName) => this.#onShelfRenamed(oldName, newName));
     this.#shelvesEvents.on("deleted", (shelfName) => this.#onShelfDeleted(shelfName));
     // An external settings sync rewrites the collections without firing repository
