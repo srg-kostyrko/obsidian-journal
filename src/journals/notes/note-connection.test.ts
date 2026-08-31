@@ -1114,7 +1114,7 @@ describe("type-scoped walks", () => {
           daily: {
             ...daily,
             notelets: {
-              nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }),
+              nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup", prompts: [mood] }),
               nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Recipe" }),
             },
           },
@@ -1131,6 +1131,7 @@ describe("type-scoped walks", () => {
         "journal-date": "2026-06-01",
         "journal-notelet": typeName,
         mood: "kept",
+        title: "keep",
       });
       index.register({
         kind: "notelet",
@@ -1160,8 +1161,8 @@ describe("type-scoped walks", () => {
   it("disconnectNoteletsOfType strips only that type's claims", async () => {
     await harness.resolve(NoteConnectionService).disconnectNoteletsOfType("daily", "Standup");
 
-    expect(harness.host.files.get(standupPath)?.frontmatter).toEqual({});
-    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ journal: "daily" });
+    expect(harness.host.files.get(standupPath)?.frontmatter).toEqual({ title: "keep" });
+    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ journal: "daily", mood: "kept" });
   });
 
   it("deleteNoteletsOfType trashes only that type's files", async () => {
