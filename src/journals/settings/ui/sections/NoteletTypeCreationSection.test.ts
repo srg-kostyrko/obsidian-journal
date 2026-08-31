@@ -3,7 +3,7 @@ import { screen, waitFor, within } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { JournalsRepository } from "@/journals";
+import { JournalsRepository, type Prompt } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import type { NoteletType, TypeId } from "@/journals/notelets/config";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
@@ -162,5 +162,66 @@ describe("NoteletTypeCreationSection", () => {
     await setup({ nameTemplate: "{{date}}", folder: "" });
 
     expect(screen.getByText(m.journal_notelet_period_path_collision_warning())).toBeTruthy();
+  });
+
+  // The within-period check must read the type's own prompts, not the journal's — a
+  // template naming a prompt that only the journal has still leaves the type unable to
+  // tell two notelets of a period apart.
+  it("warns when the type's name template names a prompt that belongs to the journal, not the type", async () => {
+    const mood: Prompt = { variable: "mood", question: "?", type: "text", frontmatterKey: "mood", required: false };
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          Work: fixedJournal(
+            "Work",
+            { type: "day" },
+            {
+              prompts: [mood],
+              notelets: {
+                nt_7f3a: buildNoteletType({
+                  id: "nt_7f3a" as TypeId,
+                  name: "Standup",
+                  nameTemplate: "{{mood}}",
+                  prompts: [],
+                }),
+              },
+            },
+          ),
+        },
+      },
+    });
+    harness.render(NoteletTypeCreationSection, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+
+    expect(screen.getByText(m.journal_notelet_no_within_period_variable_warning())).toBeTruthy();
+  });
+
+  it("does not warn when the type's name template names a prompt that belongs to the type itself", async () => {
+    const mood: Prompt = { variable: "mood", question: "?", type: "text", frontmatterKey: "mood", required: false };
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          Work: fixedJournal(
+            "Work",
+            { type: "day" },
+            {
+              prompts: [],
+              notelets: {
+                nt_7f3a: buildNoteletType({
+                  id: "nt_7f3a" as TypeId,
+                  name: "Standup",
+                  nameTemplate: "{{mood}}",
+                  prompts: [mood],
+                }),
+              },
+            },
+          ),
+        },
+      },
+    });
+    harness.render(NoteletTypeCreationSection, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+
+    expect(screen.queryByText(m.journal_notelet_no_within_period_variable_warning())).toBeNull();
   });
 });
