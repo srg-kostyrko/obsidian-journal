@@ -139,4 +139,28 @@ describe("NoteletTypeCreationSection", () => {
 
     expect(screen.getByText(m.journal_edit_name_template_empty_warning())).toBeTruthy();
   });
+
+  it("does not warn about a within-period variable for the shipped default template", async () => {
+    await setup();
+
+    expect(screen.queryByText(m.journal_notelet_no_within_period_variable_warning())).toBeNull();
+  });
+
+  it("warns when the counter is removed from the default template, leaving nothing that varies within a period", async () => {
+    await setup({ nameTemplate: "{{journal_name}}" });
+
+    expect(screen.getByText(m.journal_notelet_no_within_period_variable_warning())).toBeTruthy();
+  });
+
+  it("does not warn about a path collision for the shipped default template", async () => {
+    await setup();
+
+    expect(screen.queryByText(m.journal_notelet_period_path_collision_warning())).toBeNull();
+  });
+
+  it("warns when the type's own template renders onto the journal's period-note path", async () => {
+    await setup({ nameTemplate: "{{date}}", folder: "" });
+
+    expect(screen.getByText(m.journal_notelet_period_path_collision_warning())).toBeTruthy();
+  });
 });

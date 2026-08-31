@@ -1838,6 +1838,8 @@
   ],
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Название заметки",
+  "journal_notelet_no_within_period_variable_warning": "В этом шаблоне названия нет ничего, что менялось бы в пределах периода, поэтому каждая подзаметка после первой получает добавленный к названию номер.",
+  "journal_notelet_period_path_collision_warning": "Этот тип подзаметки даёт тот же путь к заметке, что и сам журнал. Подзаметкам автоматически присваивается другое название, но их легко перепутать.",
   "journal_notelet_counter_label": "Нумеровать каждую подзаметку",
   "journal_notelet_counter_description": "Нумерация начинается заново в каждом периоде, поэтому первая подзаметка дня — всегда 1.",
   "journal_notelet_counter_key_modal_title": "Изменить название свойства номера",

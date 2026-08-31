@@ -1798,6 +1798,8 @@
   ],
   "journal_notelet_folder_label": "Dossier",
   "journal_notelet_name_template_label": "Nom de la note",
+  "journal_notelet_no_within_period_variable_warning": "Ce modèle de nom ne contient rien qui varie au sein d’une période, si bien que chaque note brève après la première reçoit un numéro ajouté à son nom de note.",
+  "journal_notelet_period_path_collision_warning": "Ce type aboutit au même chemin de note que le journal lui-même. Les notes brèves reçoivent automatiquement un nom différent, mais les deux sont faciles à confondre.",
   "journal_notelet_counter_label": "Numéroter chaque note brève",
   "journal_notelet_counter_description": "La numérotation recommence à chaque période, la première note brève d'un jour est donc toujours 1.",
   "journal_notelet_counter_key_modal_title": "Modifier le nom de la propriété Numéro",

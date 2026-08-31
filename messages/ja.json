@@ -1645,6 +1645,8 @@
   ],
   "journal_notelet_folder_label": "フォルダ",
   "journal_notelet_name_template_label": "ノート名",
+  "journal_notelet_no_within_period_variable_warning": "この名前テンプレートには期間内で変化する要素がないため、最初のサブノート以降はすべて名前に番号が追加されます。",
+  "journal_notelet_period_path_collision_warning": "このタイプはジャーナル自体と同じノートパスに解決されます。サブノートには自動的に別の名前が付けられますが、両者は混同しやすくなります。",
   "journal_notelet_counter_label": "各サブノートに番号を付ける",
   "journal_notelet_counter_description": "番号は期間ごとに振り直されるため、その日の最初のサブノートは常に 1 です。",
   "journal_notelet_counter_key_modal_title": "番号プロパティ名を編集",

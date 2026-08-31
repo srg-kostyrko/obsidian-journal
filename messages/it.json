@@ -1798,6 +1798,8 @@
   ],
   "journal_notelet_folder_label": "Cartella",
   "journal_notelet_name_template_label": "Nome della nota",
+  "journal_notelet_no_within_period_variable_warning": "Questo modello di nome non contiene nulla che vari all'interno di un periodo, quindi ogni nota breve successiva alla prima riceve un numero aggiunto al proprio nome.",
+  "journal_notelet_period_path_collision_warning": "Questo tipo punta allo stesso percorso di nota del diario stesso. Le note brevi ricevono automaticamente un nome diverso, ma i due sono facili da confondere.",
   "journal_notelet_counter_label": "Numera ogni nota breve",
   "journal_notelet_counter_description": "La numerazione riparte a ogni periodo, quindi la prima nota breve di un giorno è sempre 1.",
   "journal_notelet_counter_key_modal_title": "Modifica il nome della proprietà numero",

@@ -1790,6 +1790,8 @@
   ],
   "journal_notelet_folder_label": "폴더",
   "journal_notelet_name_template_label": "노트 이름",
+  "journal_notelet_no_within_period_variable_warning": "이 이름 템플릿에는 기간 안에서 달라지는 요소가 없어서, 첫 번째 이후의 모든 서브노트는 이름에 번호가 추가됩니다.",
+  "journal_notelet_period_path_collision_warning": "이 유형은 저널 자체와 같은 노트 경로로 확정됩니다. 서브노트에는 자동으로 다른 이름이 붙지만, 둘을 혼동하기 쉽습니다.",
   "journal_notelet_counter_label": "각 서브노트에 번호 매기기",
   "journal_notelet_counter_description": "번호는 기간마다 다시 시작되므로 하루의 첫 서브노트는 항상 1입니다.",
   "journal_notelet_counter_key_modal_title": "번호 속성 이름 편집",

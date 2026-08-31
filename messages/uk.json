@@ -1683,6 +1683,8 @@
   ],
   "journal_notelet_folder_label": "Папка",
   "journal_notelet_name_template_label": "Назва нотатки",
+  "journal_notelet_no_within_period_variable_warning": "У цьому шаблоні назви немає нічого, що змінювалося б у межах періоду, тому кожна піднотатка після першої отримує доданий до назви номер.",
+  "journal_notelet_period_path_collision_warning": "Цей тип піднотатки дає такий самий шлях до нотатки, як і сам журнал. Піднотаткам автоматично надається інша назва, але їх легко сплутати.",
   "journal_notelet_counter_label": "Нумерувати кожну піднотатку",
   "journal_notelet_counter_description": "Нумерація починається заново в кожному періоді, тому перша піднотатка дня — завжди 1.",
   "journal_notelet_counter_key_modal_title": "Змінити назву властивості номера",

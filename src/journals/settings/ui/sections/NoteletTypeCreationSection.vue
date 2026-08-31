@@ -15,6 +15,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { JournalsViewModel } from "../../../view-model";
 import { EditNoteletCounterKeyFlow } from "../../flows/edit-notelet-counter-key.flow";
 import FolderInput from "../FolderInput.vue";
+import { hasNoWithinPeriodVariable, rendersOntoPeriodNotePath } from "../notelet-type-warnings";
 import NotePathPreview from "../NotePathPreview.vue";
 import VariableReferenceHint from "../VariableReferenceHint.vue";
 import { templateHasWrongWeek } from "../wrong-week";
@@ -35,6 +36,11 @@ const numberingVariableNames = computed<readonly string[]>(() =>
   config.value?.numbering.enabled ? config.value.numbering.sources.map((source) => source.variable) : [],
 );
 const promptVariables = computed(() => type.value?.prompts ?? []);
+
+const noWithinPeriodVariable = computed(() => type.value !== undefined && hasNoWithinPeriodVariable(type.value));
+const collidesWithPeriodNote = computed(
+  () => config.value !== undefined && type.value !== undefined && rendersOntoPeriodNotePath(config.value, type.value),
+);
 
 function editCounterKey(): void {
   void flows.invoke(EditNoteletCounterKeyFlow, { journalName: props.journalName, typeId: props.typeId });
@@ -60,6 +66,12 @@ function editCounterKey(): void {
           :numbering-variable-names="numberingVariableNames"
           :prompt-variables="promptVariables"
         />
+        <div v-if="noWithinPeriodVariable" class="journal-hint">
+          {{ m.journal_notelet_no_within_period_variable_warning() }}
+        </div>
+        <div v-if="collidesWithPeriodNote" class="journal-hint">
+          {{ m.journal_notelet_period_path_collision_warning() }}
+        </div>
       </template>
       <UiTextInput v-model="type.nameTemplate" />
     </UiSettingRow>
@@ -95,3 +107,9 @@ function editCounterKey(): void {
     </UiSettingRow>
   </UiCollapsibleBlock>
 </template>
+
+<style scoped>
+.journal-hint {
+  color: var(--text-warning);
+}
+</style>

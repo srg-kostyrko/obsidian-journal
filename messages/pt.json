@@ -1798,6 +1798,8 @@
   ],
   "journal_notelet_folder_label": "Pasta",
   "journal_notelet_name_template_label": "Nome da nota",
+  "journal_notelet_no_within_period_variable_warning": "Este modelo de nome não tem nada que varie dentro de um período, então toda nota breve após a primeira recebe um número adicionado ao nome.",
+  "journal_notelet_period_path_collision_warning": "Este tipo resolve para o mesmo caminho de nota que o próprio diário. As notas breves recebem um nome diferente automaticamente, mas os dois são fáceis de confundir.",
   "journal_notelet_counter_label": "Numerar cada nota breve",
   "journal_notelet_counter_description": "A numeração recomeça em cada período, portanto a primeira nota breve de um dia é sempre 1.",
   "journal_notelet_counter_key_modal_title": "Editar nome da propriedade de número",

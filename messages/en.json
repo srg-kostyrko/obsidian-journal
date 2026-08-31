@@ -1804,6 +1804,8 @@
   ],
   "journal_notelet_folder_label": "Folder",
   "journal_notelet_name_template_label": "Note name",
+  "journal_notelet_no_within_period_variable_warning": "This name template has nothing that varies within a period, so every notelet after the first gets a number added to its file name.",
+  "journal_notelet_period_path_collision_warning": "This type renders onto the journal's own note path. Notelets are given a different name automatically, but the two are easy to confuse.",
   "journal_notelet_counter_label": "Number each notelet",
   "journal_notelet_counter_description": "Numbers restart in every period, so the first notelet of a day is always 1.",
   "journal_notelet_counter_key_modal_title": "Edit number property name",

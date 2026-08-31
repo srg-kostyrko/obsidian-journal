@@ -1800,6 +1800,8 @@
   ],
   "journal_notelet_folder_label": "Ordner",
   "journal_notelet_name_template_label": "Notizname",
+  "journal_notelet_no_within_period_variable_warning": "Diese Namensvorlage enthält nichts, das sich innerhalb eines Zeitraums ändert, daher erhält jede Kurznotiz nach der ersten eine an den Namen angehängte Zahl.",
+  "journal_notelet_period_path_collision_warning": "Dieser Typ ergibt denselben Notizpfad wie das Journal selbst. Kurznotizen erhalten automatisch einen anderen Namen, aber die beiden lassen sich leicht verwechseln.",
   "journal_notelet_counter_label": "Jede Kurznotiz nummerieren",
   "journal_notelet_counter_description": "Die Nummerierung beginnt in jedem Zeitraum neu, die erste Kurznotiz eines Tages ist also immer 1.",
   "journal_notelet_counter_key_modal_title": "Name der Nummerneigenschaft bearbeiten",
