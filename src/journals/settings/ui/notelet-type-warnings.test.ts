@@ -17,8 +17,8 @@ describe("hasNoWithinPeriodVariable", () => {
     expect(hasNoWithinPeriodVariable({ nameTemplate: "{{journal_name}} {{notelet_index}}", prompts: [] })).toBe(false);
   });
 
-  it("is false when the counter is present", () => {
-    expect(hasNoWithinPeriodVariable({ nameTemplate: "{{journal_name}} {{notelet_index}}", prompts: [] })).toBe(false);
+  it("matches the counter token case-insensitively", () => {
+    expect(hasNoWithinPeriodVariable({ nameTemplate: "{{NOTELET_INDEX}}", prompts: [] })).toBe(false);
   });
 
   it("is false when one of the type's own questions reaches the name", () => {
@@ -45,7 +45,7 @@ describe("hasNoWithinPeriodVariable", () => {
 });
 
 describe("rendersOntoPeriodNotePath", () => {
-  it("is true when folder, date format and journal-name-substituted template all match", () => {
+  it("is true when the folder and the journal-name-substituted template both match", () => {
     expect(
       rendersOntoPeriodNotePath(
         { name: "daily", nameTemplate: "{{date}}", folder: "notes", dateFormat: "YYYY-MM-DD" },
