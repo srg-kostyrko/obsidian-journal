@@ -129,7 +129,7 @@ describe("DeleteNoteletTypeFlow", () => {
     expect(harness.host.files.has(noteletPath)).toBe(false);
   });
 
-  it("leaves another type's notelets untouched in every mode", async () => {
+  it.each(["keep", "clear", "delete"] as const)("leaves another type's notelets untouched in mode=%s", async (mode) => {
     harness = await testContainer({
       modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule],
       data: {
@@ -177,10 +177,11 @@ describe("DeleteNoteletTypeFlow", () => {
     });
 
     const promise = harness.resolve(Flows).invoke(DeleteNoteletTypeFlow, { journalName: "daily", typeId: "nt_1" });
-    openModal().submit({ mode: "delete" });
+    openModal().submit({ mode });
     await promise;
 
     expect(harness.host.files.has(recipePath)).toBe(true);
+    expect(harness.host.files.get(recipePath)?.frontmatter).toMatchObject({ "journal-notelet": "Recipe" });
   });
 
   it("emits noteletTypeDeleted, the event the command registry retires the type's command on", async () => {
