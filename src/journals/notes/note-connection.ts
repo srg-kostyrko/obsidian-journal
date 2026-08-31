@@ -75,18 +75,45 @@ export class NoteConnectionService {
     for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
   };
 
-  #forEachConnected(
-    journalName: string,
-    op: (path: VaultPath) => AsyncResult<void, unknown>,
-  ): AsyncResult<void, never> {
-    const paths = [...this.#index.entriesFor(journalName)].map(([, path]) => path);
-    // Best-effort: an AsyncResult never rejects, so Promise.all settles even when
-    // individual notes fail. We discard the per-note Results so one bad note can't strand the
-    // journal-wide operation. Spreading entriesFor up front snapshots paths before the ops mutate the index.
+  #periodPathsOf(journalName: string): VaultPath[] {
+    return [...this.#index.entriesFor(journalName)].map(([, path]) => path);
+  }
+
+  // Best-effort: an AsyncResult never rejects, so Promise.all settles even when individual notes
+  // fail. We discard the per-note Results so one bad note can't strand the journal-wide
+  // operation. Paths are snapshotted by the caller before the ops mutate the index.
+  #forEach(paths: readonly VaultPath[], op: (path: VaultPath) => AsyncResult<void, unknown>): AsyncResult<void, never> {
     const all: Promise<void> = Promise.all(paths.map((path) => op(path))).then(() => {
       return;
     });
     return AsyncResult.fromPromise(all, () => undefined as never);
+  }
+
+  // Every note the journal owns, of either kind. A journal-wide operation that walks only
+  // entriesFor silently misses every notelet, with nothing on screen.
+  #forEachConnected(
+    journalName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
+    return this.#forEach(
+      [...this.#periodPathsOf(journalName), ...this.#index.noteletsFor(journalName).map((entry) => entry.path)],
+      op,
+    );
+  }
+
+  #forEachPeriodNote(
+    journalName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
+    return this.#forEach(this.#periodPathsOf(journalName), op);
+  }
+
+  #moveKey(oldKey: string, newKey: string): (fm: Record<string, unknown>) => void {
+    return (fm) => {
+      if (!Object.hasOwn(fm, oldKey)) return;
+      fm[newKey] = fm[oldKey];
+      delete fm[oldKey];
+    };
   }
 
   #reanchorOne(journalName: string, path: VaultPath, target: ReanchorTarget): AsyncResult<void, ReanchorError> {
@@ -212,15 +239,23 @@ export class NoteConnectionService {
     );
   }
 
-  // Renaming a frontmatter key in config alone would orphan every connected note (their old
-  // key no longer matches parseEntry). Move the value across so the notes stay connected.
+  // Renaming a frontmatter key in config alone would orphan every connected note (their old key
+  // no longer matches parseEntry). Move the value across so the notes stay connected.
+  //
+  // Period notes only. A type's reserved key set is narrower than the journal's, so a type
+  // question may legally carry the same key as a journal question or numbering digit — and on a
+  // notelet that key holds the *type's* answer, which this rename has no claim on.
   renameFieldAll(journalName: string, oldKey: string, newKey: string): AsyncResult<void, never> {
+    return this.#forEachPeriodNote(journalName, (path) =>
+      this.#notes.updateFrontmatter(path, this.#moveKey(oldKey, newKey)),
+    );
+  }
+
+  // The journal-level fields — the claim's date, start, end and type keys — which both kinds
+  // carry identically and neither kind may disagree about.
+  renameJournalFieldAll(journalName: string, oldKey: string, newKey: string): AsyncResult<void, never> {
     return this.#forEachConnected(journalName, (path) =>
-      this.#notes.updateFrontmatter(path, (fm) => {
-        if (!Object.hasOwn(fm, oldKey)) return;
-        fm[newKey] = fm[oldKey];
-        delete fm[oldKey];
-      }),
+      this.#notes.updateFrontmatter(path, this.#moveKey(oldKey, newKey)),
     );
   }
 

@@ -9,11 +9,12 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
-import { customJournal, fixedJournal } from "../testing";
+import { buildNoteletType, customJournal, fixedJournal } from "../testing";
 
 import { AnchorOccupiedError, EmptyNoteNameError } from "./errors";
 import { NoteConnectionService } from "./note-connection";
 
+import type { TypeId } from "../notelets/config";
 import type { Prompt } from "../prompts/config";
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
@@ -935,5 +936,83 @@ describe("NoteConnectionService", () => {
       expect(fm?.["journal-start-date"]).toBe("2026-01-12");
       expect(fm?.["journal-end-date"]).toBe("2026-01-18");
     });
+  });
+});
+
+describe("journal-wide cascades over notelets", () => {
+  let harness: TestHarness;
+
+  const periodPath = "2026-06-01.md" as VaultPath;
+  const noteletPath = "Standup 1.md" as VaultPath;
+
+  beforeEach(async () => {
+    const daily = fixedJournal("daily", { type: "day" });
+    harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: {
+            ...daily,
+            notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
+          },
+        },
+      },
+    });
+    harness.host.putFile(periodPath, "content", { journal: "daily", "journal-date": "2026-06-01" });
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+      "journal-notelet-index": 1,
+    });
+    const index = harness.resolve(JournalsIndex);
+    index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: periodPath });
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 1,
+    });
+  });
+
+  it("disconnectAll strips a notelet's whole claim", async () => {
+    await harness.resolve(NoteConnectionService).disconnectAll("daily");
+
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toEqual({});
+  });
+
+  it("deleteAll trashes a notelet's file", async () => {
+    await harness.resolve(NoteConnectionService).deleteAll("daily");
+
+    expect(harness.host.files.has(noteletPath)).toBe(false);
+  });
+
+  it("reconnectAll rewrites a notelet's journal claim", async () => {
+    await harness.resolve(NoteConnectionService).reconnectAll("daily", "journal");
+
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ journal: "journal" });
+  });
+
+  it("renameJournalFieldAll moves the key on both kinds", async () => {
+    await harness.resolve(NoteConnectionService).renameJournalFieldAll("daily", "journal-date", "on");
+
+    expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ on: "2026-06-01" });
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ on: "2026-06-01" });
+  });
+
+  it("renameFieldAll leaves notelets alone, so a journal question's key rename cannot strand a type answer", async () => {
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+      mood: "type answer",
+    });
+
+    await harness.resolve(NoteConnectionService).renameFieldAll("daily", "mood", "feeling");
+
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ mood: "type answer" });
   });
 });
