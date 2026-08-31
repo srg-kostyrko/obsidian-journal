@@ -1,7 +1,3 @@
-import { nanoid } from "nanoid";
-
-import { CommandsRepository } from "@/commands/repository";
-import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -17,7 +13,6 @@ import { noteletTypeSubpage } from "../ui/notelet-type-subpage";
 export class AddNoteletTypeFlow implements Flow<{ journalName: string }, { typeId: TypeId }, FlowError> {
   readonly #modals = inject(ModalService);
   readonly #repository = inject(JournalsRepository);
-  readonly #commands = inject(CommandsRepository);
   readonly #ui = inject(SettingsUiService);
 
   execute(parameters: { journalName: string }): AsyncResult<{ typeId: TypeId }, FlowError> {
@@ -38,21 +33,7 @@ export class AddNoteletTypeFlow implements Flow<{ journalName: string }, { typeI
 
       const typeId = crypto.randomUUID() as TypeId;
       const type = { ...noteletTypeDefaults(typeId), name: submitted.name };
-      this.#repository.update(parameters.journalName, {
-        notelets: { ...config.notelets, [typeId]: type },
-      });
-
-      // Every type has a command from the moment it exists, so no later flow has to handle a
-      // command-less one. Everything but the target is the user's from here.
-      this.#commands.create(nanoid(), {
-        name: m.journal_notelet_command_name({ type: submitted.name }),
-        icon: "",
-        showInRibbon: false,
-        openMode: "tab",
-        target: { kind: "notelet", journalName: parameters.journalName, typeId },
-        type: "same",
-        context: "today",
-      });
+      yield* this.#repository.addNoteletType(parameters.journalName, type).mapErr(toFlowError);
 
       this.#ui.push(noteletTypeSubpage, { journalName: parameters.journalName, typeId });
       return { typeId };

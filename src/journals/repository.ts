@@ -15,9 +15,16 @@ import {
 } from "./errors";
 import { JournalsEventsToken } from "./tokens";
 
+import type { NoteletType, TypeId } from "./notelets/config";
+
 export interface JournalsEvents extends RepositoryEvents<string, JournalConfig> {
   renamed: (oldName: string, newName: string) => void;
   cloned: (sourceName: string, newName: string) => void;
+  // A notelet type's lifecycle is announced rather than acted on here: commands are seeded and
+  // deleted by the commands module, which subscribes the way it does for journal rename and
+  // clone. A journals-side write into CommandsRepository would invert every other edge.
+  noteletTypeAdded: (journalName: string, type: NoteletType) => void;
+  noteletTypeDeleted: (journalName: string, typeId: TypeId) => void;
 }
 
 export class JournalsRepository extends BaseRepository<
@@ -77,5 +84,24 @@ export class JournalsRepository extends BaseRepository<
     this.storage[newName] = existing;
     this.events.emit("renamed", oldName, newName);
     return new Ok(undefined);
+  }
+
+  addNoteletType(journalName: string, type: NoteletType): Result<void, UnknownJournalError> {
+    return this.get(journalName)
+      .okOrElse(() => new UnknownJournalError(journalName))
+      .map((config) => {
+        this.update(journalName, { notelets: { ...config.notelets, [type.id]: type } });
+        this.events.emit("noteletTypeAdded", journalName, type);
+      });
+  }
+
+  deleteNoteletType(journalName: string, typeId: TypeId): Result<void, UnknownJournalError> {
+    return this.get(journalName)
+      .okOrElse(() => new UnknownJournalError(journalName))
+      .map((config) => {
+        const { [typeId]: _removed, ...rest } = config.notelets;
+        this.update(journalName, { notelets: rest });
+        this.events.emit("noteletTypeDeleted", journalName, typeId);
+      });
   }
 }
