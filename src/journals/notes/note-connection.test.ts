@@ -1020,6 +1020,7 @@ describe("NoteConnectionService", () => {
 
       it("keeps a notelet write failure out of both failed and rewritten", async () => {
         const periodPath = "week/2026-W23.md" as VaultPath;
+        const movingNoteletPath = "notelet-moving.md" as VaultPath;
         harness.host.putFile(periodPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
         harness
           .resolve(JournalsIndex)
@@ -1039,22 +1040,39 @@ describe("NoteConnectionService", () => {
           typeId: null,
         });
 
+        harness.host.putFile(movingNoteletPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Standup",
+        });
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: movingNoteletPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+        });
+
         // "Retired" matches no configured type, so #noteletMetadataAt yields
         // NoteletTypeNotFoundError and this write fails — logged, never counted. The period
-        // note's clean move is the only thing failed/rewritten may see.
+        // note and the "Standup" notelet both move cleanly, so rewritten must count both of
+        // them and neither the failure nor a dropped notelet success may go unseen.
         const result = await harness.resolve(NoteConnectionService).reanchorAll(
           "weekly",
           new Map([
             [periodPath, { anchor: anchor("2026-06-08") }],
             [noteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Retired" }],
+            [movingNoteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Standup" }],
           ]),
         );
 
         expectOk(result);
         expect(result.value.failed).toBe(0);
-        expect(result.value.rewritten).toBe(1);
+        expect(result.value.rewritten).toBe(2);
         expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-08" });
         expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-05-31" });
+        expect(harness.host.files.get(movingNoteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
       });
     });
   });
