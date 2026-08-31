@@ -439,7 +439,7 @@
   "connect_note_modal_disconnect": "Trennen",
   "connect_note_modal_out_of_bounds": "Dieses Datum liegt außerhalb des aktiven Zeitrahmens des Journals.",
   "connect_note_notice_connected": "Notiz mit „{journalName}“ verknüpft.",
-  "connect_note_notice_connected_notelet": "Notiz mit „{journalName}“ als {type}-Kurznotiz verbunden.",
+  "connect_note_notice_connected_notelet": "Notiz mit „{journalName}“ als {type}-Kurznotiz verknüpft.",
   "connect_note_notice_disconnected": "Verknüpfung der Notiz mit „{journalName}“ aufgehoben.",
   "bulk_add_notes_to_title": "Notizen zu {journalName} hinzufügen",
   "bulk_add_notelets_to_title": "{type}-Kurznotizen hinzufügen",
