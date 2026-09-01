@@ -13,6 +13,7 @@ import UiBackLink from "@/ui/UiBackLink.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { BulkAddNoteletsFlow } from "../../notes/bulk-add/flows/bulk-add-notelets.flow";
 import { DeleteNoteletTypeFlow } from "../flows/delete-notelet-type.flow";
 import { RenameNoteletTypeFlow } from "../flows/rename-notelet-type.flow";
 
@@ -43,6 +44,10 @@ watchEffect(() => {
   if (!type.value) nav.back();
 });
 
+function bulkAdd(): void {
+  void flows.invoke(BulkAddNoteletsFlow, { journalName, typeId });
+}
+
 function rename(): void {
   void flows.invoke(RenameNoteletTypeFlow, { journalName, typeId });
 }
@@ -58,6 +63,7 @@ function remove(): void {
 
     <UiSettingRow heading>
       <template #name>{{ type.name }}</template>
+      <UiIconButton :icon="icons.action.bulkAdd" :tooltip="m.journal_notelet_bulk_add_tooltip()" @click="bulkAdd" />
       <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_notelet_rename_tooltip()" @click="rename" />
       <UiIconButton :icon="icons.action.delete" :tooltip="m.journal_notelet_delete_tooltip()" @click="remove" />
     </UiSettingRow>

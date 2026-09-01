@@ -6,11 +6,13 @@ import { checkProperty, checkTag, checkTitle } from "@/decorations/engine-checks
 import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { FolderNotFoundError, NoteMetadata, VaultPath } from "@/infrastructure/host";
-import { AsyncResult, InvariantError, attempt } from "@/infrastructure/result";
+import { AsyncResult, InvariantError, Option, attempt } from "@/infrastructure/result";
 
 import { CycleService } from "../../cycle";
 import { JournalsIndex } from "../../journals-index";
+import { NoteletPathService } from "../../notelets/notelet-path";
 import { promptsInTemplate } from "../../prompts/prompts-in-path";
+import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
 import { NoteConnectionService } from "../note-connection";
 import { NotePathService } from "../note-path";
@@ -19,6 +21,7 @@ import { splitVaultPath } from "../vault-path";
 import { formatToRegexp } from "./format-to-regexp";
 
 import type { BulkAddParameters } from "./config";
+import type { TypeId } from "../../notelets/config";
 
 export type SkipReason = "already-connected" | "filtered" | "no-date" | "invalid-date" | "out-of-bounds";
 
@@ -104,22 +107,95 @@ export class BulkAddService {
   readonly #timeline = inject(TimelineService);
   readonly #path = inject(NotePathService);
   readonly #connection = inject(NoteConnectionService);
+  readonly #journals = inject(JournalsRepository);
+  readonly #noteletPaths = inject(NoteletPathService);
 
   async #applyAll(
     journalName: string,
     actions: ResolvedAction[],
     dryRun: boolean,
     onProgress?: (done: number, total: number) => void,
+    noteletTypeId?: TypeId,
   ): Promise<BulkLogEntry[]> {
     const log: BulkLogEntry[] = [];
+    const nextCounter = this.#counterFor(journalName, noteletTypeId);
     for (const action of actions) {
-      log.push(await this.#applyOne(journalName, action, dryRun));
+      log.push(await this.#applyOne(journalName, action, dryRun, noteletTypeId, nextCounter));
       onProgress?.(log.length, actions.length);
     }
     return log;
   }
 
-  #planNote(journalName: string, path: VaultPath, parameters: BulkAddParameters, dateRegexp: RegExp): PlannedNote {
+  // The index does not advance mid-run — it only learns of a write once vault events land — so
+  // the run allocates its own counters, seeded once per anchor from whatever is already there.
+  #counterAllocator(journalName: string, typeName: string): (anchor: AnchorString) => number {
+    const next = new Map<AnchorString, number>();
+    return (anchor) => {
+      const value = next.get(anchor) ?? this.#noteletPaths.nextIndex(journalName, anchor, typeName);
+      next.set(anchor, value + 1);
+      return value;
+    };
+  }
+
+  // undefined both for a period run and for a notelet type whose counter is disabled — in
+  // either case connect must receive no counter key at all.
+  #counterFor(journalName: string, noteletTypeId: TypeId | undefined): ((anchor: AnchorString) => number) | undefined {
+    if (noteletTypeId === undefined) return undefined;
+    const config = this.#journals.get(journalName).getOrUndefined();
+    const type = config?.notelets[noteletTypeId];
+    if (!type?.counter.enabled) return undefined;
+    return this.#counterAllocator(journalName, type.name);
+  }
+
+  // The configured target for one note, plus which halves of it are refused for carrying an
+  // unanswered prompt. A bulk run is unattended by definition, so a prompt in either template
+  // refuses that half rather than rendering the placeholder into a file name.
+  //
+  // `nextCounter` is the run's own allocator, threaded from plan() so the preview walks the
+  // same numbers the apply will: the index cannot advance during either pass, so a per-note
+  // nextIndex would show every note of a period as the same number and the same name.
+  #targetFor(
+    journalName: string,
+    path: VaultPath,
+    anchor: AnchorString,
+    typeId: TypeId | undefined,
+    nextCounter: ((anchor: AnchorString) => number) | undefined,
+  ): { configured: VaultPath; nameRefused: boolean; folderRefused: boolean } {
+    if (typeId === undefined) {
+      const configuredResult = this.#path.pathFor(journalName, { journalName, anchor });
+      const config = this.#path.configFor(journalName);
+      return {
+        configured: configuredResult.isOk() ? configuredResult.value : path,
+        nameRefused: config !== undefined && promptsInTemplate(config.nameTemplate, config.prompts).length > 0,
+        folderRefused: config !== undefined && promptsInTemplate(config.folder, config.prompts).length > 0,
+      };
+    }
+    const config = this.#journals.get(journalName).getOrUndefined();
+    const type = config?.notelets[typeId];
+    if (config === undefined || type === undefined) {
+      return { configured: path, nameRefused: false, folderRefused: false };
+    }
+    const configuredResult = this.#noteletPaths.pathFor(config, type, {
+      kind: "notelet",
+      journalName,
+      anchor,
+      typeId,
+      ...(nextCounter !== undefined && { counter: nextCounter(anchor) }),
+    });
+    return {
+      configured: configuredResult.isOk() ? configuredResult.value : path,
+      nameRefused: promptsInTemplate(type.nameTemplate, type.prompts).length > 0,
+      folderRefused: promptsInTemplate(type.folder, type.prompts).length > 0,
+    };
+  }
+
+  #planNote(
+    journalName: string,
+    path: VaultPath,
+    parameters: BulkAddParameters,
+    dateRegexp: RegExp,
+    nextCounter: ((anchor: AnchorString) => number) | undefined,
+  ): PlannedNote {
     if (this.#index.entryByPath(path).isSome()) return { kind: "skip", path, reason: "already-connected" };
 
     const metadataOption = this.#metadata.get(path);
@@ -142,24 +218,22 @@ export class BulkAddService {
     const anchor = anchorOption.value;
     if (!this.#timeline.contains(journalName, anchor)) return { kind: "skip", path, reason: "out-of-bounds" };
 
-    const occupantOption = this.#index.entryByAnchor(journalName, anchor);
+    // A notelet has no anchor exclusivity, so there is no occupant and the existing-note
+    // parameter has nothing to decide.
+    const occupantOption =
+      parameters.noteletTypeId === undefined ? this.#index.entryByAnchor(journalName, anchor) : Option.none();
     const occupant =
       occupantOption.isSome() && occupantOption.value.path !== path ? occupantOption.value.path : undefined;
 
-    const configuredResult = this.#path.pathFor(journalName, { journalName, anchor });
-    const configured = configuredResult.isOk() ? configuredResult.value : path;
+    const {
+      configured,
+      nameRefused: nameHasPrompt,
+      folderRefused: folderHasPrompt,
+    } = this.#targetFor(journalName, path, anchor, parameters.noteletTypeId, nextCounter);
     const [currentFolder, currentName] = splitVaultPath(path);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
-
-    const config = this.#path.configFor(journalName);
-    const nameRefused =
-      configuredName !== currentName &&
-      config !== undefined &&
-      promptsInTemplate(config.nameTemplate, config.prompts).length > 0;
-    const folderRefused =
-      configuredFolder !== currentFolder &&
-      config !== undefined &&
-      promptsInTemplate(config.folder, config.prompts).length > 0;
+    const nameRefused = configuredName !== currentName && nameHasPrompt;
+    const folderRefused = configuredFolder !== currentFolder && folderHasPrompt;
     // A refused half must not leak the placeholder into the shown target path — fall back to
     // the note's own name/folder for whichever half is refused.
     const targetName = nameRefused ? currentName : configuredName;
@@ -197,7 +271,13 @@ export class BulkAddService {
     return typeof raw === "string" ? raw : undefined;
   }
 
-  async #applyOne(journalName: string, action: ResolvedAction, dryRun: boolean): Promise<BulkLogEntry> {
+  async #applyOne(
+    journalName: string,
+    action: ResolvedAction,
+    dryRun: boolean,
+    typeId: TypeId | undefined,
+    nextCounter: ((anchor: AnchorString) => number) | undefined,
+  ): Promise<BulkLogEntry> {
     const actions: BulkLogAction[] = [];
     if (action.existing === "skip") {
       actions.push({ kind: "skipped-occupied", anchor: action.anchor });
@@ -236,6 +316,10 @@ export class BulkAddService {
         override,
         move: action.move,
         rename: action.rename,
+        ...(typeId !== undefined && {
+          typeId,
+          ...(nextCounter !== undefined && { counter: nextCounter(action.anchor) }),
+        }),
       });
       if (result.kind === "err") actions.push({ kind: "failed", message: result.error.message });
     }
@@ -261,7 +345,11 @@ export class BulkAddService {
       // downstream reads an extension, so connect would write journal frontmatter into a binary.
       const paths = files.filter((path) => path.endsWith(".md"));
       const dateRegexp = formatToRegexp(parameters.dateFormat);
-      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp));
+      // Every path that reaches #targetFor becomes an action, and every action consumes exactly
+      // one number in #applyAll — a note skipped here never reaches either — so the two passes
+      // walk the same allocation over the same unmoved index.
+      const nextCounter = this.#counterFor(journalName, parameters.noteletTypeId);
+      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp, nextCounter));
       return { notes };
     });
   }
@@ -271,8 +359,9 @@ export class BulkAddService {
     actions: ResolvedAction[],
     dryRun: boolean,
     onProgress?: (done: number, total: number) => void,
+    noteletTypeId?: TypeId,
   ): AsyncResult<BulkLogEntry[], never> {
-    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress), () => {
+    return AsyncResult.fromPromise(this.#applyAll(journalName, actions, dryRun, onProgress, noteletTypeId), () => {
       throw new InvariantError("bulk apply never rejects");
     });
   }

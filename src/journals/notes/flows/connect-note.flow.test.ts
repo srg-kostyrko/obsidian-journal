@@ -10,10 +10,12 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../../journals-index";
 import { journalsCoreModule } from "../../module";
-import { fixedJournal } from "../../testing";
+import { buildNoteletType, fixedJournal } from "../../testing";
 import { NoteConnectionService } from "../note-connection";
 
 import { ConnectNoteFlow } from "./connect-note.flow";
+
+import type { TypeId } from "../../notelets/config";
 
 const SOURCE = "inbox/n.md" as VaultPath;
 
@@ -95,5 +97,51 @@ describe("ConnectNoteFlow", () => {
     await promise;
 
     expect(harness.notices.messages).not.toContain(m.connect_note_notice_connected({ journalName: "daily" }));
+  });
+
+  it("connects as a notelet when the modal names a type", async () => {
+    const withType = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+          ),
+        },
+      },
+    });
+    withType.host.putFile(SOURCE, "");
+    const promise = withType.resolve(Flows).invoke(ConnectNoteFlow, { path: SOURCE });
+
+    withType.modals.lastOpen().submit({ ...CONNECT_COMMAND, typeId: "nt_1" });
+    await promise;
+
+    expect(withType.host.files.get(SOURCE)?.frontmatter).toMatchObject({ "journal-notelet": "Standup" });
+  });
+
+  it("names the type in the notice when it connected a notelet", async () => {
+    const withType = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+          ),
+        },
+      },
+    });
+    withType.host.putFile(SOURCE, "");
+    const promise = withType.resolve(Flows).invoke(ConnectNoteFlow, { path: SOURCE });
+
+    withType.modals.lastOpen().submit({ ...CONNECT_COMMAND, typeId: "nt_1" });
+    await promise;
+
+    expect(withType.notices.messages).toContain(
+      m.connect_note_notice_connected_notelet({ journalName: "daily", type: "Standup" }),
+    );
   });
 });

@@ -14,6 +14,7 @@ import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import type { SubpageNav } from "@/settings";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { BulkAddNoteletsFlow } from "../../notes/bulk-add/flows/bulk-add-notelets.flow";
 import { DeleteNoteletTypeFlow } from "../flows/delete-notelet-type.flow";
 import { RenameNoteletTypeFlow } from "../flows/rename-notelet-type.flow";
 
@@ -65,6 +66,17 @@ describe("NoteletTypeSubpage", () => {
     expect(screen.getByText(m.journal_edit_section_note_creation())).toBeTruthy();
     expect(screen.getByText(m.journal_edit_section_templates())).toBeTruthy();
     expect(screen.getByText(m.journal_prompt_section_title())).toBeTruthy();
+  });
+
+  it("starts a bulk add for this type", async () => {
+    const harness = await setup();
+    const flows = harness.resolve(Flows);
+    vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
+    harness.render(NoteletTypeSubpage, { props: { journalName: "Work", typeId: "nt_7f3a", nav: noopNav } });
+
+    await userEvent.click(screen.getByLabelText(m.journal_notelet_bulk_add_tooltip()));
+
+    expect(flows.invoke).toHaveBeenCalledWith(BulkAddNoteletsFlow, { journalName: "Work", typeId: "nt_7f3a" });
   });
 
   it("invokes the rename flow from the heading's edit button", async () => {

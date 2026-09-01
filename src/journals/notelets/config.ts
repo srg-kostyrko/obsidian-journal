@@ -8,7 +8,7 @@ export const DEFAULT_NOTELET_FIELD = "journal-notelet";
 
 export type TypeId = string & { readonly __noteletTypeId: true };
 
-const typeId = v.pipe(
+export const typeIdSchema = v.pipe(
   v.string(),
   v.minLength(1),
   v.transform((s) => s as TypeId),
@@ -20,7 +20,7 @@ const noteletCounterSchema = v.object({
 });
 
 export const noteletTypeSchema = v.object({
-  id: v.optional(typeId, "" as TypeId),
+  id: v.optional(typeIdSchema, "" as TypeId),
   name: v.optional(v.pipe(v.string(), v.minLength(1)), "Notelet"),
   folder: v.optional(v.string(), ""),
   nameTemplate: v.optional(v.string(), "{{journal_name}} {{notelet_index}}"),

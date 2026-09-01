@@ -16,6 +16,8 @@ import { CycleService } from "../cycle";
 import { NoteletTypeNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { NoteletCreationService } from "../notelets/notelet-creation";
+import { NoteletPathService } from "../notelets/notelet-path";
 import { promptsInTemplate } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
 import { isNotelet } from "../types";
@@ -37,7 +39,8 @@ export type ConnectError =
   | NoteAlreadyExistsError
   | NoteNotFoundError
   | NoteDeleteError
-  | FrontmatterError;
+  | FrontmatterError
+  | NoteletTypeNotFoundError;
 
 export type DisconnectError = NoteNotFoundError | FrontmatterError;
 
@@ -67,6 +70,11 @@ export interface ConnectOptions {
   override?: boolean;
   rename?: boolean;
   move?: boolean;
+  // Present ⇒ connect as a notelet of this type rather than as the period note.
+  typeId?: TypeId;
+  // Bulk add's scan-order allocation. connect on its own reads the index for the next counter,
+  // which cannot advance mid-run because the index only learns of a write once vault events land.
+  counter?: number;
 }
 
 export class NoteConnectionService {
@@ -77,11 +85,20 @@ export class NoteConnectionService {
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
   readonly #journals = inject(JournalsRepository);
+  readonly #noteletCreation = inject(NoteletCreationService);
+  readonly #noteletPaths = inject(NoteletPathService);
   readonly #logger = inject(LoggerFactoryToken).named("note-connection");
 
   readonly #defaultClear = (fm: Record<string, unknown>): void => {
     for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
   };
+
+  // A journal that no longer resolves still owns keys on the note, so fall back to the default
+  // set rather than refusing: the note is losing that claim either way.
+  #clearMutatorFor(journalName: string): (fm: Record<string, unknown>) => void {
+    const mutator = this.#frontmatter.clearMutator(journalName);
+    return mutator.isOk() ? mutator.value : this.#defaultClear;
+  }
 
   #periodPathsOf(journalName: string): VaultPath[] {
     return [...this.#index.entriesFor(journalName)].map(([, path]) => path);
@@ -199,6 +216,97 @@ export class NoteConnectionService {
     });
   }
 
+  #connectNotelet(
+    journalName: string,
+    path: VaultPath,
+    anchor: AnchorString,
+    typeId: TypeId,
+    options: ConnectOptions,
+    clearStale: ((fm: Record<string, unknown>) => void) | undefined,
+  ): AsyncResult<{ path: VaultPath }, ConnectError> {
+    return attempt.in(this, async function* (this: NoteConnectionService) {
+      const config = yield* this.#journals.require(journalName);
+      const type = config.notelets[typeId];
+      if (type === undefined) return yield* new Err(new NoteletTypeNotFoundError(journalName, typeId));
+
+      // Assigned whether or not the note is renamed: listing order has to stay total across
+      // notelets that kept their own names.
+      const counter = type.counter.enabled
+        ? (options.counter ??
+          this.#carriedCounterAt(path, journalName, anchor, typeId) ??
+          this.#noteletPaths.nextIndex(journalName, anchor, type.name))
+        : undefined;
+      const metadata: NoteletMetadata = {
+        kind: "notelet",
+        journalName,
+        anchor,
+        typeId,
+        ...(counter !== undefined && { counter }),
+      };
+
+      let target = path;
+      if (options.rename === true || options.move === true) {
+        const configured = yield* this.#noteletPaths.pathFor(config, type, metadata);
+        // Each half refuses independently and for the same reason as the period route: nobody is
+        // being asked on this path, and a file renamed to a rendered placeholder has no repair.
+        const nameRefused = promptsInTemplate(type.nameTemplate, type.prompts).length > 0;
+        const folderRefused = promptsInTemplate(type.folder, type.prompts).length > 0;
+        target = this.#combine(path, configured, {
+          rename: options.rename === true && !nameRefused,
+          move: options.move === true && !folderRefused,
+        }) as VaultPath;
+      }
+
+      if (target !== path) yield* this.#notes.rename(path, target);
+      if (clearStale !== undefined) this.#dropStaleEntry(path, target);
+      yield* this.#noteletCreation.attachNotelet(journalName, target, metadata, clearStale);
+      return { path: target };
+    });
+  }
+
+  // nextIndex counts the note being connected along with the rest of the period, so a notelet
+  // whose journal, anchor and type all stay put would be renumbered one higher every time its
+  // dialog is confirmed. Only a move off that tuple earns a new number.
+  #carriedCounterAt(path: VaultPath, journalName: string, anchor: AnchorString, typeId: TypeId): number | undefined {
+    const existing = this.#index.entryByPath(path).getOrUndefined();
+    if (existing === undefined || !isNotelet(existing)) return undefined;
+    const unchanged = existing.journalName === journalName && existing.anchor === anchor && existing.typeId === typeId;
+    return unchanged ? existing.counter : undefined;
+  }
+
+  // The journal whose keys this note has to lose before it takes a new claim, if any. Neither
+  // write mutator removes the other kind's keys — the period one leaves the type key in place on
+  // purpose — so a note that changed journal, kind or type would keep parsing as what it was.
+  // A plain re-date is not a re-claim: clearing there would take a hand-typed answer with it.
+  #staleClaimOn(path: VaultPath, journalName: string, typeId: TypeId | undefined): string | undefined {
+    const existing = this.#index.entryByPath(path).getOrUndefined();
+    if (existing === undefined) return undefined;
+    if (existing.journalName !== journalName) return existing.journalName;
+    if (isNotelet(existing)) return typeId === undefined || existing.typeId !== typeId ? journalName : undefined;
+    return typeId === undefined ? undefined : journalName;
+  }
+
+  // The clear rides into the attach's own frontmatter write rather than being written first:
+  // everything a connect can fail on — the type lookup, the path render, a rename collision —
+  // runs before that single write, so a failed connect leaves the note claimed by whoever
+  // claimed it before instead of by nobody.
+  #staleClearFor(
+    path: VaultPath,
+    journalName: string,
+    typeId: TypeId | undefined,
+  ): ((fm: Record<string, unknown>) => void) | undefined {
+    const stale = this.#staleClaimOn(path, journalName, typeId);
+    return stale === undefined ? undefined : this.#clearMutatorFor(stale);
+  }
+
+  // The clear lands with the attach that follows this call, but the index only hears about it
+  // once the vault events do. A rename may already have transferred the entry onto its new
+  // path, so drop it under both.
+  #dropStaleEntry(path: VaultPath, target: VaultPath): void {
+    this.#index.unregister(path);
+    if (target !== path) this.#index.unregister(target);
+  }
+
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
     const [currentFolder, currentName] = splitVaultPath(current);
     const [configuredFolder, configuredName] = splitVaultPath(configured);
@@ -231,6 +339,12 @@ export class NoteConnectionService {
     options: ConnectOptions = {},
   ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
+      const clearStale = this.#staleClearFor(path, journalName, options.typeId);
+
+      if (options.typeId !== undefined) {
+        return yield* this.#connectNotelet(journalName, path, anchor, options.typeId, options, clearStale);
+      }
+
       // Metadata is resolved from the anchor's stored entry (incl. any endDate), so an
       // overridden slot's period metadata transfers to the new note.
       const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
@@ -269,20 +383,15 @@ export class NoteConnectionService {
       }
 
       if (target !== path) yield* this.#notes.rename(path, target);
-      yield* this.#creation.attachNote(journalName, target, metadata);
+      if (clearStale !== undefined) this.#dropStaleEntry(path, target);
+      yield* this.#creation.attachNote(journalName, target, metadata, clearStale);
       return { path: target };
     });
   }
 
   disconnect(path: VaultPath): AsyncResult<void, DisconnectError> {
     const entry = this.#index.entryByPath(path);
-    let mutator: (fm: Record<string, unknown>) => void;
-    if (entry.isSome()) {
-      const mutatorResult = this.#frontmatter.clearMutator(entry.value.journalName);
-      mutator = mutatorResult.isOk() ? mutatorResult.value : this.#defaultClear;
-    } else {
-      mutator = this.#defaultClear;
-    }
+    const mutator = entry.isSome() ? this.#clearMutatorFor(entry.value.journalName) : this.#defaultClear;
     return this.#notes.updateFrontmatter(path, mutator);
   }
 

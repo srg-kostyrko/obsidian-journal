@@ -239,4 +239,45 @@ describe("NoteletPathService", () => {
       expect(name.isErr()).toBe(true);
     });
   });
+
+  describe("pathFor", () => {
+    it("renders the type's folder and name template", async () => {
+      const harness = await harnessWith({ folder: "Notelets", nameTemplate: "Standup {{notelet_index}}" });
+      const config = unwrap(harness.resolve(JournalsRepository).get("daily"));
+      const type = config.notelets.nt_1;
+      assert(type !== undefined);
+
+      const path = harness.resolve(NoteletPathService).pathFor(config, type, meta({ counter: 1 }));
+
+      expect(path.isOk() && path.value).toBe("Notelets/Standup 1.md");
+    });
+
+    // availablePathFor suffixes past a taken path; the rename half of connect must not, or it
+    // offers the user a name it is not going to write.
+    it("does not step past a file already at that path", async () => {
+      const harness = await harnessWith({ nameTemplate: "Standup {{notelet_index}}" });
+      harness.host.putFile("Standup 1.md", "taken");
+      const config = unwrap(harness.resolve(JournalsRepository).get("daily"));
+      const type = config.notelets.nt_1;
+      assert(type !== undefined);
+      const metadata = meta({ counter: 1 });
+
+      const path = harness.resolve(NoteletPathService).pathFor(config, type, metadata);
+      const available = harness.resolve(NoteletPathService).availablePathFor(config, type, metadata);
+
+      expect(path.isOk() && path.value).toBe("Standup 1.md");
+      expect(available.isOk() && available.value).toBe("Standup 1 1.md");
+    });
+
+    it("rejects a name template that renders empty", async () => {
+      const harness = await harnessWith({ nameTemplate: "  " });
+      const config = unwrap(harness.resolve(JournalsRepository).get("daily"));
+      const type = config.notelets.nt_1;
+      assert(type !== undefined);
+
+      const path = harness.resolve(NoteletPathService).pathFor(config, type, meta());
+
+      expect(path.isErr()).toBe(true);
+    });
+  });
 });

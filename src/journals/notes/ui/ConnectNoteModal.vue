@@ -15,14 +15,19 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { CycleService } from "../../cycle";
 import { FrontmatterService } from "../../frontmatter";
 import { JournalsIndex } from "../../journals-index";
+import { NoteletPathService } from "../../notelets/notelet-path";
 import { pickingForWrite } from "../../picking";
 import { promptsInTemplate } from "../../prompts/prompts-in-path";
 import { JournalsRepository } from "../../repository";
 import { TimelineService } from "../../timeline";
+import { isNotelet } from "../../types";
+import { useIndexVersion } from "../../use-index-version";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
 
 import type { ConnectNoteResult } from "./modals";
+import type { NoteletType, TypeId } from "../../notelets/config";
+import type { NoteletMetadata } from "../../types";
 
 const props = defineProps<{ path: VaultPath }>();
 const api = useModal<ConnectNoteResult>();
@@ -33,26 +38,46 @@ const cycle = useService(CycleService);
 const timeline = useService(TimelineService);
 const frontmatter = useService(FrontmatterService);
 const paths = useService(NotePathService);
+const noteletPaths = useService(NoteletPathService);
+const indexVersion = useIndexVersion();
 
 const existing = index.entryByPath(props.path);
 const existingJournal = existing.isSome() ? existing.value.journalName : "";
 const journalNames = [...journals.find().ids()];
 
-const selected = ref(journalNames[0] ?? "");
-const dateAnchor = ref<AnchorString>("" as AnchorString);
+const existingEntry = existing.getOrUndefined();
+const selected = ref(existingEntry?.journalName ?? journalNames[0] ?? "");
+const dateAnchor = ref<AnchorString>((existingEntry?.anchor ?? "") as AnchorString);
 const override = ref(false);
 const rename = ref(false);
 const move = ref(false);
+const selectedType = ref<string>(
+  existingEntry !== undefined && isNotelet(existingEntry) ? (existingEntry.typeId ?? "") : "",
+);
 
 const selectedConfig = computed(() => journals.get(selected.value).getOrUndefined());
 const picking = computed<Picking>(() => (selectedConfig.value ? pickingForWrite(selectedConfig.value.write) : "day"));
 const bounds = computed(() => timeline.boundsOf(selected.value));
 const dateModel = useAnchorField({ anchor: dateAnchor, picking });
 
+const types = computed<readonly [string, NoteletType][]>(() =>
+  Object.entries(selectedConfig.value?.notelets ?? {}).toSorted((a, b) => a[1].name.localeCompare(b[1].name)),
+);
+
+const activeType = computed(() =>
+  selectedType.value ? selectedConfig.value?.notelets[selectedType.value] : undefined,
+);
+
 watch([dateAnchor, selected], () => {
   override.value = false;
   rename.value = false;
   move.value = false;
+});
+
+// A notelet type belongs to the journal it's configured on, not the date, so only a journal
+// change invalidates the current pick; re-dating a connected notelet must keep its type.
+watch(selected, () => {
+  selectedType.value = "";
 });
 
 const anchor = computed(() => {
@@ -62,8 +87,13 @@ const anchor = computed(() => {
 });
 
 const occupant = computed(() => {
+  // Several notelets per anchor is the design, so a notelet type has no occupant to replace.
+  if (activeType.value) return;
   const a = anchor.value;
   if (!a) return;
+  // JournalsIndex is not Vue-reactive: without this the answer freezes as of mount, and the
+  // period this dialog is open over is often still being indexed.
+  void indexVersion.value;
   const found = index.entryByAnchor(selected.value, a);
   if (found.isNone() || found.value.path === props.path) return;
   return found.value.path;
@@ -71,7 +101,34 @@ const occupant = computed(() => {
 
 const configuredPath = computed(() => {
   const a = anchor.value;
-  if (!a) return;
+  if (!a || !selectedConfig.value) return;
+  const type = activeType.value;
+  if (type) {
+    // Reading the index inside a computed needs useIndexVersion(): JournalsIndex is not
+    // Vue-reactive, and without this the previewed counter would freeze as of mount.
+    void indexVersion.value;
+    // nextIndex counts this note too, so a notelet staying on its own journal, date and type
+    // keeps the number it already has — previewing one higher would promise a rename that
+    // connect does not perform.
+    const current = index.entryByPath(props.path).getOrUndefined();
+    const carried =
+      current !== undefined &&
+      isNotelet(current) &&
+      current.journalName === selected.value &&
+      current.anchor === a &&
+      current.typeId === selectedType.value
+        ? current.counter
+        : undefined;
+    const metadata: NoteletMetadata = {
+      kind: "notelet",
+      journalName: selected.value,
+      anchor: a,
+      typeId: selectedType.value as TypeId,
+      counter: type.counter.enabled ? (carried ?? noteletPaths.nextIndex(selected.value, a, type.name)) : undefined,
+    };
+    const path = noteletPaths.pathFor(selectedConfig.value, type, metadata);
+    return path.isOk() ? path.value : undefined;
+  }
   const meta = frontmatter.buildMetadata(selected.value, a);
   if (!meta.isOk()) return;
   const path = paths.pathFor(selected.value, meta.value);
@@ -99,16 +156,18 @@ const configuredFolder = computed(() =>
   configuredPath.value ? folderLabel(splitVaultPath(configuredPath.value)[0]) : "",
 );
 
-const nameBlocked = computed(() =>
-  selectedConfig.value
+const nameBlocked = computed(() => {
+  if (activeType.value) return promptsInTemplate(activeType.value.nameTemplate, activeType.value.prompts).length > 0;
+  return selectedConfig.value
     ? promptsInTemplate(selectedConfig.value.nameTemplate, selectedConfig.value.prompts).length > 0
-    : false,
-);
-const folderBlocked = computed(() =>
-  selectedConfig.value
+    : false;
+});
+const folderBlocked = computed(() => {
+  if (activeType.value) return promptsInTemplate(activeType.value.folder, activeType.value.prompts).length > 0;
+  return selectedConfig.value
     ? promptsInTemplate(selectedConfig.value.folder, selectedConfig.value.prompts).length > 0
-    : false,
-);
+    : false;
+});
 
 const outOfBounds = computed(() => {
   const a = anchor.value;
@@ -132,25 +191,16 @@ function connect(): void {
     override: override.value,
     rename: rename.value,
     move: move.value,
+    ...(selectedType.value && { typeId: selectedType.value as TypeId }),
   });
 }
 </script>
 
 <template>
-  <div v-if="existing.isSome()">
-    <UiSettingRow>
-      <template #description>
-        {{ m.connect_note_modal_connected_to({ journalName: existingJournal }) }}
-      </template>
-    </UiSettingRow>
-    <UiSettingRow controls-only>
-      <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta @click="disconnect">{{ m.connect_note_modal_disconnect() }}</UiButton>
-    </UiSettingRow>
-  </div>
   <!-- Nothing to connect to on a fresh install: the form would render an empty picker above a
-       permanently disabled button, which states the situation to nobody. -->
-  <div v-else-if="journalNames.length === 0">
+       permanently disabled button, which states the situation to nobody. A note still carrying a
+       claim is not that case — it needs its Disconnect, whether or not its journal survived. -->
+  <div v-if="journalNames.length === 0 && existing.isNone()">
     <UiSettingRow>
       <template #description>{{ m.common_no_journals_yet() }}</template>
     </UiSettingRow>
@@ -159,13 +209,25 @@ function connect(): void {
     </UiSettingRow>
   </div>
   <div v-else>
-    <UiSettingRow>
+    <UiSettingRow v-if="existing.isSome()">
+      <template #description>
+        {{ m.connect_note_modal_connected_to({ journalName: existingJournal }) }}
+      </template>
+    </UiSettingRow>
+    <UiSettingRow v-else>
       <template #description>{{ path }}</template>
     </UiSettingRow>
     <UiSettingRow>
       <template #name>{{ m.common_label_journal() }}</template>
-      <UiDropdown v-model="selected">
+      <UiDropdown v-model="selected" :aria-label="m.common_label_journal()">
         <option v-for="name in journalNames" :key="name" :value="name">{{ name }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow v-if="types.length > 0">
+      <template #name>{{ m.connect_note_modal_kind_label() }}</template>
+      <UiDropdown v-model="selectedType" :aria-label="m.connect_note_modal_kind_label()">
+        <option value="">{{ m.connect_note_modal_kind_period() }}</option>
+        <option v-for="[id, type] in types" :key="id" :value="id">{{ type.name }}</option>
       </UiDropdown>
     </UiSettingRow>
     <UiSettingRow>
@@ -183,7 +245,11 @@ function connect(): void {
     <UiSettingRow v-if="needRename">
       <template #name>{{ m.connect_note_modal_rename_label() }}</template>
       <template #description>
-        <span v-if="nameBlocked">{{ m.connect_note_modal_rename_refused_prompt() }}</span>
+        <span v-if="nameBlocked">{{
+          activeType
+            ? m.connect_note_modal_rename_refused_prompt_notelet()
+            : m.connect_note_modal_rename_refused_prompt()
+        }}</span>
         <template v-else>
           {{ m.connect_note_modal_rename_description({ current: currentName, configured: configuredName }) }}
         </template>
@@ -193,7 +259,9 @@ function connect(): void {
     <UiSettingRow v-if="needMove">
       <template #name>{{ m.connect_note_modal_move_label() }}</template>
       <template #description>
-        <span v-if="folderBlocked">{{ m.connect_note_modal_move_refused_prompt() }}</span>
+        <span v-if="folderBlocked">{{
+          activeType ? m.connect_note_modal_move_refused_prompt_notelet() : m.connect_note_modal_move_refused_prompt()
+        }}</span>
         <template v-else>
           {{ m.connect_note_modal_move_description({ current: currentFolder, configured: configuredFolder }) }}
         </template>
@@ -202,7 +270,10 @@ function connect(): void {
     </UiSettingRow>
     <UiSettingRow controls-only>
       <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-      <UiButton cta :disabled="!canConnect" @click="connect">{{ m.connect_note_modal_connect() }}</UiButton>
+      <UiButton v-if="existing.isSome()" @click="disconnect">{{ m.connect_note_modal_disconnect() }}</UiButton>
+      <UiButton cta :disabled="!canConnect" @click="connect">
+        {{ existing.isSome() ? m.connect_note_modal_update() : m.connect_note_modal_connect() }}
+      </UiButton>
     </UiSettingRow>
   </div>
 </template>

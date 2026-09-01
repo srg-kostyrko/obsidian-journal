@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { FrontmatterError, NotesService } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
+import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { testContainer, type TestContainerOptions, type TestHarness } from "@/testing";
 
@@ -230,6 +233,110 @@ describe("NoteletCreationService — a question the note name spells", () => {
 
     expect(created.isErr()).toBe(true);
     expect(harness.host.files.get("Standup Dana.md")).toBeUndefined();
+  });
+});
+
+describe("attachNotelet", () => {
+  it("writes the notelet claim onto an existing note", async () => {
+    const harness = await boot(workWith());
+    harness.host.putFile("inbox/n.md", "my own words");
+
+    const attached = await harness.resolve(NoteletCreationService).attachNotelet("Work", "inbox/n.md" as VaultPath, {
+      kind: "notelet",
+      journalName: "Work",
+      anchor: ANCHOR,
+      typeId: TYPE,
+      counter: 3,
+    });
+
+    expectOk(attached);
+    expect(harness.host.files.get("inbox/n.md")?.frontmatter).toEqual({
+      journal: "Work",
+      "journal-date": ANCHOR,
+      "journal-notelet": "Standup",
+      "journal-notelet-index": 3,
+    });
+  });
+
+  it("leaves a note that already has content alone", async () => {
+    const harness = await boot(workWith({ templates: ["Templates/Standup"] }));
+    harness.host.putFile("Templates/Standup.md", "# Standup");
+    harness.host.putFile("inbox/n.md", "my own words");
+
+    await harness.resolve(NoteletCreationService).attachNotelet("Work", "inbox/n.md" as VaultPath, {
+      kind: "notelet",
+      journalName: "Work",
+      anchor: ANCHOR,
+      typeId: TYPE,
+    });
+
+    expect(harness.host.files.get("inbox/n.md")?.content).toBe("my own words");
+  });
+
+  it("renders the type's templates into an empty note even though attaching frontmatter fills the file body", async () => {
+    const harness = await boot(workWith({ templates: ["Templates/Standup"] }));
+    harness.host.putFile("Templates/Standup.md", "# Standup");
+    harness.host.putFile("inbox/n.md", "");
+    // The fake host keeps `content` and `frontmatter` as separate fields, so it never models
+    // Obsidian's real processFrontMatter embedding a `---` block into the file text. Simulate
+    // that coupling here, matching NoteCreationService.attachNote's equivalent test, so emptiness
+    // is provably judged against the note's original body rather than its post-frontmatter one.
+    const notes = harness.resolve(NotesService);
+    vi.spyOn(notes, "updateFrontmatter").mockImplementation((path) =>
+      AsyncResult.fromPromise(
+        (async () => {
+          const current = await notes.read(path);
+          const body = current.isOk() ? current.value : "";
+          await notes.write(path, `---\njournal: Work\n---\n${body}`);
+        })(),
+        () => new FrontmatterError(path, new Error("unreachable")),
+      ),
+    );
+
+    await harness.resolve(NoteletCreationService).attachNotelet("Work", "inbox/n.md" as VaultPath, {
+      kind: "notelet",
+      journalName: "Work",
+      anchor: ANCHOR,
+      typeId: TYPE,
+    });
+
+    expect(harness.host.files.get("inbox/n.md")?.content).toContain("# Standup");
+  });
+
+  // Several notelets per anchor is the design. attachNote refuses an occupied anchor; this must
+  // not inherit that, or the second notelet of a day can never be connected.
+  it("attaches a second notelet onto an anchor a period note already holds", async () => {
+    const harness = await boot(workWith());
+    harness.host.putFile("Journal/period.md", "period", { journal: "Work", "journal-date": ANCHOR });
+    harness.resolve(JournalsIndex).register({
+      journalName: "Work",
+      anchor: ANCHOR,
+      path: "Journal/period.md" as VaultPath,
+    });
+    harness.host.putFile("inbox/n.md", "note");
+
+    const attached = await harness.resolve(NoteletCreationService).attachNotelet("Work", "inbox/n.md" as VaultPath, {
+      kind: "notelet",
+      journalName: "Work",
+      anchor: ANCHOR,
+      typeId: TYPE,
+    });
+
+    expectOk(attached);
+  });
+
+  it("refuses a type the journal does not have", async () => {
+    const harness = await boot(workWith());
+    harness.host.putFile("inbox/n.md", "note");
+
+    const attached = await harness.resolve(NoteletCreationService).attachNotelet("Work", "inbox/n.md" as VaultPath, {
+      kind: "notelet",
+      journalName: "Work",
+      anchor: ANCHOR,
+      typeId: "nt_missing" as TypeId,
+    });
+
+    expect(attached.isErr()).toBe(true);
   });
 });
 
