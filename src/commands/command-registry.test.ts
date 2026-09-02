@@ -202,6 +202,24 @@ describe("DynamicCommandRegistry availability", () => {
     activate(host, path);
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
   });
+
+  it("lists an only_open_note command while a notelet is the active note", async () => {
+    const { host, index } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: { "cmd-1": buildCommand({ context: "only_open_note" }) },
+    });
+    const path = "daily/standup.md" as VaultPath;
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-05-21"),
+      path,
+      typeName: "Standup",
+      typeId: null,
+    });
+    activate(host, path);
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
 });
 
 describe("DynamicCommandRegistry execution", () => {
@@ -372,6 +390,54 @@ describe("DynamicCommandRegistry execution", () => {
         existingOnly: false,
       },
       { context: { command: "Cmd" } },
+    );
+  });
+
+  it("resolves open_note to the active notelet's anchor", async () => {
+    const { host, index, flows } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: { "cmd-1": buildCommand({ name: "Cmd", type: "same", context: "open_note" }) },
+    });
+    const path = "daily/standup.md" as VaultPath;
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-05-21"),
+      path,
+      typeName: "Standup",
+      typeId: null,
+    });
+    activate(host, path);
+    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: anchor("2026-05-21"),
+        journalNames: ["daily"],
+        openMode: "active",
+        existingOnly: false,
+      },
+      { context: { command: "Cmd" } },
+    );
+  });
+
+  it("still falls back to today when the active note is not a journal note at all", async () => {
+    const { host, flows } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: { "cmd-1": buildCommand({ name: "Cmd", type: "same", context: "open_note" }) },
+    });
+    activate(host, "inbox/scratch.md" as VaultPath);
+    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ anchor: CalendarDate.today().toAnchor() }),
+      expect.anything(),
     );
   });
 });

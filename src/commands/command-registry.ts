@@ -18,8 +18,7 @@ import {
   OpenDateFlow,
   TimelineService,
 } from "@/journals";
-import type { JournalEntry, TypeId } from "@/journals";
-import { periodEntryOf } from "@/journals/types";
+import type { IndexedNote, TypeId } from "@/journals";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesEventsToken, ShelvesRepository } from "@/shelves";
 
@@ -186,11 +185,8 @@ export class DynamicCommandRegistry {
       .exhaustive();
   }
 
-  #activeEntry(): Option<JournalEntry> {
-    return this.#workspace
-      .activeNote()
-      .flatMap((path) => this.#index.entryByPath(path))
-      .flatMap(periodEntryOf);
+  #activeEntry(): Option<IndexedNote> {
+    return this.#workspace.activeNote().flatMap((path) => this.#index.entryByPath(path));
   }
 
   #anchor(command: CommandConfig, journalNames: readonly string[], reference: CalendarDate): Option<AnchorString> {
