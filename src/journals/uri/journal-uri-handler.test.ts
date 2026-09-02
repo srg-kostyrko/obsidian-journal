@@ -15,7 +15,8 @@ import { VaultSubscriptionService } from "../vault-subscription";
 import { JournalUriHandler } from "./journal-uri-handler";
 
 import type { JournalConfig } from "../config";
-import type { TypeId } from "../notelets/config";
+import type { NoteletType, TypeId } from "../notelets/config";
+import type { Prompt } from "../prompts/config";
 
 const DAILY = fixedJournal("daily", { type: "day" });
 const WORK = fixedJournal("work", { type: "day" });
@@ -161,10 +162,21 @@ describe("JournalUriHandler errors", () => {
 
 const MEETING = "nt_a" as TypeId;
 
+const ATTENDEE: Prompt = {
+  type: "text",
+  variable: "attendee",
+  question: "Who with?",
+  frontmatterKey: "meeting-with",
+  required: false,
+};
+
 // `overrides` must never carry `notelets`: it would replace the Meeting type outright and turn
 // every case below into the unknown-type branch. The stored `id` disagrees with the record key on
 // purpose — where they agree, a resolver reading `type.id` passes every test here.
-function withMeetingType(overrides: Partial<JournalConfig> = {}): JournalConfig {
+function withMeetingType(
+  overrides: Partial<JournalConfig> = {},
+  typeOverrides: Partial<NoteletType> = {},
+): JournalConfig {
   return fixedJournal(
     "Work",
     { type: "day" },
@@ -174,6 +186,7 @@ function withMeetingType(overrides: Partial<JournalConfig> = {}): JournalConfig 
           id: "nt_stale" as TypeId,
           name: "Meeting",
           nameTemplate: "Meeting {{notelet_index}}",
+          ...typeOverrides,
         }),
       },
       ...overrides,
@@ -262,6 +275,20 @@ describe("JournalUriHandler notelet creation", () => {
 
     expect(invokeSpy).not.toHaveBeenCalled();
     expect(harness.notices.messages).toEqual([m.uri_unknown_journal({ journal: "Nope" })]);
+  });
+
+  it("stays silent when the type's questions are dismissed", async () => {
+    const harness = await noteletHarness(withMeetingType({}, { prompts: [ATTENDEE] }));
+
+    trigger(harness, { journal: "Work", notelet: "Meeting", date: "2026-09-02" });
+    await vi.waitFor(() => {
+      expect(harness.modals.opens).toHaveLength(1);
+    });
+    harness.modals.lastOpen().cancel();
+    await flush();
+
+    expect(harness.notices.messages).toEqual([]);
+    expect(harness.host.files.has("Meeting 1.md")).toBe(false);
   });
 
   it("reports a date outside the journal's timeline", async () => {
