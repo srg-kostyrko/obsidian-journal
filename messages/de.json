@@ -1223,7 +1223,7 @@
     }
   ],
   "uri_open_failed": "Die Journalnotiz konnte nicht geöffnet werden.",
-  "uri_unknown_notelet_type": "{journal} hat keinen Kurznotiz-Typ namens {type}.",
+  "uri_unknown_notelet_type": "„{journal}“ hat keinen Kurznotiz-Typ namens „{type}“.",
   "uri_notelet_failed": "Die Kurznotiz konnte nicht erstellt werden.",
   "view_deleted_error": "Diese Ansicht wurde gelöscht. Schließe diesen Tab oder erstelle die Ansicht in den Plugin-Einstellungen erneut.",
   "view_block_unknown_error": "Dieser Block ist nicht mehr verfügbar. Entferne ihn in den Plugin-Einstellungen aus der Ansicht.",

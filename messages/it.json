@@ -1223,7 +1223,7 @@
     }
   ],
   "uri_open_failed": "Impossibile aprire la nota del diario.",
-  "uri_unknown_notelet_type": "{journal} non ha alcun tipo di nota breve chiamato {type}.",
+  "uri_unknown_notelet_type": "\"{journal}\" non ha alcun tipo di nota breve chiamato \"{type}\".",
   "uri_notelet_failed": "Impossibile creare la nota breve.",
   "view_deleted_error": "Questa vista è stata eliminata. Chiudi questa scheda oppure ricrea la vista nelle impostazioni del plugin.",
   "view_block_unknown_error": "Questo blocco non è più disponibile. Rimuovilo dalla vista nelle impostazioni del plugin.",

@@ -1078,7 +1078,7 @@
     }
   ],
   "uri_open_failed": "ジャーナルのノートを開けませんでした。",
-  "uri_unknown_notelet_type": "{journal} には {type} という名前のサブノートの種類がありません。",
+  "uri_unknown_notelet_type": "「{journal}」には「{type}」という名前のサブノートの種類がありません。",
   "uri_notelet_failed": "サブノートを作成できませんでした。",
   "view_deleted_error": "このビューは削除されました。このタブを閉じるか、プラグイン設定でビューを作成し直してください。",
   "view_block_unknown_error": "このブロックは利用できなくなりました。プラグイン設定でビューから削除してください。",

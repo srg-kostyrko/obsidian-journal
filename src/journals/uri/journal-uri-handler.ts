@@ -8,6 +8,7 @@ import { NoticeService, UriService } from "@/infrastructure/host";
 import type { OpenMode, UriParameters } from "@/infrastructure/host";
 
 import { CycleService } from "../cycle";
+import { OutOfTimelineError } from "../errors";
 import { OpenDateFlow } from "../flows/open-date.flow";
 import { noteletTypeByName } from "../notelets/config";
 import { CreateNoteletFlow } from "../notelets/flows/create-notelet.flow";
@@ -118,8 +119,15 @@ export class JournalUriHandler {
       { notify: false },
     );
 
-    // A dismissed prompt modal is a deliberate cancel, so it stays silent.
-    if (result.isErr() && !(result.error instanceof UserAborted)) {
+    if (result.isErr()) {
+      const { error } = result;
+      // A dismissed prompt modal is a deliberate cancel, so it stays silent.
+      if (error instanceof UserAborted) return;
+      // The same user error the period path reports for a date its journal does not cover.
+      if (error instanceof OutOfTimelineError) {
+        this.#notices.show(m.uri_no_journal());
+        return;
+      }
       this.#notices.show(m.uri_notelet_failed());
     }
   }

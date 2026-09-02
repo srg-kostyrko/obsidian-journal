@@ -161,13 +161,20 @@ describe("JournalUriHandler errors", () => {
 
 const MEETING = "nt_a" as TypeId;
 
+// `overrides` must never carry `notelets`: it would replace the Meeting type outright and turn
+// every case below into the unknown-type branch. The stored `id` disagrees with the record key on
+// purpose — where they agree, a resolver reading `type.id` passes every test here.
 function withMeetingType(overrides: Partial<JournalConfig> = {}): JournalConfig {
   return fixedJournal(
     "Work",
     { type: "day" },
     {
       notelets: {
-        [MEETING]: buildNoteletType({ id: MEETING, name: "Meeting", nameTemplate: "Meeting {{notelet_index}}" }),
+        [MEETING]: buildNoteletType({
+          id: "nt_stale" as TypeId,
+          name: "Meeting",
+          nameTemplate: "Meeting {{notelet_index}}",
+        }),
       },
       ...overrides,
     },
@@ -261,11 +268,15 @@ describe("JournalUriHandler notelet creation", () => {
     const harness = await noteletHarness(
       withMeetingType({ timeline: { start: anchor("2027-01-01"), end: { kind: "never" } } }),
     );
+    const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
 
     trigger(harness, { journal: "Work", notelet: "Meeting", date: "2026-09-02" });
     await flush();
 
-    expect(harness.notices.messages).toEqual([m.uri_notelet_failed()]);
+    // anchorOf answers for a journal outside its own timeline, so the refusal has to come back
+    // from the creation flow rather than from the anchor guard above it.
+    expect(invokeSpy).toHaveBeenCalledWith(CreateNoteletFlow, expect.anything(), expect.anything());
+    expect(harness.notices.messages).toEqual([m.uri_no_journal()]);
     expect(harness.host.files.has("Meeting 1.md")).toBe(false);
   });
 });

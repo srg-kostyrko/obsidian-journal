@@ -1223,7 +1223,7 @@
     }
   ],
   "uri_open_failed": "Impossible d’ouvrir la note du journal.",
-  "uri_unknown_notelet_type": "{journal} n’a aucun type de note brève nommé {type}.",
+  "uri_unknown_notelet_type": "« {journal} » n’a aucun type de note brève nommé « {type} ».",
   "uri_notelet_failed": "Impossible de créer la note brève.",
   "view_deleted_error": "Cette vue a été supprimée. Fermez cet onglet ou recréez la vue dans les paramètres du plugin.",
   "view_block_unknown_error": "Ce bloc n’est plus disponible. Retirez-le de la vue dans les paramètres du plugin.",
