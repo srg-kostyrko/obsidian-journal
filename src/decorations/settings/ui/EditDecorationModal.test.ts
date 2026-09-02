@@ -25,7 +25,7 @@ async function mountModal(options: {
   conditionTypes: readonly JournalDecorationCondition["type"][];
   decoration?: JournalDecoration;
 }) {
-  const harness = await testContainer();
+  const harness = await testContainer({ modules: [journalsCoreModule] });
   return harness.renderModal(EditDecorationModal, {
     props: { conditionTypes: options.conditionTypes, decoration: options.decoration },
   });
@@ -42,6 +42,7 @@ const ALL_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = [
   "date",
   "weekday",
   "offset",
+  "has-notelet",
 ];
 
 async function mountWith(options: { conditions: JournalDecorationCondition[] }) {
@@ -103,6 +104,7 @@ describe("EditDecorationModal", () => {
       await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
       expect(screen.getByText(m.decoration_condition_type_label({ type: "date" }))).toBeTruthy();
       expect(screen.getByText(m.decoration_condition_type_label({ type: "weekday" }))).toBeTruthy();
+      expect(screen.getByText(m.decoration_condition_type_label({ type: "has-notelet" }))).toBeTruthy();
       expect(screen.queryByText(m.decoration_condition_type_label({ type: "offset" }))).toBeNull();
     });
 
@@ -142,6 +144,12 @@ describe("EditDecorationModal", () => {
       // weekdays is already a set, so a second condition can say nothing new.
       const { options } = await mountWith({ conditions: [buildCondition("weekday")] });
       expect(options.map((o) => o.value)).not.toContain("weekday");
+    });
+
+    it("does not offer has-notelet twice", async () => {
+      // typeIds is already a set, so a second condition can say nothing new.
+      const { options } = await mountWith({ conditions: [buildCondition("has-notelet")] });
+      expect(options.map((o) => o.value)).not.toContain("has-notelet");
     });
   });
 
