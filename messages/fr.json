@@ -1206,6 +1206,7 @@
   "uri_unknown_write_type": "Type de journal inconnu « {type} » dans l’URI.",
   "uri_invalid_date": "Impossible de comprendre la date « {date} » dans l’URI.",
   "uri_invalid_mode": "Mode d’ouverture inconnu « {mode} » dans l’URI.",
+  "uri_notelet_requires_journal": "Un lien de note brève nécessite un journal. Ajoutez journal=<nom> au lien.",
   "uri_unknown_journal": "Il n’existe aucun journal nommé « {journal} ».",
   "uri_no_journal": "Aucun journal ne couvre cette date.",
   "uri_no_journal_of_type": [

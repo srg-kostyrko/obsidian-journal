@@ -1206,6 +1206,7 @@
   "uri_unknown_write_type": "Tipo di diario sconosciuto \"{type}\" nell'URI.",
   "uri_invalid_date": "Impossibile interpretare la data \"{date}\" nell'URI.",
   "uri_invalid_mode": "Modalità di apertura sconosciuta \"{mode}\" nell'URI.",
+  "uri_notelet_requires_journal": "Un link a una nota breve richiede un diario. Aggiungi journal=<nome> al link.",
   "uri_unknown_journal": "Non esiste alcun diario denominato \"{journal}\".",
   "uri_no_journal": "Nessun diario copre quella data.",
   "uri_no_journal_of_type": [

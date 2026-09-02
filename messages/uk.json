@@ -1091,6 +1091,7 @@
   "uri_unknown_write_type": "Невідомий тип журналу «{type}» в URI.",
   "uri_invalid_date": "Не вдалося розпізнати дату «{date}» в URI.",
   "uri_invalid_mode": "Невідомий режим відкриття «{mode}» в URI.",
+  "uri_notelet_requires_journal": "Посиланню на піднотатку потрібен журнал. Додайте до посилання journal=<назва>.",
   "uri_unknown_journal": "Немає журналу з назвою «{journal}».",
   "uri_no_journal": "Жоден журнал не охоплює цю дату.",
   "uri_no_journal_of_type": [

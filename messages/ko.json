@@ -1206,6 +1206,7 @@
   "uri_unknown_write_type": "URI에 알 수 없는 저널 유형이 있습니다: \"{type}\".",
   "uri_invalid_date": "URI의 날짜를 이해할 수 없습니다: \"{date}\".",
   "uri_invalid_mode": "URI에 알 수 없는 열기 모드가 있습니다: \"{mode}\".",
+  "uri_notelet_requires_journal": "서브노트 링크에는 저널이 필요합니다. 링크에 journal=<이름>을 추가하세요.",
   "uri_unknown_journal": "\"{journal}\" 저널을 찾을 수 없습니다.",
   "uri_no_journal": "그 날짜를 담당하는 저널이 없습니다.",
   "uri_no_journal_of_type": [

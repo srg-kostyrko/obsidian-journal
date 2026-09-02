@@ -93,6 +93,7 @@ export class JournalUriHandler {
       )
       .with({ kind: "invalid-date" }, (dateError) => m.uri_invalid_date({ date: dateError.value }))
       .with({ kind: "invalid-mode" }, (modeError) => m.uri_invalid_mode({ mode: modeError.value }))
+      .with({ kind: "notelet-requires-journal" }, () => m.uri_notelet_requires_journal())
       .exhaustive();
   }
 

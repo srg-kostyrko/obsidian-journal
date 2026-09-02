@@ -1061,6 +1061,7 @@
   "uri_unknown_write_type": "URI に不明なジャーナルタイプ「{type}」があります。",
   "uri_invalid_date": "URI 内の日付「{date}」を解釈できませんでした。",
   "uri_invalid_mode": "URI に不明なオープンモード「{mode}」があります。",
+  "uri_notelet_requires_journal": "サブノートのリンクにはジャーナルが必要です。リンクに journal=<名前> を追加してください。",
   "uri_unknown_journal": "「{journal}」という名前のジャーナルはありません。",
   "uri_no_journal": "その日付を含むジャーナルがありません。",
   "uri_no_journal_of_type": [

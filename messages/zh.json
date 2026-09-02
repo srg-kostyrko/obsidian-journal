@@ -1061,6 +1061,7 @@
   "uri_unknown_write_type": "URI 中的日记类型“{type}”未知。",
   "uri_invalid_date": "无法识别 URI 中的日期“{date}”。",
   "uri_invalid_mode": "URI 中的打开模式“{mode}”未知。",
+  "uri_notelet_requires_journal": "子笔记链接需要一个日记。请在链接中添加 journal=<名称>。",
   "uri_unknown_journal": "没有名为“{journal}”的日记。",
   "uri_no_journal": "没有日记覆盖该日期。",
   "uri_no_journal_of_type": [

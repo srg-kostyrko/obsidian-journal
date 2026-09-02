@@ -1206,6 +1206,7 @@
   "uri_unknown_write_type": "Unbekannter Journaltyp „{type}“ in der URI.",
   "uri_invalid_date": "Das Datum „{date}“ in der URI konnte nicht interpretiert werden.",
   "uri_invalid_mode": "Unbekannter Öffnungsmodus „{mode}“ in der URI.",
+  "uri_notelet_requires_journal": "Ein Kurznotiz-Link benötigt ein Journal. Füge journal=<Name> zum Link hinzu.",
   "uri_unknown_journal": "Es gibt kein Journal mit dem Namen „{journal}“.",
   "uri_no_journal": "Für dieses Datum gibt es kein Journal.",
   "uri_no_journal_of_type": [
