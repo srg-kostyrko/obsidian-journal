@@ -1,4 +1,5 @@
 import { cloneFnJSON } from "@vueuse/core";
+import { nanoid } from "nanoid";
 
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
@@ -50,7 +51,7 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
       this.#repository.update(submitted.newName, { notelets: {} });
       if (submitted.cloneNoteletTypes && source !== undefined) {
         for (const type of Object.values(source.notelets)) {
-          const cloned = { ...cloneFnJSON(type), id: crypto.randomUUID() as TypeId };
+          const cloned = { ...cloneFnJSON(type), id: nanoid<TypeId>() };
           this.#repository.addNoteletType(submitted.newName, cloned);
           this.#noteletCommands.seed(submitted.newName, cloned);
         }

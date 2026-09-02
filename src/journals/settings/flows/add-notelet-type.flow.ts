@@ -1,3 +1,5 @@
+import { nanoid } from "nanoid";
+
 import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
@@ -33,7 +35,7 @@ export class AddNoteletTypeFlow implements Flow<{ journalName: string }, { typeI
         return yield* new Err(toFlowError(new UnknownJournalError(parameters.journalName)));
       }
 
-      const typeId = crypto.randomUUID() as TypeId;
+      const typeId = nanoid<TypeId>();
       const type = { ...noteletTypeDefaults(typeId), name: submitted.name };
       yield* this.#repository.addNoteletType(parameters.journalName, type).mapErr(toFlowError);
       this.#noteletCommands.seed(parameters.journalName, type);
