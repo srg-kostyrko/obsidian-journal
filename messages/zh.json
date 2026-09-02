@@ -649,6 +649,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "存在笔记",
+  "decoration_condition_has_notelet_describe_any": "存在子笔记",
+  "decoration_condition_has_notelet_describe_types": "存在类型为 {types} 的子笔记",
+  "decoration_condition_has_notelet_empty": "此日记还没有子笔记类型。",
+  "decoration_condition_has_notelet_label": "子笔记类型",
+  "decoration_condition_has_notelet_unknown_type": "未知类型",
   "decoration_condition_has_open_task_describe": "笔记有未完成的任务",
   "decoration_condition_note_size_describe": [
     {
@@ -730,7 +735,8 @@
         "type=has-note": "有笔记",
         "type=has-open-task": "有未完成的任务",
         "type=all-tasks-completed": "所有任务已完成",
-        "type=note-size": "笔记大小"
+        "type=note-size": "笔记大小",
+        "type=has-notelet": "有子笔记"
       }
     }
   ],
@@ -748,7 +754,8 @@
         "type=has-note": "检查是否存在笔记",
         "type=has-open-task": "检查笔记是否有未完成的任务",
         "type=all-tasks-completed": "检查是否所有任务都已完成",
-        "type=note-size": "检查笔记大小"
+        "type=note-size": "检查笔记大小",
+        "type=has-notelet": "检查是否存在子笔记"
       }
     }
   ],

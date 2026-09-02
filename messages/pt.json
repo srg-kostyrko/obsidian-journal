@@ -794,6 +794,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "existe uma nota",
+  "decoration_condition_has_notelet_describe_any": "existe uma nota breve",
+  "decoration_condition_has_notelet_describe_types": "existe uma nota breve do tipo {types}",
+  "decoration_condition_has_notelet_empty": "Este diário ainda não tem tipos de nota breve.",
+  "decoration_condition_has_notelet_label": "Tipos de nota breve",
+  "decoration_condition_has_notelet_unknown_type": "tipo desconhecido",
   "decoration_condition_has_open_task_describe": "a nota tem uma tarefa em aberto",
   "decoration_condition_note_size_describe": [
     {
@@ -875,7 +880,8 @@
         "type=has-note": "Tem nota",
         "type=has-open-task": "Tem tarefa em aberto",
         "type=all-tasks-completed": "Todas as tarefas concluídas",
-        "type=note-size": "Tamanho da nota"
+        "type=note-size": "Tamanho da nota",
+        "type=has-notelet": "Tem nota breve"
       }
     }
   ],
@@ -893,7 +899,8 @@
         "type=has-note": "Verificar se a nota existe",
         "type=has-open-task": "Verificar se a nota tem tarefas em aberto",
         "type=all-tasks-completed": "Verificar se todas as tarefas estão concluídas",
-        "type=note-size": "Verificar o tamanho da nota"
+        "type=note-size": "Verificar o tamanho da nota",
+        "type=has-notelet": "Verificar se existe uma nota breve"
       }
     }
   ],

@@ -9,6 +9,7 @@ import { FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
@@ -319,6 +320,59 @@ describe("DecorationEngine", () => {
           size: { words: 400, characters: 2200 },
         });
         expect(result.size).toBe(0);
+      });
+    });
+
+    describe("has-notelet conditions", () => {
+      const NOTELET_PATH = "journals/2026-05-25.standup.md" as VaultPath;
+
+      async function evaluateNotelet(
+        typeIds: string[],
+        options: { registerNotelet: string | null; registerNote?: boolean },
+      ): Promise<Map<string, unknown>> {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("has-notelet", { typeIds })],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarness({
+          daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+        });
+        const period = DayPeriod.containing(date("2026-05-25"));
+        const index = harness.resolve(JournalsIndex);
+        if (options.registerNote === true) {
+          index.register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
+        }
+        if (options.registerNotelet !== null) {
+          index.register({
+            kind: "notelet",
+            journalName: "daily",
+            anchor: period.anchor.toAnchor(),
+            path: NOTELET_PATH,
+            typeName: "Standup",
+            typeId: options.registerNotelet as TypeId,
+          });
+        }
+        return harness
+          .resolve(DecorationEngine)
+          .evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
+      }
+
+      it("matches has-notelet when the period holds a notelet", async () => {
+        const result = await evaluateNotelet([], { registerNotelet: "nt_a" });
+        expect(result.size).toBe(1);
+      });
+
+      it("does not match has-notelet when the period holds only a period note", async () => {
+        const result = await evaluateNotelet([], { registerNotelet: null, registerNote: true });
+        expect(result.size).toBe(0);
+      });
+
+      it("matches has-notelet only for the configured type id", async () => {
+        const matching = await evaluateNotelet(["nt_a"], { registerNotelet: "nt_a" });
+        const other = await evaluateNotelet(["nt_zzz"], { registerNotelet: "nt_a" });
+        expect(matching.size).toBe(1);
+        expect(other.size).toBe(0);
       });
     });
 

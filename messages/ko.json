@@ -794,6 +794,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "노트가 있음",
+  "decoration_condition_has_notelet_describe_any": "서브노트가 있음",
+  "decoration_condition_has_notelet_describe_types": "{types} 유형의 서브노트가 있음",
+  "decoration_condition_has_notelet_empty": "이 저널에는 아직 서브노트 유형이 없습니다.",
+  "decoration_condition_has_notelet_label": "서브노트 유형",
+  "decoration_condition_has_notelet_unknown_type": "알 수 없는 유형",
   "decoration_condition_has_open_task_describe": "노트에 미완료 작업이 있음",
   "decoration_condition_note_size_describe": [
     {
@@ -875,7 +880,8 @@
         "type=has-note": "노트 있음",
         "type=has-open-task": "미완료 작업 있음",
         "type=all-tasks-completed": "모든 작업 완료",
-        "type=note-size": "노트 크기"
+        "type=note-size": "노트 크기",
+        "type=has-notelet": "서브노트 있음"
       }
     }
   ],
@@ -893,7 +899,8 @@
         "type=has-note": "노트 존재 여부 확인",
         "type=has-open-task": "노트의 미완료 작업 확인",
         "type=all-tasks-completed": "모든 작업 완료 여부 확인",
-        "type=note-size": "노트 크기 확인"
+        "type=note-size": "노트 크기 확인",
+        "type=has-notelet": "서브노트 존재 여부 확인"
       }
     }
   ],

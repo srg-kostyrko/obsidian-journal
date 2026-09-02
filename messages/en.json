@@ -730,6 +730,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "a note exists",
+  "decoration_condition_has_notelet_describe_any": "a notelet exists",
+  "decoration_condition_has_notelet_describe_types": "a notelet of type {types} exists",
+  "decoration_condition_has_notelet_empty": "This journal has no notelet types yet.",
+  "decoration_condition_has_notelet_label": "Notelet types",
+  "decoration_condition_has_notelet_unknown_type": "unknown type",
   "decoration_condition_has_open_task_describe": "the note has an open task",
   "decoration_condition_note_size_describe": [
     {
@@ -811,7 +816,8 @@
         "type=has-note": "Has note",
         "type=has-open-task": "Has open task",
         "type=all-tasks-completed": "All tasks completed",
-        "type=note-size": "Note size"
+        "type=note-size": "Note size",
+        "type=has-notelet": "Has notelet"
       }
     }
   ],
@@ -829,7 +835,8 @@
         "type=has-note": "Check if note exists",
         "type=has-open-task": "Check if note has open tasks",
         "type=all-tasks-completed": "Check if all tasks are completed",
-        "type=note-size": "Check note size"
+        "type=note-size": "Check note size",
+        "type=has-notelet": "Check if a notelet exists"
       }
     }
   ],

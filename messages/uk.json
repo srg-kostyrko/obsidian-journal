@@ -653,6 +653,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "нотатка існує",
+  "decoration_condition_has_notelet_describe_any": "піднотатка існує",
+  "decoration_condition_has_notelet_describe_types": "існує піднотатка типу {types}",
+  "decoration_condition_has_notelet_empty": "У цьому журналі ще немає типів піднотаток.",
+  "decoration_condition_has_notelet_label": "Типи піднотаток",
+  "decoration_condition_has_notelet_unknown_type": "невідомий тип",
   "decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
   "decoration_condition_note_size_describe": [
     {
@@ -734,7 +739,8 @@
         "type=has-note": "Має нотатку",
         "type=has-open-task": "Має відкрите завдання",
         "type=all-tasks-completed": "Усі завдання виконано",
-        "type=note-size": "Розмір нотатки"
+        "type=note-size": "Розмір нотатки",
+        "type=has-notelet": "Має піднотатку"
       }
     }
   ],
@@ -752,7 +758,8 @@
         "type=has-note": "Перевірити, чи існує нотатка",
         "type=has-open-task": "Перевірити, чи є в нотатці відкриті завдання",
         "type=all-tasks-completed": "Перевірити, чи всі завдання виконано",
-        "type=note-size": "Перевірити розмір нотатки"
+        "type=note-size": "Перевірити розмір нотатки",
+        "type=has-notelet": "Перевірити, чи існує піднотатка"
       }
     }
   ],

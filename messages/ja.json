@@ -649,6 +649,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "ノートが存在する",
+  "decoration_condition_has_notelet_describe_any": "サブノートが存在する",
+  "decoration_condition_has_notelet_describe_types": "種類が {types} のサブノートが存在する",
+  "decoration_condition_has_notelet_empty": "このジャーナルにはまだサブノートの種類がありません。",
+  "decoration_condition_has_notelet_label": "サブノートの種類",
+  "decoration_condition_has_notelet_unknown_type": "不明な種類",
   "decoration_condition_has_open_task_describe": "ノートに未完了のタスクがある",
   "decoration_condition_note_size_describe": [
     {
@@ -730,7 +735,8 @@
         "type=has-note": "ノートあり",
         "type=has-open-task": "未完了タスクあり",
         "type=all-tasks-completed": "全タスク完了",
-        "type=note-size": "ノートのサイズ"
+        "type=note-size": "ノートのサイズ",
+        "type=has-notelet": "サブノートあり"
       }
     }
   ],
@@ -748,7 +754,8 @@
         "type=has-note": "ノートの有無を確認",
         "type=has-open-task": "未完了タスクの有無を確認",
         "type=all-tasks-completed": "すべてのタスクが完了しているか確認",
-        "type=note-size": "ノートのサイズを確認"
+        "type=note-size": "ノートのサイズを確認",
+        "type=has-notelet": "サブノートの有無を確認"
       }
     }
   ],

@@ -794,6 +794,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "il existe une note",
+  "decoration_condition_has_notelet_describe_any": "il existe une note brève",
+  "decoration_condition_has_notelet_describe_types": "il existe une note brève de type {types}",
+  "decoration_condition_has_notelet_empty": "Ce journal n'a pas encore de type de note brève.",
+  "decoration_condition_has_notelet_label": "Types de note brève",
+  "decoration_condition_has_notelet_unknown_type": "type inconnu",
   "decoration_condition_has_open_task_describe": "la note contient une tâche ouverte",
   "decoration_condition_note_size_describe": [
     {
@@ -875,7 +880,8 @@
         "type=has-note": "A une note",
         "type=has-open-task": "A une tâche ouverte",
         "type=all-tasks-completed": "Toutes les tâches terminées",
-        "type=note-size": "Taille de la note"
+        "type=note-size": "Taille de la note",
+        "type=has-notelet": "A une note brève"
       }
     }
   ],
@@ -893,7 +899,8 @@
         "type=has-note": "Vérifier si la note existe",
         "type=has-open-task": "Vérifier si la note a des tâches ouvertes",
         "type=all-tasks-completed": "Vérifier si toutes les tâches sont terminées",
-        "type=note-size": "Vérifier la taille de la note"
+        "type=note-size": "Vérifier la taille de la note",
+        "type=has-notelet": "Vérifier si une note brève existe"
       }
     }
   ],

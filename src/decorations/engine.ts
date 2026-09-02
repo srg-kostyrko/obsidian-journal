@@ -11,6 +11,7 @@ import type { JournalConfig, JournalWrite } from "@/journals/config";
 import {
   allTasksCompleted,
   checkDate,
+  checkHasNotelet,
   checkNoteSize,
   checkOffset,
   checkProperty,
@@ -143,6 +144,9 @@ export class DecorationEngine {
       .with({ type: "has-open-task" }, () => metadata().match({ none: () => false, some: hasOpenTask }))
       .with({ type: "all-tasks-completed" }, () => metadata().match({ none: () => false, some: allTasksCompleted }))
       .with({ type: "note-size" }, (c) => size().match({ none: () => false, some: (s) => checkNoteSize(c, s) }))
+      .with({ type: "has-notelet" }, (c) =>
+        checkHasNotelet(c, this.#index.noteletsAt(journal.name, period.anchor.toAnchor())),
+      )
       .exhaustive();
   }
 
