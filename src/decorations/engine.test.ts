@@ -328,7 +328,7 @@ describe("DecorationEngine", () => {
 
       async function evaluateNotelet(
         typeIds: string[],
-        options: { registerNotelet: string | null; registerNote?: boolean },
+        options: { registerNotelet: string | null; registerNote?: boolean; noteletAnchor?: string },
       ): Promise<Map<string, unknown>> {
         const decoration = buildDecoration({
           mode: "and",
@@ -347,7 +347,7 @@ describe("DecorationEngine", () => {
           index.register({
             kind: "notelet",
             journalName: "daily",
-            anchor: period.anchor.toAnchor(),
+            anchor: (options.noteletAnchor ?? "2026-05-25") as AnchorString,
             path: NOTELET_PATH,
             typeName: "Standup",
             typeId: options.registerNotelet as TypeId,
@@ -365,6 +365,11 @@ describe("DecorationEngine", () => {
 
       it("does not match has-notelet when the period holds only a period note", async () => {
         const result = await evaluateNotelet([], { registerNotelet: null, registerNote: true });
+        expect(result.size).toBe(0);
+      });
+
+      it("does not match has-notelet when the notelet sits on another period", async () => {
+        const result = await evaluateNotelet([], { registerNotelet: "nt_a", noteletAnchor: "2026-05-26" });
         expect(result.size).toBe(0);
       });
 

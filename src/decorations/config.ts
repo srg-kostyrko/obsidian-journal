@@ -209,7 +209,7 @@ const hasNoteCondition = v.object({ type: v.literal("has-note") });
 const hasOpenTaskCondition = v.object({ type: v.literal("has-open-task") });
 const allTasksCompletedCondition = v.object({ type: v.literal("all-tasks-completed") });
 
-export const hasNoteletCondition = v.object({
+const hasNoteletCondition = v.object({
   type: v.literal("has-notelet"),
   // Opaque ids, deliberately unbranded: journals/config.ts imports this module, so importing
   // typeIdSchema back would close a cycle. An empty list means "any type".

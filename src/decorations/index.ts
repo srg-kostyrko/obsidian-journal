@@ -7,7 +7,6 @@ export {
   decorationSchema,
   decorationStyleSchema,
   filterConditionSchema,
-  hasNoteletCondition,
   type BorderSide,
   type CalendarDecoration,
   type CalendarDecorationCondition,
@@ -46,7 +45,6 @@ export {
   type DecorationSource,
   type JournalDecorationBinding,
 } from "./engine";
-export { checkHasNotelet } from "./engine-checks";
 export { gatherBindings, type GatherOptions } from "./gather-bindings";
 export { DecorationMatchService, type BadgeUnit, type MatchBadge } from "./match-service";
 export { decorationsModule } from "./module";
