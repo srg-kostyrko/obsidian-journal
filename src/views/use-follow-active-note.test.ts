@@ -199,4 +199,25 @@ describe("useFollowActiveNote", () => {
 
     expect(followed).toEqual(["2026-07-06"]);
   });
+
+  it("follows an active notelet to its period", async () => {
+    // A weekly notelet, so the followed date is the week's representative day rather than the
+    // notelet's own anchor: the anchored Mon 2025-12-29 week is week 1 of 2026, carried by
+    // Thu 2026-01-01.
+    const { harness, followed } = await mount();
+    const path = "weekly/Standup 1.md" as VaultPath;
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "weekly",
+      anchor: "2025-12-29" as AnchorString,
+      path,
+      typeName: "Standup",
+      typeId: null,
+    });
+
+    harness.host.emitFileOpen(harness.host.putFile(path));
+    await nextTick();
+
+    expect(followed).toEqual(["2026-01-01"]);
+  });
 });
