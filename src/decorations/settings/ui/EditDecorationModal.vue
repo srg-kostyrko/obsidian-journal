@@ -25,6 +25,7 @@ import DecorationCanvas from "./DecorationCanvas.vue";
 const props = defineProps<{
   decoration?: JournalDecoration;
   conditionTypes: readonly JournalDecorationCondition["type"][];
+  journalName?: string;
 }>();
 const api = useModal<{ decoration: JournalDecoration }>();
 
@@ -85,7 +86,7 @@ const onSubmit = handleSubmit((decoration) => {
                 <UiIconButton :icon="icons.action.delete" @click="conditions.remove(i)" />
               </div>
             </template>
-            <ConditionItem :name="`conditions.${i}`" :condition="condition" />
+            <ConditionItem :name="`conditions.${i}`" :condition="condition" :journal-name="journalName" />
           </UiSettingRow>
         </div>
       </div>
