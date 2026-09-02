@@ -16,6 +16,7 @@ import { CycleService } from "../cycle";
 import { NoteletTypeNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { noteletTypeByName } from "../notelets/config";
 import { NoteletCreationService } from "../notelets/notelet-creation";
 import { NoteletPathService } from "../notelets/notelet-path";
 import { promptsInTemplate } from "../prompts/prompts-in-path";
@@ -180,11 +181,11 @@ export class NoteConnectionService {
     typeName: string,
   ): Result<NoteletMetadata, NoteletTypeNotFoundError | JournalNotFoundError> {
     return this.#journals.require(journalName).flatMap((config) => {
-      const match = Object.entries(config.notelets).find(([, candidate]) => candidate.name === typeName);
-      if (match === undefined) return new Err(new NoteletTypeNotFoundError(journalName, typeName));
+      const match = noteletTypeByName(config, typeName);
+      if (match.isNone()) return new Err(new NoteletTypeNotFoundError(journalName, typeName));
       const existing = this.#index.entryByPath(path).getOrUndefined();
       const carried = existing !== undefined && isNotelet(existing) ? existing : undefined;
-      return new Ok(this.#buildNoteletMetadata(journalName, anchor, match[0] as TypeId, carried));
+      return new Ok(this.#buildNoteletMetadata(journalName, anchor, match.value[0], carried));
     });
   }
 
