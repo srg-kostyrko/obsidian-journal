@@ -88,4 +88,18 @@ describe("needsNotes", () => {
   it("treats a decoration with no conditions as not needing notes", () => {
     expect(needsNotes(buildDecoration({ mode: "and", conditions: [] }))).toBe(false);
   });
+
+  it("does not require period notes for a has-notelet decoration", () => {
+    expect(needsNotes({ mode: "and", conditions: [{ type: "has-notelet", typeIds: [] }], styles: [] })).toBe(false);
+  });
+
+  it("does not require period notes when has-notelet is or-ed with a note-based condition", () => {
+    expect(
+      needsNotes({
+        mode: "or",
+        conditions: [{ type: "has-notelet", typeIds: [] }, { type: "has-note" }],
+        styles: [],
+      }),
+    ).toBe(false);
+  });
 });
