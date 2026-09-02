@@ -6,6 +6,7 @@ import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow, type FlowError } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
+import type { JournalConfig } from "@/journals/config";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
 import type { TypeId } from "@/journals/notelets/config";
 import { NoteletCommandService } from "@/journals/notelets/notelet-commands";
@@ -31,6 +32,23 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
     return candidate;
   }
 
+  // The cloned decorations arrive from clone() still naming the source's notelet types, which the
+  // copy no longer has. An id with no counterpart is dropped rather than carried: a dangling id
+  // matches nothing and reads as an unknown type, where a shorter list is at least editable.
+  #remapNoteletTypeIds(
+    decorations: JournalConfig["decorations"],
+    remapped: ReadonlyMap<string, TypeId>,
+  ): JournalConfig["decorations"] {
+    return cloneFnJSON(decorations).map((decoration) => ({
+      ...decoration,
+      conditions: decoration.conditions.map((condition) =>
+        condition.type === "has-notelet" && condition.typeIds.length > 0
+          ? { ...condition, typeIds: condition.typeIds.flatMap((id) => remapped.get(id) ?? []) }
+          : condition,
+      ),
+    }));
+  }
+
   execute(parameters: { journalName: string }): AsyncResult<{ name: string }, FlowError> {
     if (!this.#repository.exists(parameters.journalName)) {
       return AsyncResult.err(toFlowError(new UnknownJournalError(parameters.journalName)));
@@ -49,12 +67,20 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
       // then re-add each type with a fresh id and its own seeded command, so a cloned type is
       // indistinguishable from a hand-created one.
       this.#repository.update(submitted.newName, { notelets: {} });
+      // Keyed by the source's *record* key, which a type's stored `id` is free to disagree with.
+      const remapped = new Map<string, TypeId>();
       if (submitted.cloneNoteletTypes && source !== undefined) {
-        for (const type of Object.values(source.notelets)) {
+        for (const [sourceId, type] of Object.entries(source.notelets)) {
           const cloned = { ...cloneFnJSON(type), id: nanoid<TypeId>() };
           this.#repository.addNoteletType(submitted.newName, cloned);
           this.#noteletCommands.seed(submitted.newName, cloned);
+          remapped.set(sourceId, cloned.id);
         }
+      }
+      if (source !== undefined) {
+        this.#repository.update(submitted.newName, {
+          decorations: this.#remapNoteletTypeIds(source.decorations, remapped),
+        });
       }
 
       this.#ui.push(journalEditSubpage, { journalName: submitted.newName });
