@@ -1223,6 +1223,8 @@
     }
   ],
   "uri_open_failed": "저널 노트를 열 수 없습니다.",
+  "uri_unknown_notelet_type": "{journal}에 {type}이라는 이름의 서브노트 유형이 없습니다.",
+  "uri_notelet_failed": "서브노트를 만들 수 없습니다.",
   "view_deleted_error": "이 뷰는 삭제되었습니다. 이 탭을 닫거나 플러그인 설정에서 뷰를 다시 만드세요.",
   "view_block_unknown_error": "이 블록은 더 이상 사용할 수 없습니다. 플러그인 설정에서 뷰에서 제거하세요.",
   "view_block_config_error": "이 블록의 일부 설정이 올바르지 않습니다. 플러그인 설정에서 다시 구성하세요.",

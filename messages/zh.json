@@ -1078,6 +1078,8 @@
     }
   ],
   "uri_open_failed": "无法打开该日记笔记。",
+  "uri_unknown_notelet_type": "{journal} 中没有名为 {type} 的子笔记类型。",
+  "uri_notelet_failed": "无法创建子笔记。",
   "view_deleted_error": "此视图已被删除。请关闭此标签页，或在插件设置中重新创建该视图。",
   "view_block_unknown_error": "此块已不再可用。请在插件设置中将其从视图中移除。",
   "view_block_config_error": "此块的某些设置无效。请在插件设置中重新配置。",

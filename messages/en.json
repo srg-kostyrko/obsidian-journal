@@ -1230,6 +1230,8 @@
     }
   ],
   "uri_open_failed": "Could not open the journal entry.",
+  "uri_unknown_notelet_type": "{journal} has no notelet type named {type}.",
+  "uri_notelet_failed": "Could not create the notelet.",
 
   "view_deleted_error": "This view was deleted. Close this tab, or create the view again in the plugin settings.",
   "view_block_unknown_error": "This block is no longer available. Remove it from the view in the plugin settings.",
