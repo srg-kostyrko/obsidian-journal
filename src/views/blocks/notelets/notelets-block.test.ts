@@ -47,7 +47,10 @@ describe("noteletsBlock", () => {
 
   it("summarizes the window alone, then adds each filter's count", () => {
     expect(noteletsBlock.summary?.({ window: "day" })).toBe("Current day");
-    expect(noteletsBlock.summary?.({ window: "day", journals: ["a", "b"] })).toContain("2 journals");
-    expect(noteletsBlock.summary?.({ window: "day", types: ["a"] })).toContain("1 type");
+    expect(noteletsBlock.summary?.({ window: "day", journals: ["a", "b"] })).toBe("Current day · 2 journals");
+    expect(noteletsBlock.summary?.({ window: "day", types: ["a"] })).toBe("Current day · 1 type");
+    expect(noteletsBlock.summary?.({ window: "day", journals: ["a", "b"], types: ["a"] })).toBe(
+      "Current day · 2 journals · 1 type",
+    );
   });
 });
