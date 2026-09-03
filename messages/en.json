@@ -124,6 +124,7 @@
   "code_blocks_yaml_error": "Could not read the options in this {key} block.",
   "code_blocks_schema_error": "Some options in this {key} block are not valid.",
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
+  "code_blocks_notelets_not_connected": "Note is not connected to a journal",
   "code_blocks_home_empty": "No journals to show. Check the block's show and shelf options.",
   "common_no_journals_yet": "No journals yet. Create one in the plugin settings.",
   "code_blocks_nav_next": "Next",

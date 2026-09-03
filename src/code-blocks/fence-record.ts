@@ -14,3 +14,12 @@ export function asFenceString(value: unknown): string | undefined {
   if (typeof value === "number" || typeof value === "boolean") return String(value);
   return;
 }
+
+// A fence option that names several things but was written as one — `types: Meeting` — still
+// means that one thing. Anything a single value can't be read as (a mapping, null) degrades
+// to no filter rather than to an error panel.
+export function asFenceStringList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map((entry) => asFenceString(entry)).filter((entry) => entry !== undefined);
+  const single = asFenceString(value);
+  return single === undefined ? [] : [single];
+}
