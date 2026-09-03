@@ -127,6 +127,7 @@
   "code_blocks_yaml_error": "Не удалось прочитать параметры в этом блоке {key}.",
   "code_blocks_schema_error": "Некоторые параметры в этом блоке {key} недопустимы.",
   "code_blocks_nav_not_connected": "Заметка не связана с журналом",
+  "code_blocks_notelets_not_connected": "Заметка не связана с журналом",
   "code_blocks_home_empty": "Журналы для отображения отсутствуют. Проверьте параметры show и shelf этого блока.",
   "common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
   "code_blocks_nav_next": "Следующий",
@@ -1330,6 +1331,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Преобразуется в путь в хранилище к заметке другого журнала за дату в фокусе. Оберните его в ссылку самостоятельно и добавьте сдвиг, например +1w, чтобы указать на соседний период.",
   "view_block_markdown_template_empty": "Шаблон не выбран",
   "view_block_markdown_template_read_error": "Не удалось прочитать файл шаблона.",
+  "view_block_notelets_label": "Подзаметки",
+  "view_block_notelets_description": "Перечисляет подзаметки заметки, которую вы читаете, либо подзаметки в пределах окна вокруг даты представления.",
+  "view_block_notelets_journals_label": "Журналы",
+  "view_block_notelets_journals_description": "Оставьте все выключенными, чтобы включить все журналы на полке представления.",
+  "view_block_notelets_types_label": "Типы подзаметок",
+  "view_block_notelets_types_description": "Оставьте все выключенными, чтобы включить все типы.",
+  "view_block_notelets_types_empty": "Ни один журнал пока не определяет тип подзаметки.",
   "view_block_summary_before": "{count} до",
   "view_block_summary_after": "{count} после",
   "view_block_summary_hidden_days": "Скрыто: {days}",
@@ -1342,6 +1350,18 @@
         "countPlural=few": "{count} журнала",
         "countPlural=many": "{count} журналов",
         "countPlural=*": "{count} журнала"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} тип",
+        "countPlural=few": "{count} типа",
+        "countPlural=many": "{count} типов",
+        "countPlural=*": "{count} типа"
       }
     }
   ],
@@ -1740,6 +1760,8 @@
   "journal_edit_code_block_home_option_scale": "увеличивает размер ссылки как множитель размера текста (например, scale: 2 удваивает его).",
   "journal_edit_code_block_home_option_shelf": "ограничивает отображаемые журналы определённой полкой.",
   "journal_edit_code_block_home_custom_lead": "При наличии пользовательских настроек это может выглядеть так:",
+  "journal_edit_code_block_notelets_description": "Перечисляет подзаметки периода, к которому относится эта заметка. Добавьте список types, чтобы ограничить его определёнными типами подзаметок.",
+  "journal_edit_code_block_notelets_default": "По умолчанию это выглядит так:",
   "journal_edit_section_timeline": "Временная шкала",
   "journal_edit_sequence_enabled_description": "Присваивать заметкам номера (например, День 1, День 2, …).",
   "journal_edit_sequence_enabled_label": "Включить последовательные номера",
@@ -1864,6 +1886,11 @@
   "journal_notelet_counter_key_modal_title": "Изменить название свойства номера",
   "journal_property_key_taken": "Другой элемент этой заметки уже записывается в «{name}».",
   "journal_notelet_command_name": "Создать {type}",
+  "journal_notelet_list_empty": "Нет подзаметок за этот период.",
+  "journal_notelet_list_create": "Новая подзаметка",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (отсутствующий тип)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Поиск журналов",
   "journal_prompt_answer_required": "На этот вопрос нужно ответить.",

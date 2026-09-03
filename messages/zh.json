@@ -114,6 +114,7 @@
   "code_blocks_yaml_error": "无法读取此 {key} 块中的选项。",
   "code_blocks_schema_error": "此 {key} 块中的某些选项无效。",
   "code_blocks_nav_not_connected": "笔记未连接到日记",
+  "code_blocks_notelets_not_connected": "笔记未连接到日记",
   "code_blocks_home_empty": "暂无日记可供显示。请检查该块的 show 和 shelf 选项。",
   "common_no_journals_yet": "还没有日记。请在插件设置中创建一个。",
   "code_blocks_nav_next": "下一个",
@@ -1153,6 +1154,13 @@
   "view_block_markdown_template_variable_journal_link_description": "解析为另一篇日记中对应焦点日期的笔记在库中的路径。请自行将其包装成链接，并添加类似 +1w 的偏移以指向相邻周期。",
   "view_block_markdown_template_empty": "未选择模板",
   "view_block_markdown_template_read_error": "无法读取模板文件。",
+  "view_block_notelets_label": "子笔记",
+  "view_block_notelets_description": "列出您正在阅读的笔记的子笔记，或视图日期前后时间范围内的子笔记。",
+  "view_block_notelets_journals_label": "日记",
+  "view_block_notelets_journals_description": "全部保持关闭即可包含视图书架中的所有日记。",
+  "view_block_notelets_types_label": "子笔记类型",
+  "view_block_notelets_types_description": "全部保持关闭即可包含所有类型。",
+  "view_block_notelets_types_empty": "还没有日记定义子笔记类型。",
   "view_block_summary_before": "前 {count}",
   "view_block_summary_after": "后 {count}",
   "view_block_summary_hidden_days": "隐藏：{days}",
@@ -1163,6 +1171,16 @@
       "match": {
         "count=1": "{count} 个日记",
         "count=*": "{count} 个日记"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} 种类型",
+        "count=*": "{count} 种类型"
       }
     }
   ],
@@ -1549,6 +1567,8 @@
   "journal_edit_code_block_home_option_scale": "将链接大小增加到文本大小的倍数（例如，scale: 2 会将其加倍）。",
   "journal_edit_code_block_home_option_shelf": "将显示的日记限制在特定书架上。",
   "journal_edit_code_block_home_custom_lead": "通过自定义选项，它可以看起来像这样：",
+  "journal_edit_code_block_notelets_description": "列出此笔记所属周期的子笔记。添加 types 列表可将其限定为特定的子笔记类型。",
+  "journal_edit_code_block_notelets_default": "默认情况下，它看起来像这样：",
   "journal_edit_section_timeline": "时间线",
   "journal_edit_sequence_enabled_description": "给笔记分配编号（例如第 1 天、第 2 天……）。",
   "journal_edit_sequence_enabled_label": "启用顺序编号",
@@ -1671,6 +1691,11 @@
   "journal_notelet_counter_key_modal_title": "编辑编号属性名称",
   "journal_property_key_taken": "此笔记中的其他内容已经写入“{name}”。",
   "journal_notelet_command_name": "新建 {type}",
+  "journal_notelet_list_empty": "此周期没有子笔记。",
+  "journal_notelet_list_create": "新建子笔记",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type}（缺失类型）",
+  "journal_notelet_list_period_range": "{from}～{to}",
   "journal_period_range": "{start}～{end}",
   "journal_picker_placeholder": "搜索日记",
   "journal_prompt_answer_required": "此问题必须回答。",

@@ -125,6 +125,7 @@
   "code_blocks_yaml_error": "Impossible de lire les options de ce bloc {key}.",
   "code_blocks_schema_error": "Certaines options de ce bloc {key} ne sont pas valides.",
   "code_blocks_nav_not_connected": "Note non connectée à un journal",
+  "code_blocks_notelets_not_connected": "Note non connectée à un journal",
   "code_blocks_home_empty": "Aucun journal à afficher. Vérifiez les options show et shelf du bloc.",
   "common_no_journals_yet": "Aucun journal pour l’instant. Créez-en un dans les paramètres du plugin.",
   "code_blocks_nav_next": "Suivant",
@@ -1298,6 +1299,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Renvoie le chemin, dans le coffre-fort, de la note d’un autre journal pour la date sélectionnée. Intégrez-le vous-même dans un lien et ajoutez un décalage, par exemple +1w, pour pointer vers une période voisine.",
   "view_block_markdown_template_empty": "Aucun modèle sélectionné",
   "view_block_markdown_template_read_error": "Impossible de lire le fichier modèle.",
+  "view_block_notelets_label": "Notes brèves",
+  "view_block_notelets_description": "Liste les notes brèves de la note que vous lisez, ou celles d’une fenêtre autour de la date de la vue.",
+  "view_block_notelets_journals_label": "Journaux",
+  "view_block_notelets_journals_description": "Laissez tout désactivé pour inclure tous les journaux de l’étagère de la vue.",
+  "view_block_notelets_types_label": "Types de note brève",
+  "view_block_notelets_types_description": "Laissez tout désactivé pour inclure tous les types.",
+  "view_block_notelets_types_empty": "Aucun journal ne définit encore de type de note brève.",
   "view_block_summary_before": "{count} avant",
   "view_block_summary_after": "{count} après",
   "view_block_summary_hidden_days": "Masqués : {days}",
@@ -1308,6 +1316,16 @@
       "match": {
         "countPlural=one": "{count} journal",
         "countPlural=*": "{count} journaux"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} type",
+        "countPlural=*": "{count} types"
       }
     }
   ],
@@ -1702,6 +1720,8 @@
   "journal_edit_code_block_home_option_scale": "augmente la taille du lien en fonction de la taille du texte (par exemple, scale: 2 la double).",
   "journal_edit_code_block_home_option_shelf": "limite les journaux affichés à une étagère spécifique.",
   "journal_edit_code_block_home_custom_lead": "Avec des options personnalisées, cela peut ressembler à ceci :",
+  "journal_edit_code_block_notelets_description": "Liste les notes brèves de la période à laquelle appartient cette note. Ajoutez une liste types pour la limiter à des types de note brève particuliers.",
+  "journal_edit_code_block_notelets_default": "Par défaut, cela ressemble à ceci :",
   "journal_edit_section_timeline": "Chronologie",
   "journal_edit_sequence_enabled_description": "Attribuer des numéros aux notes (p. ex. Jour 1, Jour 2, …).",
   "journal_edit_sequence_enabled_label": "Activer les numéros séquentiels",
@@ -1824,6 +1844,11 @@
   "journal_notelet_counter_key_modal_title": "Modifier le nom de la propriété Numéro",
   "journal_property_key_taken": "Un autre élément de cette note écrit déjà dans « {name} ».",
   "journal_notelet_command_name": "Créer {type}",
+  "journal_notelet_list_empty": "Aucune note brève pour cette période.",
+  "journal_notelet_list_create": "Nouvelle note brève",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (type manquant)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Rechercher un journal",
   "journal_prompt_answer_required": "Cette question doit recevoir une réponse.",

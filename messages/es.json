@@ -125,6 +125,7 @@
   "code_blocks_yaml_error": "No se pudieron leer las opciones de este bloque {key}.",
   "code_blocks_schema_error": "Algunas opciones de este bloque {key} no son válidas.",
   "code_blocks_nav_not_connected": "La nota no está conectada a un diario",
+  "code_blocks_notelets_not_connected": "La nota no está conectada a un diario",
   "code_blocks_home_empty": "No hay diarios para mostrar. Comprueba las opciones show y shelf del bloque.",
   "common_no_journals_yet": "Aún no hay diarios. Crea uno en los ajustes del complemento.",
   "code_blocks_nav_next": "Siguiente",
@@ -1298,6 +1299,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Se resuelve en la ruta de la bóveda de la nota de otro diario para la fecha seleccionada. Inclúyela en un enlace y agrega un desplazamiento como +1w para apuntar a un período adyacente.",
   "view_block_markdown_template_empty": "No se ha seleccionado ninguna plantilla",
   "view_block_markdown_template_read_error": "No se pudo leer el archivo de plantilla.",
+  "view_block_notelets_label": "Notas breves",
+  "view_block_notelets_description": "Enumera las notas breves de la nota que estás leyendo, o de una ventana alrededor de la fecha de la vista.",
+  "view_block_notelets_journals_label": "Diarios",
+  "view_block_notelets_journals_description": "Deja todos desactivados para incluir todos los diarios del estante de la vista.",
+  "view_block_notelets_types_label": "Tipos de nota breve",
+  "view_block_notelets_types_description": "Deja todos desactivados para incluir todos los tipos.",
+  "view_block_notelets_types_empty": "Ningún diario define todavía un tipo de nota breve.",
   "view_block_summary_before": "{count} antes",
   "view_block_summary_after": "{count} después",
   "view_block_summary_hidden_days": "Ocultos: {days}",
@@ -1308,6 +1316,16 @@
       "match": {
         "count=1": "1 diario",
         "count=*": "{count} diarios"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 tipo",
+        "count=*": "{count} tipos"
       }
     }
   ],
@@ -1694,6 +1712,8 @@
   "journal_edit_code_block_home_option_scale": "aumenta el tamaño del enlace como un multiplicador del tamaño del texto (por ejemplo, scale: 2 lo duplica).",
   "journal_edit_code_block_home_option_shelf": "limita los diarios mostrados a un estante específico.",
   "journal_edit_code_block_home_custom_lead": "Con opciones personalizadas puede verse así:",
+  "journal_edit_code_block_notelets_description": "Enumera las notas breves del período al que pertenece esta nota. Añade una lista types para limitarla a tipos de nota breve concretos.",
+  "journal_edit_code_block_notelets_default": "Por defecto se ve así:",
   "journal_edit_section_timeline": "Línea de tiempo",
   "journal_edit_sequence_enabled_description": "Asignar números a las notas (por ejemplo, Día 1, Día 2, …).",
   "journal_edit_sequence_enabled_label": "Habilitar números secuenciales",
@@ -1816,6 +1836,11 @@
   "journal_notelet_counter_key_modal_title": "Editar nombre de la propiedad de número",
   "journal_property_key_taken": "Otro elemento de esta nota ya escribe en «{name}».",
   "journal_notelet_command_name": "Crear {type}",
+  "journal_notelet_list_empty": "No hay notas breves para este período.",
+  "journal_notelet_list_create": "Nueva nota breve",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (tipo faltante)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Buscar diarios",
   "journal_prompt_answer_required": "Esta pregunta debe responderse.",

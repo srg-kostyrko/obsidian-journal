@@ -125,6 +125,7 @@
   "code_blocks_yaml_error": "이 {key} 블록의 옵션을 읽을 수 없습니다.",
   "code_blocks_schema_error": "이 {key} 블록의 일부 옵션이 올바르지 않습니다.",
   "code_blocks_nav_not_connected": "노트가 저널에 연결되어 있지 않습니다",
+  "code_blocks_notelets_not_connected": "노트가 저널에 연결되어 있지 않습니다",
   "code_blocks_home_empty": "표시할 저널이 없습니다. 블록의 show 및 shelf 옵션을 확인하세요.",
   "common_no_journals_yet": "아직 저널이 없습니다. 플러그인 설정에서 만드세요.",
   "code_blocks_nav_next": "다음",
@@ -1298,6 +1299,13 @@
   "view_block_markdown_template_variable_journal_link_description": "선택된 날짜에 해당하는 다른 저널 노트의 보관함 경로로 확정됩니다. 링크는 직접 감싸야 하며, +1w처럼 이동 값을 붙이면 인접한 기간을 가리킬 수 있습니다.",
   "view_block_markdown_template_empty": "선택된 템플릿이 없습니다",
   "view_block_markdown_template_read_error": "템플릿 파일을 읽을 수 없습니다.",
+  "view_block_notelets_label": "서브노트",
+  "view_block_notelets_description": "읽고 있는 노트의 서브노트 또는 뷰의 날짜를 기준으로 한 표시 범위 내 서브노트를 나열합니다.",
+  "view_block_notelets_journals_label": "저널",
+  "view_block_notelets_journals_description": "모두 꺼두면 뷰의 선반에 있는 모든 저널이 포함됩니다.",
+  "view_block_notelets_types_label": "서브노트 유형",
+  "view_block_notelets_types_description": "모두 꺼두면 모든 유형이 포함됩니다.",
+  "view_block_notelets_types_empty": "서브노트 유형을 정의한 저널이 아직 없습니다.",
   "view_block_summary_before": "이전 {count}",
   "view_block_summary_after": "이후 {count}",
   "view_block_summary_hidden_days": "숨김: {days}",
@@ -1308,6 +1316,16 @@
       "match": {
         "count=1": "저널 1개",
         "count=*": "저널 {count}개"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "유형 1개",
+        "count=*": "유형 {count}개"
       }
     }
   ],
@@ -1694,6 +1712,8 @@
   "journal_edit_code_block_home_option_scale": "링크 크기를 텍스트 크기의 배수로 키웁니다(예: scale: 2는 두 배).",
   "journal_edit_code_block_home_option_shelf": "표시되는 저널을 특정 선반으로 제한합니다.",
   "journal_edit_code_block_home_custom_lead": "옵션을 지정하면 다음과 같이 보일 수 있습니다:",
+  "journal_edit_code_block_notelets_description": "이 노트가 속한 기간의 서브노트를 나열합니다. types 목록을 추가하면 특정 서브노트 유형으로 좁힐 수 있습니다.",
+  "journal_edit_code_block_notelets_default": "기본적으로는 다음과 같습니다:",
   "journal_edit_section_timeline": "타임라인",
   "journal_edit_sequence_enabled_description": "노트에 번호를 매깁니다(예: 1일차, 2일차 …).",
   "journal_edit_sequence_enabled_label": "순차 번호 사용",
@@ -1816,6 +1836,11 @@
   "journal_notelet_counter_key_modal_title": "번호 속성 이름 편집",
   "journal_property_key_taken": "이 노트의 다른 항목이 이미 \"{name}\"에 기록합니다.",
   "journal_notelet_command_name": "{type} 만들기",
+  "journal_notelet_list_empty": "이 기간에 대한 서브노트가 없습니다.",
+  "journal_notelet_list_create": "새 서브노트",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (누락된 유형)",
+  "journal_notelet_list_period_range": "{from} ~ {to}",
   "journal_period_range": "{start} ~ {end}",
   "journal_picker_placeholder": "저널 검색",
   "journal_prompt_answer_required": "이 질문에는 답변이 필요합니다.",
