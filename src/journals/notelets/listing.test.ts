@@ -14,6 +14,8 @@ import type { NoteletEntry } from "../types";
 
 const daily = fixedJournal("Daily", { type: "day" });
 const weekly = fixedJournal("Weekly", { type: "week" });
+const errands = fixedJournal("Errands", { type: "day" });
+const sprints = customJournal("Sprints", "week", 2, "2026-08-10");
 
 const DAY_ANCHORS = Array.from(
   { length: 31 },
@@ -308,5 +310,60 @@ describe("buildNoteletListing", () => {
       anchor: "2026-08-12" as AnchorString,
     });
     expect(listing.periods.at(0)?.types.map((t) => t.typeName)).toEqual(["Zebra", "Aardvark"]);
+  });
+
+  it("merges two same-kind fixed journals sharing a period into one group with two type entries", () => {
+    const dependencies = buildDependencies({
+      journals: [daily, weekly, errands],
+      notelets: [
+        notelet({ journalName: "Daily", anchor: "2026-08-12" as AnchorString, path: "D/x.md" as VaultPath }),
+        notelet({ journalName: "Errands", anchor: "2026-08-12" as AnchorString, path: "E/y.md" as VaultPath }),
+      ],
+    });
+    const listing = buildNoteletListing(dependencies, {
+      kind: "window",
+      journalNames: ["Daily", "Errands"],
+      start: "2026-08-12" as AnchorString,
+      end: "2026-08-12" as AnchorString,
+    });
+    expect(listing.periods).toHaveLength(1);
+    expect(listing.periods.at(0)?.kind).toBe("day");
+    expect(listing.periods.at(0)?.types).toHaveLength(2);
+    expect(new Set(listing.periods.at(0)?.types.map((t) => t.journalName))).toEqual(new Set(["Daily", "Errands"]));
+  });
+
+  it("keeps kind null for a period built only from custom journals", () => {
+    const dependencies = buildDependencies({
+      journals: [daily, weekly, sprints],
+      notelets: [
+        notelet({ journalName: "Sprints", anchor: "2026-08-12" as AnchorString, path: "S/z.md" as VaultPath }),
+      ],
+    });
+    const listing = buildNoteletListing(dependencies, {
+      kind: "period",
+      journalName: "Sprints",
+      anchor: "2026-08-12" as AnchorString,
+    });
+    expect(listing.periods).toHaveLength(1);
+    expect(listing.periods.at(0)?.kind).toBeNull();
+  });
+
+  it("takes a merged period's kind from its fixed contributor, not its custom one", () => {
+    const dependencies = buildDependencies({
+      journals: [daily, weekly, sprints],
+      notelets: [
+        notelet({ journalName: "Sprints", anchor: "2026-08-12" as AnchorString, path: "S/a.md" as VaultPath }),
+        notelet({ journalName: "Daily", anchor: "2026-08-12" as AnchorString, path: "D/b.md" as VaultPath }),
+      ],
+    });
+    const listing = buildNoteletListing(dependencies, {
+      kind: "window",
+      journalNames: ["Sprints", "Daily"],
+      start: "2026-08-12" as AnchorString,
+      end: "2026-08-12" as AnchorString,
+    });
+    expect(listing.periods).toHaveLength(1);
+    expect(listing.periods.at(0)?.kind).toBe("day");
+    expect(listing.periods.at(0)?.types).toHaveLength(2);
   });
 });
