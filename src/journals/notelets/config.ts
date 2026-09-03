@@ -1,8 +1,11 @@
 import * as v from "valibot";
 
+import { Option } from "@/infrastructure/result";
 import { defineNestedCollection } from "@/settings";
 
 import { promptsSchema } from "../prompts/config";
+
+import type { JournalConfig } from "../config";
 
 export const DEFAULT_NOTELET_FIELD = "journal-notelet";
 
@@ -51,3 +54,10 @@ export function noteletTypeDefaults(id: string, raw?: unknown): NoteletType {
 }
 
 export const noteletTypeCollection = defineNestedCollection(noteletTypeSchema, noteletTypeDefaults);
+
+// The record key is the identity every config reference resolves by; the stored `id` field is a
+// copy that a hand-edited data.json can leave disagreeing with it.
+export function noteletTypeByName(config: JournalConfig, name: string): Option<readonly [TypeId, NoteletType]> {
+  const found = Object.entries(config.notelets).find(([, candidate]) => candidate.name === name);
+  return found === undefined ? Option.none() : Option.some([found[0] as TypeId, found[1]] as const);
+}

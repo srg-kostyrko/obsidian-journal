@@ -53,7 +53,11 @@ export class EditDecorationFlow implements Flow<EditDecorationParameters, EditDe
     const existing = isEdit ? decorations[index] : undefined;
     return attempt.in(this, async function* (this: EditDecorationFlow) {
       const submitted = yield* this.#modals
-        .open(editDecorationModal, { decoration: existing, conditionTypes: this.#conditionTypes(owner) })
+        .open(editDecorationModal, {
+          decoration: existing,
+          conditionTypes: this.#conditionTypes(owner),
+          journalName: owner.kind === "journal" ? owner.journalName : undefined,
+        })
         .mapErr(() => new UserAborted("edit-decoration-modal"));
       const next = isEdit
         ? decorations.map((d, i) => (i === index ? submitted.decoration : d))

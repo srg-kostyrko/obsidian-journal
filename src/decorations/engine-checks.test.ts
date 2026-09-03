@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { DayPeriod } from "@/calendar";
-import { date } from "@/calendar/testing";
-import type { NoteMetadata } from "@/infrastructure/host";
+import { anchor, date } from "@/calendar/testing";
+import type { NoteMetadata, VaultPath } from "@/infrastructure/host";
 import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import type { TypeId } from "@/journals/notelets/config";
+import type { NoteletEntry } from "@/journals/types";
 
 import {
   allTasksCompleted,
   checkDate,
+  checkHasNotelet,
   checkNoteSize,
   checkOffset,
   checkProperty,
@@ -18,6 +21,17 @@ import {
   hasOpenTask,
 } from "./engine-checks";
 import { buildCondition } from "./testing";
+
+function notelet(typeId: string | null): NoteletEntry {
+  return {
+    kind: "notelet",
+    journalName: "Work",
+    anchor: anchor("2026-09-02"),
+    path: "n.md" as VaultPath,
+    typeName: "Meeting",
+    typeId: typeId as TypeId | null,
+  };
+}
 
 function meta(partial: Partial<NoteMetadata>): NoteMetadata {
   return {
@@ -392,6 +406,35 @@ describe("engine-checks", () => {
       expect(
         checkNoteSize(buildCondition("note-size", { condition: "lt", value: 100 }), { words: 0, characters: 0 }),
       ).toBe(true);
+    });
+  });
+
+  describe("checkHasNotelet", () => {
+    it("is false when the period has no notelets", () => {
+      expect(checkHasNotelet({ type: "has-notelet", typeIds: [] }, [])).toBe(false);
+    });
+
+    it("matches any notelet when no type ids are configured", () => {
+      expect(checkHasNotelet({ type: "has-notelet", typeIds: [] }, [notelet("nt_a")])).toBe(true);
+    });
+
+    it("matches an orphaned notelet when no type ids are configured", () => {
+      expect(checkHasNotelet({ type: "has-notelet", typeIds: [] }, [notelet(null)])).toBe(true);
+    });
+
+    it("matches only the configured types", () => {
+      expect(checkHasNotelet({ type: "has-notelet", typeIds: ["nt_a"] }, [notelet("nt_a")])).toBe(true);
+      expect(checkHasNotelet({ type: "has-notelet", typeIds: ["nt_a"] }, [notelet("nt_b")])).toBe(false);
+    });
+
+    it("does not match an orphaned notelet against a configured type", () => {
+      expect(checkHasNotelet({ type: "has-notelet", typeIds: ["nt_a"] }, [notelet(null)])).toBe(false);
+    });
+
+    it("matches when any one of several notelets is of a configured type", () => {
+      expect(checkHasNotelet({ type: "has-notelet", typeIds: ["nt_b"] }, [notelet("nt_a"), notelet("nt_b")])).toBe(
+        true,
+      );
     });
   });
 });

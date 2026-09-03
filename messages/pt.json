@@ -794,6 +794,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "existe uma nota",
+  "decoration_condition_has_notelet_describe_any": "existe uma nota breve",
+  "decoration_condition_has_notelet_describe_types": "existe uma nota breve do tipo {types}",
+  "decoration_condition_has_notelet_empty": "Este diário ainda não tem tipos de nota breve.",
+  "decoration_condition_has_notelet_label": "Tipos de nota breve",
+  "decoration_condition_has_notelet_unknown_type": "tipo desconhecido",
   "decoration_condition_has_open_task_describe": "a nota tem uma tarefa em aberto",
   "decoration_condition_note_size_describe": [
     {
@@ -875,7 +880,8 @@
         "type=has-note": "Tem nota",
         "type=has-open-task": "Tem tarefa em aberto",
         "type=all-tasks-completed": "Todas as tarefas concluídas",
-        "type=note-size": "Tamanho da nota"
+        "type=note-size": "Tamanho da nota",
+        "type=has-notelet": "Tem nota breve"
       }
     }
   ],
@@ -893,7 +899,8 @@
         "type=has-note": "Verificar se a nota existe",
         "type=has-open-task": "Verificar se a nota tem tarefas em aberto",
         "type=all-tasks-completed": "Verificar se todas as tarefas estão concluídas",
-        "type=note-size": "Verificar o tamanho da nota"
+        "type=note-size": "Verificar o tamanho da nota",
+        "type=has-notelet": "Verificar se existe uma nota breve"
       }
     }
   ],
@@ -1199,6 +1206,7 @@
   "uri_unknown_write_type": "Tipo de diário desconhecido \"{type}\" no URI.",
   "uri_invalid_date": "Não foi possível entender a data \"{date}\" no URI.",
   "uri_invalid_mode": "Modo de abertura desconhecido \"{mode}\" no URI.",
+  "uri_notelet_requires_journal": "Um link de nota breve precisa de um diário. Adicione journal=<nome> ao link.",
   "uri_unknown_journal": "Não existe nenhum diário chamado \"{journal}\".",
   "uri_no_journal": "Nenhum diário cobre essa data.",
   "uri_no_journal_of_type": [
@@ -1215,6 +1223,8 @@
     }
   ],
   "uri_open_failed": "Não foi possível abrir a nota do diário.",
+  "uri_unknown_notelet_type": "\"{journal}\" não tem nenhum tipo de nota breve chamado \"{type}\".",
+  "uri_notelet_failed": "Não foi possível criar a nota breve.",
   "view_deleted_error": "Esta visualização foi excluída. Feche esta aba ou crie a visualização novamente nas configurações do plugin.",
   "view_block_unknown_error": "Este bloco não está mais disponível. Remova-o da visualização nas configurações do plugin.",
   "view_block_config_error": "Algumas configurações deste bloco não são válidas. Reconfigure-o nas configurações do plugin.",

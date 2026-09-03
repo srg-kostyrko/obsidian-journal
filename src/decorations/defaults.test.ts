@@ -59,4 +59,8 @@ describe("defaultCondition", () => {
   it("defaults a note-size condition to words greater than zero", () => {
     expect(defaultCondition("note-size")).toEqual({ type: "note-size", unit: "words", condition: "gt", value: 0 });
   });
+
+  it("defaults has-notelet to matching any type", () => {
+    expect(defaultCondition("has-notelet")).toEqual({ type: "has-notelet", typeIds: [] });
+  });
 });

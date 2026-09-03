@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { CommandsRepository, commandsModule } from "@/commands";
 import { DynamicCommandRegistry } from "@/commands/command-registry";
 import { commandsCoreModule } from "@/commands/module";
+import type { JournalDecorationCondition } from "@/decorations/config";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
+import type { JournalConfig } from "@/journals/config";
 import { JournalLifecycleFlowError, JournalNameTakenError, UnknownJournalError } from "@/journals/errors";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
@@ -202,5 +205,101 @@ describe("CloneJournalFlow", () => {
 
     const targets = [...harness.resolve(CommandsRepository).find().entries()].map(([, command]) => command.target);
     expect(targets).toContainEqual(expect.objectContaining({ kind: "notelet", journalName: "copy" }));
+  });
+});
+
+// The stored `id` disagrees with the record key on purpose: a remap reading `type.id` instead of
+// the key would build a map nothing in the copied decorations can be looked up by.
+const STANDUP_KEY = "nt_1" as TypeId;
+const RETRO_KEY = "nt_2" as TypeId;
+
+function withTwoTypesAndDecorations(): JournalConfig {
+  return fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      notelets: {
+        [STANDUP_KEY]: buildNoteletType({ id: "nt_stale_a" as TypeId, name: "Standup" }),
+        [RETRO_KEY]: buildNoteletType({ id: "nt_stale_b" as TypeId, name: "Retro" }),
+      },
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("has-notelet", { typeIds: [RETRO_KEY] })],
+          styles: [buildStyle("background")],
+        }),
+        buildDecoration({
+          conditions: [buildCondition("has-notelet")],
+          styles: [buildStyle("background")],
+        }),
+        buildDecoration({
+          conditions: [buildCondition("title", { condition: "contains", value: "keep me" })],
+          styles: [buildStyle("background")],
+        }),
+      ],
+    },
+  );
+}
+
+async function cloneWithTypes(journal: JournalConfig): Promise<TestHarness> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
+    data: { journals: { daily: journal } },
+  });
+  const promise = harness.resolve(Flows).invoke(CloneJournalFlow, { journalName: "daily" });
+  harness.modals
+    .lastOpen<unknown, { newName: string; cloneNoteletTypes: boolean }>()
+    .submit({ newName: "copy", cloneNoteletTypes: true });
+  await promise;
+  return harness;
+}
+
+function conditionsOf(harness: TestHarness, journalName: string): JournalDecorationCondition[][] {
+  const config = harness.resolve(JournalsRepository).get(journalName).getOrUndefined();
+  return (config?.decorations ?? []).map((decoration) => [...decoration.conditions]);
+}
+
+describe("CloneJournalFlow has-notelet decorations", () => {
+  it("re-points a copied condition at the copy's own key for the same type", async () => {
+    const harness = await cloneWithTypes(withTwoTypesAndDecorations());
+
+    const clonedTypes = harness.resolve(JournalsRepository).get("copy").getOrUndefined()?.notelets ?? {};
+    const retroKey = Object.entries(clonedTypes).find(([, type]) => type.name === "Retro")?.[0];
+    const standupKey = Object.entries(clonedTypes).find(([, type]) => type.name === "Standup")?.[0];
+
+    expect(retroKey).toBeDefined();
+    expect(retroKey).not.toBe(standupKey);
+    expect(conditionsOf(harness, "copy").at(0)).toEqual([{ type: "has-notelet", typeIds: [retroKey] }]);
+  });
+
+  it("keeps an empty type list meaning any type", async () => {
+    const harness = await cloneWithTypes(withTwoTypesAndDecorations());
+
+    expect(conditionsOf(harness, "copy").at(1)).toEqual([{ type: "has-notelet", typeIds: [] }]);
+  });
+
+  it("leaves conditions of other types alone", async () => {
+    const harness = await cloneWithTypes(withTwoTypesAndDecorations());
+
+    expect(conditionsOf(harness, "copy").at(2)).toEqual(conditionsOf(harness, "daily").at(2));
+  });
+
+  it("leaves the source's own conditions pointing at the source's keys", async () => {
+    const harness = await cloneWithTypes(withTwoTypesAndDecorations());
+
+    expect(conditionsOf(harness, "daily").at(0)).toEqual([{ type: "has-notelet", typeIds: [RETRO_KEY] }]);
+  });
+
+  it("drops a type id the copy has no counterpart for", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
+      data: { journals: { daily: withTwoTypesAndDecorations() } },
+    });
+    const promise = harness.resolve(Flows).invoke(CloneJournalFlow, { journalName: "daily" });
+    harness.modals
+      .lastOpen<unknown, { newName: string; cloneNoteletTypes: boolean }>()
+      .submit({ newName: "copy", cloneNoteletTypes: false });
+    await promise;
+
+    expect(conditionsOf(harness, "copy").at(0)).toEqual([{ type: "has-notelet", typeIds: [] }]);
   });
 });

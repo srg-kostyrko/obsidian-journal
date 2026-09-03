@@ -209,6 +209,13 @@ const hasNoteCondition = v.object({ type: v.literal("has-note") });
 const hasOpenTaskCondition = v.object({ type: v.literal("has-open-task") });
 const allTasksCompletedCondition = v.object({ type: v.literal("all-tasks-completed") });
 
+const hasNoteletCondition = v.object({
+  type: v.literal("has-notelet"),
+  // Opaque ids, deliberately unbranded: journals/config.ts imports this module, so importing
+  // typeIdSchema back would close a cycle. An empty list means "any type".
+  typeIds: v.optional(v.array(v.string()), () => []),
+});
+
 export const decorationConditionSchema = v.union([
   titleCondition,
   tagCondition,
@@ -220,6 +227,7 @@ export const decorationConditionSchema = v.union([
   hasOpenTaskCondition,
   allTasksCompletedCondition,
   noteSizeCondition,
+  hasNoteletCondition,
 ]);
 export type JournalDecorationCondition = v.InferOutput<typeof decorationConditionSchema>;
 
@@ -243,6 +251,7 @@ export type JournalDecorationDateCondition = v.InferOutput<typeof dateConditionS
 export type JournalDecorationWeekdayCondition = v.InferOutput<typeof weekdayCondition>;
 export type JournalDecorationOffsetCondition = v.InferOutput<typeof offsetCondition>;
 export type JournalDecorationNoteSizeCondition = v.InferOutput<typeof noteSizeCondition>;
+export type JournalDecorationHasNoteletCondition = v.InferOutput<typeof hasNoteletCondition>;
 
 export const decorationSchema = v.object({
   mode: v.union([v.literal("and"), v.literal("or")]),

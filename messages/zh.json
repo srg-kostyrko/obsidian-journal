@@ -649,6 +649,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "存在笔记",
+  "decoration_condition_has_notelet_describe_any": "存在子笔记",
+  "decoration_condition_has_notelet_describe_types": "存在类型为 {types} 的子笔记",
+  "decoration_condition_has_notelet_empty": "此日记还没有子笔记类型。",
+  "decoration_condition_has_notelet_label": "子笔记类型",
+  "decoration_condition_has_notelet_unknown_type": "未知类型",
   "decoration_condition_has_open_task_describe": "笔记有未完成的任务",
   "decoration_condition_note_size_describe": [
     {
@@ -730,7 +735,8 @@
         "type=has-note": "有笔记",
         "type=has-open-task": "有未完成的任务",
         "type=all-tasks-completed": "所有任务已完成",
-        "type=note-size": "笔记大小"
+        "type=note-size": "笔记大小",
+        "type=has-notelet": "有子笔记"
       }
     }
   ],
@@ -748,7 +754,8 @@
         "type=has-note": "检查是否存在笔记",
         "type=has-open-task": "检查笔记是否有未完成的任务",
         "type=all-tasks-completed": "检查是否所有任务都已完成",
-        "type=note-size": "检查笔记大小"
+        "type=note-size": "检查笔记大小",
+        "type=has-notelet": "检查是否存在子笔记"
       }
     }
   ],
@@ -1054,6 +1061,7 @@
   "uri_unknown_write_type": "URI 中的日记类型“{type}”未知。",
   "uri_invalid_date": "无法识别 URI 中的日期“{date}”。",
   "uri_invalid_mode": "URI 中的打开模式“{mode}”未知。",
+  "uri_notelet_requires_journal": "子笔记链接需要一个日记。请在链接中添加 journal=<名称>。",
   "uri_unknown_journal": "没有名为“{journal}”的日记。",
   "uri_no_journal": "没有日记覆盖该日期。",
   "uri_no_journal_of_type": [
@@ -1070,6 +1078,8 @@
     }
   ],
   "uri_open_failed": "无法打开该日记笔记。",
+  "uri_unknown_notelet_type": "“{journal}”中没有名为“{type}”的子笔记类型。",
+  "uri_notelet_failed": "无法创建子笔记。",
   "view_deleted_error": "此视图已被删除。请关闭此标签页，或在插件设置中重新创建该视图。",
   "view_block_unknown_error": "此块已不再可用。请在插件设置中将其从视图中移除。",
   "view_block_config_error": "此块的某些设置无效。请在插件设置中重新配置。",

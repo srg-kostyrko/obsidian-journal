@@ -9,13 +9,13 @@ import { FRONTMATTER_NAME_KEY } from "./config";
 import { CycleService } from "./cycle";
 import { NoteletTypeNotFoundError } from "./errors";
 import { JournalsIndex } from "./journals-index";
+import { noteletTypeByName } from "./notelets/config";
 import { NumberingService } from "./numbering";
 import { JournalsRepository } from "./repository";
 import { isNoteletMetadata } from "./types";
 
 import type { JournalConfig } from "./config";
 import type { JournalNotFoundError } from "./errors";
-import type { TypeId } from "./notelets/config";
 import type { PromptAnswer } from "./prompts/config";
 import type { IndexedNote, JournalEntry, JournalMetadata, NoteletEntry, NoteletMetadata } from "./types";
 
@@ -36,12 +36,8 @@ export class FrontmatterService {
     rawType: unknown,
   ): NoteletEntry {
     const typeName = typeof rawType === "string" ? rawType : String(rawType);
-    // The record key is the identity writeMutator resolves by; the stored `id` field is only a
-    // copy that can disagree with it, so typeId must come from the matching entry's key.
     const match =
-      typeof rawType === "string" && rawType !== ""
-        ? Object.entries(config.notelets).find(([, candidate]) => candidate.name === rawType)
-        : undefined;
+      typeof rawType === "string" && rawType !== "" ? noteletTypeByName(config, rawType).getOrUndefined() : undefined;
     const type = match?.[1];
 
     const counterValue = type === undefined ? undefined : frontmatter[type.counter.frontmatterKey];
@@ -63,7 +59,7 @@ export class FrontmatterService {
       anchor,
       path,
       typeName,
-      typeId: match === undefined ? null : (match[0] as TypeId),
+      typeId: match === undefined ? null : match[0],
       ...(counter !== undefined && { counter }),
       ...(Object.keys(answers).length > 0 && { answers }),
     };

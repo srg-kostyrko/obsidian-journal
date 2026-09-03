@@ -148,4 +148,30 @@ describe("EditDecorationFlow", () => {
       expect(opened.props.conditionTypes).toEqual(CALENDAR_CONDITION_TYPES);
     });
   });
+
+  describe("journalName passed to the modal", () => {
+    it("passes the owning journal's name for a journal owner", async () => {
+      const { harness, flows } = await build({
+        journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [] }) },
+      });
+      const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "journal", journalName: "daily" } });
+      const opened = harness.modals.lastOpen<EditDecorationModalProps, { decoration: JournalDecoration }>();
+      opened.submit({ decoration: sampleDecoration });
+      await promise;
+
+      expect(opened.props.journalName).toBe("daily");
+    });
+
+    it("passes no journal name for a shelf owner", async () => {
+      const { harness, flows } = await build({
+        shelves: { work: buildShelf("work") },
+      });
+      const promise = flows.invoke(EditDecorationFlow, { owner: { kind: "shelf", shelfName: "work" } });
+      const opened = harness.modals.lastOpen<EditDecorationModalProps, { decoration: JournalDecoration }>();
+      opened.submit({ decoration: sampleCalendarDecoration });
+      await promise;
+
+      expect(opened.props.journalName).toBeUndefined();
+    });
+  });
 });

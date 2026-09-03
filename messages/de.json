@@ -794,6 +794,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "eine Notiz existiert",
+  "decoration_condition_has_notelet_describe_any": "eine Kurznotiz existiert",
+  "decoration_condition_has_notelet_describe_types": "eine Kurznotiz vom Typ {types} existiert",
+  "decoration_condition_has_notelet_empty": "Dieses Journal hat noch keine Kurznotiz-Typen.",
+  "decoration_condition_has_notelet_label": "Kurznotiz-Typen",
+  "decoration_condition_has_notelet_unknown_type": "unbekannter Typ",
   "decoration_condition_has_open_task_describe": "die Notiz hat eine offene Aufgabe",
   "decoration_condition_note_size_describe": [
     {
@@ -875,7 +880,8 @@
         "type=has-note": "Notiz vorhanden",
         "type=has-open-task": "Offene Aufgabe vorhanden",
         "type=all-tasks-completed": "Alle Aufgaben erledigt",
-        "type=note-size": "Notizgröße"
+        "type=note-size": "Notizgröße",
+        "type=has-notelet": "Kurznotiz vorhanden"
       }
     }
   ],
@@ -893,7 +899,8 @@
         "type=has-note": "Prüfen, ob eine Notiz existiert",
         "type=has-open-task": "Prüfen, ob die Notiz offene Aufgaben hat",
         "type=all-tasks-completed": "Prüfen, ob alle Aufgaben erledigt sind",
-        "type=note-size": "Notizgröße prüfen"
+        "type=note-size": "Notizgröße prüfen",
+        "type=has-notelet": "Prüfen, ob eine Kurznotiz existiert"
       }
     }
   ],
@@ -1199,6 +1206,7 @@
   "uri_unknown_write_type": "Unbekannter Journaltyp „{type}“ in der URI.",
   "uri_invalid_date": "Das Datum „{date}“ in der URI konnte nicht interpretiert werden.",
   "uri_invalid_mode": "Unbekannter Öffnungsmodus „{mode}“ in der URI.",
+  "uri_notelet_requires_journal": "Ein Kurznotiz-Link benötigt ein Journal. Füge journal=<Name> zum Link hinzu.",
   "uri_unknown_journal": "Es gibt kein Journal mit dem Namen „{journal}“.",
   "uri_no_journal": "Für dieses Datum gibt es kein Journal.",
   "uri_no_journal_of_type": [
@@ -1215,6 +1223,8 @@
     }
   ],
   "uri_open_failed": "Die Journalnotiz konnte nicht geöffnet werden.",
+  "uri_unknown_notelet_type": "„{journal}“ hat keinen Kurznotiz-Typ namens „{type}“.",
+  "uri_notelet_failed": "Die Kurznotiz konnte nicht erstellt werden.",
   "view_deleted_error": "Diese Ansicht wurde gelöscht. Schließe diesen Tab oder erstelle die Ansicht in den Plugin-Einstellungen erneut.",
   "view_block_unknown_error": "Dieser Block ist nicht mehr verfügbar. Entferne ihn in den Plugin-Einstellungen aus der Ansicht.",
   "view_block_config_error": "Einige Einstellungen in diesem Block sind ungültig. Konfiguriere ihn in den Plugin-Einstellungen neu.",

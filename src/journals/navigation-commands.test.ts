@@ -14,6 +14,9 @@ import { fixedJournal } from "./testing";
 const FIRST = "daily/2026-05-01.md" as VaultPath;
 const SECOND = "daily/2026-05-02.md" as VaultPath;
 const ORPHAN = "notes/orphan.md" as VaultPath;
+const MIDDLE = "daily/2026-05-03.md" as VaultPath;
+const LATER = "daily/2026-05-09.md" as VaultPath;
+const NOTELET = "daily/standup.md" as VaultPath;
 
 describe("JournalNavigationCommands", () => {
   let harness: TestHarness;
@@ -37,6 +40,18 @@ describe("JournalNavigationCommands", () => {
     harness.host.emitActiveLeafChange(file instanceof TFile ? file : null);
   }
 
+  function registerNotelet(): void {
+    harness.host.putFile(NOTELET);
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-05-05"),
+      path: NOTELET,
+      typeName: "Standup",
+      typeId: null,
+    });
+  }
+
   it("makes open-next available when the active note is connected to a journal", () => {
     setActive(FIRST);
     expect(harness.host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
@@ -50,6 +65,28 @@ describe("JournalNavigationCommands", () => {
   it("makes open-next unavailable when the active note is not a journal note", () => {
     setActive(ORPHAN);
     expect(harness.host.commands.get("open-next")?.checkCallback?.(true)).toBe(false);
+  });
+
+  it("makes open-next available while a notelet is the active note", () => {
+    registerNotelet();
+    setActive(NOTELET);
+    expect(harness.host.commands.get("open-next")?.checkCallback?.(true)).toBe(true);
+  });
+
+  it("steps to the next period note after the active notelet's anchor", () => {
+    const index = harness.resolve(JournalsIndex);
+    harness.host.putFile(MIDDLE);
+    harness.host.putFile(LATER);
+    index.register({ journalName: "daily", anchor: anchor("2026-05-03"), path: MIDDLE });
+    index.register({ journalName: "daily", anchor: anchor("2026-05-09"), path: LATER });
+    registerNotelet();
+    setActive(NOTELET);
+
+    harness.host.commands.get("open-next")?.checkCallback?.(false);
+
+    const workspace = harness.resolve(WorkspaceService);
+    expect(workspace.isOpen(LATER)).toBe(true);
+    expect(workspace.isOpen(MIDDLE)).toBe(false);
   });
 
   it("makes open-next unavailable when no note is active", () => {

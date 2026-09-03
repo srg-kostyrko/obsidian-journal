@@ -800,6 +800,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "заметка существует",
+  "decoration_condition_has_notelet_describe_any": "подзаметка существует",
+  "decoration_condition_has_notelet_describe_types": "существует подзаметка типа {types}",
+  "decoration_condition_has_notelet_empty": "В этом журнале ещё нет типов подзаметок.",
+  "decoration_condition_has_notelet_label": "Типы подзаметок",
+  "decoration_condition_has_notelet_unknown_type": "неизвестный тип",
   "decoration_condition_has_open_task_describe": "в заметке есть незавершённая задача",
   "decoration_condition_note_size_describe": [
     {
@@ -881,7 +886,8 @@
         "type=has-note": "Есть заметка",
         "type=has-open-task": "Есть незавершённая задача",
         "type=all-tasks-completed": "Все задачи выполнены",
-        "type=note-size": "Размер заметки"
+        "type=note-size": "Размер заметки",
+        "type=has-notelet": "Есть подзаметка"
       }
     }
   ],
@@ -899,7 +905,8 @@
         "type=has-note": "Проверить, существует ли заметка",
         "type=has-open-task": "Проверить, есть ли в заметке незавершённые задачи",
         "type=all-tasks-completed": "Проверить, все ли задачи выполнены",
-        "type=note-size": "Проверить размер заметки"
+        "type=note-size": "Проверить размер заметки",
+        "type=has-notelet": "Проверить, существует ли подзаметка"
       }
     }
   ],
@@ -1231,6 +1238,7 @@
   "uri_unknown_write_type": "Неизвестный тип журнала «{type}» в URI.",
   "uri_invalid_date": "Не удалось распознать дату «{date}» в URI.",
   "uri_invalid_mode": "Неизвестный режим открытия «{mode}» в URI.",
+  "uri_notelet_requires_journal": "Ссылке на подзаметку нужен журнал. Добавьте в ссылку journal=<название>.",
   "uri_unknown_journal": "Журнала с названием «{journal}» не существует.",
   "uri_no_journal": "Ни один журнал не охватывает эту дату.",
   "uri_no_journal_of_type": [
@@ -1247,6 +1255,8 @@
     }
   ],
   "uri_open_failed": "Не удалось открыть заметку журнала.",
+  "uri_unknown_notelet_type": "В журнале «{journal}» нет типа подзаметки с названием «{type}».",
+  "uri_notelet_failed": "Не удалось создать подзаметку.",
   "view_deleted_error": "Это представление удалено. Закройте эту вкладку или создайте представление заново в настройках плагина.",
   "view_block_unknown_error": "Этот блок больше недоступен. Удалите его из представления в настройках плагина.",
   "view_block_config_error": "Некоторые настройки этого блока недопустимы. Перенастройте его в настройках плагина.",

@@ -4,11 +4,13 @@ import type { Period } from "@/calendar";
 import type { NoteMetadata, NoteSize } from "@/infrastructure/host";
 import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
+import type { NoteletEntry } from "@/journals/types";
 
 import { matchesDate } from "./date-condition";
 
 import type {
   JournalDecorationDateCondition,
+  JournalDecorationHasNoteletCondition,
   JournalDecorationNoteSizeCondition,
   JournalDecorationOffsetCondition,
   JournalDecorationPropertyCondition,
@@ -163,6 +165,14 @@ export function checkNoteSize(condition: JournalDecorationNoteSizeCondition, siz
     .with("gt", () => actual > condition.value)
     .with("gte", () => actual >= condition.value)
     .exhaustive();
+}
+
+export function checkHasNotelet(
+  condition: JournalDecorationHasNoteletCondition,
+  notelets: readonly NoteletEntry[],
+): boolean {
+  if (condition.typeIds.length === 0) return notelets.length > 0;
+  return notelets.some((n) => n.typeId !== null && condition.typeIds.includes(n.typeId));
 }
 
 export function hasOpenTask(metadata: NoteMetadata): boolean {

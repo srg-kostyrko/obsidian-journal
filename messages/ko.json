@@ -794,6 +794,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "노트가 있음",
+  "decoration_condition_has_notelet_describe_any": "서브노트가 있음",
+  "decoration_condition_has_notelet_describe_types": "{types} 유형의 서브노트가 있음",
+  "decoration_condition_has_notelet_empty": "이 저널에는 아직 서브노트 유형이 없습니다.",
+  "decoration_condition_has_notelet_label": "서브노트 유형",
+  "decoration_condition_has_notelet_unknown_type": "알 수 없는 유형",
   "decoration_condition_has_open_task_describe": "노트에 미완료 작업이 있음",
   "decoration_condition_note_size_describe": [
     {
@@ -875,7 +880,8 @@
         "type=has-note": "노트 있음",
         "type=has-open-task": "미완료 작업 있음",
         "type=all-tasks-completed": "모든 작업 완료",
-        "type=note-size": "노트 크기"
+        "type=note-size": "노트 크기",
+        "type=has-notelet": "서브노트 있음"
       }
     }
   ],
@@ -893,7 +899,8 @@
         "type=has-note": "노트 존재 여부 확인",
         "type=has-open-task": "노트의 미완료 작업 확인",
         "type=all-tasks-completed": "모든 작업 완료 여부 확인",
-        "type=note-size": "노트 크기 확인"
+        "type=note-size": "노트 크기 확인",
+        "type=has-notelet": "서브노트 존재 여부 확인"
       }
     }
   ],
@@ -1199,6 +1206,7 @@
   "uri_unknown_write_type": "URI에 알 수 없는 저널 유형이 있습니다: \"{type}\".",
   "uri_invalid_date": "URI의 날짜를 이해할 수 없습니다: \"{date}\".",
   "uri_invalid_mode": "URI에 알 수 없는 열기 모드가 있습니다: \"{mode}\".",
+  "uri_notelet_requires_journal": "서브노트 링크에는 저널이 필요합니다. 링크에 journal=<이름>을 추가하세요.",
   "uri_unknown_journal": "\"{journal}\" 저널을 찾을 수 없습니다.",
   "uri_no_journal": "그 날짜를 담당하는 저널이 없습니다.",
   "uri_no_journal_of_type": [
@@ -1215,6 +1223,8 @@
     }
   ],
   "uri_open_failed": "저널 노트를 열 수 없습니다.",
+  "uri_unknown_notelet_type": "\"{journal}\"에 \"{type}\"이라는 이름의 서브노트 유형이 없습니다.",
+  "uri_notelet_failed": "서브노트를 만들 수 없습니다.",
   "view_deleted_error": "이 뷰는 삭제되었습니다. 이 탭을 닫거나 플러그인 설정에서 뷰를 다시 만드세요.",
   "view_block_unknown_error": "이 블록은 더 이상 사용할 수 없습니다. 플러그인 설정에서 뷰에서 제거하세요.",
   "view_block_config_error": "이 블록의 일부 설정이 올바르지 않습니다. 플러그인 설정에서 다시 구성하세요.",

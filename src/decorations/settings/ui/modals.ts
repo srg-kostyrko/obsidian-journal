@@ -8,6 +8,7 @@ import EditDecorationModal from "./EditDecorationModal.vue";
 export interface EditDecorationModalProps {
   decoration?: JournalDecoration;
   conditionTypes: readonly JournalDecorationCondition["type"][];
+  journalName?: string;
 }
 
 export const editDecorationModal = defineModal<{ decoration: JournalDecoration }>()({

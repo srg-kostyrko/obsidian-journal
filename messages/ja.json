@@ -649,6 +649,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "ノートが存在する",
+  "decoration_condition_has_notelet_describe_any": "サブノートが存在する",
+  "decoration_condition_has_notelet_describe_types": "種類が {types} のサブノートが存在する",
+  "decoration_condition_has_notelet_empty": "このジャーナルにはまだサブノートの種類がありません。",
+  "decoration_condition_has_notelet_label": "サブノートの種類",
+  "decoration_condition_has_notelet_unknown_type": "不明な種類",
   "decoration_condition_has_open_task_describe": "ノートに未完了のタスクがある",
   "decoration_condition_note_size_describe": [
     {
@@ -730,7 +735,8 @@
         "type=has-note": "ノートあり",
         "type=has-open-task": "未完了タスクあり",
         "type=all-tasks-completed": "全タスク完了",
-        "type=note-size": "ノートのサイズ"
+        "type=note-size": "ノートのサイズ",
+        "type=has-notelet": "サブノートあり"
       }
     }
   ],
@@ -748,7 +754,8 @@
         "type=has-note": "ノートの有無を確認",
         "type=has-open-task": "未完了タスクの有無を確認",
         "type=all-tasks-completed": "すべてのタスクが完了しているか確認",
-        "type=note-size": "ノートのサイズを確認"
+        "type=note-size": "ノートのサイズを確認",
+        "type=has-notelet": "サブノートの有無を確認"
       }
     }
   ],
@@ -1054,6 +1061,7 @@
   "uri_unknown_write_type": "URI に不明なジャーナルタイプ「{type}」があります。",
   "uri_invalid_date": "URI 内の日付「{date}」を解釈できませんでした。",
   "uri_invalid_mode": "URI に不明なオープンモード「{mode}」があります。",
+  "uri_notelet_requires_journal": "サブノートのリンクにはジャーナルが必要です。リンクに journal=<名前> を追加してください。",
   "uri_unknown_journal": "「{journal}」という名前のジャーナルはありません。",
   "uri_no_journal": "その日付を含むジャーナルがありません。",
   "uri_no_journal_of_type": [
@@ -1070,6 +1078,8 @@
     }
   ],
   "uri_open_failed": "ジャーナルのノートを開けませんでした。",
+  "uri_unknown_notelet_type": "「{journal}」には「{type}」という名前のサブノートの種類がありません。",
+  "uri_notelet_failed": "サブノートを作成できませんでした。",
   "view_deleted_error": "このビューは削除されました。このタブを閉じるか、プラグイン設定でビューを作成し直してください。",
   "view_block_unknown_error": "このブロックは利用できなくなりました。プラグイン設定でビューから削除してください。",
   "view_block_config_error": "このブロックの一部の設定が無効です。プラグイン設定で設定し直してください。",

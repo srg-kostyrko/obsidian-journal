@@ -8,9 +8,9 @@ import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { JournalsIndex } from "@/journals";
+import { JournalsIndex, type TypeId } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { testContainer } from "@/testing";
@@ -214,5 +214,40 @@ describe("DecorationsSection", () => {
     await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
 
     expect(document.querySelector(".row-badge")).toBeNull();
+  });
+
+  it("describes a has-notelet decoration by the type's name, not its record key or stored id", async () => {
+    // Both notelet types' stored `id` fields disagree with their record keys, so a resolver
+    // that reads `type.id` or returns the first entry rather than looking up by record key
+    // would render the wrong name here.
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-notelet", { typeIds: ["1o1"] })],
+      styles: [buildStyle("background")],
+    });
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              decorations: [decoration],
+              notelets: {
+                meeting: buildNoteletType({ id: "unrelated-a" as TypeId, name: "Meeting" }),
+                "1o1": buildNoteletType({ id: "unrelated-b" as TypeId, name: "One on One" }),
+              },
+            },
+          ),
+        },
+        shelves: { work: buildShelf("work") },
+        decorations: { decorations: [] },
+      },
+    });
+    vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
+    harness.render(DecorationsSection, { props: { owner: { kind: "journal", journalName: "daily" } } });
+    await userEvent.click(screen.getByText(m.decoration_section_title_journal()));
+
+    expect(screen.getByText(m.decoration_condition_has_notelet_describe_types({ types: "One on One" }))).toBeTruthy();
   });
 });

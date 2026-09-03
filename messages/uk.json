@@ -653,6 +653,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "нотатка існує",
+  "decoration_condition_has_notelet_describe_any": "піднотатка існує",
+  "decoration_condition_has_notelet_describe_types": "існує піднотатка типу {types}",
+  "decoration_condition_has_notelet_empty": "У цьому журналі ще немає типів піднотаток.",
+  "decoration_condition_has_notelet_label": "Типи піднотаток",
+  "decoration_condition_has_notelet_unknown_type": "невідомий тип",
   "decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
   "decoration_condition_note_size_describe": [
     {
@@ -734,7 +739,8 @@
         "type=has-note": "Має нотатку",
         "type=has-open-task": "Має відкрите завдання",
         "type=all-tasks-completed": "Усі завдання виконано",
-        "type=note-size": "Розмір нотатки"
+        "type=note-size": "Розмір нотатки",
+        "type=has-notelet": "Має піднотатку"
       }
     }
   ],
@@ -752,7 +758,8 @@
         "type=has-note": "Перевірити, чи існує нотатка",
         "type=has-open-task": "Перевірити, чи є в нотатці відкриті завдання",
         "type=all-tasks-completed": "Перевірити, чи всі завдання виконано",
-        "type=note-size": "Перевірити розмір нотатки"
+        "type=note-size": "Перевірити розмір нотатки",
+        "type=has-notelet": "Перевірити, чи існує піднотатка"
       }
     }
   ],
@@ -1084,6 +1091,7 @@
   "uri_unknown_write_type": "Невідомий тип журналу «{type}» в URI.",
   "uri_invalid_date": "Не вдалося розпізнати дату «{date}» в URI.",
   "uri_invalid_mode": "Невідомий режим відкриття «{mode}» в URI.",
+  "uri_notelet_requires_journal": "Посиланню на піднотатку потрібен журнал. Додайте до посилання journal=<назва>.",
   "uri_unknown_journal": "Немає журналу з назвою «{journal}».",
   "uri_no_journal": "Жоден журнал не охоплює цю дату.",
   "uri_no_journal_of_type": [
@@ -1100,6 +1108,8 @@
     }
   ],
   "uri_open_failed": "Не вдалося відкрити нотатку журналу.",
+  "uri_unknown_notelet_type": "У журналі «{journal}» немає типу піднотатки з назвою «{type}».",
+  "uri_notelet_failed": "Не вдалося створити піднотатку.",
   "view_deleted_error": "Це представлення видалено. Закрийте цю вкладку або створіть представлення знову в налаштуваннях плагіна.",
   "view_block_unknown_error": "Цей блок більше недоступний. Видаліть його з представлення в налаштуваннях плагіна.",
   "view_block_config_error": "Деякі налаштування цього блока недійсні. Переналаштуйте його в налаштуваннях плагіна.",

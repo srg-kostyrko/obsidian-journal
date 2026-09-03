@@ -15,6 +15,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
+import { JournalsRepository } from "@/journals";
 import { icons } from "@/ui/icons";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -34,6 +35,11 @@ const store = useService(DecorationsStore);
 const calendar = useService(Calendar);
 const matches = useService(DecorationMatchService);
 const modals = useModalService();
+const journals = useService(JournalsRepository);
+
+function typeName(id: string): string | undefined {
+  return owner.kind === "journal" ? journals.get(owner.journalName).getOrUndefined()?.notelets[id]?.name : undefined;
+}
 
 const decorations = computed<readonly JournalDecoration[]>(() => store.list(owner));
 
@@ -132,7 +138,7 @@ function remove(index: number): void {
           <span>{{ m.decoration_describe_when() }}</span>
           <template v-for="(condition, i) of decoration.conditions" :key="i">
             <span v-if="i > 0" class="mode-word">{{ m.decoration_describe_mode({ kind: decoration.mode }) }}</span>
-            <span>{{ describeCondition(condition, calendar) }}</span>
+            <span>{{ describeCondition(condition, calendar, typeName) }}</span>
           </template>
         </div>
         <div v-if="badgeTexts[index]" class="row-badge">{{ badgeTexts[index] }}</div>
