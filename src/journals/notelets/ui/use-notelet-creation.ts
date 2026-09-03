@@ -87,7 +87,9 @@ export function useNoteletCreation(
     const labels = labelsFor(list);
     const chosen = await workspace.pickFromMenu(labels, event);
     if (chosen.isErr()) return;
-    const target = list.at(labels.indexOf(chosen.value));
+    const index = labels.indexOf(chosen.value);
+    if (index === -1) return;
+    const target = list.at(index);
     if (target === undefined) return;
     await run(target, openMode);
   }

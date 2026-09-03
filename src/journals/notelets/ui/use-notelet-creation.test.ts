@@ -72,6 +72,15 @@ describe("useNoteletCreation", () => {
     expect(control.targets.value.map((t) => t.typeName)).toEqual(["Meeting"]);
   });
 
+  it("treats an empty typeIds filter as no filter", async () => {
+    const { control } = await mountControl({
+      journals: { Daily: journalWithTypes("Daily", { nt_a: { name: "Meeting" }, nt_b: { name: "Gym" } }) },
+      placements: [{ journalName: "Daily", anchor: ANCHOR }],
+      typeIds: [],
+    });
+    expect(control.targets.value.map((t) => t.typeName)).toEqual(["Gym", "Meeting"]);
+  });
+
   it("omits a journal whose timeline does not reach the placement", async () => {
     const open = journalWithTypes("Daily", { nt_a: { name: "Meeting" } });
     const closed = {
@@ -116,8 +125,9 @@ describe("useNoteletCreation", () => {
       placements: [{ journalName: "Daily", anchor: ANCHOR }],
     });
     const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok({ path: "x.md" }));
-    vi.spyOn(harness.resolve(WorkspaceService), "pickFromMenu").mockReturnValue(AsyncResult.ok("Meeting"));
+    const pick = vi.spyOn(harness.resolve(WorkspaceService), "pickFromMenu").mockReturnValue(AsyncResult.ok("Meeting"));
     await control.create(new MouseEvent("click"));
+    expect(pick).toHaveBeenCalledWith(["Gym", "Meeting"], expect.anything());
     expect(invoke).toHaveBeenCalledWith(
       CreateNoteletFlow,
       expect.objectContaining({ typeId: "nt_a", openMode: "active" }),
