@@ -221,4 +221,11 @@ describe("NoteletsBlock", () => {
     expect(screen.getByText("Standup")).toBeTruthy();
     expect(screen.queryByLabelText(m.journal_notelet_list_create())).toBeNull();
   });
+
+  it("treats an empty journals filter as no filter", async () => {
+    const { harness } = await mountBlock({ config: { journals: [] } });
+    registerNotelet(harness, { journalName: "Daily", anchor: DAY, path: "D/Standup.md", typeName: "Meeting" });
+    await nextTick();
+    expect(screen.getByText("Standup")).toBeTruthy();
+  });
 });
