@@ -30,7 +30,14 @@ jobs:
         # which a manual dispatch can ask for too — a floor-only failure is otherwise
         # unverifiable until the next 07:00 UTC.
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        obsidian: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["earliest/earliest", "latest/earliest", "latest/latest"]') || fromJSON('["latest/latest"]') }}
+        # The app version is pinned to 1.13.7 rather than `latest` because 1.13.8 is an
+        # Android-only release: its `obsidian-versions.json` entry carries `downloads: ["apk"]`
+        # and no installer bounds, so there is no asar to run and setup dies with
+        # "No asar found for Obsidian version 1.13.8". `latest` skips the 1.14.0 beta but not
+        # an Android-only build, so it lands on a version with no desktop artifact at all.
+        # Unpin — back to `latest` — once Obsidian ships a desktop 1.13.9+ (which moves
+        # `latest` past the Android-only entry) or wdio-obsidian-service filters these out.
+        obsidian: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["earliest/earliest", "1.13.7/earliest", "1.13.7/1.13.7"]') || fromJSON('["1.13.7/1.13.7"]') }}
 
     runs-on: ${{ matrix.os }}
     permissions:
