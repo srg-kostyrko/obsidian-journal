@@ -1307,6 +1307,8 @@
   "view_block_markdown_template_variable_journal_link_description": "Resolves to the vault path of another journal's note for the focused date. Wrap it in a link yourself, and add a shift like +1w to point at a neighboring period.",
   "view_block_markdown_template_empty": "No template selected",
   "view_block_markdown_template_read_error": "Could not read the template file.",
+  "view_block_notelets_label": "Notelets",
+  "view_block_notelets_description": "Lists the notelets of the note you are reading, or of a window around the view's date.",
   "view_block_summary_before": "{count} before",
   "view_block_summary_after": "{count} after",
   "view_block_summary_hidden_days": "Hidden: {days}",
@@ -1317,6 +1319,16 @@
       "match": {
         "count=1": "1 journal",
         "count=*": "{count} journals"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 type",
+        "count=*": "{count} types"
       }
     }
   ],

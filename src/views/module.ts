@@ -9,6 +9,7 @@ import { dayNotesSlice } from "./blocks/day-notes/slice";
 import { dividerBlock } from "./blocks/divider/divider-block";
 import { markdownTemplateBlock } from "./blocks/markdown-template/markdown-template-block";
 import { monthCalendarBlock } from "./blocks/month-calendar/month-calendar-block";
+import { noteletsBlock } from "./blocks/notelets/notelets-block";
 import { toolbarBlock } from "./blocks/toolbar/toolbar-block";
 import { ToolbarItemsService } from "./blocks/toolbar/toolbar-items-service";
 import { weekCalendarBlock } from "./blocks/week-calendar/week-calendar-block";
@@ -52,6 +53,7 @@ export const viewsCoreModule: Module = {
     c.register(ViewBlockDefinitionToken).useValue(customIntervalsBlock);
     c.register(ViewBlockDefinitionToken).useValue(dayNotesBlock);
     c.register(ViewBlockDefinitionToken).useValue(markdownTemplateBlock);
+    c.register(ViewBlockDefinitionToken).useValue(noteletsBlock);
 
     c.register(ToolbarItemDefinitionToken).useValue(shelfSelectorItem);
     c.register(ToolbarItemDefinitionToken).useValue(spacerItem);
