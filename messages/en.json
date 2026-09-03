@@ -1726,6 +1726,8 @@
   "journal_edit_code_block_home_option_scale": "increases link size as a multiplier of the text size (for example, scale: 2 doubles it).",
   "journal_edit_code_block_home_option_shelf": "limits the displayed journals to a specific shelf.",
   "journal_edit_code_block_home_custom_lead": "With custom options it can look like this:",
+  "journal_edit_code_block_notelets_description": "Lists the notelets of the period this note belongs to. Add a types list to narrow it to particular notelet types.",
+  "journal_edit_code_block_notelets_default": "By default it looks like this:",
   "journal_edit_section_timeline": "Timeline",
   "journal_edit_sequence_enabled_description": "Assign numbers to notes (e.g. Day 1, Day 2, …).",
   "journal_edit_sequence_enabled_label": "Enable sequential numbers",

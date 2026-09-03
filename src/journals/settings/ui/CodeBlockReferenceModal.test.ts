@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import { homeBlockKeys } from "@/code-blocks/home/home-config";
 import { timelineBlockKeys, timelineModes } from "@/code-blocks/timeline/timeline-config";
+import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
@@ -22,7 +23,9 @@ describe("CodeBlockReferenceModal", () => {
   it("documents all three code-block names", () => {
     harness.render(CodeBlockReferenceModal, {
       props: { journalName: "Daily" },
-      global: { stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true } },
+      global: {
+        stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true, NoteletsCodeBlock: true },
+      },
     });
     expect(screen.getAllByText(/journal-nav/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/calendar-timeline/).length).toBeGreaterThan(0);
@@ -32,7 +35,9 @@ describe("CodeBlockReferenceModal", () => {
   it("lists every supported timeline mode", () => {
     harness.render(CodeBlockReferenceModal, {
       props: { journalName: "Daily" },
-      global: { stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true } },
+      global: {
+        stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true, NoteletsCodeBlock: true },
+      },
     });
     for (const mode of timelineModes) {
       expect(screen.getAllByText(mode).length).toBeGreaterThan(0);
@@ -42,7 +47,9 @@ describe("CodeBlockReferenceModal", () => {
   it("lists every home block option", () => {
     harness.render(CodeBlockReferenceModal, {
       props: { journalName: "Daily" },
-      global: { stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true } },
+      global: {
+        stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true, NoteletsCodeBlock: true },
+      },
     });
     for (const option of homeBlockKeys) {
       expect(screen.getAllByText(option).length).toBeGreaterThan(0);
@@ -52,10 +59,23 @@ describe("CodeBlockReferenceModal", () => {
   it("lists every timeline block option", () => {
     harness.render(CodeBlockReferenceModal, {
       props: { journalName: "Daily" },
-      global: { stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true } },
+      global: {
+        stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true, NoteletsCodeBlock: true },
+      },
     });
     for (const option of timelineBlockKeys) {
       expect(screen.getAllByText(option).length).toBeGreaterThan(0);
     }
+  });
+
+  it("documents the notelets fence", () => {
+    harness.render(CodeBlockReferenceModal, {
+      props: { journalName: "Daily" },
+      global: {
+        stubs: { NavigationCodeBlock: true, TimelineCodeBlock: true, HomeCodeBlock: true, NoteletsCodeBlock: true },
+      },
+    });
+    expect(screen.getAllByText(/journal-notelets/).length).toBeGreaterThan(0);
+    expect(screen.getByText(m.journal_edit_code_block_notelets_description())).toBeTruthy();
   });
 });
