@@ -1182,6 +1182,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "当前日期",
         "period=week": "本周",
         "period=month": "本月",
         "period=quarter": "本季度",

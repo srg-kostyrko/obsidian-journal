@@ -1216,6 +1216,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Поточний день",
         "period=week": "Поточний тиждень",
         "period=month": "Поточний місяць",
         "period=quarter": "Поточний квартал",

@@ -1327,6 +1327,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Aktueller Tag",
         "period=week": "Aktuelle Woche",
         "period=month": "Aktueller Monat",
         "period=quarter": "Aktuelles Quartal",

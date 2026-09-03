@@ -1,7 +1,7 @@
 import { CalendarDate, periodOfKind } from "@/calendar";
 import type { AnchorString } from "@/calendar/types";
 
-export const windowKinds = ["week", "month", "quarter", "year"] as const;
+export const windowKinds = ["day", "week", "month", "quarter", "year"] as const;
 export type WindowKind = (typeof windowKinds)[number];
 
 export interface ResolvedWindow {

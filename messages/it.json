@@ -1327,6 +1327,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Giorno corrente",
         "period=week": "Settimana corrente",
         "period=month": "Mese corrente",
         "period=quarter": "Trimestre corrente",

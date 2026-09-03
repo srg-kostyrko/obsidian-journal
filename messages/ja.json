@@ -1182,6 +1182,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "今日",
         "period=week": "今週",
         "period=month": "今月",
         "period=quarter": "今四半期",

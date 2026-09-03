@@ -1363,6 +1363,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Текущий день",
         "period=week": "Текущая неделя",
         "period=month": "Текущий месяц",
         "period=quarter": "Текущий квартал",

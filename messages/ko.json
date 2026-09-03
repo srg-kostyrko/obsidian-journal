@@ -1327,6 +1327,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "현재 날짜",
         "period=week": "이번 주",
         "period=month": "이번 달",
         "period=quarter": "이번 분기",
