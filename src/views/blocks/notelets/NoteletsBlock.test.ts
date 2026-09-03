@@ -210,7 +210,7 @@ describe("NoteletsBlock", () => {
   it("falls back to the window once refDate moves outside the active entry's period", async () => {
     const FAR = "2026-12-25" as AnchorString;
     const { harness } = await mountBlock({
-      config: { window: "year" },
+      config: { window: "month" },
       context: { refDate: ref(FAR) },
     });
     harness.resolve(ActiveEntryViewModel).active.value = { journalName: "Weekly", anchor: WEEK };
@@ -221,11 +221,15 @@ describe("NoteletsBlock", () => {
       typeName: "Review",
       typeId: "nt_review",
     });
+    registerNotelet(harness, { journalName: "Daily", anchor: FAR, path: "D/Summary.md", typeName: "Meeting" });
     await nextTick();
-    expect(screen.getByText("Retro")).toBeTruthy();
+    // A wrongly-engaged follow mode would show only Weekly's own period (Retro, no Summary);
+    // a correct fallback to the month window around FAR shows the reverse.
+    expect(screen.getByText("Summary")).toBeTruthy();
+    expect(screen.queryByText("Retro")).toBeNull();
 
-    const resolved = resolveWindow("year", FAR);
-    const expected = periodLabelOf({ start: resolved.start, end: resolved.end, kind: "year" });
+    const resolved = resolveWindow("month", FAR);
+    const expected = periodLabelOf({ start: resolved.start, end: resolved.end, kind: "month" });
     expect(screen.getByRole("heading", { level: 3, name: expected })).toBeTruthy();
   });
 

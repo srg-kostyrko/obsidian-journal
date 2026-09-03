@@ -60,4 +60,20 @@ describe("entryCoversDate", () => {
 
     expect(result).toBe(true);
   });
+
+  it("fails closed for a journal the repository does not know", async () => {
+    const harness = await testContainer({
+      modules: MODULES,
+      data: { journals: { quarterly: fixedJournal("quarterly", { type: "quarter" }) } },
+    });
+    const cycle = harness.resolve(CycleService);
+
+    const result = entryCoversDate(
+      cycle,
+      { journalName: "does-not-exist", anchor: "2026-07-01" as AnchorString },
+      "2026-07-01" as AnchorString,
+    );
+
+    expect(result).toBe(false);
+  });
 });
