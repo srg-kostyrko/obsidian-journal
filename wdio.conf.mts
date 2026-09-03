@@ -8,9 +8,12 @@ import { parseObsidianVersions } from "wdio-obsidian-service";
 const SCREENSHOT_DIR = "./e2e/.reports/screenshots";
 
 // Version matrix is data-driven so CI jobs select it via OBSIDIAN_VERSIONS without
-// editing this file: PR gate -> "latest/latest"; nightly -> the floor + mismatch
+// editing this file: PR gate -> the pinned app version; nightly -> the floor + mismatch
 // combos (see docs/e2e-testing-strategy.md). `earliest` resolves manifest.minAppVersion.
-const versionSpec = env.OBSIDIAN_VERSIONS ?? "latest/latest";
+// Pinned rather than `latest/latest` for the same reason the CI matrix is: 1.13.8 is an
+// Android-only release with no asar, and `latest` selects it. See .github/workflows/e2e.yml
+// for the unpin condition; the two move together.
+const versionSpec = env.OBSIDIAN_VERSIONS ?? "1.13.7/1.13.7";
 const versions = await parseObsidianVersions(versionSpec);
 
 export const config: WebdriverIO.Config = {
