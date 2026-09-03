@@ -22,6 +22,7 @@ const update = (patch: Partial<CustomIntervalsConfig>): void => props.onChange({
         (value: string | undefined) => value && update({ window: value as CustomIntervalsConfig['window'] })
       "
     >
+      <option value="day">{{ m.view_block_config_window_current({ period: "day" }) }}</option>
       <option value="week">{{ m.view_block_config_window_current({ period: "week" }) }}</option>
       <option value="month">{{ m.view_block_config_window_current({ period: "month" }) }}</option>
       <option value="quarter">{{ m.view_block_config_window_current({ period: "quarter" }) }}</option>

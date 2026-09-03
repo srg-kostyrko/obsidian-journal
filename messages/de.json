@@ -125,6 +125,7 @@
   "code_blocks_yaml_error": "Die Optionen in diesem {key}-Block konnten nicht gelesen werden.",
   "code_blocks_schema_error": "Einige Optionen in diesem {key}-Block sind ungültig.",
   "code_blocks_nav_not_connected": "Die Notiz ist mit keinem Journal verknüpft",
+  "code_blocks_notelets_not_connected": "Die Notiz ist mit keinem Journal verknüpft",
   "code_blocks_home_empty": "Keine Journale zum Anzeigen. Prüfe die Optionen show und shelf des Blocks.",
   "common_no_journals_yet": "Noch keine Journale. Erstelle eines in den Plugin-Einstellungen.",
   "code_blocks_nav_next": "Nächste",
@@ -1298,6 +1299,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Wird zum Vault-Pfad der Notiz eines anderen Journals für das fokussierte Datum aufgelöst. Setze ihn selbst in einen Link und ergänze eine Verschiebung wie +1w, um auf einen benachbarten Zeitraum zu verweisen.",
   "view_block_markdown_template_empty": "Keine Vorlage ausgewählt",
   "view_block_markdown_template_read_error": "Die Vorlagendatei konnte nicht gelesen werden.",
+  "view_block_notelets_label": "Kurznotizen",
+  "view_block_notelets_description": "Listet die Kurznotizen der Notiz auf, die du gerade liest, oder innerhalb eines Fensters um das Datum der Ansicht.",
+  "view_block_notelets_journals_label": "Journale",
+  "view_block_notelets_journals_description": "Lasse alle deaktiviert, um jedes Journal im Regal der Ansicht einzuschließen.",
+  "view_block_notelets_types_label": "Kurznotiz-Typen",
+  "view_block_notelets_types_description": "Lasse alle deaktiviert, um jeden Typ einzuschließen.",
+  "view_block_notelets_types_empty": "Noch kein Journal definiert einen Kurznotiz-Typ.",
   "view_block_summary_before": "{count} davor",
   "view_block_summary_after": "{count} danach",
   "view_block_summary_hidden_days": "Ausgeblendet: {days}",
@@ -1308,6 +1316,16 @@
       "match": {
         "count=1": "1 Journal",
         "count=*": "{count} Journale"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Typ",
+        "count=*": "{count} Typen"
       }
     }
   ],
@@ -1327,6 +1345,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Aktueller Tag",
         "period=week": "Aktuelle Woche",
         "period=month": "Aktueller Monat",
         "period=quarter": "Aktuelles Quartal",
@@ -1703,6 +1722,8 @@
   "journal_edit_code_block_home_option_scale": "vergrößert die Links als Vielfaches der Textgröße (zum Beispiel verdoppelt `scale: 2` ihre Größe).",
   "journal_edit_code_block_home_option_shelf": "beschränkt die angezeigten Journale auf ein bestimmtes Regal.",
   "journal_edit_code_block_home_custom_lead": "Mit benutzerdefinierten Optionen kann es so aussehen:",
+  "journal_edit_code_block_notelets_description": "Listet die Kurznotizen des Zeitraums auf, zu dem diese Notiz gehört. Füge eine types-Liste hinzu, um sie auf bestimmte Kurznotiz-Typen einzugrenzen.",
+  "journal_edit_code_block_notelets_default": "Standardmäßig sieht es so aus:",
   "journal_edit_section_timeline": "Zeitleiste",
   "journal_edit_sequence_enabled_description": "Weist den Notizen Nummern zu (z. B. Tag 1, Tag 2, …).",
   "journal_edit_sequence_enabled_label": "Fortlaufende Nummern aktivieren",
@@ -1825,6 +1846,11 @@
   "journal_notelet_counter_key_modal_title": "Name der Nummerneigenschaft bearbeiten",
   "journal_property_key_taken": "Etwas anderes in dieser Notiz schreibt bereits in „{name}“.",
   "journal_notelet_command_name": "{type} erstellen",
+  "journal_notelet_list_empty": "Keine Kurznotizen für diesen Zeitraum.",
+  "journal_notelet_list_create": "Neue Kurznotiz",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (fehlender Typ)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Journale durchsuchen",
   "journal_prompt_answer_required": "Diese Frage muss beantwortet werden.",

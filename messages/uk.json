@@ -114,6 +114,7 @@
   "code_blocks_yaml_error": "Не вдалося прочитати опції в цьому блоці {key}.",
   "code_blocks_schema_error": "Деякі опції в цьому блоці {key} недійсні.",
   "code_blocks_nav_not_connected": "Нотатка не пов’язана з журналом",
+  "code_blocks_notelets_not_connected": "Нотатка не пов’язана з журналом",
   "code_blocks_home_empty": "Немає журналів для показу. Перевірте параметри show і shelf цього блоку.",
   "common_no_journals_yet": "Журналів ще немає. Створіть журнал у налаштуваннях плагіна.",
   "code_blocks_nav_next": "Далі",
@@ -1183,6 +1184,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Перетворюється на шлях у сховищі до нотатки іншого журналу для вибраної дати. Обгорніть її в посилання самостійно та додайте зсув, наприклад +1w, щоб вказати на сусідній період.",
   "view_block_markdown_template_empty": "Шаблон не вибрано",
   "view_block_markdown_template_read_error": "Не вдалося прочитати файл шаблону.",
+  "view_block_notelets_label": "Піднотатки",
+  "view_block_notelets_description": "Перелічує піднотатки нотатки, яку ви читаєте, або піднотатки в межах вікна навколо дати представлення.",
+  "view_block_notelets_journals_label": "Журнали",
+  "view_block_notelets_journals_description": "Залиште все вимкненим, щоб включити всі журнали на полиці представлення.",
+  "view_block_notelets_types_label": "Типи піднотаток",
+  "view_block_notelets_types_description": "Залиште все вимкненим, щоб включити всі типи.",
+  "view_block_notelets_types_empty": "Жоден журнал ще не визначає тип піднотатки.",
   "view_block_summary_before": "{count} перед",
   "view_block_summary_after": "{count} після",
   "view_block_summary_hidden_days": "Приховано: {days}",
@@ -1195,6 +1203,18 @@
         "countPlural=few": "{count} журнали",
         "countPlural=many": "{count} журналів",
         "countPlural=*": "{count} журналу"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} тип",
+        "countPlural=few": "{count} типи",
+        "countPlural=many": "{count} типів",
+        "countPlural=*": "{count} типу"
       }
     }
   ],
@@ -1216,6 +1236,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Поточний день",
         "period=week": "Поточний тиждень",
         "period=month": "Поточний місяць",
         "period=quarter": "Поточний квартал",
@@ -1584,6 +1605,8 @@
   "journal_edit_code_block_home_option_scale": "збільшує розмір посилання як множник розміру тексту (наприклад, scale: 2 подвоює його).",
   "journal_edit_code_block_home_option_shelf": "обмежує відображення журналів певною полицею.",
   "journal_edit_code_block_home_custom_lead": "З власними параметрами це може виглядати так:",
+  "journal_edit_code_block_notelets_description": "Перелічує піднотатки періоду, до якого належить ця нотатка. Додайте список types, щоб обмежити його певними типами піднотаток.",
+  "journal_edit_code_block_notelets_default": "За замовчуванням це виглядає так:",
   "journal_edit_section_timeline": "Часова шкала",
   "journal_edit_sequence_enabled_description": "Призначте нотаткам номери (наприклад, День 1, День 2 тощо).",
   "journal_edit_sequence_enabled_label": "Увімкнути послідовні номери",
@@ -1708,6 +1731,11 @@
   "journal_notelet_counter_key_modal_title": "Змінити назву властивості номера",
   "journal_property_key_taken": "Інший елемент цієї нотатки вже записується в «{name}».",
   "journal_notelet_command_name": "Створити {type}",
+  "journal_notelet_list_empty": "Немає піднотаток за цей період.",
+  "journal_notelet_list_create": "Нова піднотатка",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (відсутній тип)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Пошук журналів",
   "journal_prompt_answer_required": "На це запитання потрібно відповісти.",

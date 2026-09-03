@@ -2,6 +2,8 @@
 import type { HomeBlockConfig } from "@/code-blocks/home/home-config";
 import HomeCodeBlock from "@/code-blocks/home/ui/HomeCodeBlock.vue";
 import NavigationCodeBlock from "@/code-blocks/nav/ui/NavigationCodeBlock.vue";
+import type { NoteletsFenceConfig } from "@/code-blocks/notelets/notelets-config";
+import NoteletsCodeBlock from "@/code-blocks/notelets/ui/NoteletsCodeBlock.vue";
 import { timelineModes, type TimelineBlockConfig } from "@/code-blocks/timeline/timeline-config";
 import TimelineCodeBlock from "@/code-blocks/timeline/ui/TimelineCodeBlock.vue";
 import { m } from "@/i18n";
@@ -21,6 +23,7 @@ const timelineNavigationConfig: TimelineBlockConfig = { navigation: true };
 const defaultHomeConfig: HomeBlockConfig = { show: ["day"], separator: " • ", scale: 1 };
 const customHomeConfig: HomeBlockConfig = { show: ["day", "month"], separator: " | ", scale: 2 };
 const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
+const noteletsConfig: NoteletsFenceConfig = { types: [] };
 </script>
 
 <template>
@@ -81,6 +84,13 @@ const customHomeBody = `show:\n  - day\n  - month\nscale: 2\nseparator: " | "`;
       <p>{{ m.journal_edit_code_block_home_custom_lead() }}</p>
       <CodeBlockSnippet name="journals-home" :body="customHomeBody" />
       <HomeCodeBlock :path="previewPath" :config="customHomeConfig" />
+    </section>
+
+    <section class="code-block-reference__section">
+      <CodeBlockSnippet name="journal-notelets" />
+      <p>{{ m.journal_edit_code_block_notelets_description() }}</p>
+      <p>{{ m.journal_edit_code_block_notelets_default() }}</p>
+      <NoteletsCodeBlock :path="previewPath" :config="noteletsConfig" />
     </section>
   </div>
 </template>

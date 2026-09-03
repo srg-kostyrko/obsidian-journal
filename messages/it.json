@@ -125,6 +125,7 @@
   "code_blocks_yaml_error": "Impossibile leggere le opzioni di questo blocco {key}.",
   "code_blocks_schema_error": "Alcune opzioni di questo blocco {key} non sono valide.",
   "code_blocks_nav_not_connected": "La nota non è collegata a un diario",
+  "code_blocks_notelets_not_connected": "La nota non è collegata a un diario",
   "code_blocks_home_empty": "Nessun diario da mostrare. Controlla le opzioni show e shelf del blocco.",
   "common_no_journals_yet": "Nessun diario finora. Creane uno nelle impostazioni del plugin.",
   "code_blocks_nav_next": "Successivo",
@@ -1298,6 +1299,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Restituisce il percorso nel vault della nota di un altro diario per la data selezionata. Inseriscilo tu stesso in un collegamento e aggiungi uno spostamento come +1w per puntare a un periodo adiacente.",
   "view_block_markdown_template_empty": "Nessun modello selezionato",
   "view_block_markdown_template_read_error": "Impossibile leggere il file modello.",
+  "view_block_notelets_label": "Note brevi",
+  "view_block_notelets_description": "Elenca le note brevi della nota che stai leggendo, oppure quelle di una finestra attorno alla data della vista.",
+  "view_block_notelets_journals_label": "Diari",
+  "view_block_notelets_journals_description": "Lascia tutto disattivato per includere ogni diario nello scaffale della vista.",
+  "view_block_notelets_types_label": "Tipi di nota breve",
+  "view_block_notelets_types_description": "Lascia tutto disattivato per includere ogni tipo.",
+  "view_block_notelets_types_empty": "Nessun diario definisce ancora un tipo di nota breve.",
   "view_block_summary_before": "{count} prima",
   "view_block_summary_after": "{count} dopo",
   "view_block_summary_hidden_days": "Nascosti: {days}",
@@ -1308,6 +1316,16 @@
       "match": {
         "count=1": "1 diario",
         "count=*": "{count} diari"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 tipo",
+        "count=*": "{count} tipi"
       }
     }
   ],
@@ -1327,6 +1345,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Giorno corrente",
         "period=week": "Settimana corrente",
         "period=month": "Mese corrente",
         "period=quarter": "Trimestre corrente",
@@ -1701,6 +1720,8 @@
   "journal_edit_code_block_home_option_scale": "aumenta la dimensione del collegamento come moltiplicatore della dimensione del testo (ad esempio, scale: 2 la raddoppia).",
   "journal_edit_code_block_home_option_shelf": "limita i diari visualizzati a uno scaffale specifico.",
   "journal_edit_code_block_home_custom_lead": "Con le opzioni personalizzate può apparire così:",
+  "journal_edit_code_block_notelets_description": "Elenca le note brevi del periodo a cui appartiene questa nota. Aggiungi un elenco types per limitarla a tipi di nota breve specifici.",
+  "journal_edit_code_block_notelets_default": "Per impostazione predefinita si presenta così:",
   "journal_edit_section_timeline": "Cronologia",
   "journal_edit_sequence_enabled_description": "Assegna dei numeri alle note (ad esempio Giorno 1, Giorno 2, …).",
   "journal_edit_sequence_enabled_label": "Abilita numeri sequenziali",
@@ -1823,6 +1844,11 @@
   "journal_notelet_counter_key_modal_title": "Modifica il nome della proprietà numero",
   "journal_property_key_taken": "Qualcos’altro in questa nota scrive già in \"{name}\".",
   "journal_notelet_command_name": "Crea {type}",
+  "journal_notelet_list_empty": "Nessuna nota breve per questo periodo.",
+  "journal_notelet_list_create": "Nuova nota breve",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (tipo mancante)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Cerca diari",
   "journal_prompt_answer_required": "Questa domanda deve ricevere una risposta.",

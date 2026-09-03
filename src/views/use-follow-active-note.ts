@@ -1,10 +1,10 @@
 import { watch } from "vue";
 
-import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { CycleService } from "@/journals";
 import { ActiveEntryViewModel, type ActiveEntryRef } from "@/notes-calendar/active-entry";
+import { entryCoversDate } from "@/notes-calendar/entry-coverage";
 
 export interface FollowActiveNoteOptions {
   readonly enabled: () => boolean;
@@ -16,16 +16,6 @@ export interface FollowActiveNoteOptions {
 export function useFollowActiveNote(options: FollowActiveNoteOptions): void {
   const activeEntry = useService(ActiveEntryViewModel);
   const cycle = useService(CycleService);
-
-  function coversCurrentDate(entry: ActiveEntryRef): boolean {
-    const current = CalendarDate.fromAnchor(options.currentDate());
-    return cycle
-      .startOf(entry.journalName, entry.anchor)
-      .flatMap((start) =>
-        cycle.endOf(entry.journalName, entry.anchor).map((end) => !current.isBefore(start) && !current.isAfter(end)),
-      )
-      .getOr(false);
-  }
 
   // Weeks are the only period whose representative day (the one carrying the week-year)
   // differs from its start; there, the representative day is itself information the view
@@ -50,7 +40,7 @@ export function useFollowActiveNote(options: FollowActiveNoteOptions): void {
       if (active === null || !options.inScope(active.journalName)) return;
       // The view is already inside the opened note's own period, so moving the date would
       // scroll away from what the user is looking at without showing anything new.
-      if (coversCurrentDate(active) && representativeIsStart(active)) return;
+      if (entryCoversDate(cycle, active, options.currentDate()) && representativeIsStart(active)) return;
       const date = cycle
         .representativeOf(active.journalName, active.anchor)
         .map((day) => day.toAnchor())

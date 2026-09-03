@@ -124,6 +124,7 @@
   "code_blocks_yaml_error": "Could not read the options in this {key} block.",
   "code_blocks_schema_error": "Some options in this {key} block are not valid.",
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
+  "code_blocks_notelets_not_connected": "Note is not connected to a journal",
   "code_blocks_home_empty": "No journals to show. Check the block's show and shelf options.",
   "common_no_journals_yet": "No journals yet. Create one in the plugin settings.",
   "code_blocks_nav_next": "Next",
@@ -1307,6 +1308,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Resolves to the vault path of another journal's note for the focused date. Wrap it in a link yourself, and add a shift like +1w to point at a neighboring period.",
   "view_block_markdown_template_empty": "No template selected",
   "view_block_markdown_template_read_error": "Could not read the template file.",
+  "view_block_notelets_label": "Notelets",
+  "view_block_notelets_description": "Lists the notelets of the note you are reading, or of a window around the view's date.",
+  "view_block_notelets_journals_label": "Journals",
+  "view_block_notelets_journals_description": "Leave all off to include every journal in the view's shelf.",
+  "view_block_notelets_types_label": "Notelet types",
+  "view_block_notelets_types_description": "Leave all off to include every type.",
+  "view_block_notelets_types_empty": "No journal defines a notelet type yet.",
   "view_block_summary_before": "{count} before",
   "view_block_summary_after": "{count} after",
   "view_block_summary_hidden_days": "Hidden: {days}",
@@ -1317,6 +1325,16 @@
       "match": {
         "count=1": "1 journal",
         "count=*": "{count} journals"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 type",
+        "count=*": "{count} types"
       }
     }
   ],
@@ -1336,6 +1354,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "Current day",
         "period=week": "Current week",
         "period=month": "Current month",
         "period=quarter": "Current quarter",
@@ -1707,6 +1726,8 @@
   "journal_edit_code_block_home_option_scale": "increases link size as a multiplier of the text size (for example, scale: 2 doubles it).",
   "journal_edit_code_block_home_option_shelf": "limits the displayed journals to a specific shelf.",
   "journal_edit_code_block_home_custom_lead": "With custom options it can look like this:",
+  "journal_edit_code_block_notelets_description": "Lists the notelets of the period this note belongs to. Add a types list to narrow it to particular notelet types.",
+  "journal_edit_code_block_notelets_default": "By default it looks like this:",
   "journal_edit_section_timeline": "Timeline",
   "journal_edit_sequence_enabled_description": "Assign numbers to notes (e.g. Day 1, Day 2, …).",
   "journal_edit_sequence_enabled_label": "Enable sequential numbers",
@@ -1829,6 +1850,11 @@
   "journal_notelet_counter_key_modal_title": "Edit number property name",
   "journal_property_key_taken": "Something else on this note already writes to \"{name}\".",
   "journal_notelet_command_name": "New {type}",
+  "journal_notelet_list_empty": "No notelets for this period.",
+  "journal_notelet_list_create": "New notelet",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (missing type)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Search journals",
   "journal_prompt_answer_required": "This question must be answered.",

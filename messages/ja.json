@@ -114,6 +114,7 @@
   "code_blocks_yaml_error": "この {key} ブロックのオプションを読み取れませんでした。",
   "code_blocks_schema_error": "この {key} ブロックの一部のオプションが無効です。",
   "code_blocks_nav_not_connected": "ノートがジャーナルに接続されていません",
+  "code_blocks_notelets_not_connected": "ノートがジャーナルに接続されていません",
   "code_blocks_home_empty": "表示できるジャーナルがありません。ブロックの show と shelf オプションを確認してください。",
   "common_no_journals_yet": "ジャーナルがまだありません。プラグイン設定で作成してください。",
   "code_blocks_nav_next": "次へ",
@@ -1153,6 +1154,13 @@
   "view_block_markdown_template_variable_journal_link_description": "フォーカス中の日付に対応する、別のジャーナルのノートの保管庫パスに解決します。自分でリンクで囲み、+1w のようなシフトを付けると隣接する期間を指せます。",
   "view_block_markdown_template_empty": "テンプレートが選択されていません",
   "view_block_markdown_template_read_error": "テンプレートファイルを読み込めませんでした。",
+  "view_block_notelets_label": "サブノート",
+  "view_block_notelets_description": "読んでいるノートのサブノート、またはビューの日付を中心としたウィンドウ内のサブノートを一覧表示します。",
+  "view_block_notelets_journals_label": "ジャーナル",
+  "view_block_notelets_journals_description": "すべてオフのままにすると、ビューの棚にあるすべてのジャーナルが対象になります。",
+  "view_block_notelets_types_label": "サブノートの種類",
+  "view_block_notelets_types_description": "すべてオフのままにすると、すべての種類が対象になります。",
+  "view_block_notelets_types_empty": "サブノートの種類を定義しているジャーナルはまだありません。",
   "view_block_summary_before": "前{count}",
   "view_block_summary_after": "後{count}",
   "view_block_summary_hidden_days": "非表示: {days}",
@@ -1163,6 +1171,16 @@
       "match": {
         "count=1": "ジャーナル1件",
         "count=*": "ジャーナル{count}件"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "種類1件",
+        "count=*": "種類{count}件"
       }
     }
   ],
@@ -1182,6 +1200,7 @@
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
+        "period=day": "今日",
         "period=week": "今週",
         "period=month": "今月",
         "period=quarter": "今四半期",
@@ -1548,6 +1567,8 @@
   "journal_edit_code_block_home_option_scale": "テキストサイズの乗数としてリンクサイズを大きくします（例えば、scale: 2 はリンクサイズを2倍にします）。",
   "journal_edit_code_block_home_option_shelf": "表示するジャーナルを特定の棚に限定します。",
   "journal_edit_code_block_home_custom_lead": "カスタムオプションを使うと、次のようになります:",
+  "journal_edit_code_block_notelets_description": "このノートが属する期間のサブノートを一覧表示します。types リストを追加すると、特定のサブノートの種類に絞り込めます。",
+  "journal_edit_code_block_notelets_default": "デフォルトでは次のように表示されます:",
   "journal_edit_section_timeline": "タイムライン",
   "journal_edit_sequence_enabled_description": "ノートに番号を割り当てます（例: 1日目、2日目、…）。",
   "journal_edit_sequence_enabled_label": "連番を有効にする",
@@ -1670,6 +1691,11 @@
   "journal_notelet_counter_key_modal_title": "番号プロパティ名を編集",
   "journal_property_key_taken": "このノートの他の項目がすでに「{name}」に書き込んでいます。",
   "journal_notelet_command_name": "{type} を作成",
+  "journal_notelet_list_empty": "この期間のサブノートはありません。",
+  "journal_notelet_list_create": "新しいサブノート",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type}（見つからない種類）",
+  "journal_notelet_list_period_range": "{from}～{to}",
   "journal_period_range": "{start}～{end}",
   "journal_picker_placeholder": "ジャーナルを検索",
   "journal_prompt_answer_required": "この質問には回答が必要です。",

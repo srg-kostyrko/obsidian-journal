@@ -16,6 +16,7 @@ export interface ViewContext {
   // picked out of a grid. Calendar blocks re-center their window on the first and re-lay-out
   // for the other two only when the date fell outside what they already show.
   readonly refDateOrigin: Readonly<Ref<RefDateOrigin>>;
+  readonly followActiveDate: Readonly<Ref<boolean>>;
   readonly shelf: Readonly<Ref<string | null>>;
   // The settings-page preview renders items detached from any live journal scope. Items use
   // this to show their configured shape (e.g. as placeholders) instead of self-hiding.

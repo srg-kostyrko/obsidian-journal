@@ -344,4 +344,22 @@ describe("JournalViewLeaf", () => {
       await leaf.onClose();
     });
   });
+
+  describe("followActiveDate", () => {
+    it("exposes true when the view's follow-active-date setting is on", async () => {
+      const { leaf, probe } = await buildFollowingView({ followActiveDate: true });
+      await leaf.onOpen();
+
+      expect(probe.context?.followActiveDate.value).toBe(true);
+      await leaf.onClose();
+    });
+
+    it("exposes false when the view's follow-active-date setting is off", async () => {
+      const { leaf, probe } = await buildFollowingView({ followActiveDate: false });
+      await leaf.onOpen();
+
+      expect(probe.context?.followActiveDate.value).toBe(false);
+      await leaf.onClose();
+    });
+  });
 });
