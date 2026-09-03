@@ -10,6 +10,7 @@ import NoteletList from "@/journals/notelets/ui/NoteletList.vue";
 import { periodLabelOf } from "@/journals/notelets/ui/period-label";
 import { useNoteletCreation } from "@/journals/notelets/ui/use-notelet-creation";
 import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
+import { entryCoversDate } from "@/notes-calendar/entry-coverage";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -39,10 +40,14 @@ const scopedJournals = computed(() => {
 });
 
 const followed = computed(() => {
-  if (context.refDateOrigin.value !== "follow") return null;
+  if (!context.followActiveDate.value) return null;
   const active = activeEntry.active.value;
   if (active === null) return null;
-  return scopedJournals.value.includes(active.journalName) ? active : null;
+  if (!scopedJournals.value.includes(active.journalName)) return null;
+  // Every genuine follow move lands refDate on the entry's representative day, which lies
+  // inside the entry's own period — so this also catches the case a follow move never fired
+  // (the origin stayed "navigate") because the note's period already covered refDate.
+  return entryCoversDate(cycle, active, context.refDate.value) ? active : null;
 });
 
 const resolvedWindow = computed(() => resolveWindow(props.config.window, context.refDate.value));

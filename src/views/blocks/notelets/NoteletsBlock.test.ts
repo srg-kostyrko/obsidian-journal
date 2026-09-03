@@ -18,7 +18,7 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { viewsCoreModule } from "../../module";
 import { provideViewContextStub } from "../../testing";
-import { provideViewContext, type RefDateOrigin, type ViewContext } from "../../view-context";
+import { provideViewContext, type ViewContext } from "../../view-context";
 import { resolveWindow } from "../custom-intervals/window-resolution";
 
 import { noteletsBlock, type NoteletsBlockConfig } from "./notelets-block";
@@ -145,10 +145,7 @@ describe("NoteletsBlock", () => {
   });
 
   it("follows the active note's period, ignoring the configured window", async () => {
-    const { harness } = await mountBlock({
-      config: { window: "year" },
-      context: { refDateOrigin: ref<RefDateOrigin>("follow") },
-    });
+    const { harness } = await mountBlock({ config: { window: "year" } });
     harness.resolve(ActiveEntryViewModel).active.value = { journalName: "Weekly", anchor: WEEK };
     registerNotelet(harness, {
       journalName: "Weekly",
@@ -167,11 +164,73 @@ describe("NoteletsBlock", () => {
     expect(screen.getByRole("heading", { level: 3, name: periodLabelOf(bounds) })).toBeTruthy();
   });
 
-  it("falls back to the window when the followed journal is filtered out", async () => {
-    const { harness } = await mountBlock({
-      config: { journals: ["Daily"] },
-      context: { refDateOrigin: ref<RefDateOrigin>("follow") },
+  it("follows a day note that is already the active entry, even though the origin is navigate", async () => {
+    const { harness } = await mountBlock({ config: { window: "year" } });
+    harness.resolve(ActiveEntryViewModel).active.value = { journalName: "Daily", anchor: DAY };
+    registerNotelet(harness, { journalName: "Daily", anchor: DAY, path: "D/Standup.md", typeName: "Meeting" });
+    registerNotelet(harness, {
+      journalName: "Weekly",
+      anchor: WEEK,
+      path: "W/Retro.md",
+      typeName: "Review",
+      typeId: "nt_review",
     });
+    await nextTick();
+    expect(screen.getByText("Standup")).toBeTruthy();
+    expect(screen.queryByText("Retro")).toBeNull();
+
+    const bounds = periodBoundsOf(listingDependenciesOf(harness), "Daily", DAY);
+    if (bounds === undefined) throw new Error("expected Daily to resolve period bounds at DAY");
+    expect(screen.getByRole("heading", { level: 3, name: periodLabelOf(bounds) })).toBeTruthy();
+  });
+
+  it("does not follow when the view's follow-active-date setting is off", async () => {
+    const { harness } = await mountBlock({
+      config: { window: "year" },
+      context: { followActiveDate: ref(false) },
+    });
+    harness.resolve(ActiveEntryViewModel).active.value = { journalName: "Daily", anchor: DAY };
+    registerNotelet(harness, { journalName: "Daily", anchor: DAY, path: "D/Standup.md", typeName: "Meeting" });
+    registerNotelet(harness, {
+      journalName: "Weekly",
+      anchor: WEEK,
+      path: "W/Retro.md",
+      typeName: "Review",
+      typeId: "nt_review",
+    });
+    await nextTick();
+    expect(screen.getByText("Standup")).toBeTruthy();
+    expect(screen.getByText("Retro")).toBeTruthy();
+
+    const resolved = resolveWindow("year", DAY);
+    const expected = periodLabelOf({ start: resolved.start, end: resolved.end, kind: "year" });
+    expect(screen.getByRole("heading", { level: 3, name: expected })).toBeTruthy();
+  });
+
+  it("falls back to the window once refDate moves outside the active entry's period", async () => {
+    const FAR = "2026-12-25" as AnchorString;
+    const { harness } = await mountBlock({
+      config: { window: "year" },
+      context: { refDate: ref(FAR) },
+    });
+    harness.resolve(ActiveEntryViewModel).active.value = { journalName: "Weekly", anchor: WEEK };
+    registerNotelet(harness, {
+      journalName: "Weekly",
+      anchor: WEEK,
+      path: "W/Retro.md",
+      typeName: "Review",
+      typeId: "nt_review",
+    });
+    await nextTick();
+    expect(screen.getByText("Retro")).toBeTruthy();
+
+    const resolved = resolveWindow("year", FAR);
+    const expected = periodLabelOf({ start: resolved.start, end: resolved.end, kind: "year" });
+    expect(screen.getByRole("heading", { level: 3, name: expected })).toBeTruthy();
+  });
+
+  it("falls back to the window when the followed journal is filtered out", async () => {
+    const { harness } = await mountBlock({ config: { journals: ["Daily"] } });
     harness.resolve(ActiveEntryViewModel).active.value = { journalName: "Weekly", anchor: WEEK };
     registerNotelet(harness, { journalName: "Daily", anchor: DAY, path: "D/Standup.md", typeName: "Meeting" });
     await nextTick();
@@ -179,7 +238,7 @@ describe("NoteletsBlock", () => {
   });
 
   it("falls back to the window when no journal note is open", async () => {
-    const { harness } = await mountBlock({ context: { refDateOrigin: ref<RefDateOrigin>("follow") } });
+    const { harness } = await mountBlock();
     registerNotelet(harness, { journalName: "Daily", anchor: DAY, path: "D/Standup.md", typeName: "Meeting" });
     await nextTick();
     expect(screen.getByText("Standup")).toBeTruthy();

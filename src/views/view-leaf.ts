@@ -135,6 +135,7 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
           if (leafState.refDate === followedAnchor.value) return "follow";
           return leafState.refDate === selectedAnchor.value ? "select" : "navigate";
         }),
+        followActiveDate: computed(() => view.value?.followActiveDate ?? true),
         shelf: computed(() =>
           resolveLeafShelf(leafState.shelf, view.value?.defaultShelf ?? null, (name) => shelves.get(name).isSome()),
         ),
