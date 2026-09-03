@@ -85,7 +85,6 @@ function createNotelet(event: MouseEvent): void {
           v-if="creation.targets.value.length > 0"
           :icon="icons.action.add"
           :tooltip="m.journal_notelet_list_create()"
-          :aria-label="m.journal_notelet_list_create()"
           @click="createNotelet"
         />
       </header>

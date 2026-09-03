@@ -9,7 +9,7 @@ import { buildNoteletListing, periodBoundsOf } from "@/journals/notelets/listing
 import NoteletList from "@/journals/notelets/ui/NoteletList.vue";
 import { periodLabelOf } from "@/journals/notelets/ui/period-label";
 import { useNoteletCreation } from "@/journals/notelets/ui/use-notelet-creation";
-import { ActiveEntryViewModel } from "@/notes-calendar";
+import { ActiveEntryViewModel } from "@/notes-calendar/active-entry";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
