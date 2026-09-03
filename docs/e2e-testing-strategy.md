@@ -49,6 +49,16 @@ Obsidian-version compatibility is pinned in CI, not left to chance:
 `manifest.json`'s `minAppVersion` — see [Install and version
 modes](#install-and-version-modes) below.
 
+> **Temporarily pinned.** Everywhere this document says `latest` for the _app_
+> axis, the workflow and `wdio.conf.mts` currently say `1.13.7`. Obsidian 1.13.8
+> is an Android-only release — its `obsidian-versions.json` entry carries
+> `downloads: ["apk"]` and no installer bounds — so there is no asar to run and
+> setup fails with `No asar found for Obsidian version 1.13.8`. `latest` skips
+> the 1.14.0 beta but not an Android-only build, so it selects a version with no
+> desktop artifact at all. Restore `latest` once Obsidian ships a desktop
+> 1.13.9+, or once `wdio-obsidian-service` filters asar-less versions out of
+> `latest`.
+
 #### Install and version modes
 
 Obsidian has **two independent version axes**, and we configure both per capability
