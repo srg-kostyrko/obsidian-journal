@@ -118,4 +118,12 @@ describe("NoteletList", () => {
     await fireEvent.click(screen.getByText("Standup"), { ctrlKey: true });
     expect(openNote).toHaveBeenCalledWith("Daily/Standup.md", "tab");
   });
+
+  it("opens a row's note in a tab on middle click", async () => {
+    const { harness } = await mount(oneDay);
+    const workspace = harness.resolve(WorkspaceService);
+    const openNote = vi.spyOn(workspace, "openNote").mockReturnValue(AsyncResult.ok(undefined));
+    await fireEvent(screen.getByText("Standup"), new MouseEvent("auxclick", { bubbles: true, button: 1 }));
+    expect(openNote).toHaveBeenCalledWith("Daily/Standup.md", "tab");
+  });
 });

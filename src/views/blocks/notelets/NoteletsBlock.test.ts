@@ -114,6 +114,13 @@ describe("NoteletsBlock", () => {
     expect(screen.getByRole("heading", { level: 3, name: expected })).toBeTruthy();
   });
 
+  it("labels the header with the resolved window's period for a wider window kind", async () => {
+    await mountBlock({ config: { window: "month" } });
+    const resolved = resolveWindow("month", DAY);
+    const expected = periodLabelOf({ start: resolved.start, end: resolved.end, kind: "month" });
+    expect(screen.getByRole("heading", { level: 3, name: expected })).toBeTruthy();
+  });
+
   it("lists a day window's notelets across the shelf, including a week that only overlaps", async () => {
     const { harness } = await mountBlock();
     registerNotelet(harness, { journalName: "Daily", anchor: DAY, path: "D/Standup.md", typeName: "Meeting" });

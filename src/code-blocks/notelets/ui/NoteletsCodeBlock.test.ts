@@ -65,6 +65,17 @@ describe("NoteletsCodeBlock", () => {
     expect(screen.getByText(m.code_blocks_notelets_not_connected())).toBeTruthy();
   });
 
+  it("says so when the index names a journal no longer in the repository", async () => {
+    const harness = await mount();
+    harness.resolve(JournalsIndex).register({
+      journalName: "Gone",
+      anchor: DAY,
+      path: HOST,
+    });
+    await nextTick();
+    expect(screen.getByText(m.code_blocks_notelets_not_connected())).toBeTruthy();
+  });
+
   it("lists the host period's notelets", async () => {
     const harness = await mount();
     seedHost(harness);
