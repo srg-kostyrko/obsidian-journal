@@ -5,8 +5,10 @@ import { defineComponent, h, nextTick, ref } from "vue";
 import type { AnchorString } from "@/calendar";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
-import { JournalsIndex } from "@/journals";
+import { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
+import { periodBoundsOf } from "@/journals/notelets/listing";
+import { periodLabelOf } from "@/journals/notelets/ui/period-label";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { ActiveEntryViewModel } from "@/notes-calendar";
 import { notesCalendarModule } from "@/notes-calendar/module";
@@ -17,6 +19,7 @@ import { testContainer, type TestHarness } from "@/testing";
 import { viewsCoreModule } from "../../module";
 import { provideViewContextStub } from "../../testing";
 import { provideViewContext, type RefDateOrigin, type ViewContext } from "../../view-context";
+import { resolveWindow } from "../custom-intervals/window-resolution";
 
 import { noteletsBlock, type NoteletsBlockConfig } from "./notelets-block";
 import NoteletsBlock from "./ui/NoteletsBlock.vue";
@@ -71,6 +74,14 @@ async function mountBlock(
   return { harness };
 }
 
+function listingDependenciesOf(harness: TestHarness) {
+  return {
+    journals: harness.resolve(JournalsRepository),
+    index: harness.resolve(JournalsIndex),
+    cycle: harness.resolve(CycleService),
+  };
+}
+
 function registerNotelet(
   harness: TestHarness,
   seed: { journalName: string; anchor: AnchorString; path: string; typeName: string; typeId?: string | null },
@@ -94,6 +105,13 @@ describe("NoteletsBlock", () => {
   it("shows the empty message with no notelets in the window", async () => {
     await mountBlock();
     expect(screen.getByText(m.journal_notelet_list_empty())).toBeTruthy();
+  });
+
+  it("labels the header with the resolved window's period in window mode", async () => {
+    await mountBlock();
+    const resolved = resolveWindow("day", DAY);
+    const expected = periodLabelOf({ start: resolved.start, end: resolved.end, kind: "day" });
+    expect(screen.getByRole("heading", { level: 3, name: expected })).toBeTruthy();
   });
 
   it("lists a day window's notelets across the shelf, including a week that only overlaps", async () => {
@@ -136,6 +154,10 @@ describe("NoteletsBlock", () => {
     await nextTick();
     expect(screen.getByText("Retro")).toBeTruthy();
     expect(screen.queryByText("Standup")).toBeNull();
+
+    const bounds = periodBoundsOf(listingDependenciesOf(harness), "Weekly", WEEK);
+    if (bounds === undefined) throw new Error("expected Weekly to resolve period bounds at WEEK");
+    expect(screen.getByRole("heading", { level: 3, name: periodLabelOf(bounds) })).toBeTruthy();
   });
 
   it("falls back to the window when the followed journal is filtered out", async () => {

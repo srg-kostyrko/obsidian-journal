@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
-import { CalendarDate, periodOfKind } from "@/calendar";
+import { CalendarDate } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { CycleService, JournalsIndex, JournalsRepository, useIndexVersion } from "@/journals";
@@ -10,7 +10,6 @@ import NoteletList from "@/journals/notelets/ui/NoteletList.vue";
 import { periodLabelOf } from "@/journals/notelets/ui/period-label";
 import { useNoteletCreation } from "@/journals/notelets/ui/use-notelet-creation";
 import { ActiveEntryViewModel } from "@/notes-calendar";
-import { accessibleFormatPattern } from "@/notes-calendar/cell-format";
 import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -46,6 +45,8 @@ const followed = computed(() => {
   return scopedJournals.value.includes(active.journalName) ? active : null;
 });
 
+const resolvedWindow = computed(() => resolveWindow(props.config.window, context.refDate.value));
+
 const listing = computed(() => {
   void indexVersion.value;
   const target = followed.value;
@@ -57,12 +58,11 @@ const listing = computed(() => {
       typeIds: props.config.types,
     });
   }
-  const resolved = resolveWindow(props.config.window, context.refDate.value);
   return buildNoteletListing(dependencies, {
     kind: "window",
     journalNames: scopedJournals.value,
-    start: resolved.start,
-    end: resolved.end,
+    start: resolvedWindow.value.start,
+    end: resolvedWindow.value.end,
     typeIds: props.config.types,
   });
 });
@@ -73,8 +73,7 @@ const heading = computed(() => {
     const bounds = periodBoundsOf(dependencies, target.journalName, target.anchor);
     if (bounds !== undefined) return periodLabelOf(bounds);
   }
-  const kind = props.config.window;
-  return periodOfKind(kind, CalendarDate.fromAnchor(context.refDate.value)).format(accessibleFormatPattern(kind));
+  return periodLabelOf({ ...resolvedWindow.value, kind: props.config.window });
 });
 
 const placements = computed(() => {
