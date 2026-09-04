@@ -62,6 +62,49 @@ describe("CreateNoteletFlow", () => {
     expect(openSpy).toHaveBeenCalledWith("Standup 1.md", "split");
   });
 
+  it("creates without opening when openMode is null", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: seed,
+      initialize: [VaultSubscriptionService],
+    });
+    const open = vi.spyOn(harness.resolve(WorkspaceService), "openNote");
+
+    const result = await harness
+      .resolve(Flows)
+      .invoke(CreateNoteletFlow, { journalName: "Work", typeId: TYPE, anchor: ANCHOR, openMode: null });
+
+    expect(result.isOk()).toBe(true);
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it("opens in the active pane when openMode is omitted", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: seed,
+      initialize: [VaultSubscriptionService],
+    });
+    const open = vi.spyOn(harness.resolve(WorkspaceService), "openNote");
+
+    await harness.resolve(Flows).invoke(CreateNoteletFlow, { journalName: "Work", typeId: TYPE, anchor: ANCHOR });
+
+    expect(open).toHaveBeenCalledWith(expect.any(String), "active");
+  });
+
+  it("passes the assigned counter back to its caller", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: seed,
+      initialize: [VaultSubscriptionService],
+    });
+
+    const result = await harness
+      .resolve(Flows)
+      .invoke(CreateNoteletFlow, { journalName: "Work", typeId: TYPE, anchor: ANCHOR, openMode: null });
+
+    expect(result.isOk() && result.value).toMatchObject({ counter: 1 });
+  });
+
   it("opens nothing when creation is refused", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
