@@ -76,6 +76,7 @@ describe("CreateNoteletFlow", () => {
 
     expect(result.isOk()).toBe(true);
     expect(open).not.toHaveBeenCalled();
+    expect(harness.templater.cursorJumps).toEqual([]);
   });
 
   it("opens in the active pane when openMode is omitted", async () => {

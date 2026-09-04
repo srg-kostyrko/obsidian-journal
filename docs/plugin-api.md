@@ -71,7 +71,7 @@ interface JournalsApi {
 ```ts
 // Which journals exist, and what cadence do they write?
 const dailies = await journals.listJournals({ writeType: "day" });
-//  [{ name: "Work Daily", shelf: "Work", write: { type: "day" } }, …]
+//  [{ name: "Work Daily", shelf: "Work", write: { type: "day" }, notelets: [] }, …]
 
 // Does today's note exist, and where would it go?
 const [today] = await journals.notesFor("Work Daily", "today");
@@ -210,6 +210,9 @@ period note and any number of notelets.
 - **`createNotelet` always creates.** There is no ensure semantics: several notelets per period is
   the point, so calling it twice gives two notes.
 - **`createNotelet` does not open** unless you pass `openMode`.
+- **Results are grouped by journal, not globally sorted.** `noteletsFor` builds one listing per
+  matching journal, so a multi-journal selector's results appear in the order journals were
+  matched; the type/counter/filename ordering applies only within each journal's group.
 
 ## Errors
 

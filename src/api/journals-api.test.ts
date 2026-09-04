@@ -481,6 +481,23 @@ describe("JournalsApiService notelet reads", () => {
     await expect(api.noteletsFor("weekly", "2026-08-19", { type: "Nope" })).resolves.toEqual([]);
   });
 
+  it("omits a notelet whose file the vault cannot resolve", async () => {
+    const { api, index } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    index.register({
+      kind: "notelet",
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+
+    await expect(api.noteletsFor("weekly", "2026-08-19")).resolves.toEqual([]);
+  });
+
   // Forced with a spy, not a fixture: CycleService.anchorOf (cycle.ts:123) walks a custom cycle
   // forward from its anchor and always answers Some, so no real config reaches this branch. The
   // suite's existing unmappable-date case records the same finding and uses the same shape. The
@@ -750,7 +767,7 @@ describe("JournalsApiService notelet creation", () => {
     expect(open).toHaveBeenCalledWith(expect.any(String), "split");
   });
 
-  it("does not collapse two concurrent creations into one", async () => {
+  it("invokes the creation flow once per call rather than deduping", async () => {
     const { api, flows } = await buildApi({
       weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
     });
@@ -873,6 +890,30 @@ describe("JournalsApiService notelet creation", () => {
       code: "prompts-required",
     });
     expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("fails with notelet-type-not-found when the type is deleted while the prompt modal is open", async () => {
+    const { api, harness, repo } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          notelets: {
+            nt_meeting: buildNoteletType({ id: "nt_meeting" as TypeId, name: "Meeting", prompts: [mood] }),
+          },
+        },
+      ),
+    });
+
+    const pending = api.createNotelet("weekly", "2026-08-19", "Meeting");
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    repo.deleteNoteletType("weekly", "nt_meeting" as TypeId);
+    harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit({ mood: "good" });
+
+    await expect(pending).rejects.toMatchObject({
+      code: "notelet-type-not-found",
+      message: "Notelet type not found in weekly: nt_meeting",
+    });
   });
 });
 
@@ -1171,6 +1212,50 @@ describe("JournalsApiService events", () => {
 
     expect(seen).toEqual([]);
   });
+
+  it("keeps note and notelet add/remove events each to their own kind", async () => {
+    const { api, index } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    const notesAdded: string[] = [];
+    const notesRemoved: string[] = [];
+    const noteletsAdded: string[] = [];
+    const noteletsRemoved: string[] = [];
+    api.on("noteAdded", (event) => {
+      notesAdded.push(event.path);
+    });
+    api.on("noteRemoved", (event) => {
+      notesRemoved.push(event.path);
+    });
+    api.on("noteletAdded", (event) => {
+      noteletsAdded.push(event.path);
+    });
+    api.on("noteletRemoved", (event) => {
+      noteletsRemoved.push(event.path);
+    });
+
+    index.register({
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/2026-08-17.md" as VaultPath,
+    });
+    index.register({
+      kind: "notelet",
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+    index.unregister("Journal/2026-08-17.md" as VaultPath);
+    index.unregister("Journal/Meeting 1.md" as VaultPath);
+
+    expect(notesAdded).toEqual(["Journal/2026-08-17.md"]);
+    expect(notesRemoved).toEqual(["Journal/2026-08-17.md"]);
+    expect(noteletsAdded).toEqual(["Journal/Meeting 1.md"]);
+    expect(noteletsRemoved).toEqual(["Journal/Meeting 1.md"]);
+  });
 });
 
 describe("JournalsApiService unloading", () => {
@@ -1197,6 +1282,9 @@ describe("JournalsApiService unloading", () => {
     await api[Symbol.asyncDispose]();
 
     await expect(api.noteletsFor("weekly", "2026-08-18")).rejects.toMatchObject({ code: "plugin-unloaded" });
+    await expect(api.createNotelet("weekly", "2026-08-18", "Meeting")).rejects.toMatchObject({
+      code: "plugin-unloaded",
+    });
     await expect(api.noteletOf({ path: "Journal/Meeting 1.md" })).rejects.toMatchObject({
       code: "plugin-unloaded",
     });

@@ -292,9 +292,15 @@ export class JournalsApiService implements JournalsApi {
   }
 
   // Its own wrapper rather than a widened #toApiError: mapping OutOfTimelineError there would
-  // change what ensureNote and openNote answer today. Both branches are unreachable in a single
-  // uninterrupted call — #resolveOne's "timeline" eligibility and the type-name guard above both
-  // refuse first — and stay as the point-of-write defense for a config edited mid-flight.
+  // change what ensureNote and openNote answer today. The two branches differ in reachability.
+  // NoteletTypeNotFoundError is reachable: createNotelet's own type-name guard (below) checks
+  // before every await, but FrontmatterService.writeMutator re-resolves the type from the live
+  // config after the prompt modal, so a type deleted while that modal is open lands here — tested
+  // by "fails with notelet-type-not-found when the type is deleted while the prompt modal is
+  // open". OutOfTimelineError stays unreachable today: its only producers are #resolveOne's
+  // "timeline" eligibility (refuses before this point) and note-path.ts's linkTargetForDate, which
+  // is not on the creation path. The arm is kept anyway so relaxing #eligibleForNotelet later
+  // cannot silently downgrade it to creation-failed.
   #toNoteletApiError(cause: unknown, journal: string): ApiError {
     if (cause instanceof OutOfTimelineError) {
       return new ApiError("outside-timeline", cause.message, journal);
