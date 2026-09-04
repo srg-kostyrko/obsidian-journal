@@ -17,6 +17,7 @@ import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { isNotelet, periodEntryOf } from "@/journals/types";
+import type { NoteletEntry } from "@/journals/types";
 import { ShelvesService } from "@/shelves/service";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
@@ -32,8 +33,10 @@ import type {
   JournalSelector,
   JournalsApi,
   JournalsApiEvents,
+  NoteletNote,
   OpenNoteOptions,
 } from "./public-api";
+import type { TFile } from "obsidian";
 
 const API_VERSION = 1;
 
@@ -122,10 +125,30 @@ export class JournalsApiService implements JournalsApi {
     return this.#noteAtAnchor(name, anchorOption.value);
   }
 
-  #noteAtAnchor(name: string, anchor: AnchorString): JournalNote | null {
+  #periodDates(name: string, anchor: AnchorString): { displayDate: string; endDate: string } | null {
     const display = this.#cycle.representativeOf(name, anchor);
     const end = this.#cycle.endOf(name, anchor);
     if (display.isNone() || end.isNone()) return null;
+    return { displayDate: display.value.toAnchor(), endDate: end.value.toAnchor() };
+  }
+
+  #noteletFrom(entry: NoteletEntry, file: TFile): NoteletNote | null {
+    const dates = this.#periodDates(entry.journalName, entry.anchor);
+    if (dates === null) return null;
+    return {
+      journal: entry.journalName,
+      type: entry.typeName,
+      date: entry.anchor,
+      ...dates,
+      path: entry.path,
+      file,
+      counter: entry.counter ?? null,
+    };
+  }
+
+  #noteAtAnchor(name: string, anchor: AnchorString): JournalNote | null {
+    const dates = this.#periodDates(name, anchor);
+    if (dates === null) return null;
 
     const entry = this.#index.entryByAnchor(name, anchor);
     const existingPath = entry.isSome() ? entry.value.path : null;
@@ -133,8 +156,7 @@ export class JournalsApiService implements JournalsApi {
     return {
       journal: name,
       date: anchor,
-      displayDate: display.value.toAnchor(),
-      endDate: end.value.toAnchor(),
+      ...dates,
       path: this.#pathOf(name, anchor, existingPath),
       file: existingPath === null ? null : this.#files.resolve(existingPath),
     };
@@ -189,20 +211,12 @@ export class JournalsApiService implements JournalsApi {
   // learns about a new note once Obsidian re-parses its frontmatter, so a lookup here
   // reports `file: null` for the note we just created.
   #existing(name: string, anchor: AnchorString, path: string): ExistingJournalNote {
-    const display = this.#cycle.representativeOf(name, anchor);
-    const end = this.#cycle.endOf(name, anchor);
+    const dates = this.#periodDates(name, anchor);
     const file = this.#files.resolve(path);
-    if (display.isNone() || end.isNone() || file === null) {
+    if (dates === null || file === null) {
       throw new ApiError("creation-failed", `The note for ${name} could not be read back`, name);
     }
-    return {
-      journal: name,
-      date: anchor,
-      displayDate: display.value.toAnchor(),
-      endDate: end.value.toAnchor(),
-      path,
-      file,
-    };
+    return { journal: name, date: anchor, ...dates, path, file };
   }
 
   // Between the existence check and the write, NoteCreationService may await a confirmation
@@ -302,6 +316,15 @@ export class JournalsApiService implements JournalsApi {
     // We were handed the file; re-resolving entry.path would add a null branch that
     // conflates "not a journal note" with a resolution hiccup.
     return { ...note, path: entry.value.path, file: file as ExistingJournalNote["file"] };
+  }
+
+  async noteletOf(file: { path: string }): Promise<NoteletNote | null> {
+    await this.#readyForNotes();
+    const entry = this.#index.entryByPath(file.path as VaultPath);
+    if (entry.isNone() || !isNotelet(entry.value)) return null;
+    // We were handed the file, so it stands in for a resolve that could only fail spuriously —
+    // the same reason journalOf reuses it.
+    return this.#noteletFrom(entry.value, file as NoteletNote["file"]);
   }
 
   on<K extends keyof JournalsApiEvents>(event: K, handler: JournalsApiEvents[K]): () => void {

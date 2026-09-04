@@ -67,6 +67,22 @@ export interface ExistingJournalNote extends JournalNote {
   readonly file: TFile;
 }
 
+/** A notelet attached to a journal period. Always exists on disk. */
+export interface NoteletNote {
+  readonly journal: string;
+  /** The type's name, as stored in the note's frontmatter. */
+  readonly type: string;
+  /** "YYYY-MM-DD" — the period's first day. Correlates with JournalNote.date. */
+  readonly date: string;
+  /** The period's, derived from the anchor — a notelet stores neither this nor endDate. */
+  readonly displayDate: string;
+  readonly endDate: string;
+  readonly path: string;
+  readonly file: TFile;
+  /** The assigned counter, when the type has one. Orders siblings within a period. */
+  readonly counter: number | null;
+}
+
 export interface EnsureNoteOptions {
   /** Show the journal's creation-confirmation prompt. Defaults to the journal's own setting. */
   readonly confirm?: boolean;
@@ -124,6 +140,7 @@ export interface JournalsApi {
 
   notesFor(selector: JournalSelector, date: DateInput): Promise<readonly JournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
+  noteletOf(file: TFile): Promise<NoteletNote | null>;
 
   ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult>;
   openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult>;
