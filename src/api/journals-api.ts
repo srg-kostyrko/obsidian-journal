@@ -286,13 +286,9 @@ export class JournalsApiService implements JournalsApi {
   }
 
   // Its own wrapper rather than a widened #toApiError: mapping OutOfTimelineError there would
-  // change what ensureNote and openNote answer today, which is exactly the behavior change this
-  // slice may not make.
-  // The OutOfTimelineError branch is currently unreachable through createNotelet: #resolveOne's
-  // "timeline" eligibility already excludes an out-of-range anchor before the flow is invoked, so
-  // NoteletCreationService's own timeline check can never fire for a call that reaches this far.
-  // It stays for the same reason CreateNoteletFlow's error union carries OutOfTimelineError at
-  // all — a defensive check at the point of write, not one this class can currently observe.
+  // change what ensureNote and openNote answer today. Both branches are unreachable in a single
+  // uninterrupted call — #resolveOne's "timeline" eligibility and the type-name guard above both
+  // refuse first — and stay as the point-of-write defense for a config edited mid-flight.
   #toNoteletApiError(cause: unknown, journal: string): ApiError {
     if (cause instanceof OutOfTimelineError) {
       return new ApiError("outside-timeline", cause.message, journal);

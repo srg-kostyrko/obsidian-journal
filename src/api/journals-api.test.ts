@@ -748,19 +748,22 @@ describe("JournalsApiService notelet creation", () => {
     expect(open).toHaveBeenCalledWith(expect.any(String), "split");
   });
 
-  it("creates a second notelet rather than handing back the first", async () => {
-    const { api } = await buildApi({
+  it("does not collapse two concurrent creations into one", async () => {
+    const { api, flows } = await buildApi({
       weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
     });
 
-    const first = await api.createNotelet("weekly", "2026-08-19", "Meeting");
-    const second = await api.createNotelet("weekly", "2026-08-19", "Meeting");
+    await Promise.allSettled([
+      api.createNotelet("weekly", "2026-08-19", "Meeting"),
+      api.createNotelet("weekly", "2026-08-19", "Meeting"),
+    ]);
 
-    expect(second.path).not.toBe(first.path);
+    const invocations = flows.mock.calls.filter(([flow]) => flow === CreateNoteletFlow);
+    expect(invocations).toHaveLength(2);
   });
 
   it("fails with notelet-type-not-found for a name the journal does not own", async () => {
-    const { api } = await buildApi({
+    const { api, flows } = await buildApi({
       weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
     });
 
@@ -768,6 +771,7 @@ describe("JournalsApiService notelet creation", () => {
       code: "notelet-type-not-found",
       journal: "weekly",
     });
+    expect(flows).not.toHaveBeenCalledWith(CreateNoteletFlow, expect.anything(), expect.anything());
   });
 
   it("fails with journal-not-found for a journal that does not exist", async () => {
@@ -796,6 +800,33 @@ describe("JournalsApiService notelet creation", () => {
     await expect(api.createNotelet("past", "2026-08-19", "Meeting")).rejects.toMatchObject({
       code: "outside-timeline",
     });
+  });
+
+  it("refuses before the flow when a period note exists outside the timeline", async () => {
+    const { api, index, harness, flows } = await buildApi({
+      past: fixedJournal(
+        "past",
+        { type: "week" },
+        {
+          notelets: { nt_meeting: meeting },
+          timeline: {
+            start: "2020-01-01" as AnchorString,
+            end: { kind: "date", date: "2020-12-31" as AnchorString },
+          },
+        },
+      ),
+    });
+    harness.host.putFile("Past/2026-08-17.md", "existing");
+    index.register({
+      journalName: "past",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Past/2026-08-17.md" as VaultPath,
+    });
+
+    await expect(api.createNotelet("past", "2026-08-19", "Meeting")).rejects.toMatchObject({
+      code: "outside-timeline",
+    });
+    expect(flows).not.toHaveBeenCalledWith(CreateNoteletFlow, expect.anything(), expect.anything());
   });
 
   it("asks the type's prompts by default", async () => {
