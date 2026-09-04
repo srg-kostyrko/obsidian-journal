@@ -58,6 +58,10 @@ export async function capture(app: App): Promise<TFile | null> {
     void [journal, date, type, path],
   );
   offNotelets();
+  const offNoteletsRemoved = journals.on("noteletRemoved", ({ journal, date, type, path }) =>
+    void [journal, date, type, path],
+  );
+  offNoteletsRemoved();
   if (meetings[0]) await journals.openNotelet(meetings[0], { openMode: "tab" });
 
   try {

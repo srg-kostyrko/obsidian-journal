@@ -101,8 +101,11 @@ const meetings = await journals.noteletsFor("Work Weekly", "today", { type: "Mee
 // Create one, without stealing the user's pane.
 const notelet = await journals.createNotelet("Work Weekly", "today", "Meeting");
 
-// Show it, reusing a pane that already holds it in the focused window.
-await journals.openNotelet(notelet, { openMode: "tab" });
+// Show it. The default mode reuses a pane that already holds the note, in the focused window.
+await journals.openNotelet(notelet);
+
+// An explicit mode is a request for a new pane, and never reuses.
+await journals.openNotelet(notelet, { openMode: "split" });
 
 // Which notelet is this file, if any? journalOf stays period-note only.
 const held = await journals.noteletOf(this.app.workspace.getActiveFile());
