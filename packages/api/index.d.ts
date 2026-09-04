@@ -38,6 +38,8 @@ export interface JournalInfo {
   readonly name: string;
   readonly shelf: string | null;
   readonly write: JournalWrite;
+  /** The journal's notelet type names, sorted. Empty when the journal defines none. */
+  readonly notelets: readonly string[];
 }
 
 /** The journal's note for a period — on disk, or where it would go. */

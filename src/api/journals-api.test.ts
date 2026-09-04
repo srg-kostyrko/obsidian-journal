@@ -11,9 +11,10 @@ import { CycleService } from "@/journals/cycle";
 import { EnsureJournalEntryFlow, OpenJournalEntryFlow } from "@/journals/flows";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import type { Prompt, PromptAnswer } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
@@ -93,6 +94,22 @@ describe("JournalsApiService reads", () => {
     const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     expect(await api.journalInfo("nope")).toBeNull();
+  });
+
+  it("reports a journal's notelet type names through journalInfo", async () => {
+    const { api } = await buildApi({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        {
+          notelets: { nt_meeting: buildNoteletType({ id: "nt_meeting" as TypeId, name: "Meeting" }) },
+        },
+      ),
+    });
+
+    const info = await api.journalInfo("daily");
+
+    expect(info?.notelets).toEqual(["Meeting"]);
   });
 
   it("reports a period with no note as file null and a predicted path", async () => {

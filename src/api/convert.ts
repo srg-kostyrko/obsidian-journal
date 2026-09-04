@@ -39,5 +39,10 @@ export function toJournalInfo(name: string, config: JournalConfig, shelf: string
   const write: JournalWrite = match(config.write)
     .with({ type: "custom" }, ({ every, duration }) => ({ type: "custom" as const, every, duration }))
     .otherwise(({ type }) => ({ type }));
-  return { name, shelf: shelf === "" ? null : shelf, write };
+  // Sorted rather than record order: the keys are nanoids, so record order is creation order and
+  // an unrelated edit would reshuffle a caller's list.
+  const notelets = Object.values(config.notelets)
+    .map((type) => type.name)
+    .toSorted((a, b) => a.localeCompare(b));
+  return { name, shelf: shelf === "" ? null : shelf, write, notelets };
 }
