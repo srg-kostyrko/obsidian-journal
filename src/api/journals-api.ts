@@ -11,6 +11,7 @@ import { EnsureJournalEntryFlow, JournalDateResolver, OpenJournalEntryFlow } fro
 import type { ApplicableJournal } from "@/journals/flows";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
+import { buildNoteletListing } from "@/journals/notelets/listing";
 import { NotePathService } from "@/journals/notes/note-path";
 import { PromptsUnansweredError } from "@/journals/prompts/errors";
 import { JournalsRepository } from "@/journals/repository";
@@ -325,6 +326,39 @@ export class JournalsApiService implements JournalsApi {
     // We were handed the file, so it stands in for a resolve that could only fail spuriously —
     // the same reason journalOf reuses it.
     return this.#noteletFrom(entry.value, file as NoteletNote["file"]);
+  }
+
+  async noteletsFor(
+    selector: JournalSelector,
+    date: DateInput,
+    options?: { readonly type?: string },
+  ): Promise<readonly NoteletNote[]> {
+    await this.#readyForNotes();
+    const calendarDate = this.#date(date);
+    // A journal that cannot place this date is omitted rather than failing the fan-out, matching
+    // notesFor.
+    return this.#select(selector).flatMap((name) => {
+      const anchor = this.#cycle.anchorOf(name, calendarDate);
+      if (anchor.isNone()) return [];
+      const listing = buildNoteletListing(
+        { journals: this.#journals, index: this.#index, cycle: this.#cycle },
+        { kind: "period", journalName: name, anchor: anchor.value },
+      );
+      return (
+        listing.periods
+          .flatMap((period) => period.types)
+          // Filtered by stored name, not by resolved id: a type deleted in "keep" mode leaves its
+          // notes carrying a name the config no longer holds, and the name is what a caller has.
+          .filter((group) => options?.type === undefined || group.typeName === options.type)
+          .flatMap((group) => group.notelets)
+          .flatMap((entry) => {
+            const file = this.#files.resolve(entry.path);
+            if (file === null) return [];
+            const note = this.#noteletFrom(entry, file);
+            return note === null ? [] : [note];
+          })
+      );
+    });
   }
 
   on<K extends keyof JournalsApiEvents>(event: K, handler: JournalsApiEvents[K]): () => void {

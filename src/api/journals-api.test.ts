@@ -314,6 +314,187 @@ describe("JournalsApiService notelet reads", () => {
 
     expect(await api.journalOf({ path: "Journal/Meeting 1.md" })).toBeNull();
   });
+
+  it("returns a period's notelets ordered by type, then counter", async () => {
+    const { api, harness, index } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          notelets: {
+            nt_meeting: meeting,
+            nt_review: buildNoteletType({ id: "nt_review" as TypeId, name: "Review" }),
+          },
+        },
+      ),
+    });
+    const anchor = "2026-08-17" as AnchorString;
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor,
+      path: "Journal/Review.md" as VaultPath,
+      typeName: "Review",
+      typeId: "nt_review" as TypeId,
+      counter: 1,
+    });
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor,
+      path: "Journal/Meeting 2.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 2,
+    });
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+
+    const found = await api.noteletsFor("weekly", "2026-08-19");
+
+    expect(found.map((note) => note.path)).toEqual([
+      "Journal/Meeting 1.md",
+      "Journal/Meeting 2.md",
+      "Journal/Review.md",
+    ]);
+  });
+
+  it("finds a notelet from any day inside its period", async () => {
+    const { api, harness, index } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+
+    const found = await api.noteletsFor("weekly", "2026-08-21");
+
+    expect(found).toHaveLength(1);
+    expect(found.at(0)?.date).toBe("2026-08-17");
+  });
+
+  it("fans across every journal the selector matches", async () => {
+    const { api, harness, index } = await buildApi({
+      work: fixedJournal("work", { type: "day" }, { notelets: { nt_meeting: meeting } }),
+      home: fixedJournal("home", { type: "day" }, { notelets: { nt_meeting: meeting } }),
+    });
+    const anchor = "2026-08-18" as AnchorString;
+    await seedNotelet(harness, index, {
+      journalName: "work",
+      anchor,
+      path: "Work/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+    await seedNotelet(harness, index, {
+      journalName: "home",
+      anchor,
+      path: "Home/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+
+    const found = await api.noteletsFor({ writeType: "day" }, "2026-08-18");
+
+    expect(found.map((note) => note.journal).toSorted()).toEqual(["home", "work"]);
+  });
+
+  it("narrows to one type by name, per journal", async () => {
+    const { api, harness, index } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          notelets: {
+            nt_meeting: meeting,
+            nt_review: buildNoteletType({ id: "nt_review" as TypeId, name: "Review" }),
+          },
+        },
+      ),
+    });
+    const anchor = "2026-08-17" as AnchorString;
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor,
+      path: "Journal/Review.md" as VaultPath,
+      typeName: "Review",
+      typeId: "nt_review" as TypeId,
+      counter: 1,
+    });
+
+    const found = await api.noteletsFor("weekly", "2026-08-19", { type: "Meeting" });
+
+    expect(found.map((note) => note.path)).toEqual(["Journal/Meeting 1.md"]);
+  });
+
+  it("matches an orphaned notelet by the type name it still carries", async () => {
+    const { api, harness, index } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Orphan.md" as VaultPath,
+      typeName: "Retired",
+      typeId: null,
+    });
+
+    const found = await api.noteletsFor("weekly", "2026-08-19", { type: "Retired" });
+
+    expect(found.map((note) => note.type)).toEqual(["Retired"]);
+  });
+
+  it("returns empty for a type name the journal does not know, rather than failing", async () => {
+    const { api, harness, index } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    await seedNotelet(harness, index, {
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+
+    await expect(api.noteletsFor("weekly", "2026-08-19", { type: "Nope" })).resolves.toEqual([]);
+  });
+
+  // Forced with a spy, not a fixture: CycleService.anchorOf (cycle.ts:123) walks a custom cycle
+  // forward from its anchor and always answers Some, so no real config reaches this branch. The
+  // suite's existing unmappable-date case records the same finding and uses the same shape. The
+  // mock must persist rather than be *Once* — the fan-out calls anchorOf once per selected journal.
+  it("omits a journal whose cycle cannot place the date instead of failing the fan-out", async () => {
+    const { api, harness } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    vi.spyOn(harness.resolve(CycleService), "anchorOf").mockReturnValue(Option.none());
+
+    await expect(api.noteletsFor("weekly", "2026-08-19")).resolves.toEqual([]);
+  });
+
+  it("rejects a date it cannot read with invalid-date", async () => {
+    const { api } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+
+    await expect(api.noteletsFor("weekly", "whenever")).rejects.toMatchObject({ code: "invalid-date" });
+  });
 });
 
 describe("JournalsApiService writes", () => {
@@ -708,5 +889,16 @@ describe("JournalsApiService unloading", () => {
     await api[Symbol.asyncDispose]();
 
     await expect(api.notesFor("daily", "2026-08-18")).rejects.toMatchObject({ code: "plugin-unloaded" });
+  });
+
+  it("rejects notelet calls made after disposal", async () => {
+    const { api } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+
+    await api[Symbol.asyncDispose]();
+
+    await expect(api.noteletsFor("weekly", "2026-08-18")).rejects.toMatchObject({ code: "plugin-unloaded" });
+    await expect(api.noteletOf({ path: "Journal/Meeting 1.md" })).rejects.toMatchObject({
+      code: "plugin-unloaded",
+    });
   });
 });

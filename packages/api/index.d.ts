@@ -141,6 +141,11 @@ export interface JournalsApi {
   notesFor(selector: JournalSelector, date: DateInput): Promise<readonly JournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
   noteletOf(file: TFile): Promise<NoteletNote | null>;
+  noteletsFor(
+    selector: JournalSelector,
+    date: DateInput,
+    options?: { readonly type?: string },
+  ): Promise<readonly NoteletNote[]>;
 
   ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult>;
   openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult>;
