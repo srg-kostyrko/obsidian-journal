@@ -139,6 +139,8 @@ export interface JournalsApiEvents {
   journalDeleted: (event: { journal: string }) => void;
   noteAdded: (event: { journal: string; date: string; path: string }) => void;
   noteRemoved: (event: { journal: string; date: string; path: string }) => void;
+  noteletAdded: (event: { journal: string; date: string; type: string; path: string }) => void;
+  noteletRemoved: (event: { journal: string; date: string; type: string; path: string }) => void;
 }
 
 export interface JournalsApi {

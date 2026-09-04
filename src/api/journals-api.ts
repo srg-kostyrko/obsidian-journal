@@ -498,6 +498,28 @@ export class JournalsApiService implements JournalsApi {
           });
         }),
       )
+      .with("noteletAdded", () =>
+        this.#index.events.on("entryChanged", ({ entry, kind }) => {
+          if (kind !== "added" || !isNotelet(entry)) return;
+          (handler as JournalsApiEvents["noteletAdded"])({
+            journal: entry.journalName,
+            date: entry.anchor,
+            type: entry.typeName,
+            path: entry.path,
+          });
+        }),
+      )
+      .with("noteletRemoved", () =>
+        this.#index.events.on("entryChanged", ({ entry, kind }) => {
+          if (kind !== "removed" || !isNotelet(entry)) return;
+          (handler as JournalsApiEvents["noteletRemoved"])({
+            journal: entry.journalName,
+            date: entry.anchor,
+            type: entry.typeName,
+            path: entry.path,
+          });
+        }),
+      )
       .exhaustive();
   }
 

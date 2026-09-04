@@ -1083,6 +1083,94 @@ describe("JournalsApiService events", () => {
 
     expect(calls).toBe(0);
   });
+
+  it("reports an added notelet with its type", async () => {
+    const { api, index } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          notelets: { nt_meeting: buildNoteletType({ id: "nt_meeting" as TypeId, name: "Meeting" }) },
+        },
+      ),
+    });
+    const seen: { journal: string; date: string; type: string; path: string }[] = [];
+    api.on("noteletAdded", (event) => {
+      seen.push(event);
+    });
+
+    index.register({
+      kind: "notelet",
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+
+    expect(seen).toEqual([{ journal: "weekly", date: "2026-08-17", type: "Meeting", path: "Journal/Meeting 1.md" }]);
+  });
+
+  it("reports a removed notelet", async () => {
+    const { api, index } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+    index.register({
+      kind: "notelet",
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+    });
+    const seen: { journal: string; type: string }[] = [];
+    api.on("noteletRemoved", (event) => {
+      seen.push({ journal: event.journal, type: event.type });
+    });
+
+    index.unregister("Journal/Meeting 1.md" as VaultPath);
+
+    expect(seen).toEqual([{ journal: "weekly", type: "Meeting" }]);
+  });
+
+  it("does not deliver a notelet to noteAdded", async () => {
+    const { api, index } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+    const periodNotes: string[] = [];
+    const notelets: string[] = [];
+    api.on("noteAdded", (event) => {
+      periodNotes.push(event.path);
+    });
+    api.on("noteletAdded", (event) => {
+      notelets.push(event.path);
+    });
+
+    index.register({
+      kind: "notelet",
+      journalName: "weekly",
+      anchor: "2026-08-17" as AnchorString,
+      path: "Journal/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+    });
+
+    expect(notelets).toEqual(["Journal/Meeting 1.md"]);
+    expect(periodNotes).toEqual([]);
+  });
+
+  it("does not deliver a period note to noteletAdded", async () => {
+    const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    const seen: string[] = [];
+    api.on("noteletAdded", (event) => {
+      seen.push(event.path);
+    });
+
+    index.register({
+      journalName: "daily",
+      anchor: "2026-08-18" as AnchorString,
+      path: "Journal/2026-08-18.md" as VaultPath,
+    });
+
+    expect(seen).toEqual([]);
+  });
 });
 
 describe("JournalsApiService unloading", () => {
