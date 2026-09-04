@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import type { CalendarDate, AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { WorkspaceOpenError } from "@/infrastructure/host";
+import { WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { Option } from "@/infrastructure/result";
@@ -40,6 +40,7 @@ import type {
   JournalsApi,
   JournalsApiEvents,
   NoteletNote,
+  OpenNoteletOptions,
   OpenNoteOptions,
 } from "./public-api";
 import type { TFile } from "obsidian";
@@ -64,6 +65,7 @@ export class JournalsApiService implements JournalsApi {
   readonly #files = inject(NoteFileService);
   readonly #resolver = inject(JournalDateResolver);
   readonly #flows = inject(Flows);
+  readonly #workspace = inject(WorkspaceService);
   readonly #inFlight = new Map<string, Promise<EnsureResult>>();
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
@@ -80,15 +82,19 @@ export class JournalsApiService implements JournalsApi {
     void this.#unloaded.catch(() => null);
   }
 
+  #assertLoaded(): void {
+    if (this.#disposed) throw new ApiError("plugin-unloaded", "Journals has been unloaded");
+  }
+
   // listJournals/journalInfo read the settings-backed repository, which is populated before
   // `api` is even assigned; only the index reads wait, because the index is filled by a
   // whole-vault walk that takes seconds and answers "no note" for real notes until it lands.
   async #readyForNotes(): Promise<void> {
-    if (this.#disposed) throw new ApiError("plugin-unloaded", "Journals has been unloaded");
+    this.#assertLoaded();
     // whenReady never settles if readiness never arrives, so a consumer awaiting a call
     // when the user disables Journals would hang forever inside their own plugin.
     await Promise.race([this.#index.whenReady(), this.#unloaded]);
-    if (this.#disposed) throw new ApiError("plugin-unloaded", "Journals has been unloaded");
+    this.#assertLoaded();
   }
 
   #date(input: DateInput): CalendarDate {
@@ -389,6 +395,14 @@ export class JournalsApiService implements JournalsApi {
     );
     if (result.isErr()) throw this.#toNoteletApiError(result.error, name);
     return this.#createdNotelet(name, anchor, noteletType.name, result.value.path, result.value.counter ?? null);
+  }
+
+  async openNotelet(notelet: NoteletNote, options?: OpenNoteletOptions): Promise<void> {
+    // The caller already holds the notelet, so nothing here reads the index — waiting on the
+    // whole-vault walk would stall an open for no answer it needs.
+    this.#assertLoaded();
+    const result = await this.#workspace.openNote(notelet.path as VaultPath, options?.openMode ?? "active");
+    if (result.isErr()) throw new ApiError("open-failed", result.error.message, notelet.journal);
   }
 
   async journalOf(file: { path: string }): Promise<ExistingJournalNote | null> {

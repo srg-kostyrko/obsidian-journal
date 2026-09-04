@@ -26,6 +26,8 @@ import { testContainer } from "@/testing";
 import { JournalsApiService } from "./journals-api";
 import { apiModule } from "./module";
 
+import type { NoteletNote } from "./public-api";
+
 const meeting = buildNoteletType({ id: "nt_meeting" as TypeId, name: "Meeting" });
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
@@ -871,6 +873,55 @@ describe("JournalsApiService notelet creation", () => {
       code: "prompts-required",
     });
     expect(harness.modals.opens).toHaveLength(0);
+  });
+});
+
+async function createdNotelet(): Promise<{
+  api: JournalsApiService;
+  harness: Awaited<ReturnType<typeof buildApi>>["harness"];
+  note: NoteletNote;
+}> {
+  const { api, harness } = await buildApi({
+    weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+  });
+  const note = await api.createNotelet("weekly", "2026-08-19", "Meeting");
+  return { api, harness, note };
+}
+
+describe("JournalsApiService notelet opening", () => {
+  it("opens through the workspace, in the active pane by default", async () => {
+    const { api, harness, note } = await createdNotelet();
+    const open = vi.spyOn(harness.resolve(WorkspaceService), "openNote");
+
+    await api.openNotelet(note);
+
+    expect(open).toHaveBeenCalledWith(note.path, "active");
+  });
+
+  it("honors the requested mode", async () => {
+    const { api, harness, note } = await createdNotelet();
+    const open = vi.spyOn(harness.resolve(WorkspaceService), "openNote");
+
+    await api.openNotelet(note, { openMode: "window" });
+
+    expect(open).toHaveBeenCalledWith(note.path, "window");
+  });
+
+  it("fails with open-failed when the file is gone", async () => {
+    const { api, harness, note } = await createdNotelet();
+    vi.spyOn(harness.resolve(WorkspaceService), "openNote").mockReturnValueOnce(
+      AsyncResult.err(new WorkspaceOpenError(note.path as VaultPath, new Error("not a file"))),
+    );
+
+    await expect(api.openNotelet(note)).rejects.toMatchObject({ code: "open-failed", journal: "weekly" });
+  });
+
+  it("refuses after the plugin is unloaded", async () => {
+    const { api, note } = await createdNotelet();
+
+    await api[Symbol.asyncDispose]();
+
+    await expect(api.openNotelet(note)).rejects.toMatchObject({ code: "plugin-unloaded" });
   });
 });
 

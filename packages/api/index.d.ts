@@ -112,6 +112,10 @@ export interface CreateNoteletOptions {
   readonly openMode?: "active" | "tab" | "split" | "window";
 }
 
+export interface OpenNoteletOptions {
+  readonly openMode?: "active" | "tab" | "split" | "window";
+}
+
 /** Open on purpose: new codes are an additive change, so always handle the default case. */
 export type JournalsApiErrorCode =
   | "journal-not-found"
@@ -160,6 +164,7 @@ export interface JournalsApi {
     type: string,
     options?: CreateNoteletOptions,
   ): Promise<NoteletNote>;
+  openNotelet(notelet: NoteletNote, options?: OpenNoteletOptions): Promise<void>;
 
   ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult>;
   openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult>;
