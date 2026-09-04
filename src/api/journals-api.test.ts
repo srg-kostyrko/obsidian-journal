@@ -6,6 +6,7 @@ import { NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastruc
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { AsyncResult, Option } from "@/infrastructure/result";
+import { CreateNoteletFlow } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { CycleService } from "@/journals/cycle";
 import { EnsureJournalEntryFlow, OpenJournalEntryFlow } from "@/journals/flows";
@@ -26,6 +27,7 @@ import { JournalsApiService } from "./journals-api";
 import { apiModule } from "./module";
 
 const meeting = buildNoteletType({ id: "nt_meeting" as TypeId, name: "Meeting" });
+const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
 interface BuildOptions {
   /** Shelves to seed, keyed the same as their own name. Default: none. */
@@ -711,9 +713,137 @@ describe("JournalsApiService writes", () => {
   });
 });
 
-describe("JournalsApiService creation prompts", () => {
-  const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+describe("JournalsApiService notelet creation", () => {
+  it("creates a notelet through the flow and reports it", async () => {
+    const { api, flows } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
 
+    const note = await api.createNotelet("weekly", "2026-08-19", "Meeting");
+
+    expect(note).toMatchObject({ journal: "weekly", type: "Meeting", date: "2026-08-17", counter: 1 });
+    expect(note.file).not.toBeNull();
+    expect(flows).toHaveBeenLastCalledWith(CreateNoteletFlow, expect.anything(), expect.anything());
+  });
+
+  it("does not open the notelet unless a mode is asked for", async () => {
+    const { api, harness } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    const open = vi.spyOn(harness.resolve(WorkspaceService), "openNote");
+
+    await api.createNotelet("weekly", "2026-08-19", "Meeting");
+
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it("opens the notelet in the mode it was given", async () => {
+    const { api, harness } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    const open = vi.spyOn(harness.resolve(WorkspaceService), "openNote");
+
+    await api.createNotelet("weekly", "2026-08-19", "Meeting", { openMode: "split" });
+
+    expect(open).toHaveBeenCalledWith(expect.any(String), "split");
+  });
+
+  it("creates a second notelet rather than handing back the first", async () => {
+    const { api } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+
+    const first = await api.createNotelet("weekly", "2026-08-19", "Meeting");
+    const second = await api.createNotelet("weekly", "2026-08-19", "Meeting");
+
+    expect(second.path).not.toBe(first.path);
+  });
+
+  it("fails with notelet-type-not-found for a name the journal does not own", async () => {
+    const { api } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+
+    await expect(api.createNotelet("weekly", "2026-08-19", "Nope")).rejects.toMatchObject({
+      code: "notelet-type-not-found",
+      journal: "weekly",
+    });
+  });
+
+  it("fails with journal-not-found for a journal that does not exist", async () => {
+    const { api } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+
+    await expect(api.createNotelet("nope", "2026-08-19", "Meeting")).rejects.toMatchObject({
+      code: "journal-not-found",
+    });
+  });
+
+  it("fails with outside-timeline for a date the journal's timeline excludes", async () => {
+    const { api } = await buildApi({
+      past: fixedJournal(
+        "past",
+        { type: "week" },
+        {
+          notelets: { nt_meeting: meeting },
+          timeline: {
+            start: "2020-01-01" as AnchorString,
+            end: { kind: "date", date: "2020-12-31" as AnchorString },
+          },
+        },
+      ),
+    });
+
+    await expect(api.createNotelet("past", "2026-08-19", "Meeting")).rejects.toMatchObject({
+      code: "outside-timeline",
+    });
+  });
+
+  it("asks the type's prompts by default", async () => {
+    const { api, harness } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          notelets: {
+            nt_meeting: buildNoteletType({ id: "nt_meeting" as TypeId, name: "Meeting", prompts: [mood] }),
+          },
+        },
+      ),
+    });
+
+    const pending = api.createNotelet("weekly", "2026-08-19", "Meeting");
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit({ mood: "good" });
+
+    await expect(pending).resolves.toMatchObject({ type: "Meeting" });
+  });
+
+  it("fails with prompts-required when prompt:false and an answer reaches the note name", async () => {
+    const { api, harness } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          notelets: {
+            nt_meeting: buildNoteletType({
+              id: "nt_meeting" as TypeId,
+              name: "Meeting",
+              prompts: [mood],
+              nameTemplate: "{{journal_name}} {{mood}}",
+            }),
+          },
+        },
+      ),
+    });
+
+    await expect(api.createNotelet("weekly", "2026-08-19", "Meeting", { prompt: false })).rejects.toMatchObject({
+      code: "prompts-required",
+    });
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+});
+
+describe("JournalsApiService creation prompts", () => {
   it("asks by default on a prompting journal", async () => {
     const { api, harness } = await buildApi({
       daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }),

@@ -6,11 +6,15 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import { WorkspaceOpenError } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
+import { Option } from "@/infrastructure/result";
 import { CycleService } from "@/journals/cycle";
+import { NoteletTypeNotFoundError, OutOfTimelineError } from "@/journals/errors";
 import { EnsureJournalEntryFlow, JournalDateResolver, OpenJournalEntryFlow } from "@/journals/flows";
 import type { ApplicableJournal } from "@/journals/flows";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
+import { noteletTypeByName } from "@/journals/notelets/config";
+import { CreateNoteletFlow } from "@/journals/notelets/flows/create-notelet.flow";
 import { buildNoteletListing } from "@/journals/notelets/listing";
 import { NotePathService } from "@/journals/notes/note-path";
 import { PromptsUnansweredError } from "@/journals/prompts/errors";
@@ -25,6 +29,7 @@ import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
 import { ApiError } from "./errors";
 
 import type {
+  CreateNoteletOptions,
   DateInput,
   EnsureNoteOptions,
   EnsureResult,
@@ -177,7 +182,22 @@ export class JournalsApiService implements JournalsApi {
     });
   }
 
-  async #resolveOne(selector: JournalSelector, date: DateInput): Promise<ApplicableJournal> {
+  // Notelet creation always requires the timeline, so a journal that could only fail must not
+  // reach the picker. The period rule ("a note exists OR in timeline") exists so `ensure` cannot
+  // refuse a note the API just reported; there is no equivalent here.
+  #eligibleForNotelet(names: readonly string[], date: CalendarDate): ApplicableJournal[] {
+    return names.flatMap((name) => {
+      const resolved = this.#cycle.anchorOf(name, date);
+      if (resolved.isNone()) return [];
+      return this.#timeline.contains(name, resolved.value) ? [{ name, anchor: resolved.value }] : [];
+    });
+  }
+
+  async #resolveOne(
+    selector: JournalSelector,
+    date: DateInput,
+    eligibility: "existing-or-timeline" | "timeline" = "existing-or-timeline",
+  ): Promise<ApplicableJournal> {
     const calendarDate = this.#date(date);
     const names = this.#select(selector);
     if (names.length === 0) {
@@ -188,7 +208,8 @@ export class JournalsApiService implements JournalsApi {
       throw new ApiError("no-matching-journal", "No journal matches that selector");
     }
 
-    const eligible = this.#eligible(names, calendarDate);
+    const eligible =
+      eligibility === "timeline" ? this.#eligibleForNotelet(names, calendarDate) : this.#eligible(names, calendarDate);
     if (eligible.length === 0) {
       // "No period for that date" means the journal is misconfigured for this input;
       // "a period, out of range" is a different answer callers act on differently.
@@ -220,6 +241,23 @@ export class JournalsApiService implements JournalsApi {
     return { journal: name, date: anchor, ...dates, path, file };
   }
 
+  // Built from the write's own result, never re-read through the index — a notelet the index has
+  // not re-parsed yet reports as missing.
+  #createdNotelet(
+    name: string,
+    anchor: AnchorString,
+    typeName: string,
+    path: string,
+    counter: number | null,
+  ): NoteletNote {
+    const dates = this.#periodDates(name, anchor);
+    const file = this.#files.resolve(path);
+    if (dates === null || file === null) {
+      throw new ApiError("creation-failed", `The notelet for ${name} could not be read back`, name);
+    }
+    return { journal: name, type: typeName, date: anchor, ...dates, path, file, counter };
+  }
+
   // Between the existence check and the write, NoteCreationService may await a confirmation
   // modal — seconds wide. Two callers ensuring the same period would otherwise get two
   // prompts and one NoteAlreadyExistsError.
@@ -236,7 +274,7 @@ export class JournalsApiService implements JournalsApi {
     return options?.confirm === undefined ? undefined : !options.confirm;
   }
 
-  #unattended(options: EnsureNoteOptions | undefined): boolean | undefined {
+  #unattended(options: { readonly prompt?: boolean } | undefined): boolean | undefined {
     return options?.prompt === false;
   }
 
@@ -245,6 +283,24 @@ export class JournalsApiService implements JournalsApi {
     if (cause instanceof WorkspaceOpenError) return new ApiError("open-failed", cause.message, journal);
     if (cause instanceof PromptsUnansweredError) return new ApiError("prompts-required", cause.message, journal);
     return new ApiError("creation-failed", cause instanceof Error ? cause.message : String(cause), journal);
+  }
+
+  // Its own wrapper rather than a widened #toApiError: mapping OutOfTimelineError there would
+  // change what ensureNote and openNote answer today, which is exactly the behavior change this
+  // slice may not make.
+  // The OutOfTimelineError branch is currently unreachable through createNotelet: #resolveOne's
+  // "timeline" eligibility already excludes an out-of-range anchor before the flow is invoked, so
+  // NoteletCreationService's own timeline check can never fire for a call that reaches this far.
+  // It stays for the same reason CreateNoteletFlow's error union carries OutOfTimelineError at
+  // all — a defensive check at the point of write, not one this class can currently observe.
+  #toNoteletApiError(cause: unknown, journal: string): ApiError {
+    if (cause instanceof OutOfTimelineError) {
+      return new ApiError("outside-timeline", cause.message, journal);
+    }
+    if (cause instanceof NoteletTypeNotFoundError) {
+      return new ApiError("notelet-type-not-found", cause.message, journal);
+    }
+    return this.#toApiError(cause, journal);
   }
 
   async listJournals(selector?: JournalSelector): Promise<readonly JournalInfo[]> {
@@ -306,6 +362,37 @@ export class JournalsApiService implements JournalsApi {
       if (result.isErr()) throw this.#toApiError(result.error, name);
       return { note: this.#existing(name, anchor, result.value.path), created: result.value.created };
     });
+  }
+
+  async createNotelet(
+    selector: JournalSelector,
+    date: DateInput,
+    type: string,
+    options?: CreateNoteletOptions,
+  ): Promise<NoteletNote> {
+    await this.#readyForNotes();
+    const { name, anchor } = await this.#resolveOne(selector, date, "timeline");
+    const config = this.#journals.get(name);
+    const found = config.isNone() ? Option.none() : noteletTypeByName(config.value, type);
+    if (found.isNone()) {
+      throw new ApiError("notelet-type-not-found", `Journal ${name} has no notelet type named ${type}`, name);
+    }
+    const [typeId, noteletType] = found.value;
+    // No #dedupe: notelet creation is never idempotent, so two concurrent calls must produce two
+    // notelets rather than collapsing onto one.
+    const result = await this.#flows.invoke(
+      CreateNoteletFlow,
+      {
+        journalName: name,
+        typeId,
+        anchor,
+        openMode: options?.openMode ?? null,
+        unattended: this.#unattended(options),
+      },
+      { notify: false, context: { via: "api" } },
+    );
+    if (result.isErr()) throw this.#toNoteletApiError(result.error, name);
+    return this.#createdNotelet(name, anchor, noteletType.name, result.value.path, result.value.counter ?? null);
   }
 
   async journalOf(file: { path: string }): Promise<ExistingJournalNote | null> {

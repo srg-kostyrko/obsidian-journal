@@ -102,6 +102,13 @@ export interface EnsureResult {
   readonly created: boolean;
 }
 
+export interface CreateNoteletOptions {
+  /** Ask the type's creation prompts. Defaults to true. */
+  readonly prompt?: boolean;
+  /** Omit to create without opening; pass a mode to create and show. */
+  readonly openMode?: "active" | "tab" | "split" | "window";
+}
+
 /** Open on purpose: new codes are an additive change, so always handle the default case. */
 export type JournalsApiErrorCode =
   | "journal-not-found"
@@ -109,6 +116,7 @@ export type JournalsApiErrorCode =
   | "invalid-date"
   | "unmappable-date"
   | "outside-timeline"
+  | "notelet-type-not-found"
   | "creation-failed"
   | "prompts-required"
   | "open-failed"
@@ -143,6 +151,12 @@ export interface JournalsApi {
     date: DateInput,
     options?: { readonly type?: string },
   ): Promise<readonly NoteletNote[]>;
+  createNotelet(
+    selector: JournalSelector,
+    date: DateInput,
+    type: string,
+    options?: CreateNoteletOptions,
+  ): Promise<NoteletNote>;
 
   ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult>;
   openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult>;
