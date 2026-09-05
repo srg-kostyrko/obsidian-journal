@@ -38,7 +38,7 @@ if (undeclared.length > 0) {
 writeFileSync(
   join(scratch, "consumer.ts"),
   `import { getJournalsApi } from "obsidian-journals-api";
-import type { JournalNote, JournalsApiErrorCode } from "obsidian-journals-api";
+import type { JournalNote, JournalsApiErrorCode, NoteletNote } from "obsidian-journals-api";
 import type { App, TFile } from "obsidian";
 
 export async function capture(app: App): Promise<TFile | null> {
@@ -50,13 +50,30 @@ export async function capture(app: App): Promise<TFile | null> {
   const off = journals.on("journalRenamed", ({ from, to }) => void [from, to]);
   off();
 
+  const types: readonly string[] = dailies[0]?.notelets ?? [];
+  const meetings: readonly NoteletNote[] = await journals.noteletsFor("Daily", "today", {
+    type: types[0] ?? "Meeting",
+  });
+  const offNotelets = journals.on("noteletAdded", ({ journal, date, type, path }) =>
+    void [journal, date, type, path],
+  );
+  offNotelets();
+  const offNoteletsRemoved = journals.on("noteletRemoved", ({ journal, date, type, path }) =>
+    void [journal, date, type, path],
+  );
+  offNoteletsRemoved();
+  if (meetings[0]) await journals.openNotelet(meetings[0], { openMode: "tab" });
+
   try {
     const { note, created } = await journals.ensureNote(dailies[0]?.name ?? "Daily", "+1w", { confirm: false });
+    const notelet: NoteletNote = await journals.createNotelet("Daily", "today", "Meeting", { prompt: false });
+    const held: NoteletNote | null = await journals.noteletOf(notelet.file);
+    void [notes, held?.counter, notelet.displayDate];
     return created ? note.file : null;
   } catch (error) {
     const code = (error as { code: JournalsApiErrorCode }).code;
     // The union is open, so a default branch must always compile.
-    return code === "aborted" ? null : null;
+    return code === "notelet-type-not-found" ? null : null;
   }
 }
 `,

@@ -47,9 +47,22 @@ interface JournalsApi {
 
   notesFor(selector: JournalSelector, date: DateInput): Promise<readonly JournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
+  noteletOf(file: TFile): Promise<NoteletNote | null>;
+  noteletsFor(
+    selector: JournalSelector,
+    date: DateInput,
+    options?: { readonly type?: string },
+  ): Promise<readonly NoteletNote[]>;
 
   ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult>;
   openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult>;
+  createNotelet(
+    selector: JournalSelector,
+    date: DateInput,
+    type: string,
+    options?: CreateNoteletOptions,
+  ): Promise<NoteletNote>;
+  openNotelet(notelet: NoteletNote, options?: OpenNoteletOptions): Promise<void>;
 
   on<K extends keyof JournalsApiEvents>(event: K, handler: JournalsApiEvents[K]): () => void;
 }
@@ -58,7 +71,7 @@ interface JournalsApi {
 ```ts
 // Which journals exist, and what cadence do they write?
 const dailies = await journals.listJournals({ writeType: "day" });
-//  [{ name: "Work Daily", shelf: "Work", write: { type: "day" } }, …]
+//  [{ name: "Work Daily", shelf: "Work", write: { type: "day" }, notelets: [] }, …]
 
 // Does today's note exist, and where would it go?
 const [today] = await journals.notesFor("Work Daily", "today");
@@ -76,6 +89,26 @@ if (current) console.log(current.journal, current.date);
 const off = journals.on("noteAdded", ({ journal, date, path }) => {
   /* … */
 });
+
+// What notelet types does this journal offer?
+const [journal] = await journals.listJournals("Work Weekly");
+//  { name, shelf, write, notelets: ["1o1", "Meeting"] }
+
+// What notelets sit on this week?
+const meetings = await journals.noteletsFor("Work Weekly", "today", { type: "Meeting" });
+//  [{ journal, type, date, displayDate, endDate, path, file, counter }, …]
+
+// Create one, without stealing the user's pane.
+const notelet = await journals.createNotelet("Work Weekly", "today", "Meeting");
+
+// Show it. The default mode reuses a pane that already holds the note, in the focused window.
+await journals.openNotelet(notelet);
+
+// An explicit mode is a request for a new pane, and never reuses.
+await journals.openNotelet(notelet, { openMode: "split" });
+
+// Which notelet is this file, if any? journalOf stays period-note only.
+const held = await journals.noteletOf(this.app.workspace.getActiveFile());
 ```
 
 ## Selectors
@@ -156,23 +189,49 @@ configuration.
 `endDate` names a day, not an instant. A containment test needs
 `d >= note.date && d <= note.endDate` on date strings, not a timestamp compare.
 
+## Notelets
+
+A notelet is an extra note attached to a period, of a type the journal defines. A period has one
+period note and any number of notelets.
+
+- **`journalOf` never returns a notelet, and `noteAdded`/`noteRemoved` never carry one.**
+  Answering "what journal thing is this file?" is two calls. This is deliberate: a consumer
+  written before notelets existed must keep receiving exactly what it receives today.
+- **`path` and `file` are non-nullable on `NoteletNote`**, unlike `JournalNote`'s. A notelet's
+  path is not a function of its identity — the counter, the prompt answers and the auto-suffix
+  all feed it — so there is no "where it would go". It exists, or there is nothing to describe.
+- **`date`, `displayDate` and `endDate` are the period's**, derived from the anchor. A notelet
+  stores none of them. Correlate a notelet to its period note on `date`.
+- **Types are named, not identified.** `JournalInfo.notelets` lists the names `noteletsFor` and
+  `createNotelet` take. A rename breaks a hardcoded name exactly as it breaks a hardcoded journal
+  name — see [Renames](#renames).
+- **`options.type` is matched per journal.** Two journals may each own a type called "1o1", so a
+  selector spanning both returns notelets from each.
+- **`createNotelet` always creates.** There is no ensure semantics: several notelets per period is
+  the point, so calling it twice gives two notes.
+- **`createNotelet` does not open** unless you pass `openMode`.
+- **Results are grouped by journal, not globally sorted.** `noteletsFor` builds one listing per
+  matching journal, so a multi-journal selector's results appear in the order journals were
+  matched; the type/counter/filename ordering applies only within each journal's group.
+
 ## Errors
 
 Failures reject with an error carrying a stable string `code`. Absence is not a
 failure — no note for a period is `file: null`.
 
-| code                  | meaning                                                                   |
-| --------------------- | ------------------------------------------------------------------------- |
-| `journal-not-found`   | no journal by that name — usually a stale stored reference                |
-| `no-matching-journal` | the selector matched no journal                                           |
-| `invalid-date`        | the `DateInput` could not be read                                         |
-| `unmappable-date`     | the journal's configuration cannot place that date in a period            |
-| `outside-timeline`    | the period falls outside the journal's timeline, and no note exists there |
-| `creation-failed`     | the note could not be created or written                                  |
-| `open-failed`         | the note could not be opened                                              |
-| `aborted`             | the user dismissed the confirmation prompt or the journal picker          |
-| `prompts-required`    | the journal has creation prompts and `prompt: false` was passed           |
-| `plugin-unloaded`     | Journals was unloaded while the call was in flight                        |
+| code                     | meaning                                                                   |
+| ------------------------ | ------------------------------------------------------------------------- |
+| `journal-not-found`      | no journal by that name — usually a stale stored reference                |
+| `no-matching-journal`    | the selector matched no journal                                           |
+| `invalid-date`           | the `DateInput` could not be read                                         |
+| `unmappable-date`        | the journal's configuration cannot place that date in a period            |
+| `outside-timeline`       | the period falls outside the journal's timeline, and no note exists there |
+| `notelet-type-not-found` | the journal owns no notelet type by that name                             |
+| `creation-failed`        | the note could not be created or written                                  |
+| `open-failed`            | the note could not be opened                                              |
+| `aborted`                | the user dismissed the confirmation prompt or the journal picker          |
+| `prompts-required`       | the journal has creation prompts and `prompt: false` was passed           |
+| `plugin-unloaded`        | Journals was unloaded while the call was in flight                        |
 
 ```ts
 try {
@@ -220,8 +279,9 @@ this.register(
 `on` returns its unsubscribe function, so it hands straight to `this.register`.
 
 Available events: `journalCreated`, `journalRenamed`, `journalDeleted`,
-`noteAdded`, `noteRemoved`. Note events carry `path` rather than a `TFile`,
-because on removal the file is already gone.
+`noteAdded`, `noteRemoved`, `noteletAdded`, `noteletRemoved`. Note and notelet
+events carry `path` rather than a `TFile`, because on removal the file is
+already gone.
 
 ## `path` is for display, not for writing
 

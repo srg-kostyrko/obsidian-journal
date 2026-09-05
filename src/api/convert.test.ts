@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { customJournal, fixedJournal } from "@/journals/testing";
+import type { TypeId } from "@/journals/notelets/config";
+import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
 
@@ -56,6 +57,7 @@ describe("toJournalInfo", () => {
       name: "daily",
       shelf: null,
       write: { type: "day" },
+      notelets: [],
     });
   });
 
@@ -64,6 +66,22 @@ describe("toJournalInfo", () => {
       name: "sprint",
       shelf: "Work",
       write: { type: "custom", every: "week", duration: 3 },
+      notelets: [],
     });
+  });
+
+  it("lists notelet type names in sorted order, not record order", () => {
+    const config = fixedJournal(
+      "daily",
+      { type: "day" },
+      {
+        notelets: {
+          nt_second: buildNoteletType({ id: "nt_second" as TypeId, name: "Meeting" }),
+          nt_first: buildNoteletType({ id: "nt_first" as TypeId, name: "1o1" }),
+        },
+      },
+    );
+
+    expect(toJournalInfo("daily", config, "").notelets).toEqual(["1o1", "Meeting"]);
   });
 });

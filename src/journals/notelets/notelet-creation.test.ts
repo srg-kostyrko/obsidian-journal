@@ -163,6 +163,24 @@ describe("NoteletCreationService", () => {
     expect(harness.host.files.get(created.value.path)?.frontmatter).not.toHaveProperty("journal-notelet-index");
   });
 
+  it("reports the counter it assigned", async () => {
+    const harness = await boot(workWith());
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+
+    expectOk(created);
+    expect(created.value).toMatchObject({ counter: 1 });
+  });
+
+  it("reports no counter when the type has none", async () => {
+    const harness = await boot(workWith({ counter: { enabled: false, frontmatterKey: "journal-notelet-index" } }));
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+
+    expectOk(created);
+    expect(created.value.counter).toBeUndefined();
+  });
+
   it("refuses unattended creation when a question reaches the note name", async () => {
     const harness = await boot(
       workWith({

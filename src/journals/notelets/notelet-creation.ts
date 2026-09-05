@@ -75,7 +75,7 @@ export class NoteletCreationService {
     typeId: TypeId,
     anchor: AnchorString,
     options?: CreateNoteletOptions,
-  ): AsyncResult<{ path: VaultPath }, NoteletCreationError> {
+  ): AsyncResult<{ path: VaultPath; counter?: number }, NoteletCreationError> {
     return attempt.in(this, async function* (this: NoteletCreationService) {
       const config = yield* this.#journals.require(journalName);
       const type = config.notelets[typeId];
@@ -138,7 +138,7 @@ export class NoteletCreationService {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }
       yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#guard.release(path));
-      return { path };
+      return { path, ...(counter !== undefined && { counter }) };
     });
   }
 

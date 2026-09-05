@@ -35,6 +35,8 @@ export interface JournalInfo {
   readonly name: string;
   readonly shelf: string | null;
   readonly write: JournalWrite;
+  /** The journal's notelet type names, sorted. Empty when the journal defines none. */
+  readonly notelets: readonly string[];
 }
 
 /** The journal's note for a period — on disk, or where it would go. */
@@ -62,6 +64,22 @@ export interface ExistingJournalNote extends JournalNote {
   readonly file: TFile;
 }
 
+/** A notelet attached to a journal period. Always exists on disk. */
+export interface NoteletNote {
+  readonly journal: string;
+  /** The type's name, as stored in the note's frontmatter. */
+  readonly type: string;
+  /** "YYYY-MM-DD" — the period's first day. Correlates with JournalNote.date. */
+  readonly date: string;
+  /** The period's, derived from the anchor — a notelet stores neither this nor endDate. */
+  readonly displayDate: string;
+  readonly endDate: string;
+  readonly path: string;
+  readonly file: TFile;
+  /** The assigned counter, when the type has one. Orders siblings within a period. */
+  readonly counter: number | null;
+}
+
 export interface EnsureNoteOptions {
   /** Show the journal's creation-confirmation prompt. Defaults to the journal's own setting. */
   readonly confirm?: boolean;
@@ -84,6 +102,17 @@ export interface EnsureResult {
   readonly created: boolean;
 }
 
+export interface CreateNoteletOptions {
+  /** Ask the type's creation prompts. Defaults to true. */
+  readonly prompt?: boolean;
+  /** Omit to create without opening; pass a mode to create and show. */
+  readonly openMode?: "active" | "tab" | "split" | "window";
+}
+
+export interface OpenNoteletOptions {
+  readonly openMode?: "active" | "tab" | "split" | "window";
+}
+
 /** Open on purpose: new codes are an additive change, so always handle the default case. */
 export type JournalsApiErrorCode =
   | "journal-not-found"
@@ -91,6 +120,7 @@ export type JournalsApiErrorCode =
   | "invalid-date"
   | "unmappable-date"
   | "outside-timeline"
+  | "notelet-type-not-found"
   | "creation-failed"
   | "prompts-required"
   | "open-failed"
@@ -109,6 +139,8 @@ export interface JournalsApiEvents {
   journalDeleted: (event: { journal: string }) => void;
   noteAdded: (event: { journal: string; date: string; path: string }) => void;
   noteRemoved: (event: { journal: string; date: string; path: string }) => void;
+  noteletAdded: (event: { journal: string; date: string; type: string; path: string }) => void;
+  noteletRemoved: (event: { journal: string; date: string; type: string; path: string }) => void;
 }
 
 export interface JournalsApi {
@@ -119,6 +151,19 @@ export interface JournalsApi {
 
   notesFor(selector: JournalSelector, date: DateInput): Promise<readonly JournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
+  noteletOf(file: TFile): Promise<NoteletNote | null>;
+  noteletsFor(
+    selector: JournalSelector,
+    date: DateInput,
+    options?: { readonly type?: string },
+  ): Promise<readonly NoteletNote[]>;
+  createNotelet(
+    selector: JournalSelector,
+    date: DateInput,
+    type: string,
+    options?: CreateNoteletOptions,
+  ): Promise<NoteletNote>;
+  openNotelet(notelet: NoteletNote, options?: OpenNoteletOptions): Promise<void>;
 
   ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult>;
   openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult>;
