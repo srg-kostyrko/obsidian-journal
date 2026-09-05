@@ -3,6 +3,7 @@ import { browser, expect } from "@wdio/globals";
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { runCommand } from "../support/commands.js";
 import {
+  clickDialogButton,
   clickModalCta,
   pickModalDate,
   selectModalDropdownByLabel,
@@ -50,6 +51,74 @@ describe("connect a note as a notelet", () => {
     // The move followed the *type's* folder, not the journal's own.
     expect(await noteExists("loose/standup.md")).toBe(false);
     expect(await noteExists(`day/standup.md`)).toBe(false);
+  });
+
+  // Retyping is the branch that has to strip the *old* type's own keys: Meeting is counted and
+  // Retro is not, so a retype that only wrote the new name would leave the number behind under a
+  // type that has no counter at all.
+  it("strips the old type's keys when a connected notelet is retyped", async () => {
+    const today = todayAnchor();
+    await seedNote("loose/retype.md", "retype me\n");
+    await openNote("loose/retype.md");
+
+    await runCommand("journals:connect-note");
+    await waitForModalOpen();
+    await selectModalDropdownByLabel(CONNECT_AS, "meeting");
+    await pickModalDate(today);
+    await clickModalCta();
+    await waitForDialogClosed();
+    await waitForFrontmatter(
+      "loose/retype.md",
+      (frontmatter) => frontmatter["journal-notelet"] === "Meeting",
+      "the note was not connected as a Meeting notelet",
+    );
+
+    await runCommand("journals:connect-note");
+    await waitForModalOpen();
+    await selectModalDropdownByLabel(CONNECT_AS, "retro");
+    await clickModalCta();
+    await waitForDialogClosed();
+
+    await waitForFrontmatter(
+      "loose/retype.md",
+      (frontmatter) => frontmatter["journal-notelet"] === "Retro",
+      "the notelet was not retyped",
+    );
+    const frontmatter = await frontmatterOf("loose/retype.md");
+    expect(frontmatter?.["journal-notelet-index"]).toBeUndefined();
+    expect(frontmatter?.journal).toBe("daily");
+  });
+
+  it("strips every journal key when a connected notelet is disconnected", async () => {
+    const today = todayAnchor();
+    await seedNote("loose/drop.md", "drop me\n");
+    await openNote("loose/drop.md");
+
+    await runCommand("journals:connect-note");
+    await waitForModalOpen();
+    await selectModalDropdownByLabel(CONNECT_AS, "meeting");
+    await pickModalDate(today);
+    await clickModalCta();
+    await waitForDialogClosed();
+    await waitForFrontmatter(
+      "loose/drop.md",
+      (frontmatter) => frontmatter["journal-notelet"] === "Meeting",
+      "the note was not connected as a Meeting notelet",
+    );
+
+    await runCommand("journals:connect-note");
+    await waitForModalOpen();
+    await clickDialogButton(m.connect_note_modal_disconnect());
+    await waitForDialogClosed();
+
+    await browser.waitUntil(
+      async () => {
+        const frontmatter = await frontmatterOf("loose/drop.md");
+        return frontmatter?.journal === undefined && frontmatter?.["journal-notelet"] === undefined;
+      },
+      { timeoutMsg: "the disconnected notelet kept its journal keys" },
+    );
+    expect(await noteExists("loose/drop.md")).toBe(true);
   });
 
   it("connects as the journal's period note when no type is chosen", async () => {

@@ -15,27 +15,27 @@ Severity for bugs you log: 🔴 data loss / crash · 🟡 feature broken · 🟢
 below names a spec, that ground is already covered on every run; walk it manually
 only when you are investigating a specific report or the spec is red.
 
-| Section                  | Automated by                                                                                            |
-| ------------------------ | ------------------------------------------------------------------------------------------------------- |
-| §0 smoke                 | `plugin-activates`, `re-enable`                                                                         |
-| §1 write types           | `custom-interval`, `weekly-midweek-start`                                                               |
-| §2 config                | `confirm-creation`, `auto-attach-template`, `templater`                                                 |
-| §2 timeline bounds       | `timeline-bounds`                                                                                       |
-| §3 lifecycle             | `delete-journal`, `colliding-journals`                                                                  |
-| §4 numbering             | `home-index`, `auto-attach-index`, `auto-attach-multi-digit`, `adoption-guard`, `adoption-guard-custom` |
-| §5 connection            | `commands` (insert date link)                                                                           |
-| §6 bulk add              | `bulk-add`                                                                                              |
-| §7 commands              | `commands`, `default-commands`, `dynamic-commands`, `available-command`                                 |
-| §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `existing-navigation`             |
-| §9 shelves               | `nav-off-shelf`                                                                                         |
-| §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                      |
-| §14 settings             | `settings`, `settings-first-journal`                                                                    |
-| §15 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings`     |
-| §16 migration            | `legacy-upgrade`, `mid-session-enable`                                                                  |
-| §17 regression (locale)  | `calendar-locale`                                                                                       |
-| §18 URI handler          | `uri-open`                                                                                              |
-| §19 maintenance page     | `settings-snapshot`, `vault-check`                                                                      |
-| §21 notelets             | `notelets`, `notelet-connect`, `notelet-type-delete`, `week-preset`                                     |
+| Section                  | Automated by                                                                                                                                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| §0 smoke                 | `plugin-activates`, `re-enable`                                                                                                                                                                                    |
+| §1 write types           | `custom-interval`, `weekly-midweek-start`                                                                                                                                                                          |
+| §2 config                | `confirm-creation`, `auto-attach-template`, `templater`                                                                                                                                                            |
+| §2 timeline bounds       | `timeline-bounds`                                                                                                                                                                                                  |
+| §3 lifecycle             | `delete-journal`, `colliding-journals`                                                                                                                                                                             |
+| §4 numbering             | `home-index`, `auto-attach-index`, `auto-attach-multi-digit`, `adoption-guard`, `adoption-guard-custom`                                                                                                            |
+| §5 connection            | `commands` (insert date link)                                                                                                                                                                                      |
+| §6 bulk add              | `bulk-add`                                                                                                                                                                                                         |
+| §7 commands              | `commands`, `default-commands`, `dynamic-commands`, `available-command`                                                                                                                                            |
+| §8 views                 | `view`, `view-blocks`, `view-clone`, `remember-date`, `startup-view`, `existing-navigation`                                                                                                                        |
+| §9 shelves               | `nav-off-shelf`                                                                                                                                                                                                    |
+| §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                                                                                                                                 |
+| §14 settings             | `settings`, `settings-first-journal`                                                                                                                                                                               |
+| §15 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings`                                                                                                                |
+| §16 migration            | `legacy-upgrade`, `mid-session-enable`                                                                                                                                                                             |
+| §17 regression (locale)  | `calendar-locale`                                                                                                                                                                                                  |
+| §18 URI handler          | `uri-open`                                                                                                                                                                                                         |
+| §19 maintenance page     | `settings-snapshot`, `vault-check`                                                                                                                                                                                 |
+| §21 notelets             | `notelets`, `notelet-connect`, `notelet-type-lifecycle`, `notelet-type-delete`, `notelet-bulk-add`, `notelet-uri`, `notelet-decoration`, `notelet-view-block`, `notelet-maintenance`, `notelet-api`, `week-preset` |
 
 **Spend your attention where automation cannot reach.** Work the sections in this
 order, not top to bottom:
@@ -47,9 +47,9 @@ order, not top to bottom:
 3. §17 regression (theme switch, large vault, malformed frontmatter) and §0's
    mobile line.
 4. §16 migration against a real user snapshot, if you have one.
-5. §21 notelets — the newest feature. Its creation, listing, connect and
-   type-deletion spines are automated (see the table above); the settings warnings,
-   the bulk add, the rename cascades and the decoration items are not.
+5. §21 notelets — the newest feature. Most of it is automated now (see the table
+   above); what is not is the settings-page warnings, the per-note question flow, and
+   anything whose pass condition is "a human looked at it".
 6. Everything else, as a sweep, trusting the table above.
 
 ---
@@ -1425,7 +1425,8 @@ under **Notelet types**: **Meeting** (leave the defaults) and **Retro** (turn
 ### Type lifecycle
 
 - [ ] **Rename** a type with notelets connected → their frontmatter is rewritten to the
-      new name and they are renamed/moved per the type's templates.
+      new name. Their file names and folders do **not** change: a rename rewrites the
+      stored name, it does not re-render note paths.
 - [ ] Rename the type's **number property** → the key is renamed on every notelet of
       that type, and no other type's notes are touched.
 - [ ] **Delete a type → Keep notelets** → the notes stay untouched, still carrying the

@@ -1,0 +1,66 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "day",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "notelets": {
+        "meeting": {
+          "id": "meeting",
+          "name": "Meeting",
+          "folder": "notelets",
+          "nameTemplate": "{{date}} Meeting {{notelet_index}}",
+          "templates": [],
+          "counter": { "enabled": true, "frontmatterKey": "journal-notelet-index" },
+          "prompts": []
+        },
+        "retro": {
+          "id": "retro",
+          "name": "Retro",
+          "folder": "notelets",
+          "nameTemplate": "{{date}} Retro",
+          "templates": [],
+          "counter": { "enabled": false, "frontmatterKey": "journal-notelet-index" },
+          "prompts": []
+        }
+      }
+    }
+  },
+  "views": {
+    "11111111-2222-4333-8444-555555555555": {
+      "id": "11111111-2222-4333-8444-555555555555",
+      "name": "Notelets",
+      "icon": "notebook-pen",
+      "defaultShelf": null,
+      "showInRibbon": true,
+      "leaf": "right",
+      "followActiveDate": true,
+      "blocks": [
+        {
+          "id": "22222222-3333-4444-8555-666666666666",
+          "key": "notelets",
+          "config": { "window": "day" }
+        },
+        {
+          "id": "33333333-4444-4555-8666-777777777777",
+          "key": "notelets",
+          "config": { "window": "week", "types": ["retro"] }
+        }
+      ]
+    }
+  }
+}
