@@ -1849,7 +1849,7 @@
   "journal_notelet_counter_description": "Numbers restart in every period, so the first notelet of a day is always 1.",
   "journal_notelet_counter_key_modal_title": "Edit number property name",
   "journal_property_key_taken": "Something else on this note already writes to \"{name}\".",
-  "journal_notelet_command_name": "New {type}",
+  "journal_notelet_command_name": "Create {type}",
   "journal_notelet_list_empty": "No notelets for this period.",
   "journal_notelet_list_create": "New notelet",
   "journal_notelet_list_type_qualified": "{journal} / {type}",

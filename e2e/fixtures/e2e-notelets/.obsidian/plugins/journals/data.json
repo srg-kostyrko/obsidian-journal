@@ -1,0 +1,63 @@
+{
+  "version": 4,
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "day",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "notelets": {
+        "meeting": {
+          "id": "meeting",
+          "name": "Meeting",
+          "folder": "day/meetings",
+          "nameTemplate": "{{date}} Meeting {{notelet_index}}",
+          "templates": [],
+          "counter": { "enabled": true, "frontmatterKey": "journal-notelet-index" },
+          "prompts": []
+        },
+        "retro": {
+          "id": "retro",
+          "name": "Retro",
+          "folder": "day/retros",
+          "nameTemplate": "{{date}} Retro",
+          "templates": [],
+          "counter": { "enabled": false, "frontmatterKey": "journal-notelet-index" },
+          "prompts": []
+        }
+      }
+    }
+  },
+  "commands": {
+    "create-meeting": {
+      "name": "Create Meeting",
+      "icon": "",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "notelet", "journalName": "daily", "typeId": "meeting" },
+      "type": "same",
+      "context": "today"
+    },
+    "create-retro": {
+      "name": "Create Retro",
+      "icon": "",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "notelet", "journalName": "daily", "typeId": "retro" },
+      "type": "same",
+      "context": "today"
+    }
+  }
+}
