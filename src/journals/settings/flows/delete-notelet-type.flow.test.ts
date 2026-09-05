@@ -4,6 +4,7 @@ import { anchor } from "@/calendar/testing";
 import { commandsCoreModule } from "@/commands/module";
 import { CommandsRepository } from "@/commands/repository";
 import { buildCommand } from "@/commands/testing";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalLifecycleFlowError, UnknownJournalError } from "@/journals/errors";
@@ -273,5 +274,116 @@ describe("DeleteNoteletTypeFlow", () => {
     await promise;
 
     expect(typePresentDuringPurge).toBe(true);
+  });
+
+  // A deleted type's id left behind in a has-notelet condition can only match nothing, but the
+  // condition still reads as naming a type. Stripping it is only safe while the list keeps at
+  // least one other id: an emptied list means "any type" to the engine, which would widen the
+  // rule instead of narrowing it. So an emptied condition goes, and a decoration the deletion
+  // left with no conditions goes with it.
+  function decorate(decorations: ReturnType<typeof buildDecoration>[]): void {
+    harness.resolve(JournalsRepository).update("daily", { decorations });
+  }
+
+  function decorationsAfterDelete() {
+    return harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.decorations;
+  }
+
+  it("drops the deleted id from a has-notelet condition that names other types too", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [buildCondition("has-notelet", { typeIds: ["nt_1", "nt_2"] })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "has-notelet", typeIds: ["nt_2"] }] }]);
+  });
+
+  it("drops a has-notelet condition the deleted id was the only member of, keeping its siblings", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [
+          buildCondition("has-notelet", { typeIds: ["nt_1"] }),
+          buildCondition("title", { condition: "contains", value: "keep me" }),
+        ],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "title", value: "keep me" }] }]);
+  });
+
+  it("drops a decoration whose only condition the deletion emptied", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [buildCondition("has-notelet", { typeIds: ["nt_1"] })],
+        styles: [buildStyle("background")],
+      }),
+      buildDecoration({
+        conditions: [buildCondition("title", { condition: "contains", value: "survivor" })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "title", value: "survivor" }] }]);
+  });
+
+  it("leaves an any-type has-notelet condition alone", async () => {
+    decorate([
+      buildDecoration({
+        conditions: [buildCondition("has-notelet", { typeIds: [] })],
+        styles: [buildStyle("background")],
+      }),
+    ]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toMatchObject([{ conditions: [{ type: "has-notelet", typeIds: [] }] }]);
+  });
+
+  it("leaves a decoration that already had no conditions alone", async () => {
+    decorate([buildDecoration({ conditions: [], styles: [buildStyle("background")] })]);
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(decorationsAfterDelete()).toHaveLength(1);
+  });
+
+  it("leaves another journal's has-notelet condition on the same id alone", async () => {
+    const repo = harness.resolve(JournalsRepository);
+    repo.create("other", { type: "day" });
+    repo.update("other", {
+      decorations: [
+        buildDecoration({
+          conditions: [buildCondition("has-notelet", { typeIds: ["nt_1"] })],
+          styles: [buildStyle("background")],
+        }),
+      ],
+    });
+
+    const promise = invoke();
+    openModal().submit({ mode: "keep" });
+    await promise;
+
+    expect(repo.get("other").getOrUndefined()?.decorations).toMatchObject([
+      { conditions: [{ type: "has-notelet", typeIds: ["nt_1"] }] },
+    ]);
   });
 });

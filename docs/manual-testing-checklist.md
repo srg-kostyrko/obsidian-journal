@@ -35,6 +35,7 @@ only when you are investigating a specific report or the spec is red.
 | §17 regression (locale)  | `calendar-locale`                                                                                       |
 | §18 URI handler          | `uri-open`                                                                                              |
 | §19 maintenance page     | `settings-snapshot`, `vault-check`                                                                      |
+| §21 notelets             | `notelets`, `notelet-connect`, `notelet-type-delete`, `week-preset`                                     |
 
 **Spend your attention where automation cannot reach.** Work the sections in this
 order, not top to bottom:
@@ -46,8 +47,9 @@ order, not top to bottom:
 3. §17 regression (theme switch, large vault, malformed frontmatter) and §0's
    mobile line.
 4. §16 migration against a real user snapshot, if you have one.
-5. §21 notelets — the newest feature, and the one with the least automated
-   coverage; work its deletion modes and week-grid items with care.
+5. §21 notelets — the newest feature. Its creation, listing, connect and
+   type-deletion spines are automated (see the table above); the settings warnings,
+   the bulk add, the rename cascades and the decoration items are not.
 6. Everything else, as a sweep, trusting the table above.
 
 ---
