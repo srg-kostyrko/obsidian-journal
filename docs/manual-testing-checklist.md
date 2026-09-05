@@ -46,7 +46,9 @@ order, not top to bottom:
 3. §17 regression (theme switch, large vault, malformed frontmatter) and §0's
    mobile line.
 4. §16 migration against a real user snapshot, if you have one.
-5. Everything else, as a sweep, trusting the table above.
+5. §21 notelets — the newest feature, and the one with the least automated
+   coverage; work its deletion modes and week-grid items with care.
+6. Everything else, as a sweep, trusting the table above.
 
 ---
 
@@ -1340,6 +1342,112 @@ selectable inside the plugin. 11 bundles ship (`de en es fr it ja ko pt ru uk zh
 - [ ] In a translated locale, long strings do not clip or overflow their controls.
 - [ ] Weekday and month names come from the **calendar locale**, and stay correct
       when the UI language and calendar locale differ.
+
+---
+
+## 21. Notelets
+
+Setup: a Day journal "Note" with a folder and name template. Add two notelet types
+under **Notelet types**: **Meeting** (leave the defaults) and **Retro** (turn
+**Number each notelet** off and set its note name to `Retro {{date:YYYY-MM-DD}}`).
+
+### Type configuration
+
+- [ ] **Add notelet type** → name it → the type appears in the journal's list and
+      opens its own page.
+- [ ] A type's **Note name** and **Folder** preview the paths its next notes take,
+      in the type's own context (not the journal's period note).
+- [ ] Retro's name template has nothing that varies within a period → the page warns
+      that every notelet after the first gets a number added to its file name.
+- [ ] Set a type's note name and folder to exactly the journal's own → the page warns
+      that the type renders onto the journal's note path.
+- [ ] **Rename** the type → the modal refuses a name another type on this journal
+      already uses.
+- [ ] Add a **question** to Meeting and a **template** note → both are the type's own,
+      separate from the journal's.
+
+### Creating
+
+- [ ] Command palette shows **Create Meeting** → run it → a Meeting notelet is created
+      for today and opened, and the journal's own day note is untouched.
+- [ ] Run it a second time on the same day → a second notelet, numbered 2, alongside
+      the first — the day note is still untouched.
+- [ ] 🔴 Run **Create Retro** twice on one day → the second note gets a suffixed file
+      name; neither note overwrites the other.
+- [ ] A type with a question → the question dialog appears before the note is written,
+      and the answer reaches the note per its configuration.
+- [ ] Frontmatter of a new notelet carries the journal, the period date, the type name
+      and (for Meeting) the number.
+- [ ] `obsidian://journal?journal=Note&notelet=Meeting&date=today` → creates and opens
+      a Meeting notelet.
+- [ ] `obsidian://journal?notelet=Meeting&date=today` (no `journal=`) → notice says a
+      notelet link needs a journal; no note created.
+- [ ] `obsidian://journal?journal=Note&notelet=Nope&date=today` → notice names the
+      unknown type; no note created.
+
+### Listing
+
+- [ ] Add a **Notelets** block to a view → it lists the period's notelets grouped by
+      type, with a **New notelet** button.
+- [ ] The block's **Journals** and **Notelet types** filters narrow the list; leaving
+      each all-off includes everything.
+- [ ] A ` ```journal-notelets ` block in a day note lists that day's notelets.
+- [ ] The same block in a **notelet** lists its own period's notelets, itself included.
+- [ ] The same block in a note connected to no journal → says the note is not connected.
+- [ ] `types: [Meeting]` in the fence → only Meeting notelets listed.
+- [ ] An unrecognized fence option → named in a notice above the block, which still
+      renders.
+
+### Decorations and the calendar
+
+- [ ] A journal decoration with a **Has notelet** condition and no types selected →
+      paints every day that has any notelet.
+- [ ] The same condition limited to **Retro** → paints only days with a Retro.
+- [ ] Create a notelet while the calendar is open → the decoration appears without a
+      reload.
+- [ ] Open a notelet with a view in **Follow active note** mode → the view moves to
+      that notelet's period.
+
+### Adopting existing notes
+
+- [ ] **Connect note to a journal** on a loose note → the type list offers Meeting and
+      Retro alongside the period note → connecting as Meeting writes the type into
+      frontmatter and renames/moves the note to the type's templates.
+- [ ] Connect a note as a type whose **question feeds the name or folder** → the modal
+      explains the note keeps its own name/folder, and it does.
+- [ ] Connect an already-connected notelet and change only its **type** → the old
+      type's counter and question keys are stripped, the new type's written.
+- [ ] **Bulk add** on a notelet type → the preview numbers the notes in scan order, and
+      the run assigns those same numbers.
+
+### Type lifecycle
+
+- [ ] **Rename** a type with notelets connected → their frontmatter is rewritten to the
+      new name and they are renamed/moved per the type's templates.
+- [ ] Rename the type's **number property** → the key is renamed on every notelet of
+      that type, and no other type's notes are touched.
+- [ ] **Delete a type → Keep notelets** → the notes stay untouched, still carrying the
+      old type name; Maintenance's vault check then reports them as naming an unknown
+      notelet type.
+- [ ] 🔴 **Delete a type → Clear notelet type data** → the notes stay in the vault, and
+      all journal and notelet properties are gone from their frontmatter.
+- [ ] 🔴 **Delete a type → Delete notelets** → the notes are gone from the vault. Count
+      them in the confirmation first; the count must match what disappears.
+- [ ] The type's seeded command disappears from the palette in all three modes.
+- [ ] Delete the **journal** that owns the types → its notelets are handled by the
+      journal's own delete mode, the same as its period notes.
+- [ ] **Clone** a journal with **Copy notelet types** on → the copy has its own types
+      and its own commands, and no notes are copied.
+- [ ] Clone with it **off** → the copy has no notelet types.
+
+### Week grid
+
+- [ ] With a **Weekly** journal carrying notelets, change the week preset (start of
+      week) → the notelets are re-anchored along with the period notes, and still show
+      in the calendar afterwards.
+- [ ] 🔴 Where a shorter year collapses two weeks onto one anchor → the notice reports
+      the count, and the losing notes keep their old date rather than overwriting the
+      winner.
 
 ---
 

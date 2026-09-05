@@ -28,6 +28,7 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 - **Frontmatter**: Automatic metadata for better organization
 - **Auto-attach**: Notes you create yourself are connected to a journal automatically when their path matches that journal's folder and name template, the date it resolves to falls within that journal's timeline, and no other journal matches the same note
 - **Questions**: Ask for values when a note is created, saving each answer to frontmatter, rendering it into the note, or using it to name the note or its folder
+- **Notelets**: Define extra kinds of note a journal can create for a period, alongside the period's own note — meeting notes on a day, retros on a sprint — each with its own folder, name template, templates, questions, and numbering
 
 ### Integrations & Tooling
 
@@ -82,6 +83,7 @@ A view is a list of blocks. The available blocks are:
 - **Week calendar** — one or more week strips around the selected date
 - **Notes by date** — lists all vault notes created during the selected day, week, month, quarter, year, or decade, with configurable sorting, heading, and period navigation
 - **Custom intervals** — the entries of your custom journals that fall inside a chosen window (current week, month, quarter, or year)
+- **Notelets** — the notelets of the note you are reading, or of a window around the view's date, grouped by journal and type
 - **Toolbar** — a container for toolbar items: a shelf selector, period buttons, previous/next existing-note buttons, custom buttons, and flexible spacers
 - **Divider** — a horizontal rule between blocks
 - **Markdown template** — renders a template note inline, with journal variables replaced (see [Supported variables](#supported-variables))
@@ -162,8 +164,8 @@ Each journal can be configured separately with these settings:
   - Add end date property, with its own property name
 
 Every journal row also has a **clone** action. The copy carries the source's whole configuration
-under a new name, joins the same shelf, and gets its own copy of the source's commands. Notes are
-never copied. The copy starts out with the source's folder and note name template, so the two
+under a new name, joins the same shelf, and gets its own copy of the source's commands and, unless
+you turn **Copy notelet types** off, of its [notelet types](#notelets). Notes are never copied. The copy starts out with the source's folder and note name template, so the two
 resolve to the same note paths until you change one — the colliding journals warning says so until
 you do.
 
@@ -209,6 +211,71 @@ with options like Great, Okay and Rough — and save it to a property, e.g. `moo
 property a note carries, so a journal decoration matching `mood equals Great` with its own color
 paints every day you answered that way, with no other wiring needed.
 
+### Notelets
+
+A journal normally keeps one note per period — one note for today, one for this sprint. A
+**notelet** is an extra note the same journal keeps for that period, alongside the period's own
+note: meeting notes on a day, a retro on a sprint, a reading log on a week. A period can hold any
+number of them.
+
+Every notelet belongs to a **notelet type**, configured on the journal under **Notelet types**. The
+type decides where its notes go, what they are named and what they contain; the journal decides
+which period a notelet belongs to. A type is a template for notes, not a second journal — it has no
+timeline and no calendar of its own.
+
+A notelet is identified by its frontmatter, not by its path. The plugin writes the journal name, the
+period's date and the notelet's type into each one, and reads them back from there — so a notelet
+you move or rename by hand stays connected.
+
+Each type has:
+
+- **Name** — stored on every notelet of the type, and what you read in lists and menus. Renaming a
+  type rewrites the notes that carry the old name, so nothing is left stranded
+- **Folder** and **Note name** — where its notes live and what they are called, using the same
+  [variables](#supported-variables) as the journal's own notes, plus `{{notelet_index}}`. The
+  default is `{{journal_name}} {{notelet_index}}`
+- **Templates** — one or more template notes for new notelets of this type, applied the same way a
+  journal applies its own
+- **Questions** — the type's own [questions](#questions), asked when one of its notelets is created.
+  These are separate from the journal's questions, and only the type's own answers are available to
+  its name template and folder
+- **Number each notelet** — on by default. Numbering restarts in every period, so the first notelet
+  of a day is always 1, and the number is stored in a frontmatter property you can rename
+- **Commands** — the plugin seeds one command per type ("Create _\<type\>_"), and you can add more
+  targeted at the type
+
+Because several notelets share one period, a name template with nothing that varies _within_ a
+period would name them all the same. `{{notelet_index}}`, a clock variable, or one of the type's own
+questions makes each name distinct; without any of them the settings page warns, and the plugin adds
+a number to the file name so nothing is overwritten. A second warning appears when a type renders
+onto the journal's own note path — the plugin keeps them apart automatically, but the two are easy
+to confuse.
+
+**Creating a notelet:**
+
+- Run the type's seeded command, or any command you targeted at it
+- Use **New notelet** in the [notelets list](#supported-code-blocks), in a view block or a
+  `journal-notelets` code block
+- Open a link like `obsidian://journal?journal=Daily&notelet=Meeting&date=today`
+
+**Adopting notes you already have:**
+
+- **Connect note to a journal** offers the journal's notelet types alongside its period note, and
+  renames and moves the note to match the type — unless one of the type's questions feeds the name
+  or folder, in which case the note keeps where and what it is
+- **Bulk add** on a notelet type scans a folder and connects the notes it finds in one pass,
+  numbering them in scan order
+
+**Deleting a type** asks what to do with the notelets connected to it: **keep** them as ordinary
+notes with their frontmatter intact, **clear** the journal and notelet properties from their
+frontmatter while leaving the notes in your vault, or **delete** the notes. Cloning a journal
+offers **Copy notelet types**, on by default, which gives the copy its own types and commands.
+
+Notelets take part in the rest of the plugin: the **Has notelet** [decoration](#decoration-system)
+condition paints periods that have one, the [Maintenance](#maintenance) vault check reports notelets
+naming a type their journal no longer has, and a notelet counts as the active journal note for
+commands and for a view's **Follow active note**.
+
 ### Decoration System
 
 Journals provides a decoration system to visually distinguish notes in calendars and navigation blocks. Decorations live in three scopes:
@@ -223,6 +290,7 @@ They **layer**: for each property a cell can only have once — background, text
 
   - **Note content** (journal decorations): Title, tag, or frontmatter property. Titles and tags match by contains, starts with, or ends with; properties also offer exists, equals, comparisons, and true/false for checkboxes
   - **Note status** (journal decorations): Has note, has open tasks, all tasks completed
+  - **Has notelet** (journal decorations): Matches a period that has at least one [notelet](#notelets). Pick the notelet types it counts, or leave them all off to match a notelet of any type
   - **Note size** (journal decorations): Matches on the note's word or character count, using the same definition as Obsidian's own word count — frontmatter is not counted, everything else is, including code blocks and comments. The number is the one Obsidian shows in the status bar.
   - **Date and weekday** (calendar and shelf decorations, and daily journals): A specific day, month, and/or year — each of which can be left as "any" — or a set of weekdays
   - **Position** (custom-interval journals): The Nth day of the interval, counted from its start or from its end
@@ -314,6 +382,7 @@ A settings page for recovering from vault or settings damage. It does nothing on
 - **Notes with the wrong period range** — a note's start/end dates no longer match the period its own date falls in.
 - **Two notes claiming the same period** — you pick which one keeps it; the other has its journal keys removed, its content left otherwise untouched.
 - **Notes claiming a journal that no longer exists** — shown as an inventory rather than a problem, since deleting a journal while keeping its notes is a deliberate choice. Remove the leftover keys, or reconnect the notes to a different journal with the "Connect note to a journal" command.
+- **Notelets naming a type their journal no longer has** — a [notelet](#notelets) left behind by a type deleted in _keep_ mode. Remove the leftover keys, or reconnect the note with the "Connect note to a journal" command.
 
 A finding the check can repair safely shows a **Fix** button, or use **Fix everything safe** to apply every safe repair at once. A finding it cannot safely resolve — for example, when a note's file name and its own date disagree about which period it belongs to — is listed with an explanation instead of a guess, so you can open the note and decide. The page re-scans after every repair and only reports a note fixed once Obsidian has confirmed the change landed.
 
@@ -362,6 +431,11 @@ These variables can be used in the note name template, the folder path, and the 
 - A journal's own [questions](#questions) each add a variable named after the question — a
   question named `mood` renders as `{{mood}}`. Available everywhere the built-in variables above
   are; a question with no answer yet renders empty, same as an unset numbering variable.
+- `{{notelet_index}}` - the number of a [notelet](#notelets) within its period. Numbering restarts
+  in every period, so the first notelet of a day is always 1. Available only in a notelet type's
+  own note name, folder path and templates, and only while that type has **Number each notelet**
+  on. It offsets and renders as an ordinal like the other numbering variables
+  (`{{notelet_index+1}}`, `{{notelet_index:o}}`).
 - `{{note_name}}` / `{{title}}` - the note's name. Available in the folder path, in template content and in navigation block segments, but not in the note name template itself, since the name has to render first. In a navigation block segment it is the name of the note the segment opens; for a period whose note does not exist yet, the name that note would get.
 - `{{current_date}}` - the date the note is rendered on (not the reference period), formatted with `{{current_date:format}}`
 - `{{current_time}}` / `{{time}}` - the clock time at render, formatted with `{{time:HH:mm}}`
@@ -383,7 +457,7 @@ The same list is available in the app: any **additional modifications** link in 
 
 For easier navigation plugin provides code blocks that can be inserted into note content. Each journal's settings has a **Supported code blocks** link that shows the same list with a live preview of that journal's blocks, and copies a block to your clipboard when you click it.
 
-Each block's container carries a stable CSS class — `journal-nav-code-block`, `journal-timeline-code-block` and `journal-home-code-block` — that themes and CSS snippets can target. `calendar-timeline` and `journals-home` name any option they do not recognize in a notice above the block, and still render.
+Each block's container carries a stable CSS class — `journal-nav-code-block`, `journal-timeline-code-block`, `journal-home-code-block` and `journal-notelets-code-block` — that themes and CSS snippets can target. `calendar-timeline`, `journals-home` and `journal-notelets` name any option they do not recognize in a notice above the block, and still render.
 
 ````markdown
 ```journal-nav
@@ -482,6 +556,29 @@ show:
 scale: 2
 separator: " | "
 shelf: work
+```
+````
+
+````markdown
+```journal-notelets
+
+```
+````
+
+Lists the [notelets](#notelets) of the period the note holding the block belongs to, grouped by type,
+with a button that creates a new one. It reads the host note's own journal and date, so it works in
+a period note and in a notelet alike; in a note connected to no journal it says so and lists nothing.
+
+Supports following settings:
+
+- `types` - limits the list to particular notelet types, named as you named them. Without it every
+  type of the note's journal is listed.
+
+````markdown
+```journal-notelets
+types:
+  - Meeting
+  - Retro
 ```
 ````
 
@@ -618,6 +715,8 @@ Produces `Release4711Sprint1` through `Release4711Sprint6`, then rolls over to
 **Timeline**: A calendar-like view that displays days of a specific period (week, month, etc.) with links to corresponding journal entries.
 
 **Sequential number**: A number assigned to journal entries (like Sprint 1, Sprint 2). Useful for tracking iterations or repeating periods. It is exposed as a template variable, named `index` by default. A journal can chain several of these **digits** together, most significant first, so the fastest one carries into the next when it resets (like Release4711Sprint1, Release4711Sprint2).
+
+**Notelet**: An extra note a journal keeps for a period, alongside that period's own note — a meeting note on a day, a retro on a sprint. Each belongs to a **notelet type**, which is configured on the journal and decides where its notes go, what they are named, and what they contain. A period can hold any number of notelets.
 
 **Template Variables**: Special placeholders like `{{date}}` or `{{index}}` that the plugin replaces with actual values when creating notes.
 

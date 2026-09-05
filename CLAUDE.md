@@ -477,6 +477,40 @@ on it.
   interval one, registering only the fixed cells (filtered by
   `cell.scopeKind === "fixed"`), or those segments paint nothing.
 
+### Notelets
+
+- A `has-notelet` condition with an **empty `typeIds` list means "any type"**
+  (`decorations/config.ts`), so any cascade that drops ids from one must not empty a
+  list that started non-empty — that silently widens "has a Meeting" into "has any
+  notelet", which is worse than the dangling id it was cleaning up.
+  `CloneJournalFlow#remapNoteletTypeIds` guards this with `typeIds.length > 0` only
+  because a clone with no types has no notelets either, so "any" still matches
+  nothing there; the same trick is **not** available to a journal that keeps its other
+  types. This is why deleting a type leaves its id behind in conditions rather than
+  stripping it: an orphaned id can only match nothing, because a new type id is always
+  a fresh `nanoid` and can never collide with it.
+- **Every surface that filters notelets by type matches the stored type _name_, not a
+  resolved `typeId`** — `noteletsFor` in the API, `buildNoteletListing`'s callers, the
+  `journal-notelets` fence. That is what keeps an **orphaned notelet** (its type deleted
+  in _keep_ mode, so `typeId` is `null` and only `typeName` survives) reachable by the
+  name still in its frontmatter. Filtering by id instead compiles, passes most tests,
+  and silently drops exactly those notes. A fixture with a single matching notelet
+  cannot falsify a filter at all — seed a second, non-matching one.
+- **Purge before removing the type from config.** `clearMutator` enumerates the journal's
+  _current_ notelet types to know which counter and question keys a note may carry, so a
+  flow that calls `deleteNoteletType` first leaves those keys on every note the type
+  owned. `DeleteNoteletTypeFlow` orders it correctly and says so.
+- **Re-read the type across a modal's `await`.** `RenameNoteletTypeFlow` and
+  `DeleteNoteletTypeFlow` both match notelets by the type's _stored name_, and the
+  settings store can change while the modal is open (a sync merge, or any other write
+  reaching `JournalsRepository`). Purging by the pre-modal name targets a name no
+  notelet carries any more.
+- `CreateNoteletFlow.openMode` is **tri-state**: omitted means "open in the active pane"
+  (what every UI caller relies on), `null` means "create without opening" (the API's
+  `createNotelet`), and a concrete mode opens there. Same `undefined`/`null` convention
+  `JournalSelector.shelf` uses. Reading it as a plain optional mode makes the API open a
+  pane it promised not to.
+
 ### Deliberate non-bugs
 
 Settled decisions that read as regressions. Don't "fix" them; changing any needs
