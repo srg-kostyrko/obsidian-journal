@@ -46,6 +46,12 @@ const ZOOM_MONTH = "month/2030-03.md";
 const ZOOM_FIRST_MONTH = "month/2030-01.md";
 const ZOOM_QUARTER = "quarter/2030-Q1.md";
 
+// Core Obsidian ships its own "Zoom in"/"Zoom out" (UI scaling) and ranks them above ours, so
+// filtering by the bare name is not enough — the plugin prefix is what picks our row out.
+const PLUGIN = "Journals";
+const ZOOM_OUT = m.command_zoom_out();
+const ZOOM_IN = m.command_zoom_in();
+
 function journalNote(journal: string, anchor: string): string {
   return `---\njournal: ${journal}\njournal-date: ${anchor}\n---\n`;
 }
@@ -183,29 +189,29 @@ describe("commands", () => {
     it("opens the note of the next longer period on the same shelf", async () => {
       await openNote(ZOOM_MONTH);
       await openPalette();
-      await promptChoose(m.command_open_longer());
+      await promptChoose(ZOOM_OUT, PLUGIN);
       await waitForActiveNote(ZOOM_QUARTER);
     });
 
     it("opens the first shorter-period note inside the active period", async () => {
       await openNote(ZOOM_QUARTER);
       await openPalette();
-      await promptChoose(m.command_open_shorter());
+      await promptChoose(ZOOM_IN, PLUGIN);
       await waitForActiveNote(ZOOM_FIRST_MONTH);
     });
 
     it("hides the zoom commands on a note that belongs to no journal", async () => {
       await openNote("plain-note.md");
-      expect(await paletteLists(m.command_open_longer())).toBe(false);
-      expect(await paletteLists(m.command_open_shorter())).toBe(false);
+      expect(await paletteLists(ZOOM_OUT, PLUGIN)).toBe(false);
+      expect(await paletteLists(ZOOM_IN, PLUGIN)).toBe(false);
     });
 
     it("hides zooming in on the shortest journal of the shelf", async () => {
       // "extra" holds monthly, quarterly and yearly, so nothing on it writes a shorter period
       // than a month — a configuration fact, which is what check() gates on.
       await openNote(ZOOM_MONTH);
-      expect(await paletteLists(m.command_open_shorter())).toBe(false);
-      expect(await paletteLists(m.command_open_longer())).toBe(true);
+      expect(await paletteLists(ZOOM_IN, PLUGIN)).toBe(false);
+      expect(await paletteLists(ZOOM_OUT, PLUGIN)).toBe(true);
     });
   });
 });

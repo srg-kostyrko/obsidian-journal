@@ -397,10 +397,10 @@
   "command_open_no_next": "После этой заметки следующей нет.",
   "command_open_no_previous": "Перед этой заметкой предыдущей нет.",
   "command_open_needs_active_note": "Сначала откройте заметку журнала.",
-  "command_open_longer": "Открыть заметку за более длинный период",
-  "command_open_shorter": "Открыть заметку за более короткий период",
-  "command_open_no_longer": "Здесь нет журнала с более длинным периодом.",
-  "command_open_no_shorter": "Здесь нет журнала с более коротким периодом.",
+  "command_zoom_out": "Отдалить",
+  "command_zoom_in": "Приблизить",
+  "command_zoom_no_longer": "Здесь нет журнала с более длинным периодом.",
+  "command_zoom_no_shorter": "Здесь нет журнала с более коротким периодом.",
   "command_open_unavailable": "Нет заметки для открытия.",
   "command_type_label": [
     {

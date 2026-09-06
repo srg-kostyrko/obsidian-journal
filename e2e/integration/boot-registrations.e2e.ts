@@ -15,8 +15,8 @@ const STATIC_COMMANDS = [
   "journals:insert-date-link",
   "journals:open-next",
   "journals:open-prev",
-  "journals:open-longer",
-  "journals:open-shorter",
+  "journals:zoom-out",
+  "journals:zoom-in",
 ];
 
 async function registeredCommandIds(): Promise<string[]> {

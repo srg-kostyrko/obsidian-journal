@@ -395,10 +395,10 @@
   "command_open_no_next": "Non c'è una nota successiva a questa.",
   "command_open_no_previous": "Non esiste alcuna nota precedente a questa.",
   "command_open_needs_active_note": "Apri prima una nota del diario.",
-  "command_open_longer": "Apri la nota del periodo più lungo",
-  "command_open_shorter": "Apri la nota del periodo più breve",
-  "command_open_no_longer": "Nessun diario qui copre un periodo più lungo.",
-  "command_open_no_shorter": "Nessun diario qui copre un periodo più breve.",
+  "command_zoom_out": "Riduci zoom",
+  "command_zoom_in": "Aumenta zoom",
+  "command_zoom_no_longer": "Nessun diario qui copre un periodo più lungo.",
+  "command_zoom_no_shorter": "Nessun diario qui copre un periodo più breve.",
   "command_open_unavailable": "Non c'è nessuna nota da aprire.",
   "command_type_label": [
     {

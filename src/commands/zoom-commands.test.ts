@@ -52,7 +52,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    expect(host.commands.get("open-longer")?.checkCallback?.(true)).toBe(true);
+    expect(host.commands.get("zoom-out")?.checkCallback?.(true)).toBe(true);
   });
 
   it("hides the longer-period command when no journal in scope is longer", async () => {
@@ -60,16 +60,16 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    expect(host.commands.get("open-longer")?.checkCallback?.(true)).toBe(false);
-    expect(host.commands.get("open-shorter")?.checkCallback?.(true)).toBe(false);
+    expect(host.commands.get("zoom-out")?.checkCallback?.(true)).toBe(false);
+    expect(host.commands.get("zoom-in")?.checkCallback?.(true)).toBe(false);
   });
 
   it("hides both commands when the active note belongs to no journal", async () => {
     const { host } = await buildZoom({ journals: { daily, monthly } });
     host.emitActiveLeafChange(host.putFile(ORPHAN));
 
-    expect(host.commands.get("open-longer")?.checkCallback?.(true)).toBe(false);
-    expect(host.commands.get("open-shorter")?.checkCallback?.(true)).toBe(false);
+    expect(host.commands.get("zoom-out")?.checkCallback?.(true)).toBe(false);
+    expect(host.commands.get("zoom-in")?.checkCallback?.(true)).toBe(false);
   });
 
   it("opens the longer-period note covering the active note's date", async () => {
@@ -78,7 +78,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path: MONTH_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    host.commands.get("open-longer")?.checkCallback?.(false);
+    host.commands.get("zoom-out")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(workspace.isOpen(MONTH_NOTE)).toBe(true));
   });
@@ -90,7 +90,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-05-01"), path: start });
     host.emitActiveLeafChange(host.putFile(MONTH_NOTE));
 
-    host.commands.get("open-shorter")?.checkCallback?.(false);
+    host.commands.get("zoom-in")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(workspace.isOpen(start)).toBe(true));
   });
@@ -100,7 +100,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    host.commands.get("open-longer")?.checkCallback?.(false);
+    host.commands.get("zoom-out")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(host.app.vault.getAbstractFileByPath(MONTH_NOTE)).not.toBeNull());
   });
@@ -121,7 +121,7 @@ describe("ZoomCommands", () => {
     host.putFile(MONTH_NOTE);
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    host.commands.get("open-longer")?.checkCallback?.(false);
+    host.commands.get("zoom-out")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(workspace.isOpen(MONTH_NOTE)).toBe(true));
   });
@@ -136,7 +136,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    expect(host.commands.get("open-longer")?.checkCallback?.(true)).toBe(false);
+    expect(host.commands.get("zoom-out")?.checkCallback?.(true)).toBe(false);
   });
 
   it("asks which journal to open when two share the target granularity", async () => {
@@ -145,7 +145,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    host.commands.get("open-longer")?.checkCallback?.(false);
+    host.commands.get("zoom-out")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(suggests.opens.length).toBe(1));
     expect(suggests.lastOpen<readonly string[], string>().input).toEqual(["monthly", "work-monthly"]);
@@ -161,7 +161,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path: MONTH_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    host.commands.get("open-longer")?.checkCallback?.(false);
+    host.commands.get("zoom-out")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(workspace.isOpen(MONTH_NOTE)).toBe(true));
   });
@@ -180,7 +180,7 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path: MONTH_NOTE });
     host.emitActiveLeafChange(host.putFile(notelet));
 
-    host.commands.get("open-longer")?.checkCallback?.(false);
+    host.commands.get("zoom-out")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(workspace.isOpen(MONTH_NOTE)).toBe(true));
   });
@@ -190,16 +190,16 @@ describe("ZoomCommands", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
     host.emitActiveLeafChange(host.putFile(DAY_NOTE));
 
-    host.commands.get("open-longer")?.checkCallback?.(false);
+    host.commands.get("zoom-out")?.checkCallback?.(false);
 
-    await vi.waitFor(() => expect(notices.messages).toContain(m.command_open_no_longer()));
+    await vi.waitFor(() => expect(notices.messages).toContain(m.command_zoom_no_longer()));
   });
 
   it("tells a bound hotkey why nothing opened when no journal note is active", async () => {
     const { host, notices } = await buildZoom({ journals: { daily, monthly } });
     host.emitActiveLeafChange(host.putFile(ORPHAN));
 
-    host.commands.get("open-shorter")?.checkCallback?.(false);
+    host.commands.get("zoom-in")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(notices.messages).toContain(m.command_open_needs_active_note()));
   });

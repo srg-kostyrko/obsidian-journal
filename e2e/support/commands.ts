@@ -31,10 +31,13 @@ function promptItem(text: string): ReturnType<typeof $> {
 }
 
 // Filter the active prompt to `text` and choose the matching suggestion. The palette lists a
-// plugin command as "Journals: <name>", so the partial match survives the prefix.
-export async function promptChoose(text: string): Promise<void> {
+// plugin command as "Journals: <name>", so the partial match survives the prefix. Pass `match`
+// where the filter alone is ambiguous — Obsidian's own commands can share a name with ours, and
+// it renders the plugin prefix as a sibling element, so a row reads "JournalsZoom out" with no
+// separator: match on the prefix rather than on any label spanning it.
+export async function promptChoose(text: string, match: string = text): Promise<void> {
   await promptType(text);
-  const item = promptItem(text);
+  const item = promptItem(match);
   await item.waitForClickable({ timeoutMsg: `prompt did not list "${text}"` });
   await item.click();
 }
@@ -54,10 +57,10 @@ async function closePalette(): Promise<void> {
 
 // Whether the palette lists `text` after filtering to it — the real check() gate, since the
 // palette omits commands whose check() returns false. Opens, filters, reads once, closes.
-export async function paletteLists(text: string): Promise<boolean> {
+export async function paletteLists(text: string, match: string = text): Promise<boolean> {
   await openPalette();
   await promptType(text);
-  const present = await promptItem(text).isExisting();
+  const present = await promptItem(match).isExisting();
   await closePalette();
   return present;
 }

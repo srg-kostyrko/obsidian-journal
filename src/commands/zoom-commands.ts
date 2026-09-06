@@ -28,14 +28,14 @@ export class ZoomCommands {
   // question about which notes are written, and it is what the palette filters on elsewhere.
   constructor() {
     this.#commands.register({
-      id: "open-longer",
-      name: m.command_open_longer(),
+      id: "zoom-out",
+      name: m.command_zoom_out(),
       check: () => this.#targets("longer").length > 0,
       execute: () => void this.#open("longer"),
     });
     this.#commands.register({
-      id: "open-shorter",
-      name: m.command_open_shorter(),
+      id: "zoom-in",
+      name: m.command_zoom_in(),
       check: () => this.#targets("shorter").length > 0,
       execute: () => void this.#open("shorter"),
     });
@@ -72,13 +72,13 @@ export class ZoomCommands {
     }
     const journalNames = this.#targets(direction);
     if (journalNames.length === 0) {
-      this.#notices.show(direction === "longer" ? m.command_open_no_longer() : m.command_open_no_shorter());
+      this.#notices.show(direction === "longer" ? m.command_zoom_no_longer() : m.command_zoom_no_shorter());
       return;
     }
     await this.#flows.invoke(
       OpenDateFlow,
       { anchor: entry.value.anchor, journalNames },
-      { context: { command: direction === "longer" ? "open-longer" : "open-shorter" } },
+      { context: { command: direction === "longer" ? "zoom-out" : "zoom-in" } },
     );
   }
 }

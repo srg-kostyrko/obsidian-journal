@@ -327,7 +327,7 @@ They **layer**: for each property a cell can only have once — background, text
 
 ### Custom Commands
 
-The plugin ships a set of commands for opening the current, next, and previous note of each period type, plus **Open longer period note** and **Open shorter period note**, which zoom out and in from the note you have open. Zooming stays on the shelf the open note's journal belongs to, or spans every journal when it is on no shelf; a custom-interval journal takes its place by how long its interval runs, and a granularity no journal in scope writes at is passed over. The note is created if it does not exist yet. You can create more commands of your own:
+The plugin ships a set of commands for opening the current, next, and previous note of each period type, plus **Zoom out** and **Zoom in**, which step to the journal one period length longer or shorter than the note you have open. Zooming stays on the shelf the open note's journal belongs to, or spans every journal when it is on no shelf; a custom-interval journal takes its place by how long its interval runs, and a granularity no journal in scope writes at is passed over. The note is created if it does not exist yet. You can create more commands of your own:
 
 - **Command types**:
 
