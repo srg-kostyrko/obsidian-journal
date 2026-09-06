@@ -288,6 +288,12 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   native-verified. Worth a native eye: whether the purpose clause reads naturally after an
   imperative in de, it and ko, and whether ko's `을(를)` particle form is acceptable in UI
   copy where the preceding token is a variable.
+- The four `command_notelet_*label*` keys were translated by an agent working from this
+  file and from each locale's own `command_type_label` matrix, which they parallel: the
+  period phrases are that locale's existing ones, re-framed from "open the note" to
+  "create for the period". Not native-verified. Worth a native eye: whether the frame
+  reads as an action in the CJK locales, which carry the `notelet` noun in every variant
+  where the European locales leave it implicit.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.
