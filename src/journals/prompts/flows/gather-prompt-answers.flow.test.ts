@@ -102,6 +102,33 @@ describe("GatherPromptAnswersFlow", () => {
     expect(harness.modals.lastOpen()?.props).toMatchObject({ metadata });
   });
 
+  // The modal is the same one a period note opens, so its title is the only thing that says
+  // which of the two is being created.
+  it("titles the modal by the notelet type being created", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          Work: fixedJournal(
+            "Work",
+            { type: "day" },
+            { notelets: { nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup" }) } },
+          ),
+        },
+      },
+    });
+
+    void harness.resolve(Flows).invoke(GatherPromptAnswersFlow, {
+      metadata: buildNoteletMetadata({ journalName: "Work", typeId: "nt_7f3a" as TypeId }),
+      confirming: false,
+    });
+    await nextTick();
+
+    expect(harness.modals.lastOpen()?.resolvedTitle).toBe(
+      m.journal_prompt_answers_notelet_modal_title({ journal: "Work", type: "Standup" }),
+    );
+  });
+
   it("returns UserAborted when the modal is cancelled", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

@@ -1937,6 +1937,7 @@
   "journal_prompt_answer_required_in_path": "Этот ответ используется в названии заметки, поэтому он не может быть пустым.",
   "journal_prompt_answer_reserved": "«{name}» зарезервировано для неотвеченного вопроса. Введите что-нибудь другое.",
   "journal_prompt_answers_modal_title": "Новая заметка в журнале «{journal}»",
+  "journal_prompt_answers_notelet_modal_title": "Новая подзаметка типа {type} в журнале «{journal}»",
   "journal_prompt_add": "Добавить вопрос",
   "journal_prompt_autocreate_conflict": "Этот журнал создаёт заметки автоматически, поэтому никто не сможет ответить на вопрос, который входит в название заметки. Отключите что-то одно.",
   "journal_prompt_autocreate_required_warning": "Обязательный вопрос никогда не задаётся при автоматическом создании заметок.",

@@ -1897,6 +1897,7 @@
   "journal_prompt_answer_required_in_path": "Diese Antwort wird im Notiznamen verwendet und darf daher nicht leer bleiben.",
   "journal_prompt_answer_reserved": "„{name}“ ist für eine unbeantwortete Frage reserviert. Gib etwas anderes ein.",
   "journal_prompt_answers_modal_title": "Neue Notiz in „{journal}“",
+  "journal_prompt_answers_notelet_modal_title": "Neue {type}-Kurznotiz in „{journal}“",
   "journal_prompt_add": "Frage hinzufügen",
   "journal_prompt_autocreate_conflict": "Dieses Journal erstellt Notizen automatisch, daher kann niemand eine Frage beantworten, die in den Notiznamen einfließt. Schalte eines von beidem aus.",
   "journal_prompt_autocreate_required_warning": "Eine Pflichtfrage wird bei automatisch erstellten Notizen nie gestellt.",

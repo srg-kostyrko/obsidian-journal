@@ -6,7 +6,7 @@ import { toFlowError, UnknownJournalError, type JournalLifecycleFlowError } from
 import { FrontmatterService } from "@/journals/frontmatter";
 import { NotePathService } from "@/journals/notes/note-path";
 import { JournalsRepository } from "@/journals/repository";
-import type { JournalMetadata, NoteletMetadata } from "@/journals/types";
+import { isNoteletMetadata, type JournalMetadata, type NoteletMetadata } from "@/journals/types";
 
 import { promptAnswersModal } from "../ui/modals";
 
@@ -41,6 +41,9 @@ export class GatherPromptAnswersFlow implements Flow<
       return AsyncResult.err(toFlowError(new UnknownJournalError(journalName)));
     }
     const periodLabel = this.#paths.periodLabelFor(config.value, period.value);
+    const noteletTypeName = isNoteletMetadata(parameters.metadata)
+      ? config.value.notelets[parameters.metadata.typeId]?.name
+      : undefined;
 
     return attempt.in(this, async function* (this: GatherPromptAnswersFlow) {
       return yield* this.#modals
@@ -48,6 +51,7 @@ export class GatherPromptAnswersFlow implements Flow<
           metadata: parameters.metadata,
           confirming: parameters.confirming,
           periodLabel,
+          noteletTypeName,
         })
         .mapErr(() => new UserAborted("prompt-answers"));
     });

@@ -1887,6 +1887,7 @@
   "journal_prompt_answer_required_in_path": "이 답변은 노트 이름에 사용되므로 비워 둘 수 없습니다.",
   "journal_prompt_answer_reserved": "\"{name}\"은(는) 답변하지 않은 질문을 위해 예약되어 있습니다. 다른 내용을 입력하세요.",
   "journal_prompt_answers_modal_title": "'{journal}'의 새 노트",
+  "journal_prompt_answers_notelet_modal_title": "'{journal}'의 새 {type} 서브노트",
   "journal_prompt_add": "질문 추가",
   "journal_prompt_autocreate_conflict": "이 저널은 노트를 자동으로 생성하므로 노트 이름에 들어가는 질문에 아무도 답할 수 없습니다. 둘 중 하나를 끄세요.",
   "journal_prompt_autocreate_required_warning": "필수 질문은 노트가 자동으로 생성될 때는 표시되지 않습니다.",

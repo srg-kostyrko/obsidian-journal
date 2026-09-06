@@ -1895,6 +1895,7 @@
   "journal_prompt_answer_required_in_path": "Questa risposta viene usata nel nome della nota, quindi non può essere lasciata vuota.",
   "journal_prompt_answer_reserved": "\"{name}\" è riservato a una domanda senza risposta. Inserisci qualcos'altro.",
   "journal_prompt_answers_modal_title": "Nuova nota in \"{journal}\"",
+  "journal_prompt_answers_notelet_modal_title": "Nuova nota breve {type} in \"{journal}\"",
   "journal_prompt_add": "Aggiungi domanda",
   "journal_prompt_autocreate_conflict": "Questo diario crea note automaticamente, quindi nessuno può rispondere a una domanda che finisce nel nome della nota. Disattiva una delle due opzioni.",
   "journal_prompt_autocreate_required_warning": "Una domanda obbligatoria non viene mai posta quando le note vengono create automaticamente.",

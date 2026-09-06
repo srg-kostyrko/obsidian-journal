@@ -1782,6 +1782,7 @@
   "journal_prompt_answer_required_in_path": "Ця відповідь використовується в назві нотатки, тому вона не може бути порожньою.",
   "journal_prompt_answer_reserved": "«{name}» зарезервовано для запитання без відповіді. Введіть щось інше.",
   "journal_prompt_answers_modal_title": "Нова нотатка в журналі «{journal}»",
+  "journal_prompt_answers_notelet_modal_title": "Нова піднотатка типу {type} в журналі «{journal}»",
   "journal_prompt_add": "Додати запитання",
   "journal_prompt_autocreate_conflict": "Цей журнал створює нотатки автоматично, тому ніхто не зможе відповісти на запитання, яке входить у назву нотатки. Вимкніть щось одне.",
   "journal_prompt_autocreate_required_warning": "Обов'язкове запитання ніколи не задається під час автоматичного створення нотаток.",

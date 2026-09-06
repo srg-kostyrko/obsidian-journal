@@ -1742,6 +1742,7 @@
   "journal_prompt_answer_required_in_path": "この回答はノート名に使われるため、空欄のままにはできません。",
   "journal_prompt_answer_reserved": "「{name}」は未回答の質問用に予約されています。別の内容を入力してください。",
   "journal_prompt_answers_modal_title": "「{journal}」の新しいノート",
+  "journal_prompt_answers_notelet_modal_title": "「{journal}」の新しい{type}サブノート",
   "journal_prompt_add": "質問を追加",
   "journal_prompt_autocreate_conflict": "このジャーナルはノートを自動作成するため、ノート名に含まれる質問に誰も答えられません。どちらか一方をオフにしてください。",
   "journal_prompt_autocreate_required_warning": "必須の質問は、ノートが自動作成される場合には表示されません。",
