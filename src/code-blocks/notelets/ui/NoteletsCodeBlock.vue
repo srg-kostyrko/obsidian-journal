@@ -99,10 +99,13 @@ function createNotelet(event: MouseEvent): void {
   flex-direction: column;
   gap: var(--size-4-2);
 }
+/* The create button follows the heading rather than sitting at the row's end: Obsidian overlays
+   its own edit-block button on the top-right corner of a rendered fence, and a control parked
+   under it takes the hover but never the click. The view block's twin of this header keeps its
+   action on the right — it shares its corner with nothing. */
 .journal-notelets__header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--size-4-2);
 }
 .journal-notelets__heading {

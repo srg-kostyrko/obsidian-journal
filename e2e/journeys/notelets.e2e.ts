@@ -14,7 +14,7 @@ import {
 } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { openInReadingMode } from "./code-blocks.js";
+import { editBlockButtonOverlap, livePreviewNote, openInLivePreview, openInReadingMode } from "./code-blocks.js";
 
 // Notelets are the one journal surface with no e2e coverage at all, and three of their seams are
 // reachable only against a real vault: NoteletPathService picks the next free path by asking the
@@ -31,6 +31,10 @@ const NOTELET_BLOCK = ".markdown-reading-view .block-language-journal-notelets";
 const LIST_ROW = `${NOTELET_BLOCK} .journal-notelet-list__row`;
 const TYPE_HEADING = `${NOTELET_BLOCK} .journal-notelet-list__type-heading`;
 const NOT_CONNECTED = `${NOTELET_BLOCK} .journal-notelets-not-connected`;
+const CREATE_BUTTON = `${NOTELET_BLOCK} [aria-label="${m.journal_notelet_list_create()}"]`;
+// Live preview mounts the fence in the editor rather than the reading view, and that is where
+// Obsidian draws its edit-block button.
+const PREVIEW_CREATE_BUTTON = ".markdown-source-view .journal-notelets__header button";
 
 // A fixed past day, so the listing tests are independent of the notelets the creation tests
 // accumulate for today on this shared boot.
@@ -170,6 +174,43 @@ describe("notelets", () => {
 
       await expect($$(LIST_ROW)).toBeElementsArrayOfSize(2);
       expect(await activeNotePath()).toBe(`day/retros/${LISTED_DAY} Retro.md`);
+    });
+  });
+
+  // Obsidian overlays its own edit-block button on the top-right corner of a rendered fence and
+  // shows it on hover — which is the moment a click arrives. A control parked in that corner is
+  // covered by it and never receives the click, a failure no component test can state: there the
+  // button is the only thing in the DOM. Its own day, seeded last, so the notelet it creates
+  // cannot reach the row counts above.
+  describe("creating from the fence", () => {
+    const FENCE_DAY = "2030-06-11";
+    const PREVIEW_DAY = "2030-06-18";
+
+    it("creates the fence's only type from the block's own button", async () => {
+      await closeAllLeaves();
+      await seedNote(`day/${FENCE_DAY}.md`, fenceNote(FENCE_DAY, "```journal-notelets\ntypes:\n  - Retro\n```"));
+      await openInReadingMode(`day/${FENCE_DAY}.md`);
+      await $(NOTELET_BLOCK).waitForExist({ timeoutMsg: "the journal-notelets block did not render" });
+
+      await $(CREATE_BUTTON).click();
+
+      await waitForActiveNote(`day/retros/${FENCE_DAY} Retro.md`);
+    });
+
+    it("keeps that button clear of Obsidian's edit-block button", async () => {
+      await closeAllLeaves();
+      const path = "preview/notelet-fence.md";
+      await seedNote(path, livePreviewNote("daily", PREVIEW_DAY, "```journal-notelets\n```"));
+      await openInLivePreview(path);
+      await $(PREVIEW_CREATE_BUTTON).waitForExist({ timeoutMsg: "the fence did not render in live preview" });
+
+      const overlap = await editBlockButtonOverlap(
+        ".journal-notelets__header button",
+        ".block-language-journal-notelets",
+      );
+
+      expect(overlap.measured).toBe(true);
+      expect(overlap.overlaps).toBe(false);
     });
   });
 });
