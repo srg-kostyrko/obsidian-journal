@@ -260,6 +260,23 @@
           ],
         },
         {
+          title: "Notelet creation",
+          note: 'All against journal=day, which needs a notelet type named "Meeting" for these to run.',
+          cases: [
+            {
+              q: "journal=day&notelet=Meeting&date=today",
+              setup: 'a notelet type named "Meeting" on the day journal',
+              expect:
+                "creates and opens a new Meeting notelet for today, leaving today's day note untouched. Any questions the type asks are shown first.",
+            },
+            {
+              q: "journal=day&notelet=Meeting&date=today&mode=split",
+              setup: 'a notelet type named "Meeting" on the day journal',
+              expect: "same notelet, opened in a split pane.",
+            },
+          ],
+        },
+        {
           title: "Failure modes",
           note: 'Each must produce a notice; "nothing happened" is a bug.',
           cases: [
@@ -279,6 +296,19 @@
               setup: "set the day journal's timeline start to 2026-01-01 (clear it afterwards)",
               expect:
                 "notice, no note created. Stock test-vault journals are unbounded, so without that setup the date resolves and the item proves nothing.",
+            },
+            {
+              q: "notelet=Meeting&date=today",
+              expect: "notice that a notelet link needs a journal, no note created.",
+            },
+            {
+              q: "type=day&notelet=Meeting&date=today",
+              expect:
+                "same notice: type= names a write type, and a notelet type belongs to one journal.",
+            },
+            {
+              q: "journal=day&notelet=Nope&date=today",
+              expect: "notice naming the journal and the missing type, no note created.",
             },
           ],
         },

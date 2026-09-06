@@ -125,6 +125,7 @@
   "code_blocks_yaml_error": "Impossible de lire les options de ce bloc {key}.",
   "code_blocks_schema_error": "Certaines options de ce bloc {key} ne sont pas valides.",
   "code_blocks_nav_not_connected": "Note non connectée à un journal",
+  "code_blocks_notelets_not_connected": "Note non connectée à un journal",
   "code_blocks_home_empty": "Aucun journal à afficher. Vérifiez les options show et shelf du bloc.",
   "common_no_journals_yet": "Aucun journal pour l’instant. Créez-en un dans les paramètres du plugin.",
   "code_blocks_nav_next": "Suivant",
@@ -294,7 +295,8 @@
       "match": {
         "scope=global": "Aucune commande globale n’a encore été créée.",
         "scope=journal": "Aucune commande n’a encore été créée pour ce journal.",
-        "scope=shelf": "Aucune commande n’a encore été créée pour cette étagère."
+        "scope=shelf": "Aucune commande n’a encore été créée pour cette étagère.",
+        "scope=notelet": "Aucune commande n’a encore été créée pour ce type de note brève."
       }
     }
   ],
@@ -330,6 +332,46 @@
   ],
   "command_name_required_error": "Le nom de la commande est obligatoire.",
   "command_name_unique_error": "Le nom de la commande doit être unique.",
+  "command_notelet_label_today": "Créer pour aujourd’hui",
+  "command_notelet_label_tomorrow": "Créer pour demain",
+  "command_notelet_label_yesterday": "Créer pour hier",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Créer pour le jour actuel",
+        "type=same,writeType=week": "Créer pour la semaine actuelle",
+        "type=same,writeType=month": "Créer pour le mois actuel",
+        "type=same,writeType=quarter": "Créer pour le trimestre actuel",
+        "type=same,writeType=year": "Créer pour l’année actuelle",
+        "type=same,writeType=custom": "Créer pour la période actuelle",
+        "type=next,writeType=day": "Créer pour le jour suivant",
+        "type=next,writeType=week": "Créer pour la semaine suivante",
+        "type=next,writeType=month": "Créer pour le mois suivant",
+        "type=next,writeType=quarter": "Créer pour le trimestre suivant",
+        "type=next,writeType=year": "Créer pour l’année suivante",
+        "type=next,writeType=custom": "Créer pour la période suivante",
+        "type=previous,writeType=day": "Créer pour le jour précédent",
+        "type=previous,writeType=week": "Créer pour la semaine précédente",
+        "type=previous,writeType=month": "Créer pour le mois précédent",
+        "type=previous,writeType=quarter": "Créer pour le trimestre précédent",
+        "type=previous,writeType=year": "Créer pour l’année précédente",
+        "type=previous,writeType=custom": "Créer pour la période précédente",
+        "type=same_next_week,writeType=*": "Créer pour le même jour la semaine prochaine",
+        "type=same_previous_week,writeType=*": "Créer pour le même jour la semaine dernière",
+        "type=same_next_month,writeType=*": "Créer pour le même jour le mois prochain",
+        "type=same_previous_month,writeType=*": "Créer pour le même jour le mois dernier",
+        "type=same_next_year,writeType=day": "Créer pour le même jour l’année prochaine",
+        "type=same_next_year,writeType=month": "Créer pour le même mois l’année prochaine",
+        "type=same_next_year,writeType=quarter": "Créer pour le même trimestre l’année prochaine",
+        "type=same_previous_year,writeType=day": "Créer pour le même jour l’année dernière",
+        "type=same_previous_year,writeType=month": "Créer pour le même mois l’année dernière",
+        "type=same_previous_year,writeType=quarter": "Créer pour le même trimestre l’année dernière",
+        "type=*,writeType=*": "Créer une note brève"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
@@ -420,6 +462,8 @@
   "common_vault_root": "racine du coffre-fort",
   "command_connect_note": "Connecter la note à un journal",
   "connect_note_modal_date_label": "Date",
+  "connect_note_modal_kind_label": "Connecter en tant que",
+  "connect_note_modal_kind_period": "La note propre au journal",
   "connect_note_modal_move_description": "Le dossier de la note ({current}) diffère du dossier configuré du journal ({configured}).",
   "connect_note_modal_override_description": "Une autre note ({path}) est connectée à cette date. Elle sera déconnectée si vous activez cette option.",
   "connect_note_modal_override_label": "Remplacer la note déjà connectée à cette date",
@@ -427,14 +471,19 @@
   "connect_note_modal_rename_label": "Renommer le fichier pour qu’il corresponde au journal",
   "connect_note_modal_move_label": "Déplacer le fichier dans le dossier du journal",
   "connect_note_modal_rename_refused_prompt": "Ce journal pose une question dont la réponse entre dans le nom de la note, donc la note conserve son propre nom.",
+  "connect_note_modal_rename_refused_prompt_notelet": "Ce type de note brève pose une question dont la réponse entre dans le nom de la note, donc la note conserve son propre nom.",
   "connect_note_modal_move_refused_prompt": "Ce journal pose une question dont la réponse entre dans le dossier, donc la note reste dans son dossier actuel.",
+  "connect_note_modal_move_refused_prompt_notelet": "Ce type de note brève pose une question dont la réponse entre dans le dossier, donc la note reste dans son dossier actuel.",
   "connect_note_modal_connect": "Connecter",
+  "connect_note_modal_update": "Mettre à jour",
   "connect_note_modal_connected_to": "Cette note est connectée à « {journalName} ».",
   "connect_note_modal_disconnect": "Déconnecter",
   "connect_note_modal_out_of_bounds": "Cette date se situe en dehors de la période active du journal.",
   "connect_note_notice_connected": "Note connectée à « {journalName} ».",
+  "connect_note_notice_connected_notelet": "Note connectée à « {journalName} » en tant que note brève {type}.",
   "connect_note_notice_disconnected": "Note déconnectée de « {journalName} ».",
   "bulk_add_notes_to_title": "Ajouter des notes à {journalName}",
+  "bulk_add_notelets_to_title": "Ajouter des notes brèves {type}",
   "bulk_add_folder_label": "Dossier source",
   "bulk_add_folder_description": "Sélectionnez le dossier contenant les notes existantes que vous souhaitez traiter.",
   "bulk_add_folder_not_found": "Ce dossier n’existe pas dans votre coffre-fort.",
@@ -581,6 +630,8 @@
   "confirm_note_creation_body": "Créer « {noteName} » dans le journal « {journalName} » ?",
   "confirm_note_creation_confirm": "Créer",
   "confirm_note_creation_title": "Créer une nouvelle note de journal ?",
+  "confirm_notelet_creation_title": "Créer une nouvelle note brève ?",
+  "confirm_notelet_creation_body": "Créer « {noteName} » comme note brève {type} dans le journal « {journalName} » ?",
   "decoration_add": "Ajouter une décoration",
   "decoration_badge_matched_past": [
     {
@@ -786,6 +837,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "il existe une note",
+  "decoration_condition_has_notelet_describe_any": "il existe une note brève",
+  "decoration_condition_has_notelet_describe_types": "il existe une note brève de type {types}",
+  "decoration_condition_has_notelet_empty": "Ce journal n'a pas encore de type de note brève.",
+  "decoration_condition_has_notelet_label": "Types de note brève",
+  "decoration_condition_has_notelet_unknown_type": "type inconnu",
   "decoration_condition_has_open_task_describe": "la note contient une tâche ouverte",
   "decoration_condition_note_size_describe": [
     {
@@ -867,7 +923,8 @@
         "type=has-note": "A une note",
         "type=has-open-task": "A une tâche ouverte",
         "type=all-tasks-completed": "Toutes les tâches terminées",
-        "type=note-size": "Taille de la note"
+        "type=note-size": "Taille de la note",
+        "type=has-notelet": "A une note brève"
       }
     }
   ],
@@ -885,7 +942,8 @@
         "type=has-note": "Vérifier si la note existe",
         "type=has-open-task": "Vérifier si la note a des tâches ouvertes",
         "type=all-tasks-completed": "Vérifier si toutes les tâches sont terminées",
-        "type=note-size": "Vérifier la taille de la note"
+        "type=note-size": "Vérifier la taille de la note",
+        "type=has-notelet": "Vérifier si une note brève existe"
       }
     }
   ],
@@ -1191,6 +1249,7 @@
   "uri_unknown_write_type": "Type de journal inconnu « {type} » dans l’URI.",
   "uri_invalid_date": "Impossible de comprendre la date « {date} » dans l’URI.",
   "uri_invalid_mode": "Mode d’ouverture inconnu « {mode} » dans l’URI.",
+  "uri_notelet_requires_journal": "Un lien de note brève nécessite un journal. Ajoutez journal=<nom> au lien.",
   "uri_unknown_journal": "Il n’existe aucun journal nommé « {journal} ».",
   "uri_no_journal": "Aucun journal ne couvre cette date.",
   "uri_no_journal_of_type": [
@@ -1207,6 +1266,8 @@
     }
   ],
   "uri_open_failed": "Impossible d’ouvrir la note du journal.",
+  "uri_unknown_notelet_type": "« {journal} » n’a aucun type de note brève nommé « {type} ».",
+  "uri_notelet_failed": "Impossible de créer la note brève.",
   "view_deleted_error": "Cette vue a été supprimée. Fermez cet onglet ou recréez la vue dans les paramètres du plugin.",
   "view_block_unknown_error": "Ce bloc n’est plus disponible. Retirez-le de la vue dans les paramètres du plugin.",
   "view_block_config_error": "Certains paramètres de ce bloc ne sont pas valides. Reconfigurez-le dans les paramètres du plugin.",
@@ -1280,6 +1341,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Renvoie le chemin, dans le coffre-fort, de la note d’un autre journal pour la date sélectionnée. Intégrez-le vous-même dans un lien et ajoutez un décalage, par exemple +1w, pour pointer vers une période voisine.",
   "view_block_markdown_template_empty": "Aucun modèle sélectionné",
   "view_block_markdown_template_read_error": "Impossible de lire le fichier modèle.",
+  "view_block_notelets_label": "Notes brèves",
+  "view_block_notelets_description": "Liste les notes brèves de la note que vous lisez, ou celles d’une fenêtre autour de la date de la vue.",
+  "view_block_notelets_journals_label": "Journaux",
+  "view_block_notelets_journals_description": "Laissez tout désactivé pour inclure tous les journaux de l’étagère de la vue.",
+  "view_block_notelets_types_label": "Types de note brève",
+  "view_block_notelets_types_description": "Laissez tout désactivé pour inclure tous les types.",
+  "view_block_notelets_types_empty": "Aucun journal ne définit encore de type de note brève.",
   "view_block_summary_before": "{count} avant",
   "view_block_summary_after": "{count} après",
   "view_block_summary_hidden_days": "Masqués : {days}",
@@ -1290,6 +1358,16 @@
       "match": {
         "countPlural=one": "{count} journal",
         "countPlural=*": "{count} journaux"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} type",
+        "countPlural=*": "{count} types"
       }
     }
   ],
@@ -1304,15 +1382,16 @@
     }
   ],
   "view_block_config_window_label": "Fenêtre",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=week": "Semaine en cours",
-        "period=month": "Mois en cours",
-        "period=quarter": "Trimestre en cours",
-        "period=year": "Année en cours"
+        "period=day": "Jour sélectionné",
+        "period=week": "Semaine sélectionnée",
+        "period=month": "Mois sélectionné",
+        "period=quarter": "Trimestre sélectionné",
+        "period=year": "Année sélectionnée"
       }
     }
   ],
@@ -1508,6 +1587,7 @@
   "journal_colliding_warning": "Les journaux {names} ont des configurations conflictuelles, leurs notes s’écraseront donc mutuellement. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
   "journal_note_name_empty_notice": "Le journal « {journalName} » possède un modèle de nom qui aboutit à un nom de note vide, aucune note ne peut donc être créée. Définissez un modèle de nom dans les paramètres du journal.",
   "journal_note_path_claimed_notice": "Le journal « {journalName} » placerait sa note dans « {path} », mais cette note appartient déjà au journal « {claimedBy} », rien n’a donc été modifié. Modifiez le dossier ou le modèle de nom dans l’un d’eux.",
+  "journal_note_path_notelet_notice": "Le journal « {journalName} » ne peut pas créer sa note dans « {path} » : l’une de ses propres notes brèves s’y trouve déjà. Modifiez le modèle de nom ou le dossier du journal, ou déplacez cette note brève.",
   "journal_dashboard_bulk_add": "Ajouter des notes en masse à {name}",
   "journal_dashboard_clone": "Cloner {name}",
   "journal_dashboard_edit": "Configurer {name}",
@@ -1552,6 +1632,8 @@
   "journal_clone_modal_description": "Les paramètres et les commandes sont copiés. Les notes ne le sont pas.",
   "journal_clone_modal_name_label": "Nouveau nom du journal",
   "journal_clone_modal_title": "Cloner {name}",
+  "journal_clone_notelet_types_description": "Ajoute une commande pour chaque type. Désactivez cette option pour cloner sans eux.",
+  "journal_clone_notelet_types_label": "Copier les types de note brève",
   "journal_edit_allow_before_description": "Autoriser l’indexation avant la date d’ancrage. Peut produire des nombres négatifs.",
   "journal_edit_allow_before_label": "Autoriser avant l’ancrage",
   "journal_edit_anchor_description": "La numérotation commence à cette date. La note de cette date reçoit le numéro de départ, et les notes suivantes sont numérotées à partir de là.",
@@ -1680,6 +1762,8 @@
   "journal_edit_code_block_home_option_scale": "augmente la taille du lien en fonction de la taille du texte (par exemple, scale: 2 la double).",
   "journal_edit_code_block_home_option_shelf": "limite les journaux affichés à une étagère spécifique.",
   "journal_edit_code_block_home_custom_lead": "Avec des options personnalisées, cela peut ressembler à ceci :",
+  "journal_edit_code_block_notelets_description": "Liste les notes brèves de la période à laquelle appartient cette note. Ajoutez une liste types pour la limiter à des types de note brève particuliers.",
+  "journal_edit_code_block_notelets_default": "Par défaut, cela ressemble à ceci :",
   "journal_edit_section_timeline": "Chronologie",
   "journal_edit_sequence_enabled_description": "Attribuer des numéros aux notes (p. ex. Jour 1, Jour 2, …).",
   "journal_edit_sequence_enabled_label": "Activer les numéros séquentiels",
@@ -1706,6 +1790,7 @@
   "journal_edit_variable_non_invertible_warning": "Son utilisation ici empêche le journal de récupérer la date à partir du nom du fichier.",
   "journal_edit_variable_note_name_description": "Le nom de la note de cette période.",
   "journal_edit_variable_note_title_description": "Alias du nom de la note, prenant en charge la variable du plugin principal « Modèles ».",
+  "journal_edit_variable_notelet_index_description": "Le numéro de cette note brève dans sa période ; la numérotation recommence à chaque période, la première est donc toujours 1.",
   "journal_edit_variable_numbering_description": "La variable de numérotation configurée (voir la section Numéros séquentiels).",
   "journal_edit_variable_prompt_description": "La réponse à « {question} » (voir la section Questions).",
   "journal_edit_variable_reference_intro": "Variables disponibles. Le format de date par défaut est {dateFormat} lorsqu’aucun format explicite n’est spécifié.",
@@ -1734,18 +1819,87 @@
       "match": {
         "field=dateField": "Modifier le nom de la propriété Date",
         "field=startDateField": "Modifier le nom de la propriété Date de début",
-        "field=endDateField": "Modifier le nom de la propriété Date de fin"
+        "field=endDateField": "Modifier le nom de la propriété Date de fin",
+        "field=noteletField": "Modifier le nom de la propriété Type de note brève"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "La propriété qui enregistre le type de note brève d'une note.",
+  "journal_fm_notelet_field_label": "Propriété Type de note brève",
   "journal_name_required_error": "Le nom du journal est obligatoire.",
   "journal_name_unique_error": "Le nom du journal doit être unique.",
+  "journal_notelet_section_title": "Types de note brève",
+  "journal_notelet_section_description": "Un type de note brève est une sorte de note supplémentaire que ce journal peut créer pour une période, en plus de la note propre à la période.",
+  "journal_notelet_section_empty": "Aucun type de note brève pour l'instant.",
+  "journal_notelet_add": "Ajouter un type de note brève",
+  "journal_notelet_edit": "Modifier le type de note brève",
+  "journal_notelet_add_modal_title": "Ajouter un type de note brève",
+  "journal_notelet_name_label": "Nom",
+  "journal_notelet_name_description": "Enregistré dans chaque note brève. Le renommer ici le change partout.",
+  "journal_notelet_name_required_error": "Saisissez un nom pour ce type de note brève.",
+  "journal_notelet_name_unique_error": "Ce journal a déjà un type de note brève portant ce nom.",
+  "journal_notelet_rename_modal_title": "Renommer {name}",
+  "journal_notelet_bulk_add_tooltip": "Ajouter en masse les notes brèves de ce type",
+  "journal_notelet_rename_tooltip": "Renommer le type de note brève",
+  "journal_notelet_delete_tooltip": "Supprimer le type de note brève",
+  "journal_notelet_delete_modal_title": "Supprimer {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=0,countPlural=*": "Ce type de note brève n’a aucune note brève connectée.",
+        "count=*,countPlural=one": "Ce type de note brève a {count} note brève connectée.",
+        "count=*,countPlural=*": "Ce type de note brève a {count} notes brèves connectées."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Que faire des notes brèves connectées ?",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Conserver les notes brèves",
+        "mode=clear": "Effacer les données du type de note brève",
+        "mode=delete": "Supprimer les notes brèves"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Vos notes brèves restent inchangées dans votre coffre-fort.",
+        "mode=clear": "Les notes brèves restent dans votre coffre-fort, mais toutes les propriétés du journal et du type de note brève sont retirées de leur frontmatter.",
+        "mode=delete": "Toutes les notes brèves de ce type sont supprimées de votre coffre-fort."
+      }
+    }
+  ],
+  "journal_notelet_folder_label": "Dossier",
+  "journal_notelet_name_template_label": "Nom de la note",
+  "journal_notelet_no_within_period_variable_warning": "Ce modèle de nom ne contient rien qui varie au sein d’une période, si bien que chaque note brève après la première reçoit un numéro ajouté à son nom de note.",
+  "journal_notelet_period_path_collision_warning": "Ce type aboutit au même chemin de note que le journal lui-même. Les notes brèves reçoivent automatiquement un nom différent, mais les deux sont faciles à confondre.",
+  "journal_notelet_confirm_creation_label": "Confirmer la création de notes brèves",
+  "journal_notelet_confirm_creation_description": "Afficher une boîte de dialogue de confirmation avant la création d’une note brève de ce type.",
+  "journal_notelet_counter_label": "Numéroter chaque note brève",
+  "journal_notelet_counter_description": "La numérotation recommence à chaque période, la première note brève d'un jour est donc toujours 1.",
+  "journal_notelet_counter_key_modal_title": "Modifier le nom de la propriété Numéro",
+  "journal_property_key_taken": "Un autre élément de cette note écrit déjà dans « {name} ».",
+  "journal_notelet_command_name": "Créer {type}",
+  "journal_notelet_list_empty": "Aucune note brève pour cette période.",
+  "journal_notelet_list_create": "Nouvelle note brève",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (type manquant)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Rechercher un journal",
   "journal_prompt_answer_required": "Cette question doit recevoir une réponse.",
   "journal_prompt_answer_required_in_path": "Cette réponse est utilisée dans le nom de la note, elle ne peut donc pas rester vide.",
   "journal_prompt_answer_reserved": "« {name} » est réservé aux questions sans réponse. Saisissez autre chose.",
   "journal_prompt_answers_modal_title": "Nouvelle note dans « {journal} »",
+  "journal_prompt_answers_notelet_modal_title": "Nouvelle note brève {type} dans « {journal} »",
   "journal_prompt_add": "Ajouter une question",
   "journal_prompt_autocreate_conflict": "Ce journal crée des notes automatiquement, personne ne peut donc répondre à une question qui apparaît dans le nom de la note. Désactivez l'une des deux options.",
   "journal_prompt_autocreate_required_warning": "Une question obligatoire n'est jamais posée lorsque les notes sont créées automatiquement.",
@@ -1758,7 +1912,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Ajouter une question", "mode=edit": "Modifier la question" }
+      "match": {
+        "mode=add": "Ajouter une question",
+        "mode=edit": "Modifier la question"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Chemin de la note",
@@ -1808,7 +1965,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Ajouter un chiffre de numérotation", "mode=edit": "Modifier le chiffre de numérotation" }
+      "match": {
+        "mode=add": "Ajouter un chiffre de numérotation",
+        "mode=edit": "Modifier le chiffre de numérotation"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1960,6 +2120,7 @@
   "maintenance_check_group_stale": "{journal} — ces notes couvrent la mauvaise période",
   "maintenance_check_group_duplicate": "{journal} — deux notes pour {anchor}",
   "maintenance_check_group_orphaned": "{journal} — ce journal n'existe plus",
+  "maintenance_check_group_orphaned_type": "{journal} — type de note brève inconnu",
   "maintenance_detail_moved": "{path} : {from} → {to}",
   "maintenance_detail_no_usable_date": "{path} : aucune date lisible. Le nom du fichier indique {to}.",
   "maintenance_detail_path_overrides_date": "{path} : le nom du fichier indique {pathAnchor}, la note indique {dateAnchor}. Ouvrez la note et décidez.",
@@ -1968,6 +2129,7 @@
   "maintenance_detail_start_mismatch": "{path} : commence le {storedStart}, devrait commencer le {expectedStart}.",
   "maintenance_detail_duplicate": "{path} — {size} octets, modifié {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path} : il n'existe plus de type de note brève appelé « {typeName} » dans ce journal.",
   "maintenance_reason_anchor_contested": "Cette réparation a été annulée car une autre note revendique déjà la même période.",
   "maintenance_reason_path_and_date_disagree": "Rien n'a été modifié automatiquement car le nom du fichier et la note ne concordent pas.",
   "maintenance_reason_path_not_invertible": "Cela n'a pas pu être réparé automatiquement.",

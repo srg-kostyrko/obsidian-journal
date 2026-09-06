@@ -5,6 +5,15 @@ import type { AnchorString } from "@/calendar/types";
 import { resolveWindow } from "./window-resolution";
 
 describe("resolveWindow", () => {
+  describe("day window", () => {
+    it("resolves to the single day containing the reference date", () => {
+      expect(resolveWindow("day", "2026-08-12" as AnchorString)).toEqual({
+        start: "2026-08-12",
+        end: "2026-08-12",
+      });
+    });
+  });
+
   describe("week", () => {
     it("returns the locale-anchored week containing refDate", () => {
       // 2026-05-29 is a Friday; with firstDayOfWeek=Monday the week is 05-25..05-31.

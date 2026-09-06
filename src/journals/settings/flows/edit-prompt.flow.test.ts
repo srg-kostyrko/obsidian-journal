@@ -5,10 +5,11 @@ import { Flows, UserAborted } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
 import type { Prompt } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsSettingsCoreModule } from "../module";
@@ -133,5 +134,157 @@ describe("EditPromptFlow", () => {
     const result = await harness.resolve(Flows).invoke(EditPromptFlow, { journalName: "j", promptIndex: 9 });
 
     expect(result.isErr()).toBe(true);
+  });
+});
+
+describe("EditPromptFlow addressing a notelet type", () => {
+  const journalWithType = fixedJournal(
+    "j",
+    { type: "day" },
+    {
+      prompts: [moodPrompt],
+      notelets: {
+        nt_7f3a: buildNoteletType({
+          id: "nt_7f3a" as TypeId,
+          name: "Standup",
+          prompts: [{ ...moodPrompt, variable: "attendee", frontmatterKey: "with" }],
+        }),
+      },
+    },
+  );
+
+  it("appends a type prompt to the type, leaving the journal's prompts alone", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithType } },
+    });
+    const promise = harness.resolve(Flows).invoke(EditPromptFlow, { journalName: "j", typeId: "nt_7f3a" });
+    harness.modals.lastOpen<unknown, Prompt>().submit(draft({ variable: "sleep", frontmatterKey: "journal-sleep" }));
+    const result = await promise;
+
+    expect(result.isOk()).toBe(true);
+    const config = harness.resolve(JournalsRepository).get("j").getOrUndefined();
+    expect(config?.notelets.nt_7f3a?.prompts.map((p) => p.variable)).toEqual(["attendee", "sleep"]);
+    expect(config?.prompts.map((p) => p.variable)).toEqual(["mood"]);
+  });
+
+  // Once type deletion exists, spreading the pre-modal type would write it back as a partial
+  // object — and `noUncheckedIndexedAccess` is off, so it typechecks.
+  it("writes nothing when the type is deleted while the modal is open", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithType } },
+    });
+    const promise = harness.resolve(Flows).invoke(EditPromptFlow, { journalName: "j", typeId: "nt_7f3a" });
+    harness.resolve(JournalsRepository).update("j", { notelets: {} });
+    harness.modals.lastOpen<unknown, Prompt>().submit(draft({ variable: "sleep", frontmatterKey: "journal-sleep" }));
+    const result = await promise;
+
+    expect(result.kind).toBe("err");
+    expect(harness.resolve(JournalsRepository).get("j").getOrUndefined()?.notelets).toEqual({});
+  });
+
+  it("does not rename fields when a type prompt's frontmatter key changes", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { j: journalWithType } },
+    });
+    const connection = harness.resolve(NoteConnectionService);
+    const spy = vi.spyOn(connection, "renameFieldAll");
+    const promise = harness
+      .resolve(Flows)
+      .invoke(EditPromptFlow, { journalName: "j", typeId: "nt_7f3a", promptIndex: 0 });
+    harness.modals.lastOpen<unknown, Prompt>().submit(draft({ variable: "attendee", frontmatterKey: "guest" }));
+    await promise;
+
+    expect(spy).not.toHaveBeenCalled();
+    const config = harness.resolve(JournalsRepository).get("j").getOrUndefined();
+    expect(config?.notelets.nt_7f3a?.prompts[0]?.frontmatterKey).toBe("guest");
+  });
+
+  const typeMoodPrompt: Prompt = {
+    variable: "mood",
+    question: "How was standup?",
+    type: "text",
+    frontmatterKey: "mood",
+    required: false,
+  };
+
+  const journalWithTypeQuestion = fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      notelets: {
+        nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup", prompts: [typeMoodPrompt] }),
+      },
+    },
+  );
+
+  it("moves a type question's answers to the new key on that type's notelets", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { daily: journalWithTypeQuestion } },
+    });
+    const noteletPath = "Standup 1.md" as VaultPath;
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+      mood: "ok",
+    });
+    harness.resolve(JournalsIndex).register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 1,
+    });
+    const promise = harness
+      .resolve(Flows)
+      .invoke(EditPromptFlow, { journalName: "daily", typeId: "nt_1", promptIndex: 0 });
+    harness.modals.lastOpen<unknown, Prompt>().submit({ ...typeMoodPrompt, frontmatterKey: "feeling" });
+    await promise;
+
+    expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ feeling: "ok" });
+  });
+
+  it("leaves period notes alone when a type question's key is renamed", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, journalsSettingsCoreModule],
+      data: { journals: { daily: journalWithTypeQuestion } },
+    });
+    const noteletPath = "Standup 1.md" as VaultPath;
+    const periodPath = "2026-06-01.md" as VaultPath;
+    harness.host.putFile(noteletPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      "journal-notelet": "Standup",
+      mood: "ok",
+    });
+    harness.host.putFile(periodPath, "content", {
+      journal: "daily",
+      "journal-date": "2026-06-01",
+      mood: "period answer",
+    });
+    const index = harness.resolve(JournalsIndex);
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: noteletPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 1,
+    });
+    index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: periodPath });
+    const promise = harness
+      .resolve(Flows)
+      .invoke(EditPromptFlow, { journalName: "daily", typeId: "nt_1", promptIndex: 0 });
+    harness.modals.lastOpen<unknown, Prompt>().submit({ ...typeMoodPrompt, frontmatterKey: "feeling" });
+    await promise;
+
+    expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ mood: "period answer" });
   });
 });

@@ -134,6 +134,40 @@ describe("useNotesCell", () => {
 
       expect(api.isActive(may25)).toBe(false);
     });
+
+    it("highlights the period cell while one of its notelets is the active note", async () => {
+      const { harness } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
+      const noteletPath = "Daily/Standup 1.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: may25.anchor.toAnchor(),
+        path: noteletPath,
+        typeName: "Standup",
+        typeId: null,
+      });
+      harness.host.emitFileOpen(harness.host.putFile(noteletPath));
+
+      expect(api.isActive(may25)).toBe(true);
+    });
+
+    it("does not highlight the cell while a notelet of a journal outside the scope is active", async () => {
+      const { harness } = await bootHarness();
+      const api = resolveApi(harness, () => ["daily"]);
+      const noteletPath = "Weekly/Standup 1.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "weekly",
+        anchor: may25.anchor.toAnchor(),
+        path: noteletPath,
+        typeName: "Standup",
+        typeId: null,
+      });
+      harness.host.emitFileOpen(harness.host.putFile(noteletPath));
+
+      expect(api.isActive(may25)).toBe(false);
+    });
   });
 
   describe("open", () => {

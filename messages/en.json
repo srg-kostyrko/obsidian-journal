@@ -124,6 +124,7 @@
   "code_blocks_yaml_error": "Could not read the options in this {key} block.",
   "code_blocks_schema_error": "Some options in this {key} block are not valid.",
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
+  "code_blocks_notelets_not_connected": "Note is not connected to a journal",
   "code_blocks_home_empty": "No journals to show. Check the block's show and shelf options.",
   "common_no_journals_yet": "No journals yet. Create one in the plugin settings.",
   "code_blocks_nav_next": "Next",
@@ -231,7 +232,8 @@
       "match": {
         "scope=global": "No global commands created yet.",
         "scope=journal": "No commands created for this journal yet.",
-        "scope=shelf": "No commands created for this shelf yet."
+        "scope=shelf": "No commands created for this shelf yet.",
+        "scope=notelet": "No commands created for this notelet type yet."
       }
     }
   ],
@@ -267,6 +269,46 @@
   ],
   "command_name_required_error": "Command name is required.",
   "command_name_unique_error": "Command name must be unique.",
+  "command_notelet_label_today": "Create for today",
+  "command_notelet_label_tomorrow": "Create for tomorrow",
+  "command_notelet_label_yesterday": "Create for yesterday",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Create for the current day",
+        "type=same,writeType=week": "Create for the current week",
+        "type=same,writeType=month": "Create for the current month",
+        "type=same,writeType=quarter": "Create for the current quarter",
+        "type=same,writeType=year": "Create for the current year",
+        "type=same,writeType=custom": "Create for the current period",
+        "type=next,writeType=day": "Create for the next day",
+        "type=next,writeType=week": "Create for the next week",
+        "type=next,writeType=month": "Create for the next month",
+        "type=next,writeType=quarter": "Create for the next quarter",
+        "type=next,writeType=year": "Create for the next year",
+        "type=next,writeType=custom": "Create for the next period",
+        "type=previous,writeType=day": "Create for the previous day",
+        "type=previous,writeType=week": "Create for the previous week",
+        "type=previous,writeType=month": "Create for the previous month",
+        "type=previous,writeType=quarter": "Create for the previous quarter",
+        "type=previous,writeType=year": "Create for the previous year",
+        "type=previous,writeType=custom": "Create for the previous period",
+        "type=same_next_week,writeType=*": "Create for the same day next week",
+        "type=same_previous_week,writeType=*": "Create for the same day last week",
+        "type=same_next_month,writeType=*": "Create for the same day next month",
+        "type=same_previous_month,writeType=*": "Create for the same day last month",
+        "type=same_next_year,writeType=day": "Create for the same day next year",
+        "type=same_next_year,writeType=month": "Create for the same month next year",
+        "type=same_next_year,writeType=quarter": "Create for the same quarter next year",
+        "type=same_previous_year,writeType=day": "Create for the same day last year",
+        "type=same_previous_year,writeType=month": "Create for the same month last year",
+        "type=same_previous_year,writeType=quarter": "Create for the same quarter last year",
+        "type=*,writeType=*": "Create notelet"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
@@ -359,6 +401,8 @@
 
   "command_connect_note": "Connect note to a journal",
   "connect_note_modal_date_label": "Date",
+  "connect_note_modal_kind_label": "Connect as",
+  "connect_note_modal_kind_period": "The journal's own note",
   "connect_note_modal_move_description": "The note's folder ({current}) differs from the journal's configured folder ({configured}).",
   "connect_note_modal_override_description": "Another note ({path}) is connected to this date. It will be disconnected if you enable this.",
   "connect_note_modal_override_label": "Replace the note already connected to this date",
@@ -366,15 +410,20 @@
   "connect_note_modal_rename_label": "Rename file to match the journal",
   "connect_note_modal_move_label": "Move file into the journal's folder",
   "connect_note_modal_rename_refused_prompt": "This journal asks a question that goes into the note name, so the note keeps its own name.",
+  "connect_note_modal_rename_refused_prompt_notelet": "This notelet type asks a question that goes into the note name, so the note keeps its own name.",
   "connect_note_modal_move_refused_prompt": "This journal asks a question that goes into the folder, so the note stays in its current folder.",
+  "connect_note_modal_move_refused_prompt_notelet": "This notelet type asks a question that goes into the folder, so the note stays in its current folder.",
   "connect_note_modal_connect": "Connect",
+  "connect_note_modal_update": "Update",
   "connect_note_modal_connected_to": "This note is connected to \"{journalName}\".",
   "connect_note_modal_disconnect": "Disconnect",
   "connect_note_modal_out_of_bounds": "This date is outside the journal's active timeline.",
   "connect_note_notice_connected": "Note connected to \"{journalName}\".",
+  "connect_note_notice_connected_notelet": "Note connected to \"{journalName}\" as a {type} notelet.",
   "connect_note_notice_disconnected": "Note disconnected from \"{journalName}\".",
 
   "bulk_add_notes_to_title": "Add notes to {journalName}",
+  "bulk_add_notelets_to_title": "Add {type} notelets",
   "bulk_add_folder_label": "Source folder",
   "bulk_add_folder_description": "Select the folder with existing notes you want to process.",
   "bulk_add_folder_not_found": "This folder does not exist in your vault.",
@@ -520,6 +569,8 @@
   "confirm_note_creation_body": "Create '{noteName}' in journal '{journalName}'?",
   "confirm_note_creation_confirm": "Create",
   "confirm_note_creation_title": "Create a new journal note?",
+  "confirm_notelet_creation_title": "Create a new notelet?",
+  "confirm_notelet_creation_body": "Create '{noteName}' as a {type} notelet in journal '{journalName}'?",
 
   "decoration_add": "Add decoration",
   "decoration_badge_matched_past": [
@@ -722,6 +773,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "a note exists",
+  "decoration_condition_has_notelet_describe_any": "a notelet exists",
+  "decoration_condition_has_notelet_describe_types": "a notelet of type {types} exists",
+  "decoration_condition_has_notelet_empty": "This journal has no notelet types yet.",
+  "decoration_condition_has_notelet_label": "Notelet types",
+  "decoration_condition_has_notelet_unknown_type": "unknown type",
   "decoration_condition_has_open_task_describe": "the note has an open task",
   "decoration_condition_note_size_describe": [
     {
@@ -803,7 +859,8 @@
         "type=has-note": "Has note",
         "type=has-open-task": "Has open task",
         "type=all-tasks-completed": "All tasks completed",
-        "type=note-size": "Note size"
+        "type=note-size": "Note size",
+        "type=has-notelet": "Has notelet"
       }
     }
   ],
@@ -821,7 +878,8 @@
         "type=has-note": "Check if note exists",
         "type=has-open-task": "Check if note has open tasks",
         "type=all-tasks-completed": "Check if all tasks are completed",
-        "type=note-size": "Check note size"
+        "type=note-size": "Check note size",
+        "type=has-notelet": "Check if a notelet exists"
       }
     }
   ],
@@ -1198,6 +1256,7 @@
   "uri_unknown_write_type": "Unknown journal type \"{type}\" in the URI.",
   "uri_invalid_date": "Could not understand the date \"{date}\" in the URI.",
   "uri_invalid_mode": "Unknown open mode \"{mode}\" in the URI.",
+  "uri_notelet_requires_journal": "A notelet link needs a journal. Add journal=<name> to the link.",
   "uri_unknown_journal": "There is no journal named \"{journal}\".",
   "uri_no_journal": "No journal covers that date.",
   "uri_no_journal_of_type": [
@@ -1214,6 +1273,8 @@
     }
   ],
   "uri_open_failed": "Could not open the journal entry.",
+  "uri_unknown_notelet_type": "\"{journal}\" has no notelet type named \"{type}\".",
+  "uri_notelet_failed": "Could not create the notelet.",
 
   "view_deleted_error": "This view was deleted. Close this tab, or create the view again in the plugin settings.",
   "view_block_unknown_error": "This block is no longer available. Remove it from the view in the plugin settings.",
@@ -1289,6 +1350,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Resolves to the vault path of another journal's note for the focused date. Wrap it in a link yourself, and add a shift like +1w to point at a neighboring period.",
   "view_block_markdown_template_empty": "No template selected",
   "view_block_markdown_template_read_error": "Could not read the template file.",
+  "view_block_notelets_label": "Notelets",
+  "view_block_notelets_description": "Lists the notelets of the note you are reading, or of a window around the view's date.",
+  "view_block_notelets_journals_label": "Journals",
+  "view_block_notelets_journals_description": "Leave all off to include every journal in the view's shelf.",
+  "view_block_notelets_types_label": "Notelet types",
+  "view_block_notelets_types_description": "Leave all off to include every type.",
+  "view_block_notelets_types_empty": "No journal defines a notelet type yet.",
   "view_block_summary_before": "{count} before",
   "view_block_summary_after": "{count} after",
   "view_block_summary_hidden_days": "Hidden: {days}",
@@ -1299,6 +1367,16 @@
       "match": {
         "count=1": "1 journal",
         "count=*": "{count} journals"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 type",
+        "count=*": "{count} types"
       }
     }
   ],
@@ -1313,15 +1391,16 @@
     }
   ],
   "view_block_config_window_label": "Window",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=week": "Current week",
-        "period=month": "Current month",
-        "period=quarter": "Current quarter",
-        "period=year": "Current year"
+        "period=day": "Selected day",
+        "period=week": "Selected week",
+        "period=month": "Selected month",
+        "period=quarter": "Selected quarter",
+        "period=year": "Selected year"
       }
     }
   ],
@@ -1514,6 +1593,7 @@
   "journal_colliding_warning": "Journals {names} have colliding configurations, so their notes will overwrite each other. Change the folder or name template in one of them.",
   "journal_note_name_empty_notice": "Journal \"{journalName}\" has a name template that resolves to an empty note name, so no note can be created. Set a name template for it in journal settings.",
   "journal_note_path_claimed_notice": "Journal \"{journalName}\" would put its note at \"{path}\", but that note already belongs to journal \"{claimedBy}\", so nothing was changed. Change the folder or name template in one of them.",
+  "journal_note_path_notelet_notice": "Journal \"{journalName}\" can't create its note at \"{path}\" — one of its own notelets is already there. Change the journal's note name or folder, or move that notelet.",
   "journal_dashboard_bulk_add": "Bulk add notes to {name}",
   "journal_dashboard_clone": "Clone {name}",
   "journal_dashboard_edit": "Configure {name}",
@@ -1558,6 +1638,8 @@
   "journal_clone_modal_description": "Settings and commands are copied. Notes are not.",
   "journal_clone_modal_name_label": "New journal name",
   "journal_clone_modal_title": "Clone {name}",
+  "journal_clone_notelet_types_description": "Adds a command for each type. Turn off to clone without them.",
+  "journal_clone_notelet_types_label": "Copy notelet types",
   "journal_edit_allow_before_description": "Allow indexing before the anchor date. May produce negative numbers.",
   "journal_edit_allow_before_label": "Allow before anchor",
   "journal_edit_anchor_description": "Numbering starts from this date. The note for this date gets the start number, and later notes count up from it.",
@@ -1686,6 +1768,8 @@
   "journal_edit_code_block_home_option_scale": "increases link size as a multiplier of the text size (for example, scale: 2 doubles it).",
   "journal_edit_code_block_home_option_shelf": "limits the displayed journals to a specific shelf.",
   "journal_edit_code_block_home_custom_lead": "With custom options it can look like this:",
+  "journal_edit_code_block_notelets_description": "Lists the notelets of the period this note belongs to. Add a types list to narrow it to particular notelet types.",
+  "journal_edit_code_block_notelets_default": "By default it looks like this:",
   "journal_edit_section_timeline": "Timeline",
   "journal_edit_sequence_enabled_description": "Assign numbers to notes (e.g. Day 1, Day 2, …).",
   "journal_edit_sequence_enabled_label": "Enable sequential numbers",
@@ -1712,6 +1796,7 @@
   "journal_edit_variable_non_invertible_warning": "Using this here prevents the journal from recovering the date from the filename.",
   "journal_edit_variable_note_name_description": "The name of the note for this period.",
   "journal_edit_variable_note_title_description": "Alias of the note name, supporting the core Templates plugin's variable.",
+  "journal_edit_variable_notelet_index_description": "The number of this notelet within its period; numbering restarts each period, so the first is always 1.",
   "journal_edit_variable_numbering_description": "The configured numbering variable (see the Sequence section).",
   "journal_edit_variable_prompt_description": "The answer to \"{question}\" (see the Questions section).",
   "journal_edit_variable_reference_intro": "Available variables. Date format defaults to {dateFormat} when no explicit format is given.",
@@ -1740,18 +1825,87 @@
       "match": {
         "field=dateField": "Edit date property name",
         "field=startDateField": "Edit start date property name",
-        "field=endDateField": "Edit end date property name"
+        "field=endDateField": "Edit end date property name",
+        "field=noteletField": "Edit notelet type property name"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "The property that records which notelet type a note is.",
+  "journal_fm_notelet_field_label": "Notelet type property",
   "journal_name_required_error": "Journal name is required.",
   "journal_name_unique_error": "Journal name must be unique.",
+  "journal_notelet_section_title": "Notelet types",
+  "journal_notelet_section_description": "A notelet type is a kind of extra note this journal can create for a period, alongside the period's own note.",
+  "journal_notelet_section_empty": "No notelet types yet.",
+  "journal_notelet_add": "Add notelet type",
+  "journal_notelet_edit": "Edit notelet type",
+  "journal_notelet_add_modal_title": "Add notelet type",
+  "journal_notelet_name_label": "Name",
+  "journal_notelet_name_description": "Stored on each notelet, and what you rename to change it everywhere.",
+  "journal_notelet_name_required_error": "Enter a name for this notelet type.",
+  "journal_notelet_name_unique_error": "This journal already has a notelet type with that name.",
+  "journal_notelet_rename_modal_title": "Rename {name}",
+  "journal_notelet_bulk_add_tooltip": "Bulk add notelets of this type",
+  "journal_notelet_rename_tooltip": "Rename notelet type",
+  "journal_notelet_delete_tooltip": "Delete notelet type",
+  "journal_notelet_delete_modal_title": "Delete {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "This notelet type has no connected notelets.",
+        "count=1": "This notelet type has 1 connected notelet.",
+        "count=*": "This notelet type has {count} connected notelets."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "What to do with connected notelets",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Keep notelets",
+        "mode=clear": "Clear notelet type data",
+        "mode=delete": "Delete notelets"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Notelets stay in your vault unchanged.",
+        "mode=clear": "Notelets stay in your vault, but all journal and notelet type properties are removed from their frontmatter.",
+        "mode=delete": "All notelets of this type are deleted from your vault."
+      }
+    }
+  ],
+  "journal_notelet_folder_label": "Folder",
+  "journal_notelet_name_template_label": "Note name",
+  "journal_notelet_no_within_period_variable_warning": "This name template has nothing that varies within a period, so every notelet after the first gets a number added to its file name.",
+  "journal_notelet_period_path_collision_warning": "This type renders onto the journal's own note path. Notelets are given a different name automatically, but the two are easy to confuse.",
+  "journal_notelet_confirm_creation_label": "Confirm creating notelets",
+  "journal_notelet_confirm_creation_description": "Show a confirmation dialog before a notelet of this type is created.",
+  "journal_notelet_counter_label": "Number each notelet",
+  "journal_notelet_counter_description": "Numbers restart in every period, so the first notelet of a day is always 1.",
+  "journal_notelet_counter_key_modal_title": "Edit number property name",
+  "journal_property_key_taken": "Something else on this note already writes to \"{name}\".",
+  "journal_notelet_command_name": "Create {type}",
+  "journal_notelet_list_empty": "No notelets for this period.",
+  "journal_notelet_list_create": "New notelet",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (missing type)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Search journals",
   "journal_prompt_answer_required": "This question must be answered.",
   "journal_prompt_answer_required_in_path": "This answer is used in the note name, so it can't be left blank.",
   "journal_prompt_answer_reserved": "\"{name}\" is reserved for an unanswered question. Enter something else.",
   "journal_prompt_answers_modal_title": "New note in {journal}",
+  "journal_prompt_answers_notelet_modal_title": "New {type} notelet in {journal}",
   "journal_prompt_add": "Add question",
   "journal_prompt_autocreate_conflict": "This journal creates notes automatically, so nobody can answer a question that goes into the note name. Turn one of them off.",
   "journal_prompt_autocreate_required_warning": "A required question is never asked when notes are created automatically.",
@@ -1967,6 +2121,7 @@
   "maintenance_check_group_stale": "{journal} — these notes cover the wrong period",
   "maintenance_check_group_duplicate": "{journal} — two notes for {anchor}",
   "maintenance_check_group_orphaned": "{journal} — this journal no longer exists",
+  "maintenance_check_group_orphaned_type": "{journal} — unknown notelet type",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: no readable date. The file name says {to}.",
   "maintenance_detail_path_overrides_date": "{path}: the file name says {pathAnchor}, the note says {dateAnchor}. Open the note and decide.",
@@ -1975,6 +2130,7 @@
   "maintenance_detail_start_mismatch": "{path}: starts {storedStart}, should start {expectedStart}.",
   "maintenance_detail_duplicate": "{path} — {size} bytes, changed {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: no notelet type named \"{typeName}\" exists in this journal any more.",
   "maintenance_reason_anchor_contested": "This repair was withdrawn because another note already claims the same period.",
   "maintenance_reason_path_and_date_disagree": "Nothing was changed automatically because the file name and the note disagree.",
   "maintenance_reason_path_not_invertible": "This could not be repaired automatically.",

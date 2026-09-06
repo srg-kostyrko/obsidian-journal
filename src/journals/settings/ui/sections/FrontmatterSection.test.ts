@@ -17,6 +17,7 @@ const FRONTMATTER = {
   dateField: "journal-date",
   startDateField: "journal-start-date",
   endDateField: "journal-end-date",
+  noteletField: "journal-notelet",
   addStartDate: false,
   addEndDate: false,
 } as const;
@@ -69,6 +70,26 @@ describe("FrontmatterSection", () => {
       await userEvent.click(screen.getByText(m.journal_edit_section_frontmatter()));
 
       expect(screen.queryByText(m.journal_fm_field_label({ field: "startDateField" }))).not.toBeNull();
+    });
+  });
+
+  describe("notelet field pencil", () => {
+    it("invokes EditFrontmatterFieldFlow when the notelet-field pencil is clicked", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      const flows = harness.resolve(Flows);
+      vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok(undefined));
+      harness.render(FrontmatterSection, { props: { journalName: "daily" } });
+
+      await userEvent.click(screen.getByText(m.journal_edit_section_frontmatter()));
+      await userEvent.click(screen.getByLabelText(m.journal_fm_field_modal_title({ field: "noteletField" })));
+
+      expect(flows.invoke).toHaveBeenCalledWith(EditFrontmatterFieldFlow, {
+        journalName: "daily",
+        fieldName: "noteletField",
+      });
     });
   });
 

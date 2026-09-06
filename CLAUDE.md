@@ -258,6 +258,15 @@ on it.
   `null` and throws out of `waitUntil` instead of retrying, turning "not parsed
   yet" into a hard failure on whichever combo happens to be slow. `waitForState`
   guards both; anything hand-rolling a `waitUntil` must too.
+- A markdown leaf keeps **two** renderings of the same note mounted at once — a
+  `.markdown-source-view` (live preview, where a fence renders inside
+  `.cm-preview-code-block`) and a `.markdown-reading-view` — so a code block opened
+  through `openInReadingMode` matches **twice** in the DOM, in one leaf. The
+  `.workspace-leaf:not([style*="display: none"])` scoping in `code-blocks.ts` does not
+  separate them: both copies live under the same visible leaf. Any spec that _counts_
+  elements inside a fence must scope to `.markdown-reading-view`, or every count comes
+  back doubled; a spec that only takes the first match with `$()` silently reads the
+  live-preview copy, whose `getText()` can return `""` because it is off-screen.
 - Obsidian's own markup drifts across the supported range, so a selector can
   encode a version floor tighter than `manifest.minAppVersion`. The settings
   sidebar entry is the known case: `data-setting-id` and
@@ -476,6 +485,42 @@ on it.
   there does not register. It needs its own fixed-scope call alongside the
   interval one, registering only the fixed cells (filtered by
   `cell.scopeKind === "fixed"`), or those segments paint nothing.
+
+### Notelets
+
+- A `has-notelet` condition with an **empty `typeIds` list means "any type"**
+  (`decorations/config.ts`), so any cascade that drops ids from one must not empty a
+  list that started non-empty — that silently widens "has a Meeting" into "has any
+  notelet", which is worse than the dangling id it was cleaning up.
+  `CloneJournalFlow#remapNoteletTypeIds` guards this with `typeIds.length > 0` only
+  because a clone with no types has no notelets either, so "any" still matches nothing
+  there; the same trick is **not** available to a journal that keeps its other types.
+  `DeleteNoteletTypeFlow#withoutNoteletTypeId` is the shape that is safe everywhere:
+  strip the id, drop the whole **condition** when that would empty a list that started
+  non-empty, and drop the **decoration** when that leaves it with no conditions — while
+  leaving alone both an authored "any type" condition (`typeIds: []`, which never
+  contains the id) and a decoration that already had no conditions of its own.
+- **Every surface that filters notelets by type matches the stored type _name_, not a
+  resolved `typeId`** — `noteletsFor` in the API, `buildNoteletListing`'s callers, the
+  `journal-notelets` fence. That is what keeps an **orphaned notelet** (its type deleted
+  in _keep_ mode, so `typeId` is `null` and only `typeName` survives) reachable by the
+  name still in its frontmatter. Filtering by id instead compiles, passes most tests,
+  and silently drops exactly those notes. A fixture with a single matching notelet
+  cannot falsify a filter at all — seed a second, non-matching one.
+- **Purge before removing the type from config.** `clearMutator` enumerates the journal's
+  _current_ notelet types to know which counter and question keys a note may carry, so a
+  flow that calls `deleteNoteletType` first leaves those keys on every note the type
+  owned. `DeleteNoteletTypeFlow` orders it correctly and says so.
+- **Re-read the type across a modal's `await`.** `RenameNoteletTypeFlow` and
+  `DeleteNoteletTypeFlow` both match notelets by the type's _stored name_, and the
+  settings store can change while the modal is open (a sync merge, or any other write
+  reaching `JournalsRepository`). Purging by the pre-modal name targets a name no
+  notelet carries any more.
+- `CreateNoteletFlow.openMode` is **tri-state**: omitted means "open in the active pane"
+  (what every UI caller relies on), `null` means "create without opening" (the API's
+  `createNotelet`), and a concrete mode opens there. Same `undefined`/`null` convention
+  `JournalSelector.shelf` uses. Reading it as a plain optional mode makes the API open a
+  pane it promised not to.
 
 ### Deliberate non-bugs
 

@@ -471,3 +471,27 @@ describe("VariableReferenceModal nav-row context", () => {
     expect(screen.queryByText("{{index}}")).toBeNull();
   });
 });
+
+describe("VariableReferenceModal — a notelet type's variables", () => {
+  const baseProps = {
+    journalName: "daily",
+    dateFormat: "YYYY-MM-DD",
+    hasCycle: false,
+    numberingVariableNames: [],
+    promptVariables: [],
+    context: "name-template" as const,
+  };
+
+  it("lists the counter variable when the owner is a type", () => {
+    render(VariableReferenceModal, { props: { ...baseProps, openModifications: vi.fn(), notelet: true } });
+
+    expect(screen.getByText("{{notelet_index}}")).toBeTruthy();
+    expect(screen.getByText(m.journal_edit_variable_notelet_index_description())).toBeTruthy();
+  });
+
+  it("omits the counter variable when the owner is the journal", () => {
+    render(VariableReferenceModal, { props: { ...baseProps, openModifications: vi.fn() } });
+
+    expect(screen.queryByText("{{notelet_index}}")).toBeNull();
+  });
+});

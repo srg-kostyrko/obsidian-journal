@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { compoundShift, isAvailableType, supportedTypes } from "./resolve";
+import { compoundShift, isAvailableType, supportedTypes, supportedTypesFor } from "./resolve";
 
 describe("supportedTypes", () => {
   it("offers all eleven variants for day journals", () => {
@@ -99,5 +99,35 @@ describe("compoundShift", () => {
 
   it("returns null for the non-compound next variant", () => {
     expect(compoundShift("next")).toBeNull();
+  });
+});
+
+describe("supportedTypesFor", () => {
+  const dailyNotelet = { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" } as const;
+  const dailyJournal = { kind: "journal", journalName: "Work" } as const;
+
+  it("drops the available-note types for a notelet target", () => {
+    const types = supportedTypesFor(dailyNotelet, "day");
+
+    expect(types).not.toContain("previous_available");
+    expect(types).not.toContain("next_available");
+  });
+
+  it("keeps every shifting type for a notelet target", () => {
+    const types = supportedTypesFor(dailyNotelet, "day");
+
+    expect(types).toContain("same");
+    expect(types).toContain("next");
+    expect(types).toContain("previous");
+  });
+
+  it("leaves a non-notelet target's types alone", () => {
+    expect(supportedTypesFor(dailyJournal, "day")).toEqual(supportedTypes("day"));
+  });
+
+  it("still honors the write type for a notelet target", () => {
+    expect(supportedTypesFor(dailyNotelet, "week")).toEqual(
+      supportedTypes("week").filter((type) => type !== "previous_available" && type !== "next_available"),
+    );
   });
 });

@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { screen, waitFor } from "@testing-library/vue";
+import { screen, waitFor, within } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { DayPeriod, type OpenInterval } from "@/calendar";
@@ -10,19 +10,22 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../../journals-index";
 import { journalsCoreModule } from "../../module";
-import { fixedJournal } from "../../testing";
+import { buildNoteletType, fixedJournal } from "../../testing";
 
 import ConnectNoteModal from "./ConnectNoteModal.vue";
 
+import type { TypeId } from "../../notelets/config";
 import type { Prompt } from "../../prompts/config";
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
 async function pickDate(harness: TestHarness, when: string): Promise<void> {
-  await userEvent.click(screen.getByText(m.common_pick_a_date()));
+  const trigger = document.querySelector<HTMLElement>(".date-picker-trigger");
+  if (!trigger) throw new Error("date picker trigger not found");
+  await userEvent.click(trigger);
   harness.modals.lastOpen<unknown, DayPeriod>().submit(DayPeriod.containing(date(when)));
   await waitFor(() => {
-    expect(screen.queryByText(m.common_pick_a_date())).toBeNull();
+    expect(trigger.textContent).toContain(when);
   });
 }
 
@@ -33,7 +36,14 @@ describe("ConnectNoteModal", () => {
     beforeEach(async () => {
       harness = await testContainer({
         modules: [journalsCoreModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+        data: {
+          journals: {
+            // "abacus" sorts and inserts before "daily", so journalNames[0] !== the connected
+            // journal: a pre-selection test that used journalNames[0] as its fallback would fail.
+            abacus: fixedJournal("abacus", { type: "day" }),
+            daily: fixedJournal("daily", { type: "day" }),
+          },
+        },
       });
       harness.resolve(JournalsIndex).register({
         journalName: "daily",
@@ -52,10 +62,205 @@ describe("ConnectNoteModal", () => {
       expect(submit).toHaveBeenCalledWith({ action: "disconnect", journalName: "daily" });
     });
 
-    it("does not render the journal select when the note is connected", () => {
+    it("pre-selects the journal the note is connected to", () => {
       harness.renderModal(ConnectNoteModal, { props: { path: "Journal/2026-06-01.md" as VaultPath } });
 
-      expect(screen.queryByRole("combobox")).toBeNull();
+      expect(screen.getByLabelText<HTMLSelectElement>(m.common_label_journal()).value).toBe("daily");
+    });
+
+    it("pre-selects the note's own date", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: "Journal/2026-06-01.md" as VaultPath } });
+
+      expect(screen.queryByText(m.common_pick_a_date())).toBeNull();
+    });
+
+    it("still offers Disconnect beside the update button", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: "Journal/2026-06-01.md" as VaultPath } });
+
+      expect(screen.getByText(m.connect_note_modal_disconnect())).toBeTruthy();
+      expect(screen.getByText(m.connect_note_modal_update())).toBeTruthy();
+    });
+
+    it("re-dates the note to the newly picked period", async () => {
+      const { submit } = harness.renderModal(ConnectNoteModal, {
+        props: { path: "Journal/2026-06-01.md" as VaultPath },
+      });
+      await pickDate(harness, "2026-06-05");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", anchor: "2026-06-05" }));
+    });
+  });
+
+  describe("when the note is already connected as a notelet", () => {
+    let harness: TestHarness;
+    const NOTELET = "Standups/standup.md" as VaultPath;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+            ),
+            // Its own type, distinct from "daily"'s, so switching to it is observable: an
+            // incoming journal with no types at all would just hide the kind row.
+            abacus: fixedJournal(
+              "abacus",
+              { type: "day" },
+              { notelets: { nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Ledger" }) } },
+            ),
+          },
+        },
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: NOTELET,
+        typeName: "Standup",
+        typeId: "nt_1" as TypeId,
+      });
+    });
+
+    it("pre-selects the type it is connected as", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("nt_1");
+    });
+
+    it("submits the period note when the kind is changed back", async () => {
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "");
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
+    });
+
+    it("keeps its type when only the date changes", async () => {
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+      await pickDate(harness, "2026-06-05");
+
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("nt_1");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", typeId: "nt_1" }));
+    });
+
+    it("clears the type when the journal is switched", async () => {
+      // A stale ref (rather than a DOM read) is what actually reaches the submitted payload: an
+      // unmatched <select> value silently renders blank even when the underlying ref still holds
+      // the old type id, so the meaningful assertion is on what gets submitted, not on the DOM.
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      await userEvent.selectOptions(screen.getByLabelText(m.common_label_journal()), "abacus");
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
+    });
+
+    // The note is its own occupant only in the period sense; a notelet has none at all.
+    it("does not offer to replace anything", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
+    });
+  });
+
+  describe("when the note is already connected as a numbered notelet", () => {
+    let harness: TestHarness;
+    const NOTELET = "Standups/Standup 2.md" as VaultPath;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                notelets: {
+                  nt_1: buildNoteletType({
+                    id: "nt_1" as TypeId,
+                    name: "Standup",
+                    folder: "Standups",
+                    nameTemplate: "Standup {{notelet_index}}",
+                  }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: NOTELET,
+        typeName: "Standup",
+        typeId: "nt_1" as TypeId,
+        counter: 2,
+      });
+    });
+
+    // nextIndex counts this note too, so previewing against it would offer to rename the note
+    // to a number connect will not write.
+    it("offers no rename when its journal, date and type are all unchanged", () => {
+      harness.renderModal(ConnectNoteModal, { props: { path: NOTELET } });
+
+      expect(screen.queryByText(m.connect_note_modal_rename_label())).toBeNull();
+    });
+  });
+
+  describe("when the note is connected as an orphaned notelet", () => {
+    let harness: TestHarness;
+    const ORPHAN = "Standups/orphan.md" as VaultPath;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+            ),
+          },
+        },
+      });
+      // typeId: null is what the index records once a notelet's stored type name no longer
+      // resolves to any configured type — the type itself was renamed away or deleted.
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-06-01"),
+        path: ORPHAN,
+        typeName: "Retired",
+        typeId: null,
+      });
+    });
+
+    it("falls back to the period option when the connected type no longer resolves", async () => {
+      // A DOM read alone can't tell "" from any other value that fails to match a <select>
+      // option — the browser blanks the display either way. The submitted payload is what
+      // actually carries the seed, so that's the load-bearing assertion here.
+      const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: ORPHAN } });
+
+      expect(screen.getByLabelText<HTMLSelectElement>(m.connect_note_modal_kind_label()).value).toBe("");
+
+      await userEvent.click(screen.getByText(m.connect_note_modal_update()));
+
+      expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
     });
   });
 
@@ -76,6 +281,20 @@ describe("ConnectNoteModal", () => {
       harness.renderModal(ConnectNoteModal, { props: { path: "inbox/note.md" as VaultPath } });
 
       expect(screen.queryByRole("combobox")).toBeNull();
+    });
+
+    // A note whose journal was deleted keeps its claim in frontmatter, and this dialog is the
+    // only place to shed it.
+    it("still offers Disconnect for a note claimed by a journal that is gone", () => {
+      harness.resolve(JournalsIndex).register({
+        journalName: "gone",
+        anchor: anchor("2026-06-01"),
+        path: "inbox/orphan.md" as VaultPath,
+      });
+
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/orphan.md" as VaultPath } });
+
+      expect(screen.getByText(m.connect_note_modal_disconnect())).toBeTruthy();
     });
   });
 
@@ -321,6 +540,141 @@ describe("ConnectNoteModal", () => {
           m.connect_note_modal_move_description({ current: "inbox", configured: m.common_vault_root() }),
         ),
       ).toBeTruthy();
+    });
+
+    describe("with a journal that has notelet types", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                {
+                  notelets: {
+                    nt_1: buildNoteletType({
+                      id: "nt_1" as TypeId,
+                      name: "Standup",
+                      nameTemplate: "Standup {{notelet_index}}",
+                    }),
+                  },
+                },
+              ),
+            },
+          },
+        });
+      });
+
+      it("offers the journal's types beside the period note", () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+
+        const kind = screen.getByLabelText(m.connect_note_modal_kind_label());
+        expect(within(kind).getByText(m.connect_note_modal_kind_period())).toBeTruthy();
+        expect(within(kind).getByText("Standup")).toBeTruthy();
+      });
+
+      it("submits the chosen type", async () => {
+        const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+        await userEvent.click(screen.getByText(m.connect_note_modal_connect()));
+
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect", typeId: "nt_1" }));
+      });
+
+      it("submits no type for the period note", async () => {
+        const { submit } = harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.click(screen.getByText(m.connect_note_modal_connect()));
+
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ action: "connect" }));
+        expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("typeId");
+      });
+
+      // Several notelets per anchor is the design, so there is no occupant to replace.
+      it("hides the override row for a type even when the date is taken", async () => {
+        harness.resolve(JournalsIndex).register({
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: "Journal/2026-06-01.md" as VaultPath,
+        });
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+
+        expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
+      });
+
+      // The index is not Vue-reactive: without the version bridge this preview freezes as of
+      // mount, and the note the dialog is open over is exactly the one whose period is still
+      // being indexed.
+      it("re-previews the number when another notelet lands in the index after mount", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+        expect(
+          screen.getByText(m.connect_note_modal_rename_description({ current: "n.md", configured: "Standup 1.md" })),
+        ).toBeTruthy();
+
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: "Standup 1.md" as VaultPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+          counter: 1,
+        });
+
+        await waitFor(() => {
+          expect(
+            screen.getByText(m.connect_note_modal_rename_description({ current: "n.md", configured: "Standup 2.md" })),
+          ).toBeTruthy();
+        });
+      });
+
+      it("offers to replace a period note that lands in the index after mount", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+        expect(screen.queryByText(m.connect_note_modal_override_label())).toBeNull();
+
+        harness.resolve(JournalsIndex).register({
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: "Journal/2026-06-01.md" as VaultPath,
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText(m.connect_note_modal_override_label())).toBeTruthy();
+        });
+      });
+
+      it("describes the rename against the type's name, not the journal's", async () => {
+        harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+        await pickDate(harness, "2026-06-01");
+
+        await userEvent.selectOptions(screen.getByLabelText(m.connect_note_modal_kind_label()), "nt_1");
+
+        expect(
+          screen.getByText(m.connect_note_modal_rename_description({ current: "n.md", configured: "Standup 1.md" })),
+        ).toBeTruthy();
+      });
+    });
+
+    it("offers no kind row for a journal with no notelet types", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(ConnectNoteModal, { props: { path: "inbox/n.md" as VaultPath } });
+
+      expect(screen.queryByLabelText(m.connect_note_modal_kind_label())).toBeNull();
     });
   });
 });

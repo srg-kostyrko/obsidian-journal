@@ -57,6 +57,21 @@ export class NotePathClaimedError extends JournalsError implements UserFacingFlo
   }
 }
 
+export class NoteletHoldsPathError extends JournalsError implements UserFacingFlowError {
+  override name = "NoteletHoldsPathError";
+
+  constructor(
+    readonly journalName: string,
+    readonly path: string,
+  ) {
+    super(`Path ${path} derived for journal ${journalName} holds one of its own notelets`);
+  }
+
+  get userNotice(): string {
+    return m.journal_note_path_notelet_notice({ journalName: this.journalName, path: this.path });
+  }
+}
+
 export class EmptyNoteNameError extends JournalsError implements UserFacingFlowError {
   override name = "EmptyNoteNameError";
 

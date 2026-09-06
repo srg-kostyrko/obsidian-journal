@@ -5,9 +5,10 @@ import { markRaw } from "vue";
 import { DayPeriod } from "@/calendar";
 import { date } from "@/calendar/testing";
 import { m } from "@/i18n";
+import type { TypeId } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -58,11 +59,16 @@ async function buildHarness(
 async function mountSection(options: {
   journalDecorations?: readonly JournalDecoration[];
   globalDecorations?: readonly CalendarDecoration[];
+  notelets?: JournalConfig["notelets"];
   contributions: readonly Contribution[];
 }): Promise<void> {
   const harness = await buildHarness({
     journals: {
-      daily: fixedJournal("daily", { type: "day" }, { decorations: [...(options.journalDecorations ?? [])] }),
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { decorations: [...(options.journalDecorations ?? [])], notelets: options.notelets ?? {} },
+      ),
     },
     globalDecorations: options.globalDecorations,
   });
@@ -183,5 +189,28 @@ describe("DecorationBreakdownSection", () => {
     // resolve to nonexistent ids and the region would lose its accessible name entirely.
     const heading = m.decoration_breakdown_interval_heading({ journal: "sprint planning", label: "2026-05-25" });
     expect(screen.getByRole("region", { name: heading })).toBeTruthy();
+  });
+
+  it("describes a has-notelet condition by the type's name, not its record key or stored id", async () => {
+    // Both notelet types' stored `id` fields disagree with their record keys, and the targeted
+    // type is the second key in the map, so a resolver that reads `type.id` or returns the
+    // first entry rather than looking up by record key would render the wrong name here.
+    const hasNoteletDecoration: JournalDecoration = buildDecoration({
+      mode: "or",
+      conditions: [buildCondition("has-notelet", { typeIds: ["1o1"] })],
+      styles: [buildStyle("background")],
+    });
+    await mountSection({
+      journalDecorations: [hasNoteletDecoration],
+      notelets: {
+        meeting: buildNoteletType({ id: "unrelated-a" as TypeId, name: "Meeting" }),
+        "1o1": buildNoteletType({ id: "unrelated-b" as TypeId, name: "One on One" }),
+      },
+      contributions: [
+        { source: { owner: { kind: "journal", journalName: "daily" }, index: 0 }, style: buildStyle("background") },
+      ],
+    });
+
+    expect(screen.getByText(m.decoration_condition_has_notelet_describe_types({ types: "One on One" }))).toBeTruthy();
   });
 });

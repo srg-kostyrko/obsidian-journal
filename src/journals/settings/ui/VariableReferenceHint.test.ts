@@ -53,6 +53,14 @@ describe("VariableReferenceHint", () => {
     expect(harness.modals.lastOpen().props).toMatchObject({ numberingVariableNames: ["week_no"] });
   });
 
+  it("forwards the notelet flag when the hint belongs to a type", async () => {
+    harness.render(VariableReferenceHint, { props: { ...baseProps, notelet: true } });
+
+    await userEvent.click(screen.getByRole("link"));
+
+    expect(harness.modals.lastOpen().props).toMatchObject({ notelet: true });
+  });
+
   it("forwards promptVariables when provided", async () => {
     const promptVariables = [{ variable: "mood", question: "How do you feel?", type: "text" as const }];
     harness.render(VariableReferenceHint, { props: { ...baseProps, promptVariables } });

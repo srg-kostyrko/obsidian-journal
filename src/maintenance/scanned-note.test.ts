@@ -5,8 +5,9 @@ import { NoteMetadataService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { NotePathService } from "@/journals/notes/note-path";
-import { customJournal, fixedJournal } from "@/journals/testing";
+import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer, type FakeHost } from "@/testing";
 
 import { maintenanceCoreModule } from "./module";
@@ -138,6 +139,54 @@ describe("ScannedNoteResolver", () => {
     // Without the per-journal cache each resolve would call inverterFor directly —
     // this would read 2, not 1.
     expect(inverterForSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks a note carrying the journal's type key as a notelet", async () => {
+    const { resolver, host } = await buildResolver({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+      ),
+    });
+    host.putFile("Standup.md", "", { journal: "daily", "journal-date": "2026-01-12", "journal-notelet": "Standup" });
+
+    const outcome = resolver.resolve("Standup.md" as VaultPath);
+
+    expect(outcome).toMatchObject({ kind: "resolved", note: { noteletTypeName: "Standup", noteletTypeExists: true } });
+  });
+
+  it("marks a notelet whose type no longer exists", async () => {
+    const { resolver, host } = await buildResolver({ daily: fixedJournal("daily", { type: "day" }) });
+    host.putFile("Retired.md", "", { journal: "daily", "journal-date": "2026-01-12", "journal-notelet": "Retired" });
+
+    const outcome = resolver.resolve("Retired.md" as VaultPath);
+
+    expect(outcome).toMatchObject({ kind: "resolved", note: { noteletTypeName: "Retired", noteletTypeExists: false } });
+  });
+
+  it("leaves a period note with no type name", async () => {
+    const { resolver, host } = await buildResolver({ daily: fixedJournal("daily", { type: "day" }) });
+    host.putFile("Day.md", "", { journal: "daily", "journal-date": "2026-01-12" });
+
+    const outcome = resolver.resolve("Day.md" as VaultPath);
+
+    expect(outcome.kind).toBe("resolved");
+    if (outcome.kind !== "resolved") return;
+    // Absent, not present-with-undefined — every other optional ScannedNote field follows the
+    // same conditional-spread shape, and toMatchObject with an explicit `undefined` value would
+    // fail against an absent key even though the note is healthy.
+    expect(outcome.note.noteletTypeName).toBeUndefined();
+    expect(outcome.note).not.toHaveProperty("noteletTypeName");
+  });
+
+  it("marks a notelet even when its type key holds a malformed value", async () => {
+    const { resolver, host } = await buildResolver({ daily: fixedJournal("daily", { type: "day" }) });
+    host.putFile("Weird.md", "", { journal: "daily", "journal-date": "2026-01-12", "journal-notelet": 42 });
+
+    const outcome = resolver.resolve("Weird.md" as VaultPath);
+
+    expect(outcome).toMatchObject({ kind: "resolved", note: { noteletTypeName: "42", noteletTypeExists: false } });
   });
 
   it("reports a note as unreadable when a collaborator throws", async () => {

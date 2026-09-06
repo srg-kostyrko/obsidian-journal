@@ -173,6 +173,43 @@ generated id: the `v3-to-v4` migration once keyed them by `nanoid()` instead,
 making every migrated entity unreachable by name and silently breaking
 auto-attach, the calendar, commands, and the legacy-note frontmatter rewrite.
 
+**notelet / notelet type** — a **notelet** is an additional note a journal keeps
+for one of its periods, _alongside_ that period's own note: a meeting note on a
+day, a retro on a sprint. Every notelet belongs to a **notelet type**, and a
+period may hold any number of them — so `(journal, anchor)` identifies one period
+note but a _set_ of notelets, and `(journal, anchor, type)` still identifies a set.
+A type is a note-shaping template, not a second journal: it carries `folder`,
+`nameTemplate`, `templates`, `counter` and its own `prompts`, but no cadence and
+no timeline. The journal owns the periods; the type only says what a note for one
+of them looks like.
+
+Types nest on `JournalConfig.notelets` as a **record keyed by a stable id**
+(`TypeId`, a `nanoid`). The **id** is what every other part of the plugin stores —
+the seeded command's target, `has-notelet` conditions, listing-block filters, the
+settings subpage's route — and ids are unique across journals, so none of those
+references needs a journal qualifier. The **name** is what frontmatter stores and
+what the user reads. A rename therefore rewrites notes but touches no config
+reference, and a half-finished rewrite cannot strand a command or a decoration.
+The reverse arrangement (name as the reference, id in frontmatter) was rejected:
+it would put an opaque token in a file the user hand-edits, against a plugin whose
+every other stored value is readable.
+
+> **A notelet's identity is its frontmatter; its path is only where it happens to
+> live.** This is true of period notes too, but for a period note the path is _also_
+> an identity, because `inverterFor` recovers `(journal, anchor)` from it and several
+> checks lean on that second reading. For a notelet there is no second reading and
+> there cannot be: auto-suffixing produces names no template renders, and several
+> notelets share one `(journal, anchor, type)`, so path → identity is not a function.
+> Most of the shape follows from this — no path inverter for types, no path-based
+> corroboration in maintenance, and a naming scheme free to suffix because nothing
+> reads the name back.
+
+**orphaned notelet** — a notelet whose stored type name resolves to no type on its
+journal, left behind when a type is deleted in _keep_ mode. It keeps its `typeName`
+and carries `typeId: null`. Surfaces that filter by type match on the **stored
+name**, not a resolved id, precisely so an orphan stays reachable by the name it
+still carries; maintenance reports it as its own finding kind.
+
 **Navigation block: line / segment** — a journal's `navBlock` and `intervalBlock`
 (`JournalNavBlock`) each hold `lines: NavBlockSegment[][]`. A **line** is a
 horizontal group of **segments** rendered together as one row; a **segment** is a

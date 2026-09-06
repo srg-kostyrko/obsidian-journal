@@ -3,6 +3,7 @@ import { NotesService, TemplaterService } from "@/infrastructure/host";
 import type { NoteReadError, VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { TemplateEngine } from "@/templates";
+import type { TemplateContext } from "@/templates";
 
 import { JournalsRepository } from "../repository";
 
@@ -18,24 +19,16 @@ export class TemplateContentService {
   readonly #path = inject(NotePathService);
   readonly #templater = inject(TemplaterService);
 
-  renderFor(
-    name: string,
-    metadata: JournalMetadata,
-    noteName: string,
+  /** Renders the first template with content, or "" when none matches. */
+  renderTemplates(
+    templates: readonly string[],
+    context: TemplateContext,
     targetPath: VaultPath,
-  ): AsyncResult<string, JournalNotFoundError | NoteReadError> {
-    const configResult = this.#journals.require(name);
-    if (configResult.isErr()) return AsyncResult.err(configResult.error);
-    const config = configResult.value;
-    if (config.templates.length === 0) return AsyncResult.ok("");
-
-    // One context for both the template's path and its body: paths resolve
-    // {{note_name}}/{{title}} too.
-    const context = this.#path.bodyContextFor(config, metadata, noteName);
-
+  ): AsyncResult<string, NoteReadError> {
+    if (templates.length === 0) return AsyncResult.ok("");
     return AsyncResult.fromPromise(
       (async () => {
-        for (const entry of config.templates) {
+        for (const entry of templates) {
           const withExtension = entry.endsWith(".md") ? entry : `${entry}.md`;
           const renderedPath = this.#engine.renderString(withExtension, context) as VaultPath;
           if (this.#notes.find(renderedPath).isNone()) continue;
@@ -50,7 +43,21 @@ export class TemplateContentService {
         }
         return "";
       })(),
-      (error) => error as JournalNotFoundError | NoteReadError,
+      (error) => error as NoteReadError,
     );
+  }
+
+  renderFor(
+    name: string,
+    metadata: JournalMetadata,
+    noteName: string,
+    targetPath: VaultPath,
+  ): AsyncResult<string, JournalNotFoundError | NoteReadError> {
+    const configResult = this.#journals.require(name);
+    if (configResult.isErr()) return AsyncResult.err(configResult.error);
+    const config = configResult.value;
+    // One context for both the template's path and its body: paths resolve
+    // {{note_name}}/{{title}} too.
+    return this.renderTemplates(config.templates, this.#path.bodyContextFor(config, metadata, noteName), targetPath);
   }
 }

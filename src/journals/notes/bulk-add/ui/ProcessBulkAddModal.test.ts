@@ -5,11 +5,12 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
+import type { TypeId } from "@/journals/notelets/config";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../../../journals-index";
 import { journalsCoreModule } from "../../../module";
-import { fixedJournal } from "../../../testing";
+import { buildNoteletType, fixedJournal } from "../../../testing";
 import { defaultBulkAddParameters } from "../config";
 
 import ProcessBulkAddModal from "./ProcessBulkAddModal.vue";
@@ -51,6 +52,50 @@ describe("ProcessBulkAddModal", () => {
     await userEvent.click(screen.getByText(m.bulk_add_run()));
 
     expect(await screen.findByText("Connected to daily at 2026-06-01.")).toBeTruthy();
+  });
+
+  it("connects each note as a notelet of the type when the parameters carry one", async () => {
+    const withNotelet = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { folder: "Daily", notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) } },
+          ),
+        },
+      },
+    });
+    withNotelet.host.putFile("src/a.md", "content");
+    withNotelet.renderModal(ProcessBulkAddModal, {
+      props: {
+        journalName: "daily",
+        plan: {
+          notes: [
+            {
+              kind: "action",
+              path: "src/a.md" as VaultPath,
+              anchor: anchor("2026-06-01"),
+              targetPath: "src/a.md" as VaultPath,
+              existing: "none",
+              folder: "n/a",
+              name: "n/a",
+            },
+          ],
+        },
+        parameters: { ...defaultBulkAddParameters(), dryRun: false, noteletTypeId: "nt_1" as TypeId },
+      },
+    });
+
+    await userEvent.click(screen.getByText(m.bulk_add_run()));
+
+    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    // A period-note connect would write journal-date only; a notelet connect also stamps the
+    // configured type's name onto journal-notelet — that key is what distinguishes the two.
+    expect(withNotelet.host.files.get("src/a.md")?.frontmatter).toEqual(
+      expect.objectContaining({ "journal-notelet": "Standup" }),
+    );
   });
 
   it("words the log in the future tense for a dry run so it is not mistaken for a completed run", async () => {

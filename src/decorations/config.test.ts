@@ -59,3 +59,23 @@ describe("note-size condition schema", () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe("has-notelet condition schema", () => {
+  it("defaults typeIds to an empty list", () => {
+    expect(v.parse(decorationConditionSchema, { type: "has-notelet" })).toEqual({
+      type: "has-notelet",
+      typeIds: [],
+    });
+  });
+
+  it("keeps the stored type ids", () => {
+    expect(v.parse(decorationConditionSchema, { type: "has-notelet", typeIds: ["nt_a", "nt_b"] })).toEqual({
+      type: "has-notelet",
+      typeIds: ["nt_a", "nt_b"],
+    });
+  });
+
+  it("rejects a non-array typeIds", () => {
+    expect(() => v.parse(decorationConditionSchema, { type: "has-notelet", typeIds: "nt_a" })).toThrow();
+  });
+});

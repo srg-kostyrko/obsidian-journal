@@ -21,6 +21,25 @@ describe("CommandList", () => {
     expect(screen.getByText("Open daily")).toBeTruthy();
   });
 
+  it("labels a notelet command as creating for its period", () => {
+    render(CommandList, {
+      props: {
+        entries: [
+          [
+            "id-1",
+            buildCommand({
+              name: "Create standup",
+              target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+            }),
+            "day",
+          ],
+        ],
+        emptyText: "x",
+      },
+    });
+    expect(screen.getByText(m.command_notelet_label_today())).toBeTruthy();
+  });
+
   it("emits edit with the command id when the edit button is clicked", async () => {
     const { emitted } = render(CommandList, {
       props: { entries: [["id-1", buildCommand({ name: "Open daily" }), "day"]], emptyText: "x" },

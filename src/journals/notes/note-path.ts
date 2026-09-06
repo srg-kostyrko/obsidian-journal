@@ -32,6 +32,11 @@ export interface PathInverter {
   invert(path: VaultPath): Option<JournalMetadata>;
 }
 
+export function withNoteName(context: TemplateContext, noteName: string): TemplateContext {
+  const noteSpec = { kind: "string", value: noteName } as const;
+  return context.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
+}
+
 export class NotePathService {
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
@@ -40,11 +45,6 @@ export class NotePathService {
   readonly #engine = inject(TemplateEngine);
   readonly #index = inject(JournalsIndex);
   readonly #timeline = inject(TimelineService);
-
-  #withNoteName(context: TemplateContext, noteName: string): TemplateContext {
-    const noteSpec = { kind: "string", value: noteName } as const;
-    return context.withSpec("note_name", noteSpec).withSpec("title", noteSpec);
-  }
 
   #parseContext(config: JournalConfig): TemplateContext {
     // start_date/end_date mirror the render context (contextFor) so a note named by its
@@ -128,7 +128,7 @@ export class NotePathService {
       if (noteName.trim() === "") return new Err(new EmptyNoteNameError(name));
       // The rendered note name feeds back into the folder as {{note_name}}/{{title}},
       // so the filename must render first.
-      const folderContext = this.#withNoteName(context, noteName);
+      const folderContext = withNoteName(context, noteName);
       const folder = config.folder ? this.#engine.renderString(config.folder, folderContext) : "";
       const joined = folder ? `${folder}/${noteName}.md` : `${noteName}.md`;
       return new Ok(normalizePath(joined) as VaultPath);
@@ -254,7 +254,13 @@ export class NotePathService {
     return opt.isSome() ? opt.value : undefined;
   }
 
-  contextFor(config: JournalConfig, metadata: JournalMetadata): TemplateContext {
+  /**
+   * The journal's period arithmetic and numbering, with no prompt bindings.
+   *
+   * The prompt-free half of `contextFor`: a notelet renders against the same period facts but
+   * must not inherit the journal's prompt answers, which live only on the period note.
+   */
+  periodContextFor(config: JournalConfig, metadata: JournalMetadata): TemplateContext {
     // {{date}} renders the period's representative day, which for weeks is the day whose
     // calendar year equals the week-year. The anchor is the stored identity, not the render date.
     const dateValue = this.#cycle
@@ -277,14 +283,18 @@ export class NotePathService {
       // disabled) rather than leaking the literal `{{index}}` token.
       context = value === undefined ? context.string(source.variable, "") : context.number(source.variable, value);
     }
+    // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.
+    context = context.date("current_date", CalendarDate.today(), "YYYY-MM-DD", { invertible: false });
+    const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
+    return context.withSpec("time", clockSpec).withSpec("current_time", clockSpec);
+  }
+
+  contextFor(config: JournalConfig, metadata: JournalMetadata): TemplateContext {
+    let context = this.periodContextFor(config, metadata);
     for (const prompt of config.prompts) {
       const { spec } = renderBindingFor(prompt, metadata.answers?.[prompt.variable]);
       context = context.withSpec(prompt.variable, spec);
     }
-    // Render-time snapshots — invertible:false so they don't enter the filename→date round-trip.
-    context = context.date("current_date", CalendarDate.today(), "YYYY-MM-DD", { invertible: false });
-    const clockSpec = { kind: "clock", value: Clock.now(), defaultFormat: "HH:mm" } as const;
-    context = context.withSpec("time", clockSpec).withSpec("current_time", clockSpec);
     return context;
   }
 
@@ -310,7 +320,7 @@ export class NotePathService {
   }
 
   bodyContextFor(config: JournalConfig, metadata: JournalMetadata, noteName: string): TemplateContext {
-    let context = this.#withNoteName(this.contextFor(config, metadata), noteName);
+    let context = withNoteName(this.contextFor(config, metadata), noteName);
     // The placeholder is a file-name device. In prose it would be an unrepairable token, and
     // every unattended attach path renders a template — so an unanswered prompt renders empty
     // here, the way a declared-but-unresolved numbering variable already does. "Unanswered" is

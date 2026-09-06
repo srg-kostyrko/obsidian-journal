@@ -9,6 +9,7 @@ import { FakeNoteSizeService } from "@/infrastructure/host/testing";
 import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
@@ -289,6 +290,76 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(slot.value).not.toBe(initial);
+    });
+
+    it("repaints a has-notelet cell when a notelet is registered after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("has-notelet", { typeIds: [] })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      const path = "journals/2026-05-25.standup.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: period.anchor.toAnchor(),
+        path,
+        typeName: "Standup",
+        typeId: "nt_a" as TypeId,
+      });
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
+    it("repaints when the notelet is removed", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("has-notelet", { typeIds: [] })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "journals/2026-05-25.standup.md" as VaultPath;
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+
+      const index = harness.resolve(JournalsIndex);
+      index.register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: period.anchor.toAnchor(),
+        path,
+        typeName: "Standup",
+        typeId: "nt_a" as TypeId,
+      });
+      await nextTick();
+      expect(slot.value).toHaveLength(1);
+
+      index.unregister(path);
+      await nextTick();
+
+      expect(slot.value).toHaveLength(0);
     });
 
     it("decorates a week cell whose anchor collides with a day cell when its entry is added", async () => {

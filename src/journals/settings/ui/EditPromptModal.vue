@@ -25,22 +25,35 @@ import DateFormatPreview from "./DateFormatPreview.vue";
 
 import type { Prompt } from "../../prompts/config";
 
-const props = withDefaults(defineProps<{ journalName: string; promptIndex?: number }>(), { promptIndex: undefined });
+const props = withDefaults(defineProps<{ journalName: string; typeId?: string; promptIndex?: number }>(), {
+  typeId: undefined,
+  promptIndex: undefined,
+});
 const api = useModal<Prompt>();
 const journalsVM = useService(JournalsViewModel);
 
 const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
-const prompts = computed(() => config.value?.prompts ?? []);
+const noteletType = computed(() => (props.typeId === undefined ? undefined : config.value?.notelets[props.typeId]));
+const owner = computed(() => (props.typeId === undefined ? config.value : noteletType.value));
+const prompts = computed(() => owner.value?.prompts ?? []);
 const current = computed(() => (props.promptIndex === undefined ? undefined : prompts.value[props.promptIndex]));
 
 const takenVariables = computed(() => [
   ...prompts.value.filter((_, i) => i !== props.promptIndex).map((prompt) => prompt.variable),
+  // A notelet's render context carries the journal's numbering digits, so a type question named
+  // after one collides exactly as a journal question would.
   ...(config.value?.numbering.sources.map((source) => source.variable) ?? []),
 ]);
+
+// A type's reserved set is narrower than a journal's: a notelet only ever carries the journal
+// claim, the date field, the type key, this type's counter and this type's answers — never the
+// journal's numbering or question keys, and never another type's.
 const takenKeys = computed(() =>
   [
     ...prompts.value.filter((_, i) => i !== props.promptIndex).map((prompt) => prompt.frontmatterKey),
-    ...(config.value?.numbering.sources.map((source) => source.frontmatterKey) ?? []),
+    ...(noteletType.value === undefined
+      ? (config.value?.numbering.sources.map((source) => source.frontmatterKey) ?? [])
+      : [noteletType.value.counter.frontmatterKey]),
     ...(config.value ? reservedFrontmatterKeys(config.value) : []),
   ].filter((key) => key !== ""),
 );
@@ -75,11 +88,11 @@ function candidateFrom(entered: FormValues): Prompt {
 }
 
 function reachesPath(entered: FormValues): boolean {
-  if (!config.value) return false;
+  if (!owner.value) return false;
   return (
     promptsInPath({
-      nameTemplate: config.value.nameTemplate,
-      folder: config.value.folder,
+      nameTemplate: owner.value.nameTemplate,
+      folder: owner.value.folder,
       prompts: [candidateFrom(entered)],
     }).length > 0
   );

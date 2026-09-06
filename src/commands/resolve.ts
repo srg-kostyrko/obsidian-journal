@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 
 import type { JournalWrite } from "@/journals";
 
-import type { CommandType } from "./config";
+import type { CommandTarget, CommandType } from "./config";
 
 export interface CompoundShift {
   readonly amount: number;
@@ -39,6 +39,14 @@ export function supportedTypes(writeType: JournalWrite["type"]): CommandType[] {
 
 export function isAvailableType(type: CommandType): boolean {
   return type === "previous_available" || type === "next_available";
+}
+
+/** The types a command may take, narrowed by what its target can actually do. */
+export function supportedTypesFor(target: CommandTarget, writeType: JournalWrite["type"]): readonly CommandType[] {
+  const types = supportedTypes(writeType);
+  // A notelet command always creates, so the two types that resolve to "the nearest period that
+  // already has a note" would mean "find an existing notelet and create a second one beside it".
+  return target.kind === "notelet" ? types.filter((type) => !isAvailableType(type)) : types;
 }
 
 export function compoundShift(type: CommandType): CompoundShift | null {

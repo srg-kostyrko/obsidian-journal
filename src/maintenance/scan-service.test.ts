@@ -5,8 +5,9 @@ import type { VaultPath } from "@/infrastructure/host";
 import type { JournalConfig } from "@/journals/config";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { JournalsRepository } from "@/journals/repository";
-import { customJournal, fixedJournal } from "@/journals/testing";
+import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import { legacyMigrationsModule, pendingNoteMigrationSlice } from "@/settings/legacy";
 import { testContainer, type FakeHost } from "@/testing";
 
@@ -99,6 +100,35 @@ describe("gateCollisions", () => {
 
     expect(result.filter((f) => f.check === "duplicate-anchor")).toHaveLength(2);
     expect(result.at(0)?.detail).toEqual({ kind: "duplicate", anchor: anchor("2026-01-12"), size: 10, mtime: 1 });
+  });
+
+  it("excludes notelets from duplicate-anchor bucketing", () => {
+    const notes = [
+      buildScannedNote({ path: "period.md" as VaultPath }),
+      buildScannedNote({ path: "standup.md" as VaultPath, noteletTypeName: "Standup", noteletTypeExists: true }),
+      buildScannedNote({ path: "recipe.md" as VaultPath, noteletTypeName: "Recipe", noteletTypeExists: true }),
+    ];
+
+    const gated = gateCollisions(notes, []);
+
+    expect(gated.filter((finding) => finding.check === "duplicate-anchor")).toEqual([]);
+  });
+
+  it("does not gate a period note's own rewrite when notelets share its anchor", () => {
+    const notes = [
+      buildScannedNote({
+        path: "period.md" as VaultPath,
+        storedAnchor: anchor("2026-01-14"),
+        canonicalAnchor: anchor("2026-01-12"),
+      }),
+      buildScannedNote({ path: "standup.md" as VaultPath, noteletTypeName: "Standup", noteletTypeExists: true }),
+      buildScannedNote({ path: "recipe.md" as VaultPath, noteletTypeName: "Recipe", noteletTypeExists: true }),
+    ];
+
+    const result = gateCollisions(notes, [rewrite("period.md", "2026-01-12")]);
+
+    expect(result).toHaveLength(1);
+    expect(result.at(0)?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
   });
 
   it("keeps journals apart", () => {
@@ -313,6 +343,29 @@ describe("ScanService", () => {
 
     expect(report.findings.filter((f) => f.check === "orphaned-claim")).toHaveLength(1);
     expect(report.findings.at(0)?.journalName).toBe("gone");
+  });
+
+  it("does not report a period note as a duplicate when notelets share its anchor", async () => {
+    const { service, index, host } = await buildScan({
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        {
+          notelets: {
+            nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }),
+            nt_2: buildNoteletType({ id: "nt_2" as TypeId, name: "Recipe" }),
+          },
+        },
+      ),
+    });
+    host.putFile("Day.md", "", { journal: "daily", "journal-date": "2026-01-12" });
+    host.putFile("Standup.md", "", { journal: "daily", "journal-date": "2026-01-12", "journal-notelet": "Standup" });
+    host.putFile("Recipe.md", "", { journal: "daily", "journal-date": "2026-01-12", "journal-notelet": "Recipe" });
+    index.markReady();
+
+    const report = await service.scan();
+
+    expect(report.findings.filter((f) => f.check === "duplicate-anchor")).toEqual([]);
   });
 
   it("excludes notes with no journal claim and custom-journal notes from every counter", async () => {

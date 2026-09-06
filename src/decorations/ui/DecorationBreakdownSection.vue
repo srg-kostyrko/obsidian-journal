@@ -4,6 +4,7 @@ import { match } from "ts-pattern";
 import { Calendar, type Period, type PeriodKind } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { JournalsRepository } from "@/journals";
 
 import { DecorationsStore } from "../decorations-store";
 import { describeCondition } from "../settings/ui/describe-condition";
@@ -21,6 +22,7 @@ const props = defineProps<{ cell: BreakdownCell; index: number }>();
 
 const store = useService(DecorationsStore);
 const calendar = useService(Calendar);
+const journals = useService(JournalsRepository);
 
 const PERIOD_FORMAT: Record<PeriodKind, string> = {
   day: "YYYY-MM-DD",
@@ -96,9 +98,14 @@ interface Clause {
 function clausesOf(source: DecorationSource): readonly Clause[] {
   const decoration = decorationOf(source);
   if (!decoration) return [];
+  const owner = source.owner;
+  const typeName =
+    owner.kind === "journal"
+      ? (id: string) => journals.get(owner.journalName).getOrUndefined()?.notelets[id]?.name
+      : undefined;
   return decoration.conditions.map((condition) => ({
     mode: decoration.mode,
-    text: describeCondition(condition, calendar),
+    text: describeCondition(condition, calendar, typeName),
   }));
 }
 </script>

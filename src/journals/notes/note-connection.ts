@@ -9,14 +9,19 @@ import type {
   VaultPath,
 } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
-import { AsyncResult, attempt } from "@/infrastructure/result";
+import { AsyncResult, attempt, Err, Ok, type Result } from "@/infrastructure/result";
 
 import { DEFAULT_FRONTMATTER_KEYS, FRONTMATTER_NAME_KEY } from "../config";
 import { CycleService } from "../cycle";
+import { NoteletTypeNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
+import { noteletTypeByName } from "../notelets/config";
+import { NoteletCreationService } from "../notelets/notelet-creation";
+import { NoteletPathService } from "../notelets/notelet-path";
 import { promptsInTemplate } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
+import { isNotelet } from "../types";
 
 import { AnchorOccupiedError } from "./errors";
 import { NoteCreationService } from "./note-creation";
@@ -25,7 +30,8 @@ import { splitVaultPath } from "./vault-path";
 
 import type { NoteCreationError } from "./note-creation";
 import type { JournalNotFoundError } from "../errors";
-import type { JournalMetadata } from "../types";
+import type { TypeId } from "../notelets/config";
+import type { JournalMetadata, NoteletEntry, NoteletMetadata } from "../types";
 
 export type ConnectError =
   | NoteCreationError
@@ -34,7 +40,8 @@ export type ConnectError =
   | NoteAlreadyExistsError
   | NoteNotFoundError
   | NoteDeleteError
-  | FrontmatterError;
+  | FrontmatterError
+  | NoteletTypeNotFoundError;
 
 export type DisconnectError = NoteNotFoundError | FrontmatterError;
 
@@ -51,14 +58,24 @@ export interface ReanchorReport {
 export interface ReanchorTarget {
   readonly anchor: AnchorString;
   readonly endDate?: AnchorString;
+  // Presence routes the write to the notelet mutator. A notelet carries no start or end date,
+  // and the period mutator would write exactly the keys the frontmatter contract forbids. The
+  // caller supplies the name because the maintenance route re-anchors notes the index rejected,
+  // which it therefore cannot look up.
+  readonly noteletTypeName?: string;
 }
 
-export type ReanchorError = NoteNotFoundError | FrontmatterError | JournalNotFoundError;
+export type ReanchorError = NoteNotFoundError | FrontmatterError | JournalNotFoundError | NoteletTypeNotFoundError;
 
 export interface ConnectOptions {
   override?: boolean;
   rename?: boolean;
   move?: boolean;
+  // Present ⇒ connect as a notelet of this type rather than as the period note.
+  typeId?: TypeId;
+  // Bulk add's scan-order allocation. connect on its own reads the index for the next counter,
+  // which cannot advance mid-run because the index only learns of a write once vault events land.
+  counter?: number;
 }
 
 export class NoteConnectionService {
@@ -69,28 +86,119 @@ export class NoteConnectionService {
   readonly #index = inject(JournalsIndex);
   readonly #cycle = inject(CycleService);
   readonly #journals = inject(JournalsRepository);
+  readonly #noteletCreation = inject(NoteletCreationService);
+  readonly #noteletPaths = inject(NoteletPathService);
   readonly #logger = inject(LoggerFactoryToken).named("note-connection");
 
   readonly #defaultClear = (fm: Record<string, unknown>): void => {
     for (const key of DEFAULT_FRONTMATTER_KEYS) delete fm[key];
   };
 
-  #forEachConnected(
-    journalName: string,
-    op: (path: VaultPath) => AsyncResult<void, unknown>,
-  ): AsyncResult<void, never> {
-    const paths = [...this.#index.entriesFor(journalName)].map(([, path]) => path);
-    // Best-effort: an AsyncResult never rejects, so Promise.all settles even when
-    // individual notes fail. We discard the per-note Results so one bad note can't strand the
-    // journal-wide operation. Spreading entriesFor up front snapshots paths before the ops mutate the index.
+  // A journal that no longer resolves still owns keys on the note, so fall back to the default
+  // set rather than refusing: the note is losing that claim either way.
+  #clearMutatorFor(journalName: string): (fm: Record<string, unknown>) => void {
+    const mutator = this.#frontmatter.clearMutator(journalName);
+    return mutator.isOk() ? mutator.value : this.#defaultClear;
+  }
+
+  #periodPathsOf(journalName: string): VaultPath[] {
+    return [...this.#index.entriesFor(journalName)].map(([, path]) => path);
+  }
+
+  // Best-effort: an AsyncResult never rejects, so Promise.all settles even when individual notes
+  // fail. We discard the per-note Results so one bad note can't strand the journal-wide
+  // operation. Paths are snapshotted by the caller before the ops mutate the index.
+  #forEach(paths: readonly VaultPath[], op: (path: VaultPath) => AsyncResult<void, unknown>): AsyncResult<void, never> {
     const all: Promise<void> = Promise.all(paths.map((path) => op(path))).then(() => {
       return;
     });
     return AsyncResult.fromPromise(all, () => undefined as never);
   }
 
+  // Every note the journal owns, of either kind. A journal-wide operation that walks only
+  // entriesFor silently misses every notelet, with nothing on screen.
+  #forEachConnected(
+    journalName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
+    return this.#forEach(
+      [...this.#periodPathsOf(journalName), ...this.#index.noteletsFor(journalName).map((entry) => entry.path)],
+      op,
+    );
+  }
+
+  #forEachPeriodNote(
+    journalName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
+    return this.#forEach(this.#periodPathsOf(journalName), op);
+  }
+
+  #moveKey(oldKey: string, newKey: string): (fm: Record<string, unknown>) => void {
+    return (fm) => {
+      if (!Object.hasOwn(fm, oldKey)) return;
+      fm[newKey] = fm[oldKey];
+      delete fm[oldKey];
+    };
+  }
+
+  #forEachOfType(
+    journalName: string,
+    typeName: string,
+    op: (path: VaultPath) => AsyncResult<void, unknown>,
+  ): AsyncResult<void, never> {
+    return this.#forEach(
+      this.#index.noteletsOfType(journalName, typeName).map((entry) => entry.path),
+      op,
+    );
+  }
+
+  // Shared by reapplyAll (which already holds a resolved typeId off the index entry) and
+  // #noteletMetadataAt (which only has a stored type name and must resolve it itself). The two
+  // inputs don't converge — only the metadata shape they produce does.
+  #buildNoteletMetadata(
+    journalName: string,
+    anchor: AnchorString,
+    typeId: TypeId,
+    carried?: Pick<NoteletEntry, "counter" | "answers">,
+  ): NoteletMetadata {
+    return {
+      kind: "notelet",
+      journalName,
+      anchor,
+      typeId,
+      ...(carried?.counter !== undefined && { counter: carried.counter }),
+      ...(carried?.answers !== undefined && { answers: carried.answers }),
+    };
+  }
+
+  // The type is resolved by its stored name, the same reference parseEntry uses. Counter and
+  // answers ride along from the index when the note is in it; a re-anchor never recomputes them.
+  #noteletMetadataAt(
+    journalName: string,
+    path: VaultPath,
+    anchor: AnchorString,
+    typeName: string,
+  ): Result<NoteletMetadata, NoteletTypeNotFoundError | JournalNotFoundError> {
+    return this.#journals.require(journalName).flatMap((config) => {
+      const match = noteletTypeByName(config, typeName);
+      if (match.isNone()) return new Err(new NoteletTypeNotFoundError(journalName, typeName));
+      const existing = this.#index.entryByPath(path).getOrUndefined();
+      const carried = existing !== undefined && isNotelet(existing) ? existing : undefined;
+      return new Ok(this.#buildNoteletMetadata(journalName, anchor, match.value[0], carried));
+    });
+  }
+
   #reanchorOne(journalName: string, path: VaultPath, target: ReanchorTarget): AsyncResult<void, ReanchorError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
+      if (target.noteletTypeName !== undefined) {
+        const metadata = yield* this.#noteletMetadataAt(journalName, path, target.anchor, target.noteletTypeName);
+        const noteletMutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+        yield* this.#notes.updateFrontmatter(path, noteletMutator).tapErr((error) => {
+          this.#logger.warn("failed to re-anchor notelet", { path, anchor: target.anchor, error });
+        });
+        return;
+      }
       const built = yield* this.#frontmatter.buildMetadata(journalName, target.anchor);
       // buildMetadata resolves endDate by looking up the index at the note's NEW anchor, but the
       // move hasn't landed yet — the note is still filed under its OLD anchor, so that lookup either
@@ -107,6 +215,97 @@ export class NoteConnectionService {
         this.#logger.warn("failed to re-anchor note", { path, anchor: target.anchor, error });
       });
     });
+  }
+
+  #connectNotelet(
+    journalName: string,
+    path: VaultPath,
+    anchor: AnchorString,
+    typeId: TypeId,
+    options: ConnectOptions,
+    clearStale: ((fm: Record<string, unknown>) => void) | undefined,
+  ): AsyncResult<{ path: VaultPath }, ConnectError> {
+    return attempt.in(this, async function* (this: NoteConnectionService) {
+      const config = yield* this.#journals.require(journalName);
+      const type = config.notelets[typeId];
+      if (type === undefined) return yield* new Err(new NoteletTypeNotFoundError(journalName, typeId));
+
+      // Assigned whether or not the note is renamed: listing order has to stay total across
+      // notelets that kept their own names.
+      const counter = type.counter.enabled
+        ? (options.counter ??
+          this.#carriedCounterAt(path, journalName, anchor, typeId) ??
+          this.#noteletPaths.nextIndex(journalName, anchor, type.name))
+        : undefined;
+      const metadata: NoteletMetadata = {
+        kind: "notelet",
+        journalName,
+        anchor,
+        typeId,
+        ...(counter !== undefined && { counter }),
+      };
+
+      let target = path;
+      if (options.rename === true || options.move === true) {
+        const configured = yield* this.#noteletPaths.pathFor(config, type, metadata);
+        // Each half refuses independently and for the same reason as the period route: nobody is
+        // being asked on this path, and a file renamed to a rendered placeholder has no repair.
+        const nameRefused = promptsInTemplate(type.nameTemplate, type.prompts).length > 0;
+        const folderRefused = promptsInTemplate(type.folder, type.prompts).length > 0;
+        target = this.#combine(path, configured, {
+          rename: options.rename === true && !nameRefused,
+          move: options.move === true && !folderRefused,
+        }) as VaultPath;
+      }
+
+      if (target !== path) yield* this.#notes.rename(path, target);
+      if (clearStale !== undefined) this.#dropStaleEntry(path, target);
+      yield* this.#noteletCreation.attachNotelet(journalName, target, metadata, clearStale);
+      return { path: target };
+    });
+  }
+
+  // nextIndex counts the note being connected along with the rest of the period, so a notelet
+  // whose journal, anchor and type all stay put would be renumbered one higher every time its
+  // dialog is confirmed. Only a move off that tuple earns a new number.
+  #carriedCounterAt(path: VaultPath, journalName: string, anchor: AnchorString, typeId: TypeId): number | undefined {
+    const existing = this.#index.entryByPath(path).getOrUndefined();
+    if (existing === undefined || !isNotelet(existing)) return undefined;
+    const unchanged = existing.journalName === journalName && existing.anchor === anchor && existing.typeId === typeId;
+    return unchanged ? existing.counter : undefined;
+  }
+
+  // The journal whose keys this note has to lose before it takes a new claim, if any. Neither
+  // write mutator removes the other kind's keys — the period one leaves the type key in place on
+  // purpose — so a note that changed journal, kind or type would keep parsing as what it was.
+  // A plain re-date is not a re-claim: clearing there would take a hand-typed answer with it.
+  #staleClaimOn(path: VaultPath, journalName: string, typeId: TypeId | undefined): string | undefined {
+    const existing = this.#index.entryByPath(path).getOrUndefined();
+    if (existing === undefined) return undefined;
+    if (existing.journalName !== journalName) return existing.journalName;
+    if (isNotelet(existing)) return typeId === undefined || existing.typeId !== typeId ? journalName : undefined;
+    return typeId === undefined ? undefined : journalName;
+  }
+
+  // The clear rides into the attach's own frontmatter write rather than being written first:
+  // everything a connect can fail on — the type lookup, the path render, a rename collision —
+  // runs before that single write, so a failed connect leaves the note claimed by whoever
+  // claimed it before instead of by nobody.
+  #staleClearFor(
+    path: VaultPath,
+    journalName: string,
+    typeId: TypeId | undefined,
+  ): ((fm: Record<string, unknown>) => void) | undefined {
+    const stale = this.#staleClaimOn(path, journalName, typeId);
+    return stale === undefined ? undefined : this.#clearMutatorFor(stale);
+  }
+
+  // The clear lands with the attach that follows this call, but the index only hears about it
+  // once the vault events do. A rename may already have transferred the entry onto its new
+  // path, so drop it under both.
+  #dropStaleEntry(path: VaultPath, target: VaultPath): void {
+    this.#index.unregister(path);
+    if (target !== path) this.#index.unregister(target);
   }
 
   #combine(current: VaultPath, configured: VaultPath, options: ConnectOptions): string {
@@ -141,6 +340,12 @@ export class NoteConnectionService {
     options: ConnectOptions = {},
   ): AsyncResult<{ path: VaultPath }, ConnectError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
+      const clearStale = this.#staleClearFor(path, journalName, options.typeId);
+
+      if (options.typeId !== undefined) {
+        return yield* this.#connectNotelet(journalName, path, anchor, options.typeId, options, clearStale);
+      }
+
       // Metadata is resolved from the anchor's stored entry (incl. any endDate), so an
       // overridden slot's period metadata transfers to the new note.
       const metadata = yield* this.#frontmatter.buildMetadata(journalName, anchor);
@@ -179,20 +384,15 @@ export class NoteConnectionService {
       }
 
       if (target !== path) yield* this.#notes.rename(path, target);
-      yield* this.#creation.attachNote(journalName, target, metadata);
+      if (clearStale !== undefined) this.#dropStaleEntry(path, target);
+      yield* this.#creation.attachNote(journalName, target, metadata, clearStale);
       return { path: target };
     });
   }
 
   disconnect(path: VaultPath): AsyncResult<void, DisconnectError> {
     const entry = this.#index.entryByPath(path);
-    let mutator: (fm: Record<string, unknown>) => void;
-    if (entry.isSome()) {
-      const mutatorResult = this.#frontmatter.clearMutator(entry.value.journalName);
-      mutator = mutatorResult.isOk() ? mutatorResult.value : this.#defaultClear;
-    } else {
-      mutator = this.#defaultClear;
-    }
+    const mutator = entry.isSome() ? this.#clearMutatorFor(entry.value.journalName) : this.#defaultClear;
     return this.#notes.updateFrontmatter(path, mutator);
   }
 
@@ -212,22 +412,70 @@ export class NoteConnectionService {
     );
   }
 
-  // Renaming a frontmatter key in config alone would orphan every connected note (their old
-  // key no longer matches parseEntry). Move the value across so the notes stay connected.
+  // Renaming a frontmatter key in config alone would orphan every connected note (their old key
+  // no longer matches parseEntry). Move the value across so the notes stay connected.
+  //
+  // Period notes only. A type's reserved key set is narrower than the journal's, so a type
+  // question may legally carry the same key as a journal question or numbering digit — and on a
+  // notelet that key holds the *type's* answer, which this rename has no claim on.
   renameFieldAll(journalName: string, oldKey: string, newKey: string): AsyncResult<void, never> {
+    return this.#forEachPeriodNote(journalName, (path) =>
+      this.#notes.updateFrontmatter(path, this.#moveKey(oldKey, newKey)),
+    );
+  }
+
+  // The journal-level fields — the claim's date, start, end and type keys — which both kinds
+  // carry identically and neither kind may disagree about.
+  renameJournalFieldAll(journalName: string, oldKey: string, newKey: string): AsyncResult<void, never> {
     return this.#forEachConnected(journalName, (path) =>
+      this.#notes.updateFrontmatter(path, this.#moveKey(oldKey, newKey)),
+    );
+  }
+
+  // The stored type name is what parseEntry resolves a type by, so a config-only rename would
+  // orphan every notelet already written under the old one.
+  renameNoteletsOfType(journalName: string, oldTypeName: string, newTypeName: string): AsyncResult<void, never> {
+    const field = this.#journals.get(journalName).getOrUndefined()?.frontmatter.noteletField;
+    if (field === undefined) return AsyncResult.ok();
+    return this.#forEachOfType(journalName, oldTypeName, (path) =>
       this.#notes.updateFrontmatter(path, (fm) => {
-        if (!Object.hasOwn(fm, oldKey)) return;
-        fm[newKey] = fm[oldKey];
-        delete fm[oldKey];
+        fm[field] = newTypeName;
       }),
     );
+  }
+
+  renameNoteletFieldForType(
+    journalName: string,
+    typeName: string,
+    oldKey: string,
+    newKey: string,
+  ): AsyncResult<void, never> {
+    return this.#forEachOfType(journalName, typeName, (path) =>
+      this.#notes.updateFrontmatter(path, this.#moveKey(oldKey, newKey)),
+    );
+  }
+
+  disconnectNoteletsOfType(journalName: string, typeName: string): AsyncResult<void, never> {
+    return this.#forEachOfType(journalName, typeName, (path) => this.disconnect(path));
+  }
+
+  deleteNoteletsOfType(journalName: string, typeName: string): AsyncResult<void, never> {
+    return this.#forEachOfType(journalName, typeName, (path) => this.#notes.delete(path));
   }
 
   reapplyAll(journalName: string): AsyncResult<void, never> {
     return this.#forEachConnected(journalName, (path) =>
       attempt.in(this, async function* (this: NoteConnectionService) {
         const entry = yield* this.#index.entryByPath(path).okOrElse(() => new NoteNotFoundError(path));
+        if (isNotelet(entry)) {
+          // An orphaned notelet has no type config, so there are no counter or prompt keys to
+          // write, and its claim and date are already correct — a rewrite could only guess.
+          if (entry.typeId === null) return;
+          const metadata = this.#buildNoteletMetadata(journalName, entry.anchor, entry.typeId, entry);
+          const noteletMutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+          yield* this.#notes.updateFrontmatter(path, noteletMutator);
+          return;
+        }
         const metadata = yield* this.#frontmatter.buildMetadata(journalName, entry.anchor);
         const mutator = yield* this.#frontmatter.writeMutator(
           journalName,
@@ -268,12 +516,28 @@ export class NoteConnectionService {
       moves.push({ path, to: target });
     }
 
-    const settled = Promise.all(moves.map((move) => this.#reanchorOne(journalName, move.path, move.to))).then(
-      (results) => {
-        const rewritten = results.filter((result) => result.isOk()).length;
-        return { rewritten, failed: blocked + results.length - rewritten };
-      },
-    );
+    const noteletMoves: { path: VaultPath; to: ReanchorTarget }[] = [];
+    // Several notelets per anchor is the design, so a notelet neither claims a period slot nor
+    // can be blocked out of one: every notelet with a moving target moves, and none of them can
+    // reach the "couldn't move N notes" count — blocked stays fed only by the period loop above,
+    // and a notelet write failure (logged in #reanchorOne) never inflates `failed` either.
+    for (const entry of this.#index.noteletsFor(journalName)) {
+      const target = targets.get(entry.path);
+      if (target === undefined || target.anchor === entry.anchor) continue;
+      noteletMoves.push({ path: entry.path, to: target });
+    }
+
+    const settled = Promise.all([
+      Promise.all(moves.map((move) => this.#reanchorOne(journalName, move.path, move.to))),
+      Promise.all(noteletMoves.map((move) => this.#reanchorOne(journalName, move.path, move.to))),
+    ]).then(([periodResults, noteletResults]) => {
+      const periodRewritten = periodResults.filter((result) => result.isOk()).length;
+      const noteletRewritten = noteletResults.filter((result) => result.isOk()).length;
+      return {
+        rewritten: periodRewritten + noteletRewritten,
+        failed: blocked + periodResults.length - periodRewritten,
+      };
+    });
     return AsyncResult.fromPromise(settled, () => undefined as never);
   }
 }

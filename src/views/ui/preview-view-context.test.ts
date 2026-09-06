@@ -24,6 +24,7 @@ const Child = defineComponent({
       h("div", [
         h("span", { "data-testid": "ref" }, context.refDate.value),
         h("span", { "data-testid": "shelf" }, context.shelf.value ?? "null"),
+        h("span", { "data-testid": "follow" }, String(context.followActiveDate.value)),
       ]);
   },
 });
@@ -53,5 +54,10 @@ describe("provideViewPreviewContext", () => {
   it("exposes the view's default shelf", async () => {
     await mountConsumer();
     expect(screen.getByTestId("shelf").textContent).toBe("Work");
+  });
+
+  it("exposes follow-active-date as on, since the preview is inert", async () => {
+    await mountConsumer();
+    expect(screen.getByTestId("follow").textContent).toBe("true");
   });
 });

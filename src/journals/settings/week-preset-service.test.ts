@@ -10,12 +10,13 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
-import { customJournal, fixedJournal } from "../testing";
+import { buildNoteletType, customJournal, fixedJournal } from "../testing";
 
 import { journalsSettingsCoreModule } from "./module";
 import { WeekPresetService } from "./week-preset-service";
 
 import type { JournalConfig } from "../config";
+import type { TypeId } from "../notelets/config";
 
 const ISO = { mode: "custom", dow: 1, doy: 4, global: false } as const;
 const WESTERN = { mode: "custom", dow: 0, doy: 6, global: false } as const;
@@ -25,6 +26,20 @@ const MODULES = [journalsCoreModule, journalsSettingsCoreModule, calendarSetting
 function weekly(patch: { addStartDate?: boolean; addEndDate?: boolean } = {}): Record<string, JournalConfig> {
   const config = fixedJournal("weekly", { type: "week" });
   return { weekly: { ...config, frontmatter: { ...config.frontmatter, ...patch } } };
+}
+
+function weeklyWithNotelet(): Record<string, JournalConfig> {
+  const config = fixedJournal("weekly", { type: "week" });
+  return {
+    weekly: {
+      ...config,
+      // addEndDate on: a period note's mutator would otherwise clear journal-end-date on both
+      // the correct notelet path and a fallen-through period-mutator path alike, so "writes no
+      // end date" couldn't tell the two apart.
+      frontmatter: { ...config.frontmatter, addEndDate: true },
+      notelets: { nt_1: buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" }) },
+    },
+  };
 }
 
 function seedWeek(harness: TestHarness, path: string, anchorDate: string, endDate?: string): void {
@@ -39,6 +54,23 @@ function seedWeek(harness: TestHarness, path: string, anchorDate: string, endDat
     anchor: anchorDate as AnchorString,
     path: vaultPath,
     ...(endDate !== undefined && { endDate: endDate as AnchorString }),
+  });
+}
+
+function seedNotelet(harness: TestHarness, path: string, anchorDate: string): void {
+  const vaultPath = path as VaultPath;
+  harness.host.putFile(vaultPath, "", {
+    journal: "weekly",
+    "journal-date": anchorDate,
+    "journal-notelet": "Standup",
+  });
+  harness.resolve(JournalsIndex).register({
+    kind: "notelet",
+    journalName: "weekly",
+    anchor: anchorDate as AnchorString,
+    path: vaultPath,
+    typeName: "Standup",
+    typeId: "nt_1" as TypeId,
   });
 }
 
@@ -217,6 +249,25 @@ describe("WeekPresetService", () => {
     await harness.resolve(WeekPresetService).apply(WESTERN);
 
     expect(frontmatterOf(harness, "sprints/1.md")?.["journal-date"]).toBe("2026-06-01");
+  });
+
+  // 2026's ISO and Western week numbers coincide, so a seed there can't tell "carry the note's
+  // week identity forward" apart from "re-read its old anchor under the new grid" — the two
+  // answers only diverge for a boundary anchor like this one; see the period test right below
+  // this describe block for the same shape.
+  it("preserves a notelet's week identity rather than re-reading its old anchor under the new grid", async () => {
+    const harness = await testContainer({
+      modules: MODULES,
+      data: { journals: weeklyWithNotelet(), calendar: WESTERN, calendarDisplay: {} },
+    });
+    seedNotelet(harness, "week/standup.md", "2025-11-02");
+
+    await harness.resolve(WeekPresetService).apply(ISO);
+
+    // 2025-10-27 is the containment answer — the ISO week holding the old Sunday anchor.
+    const frontmatter = frontmatterOf(harness, "week/standup.md") ?? {};
+    expect(frontmatter).toMatchObject({ "journal-date": "2025-11-03", "journal-notelet": "Standup" });
+    expect(frontmatter).not.toHaveProperty("journal-end-date");
   });
 
   // A week grid can also arrive from Obsidian Sync, which never passes through apply(): reload()

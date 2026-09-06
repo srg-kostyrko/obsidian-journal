@@ -6,7 +6,11 @@ import { m } from "@/i18n";
 
 import { DATE_CONDITION_ANY, storedMonthToDisplay } from "../../date-condition";
 
-export function describeCondition(condition: JournalDecorationCondition, calendar: Calendar): string {
+export function describeCondition(
+  condition: JournalDecorationCondition,
+  calendar: Calendar,
+  typeName?: (id: string) => string | undefined,
+): string {
   return match(condition)
     .with({ type: "title" }, (c) =>
       m.decoration_condition_title_describe({
@@ -62,5 +66,10 @@ export function describeCondition(condition: JournalDecorationCondition, calenda
     )
     .with({ type: "has-open-task" }, () => m.decoration_condition_has_open_task_describe())
     .with({ type: "all-tasks-completed" }, () => m.decoration_condition_all_tasks_completed_describe())
+    .with({ type: "has-notelet" }, (c) => {
+      if (c.typeIds.length === 0) return m.decoration_condition_has_notelet_describe_any();
+      const names = c.typeIds.map((id) => typeName?.(id) ?? m.decoration_condition_has_notelet_unknown_type());
+      return m.decoration_condition_has_notelet_describe_types({ types: names.join(", ") });
+    })
     .exhaustive();
 }

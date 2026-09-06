@@ -18,6 +18,7 @@ export const RESERVED_VARIABLE_NAMES: readonly string[] = [
   "current_date",
   "time",
   "current_time",
+  "notelet_index",
 ];
 
 // Case-insensitive because TemplateContext.#lookup falls back to a case-insensitive match:

@@ -8,6 +8,7 @@ import { defineComponent, h } from "vue";
 
 import { decorationConditionSchema, type JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
+import { journalsCoreModule } from "@/journals/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import ConditionItem from "./ConditionItem.vue";
@@ -76,6 +77,12 @@ describe("ConditionItem", () => {
   it("renders ConditionTypeOnly for all-tasks-completed", async () => {
     await mount({ type: "all-tasks-completed" });
     expect(screen.getByText(m.decoration_condition_all_tasks_completed_describe())).toBeTruthy();
+  });
+
+  it("renders ConditionHasNotelet for a has-notelet condition", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule] });
+    await mount({ type: "has-notelet", typeIds: [] }, harness);
+    expect(screen.getByText(m.decoration_condition_has_notelet_empty())).toBeTruthy();
   });
 
   it("derives a property condition's number value type from the vault's registered type", async () => {

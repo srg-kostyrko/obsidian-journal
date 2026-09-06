@@ -33,7 +33,7 @@ export const customIntervalsBlock = defineViewBlock<CustomIntervalsConfig>({
   component: CustomIntervalsBlock,
   configComponent: CustomIntervalsBlockConfig,
   summary: (config) => {
-    const window = m.view_block_config_window_current({ period: config.window });
+    const window = m.view_block_config_window_selected({ period: config.window });
     return config.journals && config.journals.length > 0
       ? `${window} · ${m.view_block_summary_journal_count({ count: config.journals.length })}`
       : window;

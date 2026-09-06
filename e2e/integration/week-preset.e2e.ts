@@ -56,6 +56,35 @@ describe("week preset change", () => {
     expect(frontmatter?.["journal-end-date"]).toBe("2026-06-06");
   });
 
+  // A notelet is anchored to the same week grid as its journal's period notes, but reaches
+  // reanchorAll through the notelet arm of the cascade rather than the period-note one. Its stored
+  // date has to move with the grid too, or the parser rejects the anchor and the notelet drops out
+  // of JournalsIndex exactly as an un-re-anchored period note does.
+  it("re-anchors a weekly notelet onto the new grid alongside the period note", async () => {
+    await seedNote("week/2026-W23.md", "");
+    await seedNote(
+      "week/recaps/2026-06-01 Recap.md",
+      "---\njournal: weekly\njournal-date: 2026-06-01\njournal-notelet: Recap\n---\n",
+    );
+    await waitForJournalFrontmatter("week/2026-W23.md", { journal: "weekly", date: "2026-06-01" });
+    await waitForFrontmatter(
+      "week/recaps/2026-06-01 Recap.md",
+      (frontmatter) => frontmatter["journal-notelet"] === "Recap",
+      "seeded notelet never reached metadataCache",
+    );
+
+    await switchToWesternPreset();
+
+    await waitForFrontmatter(
+      "week/recaps/2026-06-01 Recap.md",
+      (frontmatter) => frontmatter["journal-date"] === "2026-05-31",
+      "weekly notelet was not re-anchored onto the Western week grid",
+    );
+    // The type it belongs to is untouched by a grid move — only the anchor travels.
+    const frontmatter = await frontmatterOf("week/recaps/2026-06-01 Recap.md");
+    expect(frontmatter?.["journal-notelet"]).toBe("Recap");
+  });
+
   it("keeps the note registered in the journal index after the change", async () => {
     // vault.create refuses to write into a folder that doesn't exist on disk yet, and this
     // fixture carries no note folders; seedNote creates "week/" first, same as a real user's

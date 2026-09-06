@@ -25,13 +25,28 @@
         "startDateField": "journal-start-date",
         "endDateField": "journal-end-date",
         "addStartDate": true,
-        "addEndDate": true
+        "addEndDate": true,
+        "noteletField": "journal-notelet"
       },
       "numbering": {
         "enabled": false,
         "anchorDate": "",
         "allowBefore": false,
         "sources": []
+      },
+      "notelets": {
+        "recap": {
+          "id": "recap",
+          "name": "Recap",
+          "folder": "week/recaps",
+          "nameTemplate": "{{date}} Recap",
+          "templates": [],
+          "counter": {
+            "enabled": false,
+            "frontmatterKey": "journal-notelet-index"
+          },
+          "prompts": []
+        }
       }
     }
   }

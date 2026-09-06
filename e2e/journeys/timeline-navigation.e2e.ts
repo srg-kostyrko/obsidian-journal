@@ -10,7 +10,7 @@ import {
   clickTimelineNav,
   livePreviewNote,
   openInLivePreview,
-  timelineNavEditButtonOverlap,
+  editBlockButtonOverlap,
   timelineNavLabelOffset,
   timelineWeekAnchors,
 } from "./code-blocks.js";
@@ -137,7 +137,10 @@ describe("timeline navigation", () => {
         await openInLivePreview(path);
         await $(TIMELINE_NAV).waitForExist({ timeoutMsg: `navigation row did not render in ${mode} mode` });
 
-        const overlap = await timelineNavEditButtonOverlap();
+        const overlap = await editBlockButtonOverlap(
+          '.timeline-navigation [data-nav="next"]',
+          ".block-language-calendar-timeline",
+        );
 
         expect(overlap.measured).toBe(true);
         expect(overlap.overlaps).toBe(false);

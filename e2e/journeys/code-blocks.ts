@@ -304,24 +304,33 @@ export function timelineWeekAnchors(): Promise<string[]> {
 }
 
 // Obsidian overlays its own edit-block affordance on the top-right corner of a rendered code
-// block, which is where a full-width navigation row would put its next control. Reports the
-// two rects so a spec can assert they stay apart.
-export function timelineNavEditButtonOverlap(): Promise<{ measured: boolean; overlaps: boolean }> {
-  return browser.execute(() => {
-    const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
-      .filter((l) => !l.style.display.includes("none"))
-      .find((l) => l.querySelector(".timeline-navigation"));
-    const next = leaf?.querySelector<HTMLElement>('.timeline-navigation [data-nav="next"]');
-    const block = next?.closest<HTMLElement>(".block-language-calendar-timeline");
-    const edit = block?.parentElement?.querySelector<HTMLElement>(".edit-block-button");
-    if (!next || !edit) return { measured: false, overlaps: false };
-    const a = next.getBoundingClientRect();
-    const b = edit.getBoundingClientRect();
-    return {
-      measured: true,
-      overlaps: a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top,
-    };
-  });
+// block, and shows it on hover — the moment a click arrives. Any control a block parks in that
+// corner is covered by it and never receives the click. Reports the two rects so a spec can
+// assert they stay apart; `measured` is false when either is absent, which no spec may read as
+// "they do not overlap".
+export function editBlockButtonOverlap(
+  control: string,
+  block: string,
+): Promise<{ measured: boolean; overlaps: boolean }> {
+  return browser.execute(
+    (controlSel: string, blockSel: string) => {
+      const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
+        .filter((l) => !l.style.display.includes("none"))
+        .find((l) => l.querySelector(controlSel));
+      const target = leaf?.querySelector<HTMLElement>(controlSel);
+      const host = target?.closest<HTMLElement>(blockSel);
+      const edit = host?.parentElement?.querySelector<HTMLElement>(".edit-block-button");
+      if (!target || !edit) return { measured: false, overlaps: false };
+      const a = target.getBoundingClientRect();
+      const b = edit.getBoundingClientRect();
+      return {
+        measured: true,
+        overlaps: a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top,
+      };
+    },
+    control,
+    block,
+  );
 }
 
 // Pixels the navigation label's centre sits away from the row's own centre. Positive is right.

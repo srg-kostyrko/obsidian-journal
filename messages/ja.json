@@ -114,6 +114,7 @@
   "code_blocks_yaml_error": "この {key} ブロックのオプションを読み取れませんでした。",
   "code_blocks_schema_error": "この {key} ブロックの一部のオプションが無効です。",
   "code_blocks_nav_not_connected": "ノートがジャーナルに接続されていません",
+  "code_blocks_notelets_not_connected": "ノートがジャーナルに接続されていません",
   "code_blocks_home_empty": "表示できるジャーナルがありません。ブロックの show と shelf オプションを確認してください。",
   "common_no_journals_yet": "ジャーナルがまだありません。プラグイン設定で作成してください。",
   "code_blocks_nav_next": "次へ",
@@ -283,7 +284,8 @@
       "match": {
         "scope=global": "グローバルコマンドはまだ作成されていません。",
         "scope=journal": "このジャーナルにはまだコマンドが作成されていません。",
-        "scope=shelf": "この棚にはまだコマンドが作成されていません。"
+        "scope=shelf": "この棚にはまだコマンドが作成されていません。",
+        "scope=notelet": "このサブノートの種類にはまだコマンドが作成されていません。"
       }
     }
   ],
@@ -319,6 +321,46 @@
   ],
   "command_name_required_error": "コマンド名は必須です。",
   "command_name_unique_error": "コマンド名は一意である必要があります。",
+  "command_notelet_label_today": "今日のサブノートを作成",
+  "command_notelet_label_tomorrow": "明日のサブノートを作成",
+  "command_notelet_label_yesterday": "昨日のサブノートを作成",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "現在の日のサブノートを作成",
+        "type=same,writeType=week": "現在の週のサブノートを作成",
+        "type=same,writeType=month": "現在の月のサブノートを作成",
+        "type=same,writeType=quarter": "現在の四半期のサブノートを作成",
+        "type=same,writeType=year": "現在の年のサブノートを作成",
+        "type=same,writeType=custom": "現在の期間のサブノートを作成",
+        "type=next,writeType=day": "次の日のサブノートを作成",
+        "type=next,writeType=week": "次の週のサブノートを作成",
+        "type=next,writeType=month": "次の月のサブノートを作成",
+        "type=next,writeType=quarter": "次の四半期のサブノートを作成",
+        "type=next,writeType=year": "次の年のサブノートを作成",
+        "type=next,writeType=custom": "次の期間のサブノートを作成",
+        "type=previous,writeType=day": "前の日のサブノートを作成",
+        "type=previous,writeType=week": "前の週のサブノートを作成",
+        "type=previous,writeType=month": "前の月のサブノートを作成",
+        "type=previous,writeType=quarter": "前の四半期のサブノートを作成",
+        "type=previous,writeType=year": "前の年のサブノートを作成",
+        "type=previous,writeType=custom": "前の期間のサブノートを作成",
+        "type=same_next_week,writeType=*": "来週の同じ曜日のサブノートを作成",
+        "type=same_previous_week,writeType=*": "先週の同じ曜日のサブノートを作成",
+        "type=same_next_month,writeType=*": "来月の同じ日のサブノートを作成",
+        "type=same_previous_month,writeType=*": "先月の同じ日のサブノートを作成",
+        "type=same_next_year,writeType=day": "来年の同じ日のサブノートを作成",
+        "type=same_next_year,writeType=month": "来年の同じ月のサブノートを作成",
+        "type=same_next_year,writeType=quarter": "来年の同じ四半期のサブノートを作成",
+        "type=same_previous_year,writeType=day": "昨年の同じ日のサブノートを作成",
+        "type=same_previous_year,writeType=month": "昨年の同じ月のサブノートを作成",
+        "type=same_previous_year,writeType=quarter": "昨年の同じ四半期のサブノートを作成",
+        "type=*,writeType=*": "サブノートを作成"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
@@ -409,6 +451,8 @@
   "common_vault_root": "保管庫のルート",
   "command_connect_note": "ノートをジャーナルに接続",
   "connect_note_modal_date_label": "日付",
+  "connect_note_modal_kind_label": "接続の種類",
+  "connect_note_modal_kind_period": "ジャーナル自体のノート",
   "connect_note_modal_move_description": "ノートのフォルダ ({current}) は、ジャーナルの設定済みフォルダ ({configured}) と異なります。",
   "connect_note_modal_override_description": "別のノート（{path}）がこの日付に接続されています。これを有効にすると、そのノートは切断されます。",
   "connect_note_modal_override_label": "この日付に接続済みのノートを置き換える",
@@ -416,14 +460,19 @@
   "connect_note_modal_rename_label": "ジャーナルに合わせてファイル名を変更",
   "connect_note_modal_move_label": "ファイルをジャーナルのフォルダに移動",
   "connect_note_modal_rename_refused_prompt": "このジャーナルはノート名に反映される質問をするため、ノートは自身の名前のままになります。",
+  "connect_note_modal_rename_refused_prompt_notelet": "このサブノートの種類はノート名に反映される質問をするため、ノートは自身の名前のままになります。",
   "connect_note_modal_move_refused_prompt": "このジャーナルはフォルダに反映される質問をするため、ノートは現在のフォルダのままになります。",
+  "connect_note_modal_move_refused_prompt_notelet": "このサブノートの種類はフォルダに反映される質問をするため、ノートは現在のフォルダのままになります。",
   "connect_note_modal_connect": "接続",
+  "connect_note_modal_update": "更新",
   "connect_note_modal_connected_to": "このノートは「{journalName}」に接続されています。",
   "connect_note_modal_disconnect": "切断",
   "connect_note_modal_out_of_bounds": "この日付はジャーナルの有効期間外です。",
   "connect_note_notice_connected": "ノートを「{journalName}」に接続しました。",
+  "connect_note_notice_connected_notelet": "ノートを「{journalName}」に{type}のサブノートとして接続しました。",
   "connect_note_notice_disconnected": "ノートを「{journalName}」から切断しました。",
   "bulk_add_notes_to_title": "{journalName}にノートを追加",
+  "bulk_add_notelets_to_title": "{type}のサブノートを追加",
   "bulk_add_folder_label": "読み込み元のフォルダ",
   "bulk_add_folder_description": "処理したい既存のノートが入っているフォルダを選択してください。",
   "bulk_add_folder_not_found": "このフォルダは保管庫内に存在しません。",
@@ -570,6 +619,8 @@
   "confirm_note_creation_body": "ジャーナル「{journalName}」に「{noteName}」を作成しますか？",
   "confirm_note_creation_confirm": "作成",
   "confirm_note_creation_title": "新しいジャーナルノートを作成しますか？",
+  "confirm_notelet_creation_title": "新しいサブノートを作成しますか？",
+  "confirm_notelet_creation_body": "ジャーナル「{journalName}」に「{noteName}」を{type}サブノートとして作成しますか？",
   "decoration_add": "装飾を追加",
   "decoration_border_mode_label": [
     {
@@ -641,6 +692,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "ノートが存在する",
+  "decoration_condition_has_notelet_describe_any": "サブノートが存在する",
+  "decoration_condition_has_notelet_describe_types": "種類が {types} のサブノートが存在する",
+  "decoration_condition_has_notelet_empty": "このジャーナルにはまだサブノートの種類がありません。",
+  "decoration_condition_has_notelet_label": "サブノートの種類",
+  "decoration_condition_has_notelet_unknown_type": "不明な種類",
   "decoration_condition_has_open_task_describe": "ノートに未完了のタスクがある",
   "decoration_condition_note_size_describe": [
     {
@@ -722,7 +778,8 @@
         "type=has-note": "ノートあり",
         "type=has-open-task": "未完了タスクあり",
         "type=all-tasks-completed": "全タスク完了",
-        "type=note-size": "ノートのサイズ"
+        "type=note-size": "ノートのサイズ",
+        "type=has-notelet": "サブノートあり"
       }
     }
   ],
@@ -740,7 +797,8 @@
         "type=has-note": "ノートの有無を確認",
         "type=has-open-task": "未完了タスクの有無を確認",
         "type=all-tasks-completed": "すべてのタスクが完了しているか確認",
-        "type=note-size": "ノートのサイズを確認"
+        "type=note-size": "ノートのサイズを確認",
+        "type=has-notelet": "サブノートの有無を確認"
       }
     }
   ],
@@ -1046,6 +1104,7 @@
   "uri_unknown_write_type": "URI に不明なジャーナルタイプ「{type}」があります。",
   "uri_invalid_date": "URI 内の日付「{date}」を解釈できませんでした。",
   "uri_invalid_mode": "URI に不明なオープンモード「{mode}」があります。",
+  "uri_notelet_requires_journal": "サブノートのリンクにはジャーナルが必要です。リンクに journal=<名前> を追加してください。",
   "uri_unknown_journal": "「{journal}」という名前のジャーナルはありません。",
   "uri_no_journal": "その日付を含むジャーナルがありません。",
   "uri_no_journal_of_type": [
@@ -1062,6 +1121,8 @@
     }
   ],
   "uri_open_failed": "ジャーナルのノートを開けませんでした。",
+  "uri_unknown_notelet_type": "「{journal}」には「{type}」という名前のサブノートの種類がありません。",
+  "uri_notelet_failed": "サブノートを作成できませんでした。",
   "view_deleted_error": "このビューは削除されました。このタブを閉じるか、プラグイン設定でビューを作成し直してください。",
   "view_block_unknown_error": "このブロックは利用できなくなりました。プラグイン設定でビューから削除してください。",
   "view_block_config_error": "このブロックの一部の設定が無効です。プラグイン設定で設定し直してください。",
@@ -1135,6 +1196,13 @@
   "view_block_markdown_template_variable_journal_link_description": "フォーカス中の日付に対応する、別のジャーナルのノートの保管庫パスに解決します。自分でリンクで囲み、+1w のようなシフトを付けると隣接する期間を指せます。",
   "view_block_markdown_template_empty": "テンプレートが選択されていません",
   "view_block_markdown_template_read_error": "テンプレートファイルを読み込めませんでした。",
+  "view_block_notelets_label": "サブノート",
+  "view_block_notelets_description": "読んでいるノートのサブノート、またはビューの日付を中心としたウィンドウ内のサブノートを一覧表示します。",
+  "view_block_notelets_journals_label": "ジャーナル",
+  "view_block_notelets_journals_description": "すべてオフのままにすると、ビューの棚にあるすべてのジャーナルが対象になります。",
+  "view_block_notelets_types_label": "サブノートの種類",
+  "view_block_notelets_types_description": "すべてオフのままにすると、すべての種類が対象になります。",
+  "view_block_notelets_types_empty": "サブノートの種類を定義しているジャーナルはまだありません。",
   "view_block_summary_before": "前{count}",
   "view_block_summary_after": "後{count}",
   "view_block_summary_hidden_days": "非表示: {days}",
@@ -1145,6 +1213,16 @@
       "match": {
         "count=1": "ジャーナル1件",
         "count=*": "ジャーナル{count}件"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "種類1件",
+        "count=*": "種類{count}件"
       }
     }
   ],
@@ -1159,15 +1237,16 @@
     }
   ],
   "view_block_config_window_label": "ウィンドウ",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=week": "今週",
-        "period=month": "今月",
-        "period=quarter": "今四半期",
-        "period=year": "今年"
+        "period=day": "選択中の日",
+        "period=week": "選択中の週",
+        "period=month": "選択中の月",
+        "period=quarter": "選択中の四半期",
+        "period=year": "選択中の年"
       }
     }
   ],
@@ -1355,6 +1434,7 @@
   "journal_colliding_warning": "ジャーナル {names} の設定が競合しているため、ノートが互いに上書きされます。いずれかのフォルダまたは名前テンプレートを変更してください。",
   "journal_note_name_empty_notice": "ジャーナル「{journalName}」の名前テンプレートはノート名が空になるため、ノートを作成できません。ジャーナル設定で名前テンプレートを設定してください。",
   "journal_note_path_claimed_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成しようとしましたが、そのノートはすでにジャーナル「{claimedBy}」のものです。何も変更していません。いずれかのフォルダまたは名前テンプレートを変更してください。",
+  "journal_note_path_notelet_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成できません。そこにはすでにそのジャーナル自身のサブノートがあります。ジャーナルの名前テンプレートかフォルダを変更するか、そのサブノートを移動してください。",
   "journal_dashboard_bulk_add": "{name}にノートを一括追加",
   "journal_dashboard_clone": "{name}を複製",
   "journal_dashboard_edit": "{name}を設定",
@@ -1399,6 +1479,8 @@
   "journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
   "journal_clone_modal_name_label": "新しいジャーナル名",
   "journal_clone_modal_title": "{name}を複製",
+  "journal_clone_notelet_types_description": "種類ごとにコマンドを追加します。オフにすると、それらなしで複製します。",
+  "journal_clone_notelet_types_label": "サブノートの種類をコピー",
   "journal_edit_allow_before_description": "アンカー日より前の日付にも番号を付けます。負の数になる場合があります。",
   "journal_edit_allow_before_label": "アンカー日より前を許可",
   "journal_edit_anchor_description": "この日付から番号付けが始まります。この日付のノートに開始番号が付き、以降のノートは順に加算されます。",
@@ -1527,6 +1609,8 @@
   "journal_edit_code_block_home_option_scale": "テキストサイズの乗数としてリンクサイズを大きくします（例えば、scale: 2 はリンクサイズを2倍にします）。",
   "journal_edit_code_block_home_option_shelf": "表示するジャーナルを特定の棚に限定します。",
   "journal_edit_code_block_home_custom_lead": "カスタムオプションを使うと、次のようになります:",
+  "journal_edit_code_block_notelets_description": "このノートが属する期間のサブノートを一覧表示します。types リストを追加すると、特定のサブノートの種類に絞り込めます。",
+  "journal_edit_code_block_notelets_default": "デフォルトでは次のように表示されます:",
   "journal_edit_section_timeline": "タイムライン",
   "journal_edit_sequence_enabled_description": "ノートに番号を割り当てます（例: 1日目、2日目、…）。",
   "journal_edit_sequence_enabled_label": "連番を有効にする",
@@ -1553,6 +1637,7 @@
   "journal_edit_variable_non_invertible_warning": "ここでこれを使用すると、ジャーナルがファイル名から日付を復元できなくなります。",
   "journal_edit_variable_note_name_description": "この期間のノートの名前。",
   "journal_edit_variable_note_title_description": "ノート名のエイリアスで、コアプラグイン「テンプレート」の変数に対応します。",
+  "journal_edit_variable_notelet_index_description": "この期間内でのサブノートの番号。番号は期間ごとに 1 から振り直されます。",
   "journal_edit_variable_numbering_description": "設定した番号付け変数（連番セクションを参照）。",
   "journal_edit_variable_prompt_description": "「{question}」への回答（質問セクションを参照）。",
   "journal_edit_variable_reference_intro": "使用できる変数。明示的な形式を指定しない場合、日付形式は{dateFormat}になります。",
@@ -1581,18 +1666,87 @@
       "match": {
         "field=dateField": "日付プロパティ名を編集",
         "field=startDateField": "開始日プロパティ名を編集",
-        "field=endDateField": "終了日プロパティ名を編集"
+        "field=endDateField": "終了日プロパティ名を編集",
+        "field=noteletField": "サブノートの種類プロパティ名を編集"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "ノートがどのサブノートの種類であるかを記録するプロパティです。",
+  "journal_fm_notelet_field_label": "サブノートの種類プロパティ",
   "journal_name_required_error": "ジャーナル名は必須です。",
   "journal_name_unique_error": "ジャーナル名は一意である必要があります。",
+  "journal_notelet_section_title": "サブノートの種類",
+  "journal_notelet_section_description": "サブノートの種類とは、このジャーナルがその期間のノートとは別に、期間ごとに作成できる追加ノートの種類です。",
+  "journal_notelet_section_empty": "サブノートの種類はまだありません。",
+  "journal_notelet_add": "サブノートの種類を追加",
+  "journal_notelet_edit": "サブノートの種類を編集",
+  "journal_notelet_add_modal_title": "サブノートの種類を追加",
+  "journal_notelet_name_label": "名前",
+  "journal_notelet_name_description": "各サブノートに保存されます。ここで名前を変更すると、すべてに反映されます。",
+  "journal_notelet_name_required_error": "このサブノートの種類の名前を入力してください。",
+  "journal_notelet_name_unique_error": "このジャーナルには、同じ名前のサブノートの種類がすでにあります。",
+  "journal_notelet_rename_modal_title": "{name}の名前を変更",
+  "journal_notelet_bulk_add_tooltip": "この種類のサブノートを一括追加",
+  "journal_notelet_rename_tooltip": "サブノートの種類の名前を変更",
+  "journal_notelet_delete_tooltip": "サブノートの種類を削除",
+  "journal_notelet_delete_modal_title": "{name}を削除",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "このサブノートの種類に接続されたサブノートはありません。",
+        "count=1": "このサブノートの種類には接続されたサブノートが1件あります。",
+        "count=*": "このサブノートの種類には接続されたサブノートが{count}件あります。"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "接続されたサブノートの扱い",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "サブノートを残す",
+        "mode=clear": "サブノートの種類のデータを消去",
+        "mode=delete": "サブノートを削除"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "サブノートは保管庫にそのまま残ります。",
+        "mode=clear": "サブノートは保管庫に残りますが、フロントマターからジャーナルとサブノートの種類のプロパティがすべて削除されます。",
+        "mode=delete": "このサブノートの種類に接続されたすべてのサブノートが保管庫から削除されます。"
+      }
+    }
+  ],
+  "journal_notelet_folder_label": "フォルダ",
+  "journal_notelet_name_template_label": "ノート名",
+  "journal_notelet_no_within_period_variable_warning": "この名前テンプレートには期間内で変化する要素がないため、最初のサブノート以降はすべて名前に番号が追加されます。",
+  "journal_notelet_period_path_collision_warning": "このタイプはジャーナル自体と同じノートパスに解決されます。サブノートには自動的に別の名前が付けられますが、両者は混同しやすくなります。",
+  "journal_notelet_confirm_creation_label": "サブノートの作成を確認",
+  "journal_notelet_confirm_creation_description": "このタイプのサブノートを作成する前に、確認ダイアログを表示します。",
+  "journal_notelet_counter_label": "各サブノートに番号を付ける",
+  "journal_notelet_counter_description": "番号は期間ごとに振り直されるため、その日の最初のサブノートは常に 1 です。",
+  "journal_notelet_counter_key_modal_title": "番号プロパティ名を編集",
+  "journal_property_key_taken": "このノートの他の項目がすでに「{name}」に書き込んでいます。",
+  "journal_notelet_command_name": "{type} を作成",
+  "journal_notelet_list_empty": "この期間のサブノートはありません。",
+  "journal_notelet_list_create": "新しいサブノート",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type}（見つからない種類）",
+  "journal_notelet_list_period_range": "{from}～{to}",
   "journal_period_range": "{start}～{end}",
   "journal_picker_placeholder": "ジャーナルを検索",
   "journal_prompt_answer_required": "この質問には回答が必要です。",
   "journal_prompt_answer_required_in_path": "この回答はノート名に使われるため、空欄のままにはできません。",
   "journal_prompt_answer_reserved": "「{name}」は未回答の質問用に予約されています。別の内容を入力してください。",
   "journal_prompt_answers_modal_title": "「{journal}」の新しいノート",
+  "journal_prompt_answers_notelet_modal_title": "「{journal}」の新しい{type}サブノート",
   "journal_prompt_add": "質問を追加",
   "journal_prompt_autocreate_conflict": "このジャーナルはノートを自動作成するため、ノート名に含まれる質問に誰も答えられません。どちらか一方をオフにしてください。",
   "journal_prompt_autocreate_required_warning": "必須の質問は、ノートが自動作成される場合には表示されません。",
@@ -1605,7 +1759,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "質問を追加", "mode=edit": "質問を編集" }
+      "match": {
+        "mode=add": "質問を追加",
+        "mode=edit": "質問を編集"
+      }
     }
   ],
   "journal_prompt_note_path_label": "ノートのパス",
@@ -1655,7 +1812,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "番号の桁を追加", "mode=edit": "番号の桁を編集" }
+      "match": {
+        "mode=add": "番号の桁を追加",
+        "mode=edit": "番号の桁を編集"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1952,6 +2112,7 @@
   "maintenance_check_group_stale": "{journal}: これらのノートは誤った期間をカバーしています",
   "maintenance_check_group_duplicate": "{journal}: {anchor} に2件のノート",
   "maintenance_check_group_orphaned": "{journal}: このジャーナルはもう存在しません",
+  "maintenance_check_group_orphaned_type": "{journal}: 不明なサブノートの種類",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: 読み取れる日付がありません。ファイル名は {to} を示しています。",
   "maintenance_detail_path_overrides_date": "{path}: ファイル名は {pathAnchor}、ノートは {dateAnchor} を示しています。ノートを開いて判断してください。",
@@ -1960,6 +2121,7 @@
   "maintenance_detail_start_mismatch": "{path}: 開始日は {storedStart} ですが、本来は {expectedStart} で始まるはずです。",
   "maintenance_detail_duplicate": "{path}: {size} バイト、更新日時 {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: 「{typeName}」という名前のサブノートの種類はこのジャーナルにもう存在しません。",
   "maintenance_reason_anchor_contested": "別のノートがすでに同じ期間を主張しているため、この修復は取り下げられました。",
   "maintenance_reason_path_and_date_disagree": "ファイル名とノートの内容が一致しないため、自動的な変更は行われませんでした。",
   "maintenance_reason_path_not_invertible": "自動的に修復することができませんでした。",

@@ -4,7 +4,7 @@ import { useModal } from "@/infrastructure/host/modals";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-const props = defineProps<{ journalName: string; noteName: string }>();
+const props = defineProps<{ journalName: string; noteName: string; typeName?: string }>();
 const api = useModal<boolean>();
 
 function confirm(): void {
@@ -20,7 +20,18 @@ function cancel(): void {
   <div>
     <UiSettingRow>
       <template #description>
-        {{ m.confirm_note_creation_body({ noteName: props.noteName, journalName: props.journalName }) }}
+        <template v-if="props.typeName === undefined">
+          {{ m.confirm_note_creation_body({ noteName: props.noteName, journalName: props.journalName }) }}
+        </template>
+        <template v-else>
+          {{
+            m.confirm_notelet_creation_body({
+              noteName: props.noteName,
+              journalName: props.journalName,
+              type: props.typeName,
+            })
+          }}
+        </template>
       </template>
     </UiSettingRow>
     <UiSettingRow>

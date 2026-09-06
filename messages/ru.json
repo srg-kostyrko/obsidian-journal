@@ -127,6 +127,7 @@
   "code_blocks_yaml_error": "Не удалось прочитать параметры в этом блоке {key}.",
   "code_blocks_schema_error": "Некоторые параметры в этом блоке {key} недопустимы.",
   "code_blocks_nav_not_connected": "Заметка не связана с журналом",
+  "code_blocks_notelets_not_connected": "Заметка не связана с журналом",
   "code_blocks_home_empty": "Журналы для отображения отсутствуют. Проверьте параметры show и shelf этого блока.",
   "common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
   "code_blocks_nav_next": "Следующий",
@@ -296,7 +297,8 @@
       "match": {
         "scope=global": "Глобальные команды пока не созданы.",
         "scope=journal": "Для этого журнала пока не создано ни одной команды.",
-        "scope=shelf": "Для этой полки пока не создано ни одной команды."
+        "scope=shelf": "Для этой полки пока не создано ни одной команды.",
+        "scope=notelet": "Для этого типа подзаметки пока не создано ни одной команды."
       }
     }
   ],
@@ -332,6 +334,46 @@
   ],
   "command_name_required_error": "Название команды обязательно.",
   "command_name_unique_error": "Название команды должно быть уникальным.",
+  "command_notelet_label_today": "Создать на сегодня",
+  "command_notelet_label_tomorrow": "Создать на завтра",
+  "command_notelet_label_yesterday": "Создать на вчера",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Создать на текущий день",
+        "type=same,writeType=week": "Создать на текущую неделю",
+        "type=same,writeType=month": "Создать на текущий месяц",
+        "type=same,writeType=quarter": "Создать на текущий квартал",
+        "type=same,writeType=year": "Создать на текущий год",
+        "type=same,writeType=custom": "Создать на текущий период",
+        "type=next,writeType=day": "Создать на следующий день",
+        "type=next,writeType=week": "Создать на следующую неделю",
+        "type=next,writeType=month": "Создать на следующий месяц",
+        "type=next,writeType=quarter": "Создать на следующий квартал",
+        "type=next,writeType=year": "Создать на следующий год",
+        "type=next,writeType=custom": "Создать на следующий период",
+        "type=previous,writeType=day": "Создать на предыдущий день",
+        "type=previous,writeType=week": "Создать на предыдущую неделю",
+        "type=previous,writeType=month": "Создать на предыдущий месяц",
+        "type=previous,writeType=quarter": "Создать на предыдущий квартал",
+        "type=previous,writeType=year": "Создать на предыдущий год",
+        "type=previous,writeType=custom": "Создать на предыдущий период",
+        "type=same_next_week,writeType=*": "Создать на тот же день следующей недели",
+        "type=same_previous_week,writeType=*": "Создать на тот же день прошлой недели",
+        "type=same_next_month,writeType=*": "Создать на тот же день следующего месяца",
+        "type=same_previous_month,writeType=*": "Создать на тот же день прошлого месяца",
+        "type=same_next_year,writeType=day": "Создать на тот же день следующего года",
+        "type=same_next_year,writeType=month": "Создать на тот же месяц следующего года",
+        "type=same_next_year,writeType=quarter": "Создать на тот же квартал следующего года",
+        "type=same_previous_year,writeType=day": "Создать на тот же день прошлого года",
+        "type=same_previous_year,writeType=month": "Создать на тот же месяц прошлого года",
+        "type=same_previous_year,writeType=quarter": "Создать на тот же квартал прошлого года",
+        "type=*,writeType=*": "Создать подзаметку"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
@@ -422,6 +464,8 @@
   "common_vault_root": "корень хранилища",
   "command_connect_note": "Связать заметку с журналом",
   "connect_note_modal_date_label": "Дата",
+  "connect_note_modal_kind_label": "Подключить как",
+  "connect_note_modal_kind_period": "Собственная заметка журнала",
   "connect_note_modal_move_description": "Папка заметки ({current}) отличается от настроенной папки журнала ({configured}).",
   "connect_note_modal_override_description": "К этой дате привязана другая заметка ({path}). Если включить эту опцию, она будет отвязана.",
   "connect_note_modal_override_label": "Заменить заметку, уже связанную с этой датой",
@@ -429,14 +473,19 @@
   "connect_note_modal_rename_label": "Переименовать файл в соответствии с журналом",
   "connect_note_modal_move_label": "Переместить файл в папку журнала",
   "connect_note_modal_rename_refused_prompt": "Этот журнал задаёт вопрос, ответ на который входит в название заметки, поэтому заметка сохраняет своё название.",
+  "connect_note_modal_rename_refused_prompt_notelet": "Этот тип подзаметки задаёт вопрос, ответ на который входит в название заметки, поэтому заметка сохраняет своё название.",
   "connect_note_modal_move_refused_prompt": "Этот журнал задаёт вопрос, ответ на который входит в папку, поэтому заметка остаётся в своей текущей папке.",
+  "connect_note_modal_move_refused_prompt_notelet": "Этот тип подзаметки задаёт вопрос, ответ на который входит в папку, поэтому заметка остаётся в своей текущей папке.",
   "connect_note_modal_connect": "Связать",
+  "connect_note_modal_update": "Обновить",
   "connect_note_modal_connected_to": "Эта заметка связана с «{journalName}».",
   "connect_note_modal_disconnect": "Отвязать",
   "connect_note_modal_out_of_bounds": "Эта дата вне активной шкалы времени журнала.",
   "connect_note_notice_connected": "Заметка связана с «{journalName}».",
+  "connect_note_notice_connected_notelet": "Заметка подключена к «{journalName}» как подзаметка типа «{type}».",
   "connect_note_notice_disconnected": "Заметка отвязана от «{journalName}».",
   "bulk_add_notes_to_title": "Добавить заметки в {journalName}",
+  "bulk_add_notelets_to_title": "Добавить подзаметки типа {type}",
   "bulk_add_folder_label": "Исходная папка",
   "bulk_add_folder_description": "Выберите папку с существующими заметками, которые вы хотите обработать.",
   "bulk_add_folder_not_found": "Такой папки нет в вашем хранилище.",
@@ -587,6 +636,8 @@
   "confirm_note_creation_body": "Создать «{noteName}» в журнале «{journalName}»?",
   "confirm_note_creation_confirm": "Создать",
   "confirm_note_creation_title": "Создать новую заметку журнала?",
+  "confirm_notelet_creation_title": "Создать новую подзаметку?",
+  "confirm_notelet_creation_body": "Создать «{noteName}» как подзаметку типа {type} в журнале «{journalName}»?",
   "decoration_add": "Добавить оформление",
   "decoration_badge_matched_past": [
     {
@@ -792,6 +843,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "заметка существует",
+  "decoration_condition_has_notelet_describe_any": "подзаметка существует",
+  "decoration_condition_has_notelet_describe_types": "существует подзаметка типа {types}",
+  "decoration_condition_has_notelet_empty": "В этом журнале ещё нет типов подзаметок.",
+  "decoration_condition_has_notelet_label": "Типы подзаметок",
+  "decoration_condition_has_notelet_unknown_type": "неизвестный тип",
   "decoration_condition_has_open_task_describe": "в заметке есть незавершённая задача",
   "decoration_condition_note_size_describe": [
     {
@@ -873,7 +929,8 @@
         "type=has-note": "Есть заметка",
         "type=has-open-task": "Есть незавершённая задача",
         "type=all-tasks-completed": "Все задачи выполнены",
-        "type=note-size": "Размер заметки"
+        "type=note-size": "Размер заметки",
+        "type=has-notelet": "Есть подзаметка"
       }
     }
   ],
@@ -891,7 +948,8 @@
         "type=has-note": "Проверить, существует ли заметка",
         "type=has-open-task": "Проверить, есть ли в заметке незавершённые задачи",
         "type=all-tasks-completed": "Проверить, все ли задачи выполнены",
-        "type=note-size": "Проверить размер заметки"
+        "type=note-size": "Проверить размер заметки",
+        "type=has-notelet": "Проверить, существует ли подзаметка"
       }
     }
   ],
@@ -1223,6 +1281,7 @@
   "uri_unknown_write_type": "Неизвестный тип журнала «{type}» в URI.",
   "uri_invalid_date": "Не удалось распознать дату «{date}» в URI.",
   "uri_invalid_mode": "Неизвестный режим открытия «{mode}» в URI.",
+  "uri_notelet_requires_journal": "Ссылке на подзаметку нужен журнал. Добавьте в ссылку journal=<название>.",
   "uri_unknown_journal": "Журнала с названием «{journal}» не существует.",
   "uri_no_journal": "Ни один журнал не охватывает эту дату.",
   "uri_no_journal_of_type": [
@@ -1239,6 +1298,8 @@
     }
   ],
   "uri_open_failed": "Не удалось открыть заметку журнала.",
+  "uri_unknown_notelet_type": "В журнале «{journal}» нет типа подзаметки с названием «{type}».",
+  "uri_notelet_failed": "Не удалось создать подзаметку.",
   "view_deleted_error": "Это представление удалено. Закройте эту вкладку или создайте представление заново в настройках плагина.",
   "view_block_unknown_error": "Этот блок больше недоступен. Удалите его из представления в настройках плагина.",
   "view_block_config_error": "Некоторые настройки этого блока недопустимы. Перенастройте его в настройках плагина.",
@@ -1312,6 +1373,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Преобразуется в путь в хранилище к заметке другого журнала за дату в фокусе. Оберните его в ссылку самостоятельно и добавьте сдвиг, например +1w, чтобы указать на соседний период.",
   "view_block_markdown_template_empty": "Шаблон не выбран",
   "view_block_markdown_template_read_error": "Не удалось прочитать файл шаблона.",
+  "view_block_notelets_label": "Подзаметки",
+  "view_block_notelets_description": "Перечисляет подзаметки заметки, которую вы читаете, либо подзаметки в пределах окна вокруг даты представления.",
+  "view_block_notelets_journals_label": "Журналы",
+  "view_block_notelets_journals_description": "Оставьте все выключенными, чтобы включить все журналы на полке представления.",
+  "view_block_notelets_types_label": "Типы подзаметок",
+  "view_block_notelets_types_description": "Оставьте все выключенными, чтобы включить все типы.",
+  "view_block_notelets_types_empty": "Ни один журнал пока не определяет тип подзаметки.",
   "view_block_summary_before": "{count} до",
   "view_block_summary_after": "{count} после",
   "view_block_summary_hidden_days": "Скрыто: {days}",
@@ -1324,6 +1392,18 @@
         "countPlural=few": "{count} журнала",
         "countPlural=many": "{count} журналов",
         "countPlural=*": "{count} журнала"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} тип",
+        "countPlural=few": "{count} типа",
+        "countPlural=many": "{count} типов",
+        "countPlural=*": "{count} типа"
       }
     }
   ],
@@ -1340,15 +1420,16 @@
     }
   ],
   "view_block_config_window_label": "Окно",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=week": "Текущая неделя",
-        "period=month": "Текущий месяц",
-        "period=quarter": "Текущий квартал",
-        "period=year": "Текущий год"
+        "period=day": "Выбранный день",
+        "period=week": "Выбранная неделя",
+        "period=month": "Выбранный месяц",
+        "period=quarter": "Выбранный квартал",
+        "period=year": "Выбранный год"
       }
     }
   ],
@@ -1544,6 +1625,7 @@
   "journal_colliding_warning": "У журналов {names} конфликтующие конфигурации, поэтому их заметки будут перезаписывать друг друга. Измените папку или шаблон названия в одном из них.",
   "journal_note_name_empty_notice": "В журнале «{journalName}» шаблон названия даёт пустое название заметки, поэтому заметку нельзя создать. Задайте шаблон названия в настройках журнала.",
   "journal_note_path_claimed_notice": "Журнал «{journalName}» разместил бы свою заметку в «{path}», но эта заметка уже принадлежит журналу «{claimedBy}», поэтому ничего не изменено. Измените папку или шаблон названия в одном из них.",
+  "journal_note_path_notelet_notice": "Журнал «{journalName}» не может создать заметку в «{path}»: там уже находится одна из его собственных подзаметок. Измените шаблон названия или папку журнала либо переместите эту подзаметку.",
   "journal_dashboard_bulk_add": "Массовое добавление заметок в {name}",
   "journal_dashboard_clone": "Клонировать {name}",
   "journal_dashboard_edit": "Настроить {name}",
@@ -1590,6 +1672,8 @@
   "journal_clone_modal_description": "Настройки и команды копируются. Заметки — нет.",
   "journal_clone_modal_name_label": "Новое название журнала",
   "journal_clone_modal_title": "Клонировать {name}",
+  "journal_clone_notelet_types_description": "Добавляет команду для каждого типа. Отключите, чтобы клонировать без них.",
+  "journal_clone_notelet_types_label": "Копировать типы подзаметок",
   "journal_edit_allow_before_description": "Разрешить индексацию до даты привязки. Может давать отрицательные номера.",
   "journal_edit_allow_before_label": "Разрешить до даты привязки",
   "journal_edit_anchor_description": "Нумерация начинается с этой даты. Заметка за эту дату получает начальный номер, а следующие нумеруются дальше.",
@@ -1718,6 +1802,8 @@
   "journal_edit_code_block_home_option_scale": "увеличивает размер ссылки как множитель размера текста (например, scale: 2 удваивает его).",
   "journal_edit_code_block_home_option_shelf": "ограничивает отображаемые журналы определённой полкой.",
   "journal_edit_code_block_home_custom_lead": "При наличии пользовательских настроек это может выглядеть так:",
+  "journal_edit_code_block_notelets_description": "Перечисляет подзаметки периода, к которому относится эта заметка. Добавьте список types, чтобы ограничить его определёнными типами подзаметок.",
+  "journal_edit_code_block_notelets_default": "По умолчанию это выглядит так:",
   "journal_edit_section_timeline": "Временная шкала",
   "journal_edit_sequence_enabled_description": "Присваивать заметкам номера (например, День 1, День 2, …).",
   "journal_edit_sequence_enabled_label": "Включить последовательные номера",
@@ -1744,6 +1830,7 @@
   "journal_edit_variable_non_invertible_warning": "Использование этого здесь не позволит журналу восстановить дату из имени файла.",
   "journal_edit_variable_note_name_description": "Название заметки за этот период.",
   "journal_edit_variable_note_title_description": "Псевдоним названия заметки, поддерживающий переменную основного плагина «Шаблоны».",
+  "journal_edit_variable_notelet_index_description": "Номер этой подзаметки в пределах её периода; нумерация начинается заново в каждом периоде, поэтому первая — всегда 1.",
   "journal_edit_variable_numbering_description": "Настраиваемая переменная нумерации (см. раздел «Последовательность»).",
   "journal_edit_variable_prompt_description": "Ответ на «{question}» (см. раздел «Вопросы»).",
   "journal_edit_variable_reference_intro": "Доступные переменные. Формат даты по умолчанию равен {dateFormat}, если явный формат не указан.",
@@ -1772,18 +1859,89 @@
       "match": {
         "field=dateField": "Изменить название свойства даты",
         "field=startDateField": "Изменить название свойства даты начала",
-        "field=endDateField": "Изменить название свойства даты окончания"
+        "field=endDateField": "Изменить название свойства даты окончания",
+        "field=noteletField": "Изменить название свойства типа подзаметки"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "Свойство, которое указывает, к какому типу подзаметки относится заметка.",
+  "journal_fm_notelet_field_label": "Свойство типа подзаметки",
   "journal_name_required_error": "Название журнала обязательно.",
   "journal_name_unique_error": "Название журнала должно быть уникальным.",
+  "journal_notelet_section_title": "Типы подзаметок",
+  "journal_notelet_section_description": "Тип подзаметки — это разновидность дополнительной заметки, которую этот журнал может создавать для периода наряду с собственной заметкой периода.",
+  "journal_notelet_section_empty": "Типов подзаметок пока нет.",
+  "journal_notelet_add": "Добавить тип подзаметки",
+  "journal_notelet_edit": "Изменить тип подзаметки",
+  "journal_notelet_add_modal_title": "Добавить тип подзаметки",
+  "journal_notelet_name_label": "Название",
+  "journal_notelet_name_description": "Сохраняется в каждой подзаметке. Переименование здесь меняет его везде.",
+  "journal_notelet_name_required_error": "Введите название для этого типа подзаметки.",
+  "journal_notelet_name_unique_error": "В этом журнале уже есть тип подзаметки с таким названием.",
+  "journal_notelet_rename_modal_title": "Переименовать {name}",
+  "journal_notelet_bulk_add_tooltip": "Массовое добавление подзаметок этого типа",
+  "journal_notelet_rename_tooltip": "Переименовать тип подзаметки",
+  "journal_notelet_delete_tooltip": "Удалить тип подзаметки",
+  "journal_notelet_delete_modal_title": "Удалить {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["count", "countPlural"],
+      "match": {
+        "count=0,countPlural=*": "С этим типом подзаметки не связано ни одной подзаметки.",
+        "count=*,countPlural=one": "С этим типом подзаметки связана {count} подзаметка.",
+        "count=*,countPlural=few": "С этим типом подзаметки связаны {count} подзаметки.",
+        "count=*,countPlural=many": "С этим типом подзаметки связано {count} подзаметок.",
+        "count=*,countPlural=*": "С этим типом подзаметки связано {count} подзаметки."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Что делать со связанными подзаметками",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Оставить подзаметки",
+        "mode=clear": "Очистить данные типа подзаметки",
+        "mode=delete": "Удалить подзаметки"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Подзаметки остаются в вашем хранилище без изменений.",
+        "mode=clear": "Подзаметки остаются в вашем хранилище, но свойства журнала и типа подзаметки удаляются из их frontmatter.",
+        "mode=delete": "Все подзаметки этого типа удаляются из вашего хранилища."
+      }
+    }
+  ],
+  "journal_notelet_folder_label": "Папка",
+  "journal_notelet_name_template_label": "Название заметки",
+  "journal_notelet_no_within_period_variable_warning": "В этом шаблоне названия нет ничего, что менялось бы в пределах периода, поэтому каждая подзаметка после первой получает добавленный к названию номер.",
+  "journal_notelet_period_path_collision_warning": "Этот тип подзаметки даёт тот же путь к заметке, что и сам журнал. Подзаметкам автоматически присваивается другое название, но их легко перепутать.",
+  "journal_notelet_confirm_creation_label": "Подтверждать создание подзаметок",
+  "journal_notelet_confirm_creation_description": "Показывать диалог подтверждения перед созданием подзаметки этого типа.",
+  "journal_notelet_counter_label": "Нумеровать каждую подзаметку",
+  "journal_notelet_counter_description": "Нумерация начинается заново в каждом периоде, поэтому первая подзаметка дня — всегда 1.",
+  "journal_notelet_counter_key_modal_title": "Изменить название свойства номера",
+  "journal_property_key_taken": "Другой элемент этой заметки уже записывается в «{name}».",
+  "journal_notelet_command_name": "Создать {type}",
+  "journal_notelet_list_empty": "Нет подзаметок за этот период.",
+  "journal_notelet_list_create": "Новая подзаметка",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (отсутствующий тип)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Поиск журналов",
   "journal_prompt_answer_required": "На этот вопрос нужно ответить.",
   "journal_prompt_answer_required_in_path": "Этот ответ используется в названии заметки, поэтому он не может быть пустым.",
   "journal_prompt_answer_reserved": "«{name}» зарезервировано для неотвеченного вопроса. Введите что-нибудь другое.",
   "journal_prompt_answers_modal_title": "Новая заметка в журнале «{journal}»",
+  "journal_prompt_answers_notelet_modal_title": "Новая подзаметка типа {type} в журнале «{journal}»",
   "journal_prompt_add": "Добавить вопрос",
   "journal_prompt_autocreate_conflict": "Этот журнал создаёт заметки автоматически, поэтому никто не сможет ответить на вопрос, который входит в название заметки. Отключите что-то одно.",
   "journal_prompt_autocreate_required_warning": "Обязательный вопрос никогда не задаётся при автоматическом создании заметок.",
@@ -1796,7 +1954,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Добавить вопрос", "mode=edit": "Изменить вопрос" }
+      "match": {
+        "mode=add": "Добавить вопрос",
+        "mode=edit": "Изменить вопрос"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Путь к заметке",
@@ -1846,7 +2007,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Добавить разряд нумерации", "mode=edit": "Редактировать разряд нумерации" }
+      "match": {
+        "mode=add": "Добавить разряд нумерации",
+        "mode=edit": "Редактировать разряд нумерации"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -2023,6 +2187,7 @@
   "maintenance_check_group_stale": "{journal} — эти заметки относятся к неверному периоду",
   "maintenance_check_group_duplicate": "{journal} — две заметки для {anchor}",
   "maintenance_check_group_orphaned": "{journal} — этого журнала больше не существует",
+  "maintenance_check_group_orphaned_type": "{journal} — неизвестный тип подзаметки",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: нет читаемой даты. Имя файла указывает на {to}.",
   "maintenance_detail_path_overrides_date": "{path}: имя файла указывает на {pathAnchor}, а заметка — на {dateAnchor}. Откройте заметку и решите.",
@@ -2031,6 +2196,7 @@
   "maintenance_detail_start_mismatch": "{path}: начинается {storedStart}, а должен — {expectedStart}.",
   "maintenance_detail_duplicate": "{path} — {size} байт, изменён {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: тип подзаметки «{typeName}» больше не существует в этом журнале.",
   "maintenance_reason_anchor_contested": "Это исправление было отменено, поскольку на этот же период уже претендует другая заметка.",
   "maintenance_reason_path_and_date_disagree": "Ничего не было изменено автоматически, так как имя файла и заметка не совпадают.",
   "maintenance_reason_path_not_invertible": "Это не удалось исправить автоматически.",

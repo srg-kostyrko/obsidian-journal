@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { isBenignFlowError, isUserFacingFlowError } from "@/infrastructure/flows";
 
-import { NoApplicableJournals, NotePathClaimedError } from "./errors";
+import { NoApplicableJournals, NoteletHoldsPathError, NotePathClaimedError } from "./errors";
 
 describe("NoApplicableJournals", () => {
   it("is treated as a benign flow error", () => {
@@ -19,5 +20,14 @@ describe("NotePathClaimedError", () => {
     expect(error.userNotice).toContain("daily");
     expect(error.userNotice).toContain("logbook");
     expect(error.userNotice).toContain("Journal/2026-05-19.md");
+  });
+});
+
+describe("NoteletHoldsPathError", () => {
+  it("carries a notice naming the journal and the path", () => {
+    const error = new NoteletHoldsPathError("Work", "Standup.md");
+
+    expect(isUserFacingFlowError(error)).toBe(true);
+    expect(error.userNotice).toBe(m.journal_note_path_notelet_notice({ journalName: "Work", path: "Standup.md" }));
   });
 });

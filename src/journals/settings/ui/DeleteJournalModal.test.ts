@@ -6,6 +6,7 @@ import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { journalsCoreModule } from "@/journals/module";
+import type { TypeId } from "@/journals/notelets/config";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsIndex } from "../../journals-index";
@@ -32,6 +33,32 @@ describe("DeleteJournalModal", () => {
     index.register({ journalName: "daily", anchor: anchor("2026-06-02"), path: "daily/b.md" as VaultPath });
     harness.renderModal(DeleteJournalModal, { props: { journalName: "daily" } });
     expect(screen.getByText(m.journal_delete_connected_count({ count: 2 }))).toBeTruthy();
+  });
+
+  it("counts notelets among the journal's connected notes", async () => {
+    harness.renderModal(DeleteJournalModal, { props: { journalName: "daily" } });
+    const index = harness.resolve(JournalsIndex);
+    index.register({ journalName: "daily", anchor: anchor("2026-06-01"), path: "daily/a.md" as VaultPath });
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: "daily/Standup 1.md" as VaultPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 1,
+    });
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-06-01"),
+      path: "daily/Standup 2.md" as VaultPath,
+      typeName: "Standup",
+      typeId: "nt_1" as TypeId,
+      counter: 2,
+    });
+
+    expect(await screen.findByText(m.journal_delete_connected_count({ count: 3 }))).toBeTruthy();
   });
 
   it("states plainly when the journal has no notes to lose", () => {

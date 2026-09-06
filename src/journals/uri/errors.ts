@@ -34,4 +34,18 @@ export class InvalidUriOpenModeError extends Error {
   }
 }
 
-export type UriError = MissingUriTargetError | UnknownUriWriteTypeError | InvalidUriDateError | InvalidUriOpenModeError;
+export class NoteletUriRequiresJournalError extends Error {
+  readonly kind = "notelet-requires-journal" as const;
+
+  constructor(readonly value: string) {
+    super(`A notelet URI needs journal=: ${value}`);
+    this.name = "NoteletUriRequiresJournalError";
+  }
+}
+
+export type UriError =
+  | MissingUriTargetError
+  | UnknownUriWriteTypeError
+  | InvalidUriDateError
+  | InvalidUriOpenModeError
+  | NoteletUriRequiresJournalError;

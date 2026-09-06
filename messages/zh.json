@@ -114,6 +114,7 @@
   "code_blocks_yaml_error": "无法读取此 {key} 块中的选项。",
   "code_blocks_schema_error": "此 {key} 块中的某些选项无效。",
   "code_blocks_nav_not_connected": "笔记未连接到日记",
+  "code_blocks_notelets_not_connected": "笔记未连接到日记",
   "code_blocks_home_empty": "暂无日记可供显示。请检查该块的 show 和 shelf 选项。",
   "common_no_journals_yet": "还没有日记。请在插件设置中创建一个。",
   "code_blocks_nav_next": "下一个",
@@ -283,7 +284,8 @@
       "match": {
         "scope=global": "尚未创建任何全局命令。",
         "scope=journal": "目前还没有为该日记创建任何命令。",
-        "scope=shelf": "目前还没有为该书架创建任何命令。"
+        "scope=shelf": "目前还没有为该书架创建任何命令。",
+        "scope=notelet": "目前还没有为该子笔记类型创建任何命令。"
       }
     }
   ],
@@ -319,6 +321,46 @@
   ],
   "command_name_required_error": "命令名称为必填项。",
   "command_name_unique_error": "命令名称必须唯一。",
+  "command_notelet_label_today": "为今天新建子笔记",
+  "command_notelet_label_tomorrow": "为明天新建子笔记",
+  "command_notelet_label_yesterday": "为昨天新建子笔记",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "为当前日期新建子笔记",
+        "type=same,writeType=week": "为当前周新建子笔记",
+        "type=same,writeType=month": "为当前月新建子笔记",
+        "type=same,writeType=quarter": "为当前季度新建子笔记",
+        "type=same,writeType=year": "为当前年份新建子笔记",
+        "type=same,writeType=custom": "为当前周期新建子笔记",
+        "type=next,writeType=day": "为下一日新建子笔记",
+        "type=next,writeType=week": "为下一周新建子笔记",
+        "type=next,writeType=month": "为下一月新建子笔记",
+        "type=next,writeType=quarter": "为下一季度新建子笔记",
+        "type=next,writeType=year": "为下一年新建子笔记",
+        "type=next,writeType=custom": "为下一周期新建子笔记",
+        "type=previous,writeType=day": "为上一日新建子笔记",
+        "type=previous,writeType=week": "为上一周新建子笔记",
+        "type=previous,writeType=month": "为上一月新建子笔记",
+        "type=previous,writeType=quarter": "为上一季度新建子笔记",
+        "type=previous,writeType=year": "为上一年新建子笔记",
+        "type=previous,writeType=custom": "为上一周期新建子笔记",
+        "type=same_next_week,writeType=*": "为下周同一天新建子笔记",
+        "type=same_previous_week,writeType=*": "为上周同一天新建子笔记",
+        "type=same_next_month,writeType=*": "为下个月同一天新建子笔记",
+        "type=same_previous_month,writeType=*": "为上个月同一天新建子笔记",
+        "type=same_next_year,writeType=day": "为明年同一天新建子笔记",
+        "type=same_next_year,writeType=month": "为明年同一月新建子笔记",
+        "type=same_next_year,writeType=quarter": "为明年同一季度新建子笔记",
+        "type=same_previous_year,writeType=day": "为去年同一天新建子笔记",
+        "type=same_previous_year,writeType=month": "为去年同一月新建子笔记",
+        "type=same_previous_year,writeType=quarter": "为去年同一季度新建子笔记",
+        "type=*,writeType=*": "新建子笔记"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
@@ -409,6 +451,8 @@
   "common_vault_root": "库根目录",
   "command_connect_note": "将笔记连接到日记",
   "connect_note_modal_date_label": "日期",
+  "connect_note_modal_kind_label": "连接为",
+  "connect_note_modal_kind_period": "日记本身的笔记",
   "connect_note_modal_move_description": "笔记的文件夹（{current}）与日记的配置文件夹（{configured}）不同。",
   "connect_note_modal_override_description": "另一条笔记（{path}）已连接到此日期。启用此项后，它将被断开连接。",
   "connect_note_modal_override_label": "替换已连接到此日期的笔记",
@@ -416,14 +460,19 @@
   "connect_note_modal_rename_label": "将文件重命名为与日记匹配的名称",
   "connect_note_modal_move_label": "将文件移入日记文件夹",
   "connect_note_modal_rename_refused_prompt": "此日记会提出一个问题，其答案会用于笔记名称，因此笔记将保留其原有名称。",
+  "connect_note_modal_rename_refused_prompt_notelet": "此子笔记类型会提出一个问题，其答案会用于笔记名称，因此笔记将保留其原有名称。",
   "connect_note_modal_move_refused_prompt": "此日记会提出一个问题，其答案会用于文件夹，因此笔记将保留在当前文件夹中。",
+  "connect_note_modal_move_refused_prompt_notelet": "此子笔记类型会提出一个问题，其答案会用于文件夹，因此笔记将保留在当前文件夹中。",
   "connect_note_modal_connect": "连接",
+  "connect_note_modal_update": "更新",
   "connect_note_modal_connected_to": "此笔记已连接到“{journalName}”。",
   "connect_note_modal_disconnect": "断开",
   "connect_note_modal_out_of_bounds": "该日期不在此日记的有效时间范围内。",
   "connect_note_notice_connected": "笔记已连接到“{journalName}”。",
+  "connect_note_notice_connected_notelet": "笔记已作为 {type} 子笔记连接到“{journalName}”。",
   "connect_note_notice_disconnected": "笔记已从“{journalName}”断开连接。",
   "bulk_add_notes_to_title": "将笔记添加到 {journalName}",
+  "bulk_add_notelets_to_title": "添加 {type} 子笔记",
   "bulk_add_folder_label": "源文件夹",
   "bulk_add_folder_description": "选择包含要处理的现有笔记的文件夹。",
   "bulk_add_folder_not_found": "此文件夹在库中不存在。",
@@ -570,6 +619,8 @@
   "confirm_note_creation_body": "在日记“{journalName}”中创建“{noteName}”？",
   "confirm_note_creation_confirm": "创建",
   "confirm_note_creation_title": "创建一条新的日记笔记？",
+  "confirm_notelet_creation_title": "创建一条新的子笔记？",
+  "confirm_notelet_creation_body": "在日记“{journalName}”中创建“{noteName}”作为 {type} 子笔记？",
   "decoration_add": "添加装饰",
   "decoration_border_mode_label": [
     {
@@ -641,6 +692,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "存在笔记",
+  "decoration_condition_has_notelet_describe_any": "存在子笔记",
+  "decoration_condition_has_notelet_describe_types": "存在类型为 {types} 的子笔记",
+  "decoration_condition_has_notelet_empty": "此日记还没有子笔记类型。",
+  "decoration_condition_has_notelet_label": "子笔记类型",
+  "decoration_condition_has_notelet_unknown_type": "未知类型",
   "decoration_condition_has_open_task_describe": "笔记有未完成的任务",
   "decoration_condition_note_size_describe": [
     {
@@ -722,7 +778,8 @@
         "type=has-note": "有笔记",
         "type=has-open-task": "有未完成的任务",
         "type=all-tasks-completed": "所有任务已完成",
-        "type=note-size": "笔记大小"
+        "type=note-size": "笔记大小",
+        "type=has-notelet": "有子笔记"
       }
     }
   ],
@@ -740,7 +797,8 @@
         "type=has-note": "检查是否存在笔记",
         "type=has-open-task": "检查笔记是否有未完成的任务",
         "type=all-tasks-completed": "检查是否所有任务都已完成",
-        "type=note-size": "检查笔记大小"
+        "type=note-size": "检查笔记大小",
+        "type=has-notelet": "检查是否存在子笔记"
       }
     }
   ],
@@ -1046,6 +1104,7 @@
   "uri_unknown_write_type": "URI 中的日记类型“{type}”未知。",
   "uri_invalid_date": "无法识别 URI 中的日期“{date}”。",
   "uri_invalid_mode": "URI 中的打开模式“{mode}”未知。",
+  "uri_notelet_requires_journal": "子笔记链接需要一个日记。请在链接中添加 journal=<名称>。",
   "uri_unknown_journal": "没有名为“{journal}”的日记。",
   "uri_no_journal": "没有日记覆盖该日期。",
   "uri_no_journal_of_type": [
@@ -1062,6 +1121,8 @@
     }
   ],
   "uri_open_failed": "无法打开该日记笔记。",
+  "uri_unknown_notelet_type": "“{journal}”中没有名为“{type}”的子笔记类型。",
+  "uri_notelet_failed": "无法创建子笔记。",
   "view_deleted_error": "此视图已被删除。请关闭此标签页，或在插件设置中重新创建该视图。",
   "view_block_unknown_error": "此块已不再可用。请在插件设置中将其从视图中移除。",
   "view_block_config_error": "此块的某些设置无效。请在插件设置中重新配置。",
@@ -1135,6 +1196,13 @@
   "view_block_markdown_template_variable_journal_link_description": "解析为另一篇日记中对应焦点日期的笔记在库中的路径。请自行将其包装成链接，并添加类似 +1w 的偏移以指向相邻周期。",
   "view_block_markdown_template_empty": "未选择模板",
   "view_block_markdown_template_read_error": "无法读取模板文件。",
+  "view_block_notelets_label": "子笔记",
+  "view_block_notelets_description": "列出您正在阅读的笔记的子笔记，或视图日期前后时间范围内的子笔记。",
+  "view_block_notelets_journals_label": "日记",
+  "view_block_notelets_journals_description": "全部保持关闭即可包含视图书架中的所有日记。",
+  "view_block_notelets_types_label": "子笔记类型",
+  "view_block_notelets_types_description": "全部保持关闭即可包含所有类型。",
+  "view_block_notelets_types_empty": "还没有日记定义子笔记类型。",
   "view_block_summary_before": "前 {count}",
   "view_block_summary_after": "后 {count}",
   "view_block_summary_hidden_days": "隐藏：{days}",
@@ -1145,6 +1213,16 @@
       "match": {
         "count=1": "{count} 个日记",
         "count=*": "{count} 个日记"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} 种类型",
+        "count=*": "{count} 种类型"
       }
     }
   ],
@@ -1159,15 +1237,16 @@
     }
   ],
   "view_block_config_window_label": "时间范围",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=week": "本周",
-        "period=month": "本月",
-        "period=quarter": "本季度",
-        "period=year": "本年度"
+        "period=day": "所选日",
+        "period=week": "所选周",
+        "period=month": "所选月",
+        "period=quarter": "所选季度",
+        "period=year": "所选年"
       }
     }
   ],
@@ -1355,6 +1434,7 @@
   "journal_colliding_warning": "日记 {names} 的配置存在冲突，因此它们的笔记会互相覆盖。请更改其中一个日记的文件夹或名称模板。",
   "journal_note_name_empty_notice": "日记“{journalName}”的名称模板解析出的笔记名称为空，因此无法创建笔记。请在该日记的设置中设置名称模板。",
   "journal_note_path_claimed_notice": "日记“{journalName}”会把笔记放在“{path}”，但该笔记已属于日记“{claimedBy}”，因此未做任何更改。请更改其中一个日记的文件夹或名称模板。",
+  "journal_note_path_notelet_notice": "日记“{journalName}”无法在“{path}”创建笔记：那里已经有它自己的一条子笔记。请更改该日记的名称模板或文件夹，或移动那条子笔记。",
   "journal_dashboard_bulk_add": "批量向 {name} 添加笔记",
   "journal_dashboard_clone": "克隆{name}",
   "journal_dashboard_edit": "配置{name}",
@@ -1399,6 +1479,8 @@
   "journal_clone_modal_description": "设置和命令会被复制，笔记不会。",
   "journal_clone_modal_name_label": "新日记名称",
   "journal_clone_modal_title": "克隆{name}",
+  "journal_clone_notelet_types_description": "为每种类型添加一个命令。关闭此项以在不复制这些类型的情况下克隆。",
+  "journal_clone_notelet_types_label": "复制子笔记类型",
   "journal_edit_allow_before_description": "允许在锚定日期之前进行索引。可能会产生负数。",
   "journal_edit_allow_before_label": "允许早于锚定日期",
   "journal_edit_anchor_description": "编号从此日期开始计算。此日期的笔记获得起始编号，之后的笔记依次递增。",
@@ -1527,6 +1609,8 @@
   "journal_edit_code_block_home_option_scale": "将链接大小增加到文本大小的倍数（例如，scale: 2 会将其加倍）。",
   "journal_edit_code_block_home_option_shelf": "将显示的日记限制在特定书架上。",
   "journal_edit_code_block_home_custom_lead": "通过自定义选项，它可以看起来像这样：",
+  "journal_edit_code_block_notelets_description": "列出此笔记所属周期的子笔记。添加 types 列表可将其限定为特定的子笔记类型。",
+  "journal_edit_code_block_notelets_default": "默认情况下，它看起来像这样：",
   "journal_edit_section_timeline": "时间线",
   "journal_edit_sequence_enabled_description": "给笔记分配编号（例如第 1 天、第 2 天……）。",
   "journal_edit_sequence_enabled_label": "启用顺序编号",
@@ -1553,6 +1637,7 @@
   "journal_edit_variable_non_invertible_warning": "在此处使用它会导致日记无法从文件名中还原日期。",
   "journal_edit_variable_note_name_description": "本周期笔记的名称。",
   "journal_edit_variable_note_title_description": "笔记名称的别名，支持核心插件“模板”的变量。",
+  "journal_edit_variable_notelet_index_description": "该子笔记在其周期中的编号；编号在每个周期重新开始，因此第一个始终为 1。",
   "journal_edit_variable_numbering_description": "配置的编号变量（参见“顺序编号”部分）。",
   "journal_edit_variable_prompt_description": "“{question}”的答案（参见“问题”部分）。",
   "journal_edit_variable_reference_intro": "可用变量。当未指定显式格式时，日期格式默认为{dateFormat}。",
@@ -1581,18 +1666,87 @@
       "match": {
         "field=dateField": "编辑日期属性名称",
         "field=startDateField": "编辑开始日期属性名称",
-        "field=endDateField": "编辑结束日期属性名称"
+        "field=endDateField": "编辑结束日期属性名称",
+        "field=noteletField": "编辑子笔记类型属性名称"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "记录笔记属于哪种子笔记类型的属性。",
+  "journal_fm_notelet_field_label": "子笔记类型属性",
   "journal_name_required_error": "日记名称为必填项。",
   "journal_name_unique_error": "日记名称必须唯一。",
+  "journal_notelet_section_title": "子笔记类型",
+  "journal_notelet_section_description": "子笔记类型是一种额外的笔记，本日记可以在周期自身的笔记之外，为该周期创建这种笔记。",
+  "journal_notelet_section_empty": "尚无子笔记类型。",
+  "journal_notelet_add": "添加子笔记类型",
+  "journal_notelet_edit": "编辑子笔记类型",
+  "journal_notelet_add_modal_title": "添加子笔记类型",
+  "journal_notelet_name_label": "名称",
+  "journal_notelet_name_description": "会保存在每条子笔记中；在此重命名即可全局更改。",
+  "journal_notelet_name_required_error": "请输入该子笔记类型的名称。",
+  "journal_notelet_name_unique_error": "本日记中已存在同名的子笔记类型。",
+  "journal_notelet_rename_modal_title": "重命名{name}",
+  "journal_notelet_bulk_add_tooltip": "批量添加此类型的子笔记",
+  "journal_notelet_rename_tooltip": "重命名子笔记类型",
+  "journal_notelet_delete_tooltip": "删除子笔记类型",
+  "journal_notelet_delete_modal_title": "删除{name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "此子笔记类型没有已连接的子笔记。",
+        "count=1": "此子笔记类型有 1 条已连接的子笔记。",
+        "count=*": "此子笔记类型有 {count} 条已连接的子笔记。"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "如何处理已连接的子笔记",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "保留子笔记",
+        "mode=clear": "清除子笔记类型数据",
+        "mode=delete": "删除子笔记"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "子笔记原样保留在库中。",
+        "mode=clear": "子笔记保留在库中，但会从其 frontmatter 中移除日记和子笔记类型的所有属性。",
+        "mode=delete": "与此类型关联的所有子笔记都将从库中删除。"
+      }
+    }
+  ],
+  "journal_notelet_folder_label": "文件夹",
+  "journal_notelet_name_template_label": "笔记名称",
+  "journal_notelet_no_within_period_variable_warning": "此名称模板中没有会在一个周期内变化的内容，因此除第一条之外，每条子笔记的名称都会被添加编号。",
+  "journal_notelet_period_path_collision_warning": "此类型解析出的笔记路径与日记本身相同。子笔记会自动获得不同的名称，但两者容易混淆。",
+  "journal_notelet_confirm_creation_label": "确认创建子笔记",
+  "journal_notelet_confirm_creation_description": "在创建该类型的子笔记之前显示确认对话框。",
+  "journal_notelet_counter_label": "为每条子笔记编号",
+  "journal_notelet_counter_description": "编号在每个周期重新开始，因此一天中的第一条子笔记始终为 1。",
+  "journal_notelet_counter_key_modal_title": "编辑编号属性名称",
+  "journal_property_key_taken": "此笔记中的其他内容已经写入“{name}”。",
+  "journal_notelet_command_name": "新建 {type}",
+  "journal_notelet_list_empty": "此周期没有子笔记。",
+  "journal_notelet_list_create": "新建子笔记",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type}（缺失类型）",
+  "journal_notelet_list_period_range": "{from}～{to}",
   "journal_period_range": "{start}～{end}",
   "journal_picker_placeholder": "搜索日记",
   "journal_prompt_answer_required": "此问题必须回答。",
   "journal_prompt_answer_required_in_path": "此回答会用于笔记名称，因此不能留空。",
   "journal_prompt_answer_reserved": "“{name}”是为未回答的问题保留的。请输入其他内容。",
   "journal_prompt_answers_modal_title": "在“{journal}”中新建笔记",
+  "journal_prompt_answers_notelet_modal_title": "在“{journal}”中新建 {type} 子笔记",
   "journal_prompt_add": "添加问题",
   "journal_prompt_autocreate_conflict": "此日记会自动创建笔记，因此没有人能够回答会出现在笔记名称中的问题。请关闭其中一项。",
   "journal_prompt_autocreate_required_warning": "自动创建笔记时，绝不会询问必填问题。",
@@ -1605,7 +1759,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "添加问题", "mode=edit": "编辑问题" }
+      "match": {
+        "mode=add": "添加问题",
+        "mode=edit": "编辑问题"
+      }
     }
   ],
   "journal_prompt_note_path_label": "笔记路径",
@@ -1655,7 +1812,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "添加编号位", "mode=edit": "编辑编号位" }
+      "match": {
+        "mode=add": "添加编号位",
+        "mode=edit": "编辑编号位"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1952,6 +2112,7 @@
   "maintenance_check_group_stale": "{journal}——这些笔记覆盖了错误的周期",
   "maintenance_check_group_duplicate": "{journal}——{anchor} 有两篇笔记",
   "maintenance_check_group_orphaned": "{journal}——此日记已不存在",
+  "maintenance_check_group_orphaned_type": "{journal}——未知子笔记类型",
   "maintenance_detail_moved": "{path}：{from} → {to}",
   "maintenance_detail_no_usable_date": "{path}：没有可读取的日期。文件名显示为 {to}。",
   "maintenance_detail_path_overrides_date": "{path}：文件名显示为 {pathAnchor}，笔记内容显示为 {dateAnchor}。请打开笔记并决定。",
@@ -1960,6 +2121,7 @@
   "maintenance_detail_start_mismatch": "{path}：开始于 {storedStart}，应开始于 {expectedStart}。",
   "maintenance_detail_duplicate": "{path}——{size} 字节，修改于 {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}：此日记中已不存在名为“{typeName}”的子笔记类型。",
   "maintenance_reason_anchor_contested": "由于另一篇笔记已声明相同的周期，此修复已被撤回。",
   "maintenance_reason_path_and_date_disagree": "由于文件名与笔记内容不一致，未自动进行任何更改。",
   "maintenance_reason_path_not_invertible": "无法自动修复此项。",

@@ -15,6 +15,8 @@ import { JournalsViewModel } from "../../../view-model";
 import { EditFrontmatterFieldFlow } from "../../flows/edit-frontmatter-field.flow";
 import { useReapplyFrontmatterOnToggle } from "../use-reapply-frontmatter-on-toggle";
 
+import type { FrontmatterFieldName } from "../modals";
+
 const { journalName } = defineProps<{ journalName: string }>();
 
 const flows = useService(Flows);
@@ -24,7 +26,7 @@ useReapplyFrontmatterOnToggle(config);
 
 const expanded = ref(false);
 
-function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): void {
+function editFm(fieldName: FrontmatterFieldName): void {
   void flows.invoke(EditFrontmatterFieldFlow, { journalName, fieldName });
 }
 </script>
@@ -66,6 +68,16 @@ function editFm(fieldName: "dateField" | "startDateField" | "endDateField"): voi
         :icon="icons.action.configure"
         :tooltip="m.journal_fm_field_modal_title({ field: 'endDateField' })"
         @click="editFm('endDateField')"
+      />
+    </UiSettingRow>
+
+    <UiSettingRow :name="m.journal_fm_notelet_field_label()">
+      <template #description>{{ m.journal_fm_notelet_field_description() }}</template>
+      {{ config.frontmatter.noteletField }}
+      <UiIconButton
+        :icon="icons.action.configure"
+        :tooltip="m.journal_fm_field_modal_title({ field: 'noteletField' })"
+        @click="editFm('noteletField')"
       />
     </UiSettingRow>
   </UiCollapsibleBlock>

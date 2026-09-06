@@ -7,6 +7,8 @@ import { describeCondition } from "./describe-condition";
 
 const calendar = new Calendar();
 
+const resolveTypeName = (id: string): string | undefined => ({ nt_a: "Meeting", nt_b: "1o1" })[id];
+
 describe("describeCondition", () => {
   describe("title", () => {
     it("renders the localized title clause", () => {
@@ -155,6 +157,30 @@ describe("describeCondition", () => {
     it("renders the localized all-tasks-completed clause", () => {
       expect(describeCondition({ type: "all-tasks-completed" }, calendar)).toBe(
         m.decoration_condition_all_tasks_completed_describe(),
+      );
+    });
+  });
+
+  describe("has-notelet", () => {
+    it("describes an any-type condition", () => {
+      expect(describeCondition({ type: "has-notelet", typeIds: [] }, calendar)).toBe("a notelet exists");
+    });
+
+    it("names the configured types", () => {
+      expect(describeCondition({ type: "has-notelet", typeIds: ["nt_a", "nt_b"] }, calendar, resolveTypeName)).toBe(
+        "a notelet of type Meeting, 1o1 exists",
+      );
+    });
+
+    it("falls back for an id the journal no longer defines", () => {
+      expect(describeCondition({ type: "has-notelet", typeIds: ["nt_gone"] }, calendar, () => undefined)).toBe(
+        "a notelet of type unknown type exists",
+      );
+    });
+
+    it("falls back when no resolver is supplied", () => {
+      expect(describeCondition({ type: "has-notelet", typeIds: ["nt_a"] }, calendar)).toBe(
+        "a notelet of type unknown type exists",
       );
     });
   });

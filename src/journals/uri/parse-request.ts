@@ -7,6 +7,7 @@ import {
   InvalidUriDateError,
   InvalidUriOpenModeError,
   MissingUriTargetError,
+  NoteletUriRequiresJournalError,
   UnknownUriWriteTypeError,
 } from "./errors";
 
@@ -25,12 +26,21 @@ export interface JournalUriRequest {
   readonly target: JournalUriTarget;
   readonly date: CalendarDate;
   readonly openMode: OpenMode;
+  readonly notelet?: string;
 }
 
 export function parseJournalUriRequest(
   parameters: Record<string, string | undefined>,
 ): Result<JournalUriRequest, UriError> {
+  const trimmed = parameters.notelet?.trim();
+  const notelet = trimmed === undefined || trimmed === "" ? undefined : trimmed;
+
   const target = parseTarget(parameters);
+  // A notelet type name is only unique within one journal, so a missing or write-type target gets
+  // the specific refusal rather than parseTarget's generic one.
+  if (notelet !== undefined && !(target.isOk() && target.value.kind === "journal")) {
+    return new Err(new NoteletUriRequiresJournalError(notelet));
+  }
   if (target.isErr()) return new Err(target.error);
 
   const date = parseDate(parameters.date);
@@ -39,7 +49,12 @@ export function parseJournalUriRequest(
   const openMode = parseOpenMode(parameters.mode);
   if (openMode.isErr()) return new Err(openMode.error);
 
-  return new Ok({ target: target.value, date: date.value, openMode: openMode.value });
+  return new Ok({
+    target: target.value,
+    date: date.value,
+    openMode: openMode.value,
+    ...(notelet !== undefined && { notelet }),
+  });
 }
 
 function parseTarget(parameters: Record<string, string | undefined>): Result<JournalUriTarget, UriError> {

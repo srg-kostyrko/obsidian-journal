@@ -5,7 +5,8 @@ import { describe, expect, it } from "vitest";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import type { TypeId } from "@/journals/notelets/config";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import EditPromptModal from "./EditPromptModal.vue";
@@ -571,6 +572,79 @@ describe("EditPromptModal", () => {
 
       await waitFor(() => {
         expect(submit).toHaveBeenCalledWith(expect.objectContaining({ variable: "mood" }));
+      });
+    });
+  });
+
+  describe("editing a notelet type's question", () => {
+    const seed = {
+      journals: {
+        Work: fixedJournal(
+          "Work",
+          { type: "day" },
+          {
+            prompts: [
+              {
+                type: "text",
+                variable: "mood",
+                question: "Journal question?",
+                frontmatterKey: "mood",
+                required: false,
+              },
+            ],
+            notelets: {
+              nt_7f3a: buildNoteletType({
+                id: "nt_7f3a" as TypeId,
+                name: "Standup",
+                counter: { enabled: true, frontmatterKey: "standup-index" },
+                prompts: [
+                  {
+                    type: "text",
+                    variable: "attendee",
+                    question: "Who with?",
+                    frontmatterKey: "with",
+                    required: false,
+                  },
+                ],
+              }),
+            },
+          },
+        ),
+      },
+    };
+
+    it("edits the type's question, not the journal's", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      harness.renderModal(EditPromptModal, { props: { journalName: "Work", typeId: "nt_7f3a", promptIndex: 0 } });
+
+      const [question] = textInputs();
+      expect((question as HTMLInputElement).value).toBe("Who with?");
+    });
+
+    it("refuses a property the type's counter already uses", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+      await fillRequiredFields("place");
+      await userEvent.clear(textInputs().at(-1)!);
+      await userEvent.type(textInputs().at(-1)!, "standup-index");
+      await submitForm();
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_property_duplicate({ name: "standup-index" }))).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("allows a property the journal's own question uses", async () => {
+      const harness = await testContainer({ modules: [journalsCoreModule], data: seed });
+      const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "Work", typeId: "nt_7f3a" } });
+      await fillRequiredFields("feeling");
+      await userEvent.clear(textInputs().at(-1)!);
+      await userEvent.type(textInputs().at(-1)!, "mood");
+      await submitForm();
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ frontmatterKey: "mood" }));
       });
     });
   });

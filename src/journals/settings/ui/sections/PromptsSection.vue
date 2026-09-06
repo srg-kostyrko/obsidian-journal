@@ -15,31 +15,37 @@ import { JournalsViewModel } from "../../../view-model";
 import { EditPromptFlow } from "../../flows/edit-prompt.flow";
 import { usePromptAutocreateGuard } from "../use-prompt-autocreate-guard";
 
-const { journalName } = defineProps<{ journalName: string }>();
+const props = withDefaults(defineProps<{ journalName: string; typeId?: string }>(), { typeId: undefined });
 
 const flows = useService(Flows);
 const journalsVM = useService(JournalsViewModel);
-const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
+const config = computed(() => journalsVM.getJournal(props.journalName).getOrUndefined());
+// A notelet type owns its own questions; the journal's were authored for the period note and are
+// neither inherited nor asked on a notelet.
+const owner = computed(() => (props.typeId === undefined ? config.value : config.value?.notelets[props.typeId]));
 usePromptAutocreateGuard(config);
 
 const expanded = ref(false);
 
-const prompts = computed(() => config.value?.prompts ?? []);
-const hasRequiredWithAutoCreate = computed(() => (config.value?.autoCreate ?? false) && prompts.value.some(isRequired));
+const prompts = computed(() => owner.value?.prompts ?? []);
+// A type has no auto-create, so the conflict the guard warns about cannot arise on one.
+const hasRequiredWithAutoCreate = computed(
+  () => props.typeId === undefined && (config.value?.autoCreate ?? false) && prompts.value.some(isRequired),
+);
 
 function addPrompt(): void {
-  void flows.invoke(EditPromptFlow, { journalName });
+  void flows.invoke(EditPromptFlow, { journalName: props.journalName, typeId: props.typeId });
 }
 function editPrompt(promptIndex: number): void {
-  void flows.invoke(EditPromptFlow, { journalName, promptIndex });
+  void flows.invoke(EditPromptFlow, { journalName: props.journalName, typeId: props.typeId, promptIndex });
 }
 function deletePrompt(promptIndex: number): void {
-  config.value?.prompts.splice(promptIndex, 1);
+  owner.value?.prompts.splice(promptIndex, 1);
 }
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="owner" v-model:expanded="expanded">
     <template #trigger>
       <UiIconedRow :icon="icons.section.prompts">
         {{ m.journal_prompt_section_title() }}

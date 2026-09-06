@@ -38,6 +38,12 @@ describe("checkStaleRange", () => {
     expect(result?.repair).toEqual({ kind: "rewrite", anchor: anchor("2026-01-12") });
   });
 
+  it("never fires for a notelet, which has no start or end keys to go stale", () => {
+    expect(
+      checkStaleRange(buildScannedNote({ noteletTypeName: "Standup", storedEnd: anchor("2026-01-12") })),
+    ).toBeUndefined();
+  });
+
   it("ignores a note that is already reported as rejected", () => {
     const result = checkStaleRange(
       buildScannedNote({

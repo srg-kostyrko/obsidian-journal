@@ -4,6 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import type { JournalDecoration, JournalDecorationCondition } from "@/decorations";
 import { m } from "@/i18n";
+import type { TypeId } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import { buildCondition } from "../../testing";
@@ -22,7 +25,7 @@ async function mountModal(options: {
   conditionTypes: readonly JournalDecorationCondition["type"][];
   decoration?: JournalDecoration;
 }) {
-  const harness = await testContainer();
+  const harness = await testContainer({ modules: [journalsCoreModule] });
   return harness.renderModal(EditDecorationModal, {
     props: { conditionTypes: options.conditionTypes, decoration: options.decoration },
   });
@@ -39,6 +42,7 @@ const ALL_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = [
   "date",
   "weekday",
   "offset",
+  "has-notelet",
 ];
 
 async function mountWith(options: { conditions: JournalDecorationCondition[] }) {
@@ -100,6 +104,7 @@ describe("EditDecorationModal", () => {
       await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
       expect(screen.getByText(m.decoration_condition_type_label({ type: "date" }))).toBeTruthy();
       expect(screen.getByText(m.decoration_condition_type_label({ type: "weekday" }))).toBeTruthy();
+      expect(screen.getByText(m.decoration_condition_type_label({ type: "has-notelet" }))).toBeTruthy();
       expect(screen.queryByText(m.decoration_condition_type_label({ type: "offset" }))).toBeNull();
     });
 
@@ -139,6 +144,12 @@ describe("EditDecorationModal", () => {
       // weekdays is already a set, so a second condition can say nothing new.
       const { options } = await mountWith({ conditions: [buildCondition("weekday")] });
       expect(options.map((o) => o.value)).not.toContain("weekday");
+    });
+
+    it("does not offer has-notelet twice", async () => {
+      // typeIds is already a set, so a second condition can say nothing new.
+      const { options } = await mountWith({ conditions: [buildCondition("has-notelet")] });
+      expect(options.map((o) => o.value)).not.toContain("has-notelet");
     });
   });
 
@@ -181,6 +192,41 @@ describe("EditDecorationModal", () => {
           }) as unknown,
         });
       });
+    });
+  });
+
+  describe("journal name hand-off", () => {
+    it("passes journalName through to ConditionItem's notelet-type picker", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            Work: fixedJournal(
+              "Work",
+              { type: "day" },
+              {
+                notelets: {
+                  meeting: buildNoteletType({ id: "unrelated-a" as TypeId, name: "Meeting" }),
+                  "1o1": buildNoteletType({ id: "unrelated-b" as TypeId, name: "1o1" }),
+                },
+              },
+            ),
+          },
+        },
+      });
+      harness.renderModal(EditDecorationModal, {
+        props: {
+          conditionTypes: conditionTypeOptions.day,
+          journalName: "Work",
+          decoration: {
+            mode: "and",
+            conditions: [{ type: "has-notelet", typeIds: [] }],
+            styles: [{ type: "background", color: transparent }],
+          },
+        },
+      });
+      expect(screen.getByRole("button", { name: "Meeting" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "1o1" })).toBeTruthy();
     });
   });
 

@@ -125,6 +125,7 @@
   "code_blocks_yaml_error": "Impossibile leggere le opzioni di questo blocco {key}.",
   "code_blocks_schema_error": "Alcune opzioni di questo blocco {key} non sono valide.",
   "code_blocks_nav_not_connected": "La nota non è collegata a un diario",
+  "code_blocks_notelets_not_connected": "La nota non è collegata a un diario",
   "code_blocks_home_empty": "Nessun diario da mostrare. Controlla le opzioni show e shelf del blocco.",
   "common_no_journals_yet": "Nessun diario finora. Creane uno nelle impostazioni del plugin.",
   "code_blocks_nav_next": "Successivo",
@@ -294,7 +295,8 @@
       "match": {
         "scope=global": "Nessun comando globale creato finora.",
         "scope=journal": "Nessun comando creato finora per questo diario.",
-        "scope=shelf": "Nessun comando creato finora per questo scaffale."
+        "scope=shelf": "Nessun comando creato finora per questo scaffale.",
+        "scope=notelet": "Nessun comando creato finora per questo tipo di nota breve."
       }
     }
   ],
@@ -330,6 +332,46 @@
   ],
   "command_name_required_error": "Il nome del comando è obbligatorio.",
   "command_name_unique_error": "Il nome del comando deve essere univoco.",
+  "command_notelet_label_today": "Crea per oggi",
+  "command_notelet_label_tomorrow": "Crea per domani",
+  "command_notelet_label_yesterday": "Crea per ieri",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Crea per il giorno corrente",
+        "type=same,writeType=week": "Crea per la settimana corrente",
+        "type=same,writeType=month": "Crea per il mese corrente",
+        "type=same,writeType=quarter": "Crea per il trimestre corrente",
+        "type=same,writeType=year": "Crea per l'anno corrente",
+        "type=same,writeType=custom": "Crea per il periodo corrente",
+        "type=next,writeType=day": "Crea per il giorno successivo",
+        "type=next,writeType=week": "Crea per la settimana successiva",
+        "type=next,writeType=month": "Crea per il mese successivo",
+        "type=next,writeType=quarter": "Crea per il trimestre successivo",
+        "type=next,writeType=year": "Crea per l'anno successivo",
+        "type=next,writeType=custom": "Crea per il periodo successivo",
+        "type=previous,writeType=day": "Crea per il giorno precedente",
+        "type=previous,writeType=week": "Crea per la settimana precedente",
+        "type=previous,writeType=month": "Crea per il mese precedente",
+        "type=previous,writeType=quarter": "Crea per il trimestre precedente",
+        "type=previous,writeType=year": "Crea per l'anno precedente",
+        "type=previous,writeType=custom": "Crea per il periodo precedente",
+        "type=same_next_week,writeType=*": "Crea per lo stesso giorno della prossima settimana",
+        "type=same_previous_week,writeType=*": "Crea per lo stesso giorno della settimana scorsa",
+        "type=same_next_month,writeType=*": "Crea per lo stesso giorno del mese prossimo",
+        "type=same_previous_month,writeType=*": "Crea per lo stesso giorno del mese scorso",
+        "type=same_next_year,writeType=day": "Crea per lo stesso giorno dell'anno prossimo",
+        "type=same_next_year,writeType=month": "Crea per lo stesso mese dell'anno prossimo",
+        "type=same_next_year,writeType=quarter": "Crea per lo stesso trimestre dell'anno prossimo",
+        "type=same_previous_year,writeType=day": "Crea per lo stesso giorno dell'anno scorso",
+        "type=same_previous_year,writeType=month": "Crea per lo stesso mese dell'anno scorso",
+        "type=same_previous_year,writeType=quarter": "Crea per lo stesso trimestre dell'anno scorso",
+        "type=*,writeType=*": "Crea nota breve"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
@@ -420,6 +462,8 @@
   "common_vault_root": "radice del vault",
   "command_connect_note": "Collega la nota a un diario",
   "connect_note_modal_date_label": "Data",
+  "connect_note_modal_kind_label": "Collega come",
+  "connect_note_modal_kind_period": "La nota propria del diario",
   "connect_note_modal_move_description": "La cartella della nota ({current}) è diversa dalla cartella configurata del diario ({configured}).",
   "connect_note_modal_override_description": "Un'altra nota ({path}) è collegata a questa data. Verrà scollegata se abiliti questa opzione.",
   "connect_note_modal_override_label": "Sostituisci la nota già collegata a questa data",
@@ -427,14 +471,19 @@
   "connect_note_modal_rename_label": "Rinomina il file per farlo corrispondere al diario",
   "connect_note_modal_move_label": "Sposta il file nella cartella del diario",
   "connect_note_modal_rename_refused_prompt": "Questo diario pone una domanda la cui risposta confluisce nel nome della nota, quindi la nota mantiene il proprio nome.",
+  "connect_note_modal_rename_refused_prompt_notelet": "Questo tipo di nota breve pone una domanda la cui risposta confluisce nel nome della nota, quindi la nota mantiene il proprio nome.",
   "connect_note_modal_move_refused_prompt": "Questo diario pone una domanda la cui risposta confluisce nella cartella, quindi la nota rimane nella sua cartella attuale.",
+  "connect_note_modal_move_refused_prompt_notelet": "Questo tipo di nota breve pone una domanda la cui risposta confluisce nella cartella, quindi la nota rimane nella sua cartella attuale.",
   "connect_note_modal_connect": "Collega",
+  "connect_note_modal_update": "Aggiorna",
   "connect_note_modal_connected_to": "Questa nota è collegata a \"{journalName}\".",
   "connect_note_modal_disconnect": "Scollega",
   "connect_note_modal_out_of_bounds": "Questa data non rientra nella cronologia attiva del diario.",
   "connect_note_notice_connected": "Nota collegata a \"{journalName}\".",
+  "connect_note_notice_connected_notelet": "Nota collegata a \"{journalName}\" come nota breve {type}.",
   "connect_note_notice_disconnected": "Nota scollegata da \"{journalName}\".",
   "bulk_add_notes_to_title": "Aggiungi note a {journalName}",
+  "bulk_add_notelets_to_title": "Aggiungi note brevi {type}",
   "bulk_add_folder_label": "Cartella di origine",
   "bulk_add_folder_description": "Seleziona la cartella con le note esistenti che vuoi elaborare.",
   "bulk_add_folder_not_found": "Questa cartella non esiste nel tuo vault.",
@@ -581,6 +630,8 @@
   "confirm_note_creation_body": "Creare \"{noteName}\" nel diario \"{journalName}\"?",
   "confirm_note_creation_confirm": "Crea",
   "confirm_note_creation_title": "Creare una nuova nota nel diario?",
+  "confirm_notelet_creation_title": "Creare una nuova nota breve?",
+  "confirm_notelet_creation_body": "Creare \"{noteName}\" come nota breve {type} nel diario \"{journalName}\"?",
   "decoration_add": "Aggiungi decorazione",
   "decoration_badge_matched_past": [
     {
@@ -786,6 +837,11 @@
     }
   ],
   "decoration_condition_has_note_describe": "esiste una nota",
+  "decoration_condition_has_notelet_describe_any": "esiste una nota breve",
+  "decoration_condition_has_notelet_describe_types": "esiste una nota breve di tipo {types}",
+  "decoration_condition_has_notelet_empty": "Questo diario non ha ancora tipi di nota breve.",
+  "decoration_condition_has_notelet_label": "Tipi di nota breve",
+  "decoration_condition_has_notelet_unknown_type": "tipo sconosciuto",
   "decoration_condition_has_open_task_describe": "la nota ha un'attività aperta",
   "decoration_condition_note_size_describe": [
     {
@@ -867,7 +923,8 @@
         "type=has-note": "Ha una nota",
         "type=has-open-task": "Ha un'attività aperta",
         "type=all-tasks-completed": "Tutte le attività completate",
-        "type=note-size": "Dimensione nota"
+        "type=note-size": "Dimensione nota",
+        "type=has-notelet": "Ha una nota breve"
       }
     }
   ],
@@ -885,7 +942,8 @@
         "type=has-note": "Controlla se la nota esiste",
         "type=has-open-task": "Controlla se la nota ha attività aperte",
         "type=all-tasks-completed": "Controlla se tutte le attività sono completate",
-        "type=note-size": "Controlla la dimensione della nota"
+        "type=note-size": "Controlla la dimensione della nota",
+        "type=has-notelet": "Controlla se esiste una nota breve"
       }
     }
   ],
@@ -1191,6 +1249,7 @@
   "uri_unknown_write_type": "Tipo di diario sconosciuto \"{type}\" nell'URI.",
   "uri_invalid_date": "Impossibile interpretare la data \"{date}\" nell'URI.",
   "uri_invalid_mode": "Modalità di apertura sconosciuta \"{mode}\" nell'URI.",
+  "uri_notelet_requires_journal": "Un link a una nota breve richiede un diario. Aggiungi journal=<nome> al link.",
   "uri_unknown_journal": "Non esiste alcun diario denominato \"{journal}\".",
   "uri_no_journal": "Nessun diario copre quella data.",
   "uri_no_journal_of_type": [
@@ -1207,6 +1266,8 @@
     }
   ],
   "uri_open_failed": "Impossibile aprire la nota del diario.",
+  "uri_unknown_notelet_type": "\"{journal}\" non ha alcun tipo di nota breve chiamato \"{type}\".",
+  "uri_notelet_failed": "Impossibile creare la nota breve.",
   "view_deleted_error": "Questa vista è stata eliminata. Chiudi questa scheda oppure ricrea la vista nelle impostazioni del plugin.",
   "view_block_unknown_error": "Questo blocco non è più disponibile. Rimuovilo dalla vista nelle impostazioni del plugin.",
   "view_block_config_error": "Alcune impostazioni di questo blocco non sono valide. Riconfiguralo nelle impostazioni del plugin.",
@@ -1280,6 +1341,13 @@
   "view_block_markdown_template_variable_journal_link_description": "Restituisce il percorso nel vault della nota di un altro diario per la data selezionata. Inseriscilo tu stesso in un collegamento e aggiungi uno spostamento come +1w per puntare a un periodo adiacente.",
   "view_block_markdown_template_empty": "Nessun modello selezionato",
   "view_block_markdown_template_read_error": "Impossibile leggere il file modello.",
+  "view_block_notelets_label": "Note brevi",
+  "view_block_notelets_description": "Elenca le note brevi della nota che stai leggendo, oppure quelle di una finestra attorno alla data della vista.",
+  "view_block_notelets_journals_label": "Diari",
+  "view_block_notelets_journals_description": "Lascia tutto disattivato per includere ogni diario nello scaffale della vista.",
+  "view_block_notelets_types_label": "Tipi di nota breve",
+  "view_block_notelets_types_description": "Lascia tutto disattivato per includere ogni tipo.",
+  "view_block_notelets_types_empty": "Nessun diario definisce ancora un tipo di nota breve.",
   "view_block_summary_before": "{count} prima",
   "view_block_summary_after": "{count} dopo",
   "view_block_summary_hidden_days": "Nascosti: {days}",
@@ -1290,6 +1358,16 @@
       "match": {
         "count=1": "1 diario",
         "count=*": "{count} diari"
+      }
+    }
+  ],
+  "view_block_notelets_type_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 tipo",
+        "count=*": "{count} tipi"
       }
     }
   ],
@@ -1304,15 +1382,16 @@
     }
   ],
   "view_block_config_window_label": "Finestra",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=week": "Settimana corrente",
-        "period=month": "Mese corrente",
-        "period=quarter": "Trimestre corrente",
-        "period=year": "Anno corrente"
+        "period=day": "Giorno selezionato",
+        "period=week": "Settimana selezionata",
+        "period=month": "Mese selezionato",
+        "period=quarter": "Trimestre selezionato",
+        "period=year": "Anno selezionato"
       }
     }
   ],
@@ -1508,6 +1587,7 @@
   "journal_colliding_warning": "I diari {names} hanno configurazioni in conflitto, quindi le loro note si sovrascriveranno a vicenda. Modifica il modello di cartella o di nome in uno di essi.",
   "journal_note_name_empty_notice": "Il diario \"{journalName}\" ha un modello di nome che produce un nome di nota vuoto, quindi non è possibile creare alcuna nota. Imposta un modello di nome nelle impostazioni del diario.",
   "journal_note_path_claimed_notice": "Il diario \"{journalName}\" collocherebbe la sua nota in \"{path}\", ma quella nota appartiene già al diario \"{claimedBy}\", quindi non è stato modificato nulla. Modifica la cartella o il modello di nome in uno di essi.",
+  "journal_note_path_notelet_notice": "Il diario \"{journalName}\" non può creare la sua nota in \"{path}\": lì si trova già una delle sue note brevi. Modifica il modello di nome o la cartella del diario, oppure sposta quella nota breve.",
   "journal_dashboard_bulk_add": "Aggiungi note in blocco a {name}",
   "journal_dashboard_clone": "Clona {name}",
   "journal_dashboard_edit": "Configura {name}",
@@ -1552,6 +1632,8 @@
   "journal_clone_modal_description": "Le impostazioni e i comandi vengono copiati. Le note no.",
   "journal_clone_modal_name_label": "Nuovo nome del diario",
   "journal_clone_modal_title": "Clona {name}",
+  "journal_clone_notelet_types_description": "Aggiunge un comando per ogni tipo. Disattiva per clonare senza di essi.",
+  "journal_clone_notelet_types_label": "Copia i tipi di nota breve",
   "journal_edit_allow_before_description": "Consenti l'indicizzazione prima della data di ancoraggio. Potrebbe produrre numeri negativi.",
   "journal_edit_allow_before_label": "Consenti prima dell'ancoraggio",
   "journal_edit_anchor_description": "La numerazione parte da questa data. La nota di questa data riceve il numero iniziale e le note successive proseguono il conteggio.",
@@ -1680,6 +1762,8 @@
   "journal_edit_code_block_home_option_scale": "aumenta la dimensione del collegamento come moltiplicatore della dimensione del testo (ad esempio, scale: 2 la raddoppia).",
   "journal_edit_code_block_home_option_shelf": "limita i diari visualizzati a uno scaffale specifico.",
   "journal_edit_code_block_home_custom_lead": "Con le opzioni personalizzate può apparire così:",
+  "journal_edit_code_block_notelets_description": "Elenca le note brevi del periodo a cui appartiene questa nota. Aggiungi un elenco types per limitarla a tipi di nota breve specifici.",
+  "journal_edit_code_block_notelets_default": "Per impostazione predefinita si presenta così:",
   "journal_edit_section_timeline": "Cronologia",
   "journal_edit_sequence_enabled_description": "Assegna dei numeri alle note (ad esempio Giorno 1, Giorno 2, …).",
   "journal_edit_sequence_enabled_label": "Abilita numeri sequenziali",
@@ -1706,6 +1790,7 @@
   "journal_edit_variable_non_invertible_warning": "Usarlo qui impedisce al diario di ricavare la data dal nome del file.",
   "journal_edit_variable_note_name_description": "Il nome della nota di questo periodo.",
   "journal_edit_variable_note_title_description": "Alias del nome della nota, per supportare la variabile del plugin principale \"Modelli\".",
+  "journal_edit_variable_notelet_index_description": "Il numero di questa nota breve all'interno del suo periodo; la numerazione riparte a ogni periodo, quindi la prima è sempre 1.",
   "journal_edit_variable_numbering_description": "La variabile di numerazione configurata (vedere la sezione Sequenza).",
   "journal_edit_variable_prompt_description": "La risposta a \"{question}\" (vedere la sezione Domande).",
   "journal_edit_variable_reference_intro": "Variabili disponibili. Il formato della data predefinito è {dateFormat} quando non viene specificato alcun formato esplicito.",
@@ -1734,18 +1819,87 @@
       "match": {
         "field=dateField": "Modifica il nome della proprietà data",
         "field=startDateField": "Modifica il nome della proprietà data di inizio",
-        "field=endDateField": "Modifica il nome della proprietà data di fine"
+        "field=endDateField": "Modifica il nome della proprietà data di fine",
+        "field=noteletField": "Modifica il nome della proprietà tipo di nota breve"
       }
     }
   ],
+  "journal_fm_notelet_field_description": "La proprietà che registra a quale tipo di nota breve appartiene una nota.",
+  "journal_fm_notelet_field_label": "Proprietà tipo di nota breve",
   "journal_name_required_error": "Il nome del diario è obbligatorio.",
   "journal_name_unique_error": "Il nome del diario deve essere univoco.",
+  "journal_notelet_section_title": "Tipi di nota breve",
+  "journal_notelet_section_description": "Un tipo di nota breve è una specie di nota aggiuntiva che questo diario può creare per un periodo, accanto alla nota propria del periodo.",
+  "journal_notelet_section_empty": "Nessun tipo di nota breve per ora.",
+  "journal_notelet_add": "Aggiungi tipo di nota breve",
+  "journal_notelet_edit": "Modifica tipo di nota breve",
+  "journal_notelet_add_modal_title": "Aggiungi tipo di nota breve",
+  "journal_notelet_name_label": "Nome",
+  "journal_notelet_name_description": "Viene salvato in ogni nota breve. Rinominarlo qui lo cambia ovunque.",
+  "journal_notelet_name_required_error": "Inserisci un nome per questo tipo di nota breve.",
+  "journal_notelet_name_unique_error": "Questo diario ha già un tipo di nota breve con questo nome.",
+  "journal_notelet_rename_modal_title": "Rinomina {name}",
+  "journal_notelet_bulk_add_tooltip": "Aggiungi in blocco le note brevi di questo tipo",
+  "journal_notelet_rename_tooltip": "Rinomina tipo di nota breve",
+  "journal_notelet_delete_tooltip": "Elimina tipo di nota breve",
+  "journal_notelet_delete_modal_title": "Elimina {name}",
+  "journal_notelet_delete_affected_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=0": "Questo tipo di nota breve non ha note brevi collegate.",
+        "count=1": "Questo tipo di nota breve ha 1 nota breve collegata.",
+        "count=*": "Questo tipo di nota breve ha {count} note brevi collegate."
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_label": "Cosa fare con le note brevi collegate",
+  "journal_notelet_delete_mode_option": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Mantieni le note brevi",
+        "mode=clear": "Cancella i dati del tipo di nota breve",
+        "mode=delete": "Elimina le note brevi"
+      }
+    }
+  ],
+  "journal_notelet_delete_mode_description": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=keep": "Le note brevi restano invariate nel tuo vault.",
+        "mode=clear": "Le note brevi restano nel tuo vault, ma tutte le proprietà del diario e del tipo di nota breve vengono rimosse dal loro frontmatter.",
+        "mode=delete": "Tutte le note brevi di questo tipo vengono eliminate dal tuo vault."
+      }
+    }
+  ],
+  "journal_notelet_folder_label": "Cartella",
+  "journal_notelet_name_template_label": "Nome della nota",
+  "journal_notelet_no_within_period_variable_warning": "Questo modello di nome non contiene nulla che vari all'interno di un periodo, quindi ogni nota breve successiva alla prima riceve un numero aggiunto al proprio nome.",
+  "journal_notelet_period_path_collision_warning": "Questo tipo punta allo stesso percorso di nota del diario stesso. Le note brevi ricevono automaticamente un nome diverso, ma i due sono facili da confondere.",
+  "journal_notelet_confirm_creation_label": "Conferma la creazione di note brevi",
+  "journal_notelet_confirm_creation_description": "Visualizza una finestra di dialogo di conferma prima di creare una nota breve di questo tipo.",
+  "journal_notelet_counter_label": "Numera ogni nota breve",
+  "journal_notelet_counter_description": "La numerazione riparte a ogni periodo, quindi la prima nota breve di un giorno è sempre 1.",
+  "journal_notelet_counter_key_modal_title": "Modifica il nome della proprietà numero",
+  "journal_property_key_taken": "Qualcos’altro in questa nota scrive già in \"{name}\".",
+  "journal_notelet_command_name": "Crea {type}",
+  "journal_notelet_list_empty": "Nessuna nota breve per questo periodo.",
+  "journal_notelet_list_create": "Nuova nota breve",
+  "journal_notelet_list_type_qualified": "{journal} / {type}",
+  "journal_notelet_list_unresolved_type": "{type} (tipo mancante)",
+  "journal_notelet_list_period_range": "{from} – {to}",
   "journal_period_range": "{start} – {end}",
   "journal_picker_placeholder": "Cerca diari",
   "journal_prompt_answer_required": "Questa domanda deve ricevere una risposta.",
   "journal_prompt_answer_required_in_path": "Questa risposta viene usata nel nome della nota, quindi non può essere lasciata vuota.",
   "journal_prompt_answer_reserved": "\"{name}\" è riservato a una domanda senza risposta. Inserisci qualcos'altro.",
   "journal_prompt_answers_modal_title": "Nuova nota in \"{journal}\"",
+  "journal_prompt_answers_notelet_modal_title": "Nuova nota breve {type} in \"{journal}\"",
   "journal_prompt_add": "Aggiungi domanda",
   "journal_prompt_autocreate_conflict": "Questo diario crea note automaticamente, quindi nessuno può rispondere a una domanda che finisce nel nome della nota. Disattiva una delle due opzioni.",
   "journal_prompt_autocreate_required_warning": "Una domanda obbligatoria non viene mai posta quando le note vengono create automaticamente.",
@@ -1758,7 +1912,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Aggiungi domanda", "mode=edit": "Modifica domanda" }
+      "match": {
+        "mode=add": "Aggiungi domanda",
+        "mode=edit": "Modifica domanda"
+      }
     }
   ],
   "journal_prompt_note_path_label": "Percorso della nota",
@@ -1808,7 +1965,10 @@
     {
       "declarations": ["input mode"],
       "selectors": ["mode"],
-      "match": { "mode=add": "Aggiungi cifra di numerazione", "mode=edit": "Modifica cifra di numerazione" }
+      "match": {
+        "mode=add": "Aggiungi cifra di numerazione",
+        "mode=edit": "Modifica cifra di numerazione"
+      }
     }
   ],
   "journal_sequence_digit_summary": [
@@ -1960,6 +2120,7 @@
   "maintenance_check_group_stale": "{journal} — queste note coprono il periodo sbagliato",
   "maintenance_check_group_duplicate": "{journal} — due note per {anchor}",
   "maintenance_check_group_orphaned": "{journal} — questo diario non esiste più",
+  "maintenance_check_group_orphaned_type": "{journal} — tipo di nota breve sconosciuto",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: nessuna data leggibile. Il nome del file indica {to}.",
   "maintenance_detail_path_overrides_date": "{path}: il nome del file indica {pathAnchor}, la nota indica {dateAnchor}. Apri la nota e decidi.",
@@ -1968,6 +2129,7 @@
   "maintenance_detail_start_mismatch": "{path}: inizia il {storedStart}, dovrebbe iniziare il {expectedStart}.",
   "maintenance_detail_duplicate": "{path} — {size} byte, modificato {mtime}",
   "maintenance_detail_orphaned": "{path}",
+  "maintenance_detail_orphaned_type": "{path}: non esiste più un tipo di nota breve chiamato \"{typeName}\" in questo diario.",
   "maintenance_reason_anchor_contested": "Questa riparazione è stata ritirata perché un'altra nota rivendica già lo stesso periodo.",
   "maintenance_reason_path_and_date_disagree": "Non è stato modificato nulla automaticamente perché il nome del file e la nota non concordano.",
   "maintenance_reason_path_not_invertible": "Non è stato possibile ripararlo automaticamente.",

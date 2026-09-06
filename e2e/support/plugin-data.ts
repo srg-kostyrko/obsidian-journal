@@ -14,6 +14,7 @@ export interface StoredJournal {
   numbering?: { sources?: { frontmatterKey?: string }[] };
   decorations?: { mode?: string }[];
   navBlock?: { lines?: { template?: string }[][] };
+  notelets?: Record<string, { name?: string; confirmCreation?: boolean }>;
 }
 
 export interface StoredShelf {

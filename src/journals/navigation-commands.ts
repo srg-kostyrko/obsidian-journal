@@ -6,7 +6,7 @@ import type { Option } from "@/infrastructure/result";
 
 import { JournalsIndex } from "./journals-index";
 
-import type { JournalEntry } from "./types";
+import type { IndexedNote } from "./types";
 
 type Direction = "next" | "previous";
 
@@ -36,7 +36,7 @@ export class JournalNavigationCommands {
     });
   }
 
-  #activeEntry(): Option<JournalEntry> {
+  #activeEntry(): Option<IndexedNote> {
     return this.#workspace.activeNote().flatMap((path) => this.#index.entryByPath(path));
   }
 

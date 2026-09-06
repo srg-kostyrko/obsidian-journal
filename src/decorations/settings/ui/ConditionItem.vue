@@ -5,6 +5,7 @@ import { computed, type Component } from "vue";
 import type { JournalDecorationCondition } from "@/decorations";
 
 import ConditionDate from "./ConditionDate.vue";
+import ConditionHasNotelet from "./ConditionHasNotelet.vue";
 import ConditionNoteSize from "./ConditionNoteSize.vue";
 import ConditionOffset from "./ConditionOffset.vue";
 import ConditionProperty from "./ConditionProperty.vue";
@@ -13,7 +14,7 @@ import ConditionTitle from "./ConditionTitle.vue";
 import ConditionTypeOnly from "./ConditionTypeOnly.vue";
 import ConditionWeekday from "./ConditionWeekday.vue";
 
-const props = defineProps<{ name: string; condition: JournalDecorationCondition }>();
+const props = defineProps<{ name: string; condition: JournalDecorationCondition; journalName?: string }>();
 
 const leaf = computed<Component>(() =>
   match(props.condition.type)
@@ -24,17 +25,22 @@ const leaf = computed<Component>(() =>
     .with("weekday", () => ConditionWeekday)
     .with("offset", () => ConditionOffset)
     .with("note-size", () => ConditionNoteSize)
+    .with("has-notelet", () => ConditionHasNotelet)
     .with("has-note", "has-open-task", "all-tasks-completed", () => ConditionTypeOnly)
     .exhaustive(),
 );
 
-const leafProps = computed<Record<string, unknown>>(() =>
-  props.condition.type === "has-note" ||
-  props.condition.type === "has-open-task" ||
-  props.condition.type === "all-tasks-completed"
-    ? { type: props.condition.type }
-    : { name: props.name },
-);
+const leafProps = computed<Record<string, unknown>>(() => {
+  if (
+    props.condition.type === "has-note" ||
+    props.condition.type === "has-open-task" ||
+    props.condition.type === "all-tasks-completed"
+  ) {
+    return { type: props.condition.type };
+  }
+  if (props.condition.type === "has-notelet") return { name: props.name, journalName: props.journalName };
+  return { name: props.name };
+});
 </script>
 
 <template>

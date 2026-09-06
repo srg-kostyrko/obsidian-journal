@@ -159,7 +159,8 @@ export class RepairService {
       }
 
       const anchor = action.repair.anchor;
-      if (!claim(action.journalName, anchor, action.path)) {
+      // A notelet never contests a period slot, so it neither consumes one nor can be refused one.
+      if (action.noteletTypeName === undefined && !claim(action.journalName, anchor, action.path)) {
         results.push({
           entry: {
             path: action.path,
@@ -169,7 +170,10 @@ export class RepairService {
         });
         continue;
       }
-      const result = await this.#connection.reanchor(action.journalName, action.path, { anchor });
+      const result = await this.#connection.reanchor(action.journalName, action.path, {
+        anchor,
+        ...(action.noteletTypeName !== undefined && { noteletTypeName: action.noteletTypeName }),
+      });
       if (result.kind === "err") {
         results.push({
           entry: {

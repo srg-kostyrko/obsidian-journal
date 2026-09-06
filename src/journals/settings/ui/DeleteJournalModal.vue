@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
+import { useIndexVersion } from "@/journals/use-index-version";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -17,9 +18,14 @@ const mode = ref<"keep" | "clear" | "delete">("keep");
 
 // The most destructive action in the plugin asked the user to accept "all notes connected to
 // this journal" sight unseen. The index knows exactly which notes those are — it is the same
-// set the operation walks — so the number is stated rather than left to be guessed.
+// set the operation walks — so the number is stated rather than left to be guessed. The index
+// populates asynchronously, so this must notice notes indexed after mount, not just at it.
 const index = useService(JournalsIndex);
-const connectedCount = computed(() => [...index.entriesFor(props.journalName)].length);
+const indexVersion = useIndexVersion();
+const connectedCount = computed(() => {
+  void indexVersion.value;
+  return [...index.entriesFor(props.journalName)].length + index.noteletsFor(props.journalName).length;
+});
 
 function submit(): void {
   api.submit({ mode: mode.value });

@@ -81,3 +81,32 @@ describe("parseJournalUriRequest open mode", () => {
     expect(errKind({ journal: "Daily", mode: "popup" })).toBe("invalid-mode");
   });
 });
+
+describe("parseJournalUriRequest notelet", () => {
+  it("carries the notelet type name alongside a journal target", () => {
+    expect(ok({ journal: "Work", notelet: "Meeting" })).toMatchObject({
+      target: { kind: "journal", name: "Work" },
+      notelet: "Meeting",
+    });
+  });
+
+  it("is absent when not supplied", () => {
+    expect(ok({ journal: "Work" }).notelet).toBeUndefined();
+  });
+
+  it("trims the type name", () => {
+    expect(ok({ journal: "Work", notelet: "  Meeting  " }).notelet).toBe("Meeting");
+  });
+
+  it("treats a blank notelet as absent", () => {
+    expect(ok({ journal: "Work", notelet: " ".repeat(3) }).notelet).toBeUndefined();
+  });
+
+  it("refuses a notelet without a journal", () => {
+    expect(errKind({ notelet: "Meeting" })).toBe("notelet-requires-journal");
+  });
+
+  it("refuses a notelet beside a write-type target", () => {
+    expect(errKind({ type: "day", notelet: "Meeting" })).toBe("notelet-requires-journal");
+  });
+});

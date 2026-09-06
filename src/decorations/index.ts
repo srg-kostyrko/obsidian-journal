@@ -20,6 +20,7 @@ export {
   type JournalDecorationCondition,
   type JournalDecorationCorner,
   type JournalDecorationDateCondition,
+  type JournalDecorationHasNoteletCondition,
   type JournalDecorationIcon,
   type JournalDecorationNoteSizeCondition,
   type JournalDecorationNumberPropertyCondition,

@@ -7,13 +7,13 @@ import { customIntervalsBlock } from "./custom-intervals-block";
 describe("customIntervalsBlock.summary", () => {
   it("shows the window when no journals are pinned", () => {
     expect(customIntervalsBlock.summary?.({ window: "month" })).toBe(
-      m.view_block_config_window_current({ period: "month" }),
+      m.view_block_config_window_selected({ period: "month" }),
     );
   });
   it("appends the journal count when journals are pinned", () => {
     const summary = customIntervalsBlock.summary?.({ window: "week", journals: ["a", "b"] });
     expect(summary).toBe(
-      `${m.view_block_config_window_current({ period: "week" })} · ${m.view_block_summary_journal_count({ count: 2 })}`,
+      `${m.view_block_config_window_selected({ period: "week" })} · ${m.view_block_summary_journal_count({ count: 2 })}`,
     );
   });
 });

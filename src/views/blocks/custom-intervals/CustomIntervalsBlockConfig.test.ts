@@ -15,6 +15,12 @@ function mountConfig(config: CustomIntervalsConfig, onChange: CustomIntervalsCon
 }
 
 describe("CustomIntervalsBlockConfig", () => {
+  it("offers every window kind, day first", () => {
+    mountConfig({ window: "month" }, vi.fn());
+    const options = screen.getAllByRole("option").map((option) => (option as HTMLOptionElement).value);
+    expect(options).toEqual(["day", "week", "month", "quarter", "year"]);
+  });
+
   it("emits onChange with the chosen window when the dropdown changes", async () => {
     const onChange = vi.fn();
     mountConfig({ window: "month" }, onChange);

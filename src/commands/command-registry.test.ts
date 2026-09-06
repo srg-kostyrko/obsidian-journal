@@ -6,10 +6,10 @@ import { m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { JournalsIndex, JournalsRepository, OpenDateFlow } from "@/journals";
-import type { JournalConfig } from "@/journals";
+import { JournalsIndex, JournalsRepository, OpenDateFlow, VaultSubscriptionService } from "@/journals";
+import type { JournalConfig, TypeId } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { SettingsEventsToken } from "@/settings";
 import { ShelvesRepository } from "@/shelves";
 import type { ShelfConfig } from "@/shelves";
@@ -43,7 +43,7 @@ async function buildRegistry(seed: RegistrySeed = {}) {
       commands: seed.commands ?? {},
     },
     allow: { hostState: true },
-    initialize: [DynamicCommandRegistry],
+    initialize: [DynamicCommandRegistry, VaultSubscriptionService],
   });
   return {
     host: harness.host,
@@ -199,6 +199,24 @@ describe("DynamicCommandRegistry availability", () => {
     });
     const path = "monthly/2026-05.md" as VaultPath;
     index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path });
+    activate(host, path);
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
+
+  it("lists an only_open_note command while a notelet is the active note", async () => {
+    const { host, index } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: { "cmd-1": buildCommand({ context: "only_open_note" }) },
+    });
+    const path = "daily/standup.md" as VaultPath;
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-05-21"),
+      path,
+      typeName: "Standup",
+      typeId: null,
+    });
     activate(host, path);
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
   });
@@ -374,6 +392,54 @@ describe("DynamicCommandRegistry execution", () => {
       { context: { command: "Cmd" } },
     );
   });
+
+  it("resolves open_note to the active notelet's anchor", async () => {
+    const { host, index, flows } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: { "cmd-1": buildCommand({ name: "Cmd", type: "same", context: "open_note" }) },
+    });
+    const path = "daily/standup.md" as VaultPath;
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-05-21"),
+      path,
+      typeName: "Standup",
+      typeId: null,
+    });
+    activate(host, path);
+    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      {
+        anchor: anchor("2026-05-21"),
+        journalNames: ["daily"],
+        openMode: "active",
+        existingOnly: false,
+      },
+      { context: { command: "Cmd" } },
+    );
+  });
+
+  it("still falls back to today when the active note is not a journal note at all", async () => {
+    const { host, flows } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: { "cmd-1": buildCommand({ name: "Cmd", type: "same", context: "open_note" }) },
+    });
+    activate(host, "inbox/scratch.md" as VaultPath);
+    const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
+
+    host.commands.get("cmd-1")?.checkCallback?.(false);
+
+    expect(invokeSpy).toHaveBeenCalledWith(
+      OpenDateFlow,
+      expect.objectContaining({ anchor: CalendarDate.today().toAnchor() }),
+      expect.anything(),
+    );
+  });
 });
 
 describe("DynamicCommandRegistry available types", () => {
@@ -516,6 +582,20 @@ describe("DynamicCommandRegistry journal cascade", () => {
     expect(host.commands.get("cmd-1")).toBeUndefined();
   });
 
+  it("deletes a journal's notelet commands when the journal is deleted", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      commands: {
+        "cmd-1": buildCommand({ target: { kind: "journal", journalName: "daily" } }),
+        "cmd-2": buildCommand({ target: { kind: "notelet", journalName: "daily", typeId: "nt_1" } }),
+      },
+    });
+
+    journalsRepo.delete("daily");
+
+    expect([...commandsRepo.find().entries()]).toEqual([]);
+  });
+
   it("leaves an all-target command untouched when a journal is deleted", async () => {
     const { commandsRepo, journalsRepo } = await buildRegistry({
       journals: { daily: fixedJournal("daily", { type: "day" }) },
@@ -613,6 +693,25 @@ describe("DynamicCommandRegistry journal cloning", () => {
 
     expect(commandsRepo.count()).toBe(before);
   });
+
+  it("does not copy a notelet-target command onto the clone", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    journalsRepo.clone("Work", "Work copy");
+
+    const copiedNotelets = [...commandsRepo.find().entries()].filter(
+      ([, command]) => command.target.kind === "notelet" && command.target.journalName === "Work copy",
+    );
+    expect(copiedNotelets).toHaveLength(0);
+  });
 });
 
 describe("DynamicCommandRegistry shelf targets", () => {
@@ -692,5 +791,145 @@ describe("DynamicCommandRegistry shelf targets", () => {
     shelvesRepo.rename("work", "office");
     expect(host.commands.get("cmd-1")).toBeDefined();
     expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
+});
+
+function workWithType(): JournalConfig {
+  return fixedJournal(
+    "Work",
+    { type: "day" },
+    {
+      notelets: { nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Standup" }) },
+    },
+  );
+}
+
+describe("DynamicCommandRegistry notelet targets", () => {
+  it("lists a command whose type resolves", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(true);
+  });
+
+  it("does not list a command whose type is gone", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: fixedJournal("Work", { type: "day" }) },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
+  });
+
+  it("does not list a stored available-note type on a notelet target", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          type: "previous_available",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.checkCallback?.(true)).toBe(false);
+  });
+
+  it("prefixes the palette entry with the owning journal", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.name).toBe(
+      m.command_palette_journal_name({ journal: "Work", name: "New standup" }),
+    );
+  });
+
+  // Why sameCommandOwner spans a journal and its types: both render through the journal-name
+  // prefix, so two same-named commands are indistinguishable in the palette.
+  it("renders a notelet command and its journal's own command identically on a shared name", async () => {
+    const { host } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+        "cmd-2": buildCommand({ name: "New standup", target: { kind: "journal", journalName: "Work" } }),
+      },
+    });
+
+    expect(host.commands.get("cmd-1")?.name).toBe(host.commands.get("cmd-2")?.name);
+  });
+
+  it("re-points a notelet command when its journal is renamed", async () => {
+    const { commandsRepo, journalsRepo } = await buildRegistry({
+      journals: { Work: workWithType() },
+      commands: {
+        "cmd-1": buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    journalsRepo.rename("Work", "Job");
+
+    expect(commandsRepo.get("cmd-1").getOr(buildCommand())?.target).toEqual({
+      kind: "notelet",
+      journalName: "Job",
+      typeId: "nt_7f3a",
+    });
+  });
+
+  it("creates a notelet rather than a period note", async () => {
+    const { host } = await buildRegistry({
+      journals: {
+        Work: fixedJournal(
+          "Work",
+          { type: "day" },
+          {
+            notelets: {
+              nt_7f3a: buildNoteletType({
+                id: "nt_7f3a" as TypeId,
+                name: "Standup",
+                nameTemplate: "Standup {{notelet_index}}",
+              }),
+            },
+          },
+        ),
+      },
+      commands: {
+        c1: buildCommand({
+          name: "New standup",
+          target: { kind: "notelet", journalName: "Work", typeId: "nt_7f3a" },
+        }),
+      },
+    });
+
+    host.commands.get("c1")?.checkCallback?.(false);
+
+    await vi.waitFor(() => {
+      expect(host.files.get("Standup 1.md")?.frontmatter).toMatchObject({ "journal-notelet": "Standup" });
+    });
   });
 });

@@ -78,5 +78,6 @@ export function defaultCondition(type: JournalDecorationCondition["type"]): Jour
     .with("has-open-task", () => ({ type: "has-open-task" }))
     .with("all-tasks-completed", () => ({ type: "all-tasks-completed" }))
     .with("note-size", () => ({ type: "note-size", unit: "words", condition: "gt", value: 0 }))
+    .with("has-notelet", () => ({ type: "has-notelet" as const, typeIds: [] }))
     .exhaustive();
 }
