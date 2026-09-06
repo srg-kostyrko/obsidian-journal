@@ -36,7 +36,10 @@ export class AddNoteletTypeFlow implements Flow<{ journalName: string }, { typeI
       }
 
       const typeId = nanoid<TypeId>();
-      const type = { ...noteletTypeDefaults(typeId), name: submitted.name };
+      // The type starts in the journal's own folder rather than at the schema default's vault
+      // root: the journal has already said where its notes live, and a notelet is one of them.
+      // A copy, not a link — a journal that moves later leaves its types where they were.
+      const type = { ...noteletTypeDefaults(typeId), name: submitted.name, folder: config.folder };
       yield* this.#repository.addNoteletType(parameters.journalName, type).mapErr(toFlowError);
       this.#noteletCommands.seed(parameters.journalName, type);
 

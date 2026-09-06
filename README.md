@@ -232,8 +232,9 @@ Each type has:
 - **Name** — stored on every notelet of the type, and what you read in lists and menus. Renaming a
   type rewrites the notes that carry the old name, so nothing is left stranded
 - **Folder** and **Note name** — where its notes live and what they are called, using the same
-  [variables](#supported-variables) as the journal's own notes, plus `{{notelet_index}}`. The
-  default is `{{journal_name}} {{notelet_index}}`
+  [variables](#supported-variables) as the journal's own notes, plus `{{notelet_index}}`. The name
+  defaults to `{{journal_name}} {{notelet_index}}`, and a new type starts in the journal's own
+  folder — change it to keep the type's notes somewhere else
 - **Templates** — one or more template notes for new notelets of this type, applied the same way a
   journal applies its own
 - **Questions** — the type's own [questions](#questions), asked when one of its notelets is created.

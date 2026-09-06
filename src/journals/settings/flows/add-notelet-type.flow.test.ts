@@ -20,7 +20,7 @@ describe("AddNoteletTypeFlow", () => {
   beforeEach(async () => {
     harness = await testContainer({
       modules: [journalsCoreModule, journalsSettingsCoreModule, journalsSettingsUiModule, commandsCoreModule],
-      data: { journals: { Work: fixedJournal("Work", { type: "day" }) }, commands: {} },
+      data: { journals: { Work: fixedJournal("Work", { type: "day" }, { folder: "Work/Days" }) }, commands: {} },
     });
   });
 
@@ -41,6 +41,15 @@ describe("AddNoteletTypeFlow", () => {
 
     const config = harness.resolve(JournalsRepository).get("Work").getOrUndefined();
     expect(config?.notelets[typeId]).toMatchObject({ name: "Standup" });
+  });
+
+  // The schema default is the vault root, which for a note the journal owns is never what was
+  // meant — the journal has already answered where its notes live.
+  it("starts the type in the journal's own folder", async () => {
+    const typeId = await addStandup();
+
+    const config = harness.resolve(JournalsRepository).get("Work").getOrUndefined();
+    expect(config?.notelets[typeId]?.folder).toBe("Work/Days");
   });
 
   it("stores the id in the entry's own id field", async () => {
