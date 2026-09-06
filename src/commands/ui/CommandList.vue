@@ -24,7 +24,7 @@ defineEmits<{ edit: [id: string]; delete: [id: string] }>();
     <UiSettingRow v-for="[id, command, writeType] in entries" :key="id">
       <template #name>
         {{ command.name }}
-        <span class="flair">{{ commandTypeLabel(writeType, command.type, command.context) }}</span>
+        <span class="flair">{{ commandTypeLabel(command.target, writeType, command.type, command.context) }}</span>
         <span v-if="commandContextLabel(command.context)" class="command-context">
           {{ commandContextLabel(command.context) }}
         </span>

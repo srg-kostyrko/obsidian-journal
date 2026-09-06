@@ -269,6 +269,46 @@
   ],
   "command_name_required_error": "Command name is required.",
   "command_name_unique_error": "Command name must be unique.",
+  "command_notelet_label_today": "Create for today",
+  "command_notelet_label_tomorrow": "Create for tomorrow",
+  "command_notelet_label_yesterday": "Create for yesterday",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Create for the current day",
+        "type=same,writeType=week": "Create for the current week",
+        "type=same,writeType=month": "Create for the current month",
+        "type=same,writeType=quarter": "Create for the current quarter",
+        "type=same,writeType=year": "Create for the current year",
+        "type=same,writeType=custom": "Create for the current period",
+        "type=next,writeType=day": "Create for the next day",
+        "type=next,writeType=week": "Create for the next week",
+        "type=next,writeType=month": "Create for the next month",
+        "type=next,writeType=quarter": "Create for the next quarter",
+        "type=next,writeType=year": "Create for the next year",
+        "type=next,writeType=custom": "Create for the next period",
+        "type=previous,writeType=day": "Create for the previous day",
+        "type=previous,writeType=week": "Create for the previous week",
+        "type=previous,writeType=month": "Create for the previous month",
+        "type=previous,writeType=quarter": "Create for the previous quarter",
+        "type=previous,writeType=year": "Create for the previous year",
+        "type=previous,writeType=custom": "Create for the previous period",
+        "type=same_next_week,writeType=*": "Create for the same day next week",
+        "type=same_previous_week,writeType=*": "Create for the same day last week",
+        "type=same_next_month,writeType=*": "Create for the same day next month",
+        "type=same_previous_month,writeType=*": "Create for the same day last month",
+        "type=same_next_year,writeType=day": "Create for the same day next year",
+        "type=same_next_year,writeType=month": "Create for the same month next year",
+        "type=same_next_year,writeType=quarter": "Create for the same quarter next year",
+        "type=same_previous_year,writeType=day": "Create for the same day last year",
+        "type=same_previous_year,writeType=month": "Create for the same month last year",
+        "type=same_previous_year,writeType=quarter": "Create for the same quarter last year",
+        "type=*,writeType=*": "Create notelet"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

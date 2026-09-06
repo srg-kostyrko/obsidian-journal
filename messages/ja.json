@@ -321,6 +321,46 @@
   ],
   "command_name_required_error": "コマンド名は必須です。",
   "command_name_unique_error": "コマンド名は一意である必要があります。",
+  "command_notelet_label_today": "今日のサブノートを作成",
+  "command_notelet_label_tomorrow": "明日のサブノートを作成",
+  "command_notelet_label_yesterday": "昨日のサブノートを作成",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "現在の日のサブノートを作成",
+        "type=same,writeType=week": "現在の週のサブノートを作成",
+        "type=same,writeType=month": "現在の月のサブノートを作成",
+        "type=same,writeType=quarter": "現在の四半期のサブノートを作成",
+        "type=same,writeType=year": "現在の年のサブノートを作成",
+        "type=same,writeType=custom": "現在の期間のサブノートを作成",
+        "type=next,writeType=day": "次の日のサブノートを作成",
+        "type=next,writeType=week": "次の週のサブノートを作成",
+        "type=next,writeType=month": "次の月のサブノートを作成",
+        "type=next,writeType=quarter": "次の四半期のサブノートを作成",
+        "type=next,writeType=year": "次の年のサブノートを作成",
+        "type=next,writeType=custom": "次の期間のサブノートを作成",
+        "type=previous,writeType=day": "前の日のサブノートを作成",
+        "type=previous,writeType=week": "前の週のサブノートを作成",
+        "type=previous,writeType=month": "前の月のサブノートを作成",
+        "type=previous,writeType=quarter": "前の四半期のサブノートを作成",
+        "type=previous,writeType=year": "前の年のサブノートを作成",
+        "type=previous,writeType=custom": "前の期間のサブノートを作成",
+        "type=same_next_week,writeType=*": "来週の同じ曜日のサブノートを作成",
+        "type=same_previous_week,writeType=*": "先週の同じ曜日のサブノートを作成",
+        "type=same_next_month,writeType=*": "来月の同じ日のサブノートを作成",
+        "type=same_previous_month,writeType=*": "先月の同じ日のサブノートを作成",
+        "type=same_next_year,writeType=day": "来年の同じ日のサブノートを作成",
+        "type=same_next_year,writeType=month": "来年の同じ月のサブノートを作成",
+        "type=same_next_year,writeType=quarter": "来年の同じ四半期のサブノートを作成",
+        "type=same_previous_year,writeType=day": "昨年の同じ日のサブノートを作成",
+        "type=same_previous_year,writeType=month": "昨年の同じ月のサブノートを作成",
+        "type=same_previous_year,writeType=quarter": "昨年の同じ四半期のサブノートを作成",
+        "type=*,writeType=*": "サブノートを作成"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

@@ -205,7 +205,7 @@ describe("EditCommandModal", () => {
       const typeSelect = screen.getAllByRole("combobox")[0];
       const optionLabels = [...typeSelect.querySelectorAll("option")].map((option) => option.textContent);
 
-      expect(optionLabels).toContain(commandTypeLabel("week", "next", "today"));
+      expect(optionLabels).toContain(commandTypeLabel(target, "week", "next", "today"));
     });
 
     it("submits the notelet target unchanged", async () => {

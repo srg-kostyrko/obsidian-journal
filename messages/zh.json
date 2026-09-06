@@ -321,6 +321,46 @@
   ],
   "command_name_required_error": "命令名称为必填项。",
   "command_name_unique_error": "命令名称必须唯一。",
+  "command_notelet_label_today": "为今天新建子笔记",
+  "command_notelet_label_tomorrow": "为明天新建子笔记",
+  "command_notelet_label_yesterday": "为昨天新建子笔记",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "为当前日期新建子笔记",
+        "type=same,writeType=week": "为当前周新建子笔记",
+        "type=same,writeType=month": "为当前月新建子笔记",
+        "type=same,writeType=quarter": "为当前季度新建子笔记",
+        "type=same,writeType=year": "为当前年份新建子笔记",
+        "type=same,writeType=custom": "为当前周期新建子笔记",
+        "type=next,writeType=day": "为下一日新建子笔记",
+        "type=next,writeType=week": "为下一周新建子笔记",
+        "type=next,writeType=month": "为下一月新建子笔记",
+        "type=next,writeType=quarter": "为下一季度新建子笔记",
+        "type=next,writeType=year": "为下一年新建子笔记",
+        "type=next,writeType=custom": "为下一周期新建子笔记",
+        "type=previous,writeType=day": "为上一日新建子笔记",
+        "type=previous,writeType=week": "为上一周新建子笔记",
+        "type=previous,writeType=month": "为上一月新建子笔记",
+        "type=previous,writeType=quarter": "为上一季度新建子笔记",
+        "type=previous,writeType=year": "为上一年新建子笔记",
+        "type=previous,writeType=custom": "为上一周期新建子笔记",
+        "type=same_next_week,writeType=*": "为下周同一天新建子笔记",
+        "type=same_previous_week,writeType=*": "为上周同一天新建子笔记",
+        "type=same_next_month,writeType=*": "为下个月同一天新建子笔记",
+        "type=same_previous_month,writeType=*": "为上个月同一天新建子笔记",
+        "type=same_next_year,writeType=day": "为明年同一天新建子笔记",
+        "type=same_next_year,writeType=month": "为明年同一月新建子笔记",
+        "type=same_next_year,writeType=quarter": "为明年同一季度新建子笔记",
+        "type=same_previous_year,writeType=day": "为去年同一天新建子笔记",
+        "type=same_previous_year,writeType=month": "为去年同一月新建子笔记",
+        "type=same_previous_year,writeType=quarter": "为去年同一季度新建子笔记",
+        "type=*,writeType=*": "新建子笔记"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

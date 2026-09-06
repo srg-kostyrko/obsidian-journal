@@ -334,6 +334,46 @@
   ],
   "command_name_required_error": "Название команды обязательно.",
   "command_name_unique_error": "Название команды должно быть уникальным.",
+  "command_notelet_label_today": "Создать на сегодня",
+  "command_notelet_label_tomorrow": "Создать на завтра",
+  "command_notelet_label_yesterday": "Создать на вчера",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Создать на текущий день",
+        "type=same,writeType=week": "Создать на текущую неделю",
+        "type=same,writeType=month": "Создать на текущий месяц",
+        "type=same,writeType=quarter": "Создать на текущий квартал",
+        "type=same,writeType=year": "Создать на текущий год",
+        "type=same,writeType=custom": "Создать на текущий период",
+        "type=next,writeType=day": "Создать на следующий день",
+        "type=next,writeType=week": "Создать на следующую неделю",
+        "type=next,writeType=month": "Создать на следующий месяц",
+        "type=next,writeType=quarter": "Создать на следующий квартал",
+        "type=next,writeType=year": "Создать на следующий год",
+        "type=next,writeType=custom": "Создать на следующий период",
+        "type=previous,writeType=day": "Создать на предыдущий день",
+        "type=previous,writeType=week": "Создать на предыдущую неделю",
+        "type=previous,writeType=month": "Создать на предыдущий месяц",
+        "type=previous,writeType=quarter": "Создать на предыдущий квартал",
+        "type=previous,writeType=year": "Создать на предыдущий год",
+        "type=previous,writeType=custom": "Создать на предыдущий период",
+        "type=same_next_week,writeType=*": "Создать на тот же день следующей недели",
+        "type=same_previous_week,writeType=*": "Создать на тот же день прошлой недели",
+        "type=same_next_month,writeType=*": "Создать на тот же день следующего месяца",
+        "type=same_previous_month,writeType=*": "Создать на тот же день прошлого месяца",
+        "type=same_next_year,writeType=day": "Создать на тот же день следующего года",
+        "type=same_next_year,writeType=month": "Создать на тот же месяц следующего года",
+        "type=same_next_year,writeType=quarter": "Создать на тот же квартал следующего года",
+        "type=same_previous_year,writeType=day": "Создать на тот же день прошлого года",
+        "type=same_previous_year,writeType=month": "Создать на тот же месяц прошлого года",
+        "type=same_previous_year,writeType=quarter": "Создать на тот же квартал прошлого года",
+        "type=*,writeType=*": "Создать подзаметку"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

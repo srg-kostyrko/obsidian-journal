@@ -106,7 +106,7 @@ const namePrefixHintKind = computed<"journal" | "shelf">(() => (props.target.kin
 const typeOptions = computed(() =>
   supportedTypesFor(props.target, writeType.value).map((value) => ({
     value,
-    label: commandTypeLabel(writeType.value, value, context.value ?? "today"),
+    label: commandTypeLabel(props.target, writeType.value, value, context.value ?? "today"),
   })),
 );
 

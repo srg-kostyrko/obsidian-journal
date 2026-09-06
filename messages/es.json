@@ -332,6 +332,46 @@
   ],
   "command_name_required_error": "El nombre del comando es obligatorio.",
   "command_name_unique_error": "El nombre del comando debe ser único.",
+  "command_notelet_label_today": "Crear para hoy",
+  "command_notelet_label_tomorrow": "Crear para mañana",
+  "command_notelet_label_yesterday": "Crear para ayer",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Crear para el día actual",
+        "type=same,writeType=week": "Crear para la semana actual",
+        "type=same,writeType=month": "Crear para el mes actual",
+        "type=same,writeType=quarter": "Crear para el trimestre actual",
+        "type=same,writeType=year": "Crear para el año actual",
+        "type=same,writeType=custom": "Crear para el período actual",
+        "type=next,writeType=day": "Crear para el día siguiente",
+        "type=next,writeType=week": "Crear para la semana siguiente",
+        "type=next,writeType=month": "Crear para el mes siguiente",
+        "type=next,writeType=quarter": "Crear para el trimestre siguiente",
+        "type=next,writeType=year": "Crear para el año siguiente",
+        "type=next,writeType=custom": "Crear para el período siguiente",
+        "type=previous,writeType=day": "Crear para el día anterior",
+        "type=previous,writeType=week": "Crear para la semana anterior",
+        "type=previous,writeType=month": "Crear para el mes anterior",
+        "type=previous,writeType=quarter": "Crear para el trimestre anterior",
+        "type=previous,writeType=year": "Crear para el año anterior",
+        "type=previous,writeType=custom": "Crear para el período anterior",
+        "type=same_next_week,writeType=*": "Crear para el mismo día de la semana que viene",
+        "type=same_previous_week,writeType=*": "Crear para el mismo día de la semana pasada",
+        "type=same_next_month,writeType=*": "Crear para el mismo día del mes que viene",
+        "type=same_previous_month,writeType=*": "Crear para el mismo día del mes pasado",
+        "type=same_next_year,writeType=day": "Crear para el mismo día del año que viene",
+        "type=same_next_year,writeType=month": "Crear para el mismo mes del año que viene",
+        "type=same_next_year,writeType=quarter": "Crear para el mismo trimestre del año que viene",
+        "type=same_previous_year,writeType=day": "Crear para el mismo día del año pasado",
+        "type=same_previous_year,writeType=month": "Crear para el mismo mes del año pasado",
+        "type=same_previous_year,writeType=quarter": "Crear para el mismo trimestre del año pasado",
+        "type=*,writeType=*": "Crear nota breve"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

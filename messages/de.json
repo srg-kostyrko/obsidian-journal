@@ -332,6 +332,46 @@
   ],
   "command_name_required_error": "Befehlsname ist erforderlich.",
   "command_name_unique_error": "Befehlsname muss eindeutig sein.",
+  "command_notelet_label_today": "Für heute erstellen",
+  "command_notelet_label_tomorrow": "Für morgen erstellen",
+  "command_notelet_label_yesterday": "Für gestern erstellen",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Für den aktuellen Tag erstellen",
+        "type=same,writeType=week": "Für die aktuelle Woche erstellen",
+        "type=same,writeType=month": "Für den aktuellen Monat erstellen",
+        "type=same,writeType=quarter": "Für das aktuelle Quartal erstellen",
+        "type=same,writeType=year": "Für das aktuelle Jahr erstellen",
+        "type=same,writeType=custom": "Für den aktuellen Zeitraum erstellen",
+        "type=next,writeType=day": "Für den nächsten Tag erstellen",
+        "type=next,writeType=week": "Für die nächste Woche erstellen",
+        "type=next,writeType=month": "Für den nächsten Monat erstellen",
+        "type=next,writeType=quarter": "Für das nächste Quartal erstellen",
+        "type=next,writeType=year": "Für das nächste Jahr erstellen",
+        "type=next,writeType=custom": "Für den nächsten Zeitraum erstellen",
+        "type=previous,writeType=day": "Für den vorherigen Tag erstellen",
+        "type=previous,writeType=week": "Für die vorherige Woche erstellen",
+        "type=previous,writeType=month": "Für den vorherigen Monat erstellen",
+        "type=previous,writeType=quarter": "Für das vorherige Quartal erstellen",
+        "type=previous,writeType=year": "Für das vorherige Jahr erstellen",
+        "type=previous,writeType=custom": "Für den vorherigen Zeitraum erstellen",
+        "type=same_next_week,writeType=*": "Für denselben Tag nächste Woche erstellen",
+        "type=same_previous_week,writeType=*": "Für denselben Tag letzte Woche erstellen",
+        "type=same_next_month,writeType=*": "Für denselben Tag nächsten Monat erstellen",
+        "type=same_previous_month,writeType=*": "Für denselben Tag letzten Monat erstellen",
+        "type=same_next_year,writeType=day": "Für denselben Tag nächstes Jahr erstellen",
+        "type=same_next_year,writeType=month": "Für denselben Monat nächstes Jahr erstellen",
+        "type=same_next_year,writeType=quarter": "Für dasselbe Quartal nächstes Jahr erstellen",
+        "type=same_previous_year,writeType=day": "Für denselben Tag letztes Jahr erstellen",
+        "type=same_previous_year,writeType=month": "Für denselben Monat letztes Jahr erstellen",
+        "type=same_previous_year,writeType=quarter": "Für dasselbe Quartal letztes Jahr erstellen",
+        "type=*,writeType=*": "Kurznotiz erstellen"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

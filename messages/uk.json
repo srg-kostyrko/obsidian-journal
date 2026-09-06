@@ -321,6 +321,46 @@
   ],
   "command_name_required_error": "Назва команди обов’язкова.",
   "command_name_unique_error": "Назва команди має бути унікальною.",
+  "command_notelet_label_today": "Створити на сьогодні",
+  "command_notelet_label_tomorrow": "Створити на завтра",
+  "command_notelet_label_yesterday": "Створити на вчора",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Створити на поточний день",
+        "type=same,writeType=week": "Створити на поточний тиждень",
+        "type=same,writeType=month": "Створити на поточний місяць",
+        "type=same,writeType=quarter": "Створити на поточний квартал",
+        "type=same,writeType=year": "Створити на поточний рік",
+        "type=same,writeType=custom": "Створити на поточний період",
+        "type=next,writeType=day": "Створити на наступний день",
+        "type=next,writeType=week": "Створити на наступний тиждень",
+        "type=next,writeType=month": "Створити на наступний місяць",
+        "type=next,writeType=quarter": "Створити на наступний квартал",
+        "type=next,writeType=year": "Створити на наступний рік",
+        "type=next,writeType=custom": "Створити на наступний період",
+        "type=previous,writeType=day": "Створити на попередній день",
+        "type=previous,writeType=week": "Створити на попередній тиждень",
+        "type=previous,writeType=month": "Створити на попередній місяць",
+        "type=previous,writeType=quarter": "Створити на попередній квартал",
+        "type=previous,writeType=year": "Створити на попередній рік",
+        "type=previous,writeType=custom": "Створити на попередній період",
+        "type=same_next_week,writeType=*": "Створити на той самий день наступного тижня",
+        "type=same_previous_week,writeType=*": "Створити на той самий день минулого тижня",
+        "type=same_next_month,writeType=*": "Створити на той самий день наступного місяця",
+        "type=same_previous_month,writeType=*": "Створити на той самий день минулого місяця",
+        "type=same_next_year,writeType=day": "Створити на той самий день наступного року",
+        "type=same_next_year,writeType=month": "Створити на той самий місяць наступного року",
+        "type=same_next_year,writeType=quarter": "Створити на той самий квартал наступного року",
+        "type=same_previous_year,writeType=day": "Створити на той самий день минулого року",
+        "type=same_previous_year,writeType=month": "Створити на той самий місяць минулого року",
+        "type=same_previous_year,writeType=quarter": "Створити на той самий квартал минулого року",
+        "type=*,writeType=*": "Створити піднотатку"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

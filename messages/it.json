@@ -332,6 +332,46 @@
   ],
   "command_name_required_error": "Il nome del comando è obbligatorio.",
   "command_name_unique_error": "Il nome del comando deve essere univoco.",
+  "command_notelet_label_today": "Crea per oggi",
+  "command_notelet_label_tomorrow": "Crea per domani",
+  "command_notelet_label_yesterday": "Crea per ieri",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "Crea per il giorno corrente",
+        "type=same,writeType=week": "Crea per la settimana corrente",
+        "type=same,writeType=month": "Crea per il mese corrente",
+        "type=same,writeType=quarter": "Crea per il trimestre corrente",
+        "type=same,writeType=year": "Crea per l'anno corrente",
+        "type=same,writeType=custom": "Crea per il periodo corrente",
+        "type=next,writeType=day": "Crea per il giorno successivo",
+        "type=next,writeType=week": "Crea per la settimana successiva",
+        "type=next,writeType=month": "Crea per il mese successivo",
+        "type=next,writeType=quarter": "Crea per il trimestre successivo",
+        "type=next,writeType=year": "Crea per l'anno successivo",
+        "type=next,writeType=custom": "Crea per il periodo successivo",
+        "type=previous,writeType=day": "Crea per il giorno precedente",
+        "type=previous,writeType=week": "Crea per la settimana precedente",
+        "type=previous,writeType=month": "Crea per il mese precedente",
+        "type=previous,writeType=quarter": "Crea per il trimestre precedente",
+        "type=previous,writeType=year": "Crea per l'anno precedente",
+        "type=previous,writeType=custom": "Crea per il periodo precedente",
+        "type=same_next_week,writeType=*": "Crea per lo stesso giorno della prossima settimana",
+        "type=same_previous_week,writeType=*": "Crea per lo stesso giorno della settimana scorsa",
+        "type=same_next_month,writeType=*": "Crea per lo stesso giorno del mese prossimo",
+        "type=same_previous_month,writeType=*": "Crea per lo stesso giorno del mese scorso",
+        "type=same_next_year,writeType=day": "Crea per lo stesso giorno dell'anno prossimo",
+        "type=same_next_year,writeType=month": "Crea per lo stesso mese dell'anno prossimo",
+        "type=same_next_year,writeType=quarter": "Crea per lo stesso trimestre dell'anno prossimo",
+        "type=same_previous_year,writeType=day": "Crea per lo stesso giorno dell'anno scorso",
+        "type=same_previous_year,writeType=month": "Crea per lo stesso mese dell'anno scorso",
+        "type=same_previous_year,writeType=quarter": "Crea per lo stesso trimestre dell'anno scorso",
+        "type=*,writeType=*": "Crea nota breve"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],

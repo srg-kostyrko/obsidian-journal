@@ -332,6 +332,46 @@
   ],
   "command_name_required_error": "명령어 이름을 입력하세요.",
   "command_name_unique_error": "명령어 이름은 고유해야 합니다.",
+  "command_notelet_label_today": "오늘 서브노트 만들기",
+  "command_notelet_label_tomorrow": "내일 서브노트 만들기",
+  "command_notelet_label_yesterday": "어제 서브노트 만들기",
+  "command_notelet_type_label": [
+    {
+      "declarations": ["input type", "input writeType"],
+      "selectors": ["type", "writeType"],
+      "match": {
+        "type=same,writeType=day": "현재 날짜의 서브노트 만들기",
+        "type=same,writeType=week": "현재 주의 서브노트 만들기",
+        "type=same,writeType=month": "현재 달의 서브노트 만들기",
+        "type=same,writeType=quarter": "현재 분기의 서브노트 만들기",
+        "type=same,writeType=year": "현재 연도의 서브노트 만들기",
+        "type=same,writeType=custom": "현재 기간의 서브노트 만들기",
+        "type=next,writeType=day": "다음 날의 서브노트 만들기",
+        "type=next,writeType=week": "다음 주의 서브노트 만들기",
+        "type=next,writeType=month": "다음 달의 서브노트 만들기",
+        "type=next,writeType=quarter": "다음 분기의 서브노트 만들기",
+        "type=next,writeType=year": "다음 해의 서브노트 만들기",
+        "type=next,writeType=custom": "다음 기간의 서브노트 만들기",
+        "type=previous,writeType=day": "이전 날의 서브노트 만들기",
+        "type=previous,writeType=week": "이전 주의 서브노트 만들기",
+        "type=previous,writeType=month": "이전 달의 서브노트 만들기",
+        "type=previous,writeType=quarter": "이전 분기의 서브노트 만들기",
+        "type=previous,writeType=year": "이전 해의 서브노트 만들기",
+        "type=previous,writeType=custom": "이전 기간의 서브노트 만들기",
+        "type=same_next_week,writeType=*": "다음 주 같은 날의 서브노트 만들기",
+        "type=same_previous_week,writeType=*": "지난주 같은 날의 서브노트 만들기",
+        "type=same_next_month,writeType=*": "다음 달 같은 날의 서브노트 만들기",
+        "type=same_previous_month,writeType=*": "지난달 같은 날의 서브노트 만들기",
+        "type=same_next_year,writeType=day": "내년 같은 날의 서브노트 만들기",
+        "type=same_next_year,writeType=month": "내년 같은 달의 서브노트 만들기",
+        "type=same_next_year,writeType=quarter": "내년 같은 분기의 서브노트 만들기",
+        "type=same_previous_year,writeType=day": "작년 같은 날의 서브노트 만들기",
+        "type=same_previous_year,writeType=month": "작년 같은 달의 서브노트 만들기",
+        "type=same_previous_year,writeType=quarter": "작년 같은 분기의 서브노트 만들기",
+        "type=*,writeType=*": "서브노트 만들기"
+      }
+    }
+  ],
   "command_open_mode_option": [
     {
       "declarations": ["input mode"],
