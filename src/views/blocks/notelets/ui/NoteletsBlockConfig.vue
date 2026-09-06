@@ -73,7 +73,7 @@ function updateJournals(names: string[]): void {
       "
     >
       <option v-for="kind of windowKinds" :key="kind" :value="kind">
-        {{ m.view_block_config_window_current({ period: kind }) }}
+        {{ m.view_block_config_window_selected({ period: kind }) }}
       </option>
     </UiDropdown>
   </UiSettingRow>

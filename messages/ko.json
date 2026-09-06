@@ -1380,16 +1380,16 @@
     }
   ],
   "view_block_config_window_label": "표시 범위",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "현재 날짜",
-        "period=week": "이번 주",
-        "period=month": "이번 달",
-        "period=quarter": "이번 분기",
-        "period=year": "올해"
+        "period=day": "선택한 날",
+        "period=week": "선택한 주",
+        "period=month": "선택한 달",
+        "period=quarter": "선택한 분기",
+        "period=year": "선택한 연도"
       }
     }
   ],

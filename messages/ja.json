@@ -1235,16 +1235,16 @@
     }
   ],
   "view_block_config_window_label": "ウィンドウ",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "今日",
-        "period=week": "今週",
-        "period=month": "今月",
-        "period=quarter": "今四半期",
-        "period=year": "今年"
+        "period=day": "選択中の日",
+        "period=week": "選択中の週",
+        "period=month": "選択中の月",
+        "period=quarter": "選択中の四半期",
+        "period=year": "選択中の年"
       }
     }
   ],

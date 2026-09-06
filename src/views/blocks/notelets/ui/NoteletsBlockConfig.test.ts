@@ -51,7 +51,7 @@ describe("NoteletsBlockConfig", () => {
   it("offers every window kind", async () => {
     await mount({ window: "day" });
     for (const period of ["day", "week", "month", "quarter", "year"] as const) {
-      expect(screen.getByText(m.view_block_config_window_current({ period }))).toBeTruthy();
+      expect(screen.getByText(m.view_block_config_window_selected({ period }))).toBeTruthy();
     }
   });
 

@@ -1271,16 +1271,16 @@
     }
   ],
   "view_block_config_window_label": "Вікно",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "Поточний день",
-        "period=week": "Поточний тиждень",
-        "period=month": "Поточний місяць",
-        "period=quarter": "Поточний квартал",
-        "period=year": "Поточний рік"
+        "period=day": "Вибраний день",
+        "period=week": "Вибраний тиждень",
+        "period=month": "Вибраний місяць",
+        "period=quarter": "Вибраний квартал",
+        "period=year": "Вибраний рік"
       }
     }
   ],

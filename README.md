@@ -82,7 +82,7 @@ A view is a list of blocks. The available blocks are:
 - **Month calendar** — one or more month grids around the selected date
 - **Week calendar** — one or more week strips around the selected date
 - **Notes by date** — lists all vault notes created during the selected day, week, month, quarter, year, or decade, with configurable sorting, heading, and period navigation
-- **Custom intervals** — the entries of your custom journals that fall inside a chosen window (current week, month, quarter, or year)
+- **Custom intervals** — the entries of your custom journals that fall inside a chosen window around the selected date (its day, week, month, quarter, or year)
 - **Notelets** — the notelets of the note you are reading, or of a window around the view's date, grouped by journal and type
 - **Toolbar** — a container for toolbar items: a shelf selector, period buttons, previous/next existing-note buttons, custom buttons, and flexible spacers
 - **Divider** — a horizontal rule between blocks

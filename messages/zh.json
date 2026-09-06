@@ -1235,16 +1235,16 @@
     }
   ],
   "view_block_config_window_label": "时间范围",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "当前日期",
-        "period=week": "本周",
-        "period=month": "本月",
-        "period=quarter": "本季度",
-        "period=year": "本年度"
+        "period=day": "所选日",
+        "period=week": "所选周",
+        "period=month": "所选月",
+        "period=quarter": "所选季度",
+        "period=year": "所选年"
       }
     }
   ],

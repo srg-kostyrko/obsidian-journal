@@ -1380,16 +1380,16 @@
     }
   ],
   "view_block_config_window_label": "Ventana",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "Día actual",
-        "period=week": "Semana actual",
-        "period=month": "Mes actual",
-        "period=quarter": "Trimestre actual",
-        "period=year": "Año actual"
+        "period=day": "Día seleccionado",
+        "period=week": "Semana seleccionada",
+        "period=month": "Mes seleccionado",
+        "period=quarter": "Trimestre seleccionado",
+        "period=year": "Año seleccionado"
       }
     }
   ],

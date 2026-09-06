@@ -1389,16 +1389,16 @@
     }
   ],
   "view_block_config_window_label": "Window",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "Current day",
-        "period=week": "Current week",
-        "period=month": "Current month",
-        "period=quarter": "Current quarter",
-        "period=year": "Current year"
+        "period=day": "Selected day",
+        "period=week": "Selected week",
+        "period=month": "Selected month",
+        "period=quarter": "Selected quarter",
+        "period=year": "Selected year"
       }
     }
   ],

@@ -28,7 +28,7 @@ export const noteletsBlock = defineViewBlock<NoteletsBlockConfig>({
   component: NoteletsBlock,
   configComponent: NoteletsBlockConfig,
   summary: (config) => {
-    const window = m.view_block_config_window_current({ period: config.window });
+    const window = m.view_block_config_window_selected({ period: config.window });
     const parts: string[] = [window];
     if (config.journals !== undefined)
       parts.push(m.view_block_summary_journal_count({ count: config.journals.length }));

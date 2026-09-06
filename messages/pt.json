@@ -1380,16 +1380,16 @@
     }
   ],
   "view_block_config_window_label": "Janela de tempo",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "Dia atual",
-        "period=week": "Semana atual",
-        "period=month": "Mês atual",
-        "period=quarter": "Trimestre atual",
-        "period=year": "Ano atual"
+        "period=day": "Dia selecionado",
+        "period=week": "Semana selecionada",
+        "period=month": "Mês selecionado",
+        "period=quarter": "Trimestre selecionado",
+        "period=year": "Ano selecionado"
       }
     }
   ],

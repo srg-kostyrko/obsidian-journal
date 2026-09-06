@@ -1418,16 +1418,16 @@
     }
   ],
   "view_block_config_window_label": "Окно",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "Текущий день",
-        "period=week": "Текущая неделя",
-        "period=month": "Текущий месяц",
-        "period=quarter": "Текущий квартал",
-        "period=year": "Текущий год"
+        "period=day": "Выбранный день",
+        "period=week": "Выбранная неделя",
+        "period=month": "Выбранный месяц",
+        "period=quarter": "Выбранный квартал",
+        "period=year": "Выбранный год"
       }
     }
   ],

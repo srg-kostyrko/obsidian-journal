@@ -1380,16 +1380,16 @@
     }
   ],
   "view_block_config_window_label": "Fenêtre",
-  "view_block_config_window_current": [
+  "view_block_config_window_selected": [
     {
       "declarations": ["input period"],
       "selectors": ["period"],
       "match": {
-        "period=day": "Jour actuel",
-        "period=week": "Semaine en cours",
-        "period=month": "Mois en cours",
-        "period=quarter": "Trimestre en cours",
-        "period=year": "Année en cours"
+        "period=day": "Jour sélectionné",
+        "period=week": "Semaine sélectionnée",
+        "period=month": "Mois sélectionné",
+        "period=quarter": "Trimestre sélectionné",
+        "period=year": "Année sélectionnée"
       }
     }
   ],
