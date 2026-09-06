@@ -18,6 +18,20 @@ const daily = fixedJournal(
   },
 );
 
+const work = fixedJournal(
+  "Work",
+  { type: "day" },
+  {
+    notelets: { nt_standup: buildNoteletType({ id: "nt_standup" as never, name: "Standup" }) },
+  },
+);
+
+const plain = fixedJournal("Plain", { type: "day" });
+
+function qualified(journal: string, type: string): string {
+  return m.journal_notelet_list_type_qualified({ journal, type });
+}
+
 async function mount(config: Config, journals?: Record<string, ReturnType<typeof fixedJournal>>) {
   const onChange = vi.fn();
   const harness = await testContainer({
@@ -66,8 +80,60 @@ describe("NoteletsBlockConfig", () => {
     expect(onChange).toHaveBeenCalledWith({ window: "day", journals: ["Daily"] });
   });
 
+  // A journal with no notelet types can never contribute a row to this block, so offering it is
+  // a toggle that does nothing.
+  it("omits journals that define no notelet type", async () => {
+    await mount({ window: "day" }, { Daily: daily, Plain: plain });
+
+    expect(screen.getByText("Daily")).toBeTruthy();
+    expect(screen.queryByText("Plain")).toBeNull();
+  });
+
+  // The two filters intersect, and the types are journal-qualified, so a type from a journal the
+  // block is not scoped to is a selection that can only ever render nothing.
+  it("narrows the types on offer to the journals the block is filtered to", async () => {
+    await mount({ window: "day", journals: ["Daily"] }, { Daily: daily, Work: work });
+
+    expect(screen.getByText(qualified("Daily", "Meeting"))).toBeTruthy();
+    expect(screen.queryByText(qualified("Work", "Standup"))).toBeNull();
+  });
+
+  it("offers every journal's types while no journal is picked", async () => {
+    await mount({ window: "day" }, { Daily: daily, Work: work });
+
+    expect(screen.getByText(qualified("Daily", "Meeting"))).toBeTruthy();
+    expect(screen.getByText(qualified("Work", "Standup"))).toBeTruthy();
+  });
+
+  it("drops the type selections the new journal filter no longer offers", async () => {
+    const { onChange } = await mount(
+      { window: "day", types: ["nt_meeting", "nt_standup"] },
+      { Daily: daily, Work: work },
+    );
+
+    await fireEvent.click(screen.getByText("Work"));
+
+    expect(onChange).toHaveBeenCalledWith({ window: "day", journals: ["Work"], types: ["nt_standup"] });
+  });
+
+  it("keeps every type selection when the journal filter is cleared", async () => {
+    const { onChange } = await mount(
+      { window: "day", journals: ["Work"], types: ["nt_standup"] },
+      { Daily: daily, Work: work },
+    );
+
+    await fireEvent.click(screen.getByText("Work"));
+
+    expect(onChange).toHaveBeenCalledWith({ window: "day", types: ["nt_standup"] });
+  });
+
   it("says so when no journal defines a type", async () => {
     await mount({ window: "day" }, { Daily: fixedJournal("Daily", { type: "day" }) });
     expect(screen.getByText(m.view_block_notelets_types_empty())).toBeTruthy();
+  });
+
+  it("hides the journals row when no journal defines a type", async () => {
+    await mount({ window: "day" }, { Daily: fixedJournal("Daily", { type: "day" }) });
+    expect(screen.queryByText(m.view_block_notelets_journals_label())).toBeNull();
   });
 });
