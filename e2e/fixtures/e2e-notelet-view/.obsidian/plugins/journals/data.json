@@ -1,5 +1,6 @@
 {
   "version": 4,
+  "calendar": { "mode": "custom", "dow": 1, "doy": 4, "global": false },
   "journals": {
     "daily": {
       "name": "daily",

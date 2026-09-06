@@ -39,7 +39,10 @@ function rowTextsIn(index: number): Promise<string[]> {
 }
 
 // Another day inside the same ISO week as today, so the week-window block reaches it while the
-// day-window block does not. Yesterday unless today is a Monday, in which case tomorrow.
+// day-window block does not. Yesterday unless today is a Monday, in which case tomorrow — which
+// only holds while weeks start on Monday, so the fixture pins `dow: 1` rather than inheriting the
+// runner's moment locale. Under the en-US default (weeks start Sunday) a run *on a Sunday* puts
+// yesterday in the previous week, and the week window then lists one Retro instead of two.
 function otherDayInWeek(): string {
   const now = new Date();
   const shift = now.getDay() === 1 ? 1 : -1;
