@@ -395,6 +395,10 @@
   "command_open_no_next": "Não há nenhuma nota depois desta.",
   "command_open_no_previous": "Não há nenhuma nota antes desta.",
   "command_open_needs_active_note": "Abra primeiro uma nota de diário.",
+  "command_open_longer": "Abrir a nota do período mais longo",
+  "command_open_shorter": "Abrir a nota do período mais curto",
+  "command_open_no_longer": "Nenhum diário aqui abrange um período mais longo.",
+  "command_open_no_shorter": "Nenhum diário aqui abrange um período mais curto.",
   "command_open_unavailable": "Não há nenhuma nota para abrir.",
   "command_type_label": [
     {

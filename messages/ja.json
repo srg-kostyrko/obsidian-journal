@@ -384,6 +384,10 @@
   "command_open_no_next": "このノートの後に続くノートはありません。",
   "command_open_no_previous": "このノートの前にノートはありません。",
   "command_open_needs_active_note": "先にジャーナルノートを開いてください。",
+  "command_open_longer": "より長い期間のノートを開く",
+  "command_open_shorter": "より短い期間のノートを開く",
+  "command_open_no_longer": "ここには、より長い期間を扱うジャーナルがありません。",
+  "command_open_no_shorter": "ここには、より短い期間を扱うジャーナルがありません。",
   "command_open_unavailable": "開くノートがありません。",
   "command_type_label": [
     {

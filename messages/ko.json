@@ -395,6 +395,10 @@
   "command_open_no_next": "이 노트 다음에 오는 노트가 없습니다.",
   "command_open_no_previous": "이 노트 앞에 오는 노트가 없습니다.",
   "command_open_needs_active_note": "먼저 저널 노트를 여세요.",
+  "command_open_longer": "더 긴 기간의 노트 열기",
+  "command_open_shorter": "더 짧은 기간의 노트 열기",
+  "command_open_no_longer": "여기에는 더 긴 기간을 다루는 저널이 없습니다.",
+  "command_open_no_shorter": "여기에는 더 짧은 기간을 다루는 저널이 없습니다.",
   "command_open_unavailable": "열 노트가 없습니다.",
   "command_type_label": [
     {

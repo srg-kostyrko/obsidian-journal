@@ -11,6 +11,7 @@ import { CommandsRepository, type CommandsEvents } from "./repository";
 import { CommandsEventsToken } from "./tokens";
 import { commandsUiModule } from "./ui-module";
 import { CommandsViewModel } from "./view-model";
+import { ZoomCommands } from "./zoom-commands";
 
 export const commandsCoreModule: Module = {
   register(c) {
@@ -26,6 +27,7 @@ export const commandsCoreModule: Module = {
 export const commandsStartupModule: Module = {
   register(c) {
     c.register(DynamicCommandRegistry).useClass(DynamicCommandRegistry).eager();
+    c.register(ZoomCommands).useClass(ZoomCommands).eager();
   },
 };
 
