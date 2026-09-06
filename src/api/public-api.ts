@@ -103,6 +103,8 @@ export interface EnsureResult {
 }
 
 export interface CreateNoteletOptions {
+  /** Show the type's creation-confirmation prompt. Defaults to the type's own setting. */
+  readonly confirm?: boolean;
   /** Ask the type's creation prompts. Defaults to true. */
   readonly prompt?: boolean;
   /** Omit to create without opening; pass a mode to create and show. */

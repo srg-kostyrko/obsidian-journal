@@ -254,6 +254,110 @@ describe("NoteletCreationService — a question the note name spells", () => {
   });
 });
 
+// Creating a notelet is always an explicit act, so the journal's own "Confirm creating new notes"
+// — which guards the accidental creation a calendar click can cause — does not reach it. A type
+// that wants the dialog says so itself.
+describe("NoteletCreationService — creation confirmation", () => {
+  const attendee: Prompt = {
+    type: "text",
+    variable: "attendee",
+    question: "Who with?",
+    frontmatterKey: "standup-with",
+    required: false,
+  };
+
+  it("asks before creating when the type confirms creation", async () => {
+    const harness = await boot(workWith({ confirmCreation: true }));
+
+    const promise = harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    await vi.waitFor(() => {
+      expect(harness.modals.opens).toHaveLength(1);
+    });
+    harness.modals.lastOpen<unknown, boolean>().submit(true);
+    const created = await promise;
+
+    expectOk(created);
+    expect(harness.host.files.get("Standup 1.md")).toBeDefined();
+  });
+
+  it("names the type in the confirmation it opens", async () => {
+    const harness = await boot(workWith({ confirmCreation: true }));
+
+    const promise = harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    await vi.waitFor(() => {
+      expect(harness.modals.opens).toHaveLength(1);
+    });
+    expect(harness.modals.lastOpen().props).toMatchObject({ journalName: "Work", typeName: "Standup" });
+    harness.modals.lastOpen<unknown, boolean>().submit(true);
+    await promise;
+  });
+
+  it("creates nothing when the confirmation is cancelled", async () => {
+    const harness = await boot(workWith({ confirmCreation: true }));
+
+    const promise = harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    await vi.waitFor(() => {
+      expect(harness.modals.opens).toHaveLength(1);
+    });
+    harness.modals.lastOpen().cancel();
+    const created = await promise;
+
+    expect(created.isErr()).toBe(true);
+    expect(harness.host.files.get("Standup 1.md")).toBeUndefined();
+  });
+
+  it("creates without asking when the type does not confirm creation", async () => {
+    const harness = await boot(workWith());
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+
+    expectOk(created);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  // Nobody is there to answer, and the caller has already said so.
+  it("skips the confirmation for an unattended creation", async () => {
+    const harness = await boot(workWith({ confirmCreation: true }));
+
+    const created = await harness
+      .resolve(NoteletCreationService)
+      .createNotelet("Work", TYPE, ANCHOR, { unattended: true });
+
+    expectOk(created);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("skips the confirmation when the caller asked for it to be skipped", async () => {
+    const harness = await boot(workWith({ confirmCreation: true }));
+
+    const created = await harness
+      .resolve(NoteletCreationService)
+      .createNotelet("Work", TYPE, ANCHOR, { skipConfirmation: true });
+
+    expectOk(created);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  // The questions modal carries the note path and its own Cancel, so a second dialog would ask
+  // the same question twice — the same rule the period note follows.
+  it("lets the questions modal stand in for the confirmation", async () => {
+    const harness = await boot(
+      workWith({ confirmCreation: true, nameTemplate: "Standup {{attendee}}", prompts: [attendee] }),
+    );
+
+    const promise = harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+    await vi.waitFor(() => {
+      expect(harness.modals.opens).toHaveLength(1);
+    });
+    expect(harness.modals.lastOpen().props).toMatchObject({ confirming: true });
+    harness.modals.lastOpen<unknown, Record<string, PromptAnswer>>().submit({ attendee: "Dana" });
+    const created = await promise;
+
+    expectOk(created);
+    expect(harness.modals.opens).toHaveLength(1);
+  });
+});
+
 describe("attachNotelet", () => {
   it("writes the notelet claim onto an existing note", async () => {
     const harness = await boot(workWith());

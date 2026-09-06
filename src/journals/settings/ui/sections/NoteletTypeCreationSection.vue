@@ -92,6 +92,11 @@ function editCounterKey(): void {
       <FolderInput v-model="type.folder" />
     </UiSettingRow>
 
+    <UiSettingRow :name="m.journal_notelet_confirm_creation_label()">
+      <template #description>{{ m.journal_notelet_confirm_creation_description() }}</template>
+      <UiToggle v-model="type.confirmCreation" />
+    </UiSettingRow>
+
     <UiSettingRow :name="m.journal_notelet_counter_label()">
       <template #description>{{ m.journal_notelet_counter_description() }}</template>
       <UiToggle v-model="type.counter.enabled" />

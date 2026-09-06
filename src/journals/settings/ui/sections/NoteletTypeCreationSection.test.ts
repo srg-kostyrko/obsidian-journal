@@ -84,6 +84,16 @@ describe("NoteletTypeCreationSection", () => {
     });
   });
 
+  it("turns the creation confirmation on from the toggle", async () => {
+    const harness = await setup({ confirmCreation: false });
+
+    await userEvent.click(within(rowNamed(m.journal_notelet_confirm_creation_label())).getByRole("checkbox"));
+
+    await waitFor(() => {
+      expect(typeOf(harness)?.confirmCreation).toBe(true);
+    });
+  });
+
   it("shows the counter property row while the counter is on", async () => {
     await setup({ counter: { enabled: true, frontmatterKey: "standup-number" } });
 

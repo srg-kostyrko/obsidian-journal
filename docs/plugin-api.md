@@ -210,6 +210,10 @@ period note and any number of notelets.
 - **`createNotelet` always creates.** There is no ensure semantics: several notelets per period is
   the point, so calling it twice gives two notes.
 - **`createNotelet` does not open** unless you pass `openMode`.
+- **A type can ask before it creates.** Its own _Confirm creating notelets_ setting is separate
+  from the journal's, which guards period notes only. The dialog opens for an API call the way
+  the type's questions do; pass `{ confirm: false }` for a call that must not raise one, or
+  `{ prompt: false }`, which suppresses both.
 - **Results are grouped by journal, not globally sorted.** `noteletsFor` builds one listing per
   matching journal, so a multi-journal selector's results appear in the order journals were
   matched; the type/counter/filename ordering applies only within each journal's group.

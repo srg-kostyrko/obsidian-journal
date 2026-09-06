@@ -10,6 +10,7 @@ import type {
   NoteWriteError,
   VaultPath,
 } from "@/infrastructure/host";
+import { ModalService } from "@/infrastructure/host/modals";
 import { type AsyncResult, Err, attempt } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
@@ -18,6 +19,7 @@ import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { SelfWriteGuard } from "../notes/self-write-guard";
 import { TemplateContentService } from "../notes/template-content";
+import { confirmCreationModal } from "../notes/ui/modals";
 import { PromptsUnansweredError } from "../prompts/errors";
 import { GatherPromptAnswersFlow } from "../prompts/flows/gather-prompt-answers.flow";
 import { unattendedOutcome } from "../prompts/unattended-rule";
@@ -56,6 +58,7 @@ export type NoteletAttachError =
 
 export interface CreateNoteletOptions {
   readonly unattended?: boolean;
+  readonly skipConfirmation?: boolean;
 }
 
 export class NoteletCreationService {
@@ -68,6 +71,7 @@ export class NoteletCreationService {
   readonly #notes = inject(NotesService);
   readonly #guard = inject(SelfWriteGuard);
   readonly #flows = inject(Flows);
+  readonly #modals = inject(ModalService);
 
   /** Creates one notelet of `typeId` anchored at `anchor`. Never idempotent — several per anchor is the point. */
   createNotelet(
@@ -89,6 +93,12 @@ export class NoteletCreationService {
       await this.#index.whenReady();
       const counter = type.counter.enabled ? this.#paths.nextIndex(journalName, anchor, type.name) : undefined;
 
+      // Creating a notelet is always an explicit act, so the journal's own confirmation setting —
+      // which guards the note a calendar click can create by accident — does not reach here. The
+      // type carries its own, and an unattended caller has already said nobody is watching.
+      const confirming =
+        !(options?.unattended ?? false) && !(options?.skipConfirmation ?? false) && type.confirmCreation;
+
       // Questions run before the name renders, because an answer can reach the filename and a
       // placeholder must never be persisted into one.
       let answers: Record<string, PromptAnswer> = {};
@@ -107,7 +117,7 @@ export class NoteletCreationService {
             ...(counter !== undefined && { counter }),
           };
           answers = yield* this.#flows
-            .invoke(GatherPromptAnswersFlow, { metadata: asked, confirming: false }, { notify: false })
+            .invoke(GatherPromptAnswersFlow, { metadata: asked, confirming }, { notify: false })
             .mapErr((error) => (error instanceof UserAborted ? error : new JournalNotFoundError(journalName)));
         }
       }
@@ -124,6 +134,15 @@ export class NoteletCreationService {
       const path = yield* this.#paths.availablePathFor(config, type, metadata);
       const mutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
       const bodyContext = yield* this.#paths.bodyContextFor(config, type, metadata, basenameOf(path));
+
+      // The answers modal carries the note path and its own Cancel, so it is the confirmation for
+      // a type that asks questions; a second dialog would ask the same thing twice.
+      if (confirming && type.prompts.length === 0) {
+        const confirmed = yield* this.#modals
+          .open(confirmCreationModal, { journalName, noteName: basenameOf(path), typeName: type.name })
+          .mapErr(() => new UserAborted("confirm-notelet-creation") as NoteletCreationError);
+        if (!confirmed) return yield* new Err(new UserAborted("confirm-notelet-creation"));
+      }
 
       this.#guard.mark(path);
       const createResult = await this.#notes.create(path, "");

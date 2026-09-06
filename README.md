@@ -240,6 +240,10 @@ Each type has:
 - **Questions** — the type's own [questions](#questions), asked when one of its notelets is created.
   These are separate from the journal's questions, and only the type's own answers are available to
   its name template and folder
+- **Confirm creating notelets** — off by default. Shows a confirmation dialog naming the note before
+  a notelet of this type is created. It is the type's own setting: the journal's **Confirm creating
+  new notes** guards the period note you navigate to, and never reaches a notelet. A type that asks
+  questions shows those instead, since that dialog already names the note and can be cancelled
 - **Number each notelet** — on by default. Numbering restarts in every period, so the first notelet
   of a day is always 1, and the number is stored in a frontmatter property you can rename
 - **Commands** — the plugin seeds one command per type ("Create _\<type\>_"), and you can add more

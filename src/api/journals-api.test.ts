@@ -745,6 +745,18 @@ describe("JournalsApiService notelet creation", () => {
     expect(flows).toHaveBeenLastCalledWith(CreateNoteletFlow, expect.anything(), expect.anything());
   });
 
+  it("passes skipConfirmation only when confirm is given", async () => {
+    const { api, flows } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+
+    await api.createNotelet("weekly", "2026-08-19", "Meeting", { confirm: false });
+    expect(flows.mock.calls.at(-1)?.[1]).toMatchObject({ skipConfirmation: true });
+
+    await api.createNotelet("weekly", "2026-08-19", "Meeting");
+    expect((flows.mock.calls.at(-1)?.[1] as { skipConfirmation?: boolean }).skipConfirmation).toBeUndefined();
+  });
+
   it("does not open the notelet unless a mode is asked for", async () => {
     const { api, harness } = await buildApi({
       weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),

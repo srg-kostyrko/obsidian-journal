@@ -29,6 +29,7 @@ export const noteletTypeSchema = v.object({
   nameTemplate: v.optional(v.string(), "{{journal_name}} {{notelet_index}}"),
   templates: v.optional(v.array(v.string()), []),
   counter: v.optional(noteletCounterSchema, () => ({ enabled: true, frontmatterKey: "journal-notelet-index" })),
+  confirmCreation: v.optional(v.boolean(), false),
   prompts: v.optional(promptsSchema, () => []),
 });
 
@@ -49,6 +50,7 @@ export function noteletTypeDefaults(id: string, raw?: unknown): NoteletType {
     nameTemplate: "{{journal_name}} {{notelet_index}}",
     templates: [],
     counter: { enabled: true, frontmatterKey: "journal-notelet-index" },
+    confirmCreation: false,
     prompts: [],
   };
 }

@@ -623,6 +623,8 @@
   "confirm_note_creation_body": "Створити «{noteName}» у журналі «{journalName}»?",
   "confirm_note_creation_confirm": "Створити",
   "confirm_note_creation_title": "Створити нову нотатку в журналі?",
+  "confirm_notelet_creation_title": "Створити нову піднотатку?",
+  "confirm_notelet_creation_body": "Створити «{noteName}» як піднотатку типу {type} у журналі «{journalName}»?",
   "decoration_add": "Додати оформлення",
   "decoration_border_mode_label": [
     {
@@ -1766,6 +1768,8 @@
   "journal_notelet_name_template_label": "Назва нотатки",
   "journal_notelet_no_within_period_variable_warning": "У цьому шаблоні назви немає нічого, що змінювалося б у межах періоду, тому кожна піднотатка після першої отримує доданий до назви номер.",
   "journal_notelet_period_path_collision_warning": "Цей тип піднотатки дає такий самий шлях до нотатки, як і сам журнал. Піднотаткам автоматично надається інша назва, але їх легко сплутати.",
+  "journal_notelet_confirm_creation_label": "Підтверджувати створення піднотаток",
+  "journal_notelet_confirm_creation_description": "Показувати діалог підтвердження перед створенням піднотатки цього типу.",
   "journal_notelet_counter_label": "Нумерувати кожну піднотатку",
   "journal_notelet_counter_description": "Нумерація починається заново в кожному періоді, тому перша піднотатка дня — завжди 1.",
   "journal_notelet_counter_key_modal_title": "Змінити назву властивості номера",

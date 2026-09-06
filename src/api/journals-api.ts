@@ -276,7 +276,7 @@ export class JournalsApiService implements JournalsApi {
     return started;
   }
 
-  #skipConfirmation(options: EnsureNoteOptions | undefined): boolean | undefined {
+  #skipConfirmation(options: { readonly confirm?: boolean } | undefined): boolean | undefined {
     return options?.confirm === undefined ? undefined : !options.confirm;
   }
 
@@ -396,6 +396,7 @@ export class JournalsApiService implements JournalsApi {
         anchor,
         openMode: options?.openMode ?? null,
         unattended: this.#unattended(options),
+        skipConfirmation: this.#skipConfirmation(options),
       },
       { notify: false, context: { via: "api" } },
     );

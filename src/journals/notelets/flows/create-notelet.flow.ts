@@ -18,6 +18,7 @@ export interface CreateNoteletParameters {
   /** Omitted opens in the active pane; `null` creates without opening at all. */
   openMode?: OpenMode | null;
   unattended?: boolean;
+  skipConfirmation?: boolean;
 }
 
 export class CreateNoteletFlow implements Flow<
@@ -35,6 +36,7 @@ export class CreateNoteletFlow implements Flow<
     return attempt.in(this, async function* (this: CreateNoteletFlow) {
       const { path, counter } = yield* this.#creation.createNotelet(p.journalName, p.typeId, p.anchor, {
         unattended: p.unattended,
+        skipConfirmation: p.skipConfirmation,
       });
       if (p.openMode !== null) {
         yield* this.#workspace.openNote(path, p.openMode ?? "active");

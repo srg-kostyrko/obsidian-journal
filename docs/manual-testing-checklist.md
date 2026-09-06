@@ -1378,6 +1378,11 @@ under **Notelet types**: **Meeting** (leave the defaults) and **Retro** (turn
       name; neither note overwrites the other.
 - [ ] A type with a question → the question dialog appears before the note is written,
       and the answer reaches the note per its configuration.
+- [ ] Turn **Confirm creating notelets** on for Meeting → running **Create Meeting** asks
+      first, naming the note and its type; cancelling writes nothing. The journal's own
+      **Confirm creating new notes** setting changes neither answer.
+- [ ] Turn it on for a type that also asks questions → only the question dialog appears,
+      and cancelling it still writes nothing.
 - [ ] Frontmatter of a new notelet carries the journal, the period date, the type name
       and (for Meeting) the number.
 - [ ] `obsidian://journal?journal=Note&notelet=Meeting&date=today` → creates and opens
