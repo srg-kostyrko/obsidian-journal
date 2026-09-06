@@ -1,19 +1,23 @@
 import { $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
-import { paletteLists } from "../support/commands.js";
+import { paletteLists, runCommand } from "../support/commands.js";
 import { getSettings, waitForSettings } from "../support/plugin-data.js";
 import {
+  clickDialogButton,
   clickIcon,
   closeSettings,
   expandSection,
   goBack,
+  modalText,
   openSettings,
   setModalText,
   submitModal,
   toggleSettingRow,
+  waitForDialogClosed,
+  waitForModalOpen,
 } from "../support/settings.js";
-import { frontmatterOf, noteExists, seedNote, waitForFrontmatter } from "../support/vault.js";
+import { frontmatterOf, noteExists, seedNote, todayAnchor, waitForFrontmatter } from "../support/vault.js";
 
 // Renaming a notelet type is the highest-risk operation the feature has: the stored type name is
 // what parseEntry resolves by, so the rename has to rewrite frontmatter across every notelet of
@@ -47,6 +51,37 @@ async function seedMeeting(): Promise<void> {
     MEETING,
     (frontmatter) => frontmatter["journal-notelet"] === "Meeting",
     "seeded notelet never reached metadataCache",
+  );
+}
+
+// The creation confirmation is a type's own setting, and the modal it raises is the same one the
+// period note uses — so only a real press of the type's command, against a real dialog, says that
+// the toggle reaches the creation path and that the dialog names the notelet rather than a
+// journal note.
+async function enableMeetingConfirmation(): Promise<void> {
+  await openMeetingTypePage();
+  await revealSettingRow(m.journal_notelet_confirm_creation_label());
+  await toggleSettingRow(m.journal_notelet_confirm_creation_label());
+  await waitForSettings(
+    (settings) =>
+      Object.values(settings.journals?.daily?.notelets ?? {}).some(
+        (type) => type.name === "Meeting" && type.confirmCreation === true,
+      ),
+    "the type's creation confirmation never reached data.json",
+  );
+  await closeSettings();
+}
+
+// Same re-collapse race revealCounterKeyButton documents, for a row located by its visible name.
+async function revealSettingRow(name: string): Promise<void> {
+  const row = $(`//div[contains(@class,"setting-item-name")][normalize-space(.)="${name}"]`);
+  await browser.waitUntil(
+    async () => {
+      if (await row.isExisting()) return true;
+      await expandSection(m.journal_edit_section_note_creation());
+      return row.isExisting();
+    },
+    { timeout: 10_000, interval: 500, timeoutMsg: `the note creation section never revealed the "${name}" row` },
   );
 }
 
@@ -91,6 +126,33 @@ describe("notelet type lifecycle", () => {
     );
     await closeSettings();
     expect(await paletteLists(m.journal_notelet_command_name({ type: "Review" }))).toBe(true);
+  });
+
+  it("asks before creating once the type's confirmation is turned on", async () => {
+    await enableMeetingConfirmation();
+
+    await runCommand("journals:create-meeting");
+
+    await waitForModalOpen();
+    expect(await modalText()).toContain("Meeting");
+    await clickDialogButton("Cancel");
+    await waitForDialogClosed();
+    expect(await noteExists(`day/meetings/${todayAnchor()} Meeting 1.md`)).toBe(false);
+  });
+
+  it("writes the notelet once the confirmation is accepted", async () => {
+    await enableMeetingConfirmation();
+
+    await runCommand("journals:create-meeting");
+    await waitForModalOpen();
+    await clickDialogButton(m.confirm_note_creation_confirm());
+    await waitForDialogClosed();
+
+    await waitForFrontmatter(
+      `day/meetings/${todayAnchor()} Meeting 1.md`,
+      (frontmatter) => frontmatter["journal-notelet"] === "Meeting",
+      "the confirmed notelet was never written",
+    );
   });
 
   it("rewrites a connected notelet's stored type name when its type is renamed", async () => {
