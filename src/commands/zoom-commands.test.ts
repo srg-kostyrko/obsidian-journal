@@ -20,6 +20,7 @@ const ORPHAN = "orphan.md" as VaultPath;
 
 const daily = fixedJournal("daily", { type: "day" });
 const monthly = fixedJournal("monthly", { type: "month" });
+const LATER = anchor("2027-01-01");
 
 interface ZoomSeed {
   readonly journals?: Record<string, JournalConfig>;
@@ -102,6 +103,40 @@ describe("ZoomCommands", () => {
     host.commands.get("open-longer")?.checkCallback?.(false);
 
     await vi.waitFor(() => expect(host.app.vault.getAbstractFileByPath(MONTH_NOTE)).not.toBeNull());
+  });
+
+  it("passes over a longer journal whose timeline does not reach the active note's date", async () => {
+    // OpenDateFlow drops an out-of-timeline journal on its own and answers NoApplicableJournals,
+    // which the flow layer logs and shows nothing for — so the walk has to skip it here instead,
+    // or the command lists, runs, and does nothing.
+    const laterWeekly = fixedJournal(
+      "weekly",
+      { type: "week" },
+      { timeline: { start: LATER, end: { kind: "never" } } },
+    );
+    const { host, index, workspace } = await buildZoom({ journals: { daily, weekly: laterWeekly, monthly } });
+    index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
+    index.register({ journalName: "monthly", anchor: anchor("2026-05-01"), path: MONTH_NOTE });
+    host.putFile(DAY_NOTE);
+    host.putFile(MONTH_NOTE);
+    host.emitActiveLeafChange(host.putFile(DAY_NOTE));
+
+    host.commands.get("open-longer")?.checkCallback?.(false);
+
+    await vi.waitFor(() => expect(workspace.isOpen(MONTH_NOTE)).toBe(true));
+  });
+
+  it("hides the command when the only longer journal cannot cover the active note's date", async () => {
+    const laterWeekly = fixedJournal(
+      "weekly",
+      { type: "week" },
+      { timeline: { start: LATER, end: { kind: "never" } } },
+    );
+    const { host, index } = await buildZoom({ journals: { daily, weekly: laterWeekly } });
+    index.register({ journalName: "daily", anchor: anchor("2026-05-04"), path: DAY_NOTE });
+    host.emitActiveLeafChange(host.putFile(DAY_NOTE));
+
+    expect(host.commands.get("open-longer")?.checkCallback?.(true)).toBe(false);
   });
 
   it("asks which journal to open when two share the target granularity", async () => {
