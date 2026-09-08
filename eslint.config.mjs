@@ -498,6 +498,15 @@ export default [
     },
   },
   {
+    // Benchmarks are `test()` bodies that register `bench()` registrations and never
+    // assert, and `bench.compare()` takes registrations rather than a title string.
+    files: ["**/*.bench.ts"],
+    rules: {
+      "vitest/expect-expect": "off",
+      "vitest/valid-title": "off",
+    },
+  },
+  {
     files: ["src/**/*.ts"],
     ignores: ["**/*.test.ts", "**/*.bench.ts", "src/i18n/paraglide/**"],
     rules: {
