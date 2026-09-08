@@ -97,15 +97,15 @@ most cases, no issue either.
 
 Bears on the tasks epic (#344) and its phases.
 
-| Plugin                            |       Installs | Harvest                                                                                                                                      | Status       |
-| --------------------------------- | -------------: | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| Tasks                             |      4,197,016 | The de facto task vocabulary we have to stay compatible with                                                                                 | not examined |
-| TaskNotes                         |      1,404,982 | Note-per-task with calendar and time tracking; named in #344                                                                                 | not examined |
-| Day Planner                       |        879,727 | Time blocks on an editable timeline, sourced from daily notes                                                                                | not examined |
-| Rollover Daily Todos              |        148,695 | Rolling unchecked boxes into today's note — this is #73, and the largest single-feature demand signal found                                  | not examined |
-| Review                            |         64,817 | Adding a link to the current note into a _future_ daily note                                                                                 | not examined |
-| `702573N/Obsidian-Tasks-Calendar` | 949★, unlisted | Dataview-driven task calendar with more stars than most listed plugins — how much of this domain ships as Dataview views rather than plugins | not examined |
-| Time Ruler                        |         64,073 | Drag-and-drop scheduling combining a task list with a calendar                                                                               | not examined |
+| Plugin                            |       Installs | Harvest                                                                                                                                      | Status            |
+| --------------------------------- | -------------: | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Tasks                             |      4,197,016 | The de facto task vocabulary we have to stay compatible with                                                                                 | not examined      |
+| TaskNotes                         |      1,404,982 | Note-per-task with calendar and time tracking; named in #344                                                                                 | not examined      |
+| Day Planner                       |        879,727 | Time blocks on an editable timeline, sourced from daily notes                                                                                | not examined      |
+| Rollover Daily Todos              |        148,695 | Rolling unchecked boxes into today's note — this is #73, and the largest single-feature demand signal found                                  | idea → #348, #351 |
+| Review                            |         64,817 | Adding a link to the current note into a _future_ daily note                                                                                 | not examined      |
+| `702573N/Obsidian-Tasks-Calendar` | 949★, unlisted | Dataview-driven task calendar with more stars than most listed plugins — how much of this domain ships as Dataview views rather than plugins | not examined      |
+| Time Ruler                        |         64,073 | Drag-and-drop scheduling combining a task list with a calendar                                                                               | not examined      |
 
 ## Platform questions
 
