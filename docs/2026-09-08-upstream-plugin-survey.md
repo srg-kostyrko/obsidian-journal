@@ -74,6 +74,82 @@ Ranked by how often they are linked across both trackers.
 | `nothingislost/obsidian-hover-editor`                         |        1 | Hover previews, adjacent to #119                                                |
 | `valentine195/obsidian-fantasy-calendar`                      |        1 | Non-Gregorian calendars                                                         |
 
+## Registry sweep
+
+Taken 2026-09-08 from `obsidianmd/obsidian-releases` — `community-plugins.json`
+(7,422 plugins) joined to `community-plugin-stats.json`, filtered on calendar,
+journal, daily-note, periodic, timeline, habit and planner vocabulary, ranked by
+downloads. This is the whole ecosystem rather than what two trackers happened to
+mention.
+
+### Scale
+
+| Plugin             |   Downloads |
+| ------------------ | ----------: |
+| Tasks              |   4,197,016 |
+| Calendar           |   3,082,484 |
+| TaskNotes          |   1,404,982 |
+| Notebook Navigator |     944,711 |
+| Day Planner        |     879,727 |
+| Periodic Notes     |     754,036 |
+| **Journals**       | **127,941** |
+
+Two dead plugins hold 3.8M downloads between them, which is the size of the
+migration audience. Note that GitHub stars mislead here: by stars this plugin
+leads every alternative named in Calendar #403, and by installs it is an order of
+magnitude behind the incumbents and behind Notebook Navigator, which bundles a
+calendar into a file browser.
+
+### A dedicated plugin already exists for several ideas
+
+Existence proves demand and gives a reference implementation; it is not by itself
+a reason to build or to skip.
+
+| Plugin               |  Downloads | Bears on                                                               |
+| -------------------- | ---------: | ---------------------------------------------------------------------- |
+| Rollover Daily Todos |    148,695 | #73 — task rollover                                                    |
+| Heatmap Calendar     |    174,912 | A year-scale density view; decorations are cell-scale only             |
+| Review               |     64,817 | Adding a link to a future daily note — adjacent to #344                |
+| Daily Notes Editor   |     42,469 | Editing a stream of daily notes inline on one page                     |
+| Habit Tracker 21     |     33,367 | Streaks, Calendar #352's "unbreakable chain"                           |
+| Influx               |     30,918 | Aggregating backlinked clippings — adjacent to #356                    |
+| Daily Named Folder   |     29,663 | Folder-per-day layouts, answered here by notelets                      |
+| Daily Note Outline   |     24,776 | An outline across several daily notes                                  |
+| OZ Calendar          |     22,147 | A calendar driven by any YAML date key — already how this plugin works |
+| **Journal Review**   | **21,911** | **#355 — "what happened today last year", the exact feature**          |
+| Daily notes calendar |     19,085 | Calendar navigation for daily and weekly notes                         |
+| Daily Notes Viewer   |     18,251 | Several recent daily notes on one page                                 |
+| Yearly Glance        |     12,231 | Annual events at a glance                                              |
+
+Three of these — Daily Notes Editor, Daily Notes Viewer and Daily Note Outline,
+about 85,000 downloads together — are the same missing surface: **reading several
+periodic notes at once** rather than one at a time. There is no equivalent here,
+and no issue covering it.
+
+### Bases
+
+`calendar-bases` (111,366) and `notion-bases` (20,943) add calendar layouts to
+Obsidian's Bases. #344 concluded Bases cannot help _tasks_, because Obsidian does
+not cache checkbox list items as properties — that holds, but it does not extend
+to notes-with-dates, which is exactly what Bases does cache and what those two
+plugins render. Worth taking a deliberate position on rather than inheriting the
+tasks conclusion.
+
+### Niche calendars are covered by specialists
+
+`chinese-calendar` (15,758), `dust-calendar` (15,026) and
+`karfekr/obsidian-persian-calendar` (129 stars, active) each serve one calendar
+system. This supports the decision above not to build non-Gregorian support: the
+niche has maintained answers, and each needs domain knowledge this project does
+not have.
+
+### Method
+
+`gh api repos/obsidianmd/obsidian-releases/contents/community-plugins.json -H "Accept: application/vnd.github.raw"`
+and the same for `community-plugin-stats.json`, then join on plugin id. Both are
+about 2MB, so the raw media type is required — the default contents response caps
+at 1MB.
+
 ## What the survey produced
 
 Opened: #351 (day-start offset), #352 (CLI handlers), #354 (Periodic Notes
