@@ -399,7 +399,7 @@ Findings are computed against your journals as currently configured, so if you s
 ## Compatibility with other plugins
 
 - `Daily notes` core plugin - this plugin intends to be a replacement for it. Notes created through Daily notes will not be connected to any journal so it is advised to disable this plugin.
-- `Periodic Notes` community plugin - this plugin was initially inspired by Periodic notes that seem to abandoned and aims to be a replacement for it.
+- `Periodic Notes` community plugin - this plugin was initially inspired by Periodic Notes, which appears to be abandoned, and aims to be a replacement for it.
 - `Calendar` community plugin - this plugin builds its own calendar views out of blocks and aims to be a replacement for it. There is no integration between the two.
 - `Templater` community plugin - starting with 1.3.0 plugin supports Templater templates in its settings. Journal plugin variables are replaced first and can be used inside templater commands.
 
@@ -483,6 +483,28 @@ journal through its frontmatter, not its path, so old notes can be moved
 anywhere — one folder per year, a single archive folder, or somewhere else
 entirely — and the calendar, decorations and navigation keep working. A
 journal's **Folder** setting only decides where new notes are created.
+
+## Coming from Calendar
+
+The Calendar plugin draws one month grid and marks days with dots. Everything it
+does has an equivalent here, usually a more configurable one.
+
+| In Calendar                                                      | In Journals                                                                                                                                                     |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dots sized by word count                                         | A [decoration](#decoration-system) with a note-size condition — the "words per dot" ladder is written out as a recipe there                                     |
+| A hollow dot for incomplete tasks                                | A decoration with the _has open tasks_ or _all tasks completed_ condition                                                                                       |
+| Colouring days by tag or content                                 | Decoration conditions on title, tag, frontmatter property, note size or weekday, with colours, borders, shapes, corners and icons                               |
+| One calendar per vault                                           | Any number of [journals](#journal-configuration), grouped on [shelves](#using-shelves), with views scoped to a shelf                                            |
+| A fixed month grid padded to six weeks                           | A month grid of exactly the weeks the month spans, plus week grids, notes-by-date lists and toolbars composed into a [view](#view--block-settings)              |
+| Week numbers on the left                                         | Week numbers before the weekdays, after them, or hidden, globally or per block                                                                                  |
+| Clicking a day or week number                                    | Clicking any period — day, week, month, quarter or year — from its cell or heading                                                                              |
+| `Reveal active note` command                                     | The _Follow active note_ view setting, which moves the view as you open notes                                                                                   |
+| Start of week from the locale, or a locale override to change it | [Week presets](#calendar-settings) that set the first day of the week and how the first week of the year is determined, independently of your Obsidian language |
+| Notes found by file name in one folder                           | Notes identified by their frontmatter, so they keep working when moved or renamed                                                                               |
+
+Two things Calendar has no equivalent for: a note's date can come from a
+frontmatter property rather than its file name, and a day can hold any number of
+extra notes through [notelets](#notelets).
 
 ## Supported variables
 
