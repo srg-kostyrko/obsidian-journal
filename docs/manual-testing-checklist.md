@@ -30,7 +30,7 @@ only when you are investigating a specific report or the spec is red.
 | §9 shelves               | `nav-off-shelf`                                                                                                                                                                                                    |
 | §10 code blocks          | `code-blocks`, `custom-interval-nav`, `home-index`                                                                                                                                                                 |
 | §14 settings             | `settings`, `settings-first-journal`                                                                                                                                                                               |
-| §15 startup / background | `startup-open`, `startup-confirm`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings`                                                                                                                |
+| §15 startup / background | `startup-open`, `startup-confirm`, `note-creation-devices`, `auto-create`, `auto-attach`, `settings-reload`, `sync-settings`                                                                                       |
 | §16 migration            | `legacy-upgrade`, `mid-session-enable`                                                                                                                                                                             |
 | §17 regression (locale)  | `calendar-locale`                                                                                                                                                                                                  |
 | §18 URI handler          | `uri-open`                                                                                                                                                                                                         |
@@ -961,6 +961,22 @@ sitting is faster than rediscovering the pattern per screen.
 - [x] **autoCreate** — + a Day journal with autoCreate on; advance system clock
       past local midnight (or reload after midnight) → tomorrow's note appears.
 - [x] autoCreate scheduling does not double-fire across the midnight boundary.
+- [ ] **Automatic note creation = Desktop only**, checked on the **mobile app**.
+      The rule itself is covered by `note-creation-devices.e2e.ts`, which pins it
+      to _Mobile only_ so the desktop runner is the excluded device; what no
+      automation reaches is `PlatformService` actually answering "mobile", since
+      `app.emulateMobile(true)` detaches `executeObsidian` and would not flip
+      `isMobileApp` anyway. So this pass is about the real phone, not the rule.
+  - [ ] Startup journal set, today's note already synced down → launch → it opens,
+        and its frontmatter is byte-identical afterwards (the excluded device must
+        not even write the mutator).
+  - [ ] Startup journal set, today's note absent → launch → nothing opens and
+        nothing is created.
+  - [ ] A journal with autoCreate on → launch, and again past local midnight →
+        no note appears.
+  - [ ] The same vault on desktop → launch → the note is created as usual.
+  - [ ] The journal's edit page shows "Only on desktop" under its auto-create
+        toggle, on both devices.
 - [x] **Auto-attach** — + manually create a note matching a journal's
       folder+name pattern within its timeline → journal frontmatter auto-added.
 - [x] Auto-attach on **rename** — rename an unrelated note _into_ a matching

@@ -14,6 +14,17 @@ function configOf(harness: TestHarness) {
   return harness.resolve(JournalsRepository).get("daily").getOrUndefined();
 }
 
+async function renderWithDeviceRule(devices: string): Promise<void> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: {
+      journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) },
+      noteCreation: { devices },
+    },
+  });
+  harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+}
+
 describe("NoteCreationSection", () => {
   describe("section heading", () => {
     it("renders all five setting rows", async () => {
@@ -253,6 +264,41 @@ describe("NoteCreationSection", () => {
       harness.render(NoteCreationSection, { props: { journalName: "daily" } });
 
       expect(screen.queryByText(/day inside the week/i)).toBeNull();
+    });
+  });
+
+  describe("the automatic note creation rule", () => {
+    it("says so under the auto-create toggle when the rule names one device", async () => {
+      await renderWithDeviceRule("desktop");
+
+      expect(screen.getByText(m.journal_edit_auto_create_desktop_only())).toBeTruthy();
+    });
+
+    it("names the mobile app when that is the device the rule allows", async () => {
+      await renderWithDeviceRule("mobile");
+
+      expect(screen.getByText(m.journal_edit_auto_create_mobile_only())).toBeTruthy();
+    });
+
+    it("says nothing when every device may create notes", async () => {
+      await renderWithDeviceRule("all");
+
+      expect(screen.queryByText(m.journal_edit_auto_create_desktop_only())).toBeNull();
+      expect(screen.queryByText(m.journal_edit_auto_create_mobile_only())).toBeNull();
+    });
+
+    it("says nothing when the journal does not auto-create at all", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: false }) },
+          noteCreation: { devices: "desktop" },
+        },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
+      expect(screen.queryByText(m.journal_edit_auto_create_desktop_only())).toBeNull();
     });
   });
 });

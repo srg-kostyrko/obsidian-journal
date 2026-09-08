@@ -1,13 +1,16 @@
 import { CalendarDate } from "@/calendar";
+import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { WorkspaceService } from "@/infrastructure/host";
+import { PlatformService, WorkspaceService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { CycleService } from "../cycle";
 import { OpenJournalEntryFlow } from "../flows/open-journal-entry.flow";
+import { JournalsIndex } from "../journals-index";
+import { creationAllowedOn, noteCreationSlice } from "../notes/creation-slice";
 import { JournalsRepository } from "../repository";
 import { JournalsEventsToken } from "../tokens";
 
@@ -18,10 +21,19 @@ export class StartupOpenService {
   readonly #flows = inject(Flows);
   readonly #journals = inject(JournalsRepository);
   readonly #cycle = inject(CycleService);
+  readonly #index = inject(JournalsIndex);
+  readonly #platform = inject(PlatformService);
   readonly #events = inject(JournalsEventsToken);
   readonly #logger = inject(LoggerFactoryToken).named("startup-open");
 
   readonly #slice = inject(SettingsService).getSlice(startupSlice);
+  readonly #noteCreation = inject(SettingsService).getSlice(noteCreationSlice);
+
+  #resolveDisposed: (() => void) | undefined;
+  #isDisposed = false;
+  readonly #disposed = new Promise<void>((resolve) => {
+    this.#resolveDisposed = resolve;
+  });
 
   constructor() {
     this.#events.on("renamed", (oldName, newName) => {
@@ -56,6 +68,23 @@ export class StartupOpenService {
     return override?.journalName ?? this.#slice.state.journalName;
   }
 
+  // A device the rule excludes is a pure reader: it must not reach OpenJournalEntryFlow at all,
+  // whose ensureNote writes the frontmatter mutator over a note that already exists.
+  async #openExisting(journalName: string, anchor: AnchorString): Promise<void> {
+    // Until the boot walk lands, "no entry for this anchor" means "not indexed yet". The race
+    // against dispose is what keeps an index that never becomes ready from wedging this here.
+    await Promise.race([this.#index.whenReady(), this.#disposed]);
+    // The flag, not index.isReady(): both promises can settle in the same microtask drain, and
+    // reading readiness back would open a note for a service that is already gone.
+    if (this.#isDisposed) return;
+    const path = this.#index.get(journalName, anchor);
+    if (path.isNone()) return;
+    const result = await this.#workspace.openNote(path.value, "active");
+    if (result.isErr()) {
+      this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });
+    }
+  }
+
   async #open(): Promise<void> {
     const today = CalendarDate.today();
     const journalName = this.#journalNameFor(today);
@@ -65,6 +94,10 @@ export class StartupOpenService {
     const anchorOpt = this.#cycle.anchorOf(journalName, today);
     if (anchorOpt.isNone()) return;
     const anchor = anchorOpt.value;
+    if (!creationAllowedOn(this.#noteCreation.state.devices, this.#platform.current())) {
+      await this.#openExisting(journalName, anchor);
+      return;
+    }
     const result = await this.#flows.invoke(OpenJournalEntryFlow, { journalName, anchor, openMode: "active" });
     if (result.isErr() && !(result.error instanceof UserAborted)) {
       this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });
@@ -78,5 +111,10 @@ export class StartupOpenService {
       void this.#open();
     });
     return AsyncResult.ok();
+  }
+
+  async [Symbol.asyncDispose](): Promise<void> {
+    this.#isDisposed = true;
+    this.#resolveDisposed?.();
   }
 }

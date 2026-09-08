@@ -276,7 +276,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **789/789**. Every locale has had a line-by-line pass
+All eleven locales are complete at **926/926**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 
@@ -294,6 +294,15 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   "create for the period". Not native-verified. Worth a native eye: whether the frame
   reads as an action in the CJK locales, which carry the `notelet` noun in every variant
   where the European locales leave it implicit.
+- The eight `note_creation_devices_*`, `journal_edit_auto_create_*_only` and
+  `startup_weekday_journal_label` keys were translated by an agent working from this file
+  and from each locale's existing `startup_*` and `journal_edit_auto_create_*` wording,
+  which they sit beside and must agree with: the two `_only` hints name the
+  `note_creation_devices_title` setting, so each locale repeats its own rendering of that
+  title verbatim. Not native-verified. Worth a native eye: the word each locale picks for
+  a **desktop** and a **mobile** device — the Romance and Slavic locales say "computer"
+  and "mobile device" rather than transliterating, while de/it/ja/ko/zh keep Obsidian's own
+  Desktop/Mobile pair — and whether that matches what each language's Obsidian UI says.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

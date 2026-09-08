@@ -1,7 +1,9 @@
 import { CalendarDate, Clock } from "@/calendar";
 import { inject } from "@/infrastructure/di";
+import { PlatformService } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
+import { SettingsService } from "@/settings";
 
 import { CycleService } from "../cycle";
 import { FrontmatterService } from "../frontmatter";
@@ -9,6 +11,7 @@ import { JournalsIndex } from "../journals-index";
 import { JournalsRepository } from "../repository";
 import { TimelineService } from "../timeline";
 
+import { creationAllowedOn, noteCreationSlice } from "./creation-slice";
 import { NoteCreationService } from "./note-creation";
 
 const CREATE_BUDGET_MS = 30_000;
@@ -20,7 +23,10 @@ export class AutoCreateService {
   readonly #cycle = inject(CycleService);
   readonly #index = inject(JournalsIndex);
   readonly #timeline = inject(TimelineService);
+  readonly #platform = inject(PlatformService);
   readonly #logger = inject(LoggerFactoryToken).named("auto-create");
+
+  readonly #noteCreation = inject(SettingsService).getSlice(noteCreationSlice);
 
   #timer: ReturnType<typeof window.setTimeout> | undefined;
   #disposed = false;
@@ -30,6 +36,9 @@ export class AutoCreateService {
     // leave the timer unset and auto-create dead for the rest of the session. A `finally` is no
     // help — a never-settling await never reaches one.
     this.#schedule();
+    // Read per tick, not once at construction: the rule can change while the app is running, and
+    // the next tick is the first moment that can honor it.
+    if (!creationAllowedOn(this.#noteCreation.state.devices, this.#platform.current())) return;
     for (const [name, config] of this.#journals.find().entries()) {
       if (!config.autoCreate) continue;
       await this.#createWithinBudget(name);

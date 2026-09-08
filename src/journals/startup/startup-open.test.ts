@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { VaultPath } from "@/infrastructure/host";
-import { testContainer, type TestHarness } from "@/testing";
+import { anchor } from "@/calendar/testing";
+import { PlatformService, type DeviceKind, type VaultPath } from "@/infrastructure/host";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
+import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { JournalsRepository } from "../repository";
 import { fixedJournal } from "../testing";
@@ -17,6 +19,24 @@ const OVERRIDE_TODAY_PATH = "private/2026-05-19.md" as VaultPath;
 // The frozen clock below is a Tuesday, so this is the weekday index an override must claim to win.
 const TUESDAY = 2;
 const SATURDAY = 6;
+const CONNECTED_PATH = "Daily/Tuesday standup.md" as VaultPath;
+
+const onDevice = (device: DeviceKind): ReturnType<typeof overrideWith> =>
+  overrideWith(PlatformService, { current: () => device });
+
+async function excludedDevice(): Promise<TestHarness> {
+  const harness = await testContainer({
+    modules: MODULES,
+    data: {
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      startup: { journalName: "daily" },
+      noteCreation: { devices: "desktop" },
+    },
+    overrides: [onDevice("mobile")],
+  });
+  harness.host.workspace.layoutReady = false;
+  return harness;
+}
 
 describe("StartupOpenService", () => {
   beforeEach(() => {
@@ -254,5 +274,105 @@ describe("StartupOpenService", () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(harness.host.workspace.openPaths.has(TODAY_PATH)).toBe(false);
+  });
+
+  describe("a device the automatic note creation rule excludes", () => {
+    it("opens today's note when it already exists", async () => {
+      const harness = await excludedDevice();
+      harness.host.putFile(CONNECTED_PATH, "");
+      const index = harness.resolve(JournalsIndex);
+      index.register({ journalName: "daily", anchor: anchor("2026-05-19"), path: CONNECTED_PATH });
+      index.markReady();
+
+      await harness.resolve(StartupOpenService).initialize();
+      harness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.workspace.openPaths.has(CONNECTED_PATH)).toBe(true);
+    });
+
+    it("leaves the note it opens untouched", async () => {
+      // OpenJournalEntryFlow writes the frontmatter mutator over an existing note, so a launch
+      // that creates nothing still writes — under sync that is a conflict source of its own.
+      const harness = await excludedDevice();
+      harness.host.putFile(CONNECTED_PATH, "");
+      const index = harness.resolve(JournalsIndex);
+      index.register({ journalName: "daily", anchor: anchor("2026-05-19"), path: CONNECTED_PATH });
+      index.markReady();
+
+      await harness.resolve(StartupOpenService).initialize();
+      harness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.files.get(CONNECTED_PATH)?.frontmatter).toEqual({});
+    });
+
+    it("creates no note when today has none", async () => {
+      const harness = await excludedDevice();
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(StartupOpenService).initialize();
+      harness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.files.has(TODAY_PATH)).toBe(false);
+      expect(harness.host.workspace.openPaths.size).toBe(0);
+    });
+
+    it("waits for the index rather than reading an empty one as no note", async () => {
+      // At layout-ready the boot walk has not landed, so "no entry for this anchor" means "not
+      // indexed yet" — acting on it would leave the note the user has closed on their phone.
+      const harness = await excludedDevice();
+      harness.host.putFile(CONNECTED_PATH, "");
+      const index = harness.resolve(JournalsIndex);
+
+      await harness.resolve(StartupOpenService).initialize();
+      harness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(harness.host.workspace.openPaths.size).toBe(0);
+
+      index.register({ journalName: "daily", anchor: anchor("2026-05-19"), path: CONNECTED_PATH });
+      index.markReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.workspace.openPaths.has(CONNECTED_PATH)).toBe(true);
+    });
+
+    it("opens nothing when disposed before the index is ready", async () => {
+      const harness = await excludedDevice();
+      harness.host.putFile(CONNECTED_PATH, "");
+      const index = harness.resolve(JournalsIndex);
+      const service = harness.resolve(StartupOpenService);
+
+      await service.initialize();
+      harness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+      await service[Symbol.asyncDispose]();
+
+      index.register({ journalName: "daily", anchor: anchor("2026-05-19"), path: CONNECTED_PATH });
+      index.markReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.workspace.openPaths.size).toBe(0);
+    });
+
+    it("still creates on the device the rule names", async () => {
+      const harness = await testContainer({
+        modules: MODULES,
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }) },
+          startup: { journalName: "daily" },
+          noteCreation: { devices: "desktop" },
+        },
+        overrides: [onDevice("desktop")],
+      });
+      harness.host.workspace.layoutReady = false;
+
+      await harness.resolve(StartupOpenService).initialize();
+      harness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.files.has(TODAY_PATH)).toBe(true);
+    });
   });
 });

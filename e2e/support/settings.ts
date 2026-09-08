@@ -127,6 +127,12 @@ export async function toggleSettingRow(name: string): Promise<void> {
   ).click();
 }
 
+// Select an <option> by value in a page-level UiDropdown, identified by its aria-label. The
+// modal-scoped selectModalDropdownByLabel cannot reach a dashboard block's dropdown.
+export async function selectSettingDropdownByLabel(ariaLabel: string, value: string): Promise<void> {
+  await $(`select[aria-label="${ariaLabel}"]`).selectByAttribute("value", value);
+}
+
 // Every edit subpage opens with a breadcrumb back link (UiBackLink): an icon plus the
 // "Back to list" label, so it's a text button rather than an icon button.
 export async function goBack(): Promise<void> {

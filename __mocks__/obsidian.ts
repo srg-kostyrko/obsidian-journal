@@ -3,6 +3,10 @@ import { load as yamlLoad } from "js-yaml";
 
 export { moment };
 
+// Only the flag PlatformService reads. Tests that need the mobile app override PlatformService
+// through the container rather than mutating this.
+export const Platform = { isMobileApp: false };
+
 export class TAbstractFile {
   path = "";
   name = "";
