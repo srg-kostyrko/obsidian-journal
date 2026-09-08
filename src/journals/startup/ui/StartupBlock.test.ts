@@ -1,7 +1,9 @@
 import userEvent from "@testing-library/user-event";
 import { screen, within } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
+import { nextTick } from "vue";
 
+import { calendarSettingsModule, calendarSlice } from "@/calendar";
 import { m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -15,12 +17,20 @@ import StartupBlock from "./StartupBlock.vue";
 
 import type { StartupOverride } from "../slice";
 
-const MODULES = [journalsCoreModule, journalStartupCoreModule, journalStartupUiModule];
+// calendarSettingsModule is what registers the calendar slice the weekday chips read their order
+// from — without it useWeekdays() throws UnregisteredSliceError.
+const MODULES = [journalsCoreModule, journalStartupCoreModule, journalStartupUiModule, calendarSettingsModule];
 const JOURNALS = {
   daily: fixedJournal("daily", { type: "day" }),
   weekly: fixedJournal("weekly", { type: "week" }),
 };
 const SATURDAY = 6;
+
+function chipLabels(): string[] {
+  return within(screen.getAllByRole("group")[0])
+    .getAllByRole("button")
+    .map((chip) => chip.textContent?.trim() ?? "");
+}
 
 function overridesOf(harness: TestHarness): readonly StartupOverride[] {
   return harness.settings.getSlice(startupSlice).state.overrides;
@@ -100,6 +110,25 @@ describe("StartupBlock", () => {
       await userEvent.click(screen.getByRole("button", { name: m.startup_weekday_remove() }));
 
       expect(overridesOf(harness)).toEqual([]);
+    });
+
+    it("reorders the weekday chips when the week preset moves the first day", async () => {
+      harness = await testContainer({
+        modules: MODULES,
+        data: {
+          journals: JOURNALS,
+          startup: { journalName: "daily", overrides: [{ weekdays: [], journalName: "" }] },
+          calendar: { mode: "custom", dow: 1, doy: 4, global: false },
+        },
+      });
+      harness.render(StartupBlock);
+      await expand();
+      expect(chipLabels()).toEqual(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]);
+
+      harness.settings.getSlice(calendarSlice).state = { mode: "custom", dow: 0, doy: 6, global: false };
+      await nextTick();
+
+      expect(chipLabels()).toEqual(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
     });
 
     it("disables a weekday another override already claims", async () => {

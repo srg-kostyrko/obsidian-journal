@@ -81,7 +81,11 @@ export class Calendar {
   }
 
   weekdaysShort(): readonly { index: number; label: string }[] {
-    const data = moment.localeData(CUSTOM_LOCALE);
+    // Through the ref rather than CUSTOM_LOCALE directly, for the reason localMoment reads it:
+    // the value is the same, but the read is what makes a caller rendering these labels depend on
+    // the installed grid, so applyWeekConfig's triggerRef reorders them. Reading the constant
+    // leaves a mounted weekday control on the old first day until something else re-renders it.
+    const data = moment.localeData(weekLocale.value);
     const first = data.firstDayOfWeek();
     const short = data.weekdaysShort();
     return Array.from({ length: 7 }, (_, offset) => {

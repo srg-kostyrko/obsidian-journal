@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from "vue";
+
 import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -15,12 +17,17 @@ const props = defineProps<{
   onChange: CalendarBlockFieldsChange;
 }>();
 
-const orderedWeekdays = useService(Calendar).weekdaysShort();
-const weekdayOptions = orderedWeekdays.map((weekday) => ({ value: weekday.index, label: weekday.label }));
-const allWeekdayIndices = orderedWeekdays.map((weekday) => weekday.index);
+const calendar = useService(Calendar);
+// A computed rather than a setup-time constant: weekdaysShort() is only reactive to the week grid
+// while it is read during render.
+const orderedWeekdays = computed(() => calendar.weekdaysShort());
+const weekdayOptions = computed(() =>
+  orderedWeekdays.value.map((weekday) => ({ value: weekday.index, label: weekday.label })),
+);
+const allWeekdayIndices = computed(() => orderedWeekdays.value.map((weekday) => weekday.index));
 
 function setShownWeekdays(shown: number[]): void {
-  const hiddenWeekdays = allWeekdayIndices.filter((index) => !shown.includes(index)).toSorted((a, b) => a - b);
+  const hiddenWeekdays = allWeekdayIndices.value.filter((index) => !shown.includes(index)).toSorted((a, b) => a - b);
   props.onChange({ hiddenWeekdays });
 }
 </script>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useField } from "vee-validate";
+import { computed } from "vue";
 
 import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
@@ -9,9 +10,12 @@ import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 const { name } = defineProps<{ name: string }>();
 const { value: weekdays } = useField<number[]>(`${name}.weekdays`);
 
-const weekdayOptions = useService(Calendar)
-  .weekdaysShort()
-  .map((weekday) => ({ value: weekday.index, label: weekday.label }));
+const calendar = useService(Calendar);
+// A computed rather than a setup-time constant: weekdaysShort() is only reactive to the week grid
+// while it is read during render.
+const weekdayOptions = computed(() =>
+  calendar.weekdaysShort().map((weekday) => ({ value: weekday.index, label: weekday.label })),
+);
 
 function setWeekdays(selected: number[]): void {
   weekdays.value = selected.toSorted((a, b) => a - b);
