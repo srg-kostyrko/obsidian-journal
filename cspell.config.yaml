@@ -13,6 +13,7 @@ words:
   - inlang
   - Initializable
   - invertibility
+  - jrnl
   - Keymap
   - labelledby
   - lezer
