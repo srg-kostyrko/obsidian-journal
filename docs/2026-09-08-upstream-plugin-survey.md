@@ -150,6 +150,67 @@ and the same for `community-plugin-stats.json`, then join on plugin id. Both are
 about 2MB, so the raw media type is required — the default contents response caps
 at 1MB.
 
+## Unlisted plugins (BRAT and GitHub-only)
+
+The registry sweep above sees only plugins that passed review and are listed.
+Plugins distributed through BRAT, or never submitted, are invisible to it — and
+that is where forks and experiments live.
+
+**Method.** Take the `repo` field of all 7,422 registry entries as an exclusion
+set, then run GitHub repository search (`sort=stars`, 100 per query) for
+`obsidian calendar`, `obsidian journal`, `obsidian daily notes`,
+`obsidian periodic notes`, `obsidian diary`, `obsidian habit tracker`,
+`topic:obsidian-plugin calendar` and `topic:obsidian-plugin journal`; drop
+anything already in the registry; keep what matches the domain vocabulary. 374
+unlisted repositories remained.
+
+**What this still misses.** Repository search reads names, descriptions and
+topics only — not READMEs — and the vocabulary is English, so a plugin described
+in Chinese or Japanese does not surface. Each query returns its top 100 by stars,
+so long tails are unseen. The filter does not verify that a result is a plugin at
+all, and many are vault templates or AI toys; the entries below were spot-checked
+for a `manifest.json`.
+
+### Active and relevant
+
+| Repo                                              | Stars | Last push  | Note                                                                                                                                                  |
+| ------------------------------------------------- | ----: | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Lam-L/ObJournal`                                 |    78 | 2026-03-08 | Calendar-organised notes with a journal-style list, month view and **On This Day** — verified plugin, `id=objournal`                                  |
+| `SawyerRensel/Planner`                            |    31 | 2026-05-20 | Unified calendar, kanban, timeline and task list                                                                                                      |
+| `spencerpauly/obsidian-habit-calendar`            |    27 | 2026-01-10 | Habit calendar                                                                                                                                        |
+| `yirsi/obsidian-habit-heatmap`                    |    27 | 2026-05-01 | Habit tracker with GitHub-style heatmaps                                                                                                              |
+| `luiisca/obsidian-periodic-notes-calendar`        |    25 | 2026-02-14 | Periodic notes daily→yearly with a calendar interface — a direct replacement for both incumbents, `id=periodic-notes-calendar`, `minAppVersion` 1.7.7 |
+| `Real1tyy/Periodix-Planner`                       |    24 | 2026-03-27 | Automatic periodic notes plus time budgets                                                                                                            |
+| `showaykerker/better-daily-notes-obsidian-plugin` |    18 | 2026-02-04 | Daily-note enhancements                                                                                                                               |
+| `AlbusGuo/obsidian-super-daily-notes`             |    14 | 2026-08-14 | Daily notes with schedule, events, habits, statistics, floating timer                                                                                 |
+
+### Archived or stale, but still informative
+
+| Repo                                       | Stars | Last push            | Note                                                                                 |
+| ------------------------------------------ | ----: | -------------------- | ------------------------------------------------------------------------------------ |
+| `702573N/Obsidian-Tasks-Calendar`          |   949 | 2023-02-12           | Dataview-driven task calendar — more stars than most listed plugins, never submitted |
+| `702573N/Obsidian-Tasks-Timeline`          |   519 | 2023-02-27           | Its timeline counterpart                                                             |
+| `mulfok/periodic-note-templates`           |   395 | 2023-01-24           | A template pack, not a plugin — signals appetite for ready-made periodic templates   |
+| `Ordeeper/obsidian-journaling-plugin`      |    72 | 2024-12-24, archived | "View daily notes in a journal-like format, similar to Logseq"                       |
+| `TfTHacker/journal-craft-obsidian`         |    60 | 2025-09-28           | JournalCraft                                                                         |
+| `frankolson/obsidian-tomorrows-daily-note` |    36 | 2025-03-11           | Creates tomorrow's note for pre-emptive planning                                     |
+
+Also worth noting `quanru/obsidian-example-lifeos` (1,140 stars), a _vault_
+rather than a plugin, combining P.A.R.A. with Periodic Notes — the most-starred
+result in the whole sweep, and a good picture of how people assemble this
+manually.
+
+### Two things this corroborates
+
+- **"On this day" now has three independent implementations** — Journal Review
+  (21,911 downloads), ObJournal, and the Day One feature both imitate. #355 is
+  the best-validated idea found anywhere in this survey.
+- **Reading several periodic notes at once** keeps reappearing: Daily Notes
+  Editor (42,469), Daily Note Outline (24,776), Daily Notes Viewer (18,251) and
+  the archived Logseq-style journaling plugin above. Roughly 85,000 downloads and
+  four implementations for a surface this plugin does not have and no issue
+  covers.
+
 ## What the survey produced
 
 Opened: #351 (day-start offset), #352 (CLI handlers), #354 (Periodic Notes
