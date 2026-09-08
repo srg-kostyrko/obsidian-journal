@@ -31,7 +31,9 @@ test-vault/.obsidian/workspace-mobile.json
 test-vault/**/*.md
 
 # e2e (WebdriverIO + Obsidian)
-.obsidian-cache/
+# No trailing slash: in a git worktree the cache is usually a symlink to the main
+# checkout's copy, and a directory-only pattern leaves that symlink untracked.
+.obsidian-cache
 e2e/.reports/
 
 # Exclude sourcemaps

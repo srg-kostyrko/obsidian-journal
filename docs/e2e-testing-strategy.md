@@ -74,6 +74,23 @@ Downloaded Obsidian versions are cached in `cacheDir` (e.g. `.obsidian-cache`).
 Cache it via `actions/cache` keyed on the version set, or every run re-downloads
 Obsidian.
 
+That cache competes for a budget. GitHub allows a repository 10 GB and evicts
+least-recently-used entries once it is full, and each e2e leg holds ~400 MB of
+Obsidian per version pair — so a dead entry is not free, it costs some _other_
+run its binaries. Two things keep it in bounds, because a cache is scoped to the
+ref that created it and `refs/pull/N/merge` outlives the head branch that
+`delete_branch_on_merge` removes: `cache-cleanup.yml` deletes a pull request's
+caches when it closes, and `cache-sweep.yml` runs
+`scripts/prune-actions-caches.mjs` nightly for whatever that missed — closed-PR
+entries, and anything unread for a fortnight, which is how a lockfile hash no
+branch resolves to any more finally goes. Run it by hand with `--dry-run` (or
+dispatch the workflow, which defaults to the dry run) to see what it would take.
+
+Changing the **key**, not the contents, is what actually orphans an entry: a run
+whose key already exists restores it and saves nothing, so it leaves no copy
+behind. The version unpin of 2026-09-08 moved every key from `1.13.7/*` to
+`latest/*` and left 2.4 GB stranded that way.
+
 ### WebdriverIO setup
 
 - **Testrunner mode** (`wdio.conf.ts` + `wdio run`), not standalone/programmatic —
