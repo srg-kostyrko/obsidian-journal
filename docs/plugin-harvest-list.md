@@ -74,7 +74,7 @@ most cases, no issue either.
 | Daily Notes Viewer                    |        18,251 | Several recent daily notes on one page                                                                                                                         | not examined      |
 | `Ordeeper/obsidian-journaling-plugin` | 72★, archived | Same idea, Logseq-style. Archived, so read the code rather than installing                                                                                     | not examined      |
 | Heatmap Calendar                      |       174,912 | A year-scale density view. Our decorations are cell-scale only — there is no way to see a year of activity at once                                             | idea → #366, #367 |
-| Habit Tracker 21                      |        33,367 | Streaks and habit grids. Calendar #352 asked for the "unbreakable chain"                                                                                       | not examined      |
+| Habit Tracker 21                      |        33,367 | Streaks and habit grids. Calendar #352 asked for the "unbreakable chain"                                                                                       | idea → #368       |
 | `yirsi/obsidian-habit-heatmap`        |           27★ | Habit tracking rendered as a GitHub heatmap                                                                                                                    | not examined      |
 | Yearly Glance                         |        12,231 | A year of annual events at a glance                                                                                                                            | not examined      |
 
