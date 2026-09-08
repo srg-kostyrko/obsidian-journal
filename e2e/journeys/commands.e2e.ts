@@ -1,5 +1,6 @@
 import { $, browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { openPalette, paletteLists, promptChoose, waitForPrompt } from "../support/commands.js";
 import { editorValue } from "../support/editor.js";
 import {
@@ -38,6 +39,23 @@ const NAV_PREV = "day/2030-03-10.md";
 const NAV_MID = "day/2030-03-11.md";
 const NAV_NEXT = "day/2030-03-12.md";
 
+// Zoom walks the journals of the shelf the active note's journal sits on. `monthly`, `quarterly`
+// and `yearly` share the "extra" shelf, so a monthly note zooms out to the quarter and a quarterly
+// note zooms in to the *first* month of its range — its own anchor, resolved at month granularity.
+const ZOOM_MONTH = "month/2030-03.md";
+const ZOOM_FIRST_MONTH = "month/2030-01.md";
+const ZOOM_QUARTER = "quarter/2030-Q1.md";
+
+// Core Obsidian ships its own "Zoom in"/"Zoom out" (UI scaling) and ranks them above ours, so
+// filtering by the bare name is not enough — the plugin prefix is what picks our row out.
+const PLUGIN = "Journals";
+const ZOOM_OUT = m.command_zoom_out();
+const ZOOM_IN = m.command_zoom_in();
+
+function journalNote(journal: string, anchor: string): string {
+  return `---\njournal: ${journal}\njournal-date: ${anchor}\n---\n`;
+}
+
 function dailyNote(anchor: string): string {
   return `---\njournal: daily\njournal-date: ${anchor}\n---\n`;
 }
@@ -56,6 +74,12 @@ describe("commands", () => {
     await waitForJournalFrontmatter(NAV_PREV, { journal: "daily", date: "2030-03-10" });
     await waitForJournalFrontmatter(NAV_MID, { journal: "daily", date: "2030-03-11" });
     await waitForJournalFrontmatter(NAV_NEXT, { journal: "daily", date: "2030-03-12" });
+    await seedNote(ZOOM_MONTH, journalNote("monthly", "2030-03-01"));
+    await seedNote(ZOOM_FIRST_MONTH, journalNote("monthly", "2030-01-01"));
+    await seedNote(ZOOM_QUARTER, journalNote("quarterly", "2030-01-01"));
+    await waitForJournalFrontmatter(ZOOM_MONTH, { journal: "monthly", date: "2030-03-01" });
+    await waitForJournalFrontmatter(ZOOM_FIRST_MONTH, { journal: "monthly", date: "2030-01-01" });
+    await waitForJournalFrontmatter(ZOOM_QUARTER, { journal: "quarterly", date: "2030-01-01" });
   });
 
   describe("insert date link", () => {
@@ -158,6 +182,36 @@ describe("commands", () => {
       await openNote("plain-note.md");
       expect(await paletteLists(OPEN_NEXT)).toBe(false);
       expect(await paletteLists(OPEN_PREV)).toBe(false);
+    });
+  });
+
+  describe("zoom", () => {
+    it("opens the note of the next longer period on the same shelf", async () => {
+      await openNote(ZOOM_MONTH);
+      await openPalette();
+      await promptChoose(ZOOM_OUT, PLUGIN);
+      await waitForActiveNote(ZOOM_QUARTER);
+    });
+
+    it("opens the first shorter-period note inside the active period", async () => {
+      await openNote(ZOOM_QUARTER);
+      await openPalette();
+      await promptChoose(ZOOM_IN, PLUGIN);
+      await waitForActiveNote(ZOOM_FIRST_MONTH);
+    });
+
+    it("hides the zoom commands on a note that belongs to no journal", async () => {
+      await openNote("plain-note.md");
+      expect(await paletteLists(ZOOM_OUT, PLUGIN)).toBe(false);
+      expect(await paletteLists(ZOOM_IN, PLUGIN)).toBe(false);
+    });
+
+    it("hides zooming in on the shortest journal of the shelf", async () => {
+      // "extra" holds monthly, quarterly and yearly, so nothing on it writes a shorter period
+      // than a month — a configuration fact, which is what check() gates on.
+      await openNote(ZOOM_MONTH);
+      expect(await paletteLists(ZOOM_IN, PLUGIN)).toBe(false);
+      expect(await paletteLists(ZOOM_OUT, PLUGIN)).toBe(true);
     });
   });
 });

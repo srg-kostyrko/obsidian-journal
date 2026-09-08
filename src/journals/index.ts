@@ -1,3 +1,4 @@
+export { nominalSpanDays } from "./journal-span";
 export { CycleService } from "./cycle";
 export type { JournalCycle } from "./cycle";
 

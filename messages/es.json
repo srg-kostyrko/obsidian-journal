@@ -395,6 +395,10 @@
   "command_open_no_next": "No hay ninguna nota después de esta.",
   "command_open_no_previous": "No hay ninguna nota anterior a esta.",
   "command_open_needs_active_note": "Abre primero una nota de diario.",
+  "command_zoom_out": "Alejar",
+  "command_zoom_in": "Acercar",
+  "command_zoom_no_longer": "Aquí ningún diario abarca un período más largo.",
+  "command_zoom_no_shorter": "Aquí ningún diario abarca un período más corto.",
   "command_open_unavailable": "No hay ninguna nota que abrir.",
   "command_type_label": [
     {

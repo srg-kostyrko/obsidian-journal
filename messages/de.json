@@ -395,6 +395,10 @@
   "command_open_no_next": "Nach dieser Notiz gibt es keine weitere.",
   "command_open_no_previous": "Vor dieser Notiz gibt es keine weitere.",
   "command_open_needs_active_note": "Öffne zuerst eine Journalnotiz.",
+  "command_zoom_out": "Herauszoomen",
+  "command_zoom_in": "Hineinzoomen",
+  "command_zoom_no_longer": "Kein Journal deckt hier einen längeren Zeitraum ab.",
+  "command_zoom_no_shorter": "Kein Journal deckt hier einen kürzeren Zeitraum ab.",
   "command_open_unavailable": "Es gibt keine Notiz zum Öffnen.",
   "command_type_label": [
     {

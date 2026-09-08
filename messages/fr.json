@@ -395,6 +395,10 @@
   "command_open_no_next": "Il n’y a pas de note suivante après celle-ci.",
   "command_open_no_previous": "Il n’y a pas de note précédente avant celle-ci.",
   "command_open_needs_active_note": "Ouvrez d’abord une note de journal.",
+  "command_zoom_out": "Dézoomer",
+  "command_zoom_in": "Zoomer",
+  "command_zoom_no_longer": "Aucun journal ici ne couvre une période plus longue.",
+  "command_zoom_no_shorter": "Aucun journal ici ne couvre une période plus courte.",
   "command_open_unavailable": "Il n’y a aucune note à ouvrir.",
   "command_type_label": [
     {

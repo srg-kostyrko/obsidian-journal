@@ -384,6 +384,10 @@
   "command_open_no_next": "此笔记之后没有下一条笔记。",
   "command_open_no_previous": "此笔记之前没有上一条笔记。",
   "command_open_needs_active_note": "请先打开一个日记笔记。",
+  "command_zoom_out": "缩小",
+  "command_zoom_in": "放大",
+  "command_zoom_no_longer": "此处没有涵盖更长期间的日记。",
+  "command_zoom_no_shorter": "此处没有涵盖更短期间的日记。",
   "command_open_unavailable": "没有可打开的笔记。",
   "command_type_label": [
     {

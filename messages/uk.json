@@ -384,6 +384,10 @@
   "command_open_no_next": "Після цієї нотатки наступної немає.",
   "command_open_no_previous": "Перед цією нотаткою немає попередньої.",
   "command_open_needs_active_note": "Спочатку відкрийте нотатку журналу.",
+  "command_zoom_out": "Віддалити",
+  "command_zoom_in": "Наблизити",
+  "command_zoom_no_longer": "Тут немає журналу з довшим періодом.",
+  "command_zoom_no_shorter": "Тут немає журналу з коротшим періодом.",
   "command_open_unavailable": "Немає нотатки для відкриття.",
   "command_type_label": [
     {

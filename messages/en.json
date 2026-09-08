@@ -332,6 +332,10 @@
   "command_open_no_next": "There is no next note after this one.",
   "command_open_no_previous": "There is no previous note before this one.",
   "command_open_needs_active_note": "Open a journal note first.",
+  "command_zoom_out": "Zoom out",
+  "command_zoom_in": "Zoom in",
+  "command_zoom_no_longer": "No journal here covers a longer period.",
+  "command_zoom_no_shorter": "No journal here covers a shorter period.",
   "command_open_unavailable": "There is no note to open.",
   "command_type_label": [
     {

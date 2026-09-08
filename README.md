@@ -18,6 +18,7 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 - **Timeline View**: Navigate through time periods with customizable code blocks
 - **Note Decorations**: Visually highlight notes based on contents, dates, or status, vault-wide, per shelf, or per journal
 - **Navigation Blocks**: Quick links to related journal entries
+- **Zoom Navigation**: Step from the open note to the journal one granularity longer or shorter — day to week to month, and back
 - **Date Picker**: Drill down across day, week, month, quarter, year, and decade
 
 ### Organization
@@ -326,7 +327,7 @@ They **layer**: for each property a cell can only have once — background, text
 
 ### Custom Commands
 
-The plugin ships a set of commands for opening the current, next, and previous note of each period type. You can create more:
+The plugin ships a set of commands for opening the current, next, and previous note of each period type, plus **Zoom out** and **Zoom in**, which step to the journal one period length longer or shorter than the note you have open. Zooming stays on the shelf the open note's journal belongs to, or spans every journal when it is on no shelf; a custom-interval journal takes its place by how long its interval runs, and a granularity no journal in scope writes at is passed over. The note is created if it does not exist yet. You can create more commands of your own:
 
 - **Command types**:
 
