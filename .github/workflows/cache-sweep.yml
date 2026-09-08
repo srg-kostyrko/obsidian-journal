@@ -22,12 +22,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24.x"
-
-      # The script has no dependencies, so there is nothing to install — and nothing for this
-      # job to cache, which is the point of it.
+      # No setup-node: the script imports nothing, so it needs no install step and no pinned
+      # toolchain — the runner image's own Node is enough for `fetch` and top-level await.
+      # That also keeps one fewer third-party action in a job holding `actions: write`.
       - name: Prune dead Actions caches
         # `inputs.debug-only` is empty on a schedule, so the cron run deletes for real; a manual
         # dispatch defaults to the dry run. Safe against the `A && '' || B` trap documented in
