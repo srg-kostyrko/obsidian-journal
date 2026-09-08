@@ -8,18 +8,19 @@ authoritative docs live, and the traps that none of them cover.
 Each subject below has exactly one owner. Read the owner — this file does not
 restate it.
 
-| Document                                                               | Owns                                                                                             |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [`CONTEXT.md`](CONTEXT.md)                                             | domain vocabulary — periods, journals, shelves, decorations                                      |
-| [`docs/architecture.md`](docs/architecture.md)                         | code layout, DI, `Result`/`Option`, dates and union dispatch, schemas, i18n, test file locations |
-| [`docs/unit-testing-strategy.md`](docs/unit-testing-strategy.md)       | the unit and component suite — tiers, `testContainer`, fixtures, assertions, lint rules          |
-| [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)         | the e2e layer — runner, fixtures, selectors, execution model                                     |
-| [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces    |
-| [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                     |
-| [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md) | the manual verification pass                                                                     |
-| [`docs/releasing.md`](docs/releasing.md)                               | how a version reaches the community store                                                        |
-| [`docs/plugin-api.md`](docs/plugin-api.md)                             | the plugin-facing API — its surface, stability policy, and the npm package                       |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                   | setup, quality gates, commit and PR conventions                                                  |
+| Document                                                                                 | Owns                                                                                             |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| [`CONTEXT.md`](CONTEXT.md)                                                               | domain vocabulary — periods, journals, shelves, decorations                                      |
+| [`docs/architecture.md`](docs/architecture.md)                                           | code layout, DI, `Result`/`Option`, dates and union dispatch, schemas, i18n, test file locations |
+| [`docs/unit-testing-strategy.md`](docs/unit-testing-strategy.md)                         | the unit and component suite — tiers, `testContainer`, fixtures, assertions, lint rules          |
+| [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)                           | the e2e layer — runner, fixtures, selectors, execution model                                     |
+| [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                                         | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces    |
+| [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md)                   | user-facing copy style — sentence case, error grammar, en-US                                     |
+| [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md)                   | the manual verification pass                                                                     |
+| [`docs/2026-09-08-upstream-plugin-survey.md`](docs/2026-09-08-upstream-plugin-survey.md) | the Periodic Notes and Calendar issue survey — alternatives landscape, and what was ruled out    |
+| [`docs/releasing.md`](docs/releasing.md)                                                 | how a version reaches the community store                                                        |
+| [`docs/plugin-api.md`](docs/plugin-api.md)                                               | the plugin-facing API — its surface, stability policy, and the npm package                       |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                     | setup, quality gates, commit and PR conventions                                                  |
 
 **If a rule belongs to one of those documents, it goes there, not here.** This
 file carries only what has no other home.
