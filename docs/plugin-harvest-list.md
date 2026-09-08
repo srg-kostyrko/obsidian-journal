@@ -111,7 +111,7 @@ Bears on the tasks epic (#344) and its phases.
 
 | Plugin         | Installs | Harvest                                                                                                                                                                                                                                   | Status       |
 | -------------- | -------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| Calendar Bases |  111,366 | A calendar layout over Obsidian's Bases. #344 concluded Bases cannot help _tasks_ because checkbox items are not cached as properties — that does not extend to notes-with-dates, which is what these render. Needs a deliberate position | not examined |
+| Calendar Bases |  111,366 | A calendar layout over Obsidian's Bases. #344 concluded Bases cannot help _tasks_ because checkbox items are not cached as properties — that does not extend to notes-with-dates, which is what these render. Needs a deliberate position | idea → #369  |
 | Notion Bases   |   20,943 | Table, kanban, gallery, calendar and timeline views over a folder                                                                                                                                                                         | not examined |
 
 ## Capture and input
