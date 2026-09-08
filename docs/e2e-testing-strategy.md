@@ -49,16 +49,6 @@ Obsidian-version compatibility is pinned in CI, not left to chance:
 `manifest.json`'s `minAppVersion` — see [Install and version
 modes](#install-and-version-modes) below.
 
-> **Temporarily pinned.** Everywhere this document says `latest` for the _app_
-> axis, the workflow and `wdio.conf.mts` currently say `1.13.7`. Obsidian 1.13.8
-> is an Android-only release — its `obsidian-versions.json` entry carries
-> `downloads: ["apk"]` and no installer bounds — so there is no asar to run and
-> setup fails with `No asar found for Obsidian version 1.13.8`. `latest` skips
-> the 1.14.0 beta but not an Android-only build, so it selects a version with no
-> desktop artifact at all. Restore `latest` once Obsidian ships a desktop
-> 1.13.9+, or once `wdio-obsidian-service` filters asar-less versions out of
-> `latest`.
-
 #### Install and version modes
 
 Obsidian has **two independent version axes**, and we configure both per capability
@@ -295,9 +285,25 @@ Three deliberate clocks:
 | Local on-demand     | `npm run test:e2e`                                                  | A dev runs it when touching the integration seam. Never automatic. |
 | CI                  | `pull_request` + `push` to `main` (full suite) + nightly `schedule` | Separate job, **not** wired into `checks.yml`.                     |
 
-The whole stable suite runs on **every PR and every merge to `main`** — it finishes
-in well under a minute, so there is no longer a reason to split a thin smoke gate
-from a fuller nightly pass. Both run `latest/latest` on Linux for a fast signal.
+The whole stable suite runs on **every PR and every merge to `main`**, on all three
+hosts, so there is no longer a reason to split a thin smoke gate from a fuller
+nightly pass.
+
+#### Sharding
+
+The PR legs are **split in two by `--shard`**, so each runs half the spec files.
+What makes that worth doing is where the time actually goes: measured on the run of
+2026-09-08, test bodies were 38% of the Linux suite step and 25% of the Windows one.
+The rest is Obsidian process lifecycle — 71 sessions, one per spec file, plus the
+~100 `reloadObsidian` boots the specs ask for — which is work that splits across
+runners almost linearly. Windows sets the gate at roughly twice Linux's wall clock
+for identical work, so it is the leg the split is aimed at.
+
+`--shard current/total` slices the spec list **after** suite filtering, contiguously
+and by file count rather than by duration, so the halves are only as balanced as the
+file order happens to make them (387s/440s on Windows for the run above). Nightly
+stays unsharded: it already fans out over the version axis, and its wall clock is
+nobody's feedback loop.
 
 The nightly run is specifically the defense against **Obsidian** shipping a
 breaking change under us — it can go red with zero code change. It is also the only

@@ -30,14 +30,17 @@ jobs:
         # which a manual dispatch can ask for too — a floor-only failure is otherwise
         # unverifiable until the next 07:00 UTC.
         os: ["ubuntu-latest", "windows-latest", "macos-latest"]
-        # The app version is pinned to 1.13.7 rather than `latest` because 1.13.8 is an
-        # Android-only release: its `obsidian-versions.json` entry carries `downloads: ["apk"]`
-        # and no installer bounds, so there is no asar to run and setup dies with
-        # "No asar found for Obsidian version 1.13.8". `latest` skips the 1.14.0 beta but not
-        # an Android-only build, so it lands on a version with no desktop artifact at all.
-        # Unpin — back to `latest` — once Obsidian ships a desktop 1.13.9+ (which moves
-        # `latest` past the Android-only entry) or wdio-obsidian-service filters these out.
-        obsidian: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["earliest/earliest", "1.13.7/earliest", "1.13.7/1.13.7"]') || fromJSON('["1.13.7/1.13.7"]') }}
+        obsidian: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["earliest/earliest", "latest/earliest", "latest/latest"]') || fromJSON('["latest/latest"]') }}
+        # Only the PR + merge path is sharded, because only there does wall clock buy anything:
+        # the suite is dominated by Obsidian process lifecycle rather than by assertions (test
+        # bodies are 38% of the Linux run and 25% of the Windows one — 71 sessions plus ~100
+        # reloadObsidian boots), so it splits across runners almost linearly. `--shard c/t` slices
+        # the spec list *after* suite filtering, contiguously and by file count, not by duration;
+        # measured against the run of 2026-09-08 the two halves come out 387s/440s on Windows, the
+        # leg that sets the gate. Nightly stays on one shard: it already fans out over the version
+        # axis, its wall clock is nobody's feedback loop, and 3 versions x 3 OS x 2 shards would
+        # queue against the concurrent-job limit.
+        shard: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["1/1"]') || fromJSON('["1/2", "2/2"]') }}
 
     runs-on: ${{ matrix.os }}
     permissions:
@@ -70,24 +73,29 @@ jobs:
           path: .obsidian-cache
           key: obsidian-cache-${{ runner.os }}-${{ env.OBSIDIAN_VERSIONS }}
           restore-keys: obsidian-cache-${{ runner.os }}-
+          # Deliberately not keyed by shard: both shards want the same binaries. On a cold
+          # cache they race to save it and the loser logs "another job may be creating this
+          # cache" — noise, not failure, and cheaper than storing the same asar twice.
 
       - name: Build plugin
         run: npm run build
 
       - name: Run e2e (Linux)
         if: runner.os == 'Linux'
-        run: xvfb-run -a npx wdio run ./wdio.conf.mts ${{ env.WDIO_SUITES }}
+        run: xvfb-run -a npx wdio run ./wdio.conf.mts ${{ env.WDIO_SUITES }} --shard ${{ matrix.shard }}
 
       - name: Run e2e (Windows/macOS)
         if: runner.os != 'Linux'
-        run: npx wdio run ./wdio.conf.mts ${{ env.WDIO_SUITES }}
+        run: npx wdio run ./wdio.conf.mts ${{ env.WDIO_SUITES }} --shard ${{ matrix.shard }}
 
       - name: Publish e2e results
         if: always()
         uses: mikepenz/action-junit-report@v6
         with:
           report_paths: e2e/.reports/e2e-junit-*.xml
-          check_name: e2e results (${{ matrix.os }}, ${{ matrix.obsidian }})
+          # The shard belongs in the name: two legs of the same OS and version publish
+          # separate checks, and a shared name would leave one silently overwriting the other.
+          check_name: e2e results (${{ matrix.os }}, ${{ matrix.obsidian }}, shard ${{ matrix.shard }})
           # Tolerate a suite that crashed before emitting XML; the run step
           # already failed the job in that case.
           require_tests: false

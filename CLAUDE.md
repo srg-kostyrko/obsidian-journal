@@ -17,6 +17,7 @@ restate it.
 | [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces    |
 | [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                     |
 | [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md) | the manual verification pass                                                                     |
+| [`docs/plugin-harvest-list.md`](docs/plugin-harvest-list.md)           | the standing queue of plugins to mine for ideas, and what has already been ruled out             |
 | [`docs/releasing.md`](docs/releasing.md)                               | how a version reaches the community store                                                        |
 | [`docs/plugin-api.md`](docs/plugin-api.md)                             | the plugin-facing API — its surface, stability policy, and the npm package                       |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                   | setup, quality gates, commit and PR conventions                                                  |

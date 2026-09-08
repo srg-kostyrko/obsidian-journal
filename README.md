@@ -401,7 +401,7 @@ Findings are computed against your journals as currently configured, so if you s
 ## Compatibility with other plugins
 
 - `Daily notes` core plugin - this plugin intends to be a replacement for it. Notes created through Daily notes will not be connected to any journal so it is advised to disable this plugin.
-- `Periodic Notes` community plugin - this plugin was initially inspired by Periodic notes that seem to abandoned and aims to be a replacement for it.
+- `Periodic Notes` community plugin - this plugin was initially inspired by Periodic Notes, which appears to be abandoned, and aims to be a replacement for it.
 - `Calendar` community plugin - this plugin builds its own calendar views out of blocks and aims to be a replacement for it. There is no integration between the two.
 - `Templater` community plugin - starting with 1.3.0 plugin supports Templater templates in its settings. Journal plugin variables are replaced first and can be used inside templater commands.
 
@@ -415,6 +415,98 @@ The best setup to avoid such problems would be:
 - OR `Trigger Templater on new file creation` is enabled, `Enable Folder Templates` is enabled, **NO** Folder template is configured
 
 This ensures that only journal plugin is processing note template thus avoiding conflicts with templater plugin (journal plugin will use templater itself under the hood to process templater commands).
+
+## Coming from Periodic Notes
+
+Periodic Notes has been unmaintained for a long time, and several things people
+still ask for there are already answered here — sometimes in a different enough
+shape to be easy to miss. These four come up most often.
+
+### Any cadence, not a fixed ladder
+
+Periodic Notes offers day, week, month, quarter and year, with nothing in
+between. Here a journal has an interval instead — a unit (day, week, month,
+quarter or year) and a duration — so a two-month planning cycle, a three-week
+sprint or a semester is an ordinary journal, with its own numbering, navigation
+block, decorations, and place in **Zoom out** and **Zoom in**.
+
+A custom interval counts from the journal's start date rather than from the
+calendar year, so a two-month journal starting in January runs January–February,
+March–April and so on, while one started a month later has every interval
+shifted with it. That start date is chosen when the journal is created and
+cannot be changed afterwards.
+
+### A different template on particular days
+
+Templates are tried in order and the first one that **exists and has content**
+wins, and each template path is rendered with the same variables a note name
+uses. Together those give a per-weekday template with no extra configuration —
+list two templates on the journal:
+
+1. `Templates/Daily-{{date:dddd}}.md`
+2. `Templates/Daily.md`
+
+On a Friday the first entry resolves to `Templates/Daily-Friday.md`. If that note
+exists it is used; if it does not, the entry is skipped and the plain
+`Templates/Daily.md` is used instead. Only the days you actually create a file
+for behave differently.
+
+The same works for anything a variable can express: `{{week_of_month}}` for a
+first-week-of-the-month template, `{{date:MMMM}}` per month, `{{index}}` per
+sprint, or one of the journal's own [questions](#questions).
+
+This **selects** a template rather than combining several — `Daily-Friday.md` is
+used _instead of_ `Daily.md`, not appended to it. To share a common body between
+them, embed it, or include it with Templater's `tp.file.include`.
+
+### A monthly note that lists its own weeks
+
+Date variables can be shifted and snapped to a boundary, so a template can name
+the weeks inside its own period:
+
+```
+## Week {{date+1w:w}}: {{date+1w<startOf=week>:MMM D}} - {{date+1w<endOf=week>:MMM D}}
+## Week {{date+2w:w}}: {{date+2w<startOf=week>:MMM D}} - {{date+2w<endOf=week>:MMM D}}
+```
+
+Shifts always apply before boundaries, so each line reads "the week N weeks after
+this note's date, from its start to its end". The ranges run start of week to end
+of week; a working-week range such as Monday to Friday cannot be written this way
+and needs Templater.
+
+Which month a week straddling a month boundary belongs to is your choice rather
+than a fixed rule — see `{{week_of_month}}` under
+[Supported variables](#supported-variables).
+
+### Archiving old notes
+
+There is no archive folder setting because none is needed. A note belongs to its
+journal through its frontmatter, not its path, so old notes can be moved
+anywhere — one folder per year, a single archive folder, or somewhere else
+entirely — and the calendar, decorations and navigation keep working. A
+journal's **Folder** setting only decides where new notes are created.
+
+## Coming from Calendar
+
+The Calendar plugin draws one month grid and marks days with dots. Everything it
+does has an equivalent here, usually a more configurable one.
+
+| In Calendar                                                      | In Journals                                                                                                                                                     |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dots sized by word count                                         | A [decoration](#decoration-system) with a note-size condition — the "words per dot" ladder is written out as a recipe there                                     |
+| A hollow dot for incomplete tasks                                | A decoration with the _has open tasks_ or _all tasks completed_ condition                                                                                       |
+| Colouring days by tag or content                                 | Decoration conditions on title, tag, frontmatter property, note size or weekday, with colours, borders, shapes, corners and icons                               |
+| One calendar per vault                                           | Any number of [journals](#journal-configuration), grouped on [shelves](#using-shelves), with views scoped to a shelf                                            |
+| A fixed month grid padded to six weeks                           | A month grid of exactly the weeks the month spans, plus week grids, notes-by-date lists and toolbars composed into a [view](#view--block-settings)              |
+| Week numbers on the left                                         | Week numbers before the weekdays, after them, or hidden, globally or per block                                                                                  |
+| Clicking a day or week number                                    | Clicking any period — day, week, month, quarter or year — from its cell or heading                                                                              |
+| `Reveal active note` command                                     | The _Follow active note_ view setting, which moves the view as you open notes                                                                                   |
+| Start of week from the locale, or a locale override to change it | [Week presets](#calendar-settings) that set the first day of the week and how the first week of the year is determined, independently of your Obsidian language |
+| Notes found by file name in one folder                           | Notes identified by their frontmatter, so they keep working when moved or renamed                                                                               |
+
+Two things Calendar has no equivalent for: a note's date can come from a
+frontmatter property rather than its file name, and a day can hold any number of
+extra notes through [notelets](#notelets).
 
 ## Supported variables
 

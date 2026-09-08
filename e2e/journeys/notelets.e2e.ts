@@ -11,6 +11,7 @@ import {
   todayAnchor,
   waitForActiveNote,
   waitForActiveNoteIn,
+  waitForFrontmatter,
 } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -75,11 +76,17 @@ describe("notelets", () => {
 
       const path = await waitForActiveNoteIn("day/meetings");
       expect(path).toBe(`day/meetings/${today} Meeting 1.md`);
+      // The note becomes the active leaf before metadataCache has parsed it, so the counter has
+      // to be waited for; a bare read here returns undefined on whichever run loses that race.
+      await waitForFrontmatter(
+        path,
+        (frontmatter) => frontmatter["journal-notelet-index"] === 1,
+        "the first Meeting notelet never reached metadataCache carrying counter 1",
+      );
       const frontmatter = await frontmatterOf(path);
       expect(frontmatter?.journal).toBe("daily");
       expect(frontmatter?.["journal-date"]).toBe(today);
       expect(frontmatter?.["journal-notelet"]).toBe("Meeting");
-      expect(frontmatter?.["journal-notelet-index"]).toBe(1);
 
       // The whole point of a notelet: it sits beside the period note rather than standing in for
       // it. A create path that fell back to NoteCreationService would leave this note behind.
@@ -90,8 +97,11 @@ describe("notelets", () => {
       await runCommand("journals:create-meeting");
 
       await waitForActiveNote(`day/meetings/${today} Meeting 2.md`);
-      const frontmatter = await frontmatterOf(`day/meetings/${today} Meeting 2.md`);
-      expect(frontmatter?.["journal-notelet-index"]).toBe(2);
+      await waitForFrontmatter(
+        `day/meetings/${today} Meeting 2.md`,
+        (frontmatter) => frontmatter["journal-notelet-index"] === 2,
+        "the second Meeting notelet never reached metadataCache carrying counter 2",
+      );
       // The first one is still there under its own number — the second did not overwrite it.
       expect(await noteExists(`day/meetings/${today} Meeting 1.md`)).toBe(true);
     });
@@ -116,8 +126,12 @@ describe("notelets", () => {
         "the second Retro notelet never became the active note",
       );
       expect(await noteExists(`day/retros/${today} Retro.md`)).toBe(true);
+      await waitForFrontmatter(
+        second,
+        (frontmatter) => frontmatter["journal-notelet"] === "Retro",
+        "the suffixed Retro notelet never reached metadataCache",
+      );
       const frontmatter = await frontmatterOf(second);
-      expect(frontmatter?.["journal-notelet"]).toBe("Retro");
       expect(frontmatter?.["journal-date"]).toBe(today);
     });
   });
