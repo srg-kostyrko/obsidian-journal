@@ -980,6 +980,7 @@
   ],
   "decoration_describe_when": "quand",
   "decoration_edit": "Modifier la décoration",
+  "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Ajouter une condition",
   "decoration_modal_add_style": "Ajouter un style",
   "decoration_modal_mode_label": "Quand décorer",

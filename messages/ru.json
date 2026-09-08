@@ -986,6 +986,7 @@
   ],
   "decoration_describe_when": "когда",
   "decoration_edit": "Редактировать оформление",
+  "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Добавить условие",
   "decoration_modal_add_style": "Добавить стиль",
   "decoration_modal_mode_label": "Когда оформлять",

@@ -835,6 +835,7 @@
   ],
   "decoration_describe_when": "条件:",
   "decoration_edit": "装飾を編集",
+  "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "条件を追加",
   "decoration_modal_add_style": "スタイルを追加",
   "decoration_modal_mode_label": "装飾する条件",

@@ -916,6 +916,7 @@
   ],
   "decoration_describe_when": "when",
   "decoration_edit": "Edit decoration",
+  "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Add condition",
   "decoration_modal_add_style": "Add style",
   "decoration_modal_mode_label": "When to decorate",

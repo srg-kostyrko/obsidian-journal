@@ -839,6 +839,7 @@
   ],
   "decoration_describe_when": "коли",
   "decoration_edit": "Редагувати оформлення",
+  "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "Додати умову",
   "decoration_modal_add_style": "Додати стиль",
   "decoration_modal_mode_label": "Коли оформлювати",

@@ -980,6 +980,7 @@
   ],
   "decoration_describe_when": "조건:",
   "decoration_edit": "장식 편집",
+  "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "조건 추가",
   "decoration_modal_add_style": "스타일 추가",
   "decoration_modal_mode_label": "장식 조건",

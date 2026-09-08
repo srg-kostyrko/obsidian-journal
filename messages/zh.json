@@ -835,6 +835,7 @@
   ],
   "decoration_describe_when": "当",
   "decoration_edit": "编辑装饰",
+  "decoration_mark_overflow_badge": "+{count}",
   "decoration_modal_add_condition": "添加条件",
   "decoration_modal_add_style": "添加样式",
   "decoration_modal_mode_label": "何时进行装饰",

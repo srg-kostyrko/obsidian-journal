@@ -1,17 +1,41 @@
 <script setup lang="ts">
+import { computed, ref } from "vue";
+
+import { m } from "@/i18n";
+
+import { capMarks } from "../cap-marks";
 import { PLACEMENTS, type CellMark, type Placement } from "../resolve-cell";
 
 import DecorationIcon from "./DecorationIcon.vue";
 import DecorationShape from "./DecorationShape.vue";
 
-defineProps<{ marks: Readonly<Record<Placement, readonly CellMark[]>>; limit: number }>();
+const props = defineProps<{ marks: Readonly<Record<Placement, readonly CellMark[]>>; limit: number }>();
+
+const capped = computed(() => capMarks(props.marks, props.limit));
+const open = ref<Placement | null>(null);
 </script>
 
 <template>
   <span class="cell-marks">
     <template v-for="place of PLACEMENTS" :key="place">
       <span v-if="marks[place].length > 0" :class="`place place-${place}`">
-        <template v-for="(d, i) of marks[place]" :key="i">
+        <span
+          v-if="capped[place].hidden.length > 0"
+          class="mark-overflow"
+          data-testid="mark-overflow"
+          aria-hidden="true"
+          @mouseenter="open = place"
+          @mouseleave="open = null"
+        >
+          {{ m.decoration_mark_overflow_badge({ count: capped[place].hidden.length }) }}
+          <span v-if="open === place" class="mark-overflow__popover" data-testid="mark-overflow-popover">
+            <template v-for="(d, i) of marks[place]" :key="i">
+              <DecorationIcon v-if="d.type === 'icon'" :decoration="d" />
+              <DecorationShape v-else :decoration="d" />
+            </template>
+          </span>
+        </span>
+        <template v-for="(d, i) of capped[place].visible" :key="i">
           <DecorationIcon v-if="d.type === 'icon'" :decoration="d" />
           <DecorationShape v-else :decoration="d" />
         </template>
@@ -81,5 +105,38 @@ defineProps<{ marks: Readonly<Record<Placement, readonly CellMark[]>>; limit: nu
   justify-content: flex-end;
   align-items: flex-end;
   padding: 0 1px 1px 0;
+}
+
+/* The mark grid is pointer-transparent so a click still reaches the cell underneath. The badge
+   is the one thing in it that must receive hover, so it opts back in. */
+.mark-overflow {
+  pointer-events: auto;
+  position: relative;
+  flex: none;
+  font-size: 0.55em;
+  line-height: 1;
+  font-weight: 600;
+  padding: 1px 2px;
+  border-radius: var(--radius-s);
+  background-color: var(--background-modifier-border);
+  color: var(--text-muted);
+  cursor: default;
+}
+.mark-overflow__popover {
+  position: absolute;
+  z-index: var(--layer-popover);
+  top: 100%;
+  right: 0;
+  margin-top: 2px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: var(--size-2-2) var(--size-2-3);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background-color: var(--background-secondary);
+  box-shadow: var(--shadow-s);
+  font-size: 2em;
+  white-space: nowrap;
 }
 </style>
