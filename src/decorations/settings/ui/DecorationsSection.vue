@@ -125,6 +125,8 @@ function remove(index: number): void {
       <template #description>{{ description }}</template>
     </UiSettingRow>
 
+    <slot name="settings" />
+
     <UiSettingRow v-if="decorations.length === 0" no-controls>
       <template #description>{{ m.decoration_section_empty() }}</template>
     </UiSettingRow>
