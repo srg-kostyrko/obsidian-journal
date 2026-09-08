@@ -1,0 +1,38 @@
+name: Cache sweep
+
+on:
+  schedule:
+    # Daily, offset from the stale-issue sweep (03:00 UTC) and the nightly e2e run (07:00 UTC).
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+    inputs:
+      debug-only:
+        description: "Dry run: log what would be deleted without deleting it"
+        type: boolean
+        default: true
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24.x"
+
+      # The script has no dependencies, so there is nothing to install — and nothing for this
+      # job to cache, which is the point of it.
+      - name: Prune dead Actions caches
+        # `inputs.debug-only` is empty on a schedule, so the cron run deletes for real; a manual
+        # dispatch defaults to the dry run. Safe against the `A && '' || B` trap documented in
+        # e2e.yml because the middle operand here is a non-empty string.
+        run: node scripts/prune-actions-caches.mjs ${{ inputs.debug-only && '--dry-run' || '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
