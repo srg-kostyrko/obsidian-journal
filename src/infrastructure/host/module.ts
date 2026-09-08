@@ -9,6 +9,7 @@ import { NoteMetadataService } from "./internal/note-metadata-service";
 import { NoteSizeService } from "./internal/note-size-service";
 import { NotesService } from "./internal/notes-service";
 import { NoticeService } from "./internal/notice-service";
+import { PlatformService } from "./internal/platform-service";
 import { PluginData } from "./internal/plugin-data";
 import { TemplaterService } from "./internal/templater-service";
 import { TemplatesService } from "./internal/templates-service";
@@ -31,6 +32,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(MetadataTypeService).useClass(MetadataTypeService);
       c.register(MarkdownRenderService).useClass(MarkdownRenderService);
       c.register(NoticeService).useClass(NoticeService);
+      c.register(PlatformService).useClass(PlatformService);
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(TemplaterService).useClass(TemplaterService);
       c.register(TemplatesService).useClass(TemplatesService);

@@ -3,6 +3,7 @@ import { computed, ref } from "vue";
 
 import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { SettingsService } from "@/settings";
 import VariableChip from "@/templates/ui/VariableChip.vue";
 import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 import { icons } from "@/ui/icons";
@@ -12,6 +13,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { noteCreationSlice } from "../../../notes/creation-slice";
 import { JournalsViewModel } from "../../../view-model";
 import DateFormatPreview from "../DateFormatPreview.vue";
 import FolderInput from "../FolderInput.vue";
@@ -27,10 +29,21 @@ import WrongWeekWarning from "../WrongWeekWarning.vue";
 const { journalName } = defineProps<{ journalName: string }>();
 
 const journalsVM = useService(JournalsViewModel);
+const noteCreation = useService(SettingsService).getSlice(noteCreationSlice);
 const config = computed(() => journalsVM.getJournal(journalName).getOrUndefined());
 useAutoCreateOnEnable(config);
 
 const expanded = ref(true);
+
+// Without this the toggle reads as on while the journal creates nothing on the excluded device,
+// with nothing on this page to say why.
+const autoCreateDeviceNote = computed(() => {
+  if (!config.value?.autoCreate) return "";
+  const { devices } = noteCreation.state;
+  if (devices === "desktop") return m.journal_edit_auto_create_desktop_only();
+  if (devices === "mobile") return m.journal_edit_auto_create_mobile_only();
+  return "";
+});
 
 const hasCycle = computed(() => config.value !== undefined && config.value.write.type !== "day");
 const isWeekly = computed(() => config.value?.write.type === "week");
@@ -168,6 +181,7 @@ function applyDateFormatRecommendation(): void {
       <template #description>
         <div>{{ m.journal_edit_auto_create_description() }}</div>
         <div v-if="config.confirmCreation">{{ m.journal_edit_auto_create_confirmation_skip_note() }}</div>
+        <div v-if="autoCreateDeviceNote">{{ autoCreateDeviceNote }}</div>
       </template>
       <UiToggle v-model="config.autoCreate" />
     </UiSettingRow>

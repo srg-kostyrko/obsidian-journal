@@ -961,6 +961,19 @@ sitting is faster than rediscovering the pattern per screen.
 - [x] **autoCreate** — + a Day journal with autoCreate on; advance system clock
       past local midnight (or reload after midnight) → tomorrow's note appears.
 - [x] autoCreate scheduling does not double-fire across the midnight boundary.
+- [ ] **Automatic note creation = Desktop only**, checked on the **mobile app** —
+      no automation reaches this: `app.emulateMobile(true)` detaches
+      `executeObsidian`, so e2e cannot drive a mobile platform at all.
+  - [ ] Startup journal set, today's note already synced down → launch → it opens,
+        and its frontmatter is byte-identical afterwards (the excluded device must
+        not even write the mutator).
+  - [ ] Startup journal set, today's note absent → launch → nothing opens and
+        nothing is created.
+  - [ ] A journal with autoCreate on → launch, and again past local midnight →
+        no note appears.
+  - [ ] The same vault on desktop → launch → the note is created as usual.
+  - [ ] The journal's edit page shows "Only on desktop" under its auto-create
+        toggle, on both devices.
 - [x] **Auto-attach** — + manually create a note matching a journal's
       folder+name pattern within its timeline → journal frontmatter auto-added.
 - [x] Auto-attach on **rename** — rename an unrelated note _into_ a matching

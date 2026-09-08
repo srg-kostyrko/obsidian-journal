@@ -14,15 +14,18 @@ import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
+import { noteCreationSlice } from "../../notes/creation-slice";
 import { JournalsRepository } from "../../repository";
 import { startupSlice } from "../slice";
 
+import type { CreationDevices } from "../../notes/creation-slice";
 import type { StartupOverride } from "../slice";
 
 const settings = useService(SettingsService);
 const journals = useService(JournalsRepository);
 const calendar = useService(Calendar);
 const slice = settings.getSlice(startupSlice);
+const noteCreation = settings.getSlice(noteCreationSlice);
 const expanded = ref(false);
 
 const options = computed(() => [...journals.find().options()]);
@@ -32,6 +35,13 @@ const journalName = computed({
   get: () => slice.state.journalName,
   set: (name: string) => {
     slice.state = { ...slice.state, journalName: name };
+  },
+});
+
+const devices = computed({
+  get: () => noteCreation.state.devices,
+  set: (value: CreationDevices) => {
+    noteCreation.state = { ...noteCreation.state, devices: value };
   },
 });
 
@@ -70,9 +80,17 @@ function weekdayOptionsFor(index: number): { value: number; label: string; disab
     </template>
     <UiSettingRow :name="m.startup_open_note_title()">
       <template #description>{{ m.startup_open_note_desc() }}</template>
-      <UiDropdown v-model="journalName">
+      <UiDropdown v-model="journalName" :aria-label="m.startup_open_note_title()">
         <option value="">{{ m.startup_dont_open_option() }}</option>
         <option v-for="option in options" :key="option.value" :value="option.value">{{ option.label }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow :name="m.note_creation_devices_title()">
+      <template #description>{{ m.note_creation_devices_desc() }}</template>
+      <UiDropdown v-model="devices" :aria-label="m.note_creation_devices_title()">
+        <option value="all">{{ m.note_creation_devices_all() }}</option>
+        <option value="desktop">{{ m.note_creation_devices_desktop() }}</option>
+        <option value="mobile">{{ m.note_creation_devices_mobile() }}</option>
       </UiDropdown>
     </UiSettingRow>
     <UiSettingRow :name="m.startup_weekday_title()" no-controls>
@@ -87,6 +105,7 @@ function weekdayOptionsFor(index: number): { value: number; label: string; disab
       />
       <UiDropdown
         :model-value="entry.journalName"
+        :aria-label="m.startup_weekday_journal_label()"
         @update:model-value="patchOverride(index, { journalName: $event ?? '' })"
       >
         <option value="">{{ m.startup_dont_open_option() }}</option>

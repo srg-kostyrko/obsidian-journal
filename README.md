@@ -62,6 +62,7 @@ The Journals plugin offers extensive configuration options to customize your jou
   - Manage related journals together
 
 - **Open on startup**: Pick one journal whose current note opens whenever you open the vault, and optionally a different journal on the days of the week you choose — days you don't pick open the journal you picked first. Views carry their own, separate _Open on startup_ toggle.
+- **Automatic note creation**: Choose which devices create notes on their own — desktop and mobile, desktop only, or mobile only. It covers the startup note above and every journal's _Auto-create today's note_; notes you open yourself are always created. On a device the rule excludes, the startup note still opens if it already exists, and nothing is written to it. Use this when a sync service is slow enough that two devices each create today's note before the other's copy arrives — it does not stop two devices of the same kind racing each other.
 - **Notes by date**: Choose the frontmatter property and date format used to determine when vault notes were created. Notes without a valid property value fall back to their file creation time.
 - **Calendar decorations**: Decorations that apply to every calendar, whatever journals are on screen. See the decoration system below.
 - **Week numbers**: Set the global default for where the week-number column appears (before weekdays, after weekdays, or hidden — the default is before); individual view blocks and the `calendar-timeline` code block can override it.
@@ -117,7 +118,7 @@ Each journal can be configured separately with these settings:
   - Folder: Where notes will be stored
   - Default date format: How dates appear when a variable doesn't give its own format
   - Confirm creating new notes: Prompt before creating a note you navigate to
-  - Auto-create today's note: Create it on plugin load and at every local midnight
+  - Auto-create today's note: Create it on plugin load and at every local midnight, on the devices _Automatic note creation_ allows
 
 - **Templates**: Select one or more template notes for new note content
 

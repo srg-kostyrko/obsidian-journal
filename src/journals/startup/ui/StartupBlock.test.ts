@@ -8,6 +8,7 @@ import { m } from "@/i18n";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { journalsCoreModule } from "../../module";
+import { noteCreationSlice } from "../../notes/creation-slice";
 import { fixedJournal } from "../../testing";
 import { journalStartupCoreModule } from "../module";
 import { startupSlice } from "../slice";
@@ -68,7 +69,7 @@ describe("StartupBlock", () => {
   it("writes the chosen journal to the slice", async () => {
     harness.render(StartupBlock);
     await expand();
-    await userEvent.selectOptions(screen.getByRole("combobox"), "weekly");
+    await userEvent.selectOptions(screen.getByLabelText(m.startup_open_note_title()), "weekly");
     expect(harness.settings.getSlice(startupSlice).state.journalName).toBe("weekly");
   });
 
@@ -97,7 +98,7 @@ describe("StartupBlock", () => {
       harness.render(StartupBlock);
       await expand();
 
-      await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "weekly");
+      await userEvent.selectOptions(screen.getByLabelText(m.startup_weekday_journal_label()), "weekly");
 
       expect(overridesOf(harness)).toEqual([{ weekdays: [SATURDAY], journalName: "weekly" }]);
     });
@@ -142,6 +143,26 @@ describe("StartupBlock", () => {
       const second = screen.getAllByRole("group")[1];
       expect(within(second).getByRole<HTMLButtonElement>("button", { name: "Sat" }).disabled).toBe(true);
       expect(within(second).getByRole<HTMLButtonElement>("button", { name: "Sun" }).disabled).toBe(false);
+    });
+  });
+
+  describe("automatic note creation", () => {
+    it("offers one choice per device rule", async () => {
+      harness.render(StartupBlock);
+      await expand();
+
+      expect(screen.getByRole("option", { name: m.note_creation_devices_all() })).toBeTruthy();
+      expect(screen.getByRole("option", { name: m.note_creation_devices_desktop() })).toBeTruthy();
+      expect(screen.getByRole("option", { name: m.note_creation_devices_mobile() })).toBeTruthy();
+    });
+
+    it("writes the chosen rule to the slice", async () => {
+      harness.render(StartupBlock);
+      await expand();
+
+      await userEvent.selectOptions(screen.getByLabelText(m.note_creation_devices_title()), "desktop");
+
+      expect(harness.settings.getSlice(noteCreationSlice).state.devices).toBe("desktop");
     });
   });
 });

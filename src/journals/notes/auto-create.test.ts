@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
-import type { VaultPath } from "@/infrastructure/host";
+import { PlatformService, type DeviceKind, type VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { JournalNotFoundError } from "../errors";
 import { JournalsIndex } from "../journals-index";
@@ -19,6 +19,9 @@ import type { Prompt } from "../prompts/config";
 // pending forever, and at local midnight there is nobody to answer it.
 const neverSettles = (): ReturnType<NoteCreationService["ensureNote"]> =>
   AsyncResult.fromPromise(new Promise<never>(() => undefined), () => new JournalNotFoundError("unreachable"));
+
+const onDevice = (device: DeviceKind): ReturnType<typeof overrideWith> =>
+  overrideWith(PlatformService, { current: () => device });
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 
@@ -296,6 +299,77 @@ describe("AutoCreateService", () => {
 
       expect(harness.host.files.has("2026-05-19.md")).toBe(true);
       expect(harness.modals.opens).toHaveLength(0);
+    });
+  });
+
+  describe("a device the automatic note creation rule excludes", () => {
+    it("creates nothing for a journal that would otherwise auto-create", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) },
+          noteCreation: { devices: "desktop" },
+        },
+        overrides: [onDevice("mobile")],
+      });
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.files.has("2026-05-19.md")).toBe(false);
+    });
+
+    it("creates nothing at the next local midnight either", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) },
+          noteCreation: { devices: "desktop" },
+        },
+        overrides: [onDevice("mobile")],
+      });
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      await vi.advanceTimersByTimeAsync(15 * 60 * 60 * 1000);
+
+      expect(harness.host.files.has("2026-05-20.md")).toBe(false);
+    });
+
+    it("still creates on the device the rule names", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) },
+          noteCreation: { devices: "desktop" },
+        },
+        overrides: [onDevice("desktop")],
+      });
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).initialize();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.files.has("2026-05-19.md")).toBe(true);
+    });
+
+    it("still creates when the user turns the journal's auto-create on by hand", async () => {
+      // An explicit toggle is not an unattended write: createCurrent is the settings gesture's
+      // path, and only the automatic tick answers to the device rule.
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) },
+          noteCreation: { devices: "desktop" },
+        },
+        overrides: [onDevice("mobile")],
+      });
+      harness.resolve(JournalsIndex).markReady();
+
+      await harness.resolve(AutoCreateService).createCurrent("daily");
+
+      expect(harness.host.files.has("2026-05-19.md")).toBe(true);
     });
   });
 
