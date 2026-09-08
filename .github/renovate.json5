@@ -56,6 +56,15 @@
       semanticCommitType: "chore",
       semanticCommitScope: "ci",
       schedule: ["before 06:00 on the first day of the month"],
+      // A tag is a mutable pointer: `@v7` resolves at run time to whatever the
+      // tag points at *now*, so whoever can move it changes the code CI runs
+      // with no diff in this repo to review. That is the shape the
+      // tj-actions/changed-files compromise took. A digest is content-addressed,
+      // so an upgrade becomes a reviewable bump on the schedule above instead.
+      // It earns its keep in release.yml and release-beta.yml, which run at
+      // `permissions: write-all` and build the artifact users install — an
+      // attested build is only as trustworthy as the attesting action.
+      pinDigests: true,
     },
     {
       // The typings and manifest.json's minAppVersion move independently, and
