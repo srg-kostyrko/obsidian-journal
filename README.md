@@ -61,7 +61,7 @@ The Journals plugin offers extensive configuration options to customize your jou
   - Target commands and views at a whole shelf
   - Manage related journals together
 
-- **Open on startup**: Pick one journal whose current note opens whenever you open the vault. Views carry their own, separate _Open on startup_ toggle.
+- **Open on startup**: Pick one journal whose current note opens whenever you open the vault, and optionally a different journal on the days of the week you choose — days you don't pick open the journal you picked first. Views carry their own, separate _Open on startup_ toggle.
 - **Notes by date**: Choose the frontmatter property and date format used to determine when vault notes were created. Notes without a valid property value fall back to their file creation time.
 - **Calendar decorations**: Decorations that apply to every calendar, whatever journals are on screen. See the decoration system below.
 - **Week numbers**: Set the global default for where the week-number column appears (before weekdays, after weekdays, or hidden — the default is before); individual view blocks and the `calendar-timeline` code block can override it.

@@ -28,6 +28,14 @@ describe("UiToggleGroup", () => {
     expect(emitted("update:modelValue")).toEqual([[[1, 2]]]);
   });
 
+  it("ignores a click on an option disabled on its own", async () => {
+    const { emitted } = render(UiToggleGroup, {
+      props: { modelValue: [1], options: [options[0], { value: 2, label: "Two", disabled: true }] },
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Two" }));
+    expect(emitted("update:modelValue")).toBeUndefined();
+  });
+
   it("removes an option's value from the model when a pressed option is clicked", async () => {
     const { emitted } = render(UiToggleGroup, { props: { modelValue: [1, 2], options } });
     await userEvent.click(screen.getByRole("button", { name: "Two" }));

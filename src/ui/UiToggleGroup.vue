@@ -2,7 +2,7 @@
 const model = defineModel<T[]>({ required: true });
 
 defineProps<{
-  options: { value: T; label: string; tooltip?: string; class?: string }[];
+  options: { value: T; label: string; tooltip?: string; class?: string; disabled?: boolean }[];
   disabled?: boolean;
 }>();
 
@@ -23,7 +23,7 @@ function toggle(value: T): void {
       :class="[option.class, { 'is-active': model.includes(option.value) }]"
       :aria-pressed="model.includes(option.value)"
       :aria-label="option.tooltip"
-      :disabled="disabled"
+      :disabled="disabled || option.disabled"
       @click="toggle(option.value)"
     >
       {{ option.label }}

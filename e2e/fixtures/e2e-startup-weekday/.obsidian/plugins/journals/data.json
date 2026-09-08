@@ -1,0 +1,39 @@
+{
+  "version": 5,
+  "journals": {
+    "work": {
+      "name": "work",
+      "write": { "type": "day" },
+      "folder": "work",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "private": {
+      "name": "private",
+      "write": { "type": "day" },
+      "folder": "private",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  },
+  "startup": {
+    "journalName": "work",
+    "overrides": [{ "weekdays": [0, 1, 2, 3, 4, 5, 6], "journalName": "private" }]
+  }
+}
