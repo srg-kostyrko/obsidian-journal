@@ -3,15 +3,17 @@ import { $, browser, expect } from "@wdio/globals";
 import { activeNotePath, seedNote } from "../support/vault.js";
 
 import {
-  TIMELINE_NAV,
+  TIMELINE_MERGED_NAV,
   TIMELINE_NAV_FENCE,
+  TIMELINE_NAV_LABEL_ROW,
   TIMELINE_NAV_NEXT,
+  TIMELINE_NAV_PADDED_FENCE,
   TIMELINE_NAV_RESET,
   clickTimelineNav,
   livePreviewNote,
   openInLivePreview,
   editBlockButtonOverlap,
-  timelineNavLabelOffset,
+  timelineNavCentreOffset,
   timelineWeekAnchors,
 } from "./code-blocks.js";
 
@@ -37,7 +39,9 @@ function markdownFileCount(): Promise<number> {
 async function openHost(): Promise<void> {
   await seedNote(HOST, livePreviewNote("daily", HOST_ANCHOR, TIMELINE_NAV_FENCE));
   await openInLivePreview(HOST);
-  await $(TIMELINE_NAV).waitForExist({ timeoutMsg: "timeline navigation row did not render in live preview" });
+  await $(TIMELINE_NAV_NEXT).waitForExist({
+    timeoutMsg: "timeline navigation controls did not render in live preview",
+  });
 }
 
 describe("timeline navigation", () => {
@@ -49,8 +53,11 @@ describe("timeline navigation", () => {
     await openHost();
   });
 
-  it("renders the navigation row in live preview", async () => {
-    await expect($(TIMELINE_NAV)).toBeExisting();
+  // A single week grid has one heading, which already names the week the label would, so the
+  // controls join it instead of taking a row of their own.
+  it("seats the controls in the grid heading rather than in a row of their own", async () => {
+    await expect($(TIMELINE_MERGED_NAV)).toBeExisting();
+    await expect($(TIMELINE_NAV_LABEL_ROW)).not.toBeExisting();
   });
 
   it("moves the window one week forward without opening or creating a note", async () => {
@@ -119,7 +126,7 @@ describe("timeline navigation", () => {
       editor.replaceSelection(" edited");
     });
 
-    await expect($(TIMELINE_NAV)).toBeExisting();
+    await expect($(TIMELINE_NAV_NEXT)).toBeExisting();
     expect(await timelineWeekAnchors()).toEqual(paged);
   });
 
@@ -135,10 +142,10 @@ describe("timeline navigation", () => {
           livePreviewNote("daily", HOST_ANCHOR, `\`\`\`calendar-timeline\nmode: ${mode}\nnavigation: true\n\`\`\``),
         );
         await openInLivePreview(path);
-        await $(TIMELINE_NAV).waitForExist({ timeoutMsg: `navigation row did not render in ${mode} mode` });
+        await $(TIMELINE_NAV_NEXT).waitForExist({ timeoutMsg: `navigation controls did not render in ${mode} mode` });
 
         const overlap = await editBlockButtonOverlap(
-          '.timeline-navigation [data-nav="next"]',
+          '.block-language-calendar-timeline [data-nav="next"]',
           ".block-language-calendar-timeline",
         );
 
@@ -148,21 +155,50 @@ describe("timeline navigation", () => {
     }
   });
 
-  // The reset control occupies a slot that is held open whether or not it is rendered, so the
-  // label does not jump sideways when you page away. That slot must not push the label off the
-  // row's centre while it is empty.
-  describe("label centring", () => {
-    it("centres the label while the reset slot is empty", async () => {
-      expect(Math.abs((await timelineNavLabelOffset()) ?? 999)).toBeLessThanOrEqual(1);
+  // The reset control occupies a slot that is held open whether or not it is rendered, so what
+  // sits beside it does not jump sideways when you page away. That slot must not push those
+  // contents off the row's centre while it is empty.
+  describe("centring", () => {
+    it("centres the merged row's heading cells while the reset slot is empty", async () => {
+      const offset = await timelineNavCentreOffset(TIMELINE_MERGED_NAV, '[data-testid^="header-"]');
+
+      expect(Math.abs(offset ?? 999)).toBeLessThanOrEqual(1);
     });
 
-    it("keeps the label centred once the reset control appears", async () => {
-      const before = await timelineNavLabelOffset();
+    it("keeps them centred once the reset control appears", async () => {
+      const before = await timelineNavCentreOffset(TIMELINE_MERGED_NAV, '[data-testid^="header-"]');
 
       await clickTimelineNav(TIMELINE_NAV_NEXT);
       await $(TIMELINE_NAV_RESET).waitForExist({ timeoutMsg: "reset control did not appear" });
 
-      expect(await timelineNavLabelOffset()).toBe(before);
+      expect(await timelineNavCentreOffset(TIMELINE_MERGED_NAV, '[data-testid^="header-"]')).toBe(before);
+    });
+
+    // The padded window keeps the label row, which is where the same slot pair started.
+    describe("the label row a padded window keeps", () => {
+      const LABEL = ".timeline-navigation__label";
+
+      beforeEach(async () => {
+        const path = "nav/timeline-navigation-padded.md";
+        await seedNote(path, livePreviewNote("daily", HOST_ANCHOR, TIMELINE_NAV_PADDED_FENCE));
+        await openInLivePreview(path);
+        await $(TIMELINE_NAV_LABEL_ROW).waitForExist({ timeoutMsg: "padded block did not keep the label row" });
+      });
+
+      it("centres the label while the reset slot is empty", async () => {
+        const offset = await timelineNavCentreOffset(TIMELINE_NAV_LABEL_ROW, LABEL);
+
+        expect(Math.abs(offset ?? 999)).toBeLessThanOrEqual(1);
+      });
+
+      it("keeps the label centred once the reset control appears", async () => {
+        const before = await timelineNavCentreOffset(TIMELINE_NAV_LABEL_ROW, LABEL);
+
+        await clickTimelineNav(TIMELINE_NAV_NEXT);
+        await $(TIMELINE_NAV_RESET).waitForExist({ timeoutMsg: "reset control did not appear" });
+
+        expect(await timelineNavCentreOffset(TIMELINE_NAV_LABEL_ROW, LABEL)).toBe(before);
+      });
     });
   });
 });

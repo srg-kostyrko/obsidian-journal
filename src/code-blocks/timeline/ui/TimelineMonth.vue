@@ -32,7 +32,12 @@ const monthPeriods = usePeriodWindow(
       :weeks="weeks"
       :hidden-weekdays="hiddenWeekdays"
       outside-dates="active"
-    />
+    >
+      <!-- Only ever filled when the block shows a single grid, so the controls cannot land in
+           more than one heading. -->
+      <template v-if="$slots['header-start']" #header-start><slot name="header-start" /></template>
+      <template v-if="$slots['header-end']" #header-end><slot name="header-end" /></template>
+    </NotesMonthView>
   </div>
 </template>
 

@@ -86,6 +86,24 @@ function weekAnchors(container: Element): string[] {
   );
 }
 
+// Scoped to the whole block rather than to the label row: the controls sit in the grid's own
+// heading once the two rows merge, and only `data-nav` spans both shapes.
+const next = (c: Element) => c.querySelector<HTMLElement>('[data-nav="next"]');
+const previous = (c: Element) => c.querySelector<HTMLElement>('[data-nav="prev"]');
+const reset = (c: Element) => c.querySelector<HTMLElement>('[data-nav="reset"]');
+const labelRow = (c: Element) => c.querySelector<HTMLElement>(".timeline-navigation");
+const label = (c: Element) => c.querySelector<HTMLElement>(".timeline-navigation__label")?.textContent;
+const weekHeader = (c: Element) => c.querySelector<HTMLElement>(".notes-week-view__header");
+const monthHeader = (c: Element) => c.querySelector<HTMLElement>(".notes-month-view__header");
+
+// Reading a heading's contents in document order is what separates the merge from a navigation
+// row that merely happens to render above a heading.
+function headingOrder(header: Element | null): string[] {
+  return [...(header?.querySelectorAll<HTMLElement>('[data-nav], [data-testid^="header-"]') ?? [])].map(
+    (element) => element.dataset.nav ?? element.dataset.testid ?? "",
+  );
+}
+
 afterEach(() => {
   vi.useRealTimers();
 });
@@ -323,35 +341,107 @@ describe("TimelineCodeBlock", () => {
   });
 
   describe("navigation row", () => {
-    const NAV = ".timeline-navigation";
-    const next = (c: Element) => c.querySelector<HTMLElement>(`${NAV} [data-nav="next"]`);
-    const previous = (c: Element) => c.querySelector<HTMLElement>(`${NAV} [data-nav="prev"]`);
-    const reset = (c: Element) => c.querySelector<HTMLElement>(`${NAV} [data-nav="reset"]`);
-    const label = (c: Element) => c.querySelector<HTMLElement>(`${NAV} .timeline-navigation__label`)?.textContent;
-
     describe("when it is shown", () => {
       it("stays hidden when neither the setting nor the block asks for it", async () => {
         const { container } = await renderDaily({ mode: "week" });
 
-        expect(container.querySelector(NAV)).toBeNull();
+        expect(previous(container)).toBeNull();
       });
 
       it("appears when the block asks for it", async () => {
         const { container } = await renderDaily({ mode: "week", navigation: true });
 
-        expect(container.querySelector(NAV)).toBeTruthy();
+        expect(previous(container)).toBeTruthy();
       });
 
       it("appears when the setting is on and the block is silent", async () => {
         const { container } = await renderDaily({ mode: "week" }, { timelineNavigation: true });
 
-        expect(container.querySelector(NAV)).toBeTruthy();
+        expect(previous(container)).toBeTruthy();
       });
 
       it("stays hidden when the block opts out of an enabled setting", async () => {
         const { container } = await renderDaily({ mode: "week", navigation: false }, { timelineNavigation: true });
 
-        expect(container.querySelector(NAV)).toBeNull();
+        expect(previous(container)).toBeNull();
+      });
+    });
+
+    // A block showing one grid has nothing to say in a label the grid's own heading does not
+    // already say, so the controls join that heading instead of taking a row of their own.
+    describe("merged into the grid heading", () => {
+      it("puts the week controls in the grid's heading and drops the label row", async () => {
+        const { container } = await renderDaily({ mode: "week", navigation: true });
+
+        expect(weekHeader(container)?.dataset.flanked).toBe("true");
+        expect(headingOrder(weekHeader(container))).toEqual(["prev", "header-month", "header-year", "next"]);
+        expect(labelRow(container)).toBeNull();
+      });
+
+      it("puts the month controls in the grid's heading and drops the label row", async () => {
+        const { container } = await renderDaily({ mode: "month", navigation: true });
+
+        expect(monthHeader(container)?.dataset.flanked).toBe("true");
+        expect(headingOrder(monthHeader(container))).toEqual(["prev", "header-month", "header-year", "next"]);
+        expect(labelRow(container)).toBeNull();
+      });
+
+      it("seats the reset control between the heading and the next control", async () => {
+        const { container } = await renderDaily({ mode: "week", navigation: true });
+
+        await click(next(container));
+
+        expect(headingOrder(weekHeader(container))).toEqual(["prev", "header-month", "header-year", "reset", "next"]);
+      });
+
+      it("keeps the quarter cell in the heading where quarterly journals are in scope", async () => {
+        const { container } = await renderTimeline(
+          { mode: "week", navigation: true },
+          {
+            journals: {
+              daily: fixedJournal("daily", { type: "day" }),
+              quarterly: fixedJournal("quarterly", { type: "quarter" }),
+            },
+            entries: [journalEntry("daily", HOST_ANCHOR_DATE)],
+          },
+        );
+
+        expect(headingOrder(weekHeader(container))).toEqual([
+          "prev",
+          "header-month",
+          "header-quarter",
+          "header-year",
+          "next",
+        ]);
+      });
+
+      it("keeps the label row when a padded window gives the block several headings", async () => {
+        const { container } = await renderDaily({ mode: "week", navigation: true, before: 1 });
+
+        expect(labelRow(container)).toBeTruthy();
+        expect(previous(container)?.closest(".timeline-navigation")).toBeTruthy();
+        expect(weekHeader(container)?.dataset.flanked).toBeUndefined();
+      });
+
+      it("keeps the label row in quarter mode, where each month carries its own heading", async () => {
+        const { container } = await renderDaily({ mode: "quarter", navigation: true });
+
+        expect(labelRow(container)).toBeTruthy();
+        expect(monthHeader(container)?.dataset.flanked).toBeUndefined();
+      });
+
+      it("keeps the label row in calendar mode", async () => {
+        const { container } = await renderDaily({ mode: "calendar", navigation: true });
+
+        expect(labelRow(container)).toBeTruthy();
+        expect(monthHeader(container)?.dataset.flanked).toBeUndefined();
+      });
+
+      it("leaves the heading alone when navigation is off", async () => {
+        const { container } = await renderDaily({ mode: "week" });
+
+        expect(weekHeader(container)).toBeTruthy();
+        expect(weekHeader(container)?.dataset.flanked).toBeUndefined();
       });
     });
 
@@ -397,7 +487,10 @@ describe("TimelineCodeBlock", () => {
 
         await click(next(container));
 
-        expect(label(container)).toBe("June 2026");
+        // The merged row has no label of its own, so the heading cell the controls now flank
+        // is what has to name the month the block moved to.
+        const month = container.querySelector<HTMLElement>('[data-testid="header-month"]');
+        expect(month?.dataset.anchor).toBe("2026-06-01");
       });
 
       it("moves by a quarter in quarter mode", async () => {
@@ -445,10 +538,12 @@ describe("TimelineCodeBlock", () => {
     });
 
     describe("the label", () => {
-      it("names a single visible week", async () => {
-        const { container } = await renderDaily({ mode: "week", navigation: true });
+      // Quarter mode rather than week: a single week grid merges its heading into the row and
+      // leaves no label to read.
+      it("names a single visible period", async () => {
+        const { container } = await renderDaily({ mode: "quarter", navigation: true });
 
-        expect(label(container)).toBe("W22 2026");
+        expect(label(container)).toBe("Q2 2026");
       });
 
       it("names the whole visible range when the block is padded", async () => {
@@ -461,12 +556,18 @@ describe("TimelineCodeBlock", () => {
     describe("invalidation", () => {
       it("returns to the host note's period when that note's anchor changes", async () => {
         const { container, index } = await renderDaily({ mode: "week", navigation: true });
+        // The week the new anchor belongs to, read off a block that was mounted on it, so the
+        // assertion does not have to hardcode a week start the installed grid decides.
+        const moved = await renderDaily(
+          { mode: "week", navigation: true },
+          { entries: [journalEntry("daily", "2026-08-27")] },
+        );
 
         await click(next(container));
         index.register(journalEntry("daily", "2026-08-27"));
         await nextTick();
 
-        expect(label(container)).toBe("W35 2026");
+        expect(weekAnchors(container)).toEqual(weekAnchors(moved.container));
       });
 
       it("shows the host note's period again when navigation is switched off mid-page", async () => {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, toRaw } from "vue";
+import { computed, toRaw, useSlots } from "vue";
 
 import {
   DayPeriod,
@@ -109,6 +109,12 @@ const yearCell = useNotesCell({
   shelf: () => props.shelf,
 });
 
+const slots = useSlots();
+// The heading only stops spreading across the grid once something else shares the row
+// with it, so the layout switch rides on the slots being filled rather than on a prop
+// every other caller would have to pass.
+const flanked = computed(() => Boolean(slots["header-start"] ?? slots["header-end"]));
+
 const navigationRows = computed<CalendarGridRows>(() => {
   const items: CalendarGridItem[] = days.value.map((day) => ({
     key: `day:${day.anchor.toAnchor()}`,
@@ -131,7 +137,8 @@ const isSelected = (period: Period): boolean =>
 
 <template>
   <div class="notes-week-view" :style="appearanceStyle">
-    <div v-if="showHeader" class="notes-week-view__header">
+    <div v-if="showHeader" class="notes-week-view__header" :data-flanked="flanked || null">
+      <slot name="header-start" />
       <slot name="header">
         <NotesCalendarCell data-testid="header-month" :period="monthPeriod" :cell="monthCell" />
         <NotesCalendarCell
@@ -142,6 +149,7 @@ const isSelected = (period: Period): boolean =>
         />
         <NotesCalendarCell data-testid="header-year" :period="yearPeriod" :cell="yearCell" />
       </slot>
+      <slot name="header-end" />
     </div>
     <div
       ref="grid"
@@ -212,6 +220,13 @@ const isSelected = (period: Period): boolean =>
   display: flex;
   justify-content: space-around;
   gap: var(--size-2-2);
+}
+/* Flanked by the timeline block's previous/next controls, the heading is the navigation
+   row: it centres instead of reaching the strip's edges, because Obsidian overlays its
+   edit-block button on the block's top-right corner and a control under it never gets
+   the click. */
+.notes-week-view__header[data-flanked] {
+  justify-content: center;
 }
 .notes-week-view__grid {
   display: flex;

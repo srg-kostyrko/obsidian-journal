@@ -513,7 +513,7 @@ Supports following settings:
 - `hiddenWeekdays` - hides the listed days of the week, where `0` is Sunday and `6` is Saturday, e.g. `[0, 6]` to drop weekends.
 - `before` - adds this many earlier periods above the current one. Applies to the `week` and `month` modes only.
 - `after` - adds this many later periods below the current one. Applies to the `week` and `month` modes only.
-- `navigation` - shows previous/next controls above the timeline, so you can look at other periods without opening or creating a note. Supported values are - `true`, `false`. Without it, the plugin's **Timeline navigation** calendar setting decides.
+- `navigation` - shows previous/next controls, so you can look at other periods without opening or creating a note. Supported values are - `true`, `false`. Without it, the plugin's **Timeline navigation** calendar setting decides.
 
 To see the previous and next week alongside the current one:
 
@@ -534,7 +534,9 @@ navigation: true
 ```
 ````
 
-The controls step by the timeline's own period — a week in `week` mode, a month in `month` mode, a quarter in `quarter` mode and a year in `calendar` mode — and name the periods on screen. Paging never opens or creates a note; a reset control appears once you have moved, and returns the block to the period of the note holding it. The block returns there on its own whenever Obsidian re-renders it.
+The controls step by the timeline's own period — a week in `week` mode, a month in `month` mode, a quarter in `quarter` mode and a year in `calendar` mode. Paging itself never opens or creates a note; a reset control appears once you have moved, and returns the block to the period of the note holding it. The block returns there on its own whenever Obsidian re-renders it.
+
+Where the block shows a single grid — `week` or `month` mode with no `before` or `after` — the controls sit on either side of that grid's own month, quarter and year headings, so the block spends one row instead of two. Those headings are the same links they always were: clicking one opens or creates that period's note, including while you have paged away from the note's own period. Every other shape shows several grid headings and has no single one to join, so it keeps a separate row naming the periods on screen.
 
 Sample week timeline
 
