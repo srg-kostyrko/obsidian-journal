@@ -221,6 +221,7 @@
       }
     }
   ],
+  "nav_block_section_adjacent_label": "Vorherigen und nächsten Zeitraum anzeigen",
   "block_lines_decorate_whole_label": "Gesamten Block dekorieren",
   "block_lines_empty": "Noch keine Zeilen. Füge eine hinzu.",
   "block_lines_add_line": "Zeile hinzufügen",

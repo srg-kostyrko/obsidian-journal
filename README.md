@@ -375,6 +375,7 @@ replaced "row".
 **Settings**:
 
 - Mode: create a new note when a segment is clicked, or only open notes that already exist
+- Show previous and next periods: with it off, the block draws only the current period and its previous/next arrows, which still open those notes. A single note can override this either way with the block's `adjacent` option.
 - Whole block decoration: decorate the block as a whole from the current journal's rules
 
 ### Maintenance
@@ -464,7 +465,7 @@ The same list is available in the app: any **additional modifications** link in 
 
 For easier navigation plugin provides code blocks that can be inserted into note content. Each journal's settings has a **Supported code blocks** link that shows the same list with a live preview of that journal's blocks, and copies a block to your clipboard when you click it.
 
-Each block's container carries a stable CSS class — `journal-nav-code-block`, `journal-timeline-code-block`, `journal-home-code-block` and `journal-notelets-code-block` — that themes and CSS snippets can target. `calendar-timeline`, `journals-home` and `journal-notelets` name any option they do not recognize in a notice above the block, and still render.
+Each block's container carries a stable CSS class — `journal-nav-code-block`, `journal-timeline-code-block`, `journal-home-code-block` and `journal-notelets-code-block` — that themes and CSS snippets can target. Every block names any option it does not recognize in a notice above the block, and still renders.
 
 ````markdown
 ```journal-nav
@@ -473,6 +474,16 @@ Each block's container carries a stable CSS class — `journal-nav-code-block`, 
 ````
 
 Navigation code block helps navigating relative to current note. Displayed data is configured in journal settings. `calendar-nav` and `interval-nav` are aliases for the same block, kept for older notes; all three behave identically.
+
+Supports following settings:
+
+- `adjacent` - whether the previous and next periods are shown beside the current one. Without it the journal's **Show previous and next periods** setting decides. Set it to `false` for a single period with just its arrows, or to `true` where the journal hides them. It has to be `true` or `false`, not `yes` or `no`.
+
+````markdown
+```journal-nav
+adjacent: false
+```
+````
 
 Example look for daily note:
 

@@ -32,6 +32,14 @@ async function mount(lines: NavBlockSegment[][]) {
 
 const sampleSegment = buildNavSegment({ template: "static text" });
 
+// The toggle takes its accessible name from a tooltip it does not carry, so it is reached
+// through the setting row that names it — as the notelet sections' toggles are.
+function rowNamed(name: string): HTMLElement {
+  const row = screen.getByText(name).closest(".setting-item");
+  if (!row) throw new Error(`no setting row named ${name}`);
+  return row as HTMLElement;
+}
+
 describe("NavBlockSection", () => {
   it("shows the empty-state message and 'use defaults' button when lines are empty", async () => {
     await mount([]);
@@ -46,6 +54,15 @@ describe("NavBlockSection", () => {
     await userEvent.click(screen.getByText(m.nav_block_section_use_defaults({ writeType: "day" })));
     const journal = harness.resolve(JournalsRepository).get("daily").getOrUndefined();
     expect(journal?.navBlock.lines.length).toBeGreaterThan(0);
+  });
+
+  it("stores showAdjacent false when the previous-and-next toggle is turned off", async () => {
+    const { harness } = await mount([[sampleSegment]]);
+    await userEvent.click(screen.getByText(m.nav_block_section_title()));
+
+    await userEvent.click(within(rowNamed(m.nav_block_section_adjacent_label())).getByRole("checkbox"));
+
+    expect(harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.navBlock.showAdjacent).toBe(false);
   });
 
   it("invokes the flow with lineIndex and segmentIndex when a segment is clicked", async () => {
