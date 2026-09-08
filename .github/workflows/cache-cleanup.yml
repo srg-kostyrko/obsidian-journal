@@ -41,7 +41,22 @@ jobs:
             echo "No caches scoped to $REF."
             exit 0
           fi
+          # Attempt every id even when one fails. A DELETE can legitimately 404 — GitHub may have
+          # evicted the entry between the listing and the delete, and a close/reopen/close leaves
+          # two runs sweeping the same ref — and under `set -e` that would abort the loop, leaving
+          # the rest of the caches behind and the run red for reaching the desired state early.
+          # Failing every id is a different thing (a token without `actions: write`, say), and
+          # that one should be loud rather than swallowed, so it is the only case that exits 1.
+          failed=0
+          total=0
           for id in $ids; do
-            gh api -X DELETE "/repos/$REPO/actions/caches/$id" --silent
-            echo "deleted cache $id ($REF)"
+            total=$((total + 1))
+            if gh api -X DELETE "/repos/$REPO/actions/caches/$id" --silent; then
+              echo "deleted cache $id ($REF)"
+            else
+              failed=$((failed + 1))
+              echo "could not delete cache $id ($REF) — already gone?"
+            fi
           done
+          echo "$((total - failed)) of $total caches deleted for $REF."
+          [ "$failed" -lt "$total" ] || exit 1
