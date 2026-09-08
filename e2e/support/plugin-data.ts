@@ -41,6 +41,7 @@ export interface StoredCommand {
 
 export interface StoredSettings {
   version?: number;
+  noteCreation?: { devices?: string };
   journals?: Record<string, StoredJournal>;
   shelves?: Record<string, StoredShelf>;
   views?: Record<string, StoredView>;
