@@ -1255,6 +1255,11 @@
   "startup_open_note_title": "Open on startup",
   "startup_open_note_desc": "Open a note whenever you open this vault.",
   "startup_dont_open_option": "Don't open",
+  "startup_weekday_title": "Different journal on some days",
+  "startup_weekday_desc": "Choose which journal opens on the days you pick. Any day you don't pick opens the journal above.",
+  "startup_weekday_add": "Add days",
+  "startup_weekday_days_label": "Days of the week",
+  "startup_weekday_remove": "Remove",
 
   "uri_missing_target": "Journal URI needs a \"journal\" or \"type\" parameter.",
   "uri_unknown_write_type": "Unknown journal type \"{type}\" in the URI.",

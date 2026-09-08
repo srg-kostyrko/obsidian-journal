@@ -24,3 +24,22 @@ describe("open on startup", () => {
     );
   });
 });
+
+// The weekday override resolves against the machine clock, which the suite cannot set, so the
+// fixture claims all seven weekdays for "private" — whichever day CI runs, the override is the one
+// that must win. It still falsifies: with the override lookup gone, the default "work" journal
+// opens instead, in a different folder and with different frontmatter.
+describe("open on startup with a weekday override", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-startup-weekday", plugins: ["journals"] });
+  });
+
+  it("opens the journal the override claims rather than the default one", async () => {
+    const path = await waitForActiveNoteIn("private");
+    await waitForFrontmatter(
+      path,
+      (frontmatter) => frontmatter.journal === "private",
+      `${path} did not attach journal=private frontmatter`,
+    );
+  });
+});
