@@ -182,3 +182,164 @@ describe("TemplaterService.templatesFolder", () => {
     expect(build(fakeApp({ plugin })).templatesFolder()).toBeNull();
   });
 });
+
+// Templater resolves `tp.file.include` by reading the sub-template off disk and re-entering
+// its own parser with it, so the plugin's `{{ }}` pass — which ran over the parent's body
+// before Templater ever saw it — never reaches that content. The fake below mirrors that
+// re-entry through `plugin.templater.parser.parse_commands`, the seam the service hooks.
+function includingPlugin(includes: Record<string, string> = {}, gates: Record<string, Promise<void>> = {}) {
+  const plugin = {
+    templater: {
+      parser: {
+        parse_commands: async (content: string, functionsObject: unknown): Promise<string> => {
+          const match = /<% tp\.file\.include\("([^"]+)"\) %>/.exec(content);
+          if (match === null) return content;
+          const nested = await plugin.templater.parser.parse_commands(includes[match[1]] ?? "", functionsObject);
+          return content.replace(match[0], () => nested);
+        },
+      },
+      create_running_config: (template_file: TFile | undefined, target_file: TFile, run_mode: number) => ({
+        template_file,
+        target_file,
+        run_mode,
+      }),
+      parse_template: async (config: { target_file: TFile }, content: string): Promise<string> => {
+        await gates[config.target_file.path];
+        return plugin.templater.parser.parse_commands(content, { config });
+      },
+    },
+  };
+  return plugin;
+}
+
+describe("TemplaterService.apply nested content", () => {
+  const files = { "T.md": tfile("T.md"), "N.md": tfile("N.md") };
+  const body = '<% tp.file.include("Sub") %>';
+
+  it("renders a sub-template Templater includes through the nested renderer", async () => {
+    const service = build(fakeApp({ plugin: includingPlugin({ Sub: "sub says {{date}}" }), files }));
+
+    const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, `intro ${body}`, (raw) =>
+      raw.replaceAll("{{date}}", "2026-05-19"),
+    );
+
+    expectOk(result);
+    expect(result.value).toBe("intro sub says 2026-05-19");
+  });
+
+  it("renders a sub-template's variables before Templater parses its commands", async () => {
+    const includes = { Sub: '<% "{{date}}" %>' };
+    const plugin = includingPlugin(includes);
+    // Stand in for Templater evaluating the command: by the time the parser sees it, the
+    // variable must already be gone, which a pass running after Templater cannot deliver.
+    const inner = plugin.templater.parser.parse_commands;
+    plugin.templater.parser.parse_commands = async (content: string, functionsObject: unknown): Promise<string> => {
+      const parsed = await inner(content, functionsObject);
+      return parsed.replace(/<% "([^"]*)" %>/, "$1");
+    };
+    const service = build(fakeApp({ plugin, files }));
+
+    const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, body, (raw) =>
+      raw.replaceAll("{{date}}", "2026-05-19"),
+    );
+
+    expectOk(result);
+    expect(result.value).toBe("2026-05-19");
+  });
+
+  it("does not re-render the content it was handed", async () => {
+    const service = build(fakeApp({ plugin: includingPlugin({ Sub: "sub" }), files }));
+    const seen: string[] = [];
+
+    await service.apply("T.md" as VaultPath, "N.md" as VaultPath, `top {{date}} ${body}`, (raw) => {
+      seen.push(raw);
+      return raw;
+    });
+
+    expect(seen).toEqual(["sub"]);
+  });
+
+  it("leaves nested content untouched when no nested renderer is given", async () => {
+    const service = build(fakeApp({ plugin: includingPlugin({ Sub: "sub says {{date}}" }), files }));
+
+    const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, body);
+
+    expectOk(result);
+    expect(result.value).toBe("sub says {{date}}");
+  });
+
+  it("leaves content Templater parses for another target untouched", async () => {
+    const plugin = includingPlugin({ Sub: "sub" });
+    const parse = plugin.templater.parse_template;
+    let alien = "";
+    plugin.templater.parse_template = async (config: { target_file: TFile }, content: string): Promise<string> => {
+      alien = await plugin.templater.parser.parse_commands("alien {{date}}", {
+        config: { target_file: tfile("Other.md") },
+      });
+      return parse(config, content);
+    };
+    const service = build(fakeApp({ plugin, files: { ...files, "Other.md": tfile("Other.md") } }));
+
+    await service.apply("T.md" as VaultPath, "N.md" as VaultPath, body, (raw) =>
+      raw.replaceAll("{{date}}", "2026-05-19"),
+    );
+
+    expect(alien).toBe("alien {{date}}");
+  });
+
+  it("renders each concurrent apply's includes with its own renderer", async () => {
+    const held = Promise.withResolvers<void>();
+    const plugin = includingPlugin({ Sub: "{{who}}" }, { "A.md": held.promise });
+    const service = build(
+      fakeApp({ plugin, files: { "T.md": tfile("T.md"), "A.md": tfile("A.md"), "B.md": tfile("B.md") } }),
+    );
+
+    const first = service.apply("T.md" as VaultPath, "A.md" as VaultPath, body, (raw) =>
+      raw.replaceAll("{{who}}", "first"),
+    );
+    const second = await service.apply("T.md" as VaultPath, "B.md" as VaultPath, body, (raw) =>
+      raw.replaceAll("{{who}}", "second"),
+    );
+    held.resolve();
+
+    expectOk(second);
+    expect(second.value).toBe("second");
+    const firstResult = await first;
+    expectOk(firstResult);
+    expect(firstResult.value).toBe("first");
+  });
+
+  it("keeps the nested content when the nested renderer throws", async () => {
+    const service = build(fakeApp({ plugin: includingPlugin({ Sub: "sub says {{date}}" }), files }));
+
+    const result = await service.apply("T.md" as VaultPath, "N.md" as VaultPath, body, () => {
+      throw new Error("boom");
+    });
+
+    expectOk(result);
+    expect(result.value).toBe("sub says {{date}}");
+  });
+
+  it("restores Templater's own parser once the template is applied", async () => {
+    const plugin = includingPlugin({ Sub: "sub" });
+    const original = plugin.templater.parser.parse_commands;
+    const service = build(fakeApp({ plugin, files }));
+
+    await service.apply("T.md" as VaultPath, "N.md" as VaultPath, body, (raw) => raw);
+
+    expect(plugin.templater.parser.parse_commands).toBe(original);
+  });
+
+  it("restores Templater's own parser when parsing throws", async () => {
+    const plugin = includingPlugin({ Sub: "sub" });
+    const original = plugin.templater.parser.parse_commands;
+    plugin.templater.parse_template = async (): Promise<string> => {
+      throw new Error("boom");
+    };
+    const service = build(fakeApp({ plugin, files }));
+
+    await service.apply("T.md" as VaultPath, "N.md" as VaultPath, body, (raw) => raw);
+
+    expect(plugin.templater.parser.parse_commands).toBe(original);
+  });
+});

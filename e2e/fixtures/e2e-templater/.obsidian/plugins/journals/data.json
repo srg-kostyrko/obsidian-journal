@@ -35,6 +35,23 @@
       },
       "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
     },
+    "include": {
+      "name": "include",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "folder": "include",
+      "templates": ["templates/include-parent.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
     "cursor": {
       "name": "cursor",
       "write": { "type": "day" },
@@ -69,6 +86,15 @@
       "showInRibbon": false,
       "openMode": "active",
       "target": { "kind": "journal", "journalName": "compose" },
+      "type": "same",
+      "context": "today"
+    },
+    "open-include": {
+      "name": "Open include today",
+      "icon": "",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "journal", "journalName": "include" },
       "type": "same",
       "context": "today"
     },

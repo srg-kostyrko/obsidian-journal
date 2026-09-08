@@ -2,7 +2,7 @@ import { browser, expect } from "@wdio/globals";
 
 import { runCommand } from "../support/commands.js";
 import { cursorOf, editorValue, waitForCursorLine } from "../support/editor.js";
-import { contentOf, waitForActiveNoteIn, waitForContent } from "../support/vault.js";
+import { contentOf, todayAnchor, waitForActiveNoteIn, waitForContent } from "../support/vault.js";
 
 // Slice D — the Templater interop seam. The `e2e-templater` fixture commits day
 // journals whose templates carry Templater `<% %>` syntax; booting the real
@@ -49,6 +49,28 @@ describe("templater interop", () => {
     const content = await contentOf(path);
     expect(content).not.toContain("<%");
     expect(content).not.toContain("{{");
+  });
+
+  // Templater resolves `tp.file.include` by reading the sub-template off disk, past the engine
+  // pass that rendered the parent, so before the parser hook the sub-template's `{{ }}` reached
+  // the note verbatim (#190). Only the real plugin exercises that re-entry.
+  it("renders plugin variables in a sub-template Templater includes", async () => {
+    await runCommand("journals:open-include");
+
+    const path = await waitForActiveNoteIn("include");
+    await waitForContent(
+      path,
+      (content) => content.includes("sub include"),
+      "waited for the included sub-template to render its variables",
+    );
+
+    const content = await contentOf(path);
+    expect(content).toContain("parent include / sub include");
+    // The sub-template's date sits inside a Templater command, so it proves the variables were
+    // rendered before Templater parsed the include rather than after it ran.
+    expect(content).toContain(todayAnchor());
+    expect(content).not.toContain("{{");
+    expect(content).not.toContain("<%");
   });
 
   it("jumps the editor cursor to the Templater cursor marker", async () => {

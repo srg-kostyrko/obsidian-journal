@@ -150,6 +150,42 @@ on it.
   Unit tests mirror the fake, so only an e2e that picks a _number_ property
   catches a registry rename.
 
+### Templater interop
+
+- Templater resolves `tp.file.include` by reading the sub-template **off disk**
+  and re-entering its own parser with it, so the `{{ }}` pass
+  `TemplateContentService` runs over a template body never reaches an included
+  file (#190). The seam is `parse_commands` on `plugin.templater.parser`, taking
+  the content and the functions object — the one method both the template
+  Templater was asked to run and every included file pass through, nested
+  includes included.
+  `TemplaterService` hooks it for the duration of an apply and renders each
+  nested body **before** Templater parses its commands. Rendering before rather
+  than post-processing the finished note is the whole point: it is what lets a
+  sub-template use a variable inside a `<% %>` command, and a second pass over
+  the output would also rewrite `{{ }}` that a command deliberately emitted. Do
+  not "simplify" the hook into that second pass.
+- Two properties of the hook are load-bearing and neither is visible at the call
+  site. It is **scoped** by `functionsObject.config.target_file.path`: Templater's
+  internal `config` module returns the running config verbatim, so `tp.config`
+  rides along with every parse, and without the check a parse the user or another
+  plugin starts during our `await` would get journal variables substituted into
+  it. And it is **refcounted** by target path, shared across concurrent applies —
+  a naive save-and-restore lets whichever apply finishes first uninstall the hook
+  out from under the others, which bulk add makes reachable.
+- `parse_commands` is a step deeper into Templater's internals than
+  `create_running_config` / `parse_template`, so it gets the same
+  capability-check-and-fall-back discipline: no `parser.parse_commands`, no hook,
+  behavior exactly as before. Both cached bundles carry it under that name
+  (`.obsidian-cache/obsidian-plugins/silentvoid13/Templater/<version>/main.js` —
+  minified, but the internal names survive, so grep settles a version question
+  directly). They differ only in how `generate_include` fetches the functions
+  object — `get_current_functions_object()` at 2.18.0, the
+  `current_functions_object` field at 2.22.1 — which is why the hook reads
+  neither. Only the real plugin exercises the re-entry: against
+  `__mocks__/obsidian.ts` there is no Templater, so this is an e2e-or-nothing
+  behavior, in `e2e/interop/templater.e2e.ts`.
+
 ### Settings and schema
 
 - A stored value that fails its schema on reload costs different amounts

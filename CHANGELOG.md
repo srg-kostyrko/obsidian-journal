@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - Two new commands move between journals of different period lengths from the note you have open: **Zoom out** and **Zoom in**. From a daily note, zooming out opens that week's note; from there, the month's, and zooming in walks back down. Zooming stays among the journals on the shelf the open note's journal belongs to — so a work daily note zooms to the work monthly note rather than a personal one — and reaches every journal when that journal is on no shelf. A period length nothing in scope writes at is passed over, so a vault with only daily and monthly journals zooms straight between them, and a custom-interval journal takes its place by how long its interval runs: a two-week sprint sits between the weekly and the monthly journal. A journal whose timeline does not reach the date you are on is passed over the same way. Zooming in opens the first shorter period inside the current one — the 1st of the month, from a monthly note. The note is created if it does not exist yet, and where two journals in scope write the same length of period, you are asked which of them to open. Both commands stay out of the command palette on a note that belongs to no journal, and when nothing in scope is longer or shorter.
 
+### Bug Fixes
+
+- Journal variables now resolve in a sub-template Templater includes. A template calling `<% tp.file.include("[[Sub-Template]]") %>` had its own `{{date}}` and other variables filled in, but the included file's reached the note written out as `{{date}}` — Templater reads an included file straight off disk, past the point where the variables are filled in. An included file's variables are now filled in before Templater runs its commands, so it can use them inside a Templater command as well as in its text.
+
 ## [3.3.0] - 2026-09-06
 
 ### Features

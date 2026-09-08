@@ -403,9 +403,12 @@ export class FakePluginData implements Pick<
   }
 }
 
+/** `renderNested` stands in for Templater re-entering the parser with a `tp.file.include` body. */
+type TemplaterTransform = (content: string, renderNested?: (raw: string) => string) => string;
+
 export class FakeTemplaterService implements Pick<TemplaterService, "apply" | "cursorJump" | "isSupported"> {
   #supported = false;
-  #transform: (content: string) => string = (content) => content;
+  #transform: TemplaterTransform = (content) => content;
   readonly applyCalls: { templatePath: VaultPath; targetPath: VaultPath; content: string }[] = [];
   readonly cursorJumps: VaultPath[] = [];
 
@@ -413,13 +416,18 @@ export class FakeTemplaterService implements Pick<TemplaterService, "apply" | "c
     this.#supported = value;
   }
 
-  setTransform(transform: (content: string) => string): void {
+  setTransform(transform: TemplaterTransform): void {
     this.#transform = transform;
   }
 
-  apply(templatePath: VaultPath, targetPath: VaultPath, content: string): AsyncResult<string, never> {
+  apply(
+    templatePath: VaultPath,
+    targetPath: VaultPath,
+    content: string,
+    renderNested?: (raw: string) => string,
+  ): AsyncResult<string, never> {
     this.applyCalls.push({ templatePath, targetPath, content });
-    return AsyncResult.ok(this.#transform(content));
+    return AsyncResult.ok(this.#transform(content, renderNested));
   }
 
   cursorJump(path: VaultPath): AsyncResult<void, never> {
