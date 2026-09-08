@@ -29,14 +29,15 @@ const {
   field,
   title,
   icon,
-  mode = false,
+  navigation = false,
   useDefaults = false,
 } = defineProps<{
   journalName: string;
   field: "navBlock" | "intervalBlock";
   title: string;
   icon: string;
-  mode?: boolean;
+  /** The navigation block alone has a create/open mode and adjacent periods. */
+  navigation?: boolean;
   useDefaults?: boolean;
 }>();
 
@@ -119,11 +120,15 @@ function onDropAtStart(orderedIds: string[]): void {
       <UiIconButton :icon="icons.action.add" :tooltip="m.block_lines_add_line()" @click="add" />
     </template>
 
-    <UiSettingRow v-if="mode" :name="m.nav_block_section_mode_label()">
+    <UiSettingRow v-if="navigation" :name="m.nav_block_section_mode_label()">
       <UiDropdown v-model="config[field].type">
         <option value="create">{{ m.nav_block_section_mode_option({ kind: "create" }) }}</option>
         <option value="existing">{{ m.nav_block_section_mode_option({ kind: "existing" }) }}</option>
       </UiDropdown>
+    </UiSettingRow>
+
+    <UiSettingRow v-if="navigation" :name="m.nav_block_section_adjacent_label()">
+      <UiToggle v-model="config[field].showAdjacent" />
     </UiSettingRow>
 
     <UiSettingRow :name="m.block_lines_decorate_whole_label()">

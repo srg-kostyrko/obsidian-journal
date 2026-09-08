@@ -221,6 +221,7 @@
       }
     }
   ],
+  "nav_block_section_adjacent_label": "Mostrar os períodos anterior e próximo",
   "block_lines_decorate_whole_label": "Decorar o bloco inteiro",
   "block_lines_empty": "Ainda não há linhas. Adicione uma.",
   "block_lines_add_line": "Adicionar linha",

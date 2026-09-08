@@ -107,6 +107,13 @@ describe("journalConfigSchema", () => {
 });
 
 describe("journalDefaultsFor navBlock per write type", () => {
+  it.each(["day", "week", "month", "quarter", "year", "custom"] as const)(
+    "shows the adjacent periods by default for a %s journal",
+    (type) => {
+      expect(journalDefaultsFor({ type } as JournalWrite, "journal").navBlock.showAdjacent).toBe(true);
+    },
+  );
+
   it("day journal has weekday + big day-number + relative + week + month + year rows", () => {
     const { navBlock } = journalDefaultsFor({ type: "day" }, "daily");
     expect(navBlock.type).toBe("create");
@@ -234,6 +241,7 @@ describe("journalConfigSchema navBlock default", () => {
       type: "create",
       lines: [],
       decorateWholeBlock: false,
+      showAdjacent: true,
     });
   });
 });
@@ -245,6 +253,7 @@ describe("journalConfigSchema intervalBlock default", () => {
       type: "create",
       lines: [],
       decorateWholeBlock: false,
+      showAdjacent: true,
     });
   });
 
@@ -256,6 +265,7 @@ describe("journalConfigSchema intervalBlock default", () => {
       type: "create",
       lines: [],
       decorateWholeBlock: false,
+      showAdjacent: true,
     });
   });
 });
@@ -312,6 +322,25 @@ describe("navBlockSchema", () => {
     expect(parsed.success).toBe(true);
     if (!parsed.success) return;
     expect(parsed.output.lines[0]?.[0]?.linkDate).toBe("");
+  });
+
+  it("defaults showAdjacent to true when a stored block predates the option", () => {
+    // A stored 3.x navBlock carries no showAdjacent. It has to parse rather than fail:
+    // repairCollectionEntry reads issue.path[0].key, so a failure here would substitute the
+    // whole navBlock from defaults and take the user's lines with it.
+    const value = { type: "create" as const, decorateWholeBlock: false, lines: [] };
+    const parsed = v.safeParse(navBlockSchema, value);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.showAdjacent).toBe(true);
+  });
+
+  it("keeps showAdjacent false when a stored block turned the adjacent periods off", () => {
+    const value = { type: "create" as const, decorateWholeBlock: false, lines: [], showAdjacent: false };
+    const parsed = v.safeParse(navBlockSchema, value);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.showAdjacent).toBe(false);
   });
 
   it("rejects unknown link kinds", () => {

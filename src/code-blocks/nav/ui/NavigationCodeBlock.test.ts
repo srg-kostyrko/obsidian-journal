@@ -43,6 +43,8 @@ interface NavScenario {
   readonly entries?: readonly JournalEntry[];
   /** Notes that must exist in the vault for a real open or file menu to resolve. */
   readonly notes?: readonly string[];
+  /** The parsed fence body. Unset keys leave the journal's own settings in charge. */
+  readonly fence?: { adjacent?: boolean };
 }
 
 async function renderNav(path: string, scenario: NavScenario) {
@@ -61,8 +63,10 @@ async function renderNav(path: string, scenario: NavScenario) {
   const notes = scenario.notes ?? [];
   for (const entry of entries) index.register(entry);
   for (const note of notes) harness.host.putFile(note);
-  harness.render(NavigationCodeBlock, { props: { path: path as VaultPath, config: {} } });
-  return { harness, flows, index, workspace: harness.resolve(WorkspaceService) };
+  const view = harness.render(NavigationCodeBlock, {
+    props: { path: path as VaultPath, config: scenario.fence ?? {} },
+  });
+  return { harness, flows, index, view, workspace: harness.resolve(WorkspaceService) };
 }
 
 function journalEntry(journalName: string, anchorDate: string, path: string): JournalEntry {
@@ -206,6 +210,73 @@ describe("NavigationCodeBlock adjacent periods in 'existing' mode", () => {
     await nextTick();
 
     expect(screen.getByText("26")).toBeTruthy();
+  });
+});
+
+describe("NavigationCodeBlock adjacent periods", () => {
+  const shelves = { main: buildShelf("main", { journals: ["daily"] }) };
+  const entries = [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")];
+
+  it("renders the current period alone when the journal hides the adjacent ones", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      shelves,
+      entries,
+    });
+
+    expect(screen.getByText("27")).toBeTruthy();
+    expect(screen.queryByText("26")).toBeNull();
+    expect(screen.queryByText("28")).toBeNull();
+  });
+
+  it("drops the placeholders that hold the side columns open, so the current period can centre", async () => {
+    const { view } = await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      shelves,
+      entries,
+    });
+
+    expect(view.container.querySelectorAll(".nav-block-placeholder")).toHaveLength(0);
+    expect(view.container.querySelector(".nav-view")?.classList.contains("nav-view--solo")).toBe(true);
+  });
+
+  it("keeps both arrows working when the adjacent periods are hidden", async () => {
+    const { flows } = await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      shelves,
+      entries,
+    });
+
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await user.click(screen.getByRole("button", { name: /previous/i }));
+    await user.click(screen.getByRole("button", { name: /next/i }));
+
+    expect(flows.invoke).toHaveBeenNthCalledWith(1, OpenDateFlow, expect.objectContaining({ anchor: "2026-05-26" }));
+    expect(flows.invoke).toHaveBeenNthCalledWith(2, OpenDateFlow, expect.objectContaining({ anchor: "2026-05-28" }));
+  });
+
+  it("hides the adjacent periods for one note when the fence says so and the journal shows them", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: fixedJournal("daily", { type: "day" }) },
+      shelves,
+      entries,
+      fence: { adjacent: false },
+    });
+
+    expect(screen.getByText("27")).toBeTruthy();
+    expect(screen.queryByText("26")).toBeNull();
+  });
+
+  it("shows the adjacent periods for one note when the fence says so and the journal hides them", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      shelves,
+      entries,
+      fence: { adjacent: true },
+    });
+
+    expect(screen.getByText("26")).toBeTruthy();
+    expect(screen.getByText("28")).toBeTruthy();
   });
 });
 

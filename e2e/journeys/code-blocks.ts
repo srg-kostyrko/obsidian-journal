@@ -41,6 +41,8 @@ export const timelineCalendar: CalendarSurface = calendarSurface(TIMELINE_BLOCK)
 // Fenced bodies. The timeline runs over all journals (unconnected host ⇒ null shelf) and
 // must show the week column for the has-open-task weekly decoration.
 export const NAV_FENCE = "```calendar-nav\n```";
+// The per-note override of the journal's "show previous and next periods" setting.
+export const NAV_SOLO_FENCE = "```calendar-nav\nadjacent: false\n```";
 export const TIMELINE_FENCE = "```calendar-timeline\nmode: month\nweeks: left\n```";
 // Quarter mode stacks three month grids; adjacent-month days are blanked so a neighbor
 // month's own cells aren't shadowed by duplicated dates.
@@ -246,6 +248,33 @@ export async function navViewFill(): Promise<{ view: number; host: number }> {
     return {
       view: Math.round(view?.getBoundingClientRect().width ?? -1),
       host: Math.round(host.getBoundingClientRect().width),
+    };
+  }, NAV_BLOCK);
+}
+
+// The current period's group against the row's content box — the row's own bounding width would
+// not separate the two layouts, since its padding leaves the group narrower under either. A
+// stretched group fills that content box exactly; with the adjacent periods hidden it hugs its
+// content instead, so the chevrons sit beside the period rather than out at the note's edges.
+// Only the real cascade settles this.
+export async function navCurrentGroupWidths(): Promise<{ group: number; content: number }> {
+  await browser.waitUntil(
+    async () =>
+      browser.execute(
+        (sel: string) => [...document.querySelectorAll<HTMLElement>(sel)].some((el) => el.clientWidth > 0),
+        NAV_BLOCK,
+      ),
+    { timeoutMsg: `no laid-out ${NAV_BLOCK} to measure the current group against` },
+  );
+  return browser.execute((sel: string) => {
+    const host = [...document.querySelectorAll<HTMLElement>(sel)].find((el) => el.clientWidth > 0);
+    const view = host?.querySelector<HTMLElement>(".nav-view");
+    if (!host || !view) return { group: -1, content: -1 };
+    const styles = getComputedStyle(view);
+    const padding = (Number.parseFloat(styles.paddingLeft) || 0) + (Number.parseFloat(styles.paddingRight) || 0);
+    return {
+      group: Math.round(host.querySelector<HTMLElement>(".nav-current-group")?.getBoundingClientRect().width ?? -1),
+      content: Math.round(view.getBoundingClientRect().width - padding),
     };
   }, NAV_BLOCK);
 }

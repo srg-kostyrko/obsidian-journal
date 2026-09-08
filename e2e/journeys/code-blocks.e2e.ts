@@ -14,6 +14,7 @@ import {
   NAV_NEXT_BLOCK,
   NAV_PANE_WIDTHS,
   NAV_PREVIOUS_BLOCK,
+  NAV_SOLO_FENCE,
   NAV_VIEW,
   TIMELINE_BAD_FENCE,
   TIMELINE_BLOCK,
@@ -25,6 +26,7 @@ import {
   livePreviewNote,
   monthGridLayout,
   narrowNavLayout,
+  navCurrentGroupWidths,
   navLayoutsAcross,
   navViewFill,
   openInLivePreview,
@@ -189,6 +191,29 @@ describe("code blocks", () => {
         const layout = await narrowNavLayout(300);
         expect(layout.rows).toBe(3);
         expect(layout.overflowX).toBe(0);
+      });
+    });
+
+    describe("single period", () => {
+      it("renders the current period alone, hugging its arrows, when the fence hides the adjacent ones", async () => {
+        await renderBlock("nav/solo.md", hostNote("daily", "2026-06-24", NAV_SOLO_FENCE), NAV_VIEW);
+        await $(NAV_CURRENT_BLOCK).waitForExist({ timeoutMsg: "current nav block did not render" });
+
+        await expect($(NAV_PREVIOUS_BLOCK)).not.toExist();
+        await expect($(NAV_NEXT_BLOCK)).not.toExist();
+        // The placeholders are what hold the side columns open; left behind, they would keep the
+        // current group pinned to the middle third whatever its own width.
+        await expect($(`${NAV_VIEW} .nav-block-placeholder`)).not.toExist();
+        const { group, content } = await navCurrentGroupWidths();
+        expect(group).toBeLessThan(content);
+      });
+
+      it("still opens the next period from the arrow when the adjacent periods are hidden", async () => {
+        await renderBlock("nav/solo-click.md", hostNote("daily", "2026-06-26", NAV_SOLO_FENCE), NAV_VIEW);
+        await clickNavNext();
+
+        await waitForJournalFrontmatter("day/2026-06-27.md", { journal: "daily", date: "2026-06-27" });
+        expect(await activeNotePath()).toBe("day/2026-06-27.md");
       });
     });
 

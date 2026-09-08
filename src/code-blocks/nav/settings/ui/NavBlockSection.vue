@@ -13,7 +13,7 @@ const { journalName } = defineProps<{ journalName: string }>();
     field="navBlock"
     :title="m.nav_block_section_title()"
     :icon="icons.entity.navBlock"
-    mode
+    navigation
     use-defaults
   />
 </template>

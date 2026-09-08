@@ -27,7 +27,9 @@ import { resolveSegmentDecoration, type SegmentDecorationCell } from "../segment
 import NavBlock from "./NavBlock.vue";
 import { useStackWhenTight } from "./use-stack-when-tight";
 
-const { path } = defineProps<CodeBlockProps<Record<string, never>>>();
+import type { NavBlockFenceConfig } from "../nav-config";
+
+const { path, config } = defineProps<CodeBlockProps<NavBlockFenceConfig>>();
 
 const index = useService(JournalsIndex);
 const journals = useService(JournalsRepository);
@@ -77,12 +79,16 @@ const adjacent = computed<{ previous: AnchorString | undefined; next: AnchorStri
   };
 });
 
+// The fence overrides the journal in both directions; unset there leaves the journal in charge.
+const showAdjacent = computed(() => config.adjacent ?? journal.value?.navBlock.showAdjacent ?? true);
+
 const periods = computed<Period[]>(() => {
   const currentJournal = journal.value;
   if (!currentJournal) return [];
   const list: Period[] = [];
   const anchor = currentAnchor.value;
   if (anchor) list.push(periodForJournal(currentJournal.write, anchor));
+  if (!showAdjacent.value) return list;
   if (adjacent.value.previous) list.push(periodForJournal(currentJournal.write, adjacent.value.previous));
   if (adjacent.value.next) list.push(periodForJournal(currentJournal.write, adjacent.value.next));
   return list;
@@ -117,9 +123,10 @@ const segmentCells = computed<readonly SegmentDecorationCell[]>(() => {
   if (!currentJournal) return [];
   const all = [...journals.find().list()];
   const shelfList = [...shelves.find().list()];
-  const anchors = [currentAnchor.value, adjacent.value.previous, adjacent.value.next].filter(
-    (anchor): anchor is AnchorString => anchor !== undefined,
-  );
+  const anchors = [
+    currentAnchor.value,
+    ...(showAdjacent.value ? [adjacent.value.previous, adjacent.value.next] : []),
+  ].filter((anchor): anchor is AnchorString => anchor !== undefined);
   const out: SegmentDecorationCell[] = [];
   for (const anchor of anchors) {
     for (const line of currentJournal.navBlock.lines) {
@@ -184,9 +191,14 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
 
 <template>
   <div v-if="!isConnected" class="journal-nav-not-connected">{{ m.code_blocks_nav_not_connected() }}</div>
-  <div v-else-if="journal && currentAnchor" ref="row" class="nav-view" :class="{ 'nav-view--stacked': stacked }">
+  <div
+    v-else-if="journal && currentAnchor"
+    ref="row"
+    class="nav-view"
+    :class="{ 'nav-view--stacked': stacked, 'nav-view--solo': !showAdjacent }"
+  >
     <NavBlock
-      v-if="adjacent.previous"
+      v-if="showAdjacent && adjacent.previous"
       class="nav-block-previous nav-block-side"
       :block="journal.navBlock"
       :journal
@@ -195,7 +207,7 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
       :block-scope="navBlockDecorationScope"
       :shelf="decorationShelf"
     />
-    <div v-else class="nav-block-placeholder" />
+    <div v-else-if="showAdjacent" class="nav-block-placeholder" />
 
     <!-- Both chevrons belong to the period they move, not to the neighbor they point at. Grouped
          with the current block, a wrap can never strand the current period without its controls or
@@ -229,7 +241,7 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
     </div>
 
     <NavBlock
-      v-if="adjacent.next"
+      v-if="showAdjacent && adjacent.next"
       class="nav-block-next nav-block-side"
       :block="journal.navBlock"
       :journal
@@ -238,7 +250,7 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
       :block-scope="navBlockDecorationScope"
       :shelf="decorationShelf"
     />
-    <div v-else class="nav-block-placeholder" />
+    <div v-else-if="showAdjacent" class="nav-block-placeholder" />
   </div>
 </template>
 
@@ -288,6 +300,14 @@ function openAdjacent(anchor: AnchorString | undefined, event: MouseEvent): void
 .nav-current-group > .nav-block {
   flex: 1 1 auto;
   min-width: 0;
+}
+/* With the adjacent periods hidden the current group is the row's only column, so it stops
+   claiming an equal share of it and hugs its own content instead — the chevrons sit beside the
+   period name rather than out at the note's edges, and a decorated block bands its text
+   rather than the note.
+   `.nav-view` already centres what is left. */
+.nav-view--solo > .nav-current-group {
+  flex: 0 1 auto;
 }
 /* Held for the length of one measurement by use-stack-when-tight, which asks what the columns
    need before deciding whether they can share a row. `width` alone would not answer: a flex item

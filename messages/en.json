@@ -157,6 +157,7 @@
       }
     }
   ],
+  "nav_block_section_adjacent_label": "Show previous and next periods",
   "block_lines_decorate_whole_label": "Decorate whole block",
   "block_lines_empty": "No lines yet. Add one.",
   "block_lines_add_line": "Add line",

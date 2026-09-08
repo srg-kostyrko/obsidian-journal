@@ -122,6 +122,11 @@ export const navBlockSchema = v.object({
   type: v.picklist(["create", "existing"]),
   lines: v.array(v.array(navBlockSegmentSchema)),
   decorateWholeBlock: v.boolean(),
+  // Optional so a block stored before the option parses unchanged: a failure here carries the
+  // path key "navBlock", which repairCollectionEntry substitutes wholesale from the defaults,
+  // taking the journal's own lines with it. Read only by the navigation block — the interval
+  // block has no adjacent periods, the way it has no use for `type` either.
+  showAdjacent: v.optional(v.boolean(), true),
 });
 
 export type NavBlockSegmentLink = v.InferOutput<typeof navBlockSegmentLinkSchema>;
@@ -225,6 +230,7 @@ const segNavRelative: NavBlockSegment = { ...emptyNavSegment, template: "{{relat
 const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   day: {
     type: "create",
+    showAdjacent: true,
     decorateWholeBlock: false,
     lines: [
       [{ ...emptyNavSegment, template: "{{date:ddd}}" }],
@@ -237,6 +243,7 @@ const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   },
   week: {
     type: "create",
+    showAdjacent: true,
     decorateWholeBlock: false,
     lines: [
       [{ ...segNavWeek, fontSize: 3, bold: true, link: "self", addDecorations: true }],
@@ -247,6 +254,7 @@ const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   },
   month: {
     type: "create",
+    showAdjacent: true,
     decorateWholeBlock: false,
     lines: [
       [{ ...segNavMonth, fontSize: 3, bold: true, link: "self", addDecorations: true }],
@@ -256,6 +264,7 @@ const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   },
   quarter: {
     type: "create",
+    showAdjacent: true,
     decorateWholeBlock: false,
     lines: [
       [{ ...emptyNavSegment, template: "{{date:[Q]Q}}", fontSize: 3, bold: true, link: "self", addDecorations: true }],
@@ -265,11 +274,13 @@ const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   },
   year: {
     type: "create",
+    showAdjacent: true,
     decorateWholeBlock: false,
     lines: [[{ ...segNavYear, fontSize: 3, bold: true, link: "self", addDecorations: true }], [segNavRelative]],
   },
   custom: {
     type: "create",
+    showAdjacent: true,
     decorateWholeBlock: false,
     lines: [
       [
@@ -289,11 +300,17 @@ const defaultNavBlocks: Record<JournalWrite["type"], JournalNavBlock> = {
   },
 };
 
-const emptyIntervalBlock: JournalNavBlock = { type: "create", lines: [], decorateWholeBlock: false };
+const emptyIntervalBlock: JournalNavBlock = {
+  type: "create",
+  lines: [],
+  decorateWholeBlock: false,
+  showAdjacent: true,
+};
 
 const customIntervalBlock: JournalNavBlock = {
   type: "create",
   decorateWholeBlock: true,
+  showAdjacent: true,
   lines: [
     [{ ...emptyNavSegment, template: "{{journal_name}} {{index}}", link: "self", fontSize: 1.2, bold: true }],
     [{ ...emptyNavSegment, template: "{{start_date}} to {{end_date}}" }],

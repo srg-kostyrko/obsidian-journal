@@ -1,6 +1,6 @@
 import { defineCodeBlock } from "@/infrastructure/host";
 
-import { navBlockSchema } from "./nav-config";
+import { navBlockKeys, navBlockSchema } from "./nav-config";
 import NavigationCodeBlock from "./ui/NavigationCodeBlock.vue";
 
 export const navigationCodeBlock = defineCodeBlock({
@@ -8,4 +8,5 @@ export const navigationCodeBlock = defineCodeBlock({
   schema: navBlockSchema,
   component: NavigationCodeBlock,
   cssClass: ["journal-nav-code-block"],
+  knownKeys: navBlockKeys,
 });
