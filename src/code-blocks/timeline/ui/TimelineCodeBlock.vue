@@ -22,6 +22,8 @@ import { ShelvesRepository } from "@/shelves";
 import TimelineCalendar from "./TimelineCalendar.vue";
 import TimelineMonth from "./TimelineMonth.vue";
 import TimelineNavigation from "./TimelineNavigation.vue";
+import TimelineNavReset from "./TimelineNavReset.vue";
+import TimelineNavStep from "./TimelineNavStep.vue";
 import TimelineQuarter from "./TimelineQuarter.vue";
 import TimelineWeek from "./TimelineWeek.vue";
 
@@ -120,6 +122,11 @@ const visiblePeriods = computed<readonly Period[]>(() =>
   padded.value ? periodWindow(focus.value, config.before ?? 0, config.after ?? 0) : [focus.value],
 );
 
+// One grid means one heading, and that heading already names the period the label would.
+// The controls join it rather than taking a row of their own; every other shape — a padded
+// window, quarter, calendar — carries several headings and keeps the label row.
+const merged = computed(() => navigation.value && padded.value && visiblePeriods.value.length === 1);
+
 function step(steps: number): void {
   offset.value += steps;
 }
@@ -128,7 +135,7 @@ function step(steps: number): void {
 <template>
   <div class="journal-timeline" :data-mode="mode">
     <TimelineNavigation
-      v-if="navigation"
+      v-if="navigation && !merged"
       :periods="visiblePeriods"
       :unit="unit"
       :moved="offset !== 0"
@@ -145,7 +152,16 @@ function step(steps: number): void {
       :hidden-weekdays="config.hiddenWeekdays"
       :before="config.before"
       :after="config.after"
-    />
+    >
+      <template v-if="merged" #header-start>
+        <TimelineNavStep direction="prev" :unit @step="step" />
+        <TimelineNavReset :unit mirror />
+      </template>
+      <template v-if="merged" #header-end>
+        <TimelineNavReset :unit :moved="offset !== 0" @reset="offset = 0" />
+        <TimelineNavStep direction="next" :unit @step="step" />
+      </template>
+    </TimelineWeek>
     <TimelineMonth
       v-else-if="mode === 'month'"
       :ref-date="refDate"
@@ -154,7 +170,16 @@ function step(steps: number): void {
       :hidden-weekdays="config.hiddenWeekdays"
       :before="config.before"
       :after="config.after"
-    />
+    >
+      <template v-if="merged" #header-start>
+        <TimelineNavStep direction="prev" :unit @step="step" />
+        <TimelineNavReset :unit mirror />
+      </template>
+      <template v-if="merged" #header-end>
+        <TimelineNavReset :unit :moved="offset !== 0" @reset="offset = 0" />
+        <TimelineNavStep direction="next" :unit @step="step" />
+      </template>
+    </TimelineMonth>
     <TimelineQuarter
       v-else-if="mode === 'quarter'"
       :ref-date="refDate"

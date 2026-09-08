@@ -306,15 +306,26 @@ export function livePreviewNote(journal: string, anchor: string, fence: string):
   return hostNote(journal, anchor, `${fence}\n\n${LIVE_PREVIEW_TAIL}`);
 }
 
-// The timeline's previous/next row. Buttons carry data-nav rather than a class so the
-// selector does not ride on styling hooks a theme may want to rename.
-export const TIMELINE_NAV = `${TIMELINE_BLOCK} .timeline-navigation`;
-export const TIMELINE_NAV_PREV = `${TIMELINE_NAV} [data-nav="prev"]`;
-export const TIMELINE_NAV_NEXT = `${TIMELINE_NAV} [data-nav="next"]`;
-export const TIMELINE_NAV_RESET = `${TIMELINE_NAV} [data-nav="reset"]`;
-export const TIMELINE_NAV_LABEL = `${TIMELINE_NAV} .timeline-navigation__label`;
+// The timeline's previous/next controls. Buttons carry data-nav rather than a class so the
+// selector does not ride on styling hooks a theme may want to rename — and so it holds for
+// both row shapes, since a single-grid block seats the same controls in the grid's heading.
+export const TIMELINE_NAV_PREV = `${TIMELINE_BLOCK} [data-nav="prev"]`;
+export const TIMELINE_NAV_NEXT = `${TIMELINE_BLOCK} [data-nav="next"]`;
+export const TIMELINE_NAV_RESET = `${TIMELINE_BLOCK} [data-nav="reset"]`;
+
+// The label row, which only the shapes carrying several grid headings still draw.
+export const TIMELINE_NAV_LABEL_ROW = `${TIMELINE_BLOCK} .timeline-navigation`;
+export const TIMELINE_NAV_LABEL = `${TIMELINE_NAV_LABEL_ROW} .timeline-navigation__label`;
+
+// The grid heading once the controls have joined it — the single-grid shape's navigation row.
+export const TIMELINE_MERGED_NAV = `${TIMELINE_BLOCK} [data-flanked]`;
 
 export const TIMELINE_NAV_FENCE = "```calendar-timeline\nmode: week\nweeks: left\nnavigation: true\n```";
+
+// The same block padded, which keeps the label row: three week grids have no one heading to
+// fold the controls into.
+export const TIMELINE_NAV_PADDED_FENCE =
+  "```calendar-timeline\nmode: week\nweeks: left\nnavigation: true\nbefore: 1\nafter: 1\n```";
 
 // Same hit-test limitation clickNavNext documents: a real WebDriver click cannot reach a
 // control inside a rendered code block, so dispatch a native DOM click. The Vue handler
@@ -362,17 +373,25 @@ export function editBlockButtonOverlap(
   );
 }
 
-// Pixels the navigation label's centre sits away from the row's own centre. Positive is right.
-export function timelineNavLabelOffset(): Promise<number | null> {
-  return browser.execute(() => {
-    const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
-      .filter((l) => !l.style.display.includes("none"))
-      .find((l) => l.querySelector(".timeline-navigation"));
-    const nav = leaf?.querySelector<HTMLElement>(".timeline-navigation");
-    const label = nav?.querySelector<HTMLElement>(".timeline-navigation__label");
-    if (!nav || !label) return null;
-    const row = nav.getBoundingClientRect();
-    const text = label.getBoundingClientRect();
-    return Math.round((text.left + text.right) / 2 - (row.left + row.right) / 2);
-  });
+// Pixels the centre of what a navigation row holds between its controls sits away from the
+// row's own centre. Positive is right. Takes the row and the contents so it serves both
+// shapes — the label row's single label, and the merged row's run of heading cells.
+export function timelineNavCentreOffset(rowSelector: string, contentSelector: string): Promise<number | null> {
+  return browser.execute(
+    (rowSel: string, contentSel: string) => {
+      const leaf = [...document.querySelectorAll<HTMLElement>(".workspace-leaf")]
+        .filter((l) => !l.style.display.includes("none"))
+        .find((l) => l.querySelector(rowSel));
+      const nav = leaf?.querySelector<HTMLElement>(rowSel);
+      const contents = [...(nav?.querySelectorAll<HTMLElement>(contentSel) ?? [])];
+      if (!nav || contents.length === 0) return null;
+      const rects = contents.map((element) => element.getBoundingClientRect());
+      const left = Math.min(...rects.map((rect) => rect.left));
+      const right = Math.max(...rects.map((rect) => rect.right));
+      const row = nav.getBoundingClientRect();
+      return Math.round((left + right) / 2 - (row.left + row.right) / 2);
+    },
+    rowSelector,
+    contentSelector,
+  );
 }

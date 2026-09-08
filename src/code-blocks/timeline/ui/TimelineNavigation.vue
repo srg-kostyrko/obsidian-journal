@@ -2,12 +2,11 @@
 import { computed } from "vue";
 
 import type { Period, PeriodKind } from "@/calendar";
-import { m } from "@/i18n";
-import { icons } from "@/ui/icons";
-import UiButton from "@/ui/UiButton.vue";
-import UiIcon from "@/ui/UiIcon.vue";
 
 import { navigationLabel } from "../navigation-label";
+
+import TimelineNavReset from "./TimelineNavReset.vue";
+import TimelineNavStep from "./TimelineNavStep.vue";
 
 const props = defineProps<{
   periods: readonly Period[];
@@ -22,40 +21,13 @@ const label = computed(() => navigationLabel(props.periods));
 
 <template>
   <div class="timeline-navigation">
-    <UiButton
-      flat
-      data-nav="prev"
-      :tooltip="m.view_toolbar_button_default_tooltip_prev_unit({ unit })"
-      @click="emit('step', -1)"
-    >
-      <UiIcon :name="icons.nav.prev" />
-    </UiButton>
+    <TimelineNavStep direction="prev" :unit @step="emit('step', $event)" />
     <span class="timeline-navigation__middle">
-      <!-- Mirrors the reset slot opposite it. The slot keeps its width whether or not the
-           button is in it, so the label does not shift sideways the moment the block is paged
-           away — but on its own it would push the label off centre by half its width. -->
-      <span class="timeline-navigation__reset-slot" aria-hidden="true"></span>
+      <TimelineNavReset :unit mirror />
       <span class="timeline-navigation__label">{{ label }}</span>
-      <span class="timeline-navigation__reset-slot">
-        <UiButton
-          v-if="moved"
-          flat
-          data-nav="reset"
-          :tooltip="m.relative_date_this({ period: unit })"
-          @click="emit('reset')"
-        >
-          <UiIcon :name="icons.action.reset" />
-        </UiButton>
-      </span>
+      <TimelineNavReset :unit :moved @reset="emit('reset')" />
     </span>
-    <UiButton
-      flat
-      data-nav="next"
-      :tooltip="m.view_toolbar_button_default_tooltip_next_unit({ unit })"
-      @click="emit('step', 1)"
-    >
-      <UiIcon :name="icons.nav.next" />
-    </UiButton>
+    <TimelineNavStep direction="next" :unit @step="emit('step', $event)" />
   </div>
 </template>
 
@@ -79,11 +51,5 @@ const label = computed(() => navigationLabel(props.periods));
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
   white-space: nowrap;
-}
-.timeline-navigation__reset-slot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  inline-size: var(--size-4-5);
 }
 </style>
