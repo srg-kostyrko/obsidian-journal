@@ -196,6 +196,23 @@ describe("TemplateContentService.renderFor — Templater", () => {
       expect(result.value).toBe("# 2026-05-19 [templated]");
     });
 
+    // Templater reads a `tp.file.include` sub-template off disk, past the engine pass that
+    // rendered the parent. The renderer handed down carries the parent's own bindings, so the
+    // sub-template resolves the journal's date rather than the template file's own name.
+    it("hands Templater a renderer that resolves the note's variables in included content", async () => {
+      harness.host.putFile("Templates/daily.md", "body");
+      harness.templater.setTransform(
+        (content, renderNested) => `${content} ${renderNested?.("sub {{date}}") ?? "no renderer"}`,
+      );
+
+      const result = await harness
+        .resolve(TemplateContentService)
+        .renderFor("daily", meta, "2026-05-19", "2026-05-19.md" as VaultPath);
+
+      expectOk(result);
+      expect(result.value).toBe("body sub 2026-05-19");
+    });
+
     it("passes the winning template path and target path to Templater", async () => {
       harness.host.putFile("Templates/daily.md", "body");
 
