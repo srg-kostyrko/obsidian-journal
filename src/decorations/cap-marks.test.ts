@@ -50,11 +50,11 @@ describe("capMarks", () => {
   // owner. Truncating the tail instead would keep vault-wide marks and hide the journal's own,
   // which no other assertion in this file would catch.
   it("keeps the most specific marks and hides the broadest", () => {
-    const marks = slots({ right_top: [shape("#vault"), shape("#shelf"), shape("#jrnlA"), shape("#jrnlB")] });
+    const marks = slots({ right_top: [shape("#vault"), shape("#shelf"), shape("#journalA"), shape("#journalB")] });
 
     const capped = capMarks(marks, 3);
 
-    expect(colors(capped.right_top.visible)).toEqual(["#jrnlA", "#jrnlB"]);
+    expect(colors(capped.right_top.visible)).toEqual(["#journalA", "#journalB"]);
     expect(colors(capped.right_top.hidden)).toEqual(["#vault", "#shelf"]);
   });
 

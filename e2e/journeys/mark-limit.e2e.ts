@@ -2,7 +2,7 @@ import { browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 
-import { dayAnchor } from "./decorations.js";
+import { dayAnchor, elementWidthPx } from "./decorations.js";
 import { calendar, openSeededCalendarView } from "./view.js";
 
 const DAY = 14;
@@ -33,5 +33,15 @@ describe("decoration mark limit", () => {
     const popover = cell.$('[data-testid="mark-overflow-popover"]');
     await popover.waitForExist({ timeoutMsg: "the overflow popover did not open on hover" });
     await expect(popover.$$(".shape-decoration")).toBeElementsArrayOfSize(5);
+
+    // Decision 7 says the popover renders marks "larger ... at readable size" — assert the
+    // ratio, never an absolute pixel width, since Obsidian's editor zoom scales authored
+    // pixels (elementWidthPx's own comment covers why). The cell reading is scoped to a
+    // direct child of .place-right_top: the popover's own marks also live under that place
+    // span (nested inside .mark-overflow), so a descendant selector would match the popover
+    // copy first and compare it against itself.
+    const popoverMarkWidth = await elementWidthPx(popover.$(".shape-decoration"));
+    const cellMarkWidth = await elementWidthPx(cell.$(".place-right_top > .shape-decoration"));
+    expect(popoverMarkWidth).toBeGreaterThanOrEqual(cellMarkWidth * 2);
   });
 });

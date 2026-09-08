@@ -916,7 +916,7 @@
   ],
   "decoration_describe_when": "when",
   "decoration_edit": "Edit decoration",
-  "decoration_mark_limit_description": "How many shapes and icons a cell draws in each of its nine positions. Extra marks collapse into a badge you can hover to see them all. Applies to every calendar, navigation block and interval row.",
+  "decoration_mark_limit_description": "How many shapes and icons a cell draws in each of its nine positions. Extra marks collapse into a badge you can hover to see them all. The cap applies to every calendar, navigation block, interval row and set of period buttons, and to every decoration regardless of owner — journal, shelf or vault-wide.",
   "decoration_mark_limit_label": "Marks shown per position",
   "decoration_mark_limit_unlimited": "Unlimited",
   "decoration_mark_overflow_badge": "+{count}",

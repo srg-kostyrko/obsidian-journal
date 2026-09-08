@@ -136,7 +136,9 @@ const open = ref<Placement | null>(null);
   border-radius: var(--radius-s);
   background-color: var(--background-secondary);
   box-shadow: var(--shadow-s);
-  font-size: 2em;
+  /* rem, not em: em would compound with .mark-overflow's 0.55em and shrink the marks instead
+     of enlarging them. */
+  font-size: 3.5rem;
   white-space: nowrap;
 }
 </style>

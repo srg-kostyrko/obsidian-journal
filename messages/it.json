@@ -980,7 +980,7 @@
   ],
   "decoration_describe_when": "quando",
   "decoration_edit": "Modifica decorazione",
-  "decoration_mark_limit_description": "Quante forme e icone disegna una cella in ciascuna delle sue nove posizioni. I contrassegni in eccesso vengono raccolti in un badge su cui passare il mouse per vederli tutti. Si applica a ogni calendario, blocco di navigazione e riga di intervallo.",
+  "decoration_mark_limit_description": "Quante forme e icone disegna una cella in ciascuna delle sue nove posizioni. I contrassegni in eccesso vengono raccolti in un badge su cui passare il mouse per vederli tutti. Si applica a ogni calendario, blocco di navigazione, riga di intervallo e gruppo di pulsanti periodo, oltre che a ogni decorazione indipendentemente dal proprietario: diario, scaffale o l'intero vault.",
   "decoration_mark_limit_label": "Contrassegni per posizione",
   "decoration_mark_limit_unlimited": "Illimitato",
   "decoration_mark_overflow_badge": "+{count}",

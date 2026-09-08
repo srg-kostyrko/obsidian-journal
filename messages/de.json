@@ -980,7 +980,7 @@
   ],
   "decoration_describe_when": "wenn",
   "decoration_edit": "Dekoration bearbeiten",
-  "decoration_mark_limit_description": "Wie viele Formen und Symbole eine Zelle an jeder ihrer neun Positionen zeichnet. Zusätzliche Markierungen werden zu einer Plakette zusammengefasst, die beim Überfahren mit der Maus alle anzeigt. Gilt für jeden Kalender, jeden Navigationsblock und jede Intervallzeile.",
+  "decoration_mark_limit_description": "Wie viele Formen und Symbole eine Zelle an jeder ihrer neun Positionen zeichnet. Zusätzliche Markierungen werden zu einer Plakette zusammengefasst, die beim Überfahren mit der Maus alle anzeigt. Gilt für jeden Kalender, jeden Navigationsblock, jede Intervallzeile und jede Gruppe von Zeitraum-Schaltflächen sowie für jede Dekoration unabhängig vom Besitzer – Journal, Regal oder vault-weit.",
   "decoration_mark_limit_label": "Markierungen pro Position",
   "decoration_mark_limit_unlimited": "Unbegrenzt",
   "decoration_mark_overflow_badge": "+{count}",

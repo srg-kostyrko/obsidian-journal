@@ -82,6 +82,27 @@ describe("DecorationsStore", () => {
       store.save({ kind: "global" }, [calendarDecoration]);
       expect(harness.settings.getSlice(decorationsSlice).state.decorations).toEqual([calendarDecoration]);
     });
+
+    // save({ kind: "global" }) must spread the existing slice state rather than replacing it
+    // outright, or a save silently drops every other field the slice carries alongside
+    // decorations - maxMarksPerSlot included.
+    it("preserves a non-default maxMarksPerSlot when saving global decorations", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+        data: {
+          journals: {},
+          shelves: {},
+          decorations: { decorations: [], maxMarksPerSlot: 5 },
+        },
+      });
+      const store = harness.resolve(DecorationsStore);
+
+      store.save({ kind: "global" }, [calendarDecoration]);
+
+      const state = harness.settings.getSlice(decorationsSlice).state;
+      expect(state.decorations).toEqual([calendarDecoration]);
+      expect(state.maxMarksPerSlot).toBe(5);
+    });
   });
 
   describe("exists", () => {
