@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 
+import { UNLIMITED_MARKS } from "../cap-marks";
 import { formatPadding, resolveCell } from "../resolve-cell";
 
 import CellMarks from "./CellMarks.vue";
@@ -8,7 +9,7 @@ import DecorationCorner from "./DecorationCorner.vue";
 
 import type { JournalDecorationStyle } from "../config";
 
-const props = defineProps<{ styles: readonly JournalDecorationStyle[] }>();
+const props = defineProps<{ styles: readonly JournalDecorationStyle[]; limit?: number }>();
 
 const cell = computed(() => resolveCell(props.styles));
 // Named separately so the style block's v-bind() targets stay stable across re-resolves:
@@ -30,7 +31,7 @@ const padding = computed(() => formatPadding(cell.value.padding));
       }"
     />
     <DecorationCorner v-for="(corner, i) in cell.corners" :key="i" :decoration="corner" />
-    <CellMarks :marks="cell.marks" :limit="0" />
+    <CellMarks :marks="cell.marks" :limit="limit ?? UNLIMITED_MARKS" />
     <span class="decoration-preview__content"><slot /></span>
   </span>
 </template>

@@ -8,6 +8,7 @@ import { JournalsRepository } from "@/journals";
 
 import { DecorationsStore } from "../decorations-store";
 import { describeCondition } from "../settings/ui/describe-condition";
+import { useMarkLimit } from "../use-mark-limit";
 
 import DecorationPreview from "./DecorationPreview.vue";
 
@@ -23,6 +24,7 @@ const props = defineProps<{ cell: BreakdownCell; index: number }>();
 const store = useService(DecorationsStore);
 const calendar = useService(Calendar);
 const journals = useService(JournalsRepository);
+const markLimit = useMarkLimit();
 
 const PERIOD_FORMAT: Record<PeriodKind, string> = {
   day: "YYYY-MM-DD",
@@ -115,7 +117,7 @@ function clausesOf(source: DecorationSource): readonly Clause[] {
     <h3 :id="headingId" class="decoration-breakdown__heading">{{ headingOf(cell) }}</h3>
 
     <div class="decoration-breakdown__body">
-      <DecorationPreview :styles="cell.styles" />
+      <DecorationPreview :styles="cell.styles" :limit="markLimit" />
 
       <ul class="decoration-breakdown__properties">
         <li v-for="property in cell.attribution.properties" :key="property.property">
