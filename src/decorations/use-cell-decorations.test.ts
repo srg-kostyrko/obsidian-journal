@@ -743,5 +743,25 @@ describe("useCellDecorations", () => {
       expect(matching.value).toBe("max(0.1em, 2px) max(0.6em, 2px)");
       expect(nonMatching.value).toBe(matching.value);
     });
+
+    // useCellPadding hands resolveCell every binding's styles and reads only .padding, which is a
+    // per-axis maximum of mark size. If truncation ever moves into resolveCell, the oversized
+    // mark below stops reserving and every cell in the grid loses that padding.
+    it("reserves padding for a mark the placement cap would hide", async () => {
+      const big = buildStyle("shape", { size: 1.5, placement_x: "right", placement_y: "top" });
+      const small = buildStyle("shape", { size: 0.2, placement_x: "right", placement_y: "top" });
+      const { harness } = await buildHarness([
+        buildDecoration({ styles: [big] }),
+        buildDecoration({ styles: [small] }),
+        buildDecoration({ styles: [small] }),
+        buildDecoration({ styles: [small] }),
+        buildDecoration({ styles: [small] }),
+      ]);
+
+      const padding = mountPadding(harness, [DayPeriod.containing(date("2026-05-25"))], ["daily"]);
+      await nextTick();
+
+      expect(padding.value).toBe("max(1.6em, 2px) max(1.6em, 2px)");
+    });
   });
 });
