@@ -61,7 +61,7 @@ export class DecorationsStore {
         this.#shelves.update(shelfName, { decorations: next as CalendarDecoration[] });
       })
       .with({ kind: "global" }, () => {
-        this.#slice.state = { decorations: next as CalendarDecoration[] };
+        this.#slice.state = { ...this.#slice.state, decorations: next as CalendarDecoration[] };
       })
       .exhaustive();
   }
