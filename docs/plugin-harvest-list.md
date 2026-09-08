@@ -4,23 +4,39 @@ A standing list of Obsidian plugins worth mining for ideas, with what to look fo
 in each. It is a working queue, not a report: pick a row, examine it, write the
 verdict back.
 
-**Nothing in the tables below has been examined yet.** The rows were assembled on
-2026-09-08 from download counts, descriptions and issue-tracker mentions. What
-each plugin actually does, and whether the idea is any good here, is the work
-still to do.
+The rows were assembled on 2026-09-08 from download counts, descriptions and
+issue-tracker mentions. A row still marked `not examined` has never been opened:
+what that plugin actually does, and whether the idea is any good here, is the
+work still to do.
 
 ## How to work this list
 
-1. Pick a row from the tables, preferring high install counts and the **Surfaces
-   we do not have** table.
-2. Read its README and settings, install it if it is cheap to try, and look for
-   the specific thing named in the "Harvest" column — that is the reason it is
-   listed, not a general invitation to admire it.
-3. Record the verdict in the Status column: `idea → #NNN` when it produced an
-   issue, `nothing new` when it did not, `ruled out — reason` when the idea is
-   real but deliberately declined.
-4. Check any idea against the code before calling it a gap, and check
-   [what has already been ruled out](#already-ruled-out) below.
+**One plugin per pass.** Finish it before picking the next. A sweep that skims
+ten READMEs produces ten shallow verdicts and no issues worth filing.
+
+1. **Pick one row**, preferring high install counts and the **Surfaces we do not
+   have** table.
+2. **Learn what it actually does.** Read its README, docs and settings
+   reference, then read its **source** for anything the docs leave ambiguous or
+   that looks worth stealing — marketing copy is not evidence of behavior. The
+   "Harvest" column names the reason the row is listed; it is a starting point,
+   not a limit.
+3. **Read its whole tracker, open and closed.** The ideas are in the issues, not
+   the README: what users asked for, what the maintainer declined and why, and
+   what was promised and never shipped. Read the bodies — the closing method
+   note below records how title-keyword counting invented a demand cluster that
+   did not exist.
+4. **Check every candidate against our code** before calling it a gap, against
+   [what has already been ruled out](#already-ruled-out) below, and against our
+   own tracker, open and closed. Prefer a `git grep` of the real symbol over a
+   guess at its name: a wrong spelling reads as "we don't have it".
+5. **Present the ideas one at a time**, each with its evidence, and settle each
+   one before moving to the next. Do not deliver a batch of findings and a
+   recommendation — the roadmap calls are the maintainer's.
+6. **Record the verdict** in the Status column once the pass is settled:
+   `idea → #NNN` when it produced an issue, `nothing new` when it did not,
+   `ruled out — reason` when the idea is real but deliberately declined. Issues
+   are filed only for ideas the maintainer accepted.
 
 ## Refreshing the list
 
@@ -70,7 +86,7 @@ most cases, no issue either.
 | Calendar                                   |     3,082,484 | The incumbent. Unmaintained; its tracker is already mined, see [below](#where-this-came-from)                                                                               | mined 2026-09-08 |
 | Periodic Notes                             |       754,036 | The other incumbent, likewise mined                                                                                                                                         | mined 2026-09-08 |
 | Chronology                                 |        68,684 | Calendar plus a timeline of note creation and modification                                                                                                                  | not examined     |
-| `mattmaiorana/calendar-plus`               |   10★, active | The only plugin a user publicly described as replacing **both** incumbents. Open this one first                                                                             | not examined     |
+| `mattmaiorana/calendar-plus`               |   10★, active | The only plugin a user publicly described as replacing **both** incumbents. Open this one first                                                                             | idea → #364      |
 | `Lam-L/ObJournal`                          | 78★, unlisted | Journal-style list, month view, **On This Day**, image gallery. Overlaps our positioning directly                                                                           | not examined     |
 | `luiisca/obsidian-periodic-notes-calendar` | 25★, unlisted | Periodic notes daily→yearly with a calendar interface — a BRAT-only direct replacement                                                                                      | not examined     |
 | OZ Calendar                                |        22,147 | A calendar driven by any YAML date key — the approach we already take, worth comparing                                                                                      | not examined     |
