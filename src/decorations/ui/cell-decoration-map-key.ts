@@ -25,6 +25,13 @@ export const CellPaddingKey: CellPaddingInjectionKey = Symbol("decorations:cell-
 
 export const defaultCellDecorationScope: CellDecorationScope = { map: CellDecorationMapKey, padding: CellPaddingKey };
 
+export type CellMarkLimitInjectionKey = InjectionKey<Ref<number>>;
+
+// Global, so it is a plain key rather than a member of CellDecorationScope: one setting governs
+// every scope, and putting it on the scope would thread it through all five scope objects for
+// nothing.
+export const CellMarkLimitKey: CellMarkLimitInjectionKey = Symbol("decorations:mark-limit");
+
 // A fresh scope for a surface that needs more than one independently-scoped grid in the same
 // subtree. `label` only names the symbols for debugging.
 export function createCellDecorationScope(label: string): CellDecorationScope {

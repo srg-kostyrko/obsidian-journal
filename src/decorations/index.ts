@@ -52,6 +52,7 @@ export { describeOwner, type CalendarDecorationOwner, type DecorationOwner } fro
 export { decorationsSlice } from "./settings/slice";
 export {
   CellDecorationMapKey,
+  CellMarkLimitKey,
   createCellDecorationScope,
   defaultCellDecorationScope,
   type CellDecorationScope,

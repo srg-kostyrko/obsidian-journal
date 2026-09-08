@@ -3,10 +3,16 @@ import { computed, inject } from "vue";
 
 import type { Period } from "@/calendar";
 
+import { UNLIMITED_MARKS } from "../cap-marks";
 import { cellKey } from "../engine";
 import { formatPadding, resolveCell } from "../resolve-cell";
 
-import { CellDecorationMapKey, CellPaddingKey, type CellDecorationScope } from "./cell-decoration-map-key";
+import {
+  CellDecorationMapKey,
+  CellMarkLimitKey,
+  CellPaddingKey,
+  type CellDecorationScope,
+} from "./cell-decoration-map-key";
 import CellMarks from "./CellMarks.vue";
 import DecorationCorner from "./DecorationCorner.vue";
 
@@ -28,6 +34,10 @@ const textColor = computed(() => cell.value.textColor);
 // Within a decorated grid every cell shares one reservation so a single decoration never
 // inflates only its own row; standalone use (e.g. previews) falls back to its own styles.
 const padding = computed(() => sharedPadding?.value ?? formatPadding(cell.value.padding));
+// Absent when the component is mounted outside a decorated grid (a preview, a bare unit test),
+// where nothing should be hidden.
+const markLimit = inject(CellMarkLimitKey, null);
+const limit = computed(() => markLimit?.value ?? UNLIMITED_MARKS);
 </script>
 
 <template>
@@ -42,7 +52,7 @@ const padding = computed(() => sharedPadding?.value ?? formatPadding(cell.value.
       }"
     />
     <DecorationCorner v-for="(corner, i) in cell.corners" :key="i" :decoration="corner" />
-    <CellMarks :marks="cell.marks" :limit="0" />
+    <CellMarks :marks="cell.marks" :limit="limit" />
     <span class="cell-decoration__content"><slot /></span>
   </span>
 </template>

@@ -16,8 +16,14 @@ import {
 } from "./engine";
 import { gatherBindings } from "./gather-bindings";
 import { formatPadding } from "./resolve-cell";
-import { defaultCellDecorationScope, type CellDecorationScope, type CellStyleRef } from "./ui/cell-decoration-map-key";
+import {
+  CellMarkLimitKey,
+  defaultCellDecorationScope,
+  type CellDecorationScope,
+  type CellStyleRef,
+} from "./ui/cell-decoration-map-key";
 import { useCellPadding } from "./use-cell-padding";
+import { useMarkLimit } from "./use-mark-limit";
 
 import type { JournalDecoration, JournalDecorationStyle } from "./config";
 import type { MaybeRefOrGetter } from "vue";
@@ -147,6 +153,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   });
   const sharedPadding = computed(() => formatPadding(paddingExtents.value));
   provide(scope.padding, sharedPadding);
+  provide(CellMarkLimitKey, useMarkLimit());
 
   onMounted(() => {
     const offMeta = notes.events.on("metadata-changed", repaintCell);
