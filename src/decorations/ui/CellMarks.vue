@@ -125,9 +125,12 @@ const open = ref<Placement | null>(null);
 .mark-overflow__popover {
   position: absolute;
   z-index: var(--layer-popover);
+  /* Flush against the badge, no gap: a gap between the badge's border box and the popover's
+     hit-tests to the cell behind, which fires the badge's mouseleave and unmounts the popover
+     (v-if) while the pointer is still crossing toward it. */
   top: 100%;
   right: 0;
-  margin-top: 2px;
+  margin-top: 0;
   display: flex;
   gap: 4px;
   align-items: center;

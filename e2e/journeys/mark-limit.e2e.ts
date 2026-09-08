@@ -34,14 +34,40 @@ describe("decoration mark limit", () => {
     await popover.waitForExist({ timeoutMsg: "the overflow popover did not open on hover" });
     await expect(popover.$$(".shape-decoration")).toBeElementsArrayOfSize(5);
 
-    // Decision 7 says the popover renders marks "larger ... at readable size" — assert the
-    // ratio, never an absolute pixel width, since Obsidian's editor zoom scales authored
-    // pixels (elementWidthPx's own comment covers why). The cell reading is scoped to a
-    // direct child of .place-right_top: the popover's own marks also live under that place
-    // span (nested inside .mark-overflow), so a descendant selector would match the popover
-    // copy first and compare it against itself.
+    // The popover must render marks larger, at a readable size — assert the ratio, never an
+    // absolute pixel width, since Obsidian's editor zoom scales authored pixels (elementWidthPx's
+    // own comment covers why). The cell reading is scoped to a direct child of .place-right_top:
+    // the popover's own marks also live under that place span (nested inside .mark-overflow), so
+    // a descendant selector would match the popover copy first and compare it against itself.
     const popoverMarkWidth = await elementWidthPx(popover.$(".shape-decoration"));
     const cellMarkWidth = await elementWidthPx(cell.$(".place-right_top > .shape-decoration"));
     expect(popoverMarkWidth).toBeGreaterThanOrEqual(cellMarkWidth * 2);
+  });
+
+  it("keeps the popover open as the pointer moves from the badge into it", async () => {
+    await openSeededCalendarView();
+
+    const cell = calendar.cell(dayAnchor(DAY));
+    const badge = cell.$('[data-testid="mark-overflow"]');
+    await badge.waitForExist();
+
+    const location = await badge.getLocation();
+    const size = await badge.getSize();
+    const badgeCenterX = Math.round(location.x + size.width / 2);
+    const badgeCenterY = Math.round(location.y + size.height / 2);
+    // One pixel past the badge's own border box. With the popover flush against the badge
+    // (Fix 1) this point lands inside the popover; with any gap it lands in the calendar cell
+    // behind, which is not a descendant of the badge and fires its mouseleave.
+    const justBelowBadge = Math.round(location.y + size.height) + 1;
+
+    await browser
+      .action("pointer")
+      .move({ duration: 0, x: badgeCenterX, y: badgeCenterY })
+      .pause(50)
+      .move({ duration: 0, x: badgeCenterX, y: justBelowBadge })
+      .perform();
+
+    const popover = cell.$('[data-testid="mark-overflow-popover"]');
+    await expect(popover).toExist();
   });
 });
