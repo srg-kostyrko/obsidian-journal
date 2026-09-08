@@ -1,0 +1,62 @@
+name: Cache cleanup
+
+on:
+  # `pull_request_target`, not `pull_request`: deleting a cache needs `actions: write`, and a
+  # fork's `pull_request` token is read-only, so fork PRs — the ones whose leftovers nobody is
+  # watching — could never clean up after themselves. The hazard that trigger is known for is
+  # running PR-authored code with a writable token; this job checks nothing out and runs none.
+  pull_request_target:
+    types: [closed]
+  # For sweeping a PR whose closure predates this workflow, or one whose run failed.
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "Pull request number whose caches should be deleted"
+        type: string
+        required: true
+
+permissions:
+  actions: write
+
+jobs:
+  caches:
+    runs-on: ubuntu-latest
+
+    steps:
+      # A cache is scoped to the ref that created it, and a PR's `refs/pull/N/merge` outlives
+      # its head branch — `delete_branch_on_merge` does not reach it. Left alone the entries are
+      # unreachable forever: only that PR's own runs may read them, and it is closed. They are
+      # not small either, because every e2e leg caches ~400 MB of Obsidian binaries, so a single
+      # PR leaves over a gigabyte behind and the repo drifts into cache eviction — which then
+      # costs *other* runs a cold download of the binaries.
+      - name: Delete the caches scoped to this pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REF: refs/pull/${{ github.event.pull_request.number || inputs.pr }}/merge
+        run: |
+          set -euo pipefail
+          ids=$(gh api -X GET "/repos/$REPO/actions/caches" -f ref="$REF" -F per_page=100 --jq '.actions_caches[].id')
+          if [ -z "$ids" ]; then
+            echo "No caches scoped to $REF."
+            exit 0
+          fi
+          # Attempt every id even when one fails. A DELETE can legitimately 404 — GitHub may have
+          # evicted the entry between the listing and the delete, and a close/reopen/close leaves
+          # two runs sweeping the same ref — and under `set -e` that would abort the loop, leaving
+          # the rest of the caches behind and the run red for reaching the desired state early.
+          # Failing every id is a different thing (a token without `actions: write`, say), and
+          # that one should be loud rather than swallowed, so it is the only case that exits 1.
+          failed=0
+          total=0
+          for id in $ids; do
+            total=$((total + 1))
+            if gh api -X DELETE "/repos/$REPO/actions/caches/$id" --silent; then
+              echo "deleted cache $id ($REF)"
+            else
+              failed=$((failed + 1))
+              echo "could not delete cache $id ($REF) — already gone?"
+            fi
+          done
+          echo "$((total - failed)) of $total caches deleted for $REF."
+          [ "$failed" -lt "$total" ] || exit 1
