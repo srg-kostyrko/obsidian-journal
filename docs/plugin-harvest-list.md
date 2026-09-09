@@ -109,10 +109,10 @@ Bears on the tasks epic (#344) and its phases.
 
 ## Platform questions
 
-| Plugin         | Installs | Harvest                                                                                                                                                                                                                                   | Status       |
-| -------------- | -------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| Calendar Bases |  111,366 | A calendar layout over Obsidian's Bases. #344 concluded Bases cannot help _tasks_ because checkbox items are not cached as properties — that does not extend to notes-with-dates, which is what these render. Needs a deliberate position | idea → #369  |
-| Notion Bases   |   20,943 | Table, kanban, gallery, calendar and timeline views over a folder                                                                                                                                                                         | not examined |
+| Plugin         | Installs | Harvest                                                                                                                                                                                                                                                                      | Status            |
+| -------------- | -------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| Calendar Bases |  111,366 | A calendar layout over Obsidian's Bases. #344 concluded Bases cannot help _tasks_ because checkbox items are not cached as properties — that does not extend to notes-with-dates, which is what these render. Needs a deliberate position                                    | idea → #369       |
+| Notion Bases   |   20,943 | **Not a Bases question.** A Notion-database clone competing with core Bases — its own engine, `minAppVersion` 1.8.7, predating Bases; nothing in it bears on #369. Its value here is the carrier: its rows are notes whose date is a frontmatter property and never the path | idea → #374, #356 |
 
 ## Capture and input
 
@@ -190,7 +190,7 @@ than by plugin. Last releases as of 2026-09-09, for the rows examined so far:
   whose org has since been renamed `community-archive`, and installs 404'd for
   part of 2026), Daily Note Outline 2024-03, Heatmap Calendar 2024-06. Daily
   Notes Editor 2025-04 and Rollover Daily Todos 2025-05 are slowing.
-- **Active.** Notebook Navigator 2026-09, TaskNotes 2026-08, Tasks 2026-08, Day
+- **Active.** Notebook Navigator 2026-09, Notion Bases 2026-09, TaskNotes 2026-08, Tasks 2026-08, Day
   Planner 2026-07, calendar-plus 2026-07, Yearly Glance 2026-07, Calendar Bases
   2026-04, Habit Tracker 21 2026-03.
 
