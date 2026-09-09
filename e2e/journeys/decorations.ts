@@ -132,6 +132,17 @@ export function decorationTextHex(cell: CellLocator): Promise<string | undefined
   return hexProp(decorationOf(cell), "color");
 }
 
+// Obsidian's editor zoom scales authored pixels to sub-pixel values (e.g. 3px renders as
+// 2.66667px), so a caller comparing two widths against each other (a ratio) can use the raw
+// float directly; only a comparison against an authored constant needs the rounding borderTop
+// applies.
+export async function elementWidthPx(el: CellLocator): Promise<number> {
+  const widthProp = await el.getCSSProperty("width");
+  return typeof widthProp.parsed.value === "number"
+    ? widthProp.parsed.value
+    : Number.parseFloat(widthProp.value ?? "0");
+}
+
 async function borderTop(cell: CellLocator): Promise<{ width: string; hex: string | undefined }> {
   const border = cell.$(".cell-decoration__border");
   const widthProp = await border.getCSSProperty("border-top-width");

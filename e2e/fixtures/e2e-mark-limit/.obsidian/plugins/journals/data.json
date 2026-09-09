@@ -1,0 +1,416 @@
+{
+  "version": 4,
+  "decorations": {
+    "decorations": [],
+    "maxMarksPerSlot": 3
+  },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "day",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "notelets": {},
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "right",
+              "placement_y": "top"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#22aa22"
+              },
+              "placement_x": "right",
+              "placement_y": "top"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#3333aa"
+              },
+              "placement_x": "right",
+              "placement_y": "top"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aaaa11"
+              },
+              "placement_x": "right",
+              "placement_y": "top"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#11aaaa"
+              },
+              "placement_x": "right",
+              "placement_y": "top"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#22aa22"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#3333aa"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#aaaa11"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#aa11aa"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#11aaaa"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#dd7711"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#7711dd"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#117744"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#994422"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#229944"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "square",
+              "color": {
+                "type": "custom",
+                "color": "#442299"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

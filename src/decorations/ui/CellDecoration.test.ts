@@ -1,6 +1,6 @@
 import { render } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
-import { defineComponent, h, provide, reactive, shallowRef } from "vue";
+import { defineComponent, h, provide, reactive, ref, shallowRef } from "vue";
 
 import { DayPeriod } from "@/calendar";
 import { date } from "@/calendar/testing";
@@ -8,18 +8,19 @@ import { date } from "@/calendar/testing";
 import { cellKey } from "../engine";
 import { buildStyle } from "../testing";
 
-import { CellDecorationMapKey, type CellStyleRef } from "./cell-decoration-map-key";
+import { CellDecorationMapKey, CellMarkLimitKey, type CellStyleRef } from "./cell-decoration-map-key";
 import CellDecoration from "./CellDecoration.vue";
 
 const slot = () => "hi";
 
-function makeHost(period: DayPeriod, cells: ReadonlyMap<string, CellStyleRef>) {
+function makeHost(period: DayPeriod, cells: ReadonlyMap<string, CellStyleRef>, limit?: number) {
   function render() {
     return h(CellDecoration, { period }, slot);
   }
   return defineComponent({
     setup() {
       provide(CellDecorationMapKey, cells);
+      if (limit !== undefined) provide(CellMarkLimitKey, ref(limit));
       return render;
     },
   });
@@ -52,6 +53,28 @@ describe("CellDecoration", () => {
     const { container } = render(makeHost(period, cells));
     expect(container.querySelector(".decoration-corner")).toBeNull();
     expect(container.querySelector(".shape-decoration")).toBeNull();
+  });
+
+  it("honours an injected mark limit, collapsing overflow into a badge", () => {
+    const period = DayPeriod.containing(date("2026-05-25"));
+    const shapes = Array.from({ length: 5 }, () => buildStyle("shape", { placement_x: "right", placement_y: "top" }));
+    const cells = new Map<string, CellStyleRef>([[cellKey(period.kind, period.anchor.toAnchor()), shallowRef(shapes)]]);
+
+    const { container, getByTestId } = render(makeHost(period, cells, 3));
+
+    expect(container.querySelectorAll(".place-right_top .shape-decoration")).toHaveLength(2);
+    expect(getByTestId("mark-overflow")).not.toBeNull();
+  });
+
+  it("renders every mark when no limit is injected", () => {
+    const period = DayPeriod.containing(date("2026-05-25"));
+    const shapes = Array.from({ length: 5 }, () => buildStyle("shape", { placement_x: "right", placement_y: "top" }));
+    const cells = new Map<string, CellStyleRef>([[cellKey(period.kind, period.anchor.toAnchor()), shallowRef(shapes)]]);
+
+    const { container, queryByTestId } = render(makeHost(period, cells));
+
+    expect(container.querySelectorAll(".place-right_top .shape-decoration")).toHaveLength(5);
+    expect(queryByTestId("mark-overflow")).toBeNull();
   });
 
   it("renders when the period prop arrives as a reactive proxy", () => {

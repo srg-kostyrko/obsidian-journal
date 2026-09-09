@@ -3,13 +3,18 @@ import { computed, inject } from "vue";
 
 import type { Period } from "@/calendar";
 
+import { UNLIMITED_MARKS } from "../cap-marks";
 import { cellKey } from "../engine";
 import { formatPadding, resolveCell } from "../resolve-cell";
 
-import { CellDecorationMapKey, CellPaddingKey, type CellDecorationScope } from "./cell-decoration-map-key";
+import {
+  CellDecorationMapKey,
+  CellMarkLimitKey,
+  CellPaddingKey,
+  type CellDecorationScope,
+} from "./cell-decoration-map-key";
+import CellMarks from "./CellMarks.vue";
 import DecorationCorner from "./DecorationCorner.vue";
-import DecorationIcon from "./DecorationIcon.vue";
-import DecorationShape from "./DecorationShape.vue";
 
 import type { JournalDecorationStyle } from "../config";
 
@@ -29,6 +34,10 @@ const textColor = computed(() => cell.value.textColor);
 // Within a decorated grid every cell shares one reservation so a single decoration never
 // inflates only its own row; standalone use (e.g. previews) falls back to its own styles.
 const padding = computed(() => sharedPadding?.value ?? formatPadding(cell.value.padding));
+// Absent when the component is mounted outside a decorated grid (a preview, a bare unit test),
+// where nothing should be hidden.
+const markLimit = inject(CellMarkLimitKey, null);
+const limit = computed(() => markLimit?.value ?? UNLIMITED_MARKS);
 </script>
 
 <template>
@@ -43,16 +52,7 @@ const padding = computed(() => sharedPadding?.value ?? formatPadding(cell.value.
       }"
     />
     <DecorationCorner v-for="(corner, i) in cell.corners" :key="i" :decoration="corner" />
-    <span class="cell-decoration__placed">
-      <template v-for="(group, key) in cell.marks" :key="key">
-        <span v-if="group.length > 0" :class="`place place-${key}`">
-          <template v-for="(d, i) in group" :key="i">
-            <DecorationIcon v-if="d.type === 'icon'" :decoration="d" />
-            <DecorationShape v-else :decoration="d" />
-          </template>
-        </span>
-      </template>
-    </span>
+    <CellMarks :marks="cell.marks" :limit="limit" />
     <span class="cell-decoration__content"><slot /></span>
   </span>
 </template>
@@ -82,70 +82,7 @@ const padding = computed(() => sharedPadding?.value ?? formatPadding(cell.value.
   border-radius: inherit;
 }
 
-.cell-decoration__placed {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-}
-
 .cell-decoration__content {
   display: inline-block;
-}
-
-.place {
-  display: flex;
-  gap: 2px;
-}
-.place-left_top {
-  grid-area: 1/1;
-  justify-content: flex-start;
-  align-items: flex-start;
-  padding: 1px 0 0 1px;
-}
-.place-left_middle {
-  grid-area: 2/1;
-  justify-content: flex-start;
-  align-items: center;
-}
-.place-left_bottom {
-  grid-area: 3/1;
-  justify-content: flex-start;
-  align-items: flex-end;
-  padding: 0 0 1px 1px;
-}
-.place-center_top {
-  grid-area: 1/2;
-  justify-content: center;
-  align-items: flex-start;
-}
-.place-center_middle {
-  grid-area: 2/2;
-  justify-content: center;
-  align-items: center;
-}
-.place-center_bottom {
-  grid-area: 3/2;
-  justify-content: center;
-  align-items: flex-end;
-}
-.place-right_top {
-  grid-area: 1/3;
-  justify-content: flex-end;
-  align-items: flex-start;
-  padding: 1px 1px 0 0;
-}
-.place-right_middle {
-  grid-area: 2/3;
-  justify-content: flex-end;
-  align-items: center;
-}
-.place-right_bottom {
-  grid-area: 3/3;
-  justify-content: flex-end;
-  align-items: flex-end;
-  padding: 0 1px 1px 0;
 }
 </style>

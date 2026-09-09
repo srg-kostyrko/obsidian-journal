@@ -22,6 +22,18 @@ export type Placement =
   | "right_middle"
   | "right_bottom";
 
+export const PLACEMENTS: readonly Placement[] = [
+  "left_top",
+  "left_middle",
+  "left_bottom",
+  "center_top",
+  "center_middle",
+  "center_bottom",
+  "right_top",
+  "right_middle",
+  "right_bottom",
+];
+
 export type CellMark = JournalDecorationShape | JournalDecorationIcon;
 
 export interface CellBorder {

@@ -20,8 +20,14 @@ import { cellKey } from "./engine";
 import { decorationsModule } from "./module";
 import { resolveCell } from "./resolve-cell";
 import { decorationsSettingsCoreModule } from "./settings/module";
+import { decorationsSlice } from "./settings/slice";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "./testing";
-import { CellDecorationMapKey, CellPaddingKey, type CellStyleRef } from "./ui/cell-decoration-map-key";
+import {
+  CellDecorationMapKey,
+  CellMarkLimitKey,
+  CellPaddingKey,
+  type CellStyleRef,
+} from "./ui/cell-decoration-map-key";
 import { useCellDecorations } from "./use-cell-decorations";
 
 // The cell map is keyed by period kind + anchor; mirror that for lookups.
@@ -131,6 +137,27 @@ function mountPadding(harness: TestHarness, periods: readonly Period[], journalN
   const padding = captured.value;
   if (!padding) throw new Error("padding was not provided");
   return padding;
+}
+
+function mountLimit(harness: TestHarness): Ref<number> {
+  const captured = { value: null as Ref<number> | null };
+  const Child = defineComponent({
+    template: "<div />",
+    setup() {
+      captured.value = vInject(CellMarkLimitKey)!;
+    },
+  });
+  const renderChild = () => h(Child);
+  const Host = defineComponent({
+    setup() {
+      useCellDecorations({ periods: () => [], journalNames: () => ["daily"] });
+      return renderChild;
+    },
+  });
+  harness.render(Host);
+  const limit = captured.value;
+  if (!limit) throw new Error("mark limit was not provided");
+  return limit;
 }
 
 async function withHasNote(): Promise<{ harness: TestHarness; period: DayPeriod; path: VaultPath }> {
@@ -727,6 +754,7 @@ describe("useCellDecorations", () => {
       expect(resolveCell(cells.get(key(period))?.value ?? []).background).toBe("#333333");
     });
   });
+
   describe("shared padding", () => {
     it("reserves the same padding whether or not a decoration matches a visible cell", async () => {
       const decoration = buildDecoration({
@@ -743,5 +771,37 @@ describe("useCellDecorations", () => {
       expect(matching.value).toBe("max(0.1em, 2px) max(0.6em, 2px)");
       expect(nonMatching.value).toBe(matching.value);
     });
+
+    // useCellPadding hands resolveCell every binding's styles and reads only .padding, which is a
+    // per-axis maximum of mark size. If truncation ever moves into resolveCell, the oversized
+    // mark below stops reserving and every cell in the grid loses that padding.
+    it("reserves padding for a mark the placement cap would hide", async () => {
+      const big = buildStyle("shape", { size: 1.5, placement_x: "right", placement_y: "top" });
+      const small = buildStyle("shape", { size: 0.2, placement_x: "right", placement_y: "top" });
+      const { harness } = await buildHarness([
+        buildDecoration({ styles: [big] }),
+        buildDecoration({ styles: [small] }),
+        buildDecoration({ styles: [small] }),
+        buildDecoration({ styles: [small] }),
+        buildDecoration({ styles: [small] }),
+      ]);
+
+      const padding = mountPadding(harness, [DayPeriod.containing(date("2026-05-25"))], ["daily"]);
+      await nextTick();
+
+      expect(padding.value).toBe("max(1.6em, 2px) max(1.6em, 2px)");
+    });
+  });
+});
+
+describe("mark limit", () => {
+  it("provides the stored limit to the cells in its scope", async () => {
+    const { harness } = await buildHarness();
+    harness.settings.getSlice(decorationsSlice).state = { decorations: [], maxMarksPerSlot: 4 };
+
+    const limit = mountLimit(harness);
+    await nextTick();
+
+    expect(limit.value).toBe(4);
   });
 });
