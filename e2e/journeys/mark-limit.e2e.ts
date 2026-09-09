@@ -7,8 +7,11 @@ import { calendar, openSeededCalendarView } from "./view.js";
 
 const DAY = 14;
 
-// Five decorations put a shape in right_top on every weekday and the fixture pins the limit to
-// 3, so every visible day cell overflows without seeding a note.
+// The fixture pins the limit to 3 and decorates every weekday twice over, so every visible day
+// cell overflows without seeding a note: five small shapes in right_top, and twelve more in
+// left_bottom, whose badge sits against the cell's left edge and opens a popover wide enough to
+// reach past the surface. The two groups take different rows of the cell so neither slot's marks
+// overhang the other's badge, which would send a hover to the wrong one.
 describe("decoration mark limit", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-mark-limit", plugins: ["journals"] });
@@ -20,19 +23,36 @@ describe("decoration mark limit", () => {
     const cell = calendar.cell(dayAnchor(DAY));
     await expect(cell.$$(".place-right_top .shape-decoration")).toBeElementsArrayOfSize(2);
 
-    const badge = cell.$('[data-testid="mark-overflow"]');
+    const badge = cell.$('.place-right_top [data-testid="mark-overflow"]');
     await expect(badge).toHaveText(m.decoration_mark_overflow_badge({ count: 3 }));
   });
 
-  it("reveals every mark in the slot when the badge is hovered", async () => {
+  it("lines the badge up with the marks it follows", async () => {
+    await openSeededCalendarView();
+
+    const centers = await browser.execute((anchor: string) => {
+      const selector = `.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"] .place-right_top`;
+      const slot = document.querySelector(selector);
+      const mark = slot?.querySelector(":scope > .shape-decoration")?.getBoundingClientRect();
+      const badge = slot?.querySelector('[data-testid="mark-overflow"]')?.getBoundingClientRect();
+      return mark == null || badge == null
+        ? null
+        : { mark: mark.top + mark.height / 2, badge: badge.top + badge.height / 2 };
+    }, dayAnchor(DAY));
+
+    expect(centers).not.toBeNull();
+    expect(Math.abs((centers?.mark ?? 0) - (centers?.badge ?? 0))).toBeLessThanOrEqual(1);
+  });
+
+  it("reveals the marks the badge hides when it is hovered", async () => {
     await openSeededCalendarView();
 
     const cell = calendar.cell(dayAnchor(DAY));
-    await cell.$('[data-testid="mark-overflow"]').moveTo();
+    await cell.$('.place-right_top [data-testid="mark-overflow"]').moveTo();
 
-    const popover = cell.$('[data-testid="mark-overflow-popover"]');
+    const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
     await popover.waitForExist({ timeoutMsg: "the overflow popover did not open on hover" });
-    await expect(popover.$$(".shape-decoration")).toBeElementsArrayOfSize(5);
+    await expect(popover.$$(".shape-decoration")).toBeElementsArrayOfSize(3);
 
     // The popover must render marks larger, at a readable size — assert the ratio, never an
     // absolute pixel width, since Obsidian's editor zoom scales authored pixels (elementWidthPx's
@@ -48,7 +68,7 @@ describe("decoration mark limit", () => {
     await openSeededCalendarView();
 
     const cell = calendar.cell(dayAnchor(DAY));
-    const badge = cell.$('[data-testid="mark-overflow"]');
+    const badge = cell.$('.place-right_top [data-testid="mark-overflow"]');
     await badge.waitForExist();
 
     const location = await badge.getLocation();
@@ -67,7 +87,41 @@ describe("decoration mark limit", () => {
       .move({ duration: 0, x: badgeCenterX, y: justBelowBadge })
       .perform();
 
-    const popover = cell.$('[data-testid="mark-overflow-popover"]');
+    const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
     await expect(popover).toExist();
+  });
+
+  // A popover hangs off its badge's right edge, so the left_bottom badge of a first-column cell
+  // opens one that reaches past the surface it draws over — the seeded view's right sidebar here.
+  it("keeps the popover inside the surface it opens over", async () => {
+    await openSeededCalendarView();
+
+    const anchor = await browser.execute(() => {
+      let leftmost: Element | null = null;
+      for (const badge of document.querySelectorAll('.place-left_bottom [data-testid="mark-overflow"]')) {
+        const closer = leftmost === null || badge.getBoundingClientRect().left < leftmost.getBoundingClientRect().left;
+        if (closer) leftmost = badge;
+      }
+      const cell = leftmost?.closest("[data-anchor]");
+      return cell instanceof HTMLElement ? (cell.dataset.anchor ?? null) : null;
+    });
+    expect(anchor).not.toBeNull();
+
+    const cell = calendar.cell(anchor ?? "");
+    await cell.$('.place-left_bottom [data-testid="mark-overflow"]').moveTo();
+    await cell
+      .$('.place-left_bottom [data-testid="mark-overflow-popover"]')
+      .waitForExist({ timeoutMsg: "the overflow popover did not open on hover" });
+
+    const edges = await browser.execute(() => {
+      const popover = document.querySelector('.place-left_bottom [data-testid="mark-overflow-popover"]');
+      const leaf = popover?.closest(".workspace-leaf-content");
+      return popover == null || leaf == null
+        ? null
+        : { popover: popover.getBoundingClientRect().left, leaf: leaf.getBoundingClientRect().left };
+    });
+
+    expect(edges).not.toBeNull();
+    expect(edges?.popover).toBeGreaterThanOrEqual(edges?.leaf ?? 0);
   });
 });

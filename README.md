@@ -321,7 +321,7 @@ They **layer**: for each property a cell can only have once — background, text
 
 - **Inspect a date**: From any decorations section, open _Inspect a date_ to pick a date and a shelf and see everything decorating it across all three scopes
 
-- **Marks shown per position**: A cell can collect marks from many decorations at once, and they all land in the same one of nine positions. _Marks shown per position_ on the main settings page caps how many are drawn there — 3 by default, or Unlimited. Anything over the cap collapses into a `+N` badge; hover it to see every mark in that position. The cap applies to calendars, navigation blocks and interval rows alike, and it changes only what is drawn, never which decorations matched — _Explain decorations_ still lists them all
+- **Marks shown per position**: A cell can collect marks from many decorations at once, and they all land in the same one of nine positions. _Marks shown per position_ on the main settings page caps how many are drawn there — 3 by default, or Unlimited. Anything over the cap collapses into a `+N` badge; hover it to see the marks it hides. The cap applies to calendars, navigation blocks and interval rows alike, and it changes only what is drawn, never which decorations matched — _Explain decorations_ still lists them all
 
 - **Recipes**:
 
