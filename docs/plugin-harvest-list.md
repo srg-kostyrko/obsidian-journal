@@ -103,7 +103,7 @@ Bears on the tasks epic (#344) and its phases.
 | TaskNotes                         |      1,404,982 | Note-per-task with calendar and time tracking; named in #344                                                                                 | scoped → #349     |
 | Day Planner                       |        879,727 | Time blocks on an editable timeline, sourced from daily notes                                                                                | scoped → #350     |
 | Rollover Daily Todos              |        148,695 | Rolling unchecked boxes into today's note — this is #73, and the largest single-feature demand signal found                                  | idea → #348, #351 |
-| Review                            |         64,817 | Adding a link to the current note into a _future_ daily note                                                                                 | not examined      |
+| Review                            |         64,817 | Adding a link to the current note into a _future_ daily note                                                                                 | idea → #372, #348 |
 | `702573N/Obsidian-Tasks-Calendar` | 949★, unlisted | Dataview-driven task calendar with more stars than most listed plugins — how much of this domain ships as Dataview views rather than plugins | not examined      |
 | Time Ruler                        |         64,073 | Drag-and-drop scheduling combining a task list with a calendar                                                                               | not examined      |
 
