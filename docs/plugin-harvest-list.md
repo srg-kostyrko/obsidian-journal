@@ -67,16 +67,16 @@ truncates at the top 100 per query.
 The highest-value table. Each row is a capability with no equivalent here and, in
 most cases, no issue either.
 
-| Plugin                                |      Installs | Harvest                                                                                                                                                        | Status              |
-| ------------------------------------- | ------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| Daily Notes Editor                    |        42,469 | Editing a stream of daily notes inline on one page, Roam-style. Three plugins and ~85k installs converge on this; we have no multi-note reading surface at all | scoped → #119       |
-| Daily Note Outline                    |        24,776 | An outline across several daily notes — headings, links, tags                                                                                                  | scoped → #119, #356 |
-| Daily Notes Viewer                    |        18,251 | Several recent daily notes on one page                                                                                                                         | scoped → #119       |
-| `Ordeeper/obsidian-journaling-plugin` | 72★, archived | Same idea, Logseq-style. Archived, so read the code rather than installing                                                                                     | not examined        |
-| Heatmap Calendar                      |       174,912 | A year-scale density view. Our decorations are cell-scale only — there is no way to see a year of activity at once                                             | idea → #366, #367   |
-| Habit Tracker 21                      |        33,367 | Streaks and habit grids. Calendar #352 asked for the "unbreakable chain"                                                                                       | idea → #368         |
-| `yirsi/obsidian-habit-heatmap`        |           27★ | Habit tracking rendered as a GitHub heatmap                                                                                                                    | not examined        |
-| Yearly Glance                         |        12,231 | A year of annual events at a glance                                                                                                                            | not examined        |
+| Plugin                                |      Installs | Harvest                                                                                                                                                                                                                   | Status              |
+| ------------------------------------- | ------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Daily Notes Editor                    |        42,469 | Editing a stream of daily notes inline on one page, Roam-style. Three plugins and ~85k installs converge on this; we have no multi-note reading surface at all                                                            | scoped → #119       |
+| Daily Note Outline                    |        24,776 | An outline across several daily notes — headings, links, tags                                                                                                                                                             | scoped → #119, #356 |
+| Daily Notes Viewer                    |        18,251 | Several recent daily notes on one page                                                                                                                                                                                    | scoped → #119       |
+| `Ordeeper/obsidian-journaling-plugin` | 72★, archived | Same idea, Logseq-style. Archived, so read the code rather than installing                                                                                                                                                | not examined        |
+| Heatmap Calendar                      |       174,912 | A year-scale density view. Our decorations are cell-scale only — there is no way to see a year of activity at once                                                                                                        | idea → #366, #367   |
+| Habit Tracker 21                      |        33,367 | Streaks and habit grids. Calendar #352 asked for the "unbreakable chain"                                                                                                                                                  | idea → #368         |
+| `yirsi/obsidian-habit-heatmap`        |           27★ | Habit tracking rendered as a GitHub heatmap                                                                                                                                                                               | not examined        |
+| Yearly Glance                         |        12,231 | A curated register of birthdays, anniversaries and holidays, lunar dates included. The **grid** we have — `calendar-timeline` in `calendar` mode is the same twelve decorated months; the **named dated thing** we do not | idea → #373, #356   |
 
 ## Direct overlap — what a migrating user compares us against
 
@@ -191,8 +191,8 @@ than by plugin. Last releases as of 2026-09-09, for the rows examined so far:
   part of 2026), Daily Note Outline 2024-03, Heatmap Calendar 2024-06. Daily
   Notes Editor 2025-04 and Rollover Daily Todos 2025-05 are slowing.
 - **Active.** Notebook Navigator 2026-09, TaskNotes 2026-08, Tasks 2026-08, Day
-  Planner 2026-07, calendar-plus 2026-07, Calendar Bases 2026-04, Habit Tracker
-  21 2026-03.
+  Planner 2026-07, calendar-plus 2026-07, Yearly Glance 2026-07, Calendar Bases
+  2026-04, Habit Tracker 21 2026-03.
 
 So **Surfaces we do not have** is mostly abandoned plugins with live install
 bases, while **Tasks and dates** and **Platform questions** are maintained. That
