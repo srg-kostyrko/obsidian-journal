@@ -69,7 +69,7 @@ most cases, no issue either.
 
 | Plugin                                |      Installs | Harvest                                                                                                                                                        | Status            |
 | ------------------------------------- | ------------: | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| Daily Notes Editor                    |        42,469 | Editing a stream of daily notes inline on one page, Roam-style. Three plugins and ~85k installs converge on this; we have no multi-note reading surface at all | not examined      |
+| Daily Notes Editor                    |        42,469 | Editing a stream of daily notes inline on one page, Roam-style. Three plugins and ~85k installs converge on this; we have no multi-note reading surface at all | scoped → #119     |
 | Daily Note Outline                    |        24,776 | An outline across several daily notes — headings, links, tags                                                                                                  | not examined      |
 | Daily Notes Viewer                    |        18,251 | Several recent daily notes on one page                                                                                                                         | not examined      |
 | `Ordeeper/obsidian-journaling-plugin` | 72★, archived | Same idea, Logseq-style. Archived, so read the code rather than installing                                                                                     | not examined      |
@@ -155,6 +155,14 @@ new information.
 - **iOS share sheet, and the date-property link button.** No API for either: a
   share target ships in the app binary, and the property widget is built only
   when the core `daily-notes` plugin is enabled and calls straight into it.
+- **Editable rows in a note stream.** The surface is #119 and it renders read-only.
+  Daily Notes Editor buys inline editing by mounting a real editor leaf per note —
+  Hover Editor's `nosuper(HoverPopover)`, a hand-built `WorkspaceSplit`, and
+  `around()` patches on `Workspace.prototype` and `WorkspaceLeaf.prototype` — and
+  22 of its 55 issues come from that, nine still unfixed (four open, five closed
+  `not_planned`), and its fixes do not hold: its #46 closed `completed`, then the
+  identical report as its #73 closed `not_planned` a year later. None of it is
+  reachable below e2e.
 - **Weekend-as-one-note.** Day journals have no weekday filter and custom
   intervals tile at fixed length. Belongs to #198.
 - **Ribbon menu labels, cursor placement, weekday label format, hotkeys to page
