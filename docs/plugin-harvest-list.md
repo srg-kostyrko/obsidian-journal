@@ -181,7 +181,26 @@ condition) and #357 (task done-semantics), and the migration sections in
 Both incumbents are unmaintained — Calendar #418 (2026-09-01) offers a handover
 or takedown, and #417 reports a crash that breaks the plugin on non-English
 locales — so their trackers are a finished seam rather than a recurring source.
-The plugins above are the live one.
+
+The plugins above are not uniformly livelier, and the split runs by table rather
+than by plugin. Last releases as of 2026-09-09, for the rows examined so far:
+
+- **Stalled.** Daily Notes Viewer 2022-04, Natural Language Dates 2023-12 (its
+  README declares the repository unmaintained, the registry points at a fork
+  whose org has since been renamed `community-archive`, and installs 404'd for
+  part of 2026), Daily Note Outline 2024-03, Heatmap Calendar 2024-06. Daily
+  Notes Editor 2025-04 and Rollover Daily Todos 2025-05 are slowing.
+- **Active.** Notebook Navigator 2026-09, TaskNotes 2026-08, Tasks 2026-08, Day
+  Planner 2026-07, calendar-plus 2026-07, Calendar Bases 2026-04, Habit Tracker
+  21 2026-03.
+
+So **Surfaces we do not have** is mostly abandoned plugins with live install
+bases, while **Tasks and dates** and **Platform questions** are maintained. That
+changes what each kind of row yields. A stalled tracker is a closed record: it
+can be mined exhaustively, its unfixed clusters are permanent, and the "fixes
+that did not hold" pattern is legible end to end. A live tracker is a moving
+target whose maintainer may ship the idea first, so a row there is worth
+re-checking before acting on a verdict written months earlier.
 
 One method note worth keeping: counting demand by title keyword invented a
 four-issue "locale cluster" that was one ambiguous request plus three asks for
