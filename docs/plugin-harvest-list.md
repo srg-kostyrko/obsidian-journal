@@ -118,13 +118,13 @@ Bears on the tasks epic (#344) and its phases.
 
 Lower priority; listed because the pattern recurs and we have no capture story.
 
-| Plugin                                              | Installs | Harvest                                                                                     | Status       |
-| --------------------------------------------------- | -------: | ------------------------------------------------------------------------------------------- | ------------ |
-| Natural Language Dates                              |  516,996 | The most-linked plugin across both incumbent trackers. Bears on #192                        | not examined |
-| Jump-to-Date                                        |   21,797 | A popup calendar purely for navigation                                                      | not examined |
-| Daily Named Folder                                  |   29,663 | Folder-per-day layouts — we answer this with notelets, worth checking whether that holds up | not examined |
-| Influx                                              |   30,918 | Aggregating backlinked clippings into a footer — adjacent to #356                           | not examined |
-| `SamSongAI/Trace`, `jameesy/obsidian-quick-capture` | 22★, 25★ | System-level quick capture into the daily note                                              | not examined |
+| Plugin                                              | Installs | Harvest                                                                                     | Status        |
+| --------------------------------------------------- | -------: | ------------------------------------------------------------------------------------------- | ------------- |
+| Natural Language Dates                              |  516,996 | The most-linked plugin across both incumbent trackers. Bears on #192                        | scoped → #192 |
+| Jump-to-Date                                        |   21,797 | A popup calendar purely for navigation                                                      | not examined  |
+| Daily Named Folder                                  |   29,663 | Folder-per-day layouts — we answer this with notelets, worth checking whether that holds up | not examined  |
+| Influx                                              |   30,918 | Aggregating backlinked clippings into a footer — adjacent to #356                           | not examined  |
+| `SamSongAI/Trace`, `jameesy/obsidian-quick-capture` | 22★, 25★ | System-level quick capture into the daily note                                              | not examined  |
 
 ## Deliberately not harvested
 
