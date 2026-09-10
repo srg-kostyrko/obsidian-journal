@@ -118,13 +118,13 @@ Bears on the tasks epic (#344) and its phases.
 
 Lower priority; listed because the pattern recurs and we have no capture story.
 
-| Plugin                                              | Installs | Harvest                                                                                                                                                    | Status        |
-| --------------------------------------------------- | -------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Natural Language Dates                              |  516,996 | The most-linked plugin across both incumbent trackers. Bears on #192                                                                                       | scoped → #192 |
-| Jump-to-Date                                        |   21,797 | A popup calendar purely for navigation                                                                                                                     | not examined  |
-| Daily Named Folder                                  |   29,663 | Folder-per-day layouts. Answered by the **folder template**, not by notelets: `folder: "Journal/{{note_name}}"` puts each note in a folder of its own name | nothing new   |
-| Influx                                              |   30,918 | Aggregating backlinked clippings into a footer — adjacent to #356                                                                                          | not examined  |
-| `SamSongAI/Trace`, `jameesy/obsidian-quick-capture` | 22★, 25★ | System-level quick capture into the daily note                                                                                                             | not examined  |
+| Plugin                                              | Installs | Harvest                                                                                                                                                                                                                                         | Status        |
+| --------------------------------------------------- | -------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Natural Language Dates                              |  516,996 | The most-linked plugin across both incumbent trackers. Bears on #192                                                                                                                                                                            | scoped → #192 |
+| Jump-to-Date                                        |   21,797 | A popup calendar purely for navigation                                                                                                                                                                                                          | not examined  |
+| Daily Named Folder                                  |   29,663 | Folder-per-day layouts. Answered by the **folder template**, not by notelets: `folder: "Journal/{{note_name}}"` puts each note in a folder of its own name                                                                                      | nothing new   |
+| Influx                                              |   30,918 | Aggregating backlinked clippings into a footer. Bears on #356 directly, not just adjacently: frontmatter links are a separate cache it has to merge by hand, and its excerpt-scoping issues are the argument for keeping that condition a count | idea → #356   |
+| `SamSongAI/Trace`, `jameesy/obsidian-quick-capture` | 22★, 25★ | System-level quick capture into the daily note                                                                                                                                                                                                  | not examined  |
 
 ## Deliberately not harvested
 
