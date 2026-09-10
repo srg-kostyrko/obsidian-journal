@@ -67,16 +67,16 @@ truncates at the top 100 per query.
 The highest-value table. Each row is a capability with no equivalent here and, in
 most cases, no issue either.
 
-| Plugin                                |      Installs | Harvest                                                                                                                                                                                                                   | Status              |
-| ------------------------------------- | ------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| Daily Notes Editor                    |        42,469 | Editing a stream of daily notes inline on one page, Roam-style. Three plugins and ~85k installs converge on this; we have no multi-note reading surface at all                                                            | scoped → #119       |
-| Daily Note Outline                    |        24,776 | An outline across several daily notes — headings, links, tags                                                                                                                                                             | scoped → #119, #356 |
-| Daily Notes Viewer                    |        18,251 | Several recent daily notes on one page                                                                                                                                                                                    | scoped → #119       |
-| `Ordeeper/obsidian-journaling-plugin` | 72★, archived | Same idea, Logseq-style. Archived, so read the code rather than installing                                                                                                                                                | not examined        |
-| Heatmap Calendar                      |       174,912 | A year-scale density view. Our decorations are cell-scale only — there is no way to see a year of activity at once                                                                                                        | idea → #366, #367   |
-| Habit Tracker 21                      |        33,367 | Streaks and habit grids. Calendar #352 asked for the "unbreakable chain"                                                                                                                                                  | idea → #368         |
-| `yirsi/obsidian-habit-heatmap`        |           27★ | Habit tracking rendered as a GitHub heatmap                                                                                                                                                                               | not examined        |
-| Yearly Glance                         |        12,231 | A curated register of birthdays, anniversaries and holidays, lunar dates included. The **grid** we have — `calendar-timeline` in `calendar` mode is the same twelve decorated months; the **named dated thing** we do not | idea → #373, #356   |
+| Plugin                                |      Installs | Harvest                                                                                                                                                                                                                                                | Status              |
+| ------------------------------------- | ------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
+| Daily Notes Editor                    |        42,469 | Editing a stream of daily notes inline on one page, Roam-style. Three plugins and ~85k installs converge on this; we have no multi-note reading surface at all                                                                                         | scoped → #119       |
+| Daily Note Outline                    |        24,776 | An outline across several daily notes — headings, links, tags                                                                                                                                                                                          | scoped → #119, #356 |
+| Daily Notes Viewer                    |        18,251 | Several recent daily notes on one page                                                                                                                                                                                                                 | scoped → #119       |
+| `Ordeeper/obsidian-journaling-plugin` | 72★, archived | Same idea, Logseq-style, but the same **mechanism as Daily Notes Viewer** — 442 lines that rewrite a real `Journaling.md` of `![[embeds]]` per folder on a 15s `setInterval`. Its tracker re-confirms the costs already on #119 rather than adding any | nothing new         |
+| Heatmap Calendar                      |       174,912 | A year-scale density view. Our decorations are cell-scale only — there is no way to see a year of activity at once                                                                                                                                     | idea → #366, #367   |
+| Habit Tracker 21                      |        33,367 | Streaks and habit grids. Calendar #352 asked for the "unbreakable chain"                                                                                                                                                                               | idea → #368         |
+| `yirsi/obsidian-habit-heatmap`        |           27★ | Habit tracking rendered as a GitHub heatmap                                                                                                                                                                                                            | not examined        |
+| Yearly Glance                         |        12,231 | A curated register of birthdays, anniversaries and holidays, lunar dates included. The **grid** we have — `calendar-timeline` in `calendar` mode is the same twelve decorated months; the **named dated thing** we do not                              | idea → #373, #356   |
 
 ## Direct overlap — what a migrating user compares us against
 
@@ -163,6 +163,12 @@ new information.
   `not_planned`), and its fixes do not hold: its #46 closed `completed`, then the
   identical report as its #73 closed `not_planned` a year later. None of it is
   reachable below e2e.
+- **A note-stream window anchored to the host note's own period.** The one
+  candidate from the `Ordeeper/obsidian-journaling-plugin` pass: a #119 fence in
+  a monthly note streaming the days inside that month, the way that plugin's
+  users faked it with a folder-per-year include path (its #3 and the rollup
+  request commented on it). Declined 2026-09-10 — #119's timeframe stays
+  relative.
 - **Weekend-as-one-note.** Day journals have no weekday filter and custom
   intervals tile at fixed length. Belongs to #198.
 - **Ribbon menu labels, cursor placement, weekday label format, hotkeys to page
