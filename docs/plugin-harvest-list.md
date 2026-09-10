@@ -180,6 +180,11 @@ Lower priority; listed because the pattern recurs and we have no capture story.
 | "On this day" cluster                               | 4,807 + 1,528 + 556 + 324 + 159 + 105 + 70 | `Reflection`, `LongtimeDiary`, `On This Day I`, `Yearly Diary Comparator`, `Daily Echoes`, `Daily Note Lookback`, `Time Canvas`. Seven independent implementations beyond Journal Review and Diarian, and they do not agree on the window — anniversaries, "this week/month/quarter in past years", and fixed intervals are three different features under one name. Bears directly on #355's open questions                                                                                                                                                                                                                                                                                                                                          | not examined              |
 | Periodic review and synthesis                       |                        838 + 184 + 84 + 62 | `Review Builder` (_"combining many Daily and Weekly notes"_), `Periodic Notes Synthesizer`, `Journal Recap`, `Confidant`. Generating a weekly/monthly review note _from_ the period's notes. Distinct from the note-stream surface and from the period-window idea ruled out below                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | not examined              |
 | BRAT-only tail (2026-09-10 GitHub sweep)            |                 60 confirmed plugins, ≤41★ | The whole non-registry half, and it is thin. Worth a single pass over the few that are not already covered by a registry row: `Real1tyy/Periodix-Planner` (24★, _"automatic periodic notes + time budgets"_ — same author as the registry's Prisma Calendar), `TheMMstick/obsidian-linear-calendar` (3★, weekday-aligned year-at-a-glance), `aurelien81/continuous-journaling` (2★, #119 again), `tariquesani/obsidian-merge-dailynotes` (3★, merge a date range into one note), `chippy1402/otd-photo-gallery` (2★, "on this day" for photos), `Haoo-7/Obsidian-Dayline` (2★, moods/weather/photos on a timeline), `frankolson/obsidian-tomorrows-daily-note` (36★, creates **tomorrow's** note — narrower than the ruled-out rolling horizon below) | not examined              |
+| Collect today's work into today's note              |     15,902 + 2,127 + 412 + 302 + 163 + 118 | `List Modified` (_"link all modified files meeting certain criteria to a daily note"_), `Daily Note Collector`, `Atoms`, `Easy Link to Daily Note`, `Diary Linker`, `LJ OS` (git activity snapshots). The inverse of every other row here: not "show me the day", but "write what I did today **into** the day's note". We have no surface that writes a summary of anything into a note                                                                                                                                                                                                                                                                                                                                                              | not examined              |
+| Daily-note plumbing and navigation                  |                     ~13 plugins, 37–10,291 | `Daily Note Pinner`, `Daily Note Navbar`, `Daily notes opener` (also _"quick append new line to"_ → #377), `Upcoming`, `Previous Daily Note`, `Daily Day Nav`, `Weekday Commands`, `Monthly notes`, `Daily Notes Prefix Matcher`, `Pinned Daily Notes`, `Daily Checkbox Focus`, `Daily Note Icon`, `Open File by Magic Date`. Almost certainly `nothing new` — these are our commands, nav block and view — but the cluster is worth one pass to confirm, and it is the best available census of what people bolt onto a bare daily note                                                                                                                                                                                                              | not examined              |
+| Folder and structure utilities                      |      3,581 + 2,498 + 1,209 + 741 + 29 + 25 | `Journal Folder`, `Templated daily notes`, `Organized daily notes` (Year/Month/Week hierarchies), `Daily Note Structure`, `Journal Creater`, `Daily Notes from Others`. Folder templates and note templates are ours already; the row exists so that claim is checked rather than assumed                                                                                                                                                                                                                                                                                                                                                                                                                                                             | not examined              |
+| In-note journaling markup                           |               4,693 + 538 + 212 + 102 + 75 | `BuJo Bullets` (alternate checkbox types for bullet-journal notation), `Journal Mode` (washi-tape dividers, animations), `Color Marker`, `Property Annotations` (inline annotations for properties in daily notes), `Time Logger`. Decoration _inside_ the note rather than on the calendar — a surface this plugin deliberately does not touch, and the row is here to record that boundary rather than to cross it                                                                                                                                                                                                                                                                                                                                  | not examined              |
+| `Canvas Daily Note`                                 |                                      3,567 | Puts a live node for today's note on a canvas. Worth one look against the ruled-out **canvas files as journal notes** entry below: that ruling is about a canvas _being_ a journal note, and this is the opposite direction — a canvas _referencing_ one                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | not examined              |
 
 ## Deliberately not harvested
 
@@ -297,6 +302,39 @@ opened by the first sweep**. The rows added that day are the clustered result �
 where many plugins converge on one idea they are one row, because the convergence
 is the evidence and fifteen separate passes would produce fifteen shallow
 verdicts. Nothing in that batch has been examined yet.
+
+**The arithmetic, so the next sweep can check it.** The registry pass produced 343
+domain plugins, 28 already listed, 315 new. Those 315 resolve as:
+
+- **159 named explicitly in the rows above**, most inside a cluster row rather
+  than on a row of their own.
+- **137 excluded by category**, counted rather than waved at: 36 that sync an
+  external service into the daily note (Toggl, Strava, Things, Granola, Immich,
+  Telegram, Garmin…), 29 domain trackers (food, fitness, money, media, study,
+  faith), 27 task and project managers, 22 vault-wide dashboards and activity
+  meters that measure the vault rather than the journal, 14 AI assistants over
+  the journal, and 9 event calendars.
+- That leaves **19 unaccounted for**, and the honest reason is that a cluster row
+  names _exemplars_, not every member: several of the 19 (`Daymark`,
+  `Quick Daily Note`, `Mood Journal`, `Memo Lite`, `Life Journal`,
+  `Banshan Habits Tracker`, `Daily Habit`, `Writing Habit`) belong to the mood,
+  habit and capture clusters and will be picked up when those rows are worked.
+  The genuine leftovers are out of domain — `Password Protection`, `Geulo`,
+  `HikerScrolls`, `Tag Lens`, `Solomon Chat`, `askMyu`, `AccountingCalendar`,
+  `On This Day in History` (fetches Wikipedia, not your notes).
+
+So the cluster rows are the unit of work, and a name that appears in one is an
+example of the cluster rather than the boundary of it. Work the cluster, not the
+list of names in it.
+
+If a future sweep's numbers do not add up like this, the difference is rows that
+were dropped without a decision — which is the failure mode that cost this list
+300 rows the first time.
+
+One caution about the exclusion buckets: they were produced by keyword matching
+and the first attempt was wrong in a way worth remembering — a substring test for
+`ai` matched **d-ai-ly**, inflating the "AI assistant" bucket from 14 to 86.
+Match on word boundaries and read the resulting lists before trusting a count.
 
 The GitHub half ran the same day: 60 queries across the terms and both sort
 orders, 828 non-registry repositories, 130 plausible by description, 60 with an
