@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { Container, createToken, type Module } from "@/infrastructure/di";
 import { createFakeHost } from "@/infrastructure/host/internal/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
+import { CURRENT_VERSION } from "@/settings/version";
 
 import JournalPlugin from "./main";
 
@@ -90,6 +91,18 @@ describe("JournalPlugin", () => {
         expect(noticeSpy).toHaveBeenCalledWith(m.settings_reload_failed({ error: "Failed to load plugin settings" }));
       });
     });
+  });
+
+  // The buffer is what an e2e failure dump reads, so an empty answer before onload has to be an
+  // empty list rather than a throw: the hook runs on whatever state the failure left behind.
+  it("hands out the buffered log only once the plugin has loaded", async () => {
+    const plugin = buildPlugin();
+    vi.spyOn(plugin, "loadData").mockResolvedValue({ version: CURRENT_VERSION, logging: { level: "debug" } });
+    expect(plugin.logSnapshot()).toEqual([]);
+
+    await plugin.onload();
+
+    expect(plugin.logSnapshot().map((record) => record.message)).toContain("plugin loaded");
   });
 
   it("clears the api and disposes the container on unload", async () => {

@@ -13,7 +13,7 @@
     // Assertions import the shipped copy from src/i18n/paraglide, which is generated JS
     // carrying its types in JSDoc — the same reason tsconfig.app.json allows JS.
     "allowJs": true,
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2023", "DOM"],
     "types": ["node", "mocha", "@wdio/globals/types", "wdio-obsidian-service"]
   }
 }

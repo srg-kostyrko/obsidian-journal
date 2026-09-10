@@ -1,5 +1,6 @@
 {
   "version": 5,
+  "logging": { "level": "debug" },
   "journals": {
     "work": {
       "name": "work",
