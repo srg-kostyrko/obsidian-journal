@@ -276,7 +276,7 @@ put a plugin in the wrong _table_ rather than the wrong column.
 
 The pass paid anyway, because the boundary is where the transferable ideas are:
 **#381** (an ordinal weekday on the date condition) came out of it, along with
-the costing that killed the obvious version of it — `date-holidays`, which
+the costing that killed the obvious _implementation_ of it — `date-holidays`, which
 Prisma bundles to ship 50+ countries in its free tier, is **1.50 MB minified
 against our 1.90 MB `main.js`** and is now under
 [Already ruled out](#already-ruled-out). Everything else it turned up was
@@ -375,18 +375,27 @@ new information.
   (`Single File Daily Notes`, `Journalyst`) — that row is still worth opening
   for its folder-layout half, but not for this.
 
-- **A bundled holiday dataset.** `date-holidays` is what Prisma Calendar bundles
-  to ship public holidays for 50+ countries — with state and region codes, five
-  holiday-type tiers, offline, rendered as read-only virtual all-day events that
-  write no files — in its **free** tier. It is the complete answer, Easter and its
-  movable feasts included, which no rule over `(day, month, weekday, ordinal)` can
-  reach. Declined on size: `dist/index.min.js` is **1.50 MB**, 803 KB of it the
-  dataset, against a 1.90 MB `main.js` at 3.3.0 — a 79% increase, on mobile too,
-  for a feature most users never enable, plus a dataset that ages, so the
-  dependency bump acquires a correctness deadline. Prisma absorbs it because its
-  own `main.js` is already 4.5 MB. The partial answer with none of that cost is
-  #381. If a holiday source is ever wanted, the shape to look at is a
-  user-supplied `.ics` or an opt-in downloaded country file, not a bundle.
+- **A bundled holiday dataset — the bundle only.** `date-holidays` is what Prisma
+  Calendar bundles to ship public holidays for 50+ countries in its **free** tier,
+  with state and region codes, five holiday-type tiers, offline, rendered as
+  read-only virtual all-day events that write no files. It is the complete answer,
+  Easter and its movable feasts included, which no rule over
+  `(day, month, weekday, ordinal)` can reach. Declined on size:
+  `dist/index.min.js` is **1.50 MB**, 803 KB of it the dataset, against a 1.90 MB
+  `main.js` at 3.3.0 — a 79% increase, on mobile too, for a feature most users
+  never enable, plus a dataset that ages, so the dependency bump acquires a
+  correctness deadline. Prisma absorbs it because its own `main.js` is already
+  4.5 MB.
+
+  **Holidays themselves are not declined**, and this is the one entry in this
+  section that is a rejected _implementation_ rather than a rejected idea. #381
+  carries the costed alternatives: reading a holiday `.ics` the user already has
+  (Google's US file is 121 KB, 317 `VEVENT`s, 36 names, 2021–2031, **zero
+  `RRULE`s** — every movable date materialised, so no recurrence engine and Easter
+  arrives as data), and subscribing to one by URL. It also carries the trap: a
+  holiday source must be a **named date set** the decoration engine can query, not
+  317 imported date decorations, which would bury the settings list and expire
+  silently in 2031.
 
 - **Weekend-as-one-note.** Day journals have no weekday filter and custom
   intervals tile at fixed length. Belongs to #198.
