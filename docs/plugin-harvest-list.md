@@ -9,6 +9,11 @@ issue-tracker mentions. A row still marked `not examined` has never been opened:
 what that plugin actually does, and whether the idea is any good here, is the
 work still to do.
 
+**As of 2026-09-10 every row carries a verdict — the queue is empty.** Adding
+work means rebuilding the list (see [Refreshing the list](#refreshing-the-list))
+or re-checking a row on a live tracker, per the note at the end of this file;
+the stalled ones are a closed record and do not repay a second visit.
+
 ## How to work this list
 
 **One plugin per pass.** Finish it before picking the next. A sweep that skims
