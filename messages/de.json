@@ -196,14 +196,15 @@
     }
   ],
   "nav_block_section_title": "Navigationsblock",
-  "nav_block_section_mode_label": "Modus",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "Navigationspfeile",
+  "nav_block_section_arrows_description": "Beim Wechseln geht es immer einen Zeitraum weiter, und die Notiz wird erstellt, falls sie fehlt. Beim Springen werden Zeiträume ohne Notiz übersprungen, und es wird nie eine erstellt. Ein Klick auf ein Segment erstellt dessen Notiz immer, unabhängig von dieser Einstellung.",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "Neue Notiz erstellen",
-        "kind=existing": "Vorhandene Notiz öffnen"
+        "kind=create": "Zum benachbarten Zeitraum wechseln",
+        "kind=existing": "Zur nächstgelegenen vorhandenen Notiz springen"
       }
     }
   ],

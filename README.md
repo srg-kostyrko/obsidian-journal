@@ -376,7 +376,7 @@ replaced "row".
 
 **Settings**:
 
-- Mode: create a new note when a segment is clicked, or only open notes that already exist
+- Previous and next arrows: step to the adjacent period, creating that note if it's missing, or jump to the nearest period that already has a note, skipping the gaps and never creating. Clicking a segment always creates its note either way
 - Show previous and next periods: with it off, the block draws only the current period and its previous/next arrows, which still open those notes. A single note can override this either way with the block's `adjacent` option.
 - Whole block decoration: decorate the block as a whole from the current journal's rules
 

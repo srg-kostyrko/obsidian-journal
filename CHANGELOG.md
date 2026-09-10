@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 - Journal variables now resolve in a sub-template Templater includes. A template calling `<% tp.file.include("[[Sub-Template]]") %>` had its own `{{date}}` and other variables filled in, but the included file's reached the note written out as `{{date}}` — Templater reads an included file straight off disk, past the point where the variables are filled in. An included file's variables are now filled in before Templater runs its commands, so it can use them inside a Templater command as well as in its text.
+- A journal's navigation block could already skip over the periods you have no note for — jumping straight from one existing note to the next, however far apart they are — but the setting that turns this on was called **Mode**, with the choices **Create new note** and **Open existing note**, which read as descriptions of what clicking the block does rather than of what the arrows step over. The setting is now **Previous and next arrows**, its choices are **Step to the adjacent period** and **Jump to the nearest existing note**, and it explains both. Clicking a segment creates that segment's note whichever you pick; the manual previously described this setting as controlling segment clicks, which it never did.
 
 ## [3.3.0] - 2026-09-06
 

@@ -196,14 +196,15 @@
     }
   ],
   "nav_block_section_title": "Bloco de navegação",
-  "nav_block_section_mode_label": "Modo",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "Setas de anterior e próximo",
+  "nav_block_section_arrows_description": "Ir para o período adjacente avança sempre um período e cria essa nota se ela faltar. Saltar ignora os períodos sem nota e nunca cria nenhuma. Clicar num segmento cria sempre a sua nota, seja qual for esta escolha.",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "Criar nova nota",
-        "kind=existing": "Abrir nota existente"
+        "kind=create": "Ir para o período adjacente",
+        "kind=existing": "Ir para a nota existente mais próxima"
       }
     }
   ],

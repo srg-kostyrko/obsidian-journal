@@ -198,14 +198,15 @@
     }
   ],
   "nav_block_section_title": "Блок навигации",
-  "nav_block_section_mode_label": "Режим",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "Стрелки навигации",
+  "nav_block_section_arrows_description": "Переход к соседнему периоду всегда сдвигает на один период и создаёт заметку, если её нет. Переход к ближайшей существующей заметке пропускает периоды без заметок и никогда ничего не создаёт. Щелчок по сегменту всегда создаёт его заметку, независимо от этой настройки.",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "Создать новую заметку",
-        "kind=existing": "Открыть существующую заметку"
+        "kind=create": "Переходить к соседнему периоду",
+        "kind=existing": "Переходить к ближайшей существующей заметке"
       }
     }
   ],

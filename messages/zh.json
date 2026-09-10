@@ -185,14 +185,15 @@
     }
   ],
   "nav_block_section_title": "导航块",
-  "nav_block_section_mode_label": "模式",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "上一个和下一个箭头",
+  "nav_block_section_arrows_description": "跳转到相邻时段总是移动一个时段，笔记不存在时会创建。跳转到最近的现有笔记会跳过没有笔记的时段，并且从不创建笔记。点击段落时始终会创建其笔记，与此设置无关。",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "创建新笔记",
-        "kind=existing": "打开现有笔记"
+        "kind=create": "跳转到相邻时段",
+        "kind=existing": "跳转到最近的现有笔记"
       }
     }
   ],
