@@ -53,9 +53,17 @@ gh api repos/obsidianmd/obsidian-releases/contents/community-plugin-stats.json \
   -H "Accept: application/vnd.github.raw" > stats.json
 ```
 
-Join on plugin `id`, filter `name + description` on calendar / journal / diary /
-daily note / periodic / timeline / habit / planner vocabulary, then **classify the
-whole result — do not sort by downloads and read the top**.
+Join on plugin `id`, filter `name + description` on two vocabularies, then
+**classify the whole result — do not sort by downloads and read the top**:
+
+- **time words** — calendar, journal, diary, daily note, periodic, timeline,
+  habit, planner;
+- **measurement words** — track, streak, count, logging, stats, statistic,
+  metric, progress, tally, heatmap, contribution.
+
+Both are required, and the second was missing until 2026-09-10. See the
+vocabulary note under [Where this came from](#where-this-came-from) for what it
+cost.
 
 The 2026-09-08 sweep did sort and read the top, and it cost the list roughly 300
 rows. Every registry row it produced is 12,231 installs or more, which is not a
@@ -111,8 +119,10 @@ most cases, no issue either.
 | `yirsi/obsidian-habit-heatmap`        |                             27★ | Habit tracking rendered as a GitHub heatmap. A **source-only read** — its one issue is an install failure, since the repo publishes no releases. The yield was its streak engine (the loop iterates notes, so a missing day is never a miss) and its write affordance                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | idea → #367, #368       |
 | Yearly Glance                         |                          12,231 | A curated register of birthdays, anniversaries and holidays, lunar dates included. The **grid** we have — `calendar-timeline` in `calendar` mode is the same twelve decorated months; the **named dated thing** we do not                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | idea → #373, #356       |
 | Heatmap Tracker                       |                          47,790 | **The live successor to Heatmap Calendar**, which #366 and #367 are both built on. The yield was its **Export tab** — ~2,400 lines that compile a date range's notes into a Markdown or self-contained HTML report — which no row predicted and which raises the _Periodic review and synthesis_ cluster below from a curiosity to a real surface. Its streak engine and the `excludeFalsy` saga (its #67 → #80 → #72) settle three things on #367. The four leads this row used to name were duds: cell-click-to-open (its #113) asks for a setting we answer with modifiers (`define-open-mode.ts`), unfilled days (its #87) was a documentation miss, and the seven-issue date-offset cluster (its #7, #25, #29, #35, #38, #81, #103) is entirely self-inflicted — `new Date()` over a filename, mixed with UTC — which journal-owned name templates make unreachable here | idea → #378, #366, #367 |
-| Contribution Graph                    |                          60,865 | The other big heatmap. Shades by **file activity** rather than note content — a distinction #366 does not draw and probably should                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | not examined            |
-| Life-in-weeks and linear-year grids   | 4,422 + 1,734 + 696 + 415 + 124 | `Linear Calendar`, `Life in Weeks Calendar`, `Linear Year Map`, `Life in Weeks`, `My Life Calendar`. A year or a lifetime as one **linear** run of cells rather than a month grid. Adjacent to #366's density grid but a different layout question                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | not examined            |
+| Contribution Graph                    |                          60,865 | The other big heatmap, and it just came back from a two-year release gap (0.10.0 in 2024-09, 0.11.0 on 2026-09-08, whose headline fix was replacing luxon with Obsidian's moment to settle its timezone bugs). The row's "shades by **file activity**" premise holds but splits: _created_ is durable, _modified_ is **lossy by construction** and cannot work — `mtime` is one scalar per file, so editing a note erases its earlier contributions, reported four times (its #74, #90, #109, #112) and answered by the maintainer with the line worth keeping, that a heatmap computes statistics and has no way to write data. Its #122 shows sync rewriting `ctime` too. The yield was that plus the cell-period parameter (its #98, #106)                                                                                                                                 | idea → #366, #375       |
+| `pyrochlore/obsidian-tracker`         |                 362,705, 1,953★ | **Found 2026-09-10 by a filter the sweeps never ran** (see the vocabulary note below) — the largest plugin in this domain after the incumbents, and never opened. _"Track occurrences and numbers in your notes"_: it reads values out of notes and renders summaries and charts, with a template language for the numbers — `{{maxStreak()}}`, `{{maxBreaks()}}`, `{{currentStreak()}}` — which is #367's readout as a shipped feature, `maxBreaks` included, and #367 has no equivalent. Users of two other heatmap plugins cite it by name for exactly this. **Open this before acting on #367 or #368:** their cadence taxonomy currently rests on one 33k-install plugin's tracker while this one sat unseen                                                                                                                                                             | not examined            |
+| Writing-activity and streak engines   | 32,941 + 25,418 + 6,108 + 4,654 | `Keep the Rhythm` (_"watching your word count go up is all the motivation you need"_), `Daily Stats` (_"track your daily word count"_, and the plugin Contribution Graph's #88 sends people to), `Tracker+` (a successor speaking `Tracker` Markdown), `YourPulse` (_"like your Github profile, but for your vault — daily streak, average daily word count"_, and what a commenter on Contribution Graph's #107 recommends over it). The same sub-sweep as the row above. All four measure **writing** over time rather than notes over time, which is the one shade source #366 lists that we cannot compute — worth knowing whether that is a gap or a boundary                                                                                                                                                                                                            | not examined            |
+| Life-in-weeks and linear-year grids   | 4,422 + 1,734 + 696 + 415 + 124 | `Linear Calendar`, `Life in Weeks Calendar`, `Linear Year Map`, `Life in Weeks`, `My Life Calendar`. A year or a lifetime as one **linear** run of cells rather than a month grid. **Re-annotated 2026-09-10:** not necessarily a separate layout question — Contribution Graph's #106 asks for exactly this (a 90×52 week matrix, citing Wait But Why) as a feature of a _heatmap_, and its #98 asks for a week cell for an unrelated reason, so the cell period is a parameter of #366 rather than a different grid. Whether the linear layout is a mode of that block or its own surface is what this row is now for                                                                                                                                                                                                                                                       | not examined            |
 | Thino                                 |                         430,370 | Memo capture plus a sidebar heatmap, and the largest plugin in this whole domain. **Closed source**, so it is a behaviour-and-tracker read only. Bears on #377                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | not examined            |
 
 ## Direct overlap — what a migrating user compares us against
@@ -383,6 +393,32 @@ re-checking before acting on a verdict written months earlier.
 One method note worth keeping: counting demand by title keyword invented a
 four-issue "locale cluster" that was one ambiguous request plus three asks for
 something already shipped. Read the bodies before classifying.
+
+A third, from the 2026-09-10 Contribution Graph pass, and the most expensive so
+far: **the domain describes itself in two vocabularies and the sweeps only ever
+filtered on one.** Both sweeps matched _time_ words. A plugin that says what it
+measures rather than when — `Tracker`, _"track occurrences and numbers in your
+notes"_ — contains no time word in its name or description and was therefore
+invisible, at **362,705 installs**: larger than Heatmap Calendar, Contribution
+Graph and Heatmap Tracker combined, and the streak engine users of two of those
+three cite by name.
+
+Re-running the registry filter with measurement vocabulary added gives 524 raw
+rows on time words — the same set the 2026-09-10 sweep noise-filtered down to its
+343 — and **484 more on measurement words alone**.
+The great majority of those 484 is noise the time filter was right to miss — task
+managers, time trackers, TTRPG initiative trackers, per-file word counts, ebook
+readers — but it is not all noise: `Tracker`, plus the four in the
+_Writing-activity and streak engines_ row, plus `Life Tracker` (40,411, and a
+**Bases view**, so it belongs to the Bases cluster and #369). Those six are rows
+now.
+
+Two cautions for whoever classifies the remaining 478. Use word boundaries — an
+early pass at this claimed 23 of the 484 were already listed, which was wrong:
+`Tracker` "matched" the list only because the word occurs inside _Heatmap
+Tracker_, and `Linear`, `Library` and `Harvest` matched the same way. That is the
+`ai` matching `d-ai-ly` mistake again, in a new place. And match on `repo`, which
+is unique, rather than on `name`.
 
 A second one, from the 2026-09-10 Heatmap Tracker pass: **a row's Harvest column
 can be confidently wrong about where its own value is.** That row named four
