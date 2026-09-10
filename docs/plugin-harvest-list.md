@@ -118,13 +118,13 @@ Bears on the tasks epic (#344) and its phases.
 
 Lower priority; listed because the pattern recurs and we have no capture story.
 
-| Plugin                                              | Installs | Harvest                                                                                                                                                                                                                                         | Status        |
-| --------------------------------------------------- | -------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Natural Language Dates                              |  516,996 | The most-linked plugin across both incumbent trackers. Bears on #192                                                                                                                                                                            | scoped → #192 |
-| Jump-to-Date                                        |   21,797 | A popup calendar purely for navigation                                                                                                                                                                                                          | not examined  |
-| Daily Named Folder                                  |   29,663 | Folder-per-day layouts. Answered by the **folder template**, not by notelets: `folder: "Journal/{{note_name}}"` puts each note in a folder of its own name                                                                                      | nothing new   |
-| Influx                                              |   30,918 | Aggregating backlinked clippings into a footer. Bears on #356 directly, not just adjacently: frontmatter links are a separate cache it has to merge by hand, and its excerpt-scoping issues are the argument for keeping that condition a count | idea → #356   |
-| `SamSongAI/Trace`, `jameesy/obsidian-quick-capture` | 22★, 25★ | System-level quick capture into the daily note                                                                                                                                                                                                  | not examined  |
+| Plugin                                              | Installs | Harvest                                                                                                                                                                                                                                         | Status                |
+| --------------------------------------------------- | -------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Natural Language Dates                              |  516,996 | The most-linked plugin across both incumbent trackers. Bears on #192                                                                                                                                                                            | scoped → #192         |
+| Jump-to-Date                                        |   21,797 | A popup calendar purely for navigation — 673 lines registering two commands. Its typed-date half is #192's third bullet; the plain half is ruled out below                                                                                      | ruled out — see below |
+| Daily Named Folder                                  |   29,663 | Folder-per-day layouts. Answered by the **folder template**, not by notelets: `folder: "Journal/{{note_name}}"` puts each note in a folder of its own name                                                                                      | nothing new           |
+| Influx                                              |   30,918 | Aggregating backlinked clippings into a footer. Bears on #356 directly, not just adjacently: frontmatter links are a separate cache it has to merge by hand, and its excerpt-scoping issues are the argument for keeping that condition a count | idea → #356           |
+| `SamSongAI/Trace`, `jameesy/obsidian-quick-capture` | 22★, 25★ | System-level quick capture into the daily note                                                                                                                                                                                                  | not examined          |
 
 ## Deliberately not harvested
 
@@ -174,6 +174,21 @@ new information.
 - **Ribbon menu labels, cursor placement, weekday label format, hotkeys to page
   the calendar view.** Each small, each with a workaround, none with demand in
   this project's tracker.
+- **A "jump to a date I pick" command.** Jump-to-Date's whole product, and every
+  piece of it already exists here — `datePickerModal` is opened from
+  `insert-journal-link.flow.ts`, a toolbar `ButtonItem` and a settings field,
+  just never from the palette; every command's date comes from today or the open
+  note. Declined for the same reason as the paging hotkeys above: the calendar
+  view is the workaround, and the demand is 21,797 ecosystem installs rather
+  than anything in this tracker. The typed-entry half stays with #192.
+
+  Worth keeping from that pass: their nldates-dependent command is **not
+  registered at all** when the dependency is missing, rather than registered and
+  guarded. Since `CommandRegistration.check` filters the palette only — a ribbon
+  click or bound hotkey reaches `execute` regardless — not registering is the
+  stronger form for a command that cannot work without an optional plugin. Their
+  version's cost is that installing the dependency later leaves the command
+  missing until restart.
 
 ## Where this came from
 
