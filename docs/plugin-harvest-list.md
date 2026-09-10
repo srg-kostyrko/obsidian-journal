@@ -146,7 +146,6 @@ most cases, no issue either.
 | Daily notes calendar                       |                              19,085 | Feature-for-feature the closest thing to us: day→year notes, configurable name and folder formats, date-math template variables, a created-on-date listing. Nearly all of it already answered here — the yield was the one condition it has and we do not                                                                                                                                                                                                | idea → #375         |
 | Journal Review                             |                              21,911 | "What happened today last year" — the exact feature in #355, already shipped by someone else                                                                                                                                                                                                                                                                                                                                                             | idea → #355         |
 | Diarian                                    |                        11,452, 115★ | All-in-one journaling toolkit, active. Dots per note on each day tile, the day's first attached image on the tile, an **interval-based** "on this day" (every 3 months rather than anniversaries), emoji ratings from a property, an importer from the Diarium app, and a date-format converter for pre-existing notes                                                                                                                                   | not examined        |
-| Prisma Calendar                            |                              28,064 | _"Turns any note with a date into a flexible planning system… no rigid schemas."_ The property-date approach again, at scale. Above the old reading floor and skipped anyway                                                                                                                                                                                                                                                                             | not examined        |
 | Obligator                                  |                              12,981 | _"A fully featured replacement for the built-in daily notes plugin"_, working as a virtual bullet journal. A direct-overlap row that was never opened                                                                                                                                                                                                                                                                                                    | not examined        |
 | Periodic-note calendar tail                |         ~14 plugins, 133–6,955 each | `Calendar for Daily Notes`, `CalendarZ`, `Calendar Panel`, `Chrono Notes`, `Periodic Calendar`, `Period Calendar`, `FlexiCal`, `Mantle Calendar`, `Almanac`, `Calendar Note View`, `Calendar of Notes`, `Note Diary`, `Vault Calendar`, `Link Calendar Navigator`. One pass over the cluster, not fourteen passes. (`Daily Preview Calendar` was listed here and in the note-stream tail; worked 2026-09-10 and promoted to **Surfaces we do not have**) | not examined        |
 | Note-storage models                        | 7,839 + 4,662 + 2,272 + 2,130 + 842 | `Single File Daily Notes` (every day in one file), `Journalyst` (topic-specific journals), `Folder Periodic Notes`, `Streams` (several parallel daily-note streams), `Multiple Daily Notes` (several notes per day, with a past-midnight offset → #351). Shapes our one-note-per-period model cannot express                                                                                                                                             | not examined        |
@@ -259,6 +258,39 @@ got re-made by hand each time. It is written down now. The one thing worth
 watching is where an event calendar starts _writing period notes_ — `Full
 Calendar` was the row to re-check if that ever happened.
 
+**`Prisma Calendar` (28,064, 90★, active) belongs here, and was listed as a
+direct-overlap competitor until it was opened on 2026-09-10.** The row read
+_"turns any note with a date into a flexible planning system… no rigid
+schemas"_ — the registry description — and that reads as the property-date
+approach. It is the event-calendar approach: `@fullcalendar/{core,daygrid,`
+`timegrid,list,multimonth,interaction}` is the rendering engine, events are
+`Start`/`End` datetimes with drag-to-resize, participants, capacity in hours, a
+time tracker, CalDAV/ICS sync and a dependency-aware Gantt. There is no period
+in it — `grep -rin "daily note\|periodic note\|weekly note\|monthly note" src/`
+returns **zero hits**, and the only mention across its 68 docs pages is the
+quickstart listing daily notes as an example of notes you might already have a
+date on. Its own framing is "Unlike Google Calendar / Unlike Notion". Nobody
+migrates between it and this plugin; they run both. Third time the
+descriptions-only blind spot has decided a row wrongly, and the first time it
+put a plugin in the wrong _table_ rather than the wrong column.
+
+The pass paid anyway, because the boundary is where the transferable ideas are:
+**#381** (an ordinal weekday on the date condition) came out of it, along with
+the costing that killed the obvious version of it — `date-holidays`, which
+Prisma bundles to ship 50+ countries in its free tier, is **1.50 MB minified
+against our 1.90 MB `main.js`** and is now under
+[Already ruled out](#already-ruled-out). Everything else it turned up was
+corroboration for issues that already exist: a `getEvents({start, end})` range
+read as the primary API query (#380), an `obsidian://…?call=<action>` dispatcher
+over every write action with reads deliberately excluded (#377, #352), an
+"untracked events" inbox that is exactly the visible-refusal surface #376 is
+looking for, and heatmap intensity taken from **quartiles of the visible range**
+rather than fixed thresholds (#366). Its six ADRs and its multi-device page are
+the best-written things this harvest has found; the per-device-state rule in
+them (a sync cursor in `data.json` replicates and silently breaks) was checked
+against us and we store none — `git grep localStorage -- src` is empty and every
+slice is vault state.
+
 **It has happened.** `Full Calendar Remastered` (41,898), a fork, ships a
 Journals provider built on our own API that calls `ensureNote`. It is listed
 under [Plugins that integrate with us](#plugins-that-integrate-with-us) rather
@@ -343,6 +375,19 @@ new information.
   (`Single File Daily Notes`, `Journalyst`) — that row is still worth opening
   for its folder-layout half, but not for this.
 
+- **A bundled holiday dataset.** `date-holidays` is what Prisma Calendar bundles
+  to ship public holidays for 50+ countries — with state and region codes, five
+  holiday-type tiers, offline, rendered as read-only virtual all-day events that
+  write no files — in its **free** tier. It is the complete answer, Easter and its
+  movable feasts included, which no rule over `(day, month, weekday, ordinal)` can
+  reach. Declined on size: `dist/index.min.js` is **1.50 MB**, 803 KB of it the
+  dataset, against a 1.90 MB `main.js` at 3.3.0 — a 79% increase, on mobile too,
+  for a feature most users never enable, plus a dataset that ages, so the
+  dependency bump acquires a correctness deadline. Prisma absorbs it because its
+  own `main.js` is already 4.5 MB. The partial answer with none of that cost is
+  #381. If a holiday source is ever wanted, the shape to look at is a
+  user-supplied `.ics` or an opt-in downloaded country file, not a bundle.
+
 - **Weekend-as-one-note.** Day journals have no weekday filter and custom
   intervals tile at fixed length. Belongs to #198.
 - **Ribbon menu labels, cursor placement, weekday label format, hotkeys to page
@@ -397,14 +442,16 @@ verdicts. Nothing in that batch has been examined yet.
 **The arithmetic, so the next sweep can check it.** The registry pass produced 343
 domain plugins, 28 already listed, 315 new. Those 315 resolve as:
 
-- **159 named explicitly in the rows above**, most inside a cluster row rather
-  than on a row of their own.
+- **158 named explicitly in the rows above**, most inside a cluster row rather
+  than on a row of their own. It was 159 until the 2026-09-10 `Prisma Calendar`
+  pass moved that one into the event-calendar exclusion below, where it should
+  have been routed in the first place.
 - **137 excluded by category**, counted rather than waved at: 36 that sync an
   external service into the daily note (Toggl, Strava, Things, Granola, Immich,
   Telegram, Garmin…), 29 domain trackers (food, fitness, money, media, study,
   faith), 27 task and project managers, 22 vault-wide dashboards and activity
   meters that measure the vault rather than the journal, 14 AI assistants over
-  the journal, and 9 event calendars.
+  the journal, and 10 event calendars (9 at the sweep, plus `Prisma Calendar`).
 - That leaves **19 unaccounted for**, and the honest reason is that a cluster row
   names _exemplars_, not every member: several of the 19 (`Daymark`,
   `Quick Daily Note`, `Mood Journal`, `Memo Lite`, `Life Journal`,
