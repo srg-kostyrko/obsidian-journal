@@ -36,7 +36,7 @@ const {
   field: "navBlock" | "intervalBlock";
   title: string;
   icon: string;
-  /** The navigation block alone has a create/open mode and adjacent periods. */
+  /** The navigation block alone has previous/next arrows, so only it has their setting. */
   navigation?: boolean;
   useDefaults?: boolean;
 }>();
@@ -120,10 +120,11 @@ function onDropAtStart(orderedIds: string[]): void {
       <UiIconButton :icon="icons.action.add" :tooltip="m.block_lines_add_line()" @click="add" />
     </template>
 
-    <UiSettingRow v-if="navigation" :name="m.nav_block_section_mode_label()">
+    <UiSettingRow v-if="navigation" :name="m.nav_block_section_arrows_label()">
+      <template #description>{{ m.nav_block_section_arrows_description() }}</template>
       <UiDropdown v-model="config[field].type">
-        <option value="create">{{ m.nav_block_section_mode_option({ kind: "create" }) }}</option>
-        <option value="existing">{{ m.nav_block_section_mode_option({ kind: "existing" }) }}</option>
+        <option value="create">{{ m.nav_block_section_arrows_option({ kind: "create" }) }}</option>
+        <option value="existing">{{ m.nav_block_section_arrows_option({ kind: "existing" }) }}</option>
       </UiDropdown>
     </UiSettingRow>
 

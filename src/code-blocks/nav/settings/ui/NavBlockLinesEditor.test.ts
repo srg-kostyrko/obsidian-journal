@@ -34,13 +34,40 @@ async function mount(lines: NavBlockSegment[][], decorateWholeBlock = false) {
   return { harness, flows };
 }
 
+async function mountNavigation() {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule],
+    data: { journals: { daily: journalWithIntervalLines([[sampleSegment]]) } },
+  });
+  vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
+  harness.render(NavBlockLinesEditor, {
+    props: { journalName: "daily", field: "navBlock", title: TITLE, icon: "list", navigation: true },
+  });
+  await userEvent.click(screen.getByText(TITLE));
+  return harness;
+}
+
 const sampleSegment = buildNavSegment({ template: "static text" });
 
 describe("NavBlockLinesEditor", () => {
-  it("hides the mode dropdown when mode is not enabled", async () => {
+  it("hides the arrow-behavior dropdown on a block that has no previous and next arrows", async () => {
     await mount([[sampleSegment]]);
     await userEvent.click(screen.getByText(TITLE));
-    expect(screen.queryByText(m.nav_block_section_mode_label())).toBeNull();
+    expect(screen.queryByText(m.nav_block_section_arrows_label())).toBeNull();
+  });
+
+  it("offers both arrow behaviors on the navigation block", async () => {
+    await mountNavigation();
+    expect(screen.getByText(m.nav_block_section_arrows_label())).toBeTruthy();
+    expect(screen.getByRole("option", { name: m.nav_block_section_arrows_option({ kind: "create" }) })).toBeTruthy();
+    expect(screen.getByRole("option", { name: m.nav_block_section_arrows_option({ kind: "existing" }) })).toBeTruthy();
+  });
+
+  // The label names the arrows alone, so the row has to be the place that says the two behaviors
+  // differ in whether they create a note — and that a segment click creates either way (#371).
+  it("explains what each arrow behavior does", async () => {
+    await mountNavigation();
+    expect(screen.getByText(m.nav_block_section_arrows_description())).toBeTruthy();
   });
 
   it("hides the use-defaults button when useDefaults is not enabled", async () => {

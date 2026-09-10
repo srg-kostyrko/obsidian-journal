@@ -196,14 +196,15 @@
     }
   ],
   "nav_block_section_title": "Blocco di navigazione",
-  "nav_block_section_mode_label": "Modalità",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "Frecce precedente e successivo",
+  "nav_block_section_arrows_description": "Andare al periodo adiacente avanza sempre di un periodo e crea quella nota se manca. Saltare ignora i periodi senza nota e non ne crea mai una. Fare clic su un segmento crea sempre la sua nota, qualunque sia questa scelta.",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "Crea una nuova nota",
-        "kind=existing": "Apri una nota esistente"
+        "kind=create": "Vai al periodo adiacente",
+        "kind=existing": "Vai alla nota esistente più vicina"
       }
     }
   ],

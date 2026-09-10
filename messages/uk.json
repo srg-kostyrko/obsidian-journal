@@ -185,14 +185,15 @@
     }
   ],
   "nav_block_section_title": "Блок навігації",
-  "nav_block_section_mode_label": "Режим",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "Стрілки навігації",
+  "nav_block_section_arrows_description": "Перехід до сусіднього періоду завжди зсуває на один період і створює нотатку, якщо її немає. Перехід до найближчої наявної нотатки пропускає періоди без нотаток і ніколи нічого не створює. Клацання на сегменті завжди створює його нотатку, незалежно від цього налаштування.",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "Створити нову нотатку",
-        "kind=existing": "Відкрити наявну нотатку"
+        "kind=create": "Переходити до сусіднього періоду",
+        "kind=existing": "Переходити до найближчої наявної нотатки"
       }
     }
   ],

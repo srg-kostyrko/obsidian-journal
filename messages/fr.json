@@ -196,14 +196,15 @@
     }
   ],
   "nav_block_section_title": "Bloc de navigation",
-  "nav_block_section_mode_label": "Mode",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "Flèches précédent et suivant",
+  "nav_block_section_arrows_description": "Aller à la période adjacente avance toujours d'une période et crée la note si elle manque. Sauter ignore les périodes sans note et n'en crée jamais. Cliquer sur un segment crée toujours sa note, quel que soit ce choix.",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "Créer une nouvelle note",
-        "kind=existing": "Ouvrir la note existante"
+        "kind=create": "Aller à la période adjacente",
+        "kind=existing": "Aller à la note existante la plus proche"
       }
     }
   ],

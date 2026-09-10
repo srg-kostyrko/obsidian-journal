@@ -132,14 +132,15 @@
   "code_blocks_timeline_navigation_range": "{from} – {to}",
 
   "nav_block_section_title": "Navigation block",
-  "nav_block_section_mode_label": "Mode",
-  "nav_block_section_mode_option": [
+  "nav_block_section_arrows_label": "Previous and next arrows",
+  "nav_block_section_arrows_description": "Stepping always moves one period, creating that note if it's missing. Jumping skips periods that have no note, and never creates one. Clicking a segment always creates its note, whichever you choose.",
+  "nav_block_section_arrows_option": [
     {
       "declarations": ["input kind"],
       "selectors": ["kind"],
       "match": {
-        "kind=create": "Create new note",
-        "kind=existing": "Open existing note"
+        "kind=create": "Step to the adjacent period",
+        "kind=existing": "Jump to the nearest existing note"
       }
     }
   ],
