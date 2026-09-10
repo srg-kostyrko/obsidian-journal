@@ -263,7 +263,7 @@ to confuse.
 - Run the type's seeded command, or any command you targeted at it
 - Use **New notelet** in the [notelets list](#supported-code-blocks), in a view block or a
   `journal-notelets` code block
-- Open a link like `obsidian://journal?journal=Daily&notelet=Meeting&date=today`
+- Open a link like `obsidian://journals?journal=Daily&notelet=Meeting&date=today`
 
 **Adopting notes you already have:**
 

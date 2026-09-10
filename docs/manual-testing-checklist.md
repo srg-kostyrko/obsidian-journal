@@ -1401,11 +1401,11 @@ under **Notelet types**: **Meeting** (leave the defaults) and **Retro** (turn
       and cancelling it still writes nothing.
 - [ ] Frontmatter of a new notelet carries the journal, the period date, the type name
       and (for Meeting) the number.
-- [ ] `obsidian://journal?journal=Note&notelet=Meeting&date=today` → creates and opens
+- [ ] `obsidian://journals?journal=Note&notelet=Meeting&date=today` → creates and opens
       a Meeting notelet.
-- [ ] `obsidian://journal?notelet=Meeting&date=today` (no `journal=`) → notice says a
+- [ ] `obsidian://journals?notelet=Meeting&date=today` (no `journal=`) → notice says a
       notelet link needs a journal; no note created.
-- [ ] `obsidian://journal?journal=Note&notelet=Nope&date=today` → notice names the
+- [ ] `obsidian://journals?journal=Note&notelet=Nope&date=today` → notice names the
       unknown type; no note created.
 
 ### Listing
