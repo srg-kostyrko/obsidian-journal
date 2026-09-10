@@ -10,6 +10,11 @@ export type Frontmatter = Record<string, unknown>;
 export async function createNote(path: string, content = ""): Promise<void> {
   await browser.executeObsidian(
     async ({ app }, notePath, body) => {
+      // Marked inside the same round trip rather than through a call of its own: an extra
+      // WebDriver hop before the mutation would move the very boot-window timing a failure
+      // here is usually about. The console is where the plugin's own debug trail lands, so
+      // the two interleave and a dump reads as one ordered story (see wdio.conf.mts).
+      console.debug("[e2e]", "create", notePath);
       await app.vault.create(notePath, body);
     },
     path,
@@ -23,6 +28,7 @@ export async function createNote(path: string, content = ""): Promise<void> {
 export async function writeNote(path: string, content: string): Promise<void> {
   const written = await browser.executeObsidian(
     async ({ app, obsidian }, notePath, body) => {
+      console.debug("[e2e]", "write", notePath);
       const file = app.vault.getAbstractFileByPath(notePath);
       if (!(file instanceof obsidian.TFile)) return false;
       await app.vault.modify(file, body);
@@ -39,6 +45,7 @@ export async function renameNote(from: string, to: string): Promise<void> {
   // can't reach an imported error; report via sentinel and raise in Node.
   const renamed = await browser.executeObsidian(
     async ({ app, obsidian }, fromPath, toPath) => {
+      console.debug("[e2e]", "rename", `${fromPath} -> ${toPath}`);
       const file = app.vault.getAbstractFileByPath(fromPath);
       if (!(file instanceof obsidian.TFile)) return false;
       await app.fileManager.renameFile(file, toPath);
@@ -214,6 +221,7 @@ export function waitForContent(
 export async function seedNote(path: string, content: string): Promise<void> {
   await browser.executeObsidian(
     async ({ app, obsidian }, notePath, body) => {
+      console.debug("[e2e]", "seed", notePath);
       const existing = app.vault.getAbstractFileByPath(notePath);
       if (existing instanceof obsidian.TFile) {
         await app.vault.modify(existing, body);

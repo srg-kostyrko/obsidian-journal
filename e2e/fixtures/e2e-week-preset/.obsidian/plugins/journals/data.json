@@ -1,5 +1,6 @@
 {
   "version": 4,
+  "logging": { "level": "debug" },
   "calendar": {
     "mode": "custom",
     "dow": 1,

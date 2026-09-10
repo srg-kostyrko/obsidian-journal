@@ -432,6 +432,15 @@ export default [
     },
   },
   {
+    files: ["wdio.conf.mts", "e2e/support/vault.ts"],
+    rules: {
+      // The e2e failure dump is a console artifact by design: the runner writes the plugin's
+      // log trail to its own stdout, and the vault helpers mark the renderer console so a
+      // harness action and the plugin's reaction to it read as one ordered story.
+      "no-console": "off",
+    },
+  },
+  {
     files: ["src/infrastructure/result/async-result.ts"],
     rules: {
       // AsyncResult intentionally implements PromiseLike; `then` is the documented surface.

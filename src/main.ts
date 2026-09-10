@@ -15,7 +15,8 @@ import { initLocale, m } from "@/i18n";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
-import { LoggerModule } from "@/infrastructure/logger";
+import { BufferSinkToken, LoggerFactoryToken, LoggerModule } from "@/infrastructure/logger";
+import type { LogRecord } from "@/infrastructure/logger";
 import { AutoAttachService, AutoCreateService, JournalUriHandler, StartupOpenService } from "@/journals";
 import { journalsModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
@@ -89,6 +90,17 @@ export default class JournalPlugin extends Plugin {
     container.resolve(JournalUriHandler).initialize();
 
     this.#container = container;
+    // The boot boundary every timing question is asked against: onload is async, so Obsidian's
+    // layout can be ready — and the vault already dispatching events — well before this line.
+    container
+      .resolve(LoggerFactoryToken)
+      .named("plugin")
+      .debug("plugin loaded", { layoutReady: this.app.workspace.layoutReady });
+  }
+
+  /** Diagnostics only — the in-memory log buffer, not the stable surface `api` carries. */
+  logSnapshot(): readonly LogRecord[] {
+    return this.#container?.resolve(BufferSinkToken).snapshot() ?? [];
   }
 
   onExternalSettingsChange(): void {

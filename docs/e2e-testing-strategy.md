@@ -270,8 +270,27 @@ e2e job runs exactly this single command before installing the fixture.
    on its frontmatter — not on a DOM element being visible "because it's probably
    done by then." Proxies are where flakes live.
 5. **Capture on failure.** An `afterTest` hook saves `browser.takeScreenshot()`
-   (and relevant DOM) as a CI artifact. Headless CI flakes are near-undebuggable
-   without it.
+   as a CI artifact and, beside it, a `.log` merging two streams by timestamp: the
+   plugin's own records, read off its in-memory buffer through `logSnapshot()`,
+   and the renderer console, which carries what the buffer cannot — Obsidian's own
+   errors, an uncaught exception, and the `[e2e]` markers the vault helpers write
+   as they mutate the vault, so a harness action and the plugin's reaction to it
+   read as one story. The plugin's lines also go to the runner's stdout, because a
+   headless failure is triaged from the job log before anyone downloads an
+   artifact. Chromedriver holds console entries for the life of the session, so a
+   spec that reboots in `before` still gets its whole boot trail — the one window a
+   failing first test cannot otherwise show. Headless CI flakes are
+   near-undebuggable without all of this.
+
+   Records come from the buffer rather than the console because the WebDriver log
+   wire renders console _arguments_ instead of serializing them: a record's fields
+   arrive as the bare word `Object`, losing exactly the path or id worth reading.
+   Every fixture's `data.json` therefore sets `logging.level` to `debug`, since the
+   buffer only holds what the level let through. Two fixtures stay as they are:
+   `legacy-v1`, whose payload is a real v1 shape the migration reads, and `empty`,
+   which carries no `data.json` at all and must keep answering the first-run
+   question.
+
 6. **Read vault state through `app.vault`, not node `fs`.** Assert what Obsidian
    sees in-process (post-metadataCache), not raw bytes on the temp dir — the bytes
    can run ahead of Obsidian's parsed view, which is exactly the timing slice A

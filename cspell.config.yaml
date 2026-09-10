@@ -7,6 +7,7 @@ words:
   - callsite
   - unapply
   - chrono
+  - chromedriver
   - collab
   - haspopup
   - iconed
@@ -26,6 +27,7 @@ words:
   - parameterless
   - passthroughs
   - popout
+  - prefs
   - previewable
   - rangeset
   - reanchor

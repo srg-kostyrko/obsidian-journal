@@ -68,14 +68,21 @@ export class AutoAttachService {
       void this.#handle(path);
       return;
     }
+    this.#logger.debug("waiting for the note to parse", { path });
     this.#awaitingParse.add(path);
   }
 
   async #handle(path: VaultPath): Promise<void> {
-    if (this.#guard.suppresses(path)) return;
-    if (this.#index.entryByPath(path).isSome()) return;
+    if (this.#guard.suppresses(path)) {
+      this.#logger.debug("our own write", { path });
+      return;
+    }
+    if (this.#index.entryByPath(path).isSome()) {
+      this.#logger.debug("already connected", { path });
+      return;
+    }
     if (this.#claimedElsewhere(path)) {
-      this.#logger.debug("auto-attach: note claims an unknown journal", { path });
+      this.#logger.debug("note claims an unknown journal", { path });
       return;
     }
     const matches: { name: string; metadata: JournalMetadata }[] = [];
@@ -92,11 +99,11 @@ export class AutoAttachService {
       matches.push({ name, metadata: merged });
     }
     if (matches.length === 0) {
-      this.#logger.debug("auto-attach: no matches", { path });
+      this.#logger.debug("no matches", { path });
       return;
     }
     if (matches.length > 1) {
-      this.#logger.debug("auto-attach: ambiguous", { path, candidates: matches.map((m) => m.name) });
+      this.#logger.debug("ambiguous", { path, candidates: matches.map((m) => m.name) });
       return;
     }
     const [match] = matches;
@@ -137,9 +144,9 @@ export class AutoAttachService {
     }
     const result = await this.#creation.attachNote(match.name, target, metadata);
     if (result.isErr()) {
-      this.#logger.error("auto-attach failed", { path: target, error: result.error });
+      this.#logger.error("attach failed", { path: target, error: result.error });
     } else {
-      this.#logger.info("auto-attach succeeded", { path: target, journal: match.name });
+      this.#logger.info("attached", { path: target, journal: match.name });
     }
   }
 
@@ -175,12 +182,20 @@ export class AutoAttachService {
     // (leaving #claimedElsewhere blind) and before the note migration has rewritten legacy ones,
     // whose journal key it would overwrite. Subscribing at layout-ready skips that burst; unlike
     // the index's readiness it always arrives, and fires immediately on a mid-session enable.
+    // Logged with the layout-ready state as it was *before* registering: a note created in the
+    // gap between layout-ready and the end of the plugin's async onload reaches no subscriber
+    // at all, and nothing revisits it, so this line is what separates "the event never arrived"
+    // from "the event arrived and a guard dropped it".
+    const layoutWasReady = this.#workspace.layoutReady;
     this.#workspace.onLayoutReady(() => {
+      this.#logger.debug("watching for new notes", { layoutWasReady });
       this.#unsubscribes.push(
         this.#notes.events.on("created", (note) => {
+          this.#logger.debug("note created", { path: note.path });
           this.#handleWhenParsed(note.path);
         }),
         this.#notes.events.on("renamed", ({ from, to }) => {
+          this.#logger.debug("note renamed", { from, to });
           this.#awaitingParse.delete(from);
           void this.#handle(to);
         }),
@@ -189,6 +204,7 @@ export class AutoAttachService {
         }),
         this.#notes.events.on("metadata-changed", (path) => {
           if (!this.#awaitingParse.delete(path)) return;
+          this.#logger.debug("the awaited note parsed", { path });
           void this.#handle(path);
         }),
       );
