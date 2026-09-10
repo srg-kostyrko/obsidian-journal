@@ -98,10 +98,7 @@ export default class JournalPlugin extends Plugin {
       .debug("plugin loaded", { layoutReady: this.app.workspace.layoutReady });
   }
 
-  /**
-   * The in-memory log buffer, for diagnostics — not part of the public API in `api`, and not
-   * subject to its stability policy. What it holds depends on the configured log level.
-   */
+  /** Diagnostics only — the in-memory log buffer, not the stable surface `api` carries. */
   logSnapshot(): readonly LogRecord[] {
     return this.#container?.resolve(BufferSinkToken).snapshot() ?? [];
   }
