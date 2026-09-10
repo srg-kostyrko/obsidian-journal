@@ -279,13 +279,42 @@ The pass paid anyway, because the boundary is where the transferable ideas are:
 the costing that killed the obvious _implementation_ of it — `date-holidays`, which
 Prisma bundles to ship 50+ countries in its free tier, is **1.50 MB minified
 against our 1.90 MB `main.js`** and is now under
-[Already ruled out](#already-ruled-out). Everything else it turned up was
-corroboration for issues that already exist: a `getEvents({start, end})` range
-read as the primary API query (#380), an `obsidian://…?call=<action>` dispatcher
-over every write action with reads deliberately excluded (#377, #352), an
-"untracked events" inbox that is exactly the visible-refusal surface #376 is
-looking for, and heatmap intensity taken from **quartiles of the visible range**
-rather than fixed thresholds (#366). Its six ADRs and its multi-device page are
+[Already ruled out](#already-ruled-out). **#382** came out of it too, found while
+inventorying what our own bulk vault writes report about themselves: a notelet
+whose re-anchor write fails is counted as neither `rewritten` nor `failed`, so a
+week-preset change under-reports. The exemption is deliberate and right for the
+_orphaned notelet_ it was written for, and wrong for a genuine write failure,
+which is the whole of that issue.
+
+The rest went onto issues that already exist, as comments rather than as new
+rows — and in each case the yield was **our code**, reached by checking their
+shape against ours, not the shape itself:
+
+- **#380.** Their API ships `getEvents({start, end})` _and_ `getAllEvents()`, so a
+  second designer independently concluded a range read alone is not enough. Reading
+  `Full Calendar Remastered`'s bridge to check it produced the real find: it
+  implements `getNotes` **twice in one file**, and the branch on **2.x internals is
+  strictly better** than the branch on our public API — one synchronous index read
+  against 365 async calls, or a whole-vault `getMarkdownFiles()` walk. Also: the
+  per-cell fan-out multiplies by _period length_ (a year of a monthly journal is 365
+  calls for 12 notes), and `entriesFor` is a **second** unexposed primitive beside
+  `getRange`.
+- **#377, #352.** Their `obsidian://…?call=<action>` dispatcher over every write
+  action, with reads excluded because they "don't serialize well to URL query
+  params". The transferable half is _make the verb a token_, not the `call=`
+  mechanism — Obsidian dispatches per action natively, so a second registered action
+  is the idiomatic form. Checking it also found the README's only example link used
+  `obsidian://journal?` (singular), which is not a registered action; four more
+  copies, including the 3.0.0 changelog entry.
+- **#376.** Their "untracked events" dropdown is the visible-refusal surface that
+  issue wants, with the repair attached. Checking it against `ScanService` showed
+  the walk is already paid — `not-a-claim` reaches `default: break` and is not even
+  counted — that `keepOnly` is the reusable pick-one gesture, and that
+  `Finding.journalName` being a required scalar blocks the obvious modelling.
+- **#366.** Heatmap intensity from **quartiles of the visible range** rather than
+  fixed thresholds.
+
+Its six ADRs and its multi-device page are
 the best-written things this harvest has found; the per-device-state rule in
 them (a sync cursor in `data.json` replicates and silently breaks) was checked
 against us and we store none — `git grep localStorage -- src` is empty and every
