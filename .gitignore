@@ -52,6 +52,8 @@ data.json
 .DS_Store
 
 .eslintcache
+# ESLint's --cache-location, kept out of node_modules so CI can restore it.
+.cache/
 
 coverage
 

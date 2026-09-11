@@ -24,13 +24,26 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "24.x"
+          cache: npm
       - run: npm ci
       - run: npm run compile:i18n
       - run: npm run check:i18n
       - run: npm run check:types
+      - run: npm run check:format
       # `coverage` runs the same suite as `npm test` and adds the floor from vitest.config.mts.
       # Running both would pay for the suite twice to get one signal.
       - run: npm run coverage
+      # `--cache-strategy content` in check:lint is load-bearing here: the default strategy
+      # keys on mtime, which a checkout rewrites for every file, so a restored cache is
+      # discarded entry by entry and this step silently buys nothing.
+      - name: Cache ESLint results
+        uses: actions/cache@v6
+        with:
+          path: .cache/eslint
+          key: eslint-${{ hashFiles('package-lock.json', 'eslint.config.mjs') }}-${{ github.sha }}
+          restore-keys: |
+            eslint-${{ hashFiles('package-lock.json', 'eslint.config.mjs') }}-
+            eslint-
       - run: npm run check:lint
       # The published API types are generated from src/api/public-api.ts and committed,
       # so any change to the public surface shows up as a diff in the PR that caused it.
