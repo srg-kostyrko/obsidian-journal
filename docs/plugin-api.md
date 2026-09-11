@@ -46,11 +46,18 @@ interface JournalsApi {
   journalInfo(name: string): Promise<JournalInfo | null>;
 
   notesFor(selector: JournalSelector, date: DateInput): Promise<readonly JournalNote[]>;
+  notesInRange(selector: JournalSelector, range: DateRange): Promise<readonly JournalNote[]>;
+  existingNotes(selector: JournalSelector, range?: DateRange): Promise<readonly ExistingJournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
   noteletOf(file: TFile): Promise<NoteletNote | null>;
   noteletsFor(
     selector: JournalSelector,
     date: DateInput,
+    options?: { readonly type?: string },
+  ): Promise<readonly NoteletNote[]>;
+  noteletsInRange(
+    selector: JournalSelector,
+    range: DateRange,
     options?: { readonly type?: string },
   ): Promise<readonly NoteletNote[]>;
 
@@ -81,6 +88,14 @@ if (today?.file) await this.app.vault.process(today.file, (text) => `${text}\n- 
 // Create it if it is not there. Idempotent.
 const { note, created } = await journals.ensureNote("Work Daily", "today");
 
+// A whole window at once, rather than one call per cell.
+const year = await journals.notesInRange("Work Daily", { from: "2026-01-01", to: "2026-12-31" });
+//  one entry per period, on disk or not — 365 of them, one call
+
+// Only what is on disk. Omit the range for every note the journal has ever written.
+const written = await journals.existingNotes("Work Daily", { from: "2026-01-01", to: "2026-12-31" });
+//  [{ journal, date, displayDate, endDate, path, file }, …] — path and file always set
+
 // Which journal does the open note belong to?
 const current = await journals.journalOf(this.app.workspace.getActiveFile());
 if (current) console.log(current.journal, current.date);
@@ -97,6 +112,13 @@ const [journal] = await journals.listJournals("Work Weekly");
 // What notelets sit on this week?
 const meetings = await journals.noteletsFor("Work Weekly", "today", { type: "Meeting" });
 //  [{ journal, type, date, displayDate, endDate, path, file, counter }, …]
+
+// Every notelet in a window, not just one period's.
+const quarter = await journals.noteletsInRange(
+  "Work Weekly",
+  { from: "2026-07-01", to: "2026-09-30" },
+  { type: "Meeting" },
+);
 
 // Create one, without stealing the user's pane.
 const notelet = await journals.createNotelet("Work Weekly", "today", "Meeting");
@@ -162,6 +184,48 @@ const [note] = await journals.notesFor("Monthly", "2026-08-18");
 note.date; // "2026-08-01"
 ```
 
+## Ranges
+
+A `DateRange` is `{ from, to }`, both `DateInput`, and **both ends are
+inclusive**. `from` later than `to` returns nothing rather than failing.
+
+The window is matched by **overlap, on the journal's own periods** — not by
+whether a period's `date` falls between the two bounds. A monthly journal read
+from the 15th of January still reports January:
+
+```ts
+await journals.notesInRange("Monthly", { from: "2026-01-15", to: "2026-02-15" });
+//  [{ date: "2026-01-01", … }, { date: "2026-02-01", … }]
+```
+
+Each period appears **once**, whatever its length. Do not iterate days and call
+`notesFor` per day: a weekly journal answers the same period seven times and a
+monthly one thirty, which is what these calls exist to replace.
+
+Which one to reach for:
+
+| you want                               | call                                |
+| -------------------------------------- | ----------------------------------- |
+| a cell per period, empty ones included | `notesInRange`                      |
+| only the notes that exist              | `existingNotes(selector, range)`    |
+| every note a journal has written       | `existingNotes(selector)`, no range |
+
+`existingNotes` returns `ExistingJournalNote`, so `path` and `file` are always
+set — no null checks, and nothing to filter. It reads a sorted index, so it
+costs what it returns and not what the window spans: a 90-year window over a
+journal with eleven notes does eleven notes of work.
+
+`notesInRange` materialises every period in the window, so it costs the window.
+A period with no note pays a path-template render to answer _where the note
+would go_; nothing is created, nothing is asked, and no file is touched. There
+is no cap — bound the window to what you are about to draw, or generate the
+empty cells yourself from `date` and `endDate` and use `existingNotes` to fill
+them in.
+
+Results are grouped **by journal**, in the order the selector matches them, and
+ordered by date within each journal. A multi-journal read is not interleaved by
+date.
+
 ## `date` vs `displayDate`
 
 Every returned note carries three dates, all `"YYYY-MM-DD"`:
@@ -217,6 +281,11 @@ period note and any number of notelets.
 - **Results are grouped by journal, not globally sorted.** `noteletsFor` builds one listing per
   matching journal, so a multi-journal selector's results appear in the order journals were
   matched; the type/counter/filename ordering applies only within each journal's group.
+  `noteletsInRange` groups the same way, by journal and then by period.
+- **`noteletsInRange` reads a window** under the same rules as
+  [the period reads](#ranges): both ends inclusive, matched by overlap on the journal's own
+  periods, each period once. It has no unbounded form — `noteletsFor` answers a single period,
+  and a notelet only exists where one was created.
 
 ## Errors
 
