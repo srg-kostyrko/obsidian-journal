@@ -1,4 +1,5 @@
 import userEvent from "@testing-library/user-event";
+import { fireEvent } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
 
@@ -91,6 +92,33 @@ describe("ExistingNavigationItem", () => {
     expect(parameters.anchor).toBe("2030-03-10");
     expect(parameters.existingOnly).toBe(true);
     expect(notices.messages).toHaveLength(0);
+  });
+
+  it("hands OpenDateFlow the open mode the click modifiers ask for", async () => {
+    const { result, flows } = await mountItem(
+      { target: "day", direction: "previous" },
+      {
+        journals: DAILY,
+        active: { journalName: "daily", anchor: "2030-03-12" },
+        entries: [
+          { journalName: "daily", anchor: "2030-03-10" },
+          { journalName: "daily", anchor: "2030-03-12" },
+        ],
+      },
+    );
+    const button = result.container.querySelector<HTMLElement>("[data-direction='previous']")!;
+
+    await fireEvent.click(button);
+    expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "active" }));
+
+    await fireEvent.click(button, { metaKey: true });
+    expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+
+    await fireEvent.click(button, { ctrlKey: true, altKey: true });
+    expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "split" }));
+
+    await fireEvent(button, new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }));
+    expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
   });
 
   it("disables the previous button when the target resolves no journals", async () => {
