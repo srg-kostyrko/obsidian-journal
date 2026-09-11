@@ -15,7 +15,7 @@ import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import type { Prompt, PromptAnswer } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
-import { buildNoteletType, fixedJournal } from "@/journals/testing";
+import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import type { NoteletEntry } from "@/journals/types";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import type { ShelfConfig } from "@/shelves/config";
@@ -535,6 +535,25 @@ describe("JournalsApiService range reads", () => {
     expect(notes.map((note) => note.date)).toEqual(["2026-01-05", "2026-01-12"]);
   });
 
+  // A custom interval the user pulled in leaves a gap between where it now ends and where the
+  // next one begins, and CycleService.anchorOf walks backwards past that gap rather than into
+  // it, so the period holding the window's start can be one that closed days earlier. The
+  // notelet window listing already filters on this (anchorsInWindow); the note reads share the
+  // hazard because they share intervalsInRange.
+  it("leaves out a shortened interval that closed before the window opened", async () => {
+    const { api, index } = await buildApi({ sprints: customJournal("sprints", "month", 1, "2026-03-01") });
+    index.register({
+      journalName: "sprints",
+      anchor: "2026-02-01" as AnchorString,
+      path: "Journal/feb.md" as VaultPath,
+      endDate: "2026-02-10" as AnchorString,
+    });
+
+    const notes = await api.notesInRange("sprints", { from: "2026-02-20", to: "2026-03-15" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-02-11", "2026-03-01"]);
+  });
+
   it("carries the note on disk and a predicted path for the periods without one", async () => {
     const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
     harness.host.putFile("Journal/2026-08-18.md", "existing");
@@ -634,6 +653,28 @@ describe("JournalsApiService range reads", () => {
     const notes = await api.existingNotes("monthly", { from: "2026-01-15", to: "2026-02-15" });
 
     expect(notes.map((note) => note.date)).toEqual(["2026-01-01"]);
+  });
+
+  it("leaves out an existing note whose shortened interval closed before the window opened", async () => {
+    const { api, index, harness } = await buildApi({
+      sprints: customJournal("sprints", "month", 1, "2026-03-01"),
+    });
+    for (const [anchor, endDate] of [
+      ["2026-02-01", "2026-02-10"],
+      ["2026-02-11", undefined],
+    ] as const) {
+      harness.host.putFile(`Journal/${anchor}.md`, "existing");
+      index.register({
+        journalName: "sprints",
+        anchor: anchor as AnchorString,
+        path: `Journal/${anchor}.md` as VaultPath,
+        ...(endDate !== undefined && { endDate: endDate as AnchorString }),
+      });
+    }
+
+    const notes = await api.existingNotes("sprints", { from: "2026-02-20", to: "2026-03-15" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-02-11"]);
   });
 
   it("returns every note the matched journals have written when no range is given", async () => {

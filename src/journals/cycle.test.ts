@@ -458,6 +458,44 @@ describe("CycleService", () => {
 
       expect([...result]).toEqual(["2024-01-01", "2024-01-08", "2024-01-15"]);
     });
+
+    // Shortening an interval leaves a gap between where it now ends and where the next one
+    // begins, and anchorOf's backward walk steps over that gap rather than into it, so it
+    // answers with the shortened interval for a date that falls after it. The range read has
+    // to drop it, or a window opening in the gap reports an interval that closed days earlier.
+    it("leaves out a shortened interval that closed before the range opened", async () => {
+      const { resolve } = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { s: customJournal("s", "month", 1, "2026-03-01") } },
+      });
+      resolve(JournalsIndex).register({
+        journalName: "s",
+        anchor: anchor("2026-02-01"),
+        path: "S/feb.md" as VaultPath,
+        endDate: anchor("2026-02-10"),
+      });
+
+      const result = resolve(CycleService).intervalsInRange("s", anchor("2026-02-20"), anchor("2026-03-15"));
+
+      expect([...result]).toEqual(["2026-02-11", "2026-03-01"]);
+    });
+
+    it("keeps a shortened interval the range still opens inside", async () => {
+      const { resolve } = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { s: customJournal("s", "month", 1, "2026-03-01") } },
+      });
+      resolve(JournalsIndex).register({
+        journalName: "s",
+        anchor: anchor("2026-02-01"),
+        path: "S/feb.md" as VaultPath,
+        endDate: anchor("2026-02-10"),
+      });
+
+      const result = resolve(CycleService).intervalsInRange("s", anchor("2026-02-05"), anchor("2026-02-15"));
+
+      expect([...result]).toEqual(["2026-02-01", "2026-02-11"]);
+    });
   });
 
   describe("countRepeats", () => {

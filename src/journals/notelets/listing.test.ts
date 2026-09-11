@@ -6,7 +6,7 @@ import { Option } from "@/infrastructure/result";
 
 import { customJournal, fixedJournal } from "../testing";
 
-import { anchorsInWindow, buildNoteletListing, periodBoundsOf, type NoteletListingDependencies } from "./listing";
+import { buildNoteletListing, periodBoundsOf, type NoteletListingDependencies } from "./listing";
 
 import type { JournalConfig } from "../config";
 import type { TypeId } from "./config";
@@ -96,29 +96,6 @@ describe("periodBoundsOf", () => {
 
   it("reports nothing for an unknown journal", () => {
     expect(periodBoundsOf(buildDependencies(), "Gone", "2026-08-10" as AnchorString)).toBeUndefined();
-  });
-});
-
-describe("anchorsInWindow", () => {
-  it("includes the period that contains the window start", () => {
-    expect(
-      anchorsInWindow(buildDependencies(), "Weekly", "2026-08-12" as AnchorString, "2026-08-12" as AnchorString),
-    ).toEqual(["2026-08-10"]);
-  });
-
-  it("drops a leading period that ended before the window opened", () => {
-    const dependencies = buildDependencies();
-    const shrunk: NoteletListingDependencies = {
-      ...dependencies,
-      cycle: {
-        ...dependencies.cycle,
-        endOf: (name, anchor) =>
-          anchor === "2026-08-10"
-            ? Option.some(CalendarDate.fromAnchor("2026-08-11" as AnchorString))
-            : dependencies.cycle.endOf(name, anchor),
-      },
-    };
-    expect(anchorsInWindow(shrunk, "Weekly", "2026-08-12" as AnchorString, "2026-08-12" as AnchorString)).toEqual([]);
   });
 });
 

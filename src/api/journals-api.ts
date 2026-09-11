@@ -155,7 +155,13 @@ export class JournalsApiService implements JournalsApi {
     if (window === undefined) return [...this.#index.entriesFor(name)].map(([anchor]) => anchor);
     const start = this.#cycle.anchorOf(name, window[0]);
     if (start.isNone()) return [];
-    return [...this.#index.getRange(name, start.value, window[1].toAnchor()).keys()];
+    const from = window[0].toAnchor();
+    // Widening the bound is what catches the leading period, and overlapsFrom is what keeps the
+    // widening honest: a shortened custom interval can hold the window's start date without
+    // still being open on it.
+    return [...this.#index.getRange(name, start.value, window[1].toAnchor()).keys()].filter((anchor) =>
+      this.#cycle.overlapsFrom(name, anchor, from),
+    );
   }
 
   #periodDates(name: string, anchor: AnchorString): { displayDate: string; endDate: string } | null {

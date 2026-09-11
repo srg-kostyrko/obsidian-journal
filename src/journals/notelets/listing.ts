@@ -87,22 +87,6 @@ export function periodBoundsOf(
   };
 }
 
-// intervalsInRange starts from the period containing the window start, which is already the
-// overlap rule for a partitioned cycle. A custom cycle whose stored end was pulled in can
-// still hand back a leading period that closed before the window opened; only that one can
-// fail the check, so the filter is cheap.
-export function anchorsInWindow(
-  dependencies: NoteletListingDependencies,
-  journalName: string,
-  start: AnchorString,
-  end: AnchorString,
-): readonly AnchorString[] {
-  return dependencies.cycle.intervalsInRange(journalName, start, end).filter((anchor) => {
-    const closes = dependencies.cycle.endOf(journalName, anchor);
-    return closes.isSome() && closes.value.toAnchor() >= start;
-  });
-}
-
 function matchesTypeFilter(entry: NoteletEntry, typeIds: readonly string[] | undefined): boolean {
   if (typeIds === undefined || typeIds.length === 0) return true;
   return entry.typeId !== null && typeIds.includes(entry.typeId);
@@ -113,8 +97,12 @@ function placementsOf(
   request: NoteletListingRequest,
 ): readonly { journalName: string; anchor: AnchorString }[] {
   if (request.kind === "period") return [{ journalName: request.journalName, anchor: request.anchor }];
+  // intervalsInRange is the overlap rule for both cycle kinds: it starts from the period holding
+  // the window's start, and drops a custom interval whose stored end was pulled in to before it.
   return request.journalNames.flatMap((journalName) =>
-    anchorsInWindow(dependencies, journalName, request.start, request.end).map((anchor) => ({ journalName, anchor })),
+    dependencies.cycle
+      .intervalsInRange(journalName, request.start, request.end)
+      .map((anchor) => ({ journalName, anchor })),
   );
 }
 
