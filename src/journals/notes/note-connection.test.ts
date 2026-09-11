@@ -1018,7 +1018,7 @@ describe("NoteConnectionService", () => {
         expect(harness.host.files.get(secondPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
       });
 
-      it("keeps a notelet write failure out of both failed and rewritten", async () => {
+      it("keeps an orphaned notelet out of both failed and rewritten", async () => {
         const periodPath = "week/2026-W23.md" as VaultPath;
         const movingNoteletPath = "notelet-moving.md" as VaultPath;
         harness.host.putFile(periodPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
@@ -1055,9 +1055,11 @@ describe("NoteConnectionService", () => {
         });
 
         // "Retired" matches no configured type, so #noteletMetadataAt yields
-        // NoteletTypeNotFoundError and this write fails — logged, never counted. The period
-        // note and the "Standup" notelet both move cleanly, so rewritten must count both of
-        // them and neither the failure nor a dropped notelet success may go unseen.
+        // NoteletTypeNotFoundError: an orphan, whose type was deleted in keep mode and which can
+        // never re-anchor. Counting it would put the notice in front of that user on every grid
+        // change, forever — so this one error alone stays out of `failed`. The period note and the
+        // "Standup" notelet both move cleanly, so rewritten must count both of them and neither
+        // the exempt failure nor a dropped notelet success may go unseen.
         const result = await harness.resolve(NoteConnectionService).reanchorAll(
           "weekly",
           new Map([
@@ -1073,6 +1075,38 @@ describe("NoteConnectionService", () => {
         expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-08" });
         expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-05-31" });
         expect(harness.host.files.get(movingNoteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
+      });
+
+      it("counts a notelet whose write failed as failed", async () => {
+        harness.host.putFile(noteletPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Standup",
+        });
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: noteletPath,
+          typeName: "Standup",
+          typeId: "nt_1" as TypeId,
+        });
+        vi.spyOn(harness.resolve(NotesService), "updateFrontmatter").mockImplementation(() =>
+          AsyncResult.err(new NoteNotFoundError(noteletPath)),
+        );
+
+        // A live type whose write did not land is the same outcome the whole re-anchor sweep
+        // exists to prevent — a note left holding a date that is no longer its week's start.
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll(
+            "weekly",
+            new Map([[noteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Standup" }]]),
+          );
+
+        expectOk(result);
+        expect(result.value.failed).toBe(1);
+        expect(result.value.rewritten).toBe(0);
       });
     });
   });

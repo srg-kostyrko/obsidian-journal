@@ -519,8 +519,8 @@ export class NoteConnectionService {
     const noteletMoves: { path: VaultPath; to: ReanchorTarget }[] = [];
     // Several notelets per anchor is the design, so a notelet neither claims a period slot nor
     // can be blocked out of one: every notelet with a moving target moves, and none of them can
-    // reach the "couldn't move N notes" count — blocked stays fed only by the period loop above,
-    // and a notelet write failure (logged in #reanchorOne) never inflates `failed` either.
+    // reach the "couldn't move N notes" count through `blocked`, which stays fed only by the
+    // period loop above. A notelet write that fails does count — see the split below.
     for (const entry of this.#index.noteletsFor(journalName)) {
       const target = targets.get(entry.path);
       if (target === undefined || target.anchor === entry.anchor) continue;
@@ -533,9 +533,17 @@ export class NoteConnectionService {
     ]).then(([periodResults, noteletResults]) => {
       const periodRewritten = periodResults.filter((result) => result.isOk()).length;
       const noteletRewritten = noteletResults.filter((result) => result.isOk()).length;
+      // An orphaned notelet — its type deleted in keep mode, so only the name in its frontmatter
+      // survives — can never re-anchor, and counting it would show the "N notes could not be
+      // updated" notice to that user on every grid change forever. Every other error is a
+      // well-formed notelet whose write did not land, which costs exactly what an un-re-anchored
+      // period note costs: the parser rejects the stale date and the note falls out of the index.
+      const noteletFailed = noteletResults.filter(
+        (result) => result.isErr() && !(result.error instanceof NoteletTypeNotFoundError),
+      ).length;
       return {
         rewritten: periodRewritten + noteletRewritten,
-        failed: blocked + periodResults.length - periodRewritten,
+        failed: blocked + periodResults.length - periodRewritten + noteletFailed,
       };
     });
     return AsyncResult.fromPromise(settled, () => undefined as never);
