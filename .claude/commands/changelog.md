@@ -1,63 +1,79 @@
 ---
-description: Draft user-facing release notes into CHANGELOG.md [Unreleased]
-argument-hint: [version]
-allowed-tools: Bash(git log:*), Bash(git describe:*), Bash(gh issue list:*), Bash(gh issue view:*), Bash(gh api:*), Bash(git diff:*), Read, Edit
+description: Add this branch's CHANGELOG entry, or audit [Unreleased] for gaps
+argument-hint: [audit]
+allowed-tools: Bash(git log:*), Bash(git diff:*), Bash(git describe:*), Bash(git merge-base:*), Bash(git rev-parse:*), Bash(gh issue list:*), Bash(gh issue view:*), Bash(gh pr view:*), Bash(gh api:*), Bash(npx prettier:*), Read, Edit
 ---
 
-Draft user-facing release notes into the `## [Unreleased]` section of `CHANGELOG.md`.
-Produce a **draft only** — never commit, bump the version, or tag.
+Changelog entries are written **per pull request**, into the `## [Unreleased]`
+section of `CHANGELOG.md`, as part of the change that earns them. This command
+serves that workflow in two modes.
 
-## Inputs
+**Never rewrite or replace an existing bullet.** Entries carry the voice of the
+person who made the change. This command only ever **appends**.
 
-- Target version: `$1`. If empty, run
-  `gh api repos/{owner}/{repo}/milestones --jq '.[].title'` and:
-  - exactly one open milestone → use it;
-  - zero or multiple → ask the user which version before continuing.
-- Last release tag: `git describe --tags --abbrev=0` (tags are unprefixed, e.g. `2.1.10`).
+## Mode: entry (default, no argument)
 
-## Gather
+Write the entry for the work on the current branch.
 
-1. Commits in range (subjects + bodies, oldest first):
-   `git log <lastTag>..HEAD --no-merges --reverse --pretty=format:'%x1e%H%x1f%s%x1f%b'`
-   (records separated by 0x1e, fields by 0x1f).
-2. Milestone-closed issues:
-   `gh issue list --milestone "<version>" --state closed --json number,title --jq '.[] | "\(.number)\t\(.title)"'`
-3. Commit-referenced fixed issues: scan every commit subject+body for GitHub
-   closing keywords — `(?i)(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#(\d+)` (covers
-   close/closes/closed, fix/fixes/fixed, resolve/resolves/resolved); collect the
-   numbers; for each,
-   `gh issue view <n> --json number,title,state --jq '"\(.number)\t\(.title)\t\(.state)"'`.
+### Gather
 
-## Build the draft
+```bash
+BASE=$(git merge-base main HEAD)
+git log "$BASE"..HEAD --no-merges --reverse --pretty=format:'%s%n%b%n---'
+git diff --stat "$BASE"..HEAD
+```
 
-**Features** — from commits whose subject type is `feat` (ignore
-`refactor|test|style|chore|build|ci|docs`):
+Read the diff itself for anything the commit subjects do not explain. If the
+branch has a pull request, `gh pr view --json title,body` carries the framing
+the author already chose — prefer their words.
 
-- List **every distinct user-facing feature**. Group the multiple commits that
-  implement one capability into a single bullet.
-- Phrase for end users, sentence case, imperative-free (describe the capability,
-  not the commit). No scopes, no commit hashes.
+Find the issue: a closing keyword in any commit subject or body —
+`(?i)(close[sd]?|fix(e[sd])?|resolve[sd]?)\s+#(\d+)` — or the PR body. If there
+is one, `gh issue view <n> --json title,body` and take the reporter's vocabulary.
+A rename of a user-facing term is its own decision, not a detail to settle here.
 
-**Bug Fixes** — union of milestone issues and referenced issues, **deduped by issue
-number**:
+### Write
 
-- One bullet per issue, using the issue title cleaned of tracker prefixes
-  (`Bug:`, `FR:`, `[bug]`, etc.).
-- `fix` commits that reference no issue → summarize into their own user-facing
-  bullets so nothing is dropped.
+One bullet, appended to the end of `### Features` or `### Bug Fixes` under
+`## [Unreleased]` — create the section or the heading only if absent, keeping
+`### Features` before `### Bug Fixes`.
 
-Omit a section entirely if it has no entries.
+- Written for the person using the plugin: what changed for them, never what
+  changed in the code. No scopes, no commit hashes, no file names.
+- Sentence case. en-US. Describe the capability, not the commit.
+- Match the length and depth of the bullets around it — the existing entries are
+  the model, and they are substantial: they say what the feature does, what it
+  does not do, and what happens at the edges.
+- A branch that implements one capability across several commits gets **one**
+  bullet, not one per commit.
+- A change with nothing user-facing — refactor, test, chore, build, ci, most
+  docs — gets **no** entry. Say so and stop.
 
-## Write
+Then `npx prettier --write CHANGELOG.md`; prettier owns the file's shape.
 
-- Read `CHANGELOG.md`. If a `## [Unreleased]` section exists, replace its body with
-  the new draft; otherwise insert a fresh `## [Unreleased]` section immediately after
-  the header block (before the first versioned `## [x.y.z]`).
-- Use `Edit` to apply the change.
+### Report
 
-## Report
+Show `git diff CHANGELOG.md`. Do **not** commit, bump the version, or tag —
+`/release` is what does those, and it supersedes this stop.
 
-- Run `git diff CHANGELOG.md` and show it.
-- State clearly that this is an unreviewed draft and list any judgement calls
-  (features grouped, fix commits with no issue, milestone vs ref-only sources).
-- Do **not** commit, bump the version, or tag. Stop and let the user edit.
+## Mode: audit (`/changelog audit`)
+
+Find what `[Unreleased]` is missing. Used before a release, and useful any time.
+
+```bash
+LAST=$(git describe --tags --abbrev=0)
+git log "$LAST"..HEAD --no-merges --format='%H %s' | grep -E ' (feat|fix)'
+gh issue list --milestone "<next version>" --state closed --json number,title
+```
+
+For every `feat`/`fix` commit and every closed milestone issue, decide whether
+`[Unreleased]` already covers it — by capability, not by wording; several
+commits routinely sit behind one bullet.
+
+Report three lists: commits with no entry, closed milestone issues with no
+entry, and entries that match no commit in range (usually a bullet that outlived
+a reverted change). Name the commit hashes and issue numbers.
+
+Append bullets for the genuine gaps, following the entry-mode rules above.
+Change nothing else. An audit that finds nothing is a result — report it and
+stop rather than writing something to have written something.

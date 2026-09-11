@@ -149,16 +149,21 @@ The usual types apply (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`),
 plus a project-specific `i18n(scope):` for translation-only changes.
 
 Reference the issue in the commit or pull request body with a closing keyword
-(`Fixes #123`) when there is one — release notes are assembled by matching
-commits against closed issues, and a closing keyword is the reliable way to
-link your fix to its issue and pick up the issue's title as the changelog
-wording. A `fix` commit with no issue reference is still swept in and
-summarized on its own, so nothing is silently dropped, but linking avoids a
-duplicate or orphaned bullet.
+(`Fixes #123`) when there is one. It closes the issue on merge, and it is what
+lets a release comment back on every issue it shipped — so an unlinked fix
+reaches users without its reporter ever being told.
 
-Add a `CHANGELOG.md` entry under `[Unreleased]`, in `### Features` or
-`### Bug Fixes`, written for the person using the plugin — what changed for
-them, not what changed in the code. Use the existing entries as the model.
+**Add a `CHANGELOG.md` entry under `[Unreleased]` as part of your change**, in
+`### Features` or `### Bug Fixes`, written for the person using the plugin —
+what changed for them, not what changed in the code. Use the existing entries as
+the model, including their length: they say what the feature does, what it does
+not do, and what happens at the edges. One capability gets one entry however
+many commits implement it, and a change with nothing user-facing gets none.
+If you work with Claude Code, `/changelog` drafts one from your branch.
+
+The release does not assemble these notes from commit history — it only audits
+what is already there and fills genuine gaps. An entry you skip is an entry
+nobody writes.
 
 Branch from `main` and open the pull request against `main`.
 
@@ -172,5 +177,6 @@ Branch from `main` and open the pull request against `main`.
 - [`CONTEXT.md`](CONTEXT.md) — the domain vocabulary the codebase reasons in.
 - [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md) — what the
   end-to-end suite covers and why it exists alongside the unit suite.
-- [`docs/releasing.md`](docs/releasing.md) — how a version reaches the
-  community plugin browser. Maintainer-facing; you don't need it to contribute.
+- [`.claude/skills/release/SKILL.md`](.claude/skills/release/SKILL.md) — how a
+  version reaches the community plugin browser. Maintainer-facing; you don't
+  need it to contribute.
