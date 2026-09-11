@@ -140,17 +140,25 @@ sentence case, no scopes, no commit hashes, the issue's own vocabulary.
 
 Leave the `## [Unreleased]` heading itself alone — `version-bump.mjs` promotes
 it in step 4. Run `npx prettier --write CHANGELOG.md`; prettier owns the file's
-shape. Commit the gaps on their own, as `docs(changelog): …`, **before** the
-bump, so the bump commit carries only the promotion.
+shape. **Do not commit yet** — step 3 may add a `packages/api` bump that belongs
+in the same commit, and the bump commit in step 4 has to carry only the
+promotion.
 
 If the audit finds nothing missing, say so and move on — an empty audit is a
 result, not a reason to write something.
 
 ### Step 3 — API package bump, only if the surface moved
 
-See §2 for the detection and the rule. If it fires, the version bump in
-`packages/api/package.json` rides along with the step 2 commit. If it does not,
-leave that file alone entirely.
+Run §2's detection and version rule now — the bump, not the publish, which waits
+for a green tag build. If it does not fire, leave `packages/api/package.json`
+alone entirely.
+
+**Then commit steps 2 and 3 together**, as one `docs(changelog): …` commit
+carrying both the appended changelog bullets and the `packages/api` bump. Step 2
+deliberately does not commit on its own: `npm version` in step 4 must find a
+clean tree and produce a commit of exactly six files, so an uncommitted package
+bump left over from here either dirties that commit or blocks it. If neither
+step produced a change, there is no commit and step 4 follows directly.
 
 ### Step 4 — Bump and tag
 
@@ -250,16 +258,32 @@ publishes the draft; §3 runs last, once the release is public.
 **`packages/api` does not ship on every plugin release.** Detect first:
 
 ```bash
-LAST=$(git describe --tags --abbrev=0)
-git diff --quiet "$LAST"..HEAD -- src/api/public-api.ts && echo "unchanged → skip §2"
+PREV=$(git describe --tags --abbrev=0 "$VER^" 2>/dev/null || git describe --tags --abbrev=0)
+test "$PREV" != "$VER" || { echo "refusing to compare the release against itself"; exit 1; }
+git diff --quiet "$PREV"..HEAD -- src/api/public-api.ts && echo "unchanged → skip §2"
 npm view obsidian-journals-api version   # what is already published
 ```
 
+`PREV` is **the release before this one**, not `git describe --tags
+--abbrev=0` on its own. By the time §2 runs from a resume, or from
+`/release api`, the tag for `$VER` already exists at `HEAD` — a bare `describe`
+then resolves to it, the diff compares `HEAD` with itself, and a changed surface
+reads as unchanged. The guard above is what makes that fail loudly instead.
+
 - **Unchanged** → skip this section entirely and do not touch
   `packages/api/package.json`.
-- **Changed** → bump it. **Major** only when `apiVersion` in
-  `src/api/public-api.ts` moved; otherwise **minor**, since every addition is
-  additive.
+- **Changed** → classify the diff before bumping anything. The additive-versus-
+  breaking table in [`docs/plugin-api.md`](../../../docs/plugin-api.md) §Stability
+  is the authority; do not restate it here.
+  - Every change additive, `apiVersion` unmoved → **minor**.
+  - `apiVersion` moved → **major**.
+  - Anything breaking by that table while `apiVersion` did **not** move →
+    **stop**. Nothing enforces that bump — `check:api` compiles a consumer and
+    checks the package's declared dependencies, and says nothing about
+    compatibility — so an unbumped breaking change reaches this point looking
+    exactly like an additive one. That is a defect in the change, not a
+    versioning call the release gets to make. Report it and let the maintainer
+    decide whether to fix `apiVersion` or hold the package back.
 
 Publish once the tag build is green. The constraint is simply that an npm
 version number cannot be reused once published, so do not spend one until the
