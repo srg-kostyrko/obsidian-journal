@@ -230,6 +230,138 @@ describe("engine-checks", () => {
         });
         expect(checkProperty(condition, meta({ properties: { due: 2026 } }))).toBe(false);
       });
+
+      // Obsidian's "Date & time" widget stores "YYYY-MM-DDTHH:mm:ss", and the condition's
+      // own value can only ever be date-only (the editor renders <input type="date">), so
+      // every operator has to answer at date granularity or half of them invert (#374).
+      it("matches eq when a date-and-time property falls on the condition's date", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24T08:10:00" } }))).toBe(true);
+      });
+
+      it("does not match neq when a date-and-time property falls on the condition's date", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "neq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24T08:10:00" } }))).toBe(false);
+      });
+
+      it("matches lte when a date-and-time property sits on the boundary day", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "lte",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24T23:59:00" } }))).toBe(true);
+      });
+
+      it("does not match gt when a date-and-time property sits on the boundary day", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "gt",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24T00:01:00" } }))).toBe(false);
+      });
+
+      it("still orders a date-and-time property across days", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "gt",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-25T00:01:00" } }))).toBe(true);
+      });
+
+      // The editor cannot author a time into the condition, but a hand-edited settings.json can.
+      // Date granularity is the only semantics the pair has, so the condition side is cut too.
+      it("cuts a hand-authored time off the condition's own value", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24T08:10:00",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24" } }))).toBe(true);
+      });
+
+      it("answers the same for a Date value as for the ISO string of the same day", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: new Date("2026-06-24T12:00:00Z") } }))).toBe(true);
+      });
+
+      // Cutting to ten characters is what makes the two granularity levels meet, but on its own it
+      // also makes every string that merely opens with a date read as that date. A date condition
+      // can be pointed at any property, and bulk-add shares this evaluator to decide what to
+      // connect, so an unrecognized value answers false for every operator, as a number does.
+      it("does not match eq when the property only begins with the condition's date", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24 notes" } }))).toBe(false);
+      });
+
+      it("does not order a property that is not a date at all", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "gt",
+          value: "2026-06-24",
+        });
+        // "someday" sorts after "2026-06-24", so a plain string comparison reports it as later.
+        expect(checkProperty(condition, meta({ properties: { due: "someday" } }))).toBe(false);
+      });
+
+      // A space in place of the "T" is the one variant worth keeping: several plugins write a
+      // datetime that way, and it is a date, unlike the prefix cases above.
+      it("matches a date and time written with a space separator", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24 08:10" } }))).toBe(true);
+      });
+
+      it("matches a date and time carrying a zone offset", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "eq",
+          value: "2026-06-24",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24T08:10:00+02:00" } }))).toBe(true);
+      });
+
+      it("matches nothing when the condition's own value is not a date", () => {
+        const condition = buildCondition("property", {
+          name: "due",
+          valueType: "date",
+          condition: "neq",
+          value: "whenever",
+        });
+        expect(checkProperty(condition, meta({ properties: { due: "2026-06-24" } }))).toBe(false);
+      });
     });
 
     describe("absent property", () => {

@@ -115,21 +115,38 @@ function checkBooleanProperty(
     .exhaustive();
 }
 
+// The date part of a recognized ISO representation, or null for anything else. The shape has to
+// be checked before the cut: a bare slice turns every string that merely opens with a date —
+// "2026-06-24 notes" — into that date, and a date condition can be pointed at any property.
+// A space in place of the "T" is accepted because several plugins write a datetime that way.
+const ISO_DAY = /^(\d{4}-\d{2}-\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+
+function dayOf(value: string): string | null {
+  return ISO_DAY.exec(value)?.[1] ?? null;
+}
+
 function checkDateProperty(
   c: Extract<JournalDecorationPropertyCondition, { valueType: "date" }>,
   raw: unknown,
 ): boolean {
-  // Obsidian stores date properties as ISO strings ("YYYY-MM-DD"[…]); lexicographic order on
-  // those strings matches chronological order, so plain string comparison is correct.
-  const value = raw instanceof Date ? raw.toISOString().slice(0, 10) : raw;
-  if (typeof value !== "string") return false;
+  // Obsidian stores date properties as ISO strings, and lexicographic order on those matches
+  // chronological order — but only at equal granularity. The "Date & time" widget appends a
+  // time while the condition's value is date-only by construction (<input type="date">), and a
+  // ten-character prefix sorts *before* the string it prefixes, so both sides are cut (#374).
+  const iso = raw instanceof Date ? raw.toISOString() : raw;
+  if (typeof iso !== "string") return false;
+  const value = dayOf(iso);
+  const target = dayOf(c.value);
+  // A value that is not a date answers false everywhere, the same as a number does — including
+  // the exclusion operators, which "no value to violate" only earns an absent property.
+  if (value === null || target === null) return false;
   return match(c.condition)
-    .with("eq", () => value === c.value)
-    .with("neq", () => value !== c.value)
-    .with("lt", () => value < c.value)
-    .with("lte", () => value <= c.value)
-    .with("gt", () => value > c.value)
-    .with("gte", () => value >= c.value)
+    .with("eq", () => value === target)
+    .with("neq", () => value !== target)
+    .with("lt", () => value < target)
+    .with("lte", () => value <= target)
+    .with("gt", () => value > target)
+    .with("gte", () => value >= target)
     .with(P.union("exists", "does-not-exist"), () => false)
     .exhaustive();
 }

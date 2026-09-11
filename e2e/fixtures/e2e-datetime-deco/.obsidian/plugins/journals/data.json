@@ -1,0 +1,109 @@
+{
+  "version": 4,
+  "logging": {
+    "level": "debug"
+  },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "property",
+              "name": "reviewed-eq",
+              "valueType": "date",
+              "condition": "eq",
+              "value": "2026-07-30"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "property",
+              "name": "reviewed-lte",
+              "valueType": "date",
+              "condition": "lte",
+              "value": "2026-07-30"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "property",
+              "name": "reviewed-neq",
+              "valueType": "date",
+              "condition": "exists",
+              "value": ""
+            },
+            {
+              "type": "property",
+              "name": "reviewed-neq",
+              "valueType": "date",
+              "condition": "neq",
+              "value": "2026-07-30"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-left",
+              "color": {
+                "type": "custom",
+                "color": "#ff0000"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
