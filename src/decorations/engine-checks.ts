@@ -119,17 +119,21 @@ function checkDateProperty(
   c: Extract<JournalDecorationPropertyCondition, { valueType: "date" }>,
   raw: unknown,
 ): boolean {
-  // Obsidian stores date properties as ISO strings ("YYYY-MM-DD"[…]); lexicographic order on
-  // those strings matches chronological order, so plain string comparison is correct.
-  const value = raw instanceof Date ? raw.toISOString().slice(0, 10) : raw;
-  if (typeof value !== "string") return false;
+  // Obsidian stores date properties as ISO strings, and lexicographic order on those matches
+  // chronological order — but only at equal granularity. The "Date & time" widget appends a
+  // time while the condition's value is date-only by construction (<input type="date">), and a
+  // ten-character prefix sorts *before* the string it prefixes, so both sides are cut (#374).
+  const iso = raw instanceof Date ? raw.toISOString() : raw;
+  if (typeof iso !== "string") return false;
+  const value = iso.slice(0, 10);
+  const target = c.value.slice(0, 10);
   return match(c.condition)
-    .with("eq", () => value === c.value)
-    .with("neq", () => value !== c.value)
-    .with("lt", () => value < c.value)
-    .with("lte", () => value <= c.value)
-    .with("gt", () => value > c.value)
-    .with("gte", () => value >= c.value)
+    .with("eq", () => value === target)
+    .with("neq", () => value !== target)
+    .with("lt", () => value < target)
+    .with("lte", () => value <= target)
+    .with("gt", () => value > target)
+    .with("gte", () => value >= target)
     .with(P.union("exists", "does-not-exist"), () => false)
     .exhaustive();
 }
