@@ -11,7 +11,7 @@ on:
     branches: [main]
     # Tags stay covered because `release.yml` triggers on one and runs only
     # `check:types` and `test`; dropping them here would quietly narrow what a
-    # release build is checked against. See docs/releasing.md.
+    # release build is checked against. See .claude/skills/release/SKILL.md.
     tags: ["*"]
 
 jobs:
