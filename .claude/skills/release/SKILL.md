@@ -96,13 +96,21 @@ touching it.
 
 ### Step 1 — Gates
 
+Mirror `checks.yml` exactly, in its order — it is what reports as the `build`
+check that blocks the merge button:
+
 ```bash
-npm ci && npm run compile:i18n
-npm run check:types && npm test && npm run check:lint && npm run check:i18n && npm run check:api
+npm ci
+npm run compile:i18n && npm run check:i18n && npm run check:types
+npm run coverage && npm run check:lint && npm run build:api && npm run check:api
 ```
 
 `compile:i18n` before `check:types`, always — `src/i18n/paraglide` is generated
 and git-ignored, so type-checking a fresh checkout fails without it.
+
+**`npm run coverage`, never `npm test`.** They run the same suite, but only
+`coverage` applies the floor CI gates on, so a green `npm test` says nothing
+about whether `build` will pass.
 
 **Do not run the e2e suites locally.** The release PR's `e2e-gate` runs smoke,
 integration, migration, interop and journeys across ubuntu, windows and macOS at
@@ -235,6 +243,9 @@ The assets must be exactly `main.js`, `manifest.json` and `styles.css`, and the
 manifest served from the release must carry `$VER`.
 
 ## §2 API package — conditional
+
+Runs after §1 step 7's tag build is green. It may run before or after step 8
+publishes the draft; §3 runs last, once the release is public.
 
 **`packages/api` does not ship on every plugin release.** Detect first:
 
@@ -409,8 +420,10 @@ this repo adds: checks before the build, `npm ci` over `npm install`, Node 24,
 workflow (`permissions: write-all`) instead of by raising the repository-wide
 default, which stays at read.
 
-**What CI does not gate.** `release.yml` runs only `check:types` and `test`;
-`check:lint`, `check:i18n` and `check:api` are step 1's job. `checks.yml` does run
-on the tag push, but in a separate workflow that cannot stop the draft. The e2e
-layer is gated on the release **PR**, not on the tag — which is why step 6's merge
-must not happen before `e2e-gate` is green.
+**What the tag build does not gate.** `release.yml` runs only `check:types` and
+`test` — not `coverage`, `check:lint`, `check:i18n` or `check:api`. `checks.yml`
+does run on the tag push, but as a separate workflow that cannot stop the draft.
+So nothing checked on the tag blocks a release; what actually gates one is the
+release **PR**, where `build` and `e2e-gate` both have to be green before the
+merge button unlocks. That is why step 6's merge must not be forced past a red
+gate, and why step 1 mirrors `checks.yml` rather than `release.yml`.
