@@ -199,9 +199,9 @@ on it.
   directly). They differ only in how `generate_include` fetches the functions
   object — `get_current_functions_object()` at 2.18.0, the
   `current_functions_object` field at 2.22.1 — which is why the hook reads
-  neither. Only the real plugin exercises the re-entry: against
-  `__mocks__/obsidian.ts` there is no Templater, so this is an e2e-or-nothing
-  behavior, in `e2e/interop/templater.e2e.ts`.
+  neither. Only the real plugin exercises the re-entry: against the Obsidian
+  fake there is no Templater, so this is an e2e-or-nothing behavior, in
+  `e2e/interop/templater.e2e.ts`.
 
 ### Settings and schema
 

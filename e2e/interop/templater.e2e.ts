@@ -8,7 +8,7 @@ import { contentOf, todayAnchor, waitForActiveNoteIn, waitForContent } from "../
 // journals whose templates carry Templater `<% %>` syntax; booting the real
 // Templater plugin alongside ours and firing a journal command runs the real
 // TemplateContentService -> TemplaterService.apply -> parse_template chain. Against
-// __mocks__/obsidian.ts, getPlugin("templater-obsidian") returns nothing, so the
+// the Obsidian fake, getPlugin("templater-obsidian") returns nothing, so the
 // `<% %>` would survive untouched — none of this is reachable there.
 describe("templater interop", () => {
   before(async () => {

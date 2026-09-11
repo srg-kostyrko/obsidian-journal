@@ -1,7 +1,6 @@
-import moment from "moment";
 import { load as yamlLoad } from "js-yaml";
 
-export { moment };
+export { default as moment } from "moment";
 
 // Only the flag PlatformService reads. Tests that need the mobile app override PlatformService
 // through the container rather than mutating this.
@@ -37,7 +36,7 @@ export class Notice {
 }
 
 // Obsidian renders its own tooltip layer; the real one attaches listeners rather than writing an
-// attribute. Recording it on the element keeps it assertable without pretending to be that layer.
+// attribute. Recording it on the element keeps it observable without pretending to be that layer.
 export function setTooltip(el: HTMLElement, tooltip: string): void {
   el.dataset.tooltip = tooltip;
 }
@@ -51,7 +50,7 @@ let iconIds = new Set(DEFAULT_ICON_IDS);
 export function getIcon(name: string): SVGSVGElement | null {
   if (!iconIds.has(name)) return null;
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("data-icon", name);
+  svg.dataset.icon = name;
   return svg;
 }
 
@@ -66,10 +65,16 @@ interface TagSourceCache {
 
 // Stand-in for Obsidian's combiner: inline tags already carry the "#", frontmatter ones
 // (tag/tags, string, comma-separated string, or array) do not and get it added.
+function frontmatterTagList(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") return raw.split(",");
+  return [];
+}
+
 export function getAllTags(cache: TagSourceCache): string[] | null {
   const inline = cache.tags?.map((entry) => entry.tag) ?? [];
   const raw: unknown = cache.frontmatter?.tags ?? cache.frontmatter?.tag;
-  const front = (Array.isArray(raw) ? raw : typeof raw === "string" ? raw.split(",") : [])
+  const front = frontmatterTagList(raw)
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim())
     .filter(Boolean)
@@ -79,9 +84,9 @@ export function getAllTags(cache: TagSourceCache): string[] | null {
 
 export function normalizePath(path: string): string {
   return path
-    .replaceAll(/\\/g, "/")
-    .replace(/\/{2,}/g, "/")
-    .replace(/^\/|\/$/g, "");
+    .replaceAll("\\", "/")
+    .replaceAll(/\/{2,}/g, "/")
+    .replaceAll(/^\/|\/$/g, "");
 }
 
 export type App = unknown;
@@ -176,7 +181,7 @@ export class Modal {
     if (!this.#opened) return;
     this.#opened = false;
     const index = openModals.indexOf(this);
-    if (index >= 0) openModals.splice(index, 1);
+    if (index !== -1) openModals.splice(index, 1);
     this.onClose();
     this.modalEl.remove();
   }
@@ -208,14 +213,14 @@ export class SuggestModal<T> {
   open(): void {
     if (this.#opened) return;
     this.#opened = true;
-    openSuggestModals.push(this as unknown as SuggestModal<unknown>);
+    openSuggestModals.push(this);
   }
 
   close(): void {
     if (!this.#opened) return;
     this.#opened = false;
-    const index = openSuggestModals.indexOf(this as unknown as SuggestModal<unknown>);
-    if (index >= 0) openSuggestModals.splice(index, 1);
+    const index = openSuggestModals.indexOf(this);
+    if (index !== -1) openSuggestModals.splice(index, 1);
     this.onClose();
   }
 
@@ -239,7 +244,7 @@ export class AbstractInputSuggest<T> {
     this.app = app;
     this.inputEl = inputEl;
     this.#attached = true;
-    attachedInputSuggests.push(this as unknown as AbstractInputSuggest<unknown>);
+    attachedInputSuggests.push(this);
   }
 
   getSuggestions(_query: string): T[] | Promise<T[]> {
@@ -253,8 +258,8 @@ export class AbstractInputSuggest<T> {
   close(): void {
     if (!this.#attached) return;
     this.#attached = false;
-    const index = attachedInputSuggests.indexOf(this as unknown as AbstractInputSuggest<unknown>);
-    if (index >= 0) attachedInputSuggests.splice(index, 1);
+    const index = attachedInputSuggests.indexOf(this);
+    if (index !== -1) attachedInputSuggests.splice(index, 1);
   }
 
   get isAttached(): boolean {
@@ -352,7 +357,7 @@ export class Menu {
   }
   hide(): void {
     const index = openMenus.indexOf(this);
-    if (index >= 0) openMenus.splice(index, 1);
+    if (index !== -1) openMenus.splice(index, 1);
     this.#onHide?.();
   }
 }
@@ -432,7 +437,7 @@ export function parseYaml(source: string): unknown {
 // Obsidian augments HTMLElement with a handful of helpers. Stub them here so
 // tests that exercise code calling these APIs don't fail in happy-dom.
 HTMLElement.prototype.empty = function (): void {
-  while (this.firstChild) this.removeChild(this.firstChild);
+  this.replaceChildren();
 };
 
 const attachedInputSuggests: AbstractInputSuggest<unknown>[] = [];

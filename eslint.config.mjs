@@ -116,7 +116,6 @@ export default [
       "**/perf-vault/**",
       "**/*.mjs",
       "**/*.json",
-      "**/__mocks__/**",
       "src/i18n/paraglide/**",
       "coverage/**",
       ".obsidian-cache/**",
@@ -338,6 +337,7 @@ export default [
       "**/*.test.ts",
       "**/*.bench.ts",
       "**/testing.ts",
+      "**/*.testing.ts",
       "**/testing/**",
       "vitest.setup.ts",
       "vitest.setup.shared.ts",
@@ -554,6 +554,35 @@ export default [
           ],
         },
       ],
+    },
+  },
+  {
+    // The hand-written Obsidian fake the unit suite runs against. It *is* the `obsidian` module
+    // as far as every `src/` import is concerned, so the rules that route code through the real
+    // one, or through the calendar abstraction, are circular here and nothing else in the tree
+    // is in that position.
+    files: ["src/infrastructure/host/obsidian.testing.ts"],
+    rules: {
+      // The fake cannot import moment from itself. It re-exports the copy `obsidian` pins as its
+      // own exact dependency (2.29.4), which is the point: the suite runs the same moment the
+      // plugin will at runtime. Declaring moment here instead would add a second version source
+      // that npm silently resolves to a second copy the day obsidian's pin moves.
+      "no-restricted-imports": "off",
+      "@typescript-eslint/no-restricted-imports": "off",
+      "import/no-extraneous-dependencies": "off",
+      // A fake's no-op methods are its API surface, not an unfinished body.
+      "@typescript-eslint/no-empty-function": "off",
+      // `__testing.reset()` iterates copies because `close()`/`hide()` splice the element out of
+      // the very array being walked. The rule reads the spread as redundant and autofixes it to
+      // the live array, which would skip every other entry — a silent break of the reset every
+      // test depends on.
+      "unicorn/no-useless-spread": "off",
+      // Members follow Obsidian's own class shape so the fake reads against the real API docs;
+      // private bookkeeping sits where it is relevant, not hoisted above the public surface.
+      "unicorn/consistent-class-member-order": "off",
+      // Same reason `prefer-active-doc` and `prefer-create-el` are off for tests: those rules
+      // describe plugin runtime code, and this file is the host it runs against.
+      "obsidianmd/prefer-window-timers": "off",
     },
   },
 ];

@@ -6,7 +6,7 @@ import { createNote, frontmatterOf, renameNote, waitForJournalFrontmatter } from
 // notes live at `{{date}}.md` (YYYY-MM-DD), so a foreign vault mutation at a
 // matching path must drive real metadataCache indexing -> auto-attach -> a
 // frontmatter write the test observes. None of this would fail against
-// __mocks__/obsidian.ts, which can't reproduce the indexing window.
+// the Obsidian fake, which can't reproduce the indexing window.
 describe("auto-attach", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-daily", plugins: ["journals"] });

@@ -6,7 +6,7 @@ import { createNote, frontmatterOf, waitForJournalFrontmatter } from "../support
 // `Sprint {{index}}` — an index-only name template with no date variable. Auto-attach must
 // reverse the captured index back to the sprint's anchor date (anchorDate 2026-01-05,
 // anchorValue 1, so index 3 is two 2-week steps later = 2026-02-02). This exercises the
-// numbering-inversion path that __mocks__/obsidian.ts can't reproduce, and proves the real
+// numbering-inversion path that the Obsidian fake can't reproduce, and proves the real
 // NotePathService -> NumberingService wiring boots without a DI cycle.
 describe("auto-attach with an index-only template", () => {
   before(async () => {
