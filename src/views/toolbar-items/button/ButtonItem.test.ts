@@ -150,6 +150,23 @@ describe("ButtonItem", () => {
       expect(parameters.existingOnly).toBe(false);
     });
 
+    it("hands OpenDateFlow the open mode the click modifiers ask for", async () => {
+      const { result, flows } = await mountItem(buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }));
+      const button = result.getByRole("button");
+
+      await fireEvent.click(button);
+      expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "active" }));
+
+      await fireEvent.click(button, { metaKey: true });
+      expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+
+      await fireEvent.click(button, { ctrlKey: true, altKey: true });
+      expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "split" }));
+
+      await fireEvent(button, new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }));
+      expect(flows).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+    });
+
     it("recenters the view to today when mode is 'navigate'", async () => {
       const setRefDate = vi.fn();
       const { result } = await mountItem(buttonConfigFor({ type: "current", mode: "navigate", levels: ["day"] }), {

@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { screen } from "@testing-library/vue";
+import { fireEvent, screen } from "@testing-library/vue";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
@@ -105,6 +105,37 @@ describe("HomeCodeBlock", () => {
       OpenDateFlow,
       expect.objectContaining({ anchor: "2026-05-27", journalNames: ["Daily"] }),
     );
+  });
+
+  it("hands OpenDateFlow the open mode the click modifiers ask for", async () => {
+    const { flows } = await mount(
+      { Daily: fixedJournal("Daily", { type: "day" }) },
+      { show: ["day"], separator: " • ", scale: 1 },
+    );
+    const link = screen.getByRole("link");
+
+    await fireEvent.click(link);
+    expect(flows.invoke).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "active" }));
+
+    await fireEvent.click(link, { metaKey: true });
+    expect(flows.invoke).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
+
+    await fireEvent.click(link, { ctrlKey: true, altKey: true });
+    expect(flows.invoke).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "split" }));
+  });
+
+  it("opens in a new tab on a middle-click", async () => {
+    const { flows } = await mount(
+      { Daily: fixedJournal("Daily", { type: "day" }) },
+      { show: ["day"], separator: " • ", scale: 1 },
+    );
+
+    await fireEvent(
+      screen.getByRole("link"),
+      new MouseEvent("auxclick", { button: 1, bubbles: true, cancelable: true }),
+    );
+
+    expect(flows.invoke).toHaveBeenLastCalledWith(OpenDateFlow, expect.objectContaining({ openMode: "tab" }));
   });
 
   it("narrows to the host note's shelf when the index registers it after mount", async () => {
