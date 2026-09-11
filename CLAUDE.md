@@ -412,11 +412,13 @@ on it.
     so mobile is a supported target; it is spot-checked on a tablet when a
     report warrants it, never in CI. The harness cannot help — see the
     `emulateMobile` bullet above.
-  - **UI language.** The suite covers the calendar locale only. Nothing
-    switches Obsidian's own language, so a regional variant falling back to its
-    base language and an unshipped one falling back to English are both
-    unverified. That fallback is paraglide's, and is unit-testable — it simply
-    has no test.
+  - **UI language.** The suite covers the calendar locale only; nothing
+    switches Obsidian's own language at runtime. The fallback itself is ours
+    and _is_ tested — `matchLocale` (`src/i18n/init-locale.ts`) covers the
+    region-strip and unknown-tag cases, and `initLocale("de")` drives real
+    assertions in `button-item.test.ts`. What is unverified is the boot wiring
+    (`main.ts` handing `getLanguage()` through) and whether a translated string
+    fits a control sized for English.
   - **Large-vault paint cost.** No perf spec and no budget, at any layer.
   - **Migration from a real vault.** `e2e/fixtures/e2e-legacy-v1` runs the whole
     v1→v5 chain, but nothing enters that chain part-way from a vault someone
