@@ -263,7 +263,7 @@ to confuse.
 - Run the type's seeded command, or any command you targeted at it
 - Use **New notelet** in the [notelets list](#supported-code-blocks), in a view block or a
   `journal-notelets` code block
-- Open a link like `obsidian://journal?journal=Daily&notelet=Meeting&date=today`
+- Open a link like `obsidian://journals?journal=Daily&notelet=Meeting&date=today`
 
 **Adopting notes you already have:**
 
@@ -514,6 +514,7 @@ These variables can be used in the note name template, the folder path, and the 
 
 - `{{journal_name}}` - name of journal note belongs to
 - `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is the first day of the month, quarter, year or custom interval. The exception is week notes, where `{{date}}` renders the week's representative day rather than its first day — the day whose calendar year is the week's own year, which is the Thursday under the ISO-8601 week configuration. This is what makes `{{date:YYYY}}` resolve to the right year on a week straddling January 1, whichever week configuration you use. Format can be overridden using following syntax `{{date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{date:YYYY-MM-DD}}`).
+  Because of that, the week-year formats — `gggg` and `GGGG`, and the `ww`/`WW` week numbers that belong with them — are **not recommended in a note name or a folder path**. They exist to keep a week's year right where a plain calendar year would be wrong, which is the job the representative day already does here; the default weekly format `YYYY-[W]w` relies on it. Inside a template's content they are ordinary formatting and are fine. In a name or folder they cost you the path as a fallback: the plugin recognizes its own notes by their frontmatter, and where that is missing — a note you created yourself in the right place, or a note whose stored date **Maintenance** is trying to repair — it reads the date back out of the path instead, and a week-year token leaves nothing to read.
 - `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
 - `{{week_of_month}}` - which week of its month the note's week is, counting the week that holds the 1st of the month as week 1. It follows the start of the week configured in the plugin's calendar settings, so it agrees with the week numbers the calendar shows.

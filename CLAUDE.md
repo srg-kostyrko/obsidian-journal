@@ -69,6 +69,24 @@ Project-wide decisions with no other home. They decide what counts as a bug.
   [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md).
   Settled decisions that merely _read_ as regressions are under "Deliberate
   non-bugs" below; none of those is a dropped v2 feature.
+- **Content we write into a note must be reconstructible from that note.** The
+  vault syncs; `data.json` does not. So wherever plugin-private state is the
+  authority and the note is a render target, two devices hold two truths and each
+  overwrites the other's output — and wherever the note itself is the authority,
+  a sync merge is just another edit to read back. `SelfWriteGuard`
+  (`src/journals/notes/self-write-guard.ts`) is not cover for this: it stops one
+  writer re-entering on its own write, and says nothing about a second device.
+  The rule binds anything that puts derived content into a user-owned file —
+  lifted frontmatter values, captured text, generated regions — and the shape it
+  bars is a marked region whose contents come from a list only the plugin holds.
+  Parse what is there, merge by a key that lives in the text, rewrite; or append
+  once and never revisit. `obsidian-list-modified` (15,904 installs) is the
+  worked example of getting it wrong: `trackedFiles` in `data.json`, a
+  `%% LIST MODIFIED %%`…`%% END %%` region rewritten wholesale, seven sync issues
+  across four years, a daily note that reached **300 MB** and hung Obsidian on
+  every device, and a shipped answer of "enable it on one device only". Care was
+  not the missing ingredient — it serializes every listener, writes through
+  `vault.process`, and filters sync noise by an mtime window.
 
 ## Traps
 

@@ -452,3 +452,55 @@ Two behaviours with no equivalent, worth knowing before you port:
   than on a calendar boundary. They appear as `write.type === "custom"` with
   `every` and `duration`, and they are reachable by name — no `writeType` maps
   onto them.
+
+## Coming from Journals 2.x internals
+
+Journals 2.x had no API. Integrators read fields straight off the plugin object —
+`app.plugins.getPlugin("journals").journals`, `.calendarSettings`, `.index` — and
+several shipped plugins did. **3.0.0 removed all of them.** The plugin now builds
+its services in a private container and exposes exactly one public member, `api`.
+
+Nothing throws. `plugin.journals` is `undefined`, so integration code written with
+optional chaining takes its fallback branch and the feature quietly stops working
+— usually presenting as "Journals is not installed" to a user who has it
+installed and configured.
+
+| Journals 2.x                              | now                                            | note                                                                                |
+| ----------------------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `plugin.journals`                         | `listJournals()`                               | async, and `JournalInfo` is a summary, not the journal object                       |
+| `plugin.journals.find(j => j.type === …)` | `listJournals({ writeType: … })`               | returns **all** matches; there was never only one                                   |
+| `plugin.getJournal(name)`                 | `journalInfo(name)`                            | `null` rather than `undefined` when absent                                          |
+| `plugin.getJournalConfig(name)`           | —                                              | configuration is deliberately not exposed; see below                                |
+| `plugin.shelves`, `getShelfJournals`      | `listJournals({ shelf })`, `JournalInfo.shelf` |                                                                                     |
+| `plugin.index`                            | `notesFor`, `journalOf`                        | a range read is [#380](https://github.com/srg-kostyrko/obsidian-journal/issues/380) |
+| `plugin.calendarSettings`                 | —                                              | see _the week grid_ below                                                           |
+| `openDateInJournal(...)`                  | `openNote(selector, date)`                     |                                                                                     |
+| `plugin.notesManager`, `.appManager`      | —                                              | internal seams, never an integration surface                                        |
+
+**Journal configuration has no replacement, on purpose.** `nameTemplate`,
+`folder`, `dateFormat` and `templates` were only ever read in order to
+reconstruct a note's path by hand, and doing that correctly means reimplementing
+folder variables, the week grid and custom-interval anchoring. Ask for the path
+instead: `notesFor(selector, date)` returns `path` for every matched journal,
+whether or not the note exists yet, and `ensureNote` creates it with the
+templates, prompts and `journal` / `journal-date` frontmatter that make it a
+journal note. A note written any other way is not one — nothing in the plugin
+will recognise it.
+
+**The week grid.** `calendarSettings.dow` was a number with `-1` meaning "follow
+the locale". It is now a mode — either `locale`, or a `dow`/`doy` pair — so there
+is no single number to hand back, and reading `dow` without `doy` was already
+wrong: `doy` decides which week is week 1, and therefore what a `gggg-[W]ww`
+filename resolves to.
+
+Do not reach for `window.moment` either. The user's grid is installed on a
+private locale, and the global locale receives it **only** when _Apply globally_
+is on (`Calendar.applyWeekConfig`); with it off the global locale is actively
+reset to the vault's own week. So `window.moment().startOf("week")` answers for a
+different grid than the journal does, on the default setting.
+
+Take the boundaries from the note instead. `JournalNote.date` is the period's
+first day under the user's grid and `endDate` its last, so walking a week journal
+by `endDate + 1 day` stays aligned without knowing `dow` at all, and
+`displayDate` carries the `doy`-dependent answer that `dow` alone cannot give.
+See [`date` vs `displayDate`](#date-vs-displaydate).
