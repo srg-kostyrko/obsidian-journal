@@ -25,7 +25,7 @@ import { dayAnchor } from "./decorations.js";
 
 // Slice B chunk 4 — the command-palette real-click seam. Each per-note command is check()-gated;
 // the palette honors check() and only lists an available command, which executeCommandById (used
-// by slices A/C/D) bypasses. None of this is reachable through __mocks__/obsidian.ts, which has no
+// by slices A/C/D) bypasses. None of this is reachable through the Obsidian fake, which has no
 // palette. Single boot; each it sets up its own active-leaf state, so order is irrelevant.
 
 const INSERT = "Insert link to journal note";

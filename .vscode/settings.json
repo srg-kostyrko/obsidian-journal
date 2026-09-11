@@ -1,0 +1,23 @@
+{
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    // Source: every flavor of test, bench and fake collapses onto the unit it covers.
+    // Covers `foo.ts` + `foo.test.ts`, `foo.flow.ts` + `foo.flow.test.ts`,
+    // `journal-index.ts` + `journal-index.bench.ts`, and the `-item.ts` / `-config.ts`
+    // split that toolbar items take once an appearance resolver appears.
+    "*.ts": "${capture}.test.ts, ${capture}.*.test.ts, ${capture}.bench.ts, ${capture}.e2e.ts, ${capture}.testing.ts, ${capture}.d.ts, ${capture}.js",
+    "*.vue": "${capture}.test.ts, ${capture}.*.test.ts, ${capture}.e2e.ts, ${capture}.css",
+    "*-item.ts": "${capture}-config.ts, ${capture}-config.test.ts",
+
+    // Translations: one visible source of truth, ten targets under it.
+    "en.json": "*.json",
+
+    // Root tooling. Config files greatly outnumber the ones anyone opens.
+    "package.json": "package-lock.json, .npmrc, .tool-versions, .editorconfig, .gitignore, .prettierrc, .prettierignore, cspell.config.yaml, eslint.config.mjs, version-bump.mjs",
+    "manifest.json": "manifest-beta.json, versions.json",
+    "tsconfig.json": "tsconfig.*.json, env.d.ts",
+    "vite.config.mts": "vitest.config.mts, vitest.setup.ts, vitest.setup.shared.ts, wdio.conf.mts",
+    "README.md": "CHANGELOG.md, CONTRIBUTING.md, CONTEXT.md, CLAUDE.md, LICENSE"
+  }
+}

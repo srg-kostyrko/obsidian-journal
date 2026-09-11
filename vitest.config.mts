@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 const base = {
   environment: "happy-dom" as const,
   alias: {
-    obsidian: new URL("./__mocks__/obsidian.ts", import.meta.url).pathname,
+    obsidian: new URL("./src/infrastructure/host/obsidian.testing.ts", import.meta.url).pathname,
     "@": new URL("./src", import.meta.url).pathname,
   },
 };
@@ -380,8 +380,8 @@ export default defineConfig({
         // src/ui + src/i18n pure suites") deliberately drops `UiCollapsibleBlock`'s
         // `vi.mock("@/infrastructure/host", () => ({ renderIcon: vi.fn(() => null) }))` — mocking the
         // project's own barrel, banned under this campaign's rule — and nothing else in the suite
-        // ever made `renderIcon`/`getIcon` return falsy (the fake obsidian `getIcon` in
-        // `__mocks__/obsidian.ts` always returns a real `<svg>`), so the `if (icon)` false arm in
+        // ever made `renderIcon`/`getIcon` return falsy (the Obsidian fake's
+        // `getIcon` always returns a real `<svg>`), so the `if (icon)` false arm in
         // `UiIcon.vue:27` (`host.append(icon)`) loses its only exerciser anywhere in the suite: -1
         // branch (5/6 -> 4/6 covered on that file; full-suite hit count on that arm goes 7 -> 0).
         // This is a real loss of discriminating power, not a wash — the aggregate percentage held

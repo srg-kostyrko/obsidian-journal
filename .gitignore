@@ -1,5 +1,9 @@
 # vscode
-.vscode 
+# settings.json is project config (the Explorer file-nesting patterns), so it ships; the rest
+# of .vscode is per-machine state. Directory-star, not a bare `.vscode`: git cannot re-include
+# a file whose parent directory is itself excluded.
+.vscode/*
+!.vscode/settings.json
 
 # Intellij
 *.iml

@@ -31,7 +31,7 @@ const calendarNotes = [
 // `journal`/`journal-section`/`journal-interval-index` frontmatter. Booting the
 // freshly built plugin must run the real loadData -> migration chain -> saveData
 // round-trip and walk the vault rewriting legacy note frontmatter through
-// metadataCache. Neither path exists against __mocks__/obsidian.ts, which fakes
+// metadataCache. Neither path exists against the Obsidian fake, which fakes
 // plugin-data persistence and the index.
 describe("legacy vault upgrade", () => {
   before(async () => {

@@ -9,7 +9,8 @@ declare module "@vue/reactivity" {
 }
 
 // Augment the obsidian module to expose the __testing registry used in unit tests.
-// The actual implementation lives in __mocks__/obsidian.ts (aliased by vitest).
+// The implementation lives in src/infrastructure/host/obsidian.testing.ts, aliased onto the bare
+// `obsidian` specifier by vitest.config.mts.
 import type { AbstractInputSuggest, IconName, Modal, PluginSettingTab, SuggestModal } from "obsidian";
 
 declare module "obsidian" {
@@ -26,6 +27,12 @@ declare module "obsidian" {
     pick(index: number): Promise<void>;
   }
 
+  // The real Notice renders into `messageEl`; the fake keeps the raw argument so a test can
+  // assert what was shown without a DOM round-trip.
+  interface Notice {
+    readonly message: string | DocumentFragment;
+  }
+
   interface Plugin {
     readonly settingTabs: PluginSettingTab[];
     readonly protocolHandlers: Map<string, (parameters: Record<string, string>) => unknown>;
@@ -40,6 +47,8 @@ declare module "obsidian" {
     lastAttachedInputSuggest(): AbstractInputSuggest<unknown>;
     readonly openMenus: readonly Menu[];
     lastOpenMenu(): Menu;
+    readonly shownNotices: readonly Notice[];
+    lastShownNotice(): Notice;
     reset(): void;
     seedIcons(names: readonly string[]): void;
     resetIcons(): void;

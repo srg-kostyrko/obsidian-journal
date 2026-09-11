@@ -6,7 +6,7 @@ import { todayAnchor, waitForJournalFrontmatter } from "../support/vault.js";
 // only schedules the midnight re-tick), so a journal with autoCreate=true must materialize today's
 // note shortly after the plugin loads. This spec is what proves the index ever reports ready at a
 // real boot: if it did not, auto-create would silently never run and every unit test would still
-// pass. This boot-time vault write is invisible to __mocks__/obsidian.ts; the midnight re-tick and
+// pass. This boot-time vault write is invisible to the Obsidian fake; the midnight re-tick and
 // the wait itself stay in auto-create.test.ts. The note is created but NOT opened, so we assert the
 // parsed frontmatter at the expected path rather than the active file.
 describe("auto-create", () => {

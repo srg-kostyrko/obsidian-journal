@@ -573,9 +573,10 @@ a plain definition object separate from the `XxxService` that registers/renders 
 (modals use the curried `defineModal<TResult>()(input)` with a phantom `__result`
 witness); and **imperative-with-`Disposer`** — a `register`/`attach`/`render` call
 returns a `Disposer` the caller invokes to tear down (the idiom behind dynamic
-views). The unit suite fakes this boundary via `__mocks__/obsidian.ts`; the
-**real** boundary (metadataCache timing, vault events, migration, interop) is the
-job of e2e — see [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md).
+views). The unit suite fakes this boundary via the Obsidian fake
+(`src/infrastructure/host/obsidian.testing.ts`); the **real** boundary
+(metadataCache timing, vault events, migration, interop) is the job of e2e —
+see [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md).
 
 **Repository (`BaseRepository`)** — the persistence abstraction over a keyed entity
 collection. Its `storage` is an **externally-owned reactive object** injected from

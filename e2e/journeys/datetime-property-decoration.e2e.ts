@@ -9,7 +9,7 @@ import { calendar, openSeededCalendarView } from "./view.js";
 // condition's own value can only ever be date-only — the editor renders <input type="date">.
 // Comparing the two as whole strings inverted half the operators (#374), and whether that was a
 // bug at all depended on what the *real* host caches for an unquoted ISO datetime:
-// __mocks__/obsidian.ts stores whatever a test hands it, so only Obsidian itself can settle it.
+// the Obsidian fake stores whatever a test hands it, so only Obsidian itself can settle it.
 //
 // A dedicated fixture (e2e/fixtures/e2e-datetime-deco), not the shared e2e-journeys one: its
 // daily journal carries three date-property decorations (all corner-style, so they render

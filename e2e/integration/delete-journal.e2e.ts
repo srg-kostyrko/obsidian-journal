@@ -17,7 +17,7 @@ import { createNote, frontmatterOf, noteExists, waitForJournalFrontmatter } from
 // The integration seam for journal deletion. DeleteJournalFlow purges connected notes through the
 // real NoteConnectionService (clear -> frontmatter write, delete -> vault trash) BEFORE removing
 // the journal config; the `keep` branch leaves notes untouched. Only a real vault + metadataCache
-// reproduces those writes, so these assertions cannot be made against __mocks__/obsidian.ts.
+// reproduces those writes, so these assertions cannot be made against the Obsidian fake.
 //
 // Deleting the journal is terminal for this single-journal fixture, so each it reboots onto a fresh
 // copy of e2e-daily (reloadObsidian re-copies fixtures) to restore the journal and clear prior notes.

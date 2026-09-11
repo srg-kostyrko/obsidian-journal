@@ -17,7 +17,7 @@ import { frontmatterOf, seedNote, waitForContent, waitForJournalFrontmatter } fr
 // journals list of the settings dashboard (m.journal_dashboard_bulk_add()), so the flow is reached
 // through the chunk-3 settings SPA. The seam under test is the real-vault scan (BulkAddService.plan)
 // + the two-modal write (process modal -> BulkAddService.apply -> saveData), which
-// __mocks__/obsidian.ts can't drive.
+// the Obsidian fake can't drive.
 // Single boot; each it scans its own folder so the accumulating connections stay independent.
 
 const BULK_ADD = "Bulk add notes to daily";

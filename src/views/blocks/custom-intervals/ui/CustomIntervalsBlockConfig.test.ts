@@ -7,8 +7,9 @@ import {
   customIntervalsBlock,
   type CustomIntervalsConfig,
   type CustomIntervalsConfigChange,
-} from "./custom-intervals-block";
-import CustomIntervalsBlockConfig from "./ui/CustomIntervalsBlockConfig.vue";
+} from "../custom-intervals-block";
+
+import CustomIntervalsBlockConfig from "./CustomIntervalsBlockConfig.vue";
 
 function mountConfig(config: CustomIntervalsConfig, onChange: CustomIntervalsConfigChange) {
   return render(CustomIntervalsBlockConfig, { props: { config, onChange } });

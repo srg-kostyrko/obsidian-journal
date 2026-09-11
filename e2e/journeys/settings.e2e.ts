@@ -46,8 +46,8 @@ function calendarToolbarItems(views: Record<string, StoredView> | undefined): { 
 }
 
 // Slice B chunk 3 — the settings subpage-nav SPA. The PluginSettingTab mounts a Vue app
-// whose navigation is a SettingsUiService push/pop stack; no __mocks__/obsidian.ts setting
-// tab exists. Each it asserts both contract halves: the change persisted to data.json
+// whose navigation is a SettingsUiService push/pop stack; the Obsidian fake has no
+// setting tab. Each it asserts both contract halves: the change persisted to data.json
 // (poll, saveData is async) and reflected in the DOM. Entities are distinct per it, so the
 // single boot's accumulating data.json is order-independent.
 
@@ -713,7 +713,7 @@ describe("settings", () => {
       );
     });
 
-    // The unit suite mounts the style canvas against __mocks__/obsidian.ts, which proves
+    // The unit suite mounts the style canvas against the Obsidian fake, which proves
     // nothing about the real modal: this is the only check that clicking a canvas region
     // actually writes a style and that the calendar then renders it.
     it("authors a decoration through the style canvas and renders it on the calendar", async () => {

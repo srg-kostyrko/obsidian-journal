@@ -1,8 +1,9 @@
 # Unit and component testing strategy
 
-How we write the 4,190 tests that run against `__mocks__/obsidian.ts` — the fast
-suite. The end-to-end layer, which exercises a real Obsidian process, is a
-separate subject with its own owner: [`docs/e2e-testing-strategy.md`](e2e-testing-strategy.md).
+How we write the 4,190 tests that run against the Obsidian fake
+(`src/infrastructure/host/obsidian.testing.ts`) — the fast suite. The
+end-to-end layer, which exercises a real Obsidian process, is a separate
+subject with its own owner: [`docs/e2e-testing-strategy.md`](e2e-testing-strategy.md).
 
 ## Why this doc exists
 

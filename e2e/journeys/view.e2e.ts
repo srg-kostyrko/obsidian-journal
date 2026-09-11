@@ -54,7 +54,7 @@ import type { WorkspaceLeaf } from "obsidian";
 // Slice B chunk 0 — the view-leaf render + real ribbon-click seam. Our Vue calendar
 // mounts in a real Obsidian leaf, a real ribbon click opens it, and a real cell
 // click drives OpenDateFlow -> note create+open. None of this is reachable through
-// __mocks__/obsidian.ts, which renders no leaf and has no ribbon.
+// the Obsidian fake, which renders no leaf and has no ribbon.
 
 // Earlier specs seed day notes across the current month and the Today button creates today's,
 // so a hard-coded "empty" day would pass or fail by calendar date. Read the vault instead.

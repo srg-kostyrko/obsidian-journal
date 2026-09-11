@@ -346,7 +346,7 @@ export async function closeAnyMenu(): Promise<void> {
 // Everything above (assertDecorationMatrix, the fixture seed) renders decorations that were
 // already sitting in data.json, either fixture-seeded or reached through non-canvas settings
 // fields. None of that proves a click on a CANVAS REGION writes anything: the canvas only
-// exists behind __mocks__/obsidian.ts in the unit suite, which mounts no canvas at all. This
+// exists behind the Obsidian fake in the unit suite, which mounts no canvas at all. This
 // is the one place a region click is proven to reach data.json and that Obsidian's real CSS
 // cascade renders the result back out.
 

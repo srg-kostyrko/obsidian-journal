@@ -7,7 +7,8 @@ cannot reach.
 
 ## Why e2e at all
 
-Every existing test runs against `__mocks__/obsidian.ts` — a hand-written fake of
+Every existing test runs against the Obsidian fake
+(`src/infrastructure/host/obsidian.testing.ts`) — a hand-written fake of
 `App`/`Vault`/`Workspace`/`metadataCache`/`Modal`/`ItemView`. That fake is the
 largest unverified assumption in the suite: it cannot reproduce real
 `metadataCache` indexing lag (the unobservable async window `SelfWriteGuard`
@@ -253,9 +254,9 @@ e2e job runs exactly this single command before installing the fixture.
 
 ## Authoring conventions
 
-1. **Seam-justification gate.** Every e2e test must fail the question "would this
-   pass against `__mocks__/obsidian.ts`?" If it would pass against the mock, it is
-   misfiled — move it to the unit suite. This is the test-level enforcement of
+1. **Seam-justification gate.** Every e2e test must fail the question "would
+   this pass against the Obsidian fake?" If it would pass against the fake, it
+   is misfiled — move it to the unit suite. This is the test-level enforcement of
    "test the seam, not the logic" and the main guard against suite bloat.
 2. **Build state the fast way; exercise only the behavior-under-test through its
    real trigger.** Seed preconditions via fixture vault + API (`app.vault.create`,

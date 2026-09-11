@@ -15,7 +15,7 @@ const PRE_RESTORE_PATTERN = /^backup-restore-v(\d+)-\d{4}-\d{2}-\d{2}T\d{2}-\d{2
 // (`rows`, the pre-v5 field v4ToV5Migration renames to `lines`). That rename is the
 // discriminator under test: the backup this boot writes must still read `rows`, proving the
 // snapshot captured what was on disk *before* migration touched it, not the migrated shape —
-// a distinction __mocks__/obsidian.ts cannot make since it fakes plugin-data persistence
+// a distinction the Obsidian fake cannot make since it fakes plugin-data persistence
 // entirely rather than running the real load -> snapshot -> migrate -> save chain.
 describe("pre-migration settings snapshot", () => {
   before(async () => {

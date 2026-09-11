@@ -6,7 +6,7 @@ import { createNote, waitForContent, waitForJournalFrontmatter } from "../suppor
 // (`Templates/daily.md`). Auto-attach connects a link-created note by writing journal
 // frontmatter; the regression this guards is that writing frontmatter fills the file, so a
 // naive emptiness check skips the template. Only real Obsidian embeds frontmatter into the
-// file body, so this seam is unreachable against __mocks__/obsidian.ts.
+// file body, so this seam is unreachable against the Obsidian fake.
 //
 // `daily` defines no creation prompts, so AutoAttachService's detect -> prompt -> rename ->
 // attach branch never triggers here and this stays the direct attach path: a link click still

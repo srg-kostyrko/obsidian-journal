@@ -8,10 +8,11 @@ import { fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 import { icons } from "@/ui/icons";
 
-import { buttonConfigFor } from "./button-config";
-import ButtonItemConfig from "./ui/ButtonItemConfig.vue";
+import { buttonConfigFor } from "../button-config";
 
-import type { ButtonConfig, ButtonConfigChange } from "./button-config";
+import ButtonItemConfig from "./ButtonItemConfig.vue";
+
+import type { ButtonConfig, ButtonConfigChange } from "../button-config";
 
 async function mountConfig(config: ButtonConfig, onChange: ButtonConfigChange) {
   const harness = await testContainer({

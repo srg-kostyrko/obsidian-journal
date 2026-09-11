@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { createFakeHost } from "./testing";
 
+import type { PluginSettingTab } from "obsidian";
+
 describe("createFakeHost vault consistency", () => {
   it("exposes a seeded note's frontmatter through the metadata cache", () => {
     const host = createFakeHost();
@@ -59,5 +61,22 @@ describe("createFakeHost metadata staging", () => {
     const cached = host.app.metadataCache.getFileCache(file);
     expect(cached?.tags).toEqual([{ tag: "#journal", position }]);
     expect(cached?.frontmatter).toEqual({ journal: "daily", "journal-date": "2026-05-19" });
+  });
+});
+
+describe("createFakeHost setting tabs", () => {
+  it("starts with no setting tabs", () => {
+    const host = createFakeHost();
+
+    expect(host.settingTabs).toHaveLength(0);
+  });
+
+  it("records a tab passed to addSettingTab", () => {
+    const host = createFakeHost();
+    const tab = { id: "journals" } as unknown as PluginSettingTab;
+
+    host.plugin.addSettingTab(tab);
+
+    expect(host.settingTabs).toEqual([tab]);
   });
 });
