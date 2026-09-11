@@ -25,45 +25,52 @@ plugin's own reasoning rather than just uncaught errors.
 ## Development setup
 
 ```bash
-npm ci
-npm run compile:i18n   # generates src/i18n/paraglide, which is git-ignored
+npm ci                 # also runs compile:i18n, via `prepare`
 npm run dev            # builds into test-vault/.obsidian/plugins/journals, with hot-reload
 ```
 
 Then open `test-vault/` as a vault in Obsidian — the plugin is already
 enabled there, alongside Hot Reload, Templater, and Calendar.
 
-`compile:i18n` must run before the first `check:types` on a fresh clone: the
-paraglide module it generates is not committed, so type-checking fails against
-a clone that skipped it. That's the failure a newcomer hits first — if
-`check:types` complains about `src/i18n/paraglide`, run `compile:i18n` and try
-again.
+`compile:i18n` generates `src/i18n/paraglide`, which is not committed, so
+`check:types` cannot run against a clone that skipped it. `prepare` runs it as
+part of `npm ci` for exactly that reason. If `check:types` ever does complain
+about `src/i18n/paraglide` — after a `git clean`, say — run `npm run
+compile:i18n` and try again.
 
 Use Node 24, matching CI.
 
 `npm ci` also installs a pre-commit hook (Husky + `nano-staged`) that runs
 eslint on staged `*.ts`/`*.vue` files and reformats staged `*.ts`, `*.mjs`,
-`*.js`, `*.css`, `*.md`, and `*.vue` files with Prettier. It's the only thing
-enforcing formatting — there's no `check:format` script and no CI job runs
-Prettier — so it can catch a first commit off guard: fix any eslint error it
-reports and re-stage; Prettier reformats your staged files and the commit
-proceeds.
+`*.js`, `*.css`, `*.md`, and `*.vue` files with Prettier. It can catch a first
+commit off guard: fix any eslint error it reports and re-stage; Prettier
+reformats your staged files and the commit proceeds. The hook only sees
+_staged_ files, so `check:format` backstops it in CI — that is what a Prettier
+version bump reformatting a file nobody is editing would otherwise slip past.
 
 ## Quality gates
 
-`checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` → `coverage` →
-`check:lint` → `build:api` → `check:api` on every pull request and on every push
-to `main` (`compile:i18n` is covered in Development setup above). It reports as
+`checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` →
+`check:format` → `coverage` → `check:lint` → `build:api` → `check:api` on every
+pull request and on every push to `main` (`compile:i18n` is covered in
+Development setup above). It reports as
 the `build` check, which — together with `e2e-gate`, the fixed name standing in
 for the whole e2e matrix — blocks the merge button until both are green. A check
 that is still running blocks it too. Run these before opening a pull request
 anyway; the order between them doesn't matter locally:
 
 ```bash
+npm run check        # all of the below, in CI's order
+```
+
+Or individually:
+
+```bash
 npm run check:types  # vue-tsc, no emit
 npm run coverage     # vitest, the unit and component suite, gated on a coverage floor
 npm run check:lint   # eslint over the whole project
-npm run check:i18n   # guards messages/*.json against reintroducing banned mistranslations
+npm run check:format # prettier --check, the backstop for the pre-commit hook
+npm run check:i18n   # guards messages/*.json against banned mistranslations and locale key drift
 npm run build:api    # regenerates packages/api/index.d.ts — commit the result
 npm run check:api    # proves the published package compiles for a consumer
 ```
@@ -88,19 +95,13 @@ npm run test:e2e:smoke
 npm run test:e2e:integration
 npm run test:e2e:migration
 npm run test:e2e:interop
+npm run test:e2e:journeys
 ```
 
-The `journeys` suite has no npm alias; run it directly:
-
-```bash
-npx wdio run ./wdio.conf.mts --suite journeys
-```
-
-There's no single script that runs exactly those five: `npm run test:e2e`
-runs the bare `./e2e/**/*.e2e.ts` glob, which is the nightly lane — it also
-picks up `quarantine`, the non-blocking flaky lane that never gates a merge.
-Run the per-suite scripts above, plus `journeys`, to reproduce what pull
-requests actually run in CI.
+`npm run test:e2e:pr` runs exactly those five, which is what a pull request
+runs in CI. Reach for it rather than `npm run test:e2e`: that one runs the bare
+`./e2e/**/*.e2e.ts` glob, which is the nightly lane — it also picks up
+`quarantine`, the non-blocking flaky lane that never gates a merge.
 
 ## Making a change
 
@@ -115,9 +116,10 @@ User-facing copy goes in `messages/en.json`, not in the generated
 `src/i18n/paraglide` output. Sentence case, en-US.
 
 Add the key to the other ten locale files in the same pull request. `check:i18n`
-has no key-parity check, so `en.json` alone passes every gate while the string
-silently falls back to English everywhere else — nothing will tell you, or the
-maintainer, that a locale has gone stale.
+enforces key parity in both directions, so `en.json` alone fails the build — a
+key missing from a locale would otherwise ship English there with no warning,
+no type error and no failing test, which is the shape that reached production
+once.
 
 There is no `translate:i18n` script and no bulk translator: read
 [`docs/i18n-glossary.md`](docs/i18n-glossary.md) first, reuse its canonical
