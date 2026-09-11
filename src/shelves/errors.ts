@@ -34,11 +34,7 @@ export class InvalidShelfUpdateError extends Error {
 }
 
 export type ShelvesLifecycleError =
-  | InvalidShelfNameError
-  | ShelfNameTakenError
-  | UnknownShelfError
-  | InvalidShelfUpdateError
-  | UnknownJournalError;
+  InvalidShelfNameError | ShelfNameTakenError | UnknownShelfError | InvalidShelfUpdateError | UnknownJournalError;
 
 export class ShelvesLifecycleFlowError extends FlowError {
   readonly kind = "shelves-lifecycle" as const;

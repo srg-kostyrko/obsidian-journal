@@ -33,7 +33,11 @@
         max-width: 60rem;
         background: var(--bg);
         color: var(--fg);
-        font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+        font:
+          16px/1.55 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
       }
       h1 {
         margin: 0 0 0.25rem;
@@ -157,11 +161,10 @@
   <body>
     <h1>obsidian:// link test bench</h1>
     <p class="lede">
-      Manual walk of the Journals URI handler. Clicking a link asks the browser to hand the
-      URL to Obsidian — approve the prompt. If the browser refuses the scheme outright, use
-      <strong>Copy</strong> and run <code>xdg-open '&lt;url&gt;'</code> (quoted —
-      <code>&amp;</code> is a shell operator). Close what opened between items so the next
-      result is unambiguous.
+      Manual walk of the Journals URI handler. Clicking a link asks the browser to hand the URL to Obsidian — approve
+      the prompt. If the browser refuses the scheme outright, use
+      <strong>Copy</strong> and run <code>xdg-open '&lt;url&gt;'</code> (quoted — <code>&amp;</code> is a shell
+      operator). Close what opened between items so the next result is unambiguous.
     </p>
 
     <div class="toolbar">
@@ -217,13 +220,11 @@
             {
               q: "type=day&date=today",
               setup: "a second Day journal covering the same dates",
-              expect:
-                "centered suggest modal lists both; picking one opens it, Esc opens nothing and shows no error.",
+              expect: "centered suggest modal lists both; picking one opens it, Esc opens nothing and shows no error.",
             },
             {
               q: "type=quarter&date=today",
-              expect:
-                "notice naming the write type — a valid type with no journal behind it, not a silent no-op.",
+              expect: "notice naming the write type — a valid type with no journal behind it, not a silent no-op.",
             },
           ],
         },
@@ -250,8 +251,7 @@
             { q: "journal=day&mode=split", expect: "split pane." },
             {
               q: "journal=day&mode=window",
-              expect:
-                "popout window. Close it before the next item — a stray popout steals later opens.",
+              expect: "popout window. Close it before the next item — a stray popout steals later opens.",
             },
             {
               q: "journal=day&mode=active",
@@ -303,8 +303,7 @@
             },
             {
               q: "type=day&notelet=Meeting&date=today",
-              expect:
-                "same notice: type= names a write type, and a notelet type belongs to one journal.",
+              expect: "same notice: type= names a write type, and a notelet type belongs to one journal.",
             },
             {
               q: "journal=day&notelet=Nope&date=today",
@@ -317,8 +316,7 @@
       const vaultInput = document.getElementById("vault");
       const status = document.getElementById("status");
 
-      const urlFor = (query) =>
-        `obsidian://journals?vault=${encodeURIComponent(vaultInput.value)}&${query}`;
+      const urlFor = (query) => `obsidian://journals?vault=${encodeURIComponent(vaultInput.value)}&${query}`;
 
       const flash = (message) => {
         status.textContent = message;
@@ -392,9 +390,7 @@
 
       vaultInput.addEventListener("input", refresh);
       builderQuery.addEventListener("input", refresh);
-      document
-        .getElementById("builderCopy")
-        .addEventListener("click", () => copy(builderOut.href, "URL copied"));
+      document.getElementById("builderCopy").addEventListener("click", () => copy(builderOut.href, "URL copied"));
       document.getElementById("copyAll").addEventListener("click", () => {
         const all = [...document.querySelectorAll("a[data-query]")].map((a) => a.href).join("\n");
         copy(all, "all URLs copied");
