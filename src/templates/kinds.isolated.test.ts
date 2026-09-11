@@ -34,7 +34,9 @@ async function loadKindsUnder(locale: Locale) {
   return kinds;
 }
 
-describe("renderNumber / patternForKind ordinal round-trip", () => {
+// Whichever case runs first pays the cold transform of moment + ./kinds + ./format-regex for
+// all of them: 3.1s measured, against ~50ms each for the rest. The default 5s tips under load.
+describe("renderNumber / patternForKind ordinal round-trip", { timeout: 20_000 }, () => {
   afterEach(() => {
     moment.locale("en");
     vi.resetModules();
