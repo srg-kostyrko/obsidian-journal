@@ -421,6 +421,19 @@ export default [
     },
   },
   {
+    // idsInDomOrder reads children of a container the tests build with the environment's own
+    // DOM, where Obsidian has not installed .instanceOf() and the call throws. The rule is
+    // auto-fixable and only a warning, so a bare `eslint --fix` over src/views rewrites the
+    // plain instanceof and takes use-sortable-list.isolated.test.ts red with it —
+    // `vue-tsc` cannot catch that, since Obsidian's ambient augmentation declares the method.
+    // Inline eslint-disable comments are banned repo-wide (eslint-comments/no-use), so the
+    // opt-out lives here, the same shape as the plugin-setting-tab carve-out above.
+    files: ["src/views/ui/use-sortable-list.ts"],
+    rules: {
+      "obsidianmd/prefer-instanceof": "off",
+    },
+  },
+  {
     files: ["src/infrastructure/logger/console-sink.ts"],
     rules: {
       // ConsoleSink is the single, intentional bridge from LogSink to the

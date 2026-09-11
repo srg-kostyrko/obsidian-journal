@@ -23,6 +23,8 @@ export interface SortableListOptions {
 function idsInDomOrder(container: HTMLElement): string[] {
   // Plain instanceof, not Obsidian's cross-window-safe .instanceOf(): that method only
   // exists once the real app installs it, so it throws under the test environment's DOM.
+  // obsidianmd/prefer-instanceof is off for this file in eslint.config.mjs so --fix cannot
+  // undo that.
   return Array.from(container.children, (child) =>
     child instanceof HTMLElement ? child.dataset.id : undefined,
   ).filter((id): id is string => id !== undefined);
