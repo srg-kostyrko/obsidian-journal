@@ -115,6 +115,16 @@ function checkBooleanProperty(
     .exhaustive();
 }
 
+// The date part of a recognized ISO representation, or null for anything else. The shape has to
+// be checked before the cut: a bare slice turns every string that merely opens with a date —
+// "2026-06-24 notes" — into that date, and a date condition can be pointed at any property.
+// A space in place of the "T" is accepted because several plugins write a datetime that way.
+const ISO_DAY = /^(\d{4}-\d{2}-\d{2})(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/;
+
+function dayOf(value: string): string | null {
+  return ISO_DAY.exec(value)?.[1] ?? null;
+}
+
 function checkDateProperty(
   c: Extract<JournalDecorationPropertyCondition, { valueType: "date" }>,
   raw: unknown,
@@ -125,8 +135,11 @@ function checkDateProperty(
   // ten-character prefix sorts *before* the string it prefixes, so both sides are cut (#374).
   const iso = raw instanceof Date ? raw.toISOString() : raw;
   if (typeof iso !== "string") return false;
-  const value = iso.slice(0, 10);
-  const target = c.value.slice(0, 10);
+  const value = dayOf(iso);
+  const target = dayOf(c.value);
+  // A value that is not a date answers false everywhere, the same as a number does — including
+  // the exclusion operators, which "no value to violate" only earns an absent property.
+  if (value === null || target === null) return false;
   return match(c.condition)
     .with("eq", () => value === target)
     .with("neq", () => value !== target)
