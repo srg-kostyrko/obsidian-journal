@@ -52,25 +52,26 @@ version bump reformatting a file nobody is editing would otherwise slip past.
 
 `checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` →
 `check:format` → `coverage` → `check:lint` → `build:api` → `check:api` on every
-pull request and on every push to `main` (`compile:i18n` is covered in
-Development setup above). It reports as
-the `build` check, which — together with `e2e-gate`, the fixed name standing in
-for the whole e2e matrix — blocks the merge button until both are green. A check
-that is still running blocks it too. Run these before opening a pull request
-anyway; the order between them doesn't matter locally:
+pull request and on every push to `main`. It reports as the `build` check, which
+— together with `e2e-gate`, the fixed name standing in for the whole e2e matrix
+— blocks the merge button until both are green. A check that is still running
+blocks it too. Run it before opening a pull request:
 
 ```bash
-npm run check        # all of the below, in CI's order
+npm run check
 ```
 
-Or individually:
+That is the same chain in the same order, including the `git diff --exit-code`
+on `packages/api/index.d.ts` that turns an uncommitted API regeneration into a
+local failure instead of a CI one. The pieces, if you want to run one alone:
 
 ```bash
+npm run compile:i18n # regenerates src/i18n/paraglide from messages/*.json
+npm run check:i18n   # guards messages/*.json against banned mistranslations and locale key drift
 npm run check:types  # vue-tsc, no emit
+npm run check:format # prettier --check, the backstop for the pre-commit hook
 npm run coverage     # vitest, the unit and component suite, gated on a coverage floor
 npm run check:lint   # eslint over the whole project
-npm run check:format # prettier --check, the backstop for the pre-commit hook
-npm run check:i18n   # guards messages/*.json against banned mistranslations and locale key drift
 npm run build:api    # regenerates packages/api/index.d.ts — commit the result
 npm run check:api    # proves the published package compiles for a consumer
 ```

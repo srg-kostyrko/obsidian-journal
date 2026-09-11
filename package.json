@@ -26,7 +26,7 @@
     "coverage": "vitest run --coverage",
     "bench": "vitest bench --reporter=verbose",
     "check:types": "vue-tsc -b",
-    "check": "npm run check:types && npm run coverage && npm run check:lint && npm run check:i18n && npm run check:format && npm run build:api && npm run check:api",
+    "check": "npm run compile:i18n && npm run check:i18n && npm run check:types && npm run check:format && npm run coverage && npm run check:lint && npm run build:api && git diff --exit-code packages/api/index.d.ts && npm run check:api",
     "prepare": "husky && npm run compile:i18n",
     "postinstall": "patch-package"
   },
