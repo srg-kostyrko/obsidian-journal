@@ -16,6 +16,7 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { noteletTypeByName } from "@/journals/notelets/config";
 import { CreateNoteletFlow } from "@/journals/notelets/flows/create-notelet.flow";
 import { buildNoteletListing } from "@/journals/notelets/listing";
+import type { NoteletListing } from "@/journals/notelets/listing";
 import { NotePathService } from "@/journals/notes/note-path";
 import { PromptsUnansweredError } from "@/journals/prompts/errors";
 import { JournalsRepository } from "@/journals/repository";
@@ -31,6 +32,7 @@ import { ApiError } from "./errors";
 import type {
   CreateNoteletOptions,
   DateInput,
+  DateRange,
   EnsureNoteOptions,
   EnsureResult,
   ExistingJournalNote,
@@ -67,6 +69,7 @@ export class JournalsApiService implements JournalsApi {
   readonly #flows = inject(Flows);
   readonly #workspace = inject(WorkspaceService);
   readonly #inFlight = new Map<string, Promise<EnsureResult>>();
+  readonly #noteletListingDependencies = { journals: this.#journals, index: this.#index, cycle: this.#cycle };
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
   #disposed = false;
@@ -137,6 +140,30 @@ export class JournalsApiService implements JournalsApi {
     return this.#noteAtAnchor(name, anchorOption.value);
   }
 
+  // Null for an inverted window rather than an empty one, so "from after to" answers nothing
+  // whatever the journals' cycles are: anchoring both ends first would collapse a backwards
+  // same-period window onto one valid anchor and report that period as a match.
+  #window(range: DateRange): readonly [CalendarDate, CalendarDate] | null {
+    const from = this.#date(range.from);
+    const to = this.#date(range.to);
+    return from.toAnchor() > to.toAnchor() ? null : [from, to];
+  }
+
+  // getRange compares anchors, so the window's start has to be the anchor of the period holding
+  // it — the raw date would drop the leading period every partial window opens in.
+  #existingAnchors(name: string, window: readonly [CalendarDate, CalendarDate] | undefined): readonly AnchorString[] {
+    if (window === undefined) return [...this.#index.entriesFor(name)].map(([anchor]) => anchor);
+    const start = this.#cycle.anchorOf(name, window[0]);
+    if (start.isNone()) return [];
+    const from = window[0].toAnchor();
+    // Widening the bound is what catches the leading period, and overlapsFrom is what keeps the
+    // widening honest: a shortened custom interval can hold the window's start date without
+    // still being open on it.
+    return [...this.#index.getRange(name, start.value, window[1].toAnchor()).keys()].filter((anchor) =>
+      this.#cycle.overlapsFrom(name, anchor, from),
+    );
+  }
+
   #periodDates(name: string, anchor: AnchorString): { displayDate: string; endDate: string } | null {
     const display = this.#cycle.representativeOf(name, anchor);
     const end = this.#cycle.endOf(name, anchor);
@@ -156,6 +183,22 @@ export class JournalsApiService implements JournalsApi {
       file,
       counter: entry.counter ?? null,
     };
+  }
+
+  // Kept off both call sites because the type filter is the subtle half: it matches the stored
+  // name rather than a resolved id, so a type deleted in "keep" mode — whose notes carry a name
+  // the config no longer holds, and no id — stays reachable by the name a caller has.
+  #noteletsFromListing(listing: NoteletListing, type: string | undefined): readonly NoteletNote[] {
+    return listing.periods
+      .flatMap((period) => period.types)
+      .filter((group) => type === undefined || group.typeName === type)
+      .flatMap((group) => group.notelets)
+      .flatMap((entry) => {
+        const file = this.#files.resolve(entry.path);
+        if (file === null) return [];
+        const note = this.#noteletFrom(entry, file);
+        return note === null ? [] : [note];
+      });
   }
 
   #noteAtAnchor(name: string, anchor: AnchorString): JournalNote | null {
@@ -333,6 +376,37 @@ export class JournalsApiService implements JournalsApi {
     });
   }
 
+  // intervalsInRange resolves its own start through anchorOf, which is what makes the window
+  // overlap-inclusive: a month journal read from the 15th still reports the month it starts in.
+  async notesInRange(selector: JournalSelector, range: DateRange): Promise<readonly JournalNote[]> {
+    await this.#readyForNotes();
+    const window = this.#window(range);
+    if (window === null) return [];
+    const [from, to] = window;
+    return this.#select(selector).flatMap((name) =>
+      this.#cycle.intervalsInRange(name, from.toAnchor(), to.toAnchor()).flatMap((anchor) => {
+        const note = this.#noteAtAnchor(name, anchor);
+        return note === null ? [] : [note];
+      }),
+    );
+  }
+
+  async existingNotes(selector: JournalSelector, range?: DateRange): Promise<readonly ExistingJournalNote[]> {
+    await this.#readyForNotes();
+    const window = range === undefined ? undefined : this.#window(range);
+    if (window === null) return [];
+    return this.#select(selector).flatMap((name) =>
+      this.#existingAnchors(name, window).flatMap((anchor) => {
+        const note = this.#noteAtAnchor(name, anchor);
+        if (note === null) return [];
+        const { path, file } = note;
+        // An indexed entry whose file has since gone is not a note the caller can act on, and
+        // promising ExistingJournalNote means promising both halves are there.
+        return path === null || file === null ? [] : [{ ...note, path, file }];
+      }),
+    );
+  }
+
   async ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult> {
     await this.#readyForNotes();
     const { name, anchor } = await this.#resolveOne(selector, date);
@@ -444,25 +518,39 @@ export class JournalsApiService implements JournalsApi {
     return this.#select(selector).flatMap((name) => {
       const anchor = this.#cycle.anchorOf(name, calendarDate);
       if (anchor.isNone()) return [];
-      const listing = buildNoteletListing(
-        { journals: this.#journals, index: this.#index, cycle: this.#cycle },
-        { kind: "period", journalName: name, anchor: anchor.value },
-      );
-      return (
-        listing.periods
-          .flatMap((period) => period.types)
-          // Filtered by stored name, not by resolved id: a type deleted in "keep" mode leaves its
-          // notes carrying a name the config no longer holds, and the name is what a caller has.
-          .filter((group) => options?.type === undefined || group.typeName === options.type)
-          .flatMap((group) => group.notelets)
-          .flatMap((entry) => {
-            const file = this.#files.resolve(entry.path);
-            if (file === null) return [];
-            const note = this.#noteletFrom(entry, file);
-            return note === null ? [] : [note];
-          })
+      return this.#noteletsFromListing(
+        buildNoteletListing(this.#noteletListingDependencies, {
+          kind: "period",
+          journalName: name,
+          anchor: anchor.value,
+        }),
+        options?.type,
       );
     });
+  }
+
+  // Fanned out one journal at a time rather than passing every name to a single window listing:
+  // that groups by period first, and this surface orders by journal first everywhere else.
+  async noteletsInRange(
+    selector: JournalSelector,
+    range: DateRange,
+    options?: { readonly type?: string },
+  ): Promise<readonly NoteletNote[]> {
+    await this.#readyForNotes();
+    const window = this.#window(range);
+    if (window === null) return [];
+    const [from, to] = window;
+    return this.#select(selector).flatMap((name) =>
+      this.#noteletsFromListing(
+        buildNoteletListing(this.#noteletListingDependencies, {
+          kind: "window",
+          journalNames: [name],
+          start: from.toAnchor(),
+          end: to.toAnchor(),
+        }),
+        options?.type,
+      ),
+    );
   }
 
   on<K extends keyof JournalsApiEvents>(event: K, handler: JournalsApiEvents[K]): () => void {

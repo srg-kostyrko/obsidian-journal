@@ -837,7 +837,8 @@ Produces `Release4711Sprint1` through `Release4711Sprint6`, then rolls over to
 ## For plugin developers
 
 Journals exposes an API other plugins can use to list journals, find the note for
-a date, create or open one, and subscribe to changes — see
+a date or for a whole window of dates, create or open one, and subscribe to
+changes — see
 [`docs/plugin-api.md`](docs/plugin-api.md). Types are published as
 [`obsidian-journals-api`](https://www.npmjs.com/package/obsidian-journals-api).
 

@@ -82,6 +82,50 @@ describe("plugin API", () => {
     expect(found).toBe("2024-03-07.md");
   });
 
+  it("reads a window through notesInRange and existingNotes", async () => {
+    // One note inside the window and one before it, so a window that does not bound is caught.
+    await browser.executeObsidian(async ({ app }) => {
+      const api = (app as unknown as { plugins: { plugins: Record<string, { api: unknown }> } }).plugins.plugins
+        .journals.api as { ensureNote(selector: string, date: string): Promise<unknown> };
+      await api.ensureNote("daily", "2024-05-02");
+      await api.ensureNote("daily", "2024-05-04");
+    });
+    await waitForJournalFrontmatter("2024-05-02.md", { journal: "daily", date: "2024-05-02" });
+    await waitForJournalFrontmatter("2024-05-04.md", { journal: "daily", date: "2024-05-04" });
+
+    const read = await browser.waitUntil(
+      async () => {
+        const value = await browser.executeObsidian(async ({ app }) => {
+          const api = (app as unknown as { plugins: { plugins: Record<string, { api: unknown }> } }).plugins.plugins
+            .journals.api as {
+            notesInRange(
+              selector: string,
+              range: { from: string; to: string },
+            ): Promise<{ date: string; file: unknown }[]>;
+            existingNotes(selector: string, range?: { from: string; to: string }): Promise<{ date: string }[]>;
+          };
+          const windowed = await api.existingNotes("daily", { from: "2024-05-03", to: "2024-05-10" });
+          if (windowed.length === 0) return null;
+          const all = await api.existingNotes("daily");
+          const cells = await api.notesInRange("daily", { from: "2024-05-03", to: "2024-05-05" });
+          return {
+            windowed: windowed.map((note) => note.date),
+            all: all.map((note) => note.date),
+            cells: cells.map((note) => `${note.date}:${note.file == null ? "empty" : "note"}`),
+          };
+        });
+        return value ?? false;
+      },
+      { timeout: 10_000, timeoutMsg: "the created notes never reached the index" },
+    );
+
+    expect(read.windowed).toEqual(["2024-05-04"]);
+    // 2024-03-07 was created by the test above, in this boot: an unbounded read takes no
+    // default window, so it reaches back past the one the windowed read just excluded.
+    expect(read.all).toEqual(["2024-03-07", "2024-05-02", "2024-05-04"]);
+    expect(read.cells).toEqual(["2024-05-03:empty", "2024-05-04:note", "2024-05-05:empty"]);
+  });
+
   it("reports an unknown journal as journal-not-found", async () => {
     const code = await browser.executeObsidian(async ({ app }) => {
       const api = (app as unknown as { plugins: { plugins: Record<string, { api: unknown }> } }).plugins.plugins

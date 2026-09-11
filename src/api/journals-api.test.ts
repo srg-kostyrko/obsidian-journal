@@ -15,7 +15,7 @@ import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import type { Prompt, PromptAnswer } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
-import { buildNoteletType, fixedJournal } from "@/journals/testing";
+import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import type { NoteletEntry } from "@/journals/types";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import type { ShelfConfig } from "@/shelves/config";
@@ -515,6 +515,283 @@ describe("JournalsApiService notelet reads", () => {
     const { api } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
 
     await expect(api.noteletsFor("weekly", "whenever")).rejects.toMatchObject({ code: "invalid-date" });
+  });
+});
+
+describe("JournalsApiService range reads", () => {
+  it("returns every period the window overlaps, including one that starts before it", async () => {
+    const { api } = await buildApi({ monthly: fixedJournal("monthly", { type: "month" }) });
+
+    const notes = await api.notesInRange("monthly", { from: "2026-01-15", to: "2026-02-15" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-01-01", "2026-02-01"]);
+  });
+
+  it("reports a period once rather than once per day it covers", async () => {
+    const { api } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+
+    const notes = await api.notesInRange("weekly", { from: "2026-01-05", to: "2026-01-18" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-01-05", "2026-01-12"]);
+  });
+
+  // A custom interval the user pulled in leaves a gap between where it now ends and where the
+  // next one begins, and CycleService.anchorOf walks backwards past that gap rather than into
+  // it, so the period holding the window's start can be one that closed days earlier. The
+  // notelet window listing already filters on this (anchorsInWindow); the note reads share the
+  // hazard because they share intervalsInRange.
+  it("leaves out a shortened interval that closed before the window opened", async () => {
+    const { api, index } = await buildApi({ sprints: customJournal("sprints", "month", 1, "2026-03-01") });
+    index.register({
+      journalName: "sprints",
+      anchor: "2026-02-01" as AnchorString,
+      path: "Journal/feb.md" as VaultPath,
+      endDate: "2026-02-10" as AnchorString,
+    });
+
+    const notes = await api.notesInRange("sprints", { from: "2026-02-20", to: "2026-03-15" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-02-11", "2026-03-01"]);
+  });
+
+  it("carries the note on disk and a predicted path for the periods without one", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    harness.host.putFile("Journal/2026-08-18.md", "existing");
+    index.register({
+      journalName: "daily",
+      anchor: "2026-08-18" as AnchorString,
+      path: "Journal/2026-08-18.md" as VaultPath,
+    });
+
+    const notes = await api.notesInRange("daily", { from: "2026-08-17", to: "2026-08-19" });
+
+    expect(notes.map((note) => [note.date, note.path, note.file === null])).toEqual([
+      ["2026-08-17", "2026-08-17.md", true],
+      ["2026-08-18", "Journal/2026-08-18.md", false],
+      ["2026-08-19", "2026-08-19.md", true],
+    ]);
+  });
+
+  it("keeps a period outside the timeline as a cell with no path", async () => {
+    const { api } = await buildApi({
+      past: fixedJournal(
+        "past",
+        { type: "day" },
+        {
+          timeline: {
+            start: "2026-08-18" as AnchorString,
+            end: { kind: "date", date: "2026-12-31" as AnchorString },
+          },
+        },
+      ),
+    });
+
+    const notes = await api.notesInRange("past", { from: "2026-08-17", to: "2026-08-18" });
+
+    expect(notes.map((note) => [note.date, note.path])).toEqual([
+      ["2026-08-17", null],
+      ["2026-08-18", "2026-08-18.md"],
+    ]);
+  });
+
+  it("fans out one matching journal at a time", async () => {
+    const { api } = await buildApi({
+      a: fixedJournal("a", { type: "day" }),
+      b: fixedJournal("b", { type: "day" }),
+    });
+
+    const notes = await api.notesInRange({ writeType: "day" }, { from: "2026-08-17", to: "2026-08-18" });
+
+    expect(notes.map((note) => `${note.journal}:${note.date}`)).toEqual([
+      "a:2026-08-17",
+      "a:2026-08-18",
+      "b:2026-08-17",
+      "b:2026-08-18",
+    ]);
+  });
+
+  it("returns nothing for an inverted range", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await expect(api.notesInRange("daily", { from: "2026-08-19", to: "2026-08-17" })).resolves.toEqual([]);
+  });
+
+  it("rejects a range bound it cannot read with invalid-date", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await expect(api.notesInRange("daily", { from: "2026-08-17", to: "whenever" })).rejects.toMatchObject({
+      code: "invalid-date",
+    });
+  });
+
+  it("returns only the periods of the window that have a note", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    for (const anchor of ["2026-08-16", "2026-08-18"]) {
+      harness.host.putFile(`Journal/${anchor}.md`, "existing");
+      index.register({
+        journalName: "daily",
+        anchor: anchor as AnchorString,
+        path: `Journal/${anchor}.md` as VaultPath,
+      });
+    }
+
+    const notes = await api.existingNotes("daily", { from: "2026-08-17", to: "2026-08-19" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-08-18"]);
+    expect(notes[0]?.file).not.toBeNull();
+  });
+
+  it("includes a note whose period starts before the window", async () => {
+    const { api, index, harness } = await buildApi({ monthly: fixedJournal("monthly", { type: "month" }) });
+    harness.host.putFile("Journal/2026-01.md", "existing");
+    index.register({
+      journalName: "monthly",
+      anchor: "2026-01-01" as AnchorString,
+      path: "Journal/2026-01.md" as VaultPath,
+    });
+
+    const notes = await api.existingNotes("monthly", { from: "2026-01-15", to: "2026-02-15" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-01-01"]);
+  });
+
+  it("leaves out an existing note whose shortened interval closed before the window opened", async () => {
+    const { api, index, harness } = await buildApi({
+      sprints: customJournal("sprints", "month", 1, "2026-03-01"),
+    });
+    for (const [anchor, endDate] of [
+      ["2026-02-01", "2026-02-10"],
+      ["2026-02-11", undefined],
+    ] as const) {
+      harness.host.putFile(`Journal/${anchor}.md`, "existing");
+      index.register({
+        journalName: "sprints",
+        anchor: anchor as AnchorString,
+        path: `Journal/${anchor}.md` as VaultPath,
+        ...(endDate !== undefined && { endDate: endDate as AnchorString }),
+      });
+    }
+
+    const notes = await api.existingNotes("sprints", { from: "2026-02-20", to: "2026-03-15" });
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-02-11"]);
+  });
+
+  it("returns every note the matched journals have written when no range is given", async () => {
+    const { api, index, harness } = await buildApi({
+      a: fixedJournal("a", { type: "day" }),
+      b: fixedJournal("b", { type: "day" }),
+    });
+    for (const [journalName, anchor] of [
+      ["a", "2020-01-01"],
+      ["a", "2026-08-18"],
+      ["b", "2026-08-18"],
+    ] as const) {
+      harness.host.putFile(`${journalName}/${anchor}.md`, "existing");
+      index.register({
+        journalName,
+        anchor: anchor as AnchorString,
+        path: `${journalName}/${anchor}.md` as VaultPath,
+      });
+    }
+
+    const notes = await api.existingNotes("a");
+
+    expect(notes.map((note) => `${note.journal}:${note.date}`)).toEqual(["a:2020-01-01", "a:2026-08-18"]);
+  });
+
+  it("omits an indexed note whose file is no longer in the vault", async () => {
+    const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    index.register({
+      journalName: "daily",
+      anchor: "2026-08-18" as AnchorString,
+      path: "Journal/vanished.md" as VaultPath,
+    });
+
+    await expect(api.existingNotes("daily")).resolves.toEqual([]);
+  });
+
+  it("returns nothing for a range inverted inside a single period", async () => {
+    const { api, index, harness } = await buildApi({ monthly: fixedJournal("monthly", { type: "month" }) });
+    harness.host.putFile("Journal/2026-01.md", "existing");
+    index.register({
+      journalName: "monthly",
+      anchor: "2026-01-01" as AnchorString,
+      path: "Journal/2026-01.md" as VaultPath,
+    });
+
+    await expect(api.existingNotes("monthly", { from: "2026-01-20", to: "2026-01-15" })).resolves.toEqual([]);
+  });
+
+  it("rejects a range bound existingNotes cannot read with invalid-date", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await expect(api.existingNotes("daily", { from: "whenever", to: "2026-08-19" })).rejects.toMatchObject({
+      code: "invalid-date",
+    });
+  });
+});
+
+describe("JournalsApiService notelet range reads", () => {
+  it("returns notelets from every period the window overlaps", async () => {
+    const { api, harness, index } = await buildApi({
+      weekly: fixedJournal("weekly", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    for (const anchor of ["2026-08-10", "2026-08-17"]) {
+      await seedNotelet(harness, index, {
+        journalName: "weekly",
+        anchor: anchor as AnchorString,
+        path: `Journal/Meeting ${anchor}.md` as VaultPath,
+        typeName: "Meeting",
+        typeId: "nt_meeting" as TypeId,
+        counter: 1,
+      });
+    }
+
+    const notelets = await api.noteletsInRange("weekly", { from: "2026-08-14", to: "2026-08-18" });
+
+    expect(notelets.map((notelet) => notelet.date)).toEqual(["2026-08-10", "2026-08-17"]);
+  });
+
+  it("orders notelets by journal before period", async () => {
+    const { api, harness, index } = await buildApi({
+      a: fixedJournal("a", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+      b: fixedJournal("b", { type: "week" }, { notelets: { nt_meeting: meeting } }),
+    });
+    for (const [journalName, anchor] of [
+      ["a", "2026-08-17"],
+      ["b", "2026-08-10"],
+    ] as const) {
+      await seedNotelet(harness, index, {
+        journalName,
+        anchor: anchor as AnchorString,
+        path: `Journal/${journalName} Meeting.md` as VaultPath,
+        typeName: "Meeting",
+        typeId: "nt_meeting" as TypeId,
+        counter: 1,
+      });
+    }
+
+    const notelets = await api.noteletsInRange({ writeType: "week" }, { from: "2026-08-10", to: "2026-08-23" });
+
+    expect(notelets.map((notelet) => `${notelet.journal}:${notelet.date}`)).toEqual(["a:2026-08-17", "b:2026-08-10"]);
+  });
+
+  it("filters by the stored type name, so a notelet whose type was deleted in keep mode still matches", async () => {
+    const { api, harness, index } = await buildApi({ weekly: fixedJournal("weekly", { type: "week" }) });
+    for (const typeName of ["Retired", "Kept"]) {
+      await seedNotelet(harness, index, {
+        journalName: "weekly",
+        anchor: "2026-08-17" as AnchorString,
+        path: `Journal/${typeName}.md` as VaultPath,
+        typeName,
+        typeId: null,
+      });
+    }
+
+    const notelets = await api.noteletsInRange("weekly", { from: "2026-08-17", to: "2026-08-23" }, { type: "Retired" });
+
+    expect(notelets.map((notelet) => notelet.type)).toEqual(["Retired"]);
   });
 });
 

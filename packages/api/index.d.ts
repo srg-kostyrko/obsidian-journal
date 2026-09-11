@@ -11,6 +11,12 @@ export interface DateLike {
 /** "YYYY-MM-DD", "today", a relative shift like "+1w" / "-3d", a Date, or a moment. */
 export type DateInput = Date | DateLike | string;
 
+/** A window of dates, inclusive of both ends. */
+export interface DateRange {
+  readonly from: DateInput;
+  readonly to: DateInput;
+}
+
 export type JournalWriteType = "day" | "week" | "month" | "quarter" | "year" | "custom";
 
 /**
@@ -155,11 +161,20 @@ export interface JournalsApi {
   journalInfo(name: string): Promise<JournalInfo | null>;
 
   notesFor(selector: JournalSelector, date: DateInput): Promise<readonly JournalNote[]>;
+  /** Every period the window overlaps, whether or not a note is there. One entry per period. */
+  notesInRange(selector: JournalSelector, range: DateRange): Promise<readonly JournalNote[]>;
+  /** Only the notes on disk. Omit the range for every note the matched journals have written. */
+  existingNotes(selector: JournalSelector, range?: DateRange): Promise<readonly ExistingJournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
   noteletOf(file: TFile): Promise<NoteletNote | null>;
   noteletsFor(
     selector: JournalSelector,
     date: DateInput,
+    options?: { readonly type?: string },
+  ): Promise<readonly NoteletNote[]>;
+  noteletsInRange(
+    selector: JournalSelector,
+    range: DateRange,
     options?: { readonly type?: string },
   ): Promise<readonly NoteletNote[]>;
   createNotelet(

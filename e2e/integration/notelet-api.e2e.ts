@@ -22,9 +22,20 @@ interface NoteletApi {
   listJournals(selector: string): Promise<{ name: string; notelets: readonly string[] }[]>;
   noteletOf(file: unknown): Promise<NoteletShape | null>;
   noteletsFor(selector: string, date: string, options?: { type?: string }): Promise<NoteletShape[]>;
+  noteletsInRange(
+    selector: string,
+    range: { from: string; to: string },
+    options?: { type?: string },
+  ): Promise<NoteletShape[]>;
   createNotelet(selector: string, date: string, type: string, options?: { openMode?: string }): Promise<NoteletShape>;
   openNotelet(notelet: NoteletShape): Promise<void>;
   on(event: string, handler: (payload: unknown) => void): () => void;
+}
+
+function shiftAnchor(anchor: string, days: number): string {
+  const shifted = new Date(`${anchor}T00:00:00`);
+  shifted.setDate(shifted.getDate() + days);
+  return `${shifted.getFullYear()}-${String(shifted.getMonth() + 1).padStart(2, "0")}-${String(shifted.getDate()).padStart(2, "0")}`;
 }
 
 // A notelet carries a TFile, which cannot cross the WebDriver wire — every assertion reads the
@@ -158,6 +169,24 @@ describe("plugin API — notelets", () => {
     expect(listed.all).toHaveLength(2);
     expect(listed.all).toContain("Meeting");
     expect(listed.all).toContain("Retro");
+    expect(listed.typed).toEqual(["Retro"]);
+  });
+
+  it("lists the same notelets through a window that spans the period", async () => {
+    const today = todayAnchor();
+    const listed = await browser.executeObsidian(
+      async ({ app }, range: { from: string; to: string }) => {
+        const api = (app as unknown as { plugins: { plugins: Record<string, { api: NoteletApi }> } }).plugins.plugins
+          .journals.api;
+        const all = await api.noteletsInRange("daily", range);
+        const typed = await api.noteletsInRange("daily", range, { type: "Retro" });
+        return { all: all.map((notelet) => notelet.type), typed: typed.map((notelet) => notelet.type) };
+      },
+      { from: shiftAnchor(today, -2), to: shiftAnchor(today, 2) },
+    );
+
+    expect(listed.all).toHaveLength(2);
+    expect(listed.all).toContain("Meeting");
     expect(listed.typed).toEqual(["Retro"]);
   });
 

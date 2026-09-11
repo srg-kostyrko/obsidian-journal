@@ -22,6 +22,12 @@ if (!journals) return; // Journals is not installed or not enabled
 // Journals allows several journals of the same kind, so reads fan out.
 const notes = await journals.notesFor({ writeType: "day" }, "today");
 
+// A whole window in one call, rather than one call per period. Each period appears once.
+const year = await journals.notesInRange("Daily", { from: "2026-01-01", to: "2026-12-31" });
+
+// Only the notes on disk; omit the range for every note the journal has written.
+const written = await journals.existingNotes("Daily");
+
 // Writes resolve to exactly one note, asking the user when a selector is ambiguous.
 const { note, created } = await journals.ensureNote({ writeType: "day" }, "today");
 ```

@@ -233,6 +233,19 @@ export class CycleService {
     );
   }
 
+  /** Whether the period at `anchor` is still open on `start`, for a window opening there. */
+  // An anchor at or after the window's start overlaps it by construction, so the stored end is
+  // read only for the leading run that opens before it. That run is where a custom interval the
+  // user pulled in can already have closed: anchorOf walks a custom cycle backwards past the gap
+  // a shortened interval leaves rather than into it, so it answers with the shortened interval
+  // for a date that now falls after it. Any read that widens a window's lower bound to the
+  // anchor holding it owes this check.
+  overlapsFrom(name: string, anchor: AnchorString, start: AnchorString): boolean {
+    if (anchor >= start) return true;
+    const closes = this.endOf(name, anchor);
+    return closes.isSome() && closes.value.toAnchor() >= start;
+  }
+
   intervalsInRange(name: string, start: AnchorString, end: AnchorString): readonly AnchorString[] {
     if (start > end) return [];
     const firstOpt = this.anchorOf(name, CalendarDate.fromAnchor(start));
@@ -240,7 +253,7 @@ export class CycleService {
     const out: AnchorString[] = [];
     let current = firstOpt.value;
     while (current <= end) {
-      out.push(current);
+      if (this.overlapsFrom(name, current, start)) out.push(current);
       const nextOpt = this.nextAnchor(name, current);
       if (nextOpt.isNone() || nextOpt.value <= current) break;
       current = nextOpt.value;
