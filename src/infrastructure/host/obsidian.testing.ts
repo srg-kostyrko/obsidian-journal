@@ -27,7 +27,9 @@ export class TFolder extends TAbstractFile {
 }
 
 export class Notice {
-  constructor(public message: string | DocumentFragment) {}
+  constructor(public message: string | DocumentFragment) {
+    shownNotices.push(this);
+  }
   setMessage(message: string | DocumentFragment): this {
     this.message = message;
     return this;
@@ -445,6 +447,7 @@ const attachedInputSuggests: AbstractInputSuggest<unknown>[] = [];
 const openModals: Modal[] = [];
 const openSuggestModals: SuggestModal<unknown>[] = [];
 const openMenus: Menu[] = [];
+const shownNotices: Notice[] = [];
 
 export const __testing = {
   get openModals(): readonly Modal[] {
@@ -479,6 +482,14 @@ export const __testing = {
     if (!last) throw new Error("__testing.lastOpenMenu() called before any menu opened");
     return last;
   },
+  get shownNotices(): readonly Notice[] {
+    return shownNotices;
+  },
+  lastShownNotice(): Notice {
+    const last = shownNotices.at(-1);
+    if (!last) throw new Error("__testing.lastShownNotice() called before any notice shown");
+    return last;
+  },
   reset(): void {
     for (const m of [...openModals]) m.close();
     openModals.length = 0;
@@ -488,6 +499,8 @@ export const __testing = {
     attachedInputSuggests.length = 0;
     for (const m of [...openMenus]) m.hide();
     openMenus.length = 0;
+    // Notices dismiss themselves; nothing holds one, so clearing the log is the whole reset.
+    shownNotices.length = 0;
   },
   seedIcons(names: readonly string[]): void {
     for (const name of names) iconIds.add(name);

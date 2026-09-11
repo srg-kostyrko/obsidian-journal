@@ -27,6 +27,12 @@ declare module "obsidian" {
     pick(index: number): Promise<void>;
   }
 
+  // The real Notice renders into `messageEl`; the fake keeps the raw argument so a test can
+  // assert what was shown without a DOM round-trip.
+  interface Notice {
+    readonly message: string | DocumentFragment;
+  }
+
   interface Plugin {
     readonly settingTabs: PluginSettingTab[];
     readonly protocolHandlers: Map<string, (parameters: Record<string, string>) => unknown>;
