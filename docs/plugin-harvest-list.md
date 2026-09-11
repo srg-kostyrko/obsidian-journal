@@ -184,12 +184,13 @@ Found with `gh api "search/code?q=getPlugin%28%27journals%27%29"` and the same f
 `obsidian-journals-api`. Re-run both when this section is refreshed; code search
 matches only default branches and misses minified builds.
 
-| Plugin                                 |  Installs | How it reaches us                                                                     | State                     |
-| -------------------------------------- | --------: | ------------------------------------------------------------------------------------- | ------------------------- |
-| `mirnovov/obsidian-homepage`           | 1,322,113 | `obsidian-journals-api` in `src/periodic.ts`                                          | supported path            |
-| `Full Calendar Remastered`             |    41,898 | `obsidian-journals-api`, `src/providers/journals/JournalsBridge.ts` with tests        | supported path — see #380 |
-| `szuc/obsidian-life-in-weeks-calendar` |     1,734 | `plugin.journals`, `plugin.calendarSettings` — 2.x internals                          | **broken since 3.0.0**    |
-| `parkisutama/obsidian-wise-view`       |  unlisted | `plugin.journals`, `journal.get(date)` — 2.x internals, commented as "the public API" | **broken since 3.0.0**    |
+| Plugin                                          |  Installs | How it reaches us                                                                                                                                                 | State                                      |
+| ----------------------------------------------- | --------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| `mirnovov/obsidian-homepage`                    | 1,322,113 | `obsidian-journals-api` in `src/periodic.ts`                                                                                                                      | supported path                             |
+| `Full Calendar Remastered`                      |    41,898 | `obsidian-journals-api`, `src/providers/journals/JournalsBridge.ts` with tests                                                                                    | supported path — see #380                  |
+| `szuc/obsidian-life-in-weeks-calendar`          |     1,734 | `plugin.journals`, `plugin.calendarSettings` — 2.x internals                                                                                                      | **broken since 3.0.0**                     |
+| `parkisutama/obsidian-wise-view`                |  unlisted | `plugin.journals`, `journal.get(date)` — 2.x internals, commented as "the public API"                                                                             | **broken since 3.0.0**                     |
+| `asefhossainkhan/journals-aware-rollover-todos` |        68 | Raw frontmatter — hardcoded `journal-date`, a regex YAML parser, a whole-vault walk, and a 6s poll for readiness. No dependency on `obsidian-journals-api` at all | **works, on no supported seam** — see #347 |
 
 **The pattern, and it cost two integrations.** 2.x exposed most of the plugin as
 public getters, so integrating meant reading `plugin.journals` and reconstructing
