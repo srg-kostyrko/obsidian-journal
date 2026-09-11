@@ -306,6 +306,79 @@ describe("CycleService", () => {
 
       expect(previous.isSome() && previous.value).toBe("2025-01-31");
     });
+
+    // Shortening an interval leaves the days between its new end and the next anchor to a
+    // projected interval starting at endDate + 1, which #customNext creates and nothing
+    // registers. Stepping back by a whole duration lands on the shortened interval instead
+    // and skips that projected one — the nav block's previous arrow jumping two periods.
+    it("lands on the interval a shortening created rather than skipping it", async () => {
+      const { resolve } = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { s: customJournal("s", "month", 1, "2026-01-01") } },
+      });
+      resolve(JournalsIndex).register({
+        journalName: "s",
+        anchor: anchor("2026-02-01"),
+        path: "S/feb.md" as VaultPath,
+        endDate: anchor("2026-02-10"),
+      });
+
+      const previous = resolve(CycleService).previousAnchor("s", anchor("2026-03-01"));
+
+      expect(previous.isSome() && previous.value).toBe("2026-02-11");
+    });
+
+    it("steps back through two shortenings inside one duration", async () => {
+      const { resolve } = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { s: customJournal("s", "month", 1, "2026-01-01") } },
+      });
+      const index = resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: anchor("2026-02-01"),
+        path: "S/a.md" as VaultPath,
+        endDate: anchor("2026-02-05"),
+      });
+      index.register({
+        journalName: "s",
+        anchor: anchor("2026-02-06"),
+        path: "S/b.md" as VaultPath,
+        endDate: anchor("2026-02-10"),
+      });
+      const cycle = resolve(CycleService);
+
+      expect(unwrap(cycle.previousAnchor("s", anchor("2026-03-01")))).toBe("2026-02-11");
+      expect(unwrap(cycle.previousAnchor("s", anchor("2026-02-11")))).toBe("2026-02-06");
+      expect(unwrap(cycle.previousAnchor("s", anchor("2026-02-06")))).toBe("2026-02-01");
+    });
+
+    it("undoes nextAnchor across a grid carrying both a shortening and an extension", async () => {
+      const { resolve } = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { s: customJournal("s", "month", 1, "2026-01-01") } },
+      });
+      const index = resolve(JournalsIndex);
+      index.register({
+        journalName: "s",
+        anchor: anchor("2026-02-01"),
+        path: "S/short.md" as VaultPath,
+        endDate: anchor("2026-02-10"),
+      });
+      index.register({
+        journalName: "s",
+        anchor: anchor("2026-03-01"),
+        path: "S/long.md" as VaultPath,
+        endDate: anchor("2026-04-20"),
+      });
+      const cycle = resolve(CycleService);
+
+      const grid = cycle.intervalsInRange("s", anchor("2026-01-01"), anchor("2026-05-01"));
+      for (const a of grid) {
+        const next = unwrap(cycle.nextAnchor("s", a));
+        expect(unwrap(cycle.previousAnchor("s", next))).toBe(a);
+      }
+    });
   });
 
   describe("startOf and endOf", () => {
@@ -422,6 +495,26 @@ describe("CycleService", () => {
       const result = resolve(CycleService).anchorOf("s", date("2024-01-05"));
 
       expect(result.isSome() && result.value).toBe("2023-12-18");
+    });
+
+    // The backward walk reaches this one too: the interval a shortening created sits between
+    // the shortened interval and the configured anchor, so a date inside it is only reachable
+    // if stepping back finds it rather than stepping over it.
+    it("anchorOf maps a date after a shortened interval that precedes the configured anchor", async () => {
+      const { resolve } = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { s: customJournal("s", "month", 1, "2026-03-01") } },
+      });
+      resolve(JournalsIndex).register({
+        journalName: "s",
+        anchor: anchor("2026-02-01"),
+        path: "S/feb.md" as VaultPath,
+        endDate: anchor("2026-02-10"),
+      });
+
+      const result = resolve(CycleService).anchorOf("s", date("2026-02-20"));
+
+      expect(result.isSome() && result.value).toBe("2026-02-11");
     });
   });
 
