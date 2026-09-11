@@ -2,9 +2,9 @@ import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 
-import PeriodButtonsItemConfig from "./ui/PeriodButtonsItemConfig.vue";
+import PeriodButtonsItemConfig from "./PeriodButtonsItemConfig.vue";
 
-import type { PeriodButtonsConfig, PeriodButtonsConfigChange } from "./period-buttons-item";
+import type { PeriodButtonsConfig, PeriodButtonsConfigChange } from "../period-buttons-item";
 
 function mountConfig(config: PeriodButtonsConfig, onChange: PeriodButtonsConfigChange) {
   return render(PeriodButtonsItemConfig, { props: { config, onChange } });

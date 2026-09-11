@@ -4,9 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { testContainer } from "@/testing";
 
-import MonthCalendarBlockConfig from "./ui/MonthCalendarBlockConfig.vue";
+import MonthCalendarBlockConfig from "./MonthCalendarBlockConfig.vue";
 
-import type { MonthCalendarConfig, MonthCalendarConfigChange } from "./month-calendar-block";
+import type { MonthCalendarConfig, MonthCalendarConfigChange } from "../month-calendar-block";
 
 async function mountConfig(config: MonthCalendarConfig, onChange: MonthCalendarConfigChange) {
   const harness = await testContainer();

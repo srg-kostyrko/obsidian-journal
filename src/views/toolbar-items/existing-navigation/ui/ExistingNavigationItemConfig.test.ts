@@ -5,10 +5,11 @@ import { describe, expect, it, vi } from "vitest";
 import { m } from "@/i18n";
 import { testContainer } from "@/testing";
 
-import { existingNavigationConfigFor } from "./existing-navigation-config";
-import ExistingNavigationItemConfig from "./ui/ExistingNavigationItemConfig.vue";
+import { existingNavigationConfigFor } from "../existing-navigation-config";
 
-import type { ExistingNavigationConfig, ExistingNavigationConfigChange } from "./existing-navigation-config";
+import ExistingNavigationItemConfig from "./ExistingNavigationItemConfig.vue";
+
+import type { ExistingNavigationConfig, ExistingNavigationConfigChange } from "../existing-navigation-config";
 
 async function mountConfig(config: ExistingNavigationConfig, onChange: ExistingNavigationConfigChange) {
   const harness = await testContainer();

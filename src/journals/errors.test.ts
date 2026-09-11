@@ -7,7 +7,7 @@ import {
   UnknownJournalError,
   UnknownSequenceSourceError,
   toFlowError,
-} from "@/journals/errors";
+} from "./errors";
 
 describe("InvalidJournalNameError", () => {
   it("has kind 'invalid-name'", () => {

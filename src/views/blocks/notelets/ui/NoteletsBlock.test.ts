@@ -16,15 +16,15 @@ import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
-import { viewsCoreModule } from "../../module";
-import { provideViewContextStub } from "../../testing";
-import { provideViewContext, type ViewContext } from "../../view-context";
-import { resolveWindow } from "../custom-intervals/window-resolution";
+import { viewsCoreModule } from "../../../module";
+import { provideViewContextStub } from "../../../testing";
+import { provideViewContext, type ViewContext } from "../../../view-context";
+import { resolveWindow } from "../../custom-intervals/window-resolution";
+import { noteletsBlock, type NoteletsBlockConfig } from "../notelets-block";
 
-import { noteletsBlock, type NoteletsBlockConfig } from "./notelets-block";
-import NoteletsBlock from "./ui/NoteletsBlock.vue";
+import NoteletsBlock from "./NoteletsBlock.vue";
 
-import type { BlockInstanceId } from "../../config";
+import type { BlockInstanceId } from "../../../config";
 
 const BLOCK_ID = "44444444-4444-4444-8444-444444444444" as BlockInstanceId;
 const DAY = "2026-08-12" as AnchorString;
