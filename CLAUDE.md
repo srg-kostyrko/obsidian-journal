@@ -402,10 +402,12 @@ on it.
   records that any more: the manual checklist that used to list them was
   retired on 2026-09-11 because it had become a committed ledger of one v3-era
   pass rather than a procedure anyone re-ran. Its item text is in git history.
-  Treat a report in one of these as expected rather than as a regression, and
-  don't assume a green suite says anything about them. Clock-dependent surfaces
-  are a sixth such area, covered by the `useToday()` bullet under **Vue and
-  reactivity**.
+  Don't read the absence of coverage either way. A green suite is not evidence
+  that these work, so it cannot discount a report; and a defect found in one is
+  an ordinary defect, subject to the standing rules above — not a deliberate
+  non-bug, and not necessarily a regression a bisect will locate. Expect to
+  reproduce it by hand. Clock-dependent surfaces are a sixth such area, covered
+  by the `useToday()` bullet under **Vue and reactivity**.
   - **Mobile.** `isDesktopOnly: false` has been the manifest's value since v1,
     so mobile is a supported target; it is spot-checked on a tablet when a
     report warrants it, never in CI. The harness cannot help — see the
