@@ -108,6 +108,16 @@ Known blind spots in both passes: descriptions and topics only, never READMEs;
 English vocabulary, so CJK-described plugins never surface; repository search
 truncates at the top 100 per query.
 
+And one the two vocabularies cannot fix, found on 2026-09-11. A **platform-shaped**
+category is invisible to a subject-vocabulary filter: "bases" is neither a time word
+nor a measurement word, so requiring both can only ever catch the Bases plugins that
+also describe a subject we search for. The registry holds roughly **110** of them; the
+list tracked seven. Enumerate such a category by its platform term alone
+(`name + description` on "bases", or `registerBasesView` in code search) and classify
+the result, rather than expecting the standing filter to reach it. The same applies to
+any future host API that spawns a plugin category — the shape to watch for is a word
+that names a _mechanism_ rather than a _subject_.
+
 ## Surfaces we do not have
 
 The highest-value table. Each row is a capability with no equivalent here and, in
