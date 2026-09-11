@@ -371,9 +371,10 @@ is most of what nightly buys.
 ### Known limitation — desktop only
 
 `manifest.json` sets `isDesktopOnly: false`, but Electron-based e2e only ever
-exercises **desktop**. No e2e test validates mobile. Mobile stays covered by unit
-tests + the manual testing checklist. A green e2e suite does **not** imply mobile
-works.
+exercises **desktop**. No e2e test validates mobile, and no manual pass does
+either — it is spot-checked on a tablet when a report warrants it. Beyond what
+unit tests reach, mobile is unverified, and a green e2e suite says **nothing**
+about it.
 
 ## Roadmap
 

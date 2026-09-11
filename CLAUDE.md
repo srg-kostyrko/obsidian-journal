@@ -16,7 +16,6 @@ restate it.
 | [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)         | the e2e layer — runner, fixtures, selectors, execution model                                     |
 | [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces    |
 | [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                     |
-| [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md) | the manual verification pass                                                                     |
 | [`docs/plugin-harvest-list.md`](docs/plugin-harvest-list.md)           | the standing queue of plugins to mine for ideas, and what has already been ruled out             |
 | [`.claude/skills/release/SKILL.md`](.claude/skills/release/SKILL.md)   | how a version reaches the community store, and the post-release sweep that follows               |
 | [`docs/plugin-api.md`](docs/plugin-api.md)                             | the plugin-facing API — its surface, stability policy, and the npm package                       |
@@ -65,10 +64,9 @@ Project-wide decisions with no other home. They decide what counts as a bug.
   what they lost. Check the claim against the v2 source at the `2.1.10` tag
   before answering, and treat a real gap as a defect unless it appears under
   "Deliberate non-bugs" below. One deviation _was_ opted into: the v1 → v2
-  migration runs non-interactively in v3, recorded in the migration section of
-  [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md).
-  Settled decisions that merely _read_ as regressions are under "Deliberate
-  non-bugs" below; none of those is a dropped v2 feature.
+  migration runs **non-interactively** in v3, where v2 prompted — confirm it,
+  don't file it. Settled decisions that merely _read_ as regressions are under
+  "Deliberate non-bugs" below; none of those is a dropped v2 feature.
 - **Content we write into a note must be reconstructible from that note.** The
   vault syncs; `data.json` does not. So wherever plugin-private state is the
   authority and the note is a render target, two devices hold two truths and each
@@ -400,6 +398,35 @@ on it.
   stable Obsidian it lands in `enabledPlugins` but never instantiates:
   `getPlugin("templater-obsidian")` returns null and `<% %>` passes through
   literally with nothing failing loudly.
+- Five areas have **no automated coverage of any kind**, and nothing else
+  records that any more: the manual checklist that used to list them was
+  retired on 2026-09-11 because it had become a committed ledger of one v3-era
+  pass rather than a procedure anyone re-ran. Its item text is in git history.
+  Don't read the absence of coverage either way. A green suite is not evidence
+  that these work, so it cannot discount a report; and a defect found in one is
+  an ordinary defect, subject to the standing rules above — not a deliberate
+  non-bug, and not necessarily a regression a bisect will locate. Expect to
+  reproduce it by hand. Clock-dependent surfaces are a sixth such area, covered
+  by the `useToday()` bullet under **Vue and reactivity**.
+  - **Mobile.** `isDesktopOnly: false` has been the manifest's value since v1,
+    so mobile is a supported target; it is spot-checked on a tablet when a
+    report warrants it, never in CI. The harness cannot help — see the
+    `emulateMobile` bullet above.
+  - **UI language.** The suite covers the calendar locale only; nothing
+    switches Obsidian's own language at runtime. The fallback itself is ours
+    and _is_ tested — `matchLocale` (`src/i18n/init-locale.ts`) covers the
+    region-strip and unknown-tag cases, and `initLocale("de")` drives real
+    assertions in `button-item.test.ts`. What is unverified is the boot wiring
+    (`main.ts` handing `getLanguage()` through) and whether a translated string
+    fits a control sized for English.
+  - **Large-vault paint cost.** No perf spec and no budget, at any layer.
+  - **Migration from a real vault.** `e2e/fixtures/e2e-legacy-v1` runs the whole
+    v1→v5 chain, but nothing enters that chain part-way from a vault someone
+    actually used.
+  - **Anything whose pass condition is "a human looked at it"** — theme
+    legibility light and dark, focus rings, translated strings overflowing their
+    controls. Two known-open items live here: calendar cells are focusable with
+    no visible ring, and view-editor block and toolbar controls are hover-only.
 
 ### UI conventions
 
@@ -587,10 +614,10 @@ the maintainer's opt-in.
   "wrong side" is a stale `workspace.json`; check where the leaf sits in the
   workspace tree before touching the view host.
 - The seeded default Calendar view's missing ribbon icon is deliberate — see
-  `src/views/default-view.ts` and the first-run step in
-  [`docs/manual-testing-checklist.md`](docs/manual-testing-checklist.md).
-  Fixtures with no persisted `views` key get that seed, so an e2e must open the
-  view by command; a ribbon click works only on a fixture that pins it on.
+  `src/views/default-view.ts`. It matches v2, which exposed the calendar by
+  command only. Fixtures with no persisted `views` key get that seed, so an e2e
+  must open the view by command; a ribbon click works only on a fixture that
+  pins it on.
 - No `SelfWriteGuard` e2e exists. Against real Obsidian, guard-on and guard-off
   converge to byte-identical frontmatter; the only divergent case is a
   non-deterministic race, so the test would be a tautology or a flake. Unit
