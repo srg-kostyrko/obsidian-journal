@@ -21,7 +21,7 @@ const props = defineProps<{
   disabled?: boolean;
 }>();
 
-const modelValue = defineModel<Period | null>();
+const modelValue = defineModel<Period | null>({ default: null });
 
 const modalService = useService(ModalService);
 
@@ -45,7 +45,7 @@ async function open(): Promise<void> {
   const result = await modalService.open(datePickerModal, {
     picking: props.picking,
     bounds: props.bounds,
-    selected: toRaw(modelValue.value) ?? null,
+    selected: toRaw(modelValue.value),
   });
   result.tap((period) => {
     modelValue.value = period;

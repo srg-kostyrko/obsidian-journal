@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { waitFor } from "@testing-library/vue";
+import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
@@ -42,55 +42,55 @@ async function setup(blocks: View["blocks"]) {
 
 describe("BlocksList", () => {
   it("shows the empty state when the view has no blocks", async () => {
-    const { getByText } = await setup([]);
-    expect(getByText(m.view_edit_blocks_empty())).toBeTruthy();
+    await setup([]);
+    expect(screen.getByText(m.view_edit_blocks_empty())).toBeTruthy();
   });
 
   it("renders the definition label for known block keys", async () => {
-    const { getByText } = await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
-    expect(getByText(m.view_block_divider_label())).toBeTruthy();
+    await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
+    expect(screen.getByText(m.view_block_divider_label())).toBeTruthy();
   });
 
   it("renders an unknown-key fallback label", async () => {
-    const { getByText } = await setup([{ id: BLOCK_A, key: "not-a-real-block", config: {} }]);
-    expect(getByText(m.view_block_unknown_label({ key: "not-a-real-block" }))).toBeTruthy();
+    await setup([{ id: BLOCK_A, key: "not-a-real-block", config: {} }]);
+    expect(screen.getByText(m.view_block_unknown_label({ key: "not-a-real-block" }))).toBeTruthy();
   });
 
   it("removes a block when the remove button is clicked", async () => {
-    const { harness, getByLabelText } = await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
-    await userEvent.click(getByLabelText(m.view_block_remove()));
+    const { harness } = await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
+    await userEvent.click(screen.getByLabelText(m.view_block_remove()));
     const repo = harness.resolve(ViewsRepository);
     expect(repo.get(VIEW_ID).getOr(undefined as never)?.blocks).toEqual([]);
   });
 
   it("renders a ToolbarStrip when a block's key is 'toolbar'", async () => {
-    const { getByText } = await setup([{ id: BLOCK_A, key: "toolbar", config: { items: [] } }]);
-    expect(getByText(m.view_toolbar_item_empty())).toBeTruthy();
+    await setup([{ id: BLOCK_A, key: "toolbar", config: { items: [] } }]);
+    expect(screen.getByText(m.view_toolbar_item_empty())).toBeTruthy();
   });
 
   it("renders a block's config summary", async () => {
-    const { getByText } = await setup([
+    await setup([
       { id: BLOCK_A, key: "toolbar", config: { items: [{ id: ITEM_A, key: "shelf-selector", config: {} }] } },
     ]);
-    expect(getByText(m.view_block_toolbar_item_count({ count: 1 }))).toBeTruthy();
+    expect(screen.getByText(m.view_block_toolbar_item_count({ count: 1 }))).toBeTruthy();
   });
 
   describe("editing a block's config", () => {
     const weekConfig = { before: 0, after: 0, hiddenWeekdays: [], weeks: "left", showHeading: true };
 
     it("offers an edit button for blocks whose definition has a config editor", async () => {
-      const { getByLabelText } = await setup([{ id: BLOCK_A, key: "week-calendar", config: weekConfig }]);
-      expect(getByLabelText(m.view_block_edit())).toBeTruthy();
+      await setup([{ id: BLOCK_A, key: "week-calendar", config: weekConfig }]);
+      expect(screen.getByLabelText(m.view_block_edit())).toBeTruthy();
     });
 
     it("offers no edit button for blocks without a config editor", async () => {
-      const { queryByLabelText } = await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
-      expect(queryByLabelText(m.view_block_edit())).toBeNull();
+      await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
+      expect(screen.queryByLabelText(m.view_block_edit())).toBeNull();
     });
 
     it("persists the edited config when the edit modal is saved", async () => {
-      const { harness, getByLabelText } = await setup([{ id: BLOCK_A, key: "week-calendar", config: weekConfig }]);
-      await userEvent.click(getByLabelText(m.view_block_edit()));
+      const { harness } = await setup([{ id: BLOCK_A, key: "week-calendar", config: weekConfig }]);
+      await userEvent.click(screen.getByLabelText(m.view_block_edit()));
       harness.modals.lastOpen<unknown, Record<string, unknown>>().submit({ ...weekConfig, weeks: "right" });
       const repo = harness.resolve(ViewsRepository);
       await waitFor(() => {

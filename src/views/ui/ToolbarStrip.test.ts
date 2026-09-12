@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { waitFor } from "@testing-library/vue";
+import { screen, waitFor } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 
@@ -61,12 +61,12 @@ async function setup(items: { id: BlockInstanceId; key: string; config: Record<s
 
 describe("ToolbarStrip", () => {
   it("shows the empty state when the toolbar has no items", async () => {
-    const { getByText } = await setup([]);
-    expect(getByText(m.view_toolbar_item_empty())).toBeTruthy();
+    await setup([]);
+    expect(screen.getByText(m.view_toolbar_item_empty())).toBeTruthy();
   });
 
   it("renders a frame per toolbar item", async () => {
-    const { getAllByLabelText } = await setup([
+    await setup([
       { id: ITEM_A, key: "shelf-selector", config: {} },
       {
         id: "44444444-4444-4444-8444-444444444444" as BlockInstanceId,
@@ -74,29 +74,29 @@ describe("ToolbarStrip", () => {
         config: buttonItem.defaultConfig(),
       },
     ]);
-    expect(getAllByLabelText(m.view_toolbar_item_remove())).toHaveLength(2);
+    expect(screen.getAllByLabelText(m.view_toolbar_item_remove())).toHaveLength(2);
   });
 
   it("removes an item when its delete button is clicked", async () => {
-    const { harness, getByLabelText } = await setup([{ id: ITEM_A, key: "shelf-selector", config: {} }]);
-    await userEvent.click(getByLabelText(m.view_toolbar_item_remove()));
+    const { harness } = await setup([{ id: ITEM_A, key: "shelf-selector", config: {} }]);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_remove()));
     const repo = harness.resolve(ViewsRepository);
     const items = (repo.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: unknown[] }).items;
     expect(items).toEqual([]);
   });
 
   it("invokes AddToolbarItemToBlockFlow when Add is clicked", async () => {
-    const { harness, getByLabelText } = await setup([]);
+    const { harness } = await setup([]);
     const flows = harness.resolve(Flows);
     const spy = vi.spyOn(flows, "invoke").mockReturnValue({ tap: () => undefined } as never);
-    await userEvent.click(getByLabelText(m.view_add_toolbar_item()));
+    await userEvent.click(screen.getByLabelText(m.view_add_toolbar_item()));
     expect(spy).toHaveBeenCalledWith(AddToolbarItemToBlockFlow, { viewId: VIEW_ID, blockId: BLOCK_ID });
   });
 
   it("titles the edit modal by qualifying the item type with its config-specific summary", async () => {
     const config = buttonConfigFor({ type: "pick-date", mode: "navigate", levels: ["day"] });
-    const { harness, getByLabelText } = await setup([{ id: ITEM_A, key: "button", config }]);
-    await userEvent.click(getByLabelText(m.view_toolbar_item_edit()));
+    const { harness } = await setup([{ id: ITEM_A, key: "button", config }]);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
     expect(harness.modals.lastOpen().resolvedTitle).toBe(
       m.view_toolbar_item_edit_title_detail({ type: buttonItem.label(), detail: m.common_pick_a_date() }),
     );
@@ -104,8 +104,8 @@ describe("ToolbarStrip", () => {
 
   it("titles the edit modal with just the item type when it has no summary", async () => {
     const config = existingNavigationItem.defaultConfig();
-    const { harness, getByLabelText } = await setup([{ id: ITEM_A, key: "existing-navigation", config }]);
-    await userEvent.click(getByLabelText(m.view_toolbar_item_edit()));
+    const { harness } = await setup([{ id: ITEM_A, key: "existing-navigation", config }]);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
     expect(harness.modals.lastOpen().resolvedTitle).toBe(
       m.view_toolbar_item_edit_title({ type: existingNavigationItem.label() }),
     );
@@ -113,8 +113,8 @@ describe("ToolbarStrip", () => {
 
   it("persists the edited config when the edit modal is saved", async () => {
     const config = { ...buttonConfigFor({ type: "current", mode: "create", levels: ["day"] }), label: "A" };
-    const { harness, getByLabelText } = await setup([{ id: ITEM_A, key: "button", config }]);
-    await userEvent.click(getByLabelText(m.view_toolbar_item_edit()));
+    const { harness } = await setup([{ id: ITEM_A, key: "button", config }]);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
     harness.modals.lastOpen<unknown, Record<string, unknown>>().submit({ ...config, label: "B" });
     const repo = harness.resolve(ViewsRepository);
     await waitFor(() => {

@@ -43,6 +43,17 @@ function numberingOf(harness: TestHarness): JournalConfig["numbering"] | undefin
   return harness.resolve(JournalsRepository).get("daily").getOrUndefined()?.numbering;
 }
 
+async function renderWithDigits(variables: readonly string[]): Promise<TestHarness> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: {
+      journals: { daily: fixedJournal("daily", { type: "day" }, { numbering: enabledNumbering(variables) }) },
+    },
+  });
+  harness.render(SequenceSection, { props: { journalName: "daily" } });
+  return harness;
+}
+
 describe("SequenceSection", () => {
   describe("sequence toggle", () => {
     it("materializes the default source when sequential numbers is toggled on", async () => {
@@ -213,19 +224,8 @@ describe("SequenceSection", () => {
     });
 
     describe("with a single digit", () => {
-      let harness: TestHarness;
-
-      beforeEach(async () => {
-        harness = await testContainer({
-          modules: [journalsCoreModule],
-          data: {
-            journals: { daily: fixedJournal("daily", { type: "day" }, { numbering: enabledNumbering(["index"]) }) },
-          },
-        });
-        harness.render(SequenceSection, { props: { journalName: "daily" } });
-      });
-
       it("invokes the digit flow with no index when adding", async () => {
+        const harness = await renderWithDigits(["index"]);
         const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
         await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
@@ -235,6 +235,7 @@ describe("SequenceSection", () => {
       });
 
       it("does not offer to delete the only remaining digit", async () => {
+        await renderWithDigits(["index"]);
         await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
         expect(screen.queryByLabelText(m.journal_sequence_digit_delete())).toBeNull();
@@ -242,21 +243,8 @@ describe("SequenceSection", () => {
     });
 
     describe("with two digits", () => {
-      let harness: TestHarness;
-
-      beforeEach(async () => {
-        harness = await testContainer({
-          modules: [journalsCoreModule],
-          data: {
-            journals: {
-              daily: fixedJournal("daily", { type: "day" }, { numbering: enabledNumbering(["release", "sprint"]) }),
-            },
-          },
-        });
-        harness.render(SequenceSection, { props: { journalName: "daily" } });
-      });
-
       it("invokes the digit flow with the row index when editing", async () => {
+        const harness = await renderWithDigits(["release", "sprint"]);
         const invoke = vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue(AsyncResult.ok(undefined));
         await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
@@ -266,6 +254,7 @@ describe("SequenceSection", () => {
       });
 
       it("removes the digit at the clicked row", async () => {
+        const harness = await renderWithDigits(["release", "sprint"]);
         await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
         await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[1]);
@@ -276,6 +265,7 @@ describe("SequenceSection", () => {
       });
 
       it("promotes the next digit to index 0 when the top digit is deleted", async () => {
+        const harness = await renderWithDigits(["release", "sprint"]);
         await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
 
         await userEvent.click(screen.getAllByLabelText(m.journal_sequence_digit_delete())[0]);

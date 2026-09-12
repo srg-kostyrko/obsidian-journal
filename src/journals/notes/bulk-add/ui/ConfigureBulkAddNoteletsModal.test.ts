@@ -77,7 +77,7 @@ describe("ConfigureBulkAddNoteletsModal", () => {
     await userEvent.type(screen.getByRole("textbox", { name: m.bulk_add_folder_label() }), "Typo");
     await userEvent.click(screen.getByText(m.bulk_add_next()));
 
-    await waitFor(() => expect(screen.getByText(m.bulk_add_folder_not_found())).toBeTruthy());
+    expect(await screen.findByText(m.bulk_add_folder_not_found())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 

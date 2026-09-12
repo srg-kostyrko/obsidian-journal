@@ -93,7 +93,7 @@ describe("EditDecorationModal", () => {
         },
       });
       await userEvent.click(screen.getByText(m.common_action_submit()));
-      await waitFor(() => expect(screen.getByText(m.journal_property_name_required())).toBeTruthy());
+      expect(await screen.findByText(m.journal_property_name_required())).toBeTruthy();
       expect(submit).not.toHaveBeenCalled();
     });
   });

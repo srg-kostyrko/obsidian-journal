@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 import { JournalsRepository } from "@/journals";
@@ -20,6 +20,25 @@ async function renderWithDeviceRule(devices: string): Promise<void> {
     data: {
       journals: { daily: fixedJournal("daily", { type: "day" }, { autoCreate: true }) },
       noteCreation: { devices },
+    },
+  });
+  harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+}
+
+async function renderDefaultTemplate(): Promise<TestHarness> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+  });
+  harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+  return harness;
+}
+
+async function renderUnknownVariable(): Promise<void> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: {
+      journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date}}-{{mystery}}" }) },
     },
   });
   harness.render(NoteCreationSection, { props: { journalName: "daily" } });
@@ -85,17 +104,8 @@ describe("NoteCreationSection", () => {
     });
 
     describe("on the default date template", () => {
-      let harness: TestHarness;
-
-      beforeEach(async () => {
-        harness = await testContainer({
-          modules: [journalsCoreModule],
-          data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-        });
-        harness.render(NoteCreationSection, { props: { journalName: "daily" } });
-      });
-
       it("persists edits to the journal config", async () => {
+        const harness = await renderDefaultTemplate();
         const input = screen.getByDisplayValue("{{date}}");
 
         await userEvent.clear(input);
@@ -104,11 +114,14 @@ describe("NoteCreationSection", () => {
         expect(configOf(harness)?.nameTemplate).toBe("daily-note");
       });
 
-      it("does not warn about collisions for the default date template", () => {
+      it("does not warn about collisions for the default date template", async () => {
+        await renderDefaultTemplate();
+
         expect(screen.queryByText(/resolve to/)).toBeNull();
       });
 
       it("live-renders the note path preview as nameTemplate changes", async () => {
+        const harness = await renderDefaultTemplate();
         const input = screen.getByDisplayValue("{{date}}");
 
         await userEvent.clear(input);
@@ -124,17 +137,9 @@ describe("NoteCreationSection", () => {
     });
 
     describe("on a template with an unknown variable", () => {
-      beforeEach(async () => {
-        const harness = await testContainer({
-          modules: [journalsCoreModule],
-          data: {
-            journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date}}-{{mystery}}" }) },
-          },
-        });
-        harness.render(NoteCreationSection, { props: { journalName: "daily" } });
-      });
+      it("shows the invertibility warning for non-invertible templates", async () => {
+        await renderUnknownVariable();
 
-      it("shows the invertibility warning for non-invertible templates", () => {
         expect(
           screen.getByText(
             m.journal_edit_name_template_invertibility_warning({
@@ -145,11 +150,15 @@ describe("NoteCreationSection", () => {
         ).toBeTruthy();
       });
 
-      it("names the offending variable in the invertibility warning", () => {
+      it("names the offending variable in the invertibility warning", async () => {
+        await renderUnknownVariable();
+
         expect(screen.getByText(/"mystery"/)).toBeTruthy();
       });
 
-      it("keeps the internal reason code out of the invertibility warning", () => {
+      it("keeps the internal reason code out of the invertibility warning", async () => {
+        await renderUnknownVariable();
+
         // Asserting against m.*() with the same arguments the component passes cannot catch a
         // message that renders the reason union verbatim — it passes for any message body. This
         // reads the rendered text instead, and stays true through copy edits.

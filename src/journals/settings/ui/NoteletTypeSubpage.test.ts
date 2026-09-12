@@ -166,7 +166,7 @@ describe("NoteletTypeSubpage", () => {
       notelets: { nt_7f3a: buildNoteletType({ id: "nt_7f3a" as TypeId, name: "Retro" }) },
     });
 
-    await waitFor(() => expect(screen.getByText("Retro")).toBeTruthy());
+    expect(await screen.findByText("Retro")).toBeTruthy();
     expect(back).not.toHaveBeenCalled();
   });
 });

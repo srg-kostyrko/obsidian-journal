@@ -38,7 +38,7 @@ describe("JournalPlugin", () => {
 
     try {
       plugin.onunload();
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
       expect(rejections).toEqual([]);
     } finally {
       Container.prototype.dispose = originalDispose;

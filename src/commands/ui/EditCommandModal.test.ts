@@ -103,7 +103,7 @@ describe("EditCommandModal", () => {
   it("surfaces a required-name error when submitting without a name", async () => {
     const { submit } = await mountModal({ target: { kind: "all", writeType: "day" } });
     await userEvent.click(screen.getByText(m.common_action_create()));
-    await waitFor(() => expect(screen.getByText(m.command_name_required_error())).toBeTruthy());
+    expect(await screen.findByText(m.command_name_required_error())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 
@@ -114,7 +114,7 @@ describe("EditCommandModal", () => {
     });
     await userEvent.type(screen.getByRole("textbox"), "Taken");
     await userEvent.click(screen.getByText(m.common_action_create()));
-    await waitFor(() => expect(screen.getByText(m.command_name_unique_error())).toBeTruthy());
+    expect(await screen.findByText(m.command_name_unique_error())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 
@@ -123,7 +123,7 @@ describe("EditCommandModal", () => {
     await userEvent.type(screen.getByRole("textbox"), "Ribboned");
     await userEvent.click(screen.getByLabelText(m.common_show_in_ribbon()));
     await userEvent.click(screen.getByText(m.common_action_create()));
-    await waitFor(() => expect(screen.getByText(m.command_icon_required_error())).toBeTruthy());
+    expect(await screen.findByText(m.command_icon_required_error())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 

@@ -223,7 +223,7 @@ describe("NoteSizeService", () => {
     service.get("a.md" as VaultPath);
     await settle();
 
-    await host.app.vault.delete(file);
+    await host.app.fileManager.trashFile(file);
 
     expect(service.get("a.md" as VaultPath).isNone()).toBe(true);
   });
@@ -237,7 +237,7 @@ describe("NoteSizeService", () => {
     spy.mockReturnValueOnce(staleRead);
     service.get("a.md" as VaultPath);
 
-    await host.app.vault.delete(file);
+    await host.app.fileManager.trashFile(file);
 
     // A new note lands at the now-free "a.md" path and a cell asks for it. If delete
     // left the stale entry in #pending, this get() would see "already in flight" and

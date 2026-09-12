@@ -155,7 +155,7 @@ describe("EditNavBlockSegmentModal", () => {
     await mountModal({ segment: buildNavSegment({ link: "quarter", template: "x" }) });
     await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_link_date()), "+1q");
     await waitFor(() => {
-      expect(screen.queryByText(/Shifts to/)).toBeTruthy();
+      expect(screen.getByText(/Shifts to/)).toBeTruthy();
     });
   });
 

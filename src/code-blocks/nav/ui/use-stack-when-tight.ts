@@ -17,9 +17,7 @@ export function useStackWhenTight(row: Ref<HTMLElement | undefined>): Readonly<R
   const stacked = ref(false);
 
   function neededWidth(el: HTMLElement): number {
-    // Plain instanceof, not Obsidian's cross-window-safe .instanceOf(): that method only exists
-    // once the real app installs it, so it throws under the test environment's DOM.
-    const columns = [...el.children].filter((child): child is HTMLElement => child instanceof HTMLElement);
+    const columns = [...el.children].filter((child): child is HTMLElement => child.instanceOf(HTMLElement));
     // Size every column to its own content for the duration of the read, whatever the row is doing
     // right now, so the answer can never depend on the decision it feeds.
     el.classList.add(MEASURING_CLASS);

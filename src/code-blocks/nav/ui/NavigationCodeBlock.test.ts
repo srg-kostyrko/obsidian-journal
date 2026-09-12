@@ -721,7 +721,7 @@ describe("NavigationCodeBlock decorations", () => {
       entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
 
-    const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
+    const decorations = screen.getAllByTestId("cell-decoration");
     expect(decorations.length).toBe(3);
   });
 
@@ -840,7 +840,7 @@ describe("NavigationCodeBlock decorations", () => {
       entries: [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")],
     });
 
-    const decorations = document.querySelectorAll("[data-testid='cell-decoration']");
+    const decorations = screen.getAllByTestId("cell-decoration");
     expect(decorations.length).toBe(3);
   });
 

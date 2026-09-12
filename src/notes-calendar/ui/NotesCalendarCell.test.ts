@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, DayPeriod } from "@/calendar";
@@ -39,7 +39,6 @@ describe("NotesCalendarCell", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-    cleanup();
   });
 
   describe("label", () => {

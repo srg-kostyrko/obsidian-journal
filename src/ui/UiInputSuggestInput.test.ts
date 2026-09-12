@@ -1,4 +1,5 @@
 import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ref } from "vue";
 
@@ -36,14 +37,14 @@ describe("UiInputSuggestInput", () => {
 
   it("writes the selected value back through v-model", () => {
     const model = ref("");
-    const { getByRole } = harness.render(UiInputSuggestInput, {
+    harness.render(UiInputSuggestInput, {
       props: {
         modelValue: model.value,
         definition: fruitSuggest,
         "onUpdate:modelValue": (v: string) => (model.value = v),
       },
     });
-    const input = getByRole<HTMLInputElement>("textbox");
+    const input = screen.getByRole<HTMLInputElement>("textbox");
     harness.inputSuggests.handleFor<string>(input).select("apricot");
     expect(input.value).toBe("apricot");
   });
@@ -65,14 +66,14 @@ describe("UiInputSuggestInput", () => {
 
   it("propagates user typing through v-model", async () => {
     const model = ref("");
-    const { getByRole } = harness.render(UiInputSuggestInput, {
+    harness.render(UiInputSuggestInput, {
       props: {
         modelValue: model.value,
         definition: fruitSuggest,
         "onUpdate:modelValue": (v: string) => (model.value = v),
       },
     });
-    await userEvent.type(getByRole("textbox"), "ap");
+    await userEvent.type(screen.getByRole("textbox"), "ap");
     expect(model.value).toBe("ap");
   });
 });

@@ -202,8 +202,8 @@ describe("DecorationCanvas", () => {
       await userEvent.click(screen.getByRole("button", { name: "Cell background" }));
       await userEvent.click(screen.getByRole("tab", { name: "Shape" }));
       await userEvent.click(screen.getByRole("button", { name: "Top left" }));
-      const background = host.values.styles.find((s) => s.type === "background");
-      expect(background).toHaveProperty("color");
+      const backgroundStyle = host.values.styles.find((s) => s.type === "background");
+      expect(backgroundStyle).toHaveProperty("color");
     });
 
     it("leaves a decoration that parses cleanly after adding a second layer", async () => {

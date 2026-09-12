@@ -57,17 +57,15 @@ describe("AddJournalModal", () => {
       await userEvent.selectOptions(screen.getByRole("combobox"), "custom");
       await userEvent.clear(screen.getByRole("spinbutton"));
       await userEvent.type(screen.getByRole("spinbutton"), "3");
-      await waitFor(() =>
-        expect(
-          screen.getByRole("option", { name: m.journal_add_modal_every_unit({ unit: "week", count: 3 }) }),
-        ).toBeTruthy(),
-      );
+      expect(
+        await screen.findByRole("option", { name: m.journal_add_modal_every_unit({ unit: "week", count: 3 }) }),
+      ).toBeTruthy();
     });
 
     it("surfaces a required-name error when submitting without a name", async () => {
       const { submit } = harness.renderModal(AddJournalModal);
       await userEvent.click(screen.getByText(m.common_action_create()));
-      await waitFor(() => expect(screen.getByText(m.journal_name_required_error())).toBeTruthy());
+      expect(await screen.findByText(m.journal_name_required_error())).toBeTruthy();
       expect(submit).not.toHaveBeenCalled();
     });
 
@@ -76,7 +74,7 @@ describe("AddJournalModal", () => {
       await userEvent.type(screen.getByRole("textbox"), "x");
       await userEvent.selectOptions(screen.getByRole("combobox"), "custom");
       await userEvent.click(screen.getByText(m.common_action_create()));
-      await waitFor(() => expect(screen.getByText(m.journal_add_modal_anchor_required_error())).toBeTruthy());
+      expect(await screen.findByText(m.journal_add_modal_anchor_required_error())).toBeTruthy();
       expect(submit).not.toHaveBeenCalled();
     });
 

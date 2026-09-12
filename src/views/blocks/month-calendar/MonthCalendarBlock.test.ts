@@ -1,3 +1,4 @@
+import { screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 import { computed, defineComponent, h, nextTick, ref, type PropType } from "vue";
 
@@ -65,60 +66,51 @@ const baseConfig: MonthCalendarConfig = {
 
 describe("MonthCalendarBlock", () => {
   it("renders the calendar when the vault has no journals", async () => {
-    const { getAllByTestId } = await mountBlock(baseConfig, { shelf: computed(() => null) });
-    expect(getAllByTestId("month-stub").length).toBe(1);
+    await mountBlock(baseConfig, { shelf: computed(() => null) });
+    expect(screen.getAllByTestId("month-stub").length).toBe(1);
   });
 
   it("renders a single NotesMonthView when before=0 and after=0", async () => {
-    const { getAllByTestId } = await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
-    expect(getAllByTestId("month-stub").length).toBe(1);
+    await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(screen.getAllByTestId("month-stub").length).toBe(1);
   });
 
   it("renders before + after + 1 NotesMonthView instances", async () => {
-    const { getAllByTestId } = await mountBlock(
-      { ...baseConfig, before: 1, after: 1 },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
-    expect(getAllByTestId("month-stub").length).toBe(3);
+    await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(screen.getAllByTestId("month-stub").length).toBe(3);
   });
 
   it("dims outside-month days when a single month is shown", async () => {
-    const { getAllByTestId } = await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
-    expect(getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "active")).toBe(true);
+    await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(screen.getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "active")).toBe(true);
   });
 
   it("blanks outside-month days when more than one month is shown", async () => {
-    const { getAllByTestId } = await mountBlock(
-      { ...baseConfig, before: 1 },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
-    expect(getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "blank")).toBe(true);
+    await mountBlock({ ...baseConfig, before: 1 }, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(screen.getAllByTestId("month-stub").every((s) => s.dataset.outsideDates === "blank")).toBe(true);
   });
 
   it("anchors the first NotesMonthView at refDate shifted back by before months", async () => {
-    const { getAllByTestId } = await mountBlock(
-      { ...baseConfig, before: 2 },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-03-01");
+    await mountBlock({ ...baseConfig, before: 2 }, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-03-01");
   });
 
   it("passes the current shelf to each NotesMonthView", async () => {
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, after: 1 }, { shelf: ref("my-shelf") });
-    expect(getAllByTestId("month-stub").every((s) => s.dataset.shelf === "my-shelf")).toBe(true);
+    await mountBlock({ ...baseConfig, after: 1 }, { shelf: ref("my-shelf") });
+    expect(screen.getAllByTestId("month-stub").every((s) => s.dataset.shelf === "my-shelf")).toBe(true);
   });
 
   it("passes refDate and selection through to each NotesMonthView", async () => {
     const selectRefDate = vi.fn();
     const setRefDate = vi.fn();
-    const { getAllByTestId, getByTestId } = await mountBlock(baseConfig, {
+    await mountBlock(baseConfig, {
       refDate: ref("2026-05-15" as AnchorString),
       selectRefDate,
       setRefDate,
     });
 
-    expect(getAllByTestId("month-stub")[0]?.dataset.selectedDate).toBe("2026-05-15");
-    getByTestId("select-date").click();
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.selectedDate).toBe("2026-05-15");
+    screen.getByTestId("select-date").click();
     expect(selectRefDate).toHaveBeenCalledWith("2026-05-25");
     expect(setRefDate).not.toHaveBeenCalled();
   });
@@ -126,71 +118,71 @@ describe("MonthCalendarBlock", () => {
   it("holds the window on a selected date that is already visible", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+    await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
 
     refDateOrigin.value = "select";
     refDate.value = "2026-06-03" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
   });
 
   it("re-lays-out for a selected date the window does not show", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock(baseConfig, { refDate, refDateOrigin });
+    await mountBlock(baseConfig, { refDate, refDateOrigin });
 
     refDateOrigin.value = "select";
     refDate.value = "2026-06-03" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-06-01");
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-06-01");
   });
 
   it("holds the window on a followed date that is already visible", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+    await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
 
     refDateOrigin.value = "follow";
     refDate.value = "2026-04-02" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
   });
 
   it("re-centers the window on a navigated date that it already contained", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+    await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
 
     refDate.value = "2026-04-02" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-03-01");
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-03-01");
   });
 
   it("re-lays-out for a followed date whose month it only paints in its margin", async () => {
     const refDate = ref("2026-04-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock(baseConfig, { refDate, refDateOrigin });
+    await mountBlock(baseConfig, { refDate, refDateOrigin });
 
     refDateOrigin.value = "follow";
     refDate.value = "2026-05-01" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-05-01");
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-05-01");
   });
 
   it("holds its layout for a followed date in an adjacent month it displays", async () => {
     const refDate = ref("2026-04-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, after: 1 }, { refDate, refDateOrigin });
+    await mountBlock({ ...baseConfig, after: 1 }, { refDate, refDateOrigin });
 
     refDateOrigin.value = "follow";
     refDate.value = "2026-05-01" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
+    expect(screen.getAllByTestId("month-stub")[0]?.dataset.month).toBe("2026-04-01");
   });
 });

@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { initLocale } from "@/i18n";
@@ -18,7 +18,6 @@ vi.stubGlobal("navigator", {
 beforeAll(() => initLocale("en"));
 
 afterEach(() => {
-  cleanup();
   writeText.mockClear();
 });
 

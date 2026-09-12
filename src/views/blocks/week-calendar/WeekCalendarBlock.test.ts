@@ -1,3 +1,4 @@
+import { screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref, type PropType } from "vue";
 
@@ -63,34 +64,31 @@ const baseConfig: WeekCalendarConfig = {
 
 describe("WeekCalendarBlock", () => {
   it("renders a single NotesWeekView when before=0 and after=0", async () => {
-    const { getAllByTestId } = await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
-    expect(getAllByTestId("week-stub").length).toBe(1);
+    await mountBlock(baseConfig, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(screen.getAllByTestId("week-stub").length).toBe(1);
   });
 
   it("renders before + after + 1 NotesWeekView instances", async () => {
-    const { getAllByTestId } = await mountBlock(
-      { ...baseConfig, before: 1, after: 1 },
-      { refDate: ref("2026-05-15" as AnchorString) },
-    );
-    expect(getAllByTestId("week-stub").length).toBe(3);
+    await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate: ref("2026-05-15" as AnchorString) });
+    expect(screen.getAllByTestId("week-stub").length).toBe(3);
   });
 
   it("passes the current shelf to each NotesWeekView", async () => {
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, after: 1 }, { shelf: ref("my-shelf") });
-    expect(getAllByTestId("week-stub").every((s) => s.dataset.shelf === "my-shelf")).toBe(true);
+    await mountBlock({ ...baseConfig, after: 1 }, { shelf: ref("my-shelf") });
+    expect(screen.getAllByTestId("week-stub").every((s) => s.dataset.shelf === "my-shelf")).toBe(true);
   });
 
   it("passes refDate and selection through to each NotesWeekView", async () => {
     const selectRefDate = vi.fn();
     const setRefDate = vi.fn();
-    const { getAllByTestId, getByTestId } = await mountBlock(baseConfig, {
+    await mountBlock(baseConfig, {
       refDate: ref("2026-05-15" as AnchorString),
       selectRefDate,
       setRefDate,
     });
 
-    expect(getAllByTestId("week-stub")[0]?.dataset.selectedDate).toBe("2026-05-15");
-    getByTestId("select-date").click();
+    expect(screen.getAllByTestId("week-stub")[0]?.dataset.selectedDate).toBe("2026-05-15");
+    screen.getByTestId("select-date").click();
     expect(selectRefDate).toHaveBeenCalledWith("2026-05-25");
     expect(setRefDate).not.toHaveBeenCalled();
   });
@@ -98,25 +96,25 @@ describe("WeekCalendarBlock", () => {
   it("holds the window on a followed date that is already visible", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
-    const start = getAllByTestId("week-stub")[0]?.dataset.week;
+    await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+    const start = screen.getAllByTestId("week-stub")[0]?.dataset.week;
 
     refDateOrigin.value = "follow";
     refDate.value = "2026-05-22" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("week-stub")[0]?.dataset.week).toBe(start);
+    expect(screen.getAllByTestId("week-stub")[0]?.dataset.week).toBe(start);
   });
 
   it("re-centers the window on a navigated date that it already contained", async () => {
     const refDate = ref("2026-05-15" as AnchorString);
     const refDateOrigin = ref<RefDateOrigin>("navigate");
-    const { getAllByTestId } = await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
-    const start = getAllByTestId("week-stub")[0]?.dataset.week;
+    await mountBlock({ ...baseConfig, before: 1, after: 1 }, { refDate, refDateOrigin });
+    const start = screen.getAllByTestId("week-stub")[0]?.dataset.week;
 
     refDate.value = "2026-05-22" as AnchorString;
     await nextTick();
 
-    expect(getAllByTestId("week-stub")[0]?.dataset.week).not.toBe(start);
+    expect(screen.getAllByTestId("week-stub")[0]?.dataset.week).not.toBe(start);
   });
 });

@@ -305,7 +305,7 @@ describe("EditPromptModal", () => {
       data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
     });
     harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
-    expect(screen.queryByText(m.journal_prompt_required_label())).toBeTruthy();
+    expect(screen.getByText(m.journal_prompt_required_label())).toBeTruthy();
 
     await userEvent.selectOptions(screen.getByRole("combobox"), "toggle");
 
