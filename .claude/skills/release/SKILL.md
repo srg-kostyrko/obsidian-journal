@@ -240,12 +240,17 @@ session links.
 ### Step 6 — Merge with a merge commit
 
 **Read the PR's comments before merging, not just the check list.** A bot review
-posts findings while every check stays green:
+posts findings while every check stays green. Feedback arrives in three places
+and reading two of them is how a finding gets merged past:
 
 ```bash
 gh api repos/srg-kostyrko/obsidian-journal/pulls/<n>/comments --jq '.[] | "\(.path):\(.line) \(.body)"'
+gh api repos/srg-kostyrko/obsidian-journal/pulls/<n>/reviews  --jq '.[] | "\(.state): \(.body)"'
 gh pr view <n> --json comments --jq '.comments[] | "[\(.author.login)] \(.body)"'
 ```
+
+The middle one is the review **submission** — a change request, or a summary
+that names findings the inline comments do not repeat.
 
 ```bash
 gh pr merge <n> --merge
