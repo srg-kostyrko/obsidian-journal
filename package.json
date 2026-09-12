@@ -27,7 +27,10 @@
     "bench": "vitest bench --reporter=verbose",
     "check:types": "vue-tsc -b",
     "check": "npm run compile:i18n && npm run check:i18n && npm run check:types && npm run check:format && npm run coverage && npm run check:lint && npm run build:api && git diff --exit-code packages/api/index.d.ts && npm run check:api",
-    "prepare": "husky && npm run compile:i18n"
+    "prepare": "husky && npm run compile:i18n",
+    "docs:dev": "vitepress dev docs/user",
+    "docs:build": "vitepress build docs/user",
+    "docs:preview": "vitepress preview docs/user"
   },
   "repository": {
     "type": "git",
@@ -100,6 +103,7 @@
     "typescript-eslint": "^8.67.0",
     "vite": "^8.2.1",
     "vite-plugin-static-copy": "^4.1.1",
+    "vitepress": "^1.6.4",
     "vitest": "^5.0.0",
     "vue-tsc": "^3.3.9",
     "wdio-obsidian-reporter": "^3.1.3",
