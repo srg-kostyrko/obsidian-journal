@@ -56,7 +56,7 @@ describe("NoteSizeService", () => {
 
       service.get("a.md" as VaultPath);
       await settle();
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
 
       expect(rejections).toEqual([]);
       expect(service.get("a.md" as VaultPath).isSome()).toBe(true);

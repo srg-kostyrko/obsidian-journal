@@ -11,6 +11,10 @@ import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
 import type { App, Plugin } from "obsidian";
 
+// Deliberately not ".obsidian/…": the config folder is user-configurable, so the fixture proves
+// PluginData builds its paths from manifest.dir rather than assuming Obsidian's default.
+const PLUGIN_DIRECTORY = "my-config/plugins/journal";
+
 function build(): { service: PluginData; host: FakeHost } {
   const host = createFakeHost();
   const c = new Container();
@@ -81,8 +85,7 @@ function buildFileAccess(files: Record<string, string> = {}): { data: PluginData
     },
   };
   const c = new Container();
-  const pluginDirectory = ".obsidian/plugins/journal";
-  c.register(InternalPluginToken).useValue({ manifest: { dir: pluginDirectory } } as unknown as Plugin);
+  c.register(InternalPluginToken).useValue({ manifest: { dir: PLUGIN_DIRECTORY } } as unknown as Plugin);
   c.register(InternalObsidianAppToken).useValue({ vault: { adapter } } as unknown as App);
   c.register(PluginData).useClass(PluginData);
   return { data: c.resolve(PluginData), files };
@@ -91,16 +94,14 @@ function buildFileAccess(files: Record<string, string> = {}): { data: PluginData
 describe("PluginData file access", () => {
   it("writes a file into the plugin's own directory", async () => {
     const { data, files } = buildFileAccess();
-    const pluginDirectory = ".obsidian/plugins/journal";
 
     expectOk(await data.writeFile("backup-v3.json", '{"a":1}'));
 
-    expect(files[`${pluginDirectory}/backup-v3.json`]).toBe('{"a":1}');
+    expect(files[`${PLUGIN_DIRECTORY}/backup-v3.json`]).toBe('{"a":1}');
   });
 
   it("reads a file back", async () => {
-    const pluginDirectory = ".obsidian/plugins/journal";
-    const { data } = buildFileAccess({ [`${pluginDirectory}/backup-v3.json`]: '{"a":1}' });
+    const { data } = buildFileAccess({ [`${PLUGIN_DIRECTORY}/backup-v3.json`]: '{"a":1}' });
 
     const result = await data.readFile("backup-v3.json");
 
@@ -109,10 +110,9 @@ describe("PluginData file access", () => {
   });
 
   it("lists file names without their directory", async () => {
-    const pluginDirectory = ".obsidian/plugins/journal";
     const { data } = buildFileAccess({
-      [`${pluginDirectory}/backup-v3.json`]: "{}",
-      [`${pluginDirectory}/data.json`]: "{}",
+      [`${PLUGIN_DIRECTORY}/backup-v3.json`]: "{}",
+      [`${PLUGIN_DIRECTORY}/data.json`]: "{}",
     });
 
     const result = await data.listFiles();
@@ -122,12 +122,11 @@ describe("PluginData file access", () => {
   });
 
   it("deletes a file", async () => {
-    const pluginDirectory = ".obsidian/plugins/journal";
-    const { data, files } = buildFileAccess({ [`${pluginDirectory}/backup-v3.json`]: "{}" });
+    const { data, files } = buildFileAccess({ [`${PLUGIN_DIRECTORY}/backup-v3.json`]: "{}" });
 
     expectOk(await data.deleteFile("backup-v3.json"));
 
-    expect(files[`${pluginDirectory}/backup-v3.json`]).toBeUndefined();
+    expect(files[`${PLUGIN_DIRECTORY}/backup-v3.json`]).toBeUndefined();
   });
 
   it("refuses a name that escapes the plugin directory", async () => {

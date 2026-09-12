@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { screen, waitFor } from "@testing-library/vue";
+import { screen } from "@testing-library/vue";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { anchor } from "@/calendar/testing";
@@ -90,7 +90,7 @@ describe("ProcessBulkAddModal", () => {
 
     await userEvent.click(screen.getByText(m.bulk_add_run()));
 
-    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(await screen.findByText(m.common_action_close())).toBeTruthy();
     // A period-note connect would write journal-date only; a notelet connect also stamps the
     // configured type's name onto journal-notelet — that key is what distinguishes the two.
     expect(withNotelet.host.files.get("src/a.md")?.frontmatter).toEqual(
@@ -173,7 +173,7 @@ describe("ProcessBulkAddModal", () => {
 
     await userEvent.click(screen.getByText(m.bulk_add_run()));
 
-    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(await screen.findByText(m.common_action_close())).toBeTruthy();
     expect(harness.host.files.get("src/a.md")?.frontmatter).toEqual({});
   });
 
@@ -290,7 +290,7 @@ describe("ProcessBulkAddModal", () => {
     await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_other_folder_label() }), "move");
     await userEvent.click(screen.getByText(m.bulk_add_run()));
 
-    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(await screen.findByText(m.common_action_close())).toBeTruthy();
     expect(harness.host.files.has("src/a.md")).toBe(false);
     expect(harness.host.files.has("Daily/a.md")).toBe(true);
   });
@@ -330,7 +330,7 @@ describe("ProcessBulkAddModal", () => {
     await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_existing_label() }), "merge");
     await userEvent.click(screen.getByText(m.bulk_add_run()));
 
-    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(await screen.findByText(m.common_action_close())).toBeTruthy();
     expect(harness.host.files.has("src/a.md")).toBe(false);
     expect(harness.host.files.get("Daily/2026-06-01.md")?.content).toContain("SOURCE");
   });
@@ -360,7 +360,7 @@ describe("ProcessBulkAddModal", () => {
     await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_other_name_label() }), "rename");
     await userEvent.click(screen.getByText(m.bulk_add_run()));
 
-    await waitFor(() => expect(screen.getByText(m.common_action_close())).toBeTruthy());
+    expect(await screen.findByText(m.common_action_close())).toBeTruthy();
     expect(harness.host.files.has("src/a.md")).toBe(false);
     expect(harness.host.files.has("src/2026-06-01.md")).toBe(true);
   });

@@ -33,21 +33,43 @@ const noopNav: SubpageNav<{ journalName: string }> = {
   replace: () => undefined,
 };
 
+async function renderWeekly(): Promise<void> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, journalsUiModule],
+    data: { journals: { work: fixedJournal("work", { type: "week" }) } },
+  });
+  harness.render(JournalEditSubpage, { props: { journalName: "work", nav: noopNav } });
+}
+
+async function renderForRename(): Promise<{ harness: TestHarness; back: Mock<() => void> }> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, journalsUiModule],
+    data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+  });
+  const back = vi.fn();
+  // The dashboard re-renders the subpage with the frame's replaced props; stand in for it.
+  const nav: SubpageNav<{ journalName: string }> = {
+    back,
+    push: () => undefined,
+    replace: (props) => void utilities.rerender(props),
+  };
+  const utilities: RenderResult = harness.render(JournalEditSubpage, {
+    props: { journalName: "daily", nav },
+  });
+  return { harness, back };
+}
+
 describe("JournalEditSubpage", () => {
   describe("with a weekly journal", () => {
-    beforeEach(async () => {
-      const harness = await testContainer({
-        modules: [journalsCoreModule, journalsUiModule],
-        data: { journals: { work: fixedJournal("work", { type: "week" }) } },
-      });
-      harness.render(JournalEditSubpage, { props: { journalName: "work", nav: noopNav } });
-    });
+    it("renders the journal name", async () => {
+      await renderWeekly();
 
-    it("renders the journal name", () => {
       expect(screen.getByText("work")).toBeTruthy();
     });
 
-    it("renders the write frequency", () => {
+    it("renders the write frequency", async () => {
+      await renderWeekly();
+
       expect(screen.getByText(m.journal_write({ type: "week", every: "day", duration: 1 }))).toBeTruthy();
     });
   });
@@ -98,27 +120,9 @@ describe("JournalEditSubpage", () => {
   });
 
   describe("when the journal is renamed", () => {
-    let harness: TestHarness;
-    let back: Mock<() => void>;
-
-    beforeEach(async () => {
-      harness = await testContainer({
-        modules: [journalsCoreModule, journalsUiModule],
-        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
-      });
-      back = vi.fn();
-      // The dashboard re-renders the subpage with the frame's replaced props; stand in for it.
-      const nav: SubpageNav<{ journalName: string }> = {
-        back,
-        push: () => undefined,
-        replace: (props) => void utilities.rerender(props),
-      };
-      const utilities: RenderResult = harness.render(JournalEditSubpage, {
-        props: { journalName: "daily", nav },
-      });
-    });
-
     it("keeps the journal's page open", async () => {
+      const { harness, back } = await renderForRename();
+
       harness.resolve(JournalsRepository).rename("daily", "diary");
 
       await nextTick();
@@ -128,9 +132,11 @@ describe("JournalEditSubpage", () => {
     });
 
     it("shows the journal's new name", async () => {
+      const { harness } = await renderForRename();
+
       harness.resolve(JournalsRepository).rename("daily", "diary");
 
-      await waitFor(() => expect(screen.getByText("diary")).toBeTruthy());
+      expect(await screen.findByText("diary")).toBeTruthy();
     });
   });
 });

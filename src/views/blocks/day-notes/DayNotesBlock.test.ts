@@ -397,7 +397,7 @@ describe("DayNotesBlock", () => {
     expect(open).toHaveBeenLastCalledWith("Note.md", "active");
     await fireEvent.click(card, { metaKey: true });
     expect(open).toHaveBeenLastCalledWith("Note.md", "tab");
-    void fireEvent(card, new MouseEvent("auxclick", { button: 1, bubbles: true }));
+    await fireEvent(card, new MouseEvent("auxclick", { button: 1, bubbles: true }));
     expect(open).toHaveBeenLastCalledWith("Note.md", "tab");
   });
 

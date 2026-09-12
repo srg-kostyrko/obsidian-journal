@@ -8,7 +8,9 @@ defineProps<{
   narrow?: boolean;
 }>();
 
-const model = defineModel<number>();
+// A blank number field is a real state, and callers bind config values that can be unset, so
+// there is no numeric default that would not invent a value the parent never chose.
+const model = defineModel<number | undefined>({ default: undefined });
 </script>
 
 <template>

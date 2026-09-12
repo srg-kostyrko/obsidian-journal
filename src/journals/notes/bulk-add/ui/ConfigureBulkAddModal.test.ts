@@ -61,7 +61,7 @@ describe("ConfigureBulkAddModal", () => {
     await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_date_place_label() }), "property");
     await userEvent.click(screen.getByText(m.bulk_add_next()));
 
-    await waitFor(() => expect(screen.getByText(m.journal_property_name_required())).toBeTruthy());
+    expect(await screen.findByText(m.journal_property_name_required())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 
@@ -71,7 +71,7 @@ describe("ConfigureBulkAddModal", () => {
     await userEvent.clear(screen.getByRole("textbox", { name: m.bulk_add_date_format_label() }));
     await userEvent.click(screen.getByText(m.bulk_add_next()));
 
-    await waitFor(() => expect(screen.getByText(m.bulk_add_date_format_required())).toBeTruthy());
+    expect(await screen.findByText(m.bulk_add_date_format_required())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 
@@ -89,7 +89,7 @@ describe("ConfigureBulkAddModal", () => {
     await userEvent.type(screen.getByRole("textbox", { name: m.bulk_add_folder_label() }), "Typo");
     await userEvent.click(screen.getByText(m.bulk_add_next()));
 
-    await waitFor(() => expect(screen.getByText(m.bulk_add_folder_not_found())).toBeTruthy());
+    expect(await screen.findByText(m.bulk_add_folder_not_found())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 

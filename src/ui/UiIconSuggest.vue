@@ -6,7 +6,7 @@ import { defineInputSuggest, renderIcon } from "@/infrastructure/host";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiInputSuggestInput from "@/ui/UiInputSuggestInput.vue";
 
-const model = defineModel<string>();
+const model = defineModel<string>({ default: "" });
 defineProps<{ placeholder?: string; disabled?: boolean }>();
 
 const allIcons = getIconIds();
@@ -32,7 +32,7 @@ const definition = computed(() =>
   <span class="ui-icon-suggest">
     <UiIcon v-if="model" :name="model" />
     <UiInputSuggestInput
-      :model-value="model ?? ''"
+      :model-value="model"
       :definition="definition"
       :placeholder="placeholder"
       :disabled="disabled"

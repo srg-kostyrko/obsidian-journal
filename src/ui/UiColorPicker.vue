@@ -3,7 +3,9 @@ defineProps<{
   disabled?: boolean;
 }>();
 
-const model = defineModel<string>();
+// `<input type="color">` coerces an empty value to #000000, so that is the honest default —
+// the same fallback UiColorSettingsPicker uses when a custom color is not set yet.
+const model = defineModel<string>({ default: "#000000" });
 </script>
 
 <template>

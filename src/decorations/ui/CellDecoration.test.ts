@@ -1,4 +1,4 @@
-import { render } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { defineComponent, h, provide, reactive, ref, shallowRef } from "vue";
 
@@ -29,11 +29,11 @@ function makeHost(period: DayPeriod, cells: ReadonlyMap<string, CellStyleRef>, l
 describe("CellDecoration", () => {
   it("renders slot content unchanged when no decorations are provided", () => {
     const period = DayPeriod.containing(date("2026-05-25"));
-    const { getByText } = render(CellDecoration, {
+    render(CellDecoration, {
       props: { period },
       slots: { default: "Hello" },
     });
-    expect(getByText("Hello")).toBeTruthy();
+    expect(screen.getByText("Hello")).toBeTruthy();
   });
 
   it("renders a corner decoration when a corner style is provided for the period", () => {
@@ -60,10 +60,10 @@ describe("CellDecoration", () => {
     const shapes = Array.from({ length: 5 }, () => buildStyle("shape", { placement_x: "right", placement_y: "top" }));
     const cells = new Map<string, CellStyleRef>([[cellKey(period.kind, period.anchor.toAnchor()), shallowRef(shapes)]]);
 
-    const { container, getByTestId } = render(makeHost(period, cells, 3));
+    const { container } = render(makeHost(period, cells, 3));
 
     expect(container.querySelectorAll(".place-right_top .shape-decoration")).toHaveLength(2);
-    expect(getByTestId("mark-overflow")).not.toBeNull();
+    expect(screen.getByTestId("mark-overflow")).not.toBeNull();
   });
 
   it("renders every mark when no limit is injected", () => {
@@ -71,10 +71,10 @@ describe("CellDecoration", () => {
     const shapes = Array.from({ length: 5 }, () => buildStyle("shape", { placement_x: "right", placement_y: "top" }));
     const cells = new Map<string, CellStyleRef>([[cellKey(period.kind, period.anchor.toAnchor()), shallowRef(shapes)]]);
 
-    const { container, queryByTestId } = render(makeHost(period, cells));
+    const { container } = render(makeHost(period, cells));
 
     expect(container.querySelectorAll(".place-right_top .shape-decoration")).toHaveLength(5);
-    expect(queryByTestId("mark-overflow")).toBeNull();
+    expect(screen.queryByTestId("mark-overflow")).toBeNull();
   });
 
   it("renders when the period prop arrives as a reactive proxy", () => {

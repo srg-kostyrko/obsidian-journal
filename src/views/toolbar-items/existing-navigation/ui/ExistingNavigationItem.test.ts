@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { fireEvent } from "@testing-library/vue";
+import { fireEvent, screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
 
@@ -200,37 +200,37 @@ describe("ExistingNavigationItem", () => {
   });
 
   it("renders the seeded chevron label", async () => {
-    const { result } = await mountItem(existingNavigationConfigFor("day", "next"));
-    expect(result.getByText("›")).toBeTruthy();
+    await mountItem(existingNavigationConfigFor("day", "next"));
+    expect(screen.getByText("›")).toBeTruthy();
   });
 
   it("renders a custom label in place of the chevron", async () => {
-    const { result } = await mountItem({ ...existingNavigationConfigFor("day", "next"), label: "Older" });
-    expect(result.getByText("Older")).toBeTruthy();
+    await mountItem({ ...existingNavigationConfigFor("day", "next"), label: "Older" });
+    expect(screen.getByText("Older")).toBeTruthy();
   });
 
   it("renders no chevron when the label is cleared", async () => {
-    const { result } = await mountItem({ ...existingNavigationConfigFor("day", "next"), label: "" });
-    expect(result.queryByText("›")).toBeNull();
+    await mountItem({ ...existingNavigationConfigFor("day", "next"), label: "" });
+    expect(screen.queryByText("›")).toBeNull();
   });
 
   it("uses the seeded tooltip as the button aria-label", async () => {
-    const { result } = await mountItem(existingNavigationConfigFor("day", "previous"));
-    expect(result.getByLabelText(m.command_open_previous())).toBeTruthy();
+    await mountItem(existingNavigationConfigFor("day", "previous"));
+    expect(screen.getByLabelText(m.command_open_previous())).toBeTruthy();
   });
 
   it("uses a custom tooltip as the button aria-label", async () => {
-    const { result } = await mountItem({ ...existingNavigationConfigFor("day", "next"), tooltip: "Jump back" });
-    expect(result.getByLabelText("Jump back")).toBeTruthy();
+    await mountItem({ ...existingNavigationConfigFor("day", "next"), tooltip: "Jump back" });
+    expect(screen.getByLabelText("Jump back")).toBeTruthy();
   });
 
   it("omits the aria-label attribute when the tooltip is emptied", async () => {
-    const { result } = await mountItem({ ...existingNavigationConfigFor("day", "next"), tooltip: "" });
-    expect(result.getByRole("button").getAttribute("aria-label")).toBeNull();
+    await mountItem({ ...existingNavigationConfigFor("day", "next"), tooltip: "" });
+    expect(screen.getByRole("button").hasAttribute("aria-label")).toBe(false);
   });
 
   it("searches from the view's date when no journal note is active", async () => {
-    const { result, flows } = await mountItem(
+    const { flows } = await mountItem(
       { target: "day", direction: "next" },
       {
         journals: DAILY,
@@ -243,7 +243,7 @@ describe("ExistingNavigationItem", () => {
       { refDate: ref("2030-03-15" as AnchorString) },
     );
 
-    await userEvent.click(result.getByRole("button"));
+    await userEvent.click(screen.getByRole("button"));
 
     expect(flows.mock.calls[0]?.[1]).toMatchObject({ anchor: "2030-03-20" });
   });

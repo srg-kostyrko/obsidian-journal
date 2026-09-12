@@ -7,7 +7,7 @@ import { propertyTypeIcon } from "@/ui/icons";
 import UiIcon from "@/ui/UiIcon.vue";
 import UiInputSuggestInput from "@/ui/UiInputSuggestInput.vue";
 
-const model = defineModel<string>();
+const model = defineModel<string>({ default: "" });
 defineProps<{ placeholder?: string; disabled?: boolean; ariaLabel?: string }>();
 
 const metadataTypes = useService(MetadataTypeService);
@@ -38,7 +38,7 @@ const definition = computed(() =>
   <span class="ui-property-suggest">
     <UiIcon v-if="currentIcon" :name="currentIcon" />
     <UiInputSuggestInput
-      :model-value="model ?? ''"
+      :model-value="model"
       :definition="definition"
       :placeholder="placeholder"
       :disabled="disabled"

@@ -42,7 +42,7 @@ describe("ViewNameModal", () => {
 
     await userEvent.click(screen.getByText(m.common_action_create()));
 
-    await waitFor(() => expect(screen.getByText(m.view_name_required_error())).toBeTruthy());
+    expect(await screen.findByText(m.view_name_required_error())).toBeTruthy();
   });
 
   it("rejects the unchanged name when renaming", async () => {
@@ -50,7 +50,7 @@ describe("ViewNameModal", () => {
 
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    await waitFor(() => expect(screen.getByText(m.view_name_unchanged_error())).toBeTruthy());
+    expect(await screen.findByText(m.view_name_unchanged_error())).toBeTruthy();
   });
 
   it("cancels when the user clicks Cancel", async () => {

@@ -69,7 +69,7 @@ describe("FrontmatterSection", () => {
 
       await userEvent.click(screen.getByText(m.journal_edit_section_frontmatter()));
 
-      expect(screen.queryByText(m.journal_fm_field_label({ field: "startDateField" }))).not.toBeNull();
+      expect(screen.getByText(m.journal_fm_field_label({ field: "startDateField" }))).toBeTruthy();
     });
   });
 
@@ -119,7 +119,7 @@ describe("FrontmatterSection", () => {
 
       await userEvent.click(screen.getByText(m.journal_edit_section_frontmatter()));
 
-      expect(screen.queryByText(m.journal_fm_field_label({ field: "endDateField" }))).not.toBeNull();
+      expect(screen.getByText(m.journal_fm_field_label({ field: "endDateField" }))).toBeTruthy();
     });
   });
 });

@@ -24,9 +24,7 @@ defineEmits<{ edit: [lineIndex: number, segmentIndex: number] }>();
 // this stays correct if this template's line markup ever changes shape.
 const lineEls = ref<(HTMLElement | null)[]>([]);
 function setLineEl(index: number, el: Element | null): void {
-  // Plain instanceof, not Obsidian's cross-window-safe .instanceOf(): that method only
-  // exists once the real app installs it, so it throws under the test environment's DOM.
-  lineEls.value[index] = el instanceof HTMLElement ? el : null;
+  lineEls.value[index] = el?.instanceOf(HTMLElement) ? el : null;
 }
 </script>
 

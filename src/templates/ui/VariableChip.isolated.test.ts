@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { cleanup, render, screen } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import VariableChip from "./VariableChip.vue";
@@ -14,7 +14,6 @@ vi.stubGlobal("navigator", {
 });
 
 afterEach(() => {
-  cleanup();
   writeText.mockClear();
 });
 

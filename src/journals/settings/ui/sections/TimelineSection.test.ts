@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
-import { beforeEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { DayPeriod, type OpenInterval } from "@/calendar";
 import { anchor, date } from "@/calendar/testing";
@@ -11,6 +11,25 @@ import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
 import TimelineSection from "./TimelineSection.vue";
+
+async function setupClearStart(): Promise<TestHarness> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: {
+      journals: {
+        daily: fixedJournal(
+          "daily",
+          { type: "day" },
+          {
+            timeline: { start: anchor("2024-01-01"), end: { kind: "never" } },
+          },
+        ),
+      },
+    },
+  });
+  harness.render(TimelineSection, { props: { journalName: "daily" } });
+  return harness;
+}
 
 describe("TimelineSection", () => {
   describe("timeline.start DatePicker", () => {
@@ -42,33 +61,17 @@ describe("TimelineSection", () => {
   });
 
   describe("clear start button", () => {
-    let harness: TestHarness;
-
-    beforeEach(async () => {
-      harness = await testContainer({
-        modules: [journalsCoreModule],
-        data: {
-          journals: {
-            daily: fixedJournal(
-              "daily",
-              { type: "day" },
-              {
-                timeline: { start: anchor("2024-01-01"), end: { kind: "never" } },
-              },
-            ),
-          },
-        },
-      });
-      harness.render(TimelineSection, { props: { journalName: "daily" } });
-    });
-
     it("names itself for what it clears rather than as a close button", async () => {
+      await setupClearStart();
+
       await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
 
       expect(screen.getByRole("button", { name: m.journal_edit_clear_start_tooltip() })).toBeTruthy();
     });
 
     it("clears timeline.start when clicked", async () => {
+      const harness = await setupClearStart();
+
       await userEvent.click(screen.getByText(m.journal_edit_section_timeline()));
       await userEvent.click(screen.getByRole("button", { name: m.journal_edit_clear_start_tooltip() }));
 

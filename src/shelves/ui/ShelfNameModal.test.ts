@@ -37,7 +37,7 @@ describe("ShelfNameModal", () => {
   it("surfaces a required error when the name is empty", async () => {
     const { submit } = harness.renderModal(ShelfNameModal, { props: { takenNames: [] } });
     await userEvent.click(screen.getByText(m.common_action_create()));
-    await waitFor(() => expect(screen.getByText(m.shelf_name_required_error())).toBeTruthy());
+    expect(await screen.findByText(m.shelf_name_required_error())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 
@@ -45,14 +45,14 @@ describe("ShelfNameModal", () => {
     const { submit } = harness.renderModal(ShelfNameModal, { props: { takenNames: ["Work"] } });
     await userEvent.type(screen.getByRole("textbox"), "Work");
     await userEvent.click(screen.getByText(m.common_action_create()));
-    await waitFor(() => expect(screen.getByText(m.shelf_name_unique_error())).toBeTruthy());
+    expect(await screen.findByText(m.shelf_name_unique_error())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 
   it("rejects the unchanged name when renaming", async () => {
     const { submit } = harness.renderModal(ShelfNameModal, { props: { currentName: "Work", takenNames: [] } });
     await userEvent.click(screen.getByText(m.common_action_submit()));
-    await waitFor(() => expect(screen.getByText(m.shelf_name_unchanged_error())).toBeTruthy());
+    expect(await screen.findByText(m.shelf_name_unchanged_error())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
   });
 

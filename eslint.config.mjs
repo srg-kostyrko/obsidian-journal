@@ -11,6 +11,7 @@ import vitest from "@vitest/eslint-plugin";
 import importX from "eslint-plugin-import-x";
 import obsidianmd from "eslint-plugin-obsidianmd";
 import mocha from "eslint-plugin-mocha";
+import testingLibrary from "eslint-plugin-testing-library";
 
 const noRawError = {
   selector: "NewExpression[callee.name='Error']",
@@ -370,6 +371,64 @@ export default [
     },
   },
   {
+    // Component tests query through `screen`/`within` and the accessibility tree; reaching past a
+    // found element into the DOM (`querySelector`, `closest`, `parentElement`) is banned so a test
+    // names what the user perceives. Asserting a *class* is still correct where the class is the
+    // rendered contract — decorations paint `.decoration-corner`, themes and user CSS snippets key
+    // on it — so those assertions stay, reached through `getByTestId(...)` and read off
+    // `.classList` rather than a selector.
+    files: [
+      "**/*.test.ts",
+      "**/*.bench.ts",
+      "**/testing.ts",
+      "**/*.testing.ts",
+      "**/testing/**",
+      "vitest.setup.ts",
+      "vitest.setup.shared.ts",
+    ],
+    ...testingLibrary.configs["flat/vue"],
+    rules: {
+      ...testingLibrary.configs["flat/vue"].rules,
+      // Unsatisfiable in this repo, not a style preference: the rule accepts only `view` or
+      // `utils` for a render result, `unicorn/name-replacements` rejects `utils` and demands
+      // `utilities`, and `view` is a domain noun here — tests hold real View entities in a
+      // variable of that name. The suite's own convention is `result`/`utilities`.
+      "testing-library/render-result-naming-convention": "off",
+
+      // Deferred, not rejected: 641 sites across 56 files still reach past a found element into
+      // the DOM. They convert, and the conversion is worth doing — a role query asserts the
+      // accessible structure a class selector is blind to. The order that works, established on
+      // NotesMonthView: prefer `getByRole` (the calendar grid already carries grid/row/
+      // columnheader/rowheader/gridcell), then `within(row).getByRole(...)` for controls inside a
+      // setting row, then `getByLabelText` — adding the label to the component where one is
+      // missing, which is the same defect vuejs-accessibility/form-control-has-label reports.
+      // `data-testid` is the last rung, for elements with no accessible identity at all
+      // (decoration marks, `aria-hidden` blank cells). Focus assertions become
+      // `expect(el.matches(":focus")).toBe(true)` — verified to work under happy-dom, so no
+      // jest-dom dependency is needed. Turn both on once the last file is converted.
+      "testing-library/no-node-access": "off",
+      "testing-library/no-container": "off",
+    },
+  },
+  {
+    // `no-debugging-utils` matches any `.debug()` member call, and this file exercises our own
+    // logger's debug level. Inline eslint-disable comments are banned repo-wide
+    // (eslint-comments/no-use), so the opt-out lives here.
+    files: ["src/infrastructure/logger/*.test.ts"],
+    rules: {
+      "testing-library/no-debugging-utils": "off",
+    },
+  },
+  {
+    // The setup files are where cleanup is owned — `no-manual-cleanup` assumes the runner does it
+    // for you, and with these globals-free vitest projects that is exactly what this registration
+    // makes true.
+    files: ["vitest.setup.ts", "vitest.setup.shared.ts"],
+    rules: {
+      "testing-library/no-manual-cleanup": "off",
+    },
+  },
+  {
     files: ["**/*.test.ts"],
     ignores: ["**/*.isolated.test.ts"],
     rules: {
@@ -421,16 +480,12 @@ export default [
     },
   },
   {
-    // idsInDomOrder reads children of a container the tests build with the environment's own
-    // DOM, where Obsidian has not installed .instanceOf() and the call throws. The rule is
-    // auto-fixable and only a warning, so a bare `eslint --fix` over src/views rewrites the
-    // plain instanceof and takes use-sortable-list.isolated.test.ts red with it —
-    // `vue-tsc` cannot catch that, since Obsidian's ambient augmentation declares the method.
-    // Inline eslint-disable comments are banned repo-wide (eslint-comments/no-use), so the
-    // opt-out lives here, the same shape as the plugin-setting-tab carve-out above.
-    files: ["src/views/ui/use-sortable-list.ts"],
+    // The other half of that same version floor: the rule wants getSettingDefinitions() so the
+    // settings appear in Obsidian's search, and that API is 1.13.0. Revisit when minAppVersion
+    // reaches 1.13 — this is a deferred feature, not a rule we disagree with.
+    files: ["src/settings/ui/plugin-setting-tab.ts"],
     rules: {
-      "obsidianmd/prefer-instanceof": "off",
+      "obsidianmd/settings-tab/prefer-setting-definitions": "off",
     },
   },
   {

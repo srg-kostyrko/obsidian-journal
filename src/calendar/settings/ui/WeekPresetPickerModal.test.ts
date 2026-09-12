@@ -58,8 +58,8 @@ describe("WeekPresetPickerModal", () => {
     const useButton = rowFor(m.calendar_preset_name({ preset: "custom" })).querySelector("button");
     await userEvent.click(useButton!);
 
-    expect(screen.queryByText(m.calendar_picker_start_week_on())).not.toBeNull();
-    expect(screen.queryByText(m.calendar_picker_first_week_label())).not.toBeNull();
+    expect(screen.getByText(m.calendar_picker_start_week_on())).toBeTruthy();
+    expect(screen.getByText(m.calendar_picker_first_week_label())).toBeTruthy();
   });
 
   it("prefills the custom fields from the locale week when Custom is opened from locale mode", async () => {
