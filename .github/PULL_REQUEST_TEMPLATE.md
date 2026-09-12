@@ -6,11 +6,8 @@ Fixes #
 
 ## Checklist
 
-- [ ] `npm run check:types` passes
-- [ ] `npm test` passes
-- [ ] `npm run check:lint` passes
-- [ ] `npm run check:i18n` passes
-- [ ] the e2e per-suite scripts pass (see CONTRIBUTING.md), if this changes runtime behavior
+- [ ] `npm run check` passes (types, coverage, lint, format, i18n, api)
+- [ ] `npm run test:e2e:pr` passes, if this changes runtime behavior
 - [ ] User-facing copy is in `messages/en.json` only
 - [ ] `CHANGELOG.md` has an `[Unreleased]` entry, written for the user
 

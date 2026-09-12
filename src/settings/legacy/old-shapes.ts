@@ -372,9 +372,7 @@ export interface JournalDecorationAllTasksCompletedCondition {
 }
 
 export type GenericConditions =
-  | JournalDecorationTitleCondition
-  | JournalDecorationTagCondition
-  | JournalDecorationPropertyCondition;
+  JournalDecorationTitleCondition | JournalDecorationTagCondition | JournalDecorationPropertyCondition;
 
 export type JournalDecorationCondition =
   | JournalDecorationTitleCondition
