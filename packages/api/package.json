@@ -1,6 +1,6 @@
 {
   "name": "obsidian-journals-api",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Types and locator for the Obsidian Journals plugin API",
   "license": "MIT",
   "type": "module",
