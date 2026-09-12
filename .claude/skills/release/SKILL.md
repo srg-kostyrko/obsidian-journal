@@ -13,9 +13,10 @@ and community work that follows a release.
 pushing a branch, merging the release PR, pushing the tag, publishing the
 release, publishing to npm. Do not stop to ask permission for those again.
 
-Two things are never done unattended, because both go out in the maintainer's
-own voice: the **next milestone's theme** and the **Discord announcement**.
-Draft them, hand them over, and let the maintainer act.
+Three things are never done unattended, because each goes out in the maintainer's
+own voice: **cross-links into issues the release did not close**, the **next
+milestone's theme**, and the **Discord announcement**. Draft them, hand them
+over, and let the maintainer act.
 
 ## Invocation
 
@@ -128,14 +129,26 @@ to find what is **missing**.
 ```bash
 LAST=$(git describe --tags --abbrev=0)
 git log "$LAST"..HEAD --no-merges --format='%H %s' | grep -E ' (feat|fix)'
+git log "$LAST"..HEAD --no-merges --format='%h %s' -- CHANGELOG.md
 gh issue list --milestone "$VER" --state closed --json number,title
 ```
 
 Walk every `feat`/`fix` commit and every closed milestone issue, and check
 whether `[Unreleased]` already covers it. Gaps happen — a PR that forgot its
-entry, or a surface that grew after the entry was written. **Append** the missing
-bullets under the existing `### Features` / `### Bug Fixes` headings, matching
-the surrounding bullets' voice: what changed for the person using the plugin,
+entry, or a surface that grew after the entry was written.
+
+**A commit that touched `CHANGELOG.md` is not evidence that it added an entry.**
+Check the diff, not the file list:
+
+```bash
+git show <sha> -- CHANGELOG.md | grep -E '^\+[^+]'      # empty means no bullet
+```
+
+3.4.0's weekday-picker fix is the worked example: it touched `CHANGELOG.md`, and
+its whole diff there was the deletion of one blank line.
+
+**Append** the missing bullets under the existing `### Features` /
+`### Bug Fixes` headings, matching the surrounding bullets' voice: what changed for the person using the plugin,
 sentence case, no scopes, no commit hashes, the issue's own vocabulary.
 
 Leave the `## [Unreleased]` heading itself alone — `version-bump.mjs` promotes
@@ -152,6 +165,12 @@ result, not a reason to write something.
 Run §2's detection and version rule now — the bump, not the publish, which waits
 for a green tag build. If it does not fire, leave `packages/api/package.json`
 alone entirely.
+
+If it does fire, **name the new package version in the changelog bullet that
+describes the surface**, here and not later. §2 runs after the release notes are
+published from this section verbatim, so an edit there desyncs the file from the
+notes and needs its own pull request to reach protected `main`. The version is
+already decided at this point; spend it now.
 
 **Then commit steps 2 and 3 together**, as one `docs(changelog): …` commit
 carrying both the appended changelog bullets and the `packages/api` bump. Step 2
@@ -174,10 +193,24 @@ Verify the commit programmatically rather than by eye:
 
 ```bash
 git show --stat HEAD                                     # exactly six files
-git show HEAD -- versions.json | grep -c '^+[^+]'        # exactly 1
+git show HEAD -- versions.json | grep -E '^[+-][^+-]'    # three lines, see below
 git show HEAD -- CHANGELOG.md | grep -E '^[+-][^+-]'     # heading rewrite only
 git tag --points-at HEAD                                 # the tag is here
 ```
+
+`versions.json` must show exactly three lines: the previous last entry removed,
+the same entry back with a comma, and `$VER` added. Anything else — an older
+row's `minAppVersion` moving, a second new key — means back out.
+
+```
+-  "3.3.0": "1.8.7"
++  "3.3.0": "1.8.7",
++  "3.4.0": "1.8.7"
+```
+
+Do not count added lines instead. Appending an entry always rewrites the
+preceding line to add its comma, so any "exactly one addition" check fails on
+every release and teaches you to ignore your own verification.
 
 Any disagreement means back out before anything is pushed:
 
@@ -206,6 +239,19 @@ session links.
 
 ### Step 6 — Merge with a merge commit
 
+**Read the PR's comments before merging, not just the check list.** A bot review
+posts findings while every check stays green. Feedback arrives in three places
+and reading two of them is how a finding gets merged past:
+
+```bash
+gh api repos/srg-kostyrko/obsidian-journal/pulls/<n>/comments --jq '.[] | "\(.path):\(.line) \(.body)"'
+gh api repos/srg-kostyrko/obsidian-journal/pulls/<n>/reviews  --jq '.[] | "\(.state): \(.body)"'
+gh pr view <n> --json comments --jq '.comments[] | "[\(.author.login)] \(.body)"'
+```
+
+The middle one is the review **submission** — a change request, or a summary
+that names findings the inline comments do not repeat.
+
 ```bash
 gh pr merge <n> --merge
 git switch main && git pull --ff-only
@@ -214,6 +260,10 @@ git merge-base --is-ancestor "$VER^{commit}" main   # must succeed
 
 `--merge` is not a preference. Squash and rebase each rewrite the commit the tag
 points at, leaving the tag dangling off `main`.
+
+GitHub deletes the remote branch on merge, so only the local one is left —
+`git branch -d "release/$VER"`. A `git push origin --delete` after that errors
+with "remote ref does not exist"; that is the expected outcome, not a problem.
 
 ### Step 7 — Push the tag, after the branch has landed
 
@@ -302,6 +352,18 @@ refuses to publish if the committed file disagrees with its source.
 **The npm OTP prompt is the maintainer's.** This is the one interactive stop in
 the whole runbook.
 
+**`+ package@version` in the publish output is the success signal — the registry
+is not.** npm answers a successful publish with "Your package is being processed
+and may take a few minutes to become available", and for those minutes both
+`npm view` and a cache-bypassed fetch of the registry document keep serving the
+previous version. A single read is therefore not evidence of anything. Poll until
+it flips, and never report a publish as failed on a registry read when the
+publish output said otherwise:
+
+```bash
+until [ "$(npm view obsidian-journals-api version)" = "<new>" ]; do sleep 30; done
+```
+
 **A 404 on publish is an auth failure, not a missing package.** npm masks auth
 failures as `404 Not Found` on the publish endpoint so an unauthenticated caller
 cannot probe which private package names exist. Diagnose it:
@@ -311,10 +373,10 @@ cannot probe which private package names exist. Diagnose it:
 | `npm whoami` → 401                   | Token expired or revoked. `npm_` granular tokens expire — 90 days by default. `npm login` is interactive; hand it over. |
 | `npm whoami` succeeds, publish → 404 | The granular token's package scope does not cover `obsidian-journals-api`, or grants read without write.                |
 
-Record the published version in `CHANGELOG.md` under the plugin version that
-shipped the surface. The package carries **no npm provenance attestation** —
-`--provenance` needs CI's OIDC token — and that is deliberate: the alternative is
-an automation token sitting in repository secrets.
+The changelog bullet already names this version — §1 step 3 wrote it there, while
+the release notes could still be edited. The package carries **no npm provenance
+attestation** — `--provenance` needs CI's OIDC token — and that is deliberate:
+the alternative is an automation token sitting in repository secrets.
 
 ## §3 Post-release
 
@@ -325,17 +387,32 @@ an automation token sitting in repository secrets.
    request that predates its own design, say — add that too, in the issue's own
    vocabulary rather than the implementation's.
 2. **Close the issues the release fixed. Close the milestone.**
-3. **Cross-link adjacent issues** the release answers indirectly: an open request
-   the new feature covers gets a comment pointing at it and stating plainly what
-   is, and is not, planned.
+
+Step 1 is mechanical — the issue is the release's own and the content is "this
+shipped". That is the whole of what posts unattended.
 
 ### Handed to the maintainer
 
+3. **Cross-links into issues the release did not close.** An open request the new
+   feature covers indirectly, or a bug a new setting merely sidesteps, deserves a
+   comment — but that comment asserts a relationship in the maintainer's voice,
+   on a thread it may be about to disappoint. Draft them: one line per target
+   naming the issue and the claim the comment would make, **including the ones
+   you considered and rejected**, since a link not drawn is a judgment the
+   maintainer never sees. Post only the ones they approve.
+
 4. **The next milestone carries a theme.** It is a product decision — do not pick
    one. Read the open backlog and propose **two or three candidate themes**, each
-   a short capability statement, with the issues that fit it and their demand
-   (reactions, comments, age). The maintainer picks one or names their own. Only
-   then create the milestone, due **two weeks out**, and assign those issues.
+   a short capability statement, with the issues that fit it and their demand.
+   The maintainer picks one or names their own. Only then create the milestone,
+   due **two weeks out**, and assign those issues.
+
+   **Demand here is reactions from someone other than the maintainer, and the
+   count of distinct non-maintainer participants — never the raw comment count.**
+   This backlog is seeded by plugin harvesting, so the most-commented issues are
+   typically the maintainer's own notes to themselves, and ranking by comments
+   surfaces whatever they wrote up most recently. Age counts only once a second
+   voice is on the thread.
 
 5. **The Discord announcement** for the Obsidian community server. Write it to
    the scratchpad and hand it over — **never post it**.
@@ -374,6 +451,8 @@ untested machinery.
 - Never add a `Co-Authored-By` trailer, or a claude.ai session link, to a commit,
   PR body, or issue comment.
 - Never change `minAppVersion` as part of a release.
+- Never comment on an issue the release did not close without the maintainer's
+  approval of that comment.
 - Never post the Discord message.
 
 ## When something goes red
