@@ -10,8 +10,12 @@ export default defineConfig({
     nav: [{ text: "Manual", link: "/journals" }],
     sidebar: [
       {
-        text: "Journals",
-        items: [{ text: "Overview", link: "/" }],
+        text: "Reference",
+        items: [
+          { text: "Variables", link: "/reference/variables" },
+          { text: "Code blocks", link: "/reference/code-blocks" },
+          { text: "Glossary", link: "/reference/glossary" },
+        ],
       },
     ],
     search: { provider: "local" },
