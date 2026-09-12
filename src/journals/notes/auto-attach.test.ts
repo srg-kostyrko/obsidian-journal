@@ -176,6 +176,26 @@ describe("AutoAttachService", () => {
         "journal-date": "2026-05-19",
       });
     });
+
+    // Obsidian sets workspace.layoutReady *before* it drains its onLayoutReady queue, and drains
+    // it one callback per timer tick (`await sleep(0)` ahead of each, app.js). Every other observer
+    // — the vault included — therefore sees a ready workspace while callbacks queued behind ours
+    // have not run. This stages that gap by flipping the flag without draining: a note arriving
+    // from sync there must still be adopted, and nothing revisits a created path if it is missed.
+    it("attaches a note that arrives once layout is ready but before queued callbacks have run", async () => {
+      harness.host.workspace.layoutReady = false;
+      await harness.resolve(AutoAttachService).initialize();
+
+      harness.host.workspace.layoutReady = true;
+      await harness.resolve(NotesService).create("2026-05-19.md" as VaultPath, "");
+      harness.host.emitMetadata("2026-05-19.md");
+      await settle();
+
+      expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toEqual({
+        journal: "daily",
+        "journal-date": "2026-05-19",
+      });
+    });
   });
 
   it("does nothing for a path that doesn't match any journal", async () => {

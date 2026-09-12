@@ -54,15 +54,16 @@ export class AutoAttachService {
   // carries a complete claim is adopted and rewritten — which for a custom interval destroys a
   // manually set end date, and that end date *is* the sequence every later interval steps from.
   // VaultSubscriptionService answers this by never acting on "created" and waiting for
-  // metadata-changed instead; a created path waits the same way here. It subscribes at
-  // layout-ready, after that service's own subscription, so a note that parses into a valid entry
-  // is in the index by the time this runs and #handle's first guard drops it untouched.
+  // metadata-changed instead; a created path waits the same way here. main.ts initializes that
+  // service first, so its metadata-changed handler runs ahead of ours and a note that parses into
+  // a valid entry is in the index by the time this runs — #handle's first guard then drops it
+  // untouched.
   //
   // Renames must NOT wait: a rename changes no content, so Obsidian re-keys the cache without
   // re-parsing and no metadata-changed ever follows. A renamed path parked here would never be
-  // adopted at all. They need no wait either — VaultSubscriptionService registers its
-  // renamed -> transferPath handler at initialize, ahead of this one, so an already-connected
-  // note carries its index entry across and #handle's guard sees it.
+  // adopted at all. They need no wait either — the same initialize order puts that service's
+  // renamed -> transferPath handler ahead of ours, so an already-connected note carries its index
+  // entry across and #handle's guard sees it.
   #handleWhenParsed(path: VaultPath): void {
     if (this.#metadata.get(path).isSome()) {
       void this.#handle(path);
@@ -176,39 +177,62 @@ export class AutoAttachService {
     await this.#notes.deleteFolder(folder as VaultPath);
   }
 
+  // Obsidian replays "create" for every file already in the vault while it loads. Those are not
+  // new notes: adopting them by path would run before metadataCache has parsed their frontmatter
+  // (leaving #claimedElsewhere blind) and before the note migration has rewritten legacy ones,
+  // whose journal key it would overwrite. The replay is over by the time `workspace.layoutReady`
+  // flips — measured across the supported range, every replayed create reads it false — so that
+  // flag, read at *event* time, is the boundary.
+  //
+  // Reading it per event rather than subscribing from inside onLayoutReady is the load-bearing
+  // part. Obsidian flips the flag and only then drains its onLayoutReady queue, one callback per
+  // timer tick (`await sleep(0)` ahead of each, app.js), so a subscription installed from that
+  // callback goes live an unbounded number of ticks after the vault is already dispatching
+  // real events. A note arriving in that gap — from Sync, or from a test harness that gates on
+  // its own onLayoutReady callback — reaches no subscriber, and since nothing revisits a created
+  // path it is never adopted at all. The gate stays on every handler: before layout-ready the
+  // index is still being built, so acting on a rename then would rewrite a connected note that
+  // merely has no entry yet.
+  #afterLayoutReady<T>(handler: (payload: T) => void): (payload: T) => void {
+    return (payload) => {
+      if (!this.#workspace.layoutReady) return;
+      handler(payload);
+    };
+  }
+
   initialize(): AsyncResult<void, never> {
-    // Obsidian replays "create" for every file already in the vault while it loads. Those are not
-    // new notes: adopting them by path would run before metadataCache has parsed their frontmatter
-    // (leaving #claimedElsewhere blind) and before the note migration has rewritten legacy ones,
-    // whose journal key it would overwrite. Subscribing at layout-ready skips that burst; unlike
-    // the index's readiness it always arrives, and fires immediately on a mid-session enable.
-    // Logged with the layout-ready state as it was *before* registering: a note created in the
-    // gap between layout-ready and the end of the plugin's async onload reaches no subscriber
-    // at all, and nothing revisits it, so this line is what separates "the event never arrived"
-    // from "the event arrived and a guard dropped it".
-    const layoutWasReady = this.#workspace.layoutReady;
-    this.#workspace.onLayoutReady(() => {
-      this.#logger.debug("watching for new notes", { layoutWasReady });
-      this.#unsubscribes.push(
-        this.#notes.events.on("created", (note) => {
+    this.#logger.debug("watching for new notes", { layoutReady: this.#workspace.layoutReady });
+    this.#unsubscribes.push(
+      this.#notes.events.on(
+        "created",
+        this.#afterLayoutReady((note) => {
           this.#logger.debug("note created", { path: note.path });
           this.#handleWhenParsed(note.path);
         }),
-        this.#notes.events.on("renamed", ({ from, to }) => {
+      ),
+      this.#notes.events.on(
+        "renamed",
+        this.#afterLayoutReady(({ from, to }) => {
           this.#logger.debug("note renamed", { from, to });
           this.#awaitingParse.delete(from);
           void this.#handle(to);
         }),
-        this.#notes.events.on("deleted", (path) => {
+      ),
+      this.#notes.events.on(
+        "deleted",
+        this.#afterLayoutReady((path) => {
           this.#awaitingParse.delete(path);
         }),
-        this.#notes.events.on("metadata-changed", (path) => {
+      ),
+      this.#notes.events.on(
+        "metadata-changed",
+        this.#afterLayoutReady((path) => {
           if (!this.#awaitingParse.delete(path)) return;
           this.#logger.debug("the awaited note parsed", { path });
           void this.#handle(path);
         }),
-      );
-    });
+      ),
+    );
     return AsyncResult.ok();
   }
 

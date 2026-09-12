@@ -179,8 +179,11 @@ export const config: WebdriverIO.Config = {
     if (lines.length === 0) return;
     await mkdir(LOG_DIR, { recursive: true });
     await writeFile(path.join(LOG_DIR, `${name}.log`), `${lines.join("\n")}\n`);
-    if (records.length > 0) {
-      console.log([`--- journals log: ${test.title} ---`, ...records.map(pluginLine)].join("\n"));
-    }
+    // The merged story, not just the plugin's half: the harness markers say when the spec touched
+    // the vault, and a boot-window failure is only legible as "the create landed before the
+    // subscriber did" when both halves sit on one timeline. Printing the plugin log alone left
+    // that ordering readable only in the artifact, which is the second trip this copy exists to
+    // spare.
+    console.log([`--- journals log: ${test.title} ---`, ...lines].join("\n"));
   },
 };

@@ -99,6 +99,22 @@ on it.
   markers.
 - The `onLayoutReady` `appStartup` guard gates the startup _note_ only. View
   auto-open must run unconditionally.
+- `workspace.layoutReady` flips to `true` **before** Obsidian drains its
+  `onLayoutReady` queue, and the drain runs `await sleep(0)` ahead of _each_
+  callback (`app.js`, 1.8.7 through 1.13.x). So a subscription installed from an
+  `onLayoutReady` callback goes live an unbounded number of timer ticks after the
+  vault is already dispatching real events, and anything gating on its own
+  callback — `wdio-obsidian-service`'s `prepareApp` does — resumes inside that
+  gap. Never use the callback as the "vault has finished loading" boundary for an
+  event you cannot afford to miss; read the `layoutReady` flag **at event time**
+  instead. It is an equally tight gate against the boot create-replay — measured
+  across the supported range, every replayed `create` reads it `false` — and it
+  has no gap. This is what made the nightly's rotating `waitForJournalFrontmatter`
+  failure (always the first test after a `reloadObsidian`): the harness created
+  the note while `AutoAttachService`'s `created` subscriber was still queued, and
+  nothing revisits a created path, so the miss was permanent. The fake models the
+  drain as synchronous, so only a test that flips `workspace.layoutReady` without
+  draining can stage the gap (`auto-attach.test.ts`).
 
 ### Vue and reactivity
 
