@@ -9,10 +9,10 @@ jobs:
     outputs:
       PACKAGE_VERSION: ${{ steps.version.outputs.PACKAGE_VERSION }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24.x"
       - id: version
@@ -24,10 +24,10 @@ jobs:
     env:
       PACKAGE_VERSION: ${{ needs.get-version.outputs.PACKAGE_VERSION }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24.x"
 
@@ -54,7 +54,7 @@ jobs:
           cp manifest-beta.json release-assets/manifest.json
 
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
         with:
           subject-path: |
             build/main.js

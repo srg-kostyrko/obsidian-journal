@@ -56,10 +56,10 @@ jobs:
       WDIO_SUITES: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && '--suite smoke --suite integration --suite migration --suite interop --suite journeys --suite quarantine' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Use Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24.x"
           cache: npm
@@ -68,7 +68,7 @@ jobs:
         run: npm ci
 
       - name: Cache Obsidian binaries
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: .obsidian-cache
           key: obsidian-cache-${{ runner.os }}-${{ env.OBSIDIAN_VERSIONS }}
@@ -90,7 +90,7 @@ jobs:
 
       - name: Publish e2e results
         if: always()
-        uses: mikepenz/action-junit-report@v6
+        uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d # v6
         with:
           report_paths: e2e/.reports/e2e-junit-*.xml
           # The shard belongs in the name: two legs of the same OS and version publish
@@ -104,7 +104,7 @@ jobs:
 
       - name: Upload e2e reports
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: e2e-reports-${{ matrix.os }}-${{ strategy.job-index }}
           path: e2e/.reports/
