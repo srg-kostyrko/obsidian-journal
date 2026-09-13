@@ -1,6 +1,3 @@
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
-
 import { $, browser } from "@wdio/globals";
 
 import { hostNote, openInReadingMode, VISIBLE_LEAF } from "../journeys/code-blocks.js";
@@ -8,18 +5,17 @@ import { runCommand } from "../support/commands.js";
 import { setModalText, submitModal, waitForModalOpen } from "../support/settings.js";
 import { openViaUri } from "../support/uri.js";
 import {
-  activeNotePath,
   closeAllLeaves,
   frontmatterOf,
   seedNote,
   todayAnchor,
   waitForActiveNoteIn,
+  waitForDistinctActiveNote,
   waitForFrontmatter,
   waitForJournalFrontmatter,
 } from "../support/vault.js";
-import { waitForState } from "../support/wait.js";
 
-import { recordOutcome } from "./capture.js";
+import { captureThemed, recordOutcome, textsOf } from "./capture.js";
 
 // Same reading-view scoping as code-blocks.shot.ts: a markdown leaf keeps both a live-preview
 // and a reading-view copy of a fence mounted, so an unscoped selector would match twice.
@@ -32,70 +28,6 @@ const TYPE_HEADING = `${NOTELET_BLOCK} .journal-notelet-list__type-heading`;
 // settings panel the same way settings.ts's activeModal() is, for the one thing modalText()
 // (the dialog's whole rendered text) cannot isolate on its own.
 const DIALOG_TITLE = ".modal-container:not(:has(.mod-settings)) .modal-title";
-
-function textsOf(selector: string): Promise<string[]> {
-  return browser.execute(
-    (sel) => [...document.querySelectorAll<HTMLElement>(sel)].map((el) => el.textContent?.trim() ?? ""),
-    selector,
-  );
-}
-
-const ASSETS = "./docs/user/public/assets";
-const THEMES = [
-  { id: "moonstone", suffix: "light" },
-  { id: "obsidian", suffix: "dark" },
-] as const;
-
-// capture.ts's shared captureThemed takes both themes' screenshots from ONE boot, switching
-// live between them. For this block that is unreliable in this environment for reasons no DOM
-// wait can paper over: empirically (proven by swapping the two themes' order and watching the
-// failure follow the SECOND slot rather than either theme), whichever of the two screenshots is
-// the second one taken in a session comes back as a stale, wrong frame — the note's own
-// title-and-Properties top, scrolled to 0, rather than the block — even though a DOM read taken
-// at the very same instant confirms the right rows are mounted. The first screenshot in a
-// session is reliable every time this was tried. So: one full reboot per theme, each one taking
-// exactly one (first-and-only) screenshot, sidesteps the failure instead of chasing it.
-async function seedAndCaptureThemed(
-  themeId: (typeof THEMES)[number]["id"],
-  today: string,
-  path_: string,
-  selector: string,
-  name: string,
-  suffix: string,
-): Promise<{ headings: string[]; rows: string[] }> {
-  await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-notelets", plugins: ["journals"] });
-  await browser.executeObsidian(({ app }, id) => {
-    (app as unknown as { changeTheme(themeId: string): void }).changeTheme(id);
-  }, themeId);
-  await seedNote(`day/meetings/${today} Meeting 1.md`, noteletNote(today, "Meeting", "journal-notelet-index: 1\n"));
-  await seedNote(`day/meetings/${today} Meeting 2.md`, noteletNote(today, "Meeting", "journal-notelet-index: 2\n"));
-  await seedNote(`day/retros/${today} Retro.md`, noteletNote(today, "Retro"));
-  await seedNote(`day/retros/${today} Retro 1.md`, noteletNote(today, "Retro"));
-  await seedNote(path_, hostNote("daily", today, "```journal-notelets\n```"));
-  await openInReadingMode(path_);
-  await $(selector).waitForExist({ timeoutMsg: `the journal-notelets block did not render (${suffix})` });
-  await $(LIST_ROW).waitForExist({ timeoutMsg: `the journal-notelets block listed no rows (${suffix})` });
-
-  await mkdir(ASSETS, { recursive: true });
-  // A zero-width element cannot be captured; capture.ts's own stability wait, kept as-is since
-  // width really is stable by the time rows exist.
-  let consecutive = 0;
-  await browser.waitUntil(
-    async () => {
-      const width = await browser.execute(
-        (sel: string) => document.querySelector<HTMLElement>(sel)?.clientWidth ?? 0,
-        selector,
-      );
-      consecutive = width > 0 ? consecutive + 1 : 0;
-      return consecutive >= 3;
-    },
-    { timeoutMsg: `${selector} never settled on a laid-out width`, interval: 100 },
-  );
-  await browser.pause(250);
-  await $(selector).saveScreenshot(path.join(ASSETS, `${name}-${suffix}.png`));
-
-  return { headings: await textsOf(TYPE_HEADING), rows: await textsOf(LIST_ROW) };
-}
 
 function noteletNote(anchor: string, type: string, extra = ""): string {
   return `---\njournal: daily\njournal-date: ${anchor}\njournal-notelet: ${type}\n${extra}---\n`;
@@ -121,15 +53,10 @@ describe("notelets examples", () => {
     await runCommand("journals:create-meeting");
     // waitForActiveNoteIn would be satisfied instantly by the note the FIRST create already
     // left active (same folder), so the second create has to be waited for by difference.
-    let second = "";
-    await waitForState(
-      activeNotePath,
-      (active) => {
-        second = active;
-        return active.startsWith("day/meetings/") && active !== first;
-      },
-      "waited for the second Meeting notelet to become active",
-    );
+    const second = await waitForDistinctActiveNote(first, {
+      folder: "day/meetings",
+      timeoutMsg: "waited for the second Meeting notelet to become active",
+    });
     await waitForFrontmatter(
       second,
       (frontmatter) => frontmatter["journal-notelet-index"] === 2,
@@ -156,15 +83,10 @@ describe("notelets examples", () => {
     );
 
     await runCommand("journals:create-retro");
-    let second = "";
-    await waitForState(
-      activeNotePath,
-      (active) => {
-        second = active;
-        return active.startsWith("day/retros/") && active !== first;
-      },
-      "waited for the second Retro notelet to become active",
-    );
+    const second = await waitForDistinctActiveNote(first, {
+      folder: "day/retros",
+      timeoutMsg: "waited for the second Retro notelet to become active",
+    });
     await waitForFrontmatter(
       second,
       (frontmatter) => frontmatter["journal-notelet"] === "Retro",
@@ -183,23 +105,40 @@ describe("notelets examples", () => {
     const today = todayAnchor();
     const path = `day/${today}.md`;
 
-    let outcome: { headings: string[]; rows: string[] } | undefined;
-    for (const theme of THEMES) {
-      outcome = await seedAndCaptureThemed(theme.id, today, path, NOTELET_BLOCK, "notelets-block", theme.suffix);
-    }
+    await seedNote(`day/meetings/${today} Meeting 1.md`, noteletNote(today, "Meeting", "journal-notelet-index: 1\n"));
+    await seedNote(`day/meetings/${today} Meeting 2.md`, noteletNote(today, "Meeting", "journal-notelet-index: 2\n"));
+    await seedNote(`day/retros/${today} Retro.md`, noteletNote(today, "Retro"));
+    await seedNote(`day/retros/${today} Retro 1.md`, noteletNote(today, "Retro"));
+    await seedNote(path, hostNote("daily", today, "```journal-notelets\n```"));
+    await openInReadingMode(path);
+    await $(NOTELET_BLOCK).waitForExist({ timeoutMsg: "the journal-notelets block did not render" });
+    await $(LIST_ROW).waitForExist({ timeoutMsg: "the journal-notelets block listed no rows" });
 
-    await recordOutcome("notelets-block", { today, ...outcome });
+    await captureThemed(NOTELET_BLOCK, "notelets-block");
+
+    await recordOutcome("notelets-block", {
+      today,
+      headings: await textsOf(TYPE_HEADING),
+      rows: await textsOf(LIST_ROW),
+    });
   });
 
   it("creates a Meeting notelet through an obsidian://journals notelet link", async () => {
+    // Reload so this test records Meeting 3 regardless of what earlier tests in this describe
+    // block left behind — it seeds its own two prior Meeting notelets.
+    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-notelets", plugins: ["journals"] });
+    const today = todayAnchor();
+    await seedNote(`day/meetings/${today} Meeting 1.md`, noteletNote(today, "Meeting", "journal-notelet-index: 1\n"));
+    await seedNote(`day/meetings/${today} Meeting 2.md`, noteletNote(today, "Meeting", "journal-notelet-index: 2\n"));
+
     await closeAllLeaves();
     await openViaUri({ journal: "daily", notelet: "Meeting" });
 
     const path = await waitForActiveNoteIn("day/meetings");
     await waitForFrontmatter(
       path,
-      (frontmatter) => frontmatter["journal-notelet"] === "Meeting",
-      "waited for the link-created Meeting notelet to reach metadataCache",
+      (frontmatter) => frontmatter["journal-notelet"] === "Meeting" && frontmatter["journal-notelet-index"] === 3,
+      "waited for the link-created Meeting notelet's counter to reach metadataCache",
     );
     const frontmatter = await frontmatterOf(path);
 

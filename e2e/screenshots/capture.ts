@@ -3,6 +3,8 @@ import path from "node:path";
 
 import { browser } from "@wdio/globals";
 
+import { waitForState } from "../support/wait.js";
+
 const ASSETS = "./docs/user/public/assets";
 const OUTCOMES = "./e2e/.reports/outcomes";
 const CAPTURE_TIMEOUT_MS = 8000;
@@ -120,6 +122,31 @@ export async function captureThemed(selector: string, name: string, options: Cap
     await browser.pause(250);
     await saveElementScreenshot(selector, path.join(ASSETS, `${name}-${theme.suffix}.png`), options);
   }
+}
+
+/** Read every matching element's trimmed text content. */
+export function textsOf(selector: string): Promise<string[]> {
+  return browser.execute(
+    (sel) => [...document.querySelectorAll<HTMLElement>(sel)].map((el) => el.textContent?.trim() ?? ""),
+    selector,
+  );
+}
+
+// The default right sidebar is narrower than some views need at a readable size — content
+// overflows and clips rather than shrinking below its minimums. Force a width the way CLAUDE.md
+// documents for narrow-pane responsive testing, used here in the opposite direction, and wait
+// for `settleSelector`'s box to actually reach it before anything reads marks or captures against
+// it (a flex/grid layout can report a non-zero clientWidth mid-reflow).
+export async function widenRightSidebar(px: number, settleSelector: string): Promise<void> {
+  await browser.execute((width: number) => {
+    const split = document.querySelector<HTMLElement>(".mod-right-split");
+    if (split) split.style.width = `${width}px`;
+  }, px);
+  await waitForState(
+    () => browser.execute((sel: string) => document.querySelector<HTMLElement>(sel)?.clientWidth ?? 0, settleSelector),
+    (width) => width >= px - 40,
+    "waited for the sidebar's content to settle at the widened width",
+  );
 }
 
 /** Write what an example actually did, for comparison with what its page claims. */

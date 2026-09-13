@@ -1,35 +1,10 @@
 import { $$, browser } from "@wdio/globals";
 
+import { waitForNoticeText } from "../support/notices.js";
 import { openViaUri } from "../support/uri.js";
 import { contentOf, createNote, frontmatterOf, noteExists, waitForJournalFrontmatter } from "../support/vault.js";
 
 import { recordOutcome } from "./capture.js";
-
-// Read whatever the Notice layer currently shows, without asserting a specific text up front —
-// these examples exist to observe the real outcome, not to confirm a guess about it.
-//
-// A Notice fades IN on creation, and WebDriver's getText() reads an opacity:0 element as empty
-// text, so a check made the instant the element appears can catch it mid-fade. Wait for a
-// non-empty reading rather than mere existence.
-async function noticeTexts(): Promise<string[]> {
-  return $$(".notice-container .notice").map((notice) => notice.getText());
-}
-
-async function waitForNoticeText(timeout: number): Promise<string[]> {
-  try {
-    await browser.waitUntil(
-      async () => {
-        const texts = await noticeTexts();
-        return texts.some((text) => text.trim() !== "");
-      },
-      { timeout, interval: 100 },
-    );
-  } catch {
-    // No notice rendered within the bound; fall through and report whatever is there (nothing).
-  }
-  const texts = await noticeTexts();
-  return texts.filter((text) => text.trim() !== "");
-}
 
 // Notices persist for several seconds, so a leftover from the first half of a two-part test
 // would otherwise be read again as if it were fresh. Obsidian dismisses a Notice on click.
@@ -83,7 +58,7 @@ describe("journals examples", () => {
   it("renders current_date and time variables into a template's frontmatter (#154)", async () => {
     await openViaUri({ journal: "daily", date: "2026-06-15" });
     const path = "Calendar/2020s/2026/06/2026-06-15.md";
-    await browser.waitUntil(async () => noteExists(path), { timeoutMsg: `${path} was never created` });
+    await waitForJournalFrontmatter(path, { journal: "daily", date: "2026-06-15" });
     const content = await contentOf(path);
 
     const lineFor = (key: string): string | undefined =>

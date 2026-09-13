@@ -1,74 +1,16 @@
-import { mkdir } from "node:fs/promises";
-import path from "node:path";
-
-import { $, browser, $$ } from "@wdio/globals";
+import { $, $$, browser } from "@wdio/globals";
 
 import { dayAnchor, decorationBackgroundHex, note } from "../journeys/decorations.js";
 import { calendar, MONTH_VIEW, openSeededCalendarView } from "../journeys/view.js";
+import { getSettings } from "../support/plugin-data.js";
 import { closeSettings, expandSection, openSettings } from "../support/settings.js";
 import { contentOf, seedNote, todayAnchor } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { recordOutcome } from "./capture.js";
+import { captureThemed, recordOutcome, widenRightSidebar } from "./capture.js";
 
 const CHECKBOX_TRUE_HEX = "#2e7d32";
 const CHECKBOX_FALSE_HEX = "#888888";
-
-const ASSETS = "./docs/user/public/assets";
-
-// A single-theme capture, run exactly once per Obsidian session (see the two `it`s below,
-// which reload for a second, dark-only session rather than switching theme mid-session). This
-// environment's renderer has reproducibly failed to return a correct SECOND screenshot taken
-// after a changeTheme() call within one session, once the sidebar has been widened — confirmed
-// even on an untouched, previously-passing test (views.shot.ts's own sidebar capture), and
-// unaffected by pause length (tried 250ms through 6s) or capture mechanism (element-scoped or
-// full-viewport): the returned image was the app's default top-left chrome (ribbon, file
-// explorer), not the calendar, even though the target element's own box and DOM match count
-// were verified identical to the working first call. Every *first* screenshot of a session has
-// succeeded without exception, so each theme gets its own fresh session instead.
-async function captureOneTheme(
-  themeId: "moonstone" | "obsidian",
-  bodyClass: "theme-light" | "theme-dark",
-  selector: string,
-  name: string,
-  suffix: "light" | "dark",
-): Promise<void> {
-  await mkdir(ASSETS, { recursive: true });
-  let consecutive = 0;
-  await browser.waitUntil(
-    async () => {
-      const width = await browser.execute(
-        (sel: string) => document.querySelector<HTMLElement>(sel)?.clientWidth ?? 0,
-        selector,
-      );
-      consecutive = width > 0 ? consecutive + 1 : 0;
-      return consecutive >= 3;
-    },
-    { timeoutMsg: `${selector} never settled on a laid-out width`, interval: 100 },
-  );
-  await browser.executeObsidian(({ app }, id) => {
-    (app as unknown as { changeTheme(themeId: string): void }).changeTheme(id);
-  }, themeId);
-  await browser.waitUntil(
-    async () => browser.execute((cls: string) => document.body.classList.contains(cls), bodyClass),
-    { timeoutMsg: `Obsidian theme ${themeId} was never applied` },
-  );
-  consecutive = 0;
-  await browser.waitUntil(
-    async () => {
-      const width = await browser.execute(
-        (sel: string) => document.querySelector<HTMLElement>(sel)?.clientWidth ?? 0,
-        selector,
-      );
-      consecutive = width > 0 ? consecutive + 1 : 0;
-      return consecutive >= 3;
-    },
-    { timeoutMsg: `${selector} never re-settled on a laid-out width after the theme change`, interval: 100 },
-  );
-  // changeTheme suspends CSS transitions for 200ms.
-  await browser.pause(250);
-  await $(selector).saveScreenshot(path.join(ASSETS, `${name}-${suffix}.png`));
-}
 
 // Exactly `n` whitespace-separated tokens, matching how Obsidian's own status-bar word count
 // (and the note-size condition it feeds) counts a note — see note-size-decoration.e2e.ts.
@@ -104,24 +46,45 @@ function overflowBadgeText(cellSelector: string, place: string): Promise<string 
   );
 }
 
-// The default right sidebar is narrower than a 7-column month grid needs at a readable size
-// (the clipping CLAUDE.md and the views-sidebar screenshot both document); widen the split
-// itself, the same "force a width via browser.execute" technique views-sidebar.shot.ts uses,
-// just wider still — this test's cells each need to fit a day number plus two kept marks and
-// an overflow badge in two different corners, not one mark in one corner.
-async function widenRightSidebar(px: number): Promise<void> {
-  await browser.execute((width: number) => {
-    const split = document.querySelector<HTMLElement>(".mod-right-split");
-    if (split) split.style.width = `${width}px`;
-  }, px);
-  // A flex/grid grid can report a non-zero clientWidth mid-reflow (captureThemed's own layout
-  // wait only checks width), so confirm the grid actually settled at the new width before
-  // anything reads marks or screenshots against it.
-  await waitForState(
-    () => browser.execute((sel: string) => document.querySelector<HTMLElement>(sel)?.clientWidth ?? 0, MONTH_VIEW),
-    (width) => width >= px - 40,
-    "waited for the month grid to settle at the widened sidebar width",
-  );
+interface DecorationStyle {
+  type: string;
+  color?: { color?: string };
+  placement_x?: string;
+  placement_y?: string;
+}
+interface DecoratedEntity {
+  decorations?: { styles?: DecorationStyle[] }[];
+}
+interface DecoratedSettings {
+  journals?: Record<string, DecoratedEntity>;
+  shelves?: Record<string, DecoratedEntity>;
+}
+
+function stylesOfType(entity: DecoratedEntity | undefined, type: string): DecorationStyle[] {
+  return (entity?.decorations ?? []).flatMap((binding) => binding.styles?.filter((style) => style.type === type) ?? []);
+}
+
+// Read the mark cap fixture's own persisted config rather than hardcoding the colors and counts
+// it configures, so a change to e2e-docs-decorations-cap's data.json can't silently drift from
+// what the outcome JSON claims. getSettings()'s StoredSettings type doesn't model decoration
+// styles, so this widens locally to the shape it actually reads.
+async function capDecorationSummary(): Promise<{
+  journalBackground: string | undefined;
+  shelfBackground: string | undefined;
+  rightTopConfigured: number;
+  leftBottomConfigured: number;
+}> {
+  const settings = (await getSettings()) as unknown as DecoratedSettings;
+  const journal = settings.journals?.daily;
+  const shelf = settings.shelves?.["cap-shelf"];
+  const shapes = stylesOfType(journal, "shape");
+  return {
+    journalBackground: stylesOfType(journal, "background")[0]?.color?.color,
+    shelfBackground: stylesOfType(shelf, "background")[0]?.color?.color,
+    rightTopConfigured: shapes.filter((style) => style.placement_x === "right" && style.placement_y === "top").length,
+    leftBottomConfigured: shapes.filter((style) => style.placement_x === "left" && style.placement_y === "bottom")
+      .length,
+  };
 }
 
 // The "Marks shown per position" dropdown (CalendarDecorationsBlock.vue) carries no
@@ -295,14 +258,10 @@ describe("decorations examples", () => {
       // markCount() to see 2 elements in the DOM, but not enough for either to actually paint.
       // Widen the split so every cell has room for its dots.
       //
-      // The default view's ref date starts at real today, so its auto-selected cell (which
-      // carries a ring covering whatever dots sit under it) sits on today until moved. Paging
-      // the calendar to another month (via the toolbar's Next month button) reproducibly made
-      // the second (dark-theme) screenshot of a session return the wrong content — so instead
-      // of navigating, stay on the real current month and pick whichever of two disjoint 4-day
-      // blocks does not contain today's day-of-month: the default (unmoved) selection then
-      // always lands on today, which this choice keeps off all four seeded days. Both blocks
-      // fit inside every month (max day used is 13).
+      // The default view's ref date starts at real today, and its auto-selected cell carries a
+      // ring that would cover whatever dots sit under it — pick whichever of two disjoint 4-day
+      // blocks does not contain today's day-of-month, keeping the ring off all four seeded days.
+      // Both blocks fit inside every month (max day used is 13).
       const todayDay = Number(todayAnchor().slice(8, 10));
       const monthPrefix = todayAnchor().slice(0, 7);
       const blockA = [10, 11, 12, 13];
@@ -316,7 +275,7 @@ describe("decorations examples", () => {
 
       const openBoard = async (): Promise<void> => {
         await openSeededCalendarView();
-        await widenRightSidebar(600);
+        await widenRightSidebar(600, MONTH_VIEW);
       };
 
       await openBoard();
@@ -358,30 +317,7 @@ describe("decorations examples", () => {
 
       const atCap3 = await readAll();
 
-      await captureOneTheme("moonstone", "theme-light", MONTH_VIEW, "decorations-word-count", "light");
-
-      // A fresh session for the dark capture, taken immediately on it (see captureOneTheme's
-      // comment) — before anything else touches this session, in particular the Settings modal
-      // opened below for the uncapped reading: the dark capture hung every time it ran in the
-      // same session right after that round-trip. reloadObsidian boots from a fresh copy of the
-      // fixture (docs/e2e-testing-strategy.md), so the four notes seeded above do not survive
-      // the reload either and must be re-seeded here.
-      await browser.reloadObsidian({
-        vault: "./e2e/fixtures/e2e-docs-decorations-word-count",
-        plugins: ["journals"],
-      });
-      await openSeededCalendarView();
-      await seedNote(`${day100}.md`, note("daily", day100, words(100)));
-      await seedNote(`${day600}.md`, note("daily", day600, words(600)));
-      await seedNote(`${day800}.md`, note("daily", day800, words(800)));
-      await seedNote(`${day1300}.md`, note("daily", day1300, words(1300)));
-      await waitForState(
-        () => markCount(monthCellSelector(day1300), "center_bottom"),
-        (n) => n === 2,
-        "waited for the 1300-word cell's ladder marks to settle under the default cap (dark session)",
-      );
-      await widenRightSidebar(600);
-      await captureOneTheme("obsidian", "theme-dark", MONTH_VIEW, "decorations-word-count", "dark");
+      await captureThemed(MONTH_VIEW, "decorations-word-count");
 
       // The uncapped reading needs no screenshot, so it can safely open Settings in this same
       // (already captured) session.
@@ -417,7 +353,7 @@ describe("decorations examples", () => {
       // opposite corner, all at once.
       const openBoard = async (): Promise<void> => {
         await openSeededCalendarView();
-        await widenRightSidebar(720);
+        await widenRightSidebar(720, MONTH_VIEW);
         await waitForState(
           () => decorationBackgroundHex($(todayCell)),
           (hex) => hex !== undefined,
@@ -432,26 +368,21 @@ describe("decorations examples", () => {
       const rightTopBadge = await overflowBadgeText(todayCell, "right_top");
       const leftBottomVisible = await markCount(todayCell, "left_bottom");
       const leftBottomBadge = await overflowBadgeText(todayCell, "left_bottom");
+      const { journalBackground, shelfBackground, rightTopConfigured, leftBottomConfigured } =
+        await capDecorationSummary();
 
-      await captureOneTheme("moonstone", "theme-light", MONTH_VIEW, "decorations-cap", "light");
+      await captureThemed(MONTH_VIEW, "decorations-cap");
 
       await recordOutcome("decorations-cap", {
         today,
-        journalBackground: "#aa4411",
-        shelfBackground: "#1144aa",
+        journalBackground,
+        shelfBackground,
         winningBackground,
         marks: {
-          rightTop: { visible: rightTopVisible, badge: rightTopBadge, totalConfigured: 5 },
-          leftBottom: { visible: leftBottomVisible, badge: leftBottomBadge, totalConfigured: 12 },
+          rightTop: { visible: rightTopVisible, badge: rightTopBadge, totalConfigured: rightTopConfigured },
+          leftBottom: { visible: leftBottomVisible, badge: leftBottomBadge, totalConfigured: leftBottomConfigured },
         },
       });
-
-      // A fresh session for the dark capture only (see captureOneTheme's comment). Nothing in
-      // this fixture is written by the test itself, so the reload reproduces the exact same
-      // state.
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-decorations-cap", plugins: ["journals"] });
-      await openBoard();
-      await captureOneTheme("obsidian", "theme-dark", MONTH_VIEW, "decorations-cap", "dark");
     });
   });
 });

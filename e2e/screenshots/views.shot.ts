@@ -14,7 +14,7 @@ import {
 } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { captureThemed, recordOutcome } from "./capture.js";
+import { captureThemed, recordOutcome, textsOf, widenRightSidebar } from "./capture.js";
 
 class UnexpectedNavSegmentCountError extends Error {
   constructor(segmentTexts: readonly string[]) {
@@ -40,13 +40,6 @@ const NAV_CURRENT_JOURNAL = `${NAV_BLOCK_JOURNAL} .nav-block-current`;
 
 function countMatching(selector: string): Promise<number> {
   return browser.execute((sel) => document.querySelectorAll(sel).length, selector);
-}
-
-function textsOf(selector: string): Promise<string[]> {
-  return browser.execute(
-    (sel) => [...document.querySelectorAll<HTMLElement>(sel)].map((el) => el.textContent?.trim() ?? ""),
-    selector,
-  );
 }
 
 // Segments are `.nav-row` elements sharing one block; picking one by its rendered text is the
@@ -142,13 +135,8 @@ describe("views examples", () => {
 
       // The default right sidebar is narrower than this view's 7-column month grid needs (it
       // overflows and clips rather than shrinking below content minimums), which would make the
-      // hero screenshot unreadable. Widen the sidebar split itself before capturing — the same
-      // "force a width via browser.execute" technique CLAUDE.md documents for narrow-pane
-      // testing, used here in the opposite direction.
-      await browser.execute(() => {
-        const split = document.querySelector<HTMLElement>(".mod-right-split");
-        if (split) split.style.width = "540px";
-      });
+      // hero screenshot unreadable. Widen the sidebar split itself before capturing.
+      await widenRightSidebar(540, VIEW_ROOT);
 
       // The grid stretches to the view's full width at any split width, so its rightmost column
       // (the 19th's border, the 3 October cell) always meets the view's edge; the padding is what
@@ -257,9 +245,7 @@ describe("views examples", () => {
 
       await captureThemed(WEEK_VIEW, "views-and-blocks-week-numbers");
 
-      // Surfaced through the outcome JSON and the run report rather than console output — the
-      // repo's no-console rule has no e2e-screenshots exemption. activeHighlighted: false here
-      // is exactly the "say so loudly" signal the brief asks for.
+      // No console exemption for e2e screenshots; surface a false reading through the outcome JSON.
       const highlighted = dataActiveAfter === "true";
 
       await recordOutcome("views-and-blocks-week-numbers", {

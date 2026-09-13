@@ -254,6 +254,31 @@ export async function closeAllLeaves(): Promise<void> {
   await browser.executeObsidian(({ app }) => app.workspace.detachLeavesOfType("markdown"));
 }
 
+// A second open into the same folder can read back the still-active PREVIOUS note if the
+// active-file switch hasn't landed yet — the plugin awaits its own metadataCache round trip
+// before opening the note. Wait for the active path to differ from `previous` (which may be
+// null, a WebDriver-serialized undefined, meaning "nothing was active yet"), optionally also
+// requiring a folder prefix.
+export async function waitForDistinctActiveNote(
+  previous: string | null | undefined,
+  options: { folder?: string; timeoutMsg?: string } = {},
+): Promise<string> {
+  let path = "";
+  await waitForState(
+    activeNotePath,
+    (active) => {
+      path = active;
+      if (active === previous) return false;
+      return options.folder === undefined || active.startsWith(`${options.folder}/`);
+    },
+    options.timeoutMsg ??
+      (options.folder === undefined
+        ? "waited for a different active note"
+        : `waited for a different active note under ${options.folder}/`),
+  );
+  return path;
+}
+
 export function waitForActiveNote(path: string): Promise<void> {
   return waitForState(activeNotePath, (active) => active === path, `waited for ${path} to become the active note`);
 }

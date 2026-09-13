@@ -1,41 +1,18 @@
-import { $$, browser } from "@wdio/globals";
+import { browser } from "@wdio/globals";
 
 import { cursorOf, editorValue, waitForCursorLine } from "../support/editor.js";
+import { waitForNoticeText } from "../support/notices.js";
 import { openViaUri } from "../support/uri.js";
 import {
-  activeNotePath,
   contentOf,
   frontmatterOf,
   noteExists,
   todayAnchor,
+  waitForDistinctActiveNote,
   waitForJournalFrontmatter,
 } from "../support/vault.js";
 
 import { recordOutcome } from "./capture.js";
-
-// Read whatever the Notice layer currently shows, without asserting a specific text up front —
-// these examples exist to observe the real outcome, not to confirm a guess about it. Copied from
-// journals.shot.ts's notice-polling approach (a Notice fades IN, so a bare existence check can
-// catch it mid-fade with empty text).
-async function noticeTexts(): Promise<string[]> {
-  return $$(".notice-container .notice").map((notice) => notice.getText());
-}
-
-async function waitForNoticeText(timeout: number): Promise<string[]> {
-  try {
-    await browser.waitUntil(
-      async () => {
-        const texts = await noticeTexts();
-        return texts.some((text) => text.trim() !== "");
-      },
-      { timeout, interval: 100 },
-    );
-  } catch {
-    // No notice rendered within the bound; fall through and report whatever is there (nothing).
-  }
-  const texts = await noticeTexts();
-  return texts.filter((text) => text.trim() !== "");
-}
 
 function markdownFileCount(): Promise<number> {
   return browser.executeObsidian(({ app }) => app.vault.getMarkdownFiles().length);
@@ -46,25 +23,6 @@ function firstPathUnder(prefix: string): Promise<string | undefined> {
     ({ app }, folderPrefix) => app.vault.getMarkdownFiles().find((f) => f.path.startsWith(folderPrefix))?.path,
     prefix,
   );
-}
-
-// Waits for the active note to become some path other than `exclude`, returning it as a plain
-// string rather than requiring a `!` assertion at the call site (no-non-null-assertion is on for
-// e2e specs, unlike the vitest suite).
-async function waitForDistinctActiveNote(exclude: string | undefined, timeoutMsg: string): Promise<string> {
-  let found = "";
-  await browser.waitUntil(
-    async () => {
-      const path = await activeNotePath();
-      if (typeof path === "string" && path !== exclude) {
-        found = path;
-        return true;
-      }
-      return false;
-    },
-    { timeoutMsg },
-  );
-  return found;
 }
 
 describe("setup examples", () => {
@@ -117,24 +75,20 @@ describe("setup examples", () => {
   it("numbers academic term weeks from the current week grid and refuses a date past the end (setup-academic)", async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-setup-academic", plugins: ["journals"] });
 
-    // A weekly journal resolves each period from the CURRENT week grid (CycleService), which
-    // defaults to calendar mode "locale" — under the harness's locale that grid starts on
-    // Sunday, not Monday. A term whose declared start/anchor is a Monday (e.g. 2026-09-07, the
-    // date the page originally used) lands mid-period: the timeline's own straddling rule
-    // (TimelineService#contains) still creates that period's note, but under its TRUE anchor
-    // (the preceding Sunday) — and, observed separately, that note comes back with the
-    // {{index}} variable rendering EMPTY and no journal-index frontmatter at all, because the
-    // numbering anchor (also the literal Monday string) sits after that period's true anchor
-    // and `allowBefore` is off. To demonstrate the numbering/variable machinery working as
-    // documented, this fixture's start and numbering anchor are the nearest actual week-start
-    // day instead, 2026-09-06 (Sunday) — record the dates actually used.
+    // The settings pickers store a period's first day, and this fixture's week grid starts
+    // Sunday — so the term's start and numbering anchor are the nearest Sunday, 2026-09-06,
+    // rather than a Monday.
     await openViaUri({ journal: "term", date: "2026-09-06" });
-    const firstPath = await waitForDistinctActiveNote(undefined, "no note became active for 2026-09-06");
+    const firstPath = await waitForDistinctActiveNote(undefined, {
+      timeoutMsg: "no note became active for 2026-09-06",
+    });
     const firstContent = await contentOf(firstPath);
     const firstFrontmatter = await frontmatterOf(firstPath);
 
     await openViaUri({ journal: "term", date: "2026-09-13" });
-    const secondPath = await waitForDistinctActiveNote(firstPath, "no distinct note became active for 2026-09-13");
+    const secondPath = await waitForDistinctActiveNote(firstPath, {
+      timeoutMsg: "no distinct note became active for 2026-09-13",
+    });
     const secondContent = await contentOf(secondPath);
     const secondFrontmatter = await frontmatterOf(secondPath);
 
@@ -179,7 +133,9 @@ describe("setup examples", () => {
     for (const anchor of anchors) {
       await openViaUri({ journal: "release", date: anchor });
       names.push(
-        await waitForDistinctActiveNote(names.at(-1), `no new note became active for release anchor ${anchor}`),
+        await waitForDistinctActiveNote(names.at(-1), {
+          timeoutMsg: `no new note became active for release anchor ${anchor}`,
+        }),
       );
     }
 

@@ -1,32 +1,15 @@
-import { $, $$, browser } from "@wdio/globals";
+import { $, browser } from "@wdio/globals";
 
 import { CUSTOM_INTERVALS } from "../journeys/view-blocks.js";
+import { waitForNoticeText } from "../support/notices.js";
 import { clickButton, clickRowButton, expandSection, openSettings } from "../support/settings.js";
 import { openViaUri } from "../support/uri.js";
-import { activeNotePath, frontmatterOf, seedNote, waitForFrontmatter, writeNote } from "../support/vault.js";
+import { frontmatterOf, seedNote, waitForDistinctActiveNote, waitForFrontmatter, writeNote } from "../support/vault.js";
 
 import { captureThemed, recordOutcome } from "./capture.js";
 
 const RIBBON_OPEN_SPRINTS = '[aria-label="Open Sprints"]';
 const INTERVAL_ENTRY = `${CUSTOM_INTERVALS} .journal-view-custom-intervals__entry`;
-
-// waitForActiveNoteIn (vault.ts) only checks the folder prefix, so a second openViaUri call
-// into the same folder can read back the still-active PREVIOUS note if the active-file switch
-// hasn't landed yet — the plugin awaits its own metadataCache round trip before opening the
-// note. Wait for the active path to both land in the folder AND differ from what was active
-// a moment ago (opened via an earlier call in this same test).
-async function waitForNewActiveNoteIn(folder: string, previous: string): Promise<string> {
-  let path = "";
-  await browser.waitUntil(
-    async () => {
-      const active = await activeNotePath();
-      path = active ?? "";
-      return path.startsWith(`${folder}/`) && path !== previous;
-    },
-    { timeoutMsg: `waited for a new journal note to open under ${folder}/ (previous: ${previous})` },
-  );
-  return path;
-}
 
 async function renderedIntervalAnchors(): Promise<string[]> {
   await $(INTERVAL_ENTRY).waitForExist({ timeoutMsg: "no custom-interval entry rendered" });
@@ -34,28 +17,6 @@ async function renderedIntervalAnchors(): Promise<string[]> {
     (selector) => Array.from(document.querySelectorAll<HTMLElement>(selector), (el) => el.dataset.anchor ?? ""),
     INTERVAL_ENTRY,
   );
-}
-
-// Mirrors journals.shot.ts's notice reader: observe whatever the Notice layer shows rather
-// than asserting a guess about it up front.
-async function noticeTexts(): Promise<string[]> {
-  return $$(".notice-container .notice").map((notice) => notice.getText());
-}
-
-async function waitForNoticeText(timeout: number): Promise<string[]> {
-  try {
-    await browser.waitUntil(
-      async () => {
-        const texts = await noticeTexts();
-        return texts.some((text) => text.trim() !== "");
-      },
-      { timeout, interval: 100 },
-    );
-  } catch {
-    // No notice rendered within the bound; fall through and report whatever is there (nothing).
-  }
-  const texts = await noticeTexts();
-  return texts.filter((text) => text.trim() !== "");
 }
 
 async function switchToWesternPreset(): Promise<void> {
@@ -192,7 +153,7 @@ describe("periods examples", () => {
     const shortened = await frontmatterOf(path);
 
     await openViaUri({ journal: "sprint", date: "2026-01-15" });
-    const nextPath = await waitForNewActiveNoteIn("sprint", path);
+    const nextPath = await waitForDistinctActiveNote(path, { folder: "sprint" });
     await waitForFrontmatter(
       nextPath,
       (fm) => typeof fm["journal-start-date"] === "string",
@@ -201,7 +162,7 @@ describe("periods examples", () => {
     const next = await frontmatterOf(nextPath);
 
     await openViaUri({ journal: "sprint", date: "2026-01-30" });
-    const afterPath = await waitForNewActiveNoteIn("sprint", nextPath);
+    const afterPath = await waitForDistinctActiveNote(nextPath, { folder: "sprint" });
     await waitForFrontmatter(
       afterPath,
       (fm) => typeof fm["journal-start-date"] === "string",
@@ -232,7 +193,7 @@ describe("periods examples", () => {
     const shortened = await frontmatterOf(path);
 
     await openViaUri({ journal: "monthly", date: "2026-01-25" });
-    const nextPath = await waitForNewActiveNoteIn("monthly", path);
+    const nextPath = await waitForDistinctActiveNote(path, { folder: "monthly" });
     await waitForFrontmatter(
       nextPath,
       (fm) => typeof fm["journal-start-date"] === "string",
@@ -241,7 +202,7 @@ describe("periods examples", () => {
     const next = await frontmatterOf(nextPath);
 
     await openViaUri({ journal: "monthly", date: "2026-02-10" });
-    const afterPath = await waitForNewActiveNoteIn("monthly", nextPath);
+    const afterPath = await waitForDistinctActiveNote(nextPath, { folder: "monthly" });
     await waitForFrontmatter(
       afterPath,
       (fm) => typeof fm["journal-start-date"] === "string",
@@ -264,7 +225,7 @@ describe("periods examples", () => {
     let previous = "";
     for (const date of dates) {
       await openViaUri({ journal: "weekly", date });
-      const path = await waitForNewActiveNoteIn("week", previous);
+      const path = await waitForDistinctActiveNote(previous, { folder: "week" });
       previous = path;
       await waitForFrontmatter(
         path,

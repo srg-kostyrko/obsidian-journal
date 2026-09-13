@@ -2,7 +2,7 @@ import { $, browser } from "@wdio/globals";
 
 import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView } from "../journeys/view.js";
 import { openPalette, promptChoose } from "../support/commands.js";
-import { frontmatterOf, seedNote, todayAnchor, waitForActiveNote } from "../support/vault.js";
+import { activeNotePath, frontmatterOf, seedNote, todayAnchor, waitForActiveNote } from "../support/vault.js";
 
 import { captureThemed, recordOutcome } from "./capture.js";
 
@@ -47,7 +47,9 @@ describe("shelves examples", () => {
     const menu = $(".menu");
     await menu.waitForExist({ timeoutMsg: "shelf selector menu did not open" });
     await menu.$(".menu-item-title=office").click();
-    await $("button*=office").waitForExist({ timeoutMsg: "shelf selector button never showed office" });
+    const shelfButton = $("button*=office");
+    await shelfButton.waitForExist({ timeoutMsg: "shelf selector button never showed office" });
+    const shelfButtonLabelAfterPick = await shelfButton.getText();
 
     // Scoped to office (work only): personal's mark drops out, work's remains.
     await browser.waitUntil(async () => (await markCountFor(today)) === 1, {
@@ -59,13 +61,14 @@ describe("shelves examples", () => {
 
     await calendar.cell(today).click();
     await waitForActiveNote(`work/${today}.md`);
+    const clickedTodayCellOpened = await activeNotePath();
 
     await recordOutcome("shelves-selector", {
       today,
       markCountAllJournals,
       markCountOffice,
-      shelfButtonLabelAfterPick: "office",
-      clickedTodayCellOpened: "work/" + today + ".md",
+      shelfButtonLabelAfterPick,
+      clickedTodayCellOpened,
     });
   });
 

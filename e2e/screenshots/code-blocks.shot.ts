@@ -2,7 +2,7 @@ import { $, browser } from "@wdio/globals";
 
 import { NAV_FENCE, VISIBLE_LEAF, hostNote, renderBlock } from "../journeys/code-blocks.js";
 
-import { captureThemed, recordOutcome } from "./capture.js";
+import { captureThemed, recordOutcome, textsOf } from "./capture.js";
 
 // A markdown leaf mounts both a live-preview and a reading-view copy of each block; the
 // reading-view copy is the one with a definite width to capture.
@@ -45,10 +45,7 @@ describe("code-blocks reference screenshots", () => {
     await $(`${HOME_VIEW} .home-code-block`).waitForExist({ timeoutMsg: "journals-home block did not render" });
     await $(`${HOME_VIEW} .home-code-block a`).waitForExist({ timeoutMsg: "journals-home block drew no links" });
 
-    const labels = await browser.execute(
-      (sel) => [...document.querySelectorAll<HTMLElement>(sel)].map((el) => el.textContent?.trim() ?? ""),
-      `${HOME_VIEW} .home-code-block a`,
-    );
+    const labels = await textsOf(`${HOME_VIEW} .home-code-block a`);
 
     await captureThemed(HOME_VIEW, "code-blocks-home");
 
