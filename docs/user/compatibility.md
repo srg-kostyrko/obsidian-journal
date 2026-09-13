@@ -1,17 +1,64 @@
-# Compatibility with other plugins
+# Compatibility
 
-- `Daily notes` core plugin - this plugin intends to be a replacement for it. Notes created through Daily notes will not be connected to any journal so it is advised to disable this plugin.
-- `Periodic Notes` community plugin - this plugin was initially inspired by Periodic Notes, which appears to be abandoned, and aims to be a replacement for it.
-- `Calendar` community plugin - this plugin builds its own calendar views out of blocks and aims to be a replacement for it. There is no integration between the two.
-- `Templater` community plugin - starting with 1.3.0 plugin supports Templater templates in its settings. Journal plugin variables are replaced first and can be used inside templater commands.
+## Obsidian and devices
 
-## Templater caveats
+Journals needs Obsidian 1.8.7 or later and runs on desktop and mobile. The interface follows Obsidian's
+language setting.
 
-There can be cases when Templater starts interfering with plugin actions resulting in partially broken note or journal related data removed from frontmatter.
-The best setup to avoid such problems would be:
+Automatic note creation can be limited to desktop or mobile, which helps when a slow sync lets two
+devices each create today's note — see [Notes](/notes#auto-create-today-s-note).
 
-- template configured in journal plugin settings
-- `Trigger Templater on new file creation` is disabled
-- OR `Trigger Templater on new file creation` is enabled, `Enable Folder Templates` is enabled, **NO** Folder template is configured
+## Plugins that do the same job
 
-This ensures that only journal plugin is processing note template thus avoiding conflicts with templater plugin (journal plugin will use templater itself under the hood to process templater commands).
+- **Daily notes** (core plugin) — Journals replaces it. A note Daily notes creates carries no journal
+  properties, so it is only connected if its path matches a journal's folder and name template (see
+  [Auto-attach](/notes#auto-attach)). Turn Daily notes off, or point both at different folders.
+- **Periodic Notes** — Journals was inspired by it and replaces it. See
+  [Coming from Periodic Notes](/guides/from-periodic-notes).
+- **Calendar** — Journals builds its own calendars from view blocks. The two do not share settings or
+  data. See [Coming from Calendar](/guides/from-calendar).
+
+## Templater
+
+Journals runs Templater itself when a template contains Templater commands.
+
+::: v-pre
+
+1. The journal's own variables are filled in first — `{{date}}`, `{{index}}`, question answers.
+2. Templater then runs its commands on the result, so a command can use a journal variable:
+   `<% tp.date.now("dddd", 0, "{{date}}", "YYYY-MM-DD") %>` writes `Monday` into the note for 15 June 2026.
+3. A sub-template pulled in with `tp.file.include` gets the journal's variables filled in too, before
+   Templater reads its commands.
+4. A `tp.file.cursor` in the template places the cursor when the new note opens.
+
+:::
+
+### Avoiding double processing
+
+Templater can process a new note on its own as well, and two plugins writing the same new file can leave
+it half-rendered or strip the journal properties from it. The safest setup:
+
+- Configure the template in the journal's settings, not in Templater.
+- Turn off Templater's **Trigger Templater on new file creation** —
+- or keep it on with **Enable Folder Templates** on and **no folder template** covering the journal's
+  folder.
+
+The journal's **Templates** section has a **Templater caveats** link with the same advice.
+
+## Week configuration and other plugins
+
+**Week configuration** with **Custom** offers **Apply week configuration to all dates in vault**. Off,
+the week settings apply only inside Journals. On, they also change how Obsidian itself and other plugins
+number weeks; you might need to restart Obsidian. See [Periods](/periods#weeks).
+
+## When another plugin gets in the way
+
+If something in Journals stops responding — a settings field you cannot change, a dialog that does not
+open — another plugin may be interfering. To check:
+
+1. Under **Community plugins** in Obsidian's settings, turn off every plugin except Journals. Don't use
+   **Restricted mode** for this: it turns off Journals too, and leaving it turns every plugin back on at
+   once.
+2. If the problem is gone, turn the other plugins back on one at a time until it returns.
+
+Include what you find when you [report a bug](/troubleshooting).
