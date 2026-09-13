@@ -1,66 +1,227 @@
-# Journal Configuration
+# Journals
 
 ::: v-pre
 
-Each journal can be configured separately with these settings:
+A journal writes one note per period, and every period is the same length: a day, a week, a month, a
+quarter, a year, or a custom interval such as a two-week sprint. Want daily, weekly and monthly
+notes? Make three journals, one per length. [Shelves](/shelves) are how you keep a set of them
+together, and [Periods](/periods) explains how each length is counted.
 
-- **Note creation**:
+A journal decides where its notes go, what they are called, what goes into a new one, which dates it
+writes for, and which properties it records on each note.
 
-  - Note name template: Set the note filename pattern
-  - Folder: Where notes will be stored
-  - Default date format: How dates appear when a variable doesn't give its own format
-  - Confirm creating new notes: Prompt before creating a note you navigate to
-  - Auto-create today's note: Create it on plugin load and at every local midnight, on the devices _Automatic note creation_ allows
+## Creating a journal
 
-- **Templates**: Select one or more template notes for new note content
+**Add journal** on the main settings page asks for:
 
-- **Timeline**:
+- **Journal name** — must be unique. Journal names appear in the command palette, in note properties
+  and in code blocks.
+- **I'll be writing** — **daily**, **weekly**, **monthly**, **quarterly**, **annually**, or **Custom
+  intervals**. For custom intervals, **Every** sets the length — a number and a unit — and **Start
+  date** is "used to count custom intervals from. It cannot be changed after creating the journal."
 
-  - Start writing on: When this journal begins
-  - End writing: When to stop creating notes (never, after a date, or after N repeats)
+**Create** opens the new journal's settings page. The period length cannot be changed later; the
+settings page shows it next to the journal's name.
 
-- **Sequential numbers**: For numbered entries (like "Sprint 1"), and for chained ones (like "Release4711Sprint1")
+A new journal names its notes `{{date}}` — `{{journal_name}} {{index}}` for custom intervals — keeps
+them at the root of the vault, and formats dates to suit its period.
 
-  - Enable sequential numbers
-  - A journal's numbering is an ordered list of **digits**, slowest first. The last (fastest)
-    digit advances once per note; when it wraps around, it carries into the digit above it, the
-    way a car odometer's ones wheel turns the tens wheel. Each digit has its own:
-    - **Variable name**, used as `{{name}}` in the note name template and folder path
-    - **Start number**
-    - **Reset rule** — only the first (slowest) digit can be set to _Continuous_ (never resets);
-      every digit below it resets after a fixed count, shown as "how many per _\<the digit above
-      it\>_"
-    - **Frontmatter property** the digit's number is stored in
-  - Anchor date: The note on the anchor date gets every digit's start number, and later notes count up from there
-  - Digits can only be added at the bottom, as a new fastest digit — there is no way to insert a
-    slower one above the current top. To turn a single-counter journal into a chained one (say,
-    adding Release above an existing Sprint), rename the existing digit to `release`, give it its
-    new start number, and add a finer `sprint` digit beneath it
-  - The last remaining digit cannot be deleted; deleting the slowest one promotes the next digit
-    to take its place
-  - Allow before anchor: Permit numbering earlier notes, which may produce negative numbers. Offered only when the journal has no start date and the slowest digit is Continuous
-  - A live **preview** shows the full paths of the next five notes the current configuration
-    produces, so a digit used only in the folder template is visible too
-  - A note named only by its digits (no date anywhere in the name or folder) can still auto-attach
-    to its journal, but only when the slowest digit is Continuous **and** every digit appears in
-    the name or folder template. When it can't, the note creation and sequence sections warn with
-    the specific reason: which digits the template leaves out, which digit resets and so repeats
-    its numbers forever, or which digit below the slowest never resets and so freezes every digit
-    above it
+## Note creation
 
-  For example, a name template of `Release{{release}}Sprint{{sprint}}` with `release` starting at
-  4711 (Continuous) and `sprint` starting at 1 (6 per release) produces `Release4711Sprint1` …
-  `Release4711Sprint6`, then `Release4712Sprint1`.
+**Resolved note path:** shows where the note for today's period goes, so you can see the effect of
+each change as you make it.
 
-- **Frontmatter**: Customize the properties the plugin writes
-  - Date property name
-  - Add start date property, with its own property name
-  - Add end date property, with its own property name
+**Note name template** — "Template used to generate new note names." Any [template
+variable](/reference/variables) can go in it: `{{date}}`, `{{date:dddd}}`, `{{index}}`, a question's
+answer. The settings page warns when:
 
-Every journal row also has a **clone** action. The copy carries the source's whole configuration
-under a new name, joins the same shelf, and gets its own copy of the source's commands and, unless
-you turn **Copy notelet types** off, of its [notelet types](/notelets). Notes are never copied. The copy starts out with the source's folder and note name template, so the two
-resolve to the same note paths until you change one — the colliding journals warning says so until
-you do.
+- two periods resolve to the same name — "Entries for _A_ and _B_ both resolve to _path_. They will
+  share one note.";
+- the template resolves to an empty name, so no note can be created;
+- a note you create yourself could not be matched back to this journal. See
+  [Auto-attach](/notes#auto-attach).
+
+A template that contains a `/` gets the offer "Note name template contains a path separator. Move the
+path prefix into the Folder field?" with **Apply recommendation**.
+
+**Folder** — "New notes will be created in this folder." It takes variables too, so notes can be
+filed by date: `Journal/{{date:YYYY}}/{{date:MM}}` puts each note under its year and month.
+
+**Default date format** — "Default format for date variables that don't specify their own", written
+with [moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). A variable with its
+own format, like `{{date:DD.MM.YYYY}}`, ignores it.
+
+- On a weekly journal, `{{date}}` is a day inside the week, chosen so year tokens match the week's
+  year. Use `{{start_date}}` for the week's first day.
+- A format that uses `W` gets a warning: "You use `W` to format weeks, which does not respect custom
+  week settings and may show a different week number than the Calendar view. Use `w` instead (and
+  change the start of the week in the plugin settings if needed)." See
+  [Week configuration](/periods).
+- A format containing a `/` gets the offer "Date format contains a path separator. Move the date
+  variables into the Folder field?"
+
+**Confirm creating new notes** and **Auto-create today's note** are covered in
+[Notes](/notes#creating-a-note).
+
+## Templates
+
+"Path to a note that will be used as a template when creating new notes. When multiple are
+configured, the first existing wins." **Add template** adds a path; each path shows its **Resolved
+template path:**.
+
+- A template that exists but is empty is skipped, and the next one is tried.
+- Paths take variables, which makes fallbacks possible. With `Templates/Daily-{{date:dddd}}.md`
+  followed by `Templates/Daily.md`, a Friday note uses `Templates/Daily-Friday.md` when that file
+  exists and `Templates/Daily.md` otherwise.
+- Variables in the template's text are filled in for the note being created. With Templater
+  installed, its commands run afterwards — see [Compatibility](/compatibility).
+- A template only ever fills a new note, or an empty note being connected. A note with content is
+  never overwritten.
+
+## Timeline
+
+A journal's timeline is the range of dates it writes notes for.
+
+- **Start writing on** — "New notes prior to this date won't be created." Custom intervals show their
+  start date here and cannot change it.
+- **End writing** — **Never** ("Writing continues indefinitely."), **After date** ("New notes after
+  this date won't be created.") or **After repeating** a number of **times** ("After creating this
+  many notes, new notes won't be created."). Ending after a number of repeats needs a start date to
+  count from; without one the journal is not bounded and the settings page says so.
+
+A period that straddles the start date is inside the timeline — a week whose first day falls before
+a mid-week start still gets its note.
+
+Outside the timeline, calendar cells cannot be clicked, auto-create, auto-attach and bulk add skip
+the date, and **Connect note to a journal** refuses it. Notes that already exist for those dates stay
+where they are, and still open and link.
+
+## Sequential numbers
+
+For numbered entries (like "Sprint 1"), and for chained ones (like "Release4711Sprint1").
+
+- **Enable sequential numbers** — "Assign numbers to notes (e.g. Day 1, Day 2, …)."
+- A journal's numbering is an ordered list of **digits**, slowest first. The last (fastest) digit
+  advances once per note; when it wraps around, it carries into the digit above it, the way a car
+  odometer's ones wheel turns the tens wheel. **Add digit** and **Edit digit** open the same dialog:
+  - **Variable name** — "Use this digit in a note name or folder as a template variable." Written as
+    `{{name}}` in the note name template and folder.
+  - **Start number** — "Number assigned at the anchor date."
+  - **Reset** — "How the number changes over time." Only the first (slowest) digit has it:
+    **Continuous** never resets, and **Resets after** a number of **repeats** starts over. Every
+    digit below the first resets after a fixed count instead, set as **How many per** _the digit
+    above it_: "After this many, _this digit_ restarts and _the one above_ goes up by one."
+  - **Property name** — the property the digit's number is stored in.
+- **Anchor date** — "Numbering starts from this date. The note for this date gets the start number,
+  and later notes count up from it." A journal with a start date uses it as the anchor date.
+- Digits can only be added at the bottom (**Add digit**), as a new fastest digit — there is no way to
+  insert a slower one above the current top. To turn a single-counter journal into a chained one
+  (say, adding Release above an existing Sprint), rename the existing digit to `release`, give it
+  its new start number, and add a finer `sprint` digit beneath it.
+- The last remaining digit cannot be deleted; deleting the slowest one promotes the next digit to
+  take its place.
+- **Allow before anchor** — "Allow indexing before the anchor date. May produce negative numbers."
+  Offered only when the journal has no start date and the slowest digit is Continuous.
+- **Preview** shows the full paths of the next five notes, so a digit used only in the folder is
+  visible too.
+- A note named only by its digits (no date anywhere in the name or folder) can still be matched back
+  to its journal, but only when the slowest digit is Continuous **and** every digit appears in the
+  name or folder template. When it can't, the section warns with the reason.
+
+For example, a name template of `Release{{release}}Sprint{{sprint}}` with `release` starting at 4711
+(Continuous) and `sprint` starting at 1 (6 per release) produces `Release4711Sprint1` …
+`Release4711Sprint6`, then `Release4712Sprint1`.
+
+## Frontmatter
+
+Every journal note carries a `journal` property naming its journal. That name is fixed. The others are
+yours to rename:
+
+- **Date property name** — the period's date. `journal-date` unless you change it.
+- **Add start date property** — "For weekly journals that span two years, the start date can differ
+  from the date property." Turn it on to record the period's first day under **Start date property
+  name** (`journal-start-date`).
+- **Add end date property** — records the period's last day under **End date property name**
+  (`journal-end-date`). A custom interval whose end you moved by hand keeps its end date whether or
+  not this is on.
+- **Notelet type property** — "The property that records which notelet type a note is." See
+  [Notelets](/notelets).
+
+Renaming a property moves the value to the new name on every note the journal already has, notelets
+included, so no note loses its connection.
+
+## The rest of a journal's settings
+
+- **Questions** — asked when a note is created. See [Questions](/questions).
+- **Notelet types** — extra notes a period can hold. See [Notelets](/notelets).
+- **Commands** — commands targeting this journal. See [Commands](/commands).
+- **Navigation block** and, for custom intervals, the interval list — see
+  [Views and blocks](/views-and-blocks).
+- **Decorations** — see [Decorations](/decorations).
+
+## Renaming, cloning and deleting
+
+**Rename journal**, next to the journal's name, changes the `journal` property on every note the
+journal already has, notelets included. Shelves and commands follow the new name.
+
+**Clone** makes a copy under a **New journal name**: "Settings and commands are copied. Notes are
+not." **Copy notelet types** — "Adds a command for each type. Turn off to clone without them." The
+copy joins the same [shelf](/shelves). It starts with the source's folder and name template, so the
+two resolve to the same note paths until you change one — **Colliding journal settings** on the main
+settings page says so until you do.
+
+**Delete** says how many notes are connected — "This journal has 3 connected notes." — and asks
+**What to do with connected notes**:
+
+- **Keep notes** — "Notes stay in your vault unchanged." They keep their `journal` property, so no
+  other journal adopts them, and a journal you create later with the same name picks them up again.
+- **Clear journal data** — "Notes stay in your vault, but the journal properties are removed from
+  their frontmatter."
+- **Delete notes** — "All notes connected to this journal are deleted from your vault."
+
+Commands that target the journal are deleted with it, and it is taken off its shelf.
+
+## Examples
+
+### Filing notes by decade
+
+A daily journal with **Folder** `Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}/{{date:MM}}` and
+**Note name template** `{{date}}`. Opening its note for 14 February 1959 creates
+`Calendar/1950s/1959/02/1959-02-14.md`.
+
+The plugin cannot read a date back out of the decade part of that folder, so a note you make yourself
+at `Calendar/1950s/1959/02/1959-02-15.md` is not [auto-attached](/notes#auto-attach). Create notes in
+this layout from a calendar, a command or a link, or connect them with
+[Connect note to a journal](/notes#connect-note-to-a-journal).
+
+### Recording when a note was created
+
+The journal's template note starts with:
+
+```markdown
+---
+created: {{current_date:YYYY-MM-DD}} {{time:HH:mm:ss}}
+created_wrong: {{current_date:YYYY-MM-DD HH:mm:ss}}
+stamp: {{current_date:YYYY-MM-DD HH:mm}}
+---
+```
+
+A note created at 20:27:19 on 13 September 2026 gets:
+
+```yaml
+created: 2026-09-13 20:27:19
+created_wrong: 2026-09-13 00:00:00
+stamp: 2026-09-13 00:00
+```
+
+`{{current_date}}` is a date, so any time in its format comes out as zeros. Take the time from
+`{{time}}`.
+
+### A journal with a start and an end
+
+A daily journal named `daily-window` with **Folder** `window`, **Start writing on** 1 June 2030 and
+**End writing** **After date** 30 June 2030. Links for the day before and the day after —
+`obsidian://journals?journal=daily-window&date=2030-05-31` and `…&date=2030-07-01` — create no note
+and show "No journal covers that date."
 
 :::
