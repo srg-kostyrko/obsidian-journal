@@ -14,7 +14,9 @@ export default defineConfig({
       {
         text: "Using Journals",
         items: [
+          { text: "Periods", link: "/periods" },
           { text: "Journals", link: "/journals" },
+          { text: "Notes", link: "/notes" },
           { text: "Shelves", link: "/shelves" },
           { text: "Questions", link: "/questions" },
           { text: "Notelets", link: "/notelets" },

@@ -1,0 +1,84 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "Sprint": {
+      "name": "Sprint",
+      "write": { "type": "custom", "every": "week", "duration": 2, "anchorDate": "2026-02-01" },
+      "nameTemplate": "{{journal_name}} {{index}}",
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": true,
+        "addEndDate": true
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-02-01",
+        "allowBefore": false,
+        "sources": [
+          { "variable": "index", "frontmatterKey": "journal-index", "anchorValue": 1, "reset": { "kind": "never" } }
+        ]
+      },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "intervalBlock": {
+        "type": "create",
+        "decorateWholeBlock": true,
+        "rows": [
+          {
+            "template": "{{journal_name}} {{index}}",
+            "fontSize": 1.2,
+            "bold": true,
+            "italic": false,
+            "link": "self",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          },
+          {
+            "template": "{{start_date}} to {{end_date}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "none",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          },
+          {
+            "template": "Note: {{note_name}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "none",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          }
+        ]
+      }
+    }
+  },
+  "views": {
+    "d1000000-0000-4000-8000-000000000001": {
+      "id": "d1000000-0000-4000-8000-000000000001",
+      "name": "Sprints",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": true,
+      "leaf": "right",
+      "blocks": [
+        {
+          "id": "d1000000-0000-4000-8000-000000000002",
+          "key": "custom-intervals",
+          "config": { "window": "month" }
+        }
+      ]
+    }
+  }
+}
