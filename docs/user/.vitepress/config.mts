@@ -37,6 +37,14 @@ export default defineConfig({
           { text: "Troubleshooting", link: "/troubleshooting" },
         ],
       },
+      {
+        text: "Guides",
+        items: [
+          { text: "Coming from Periodic Notes", link: "/guides/from-periodic-notes" },
+          { text: "Coming from Calendar", link: "/guides/from-calendar" },
+          { text: "Setup examples", link: "/guides/setup-examples" },
+        ],
+      },
     ],
     search: { provider: "local" },
     socialLinks: [{ icon: "github", link: "https://github.com/srg-kostyrko/obsidian-journal" }],
