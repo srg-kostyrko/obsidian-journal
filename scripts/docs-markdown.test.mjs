@@ -220,4 +220,18 @@ describe("fenceBlocks", () => {
   it("closes a fence only on a run at least as long as its opener", () => {
     expect(fenceBlocks("````\n```\n````").at(0)?.body).toBe("```");
   });
+
+  it("runs an unclosed fence to the end of the text", () => {
+    expect(fenceBlocks("intro\n```calendar-timeline\nmode: month")).toEqual([
+      { lineno: 2, info: "calendar-timeline", body: "mode: month" },
+    ]);
+  });
+
+  it("reads fences nested in an unclosed markdown fence", () => {
+    const text = "````markdown\n```journals-home\nscale: 2\n```";
+    expect(fenceBlocks(text)).toEqual([
+      { lineno: 1, info: "markdown", body: "```journals-home\nscale: 2\n```" },
+      { lineno: 2, info: "journals-home", body: "scale: 2" },
+    ]);
+  });
 });

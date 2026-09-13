@@ -92,6 +92,13 @@ export function scanMarkdown(text) {
  */
 export function fenceBlocks(text) {
   const blocks = [];
+  const emit = (fence) => {
+    const body = fence.lines.join("\n");
+    blocks.push({ lineno: fence.lineno, info: fence.info, body });
+    if (fence.info === "markdown" || fence.info === "md") {
+      for (const inner of fenceBlocks(body)) blocks.push({ ...inner, lineno: fence.lineno + inner.lineno });
+    }
+  };
   let open = null;
   for (const [index, raw] of text.split("\n").entries()) {
     const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
@@ -100,11 +107,7 @@ export function fenceBlocks(text) {
         open.lines.push(line);
         continue;
       }
-      const body = open.lines.join("\n");
-      blocks.push({ lineno: open.lineno, info: open.info, body });
-      if (open.info === "markdown" || open.info === "md") {
-        for (const inner of fenceBlocks(body)) blocks.push({ ...inner, lineno: open.lineno + inner.lineno });
-      }
+      emit(open);
       open = null;
       continue;
     }
@@ -114,5 +117,8 @@ export function fenceBlocks(text) {
       open = { char: match[1][0], length: match[1].length, info, lineno: index + 1, lines: [] };
     }
   }
+  // An unterminated fence runs to the end of the document, per CommonMark / markdown-it,
+  // the same way scanMarkdown already reads it (every trailing line stays `fenced: true`).
+  if (open) emit(open);
   return blocks;
 }
