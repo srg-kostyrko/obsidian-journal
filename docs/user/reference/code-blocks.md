@@ -1,41 +1,9 @@
-# Supported code blocks
+# Code blocks
 
-For easier navigation plugin provides code blocks that can be inserted into note content. Each journal's settings has a **Supported code blocks** link that shows the same list with a live preview of that journal's blocks, and copies a block to your clipboard when you click it.
+Journals draws four kinds of code block. Type one into any note — or into a journal's template, so every
+note gets it — and it renders in reading view and live preview.
 
-Each block's container carries a stable CSS class — `journal-nav-code-block`, `journal-timeline-code-block`, `journal-home-code-block` and `journal-notelets-code-block` — that themes and CSS snippets can target. Every block names any option it does not recognize in a notice above the block, and still renders.
-
-````markdown
-```journal-nav
-
-```
-````
-
-Navigation code block helps navigating relative to current note. Displayed data is configured in journal settings. `calendar-nav` and `interval-nav` are aliases for the same block, kept for older notes; all three behave identically.
-
-Supports following settings:
-
-- `adjacent` - whether the previous and next periods are shown beside the current one. Without it the journal's **Show previous and next periods** setting decides. Set it to `false` for a single period with just its arrows, or to `true` where the journal hides them. It has to be `true` or `false`, not `yes` or `no`.
-
-````markdown
-```journal-nav
-adjacent: false
-```
-````
-
-Example look for daily note:
-
-![Daily note nav](/assets/code-blocks-nav-daily-light.png){.light-only}
-![Daily note nav](/assets/code-blocks-nav-daily-dark.png){.dark-only}
-
----
-
-````markdown
-```calendar-timeline
-
-```
-````
-
-Timeline code blocks helps navigating daily notes in bigger periods (like week, month, quarter or year). By default daily and weekly notes show `week` timeline, monthly note - `month` timeline, quarter note - `quarter` timeline and yearly note - `calendar` timeline. Custom interval notes show a `week` timeline, and a note that belongs to no journal shows the current week. This can be changed using `mode` param.
+::: v-pre
 
 ````markdown
 ```calendar-timeline
@@ -43,17 +11,70 @@ mode: month
 ```
 ````
 
-Supports following settings:
+A block's options go inside the fence, one per line as `option: value`. Each journal's settings has a
+**Supported code blocks** link that lists them with a live preview, and copies a block when you click it.
 
-- `mode` - which period the timeline shows. Supported values are - `week`, `month`, `quarter`, `calendar`. Without it the journal's own period decides, as above.
-- `shelf` - limits the displayed notes to a specific shelf. Without it, the shelf holding the current journal is used.
-- `weeks` - where the week-number column appears. Supported values are - `default`, `left`, `right`, `none`. `default` follows the plugin's calendar setting.
-- `hiddenWeekdays` - hides the listed days of the week, where `0` is Sunday and `6` is Saturday, e.g. `[0, 6]` to drop weekends.
-- `before` - adds this many earlier periods above the current one. Applies to the `week` and `month` modes only.
-- `after` - adds this many later periods below the current one. Applies to the `week` and `month` modes only.
-- `navigation` - shows previous/next controls, so you can look at other periods without opening or creating a note. Supported values are - `true`, `false`. Without it, the plugin's **Timeline navigation** calendar setting decides.
+**A wrong option does not break the block.** An option name the block does not know is listed in a
+notice above the block, and a value it does not understand falls back to the default — so a block that
+looks right but ignores your option usually has a misspelled value. `true` and `false` must be written
+that way; `yes`, `no`, `on` and `off` are read as text.
 
-To see the previous and next week alongside the current one:
+Every block's container carries a class themes and CSS snippets can target: `journal-nav-code-block`,
+`journal-timeline-code-block`, `journal-home-code-block`, `journal-notelets-code-block`.
+
+## Navigation block — `journal-nav`
+
+````markdown
+```journal-nav
+
+```
+````
+
+Draws the journal's [navigation block](/views-and-blocks#navigation-blocks) for the note it sits in —
+its lines, segments and arrows are set in the journal's settings, not here. It needs a note connected
+to a journal. `calendar-nav` and `interval-nav` are older names for the same block and still work.
+
+| Option     | Values          | Default                                          |
+| ---------- | --------------- | ------------------------------------------------ |
+| `adjacent` | `true`, `false` | the journal's **Show previous and next periods** |
+
+`adjacent: false` shows only the current period and its arrows; `adjacent: true` shows the previous and
+next periods where the journal hides them.
+
+````markdown
+```journal-nav
+adjacent: false
+```
+````
+
+![Daily note navigation block](/assets/code-blocks-nav-daily-light.png){.light-only}
+![Daily note navigation block](/assets/code-blocks-nav-daily-dark.png){.dark-only}
+
+## Timeline — `calendar-timeline`
+
+````markdown
+```calendar-timeline
+
+```
+````
+
+A calendar grid for the period around the note it sits in. Without `mode`, a daily or weekly note shows
+its week, a monthly note its month, a quarterly note its quarter and a yearly note its year. A custom
+interval note shows its week, and a note in no journal shows the current week.
+
+| Option           | Values                                            | Default                                          |
+| ---------------- | ------------------------------------------------- | ------------------------------------------------ |
+| `mode`           | `week`, `month`, `quarter`, `calendar`            | from the note's journal, as above                |
+| `shelf`          | a shelf's name                                    | the shelf of the note's journal, or all journals |
+| `weeks`          | `default`, `left`, `right`, `none`                | `default` — **Default week numbers**             |
+| `hiddenWeekdays` | a list of day numbers, `0` Sunday to `6` Saturday | none hidden                                      |
+| `before`         | a number of extra periods above                   | `0`; `week` and `month` modes only               |
+| `after`          | a number of extra periods below                   | `0`; `week` and `month` modes only               |
+| `navigation`     | `true`, `false`                                   | **Default timeline navigation**                  |
+
+`calendar` shows the whole year as twelve months; `quarter` shows three.
+
+The previous and next week alongside the current one:
 
 ````markdown
 ```calendar-timeline
@@ -63,32 +84,28 @@ after: 1
 ```
 ````
 
-To page through periods without leaving the note:
+A month without weekends:
 
 ````markdown
 ```calendar-timeline
-mode: week
-navigation: true
+mode: month
+hiddenWeekdays: [0, 6]
 ```
 ````
 
-The controls step by the timeline's own period — a week in `week` mode, a month in `month` mode, a quarter in `quarter` mode and a year in `calendar` mode. Paging itself never opens or creates a note; a reset control appears once you have moved, and returns the block to the period of the note holding it. The block returns there on its own whenever Obsidian re-renders it.
-
-Where the block shows a single grid — `week` or `month` mode with no `before` or `after` — the controls sit on either side of that grid's own month, quarter and year headings, so the block spends one row instead of two. Those headings are the same links they always were: clicking one opens or creates that period's note, including while you have paged away from the note's own period. Every other shape shows several grid headings and has no single one to join, so it keeps a separate row naming the periods on screen.
-
-Sample week timeline
+With `navigation: true`, arrows page through periods without opening or creating a note — a week at a
+time in `week` mode, a month in `month`, a quarter in `quarter`, a year in `calendar`. A reset control
+appears once you have moved, and the block returns to the note's own period whenever Obsidian redraws
+it. When the block shows a single grid — `week` or `month` with no `before` or `after` — the arrows sit
+beside the grid's own headings, which still open their notes.
 
 ![Week timeline](/assets/code-blocks-timeline-week-light.png){.light-only}
 ![Week timeline](/assets/code-blocks-timeline-week-dark.png){.dark-only}
 
-Sample month timeline
-
 ![Month timeline](/assets/code-blocks-timeline-month-light.png){.light-only}
 ![Month timeline](/assets/code-blocks-timeline-month-dark.png){.dark-only}
 
-Quarter and Calendar timeline repeat month timeline for every month in quarter or year.
-
----
+## Links to today's notes — `journals-home`
 
 ````markdown
 ```journals-home
@@ -96,13 +113,21 @@ Quarter and Calendar timeline repeat month timeline for every month in quarter o
 ```
 ````
 
-Displays list of links to current notes in journals.
-Supports following settings:
+A row of links to the current notes: "Today", "This week" and so on. Useful on a dashboard note.
 
-- `show` - controls what journals are displayed (by default only the day link is displayed). Supported values are - `day`, `week`, `month`, `quarter`, `year`, `custom`.
-- `separator` - used to separate multiple links. Default - a bullet padded with spaces, `" • "`.
-- `scale` - allows to increase size of links. Used as multiplier of text size - so to have links twice as big as regular text use `2`. Default - `1`.
-- `shelf` - allows to limit journals displayed in block to some specific shelf. Without it, the shelf holding the current note's journal is used.
+| Option      | Values                                                        | Default                                          |
+| ----------- | ------------------------------------------------------------- | ------------------------------------------------ |
+| `show`      | a list of `day`, `week`, `month`, `quarter`, `year`, `custom` | `[day]`                                          |
+| `separator` | text between links                                            | `" • "`                                          |
+| `scale`     | a number; `2` makes the links twice as big                    | `1`                                              |
+| `shelf`     | a shelf's name                                                | the shelf of the note's journal, or all journals |
+
+- Each of `day` … `year` adds one link, shown when a journal of that length is in scope. With more than
+  one such journal, clicking asks which.
+- `custom` adds one link per custom interval journal in scope, labelled with its current interval
+  note's name.
+- A `shelf` naming a shelf that does not exist shows "No journals to show. Check the block's show and
+  shelf options."
 
 ````markdown
 ```journals-home
@@ -110,14 +135,19 @@ show:
   - day
   - week
   - month
-  - quarter
-  - year
   - custom
-scale: 2
+scale: 1.5
 separator: " | "
 shelf: work
 ```
 ````
+
+In a vault with daily and weekly journals but no monthly one, `show: [day, week, month]` draws two links:
+
+![Two links, "Today" and "This week", separated by a dot](/assets/code-blocks-home-light.png){.light-only}
+![Two links, "Today" and "This week", separated by a dot](/assets/code-blocks-home-dark.png){.dark-only}
+
+## Notelets — `journal-notelets`
 
 ````markdown
 ```journal-notelets
@@ -125,14 +155,13 @@ shelf: work
 ```
 ````
 
-Lists the [notelets](/notelets) of the period the note holding the block belongs to, grouped by type,
-with a button that creates a new one. It reads the host note's own journal and date, so it works in
-a period note and in a notelet alike; in a note connected to no journal it says so and lists nothing.
+Lists the [notelets](/notelets) of the period the note belongs to, grouped by type, with **New
+notelet**. It works in a period note and in a notelet alike. In a note connected to no journal it says
+"Note is not connected to a journal".
 
-Supports following settings:
-
-- `types` - limits the list to particular notelet types, named as you named them. Without it every
-  type of the note's journal is listed.
+| Option  | Values                                    | Default                   |
+| ------- | ----------------------------------------- | ------------------------- |
+| `types` | a list of notelet type names, or one name | every type of the journal |
 
 ````markdown
 ```journal-notelets
@@ -141,3 +170,5 @@ types:
   - Retro
 ```
 ````
+
+:::
