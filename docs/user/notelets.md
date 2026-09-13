@@ -3,71 +3,140 @@
 ::: v-pre
 
 A journal normally keeps one note per period — one note for today, one for this sprint. A
-**notelet** is an extra note the same journal keeps for that period, alongside the period's own
-note: meeting notes on a day, a retro on a sprint, a reading log on a week. A period can hold any
-number of them.
+**notelet** is an extra note the same journal keeps for that period, alongside the period's own note:
+meeting notes on a day, a retro on a sprint, a reading log on a week. A period can hold any number of
+them.
 
-Every notelet belongs to a **notelet type**, configured on the journal under **Notelet types**. The
-type decides where its notes go, what they are named and what they contain; the journal decides
-which period a notelet belongs to. A type is a template for notes, not a second journal — it has no
-timeline and no calendar of its own.
+Every notelet belongs to a **notelet type**: "A notelet type is a kind of extra note this journal can
+create for a period, alongside the period's own note." The type decides where its notes go, what they
+are called and what goes into them; the journal decides which period a notelet belongs to. A type
+has no timeline or calendar of its own.
 
-A notelet is identified by its frontmatter, not by its path. The plugin writes the journal name, the
-period's date and the notelet's type into each one, and reads them back from there — so a notelet
-you move or rename by hand stays connected.
+A notelet is recognized by its properties, not its path. The plugin writes the journal's name, the
+period's date and the type's name into each one, so a notelet you move or rename by hand stays
+connected.
 
-Each type has:
+## Adding a notelet type
 
-- **Name** — stored on every notelet of the type, and what you read in lists and menus. Renaming a
-  type rewrites the notes that carry the old name, so nothing is left stranded
-- **Folder** and **Note name** — where its notes live and what they are called, using the same
-  [variables](/reference/variables) as the journal's own notes, plus `{{notelet_index}}`. The name
-  defaults to `{{journal_name}} {{notelet_index}}`, and a new type starts in the journal's own
-  folder — change it to keep the type's notes somewhere else
-- **Templates** — one or more template notes for new notelets of this type, applied the same way a
-  journal applies its own
-- **Questions** — the type's own [questions](/questions), asked when one of its notelets is created.
-  These are separate from the journal's questions, and only the type's own answers are available to
-  its name template and folder
-- **Confirm creating notelets** — off by default. Shows a confirmation dialog naming the note before
-  a notelet of this type is created. It is the type's own setting: the journal's **Confirm creating
-  new notes** guards the period note you navigate to, and never reaches a notelet. A type that asks
-  questions shows those instead, since that dialog already names the note and can be cancelled
-- **Number each notelet** — on by default. Numbering restarts in every period, so the first notelet
-  of a day is always 1, and the number is stored in a frontmatter property you can rename
-- **Commands** — the plugin seeds one command per type ("Create _\<type\>_"), and you can add more
-  targeted at the type
+On a journal's settings page, **Notelet types** → **Add notelet type** asks for a **Name**: "Stored on
+each notelet, and what you rename to change it everywhere." It must be unique within the journal.
 
-Because several notelets share one period, a name template with nothing that varies _within_ a
-period would name them all the same. `{{notelet_index}}`, a clock variable, or one of the type's own
-questions makes each name distinct; without any of them the settings page warns, and the plugin adds
-a number to the file name so nothing is overwritten. A second warning appears when a type renders
-onto the journal's own note path — the plugin keeps them apart automatically, but the two are easy
-to confuse.
+The type's own page has:
 
-**Creating a notelet:**
+- **Note name** — what its notelets are called, using the journal's [variables](/reference/variables)
+  plus `{{notelet_index}}`. `{{journal_name}} {{notelet_index}}` by default.
+- **Folder** — where they go. Empty by default, which is the vault root; set it, for example to
+  `Daily/meetings`.
+- **Confirm creating notelets** — "Show a confirmation dialog before a notelet of this type is
+  created." Off by default. This is the type's own setting; the journal's **Confirm creating new
+  notes** never applies to notelets. A type that asks questions shows its question dialog instead.
+- **Number each notelet** — "Numbers restart in every period, so the first notelet of a day is always
+  1." On by default. The number is stored under **Property name**, `journal-notelet-index` unless you
+  change it, and is `{{notelet_index}}` in the name.
+- **Templates** — template notes for new notelets, chosen the way a journal chooses its own. See
+  [Templates](/journals#templates).
+- **Questions** — the type's own [questions](/questions). Only the type's answers are available to its
+  note name and folder; the journal's questions are not asked for a notelet.
+- **Commands** — adding a type adds a **Create** _type_ command; add more targeted at the type. See
+  [Commands](/commands).
 
-- Run the type's seeded command, or any command you targeted at it
-- Use **New notelet** in the [notelets list](/reference/code-blocks), in a view block or a
-  `journal-notelets` code block
-- Open a link like `obsidian://journals?journal=Daily&notelet=Meeting&date=today`
+### Names that would repeat
 
-**Adopting notes you already have:**
+Several notelets share one period, so a name with nothing that changes within a period would give
+them all the same name. `{{notelet_index}}`, a time variable such as `{{time}}`, or one of the type's
+questions keeps them apart. Without one, the settings page warns — "This name template has nothing that
+varies within a period, so every notelet after the first gets a number added to its file name." — and
+the plugin does exactly that, so nothing is overwritten.
 
-- **Connect note to a journal** offers the journal's notelet types alongside its period note, and
-  renames and moves the note to match the type — unless one of the type's questions feeds the name
-  or folder, in which case the note keeps where and what it is
-- **Bulk add** on a notelet type scans a folder and connects the notes it finds in one pass,
-  numbering them in scan order
+A second warning appears when the type's notelets would land on the journal's own note path. The
+plugin names them differently, but the two are easy to confuse.
 
-**Deleting a type** asks what to do with the notelets connected to it: **keep** them as ordinary
-notes with their frontmatter intact, **clear** the journal and notelet properties from their
-frontmatter while leaving the notes in your vault, or **delete** the notes. Cloning a journal
-offers **Copy notelet types**, on by default, which gives the copy its own types and commands.
+## Creating a notelet
 
-Notelets take part in the rest of the plugin: the **Has notelet** [decoration](/decorations)
-condition paints periods that have one, the [Maintenance](/troubleshooting#maintenance) vault check reports notelets
-naming a type their journal no longer has, and a notelet counts as the active journal note for
-commands and for a view's **Follow active note**.
+- Run the type's **Create** _type_ command, or any command targeted at the type. A notelet command
+  always creates a new notelet — it never opens an existing one.
+- **New notelet** in a notelets list: the **Notelets** view block, or a `journal-notelets` code block.
+- A link such as `obsidian://journals?journal=Daily&notelet=Meeting&date=today`.
+
+Each creates a notelet for the chosen period, numbered after the ones already there.
+
+## Listing notelets
+
+A `journal-notelets` code block lists the notelets of the period the note it sits in belongs to —
+in a period note or in a notelet alike — grouped by type, with **New notelet**. In a note connected to
+no journal it says "Note is not connected to a journal".
+
+````markdown
+```journal-notelets
+types:
+  - Meeting
+```
+````
+
+`types` limits the list to types named as you named them. See
+[Code blocks](/reference/code-blocks). The **Notelets** view block lists them in a view — see
+[Views and blocks](/views-and-blocks#notelets).
+
+A notelet whose type was deleted is listed as "_type_ (missing type)".
+
+## Adopting notes you already have
+
+- **Connect note to a journal** offers the journal's notelet types under **Connect as**. See
+  [Connect note to a journal](/notes#connect-note-to-a-journal).
+- **Bulk add notelets of this type**, on the type's row, connects a folder of notes as notelets, numbered
+  in the order the folder is scanned. See [Bulk add](/notes#bulk-add).
+
+## Renaming and deleting a type
+
+**Rename notelet type** rewrites the type name on every notelet that carries it; the notes stay where
+they are.
+
+**Delete notelet type** says how many notelets are connected and asks **What to do with connected
+notelets**:
+
+- **Keep notelets** — "Notelets stay in your vault unchanged." They keep the old type's name, still
+  list as "(missing type)", and the [vault check](/troubleshooting#maintenance) reports them.
+- **Clear notelet type data** — "Notelets stay in your vault, but all journal and notelet type
+  properties are removed from their frontmatter."
+- **Delete notelets** — "All notelets of this type are deleted from your vault."
+
+Deleting a type also takes it out of every **Check if a notelet exists** decoration condition that named
+it, and removes a condition — or a whole decoration — that named nothing else.
+
+Cloning a journal offers **Copy notelet types**, on by default. See [Journals](/journals).
+
+## Notelets elsewhere
+
+- **Check if a notelet exists** paints periods that have one — see [Decorations](/decorations).
+- A notelet counts as the active journal note for commands and for a view's **Follow active note**.
+
+## Examples
+
+### Meeting notes on a day
+
+A daily journal (folder `day`, name `{{date}}`) with two notelet types:
+
+| Type    | Note name                            | Folder         | Number each notelet |
+| ------- | ------------------------------------ | -------------- | ------------------- |
+| Meeting | `{{date}} Meeting {{notelet_index}}` | `day/meetings` | on                  |
+| Retro   | `{{date}} Retro`                     | `day/retros`   | off                 |
+
+and their commands **Create Meeting** and **Create Retro**.
+
+Running **Create Meeting** twice on 14 September 2026 creates `day/meetings/2026-09-14 Meeting 1.md`
+and `day/meetings/2026-09-14 Meeting 2.md`, with `journal-notelet-index` 1 and 2. Running **Create
+Retro** twice creates `day/retros/2026-09-14 Retro.md`, then `day/retros/2026-09-14 Retro 1.md`: its
+name has nothing that changes within the day, so the second gets a number.
+
+A `journal-notelets` block in that day's note lists them by type:
+
+![A notelets block for September 14, 2026: two Meeting notelets and two Retro notelets](/assets/notelets-block-light.png){.light-only}
+![A notelets block for September 14, 2026: two Meeting notelets and two Retro notelets](/assets/notelets-block-dark.png){.dark-only}
+
+### A notelet from a link
+
+After those two meetings, following `obsidian://journals?journal=daily&notelet=Meeting` creates
+`day/meetings/2026-09-14 Meeting 3.md`, with `journal-notelet: Meeting` and
+`journal-notelet-index: 3`.
 
 :::
