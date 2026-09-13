@@ -42,9 +42,13 @@ function frontmatterEndLine(text) {
 // markdown-it-container's own rule: an opener must carry a name (a bare `:::`
 // closes nothing and must not be mistaken for one — the defect docs/user/.vitepress/llms.mts
 // has under its optional-name opener regex); a closer needs no name and pops the
-// top frame once its colon run is at least as long as the one it closes.
-const CONTAINER_OPEN = /^(:{3,})\s*\S/;
-const CONTAINER_CLOSE = /^(:{3,})\s*$/;
+// top frame once its colon run is at least as long as the one it closes. Leading
+// whitespace of any width is allowed on both, unlike the fence rule's 0-3 space
+// cap: markdown-it-container honors a container nested inside a list item at the
+// item's content indentation, which routinely exceeds 3 spaces. Known residual:
+// this also matches a `:::` line sitting inside a 4-space-indented code block.
+const CONTAINER_OPEN = /^[ \t]*(:{3,})(\s*\S.*)$/;
+const CONTAINER_CLOSE = /^[ \t]*(:{3,})\s*$/;
 
 function findMustaches(text) {
   const hits = [];
@@ -63,7 +67,7 @@ function findMustaches(text) {
 
     const openMatch = CONTAINER_OPEN.exec(line);
     if (openMatch) {
-      const name = line.slice(openMatch[1].length).trim();
+      const name = openMatch[2].trim();
       stack.push({ colons: openMatch[1].length, isVPre: name === "v-pre" });
       continue;
     }
