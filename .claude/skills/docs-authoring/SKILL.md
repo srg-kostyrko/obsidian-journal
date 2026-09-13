@@ -58,9 +58,17 @@ Every feature page ends with two or three concrete, copyable configurations.
 ## `{{...}}` in prose
 
 VitePress compiles every page as a Vue template, so a literal `{{...}}` in prose —
-including inside inline backticks — is parsed as a Vue expression and fails the
-build. The manual quotes template variables like `{{date}}` constantly, so this
-will come up on most pages. Fenced code blocks are exempt.
+including inside inline backticks — is evaluated as a Vue expression. Fenced code
+blocks are exempt. The manual quotes template variables like `{{date}}`
+constantly, so this will come up on most pages.
+
+The consequence depends on the contents, and the build is not a reliable
+gate: a plain variable name like `{{date}}` silently renders as blank text and
+the build still passes; a variable with modifiers, like `{{date+5d:format}}`
+or `{{index:o}}`, usually fails the build with a syntax error. Neither
+`npm run docs:build` nor `npm run check:docs-links` catches a forgotten wrap
+around a plain variable name, so wrap every `{{...}}` outside a fenced block —
+don't rely on the build to tell you.
 
 Wrap the affected content in a `::: v-pre` container: the opening and closing
 lines at column 0, nothing else on them.
