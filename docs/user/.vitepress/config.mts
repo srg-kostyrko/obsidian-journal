@@ -1,4 +1,5 @@
 import { defineConfig } from "vitepress";
+import { emitLlmsTxt } from "./llms.mts";
 
 export default defineConfig({
   title: "Journals for Obsidian",
@@ -6,6 +7,7 @@ export default defineConfig({
   base: "/obsidian-journal/",
   cleanUrls: true,
   lastUpdated: true,
+  buildEnd: emitLlmsTxt,
   themeConfig: {
     nav: [{ text: "Manual", link: "/journals" }],
     sidebar: [
