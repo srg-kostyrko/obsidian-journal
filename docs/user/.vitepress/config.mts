@@ -10,11 +10,31 @@ export default defineConfig({
     nav: [{ text: "Manual", link: "/journals" }],
     sidebar: [
       {
+        text: "Using Journals",
+        items: [
+          { text: "Journals", link: "/journals" },
+          { text: "Shelves", link: "/shelves" },
+          { text: "Questions", link: "/questions" },
+          { text: "Notelets", link: "/notelets" },
+          { text: "Decorations", link: "/decorations" },
+          { text: "Views and blocks", link: "/views-and-blocks" },
+          { text: "Commands", link: "/commands" },
+        ],
+      },
+      {
         text: "Reference",
         items: [
+          { text: "Settings", link: "/settings" },
           { text: "Variables", link: "/reference/variables" },
           { text: "Code blocks", link: "/reference/code-blocks" },
           { text: "Glossary", link: "/reference/glossary" },
+        ],
+      },
+      {
+        text: "Help",
+        items: [
+          { text: "Compatibility", link: "/compatibility" },
+          { text: "Troubleshooting", link: "/troubleshooting" },
         ],
       },
     ],

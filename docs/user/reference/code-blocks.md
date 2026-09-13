@@ -122,7 +122,7 @@ shelf: work
 ```
 ````
 
-Lists the [notelets](#notelets) of the period the note holding the block belongs to, grouped by type,
+Lists the [notelets](/notelets) of the period the note holding the block belongs to, grouped by type,
 with a button that creates a new one. It reads the host note's own journal and date, so it works in
 a period note and in a notelet alike; in a note connected to no journal it says so and lists nothing.
 

@@ -23,10 +23,10 @@ These variables can be used in the note name template, the folder path, and the 
   `{{index:o}}` renders it as an ordinal ("4th"). They combine as
   `{{index+3:o}}`. Both survive the round-trip out of a note name, so a journal
   named `Sprint {{index+3}}` still recognizes its own notes.
-- A journal's own [questions](#questions) each add a variable named after the question — a
+- A journal's own [questions](/questions) each add a variable named after the question — a
   question named `mood` renders as `{{mood}}`. Available everywhere the built-in variables above
   are; a question with no answer yet renders empty, same as an unset numbering variable.
-- `{{notelet_index}}` - the number of a [notelet](#notelets) within its period. Numbering restarts
+- `{{notelet_index}}` - the number of a [notelet](/notelets) within its period. Numbering restarts
   in every period, so the first notelet of a day is always 1. Available only in a notelet type's
   own note name, folder path and templates, and only while that type has **Number each notelet**
   on. It offsets and renders as an ordinal like the other numbering variables
