@@ -16,6 +16,11 @@
 // or inline link that points at a page-relative target (`./x`, `x`) is not
 // something this script can resolve without walking the renderer's own path
 // rules, so it is reported as unchecked rather than silently ignored.
+//
+// Inline code spans are stripped before a line is scanned for links: this manual
+// documents syntax by showing it, so `` `[x](/nope)` `` in prose is example text,
+// not a real link, and must not be checked. Only single-line spans are handled —
+// a code span opened on one line and closed on a later one is a known gap.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
@@ -85,6 +90,37 @@ function* unfencedLines(text) {
   }
 }
 
+// A code span opens at a run of N backticks and closes at the next run of
+// exactly N backticks; a run with no same-length match later on the line is
+// literal text, not an opener, and must not swallow the rest of the line.
+// Column positions don't matter here — the span's content is blanked out in
+// place so the line length (and therefore nothing downstream) never shifts.
+function stripCodeSpans(line) {
+  const runs = [...line.matchAll(/`+/g)].map((m) => ({ start: m.index, end: m.index + m[0].length }));
+  const spans = [];
+  let i = 0;
+  while (i < runs.length) {
+    const open = runs[i];
+    const openLength = open.end - open.start;
+    let j = i + 1;
+    while (j < runs.length && runs[j].end - runs[j].start !== openLength) j++;
+    if (j < runs.length) {
+      spans.push([open.start, runs[j].end]);
+      i = j + 1;
+    } else {
+      i++;
+    }
+  }
+  if (spans.length === 0) return line;
+  let out = "";
+  let cursor = 0;
+  for (const [start, end] of spans) {
+    out += line.slice(cursor, start) + " ".repeat(end - start);
+    cursor = end;
+  }
+  return out + line.slice(cursor);
+}
+
 function classify(target) {
   if (/^([a-z][\w+.-]*:)?\/\//i.test(target) || /^(mailto|tel):/i.test(target)) return "external";
   if (target.startsWith("/")) return "site";
@@ -137,7 +173,8 @@ for (const mdPath of walk(src, ".md")) {
   }
 
   for (const { lineno, line } of unfencedLines(text)) {
-    for (const m of line.matchAll(linkPattern)) {
+    const scanLine = stripCodeSpans(line);
+    for (const m of scanLine.matchAll(linkPattern)) {
       const isImage = m[1] === "!";
       if (isImage) continue;
 
