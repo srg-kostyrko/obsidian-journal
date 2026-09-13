@@ -2,6 +2,17 @@
 
 A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that transforms your note-taking experience. This plugin helps you create, organize, and navigate structured journal entries across multiple timeframes, from daily notes to custom periods. Whether you're tracking daily work logs, organizing research notes by week, or managing project sprints, Journals provides powerful tools for consistent formatting, easy navigation, and visual organization of your time-based notes.
 
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-dark.png"
+  />
+  <img
+    alt="A Journals view in the Obsidian sidebar: toolbars, a decorated month calendar and the notes written on the selected day"
+    src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-light.png"
+  />
+</picture>
+
 ## Key Features
 
 ### Journal Types
@@ -47,6 +58,12 @@ Follow the steps below to install plugin.
 2. Enable the plugin in your Obsidian settings (find "Journals" under "Community plugins").
 3. Check the settings. Configure journals that you need.
 
+## Compatibility
+
+Journals needs Obsidian 1.8.7 or later and runs on desktop and mobile. It works alongside Templater, and
+replaces Daily notes, Periodic Notes and Calendar — see
+[Compatibility](https://srg-kostyrko.github.io/obsidian-journal/compatibility) for how they interact.
+
 ## Documentation
 
 The full user manual lives at
@@ -54,7 +71,9 @@ The full user manual lives at
 
 |                                                                                                          |                                                                 |
 | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| [Periods](https://srg-kostyrko.github.io/obsidian-journal/periods)                                       | Period lengths, custom intervals and week configuration         |
 | [Journals](https://srg-kostyrko.github.io/obsidian-journal/journals)                                     | Configuring a journal — periods, naming, templates, frontmatter |
+| [Notes](https://srg-kostyrko.github.io/obsidian-journal/notes)                                           | Creating notes, attaching existing ones, and bulk add           |
 | [Shelves](https://srg-kostyrko.github.io/obsidian-journal/shelves)                                       | Grouping journals, and scoping views and commands to a group    |
 | [Questions](https://srg-kostyrko.github.io/obsidian-journal/questions)                                   | Prompting for answers when a note is created                    |
 | [Notelets](https://srg-kostyrko.github.io/obsidian-journal/notelets)                                     | Extra notes attached to a period                                |
@@ -84,3 +103,7 @@ changes — see
 Contributions via bug reports, bug fixes, documentation, and general improvements are always welcome. For more major feature work, open an issue about the idea first so we can judge feasibility and how best to implement it.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, the checks a change needs to pass, and how to open a pull request.
+
+## Licence
+
+[MIT](LICENSE)
