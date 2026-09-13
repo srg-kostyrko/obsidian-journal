@@ -8,18 +8,19 @@ authoritative docs live, and the traps that none of them cover.
 Each subject below has exactly one owner. Read the owner — this file does not
 restate it.
 
-| Document                                                               | Owns                                                                                             |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| [`CONTEXT.md`](CONTEXT.md)                                             | domain vocabulary — periods, journals, shelves, decorations                                      |
-| [`docs/architecture.md`](docs/architecture.md)                         | code layout, DI, `Result`/`Option`, dates and union dispatch, schemas, i18n, test file locations |
-| [`docs/unit-testing-strategy.md`](docs/unit-testing-strategy.md)       | the unit and component suite — tiers, `testContainer`, fixtures, assertions, lint rules          |
-| [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)         | the e2e layer — runner, fixtures, selectors, execution model                                     |
-| [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces    |
-| [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                     |
-| [`docs/plugin-harvest-list.md`](docs/plugin-harvest-list.md)           | the standing queue of plugins to mine for ideas, and what has already been ruled out             |
-| [`.claude/skills/release/SKILL.md`](.claude/skills/release/SKILL.md)   | how a version reaches the community store, and the post-release sweep that follows               |
-| [`docs/plugin-api.md`](docs/plugin-api.md)                             | the plugin-facing API — its surface, stability policy, and the npm package                       |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                   | setup, quality gates, commit and PR conventions                                                  |
+| Document                                                               | Owns                                                                                                            |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| [`CONTEXT.md`](CONTEXT.md)                                             | domain vocabulary — periods, journals, shelves, decorations                                                     |
+| [`docs/architecture.md`](docs/architecture.md)                         | code layout, DI, `Result`/`Option`, dates and union dispatch, schemas, i18n, test file locations                |
+| [`docs/unit-testing-strategy.md`](docs/unit-testing-strategy.md)       | the unit and component suite — tiers, `testContainer`, fixtures, assertions, lint rules                         |
+| [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)         | the e2e layer — runner, fixtures, selectors, execution model                                                    |
+| [`docs/i18n-glossary.md`](docs/i18n-glossary.md)                       | translation terms, and the `check:i18n` rules that `scripts/check-i18n-glossary.mjs` enforces                   |
+| [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md) | user-facing copy style — sentence case, error grammar, en-US                                                    |
+| [`docs/plugin-harvest-list.md`](docs/plugin-harvest-list.md)           | the standing queue of plugins to mine for ideas, and what has already been ruled out                            |
+| [`.claude/skills/release/SKILL.md`](.claude/skills/release/SKILL.md)   | how a version reaches the community store, and the post-release sweep that follows                              |
+| [`docs/plugin-api.md`](docs/plugin-api.md)                             | the plugin-facing API — its surface, stability policy, and the npm package                                      |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                   | setup, quality gates, commit and PR conventions                                                                 |
+| [`docs/user/`](docs/user/)                                             | the user manual — every setting, block and migration path; published at srg-kostyrko.github.io/obsidian-journal |
 
 **If a rule belongs to one of those documents, it goes there, not here.** This
 file carries only what has no other home.
@@ -524,7 +525,7 @@ on it.
   survives in exactly one consumer, `PeriodButtonsItem.vue`.
 - Whole-block nav decoration draws only on the current journal's own
   decorations — the _Whole block decoration_ setting in
-  [`README.md`](README.md#navigation-blocks) describes it, and
+  [`views-and-blocks.md`](docs/user/views-and-blocks.md#navigation-blocks) describes it, and
   `navBlockDecorationScope` (`decoration-scopes.ts`) is the one map it reads.
   Per-segment decoration is scoped differently and is the part no doc states,
   and unlike the block it is not one scope: a segment linked `none`, or an

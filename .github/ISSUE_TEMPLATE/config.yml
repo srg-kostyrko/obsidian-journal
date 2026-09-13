@@ -1,7 +1,7 @@
 blank_issues_enabled: false
 contact_links:
   - name: Documentation
-    url: https://github.com/srg-kostyrko/obsidian-journal#readme
+    url: https://srg-kostyrko.github.io/obsidian-journal/
     about: Settings reference, template variables, code blocks, and troubleshooting.
   - name: Obsidian forum
     url: https://forum.obsidian.md/

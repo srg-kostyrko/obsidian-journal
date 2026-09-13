@@ -120,6 +120,9 @@ export default [
       "src/i18n/paraglide/**",
       "coverage/**",
       ".obsidian-cache/**",
+      // The VitePress `.mts` files under docs/user/.vitepress are in no tsconfig, so linting them
+      // would pull a fresh path into the project service for no benefit.
+      "docs/**",
     ],
   },
   eslint.configs.recommended,

@@ -61,3 +61,6 @@ coverage
 
 # Retired 2026-08-13 — specs and plans now live in .superpowers/
 docs/superpowers/
+
+docs/user/.vitepress/dist/
+docs/user/.vitepress/cache/
