@@ -1,0 +1,40 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "cursor": {
+      "name": "cursor",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "folder": "cursor",
+      "templates": ["templates/cursor.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "date-now": {
+      "name": "date-now",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "folder": "date-now",
+      "templates": ["templates/date-now.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  }
+}
