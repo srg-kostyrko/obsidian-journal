@@ -1,36 +1,111 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { $, browser } from "@wdio/globals";
+import { browser } from "@wdio/globals";
 
 const ASSETS = "./docs/user/public/assets";
 const OUTCOMES = "./e2e/.reports/outcomes";
+const CAPTURE_TIMEOUT_MS = 8000;
 
 const THEMES = [
   { id: "moonstone", bodyClass: "theme-light", suffix: "light" },
   { id: "obsidian", bodyClass: "theme-dark", suffix: "dark" },
 ] as const;
 
-/** Save an element screenshot of `selector` in each Obsidian theme. */
-export async function captureThemed(selector: string, name: string): Promise<void> {
-  // saveScreenshot does not create directories.
-  await mkdir(ASSETS, { recursive: true });
-  // A zero-width element cannot be captured, so wait for a stable, non-zero box.
-  const waitForStableLayout = async (): Promise<void> => {
-    let consecutive = 0;
-    await browser.waitUntil(
-      async () => {
-        const width = await browser.execute(
-          (sel: string) => document.querySelector<HTMLElement>(sel)?.clientWidth ?? 0,
-          selector,
+interface CaptureOptions {
+  /** CSS pixels of surrounding window to include on every side, clamped to the viewport. */
+  padding?: number;
+}
+
+interface CaptureReply {
+  data?: string;
+  error?: string;
+}
+
+interface CapturedImage {
+  toPNG(): { toString(encoding: "base64"): string };
+}
+
+interface ElectronHost {
+  electron?: { remote?: { getCurrentWebContents(): { capturePage(rect: object): Promise<CapturedImage> } } };
+}
+
+class CaptureFailedError extends Error {
+  constructor(selector: string, reason: string) {
+    super(`capture of ${selector} failed: ${reason}`);
+    this.name = "CaptureFailedError";
+  }
+}
+
+// A zero-width element cannot be captured, so wait for a stable, non-zero box.
+async function waitForStableLayout(selector: string): Promise<void> {
+  let consecutive = 0;
+  await browser.waitUntil(
+    async () => {
+      const width = await browser.execute(
+        (sel: string) => document.querySelector<HTMLElement>(sel)?.clientWidth ?? 0,
+        selector,
+      );
+      consecutive = width > 0 ? consecutive + 1 : 0;
+      return consecutive >= 3;
+    },
+    { timeoutMsg: `${selector} never settled on a laid-out width`, interval: 100 },
+  );
+}
+
+/** Save a screenshot of `selector`'s box to `file` once its layout has settled. */
+export async function saveElementScreenshot(
+  selector: string,
+  file: string,
+  options: CaptureOptions = {},
+): Promise<void> {
+  await mkdir(path.dirname(file), { recursive: true });
+  await waitForStableLayout(selector);
+  // Not chromedriver's screenshot (`$().saveScreenshot`, `browser.takeScreenshot`, or CDP
+  // `Page.captureScreenshot`): against Obsidian's window it waits for a freshly presented frame
+  // that often never comes, so it hangs for good, or its retry hands back the window's top-left
+  // corner at the element's size. Electron's capturePage copies the surface as last drawn. The
+  // in-page timeout turns a stall into a failed test rather than a wedged WebDriver session.
+  const reply = await browser.execute(
+    async (sel: string, padding: number, timeoutMs: number): Promise<CaptureReply> => {
+      const box = document.querySelector(sel)?.getBoundingClientRect();
+      const remote = (window as unknown as ElectronHost).electron?.remote;
+      if (box === undefined) return { error: "target is not in the document" };
+      if (remote === undefined) return { error: "electron.remote is unavailable" };
+      // Rounded, not floored and ceiled, to frame a fractional box as chromedriver did, so a
+      // retake of an unchanged block reproduces the committed image byte for byte.
+      const left = Math.max(0, Math.round(box.left - padding));
+      const top = Math.max(0, Math.round(box.top - padding));
+      const width = Math.min(window.innerWidth - left, Math.round(box.width + 2 * padding));
+      const height = Math.min(window.innerHeight - top, Math.round(box.height + 2 * padding));
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const stalled = new Promise<CaptureReply>((resolve) => {
+        timer = setTimeout(() => resolve({ error: `no image after ${timeoutMs} ms` }), timeoutMs);
+      });
+      const captured = remote
+        .getCurrentWebContents()
+        .capturePage({ x: left, y: top, width, height })
+        .then(
+          (image): CaptureReply => ({ data: image.toPNG().toString("base64") }),
+          (error: unknown): CaptureReply => ({ error: String(error) }),
         );
-        consecutive = width > 0 ? consecutive + 1 : 0;
-        return consecutive >= 3;
-      },
-      { timeoutMsg: `${selector} never settled on a laid-out width`, interval: 100 },
-    );
-  };
-  await waitForStableLayout();
+      try {
+        return await Promise.race([captured, stalled]);
+      } finally {
+        clearTimeout(timer);
+      }
+    },
+    selector,
+    options.padding ?? 0,
+    CAPTURE_TIMEOUT_MS,
+  );
+  if (reply.data === undefined) throw new CaptureFailedError(selector, reply.error ?? "no image");
+  await writeFile(file, reply.data, "base64");
+}
+
+/** Save an element screenshot of `selector` in each Obsidian theme. */
+export async function captureThemed(selector: string, name: string, options: CaptureOptions = {}): Promise<void> {
+  await waitForStableLayout(selector);
   for (const theme of THEMES) {
     await browser.executeObsidian(({ app }, id) => {
       // Undocumented: sets the vault's `theme` config and restyles live, as the appearance tab does.
@@ -40,12 +115,10 @@ export async function captureThemed(selector: string, name: string): Promise<voi
       async () => browser.execute((cls: string) => document.body.classList.contains(cls), theme.bodyClass),
       { timeoutMsg: `Obsidian theme ${theme.id} was never applied` },
     );
-    // changeTheme also collapses the block's width for a moment while it re-lays-out under the
-    // new theme's CSS, so re-check layout here too, not only before the loop.
-    await waitForStableLayout();
-    // changeTheme suspends CSS transitions for 200 ms.
+    // changeTheme suspends CSS transitions for 200 ms, and collapses the block's width for a
+    // moment while it re-lays-out, which the layout wait in saveElementScreenshot rides out.
     await browser.pause(250);
-    await $(selector).saveScreenshot(path.join(ASSETS, `${name}-${theme.suffix}.png`));
+    await saveElementScreenshot(selector, path.join(ASSETS, `${name}-${theme.suffix}.png`), options);
   }
 }
 
