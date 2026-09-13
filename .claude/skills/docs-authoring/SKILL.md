@@ -21,21 +21,17 @@ Pages are named for domain concepts, never for settings tabs.
 Never source a claim from `README.md`. It is an overview and is deliberately brief;
 paraphrasing it produces the shallow content this manual exists to replace.
 
-## The citation rule
+## Verifying claims
 
-Every behavioral claim carries an HTML comment naming the file it was verified in:
+A page states behavior, and fluent prose about this plugin is wrong in ways that are
+expensive to catch. Before a page is committed, an agent that did not write it checks
+every claim against the code and marks each confirmed, wrong or unsupported; wrong
+claims are fixed and unsupported ones are traced or deleted. The verdicts go into the
+PR description, not into the page.
 
-```markdown
-A weekly journal anchors to the week's first day under the installed week grid.
-<!-- src: src/journals/settings/week-preset-service.ts -->
-```
-
-File only, never line numbers — they rot on every unrelated edit and generate
-false alarms. The comment is invisible when rendered and survives prettier.
-
-This is not decoration. It is what makes review cheap ("is this citation real"
-rather than "does this sound right"), and it is the index the docs-audit skill
-uses to find paragraphs whose justification has moved.
+Pages carry no source citations. A correct path does not make a claim true, and a
+refactor that moves a file would turn every citation of it into a false alarm or
+silent rot.
 
 ## Worked examples
 
@@ -47,12 +43,26 @@ Every feature page ends with two or three concrete, copyable configurations.
   single most expensive thing this manual can ship.
 - Examples go inside the feature page they demonstrate. `docs/user/guides/` is a
   closed set of three; do not add a fourth.
+- Run the example in a fixture vault through a `e2e/screenshots/<page>.shot.ts` spec, which
+  records what actually happened in `e2e/.reports/outcomes/`. If the outcome disagrees with
+  the page, the page changes.
+- A fence meant to show a wrong option must use the `yaml` language: the unit suite parses
+  every code-block fence in the manual and fails on an option the block would ignore.
 
 ## Page conventions
 
 - One `#` heading per page, matching the sidebar entry in `.vitepress/config.mts`.
 - A link to another page is a site-absolute path: `/decorations`, `/reference/variables`.
-- Screenshots live in `docs/user/public/assets/` and are referenced as `/assets/<name>.png`.
+- Screenshots are generated, never captured by hand, and only where the outcome is seen.
+  `npm run docs:screenshots` regenerates all of them; `npx wdio run ./wdio.conf.mts --spec
+./e2e/screenshots/<page>.shot.ts` (after `npm run build`) regenerates one page's. Each
+  subject is captured in both Obsidian themes and embedded as a pair:
+
+  ```markdown
+  ![Month calendar in the sidebar](/assets/views-month-light.png){.light-only}
+  ![Month calendar in the sidebar](/assets/views-month-dark.png){.dark-only}
+  ```
+
 - A new page must be added to `sidebar` in `.vitepress/config.mts`, or it is unreachable.
 
 ## `{{...}}` in prose
@@ -94,3 +104,4 @@ Run, in order:
 1. `npm run check:docs-mustaches` — catches an unwrapped `{{...}}`.
 2. `npm run docs:build` — catches a link to a page that does not exist.
 3. `npm run check:docs-links` — catches a link to an anchor that does not exist.
+4. The claim review described under **Verifying claims**.
