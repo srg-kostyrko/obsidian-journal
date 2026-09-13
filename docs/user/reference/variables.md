@@ -2,50 +2,104 @@
 
 ::: v-pre
 
-These variables can be used in the note name template, the folder path, and the content of a template note. Each journal's settings has a **Supported variables** link that opens the same list for that journal, with its own date format and numbering variables filled in.
+Variables are written in double braces — `{{date}}`, `{{index}}` — and filled in for the note being
+created. They work in a journal's **Note name template** and **Folder**, in template notes, in
+navigation block segments, in a notelet type's name and folder, and in the markdown template view
+block. Each journal's settings has a **Supported variables** link that opens the same list for that
+journal, with its own date format, numbering digits and questions filled in.
 
-- `{{journal_name}}` - name of journal note belongs to
-- `{{date}}` - date used as reference to specific period, formatted using date format from settings. In most cases it is the first day of the month, quarter, year or custom interval. The exception is week notes, where `{{date}}` renders the week's representative day rather than its first day — the day whose calendar year is the week's own year, which is the Thursday under the ISO-8601 week configuration. This is what makes `{{date:YYYY}}` resolve to the right year on a week straddling January 1, whichever week configuration you use. Format can be overridden using following syntax `{{date:format}}` where format is string using [Moment.js format rules](https://momentjs.com/docs/#/displaying/format/) (like `{{date:YYYY-MM-DD}}`).
-  Because of that, the week-year formats — `gggg` and `GGGG`, and the `ww`/`WW` week numbers that belong with them — are **not recommended in a note name or a folder path**. They exist to keep a week's year right where a plain calendar year would be wrong, which is the job the representative day already does here; the default weekly format `YYYY-[W]w` relies on it. Inside a template's content they are ordinary formatting and are fine. In a name or folder they cost you the path as a fallback: the plugin recognizes its own notes by their frontmatter, and where that is missing — a note you created yourself in the right place, or a note whose stored date **Maintenance** is trying to repair — it reads the date back out of the path instead, and a week-year token leaves nothing to read.
-- `{{start_date}}` - first day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
-- `{{end_date}}` - last day of week, month, quarter, year or interval depending on note type, formatting rules are the same as in `{{date}}`, as well as the calculations
-- `{{week_of_month}}` - which week of its month the note's week is, counting the week that holds the 1st of the month as week 1. It follows the start of the week configured in the plugin's calendar settings, so it agrees with the week numbers the calendar shows.
-  Because a week can straddle two months, the month it counts within is whichever month the date it is read from falls in. Date modifications choose that date: `{{week_of_month}}` counts within the note's own month, while `{{week_of_month<endOf=week>}}` counts within the month the week ends in — which moves a whole straddling week into the later month. Pair it with a month rendered the same way so the two agree: `{{date<endOf=week>:MMMM}} week {{week_of_month<endOf=week>}}` names August 31 2026 "September week 1".
-  It can be offset and rendered as an ordinal like a numbering variable (`{{week_of_month-1}}`, `{{week_of_month:o}}`).
-  It is computed from the date rather than stored, so a note name built from it is still recognized as the journal's own — but changing the start of the week later changes what the plugin would name a note, while notes already on disk keep the name they were created with.
-- `{{index}}` - a journal's numbering variable; its first (and by default only) digit is named
-  `index` unless renamed. A journal can chain several digits together, each under its own
-  variable name and frontmatter property — see **Sequential numbers** below; the name you give a
-  digit there is the name you use here. Numbering is on by default for custom-interval journals
-  and can be enabled for any journal type.
-  A numbering variable can be offset and rendered as an ordinal: `{{index+3}}`
-  adds three to the rendered value, `{{index-1}}` subtracts one, and
-  `{{index:o}}` renders it as an ordinal ("4th"). They combine as
-  `{{index+3:o}}`. Both survive the round-trip out of a note name, so a journal
-  named `Sprint {{index+3}}` still recognizes its own notes.
-- A journal's own [questions](/questions) each add a variable named after the question — a
-  question named `mood` renders as `{{mood}}`. Available everywhere the built-in variables above
-  are; a question with no answer yet renders empty, same as an unset numbering variable.
-- `{{notelet_index}}` - the number of a [notelet](/notelets) within its period. Numbering restarts
-  in every period, so the first notelet of a day is always 1. Available only in a notelet type's
-  own note name, folder path and templates, and only while that type has **Number each notelet**
-  on. It offsets and renders as an ordinal like the other numbering variables
-  (`{{notelet_index+1}}`, `{{notelet_index:o}}`).
-- `{{note_name}}` / `{{title}}` - the note's name. Available in the folder path, in template content and in navigation block segments, but not in the note name template itself, since the name has to render first. In a navigation block segment it is the name of the note the segment opens; for a period whose note does not exist yet, the name that note would get.
-- `{{current_date}}` - the date the note is rendered on (not the reference period), formatted with `{{current_date:format}}`
-- `{{current_time}}` / `{{time}}` - the clock time at render, formatted with `{{time:HH:mm}}`
-- `{{relative_date}}` - "Yesterday", "Today", "Last Tuesday", "This month", "3 weeks ago", and so on. Available in navigation block segments.
-- `{{journal_link(journal_name)}}` - inside a template note's content, and in the markdown template view block, resolves to the vault path of the corresponding note in another journal. Wrap it in a link or embed yourself, for example `[[{{journal_link(daily)}}]]`.
+## Where each variable works
+
+| Variable                                           |     Note name      |       Folder       |  Template content  | Navigation segment |
+| -------------------------------------------------- | :----------------: | :----------------: | :----------------: | :----------------: |
+| `{{date}}`, `{{start_date}}`, `{{end_date}}`       |         ✓          |         ✓          |         ✓          |         ✓          |
+| `{{week_of_month}}`                                |         ✓          |         ✓          |         ✓          |         ✓          |
+| `{{journal_name}}`                                 |         ✓          |         ✓          |         ✓          |         ✓          |
+| numbering digits — `{{index}}`                     |         ✓          |         ✓          |         ✓          |         ✓          |
+| question answers — `{{mood}}`                      |        ✓ ¹         |        ✓ ¹         |         ✓          |         ✓          |
+| `{{current_date}}`, `{{time}}`, `{{current_time}}` |        ✓ ²         |        ✓ ²         |         ✓          |         ✓          |
+| `{{note_name}}`, `{{title}}`                       |                    |         ✓          |         ✓          |         ✓          |
+| `{{relative_date}}`                                |                    |                    |                    |         ✓          |
+| `{{journal_link(name)}}`                           |        ✓ ²         |        ✓ ²         |         ✓          |         ✓          |
+| `{{notelet_index}}`                                | notelet types only | notelet types only | notelet types only |                    |
+
+¹ Not a yes/no answer — see [Questions](/questions#answers-in-the-note-name-or-folder).
+² Allowed, but a name or folder that uses them cannot be read back, so notes you create yourself will
+not [auto-attach](/notes#auto-attach). The settings page warns.
+
+## The variables
+
+- `{{journal_name}}` — the journal's name.
+- `{{date}}` — the period's date, in the journal's **Default date format** unless you give one:
+  `{{date:YYYY-MM-DD}}`, using [Moment.js format tokens](https://momentjs.com/docs/#/displaying/format/).
+  For day, month, quarter, year and custom intervals it is the period's first day. For a week it is the
+  week's **representative day** — the day whose calendar year is the week's own year, which is the
+  Thursday under ISO 8601. That is what makes `{{date:YYYY}}` give the right year for a week that
+  straddles New Year, whichever week configuration you use.
+
+  The week-year formats `gggg` and `GGGG` are **not recommended in a note name or a folder**. The
+  representative day already keeps `YYYY` right, and in a name or folder these two tokens stop the
+  plugin reading the date back out of the path — which it does for notes you create yourself and when
+  **Maintenance** repairs a stored date. Week numbers (`w`, `ww`) are fine. Inside a template's content
+  every token is ordinary formatting.
+
+- `{{start_date}}`, `{{end_date}}` — the period's first and last day, formatted and shifted like
+  `{{date}}`. For a custom interval whose end you moved by hand, `{{end_date}}` is the moved end.
+- `{{week_of_month}}` — which week of its month the note's week is, counting the week that holds the 1st
+  as week 1. It follows **Week configuration**, so it agrees with the calendar's week numbers.
+  Because a week can straddle two months, it counts within the month of the date it is read from, and
+  date modifications choose that date: `{{week_of_month}}` counts within the note's own month, while
+  `{{week_of_month<endOf=week>}}` counts within the month the week ends in. Pair it with a month read the
+  same way so the two agree: `{{date<endOf=week>:MMMM}} week {{week_of_month<endOf=week>}}` names
+  31 August 2026 "September week 1".
+  It offsets and renders as an ordinal like a numbering digit: `{{week_of_month-1}}`,
+  `{{week_of_month:o}}`. It is worked out from the date, so changing the start of the week later changes
+  what the plugin would call a note, while notes already on disk keep their names.
+- `{{index}}` — a journal's [sequential number](/journals#sequential-numbers). The first digit is named
+  `index` unless you rename it; each further digit is its own variable under the name you give it.
+  Numbering is on by default for custom intervals. `{{index+3}}` adds three, `{{index-1}}` subtracts
+  one, `{{index:o}}` renders an ordinal ("4th"), and they combine: `{{index+3:o}}`. A name built with
+  offsets and ordinals is still read back correctly.
+- A [question](/questions) adds a variable under its **Variable name** — a question named `mood` is
+  `{{mood}}`. A date answer takes every date modification. An unanswered question renders empty in
+  template content.
+- `{{notelet_index}}` — a [notelet](/notelets)'s number within its period, restarting every period.
+  Only in a notelet type's own name, folder and templates. With **Number each notelet** off it still
+  renders, but the number is not stored on the notelet. Offsets and ordinals work as for `{{index}}`.
+- `{{note_name}}`, `{{title}}` — the note's name. Not in the note name template itself, since the name
+  has to exist first. In a navigation segment, the name of the journal's note for the period that part
+  of the block shows — or the name it would get — whatever the segment links to.
+- `{{current_date}}` — the day the note is written, not its period. It is a date, so its format holds a
+  date only: `{{current_date:YYYY-MM-DD HH:mm}}` renders the time as `00:00`, and `HH:mm:ss` as
+  `00:00:00`. For the time of day, use `{{time}}`.
+- `{{time}}`, `{{current_time}}` — the time the note is written, `HH:mm` unless you give a format:
+  `{{time:HH:mm:ss}}`. For a full timestamp: `{{current_date:YYYY-MM-DD}} {{time:HH:mm:ss}}`.
+- `{{relative_date}}` — "Yesterday", "Today", "Last Tuesday", "This month", "3 weeks ago" and so on, in
+  navigation segments.
+- `{{journal_link(daily)}}` — the vault path of the note in another journal for the same date, whether
+  or not it exists yet. Most useful in template content and the markdown template view block. Wrap it in a link
+  yourself: `[[{{journal_link(daily)}}]]`. A date that journal does not cover leaves it unresolved.
 
 ## Date modifications
 
-Any date or time variable, `{{week_of_month}}`, and `journal_link`, can be shifted before it is formatted:
+Any date or time variable, `{{week_of_month}}`, a date answer and `journal_link` can be shifted before
+it is formatted:
 
-- `{{date+5d:format}}` adds 5 days. The units are `y` (years), `q` (quarters), `m` (months), `w` (weeks), `d` (days) and `h` (hours), with `+` or `-`, for example `{{date-1w}}` or `{{journal_link(daily)+1d}}`.
-- `{{date<startOf=week>}}` and `{{date<endOf=month>}}` snap to a boundary. The units are `decade`, `year`, `quarter`, `month`, `week`, `day` and `hour`.
-- Modifications can be combined and go before the `:format`, for example `{{date+1w<startOf=week>:MMM DD, YYYY}}`. Shifts always apply first, then boundaries, then the format override, whatever order you write them in.
-- Date variables have day precision, so `h` and `<startOf=hour>` change nothing on them; they only move `{{time}}` and `{{current_time}}`. Conversely, `<startOf=decade>` applies to dates only.
+- **Shift** — `{{date+5d}}` adds five days. Units: `y` years, `q` quarters, `m` months, `w` weeks, `d`
+  days, `h` hours; `+` or `-`. `{{date-1w}}`, `{{journal_link(daily)+1d}}`.
+- **Boundary** — `{{date<startOf=week>}}`, `{{date<endOf=month>}}`. Units: `decade`, `year`, `quarter`,
+  `month`, `week`, `day`, `hour`.
+- They combine, before the format: `{{date+1w<startOf=week>:MMM DD, YYYY}}`. Shifts apply first, then
+  boundaries, then the format, whatever order you write them in.
+- Dates have day precision, so `h` and `<startOf=hour>` change nothing on them — they only move
+  `{{time}}` and `{{current_time}}`. `<startOf=decade>` applies to dates only.
 
-The same list is available in the app: any **additional modifications** link in a journal's settings opens it.
+To file notes by decade, for example: `Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}` puts
+14 February 1959 under `Calendar/1950s/1959`. The plugin cannot read the decade back out of a path,
+so notes you make yourself in such a folder do not [auto-attach](/notes#auto-attach) — see
+[Filing notes by decade](/journals#filing-notes-by-decade).
+
+A `{{…}}` the plugin cannot read — a misspelled variable, an unclosed brace — is left in the text as
+written.
 
 :::
