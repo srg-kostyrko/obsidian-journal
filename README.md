@@ -5,11 +5,11 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
-    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-dark.png"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-and-blocks-sidebar-dark.png"
   />
   <img
     alt="A Journals view in the Obsidian sidebar: toolbars, a decorated month calendar and the notes written on the selected day"
-    src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-light.png"
+    src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-and-blocks-sidebar-light.png"
   />
 </picture>
 
