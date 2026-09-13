@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, onTestFinished } from "vitest";
-import { markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
+import { fenceBlocks, markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
 
 // One word per line: what a consumer would do with it.
 function kinds(text) {
@@ -187,5 +187,37 @@ describe("markdownFiles", () => {
       "reference/glossary.md",
       "zeta.md",
     ]);
+  });
+});
+
+describe("fenceBlocks", () => {
+  it("returns a fence with its info word, body and opening line", () => {
+    expect(fenceBlocks("intro\n```calendar-timeline\nmode: month\n```\n")).toEqual([
+      { lineno: 2, info: "calendar-timeline", body: "mode: month" },
+    ]);
+  });
+
+  it("returns fences nested in a markdown fence at their line in the file", () => {
+    const text = "````markdown\n```journals-home\nscale: 2\n```\n````";
+    expect(fenceBlocks(text)).toEqual([
+      { lineno: 1, info: "markdown", body: "```journals-home\nscale: 2\n```" },
+      { lineno: 2, info: "journals-home", body: "scale: 2" },
+    ]);
+  });
+
+  it("does not look inside a fence of another language", () => {
+    expect(fenceBlocks("````text\n```journals-home\n```\n````").map((block) => block.info)).toEqual(["text"]);
+  });
+
+  it("reads the info word before any attributes", () => {
+    expect(fenceBlocks("```ts{1}\nconst x = 1;\n```").at(0)?.info).toBe("ts");
+  });
+
+  it("keeps an empty body as an empty string", () => {
+    expect(fenceBlocks("```journal-nav\n\n```").at(0)?.body).toBe("");
+  });
+
+  it("closes a fence only on a run at least as long as its opener", () => {
+    expect(fenceBlocks("````\n```\n````").at(0)?.body).toBe("```");
   });
 });
