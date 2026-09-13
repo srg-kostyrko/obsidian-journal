@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "docs/user/**"
+      - "scripts/docs-markdown.mjs"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
