@@ -120,10 +120,8 @@ export default [
       "src/i18n/paraglide/**",
       "coverage/**",
       ".obsidian-cache/**",
-      // The VitePress config is the only .ts file outside src/. Linting it would pull a new
-      // path into the project service for no benefit; `extraFileExtensions` must hold the same
-      // value for every linted file, and a stray entry here is exactly the shape that turned
-      // check:lint into an 11-minute run before.
+      // The VitePress `.mts` files under docs/user/.vitepress are in no tsconfig, so linting them
+      // would pull a fresh path into the project service for no benefit.
       "docs/**",
     ],
   },
