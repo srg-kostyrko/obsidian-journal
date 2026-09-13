@@ -136,8 +136,15 @@ create a note for it.
 See [Commands on a shelf](/shelves#a-command-on-a-shelf) for a shelf command that opens its shelf's daily
 note.
 
-<!-- EXAMPLES PENDING RUN (P2):
-2. URI new tab: base e2e-uri (work, personal daily; weekly); `obsidian://journals?type=week&date=+1w&mode=tab`; record the note opened and that a new leaf appeared. uri-open.e2e.ts tests type and mode separately, with no relative date.
-Replace this comment with copied configuration and observed outcomes. -->
+### Next week's note in a new tab
+
+With one weekly journal, **Folder** `week`, following this link on 13 September 2026 creates
+`week/2026-W39.md` and opens it in a new tab:
+
+```text
+obsidian://journals?type=week&date=+1w&mode=tab
+```
+
+The `+` needs no escaping: Obsidian passes it through as written.
 
 :::
