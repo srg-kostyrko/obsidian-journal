@@ -1,6 +1,6 @@
 ---
 name: docs-authoring
-description: Use when writing or deepening a page of the user manual under docs/user/ — establishes which sources are authoritative, the citation rule, and where worked examples may live.
+description: Use when writing or deepening a page of the user manual under docs/user/ — establishes which sources are authoritative, how claims are verified, and where worked examples and screenshots come from.
 ---
 
 # Writing a user manual page
