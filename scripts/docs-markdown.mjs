@@ -122,3 +122,8 @@ export function fenceBlocks(text) {
   if (open) emit(open);
   return blocks;
 }
+
+/** Whether a line is the dark copy of a screenshot pair, which an agent reading the manual never needs twice. */
+export function isDarkOnlyImage(line) {
+  return /^\s*!\[[^\]]*\]\([^)]*\)\{\.dark-only\}\s*$/.test(line);
+}

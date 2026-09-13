@@ -1,18 +1,18 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { SiteConfig } from "vitepress";
-import { markdownFiles, scanMarkdown } from "../../../scripts/docs-markdown.mjs";
+import { isDarkOnlyImage, markdownFiles, scanMarkdown } from "../../../scripts/docs-markdown.mjs";
 
 function firstHeading(body: string, fallback: string): string {
   return /^#\s+(.+)$/m.exec(body)?.[1] ?? fallback;
 }
 
-// The `::: v-pre` markers are noise to an agent; the content they wrap is not.
-function stripVPre(body: string, file: string): string {
+// The ::: v-pre markers and the dark copy of each screenshot are noise to an agent; the content is not.
+function stripForAgents(body: string, file: string): string {
   const { lines, unclosedVPre } = scanMarkdown(body);
   if (unclosedVPre) throw new Error(`unclosed "::: v-pre" container in ${file}`);
   return lines
-    .filter((entry) => !entry.vPreMarker)
+    .filter((entry) => !entry.vPreMarker && (entry.fenced || !isDarkOnlyImage(entry.line)))
     .map((entry) => entry.line)
     .join("\n");
 }
@@ -74,7 +74,7 @@ export async function emitLlmsTxt(config: SiteConfig): Promise<void> {
   const pages = await Promise.all(
     markdownFiles(config.srcDir).map(async (file) => {
       const rel = relative(config.srcDir, file);
-      const body = stripVPre(await readFile(file, "utf8"), rel);
+      const body = stripForAgents(await readFile(file, "utf8"), rel);
       const route = rel.replace(/(?:index)?\.md$/, "");
       return { route, title: firstHeading(body, route), body };
     }),

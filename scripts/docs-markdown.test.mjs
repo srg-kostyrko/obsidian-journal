@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, onTestFinished } from "vitest";
-import { fenceBlocks, markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
+import { fenceBlocks, isDarkOnlyImage, markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
 
 // One word per line: what a consumer would do with it.
 function kinds(text) {
@@ -233,5 +233,19 @@ describe("fenceBlocks", () => {
       { lineno: 1, info: "markdown", body: "```journals-home\nscale: 2\n```" },
       { lineno: 2, info: "journals-home", body: "scale: 2" },
     ]);
+  });
+});
+
+describe("isDarkOnlyImage", () => {
+  it("matches the dark half of a screenshot pair", () => {
+    expect(isDarkOnlyImage("![Month view](/assets/views-month-dark.png){.dark-only}")).toBe(true);
+  });
+
+  it("does not match the light half", () => {
+    expect(isDarkOnlyImage("![Month view](/assets/views-month-light.png){.light-only}")).toBe(false);
+  });
+
+  it("does not match prose that mentions the class", () => {
+    expect(isDarkOnlyImage("Pages mark the dark copy with `{.dark-only}`.")).toBe(false);
   });
 });
