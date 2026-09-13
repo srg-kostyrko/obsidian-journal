@@ -442,6 +442,9 @@ indices.
 The unit suite runs `isolate: false` in a shared vitest project, so workers
 reuse one module registry across the files they run. That is what keeps the
 suite fast: the import graph is paid once per worker instead of once per file.
+(A third project, `scripts`, runs `scripts/**/*.test.mjs` under plain Node for
+the dependency-free build scripts; it is pure-tier by construction and sits
+outside the coverage floor.)
 
 The cost is that a file can reach the next one through anything
 process-global. A test that does belongs in `*.isolated.test.ts`, which runs

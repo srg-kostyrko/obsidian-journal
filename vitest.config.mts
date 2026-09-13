@@ -567,6 +567,16 @@ export default defineConfig({
           benchmark: { include: [] },
         },
       },
+      // Dependency-free Node modules under scripts/. Outside the coverage floor, which stays scoped to src/.
+      {
+        test: {
+          name: "scripts",
+          environment: "node",
+          include: ["scripts/**/*.test.mjs"],
+          exclude: ["**/node_modules/**"],
+          benchmark: { include: [] },
+        },
+      },
     ],
   },
 });

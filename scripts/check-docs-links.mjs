@@ -1,30 +1,13 @@
 // VitePress's build fails a link to a manual page that doesn't exist, but says
-// nothing about a `#fragment` pointing at a heading that isn't there — three such
-// dead links passed a green `docs:build` during the manual's port. This is the
-// permanent version of the anchor check written for that port (a throwaway Python
-// script, since discarded); it collects every heading/section `id` the built site
-// produced and checks every markdown link against it. Ids are read from the whole
-// HTML page, so a fragment that happens to match some unrelated theme element's id
-// would still pass — that gap is accepted.
-//
-// Ported bugs fixed along the way: fence detection now follows CommonMark (so a
-// `~~~` fence, or one indented inside a list item, doesn't leak its contents into
-// the scan or desync the fence state for the rest of the file); a link with a
-// title (`](/x#y "Title")`) is matched instead of silently skipped; and
-// reference-style links (`[text][ref]` + `[ref]: /target`) are resolved and
-// checked when their definition is site-relative or a bare fragment. A definition
-// or inline link that points at a page-relative target (`./x`, `x`) is not
-// something this script can resolve without walking the renderer's own path
-// rules, so it is reported as unchecked rather than silently ignored.
-//
-// Inline code spans are stripped before a line is scanned for links: this manual
-// documents syntax by showing it, so `` `[x](/nope)` `` in prose is example text,
-// not a real link, and must not be checked. Only single-line spans are handled —
-// a code span opened on one line and closed on a later one is a known gap.
+// nothing about a `#fragment` pointing at a heading that isn't there. This checks
+// every markdown link against the `id`s the built site produced — read from the
+// whole HTML page, so a fragment matching an unrelated theme element's id still
+// passes; that gap is accepted. A page-relative target (`./x`, `x`) would need
+// the renderer's own path rules to resolve, so it is reported as unchecked.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { unfencedLines } from "./docs-markdown.mjs";
+import { markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
 
 const {
   values: { src, dist },
@@ -35,12 +18,12 @@ const {
   },
 });
 
-function walk(dir, extension) {
+function htmlFiles(dir) {
   const out = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walk(full, extension));
-    else if (entry.name.endsWith(extension)) out.push(full);
+    if (entry.isDirectory()) out.push(...htmlFiles(full));
+    else if (entry.name.endsWith(".html")) out.push(full);
   }
   return out;
 }
@@ -67,11 +50,11 @@ function srcRoute(relativeMdPath) {
   return stripTrailingSlash(`/${posix.slice(0, -".md".length)}`);
 }
 
-// A code span opens at a run of N backticks and closes at the next run of
-// exactly N backticks; a run with no same-length match later on the line is
-// literal text, not an opener, and must not swallow the rest of the line.
-// Column positions don't matter here — the span's content is blanked out in
-// place so the line length (and therefore nothing downstream) never shifts.
+// This manual documents link syntax by showing it, so a link inside a code span is
+// example text, not a link. A span opens at a run of N backticks and closes at the
+// next run of exactly N; a run with no same-length match later on the line is
+// literal text and must not swallow the rest of the line. Only single-line spans
+// are handled. The span is blanked in place so nothing downstream shifts.
 function stripCodeSpans(line) {
   const runs = [...line.matchAll(/`+/g)].map((m) => ({ start: m.index, end: m.index + m[0].length }));
   const spans = [];
@@ -127,29 +110,29 @@ if (!exists(dist)) {
 }
 
 const routes = new Map();
-for (const htmlPath of walk(dist, ".html")) {
+for (const htmlPath of htmlFiles(dist)) {
   const rel = path.relative(dist, htmlPath);
   const ids = new Set([...readFileSync(htmlPath, "utf8").matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
   routes.set(distRoute(rel), ids);
 }
 
 const linkPattern = /(!?)\[([^\]]*)\](?:\(([^)]*)\)|\[([^\]]*)\])/g;
-const definitionPattern = /^\[([^\]]+)\]:\s*(\S+)/;
+const definitionPattern = /^ {0,3}\[([^\]]+)\]:\s*(\S+)/;
 
 const failures = [];
 const unchecked = [];
 
-for (const mdPath of walk(src, ".md")) {
+for (const mdPath of markdownFiles(src)) {
   const ownRoute = srcRoute(path.relative(src, mdPath));
-  const text = readFileSync(mdPath, "utf8");
+  const prose = scanMarkdown(readFileSync(mdPath, "utf8")).lines.filter((entry) => !entry.fenced);
 
   const definitions = new Map();
-  for (const { line } of unfencedLines(text)) {
+  for (const { line } of prose) {
     const m = definitionPattern.exec(line);
     if (m) definitions.set(m[1].trim().toLowerCase(), m[2]);
   }
 
-  for (const { lineno, line } of unfencedLines(text)) {
+  for (const { lineno, line } of prose) {
     const scanLine = stripCodeSpans(line);
     for (const m of scanLine.matchAll(linkPattern)) {
       const isImage = m[1] === "!";
