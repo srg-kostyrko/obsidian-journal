@@ -24,7 +24,8 @@ adjacent: false
 
 Example look for daily note:
 
-![Daily note nav](/assets/daily-nav.png)
+![Daily note nav](/assets/code-blocks-nav-daily-light.png){.light-only}
+![Daily note nav](/assets/code-blocks-nav-daily-dark.png){.dark-only}
 
 ---
 
@@ -77,11 +78,13 @@ Where the block shows a single grid — `week` or `month` mode with no `before` 
 
 Sample week timeline
 
-![Week timeline](/assets/week-timeline.png)
+![Week timeline](/assets/code-blocks-timeline-week-light.png){.light-only}
+![Week timeline](/assets/code-blocks-timeline-week-dark.png){.dark-only}
 
 Sample month timeline
 
-![Month timeline](/assets/month-timeline.png)
+![Month timeline](/assets/code-blocks-timeline-month-light.png){.light-only}
+![Month timeline](/assets/code-blocks-timeline-month-dark.png){.dark-only}
 
 Quarter and Calendar timeline repeat month timeline for every month in quarter or year.
 

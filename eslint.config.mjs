@@ -321,14 +321,14 @@ export default [
     // and parameterized suite runners. Turn off the mocha rules that only make sense
     // for top-level spec entry points.
     files: ["e2e/**/*.ts"],
-    ignores: ["e2e/**/*.e2e.ts"],
+    ignores: ["e2e/**/*.e2e.ts", "e2e/**/*.shot.ts"],
     rules: {
       // Helper modules are not spec entry points; exports are their public API.
       "mocha/no-exports": "off",
     },
   },
   {
-    files: ["e2e/**/*.e2e.ts"],
+    files: ["e2e/**/*.e2e.ts", "e2e/**/*.shot.ts"],
     rules: {
       // Suite-runner calls (e.g. assertDecorationMatrix()) inside describe are the
       // intended programmatic-suite pattern; no-setup-in-describe cannot distinguish

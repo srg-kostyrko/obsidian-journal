@@ -155,6 +155,14 @@ integration --suite migration --suite interop --suite journeys`), omitting
 
 - **Targeted dev runs:** `--spec ./path/or/pattern` for one file/pattern;
   `--mochaOpts.grep "<title>"` to filter by `describe`/`it` title across files.
+- **Documentation screenshots** are the `screenshots` suite (`e2e/screenshots/**/*.shot.ts`). No
+  CI job names it and the bare glob matches only `*.e2e.ts`, so no ordinary run rewrites a
+  committed image. `npm run docs:screenshots` regenerates every image; `--spec` regenerates one
+  page's. A shot spec asserts nothing — its images are reviewed by eye, and the outcomes it
+  records under `e2e/.reports/outcomes/` are what a manual page's claims are compared against. On
+  this desktop setup the suite must run through `e2e-run` (`e2e-run npm run docs:screenshots`),
+  since a hidden Obsidian window is never composited and renders no frames for a screenshot to
+  capture.
 - **`.only` gotcha:** `it.only` / `describe.only` does **not** reliably restrict a
   WDIO run (it doesn't pre-scan files) — unlike Vitest. Use `--spec` (+ `--grep`),
   not `.only`.

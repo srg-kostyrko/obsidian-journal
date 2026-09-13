@@ -86,6 +86,9 @@ export const config: WebdriverIO.Config = {
     interop: ["./e2e/interop/**/*.e2e.ts"],
     journeys: ["./e2e/journeys/**/*.e2e.ts"],
     quarantine: ["./e2e/quarantine/**/*.e2e.ts"],
+    // Documentation screenshots. No CI job names this suite and the bare glob above matches only
+    // *.e2e.ts, so no ordinary run rewrites a committed image.
+    screenshots: ["./e2e/screenshots/**/*.shot.ts"],
   },
 
   // One full Obsidian boot per worker; start single-process for determinism.
