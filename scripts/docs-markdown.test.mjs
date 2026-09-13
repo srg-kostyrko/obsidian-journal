@@ -94,6 +94,17 @@ describe("scanMarkdown", () => {
     it("reports a closed v-pre as closed", () => {
       expect(scanMarkdown("::: v-pre\n{{x}}\n:::").unclosedVPre).toBe(false);
     });
+
+    it("ends a v-pre at a closer longer than its own opener", () => {
+      const text = "::: v-pre\n{{x}}\n::::\n{{y}}";
+      expect(kinds(text)).toEqual(["marker", "vpre", "marker", "text"]);
+      expect(scanMarkdown(text).unclosedVPre).toBe(false);
+    });
+
+    it("reads a bare colon run as text rather than a nameless opener", () => {
+      const text = ":::\n::: v-pre\n{{x}}\n:::\n{{y}}";
+      expect(kinds(text)).toEqual(["text", "marker", "vpre", "marker", "text"]);
+    });
   });
 
   describe("fences", () => {
@@ -127,6 +138,10 @@ describe("scanMarkdown", () => {
     it("does not let a fence disturb an enclosing v-pre", () => {
       const text = "::: v-pre\n```\n:::\n```\n{{x}}\n:::";
       expect(kinds(text)).toEqual(["marker", "fence", "fence", "fence", "vpre", "marker"]);
+    });
+
+    it("does not open a fence on a four-space-indented backtick run", () => {
+      expect(kinds("    ```\n::: v-pre\n{{x}}\n:::")).toEqual(["text", "marker", "vpre", "marker"]);
     });
   });
 
