@@ -24,6 +24,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
+import { unfencedLines } from "./docs-markdown.mjs";
 
 const {
   values: { src, dist },
@@ -64,30 +65,6 @@ function srcRoute(relativeMdPath) {
   const parsed = path.posix.parse(posix);
   if (parsed.base === "index.md") return stripTrailingSlash(parsed.dir === "" ? "/" : `/${parsed.dir}`);
   return stripTrailingSlash(`/${posix.slice(0, -".md".length)}`);
-}
-
-// CommonMark fences: an opening line is 0-3 spaces of indentation plus 3+ of the
-// same fence character; a closing line is the same character, at least as many of
-// them, and nothing else but trailing whitespace.
-function* unfencedLines(text) {
-  let fenceChar = null;
-  let fenceLength = 0;
-  const lines = text.split("\n");
-  for (const [index, line] of lines.entries()) {
-    if (fenceChar) {
-      const closeRe = fenceChar === "`" ? /^ {0,3}(`+)\s*$/ : /^ {0,3}(~+)\s*$/;
-      const close = closeRe.exec(line);
-      if (close && close[1].length >= fenceLength) fenceChar = null;
-      continue;
-    }
-    const open = /^ {0,3}(`{3,}|~{3,})/.exec(line);
-    if (open) {
-      fenceChar = open[1][0];
-      fenceLength = open[1].length;
-      continue;
-    }
-    yield { lineno: index + 1, line };
-  }
 }
 
 // A code span opens at a run of N backticks and closes at the next run of

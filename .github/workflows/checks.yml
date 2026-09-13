@@ -30,6 +30,11 @@ jobs:
       - run: npm run check:i18n
       - run: npm run check:types
       - run: npm run check:format
+      # A plain variable name like {{date}} renders blank without failing the build, so
+      # this runs before docs:build: it names the file and line instead of leaving a
+      # forgotten ::: v-pre wrap to surface later as Vue's opaque syntax error on a
+      # variable with modifiers.
+      - run: npm run check:docs-mustaches
       # docs:build fails on a link to a manual page that does not exist; check:docs-links
       # fails on a link to an anchor that does not exist, which the build does not check.
       - run: npm run docs:build

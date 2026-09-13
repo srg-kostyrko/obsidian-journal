@@ -67,11 +67,12 @@ gate: a plain variable name like `{{date}}` silently renders as blank text and
 the build still passes; a variable with modifiers, like `{{date+5d:format}}`
 or `{{index:o}}`, usually fails the build with a syntax error. Neither
 `npm run docs:build` nor `npm run check:docs-links` catches a forgotten wrap
-around a plain variable name, so wrap every `{{...}}` outside a fenced block —
-don't rely on the build to tell you.
+around a plain variable name — `npm run check:docs-mustaches` does — so wrap
+every `{{...}}` outside a fenced block, don't rely on the build to tell you.
 
 Wrap the affected content in a `::: v-pre` container: the opening and closing
-lines at column 0, nothing else on them.
+lines at column 0, nothing else on them. This container form is what
+`check:docs-mustaches` recognises as protection; an inline `<span v-pre>` is not.
 
 ```markdown
 ::: v-pre
@@ -88,6 +89,8 @@ strips its two marker lines from the output — and fails the build on a
 
 ## Before you finish
 
-Run `npm run docs:build`, then `npm run check:docs-links`. The build catches a
-link to a page that does not exist; the link checker catches a link to an
-anchor that does not exist.
+Run, in order:
+
+1. `npm run check:docs-mustaches` — catches an unwrapped `{{...}}`.
+2. `npm run docs:build` — catches a link to a page that does not exist.
+3. `npm run check:docs-links` — catches a link to an anchor that does not exist.
