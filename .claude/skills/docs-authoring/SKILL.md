@@ -70,6 +70,9 @@ Every feature page ends with two or three concrete, copyable configurations.
   ![Month calendar in the sidebar](/assets/views-and-blocks-month-dark.png){.dark-only}
   ```
 
+- Open every captured PNG before committing it. A capture can crop the wrong frame — the
+  workspace chrome, or another block — and the spec still passes.
+
 - A new page must be added to `sidebar` in `.vitepress/config.mts`, or it is unreachable.
 
 ## `{{...}}` in prose
