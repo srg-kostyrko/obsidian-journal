@@ -69,26 +69,26 @@ replaces Daily notes, Periodic Notes and Calendar — see
 The full user manual lives at
 **[srg-kostyrko.github.io/obsidian-journal](https://srg-kostyrko.github.io/obsidian-journal/)**.
 
-|                                                                                                          |                                                                 |
-| -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| [Periods](https://srg-kostyrko.github.io/obsidian-journal/periods)                                       | Period lengths, custom intervals and week configuration         |
-| [Journals](https://srg-kostyrko.github.io/obsidian-journal/journals)                                     | Configuring a journal — periods, naming, templates, frontmatter |
-| [Notes](https://srg-kostyrko.github.io/obsidian-journal/notes)                                           | Creating notes, attaching existing ones, and bulk add           |
-| [Shelves](https://srg-kostyrko.github.io/obsidian-journal/shelves)                                       | Grouping journals, and scoping views and commands to a group    |
-| [Questions](https://srg-kostyrko.github.io/obsidian-journal/questions)                                   | Prompting for answers when a note is created                    |
-| [Notelets](https://srg-kostyrko.github.io/obsidian-journal/notelets)                                     | Extra notes attached to a period                                |
-| [Decorations](https://srg-kostyrko.github.io/obsidian-journal/decorations)                               | Styling calendar cells from note content                        |
-| [Views and blocks](https://srg-kostyrko.github.io/obsidian-journal/views-and-blocks)                     | Calendars, toolbars, note lists, navigation blocks              |
-| [Commands](https://srg-kostyrko.github.io/obsidian-journal/commands)                                     | Built-in commands, and writing your own                         |
-| [Settings](https://srg-kostyrko.github.io/obsidian-journal/settings)                                     | Every setting, and what explains it                             |
-| [Variables](https://srg-kostyrko.github.io/obsidian-journal/reference/variables)                         | Template variables and date modifications                       |
-| [Code blocks](https://srg-kostyrko.github.io/obsidian-journal/reference/code-blocks)                     | All six code blocks and their options                           |
-| [Glossary](https://srg-kostyrko.github.io/obsidian-journal/reference/glossary)                           | Terms used throughout the manual                                |
-| [Coming from Periodic Notes](https://srg-kostyrko.github.io/obsidian-journal/guides/from-periodic-notes) | Migration guide                                                 |
-| [Coming from Calendar](https://srg-kostyrko.github.io/obsidian-journal/guides/from-calendar)             | Migration guide                                                 |
-| [Setup examples](https://srg-kostyrko.github.io/obsidian-journal/guides/setup-examples)                  | Complete configurations for common setups                       |
-| [Compatibility](https://srg-kostyrko.github.io/obsidian-journal/compatibility)                           | Working alongside other plugins, including Templater            |
-| [Troubleshooting](https://srg-kostyrko.github.io/obsidian-journal/troubleshooting)                       | Common issues, the vault check, and reporting a bug             |
+|                                                                                                          |                                                                  |
+| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [Periods](https://srg-kostyrko.github.io/obsidian-journal/periods)                                       | Period lengths, custom intervals and week configuration          |
+| [Journals](https://srg-kostyrko.github.io/obsidian-journal/journals)                                     | Configuring a journal — naming, templates, timeline, frontmatter |
+| [Notes](https://srg-kostyrko.github.io/obsidian-journal/notes)                                           | Creating notes, attaching existing ones, and bulk add            |
+| [Shelves](https://srg-kostyrko.github.io/obsidian-journal/shelves)                                       | Grouping journals, and scoping views and commands to a group     |
+| [Questions](https://srg-kostyrko.github.io/obsidian-journal/questions)                                   | Prompting for answers when a note is created                     |
+| [Notelets](https://srg-kostyrko.github.io/obsidian-journal/notelets)                                     | Extra notes attached to a period                                 |
+| [Decorations](https://srg-kostyrko.github.io/obsidian-journal/decorations)                               | Styling dates by their notes, dates and weekdays                 |
+| [Views and blocks](https://srg-kostyrko.github.io/obsidian-journal/views-and-blocks)                     | Calendars, toolbars, note lists, navigation blocks               |
+| [Commands](https://srg-kostyrko.github.io/obsidian-journal/commands)                                     | Built-in commands, and writing your own                          |
+| [Settings](https://srg-kostyrko.github.io/obsidian-journal/settings)                                     | Every setting, and what explains it                              |
+| [Variables](https://srg-kostyrko.github.io/obsidian-journal/reference/variables)                         | Template variables and date modifications                        |
+| [Code blocks](https://srg-kostyrko.github.io/obsidian-journal/reference/code-blocks)                     | All four code blocks and their options                           |
+| [Glossary](https://srg-kostyrko.github.io/obsidian-journal/reference/glossary)                           | Terms used throughout the manual                                 |
+| [Coming from Periodic Notes](https://srg-kostyrko.github.io/obsidian-journal/guides/from-periodic-notes) | Migration guide                                                  |
+| [Coming from Calendar](https://srg-kostyrko.github.io/obsidian-journal/guides/from-calendar)             | Migration guide                                                  |
+| [Setup examples](https://srg-kostyrko.github.io/obsidian-journal/guides/setup-examples)                  | Complete configurations for common setups                        |
+| [Compatibility](https://srg-kostyrko.github.io/obsidian-journal/compatibility)                           | Working alongside other plugins, including Templater             |
+| [Troubleshooting](https://srg-kostyrko.github.io/obsidian-journal/troubleshooting)                       | Common issues, the vault check, and reporting a bug              |
 
 ## For plugin developers
 

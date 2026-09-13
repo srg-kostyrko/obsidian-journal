@@ -133,7 +133,7 @@ create a note for it.
 
 ### A command on a shelf
 
-See [Commands on a shelf](/shelves#a-command-on-a-shelf) for a shelf command that opens its shelf's daily
+See [A command on a shelf](/shelves#a-command-on-a-shelf) for a shelf command that opens its shelf's daily
 note.
 
 ### Next week's note in a new tab

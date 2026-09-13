@@ -100,7 +100,7 @@ a note when it reopens it.
 
 ### Name each day after its mood
 
-A daily journal with:
+A daily journal named `prompted` with:
 
 | Setting            | Value                   |
 | ------------------ | ----------------------- |

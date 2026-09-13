@@ -67,8 +67,8 @@ template itself.
 ## A decoration does not show
 
 - Its **match badge** in settings says whether it matched recently. "Matched nothing" means the
-  conditions never hold — check **When to decorate** is **any** rather than **all** if that is what you
-  meant.
+  conditions never hold — check whether **When to decorate** should be **Decorate when any condition is
+  fulfilled** rather than **Decorate when all conditions are fulfilled**.
 - Right-click the cell → **Explain decorations** shows which decoration painted each part of the cell and
   which it overrode.
 - A property condition offers comparisons for the property's type as Obsidian knows it. Set the type in

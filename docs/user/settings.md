@@ -26,8 +26,6 @@ explained. Open the plugin's settings from **Settings → Community plugins → 
 | **Logging**                                                      | **Log level**, **Export logs**                                                 | [Troubleshooting](/troubleshooting#reporting-a-bug)                        |
 | **Maintenance**                                                  | **Open**                                                                       | [Troubleshooting](/troubleshooting#maintenance)                            |
 
-¹ The startup note is not yet explained on a page of its own. <!-- TODO before commit: give "Open on startup" and "Different journal on some days" a section (Notes or Journals) and link it here; source src/journals/startup/startup-open.ts, StartupBlock.vue. -->
-
 ## A journal's settings page
 
 The journal's name, with **Rename journal**, and its period length, then:
