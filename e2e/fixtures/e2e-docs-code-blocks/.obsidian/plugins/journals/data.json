@@ -15,7 +15,79 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "navBlock": {
+        "type": "create",
+        "decorateWholeBlock": false,
+        "rows": [
+          {
+            "template": "{{date:ddd}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "none",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          },
+          {
+            "template": "{{date:D}}",
+            "fontSize": 3,
+            "bold": true,
+            "italic": false,
+            "link": "self",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": true
+          },
+          {
+            "template": "{{relative_date}}",
+            "fontSize": 0.7,
+            "bold": false,
+            "italic": false,
+            "link": "none",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          },
+          {
+            "template": "{{date:[W]w}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "week",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          },
+          {
+            "template": "{{date:MMMM}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "month",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          },
+          {
+            "template": "{{date:YYYY}}",
+            "fontSize": 1,
+            "bold": false,
+            "italic": false,
+            "link": "year",
+            "journal": "",
+            "color": { "type": "theme", "name": "text-normal" },
+            "background": { "type": "transparent" },
+            "addDecorations": false
+          }
+        ]
+      }
     },
     "weekly": {
       "name": "weekly",

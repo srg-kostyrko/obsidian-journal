@@ -18,7 +18,12 @@ function closesFence(line, char, length) {
   return close !== null && close[1].length >= length;
 }
 
-/** Every `.md` under `dir`, sorted, skipping dot-directories and `public/`. */
+/**
+ * Every `.md` under `dir`, sorted, skipping dot-directories and `public/`.
+ *
+ * @param {string} dir
+ * @returns {string[]}
+ */
 export function markdownFiles(dir) {
   const out = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

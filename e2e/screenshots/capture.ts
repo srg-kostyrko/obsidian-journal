@@ -13,16 +13,9 @@ const THEMES = [
 
 /** Save an element screenshot of `selector` in each Obsidian theme. */
 export async function captureThemed(selector: string, name: string): Promise<void> {
-  // The `git rm` of the three 2023 PNGs left this directory with no tracked files, and git
-  // does not keep empty directories, so a clean checkout has none here for saveScreenshot to
-  // write into.
+  // saveScreenshot does not create directories.
   await mkdir(ASSETS, { recursive: true });
-  // A screenshot taken while `selector`'s element is mid-layout (width 0) does not just fail that
-  // one capture: chromedriver's element-screenshot command wedges for the rest of the session —
-  // "Cannot take screenshot with 0 width", then every later screenshot command times out and
-  // never recovers. A single non-zero clientWidth reading is not enough to trust either, since
-  // changeTheme's re-layout can leave the width flickering for a stretch — require several
-  // consecutive non-zero readings before trusting it has settled.
+  // A zero-width element cannot be captured, so wait for a stable, non-zero box.
   const waitForStableLayout = async (): Promise<void> => {
     let consecutive = 0;
     await browser.waitUntil(
@@ -50,11 +43,7 @@ export async function captureThemed(selector: string, name: string): Promise<voi
     // changeTheme also collapses the block's width for a moment while it re-lays-out under the
     // new theme's CSS, so re-check layout here too, not only before the loop.
     await waitForStableLayout();
-    // changeTheme also suspends CSS transitions for 200 ms; a capture inside that window catches
-    // half-applied colors. An async browser.execute() waiting on requestAnimationFrame does not
-    // reliably resolve here — observed as a genuine 30s "script timeout" on execute/sync, rAF
-    // apparently never firing in this harness — so wait on the Node side instead of asking the
-    // page to schedule anything.
+    // changeTheme suspends CSS transitions for 200 ms.
     await browser.pause(250);
     await $(selector).saveScreenshot(path.join(ASSETS, `${name}-${theme.suffix}.png`));
   }

@@ -41,6 +41,8 @@ Every feature page ends with two or three concrete, copyable configurations.
   or a vault you configured and observed. Never compose one from reading the schema.
   A composed config that looks valid and does not do what the page claims is the
   single most expensive thing this manual can ship.
+- An example may instead cite an existing e2e spec that already asserts its outcome,
+  with the config copied from that spec's fixture, rather than running a new one.
 - Examples go inside the feature page they demonstrate. `docs/user/guides/` is a
   closed set of three; do not add a fourth.
 - Run the example in a fixture vault through a `e2e/screenshots/<page>.shot.ts` spec, which
@@ -48,6 +50,9 @@ Every feature page ends with two or three concrete, copyable configurations.
   the page, the page changes.
 - A fence meant to show a wrong option must use the `yaml` language: the unit suite parses
   every code-block fence in the manual and fails on an option the block would ignore.
+- The fence test only sees fences the shared grammar recognizes: a fence indented four or
+  more spaces, or one inside a blockquote, is not validated. Keep documented code-block
+  fences at the left margin, or inside a `markdown` fence.
 
 ## Page conventions
 
@@ -56,11 +61,13 @@ Every feature page ends with two or three concrete, copyable configurations.
 - Screenshots are generated, never captured by hand, and only where the outcome is seen.
   `npm run docs:screenshots` regenerates all of them; `npx wdio run ./wdio.conf.mts --spec
 ./e2e/screenshots/<page>.shot.ts` (after `npm run build`) regenerates one page's. Each
-  subject is captured in both Obsidian themes and embedded as a pair:
+  subject is captured in both Obsidian themes and embedded as a pair, named
+  `<page>-<subject>-light.png` / `-dark.png`, where `<page>` is the page's file name
+  without `.md`:
 
   ```markdown
-  ![Month calendar in the sidebar](/assets/views-month-light.png){.light-only}
-  ![Month calendar in the sidebar](/assets/views-month-dark.png){.dark-only}
+  ![Month calendar in the sidebar](/assets/views-and-blocks-month-light.png){.light-only}
+  ![Month calendar in the sidebar](/assets/views-and-blocks-month-dark.png){.dark-only}
   ```
 
 - A new page must be added to `sidebar` in `.vitepress/config.mts`, or it is unreachable.

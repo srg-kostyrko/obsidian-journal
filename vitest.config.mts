@@ -33,6 +33,8 @@ export default defineConfig({
         // `module.ts` is assumed to hold wiring only — `src/settings/legacy/module.ts` already
         // breaks that assumption (its `legacyMigrations` array is real behavior with its own
         // test), so a file matching this glob still needs checking for non-wiring exports.
+        // `src/code-blocks/module.ts` is the same case: it also exports `codeBlockDefinitions`,
+        // a branchless constant list, alongside its wiring.
         // `src/**/startup-module.ts` joins them for the same reason — a startup module is that
         // same wiring — and carries the same caveat. Unlike the other two it is not avoiding a
         // fresh-0% drag: the one such file today, `src/views/startup-module.ts`, is at 100%, so

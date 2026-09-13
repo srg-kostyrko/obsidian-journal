@@ -140,6 +140,7 @@ behind. The version unpin of 2026-09-08 moved every key from `1.13.7/*` to
     interop: ["./e2e/interop/**/*.e2e.ts"], // slice D
     journeys: ["./e2e/journeys/**/*.e2e.ts"], // slice B
     quarantine: ["./e2e/quarantine/**/*.e2e.ts"],
+    screenshots: ["./e2e/screenshots/**/*.shot.ts"],
   }
   ```
 

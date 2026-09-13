@@ -116,10 +116,7 @@ describe("fenceProblems", () => {
 });
 
 describe("the user manual", () => {
-  // markdownFiles has no JSDoc return annotation and recurses into itself, which TypeScript
-  // can't infer a return type through, so it resolves to `any` and everything chained off it
-  // would silently follow — the cast is the seam that stops that at the one place it enters.
-  const fences = (markdownFiles(MANUAL) as string[]).flatMap((file) =>
+  const fences = markdownFiles(MANUAL).flatMap((file) =>
     fenceBlocks(readFileSync(file, "utf8")).map((fence) => ({ ...fence, file: path.relative(MANUAL, file) })),
   );
 
