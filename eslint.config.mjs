@@ -656,4 +656,13 @@ export default [
       "obsidianmd/prefer-window-timers": "off",
     },
   },
+  {
+    // Reads docs/user off disk (node:fs/path/url) to check it against the plugin's fence
+    // definitions; it runs only under vitest/CI, never inside a vault, so the mobile-safety rule
+    // against Node built-ins does not apply here the way it does to shipped plugin code.
+    files: ["src/code-blocks/manual-fences.test.ts"],
+    rules: {
+      "obsidianmd/no-nodejs-modules": "off",
+    },
+  },
 ];
