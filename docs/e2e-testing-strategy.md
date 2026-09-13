@@ -159,10 +159,12 @@ integration --suite migration --suite interop --suite journeys`), omitting
   CI job names it and the bare glob matches only `*.e2e.ts`, so no ordinary run rewrites a
   committed image. `npm run docs:screenshots` regenerates every image; `--spec` regenerates one
   page's. A shot spec asserts nothing — its images are reviewed by eye, and the outcomes it
-  records under `e2e/.reports/outcomes/` are what a manual page's claims are compared against. On
-  this desktop setup the suite must run through `e2e-run` (`e2e-run npm run docs:screenshots`),
-  since a hidden Obsidian window is never composited and renders no frames for a screenshot to
-  capture.
+  records under `e2e/.reports/outcomes/` are what a manual page's claims are compared against.
+  Capture needs a composited window: a Chromium window that is hidden (for example parked on an
+  invisible workspace) receives no frame callbacks, so screenshot commands hang with "Timed out
+  receiving message from renderer". Run the suite with the Obsidian window visible — on the
+  maintainer's Hyprland setup that is the local `~/.local/bin/e2e-run` wrapper (`e2e-run npm run
+docs:screenshots`), which is not part of this repository.
 - **`.only` gotcha:** `it.only` / `describe.only` does **not** reliably restrict a
   WDIO run (it doesn't pre-scan files) — unlike Vitest. Use `--spec` (+ `--grep`),
   not `.only`.
