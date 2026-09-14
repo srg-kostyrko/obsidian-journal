@@ -1,0 +1,1 @@
+Friday template for {{date}}

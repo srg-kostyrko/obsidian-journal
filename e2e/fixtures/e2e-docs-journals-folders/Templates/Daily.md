@@ -1,0 +1,1 @@
+Everyday template for {{date}}

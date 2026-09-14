@@ -1,0 +1,38 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "folder": "Journal/{{date:YYYY}}",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "templates": ["Templates/Daily-{{date:dddd}}.md", "Templates/Daily.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "iso": {
+      "name": "iso",
+      "write": { "type": "day" },
+      "folder": "Iso",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "templates": ["Templates/Daily-{{date:E}}.md", "Templates/Daily.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  }
+}

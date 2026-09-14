@@ -3,7 +3,15 @@ import { $$, browser } from "@wdio/globals";
 import { pinClock } from "../support/clock.js";
 import { waitForNoticeText } from "../support/notices.js";
 import { openViaUri } from "../support/uri.js";
-import { contentOf, createNote, frontmatterOf, noteExists, waitForJournalFrontmatter } from "../support/vault.js";
+import {
+  activeNotePath,
+  contentOf,
+  createNote,
+  frontmatterOf,
+  noteExists,
+  waitForActiveNote,
+  waitForJournalFrontmatter,
+} from "../support/vault.js";
 
 import { recordOutcome } from "./capture.js";
 
@@ -99,6 +107,74 @@ describe("journals examples", () => {
     await recordOutcome("journals-bounded", {
       before: { date: beforeStart, path: beforePath, exists: beforeExists, notices: beforeNotices },
       after: { date: afterEnd, path: afterPath, exists: afterExists, notices: afterNotices },
+    });
+  });
+});
+
+const FOLDERS_VAULT = "./e2e/fixtures/e2e-docs-journals-folders";
+
+function momentLocale(): Promise<string> {
+  return browser.execute(() => (window as unknown as { moment: { locale(): string } }).moment.locale());
+}
+
+async function createdBody(journal: string, folder: string, date: string): Promise<{ path: string; body?: string }> {
+  const path = `${folder}/${date}.md`;
+  await openViaUri({ journal, date });
+  await waitForJournalFrontmatter(path, { journal, date });
+  const content = await contentOf(path);
+  return { path, body: content?.replace(/^---\n[\s\S]*?\n---\n/, "").trim() };
+}
+
+describe("journals folder and template examples", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: FOLDERS_VAULT, plugins: ["journals"] });
+  });
+
+  it("files notes under a folder per year, leaving older notes where they are", async () => {
+    const createdPath = "Journal/2026/2026-09-14.md";
+    await openViaUri({ journal: "daily", date: "2026-09-14" });
+    await waitForJournalFrontmatter(createdPath, { journal: "daily", date: "2026-09-14" });
+
+    // The fixture's note for 31 December 2025 sits at the vault root, where the journal wrote its
+    // notes before its folder gained a year.
+    const olderPath = "2025-12-31.md";
+    await openViaUri({ journal: "daily", date: "2025-12-31" });
+    let openedOlder = true;
+    await waitForActiveNote(olderPath).catch(() => {
+      openedOlder = false;
+    });
+    const activeAfterOlder = await activeNotePath();
+    const olderAtNewPath = "Journal/2025/2025-12-31.md";
+    const olderAtNewPathExists = await noteExists(olderAtNewPath);
+
+    const handMadePath = "Journal/2027/2027-01-05.md";
+    await browser.executeObsidian(async ({ app }) => {
+      await app.vault.createFolder("Journal/2027");
+    });
+    await createNote(handMadePath, "");
+    let autoAttached = true;
+    await waitForJournalFrontmatter(handMadePath, { journal: "daily", date: "2027-01-05" }).catch(() => {
+      autoAttached = false;
+    });
+
+    await recordOutcome("journals-year-folders", {
+      created: { path: createdPath, exists: await noteExists(createdPath) },
+      older: { path: olderPath, openedOlder, activeAfterOlder, olderAtNewPath, olderAtNewPathExists },
+      handMade: { path: handMadePath, autoAttached, frontmatter: await frontmatterOf(handMadePath) },
+    });
+  });
+
+  it("picks a template by the note's weekday", async () => {
+    await recordOutcome("journals-weekday-templates", {
+      momentLocale: await momentLocale(),
+      byName: {
+        friday: await createdBody("daily", "Journal/2026", "2026-09-18"),
+        monday: await createdBody("daily", "Journal/2026", "2026-09-21"),
+      },
+      byNumber: {
+        friday: await createdBody("iso", "Iso", "2026-09-18"),
+        monday: await createdBody("iso", "Iso", "2026-09-21"),
+      },
     });
   });
 });
