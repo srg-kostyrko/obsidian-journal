@@ -50,6 +50,17 @@ async function clickCurrentNavSegment(text: string): Promise<void> {
   );
 }
 
+// Per-line grouping, so a line holding two segments (month and year sharing a line) reads as
+// one entry with two texts rather than being flattened alongside the single-segment lines.
+function currentLineSegmentTexts(): Promise<string[][]> {
+  return browser.execute((sel: string) => {
+    const lines = [...document.querySelectorAll<HTMLElement>(`${sel} .nav-block-line`)];
+    return lines.map((line) =>
+      [...line.querySelectorAll<HTMLElement>(".nav-row")].map((row) => row.textContent?.trim() ?? ""),
+    );
+  }, NAV_CURRENT);
+}
+
 describe("navigation blocks examples", () => {
   before(async () => {
     await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-docs-navigation-blocks", plugins: ["journals"] });
@@ -99,6 +110,65 @@ describe("navigation blocks examples", () => {
       segmentTexts,
       week: { label: weekText, openedPath: weekPath, frontmatter: weekFrontmatter },
       month: { label: monthText, openedPath: monthPath, frontmatter: monthFrontmatter },
+    });
+  });
+});
+
+// Month and year sharing one line — e2e-docs-navigation-blocks-one-line's daily journal puts
+// them there instead of the default's one-segment-per-line lines, and adds a yearly journal
+// (folder `year`) so the year segment has a note to open.
+describe("navigation blocks examples — several segments on one line", () => {
+  before(async () => {
+    await reloadObsidianOn(TODAY, {
+      vault: "./e2e/fixtures/e2e-docs-navigation-blocks-one-line",
+      plugins: ["journals"],
+    });
+  });
+
+  it("puts month and year segments on the same line, each opening its own note", async () => {
+    const path = `day/${TODAY}.md`;
+    await seedNote(path, hostNote("daily", TODAY, "```journal-nav\n```"));
+
+    await openInReadingMode(path);
+    await $(NAV_VIEW).waitForExist({ timeoutMsg: "journal-nav block did not render" });
+
+    const lineTexts = await currentLineSegmentTexts();
+    // weekday; day (self); relative date; week; month+year sharing the last line.
+    const lastLine = lineTexts.at(-1);
+    const monthText = lastLine?.[0];
+    const yearText = lastLine?.[1];
+    if (lastLine === undefined || monthText === undefined || yearText === undefined) {
+      throw new UnexpectedNavSegmentCountError(lineTexts.flat());
+    }
+
+    await clickCurrentNavSegment(monthText);
+    // The host note is still active when the click lands, so wait for the path to move off it.
+    await waitForState(activeNotePath, (p) => p !== path, "waited for the month segment to open a note");
+    const monthPath = (await activeNotePath()) ?? "";
+    const monthFrontmatter = await frontmatterOf(monthPath);
+
+    await openInReadingMode(path);
+    await $(NAV_VIEW).waitForExist({ timeoutMsg: "journal-nav block did not re-render" });
+    await clickCurrentNavSegment(yearText);
+    await waitForState(
+      activeNotePath,
+      (active) => active !== path && active !== monthPath,
+      "waited for the year segment to open a note",
+    );
+    const yearPath = (await activeNotePath()) ?? "";
+    const yearFrontmatter = await frontmatterOf(yearPath);
+
+    // Both clicks navigated away from the host note's own tab, which Obsidian then hides
+    // (inline display:none) — re-open it so the visible-leaf screenshot is its nav block.
+    await openInReadingMode(path);
+    await $(NAV_VIEW).waitForExist({ timeoutMsg: "journal-nav block did not re-render for capture" });
+    await captureThemed(NAV_VIEW, "navigation-blocks-one-line");
+
+    await recordOutcome("navigation-blocks-one-line", {
+      hostPath: path,
+      lineTexts,
+      month: { label: monthText, openedPath: monthPath, frontmatter: monthFrontmatter },
+      year: { label: yearText, openedPath: yearPath, frontmatter: yearFrontmatter },
     });
   });
 });

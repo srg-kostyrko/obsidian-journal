@@ -25,6 +25,19 @@ journal starts with lines suited to its period; **Use defaults for daily notes**
 puts them back. **Add line** and **Add segment** build your own, and you rearrange them by dragging
 in the preview.
 
+The defaults put one segment on each line. The period's own line comes first, large and bold, and
+opens the note's own period; the lines for longer periods open those periods' notes. Shown here for 14
+September 2026:
+
+| Journal         | Lines, top to bottom                                                                                |
+| --------------- | --------------------------------------------------------------------------------------------------- |
+| daily           | weekday `Mon` · **day** `14` · relative date `Today` · week `W38` · month `September` · year `2026` |
+| weekly          | **week** `W38` · relative date · month · year                                                       |
+| monthly         | **month** `September` · relative date · year                                                        |
+| quarterly       | **quarter** `Q3` · relative date · year                                                             |
+| yearly          | **year** `2026` · relative date                                                                     |
+| custom interval | **name and number**, such as `Sprint 4` · start date · `to` · end date                              |
+
 Each segment has:
 
 - **Template** — its text, with [variables](/reference/variables): `{{date:dddd}}`, `Week
@@ -77,5 +90,17 @@ daily note for 14 September 2026, clicking **W38** opens `week/2026-W38.md`, and
 
 ![A navigation block showing Sunday 13, Monday 14 and Tuesday 15, each with its week, month and year](/assets/navigation-blocks-lines-light.png){.light-only}
 ![A navigation block showing Sunday 13, Monday 14 and Tuesday 15, each with its week, month and year](/assets/navigation-blocks-lines-dark.png){.dark-only}
+
+### Month and year on one line
+
+The same daily journal, with its month and year lines merged into one line of two segments —
+`{{date:MMMM}}` linked to **Month**, and `{{date:YYYY}}` added beside it with **Add segment**, linked to
+**Year** — and a yearly journal with **Folder** `year`. In the daily note for 14 September 2026 the
+last line holds both segments: the previous and next columns read `September 2026` side by side, and
+in the larger current column the two wrap when they do not fit. Clicking **September** opens
+`month/2026-09.md`, and clicking **2026** opens `year/2026.md`.
+
+![A navigation block for Sunday 13, Monday 14 and Tuesday 15, whose last line holds the month and year as two segments](/assets/navigation-blocks-one-line-light.png){.light-only}
+![A navigation block for Sunday 13, Monday 14 and Tuesday 15, whose last line holds the month and year as two segments](/assets/navigation-blocks-one-line-dark.png){.dark-only}
 
 :::

@@ -1,6 +1,6 @@
-import { $ } from "@wdio/globals";
+import { $, browser } from "@wdio/globals";
 
-import { NAV_FENCE, VISIBLE_LEAF, hostNote, renderBlock } from "../journeys/code-blocks.js";
+import { VISIBLE_LEAF, hostNote, renderBlock } from "../journeys/code-blocks.js";
 import { reloadObsidianOn } from "../support/clock.js";
 
 import { captureThemed, recordOutcome, textsOf } from "./capture.js";
@@ -8,9 +8,16 @@ import { captureThemed, recordOutcome, textsOf } from "./capture.js";
 // A markdown leaf mounts both a live-preview and a reading-view copy of each block; the
 // reading-view copy is the one with a definite width to capture.
 const READING_VIEW = `${VISIBLE_LEAF} .markdown-reading-view`;
-const NAV_VIEW = `${READING_VIEW} .block-language-calendar-nav .nav-view`;
+// The canonical `journal-nav` fence name (not the `calendar-nav` alias), matching what the
+// docs page itself shows for this option.
+const NAV_BLOCK = `${READING_VIEW} .block-language-journal-nav`;
+const NAV_VIEW = `${NAV_BLOCK} .nav-view`;
+const NAV_CURRENT = `${NAV_BLOCK} .nav-block-current`;
 const TIMELINE_BLOCK = `${READING_VIEW} .block-language-calendar-timeline`;
 const HOME_VIEW = `${READING_VIEW} .block-language-journals-home`;
+
+// The `adjacent: false` example on the code-blocks reference page.
+const NAV_ADJACENT_FALSE_FENCE = "```journal-nav\nadjacent: false\n```";
 
 describe("code-blocks reference screenshots", () => {
   before(async () => {
@@ -18,10 +25,19 @@ describe("code-blocks reference screenshots", () => {
     await reloadObsidianOn("2026-09-13", { vault: "./e2e/fixtures/e2e-docs-code-blocks", plugins: ["journals"] });
   });
 
-  it("captures a daily note's navigation block", async () => {
-    await renderBlock("day/2026-06-15.md", hostNote("daily", "2026-06-15", NAV_FENCE), NAV_VIEW);
-    await $(`${NAV_VIEW} .nav-row`).waitForExist({ timeoutMsg: "nav block drew no rows" });
-    await captureThemed(NAV_VIEW, "code-blocks-nav-daily");
+  it("captures a daily note's navigation block with adjacent: false", async () => {
+    await renderBlock("day/2026-06-15.md", hostNote("daily", "2026-06-15", NAV_ADJACENT_FALSE_FENCE), NAV_VIEW);
+    await $(`${NAV_CURRENT} .nav-row`).waitForExist({ timeoutMsg: "nav block drew no rows" });
+
+    const segmentTexts = await textsOf(`${NAV_CURRENT} .nav-row`);
+    const periodColumns = await browser.execute(
+      (sel: string) => document.querySelectorAll(sel).length,
+      `${NAV_BLOCK} .nav-block`,
+    );
+
+    await captureThemed(NAV_VIEW, "code-blocks-nav-adjacent");
+
+    await recordOutcome("code-blocks-nav-adjacent", { segmentTexts, periodColumns });
   });
 
   it("captures a week timeline", async () => {

@@ -47,8 +47,8 @@ adjacent: false
 ```
 ````
 
-![Daily note navigation block](/assets/code-blocks-nav-daily-light.png){.light-only}
-![Daily note navigation block](/assets/code-blocks-nav-daily-dark.png){.dark-only}
+![A navigation block showing only Monday 15 June 2026, with an arrow on each side](/assets/code-blocks-nav-adjacent-light.png){.light-only}
+![A navigation block showing only Monday 15 June 2026, with an arrow on each side](/assets/code-blocks-nav-adjacent-dark.png){.dark-only}
 
 ## Timeline — `calendar-timeline`
 
