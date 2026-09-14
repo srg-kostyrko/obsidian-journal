@@ -19,11 +19,13 @@ export default {
     const base = siteData.value.base;
     const initial = movedTo(base);
     if (initial) history.replaceState(history.state, "", initial);
-    router.onAfterRouteChange = async () => {
+    const redirectIfMoved = async () => {
       const moved = movedTo(base);
       if (!moved) return;
       history.replaceState(history.state, "", moved);
       await router.go(moved);
     };
+    router.onAfterRouteChange = redirectIfMoved;
+    window.addEventListener("hashchange", redirectIfMoved);
   },
 } satisfies Theme;
