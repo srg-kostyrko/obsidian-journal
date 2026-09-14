@@ -9,20 +9,25 @@ export default defineConfig({
   lastUpdated: true,
   buildEnd: emitLlmsTxt,
   themeConfig: {
-    nav: [{ text: "Manual", link: "/journals" }],
+    nav: [{ text: "Manual", link: "/" }],
     sidebar: [
       {
-        text: "Using Journals",
+        text: "Basics",
         items: [
           { text: "Periods", link: "/periods" },
           { text: "Journals", link: "/journals" },
           { text: "Notes", link: "/notes" },
+          { text: "Views", link: "/views" },
+          { text: "Navigation blocks", link: "/navigation-blocks" },
+        ],
+      },
+      {
+        text: "Going further",
+        items: [
           { text: "Shelves", link: "/shelves" },
           { text: "Questions", link: "/questions" },
           { text: "Notelets", link: "/notelets" },
           { text: "Decorations", link: "/decorations" },
-          { text: "Views", link: "/views" },
-          { text: "Navigation blocks", link: "/navigation-blocks" },
           { text: "Commands", link: "/commands" },
         ],
       },
@@ -32,6 +37,7 @@ export default defineConfig({
           { text: "Settings", link: "/settings" },
           { text: "Variables", link: "/reference/variables" },
           { text: "Code blocks", link: "/reference/code-blocks" },
+          { text: "Links", link: "/reference/links" },
           { text: "Glossary", link: "/reference/glossary" },
         ],
       },
