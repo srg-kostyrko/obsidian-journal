@@ -6,7 +6,7 @@ import { MAX_REDIRECT_HOPS, redirectTarget } from "./docs-redirects.mjs";
 
 export const MANUAL_FILE = "src/ui/manual.ts";
 
-const MANUAL_PATH = /"(\/[a-z0-9/-]*(?:#[a-z0-9-]+)?)"/g;
+const MANUAL_PATH = /"(\/(?:[a-z0-9-]+(?:\/[a-z0-9-]+)*)?(?:#[a-z0-9-]+)?)"/g;
 
 export function extractManualPaths(source) {
   return [...new Set([...source.matchAll(MANUAL_PATH)].map((match) => match[1]))];
@@ -37,27 +37,41 @@ export function linkedManualPaths(cwd) {
   return { paths, releasesWithLinks };
 }
 
+function redirectFailureReason(redirects, target, exists) {
+  const result = redirectTarget(redirects, target);
+  if ("error" in result)
+    return result.error === "loop" ? `redirect loop at ${result.path}` : `more than ${MAX_REDIRECT_HOPS} redirects`;
+  if (result.hops === 0) return "does not exist and has no redirect";
+  if (!exists(result.path)) return `redirects to ${result.path}, which does not exist`;
+  return undefined;
+}
+
 export function verifyManualLinks(paths, redirects, exists) {
   const failures = [];
   for (const [target, shippedIn] of paths) {
     if (exists(target)) continue;
-    const result = redirectTarget(redirects, target);
-    let reason;
-    if ("error" in result)
-      reason = result.error === "loop" ? `redirect loop at ${result.path}` : `more than ${MAX_REDIRECT_HOPS} redirects`;
-    else if (result.hops === 0) reason = "does not exist and has no redirect";
-    else if (!exists(result.path)) reason = `redirects to ${result.path}, which does not exist`;
+    const reason = redirectFailureReason(redirects, target, exists);
     if (reason) failures.push({ target, shippedIn, reason });
   }
   return failures;
 }
 
+// Every key gets checked, not only the ones a plugin link resolves through: a loop or a dead
+// destination on a redirect no plugin link currently uses still breaks the theme's `movedTo` the
+// day something does start using it.
 export function verifyRedirects(redirects, exists) {
-  return Object.keys(redirects)
-    .filter((source) => exists(source))
-    .map((target) => ({
-      target,
-      shippedIn: null,
-      reason: "is redirected but still exists, so readers would be sent away from it",
-    }));
+  const failures = [];
+  for (const source of Object.keys(redirects)) {
+    if (exists(source)) {
+      failures.push({
+        target: source,
+        shippedIn: null,
+        reason: "is redirected but still exists, so readers would be sent away from it",
+      });
+      continue;
+    }
+    const reason = redirectFailureReason(redirects, source, exists);
+    if (reason) failures.push({ target: source, shippedIn: null, reason });
+  }
+  return failures;
 }

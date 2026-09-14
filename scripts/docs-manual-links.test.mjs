@@ -26,6 +26,12 @@ describe("extractManualPaths", () => {
 
     expect(sorted(fromSource)).toEqual(sorted(fromModule));
   });
+
+  // sitePath (docs-redirects.mjs) strips a trailing slash before lookup, so a manual.ts value
+  // ending in one would be checked under a key the theme never looks up under.
+  it("does not extract a path with a trailing slash", () => {
+    expect(extractManualPaths('export const x = { a: "/guides/" };')).toEqual([]);
+  });
 });
 
 function scratchRepo() {
@@ -126,5 +132,25 @@ describe("verifyRedirects", () => {
         reason: "is redirected but still exists, so readers would be sent away from it",
       },
     ]);
+  });
+
+  it("reports an unused redirect that loops", () => {
+    const exists = () => false;
+    expect(verifyRedirects({ "/a": "/b", "/b": "/a" }, exists)).toEqual([
+      { target: "/a", shippedIn: null, reason: "redirect loop at /a" },
+      { target: "/b", shippedIn: null, reason: "redirect loop at /b" },
+    ]);
+  });
+
+  it("reports an unused redirect whose destination does not exist", () => {
+    const exists = () => false;
+    expect(verifyRedirects({ "/journals#timeline": "/periods#gone" }, exists)).toEqual([
+      { target: "/journals#timeline", shippedIn: null, reason: "redirects to /periods#gone, which does not exist" },
+    ]);
+  });
+
+  it("does not report a valid unused redirect", () => {
+    const exists = (target) => target === "/periods#weeks";
+    expect(verifyRedirects({ "/journals#timeline": "/periods#weeks" }, exists)).toEqual([]);
   });
 });
