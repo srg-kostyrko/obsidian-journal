@@ -2,6 +2,11 @@
 import { computed } from "vue";
 
 import UiIcon from "./UiIcon.vue";
+import UiManualLink from "./UiManualLink.vue";
+
+import type { ManualPath } from "./manual";
+
+defineProps<{ help?: ManualPath }>();
 
 const expanded = defineModel<boolean>("expanded");
 
@@ -18,6 +23,7 @@ function toggle() {
       <UiIcon :name="icon" />
       <span class="collapsible-trigger-text">
         <slot name="trigger" />
+        <UiManualLink v-if="help" :path="help" />
       </span>
       <span class="collapsible-trigger-controls" @click.stop>
         <slot name="controls" />

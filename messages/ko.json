@@ -1100,6 +1100,7 @@
     }
   ],
   "ui_color_theme_variable_label": "CSS 변수",
+  "ui_manual_link": "매뉴얼에서 열기",
   "ui_theme_color_group_label": [
     {
       "declarations": ["input group"],

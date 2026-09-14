@@ -1,6 +1,9 @@
-import { render } from "@testing-library/vue";
+import { render, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
+import { m } from "@/i18n";
+
+import { manual } from "./manual";
 import UiSettingRow from "./UiSettingRow.vue";
 
 describe("UiSettingRow", () => {
@@ -16,6 +19,14 @@ describe("UiSettingRow", () => {
         slots: { name: "Slotted" },
       });
       expect(container.querySelector(".setting-item-name")?.textContent?.trim()).toBe("Slotted");
+    });
+
+    it("links the name to the manual when help is set", () => {
+      render(UiSettingRow, { props: { name: "Title", help: manual.shelf.page } });
+
+      expect(screen.getByRole("link", { name: m.ui_manual_link() }).getAttribute("href")).toBe(
+        "https://srg-kostyrko.github.io/obsidian-journal/shelves",
+      );
     });
   });
 

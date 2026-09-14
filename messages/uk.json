@@ -959,6 +959,7 @@
     }
   ],
   "ui_color_theme_variable_label": "Змінна CSS",
+  "ui_manual_link": "Відкрити в посібнику",
   "ui_theme_color_group_label": [
     {
       "declarations": ["input group"],

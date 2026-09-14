@@ -8,6 +8,7 @@ export const icons = {
     bulkAdd: "import",
     copy: "copy",
     openExternal: "external-link",
+    help: "badge-help",
     pickDate: "crosshair",
     calendar: "calendar",
     check: "lucide-check",

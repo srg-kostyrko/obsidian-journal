@@ -1,7 +1,10 @@
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/vue";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
+import { m } from "@/i18n";
+
+import { manual } from "./manual";
 import UiCollapsibleBlock from "./UiCollapsibleBlock.vue";
 
 describe("UiCollapsibleBlock", () => {
@@ -49,5 +52,27 @@ describe("UiCollapsibleBlock", () => {
     });
     await userEvent.click(screen.getByTestId("ctrl"));
     expect(emitted("update:expanded")).toBeUndefined();
+  });
+
+  describe("help", () => {
+    it("opens the manual at the section without toggling the block", async () => {
+      const open = vi.spyOn(window, "open").mockReturnValue(null);
+      onTestFinished(() => open.mockRestore());
+      const { emitted } = render(UiCollapsibleBlock, {
+        props: { expanded: false, help: manual.journal.templates },
+        slots: { trigger: "Title" },
+      });
+
+      await userEvent.click(screen.getByRole("link", { name: m.ui_manual_link() }));
+
+      expect(open).toHaveBeenCalledWith("https://srg-kostyrko.github.io/obsidian-journal/journals#templates", "_blank");
+      expect(emitted("update:expanded")).toBeUndefined();
+    });
+
+    it("renders no link without help", () => {
+      render(UiCollapsibleBlock, { props: { expanded: false }, slots: { trigger: "Title" } });
+
+      expect(screen.queryByRole("link")).toBeNull();
+    });
   });
 });
