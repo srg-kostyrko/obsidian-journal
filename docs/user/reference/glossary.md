@@ -4,8 +4,8 @@ The words this manual uses, and where each is explained.
 
 ::: v-pre
 
-**Anchor** — the date a note records for its period: the period's first day, written in the note's
-date property. See [Periods](/periods#how-a-note-knows-its-period).
+**Anchor date** — the date a journal's sequential numbering counts from: the note for that date gets
+each digit's start number. See [Journals](/journals#sequential-numbers).
 
 **Auto-attach** — connecting a note you created yourself, because its path matches a journal's folder
 and name template. See [Notes](/notes#auto-attach).
@@ -13,8 +13,16 @@ and name template. See [Notes](/notes#auto-attach).
 **Auto-create** — creating today's note without being asked, when Obsidian starts and at midnight. See
 [Notes](/notes#auto-create-today-s-note).
 
+**Block** — used for three things. A **view block** is one part of a [view](/views#blocks): a
+calendar, a list, a toolbar. A **code block** is a fence you type into a note. The **navigation
+block** is the code block a journal draws in its own notes. **Custom intervals** and **Notelets** are
+each the name of a view block as well.
+
 **Bulk add** — connecting a whole folder of existing notes to a journal in one pass. See
 [Notes](/notes#bulk-add).
+
+**Calendar decorations** — the decorations on the main settings page, which apply vault-wide. See
+[Decorations](/decorations#where-decorations-live).
 
 **Code block** — a fenced block such as ` ```journal-nav ` that Journals draws as a navigation strip,
 timeline, link list or notelet list. See [Code blocks](/reference/code-blocks).
@@ -43,8 +51,8 @@ templates. See [Journals](/journals).
 **Line**, **segment** — a navigation block is a stack of lines, each made of segments: a piece of text
 that can link to a note. See [Navigation blocks](/navigation-blocks#lines-and-segments).
 
-**Maintenance** — the settings page holding the vault check and settings snapshots. See
-[Troubleshooting](/troubleshooting#maintenance).
+**Maintenance** — the section at the bottom of the main settings page that opens the vault check and
+settings snapshots. See [Troubleshooting](/troubleshooting#maintenance).
 
 **Navigation block** — the strip of links a journal draws in its notes through the `journal-nav` code
 block. See [Navigation blocks](/navigation-blocks).
@@ -57,10 +65,16 @@ such as a meeting note on a day; its type decides its name, folder and template.
 [Notelets](/notelets#renaming-and-deleting-a-type).
 
 **Period** — the stretch of time one note covers: a day, week, month, quarter, year or custom interval.
-See [Periods](/periods).
+A note records its period by the period's first day. See [Periods](/periods).
 
 **Question** — something a journal asks when it creates a note, with the answer saved as a property or
 written into the note. See [Questions](/questions).
+
+**Representative day** — the day `{{date}}` stands for on a weekly journal: the day whose calendar
+year is the week's own year. See [Variables](/reference/variables#the-variables).
+
+**Selected date** — the date a view is centered on; its calendars and lists read from it. See
+[Views](/views#the-view-s-date).
 
 **Sequential numbers** — numbers a journal assigns to its notes in order, such as Sprint 1, Sprint 2.
 See [Journals](/journals#sequential-numbers).

@@ -45,6 +45,33 @@ do.
 
 When a note path already belongs to another journal, nothing is written and a notice says which.
 
+## Clicking a date asks which journal
+
+Two journals of the same period length are in scope and both cover the date. Pick a shelf in the
+view's shelf selector so only one of them is in scope — see
+[Work and home on one calendar](/shelves#work-and-home-on-one-calendar). Commands and
+[links](/reference/links) that target a period length ask the same way.
+
+## Today's note was created on two devices
+
+When sync is slow, your phone and your computer can each create today's note before the other's copy
+arrives. Set **Automatic note creation** on the main settings page to **Desktop only** or **Mobile
+only** — see [Auto-create today's note](/notes#auto-create-today-s-note). If two notes now claim the
+same day, the [vault check](#vault-check) lists them, and **Keep this one** removes the claim from the
+others.
+
+## A command is missing from the palette, or does nothing
+
+The palette lists a command only where it can do something — **Open next note** only while a journal
+note is open, and a command whose **Context** is **Open note's date only** likewise. A hotkey or ribbon
+button runs it anyway and shows a notice saying why nothing happened. See [Commands](/commands).
+
+## A navigation segment cannot link to another journal
+
+A segment's **Journal** link offers only journals on the same shelf, so a journal on no shelf has
+none to offer. Put the journals on one shelf — see
+[Navigation blocks and zoom](/shelves#navigation-blocks-and-zoom).
+
 ## A code block shows nothing, or an error
 
 - **Nothing at all, or plain code.** The fence name is wrong — `journal-nav`, `calendar-timeline`,
