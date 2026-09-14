@@ -77,12 +77,15 @@ npm view obsidian-journals-api version
 | Release published, npm behind        | §2         |
 | Everything shipped                   | §3         |
 
-Step 5a re-runs safely: `gh pr list --head "docs/audit-$VER" --state all` showing an open or merged
-PR (the remote branch is auto-deleted on merge, so this is the check, not "a `docs/audit-$VER`
-branch exists") and the `Manual: document what $VER shipped` issue are both reused. Resuming
-anywhere past step 6, run `/docs-audit $VER` before §3 when neither exists — a regression it finds
-there is reported, since the merge has already happened. A run that found nothing leaves no trace,
-so it runs again; that costs time, not correctness.
+Resuming at step 5a or step 6 starts with `git switch "release/$VER"` (and `git pull --ff-only` if the
+branch is pushed) — preflight left the checkout on `main`, which has neither the promoted
+`## [$VER]` heading nor any fix-forward; resuming past step 6 needs no switch, since the release
+branch has already merged into `main`. Step 5a re-runs safely: `gh pr list --head "docs/audit-$VER"
+--state all` showing an open or merged PR (the remote branch is auto-deleted on merge, so this is the
+check, not "a `docs/audit-$VER` branch exists") and the `Manual: document what $VER shipped` issue are
+both reused. Resuming anywhere past step 6, run `/docs-audit $VER` before §3 when neither exists — a
+regression it finds there is reported, since the merge has already happened. A run that found nothing
+leaves no trace, so it runs again; that costs time, not correctness.
 
 ### Choosing the version
 

@@ -243,15 +243,16 @@ stops here and tells the maintainer: a leftover branch or worktree holds a previ
 and the skill never deletes them.
 
 Dispatch a fresh `general-purpose` agent with `fixer.md`, plus the dispatch wrapper (§3, `{{WT}}`
-form): `{{WT}}`, `{{FINDINGS}}` as a list with page, line, quote, verdict, evidence and — for stale
-quotes — old and new text; a stale quote from a `removed` row carries no new text, so carry the
-release's `added` rows from `strings.tsv` alongside it, so the fixer can find the replacement label.
-`{{REVIEW_NOTES}}` as "none" in round 1.
+form): `{{ROOT}}` as the audited checkout's root, `{{WT}}`, `{{FINDINGS}}` as a list with page, line,
+quote, verdict, evidence and — for stale quotes — old and new text; a stale quote from a `removed` row
+carries no new text, so carry the release's `added` rows from `strings.tsv` alongside it, so the fixer
+can find the replacement label. `{{REVIEW_NOTES}}` as "none" in round 1.
 
 ## §6 Stage 3 — claim review
 
 Dispatch a fresh `general-purpose` agent — never the fixer — with `reviewer.md`, plus the dispatch
-wrapper (§3, `{{WT}}` form): `{{WT}}`, `{{BASE}}`, `{{FINDINGS}}` — the same list the fixer received.
+wrapper (§3, `{{WT}}` form): `{{ROOT}}` as the audited checkout's root, `{{WT}}`, `{{BASE}}`,
+`{{FINDINGS}}` — the same list the fixer received.
 
 - Every claim `confirmed` → commit.
 - Any `wrong` or `unsupported` → round 2: dispatch a **new** fixer with the same findings and the

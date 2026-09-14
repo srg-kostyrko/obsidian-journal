@@ -2,7 +2,7 @@
 
 You did not write the edits in the worktree `{{WT}}` (cd there first). Check them. You are read-only: edit, commit and push nothing.
 
-Run `git diff` — the edits are uncommitted, against `{{BASE}}`.
+Run `git diff` — the edits are uncommitted, against `{{BASE}}`. Also list new files with `git ls-files --others --exclude-standard -- docs/user`, read each in full, and treat every sentence in them as added; you are read-only, so do not `git add` them.
 
 ## Findings the edits address
 
@@ -10,7 +10,7 @@ Run `git diff` — the edits are uncommitted, against `{{BASE}}`.
 
 ## What to do
 
-1. For **every sentence the diff adds or changes that states behavior**, settle it in the code in `{{WT}}/src` and the UI text in `messages/en.json`:
+1. For **every sentence the diff adds or changes that states behavior**, settle it in the code in `{{ROOT}}/src` and the UI text in `{{ROOT}}/messages/en.json`:
    - `confirmed` — the code does what the sentence says; give `file:line`.
    - `wrong` — it does not; say what it does.
    - `unsupported` — you cannot trace it; say what you looked at.
