@@ -14,11 +14,33 @@ here, usually a more configurable one.
 | Clicking a day or week number                                    | Clicking any period — day, week, month, quarter or year — from its cell or heading                                                         |
 | `Reveal active note` command                                     | **Follow active note** on a view, which moves the view as you open notes                                                                   |
 | Start of week from the locale, or a locale override to change it | [Week configuration](/periods#weeks), which sets the first day of the week and week 1 of the year, independently of your Obsidian language |
-| Notes found by file name in one folder                           | Notes identified by their properties, so they keep working when moved or renamed                                                           |
+| Notes found by file name in one folder                           | Notes identified by their properties, so they keep working when moved or renamed — see [Your existing notes](#your-existing-notes)         |
 
 Two things Calendar has no equivalent for: a note's creation date for **Notes by date** can come from a
 property rather than the file, and a day can hold any number of extra notes through
 [notelets](/notelets).
+
+::: v-pre
+
+## Your existing notes
+
+Calendar shows the daily notes that the core Daily notes plugin — or Periodic Notes, when it is on —
+creates, and finds them by file name. Journals finds notes by their properties instead, and adopts a
+note that was already in your vault only when you rename or move it onto a path the journal would use —
+so a new journal starts with an empty calendar. For your daily notes:
+
+1. Create a daily journal whose **Folder** is the folder your daily notes are in. Its **Note name
+   template** `{{date}}` and **Default date format** `YYYY-MM-DD` match Daily notes' own default; if
+   you changed that format, use yours. New notes then land beside the old ones.
+2. Connect the old notes with [Bulk add](/notes#bulk-add): **Source folder** that folder, **Read the
+   date from** **Note title**, and the same date format. The first run is a dry run, which only lists
+   what it would do.
+
+Weekly notes go the same way, into a weekly journal. Calendar names them with its **Weekly note
+format**, which it offers while **Show week number** is on and Periodic Notes' weekly notes are off. If that format uses `gggg`, name new notes with `YYYY` instead — see
+[Variables](/reference/variables#the-variables).
+
+:::
 
 ## Word-count dots
 
