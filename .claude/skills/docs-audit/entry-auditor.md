@@ -12,7 +12,7 @@ Section: {{KIND}}
 
 ## Commits in the release range
 
-{{COMMITS}}
+The commit list is in the file `{{COMMITS}}`, one `hash subject` per line.
 
 ## What to do
 

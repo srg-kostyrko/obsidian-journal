@@ -6,11 +6,13 @@ Work in `{{ROOT}}` (cd there first).
 
 ## The manual diff for the release range
 
-{{DOCS_DIFF}}
+The diff is in the file `{{DOCS_DIFF}}` — it may run to thousands of lines. Read it per page rather
+than whole: `git diff {{PREV}} {{UPPER}} -- docs/user/<page>.md | grep '^@@'` gives that page's hunk
+headers.
 
 ## Call sites
 
-{{CALL_SITES}}
+The list is in the file `{{CALL_SITES}}`.
 
 ## What to do
 
@@ -20,7 +22,9 @@ Work in `{{ROOT}}` (cd there first).
 
 ## Return
 
-Only this, in one `json` fence:
+Only this, in one `json` fence. For a `does-not-explain` target, `note` names its cause plainly — a
+stale label, a rewritten sentence, a missing row — rather than describing the symptom; the orchestrator
+merges it with a matching finding from another auditor by that name:
 
 ```json
 {
@@ -31,6 +35,13 @@ Only this, in one `json` fence:
       "callSites": ["src/journals/settings/ui/sections/TimelineSection.vue:66"],
       "verdict": "explains",
       "note": ""
+    },
+    {
+      "key": "manual.journal.autoCreate",
+      "path": "/journals#automatic-note-creation",
+      "callSites": ["src/journals/settings/ui/sections/AutoCreateSection.vue:40"],
+      "verdict": "does-not-explain",
+      "note": "the Devices row is gone; the label it explained is now \"Automatic note creation\""
     }
   ]
 }
