@@ -2,10 +2,9 @@
 
 ::: v-pre
 
-A journal can ask questions when it creates a note: "Questions are asked when a note is created.
-Their answers can be used in the note's properties, its template content, and its name." Use them to
-record a mood, a sprint goal or a due date as a property, to write the answer into the note, or to
-name the note after it.
+A journal can ask questions when it creates a note, and use the answers in the note's properties, its
+template content and its name: record a mood, a sprint goal or a due date as a property, write the
+answer into the note, or name the note after it.
 
 Questions live in the **Questions** section of a journal's settings page. A [notelet type](/notelets)
 has its own questions, separate from its journal's.
@@ -86,7 +85,7 @@ Never asked:
 
 - **Opening a note that already exists** — the answers it stored stay as they are.
 - **Auto-create.** A journal with a required question, or with a question in its name or folder, is
-  skipped. "A required question is never asked when notes are created automatically."
+  skipped.
 - **Connect note to a journal** and **Bulk add.** The note keeps its own name; see [Notes](/notes).
 - **Notes arriving through sync** already carry their answers.
 

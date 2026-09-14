@@ -150,8 +150,8 @@ shelf's before vault-wide. The cap changes only what is drawn, never what matche
   property by property, which decoration painted each background, border and mark, and which ones it
   overrode.
 - **Inspect a date.** From any decorations section, **Inspect a date** takes a **Date** and a **Shelf
-  in view** and shows everything decorating that date across all three sections. "Nothing decorates
-  this date." when nothing does.
+  in view** and shows everything decorating that date across all three sections, or says that nothing
+  does.
 
 If a decoration's settings can't be changed at all — fields that do not respond — another plugin may
 be interfering. See [Troubleshooting](/troubleshooting).

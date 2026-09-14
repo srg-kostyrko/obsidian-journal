@@ -155,8 +155,8 @@ In a vault with daily and weekly journals but no monthly one, `show: [day, week,
 ````
 
 Lists the [notelets](/notelets) of the period the note belongs to, grouped by type, with **New
-notelet**. It works in a period note and in a notelet alike. In a note connected to no journal it says
-"Note is not connected to a journal".
+notelet**. It works in a period note and in a notelet alike. In a note connected to no journal it lists nothing and says so — see
+[Troubleshooting](/troubleshooting).
 
 | Option  | Values                                    | Default                   |
 | ------- | ----------------------------------------- | ------------------------- |

@@ -103,11 +103,11 @@ Scans every note that claims a journal and groups what it finds by journal:
 | _journal_ — unknown notelet type                | notelets of a deleted type; **Remove journal keys**, or reconnect them           |
 
 Each row is marked **Will be fixed** or **Needs your decision**. **Fix** _count_ repairs a group and
-**Fix everything safe** repairs every safe finding. Where the file name and the note disagree — "the file
-name says 2026-03-02, the note says 2026-03-09. Open the note and decide." — nothing is changed for you.
+**Fix everything safe** repairs every safe finding. Where the file name and the note disagree on
+the date, nothing is changed for you: open the note and decide which is right.
 
-"Findings are based on your journals as they are configured right now. If your settings are wrong,
-restore a snapshot first." The page checks again after every repair.
+Findings reflect your journals as they are configured right now, so if your settings are wrong,
+restore a snapshot first. The page checks again after every repair.
 
 ### Settings snapshots
 
