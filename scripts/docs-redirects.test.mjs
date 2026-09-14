@@ -8,8 +8,11 @@ describe("sitePath", () => {
     );
   });
 
-  it("drops a .html suffix and a trailing slash", () => {
+  it("drops a .html suffix", () => {
     expect(sitePath("/obsidian-journal/reference/links.html", "", "/obsidian-journal/")).toBe("/reference/links");
+  });
+
+  it("drops a trailing slash", () => {
     expect(sitePath("/obsidian-journal/guides/", "", "/obsidian-journal/")).toBe("/guides");
   });
 
