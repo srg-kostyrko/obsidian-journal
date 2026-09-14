@@ -24,6 +24,17 @@ no notes to open yet.
 ```
 ````
 
+## How do I…
+
+- [File notes in a folder per year](/journals#filing-notes-by-year)
+- [Use a different template on some days](/journals#a-different-template-on-some-days)
+- [Bring in the notes I already have](/notes#bulk-add)
+- [Write weekly and monthly notes as well](/periods)
+- [Number notes, like Sprint 1 and Sprint 2](/journals#sequential-numbers)
+- [Keep work and personal journals apart](/shelves)
+- [Mark the days that have a note](/decorations#where-decorations-live)
+- [Open today's note with a hotkey](/commands#commands-you-create)
+
 Looking for what a setting does? [Settings](/settings) maps every setting to the page that explains
 it.
 

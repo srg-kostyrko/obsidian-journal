@@ -47,7 +47,9 @@ that resolve to the same name share one note. A name the plugin cannot read a da
 but notes you create yourself will not [auto-attach](/notes#auto-attach).
 
 **Folder** — where new notes go. It takes variables too, so notes can be filed by date:
-`Journal/{{date:YYYY}}/{{date:MM}}` puts each note under its year and month.
+`Journal/{{date:YYYY}}/{{date:MM}}` puts each note under its year and month. Changing **Folder** later
+affects only new notes: the notes a journal already has stay where they are, and stay connected. Move
+them yourself if you want them in the new layout — a note keeps its connection wherever it goes.
 
 **Default date format** — used for a date variable that doesn't specify its own format, written with
 [moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). A variable with its
@@ -59,7 +61,7 @@ than `W` — see [Week numbers in names](/periods#week-numbers-in-names).
 **Confirm creating new notes** and **Auto-create today's note** are covered in
 [Notes](/notes#creating-a-note).
 
-Example: [Filing notes by decade](#filing-notes-by-decade).
+Examples: [Filing notes by year](#filing-notes-by-year), [Filing notes by decade](#filing-notes-by-decade).
 
 ## Templates
 
@@ -68,15 +70,14 @@ first that exists wins. **Add template** adds a path; each path shows its **Reso
 template path:**.
 
 - A template that exists but is empty is skipped, and the next one is tried.
-- Paths take variables, which makes fallbacks possible. With `Templates/Daily-{{date:dddd}}.md`
-  followed by `Templates/Daily.md`, a Friday note uses `Templates/Daily-Friday.md` when that file
-  exists and `Templates/Daily.md` otherwise.
+- Paths take variables, so a journal can use a different template on some days — a weekday, a month.
 - Variables in the template's text are filled in for the note being created. With Templater
   installed, its commands run afterwards — see [Compatibility](/compatibility).
 - A template only ever fills a new note, or an empty note being connected. A note with content is
   never overwritten.
 
-Example: [Recording when a note was created](#recording-when-a-note-was-created).
+Examples: [Recording when a note was created](#recording-when-a-note-was-created),
+[A different template on some days](#a-different-template-on-some-days).
 
 ## Timeline
 
@@ -183,6 +184,17 @@ Commands that target the journal are deleted with it, and it is taken off its sh
 
 ## Examples
 
+### Filing notes by year
+
+A daily journal with **Folder** `Journal/{{date:YYYY}}` and **Note name template** `{{date}}`. Before
+its folder was set, it wrote its note for 31 December 2025 at the root of the vault, as
+`2025-12-31.md`.
+
+- Opening its note for 14 September 2026 creates `Journal/2026/2026-09-14.md`.
+- Opening 31 December 2025 opens `2025-12-31.md` where it is; nothing is created under `Journal/2025`.
+- A note you make yourself at `Journal/2027/2027-01-05.md` is [auto-attached](/notes#auto-attach) for
+  5 January 2027.
+
 ### Filing notes by decade
 
 A daily journal with **Folder** `Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}/{{date:MM}}` and
@@ -208,6 +220,26 @@ A note created at 20:27:19 on 13 September 2026 gets `created: 2026-09-13 20:27:
 
 Take the time from `{{time}}`: `{{current_date}}` holds no time of day — see
 [Variables](/reference/variables#the-variables).
+
+### A different template on some days
+
+A daily journal with two **Templates**, in this order:
+
+1. `Templates/Daily-{{date:dddd}}.md`
+2. `Templates/Daily.md`
+
+The vault has `Templates/Daily-Friday.md` and no template for any other weekday. Opening Friday 18
+September 2026 fills the note from `Daily-Friday.md`; opening Monday 21 September fills it from
+`Daily.md`, because `Templates/Daily-Monday.md` does not exist.
+
+`dddd` writes the weekday in Obsidian's language, so with Obsidian in German the Friday template has to
+be `Daily-Freitag.md`, and after switching languages new Friday notes fall back to `Daily.md`.
+`{{date:E}}` numbers the weekdays instead — 1 for Monday to 7 for Sunday — in any language: with
+`Templates/Daily-{{date:E}}.md` first, the same Friday uses `Templates/Daily-5.md`.
+
+The same works for anything a variable expresses — `{{date:MM}}` for a template per month,
+`{{week_of_month}}` for the first week of each month. One template is picked, not several combined; to
+share a common body, embed it, or include it with Templater's `tp.file.include`.
 
 ### A journal with a start and an end
 

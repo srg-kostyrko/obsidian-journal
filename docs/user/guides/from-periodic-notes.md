@@ -48,23 +48,10 @@ created and cannot be changed afterwards. See [Custom intervals](/periods#custom
 ## A different template on particular days
 
 Templates are tried in order and the first one that **exists and has content** wins, and each template
-path is rendered with the same variables a note name uses. Together those give a per-weekday template
-with no extra configuration — list two templates on the journal:
-
-1. `Templates/Daily-{{date:dddd}}.md`
-2. `Templates/Daily.md`
-
-On a Friday the first entry resolves to `Templates/Daily-Friday.md`. If that note exists it is used;
-if it does not, the entry is skipped and the plain `Templates/Daily.md` is used instead. Only the days
-you actually create a file for behave differently.
-
-The same works for anything a variable can express: `{{week_of_month}}` for a first-week-of-the-month
-template, `{{date:MMMM}}` per month, `{{index}}` per sprint, or one of the journal's own
-[questions](/questions).
-
-This **selects** a template rather than combining several — `Daily-Friday.md` is used _instead of_
-`Daily.md`, not appended to it. To share a common body between them, embed it, or include it with
-Templater's `tp.file.include`. See [Templates](/journals#templates).
+path takes the same variables a note name does. So there is no per-weekday setting to look for: list
+`Templates/Daily-{{date:dddd}}.md` before `Templates/Daily.md`, and Fridays use
+`Templates/Daily-Friday.md` once that note exists. The variants, and a language trap in weekday names,
+are under [A different template on some days](/journals#a-different-template-on-some-days).
 
 ## A monthly note that lists its own weeks
 

@@ -70,6 +70,9 @@ A new vault comes with commands on the main settings page for the current, next 
 weekly, monthly, quarterly and yearly note — "Open today's note", "Open next weekly note", "Open
 previous monthly note" and so on — opening in a new tab. Edit or delete them like your own.
 
+To run a command from the keyboard, give it a key in Obsidian's own **Settings → Hotkeys**, where every
+command — built in or your own — is listed.
+
 ### A command's settings
 
 - **Name** — must be unique among the commands in the same place. For a journal command, the journal's

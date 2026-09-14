@@ -31,6 +31,11 @@ applies.
 A calendar showing **All journals** draws every shelf's decorations. Calendar decorations are the
 vault-wide layer, and the rest of this page calls them vault-wide.
 
+A new journal already marks the periods that have a note: it starts with one journal decoration,
+**Check if note exists**, drawn as a small circle in the theme's accent color at the bottom center —
+or, for a custom interval journal, as an accent-colored border on the left. Edit or delete it like any
+other.
+
 ## Conditions
 
 Which conditions a journal decoration offers depends on the journal's period:
