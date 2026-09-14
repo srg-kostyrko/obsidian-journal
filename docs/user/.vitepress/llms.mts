@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import type { SiteConfig } from "vitepress";
-import { isDarkOnlyImage, markdownFiles, scanMarkdown } from "../../../scripts/docs-markdown.mjs";
+import { isDarkOnlyImage, markdownFiles, scanMarkdown, stripHeadingId } from "../../../scripts/docs-markdown.mjs";
 
 function firstHeading(body: string, fallback: string): string {
   return /^#\s+(.+)$/m.exec(body)?.[1] ?? fallback;
@@ -13,7 +13,7 @@ function stripForAgents(body: string, file: string): string {
   if (unclosedVPre) throw new Error(`unclosed "::: v-pre" container in ${file}`);
   return lines
     .filter((entry) => !entry.vPreMarker && (entry.fenced || !isDarkOnlyImage(entry.line)))
-    .map((entry) => entry.line)
+    .map((entry) => (entry.fenced ? entry.line : stripHeadingId(entry.line)))
     .join("\n");
 }
 

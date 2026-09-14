@@ -15,7 +15,7 @@ A notelet is recognized by its properties, not its path. The plugin writes the j
 period's date and the type's name into each one, so a notelet you move or rename by hand stays
 connected.
 
-## Adding a notelet type
+## Adding a notelet type {#adding-a-notelet-type}
 
 On a journal's settings page, **Notelet types** → **Add notelet type** asks for a **Name**, stored on
 each notelet — rename it here later to change it everywhere. It must be unique within the journal.

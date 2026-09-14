@@ -36,7 +36,7 @@ warning under the journal's **Note name template** — it says when names cannot
 - The period's note may already exist elsewhere: a note you moved or renamed keeps its connection, and
   opening that period opens it where it is.
 
-## Two journals fight over the same notes
+## Two journals fight over the same notes {#two-journals-fight-over-the-same-notes}
 
 **Colliding journal settings** on the main settings page names journals whose folder and name template
 resolve to the same paths: "Journals … have colliding configurations, so their notes will overwrite each
@@ -112,12 +112,12 @@ Another plugin may be interfering — this has happened. See
 
 See [Templater](/compatibility#templater) for the setup that keeps the two from processing the same note.
 
-## Maintenance
+## Maintenance {#maintenance}
 
 **Maintenance**, at the bottom of the main settings page, has two tools. It does nothing unless you use
 it.
 
-### Vault check
+### Vault check {#vault-check}
 
 Scans every note that claims a journal and groups what it finds by journal:
 
@@ -136,13 +136,13 @@ the date, nothing is changed for you: open the note and decide which is right.
 Findings reflect your journals as they are configured right now, so if your settings are wrong,
 restore a snapshot first. The page checks again after every repair.
 
-### Settings snapshots
+### Settings snapshots {#settings-snapshots}
 
 A copy of your settings is saved before the plugin migrates them to a new version ("Taken before
 upgrading from settings version 4"), and before a snapshot is restored ("Taken before restoring a
 snapshot"). **Restore** puts one back.
 
-## Reporting a bug
+## Reporting a bug {#reporting-a-bug}
 
 1. Under **Logging** on the main settings page, set **Log level** to **Debug** — only messages at or
    above the chosen level are printed to the console and kept for export, so Debug captures everything.

@@ -8,6 +8,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
+import { linkedManualPaths, verifyManualLinks, verifyRedirects } from "./docs-manual-links.mjs";
 
 const {
   values: { src, dist },
@@ -166,9 +167,31 @@ for (const mdPath of markdownFiles(src)) {
   }
 }
 
+function linkExists(target) {
+  const { route, frag } = resolveTarget(target, "/");
+  const ids = routes.get(route);
+  return Boolean(ids) && (!frag || ids.has(frag));
+}
+
+// A link a release put in the plugin stays in that release's installs for good, so every tag's
+// links must keep landing — directly, or through a redirect written when the section moved.
+const { paths: pluginLinks, releasesWithLinks } = linkedManualPaths(process.cwd());
+const redirects = JSON.parse(readFileSync(path.join(src, ".vitepress", "redirects.json"), "utf8"));
+const pluginFailures = [
+  ...verifyRedirects(redirects, linkExists),
+  ...verifyManualLinks(pluginLinks, redirects, linkExists),
+];
+
 for (const { mdPath, lineno, target } of unchecked) console.log(`UNCHECKED: ${mdPath}:${lineno} -> ${target}`);
 for (const { mdPath, lineno, target } of failures) console.log(`DEAD: ${mdPath}:${lineno} -> ${target}`);
+for (const { target, shippedIn, reason } of pluginFailures)
+  console.log(
+    `PLUGIN LINK: ${target} (${shippedIn ? `shipped in ${shippedIn}` : "unreleased"}) ${reason} — add an entry to docs/user/.vitepress/redirects.json pointing at where this is explained now`,
+  );
 
 console.log(`${unchecked.length} unchecked link(s)`);
 console.log(`${failures.length} dead link(s)`);
-process.exit(failures.length > 0 ? 1 : 0);
+console.log(
+  `${pluginLinks.size} plugin link(s) checked, from ${releasesWithLinks} release(s) and the working tree; ${pluginFailures.length} failing`,
+);
+process.exit(failures.length + pluginFailures.length > 0 ? 1 : 0);

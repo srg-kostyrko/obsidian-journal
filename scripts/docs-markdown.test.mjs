@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, onTestFinished } from "vitest";
-import { fenceBlocks, isDarkOnlyImage, markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
+import { fenceBlocks, isDarkOnlyImage, markdownFiles, scanMarkdown, stripHeadingId } from "./docs-markdown.mjs";
 
 // One word per line: what a consumer would do with it.
 function kinds(text) {
@@ -233,6 +233,16 @@ describe("fenceBlocks", () => {
       { lineno: 1, info: "markdown", body: "```journals-home\nscale: 2\n```" },
       { lineno: 2, info: "journals-home", body: "scale: 2" },
     ]);
+  });
+});
+
+describe("stripHeadingId", () => {
+  it("removes a custom anchor from a heading", () => {
+    expect(stripHeadingId("## A view's settings {#a-view-s-settings}")).toBe("## A view's settings");
+  });
+
+  it("leaves a line that is not a heading alone", () => {
+    expect(stripHeadingId("Braces {#like-this} in prose")).toBe("Braces {#like-this} in prose");
   });
 });
 

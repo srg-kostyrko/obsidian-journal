@@ -51,7 +51,7 @@ monthly note.
 - The note is created if it does not exist. Where two journals in scope write the same length, you are
   asked which.
 
-## Commands you create
+## Commands you create {#commands-you-create}
 
 A command opens a journal note for a date worked out from today or from the note you have open. Add
 them in four places, and where you add one decides what it targets:

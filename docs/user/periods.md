@@ -25,7 +25,7 @@ the first day of a period of its journal is not recognized as that journal's not
 When you create or connect a note for any date, the plugin works out which period that date falls in
 and uses the period's first day. A daily date given to a weekly journal lands on that date's week.
 
-## Weeks
+## Weeks {#weeks}
 
 Which day a week starts on, and which week is week 1 of the year, come from **Week configuration** on
 the main settings page, which also decides week numbers. **Change** opens the choices:
