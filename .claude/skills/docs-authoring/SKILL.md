@@ -32,6 +32,9 @@ The review's value is the fixes it causes. Do not publish its verdicts — not i
 the PR description or a PR comment. A verdict list describes one version of a page, goes
 stale on the next edit, and nothing re-checks it.
 
+Drift after a page ships is the `docs-audit` skill's job: the release runs it before every merge,
+and its fixer edits pages under this skill's rules.
+
 Some claims cannot be settled from this repo. Give the reviewer these sources, or it marks
 such claims unsupported:
 
