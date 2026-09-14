@@ -16,7 +16,7 @@ Section: {{KIND}}
 
 ## What to do
 
-1. **Find every manual paragraph that states behavior this entry describes or changed.** Start from the entry's bold terms — `grep -rn -F '**<term>**' docs/user` — then read the sections around each hit and follow links between pages. The same behavior is often stated on a concept page, in `settings.md` and in a guide under `guides/`; check each.
+1. **Find every manual paragraph that states behavior this entry describes or changed.** Start from the entry's bold terms — `grep -rn -F --exclude-dir=.vitepress '**<term>**' docs/user` — then read the sections around each hit and follow links between pages. The same behavior is often stated on a concept page, in `settings.md` and in a guide under `guides/`; check each.
 2. **Split those paragraphs into behavioral claims** — sentences a user could act on and be wrong. Skip navigation prose and examples' framing.
 3. **Settle each claim in the code**, then give one verdict:
    - `holds` — the code does what the sentence says.

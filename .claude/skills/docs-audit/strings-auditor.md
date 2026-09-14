@@ -13,7 +13,7 @@ Tab-separated `key`, `English text`:
 ## What to do
 
 1. **Classify each key** by where it renders: `grep -rn "m\.<key>(" src`. Keep only those naming a **setting**, a **command** or a **block** (a code-block type or a view block). Skip descriptions, notices, errors, button verbs, placeholders and option values — list them under `skipped` with a one-word reason.
-2. **For each kept key, decide whether some manual paragraph explains it**: what it does, and when a user would change it. Search by its English text in bold — `grep -rn -F '**<text>**' docs/user` — and by the concept it controls. A row in `settings.md`, a label in a list, or a mention in passing is **not** an explanation; record those under `mentions`.
+2. **For each kept key, decide whether some manual paragraph explains it**: what it does, and when a user would change it. Search by its English text in bold — `grep -rn -F --exclude-dir=.vitepress '**<text>**' docs/user` — and by the concept it controls. A row in `settings.md`, a label in a list, or a mention in passing is **not** an explanation; record those under `mentions`.
 
 ## Return
 

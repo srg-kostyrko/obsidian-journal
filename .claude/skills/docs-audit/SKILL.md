@@ -93,8 +93,8 @@ longer:
 ```bash
 awk -F'\t' '$1 != "added"' "$OUT/strings.tsv" | while IFS=$'\t' read -r _ key old new; do
   {
-    grep -rnF -- "**$old**" docs/user
-    [ ${#old} -ge 20 ] && grep -rnF -- "$old" docs/user | grep -vF -- "**$old**"
+    grep -rnF --exclude-dir=.vitepress -- "**$old**" docs/user
+    [ ${#old} -ge 20 ] && grep -rnF --exclude-dir=.vitepress -- "$old" docs/user | grep -vF -- "**$old**"
   } | while IFS= read -r hit; do printf '%s\t%s\t%s\t%s\n' "$key" "$old" "$new" "$hit"; done
 done > "$OUT/stale-quotes.tsv"
 ```
@@ -180,7 +180,7 @@ Body, in user terms — **no verdict list**, no changelog entry, no `Co-Authored
 
 <LABEL> changed behavior these pages describe.
 
-- **<page title>** — <what now reads differently>. Made stale by: "<first sentence of the entry>"
+- **<page title>** — <what now reads differently>. Made stale by: “<first sentence of the entry>”
 
 ## Checks
 
