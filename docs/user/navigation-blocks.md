@@ -74,7 +74,9 @@ Examples: [Week and month lines in a daily note](#week-and-month-lines-in-a-dail
 - **Decorate whole block** — paint the whole block with the journal's own decorations for the note's
   period.
 
-On a narrow pane, such as a phone, the previous, current and next columns stack.
+When the previous, current and next columns no longer fit side by side, they stack, one per row. That
+depends on what they hold, not on the device: the previous and next columns shrink on a narrow pane, so
+a day block stays on one row on a phone, while a decorated month block needs a much wider pane.
 
 ## Calendar interval lines {#calendar-interval-lines}
 

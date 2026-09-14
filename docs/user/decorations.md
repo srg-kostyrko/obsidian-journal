@@ -74,10 +74,10 @@ treated as text.
 
 - **equals** and **does not equal** on text are exact; the others ignore case. A list property
   matches when any of its items does.
-- A note without the property matches **does not equal** and **does not contain** — there is no value
-  to break them — and nothing else except **does not exist**.
-- Date & time properties compare by the day; the time is ignored. A value that is not a date matches
-  nothing.
+- A note without the property matches **does not equal**, **does not contain** and, on a date,
+  **not on** — there is no value to break them — and nothing else except **does not exist**.
+- Date & time properties compare by the day; the time is ignored. A value that is there but is not a
+  date matches only **exists** — every comparison fails, **not on** included.
 
 **Checkboxes.** A ticked checkbox is **is true**, an unticked one is **is false**, and a note without
 the property at all is **does not exist**. A property added to a note but never ticked holds no value
