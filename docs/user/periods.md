@@ -40,9 +40,9 @@ the main settings page, which also decides week numbers. **Change** opens the ch
 - **Custom** — pick **Start week on**, and **First week of year**: the day of January (1–7) that the
   first week of the year must contain — 4 means the first week is the one containing Jan 4.
 
-With **Custom**, **Apply week configuration to all dates in vault** appears: off, week-configuration
-settings apply only to dates inside journals and do not affect dates created by other plugins or
-Obsidian itself. You might need to restart Obsidian for it to take effect.
+With anything but **Follow system locale**, **Apply week configuration to all dates in vault**
+appears: off, week-configuration settings apply only to dates inside journals and do not affect dates
+created by other plugins or Obsidian itself. You might need to restart Obsidian for it to take effect.
 
 ### Changing it when you already have weekly notes
 

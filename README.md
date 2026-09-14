@@ -60,8 +60,8 @@ Follow the steps below to install plugin.
 
 ## Compatibility
 
-Journals needs Obsidian 1.8.7 or later and runs on desktop and mobile. It works alongside Templater, and
-replaces Daily notes, Periodic Notes and Calendar — see
+Journals needs Obsidian 1.8.7 or later and runs on desktop and mobile. It works alongside Templater and
+Notebook Navigator, and replaces Daily notes, Periodic Notes and Calendar — see
 [Compatibility](https://srg-kostyrko.github.io/obsidian-journal/compatibility) for how they interact.
 
 ## Documentation
