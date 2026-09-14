@@ -41,13 +41,13 @@ records a note's journal, date and numbers there. See [Journals](/journals#front
 templates. See [Journals](/journals).
 
 **Line**, **segment** — a navigation block is a stack of lines, each made of segments: a piece of text
-that can link to a note. See [Navigation blocks](/views-and-blocks#navigation-blocks).
+that can link to a note. See [Navigation blocks](/navigation-blocks#lines-and-segments).
 
 **Maintenance** — the settings page holding the vault check and settings snapshots. See
 [Troubleshooting](/troubleshooting#maintenance).
 
 **Navigation block** — the strip of links a journal draws in its notes through the `journal-nav` code
-block. See [Views and blocks](/views-and-blocks#navigation-blocks).
+block. See [Navigation blocks](/navigation-blocks).
 
 **Notelet**, **notelet type** — an extra note a journal keeps for a period beside the period's own note,
 such as a meeting note on a day; its type decides its name, folder and template. See

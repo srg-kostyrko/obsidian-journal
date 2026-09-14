@@ -1,6 +1,5 @@
 import { $, browser } from "@wdio/globals";
 
-import { VISIBLE_LEAF, hostNote, openInReadingMode } from "../journeys/code-blocks.js";
 import { note } from "../journeys/decorations.js";
 import { LIVE_LEAF, MONTH_VIEW, openCalendarView } from "../journeys/view.js";
 import { reloadObsidianOn } from "../support/clock.js";
@@ -10,13 +9,6 @@ import { waitForState } from "../support/wait.js";
 
 import { captureThemed, recordOutcome, textsOf, widenRightSidebar } from "./capture.js";
 
-class UnexpectedNavSegmentCountError extends Error {
-  constructor(segmentTexts: readonly string[]) {
-    super(`expected at least 5 nav segments, got: ${JSON.stringify(segmentTexts)}`);
-    this.name = "UnexpectedNavSegmentCountError";
-  }
-}
-
 const VIEW_ROOT = `${LIVE_LEAF} .journal-view-root`;
 const DAY_NOTES = `${VIEW_ROOT} .journal-view-day-notes`;
 const DAY_NOTES_CARD = `${DAY_NOTES} .journal-view-day-notes__card`;
@@ -24,13 +16,6 @@ const DAY_NOTES_TITLE = `${DAY_NOTES} .journal-view-day-notes__title`;
 
 const WEEK_VIEW = `${LIVE_LEAF} .notes-week-view`;
 const WEEK_NUMBER_CELL = `${WEEK_VIEW} [data-testid="week-number-cell"]`;
-
-// Reading-mode nav block, rendered through the canonical `journal-nav` fence name (not the
-// `calendar-nav` alias journeys/code-blocks.ts's own NAV_BLOCK/NAV_VIEW constants are scoped to).
-const READING_VIEW = `${VISIBLE_LEAF} .markdown-reading-view`;
-const NAV_BLOCK_JOURNAL = `${READING_VIEW} .block-language-journal-nav`;
-const NAV_VIEW_JOURNAL = `${NAV_BLOCK_JOURNAL} .nav-view`;
-const NAV_CURRENT_JOURNAL = `${NAV_BLOCK_JOURNAL} .nav-block-current`;
 
 // The day views-and-blocks.md quotes; commands.md quotes the next-week link a day earlier.
 const TODAY = "2026-09-14";
@@ -55,32 +40,6 @@ async function seedNoteOnPinnedClock(path: string, content: string): Promise<voi
 
 function countMatching(selector: string): Promise<number> {
   return browser.execute((sel) => document.querySelectorAll(sel).length, selector);
-}
-
-// Segments are `.nav-row` elements sharing one block; picking one by its rendered text is the
-// only handle two segments in different lines offer. A real WebDriver click can't reach a row in
-// this reading-mode layout (same Electron hit-test gap code-blocks.ts's clickNavNext documents),
-// so dispatch a native DOM click, which still fires the Vue @click handler.
-async function clickCurrentNavSegment(text: string): Promise<void> {
-  const rowSelector = `${NAV_CURRENT_JOURNAL} .nav-row`;
-  await browser.waitUntil(
-    async () =>
-      browser.execute(
-        (sel: string, target: string) =>
-          [...document.querySelectorAll(sel)].some((el) => el.textContent?.trim() === target),
-        rowSelector,
-        text,
-      ),
-    { timeoutMsg: `nav segment "${text}" did not render` },
-  );
-  await browser.execute(
-    (sel: string, target: string) => {
-      const el = [...document.querySelectorAll<HTMLElement>(sel)].find((row) => row.textContent?.trim() === target);
-      el?.click();
-    },
-    rowSelector,
-    text,
-  );
 }
 
 describe("views examples", () => {
@@ -171,60 +130,6 @@ describe("views examples", () => {
         dayNotesTitlesInOrder: titles,
         excludedNote: "Inbox/different-day.md",
         excludedNoteCreatedProperty: differentDay,
-      });
-    });
-  });
-
-  describe("navigation rows (#106)", () => {
-    before(async () => {
-      await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-docs-views-nav", plugins: ["journals"] });
-    });
-
-    it("opens the week's and month's notes from a daily note's default nav rows", async () => {
-      const anchor = TODAY;
-      const path = `day/${anchor}.md`;
-      await seedNote(path, hostNote("daily", anchor, "```journal-nav\n```"));
-
-      await openInReadingMode(path);
-      await $(NAV_VIEW_JOURNAL).waitForExist({ timeoutMsg: "journal-nav block did not render" });
-
-      const segmentTexts = await textsOf(`${NAV_CURRENT_JOURNAL} .nav-row`);
-      // The day journal's default nav block: ddd, D (self), relative, week, month, year — one
-      // segment per line. Week and month are lines 3 and 4 (0-indexed).
-      const weekText = segmentTexts[3];
-      const monthText = segmentTexts[4];
-      if (weekText === undefined || monthText === undefined) {
-        throw new UnexpectedNavSegmentCountError(segmentTexts);
-      }
-
-      await clickCurrentNavSegment(weekText);
-      // The host note is still active when the click lands, so wait for the path to move off it.
-      await waitForState(activeNotePath, (p) => p !== path, "waited for the week segment to open a note");
-      const weekPath = (await activeNotePath()) ?? "";
-      const weekFrontmatter = await frontmatterOf(weekPath);
-
-      await openInReadingMode(path);
-      await $(NAV_VIEW_JOURNAL).waitForExist({ timeoutMsg: "journal-nav block did not re-render" });
-      await clickCurrentNavSegment(monthText);
-      await waitForState(
-        activeNotePath,
-        (active) => active !== path && active !== weekPath,
-        "waited for the month segment to open a note",
-      );
-      const monthPath = (await activeNotePath()) ?? "";
-      const monthFrontmatter = await frontmatterOf(monthPath);
-
-      // Both clicks navigated away from the host note's own tab, which Obsidian then hides
-      // (inline display:none) — re-open it so the visible-leaf screenshot is its nav block.
-      await openInReadingMode(path);
-      await $(NAV_VIEW_JOURNAL).waitForExist({ timeoutMsg: "journal-nav block did not re-render for capture" });
-      await captureThemed(NAV_VIEW_JOURNAL, "views-and-blocks-nav-rows");
-
-      await recordOutcome("views-and-blocks-nav-rows", {
-        hostPath: path,
-        segmentTexts,
-        week: { label: weekText, openedPath: weekPath, frontmatter: weekFrontmatter },
-        month: { label: monthText, openedPath: monthPath, frontmatter: monthFrontmatter },
       });
     });
   });

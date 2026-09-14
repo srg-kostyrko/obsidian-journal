@@ -525,7 +525,7 @@ on it.
   survives in exactly one consumer, `PeriodButtonsItem.vue`.
 - Whole-block nav decoration draws only on the current journal's own
   decorations — the _Whole block decoration_ setting in
-  [`views-and-blocks.md`](docs/user/views-and-blocks.md#navigation-blocks) describes it, and
+  [`navigation-blocks.md`](docs/user/navigation-blocks.md#block-settings) describes it, and
   `navBlockDecorationScope` (`decoration-scopes.ts`) is the one map it reads.
   Per-segment decoration is scoped differently and is the part no doc states,
   and unlike the block it is not one scope: a segment linked `none`, or an

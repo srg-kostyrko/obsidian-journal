@@ -30,7 +30,7 @@ Every block's container carries a class themes and CSS snippets can target: `jou
 ```
 ````
 
-Draws the journal's [navigation block](/views-and-blocks#navigation-blocks) for the note it sits in —
+Draws the journal's [navigation block](/navigation-blocks) for the note it sits in —
 its lines, segments and arrows are set in the journal's settings, not here. It needs a note connected
 to a journal. `calendar-nav` and `interval-nav` are older names for the same block and still work.
 

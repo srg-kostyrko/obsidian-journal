@@ -11,7 +11,9 @@ every setting, code block and migration path.
    in them.
 3. [Notes](/notes) — how notes get into a journal, including notes you already have.
 4. [Shelves](/shelves) — keep work and personal journals apart.
-5. [Views and blocks](/views-and-blocks) — put a calendar on screen, and navigation into your notes.
+5. [Views and blocks](/views-and-blocks) — put a calendar on screen.
+6. [Navigation blocks](/navigation-blocks) — links to the previous, next and surrounding periods,
+   inside each note.
 
 ## Everything else
 

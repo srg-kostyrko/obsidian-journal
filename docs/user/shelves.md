@@ -74,7 +74,7 @@ one, it asks which. See [Commands](/commands) for what each command type does.
 
 ## Navigation blocks and zoom
 
-A [navigation block](/views-and-blocks) row that links to another period length — a month row in a
+A [navigation block](/navigation-blocks) row that links to another period length — a month row in a
 daily note — opens that period's journal from the same shelf as the note's journal, and from every
 journal when that journal is on no shelf.
 

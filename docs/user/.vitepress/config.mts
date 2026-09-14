@@ -22,6 +22,7 @@ export default defineConfig({
           { text: "Notelets", link: "/notelets" },
           { text: "Decorations", link: "/decorations" },
           { text: "Views and blocks", link: "/views-and-blocks" },
+          { text: "Navigation blocks", link: "/navigation-blocks" },
           { text: "Commands", link: "/commands" },
         ],
       },
