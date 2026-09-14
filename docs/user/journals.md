@@ -185,21 +185,13 @@ The journal's template note starts with:
 ```markdown
 ---
 created: {{current_date:YYYY-MM-DD}} {{time:HH:mm:ss}}
-created_wrong: {{current_date:YYYY-MM-DD HH:mm:ss}}
-stamp: {{current_date:YYYY-MM-DD HH:mm}}
 ---
 ```
 
-A note created at 20:27:19 on 13 September 2026 gets:
+A note created at 20:27:19 on 13 September 2026 gets `created: 2026-09-13 20:27:19`.
 
-```yaml
-created: 2026-09-13 20:27:19
-created_wrong: 2026-09-13 00:00:00
-stamp: 2026-09-13 00:00
-```
-
-`{{current_date}}` is a date, so any time in its format comes out as zeros. Take the time from
-`{{time}}`.
+Take the time from `{{time}}`: `{{current_date}}` is a date, so a time written into its own format —
+`{{current_date:YYYY-MM-DD HH:mm:ss}}` — comes out as `00:00:00`.
 
 ### A journal with a start and an end
 
