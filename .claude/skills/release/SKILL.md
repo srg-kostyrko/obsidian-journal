@@ -234,7 +234,6 @@ git switch -c "release/$VER"
 git push -u origin "release/$VER"
 git ls-remote --tags origin "$VER" | wc -l     # must print 0
 gh pr create --title "chore: release $VER" --body "…"
-gh pr checks <n> --watch --interval 30
 ```
 
 The PR body says what is in the release, why it is minor or patch, whether
