@@ -1,5 +1,7 @@
 import { $, browser } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
+
 const PLUGIN_ID = "journals";
 
 // The settings panel is itself an Obsidian modal (a .modal-container wrapping .mod-settings),
@@ -324,4 +326,22 @@ export async function clickModalCheckboxByLabel(label: string): Promise<void> {
 // (e.g. a weekday short name like "Sat"). UiToggleGroup renders <button> elements, not checkboxes.
 export async function clickModalToggleOption(label: string): Promise<void> {
   await activeModal().$(`button=${label}`).click();
+}
+
+// A manual link is an anchor named by the shared tooltip; its href is the page the plugin opens.
+// Waits for the page's links to settle on the expected list, then returns what is there, so the
+// spec's assertion reports a readable diff when they never do.
+export async function waitForManualLinks(expected: readonly string[]): Promise<string[]> {
+  const read = (): Promise<string[]> =>
+    browser.execute(
+      (name) =>
+        [...document.querySelectorAll(`.mod-settings a[aria-label="${CSS.escape(name)}"]`)].map(
+          (a) => a.getAttribute("href") ?? "",
+        ),
+      m.ui_manual_link(),
+    );
+  await browser
+    .waitUntil(async () => JSON.stringify(await read()) === JSON.stringify(expected), { timeout: 5000 })
+    .catch(() => null);
+  return read();
 }
