@@ -1,7 +1,8 @@
 export const MANUAL_BASE = "https://srg-kostyrko.github.io/obsidian-journal";
 
 // Shipped links are checked against every release tag by scripts/docs-manual-links.mjs, which reads
-// this file's string literals by pattern: keep every value a plain "/page" or "/page#fragment".
+// this file's string literals by pattern: keep every value a plain /page or /page#fragment path,
+// with no quoted example paths in comments — the same pattern would pick those up too.
 export const manual = {
   journal: {
     page: "/journals",
