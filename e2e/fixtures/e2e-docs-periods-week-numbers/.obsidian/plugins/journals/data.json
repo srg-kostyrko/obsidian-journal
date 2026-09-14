@@ -1,0 +1,28 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "calendar": {
+    "mode": "custom",
+    "dow": 1,
+    "doy": 4,
+    "global": false
+  },
+  "journals": {
+    "weekly": {
+      "name": "weekly",
+      "write": { "type": "week" },
+      "folder": "week",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date:YYYY-[W]ww}}",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": true,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  }
+}

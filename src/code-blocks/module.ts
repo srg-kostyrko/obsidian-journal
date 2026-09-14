@@ -1,5 +1,5 @@
 import type { Module } from "@/infrastructure/di";
-import { CodeBlockDefinitionToken } from "@/infrastructure/host";
+import { CodeBlockDefinitionToken, type CodeBlockDefinition } from "@/infrastructure/host";
 
 import { homeCodeBlock } from "./home/home-block";
 import { navigationCodeBlock } from "./nav/nav-block";
@@ -13,12 +13,18 @@ export const codeBlocksCoreModule: Module = {
   },
 };
 
+// The one list of fences the plugin registers; the manual's fence test reads it, so a new block
+// cannot ship without its documented example being checked.
+export const codeBlockDefinitions: readonly CodeBlockDefinition[] = [
+  homeCodeBlock,
+  navigationCodeBlock,
+  noteletsCodeBlock,
+  timelineCodeBlock,
+];
+
 export const codeBlocksUiModule: Module = {
   register(c) {
-    c.register(CodeBlockDefinitionToken).useValue(homeCodeBlock);
-    c.register(CodeBlockDefinitionToken).useValue(navigationCodeBlock);
-    c.register(CodeBlockDefinitionToken).useValue(noteletsCodeBlock);
-    c.register(CodeBlockDefinitionToken).useValue(timelineCodeBlock);
+    for (const definition of codeBlockDefinitions) c.register(CodeBlockDefinitionToken).useValue(definition);
   },
 };
 

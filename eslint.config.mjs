@@ -321,14 +321,14 @@ export default [
     // and parameterized suite runners. Turn off the mocha rules that only make sense
     // for top-level spec entry points.
     files: ["e2e/**/*.ts"],
-    ignores: ["e2e/**/*.e2e.ts"],
+    ignores: ["e2e/**/*.e2e.ts", "e2e/**/*.shot.ts"],
     rules: {
       // Helper modules are not spec entry points; exports are their public API.
       "mocha/no-exports": "off",
     },
   },
   {
-    files: ["e2e/**/*.e2e.ts"],
+    files: ["e2e/**/*.e2e.ts", "e2e/**/*.shot.ts"],
     rules: {
       // Suite-runner calls (e.g. assertDecorationMatrix()) inside describe are the
       // intended programmatic-suite pattern; no-setup-in-describe cannot distinguish
@@ -654,6 +654,15 @@ export default [
       // Same reason `prefer-active-doc` and `prefer-create-el` are off for tests: those rules
       // describe plugin runtime code, and this file is the host it runs against.
       "obsidianmd/prefer-window-timers": "off",
+    },
+  },
+  {
+    // Reads docs/user off disk (node:fs/path/url) to check it against the plugin's fence
+    // definitions; it runs only under vitest/CI, never inside a vault, so the mobile-safety rule
+    // against Node built-ins does not apply here the way it does to shipped plugin code.
+    files: ["src/code-blocks/manual-fences.test.ts"],
+    rules: {
+      "obsidianmd/no-nodejs-modules": "off",
     },
   },
 ];

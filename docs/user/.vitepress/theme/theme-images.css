@@ -1,0 +1,11 @@
+/* Every screenshot ships in both Obsidian themes; show the one matching the site's appearance. */
+html.dark .vp-doc .light-only,
+html:not(.dark) .vp-doc .dark-only {
+  display: none;
+}
+
+/* Element screenshots come out at the capturing machine's pixel density, so pin the displayed size. */
+.vp-doc img.light-only,
+.vp-doc img.dark-only {
+  max-width: min(100%, 640px);
+}

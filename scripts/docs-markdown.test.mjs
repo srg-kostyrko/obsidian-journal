@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it, onTestFinished } from "vitest";
-import { markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
+import { fenceBlocks, isDarkOnlyImage, markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
 
 // One word per line: what a consumer would do with it.
 function kinds(text) {
@@ -94,6 +94,17 @@ describe("scanMarkdown", () => {
     it("reports a closed v-pre as closed", () => {
       expect(scanMarkdown("::: v-pre\n{{x}}\n:::").unclosedVPre).toBe(false);
     });
+
+    it("ends a v-pre at a closer longer than its own opener", () => {
+      const text = "::: v-pre\n{{x}}\n::::\n{{y}}";
+      expect(kinds(text)).toEqual(["marker", "vpre", "marker", "text"]);
+      expect(scanMarkdown(text).unclosedVPre).toBe(false);
+    });
+
+    it("reads a bare colon run as text rather than a nameless opener", () => {
+      const text = ":::\n::: v-pre\n{{x}}\n:::\n{{y}}";
+      expect(kinds(text)).toEqual(["text", "marker", "vpre", "marker", "text"]);
+    });
   });
 
   describe("fences", () => {
@@ -127,6 +138,10 @@ describe("scanMarkdown", () => {
     it("does not let a fence disturb an enclosing v-pre", () => {
       const text = "::: v-pre\n```\n:::\n```\n{{x}}\n:::";
       expect(kinds(text)).toEqual(["marker", "fence", "fence", "fence", "vpre", "marker"]);
+    });
+
+    it("does not open a fence on a four-space-indented backtick run", () => {
+      expect(kinds("    ```\n::: v-pre\n{{x}}\n:::")).toEqual(["text", "marker", "vpre", "marker"]);
     });
   });
 
@@ -172,5 +187,65 @@ describe("markdownFiles", () => {
       "reference/glossary.md",
       "zeta.md",
     ]);
+  });
+});
+
+describe("fenceBlocks", () => {
+  it("returns a fence with its info word, body and opening line", () => {
+    expect(fenceBlocks("intro\n```calendar-timeline\nmode: month\n```\n")).toEqual([
+      { lineno: 2, info: "calendar-timeline", body: "mode: month" },
+    ]);
+  });
+
+  it("returns fences nested in a markdown fence at their line in the file", () => {
+    const text = "````markdown\n```journals-home\nscale: 2\n```\n````";
+    expect(fenceBlocks(text)).toEqual([
+      { lineno: 1, info: "markdown", body: "```journals-home\nscale: 2\n```" },
+      { lineno: 2, info: "journals-home", body: "scale: 2" },
+    ]);
+  });
+
+  it("does not look inside a fence of another language", () => {
+    expect(fenceBlocks("````text\n```journals-home\n```\n````").map((block) => block.info)).toEqual(["text"]);
+  });
+
+  it("reads the info word before any attributes", () => {
+    expect(fenceBlocks("```ts{1}\nconst x = 1;\n```").at(0)?.info).toBe("ts");
+  });
+
+  it("keeps an empty body as an empty string", () => {
+    expect(fenceBlocks("```journal-nav\n\n```").at(0)?.body).toBe("");
+  });
+
+  it("closes a fence only on a run at least as long as its opener", () => {
+    expect(fenceBlocks("````\n```\n````").at(0)?.body).toBe("```");
+  });
+
+  it("runs an unclosed fence to the end of the text", () => {
+    expect(fenceBlocks("intro\n```calendar-timeline\nmode: month")).toEqual([
+      { lineno: 2, info: "calendar-timeline", body: "mode: month" },
+    ]);
+  });
+
+  it("reads fences nested in an unclosed markdown fence", () => {
+    const text = "````markdown\n```journals-home\nscale: 2\n```";
+    expect(fenceBlocks(text)).toEqual([
+      { lineno: 1, info: "markdown", body: "```journals-home\nscale: 2\n```" },
+      { lineno: 2, info: "journals-home", body: "scale: 2" },
+    ]);
+  });
+});
+
+describe("isDarkOnlyImage", () => {
+  it("matches the dark half of a screenshot pair", () => {
+    expect(isDarkOnlyImage("![Month view](/assets/views-month-dark.png){.dark-only}")).toBe(true);
+  });
+
+  it("does not match the light half", () => {
+    expect(isDarkOnlyImage("![Month view](/assets/views-month-light.png){.light-only}")).toBe(false);
+  });
+
+  it("does not match prose that mentions the class", () => {
+    expect(isDarkOnlyImage("Pages mark the dark copy with `{.dark-only}`.")).toBe(false);
   });
 });

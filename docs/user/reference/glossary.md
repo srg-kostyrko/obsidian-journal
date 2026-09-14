@@ -1,23 +1,106 @@
 # Glossary
 
-**Frontmatter**: Metadata at the top of your note, surrounded by `---` lines. The Journal plugin uses frontmatter to store journal name, dates, and other information.
-
-**Decoration**: Visual indicators that mark or highlight specific days in the calendar view based on conditions you set. They can include colors, shapes, icons, or borders. A decoration belongs to one of three scopes: the whole vault, a shelf, or a journal.
-
-**Journal Shelf**: A grouping mechanism to organize multiple journals together (like "Work" or "Personal"). Helps you filter and focus on specific journal contexts.
-
-**View**: A panel you assemble from blocks — calendars, toolbars, dividers, rendered templates — and open in a sidebar or as a tab.
-
-**Navigation Block**: A special code block that generates navigation links between journal entries, customized to each journal type.
-
-**Timeline**: A calendar-like view that displays days of a specific period (week, month, etc.) with links to corresponding journal entries.
-
-**Sequential number**: A number assigned to journal entries (like Sprint 1, Sprint 2). Useful for tracking iterations or repeating periods. It is exposed as a template variable, named `index` by default. A journal can chain several of these **digits** together, most significant first, so the fastest one carries into the next when it resets (like Release4711Sprint1, Release4711Sprint2).
-
-**Notelet**: An extra note a journal keeps for a period, alongside that period's own note — a meeting note on a day, a retro on a sprint. Each belongs to a **notelet type**, which is configured on the journal and decides where its notes go, what they are named, and what they contain. A period can hold any number of notelets.
+The words this manual uses, and where each is explained.
 
 ::: v-pre
 
-**Template Variables**: Special placeholders like `{{date}}` or `{{index}}` that the plugin replaces with actual values when creating notes.
+**Anchor date** — the date a journal's sequential numbering counts from: the note for that date gets
+each digit's start number. See [Journals](/journals#sequential-numbers).
+
+**Auto-attach** — connecting a note you created yourself, because its path matches a journal's folder
+and name template. See [Notes](/notes#auto-attach).
+
+**Auto-create** — creating today's note without being asked, when Obsidian starts and at midnight. See
+[Notes](/notes#auto-create-today-s-note).
+
+**Block** — used for three things. A **view block** is one part of a [view](/views#blocks): a
+calendar, a list, a toolbar. A **code block** is a fence you type into a note. The **navigation
+block** is the code block a journal draws in its own notes. **Custom intervals** and **Notelets** are
+each the name of a view block as well.
+
+**Bulk add** — connecting a whole folder of existing notes to a journal in one pass. See
+[Notes](/notes#bulk-add).
+
+**Calendar decorations** — the decorations on the main settings page, which apply vault-wide. See
+[Decorations](/decorations#where-decorations-live).
+
+**Code block** — a fenced block such as ` ```journal-nav ` that Journals draws as a navigation strip,
+timeline, link list or notelet list. See [Code blocks](/reference/code-blocks).
+
+**Condition** — the test a decoration applies to a date: a title, a tag, a property, a note's size, a
+weekday. See [Decorations](/decorations#conditions).
+
+**Connect** — making a note a journal's note by writing the journal's properties into it. **Connect
+note to a journal** does it for one note. See [Notes](/notes#connect-note-to-a-journal).
+
+**Custom interval** — a period of a length you choose, such as two weeks, counted from a start date.
+See [Periods](/periods#custom-intervals).
+
+**Decoration** — a style — a color, a border, a shape, an icon — painted on a date when its conditions
+hold. See [Decorations](/decorations).
+
+**Digit** — one counter in a journal's sequential numbering, such as `release` and `sprint` in
+`Release4711Sprint1`. See [Journals](/journals#sequential-numbers).
+
+**Frontmatter**, **properties** — the block of `key: value` pairs at the top of a note. Journals
+records a note's journal, date and numbers there. See [Journals](/journals#frontmatter).
+
+**Journal** — a set of notes, one per period of one length, sharing a folder, a name template and
+templates. See [Journals](/journals).
+
+**Line**, **segment** — a navigation block is a stack of lines, each made of segments: a piece of text
+that can link to a note. See [Navigation blocks](/navigation-blocks#lines-and-segments).
+
+**Maintenance** — the section at the bottom of the main settings page that opens the vault check and
+settings snapshots. See [Troubleshooting](/troubleshooting#maintenance).
+
+**Navigation block** — the strip of links a journal draws in its notes through the `journal-nav` code
+block. See [Navigation blocks](/navigation-blocks).
+
+**Notelet**, **notelet type** — an extra note a journal keeps for a period beside the period's own note,
+such as a meeting note on a day; its type decides its name, folder and template. See
+[Notelets](/notelets).
+
+**Orphaned notelet** — a notelet whose type was deleted while its notes were kept. See
+[Notelets](/notelets#renaming-and-deleting-a-type).
+
+**Period** — the stretch of time one note covers: a day, week, month, quarter, year or custom interval.
+A note records its period by the period's first day. See [Periods](/periods).
+
+**Question** — something a journal asks when it creates a note, with the answer saved as a property or
+written into the note. See [Questions](/questions).
+
+**Representative day** — the day `{{date}}` stands for on a weekly journal: the day whose calendar
+year is the week's own year. See [Variables](/reference/variables#the-variables).
+
+**Selected date** — the date a view is centered on; its calendars and lists read from it. See
+[Views](/views#the-view-s-date).
+
+**Sequential numbers** — numbers a journal assigns to its notes in order, such as Sprint 1, Sprint 2.
+See [Journals](/journals#sequential-numbers).
+
+**Shelf** — a group of journals that belong together, such as work or personal, used to scope views,
+commands and decorations. See [Shelves](/shelves).
+
+**Template** — a note whose contents fill a new journal note, with its variables filled in. See
+[Journals](/journals#templates).
+
+**Template variable** — a placeholder in double braces, such as `{{date}}`, filled in for each note. See
+[Variables](/reference/variables).
+
+**Timeline** — the range of dates a journal writes notes for. See [Journals](/journals#timeline).
+
+**Toolbar item** — a button, shelf selector, period buttons, existing notes navigation or spacer inside a
+view's toolbar. See
+[Views](/views#toolbar).
+
+**Vault check** — the Maintenance tool that finds notes whose journal properties no longer fit and
+repairs them. See [Troubleshooting](/troubleshooting#vault-check).
+
+**View** — a panel built from blocks — calendars, lists, toolbars — opened in a sidebar or a tab. See
+[Views](/views).
+
+**Week configuration** — which day a week starts on and which week is week 1. See
+[Periods](/periods#weeks).
 
 :::

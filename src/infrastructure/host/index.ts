@@ -56,10 +56,13 @@ export {
   CodeBlockService,
   CodeBlockYamlError,
   defineCodeBlock,
+  parseFenceSource,
+  unknownFenceKeys,
   type CodeBlockConfig,
   type CodeBlockDefinition,
   type CodeBlockDefinitionInput,
   type CodeBlockProps,
+  type ParsedFenceSource,
 } from "./code-blocks";
 export { CommandService, type CommandRegistration } from "./commands";
 export { UriService, type UriHandler, type UriParameters } from "./uri";

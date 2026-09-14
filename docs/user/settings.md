@@ -1,23 +1,92 @@
 # Settings
 
-Where each setting lives in **Settings → Journals**, and what explains it.
+A map of every setting, in the order the settings pages show them, each linked to where it is
+explained. Open the plugin's settings from **Settings → Community plugins → Journals**; every other
+page below is reached from there.
 
-## Global settings
+## Main settings page
 
-| Setting                 | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Shelves                 | Organize journals into logical groups (like work, personal, projects). Shelves let you:<br>- Scope views to show only journals from a specific shelf<br>- Limit decorations in navigation blocks to the current shelf<br>- Decorate every journal on the shelf from one place<br>- Target commands and views at a whole shelf<br>- Manage related journals together. See [Shelves](/shelves).                                                                                                                                            |
-| Open on startup         | Pick one journal whose current note opens whenever you open the vault, and optionally a different journal on the days of the week you choose — days you don't pick open the journal you picked first. Views carry their own, separate _Open on startup_ toggle.                                                                                                                                                                                                                                                                          |
-| Automatic note creation | Choose which devices create notes on their own — desktop and mobile, desktop only, or mobile only. It covers the startup note above and every journal's _Auto-create today's note_; notes you open yourself are always created. On a device the rule excludes, the startup note still opens if it already exists, and nothing is written to it. Use this when a sync service is slow enough that two devices each create today's note before the other's copy arrives — it does not stop two devices of the same kind racing each other. |
-| Notes by date           | Choose the frontmatter property and date format used to determine when vault notes were created. Notes without a valid property value fall back to their file creation time.                                                                                                                                                                                                                                                                                                                                                             |
-| Calendar decorations    | Decorations that apply to every calendar, whatever journals are on screen. See [the decoration system](/decorations).                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Week numbers            | Set the global default for where the week-number column appears (before weekdays, after weekdays, or hidden — the default is before); individual view blocks and the `calendar-timeline` code block can override it.                                                                                                                                                                                                                                                                                                                     |
-| Timeline navigation     | Set the global default for whether `calendar-timeline` code blocks carry previous/next controls (off by default); an individual block can override it with its `navigation` option.                                                                                                                                                                                                                                                                                                                                                      |
-| Logging                 | Set the log level (debug, info, warn, or error — the default is warn) and dump captured activity to a note for troubleshooting.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Section                                                          | Settings                                                                                                  | Explained in                                                               |
+| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Colliding journal settings**                                   | shown only when two journals resolve to the same paths                                                    | [Troubleshooting](/troubleshooting#two-journals-fight-over-the-same-notes) |
+| **Journal shelves**                                              | **Add shelf**; per shelf **Configure**, **Delete**                                                        | [Shelves](/shelves#creating-shelves)                                       |
+| **Journals** (**Journals not on a shelf** once you have shelves) | **Create new journal**; per journal **Bulk add notes to** _journal_, **Configure**, **Clone**, **Delete** | [Journals](/journals#creating-a-journal), [Bulk add](/notes#bulk-add)      |
+| **Commands**                                                     | commands for every journal of one period length                                                           | [Commands](/commands#commands-you-create)                                  |
+| **Views**                                                        | **Add a view**; per view **Configure**, **Clone**, **Delete**                                             | [Views](/views#a-view-s-settings)                                          |
+| **Startup**                                                      | **Open on startup**                                                                                       | [Notes](/notes#opening-a-note-when-obsidian-starts)                        |
+|                                                                  | **Automatic note creation**                                                                               | [Notes](/notes#auto-create-today-s-note)                                   |
+|                                                                  | **Different journal on some days** — **Days of the week**, **Journal to open**                            | [Notes](/notes#opening-a-note-when-obsidian-starts)                        |
+| **Notes by date**                                                | **Creation date property**, **Creation date format**                                                      | [Views](/views#notes-by-date)                                              |
+| **Calendar**                                                     | **Week configuration** — **Change**                                                                       | [Periods](/periods#weeks)                                                  |
+|                                                                  | **Apply week configuration to all dates in vault**                                                        | [Periods](/periods#weeks)                                                  |
+|                                                                  | **Default week numbers**                                                                                  | [Views](/views#month-calendar-and-week-calendar)                           |
+|                                                                  | **Default timeline navigation**                                                                           | [Code blocks](/reference/code-blocks)                                      |
+| **Calendar decorations**                                         | **Marks shown per position**                                                                              | [Decorations](/decorations#marks-shown-per-position)                       |
+|                                                                  | vault-wide decorations                                                                                    | [Decorations](/decorations#where-decorations-live)                         |
+| **Calendar highlighting**                                        | **Today**, **Active**, **Selected date — ring** colors                                                    | [Views](/views#month-calendar-and-week-calendar)                           |
+| **Logging**                                                      | **Log level**, **Export logs**                                                                            | [Troubleshooting](/troubleshooting#reporting-a-bug)                        |
+| **Maintenance**                                                  | **Open**                                                                                                  | [Maintenance page](#maintenance-page)                                      |
 
-## Calendar settings
+## A journal's settings page
 
-| Setting               | What it does                                                                                                                                                                                                                                                                |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Week configuration    | Follow the locale, or choose a preset that sets both which day starts the week and how the first week of the year is determined — the two together decide week numbers. A custom preset can optionally be applied to Obsidian globally rather than only inside this plugin. |
-| Calendar highlighting | - Customize today's date highlight (text and background colors)<br>- Customize active note highlight (text and background colors)<br>- Customize the ring around the date selected by a view                                                                                |
+Reached with **Configure** on a journal's row — on the main settings page, or on its shelf's page.
+
+| Section                     | Settings                                                                                                                                                                        | Explained in                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| _the journal's name_        | **Rename journal**; the period length                                                                                                                                           | [Journals](/journals#renaming-cloning-and-deleting)             |
+| **Shelf**                   | **Place on a shelf** — shown once a shelf exists                                                                                                                                | [Shelves](/shelves#putting-a-journal-on-a-shelf)                |
+| **Note creation**           | **Note name template**, **Folder**, **Default date format**                                                                                                                     | [Journals](/journals#note-creation)                             |
+|                             | **Confirm creating new notes**, **Auto-create today's note**                                                                                                                    | [Notes](/notes#creating-a-note)                                 |
+| **Questions**               | **Add question**                                                                                                                                                                | [Questions](/questions)                                         |
+| **Templates**               | **Add template**                                                                                                                                                                | [Journals](/journals#templates)                                 |
+| **Notelet types**           | **Add notelet type**; per type **Edit notelet type**                                                                                                                            | [Notelets](/notelets#adding-a-notelet-type)                     |
+| **Timeline**                | **Start writing on**, **End writing**                                                                                                                                           | [Journals](/journals#timeline)                                  |
+| **Sequential numbers**      | **Enable sequential numbers**, **Anchor date**, **Allow before anchor**, digits                                                                                                 | [Journals](/journals#sequential-numbers)                        |
+| **Frontmatter**             | **Date property name**, **Add start date property** (then **Start date property name**), **Add end date property** (then **End date property name**), **Notelet type property** | [Journals](/journals#frontmatter)                               |
+| **Commands**                | commands for this journal                                                                                                                                                       | [Commands](/commands#commands-you-create)                       |
+| **Navigation block**        | lines and segments, **Previous and next arrows**, **Show previous and next periods**, **Decorate whole block**                                                                  | [Navigation blocks](/navigation-blocks)                         |
+| **Calendar interval lines** | custom intervals only                                                                                                                                                           | [Navigation blocks](/navigation-blocks#calendar-interval-lines) |
+| **Journal decorations**     | this journal's decorations                                                                                                                                                      | [Decorations](/decorations)                                     |
+
+## A notelet type's page
+
+Reached with **Edit notelet type** on a type's row, under **Notelet types** on its journal's page.
+
+| Section           | Settings                                                                                                   | Explained in                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| _the type's name_ | **Bulk add notelets of this type**                                                                         | [Notelets](/notelets#adopting-notes-you-already-have) |
+|                   | **Rename notelet type**, **Delete notelet type**                                                           | [Notelets](/notelets#renaming-and-deleting-a-type)    |
+| **Note creation** | **Note name**, **Folder**, **Confirm creating notelets**, **Number each notelet** (then **Property name**) | [Notelets](/notelets#adding-a-notelet-type)           |
+| **Templates**     | **Add template**                                                                                           | [Journals](/journals#templates)                       |
+| **Questions**     | **Add question** — the type's own questions                                                                | [Questions](/questions)                               |
+| **Commands**      | commands that create a notelet of this type                                                                | [Commands](/commands#commands-you-create)             |
+
+## A shelf's page
+
+Reached with **Configure** on a shelf's row, under **Journal shelves** on the main settings page.
+
+| Section               | Settings                                                                                                  | Explained in                                                      |
+| --------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| _the shelf's name_    | **Rename shelf**                                                                                          | [Shelves](/shelves#renaming-and-deleting-a-shelf)                 |
+| **Journals**          | **Create new journal**; per journal **Bulk add notes to** _journal_, **Configure**, **Clone**, **Delete** | [Shelves](/shelves#creating-shelves), [Bulk add](/notes#bulk-add) |
+| **Commands**          | **Add command** — commands for the shelf's journals of one period length                                  | [Shelves](/shelves#commands-on-a-shelf)                           |
+| **Shelf decorations** | decorations for every journal on the shelf                                                                | [Decorations](/decorations#where-decorations-live)                |
+
+## A view's page
+
+Reached with **Configure** on a view's row, under **Views** on the main settings page.
+
+| Section           | Settings                                                                                                                                 | Explained in                      |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| _the view's name_ | **Rename view**                                                                                                                          | [Views](/views#a-view-s-settings) |
+|                   | **Icon**, **Default shelf**, **Show in ribbon**, **Open on startup**, **Remember last viewed date**, **Follow active note**, **Open in** | [Views](/views#a-view-s-settings) |
+| **Blocks**        | **Add block**; per block its own settings                                                                                                | [Views](/views#blocks)            |
+
+## Maintenance page
+
+Reached with **Open** under **Maintenance**, at the bottom of the main settings page.
+
+| Section                | Settings                                                                                       | Explained in                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| **Settings snapshots** | **Restore** on each snapshot                                                                   | [Troubleshooting](/troubleshooting#settings-snapshots) |
+| **Vault check**        | **Fix** _count_ per group, **Keep this one**, **Remove journal keys**, **Fix everything safe** | [Troubleshooting](/troubleshooting#vault-check)        |

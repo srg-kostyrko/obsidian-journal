@@ -1,0 +1,110 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "decorations": { "decorations": [], "maxMarksPerSlot": 3 },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [{ "type": "has-note" }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": { "type": "custom", "color": "#3333aa" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [{ "type": "note-size", "unit": "words", "condition": "gt", "value": 500 }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": { "type": "custom", "color": "#3333aa" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [{ "type": "note-size", "unit": "words", "condition": "gt", "value": 750 }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": { "type": "custom", "color": "#3333aa" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [{ "type": "note-size", "unit": "words", "condition": "gt", "value": 1000 }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": { "type": "custom", "color": "#3333aa" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [{ "type": "note-size", "unit": "words", "condition": "gt", "value": 1250 }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": { "type": "custom", "color": "#3333aa" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            { "type": "note-size", "unit": "words", "condition": "gte", "value": 250 },
+            { "type": "note-size", "unit": "words", "condition": "lt", "value": 1000 }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.3,
+              "shape": "circle",
+              "color": { "type": "custom", "color": "#aa5522" },
+              "placement_x": "left",
+              "placement_y": "top"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

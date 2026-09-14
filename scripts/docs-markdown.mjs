@@ -13,7 +13,17 @@ const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})/;
 const CONTAINER_OPEN = /^[ \t]*(:{3,})[ \t]*([^\s:]\S*)/;
 const CONTAINER_CLOSE = /^[ \t]*(:{3,})[ \t]*$/;
 
-/** Every `.md` under `dir`, sorted, skipping dot-directories and `public/`. */
+function closesFence(line, char, length) {
+  const close = (char === "`" ? /^ {0,3}(`+)\s*$/ : /^ {0,3}(~+)\s*$/).exec(line);
+  return close !== null && close[1].length >= length;
+}
+
+/**
+ * Every `.md` under `dir`, sorted, skipping dot-directories and `public/`.
+ *
+ * @param {string} dir
+ * @returns {string[]}
+ */
 export function markdownFiles(dir) {
   const out = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -42,9 +52,7 @@ export function scanMarkdown(text) {
     lines.push(entry);
 
     if (fenceChar) {
-      const closeRe = fenceChar === "`" ? /^ {0,3}(`+)\s*$/ : /^ {0,3}(~+)\s*$/;
-      const close = closeRe.exec(line);
-      if (close && close[1].length >= fenceLength) fenceChar = null;
+      if (closesFence(line, fenceChar, fenceLength)) fenceChar = null;
       entry.fenced = true;
       continue;
     }
@@ -77,4 +85,50 @@ export function scanMarkdown(text) {
   }
 
   return { lines, unclosedVPre: inVPre() };
+}
+
+/**
+ * Every fenced block as `{ lineno, info, body }`, `lineno` being the opener's one-based line.
+ * The manual shows a code block's source by wrapping it in a `markdown` fence, so a block
+ * whose info word is `markdown` or `md` is followed by the blocks nested inside it.
+ *
+ * @param {string} text
+ * @returns {{ lineno: number, info: string, body: string }[]}
+ */
+export function fenceBlocks(text) {
+  const blocks = [];
+  const emit = (fence) => {
+    const body = fence.lines.join("\n");
+    blocks.push({ lineno: fence.lineno, info: fence.info, body });
+    if (fence.info === "markdown" || fence.info === "md") {
+      for (const inner of fenceBlocks(body)) blocks.push({ ...inner, lineno: fence.lineno + inner.lineno });
+    }
+  };
+  let open = null;
+  for (const [index, raw] of text.split("\n").entries()) {
+    const line = raw.endsWith("\r") ? raw.slice(0, -1) : raw;
+    if (open) {
+      if (!closesFence(line, open.char, open.length)) {
+        open.lines.push(line);
+        continue;
+      }
+      emit(open);
+      open = null;
+      continue;
+    }
+    const match = FENCE_OPEN.exec(line);
+    if (match) {
+      const info = line.slice(match[0].length).trim().split(/[\s{]/)[0] ?? "";
+      open = { char: match[1][0], length: match[1].length, info, lineno: index + 1, lines: [] };
+    }
+  }
+  // An unterminated fence runs to the end of the document, per CommonMark / markdown-it,
+  // the same way scanMarkdown already reads it (every trailing line stays `fenced: true`).
+  if (open) emit(open);
+  return blocks;
+}
+
+/** Whether a line is the dark copy of a screenshot pair, which an agent reading the manual never needs twice. */
+export function isDarkOnlyImage(line) {
+  return /^\s*!\[[^\]]*\]\([^)]*\)\{\.dark-only\}\s*$/.test(line);
 }

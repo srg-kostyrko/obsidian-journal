@@ -1,0 +1,107 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "work": {
+      "name": "work",
+      "write": { "type": "day" },
+      "folder": "work",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [{ "type": "has-note" }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": { "type": "theme", "name": "interactive-accent" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        }
+      ]
+    },
+    "personal": {
+      "name": "personal",
+      "write": { "type": "day" },
+      "folder": "personal",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [{ "type": "has-note" }],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": { "type": "theme", "name": "interactive-accent" },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "shelves": {
+    "office": { "name": "office", "journals": ["work"] },
+    "home": { "name": "home", "journals": ["personal"] }
+  },
+  "views": {
+    "d0cca100-0000-4000-8000-000000000001": {
+      "id": "d0cca100-0000-4000-8000-000000000001",
+      "name": "Calendar",
+      "icon": "calendar-days",
+      "defaultShelf": null,
+      "showInRibbon": true,
+      "leaf": "right",
+      "blocks": [
+        {
+          "id": "d0cca100-0000-4000-8000-000000000003",
+          "key": "toolbar",
+          "config": {
+            "items": [{ "id": "d0cca100-0000-4000-8000-000000000004", "key": "shelf-selector", "config": {} }]
+          }
+        },
+        {
+          "id": "d0cca100-0000-4000-8000-000000000002",
+          "key": "month-calendar",
+          "config": { "before": 0, "after": 0, "hiddenWeekdays": [], "weeks": "left" }
+        }
+      ]
+    }
+  },
+  "commands": {
+    "office-open-today": {
+      "name": "Open today",
+      "icon": "",
+      "showInRibbon": false,
+      "openMode": "active",
+      "target": { "kind": "shelf", "shelfName": "office", "writeType": "day" },
+      "type": "same",
+      "context": "today"
+    }
+  }
+}

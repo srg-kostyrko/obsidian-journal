@@ -2,67 +2,158 @@
 
 ::: v-pre
 
-## Common Issues
+Find the symptom, check what it suggests, then use the tools at the bottom of the page — the vault
+check, settings snapshots, and the log — if that does not settle it.
 
-### Notes are created in the wrong location
+## A note is not on the calendar
 
-- Check your folder path in journal settings
-- Verify your note name template doesn't contain illegal characters
-- Make sure the folder exists in your vault
+The calendar shows a note when its properties name the journal and a date the journal recognizes.
 
-### Template variables aren't working
+1. **Open the note's properties.** It needs `journal` naming the journal exactly, and the date property
+   (`journal-date` unless renamed). No properties? The note was never connected — use
+   [Connect note to a journal](/notes#connect-note-to-a-journal), or [Bulk add](/notes#bulk-add) for many.
+2. **Check the date is the period's first day.** A monthly note dated the 15th, or a weekly note dated
+   mid-week, is not recognized. After changing **Week configuration**, a weekly note whose date could
+   not be moved stays on the old grid. The vault check finds and fixes both.
+3. **Check the shelf.** A calendar scoped to a shelf shows only that shelf's journals. Pick **All
+   journals** in the shelf selector to rule it out.
+4. **Check the timeline.** A date outside the journal's **Start writing on** / **End writing** cannot
+   be clicked in a calendar.
 
-- Verify syntax: use double braces `{{variable}}`
-- For date formatting, use Moment.js syntax (e.g., `{{date:YYYY-MM-DD}}`)
-- Check for spaces or typos in variable names
+## A note you made yourself was not picked up
 
-### Calendar view isn't showing notes
+Auto-attach reacts to notes created or renamed while Obsidian runs, and only when exactly one journal's
+folder and name template match the note's whole path. Notes that were already there when you installed
+the plugin are not adopted. See [Auto-attach](/notes#auto-attach) for the full list, and look for a
+warning under the journal's **Note name template** — it says when names cannot be read back.
 
-- Ensure notes have proper frontmatter (journal name and date)
-- Check if you're filtering by shelf and the journal is assigned to that shelf
-- Verify the date format in your journal settings matches your note dates
+## A note was created in the wrong place
 
-### Conflicts with Templater
+- Look at **Resolved note path:** at the top of the journal's **Note creation** section; it shows
+  exactly where the next note goes.
+- A `/` in **Note name template** or **Default date format** creates folders — the settings page offers
+  to move that part into **Folder**.
+- The period's note may already exist elsewhere: a note you moved or renamed keeps its connection, and
+  opening that period opens it where it is.
 
-- Follow the Templater setup in the compatibility section
-- Ensure Templater isn't configured to auto-process the same templates
-- The recommended setup is to let the Journal plugin handle the template processing
+## Two journals fight over the same notes
 
-### Missing decorations
+**Colliding journal settings** on the main settings page names journals whose folder and name template
+resolve to the same paths: "Journals … have colliding configurations, so their notes will overwrite each
+other." Change the folder or name template of one. A freshly cloned journal always collides until you
+do.
 
-- Verify your condition criteria (tags, properties, dates)
-- Check if you're using AND logic when OR might be more appropriate
-- Ensure the decoration style settings are properly configured
-- Check the decoration's match badge in settings — a rule that reports it matched nothing recently is not firing
-- Right-click the cell and choose **Explain decorations** to see which rule won each color, border, and mark, and which rules it overrode
+When a note path already belongs to another journal, nothing is written and a notice says which.
 
-## What to do if you encounter bugs
+## Clicking a date asks which journal
 
-1. Check the console for error messages (Ctrl+Shift+I on Windows/Linux, Cmd+Option+I on macOS)
-2. Verify you're using the latest version of the plugin
-3. Try with a minimal configuration to isolate the issue
-4. Raise the log level in the plugin's settings, under **Logging**, and dump the recent
-   log messages to a note — it often captures more than the console alone
-5. Open an [issue](https://github.com/srg-kostyrko/obsidian-journal/issues/new/choose) and
-   pick the bug report form; it asks for steps to reproduce, plugin and Obsidian version,
-   console output, and your journal configuration
+Two journals of the same period length are in scope and both cover the date. Pick a shelf in the
+view's shelf selector so only one of them is in scope — see
+[Work and home on one calendar](/shelves#work-and-home-on-one-calendar). Commands and
+[links](/reference/links) that target a period length ask the same way.
+
+## Today's note was created on two devices
+
+When sync is slow, your phone and your computer can each create today's note before the other's copy
+arrives. Set **Automatic note creation** on the main settings page to **Desktop only** or **Mobile
+only** — see [Auto-create today's note](/notes#auto-create-today-s-note). If two notes now claim the
+same day, the [vault check](#vault-check) lists them, and **Keep this one** removes the claim from the
+others.
+
+## A command is missing from the palette, or does nothing
+
+The palette lists a command only where it can do something — **Open next note** only while a journal
+note is open, and a command whose **Context** is **Open note's date only** likewise. A hotkey or ribbon
+button runs it anyway and shows a notice saying why nothing happened. See [Commands](/commands).
+
+## A navigation segment cannot link to another journal
+
+A segment's **Journal** link offers only journals on the same shelf, so a journal on no shelf has
+none to offer. Put the journals on one shelf — see
+[Navigation blocks and zoom](/shelves#navigation-blocks-and-zoom).
+
+## A code block shows nothing, or an error
+
+- **Nothing at all, or plain code.** The fence name is wrong — `journal-nav`, `calendar-timeline`,
+  `journals-home`, `journal-notelets` — or the note is open in Obsidian's Source mode, which shows code
+  blocks as plain text. Switch to Live Preview or Reading view.
+- **"Note is not connected to a journal".** Navigation and notelet blocks read their journal from the
+  note they sit in. Connect the note, or use them only in journal notes.
+- **A message about options.** An option name the block does not know is listed above the block, and a
+  value it does not understand falls back to the default. Check spelling against
+  [Code blocks](/reference/code-blocks).
+- **An empty `journals-home`** — "No journals to show. Check the block's show and shelf options." A
+  `shelf` naming a renamed or deleted shelf shows nothing.
+
+## Variables show up as `{{…}}` in notes
+
+A `{{…}}` the plugin cannot read is left as written: check the braces are doubled and closed, and the
+name is spelled as in [Variables](/reference/variables). `{{note_name}}` does not work in the note name
+template itself.
+
+## A decoration does not show
+
+- Its **match badge** in settings says whether it matched recently. "Matched nothing" means the
+  conditions never hold — check whether **When to decorate** should be **Decorate when any condition is
+  fulfilled** rather than **Decorate when all conditions are fulfilled**.
+- Right-click the cell → **Explain decorations** shows which decoration painted each part of the cell and
+  which it overrode.
+- A property condition offers comparisons for the property's type as Obsidian knows it. Set the type in
+  Obsidian first.
+
+See [Decorations](/decorations).
+
+## Settings fields do not respond
+
+Another plugin may be interfering — this has happened. See
+[When another plugin gets in the way](/compatibility#when-another-plugin-gets-in-the-way).
+
+## Templater breaks notes or removes properties
+
+See [Templater](/compatibility#templater) for the setup that keeps the two from processing the same note.
 
 ## Maintenance
 
-A settings page for recovering from vault or settings damage. It does nothing on its own — open it from **Settings → Journals → Maintenance** when you suspect something is wrong.
+**Maintenance**, at the bottom of the main settings page, has two tools. It does nothing unless you use
+it.
 
-**Settings snapshots**: Before your settings are migrated to a new plugin version, and before you restore an earlier snapshot, a copy of the current settings file is saved automatically. The page lists every snapshot it finds, what it was taken before, and lets you restore one with a click — which itself snapshots whatever it's about to overwrite first. Migration snapshots are kept indefinitely; the three most recent pre-restore snapshots are kept.
+### Vault check
 
-**Vault check**: Scans every note that claims a journal in its frontmatter for four kinds of mismatch:
+Scans every note that claims a journal and groups what it finds by journal:
 
-- **Notes the calendar can't see** — a note's stored date no longer matches its journal, usually from a note opened while that journal was misconfigured.
-- **Notes with the wrong period range** — a note's start/end dates no longer match the period its own date falls in.
-- **Two notes claiming the same period** — you pick which one keeps it; the other has its journal keys removed, its content left otherwise untouched.
-- **Notes claiming a journal that no longer exists** — shown as an inventory rather than a problem, since deleting a journal while keeping its notes is a deliberate choice. Remove the leftover keys, or reconnect the notes to a different journal with the "Connect note to a journal" command.
-- **Notelets naming a type their journal no longer has** — a [notelet](/notelets) left behind by a type deleted in _keep_ mode. Remove the leftover keys, or reconnect the note with the "Connect note to a journal" command.
+| Group                                           | What it means                                                                    |
+| ----------------------------------------------- | -------------------------------------------------------------------------------- |
+| _journal_ — the calendar cannot see these notes | the stored date is not a period of the journal; the check proposes the right one |
+| _journal_ — these notes cover the wrong period  | the start or end date does not match the note's own period                       |
+| _journal_ — two notes for _date_                | two notes claim one period; **Keep this one** removes the claim from the others  |
+| _journal_ — this journal no longer exists       | notes of a deleted journal; **Remove journal keys**, or reconnect them           |
+| _journal_ — unknown notelet type                | notelets of a deleted type; **Remove journal keys**, or reconnect them           |
 
-A finding the check can repair safely shows a **Fix** button, or use **Fix everything safe** to apply every safe repair at once. A finding it cannot safely resolve — for example, when a note's file name and its own date disagree about which period it belongs to — is listed with an explanation instead of a guess, so you can open the note and decide. The page re-scans after every repair and only reports a note fixed once Obsidian has confirmed the change landed.
+Each row is marked **Will be fixed** or **Needs your decision**. **Fix** _count_ repairs a group and
+**Fix everything safe** repairs every safe finding. Where the file name and the note disagree on
+the date, nothing is changed for you: open the note and decide which is right.
 
-Findings are computed against your journals as currently configured, so if you suspect your settings themselves are wrong, restore a snapshot first — repairing notes against a broken configuration can make things worse.
+Findings reflect your journals as they are configured right now, so if your settings are wrong,
+restore a snapshot first. The page checks again after every repair.
+
+### Settings snapshots
+
+A copy of your settings is saved before the plugin migrates them to a new version ("Taken before
+upgrading from settings version 4"), and before a snapshot is restored ("Taken before restoring a
+snapshot"). **Restore** puts one back.
+
+## Reporting a bug
+
+1. Under **Logging** on the main settings page, set **Log level** to **Debug** — only messages at or
+   above the chosen level are printed to the console and kept for export, so Debug captures everything.
+2. Make the problem happen again.
+3. **Export logs** → **Dump logs to note** writes a note named `journal-log-` followed by the date and
+   time.
+4. Open a [bug report](https://github.com/srg-kostyrko/obsidian-journal/issues/new/choose). It asks what
+   happened, steps to reproduce, plugin and Obsidian versions, platform, console output, the journal's
+   configuration, and other plugins involved — Templater, Calendar, Periodic Notes, Daily notes. Attach
+   the log note.
+
+Set the log level back afterwards.
 
 :::

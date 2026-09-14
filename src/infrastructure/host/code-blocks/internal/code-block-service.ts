@@ -1,4 +1,3 @@
-import { parseYaml } from "obsidian";
 import * as v from "valibot";
 
 import { formatConjunction, m } from "@/i18n";
@@ -6,7 +5,7 @@ import { inject, InjectorToken } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
 import { InternalPluginToken } from "../../internal/tokens";
-import { CodeBlockYamlError } from "../errors";
+import { parseFenceSource, unknownFenceKeys } from "../parse-fence";
 import { CodeBlockDefinitionToken, type CodeBlockDefinition, type CodeBlockProps } from "../types";
 
 import { VueCodeBlockHost } from "./vue-code-block-host";
@@ -46,7 +45,7 @@ export class CodeBlockService {
     path: VaultPath,
     attach: (child: VueCodeBlockHost) => void,
   ): void {
-    const parsed = this.#parseYaml(source);
+    const parsed = parseFenceSource(source);
     if (parsed.kind === "err") {
       this.#logger.error("code-block yaml parse failed", { key, path, cause: parsed.error.cause });
       // The parser's own message carries the line, the column and an excerpt with a caret —
@@ -61,7 +60,7 @@ export class CodeBlockService {
       return;
     }
     const props: CodeBlockProps<InferOutput<TSchema>> = { path, config: validated.output };
-    const unknownKeys = this.#unknownKeys(definition, parsed.value);
+    const unknownKeys = unknownFenceKeys(definition.knownKeys, parsed.value);
     if (unknownKeys.length > 0) {
       this.#logger.warn("code-block ignored unrecognized keys", { key, path, keys: unknownKeys });
     }
@@ -77,24 +76,6 @@ export class CodeBlockService {
           : undefined,
       ),
     );
-  }
-
-  // Only a block that declares its options can tell a typo from a key it never had.
-  #unknownKeys(definition: CodeBlockDefinition, parsed: unknown): string[] {
-    const known = definition.knownKeys;
-    if (known === undefined) return [];
-    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return [];
-    return Object.keys(parsed).filter((k) => !known.includes(k));
-  }
-
-  #parseYaml(source: string): { kind: "ok"; value: unknown } | { kind: "err"; error: CodeBlockYamlError } {
-    const trimmed = source.trim();
-    if (trimmed === "") return { kind: "ok", value: {} };
-    try {
-      return { kind: "ok", value: parseYaml(source.replaceAll("\t", "  ")) };
-    } catch (error) {
-      return { kind: "err", error: new CodeBlockYamlError(error) };
-    }
   }
 
   #renderError(

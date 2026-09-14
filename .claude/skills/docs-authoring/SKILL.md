@@ -1,6 +1,6 @@
 ---
 name: docs-authoring
-description: Use when writing or deepening a page of the user manual under docs/user/ — establishes which sources are authoritative, the citation rule, and where worked examples may live.
+description: Use when writing or deepening a page of the user manual under docs/user/ — establishes which sources are authoritative, how claims are verified, and where worked examples and screenshots come from.
 ---
 
 # Writing a user manual page
@@ -21,21 +21,31 @@ Pages are named for domain concepts, never for settings tabs.
 Never source a claim from `README.md`. It is an overview and is deliberately brief;
 paraphrasing it produces the shallow content this manual exists to replace.
 
-## The citation rule
+## Verifying claims
 
-Every behavioral claim carries an HTML comment naming the file it was verified in:
+A page states behavior, and fluent prose about this plugin is wrong in ways that are
+expensive to catch. Before a page is committed, an agent that did not write it checks
+every claim against the code and marks each confirmed, wrong or unsupported; wrong
+claims are fixed and unsupported ones are traced or deleted.
 
-```markdown
-A weekly journal anchors to the week's first day under the installed week grid.
-<!-- src: src/journals/settings/week-preset-service.ts -->
-```
+The review's value is the fixes it causes. Do not publish its verdicts — not in the page,
+the PR description or a PR comment. A verdict list describes one version of a page, goes
+stale on the next edit, and nothing re-checks it.
 
-File only, never line numbers — they rot on every unrelated edit and generate
-false alarms. The comment is invisible when rendered and survives prettier.
+Some claims cannot be settled from this repo. Give the reviewer these sources, or it marks
+such claims unsupported:
 
-This is not decoration. It is what makes review cheap ("is this citation real"
-rather than "does this sound right"), and it is the index the docs-audit skill
-uses to find paragraphs whose justification has moved.
+- **Obsidian's own behavior** — `npx asar extract-file <asar> app.js` on a cached app under
+  `.obsidian-cache/obsidian-app/`, then grep it; it is minified, so never read it whole.
+- **Another plugin** a guide maps onto Journals — its GitHub source at the version the
+  community store ships, which is the `version` in `manifest.json` on its default branch,
+  not its latest release.
+- **Anything the e2e harness cannot stage**, such as Obsidian's UI language, is settled from
+  source instead of a run.
+
+Pages carry no source citations. A correct path does not make a claim true, and a
+refactor that moves a file would turn every citation of it into a false alarm or
+silent rot.
 
 ## Worked examples
 
@@ -45,14 +55,47 @@ Every feature page ends with two or three concrete, copyable configurations.
   or a vault you configured and observed. Never compose one from reading the schema.
   A composed config that looks valid and does not do what the page claims is the
   single most expensive thing this manual can ship.
+- An example may instead cite an existing e2e spec that already asserts its outcome,
+  with the config copied from that spec's fixture, rather than running a new one.
 - Examples go inside the feature page they demonstrate. `docs/user/guides/` is a
   closed set of three; do not add a fourth.
+- Run the example in a fixture vault through a `e2e/screenshots/<page>.shot.ts` spec, which
+  records what actually happened in `e2e/.reports/outcomes/`. If the outcome disagrees with
+  the page, the page changes.
+- A fence meant to show a wrong option must use the `yaml` language: the unit suite parses
+  every code-block fence in the manual and fails on an option the block would ignore.
+- The fence test only sees fences the shared grammar recognizes: a fence indented four or
+  more spaces, or one inside a blockquote, is not validated. Keep documented code-block
+  fences at the left margin, or inside a `markdown` fence.
 
 ## Page conventions
 
 - One `#` heading per page, matching the sidebar entry in `.vitepress/config.mts`.
+- Document a warning, notice or error message only when its effect shows up somewhere other
+  than where it appears — a settings warning whose consequence is that notes stop attaching —
+  or when the page needs it to explain an outcome. The UI already shows the rest to the reader
+  who meets them. Give each one a single home and link to it from elsewhere, and quote its text
+  only when a reader would search for it. Nothing checks a quoted message against
+  `messages/en.json`, so every extra quote goes stale on the next reword.
+- A setting's or block's description text is not quoted — describe what it does in the page's own
+  words, and only what its label does not already say; quote UI text only when the reader types or
+  searches for it.
 - A link to another page is a site-absolute path: `/decorations`, `/reference/variables`.
-- Screenshots live in `docs/user/public/assets/` and are referenced as `/assets/<name>.png`.
+- Screenshots are generated, never captured by hand, and only where the outcome is seen.
+  `npm run docs:screenshots` regenerates all of them; `npx wdio run ./wdio.conf.mts --spec
+./e2e/screenshots/<page>.shot.ts` (after `npm run build`) regenerates one page's. Each
+  subject is captured in both Obsidian themes and embedded as a pair, named
+  `<page>-<subject>-light.png` / `-dark.png`, where `<page>` is the page's file name
+  without `.md`:
+
+  ```markdown
+  ![Month calendar in the sidebar](/assets/views-month-light.png){.light-only}
+  ![Month calendar in the sidebar](/assets/views-month-dark.png){.dark-only}
+  ```
+
+- Open every captured PNG before committing it. A capture can crop the wrong frame — the
+  workspace chrome, or another block — and the spec still passes.
+
 - A new page must be added to `sidebar` in `.vitepress/config.mts`, or it is unreachable.
 
 ## `{{...}}` in prose
@@ -94,3 +137,4 @@ Run, in order:
 1. `npm run check:docs-mustaches` — catches an unwrapped `{{...}}`.
 2. `npm run docs:build` — catches a link to a page that does not exist.
 3. `npm run check:docs-links` — catches a link to an anchor that does not exist.
+4. The claim review described under **Verifying claims**.

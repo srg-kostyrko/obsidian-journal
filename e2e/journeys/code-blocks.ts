@@ -13,7 +13,7 @@ import { calendarSurface, type CalendarSurface } from "./calendar.js";
 // the DOM (hidden via inline display:none), so an unscoped `.block-language-*` would match
 // a stale prior note. Pin every block root to the visible leaf (the just-opened note),
 // matching view.ts's MONTH_VIEW.
-const VISIBLE_LEAF = '.workspace-leaf:not([style*="display: none"])';
+export const VISIBLE_LEAF = '.workspace-leaf:not([style*="display: none"])';
 
 export const NAV_BLOCK = `${VISIBLE_LEAF} .block-language-calendar-nav`;
 export const TIMELINE_BLOCK = `${VISIBLE_LEAF} .block-language-calendar-timeline`;

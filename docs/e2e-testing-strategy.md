@@ -140,6 +140,7 @@ behind. The version unpin of 2026-09-08 moved every key from `1.13.7/*` to
     interop: ["./e2e/interop/**/*.e2e.ts"], // slice D
     journeys: ["./e2e/journeys/**/*.e2e.ts"], // slice B
     quarantine: ["./e2e/quarantine/**/*.e2e.ts"],
+    screenshots: ["./e2e/screenshots/**/*.shot.ts"],
   }
   ```
 
@@ -155,6 +156,18 @@ integration --suite migration --suite interop --suite journeys`), omitting
 
 - **Targeted dev runs:** `--spec ./path/or/pattern` for one file/pattern;
   `--mochaOpts.grep "<title>"` to filter by `describe`/`it` title across files.
+- **Documentation screenshots** are the `screenshots` suite (`e2e/screenshots/**/*.shot.ts`). No
+  CI job names it and the bare glob matches only `*.e2e.ts`, so no ordinary run rewrites a
+  committed image. `npm run docs:screenshots` regenerates every image; `--spec` regenerates one
+  page's. A shot spec asserts nothing — its images are reviewed by eye, and the outcomes it
+  records under `e2e/.reports/outcomes/` are what a manual page's claims are compared against.
+  A spec whose page quotes a date pins the renderer's date to it (`e2e/support/clock.ts`), so a rerun
+  on any day reproduces the committed outcomes and images.
+  Capture needs a composited window: a Chromium window that is hidden (for example parked on an
+  invisible workspace) receives no frame callbacks, so screenshot commands hang with "Timed out
+  receiving message from renderer". Run the suite with the Obsidian window visible — on the
+  maintainer's Hyprland setup that is the local `~/.local/bin/e2e-run` wrapper (`e2e-run npm run
+docs:screenshots`), which is not part of this repository.
 - **`.only` gotcha:** `it.only` / `describe.only` does **not** reliably restrict a
   WDIO run (it doesn't pre-scan files) — unlike Vitest. Use `--spec` (+ `--grep`),
   not `.only`.

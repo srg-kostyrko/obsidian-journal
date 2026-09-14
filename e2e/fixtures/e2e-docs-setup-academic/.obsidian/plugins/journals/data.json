@@ -1,0 +1,45 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "term": {
+      "name": "term",
+      "write": {
+        "type": "week"
+      },
+      "folder": "Education/{{date:YYYY}}/{{date:MMMM}}",
+      "nameTemplate": "Week {{index}} - {{start_date:MMM D}} to {{end_date:MMM D}}",
+      "timeline": {
+        "start": "2026-09-06",
+        "end": {
+          "kind": "date",
+          "date": "2026-12-18"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-09-06",
+        "allowBefore": false,
+        "sources": [
+          {
+            "variable": "index",
+            "frontmatterKey": "journal-index",
+            "anchorValue": 1,
+            "reset": {
+              "kind": "never"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "shelves": {}
+}
