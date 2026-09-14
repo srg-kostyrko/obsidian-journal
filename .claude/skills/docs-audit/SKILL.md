@@ -185,7 +185,7 @@ same prompt; a second failure goes in the report as "not audited".
   - with `--dry-run`, it stays `regression`;
   - otherwise ask the maintainer, one question per regression: **fix forward** (it stays
     `regression` and its paragraph is never edited) or **intended** (it becomes `docs-wrong`).
-- **`uncovered`** — an entry auditor's `uncovered: true` on a Bug Fixes entry is dropped. A strings
+- **`uncovered`** — an entry auditor's `uncovered: true` on a Bug Fixes entry is dropped, and so is one on a feature only plugin developers meet (the plugin API, which `docs/plugin-api.md` owns). A strings
   item with `explainedAt: null` is uncovered. Merge duplicates naming the same behavior.
 - **Duplicates** — a `does-not-explain` target whose cause is already a stale quote, a
   `docs-wrong`/`unsupported` claim or an `uncovered` item is merged into that finding and not sent to
@@ -205,7 +205,7 @@ Skip when the fixer input is empty or the PR already exists.
 cd <ROOT> && . <OUT>/env.sh
 
 WT="$(dirname "$ROOT")/$(basename "$ROOT")-docs-audit-$LABEL"
-git worktree add -b "$BRANCH" "$WT" "$BASE"
+git worktree add --no-track -b "$BRANCH" "$WT" "$BASE"
 (cd "$WT" && npm ci)
 cat >> "$OUT/env.sh" <<EOF
 export WT='$WT'

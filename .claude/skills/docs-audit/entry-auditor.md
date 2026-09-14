@@ -24,7 +24,7 @@ The commit list is in the file `{{COMMITS}}`, one `hash subject` per line.
    - `regression` — the code does something else **and** something other than the manual shows the sentence's behavior was intended. Name it in `intent`: a changelog entry, a unit or e2e test asserting it, a GitHub issue (`gh issue view <n>`), or the v2 source (`git show 2.1.10:<path>`). The manual is never evidence of intent.
    - `unsupported` — you could not trace what decides it. Say what you looked at in `note`.
 4. **An entry in this release's range that states the new behavior makes the change intended.** If this entry, or another bullet in the same changelog section, says the code's current behavior is what was meant, the paragraph is `docs-wrong` even when an older test still asserts the old behavior — put that test in `note` as stale.
-5. **If this is a Features entry and no paragraph explains its behavior at all**, set `uncovered: true` and name the page it belongs on. A table row in `settings.md`, a list of commands, or a passing mention is not an explanation. Bug Fixes entries are never `uncovered`.
+5. **If this is a Features entry and no paragraph explains its behavior at all**, set `uncovered: true` and name the page it belongs on. A table row in `settings.md`, a list of commands, or a passing mention is not an explanation. Bug Fixes entries are never `uncovered`. Behavior only a plugin developer meets — the plugin API in `src/api/`, documented in `docs/plugin-api.md` — is never uncovered: set `uncovered: false`.
 
 Report only claims about the behavior this entry concerns. Do not audit paragraphs you pass on the way.
 
