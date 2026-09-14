@@ -120,7 +120,7 @@ the fix has to be in the code.
 User-facing copy goes in `messages/en.json`, not in the generated
 `src/i18n/paraglide` output. Sentence case, en-US.
 
-Add the key to the other ten locale files in the same pull request. `check:i18n`
+Add the key to every other locale file in the same pull request. `check:i18n`
 enforces key parity in both directions, so `en.json` alone fails the build — a
 key missing from a locale would otherwise ship English there with no warning,
 no type error and no failing test, which is the shape that reached production
