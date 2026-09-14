@@ -26,8 +26,22 @@ paraphrasing it produces the shallow content this manual exists to replace.
 A page states behavior, and fluent prose about this plugin is wrong in ways that are
 expensive to catch. Before a page is committed, an agent that did not write it checks
 every claim against the code and marks each confirmed, wrong or unsupported; wrong
-claims are fixed and unsupported ones are traced or deleted. The verdicts go into the
-PR description, not into the page.
+claims are fixed and unsupported ones are traced or deleted.
+
+The review's value is the fixes it causes. Do not publish its verdicts — not in the page,
+the PR description or a PR comment. A verdict list describes one version of a page, goes
+stale on the next edit, and nothing re-checks it.
+
+Some claims cannot be settled from this repo. Give the reviewer these sources, or it marks
+such claims unsupported:
+
+- **Obsidian's own behavior** — `npx asar extract-file <asar> app.js` on a cached app under
+  `.obsidian-cache/obsidian-app/`, then grep it; it is minified, so never read it whole.
+- **Another plugin** a guide maps onto Journals — its GitHub source at the version the
+  community store ships, which is the `version` in `manifest.json` on its default branch,
+  not its latest release.
+- **Anything the e2e harness cannot stage**, such as Obsidian's UI language, is settled from
+  source instead of a run.
 
 Pages carry no source citations. A correct path does not make a claim true, and a
 refactor that moves a file would turn every citation of it into a false alarm or
