@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Features
+
+- Settings sections now link to the manual. A **?** next to a section's heading — on the main settings page and on every journal, notelet type, shelf and view page — opens the part of the manual that explains that section, in your browser.
+
 ### Bug Fixes
 
 - A note that lands in your vault in the moment Obsidian finishes starting up is no longer skipped by the journal it matches. The plugin deliberately ignores the notes Obsidian replays to it while the vault loads — those are your existing files, not new ones — but it started watching for real ones a fraction of a second too late, so a note arriving from sync, or written by another application, in that gap reached nobody. Nothing revisits a note once it has arrived, so the miss was permanent: the note stayed unconnected through every later restart, and only renaming it into place or using **Connect note to a journal** would adopt it. Notes arriving at any other time were never affected, and the notes already in your vault are still left alone at startup.

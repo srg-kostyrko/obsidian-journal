@@ -81,6 +81,12 @@ Every feature page ends with two or three concrete, copyable configurations.
   words, and only what its label does not already say; quote UI text only when the reader types or
   searches for it.
 - A link to another page is a site-absolute path: `/decorations`, `/reference/variables`.
+- The plugin links into the manual from its settings, through `src/ui/manual.ts`, and an installed
+  release keeps its links for good. A heading any release links to is therefore permanent: when its
+  section moves or goes, add an entry to `docs/user/.vitepress/redirects.json` from the old path to
+  where that is explained now. `npm run check:docs-links` lists every link that needs one. Point a
+  redirect at the section that explains the same thing — the check proves it lands, not that it lands
+  somewhere right.
 - Screenshots are generated, never captured by hand, and only where the outcome is seen.
   `npm run docs:screenshots` regenerates all of them; `npx wdio run ./wdio.conf.mts --spec
 ./e2e/screenshots/<page>.shot.ts` (after `npm run build`) regenerates one page's. Each
