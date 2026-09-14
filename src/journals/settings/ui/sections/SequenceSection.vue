@@ -7,6 +7,7 @@ import { formatConjunction, m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -88,7 +89,7 @@ function summaryFor(sourceIndex: number): string {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded" :help="manual.journal.sequentialNumbers">
     <template #trigger>
       <UiIconedRow :icon="icons.section.numbering">
         {{ m.journal_edit_section_sequential_numbers() }}

@@ -7,6 +7,7 @@ import { SettingsService } from "@/settings";
 import VariableChip from "@/templates/ui/VariableChip.vue";
 import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -64,7 +65,7 @@ function applyDateFormatRecommendation(): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded" :help="manual.journal.noteCreation">
     <template #trigger>
       <UiIconedRow :icon="icons.action.addFile">{{ m.journal_edit_section_note_creation() }}</UiIconedRow>
     </template>

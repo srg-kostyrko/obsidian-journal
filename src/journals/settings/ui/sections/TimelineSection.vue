@@ -6,6 +6,7 @@ import { DatePicker, useAnchorField, type Picking } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -62,7 +63,7 @@ function setEndKind(kind: TimelineEnd["kind"]): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded" :help="manual.journal.timeline">
     <template #trigger>
       <UiIconedRow :icon="icons.section.timeline">{{ m.journal_edit_section_timeline() }}</UiIconedRow>
     </template>

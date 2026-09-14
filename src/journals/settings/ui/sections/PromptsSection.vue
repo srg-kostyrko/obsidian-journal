@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -45,7 +46,7 @@ function deletePrompt(promptIndex: number): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="owner" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="owner" v-model:expanded="expanded" :help="manual.questions.page">
     <template #trigger>
       <UiIconedRow :icon="icons.section.prompts">
         {{ m.journal_prompt_section_title() }}

@@ -6,6 +6,7 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { SettingsUiService } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -35,7 +36,7 @@ function editType(typeId: string): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded" :help="manual.notelet.addingType">
     <template #trigger>
       <UiIconedRow :icon="icons.section.notelets">
         {{ m.journal_notelet_section_title() }}

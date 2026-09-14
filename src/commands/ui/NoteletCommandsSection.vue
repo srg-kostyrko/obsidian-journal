@@ -7,6 +7,7 @@ import { Flows } from "@/infrastructure/flows";
 import type { JournalWrite } from "@/journals/config";
 import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -55,7 +56,7 @@ function remove(id: string): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.commands.yourOwn">
     <template #trigger>
       <UiIconedRow :icon="icons.entity.command">
         {{ m.command_section_title() }}

@@ -15,6 +15,7 @@ import {
 import { BulkAddFlow } from "@/journals/notes/bulk-add/flows/bulk-add.flow";
 import { SettingsUiService } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -58,7 +59,7 @@ function remove(journalName: string): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.journal.creating">
     <template #trigger>
       <UiIconedRow :icon="icons.entity.journal">
         {{ hasShelves ? m.shelf_journals_block_title_filtered() : m.common_label_journals() }}

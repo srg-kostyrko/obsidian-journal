@@ -8,6 +8,7 @@ import { Flows } from "@/infrastructure/flows";
 import { journalDefaultsFor } from "@/journals/config";
 import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
+import type { ManualPath } from "@/ui/manual";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -29,6 +30,7 @@ const {
   field,
   title,
   icon,
+  help,
   navigation = false,
   useDefaults = false,
 } = defineProps<{
@@ -36,6 +38,7 @@ const {
   field: "navBlock" | "intervalBlock";
   title: string;
   icon: string;
+  help: ManualPath;
   /** The navigation block alone has previous/next arrows, so only it has their setting. */
   navigation?: boolean;
   useDefaults?: boolean;
@@ -109,7 +112,7 @@ function onDropAtStart(orderedIds: string[]): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded" :help="help">
     <template #trigger>
       <UiIconedRow :icon="icon">
         {{ title }}

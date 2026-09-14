@@ -9,6 +9,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { buildNavSegment, customJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer } from "@/testing";
+import { manual } from "@/ui/manual";
 
 import { EditNavBlockSegmentFlow } from "../flows/edit-nav-segment.flow";
 
@@ -29,7 +30,13 @@ async function mount(lines: NavBlockSegment[][], decorateWholeBlock = false) {
   const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
   harness.render(NavBlockLinesEditor, {
-    props: { journalName: "daily", field: "intervalBlock", title: TITLE, icon: "list" },
+    props: {
+      journalName: "daily",
+      field: "intervalBlock",
+      title: TITLE,
+      icon: "list",
+      help: manual.navigation.intervalLines,
+    },
   });
   return { harness, flows };
 }
@@ -41,7 +48,14 @@ async function mountNavigation() {
   });
   vi.spyOn(harness.resolve(Flows), "invoke").mockReturnValue({} as never);
   harness.render(NavBlockLinesEditor, {
-    props: { journalName: "daily", field: "navBlock", title: TITLE, icon: "list", navigation: true },
+    props: {
+      journalName: "daily",
+      field: "navBlock",
+      title: TITLE,
+      icon: "list",
+      help: manual.navigation.page,
+      navigation: true,
+    },
   });
   await userEvent.click(screen.getByText(TITLE));
   return harness;
