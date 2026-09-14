@@ -11,18 +11,18 @@ explained. Open the plugin's settings from **Settings → Community plugins → 
 | **Journal shelves**                                              | **Add shelf**, **Configure**, delete                                           | [Shelves](/shelves#creating-shelves)                                       |
 | **Journals** (**Journals not on a shelf** once you have shelves) | create, **Configure**, **Clone**, **Bulk add notes to** _journal_, delete      | [Journals](/journals#creating-a-journal), [Bulk add](/notes#bulk-add)      |
 | **Commands**                                                     | commands for every journal of one period length                                | [Commands](/commands#commands-you-create)                                  |
-| **Views**                                                        | **Add a view**, **Configure**, **Clone**, delete                               | [Views and blocks](/views-and-blocks#a-view-s-settings)                    |
+| **Views**                                                        | **Add a view**, **Configure**, **Clone**, delete                               | [Views](/views#a-view-s-settings)                                          |
 | **Startup**                                                      | **Open on startup**                                                            | [Notes](/notes#opening-a-note-when-obsidian-starts)                        |
 |                                                                  | **Automatic note creation**                                                    | [Notes](/notes#auto-create-today-s-note)                                   |
 |                                                                  | **Different journal on some days** — **Days of the week**, **Journal to open** | [Notes](/notes#opening-a-note-when-obsidian-starts)                        |
-| **Notes by date**                                                | **Creation date property**, **Creation date format**                           | [Views and blocks](/views-and-blocks#notes-by-date)                        |
+| **Notes by date**                                                | **Creation date property**, **Creation date format**                           | [Views](/views#notes-by-date)                                              |
 | **Calendar**                                                     | **Week configuration** — **Change**                                            | [Periods](/periods#weeks)                                                  |
 |                                                                  | **Apply week configuration to all dates in vault**                             | [Periods](/periods#weeks)                                                  |
-|                                                                  | **Default week numbers**                                                       | [Views and blocks](/views-and-blocks#month-calendar-and-week-calendar)     |
+|                                                                  | **Default week numbers**                                                       | [Views](/views#month-calendar-and-week-calendar)                           |
 |                                                                  | **Default timeline navigation**                                                | [Code blocks](/reference/code-blocks)                                      |
 | **Calendar decorations**                                         | **Marks shown per position**                                                   | [Decorations](/decorations#marks-shown-per-position)                       |
 |                                                                  | vault-wide decorations                                                         | [Decorations](/decorations#where-decorations-live)                         |
-| **Calendar highlighting**                                        | **Today**, **Active**, **Selected date — ring** colors                         | [Views and blocks](/views-and-blocks#month-calendar-and-week-calendar)     |
+| **Calendar highlighting**                                        | **Today**, **Active**, **Selected date — ring** colors                         | [Views](/views#month-calendar-and-week-calendar)                           |
 | **Logging**                                                      | **Log level**, **Export logs**                                                 | [Troubleshooting](/troubleshooting#reporting-a-bug)                        |
 | **Maintenance**                                                  | **Open**                                                                       | [Troubleshooting](/troubleshooting#maintenance)                            |
 
@@ -61,7 +61,7 @@ The shelf's name with **Rename shelf**, then **Journals**, **Commands** and **Sh
 
 **Icon**, **Default shelf**, **Show in ribbon**, **Open on startup**, **Remember last viewed date**,
 **Follow active note**, **Open in**, **Blocks** — see
-[Views and blocks](/views-and-blocks#a-view-s-settings).
+[Views](/views#a-view-s-settings).
 
 ## Maintenance
 

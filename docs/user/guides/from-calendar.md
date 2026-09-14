@@ -3,18 +3,18 @@
 The Calendar plugin draws one month grid and marks days with dots. Everything it does has an equivalent
 here, usually a more configurable one.
 
-| In Calendar                                                      | In Journals                                                                                                                                    |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Dots sized by word count                                         | [Decorations](/decorations) with note-size conditions — see [Word-count dots](#word-count-dots) below                                          |
-| A hollow dot for incomplete tasks                                | A decoration with **Check if note has open tasks** or **Check if all tasks are completed**                                                     |
-| Colouring days by tag or content                                 | Decoration conditions on title, tag, frontmatter property, note size or weekday, painting colors, borders, shapes, corners and icons           |
-| One calendar per vault                                           | Any number of [journals](/journals), grouped on [shelves](/shelves), with views scoped to a shelf                                              |
-| A fixed month grid padded to six weeks                           | A month grid of exactly the weeks the month spans, plus week grids, notes-by-date lists and toolbars composed into a [view](/views-and-blocks) |
-| Week numbers on the left                                         | **Before weekdays**, **After weekdays** or **Hidden**, globally or per calendar block                                                          |
-| Clicking a day or week number                                    | Clicking any period — day, week, month, quarter or year — from its cell or heading                                                             |
-| `Reveal active note` command                                     | **Follow active note** on a view, which moves the view as you open notes                                                                       |
-| Start of week from the locale, or a locale override to change it | [Week configuration](/periods#weeks), which sets the first day of the week and week 1 of the year, independently of your Obsidian language     |
-| Notes found by file name in one folder                           | Notes identified by their properties, so they keep working when moved or renamed                                                               |
+| In Calendar                                                      | In Journals                                                                                                                                |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Dots sized by word count                                         | [Decorations](/decorations) with note-size conditions — see [Word-count dots](#word-count-dots) below                                      |
+| A hollow dot for incomplete tasks                                | A decoration with **Check if note has open tasks** or **Check if all tasks are completed**                                                 |
+| Colouring days by tag or content                                 | Decoration conditions on title, tag, frontmatter property, note size or weekday, painting colors, borders, shapes, corners and icons       |
+| One calendar per vault                                           | Any number of [journals](/journals), grouped on [shelves](/shelves), with views scoped to a shelf                                          |
+| A fixed month grid padded to six weeks                           | A month grid of exactly the weeks the month spans, plus week grids, notes-by-date lists and toolbars composed into a [view](/views)        |
+| Week numbers on the left                                         | **Before weekdays**, **After weekdays** or **Hidden**, globally or per calendar block                                                      |
+| Clicking a day or week number                                    | Clicking any period — day, week, month, quarter or year — from its cell or heading                                                         |
+| `Reveal active note` command                                     | **Follow active note** on a view, which moves the view as you open notes                                                                   |
+| Start of week from the locale, or a locale override to change it | [Week configuration](/periods#weeks), which sets the first day of the week and week 1 of the year, independently of your Obsidian language |
+| Notes found by file name in one folder                           | Notes identified by their properties, so they keep working when moved or renamed                                                           |
 
 Two things Calendar has no equivalent for: a note's creation date for **Notes by date** can come from a
 property rather than the file, and a day can hold any number of extra notes through

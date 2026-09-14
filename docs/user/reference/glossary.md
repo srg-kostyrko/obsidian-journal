@@ -78,13 +78,13 @@ commands and decorations. See [Shelves](/shelves).
 
 **Toolbar item** — a button, shelf selector, period buttons, existing notes navigation or spacer inside a
 view's toolbar. See
-[Views and blocks](/views-and-blocks#toolbar).
+[Views](/views#toolbar).
 
 **Vault check** — the Maintenance tool that finds notes whose journal properties no longer fit and
 repairs them. See [Troubleshooting](/troubleshooting#vault-check).
 
 **View** — a panel built from blocks — calendars, lists, toolbars — opened in a sidebar or a tab. See
-[Views and blocks](/views-and-blocks).
+[Views](/views).
 
 **Week configuration** — which day a week starts on and which week is week 1. See
 [Periods](/periods#weeks).

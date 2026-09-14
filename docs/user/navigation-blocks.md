@@ -64,7 +64,7 @@ On a narrow pane, such as a phone, the previous, current and next columns stack.
 
 Custom interval journals have a second set of lines, **Calendar interval lines**, edited the same way.
 They draw each interval in the **Custom intervals**
-[view block](/views-and-blocks#custom-intervals).
+[view block](/views#custom-intervals).
 
 ## Examples
 

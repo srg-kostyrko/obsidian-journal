@@ -141,7 +141,7 @@ included, so no note loses its connection.
 - **Notelet types** — extra notes a period can hold. See [Notelets](/notelets).
 - **Commands** — commands targeting this journal. See [Commands](/commands).
 - **Navigation block** and, for custom intervals, the interval list — see
-  [Views and blocks](/views-and-blocks).
+  [Views](/views).
 - **Decorations** — see [Decorations](/decorations).
 
 ## Renaming, cloning and deleting

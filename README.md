@@ -5,11 +5,11 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
-    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-and-blocks-sidebar-dark.png"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-dark.png"
   />
   <img
     alt="A Journals view in the Obsidian sidebar: toolbars, a decorated month calendar and the notes written on the selected day"
-    src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-and-blocks-sidebar-light.png"
+    src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-light.png"
   />
 </picture>
 
@@ -78,7 +78,7 @@ The full user manual lives at
 | [Questions](https://srg-kostyrko.github.io/obsidian-journal/questions)                                   | Prompting for answers when a note is created                     |
 | [Notelets](https://srg-kostyrko.github.io/obsidian-journal/notelets)                                     | Extra notes attached to a period                                 |
 | [Decorations](https://srg-kostyrko.github.io/obsidian-journal/decorations)                               | Styling dates by their notes, dates and weekdays                 |
-| [Views and blocks](https://srg-kostyrko.github.io/obsidian-journal/views-and-blocks)                     | Calendars, toolbars and note lists in a view                     |
+| [Views](https://srg-kostyrko.github.io/obsidian-journal/views)                                           | Calendars, toolbars and note lists in a view                     |
 | [Navigation blocks](https://srg-kostyrko.github.io/obsidian-journal/navigation-blocks)                   | The links a journal draws in its own notes                       |
 | [Commands](https://srg-kostyrko.github.io/obsidian-journal/commands)                                     | Built-in commands, and writing your own                          |
 | [Settings](https://srg-kostyrko.github.io/obsidian-journal/settings)                                     | Every setting, and what explains it                              |

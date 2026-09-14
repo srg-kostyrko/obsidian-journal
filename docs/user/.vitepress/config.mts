@@ -21,7 +21,7 @@ export default defineConfig({
           { text: "Questions", link: "/questions" },
           { text: "Notelets", link: "/notelets" },
           { text: "Decorations", link: "/decorations" },
-          { text: "Views and blocks", link: "/views-and-blocks" },
+          { text: "Views", link: "/views" },
           { text: "Navigation blocks", link: "/navigation-blocks" },
           { text: "Commands", link: "/commands" },
         ],

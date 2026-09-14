@@ -71,7 +71,7 @@ types:
 
 `types` limits the list to types named as you named them. See
 [Code blocks](/reference/code-blocks). The **Notelets** view block lists them in a view — see
-[Views and blocks](/views-and-blocks#notelets).
+[Views](/views#notelets).
 
 A notelet whose type was deleted is listed as _type_ (missing type).
 

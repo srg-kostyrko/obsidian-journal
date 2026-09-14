@@ -80,7 +80,7 @@ creating the journal.
 - A new custom interval journal names its notes `{{journal_name}} {{index}}` — `Sprint 1`, `Sprint
 2` — using [sequential numbers](/journals#sequential-numbers).
 - Its notes are named by `{{start_date}}` and `{{end_date}}` in lists; see
-  [Views and blocks](/views-and-blocks).
+  [Views](/views).
 
 ### Making one interval longer or shorter
 

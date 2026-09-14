@@ -75,8 +75,8 @@ Every feature page ends with two or three concrete, copyable configurations.
   without `.md`:
 
   ```markdown
-  ![Month calendar in the sidebar](/assets/views-and-blocks-month-light.png){.light-only}
-  ![Month calendar in the sidebar](/assets/views-and-blocks-month-dark.png){.dark-only}
+  ![Month calendar in the sidebar](/assets/views-month-light.png){.light-only}
+  ![Month calendar in the sidebar](/assets/views-month-dark.png){.dark-only}
   ```
 
 - Open every captured PNG before committing it. A capture can crop the wrong frame — the

@@ -17,7 +17,7 @@ const DAY_NOTES_TITLE = `${DAY_NOTES} .journal-view-day-notes__title`;
 const WEEK_VIEW = `${LIVE_LEAF} .notes-week-view`;
 const WEEK_NUMBER_CELL = `${WEEK_VIEW} [data-testid="week-number-cell"]`;
 
-// The day views-and-blocks.md quotes; commands.md quotes the next-week link a day earlier.
+// The day views.md quotes; commands.md quotes the next-week link a day earlier.
 const TODAY = "2026-09-14";
 const URI_DAY = "2026-09-13";
 
@@ -120,9 +120,9 @@ describe("views examples", () => {
       // The grid stretches to the view's full width at any split width, so its rightmost column
       // (the 19th's border, the 3 October cell) always meets the view's edge; the padding is what
       // keeps it off the image's edge.
-      await captureThemed(VIEW_ROOT, "views-and-blocks-sidebar", { padding: 8 });
+      await captureThemed(VIEW_ROOT, "views-sidebar", { padding: 8 });
 
-      await recordOutcome("views-and-blocks-sidebar", {
+      await recordOutcome("views-sidebar", {
         today,
         decoDays,
         dayNotesPeriod: "day",
@@ -168,12 +168,12 @@ describe("views examples", () => {
       const dataActiveAfter = await cell.getAttribute("data-active");
       const backgroundColor = await cell.getCSSProperty("background-color");
 
-      await captureThemed(WEEK_VIEW, "views-and-blocks-week-numbers");
+      await captureThemed(WEEK_VIEW, "views-week-numbers");
 
       // No console exemption for e2e screenshots; surface a false reading through the outcome JSON.
       const highlighted = dataActiveAfter === "true";
 
-      await recordOutcome("views-and-blocks-week-numbers", {
+      await recordOutcome("views-week-numbers", {
         weekAnchor,
         openedPath,
         dataActiveBeforeOpen: dataActiveBefore,

@@ -14,7 +14,7 @@ journals you want, and bind to hotkeys or the ribbon.
 | **Zoom out**, **Zoom in**                  | Opens the note one period length longer or shorter than the open note's. See [Zoom](#zoom).        |
 | **Insert link to journal note**            | Asks for a journal and a date, and inserts a link to that note at the cursor.                      |
 | **Connect note to a journal**              | Connects the open note to a journal and date. See [Notes](/notes#connect-note-to-a-journal).       |
-| **Open** _view_                            | Opens a [view](/views-and-blocks).                                                                 |
+| **Open** _view_                            | Opens a [view](/views).                                                                            |
 | **Change shelf in** _view_                 | Picks the shelf an open view shows.                                                                |
 
 The palette lists a command only where it can do something — **Open next note** only while a journal

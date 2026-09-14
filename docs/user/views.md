@@ -1,4 +1,4 @@
-# Views and blocks
+# Views
 
 ::: v-pre
 
@@ -157,15 +157,15 @@ date** block — **Period** **Day**, **Sort notes by** **Last modified**, **Sort
 
 The list shows `without-created`, then `with-created`, the last modified first.
 
-![A sidebar view: toolbars, a decorated September calendar, the two notes for the 14th and a list of sprint dates](/assets/views-and-blocks-sidebar-light.png){.light-only}
-![A sidebar view: toolbars, a decorated September calendar, the two notes for the 14th and a list of sprint dates](/assets/views-and-blocks-sidebar-dark.png){.dark-only}
+![A sidebar view: toolbars, a decorated September calendar, the two notes for the 14th and a list of sprint dates](/assets/views-sidebar-light.png){.light-only}
+![A sidebar view: toolbars, a decorated September calendar, the two notes for the 14th and a list of sprint dates](/assets/views-sidebar-dark.png){.dark-only}
 
 ### Week numbers after the weekdays
 
 A **Week calendar** block with **Week numbers** **After weekdays**. With the week's note open, its
 week number carries the **Active** highlight at the end of the row:
 
-![A week strip from Sunday 13 to Saturday 19 with a highlighted W38 at its right end](/assets/views-and-blocks-week-numbers-light.png){.light-only}
-![A week strip from Sunday 13 to Saturday 19 with a highlighted W38 at its right end](/assets/views-and-blocks-week-numbers-dark.png){.dark-only}
+![A week strip from Sunday 13 to Saturday 19 with a highlighted W38 at its right end](/assets/views-week-numbers-light.png){.light-only}
+![A week strip from Sunday 13 to Saturday 19 with a highlighted W38 at its right end](/assets/views-week-numbers-dark.png){.dark-only}
 
 :::
