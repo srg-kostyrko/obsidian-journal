@@ -37,9 +37,9 @@ created at. The note is not created until you follow the link.
 ### Zoom
 
 **Zoom out** and **Zoom in** move between journals of different period lengths from the note you have
-open. From a daily note, zooming out opens that week's note; from there, the month's; zooming in walks
-back down, opening the first shorter period inside the current one — the 1st of the month, from a
-monthly note.
+open. From a daily note, zooming out opens that week's note; from there, the month's. Zooming in walks
+back down to the shorter period that holds the first day of the current one: from a monthly note, the
+1st of the month — or the week holding the 1st, which can start in the previous month.
 
 - Zooming stays among the journals on the same [shelf](/shelves) as the open note's journal, or every
   journal when it is on no shelf.
