@@ -6,6 +6,7 @@ on:
     paths:
       - "docs/user/**"
       - "scripts/docs-markdown.mjs"
+      - "scripts/docs-redirects.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/pages.yml"
