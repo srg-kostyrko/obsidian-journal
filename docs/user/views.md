@@ -6,6 +6,16 @@ A **view** is a panel you build from blocks — calendars, lists, toolbars — a
 tab. The strip of links a journal draws inside its own notes is a [navigation block](/navigation-blocks),
 and the code blocks you type into notes yourself are in [Code blocks](/reference/code-blocks).
 
+| You want to…                                    | Go to                                                                 |
+| ----------------------------------------------- | --------------------------------------------------------------------- |
+| Change the Calendar you start with              | [The Calendar view you start with](#the-calendar-view-you-start-with) |
+| Open a view somewhere else, or on startup       | [A view's settings](#a-view-s-settings)                               |
+| Pick a date without opening its note            | [The view's date](#the-view-s-date)                                   |
+| Hide weekends or move week numbers              | [Month calendar and Week calendar](#month-calendar-and-week-calendar) |
+| List the notes created on a day                 | [Notes by date](#notes-by-date)                                       |
+| Add buttons                                     | [Toolbar](#toolbar)                                                   |
+| Put links to other periods inside notes instead | [Navigation blocks](/navigation-blocks)                               |
+
 ## The Calendar view you start with
 
 A new vault gets one view, **Calendar**, in the right sidebar. It opens on startup and has no ribbon
@@ -73,6 +83,8 @@ in scope.
 **Calendar highlighting**, on the main settings page, sets the colors for **Today** (today's date),
 **Active** (the note currently open) and **Selected date — ring**.
 
+Example: [Week numbers after the weekdays](#week-numbers-after-the-weekdays).
+
 ### Notes by date
 
 Lists notes created in the period containing the view's selected date — any note in the vault, not
@@ -86,6 +98,8 @@ A note's creation date comes from **Creation date property** on the main setting
 read with **Creation date format** `YYYY-MM-DD` — and a note without a valid value there falls back to
 its file creation time. File creation times change when a vault is synced or copied, so set the
 property if you rely on this list.
+
+Example: [A sidebar calendar with the day's notes](#a-sidebar-calendar-with-the-day-s-notes).
 
 ### Custom intervals
 
@@ -111,8 +125,8 @@ See [Notelets](/notelets).
 ### Markdown template
 
 Renders a template note as markdown, with journal variables processed. Pick a **Template file**. In it,
-`{{date}}` is the active note's date, or the view's focused date when no journal note is open, and
-`{{journal_link(weekly)}}` resolves to the vault path of another journal's note for the focused
+`{{date}}` is the active note's date, or the view's selected date when no journal note is open, and
+`{{journal_link(weekly)}}` resolves to the vault path of another journal's note for the same
 date — wrap it in a link yourself: `[[{{journal_link(weekly)}}|This week]]`. See
 [Variables](/reference/variables).
 

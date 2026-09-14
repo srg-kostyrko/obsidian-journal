@@ -12,7 +12,7 @@ different length, add another [journal](/journals).
 | **weekly**           | week, starting on the day **Week configuration** sets                         |
 | **monthly**          | calendar month                                                                |
 | **quarterly**        | calendar quarter — January to March, April to June, and so on                 |
-| **annually**         | calendar year                                                                 |
+| **annually**         | calendar year — commands call it **Yearly note**                              |
 | **Custom intervals** | a run of days, weeks, months, quarters or years you choose, such as two weeks |
 
 ## How a note knows its period
@@ -57,6 +57,8 @@ updated to the new week configuration.":
 - the new configuration makes a year one week shorter, so two old weeks land on the same new week.
   The first keeps the week; the other keeps its old date, and is no longer shown until you move it.
 
+Example: [Changing the week configuration](#changing-the-week-configuration).
+
 ### Week numbers in names
 
 A weekly journal's name template usually shows a week number. Use `w` in the format, which follows
@@ -65,8 +67,12 @@ uses it: "You use `W` to format weeks, which does not respect custom week settin
 different week number than the Calendar view."
 
 For a week that straddles New Year, `{{date}}` on a weekly journal is a day inside the week chosen so
-that year tokens match the week's own year: under ISO 8601, `{{date:YYYY-[W]ww}}` names the week
-starting 29 December 2025 `2026-W01`. Use `{{start_date}}` when you want the week's actual first day.
+that year tokens match the week's own year — its
+[representative day](/reference/variables#the-variables): under ISO 8601, `{{date:YYYY-[W]ww}}` names
+the week starting 29 December 2025 `2026-W01`. Use `{{start_date}}` when you want the week's actual
+first day.
+
+Example: [A week across New Year](#a-week-across-new-year).
 
 ## Custom intervals
 
@@ -79,8 +85,10 @@ creating the journal.
   the 31st start on the last day of shorter months, and return to the 31st when a month has one.
 - A new custom interval journal names its notes `{{journal_name}} {{index}}` — `Sprint 1`, `Sprint
 2` — using [sequential numbers](/journals#sequential-numbers).
-- Its notes are named by `{{start_date}}` and `{{end_date}}` in lists; see
-  [Views](/views).
+- In interval lists, each interval is drawn with the journal's
+  [Calendar interval lines](/navigation-blocks#calendar-interval-lines).
+
+Example: [Numbered sprints](#numbered-sprints).
 
 ### Making one interval longer or shorter
 
@@ -99,6 +107,8 @@ unit the journal counts in:
 
 An interval whose end differs from its usual length keeps its end date property even when **Add end
 date property** is off.
+
+Example: [Shortening an interval](#shortening-an-interval).
 
 ## Things periods do not do
 

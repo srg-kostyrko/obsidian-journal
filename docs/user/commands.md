@@ -6,6 +6,14 @@ Everything Journals does from the command palette — opening today's note, step
 zooming between period lengths — is a command. Some come built in; the rest you create, aimed at the
 journals you want, and bind to hotkeys or the ribbon.
 
+| You want to…                                   | Go to                                         |
+| ---------------------------------------------- | --------------------------------------------- |
+| Open the next or previous note                 | [Built-in commands](#built-in-commands)       |
+| Move between daily, weekly and monthly notes   | [Zoom](#zoom)                                 |
+| Add a command for a journal, a shelf or a type | [Commands you create](#commands-you-create)   |
+| Change which note a command opens              | [A command's settings](#a-command-s-settings) |
+| Open a note from outside Obsidian              | [Links](/reference/links)                     |
+
 ## Built-in commands
 
 | Command                                    | What it does                                                                                       |
@@ -93,26 +101,7 @@ previous monthly note" and so on — opening in a new tab. Edit or delete them l
 - **Open note** — **Replacing the active note**, **In a new tab**, **Next to the active note** or **In a
   popout window**.
 
-## Links: `obsidian://journals`
-
-A link opens a journal note from anywhere — another note, a bookmark, a script, another app:
-
-```text
-obsidian://journals?journal=Work&date=today
-```
-
-| Parameter | Value                                                                                            |
-| --------- | ------------------------------------------------------------------------------------------------ |
-| `journal` | the journal's name                                                                               |
-| `type`    | instead of `journal`: `day`, `week`, `month`, `quarter` or `year` — every journal of that length |
-| `date`    | `today` (the default), `YYYY-MM-DD`, or a shift from today: `+1d`, `-2w`, `+1m`, `-1q`, `+1y`    |
-| `mode`    | `active` (the default), `tab`, `split` or `window`                                               |
-| `notelet` | with `journal`: create a [notelet](/notelets) of that type instead of opening the period's note  |
-
-The note is created if it does not exist, with the journal's questions asked. With `type`, if more than
-one journal of that length covers the date, you are asked which.
-
-A link that cannot be followed shows a notice saying why.
+Example: [Step back over missing days](#step-back-over-missing-days).
 
 ## Examples
 
@@ -126,20 +115,7 @@ or today**.
 With `day/2030-09-12.md` open, running it opens `day/2030-09-10.md`. It skips the 11th and does not
 create a note for it.
 
-### A command on a shelf
-
-See [A command on a shelf](/shelves#a-command-on-a-shelf) for a shelf command that opens its shelf's daily
-note.
-
-### Next week's note in a new tab
-
-With one weekly journal, **Folder** `week`, following this link on 13 September 2026 creates
-`week/2026-W39.md` and opens it in a new tab:
-
-```text
-obsidian://journals?type=week&date=+1w&mode=tab
-```
-
-The `+` needs no escaping: Obsidian passes it through as written.
+For a shelf command, see [A command on a shelf](/shelves#a-command-on-a-shelf); for opening a note from
+outside Obsidian, [Links](/reference/links#examples).
 
 :::

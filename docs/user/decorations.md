@@ -11,6 +11,15 @@ decide what it paints. **When to decorate** joins the conditions: **Decorate whe
 fulfilled** or **Decorate when any condition is fulfilled**. A decoration with no conditions never
 applies.
 
+| You want to…                                         | Go to                                                                            |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Decorate every calendar, or every journal on a shelf | [Where decorations live](#where-decorations-live)                                |
+| Color days by a property, a tag or the title         | [Frontmatter property](#frontmatter-property), [Title and tags](#title-and-tags) |
+| Show how much you wrote                              | [Note size](#note-size)                                                          |
+| Choose what a decoration paints                      | [Styles](#styles)                                                                |
+| See more than three marks in a cell                  | [Marks shown per position](#marks-shown-per-position)                            |
+| Find out why a date looks the way it does            | [Finding out why](#finding-out-why-a-date-looks-the-way-it-does)                 |
+
 ## Where decorations live
 
 | Section                  | Found on                   | Applies to                                                      | Conditions                    |
@@ -19,7 +28,8 @@ applies.
 | **Shelf decorations**    | a [shelf](/shelves)'s page | day cells while this shelf is shown, whatever journals it holds | date and weekday only         |
 | **Journal decorations**  | a journal's settings page  | the journal's own periods                                       | all of them, by period length |
 
-A calendar showing **All journals** draws every shelf's decorations.
+A calendar showing **All journals** draws every shelf's decorations. Calendar decorations are the
+vault-wide layer, and the rest of this page calls them vault-wide.
 
 ## Conditions
 
@@ -68,11 +78,15 @@ treated as text.
 the property at all is **does not exist**. A property added to a note but never ticked holds no value
 yet, so it matches **exists** but neither **is true** nor **is false**.
 
+Example: [A workout checkbox](#a-workout-checkbox).
+
 ### Note size
 
 **Unit** — **Words** or **Characters** — compared with `<`, `<=`, `>` or `>=`. The count is the one
 Obsidian shows in its status bar: frontmatter is not counted, everything else is. Add two note-size
 conditions to one decoration to match a band, such as at least 250 and fewer than 1000 words.
+
+Example: [Word-count bands](#word-count-bands).
 
 ### Tasks
 
@@ -137,6 +151,8 @@ cell's nine positions draws, collapsing the rest into a badge you can hover to s
 default, or **Unlimited**. The badge reads `+N` and takes one of the places, so a cap of 3 shows two
 marks and `+N`. The marks kept are the most specific ones — the journal's before the shelf's, the
 shelf's before vault-wide. The cap changes only what is drawn, never what matched.
+
+Example: [A shelf color and a crowded cell](#a-shelf-color-and-a-crowded-cell).
 
 ## Finding out why a date looks the way it does
 

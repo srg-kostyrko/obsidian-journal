@@ -10,9 +10,19 @@ together, and [Periods](/periods) explains how each length is counted.
 A journal decides where its notes go, what they are called, what goes into a new one, which dates it
 writes for, and which properties it records on each note.
 
+| You want to…                                                 | Go to                                                            |
+| ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Choose where notes go and what they are called               | [Note creation](#note-creation)                                  |
+| Start notes from a template, or a different one on some days | [Templates](#templates)                                          |
+| Limit the dates a journal writes notes for                   | [Timeline](#timeline)                                            |
+| Number notes — Day 1, Sprint 4                               | [Sequential numbers](#sequential-numbers)                        |
+| Rename the properties written into notes                     | [Frontmatter](#frontmatter)                                      |
+| Rename, copy or delete a journal                             | [Renaming, cloning and deleting](#renaming-cloning-and-deleting) |
+
 ## Creating a journal
 
-**Add journal** on the main settings page asks for:
+The **+** button (**Create new journal**) in the **Journals** section of the main settings page opens
+**Add journal**, which asks for:
 
 - **Journal name** — must be unique. Journal names appear in the command palette, in note properties
   and in code blocks.
@@ -43,12 +53,13 @@ but notes you create yourself will not [auto-attach](/notes#auto-attach).
 [moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). A variable with its
 own format, like `{{date:DD.MM.YYYY}}`, ignores it.
 
-- On a weekly journal, `{{date}}` is a day inside the week, chosen so year tokens match the week's
-  year. Use `{{start_date}}` for the week's first day.
-- Use `w`, not `W`, for week numbers — see [Week numbers in names](/periods#week-numbers-in-names).
+On a weekly journal, `{{date}}` is not always the week's first day, and week numbers need `w` rather
+than `W` — see [Week numbers in names](/periods#week-numbers-in-names).
 
 **Confirm creating new notes** and **Auto-create today's note** are covered in
 [Notes](/notes#creating-a-note).
+
+Example: [Filing notes by decade](#filing-notes-by-decade).
 
 ## Templates
 
@@ -64,6 +75,8 @@ template path:**.
   installed, its commands run afterwards — see [Compatibility](/compatibility).
 - A template only ever fills a new note, or an empty note being connected. A note with content is
   never overwritten.
+
+Example: [Recording when a note was created](#recording-when-a-note-was-created).
 
 ## Timeline
 
@@ -82,6 +95,8 @@ a mid-week start still gets its note.
 Outside the timeline, calendar cells cannot be clicked, auto-create, auto-attach and bulk add skip
 the date, and **Connect note to a journal** refuses it. Notes that already exist for those dates stay
 where they are, and still open and link.
+
+Example: [A journal with a start and an end](#a-journal-with-a-start-and-an-end).
 
 ## Sequential numbers
 
@@ -116,7 +131,8 @@ For numbered entries (like `Sprint 1`), and for chained ones (like `Release4711S
 
 For example, a name template of `Release{{release}}Sprint{{sprint}}` with `release` starting at 4711
 (Continuous) and `sprint` starting at 1 (6 per release) produces `Release4711Sprint1` …
-`Release4711Sprint6`, then `Release4712Sprint1`.
+`Release4711Sprint6`, then `Release4712Sprint1`. The whole configuration is under
+[Release and sprint numbering](/guides/setup-examples#release-and-sprint-numbering).
 
 ## Frontmatter
 
@@ -140,8 +156,8 @@ included, so no note loses its connection.
 - **Questions** — asked when a note is created. See [Questions](/questions).
 - **Notelet types** — extra notes a period can hold. See [Notelets](/notelets).
 - **Commands** — commands targeting this journal. See [Commands](/commands).
-- **Navigation block** and, for custom intervals, the interval list — see
-  [Views](/views).
+- **Navigation block** and, for custom intervals, **Calendar interval lines** — see
+  [Navigation blocks](/navigation-blocks).
 - **Decorations** — see [Decorations](/decorations).
 
 ## Renaming, cloning and deleting
@@ -190,8 +206,8 @@ created: {{current_date:YYYY-MM-DD}} {{time:HH:mm:ss}}
 
 A note created at 20:27:19 on 13 September 2026 gets `created: 2026-09-13 20:27:19`.
 
-Take the time from `{{time}}`: `{{current_date}}` is a date, so a time written into its own format —
-`{{current_date:YYYY-MM-DD HH:mm:ss}}` — comes out as `00:00:00`.
+Take the time from `{{time}}`: `{{current_date}}` holds no time of day — see
+[Variables](/reference/variables#the-variables).
 
 ### A journal with a start and an end
 

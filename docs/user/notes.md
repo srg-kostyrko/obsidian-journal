@@ -21,7 +21,7 @@ the note for you, recognize a note you created yourself, or connect a note you p
 ## Creating a note
 
 Opening a period that has no note yet creates it — clicking a day in a calendar, a segment of a
-navigation block, a command that opens a period's note, or an `obsidian://journals` link. Commands
+navigation block, a command that opens a period's note, or an [`obsidian://journals` link](/reference/links). Commands
 that jump to the nearest _existing_ note never create one; see [Commands](/commands).
 
 - **Where it goes.** The note's name comes from the journal's **Note name template** and its folder
@@ -111,6 +111,8 @@ case where auto-attach asks: clicking the link asks the questions, then names th
 answers. Cancelling deletes the still-empty note Obsidian made for the link, the way Obsidian
 deletes any file.
 
+Example: [Keep notes you make by hand](#keep-notes-you-make-by-hand).
+
 ## Connect note to a journal
 
 Run **Connect note to a journal** from the command palette with a note open in the editor. It is not
@@ -145,6 +147,8 @@ For a note that is already connected, the dialog names the journal it is connect
 properties — its date, start and end dates, sequence numbers, question answers and notelet
 properties — and leaves the note where it is. Connecting a note to a different journal removes the
 old journal's properties in the same step.
+
+Example: [Connect a stray note and file it](#connect-a-stray-note-and-file-it).
 
 ## Bulk add
 
@@ -189,6 +193,8 @@ the journal's timeline**.
 
 **Run** processes the notes and shows what happened to each. A dry run reports what would have
 happened without changing anything in your vault; start again with **Dry run** off to apply it.
+
+Example: [Adopt a folder of daily notes from another plugin](#adopt-a-folder-of-daily-notes-from-another-plugin).
 
 ## Examples
 

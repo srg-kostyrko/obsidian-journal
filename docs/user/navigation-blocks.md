@@ -47,8 +47,8 @@ Each segment has:
 - **Link** — what clicking it opens:
   - **None** — nothing;
   - **Self** — the note's own period;
-  - **Journal** — another journal's note for the same date; only journals on the same shelf can be
-    picked, so a journal on no shelf has none to offer;
+  - **Journal** — another journal's note for the same date, picked from the journals on the same
+    shelf — see [Shelves](/shelves#navigation-blocks-and-zoom);
   - **Day**, **Week**, **Month**, **Quarter**, **Year** — the note for the day, week… containing the
     date, from the journal of that length on the same shelf, or from any journal when this one is on
     no shelf.
@@ -59,6 +59,9 @@ Each segment has:
   period unshifted, uses the decorations of every journal of this journal's length on the same shelf.
 
 Clicking a segment opens its note, creating it if it does not exist.
+
+Examples: [Week and month lines in a daily note](#week-and-month-lines-in-a-daily-note),
+[Month and year on one line](#month-and-year-on-one-line).
 
 ## Block settings
 

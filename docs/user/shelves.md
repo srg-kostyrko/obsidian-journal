@@ -20,9 +20,8 @@ monthly journal while a personal shelf holds its own.
   sit in. See [Code blocks](#code-blocks).
 
 A journal is on at most one shelf. When the journal something starts from is on no shelf, most things
-that scope to a shelf reach every journal instead. The exception is a navigation row that links to a
-specific journal: its picker offers only journals on the same shelf, so it offers nothing to a journal
-on no shelf.
+that scope to a shelf reach every journal instead — with one exception, under
+[Navigation blocks and zoom](#navigation-blocks-and-zoom).
 
 ## Creating shelves
 
@@ -63,6 +62,8 @@ workspace layout, so it survives a restart. Picking **All journals** sticks even
 default shelf. If the shelf you picked is renamed or deleted, the pane goes back to the view's
 default shelf.
 
+Example: [Work and home on one calendar](#work-and-home-on-one-calendar).
+
 ## Commands on a shelf
 
 Add a command from the **Commands** section of a shelf's page. Besides what every command has, a
@@ -71,6 +72,8 @@ targeted through a shelf. In the command palette it appears as Shelf: _shelf_: _
 
 When it runs, the command works on the shelf's journals of that note type. If the shelf has more than
 one, it asks which. See [Commands](/commands) for what each command type does.
+
+Example: [A command on a shelf](#a-command-on-a-shelf).
 
 ## Navigation blocks and zoom
 

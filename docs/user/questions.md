@@ -59,6 +59,8 @@ A question left blank writes nothing into the body.
   journal when the name's answers come from a fixed set — a choice, a number or a date. See
   [Auto-attach](/notes#auto-attach).
 
+Example: [Name each day after its mood](#name-each-day-after-its-mood).
+
 ## The answer dialog
 
 Creating a note on a journal with questions opens **New note in** _journal_ before anything is
@@ -71,12 +73,14 @@ the name depends on an answer — and each question.
 - The dialog replaces the confirmation dialog: with **Confirm creating new notes** on, you see this
   dialog and no second one.
 
+Example: [A sprint goal](#a-sprint-goal).
+
 ## When questions are asked, and when they are not
 
 Asked:
 
 - when you open a date that has no note — from a calendar, a navigation block, a command or an
-  `obsidian://journals` link;
+  [`obsidian://journals` link](/reference/links);
 - when you click a link to a note that does not exist yet, if the plugin wrote that link and the
   journal's name template uses an answer. The dialog asks, then the note is renamed from your answers
   and the link is updated. Cancelling removes the empty note.

@@ -47,14 +47,18 @@ questions keeps them apart. Without one, the settings page warns — "This name 
 varies within a period, so every notelet after the first gets a number added to its file name." — and
 the plugin does exactly that, so nothing is overwritten.
 
+Example: [Meeting notes on a day](#meeting-notes-on-a-day).
+
 ## Creating a notelet
 
 - Run the type's **Create** _type_ command, or any command targeted at the type. A notelet command
   always creates a new notelet — it never opens an existing one.
 - **New notelet** in a notelets list: the **Notelets** view block, or a `journal-notelets` code block.
-- A link such as `obsidian://journals?journal=Daily&notelet=Meeting&date=today`.
+- A [link](/reference/links) such as `obsidian://journals?journal=Daily&notelet=Meeting&date=today`.
 
 Each creates a notelet for the chosen period, numbered after the ones already there.
+
+Example: [A notelet from a link](#a-notelet-from-a-link).
 
 ## Listing notelets
 
@@ -90,8 +94,9 @@ they are.
 **Delete notelet type** says how many notelets are connected and asks **What to do with connected
 notelets**:
 
-- **Keep notelets** — notelets stay in your vault, unchanged. They keep the old type's name, still
-  list as (missing type), and the [vault check](/troubleshooting#maintenance) reports them.
+- **Keep notelets** — notelets stay in your vault, unchanged, as **orphaned notelets**. They keep the
+  old type's name, still list as (missing type), and the [vault check](/troubleshooting#maintenance)
+  reports them.
 - **Clear notelet type data** — notelets stay in your vault, but all journal and notelet type
   properties are removed from their frontmatter.
 - **Delete notelets** — every notelet of this type is deleted from your vault.

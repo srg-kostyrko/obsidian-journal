@@ -7,7 +7,8 @@ settings page; anything not listed stays at its default.
 
 ## Daily work journal
 
-A note per working day, created automatically, filed under one folder.
+A note for every day, created automatically, filed under one folder. Auto-create has no weekday
+filter, so weekends get a note too.
 
 | Setting                      | Value                     |
 | ---------------------------- | ------------------------- |

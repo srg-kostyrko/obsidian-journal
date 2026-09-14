@@ -1,4 +1,4 @@
-# Supported variables
+# Variables
 
 ::: v-pre
 
@@ -26,6 +26,10 @@ journal, with its own date format, numbering digits and questions filled in.
 ¹ Not a yes/no answer — see [Questions](/questions#answers-in-the-note-name-or-folder).
 ² Allowed, but a name or folder that uses them cannot be read back, so notes you create yourself will
 not [auto-attach](/notes#auto-attach). The settings page warns.
+
+A notelet type's name and folder take its journal's variables, with the type's own questions in place
+of the journal's, plus `{{notelet_index}}`. The **Markdown template** view block is covered in
+[Views](/views#markdown-template).
 
 ## The variables
 
@@ -94,10 +98,9 @@ it is formatted:
 - Dates have day precision, so `h` and `<startOf=hour>` change nothing on them — they only move
   `{{time}}` and `{{current_time}}`. `<startOf=decade>` applies to dates only.
 
-To file notes by decade, for example: `Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}` puts
-14 February 1959 under `Calendar/1950s/1959`. The plugin cannot read the decade back out of a path,
-so notes you make yourself in such a folder do not [auto-attach](/notes#auto-attach) — see
-[Filing notes by decade](/journals#filing-notes-by-decade).
+`{{date<startOf=decade>:YYYY}}s` names a decade, such as `1950s` — see
+[Filing notes by decade](/journals#filing-notes-by-decade) for a folder built on it, and what that does
+to auto-attach.
 
 A `{{…}}` the plugin cannot read — a misspelled variable, an unclosed brace — is left in the text as
 written.
