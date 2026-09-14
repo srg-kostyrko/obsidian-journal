@@ -6,8 +6,8 @@ description: Use when cutting a Journals release — bumping the plugin to a new
 # Releasing Journals
 
 Maintainer runbook, executed rather than read. It covers the whole arc: gates,
-changelog audit, bump, tag, draft, publish, npm package, then the issue-tracker
-and community work that follows a release.
+changelog audit, bump, tag, manual audit, draft, publish, npm package, then the
+issue-tracker and community work that follows a release.
 
 **Invoking this skill is the authorization for every outward step below** —
 pushing a branch, merging the release PR, pushing the tag, publishing the
@@ -67,15 +67,20 @@ gh release view "$VER" --json isDraft,publishedAt 2>/dev/null
 npm view obsidian-journals-api version
 ```
 
-| Observed                             | Resume at                  |
-| ------------------------------------ | -------------------------- |
-| Nothing exists                       | §1 step 1                  |
-| Manifest bumped, no branch on remote | §1 step 5                  |
-| Branch pushed, PR open               | §1 step 5 (wait on checks) |
-| PR merged, tag not on remote         | §1 step 7                  |
-| Tag pushed, release still a draft    | §1 step 8                  |
-| Release published, npm behind        | §2                         |
-| Everything shipped                   | §3                         |
+| Observed                             | Resume at  |
+| ------------------------------------ | ---------- |
+| Nothing exists                       | §1 step 1  |
+| Manifest bumped, no branch on remote | §1 step 5  |
+| Branch pushed, PR open               | §1 step 5a |
+| PR merged, tag not on remote         | §1 step 7  |
+| Tag pushed, release still a draft    | §1 step 8  |
+| Release published, npm behind        | §2         |
+| Everything shipped                   | §3         |
+
+Step 5a re-runs safely: an existing `docs/audit-$VER` PR and `Manual: document what $VER shipped`
+issue are reused. Resuming anywhere past step 6, run `/docs-audit $VER` before §3 when neither
+exists — a regression it finds there is reported, since the merge has already happened. A run that
+found nothing leaves no trace, so it runs again; that costs time, not correctness.
 
 ### Choosing the version
 
@@ -236,6 +241,19 @@ The PR body says what is in the release, why it is minor or patch, whether
 `src/settings/migrations.ts` moved, what `minAppVersion` is, and that the PR
 must be merged with a merge commit. No `Co-Authored-By` trailer. No claude.ai
 session links.
+
+### Step 5a — Audit the manual
+
+Start `gh pr checks <n> --watch --interval 30` in the background, then run `/docs-audit $VER`. The
+audit judges claims against `origin/main`, which holds the same code as the release branch.
+
+**Step 6 waits for both** a green gate and a finished audit.
+
+- A **regression** the maintainer chose to fix forward is red — see "When something goes red". The
+  fix goes on the release branch, and step 5a runs again after it.
+- The docs fix PR and the uncovered issue do not block the release. The fix PR can merge before or
+  after the release PR — `main` does not require branches to be up to date, so it never restarts
+  the release gate.
 
 ### Step 6 — Merge with a merge commit
 
@@ -454,12 +472,15 @@ untested machinery.
 - Never comment on an issue the release did not close without the maintainer's
   approval of that comment.
 - Never post the Discord message.
+- Never merge the docs audit's fix PR as part of the release.
 
 ## When something goes red
 
 Stop. Report the failing output verbatim. Change nothing further — no retry, no
 fix-and-continue; a fix is its own task with its own approval. Re-invoking the
 skill resumes from §0, which works out what already happened.
+
+A regression from step 5a that the maintainer chose to fix forward counts as red.
 
 Recovering a bad bump before anything is pushed:
 
