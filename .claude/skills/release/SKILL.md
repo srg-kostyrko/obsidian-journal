@@ -77,10 +77,12 @@ npm view obsidian-journals-api version
 | Release published, npm behind        | §2         |
 | Everything shipped                   | §3         |
 
-Step 5a re-runs safely: an existing `docs/audit-$VER` PR and `Manual: document what $VER shipped`
-issue are reused. Resuming anywhere past step 6, run `/docs-audit $VER` before §3 when neither
-exists — a regression it finds there is reported, since the merge has already happened. A run that
-found nothing leaves no trace, so it runs again; that costs time, not correctness.
+Step 5a re-runs safely: `gh pr list --head "docs/audit-$VER" --state all` showing an open or merged
+PR (the remote branch is auto-deleted on merge, so this is the check, not "a `docs/audit-$VER`
+branch exists") and the `Manual: document what $VER shipped` issue are both reused. Resuming
+anywhere past step 6, run `/docs-audit $VER` before §3 when neither exists — a regression it finds
+there is reported, since the merge has already happened. A run that found nothing leaves no trace,
+so it runs again; that costs time, not correctness.
 
 ### Choosing the version
 
@@ -244,12 +246,15 @@ session links.
 ### Step 5a — Audit the manual
 
 Start `gh pr checks <n> --watch --interval 30` in the background, then run `/docs-audit $VER`. The
-audit judges claims against `origin/main`, which holds the same code as the release branch.
+audit reads the release branch as it stands and, if it needs to open a fix branch, starts it from
+`origin/main`.
 
 **Step 6 waits for both** a green gate and a finished audit.
 
 - A **regression** the maintainer chose to fix forward is red — see "When something goes red". The
-  fix goes on the release branch, and step 5a runs again after it.
+  fix goes on the release branch, and step 5a runs again after it. That re-run is safe: the fix PR,
+  if one was opened on the first pass, already exists, so `/docs-audit`'s own guard skips stages 2–3
+  and the re-run is stage 1 only.
 - The docs fix PR and the uncovered issue do not block the release. The fix PR can merge before or
   after the release PR — `main` does not require branches to be up to date, so it never restarts
   the release gate.

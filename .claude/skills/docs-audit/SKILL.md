@@ -39,8 +39,15 @@ git fetch origin --tags
 LABEL=${VER:-unreleased-$(date +%F)}
 BRANCH="docs/audit-$LABEL"
 OUT=<this session's scratchpad directory>/docs-audit-$LABEL && mkdir -p "$OUT"
-git diff --quiet "$BASE" -- src docs/user messages || { echo "checkout differs from $BASE — check it out first"; exit 1; }
 gh pr list --head "$BRANCH" --state all --json number,url,state
+PR_COUNT=$(gh pr list --head "$BRANCH" --state all --json state --jq '[.[] | select(.state == "OPEN" or .state == "MERGED")] | length')
+if [ "$PR_COUNT" -gt 0 ]; then
+  echo "an open or merged PR for $BRANCH already exists — guard skipped, stage 1 judges the checkout as it stands"
+elif [ -n "$VER" ]; then
+  git diff --quiet "$BASE" -- docs/user messages || { echo "checkout differs from $BASE — check it out first"; exit 1; }
+else
+  git diff --quiet "$BASE" -- src docs/user messages || { echo "checkout differs from $BASE — check it out first"; exit 1; }
+fi
 cat > "$OUT/env.sh" <<EOF
 export VER='$VER'
 export BASE='$BASE'
@@ -49,18 +56,25 @@ export LABEL='$LABEL'
 export BRANCH='$BRANCH'
 export OUT='$OUT'
 EOF
+echo "ROOT=$ROOT"
+echo "OUT=$OUT"
 ```
 
-The guard is what lets every agent read the working tree. The release branch passes it: its bump
-commit touches only version files and the changelog heading.
+**An existing open or merged PR for `$BRANCH`** means stages 2–3 already ran: skip them, skip the
+guard entirely, and link the PR in the report — stage 1 judges claims against the checkout as it
+stands. **Stage 1 always runs** — inside a release it decides whether the merge may happen.
+
+The guard, when it applies, is what lets every agent read the working tree as the claims it judges.
+It always requires `docs/user` and `messages` to match `$BASE`; it requires `src` to match `$BASE`
+too, but only when `$VER` is empty — a release checkout is the code that ships, fix-forwards
+included, while the fix branch still starts from `$BASE`, so mid-cycle `src` must agree with `$BASE`
+and a release run must not demand that. The release branch passes it: its bump commit touches only
+version files and the changelog heading.
 
 **Each shell tool call starts a fresh shell** — `$ROOT`, `$OUT` and everything computed after them
 are gone in the next one. From here on, **start every later block with `cd <ROOT> && . <OUT>/env.sh`**,
 using the literal paths §0 just printed (not the variable names — this fresh shell has neither set).
 Sourcing `env.sh` restores every value written to it so far; §1 and §5 below append to it.
-
-**An existing PR for `$BRANCH`** means stages 2–3 already ran: skip them and link it in the report.
-**Stage 1 always runs** — inside a release it decides whether the merge may happen.
 
 ## §1 Range
 
@@ -149,7 +163,8 @@ done > "$OUT/stale-quotes.tsv"
 
 `printf`, not `sed`: UI text may hold `|`, `&` or `/`, which a `sed` replacement would misread.
 
-Drop a hit whose line also contains the new text. Every remaining hit goes to the fixer.
+Drop a `changed` row's hit whose line also contains the new text — a `removed` row has no new text
+to compare against, so keep every one of its hits. Every remaining hit goes to the fixer.
 
 ## §3 Stage 1 — auditors
 
@@ -179,6 +194,10 @@ same prompt; a second failure goes in the report as "not audited".
 
 ## §4 Triage
 
+- **Stages 2–3 skipped** — when an existing open or merged PR for `$BRANCH` means the fixer does not
+  run (§0), every finding that would have gone to it — including a regression the maintainer answers
+  **intended** — is listed in the report under **Not fixed — PR already open**, for the maintainer to
+  add to that PR themselves.
 - **`regression`** — read the cited code and the `intent` evidence yourself. Evidence from
   `docs/user/` does not count. If the evidence does not hold up, reclassify as `docs-wrong`.
   If it does:
@@ -203,8 +222,13 @@ Skip when the fixer input is empty or the PR already exists.
 
 ```bash
 cd <ROOT> && . <OUT>/env.sh
+set -e
 
 WT="$(dirname "$ROOT")/$(basename "$ROOT")-docs-audit-$LABEL"
+if git show-ref --verify --quiet "refs/heads/$BRANCH" || [ -e "$WT" ]; then
+  echo "leftover branch $BRANCH or worktree $WT from a previous run — remove it by hand, the skill never deletes it"
+  exit 1
+fi
 git worktree add --no-track -b "$BRANCH" "$WT" "$BASE"
 (cd "$WT" && npm ci)
 cat >> "$OUT/env.sh" <<EOF
@@ -212,14 +236,22 @@ export WT='$WT'
 EOF
 ```
 
+A dry run leaves `$WT` and the local branch behind, and a real run leaves the local branch after the
+worktree is removed; without the check above, the next `git worktree add -b` would fail and, without
+`set -e`, the block would carry on into the stale worktree. When either check trips, the orchestrator
+stops here and tells the maintainer: a leftover branch or worktree holds a previous run's commits,
+and the skill never deletes them.
+
 Dispatch a fresh `general-purpose` agent with `fixer.md`, plus the dispatch wrapper (§3, `{{WT}}`
 form): `{{WT}}`, `{{FINDINGS}}` as a list with page, line, quote, verdict, evidence and — for stale
-quotes — old and new text, and `{{REVIEW_NOTES}}` as "none" in round 1.
+quotes — old and new text; a stale quote from a `removed` row carries no new text, so carry the
+release's `added` rows from `strings.tsv` alongside it, so the fixer can find the replacement label.
+`{{REVIEW_NOTES}}` as "none" in round 1.
 
 ## §6 Stage 3 — claim review
 
 Dispatch a fresh `general-purpose` agent — never the fixer — with `reviewer.md`, plus the dispatch
-wrapper (§3, `{{WT}}` form): `{{WT}}`, `{{BASE}}`.
+wrapper (§3, `{{WT}}` form): `{{WT}}`, `{{BASE}}`, `{{FINDINGS}}` — the same list the fixer received.
 
 - Every claim `confirmed` → commit.
 - Any `wrong` or `unsupported` → round 2: dispatch a **new** fixer with the same findings and the
@@ -227,13 +259,15 @@ wrapper (§3, `{{WT}}` form): `{{WT}}`, `{{BASE}}`.
 - Still disputed after round 2 → restore those paragraphs to `$BASE`'s text in `$WT`, and list them
   under **Dropped**.
 
-Then commit one commit per changed file:
+Then commit one commit per changed file. `git diff --name-only` misses files the fixer created, so
+stage everything under `docs/user` first and commit per staged file:
 
 ```bash
 cd <ROOT> && . <OUT>/env.sh && cd "$WT"
 
-for f in $(git diff --name-only); do
-  git add "$f" && git commit -m "docs(manual): correct $(basename "$f" .md) for $LABEL"
+git add -A docs/user
+for f in $(git diff --cached --name-only); do
+  git commit -m "docs(manual): correct $(basename "$f" .md) for $LABEL" -- "$f"
 done
 ```
 
@@ -263,6 +297,9 @@ section that no longer explains it:
 claim was checked against the code by a reviewer that did not write it.
 ```
 
+Write the body to `$OUT/pr-body.md`. With `--dry-run`, skip the block below: print the body, leave
+`$WT` and the local branch for inspection, and say where they are. Otherwise:
+
 ```bash
 cd <ROOT> && . <OUT>/env.sh && cd "$WT"
 
@@ -271,12 +308,10 @@ gh pr create --base main --head "$BRANCH" --title "docs(manual): correct what $L
 git -C "$ROOT" worktree remove "$WT"
 ```
 
-With `--dry-run`: print the body, leave `$WT` and the local branch for inspection, and say where
-they are.
-
 ### Uncovered issue
 
-Only when `$VER` is set, something is uncovered, and not `--dry-run`.
+Only when `$VER` is set, something is uncovered, and not `--dry-run`. Write the body to
+`$OUT/issue-body.md` first, then look up whether the issue already exists:
 
 ```markdown
 The <VER> release shipped these without a manual section that explains them.
@@ -289,9 +324,11 @@ cd <ROOT> && . <OUT>/env.sh
 
 TITLE="Manual: document what $VER shipped"
 gh issue list --state all --search "in:title \"$TITLE\"" --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number"
-gh issue create --title "$TITLE" --label documentation --body-file "$OUT/issue-body.md"   # when none
-gh issue edit <n> --body-file "$OUT/issue-body.md"                                        # when one exists
 ```
+
+If the lookup printed nothing, run: `gh issue create --title "$TITLE" --label documentation
+--body-file "$OUT/issue-body.md"`; otherwise run `gh issue edit <n> --body-file
+"$OUT/issue-body.md"` with the number it printed.
 
 When editing, start from the issue's current body: keep every existing line, checked state
 included, and append only items whose bold term is not already there.
@@ -302,12 +339,15 @@ included, and append only items whose bold term is not already there.
 
 1. **Regressions** — quote, page and line, code at `file:line`, the intent evidence, and the
    maintainer's choice. Inside a release, any left as fix-forward stop it before step 6.
-2. **Uncovered** — each item, and the issue link.
-3. **Dropped** — paragraphs still disputed after two review rounds.
-4. **Drift** — commits `main` holds past `$VER`, if any.
-5. **Not audited** — agents that failed twice.
-6. **Counts** — claims per verdict. Detail only for non-`holds`.
-7. The PR link, or "nothing to fix".
+2. **Not fixed — PR already open** — only when §0 found an existing open or merged PR and skipped
+   stages 2–3: every finding that would have gone to the fixer, page, line, quote, verdict and
+   evidence, for the maintainer to add to that PR themselves.
+3. **Uncovered** — each item, and the issue link.
+4. **Dropped** — paragraphs still disputed after two review rounds.
+5. **Drift** — commits `main` holds past `$VER`, if any.
+6. **Not audited** — agents that failed twice.
+7. **Counts** — claims per verdict. Detail only for non-`holds`.
+8. The PR link, or "nothing to fix".
 
 ## Never
 
