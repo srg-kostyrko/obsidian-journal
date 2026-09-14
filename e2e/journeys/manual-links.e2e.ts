@@ -1,4 +1,4 @@
-import { $, browser, expect } from "@wdio/globals";
+import { browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { manual, manualUrl, type ManualPath } from "../../src/ui/manual.js";
@@ -8,6 +8,7 @@ import {
   closeSettings,
   expandSection,
   openJournalSubpage,
+  openNoteletTypeSubpage,
   openSettings,
   openShelfSubpage,
   waitForManualLinks,
@@ -95,12 +96,7 @@ describe("manual links in settings", () => {
     afterEach(closeSettings);
 
     it("links every section of a notelet type's page", async () => {
-      await clickIcon(m.journal_dashboard_edit({ name: "daily" }));
-      await expandSection(m.journal_notelet_section_title());
-      await clickIcon(m.journal_notelet_edit());
-      await $(`button[aria-label="${m.journal_notelet_rename_tooltip()}"]`).waitForExist({
-        timeoutMsg: "the notelet type page did not open",
-      });
+      await openNoteletTypeSubpage("daily");
 
       await expectLinks([
         manual.notelet.page,

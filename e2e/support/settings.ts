@@ -152,6 +152,17 @@ export async function openJournalSubpage(shelf: string, journal: string): Promis
   await clickIcon(`Configure ${journal}`);
 }
 
+// The journal subpage carries a "Note creation" section of its own, so a caller that expands
+// one before this push has rendered silently opens the journal's instead of the type's.
+export async function openNoteletTypeSubpage(journal: string): Promise<void> {
+  await clickIcon(m.journal_dashboard_edit({ name: journal }));
+  await expandSection(m.journal_notelet_section_title());
+  await clickIcon(m.journal_notelet_edit());
+  await $(`button[aria-label="${m.journal_notelet_rename_tooltip()}"]`).waitForExist({
+    timeoutMsg: "the notelet type page did not open",
+  });
+}
+
 // Set the first text input in the open modal (the primary field — name/template/new-name).
 export async function setModalText(value: string): Promise<void> {
   await activeModal().$('input[type="text"]').setValue(value);
