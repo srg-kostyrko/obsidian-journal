@@ -83,7 +83,7 @@ A notelet whose type was deleted is listed as _type_ (missing type).
 
 - **Connect note to a journal** offers the journal's notelet types under **Connect as**. See
   [Connect note to a journal](/notes#connect-note-to-a-journal).
-- **Bulk add notelets of this type**, on the type's row, connects a folder of notes as notelets, numbered
+- **Bulk add notelets of this type**, next to the name on the type's page, connects a folder of notes as notelets, numbered
   in the order the folder is scanned. See [Bulk add](/notes#bulk-add).
 
 ## Renaming and deleting a type

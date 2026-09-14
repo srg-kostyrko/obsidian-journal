@@ -33,7 +33,8 @@ Edit it, or add views of your own, under **Views** on the main settings page.
 
 ## A view's settings
 
-**Add a view** creates one, and **Configure** opens its page:
+**Add a view** creates one, and **Configure** opens its page. The page's heading is the view's name,
+with **Rename view**; below it:
 
 - **Icon** — shown in the view's tab header and in the ribbon.
 - **Default shelf** — the shelf the view starts on when it opens. See [Shelves](/shelves#scoping-a-view).
