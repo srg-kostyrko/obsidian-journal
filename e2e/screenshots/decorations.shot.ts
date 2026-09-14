@@ -149,95 +149,84 @@ describe("decorations examples", () => {
       });
     });
 
-    it("records the raw frontmatter Obsidian writes for a checkbox property added through its own property UI, left unticked", async () => {
+    it("records the raw frontmatter Obsidian writes for a checkbox property added through its own property UI, left unchecked", async () => {
       const anchor = dayAnchor(6);
       const path = `${anchor}.md`;
       await seedNote(path, note("daily", anchor));
 
-      let outcome: Record<string, unknown>;
-      try {
-        await browser.executeObsidian(async ({ app, obsidian }, notePath) => {
-          const file = app.vault.getAbstractFileByPath(notePath);
-          if (file instanceof obsidian.TFile) await app.workspace.getLeaf(false).openFile(file);
-        }, path);
+      await browser.executeObsidian(async ({ app, obsidian }, notePath) => {
+        const file = app.vault.getAbstractFileByPath(notePath);
+        if (file instanceof obsidian.TFile) await app.workspace.getLeaf(false).openFile(file);
+      }, path);
 
-        const metadataContainer = $(".workspace-leaf.mod-active .metadata-container");
-        await metadataContainer.waitForExist({ timeoutMsg: "properties editor did not render for the active note" });
+      const metadataContainer = $(".workspace-leaf.mod-active .metadata-container");
+      await metadataContainer.waitForExist({ timeoutMsg: "properties editor did not render for the active note" });
 
-        const rowsBefore = await metadataContainer.$$(".metadata-property").length;
-        const addButton = metadataContainer.$(".metadata-add-button");
-        await addButton.waitForExist({ timeoutMsg: "Add property button not found" });
-        await addButton.click();
+      const rowsBefore = await metadataContainer.$$(".metadata-property").length;
+      const addButton = metadataContainer.$(".metadata-add-button");
+      await addButton.waitForExist({ timeoutMsg: "Add property button not found" });
+      await addButton.click();
 
-        // A new row is appended to the property list — the ONLY reliable way to find it, since
-        // it carries no name or id of its own until the key is typed and committed. Picking the
-        // first `.metadata-property-key-input` on the page (there is one per existing property,
-        // e.g. "journal") would type into the wrong row. Marking the last row in-page (rather
-        // than indexing a resolved element array) keeps every WDIO handle below a plain,
-        // always-defined `$()` lookup instead of a possibly-undefined array element.
-        await browser.waitUntil(async () => (await metadataContainer.$$(".metadata-property").length) > rowsBefore, {
-          timeoutMsg: "new property row did not appear after clicking Add property",
-        });
-        await browser.execute(() => {
-          [...document.querySelectorAll(".metadata-property")].at(-1)?.setAttribute("data-e2e-new-row", "true");
-        });
-        const newRow = metadataContainer.$('.metadata-property[data-e2e-new-row="true"]');
-        await newRow.waitForExist({ timeoutMsg: "marked new property row not found" });
+      // A new row is appended to the property list — the ONLY reliable way to find it, since
+      // it carries no name or id of its own until the key is typed and committed. Picking the
+      // first `.metadata-property-key-input` on the page (there is one per existing property,
+      // e.g. "journal") would type into the wrong row. Marking the last row in-page (rather
+      // than indexing a resolved element array) keeps every WDIO handle below a plain,
+      // always-defined `$()` lookup instead of a possibly-undefined array element.
+      await browser.waitUntil(async () => (await metadataContainer.$$(".metadata-property").length) > rowsBefore, {
+        timeoutMsg: "new property row did not appear after clicking Add property",
+      });
+      await browser.execute(() => {
+        [...document.querySelectorAll(".metadata-property")].at(-1)?.setAttribute("data-e2e-new-row", "true");
+      });
+      const newRow = metadataContainer.$('.metadata-property[data-e2e-new-row="true"]');
+      await newRow.waitForExist({ timeoutMsg: "marked new property row not found" });
 
-        const keyInput = newRow.$(".metadata-property-key-input");
-        await keyInput.waitForExist({ timeoutMsg: "new property key input did not appear" });
-        await keyInput.setValue("workout");
-        await browser.keys("Tab");
+      const keyInput = newRow.$(".metadata-property-key-input");
+      await keyInput.waitForExist({ timeoutMsg: "new property key input did not appear" });
+      await keyInput.setValue("workout");
+      await browser.keys("Tab");
 
-        // Change the new row's type to Checkbox via its type-picker menu (the property icon
-        // to the left of the key).
-        const propertyIcon = newRow.$(".metadata-property-icon");
-        await propertyIcon.waitForExist({ timeoutMsg: "workout property row did not render" });
-        await propertyIcon.click();
-        const menu = $(".menu");
-        await menu.waitForExist({ timeoutMsg: "property type menu did not open" });
+      // Change the new row's type to Checkbox via its type-picker menu (the property icon
+      // to the left of the key).
+      const propertyIcon = newRow.$(".metadata-property-icon");
+      await propertyIcon.waitForExist({ timeoutMsg: "workout property row did not render" });
+      await propertyIcon.click();
+      const menu = $(".menu");
+      await menu.waitForExist({ timeoutMsg: "property type menu did not open" });
 
-        // The type list is a nested submenu behind a "Property type" trigger, not top-level
-        // items — Obsidian's Menu opens a submenu on hover, matching its Electron-style menus.
-        const typeTrigger = menu.$(".menu-item-title*=Property type");
-        await typeTrigger.waitForExist({ timeoutMsg: "Property type submenu trigger not found" });
-        await typeTrigger.moveTo();
+      // The type list is a nested submenu behind a "Property type" trigger, not top-level
+      // items — Obsidian's Menu opens a submenu on hover, matching its Electron-style menus.
+      const typeTrigger = menu.$(".menu-item-title*=Property type");
+      await typeTrigger.waitForExist({ timeoutMsg: "Property type submenu trigger not found" });
+      await typeTrigger.moveTo();
 
-        await browser.waitUntil(async () => (await $$(".menu").length) > 1, {
-          timeoutMsg: "Property type submenu did not open on hover",
-        });
-        await browser.execute(() => {
-          [...document.querySelectorAll(".menu")].at(-1)?.setAttribute("data-e2e-submenu", "true");
-        });
-        const submenu = $('.menu[data-e2e-submenu="true"]');
-        await submenu.waitForExist({ timeoutMsg: "marked property-type submenu not found" });
-        const checkboxItem = submenu.$(".menu-item-title*=Checkbox");
-        await checkboxItem.waitForExist({ timeoutMsg: "Checkbox type option not found in property type submenu" });
-        await checkboxItem.click();
+      await browser.waitUntil(async () => (await $$(".menu").length) > 1, {
+        timeoutMsg: "Property type submenu did not open on hover",
+      });
+      await browser.execute(() => {
+        [...document.querySelectorAll(".menu")].at(-1)?.setAttribute("data-e2e-submenu", "true");
+      });
+      const submenu = $('.menu[data-e2e-submenu="true"]');
+      await submenu.waitForExist({ timeoutMsg: "marked property-type submenu not found" });
+      const checkboxItem = submenu.$(".menu-item-title*=Checkbox");
+      await checkboxItem.waitForExist({ timeoutMsg: "Checkbox type option not found in property type submenu" });
+      await checkboxItem.click();
 
-        // A type change onto a value the widget rejects (here: null) can pop a confirmation
-        // dialog; accept it if Obsidian shows one so the type change actually commits.
-        const confirmButton = $(".modal-container .mod-cta");
-        if (await confirmButton.isExisting()) await confirmButton.click();
+      // A type change onto a value the widget rejects (here: null) can pop a confirmation
+      // dialog; accept it if Obsidian shows one so the type change actually commits.
+      const confirmButton = $(".modal-container .mod-cta");
+      if (await confirmButton.isExisting()) await confirmButton.click();
 
-        await browser.pause(300);
-        const content = await contentOf(path);
-        const registeredWidget = await browser.executeObsidian(({ app }) => {
-          const manager = app as unknown as {
-            metadataTypeManager?: { getAllProperties?: () => Record<string, { widget?: string }> };
-          };
-          return manager.metadataTypeManager?.getAllProperties?.().workout?.widget;
-        });
-        outcome = { status: "recorded", path, content, registeredWidget };
-      } catch (error) {
-        const content = await contentOf(path);
-        outcome = {
-          status: "UNVERIFIED",
-          reason: error instanceof Error ? error.message : String(error),
-          path,
-          contentSoFar: content,
+      await browser.pause(300);
+      const content = await contentOf(path);
+      const registeredWidget = await browser.executeObsidian(({ app }) => {
+        const manager = app as unknown as {
+          metadataTypeManager?: { getAllProperties?: () => Record<string, { widget?: string }> };
         };
-      }
+        return manager.metadataTypeManager?.getAllProperties?.().workout?.widget;
+      });
+      const outcome = { path, content, registeredWidget };
 
       await recordOutcome("decorations-checkbox-ui-add", outcome);
     });

@@ -29,9 +29,7 @@ describe("journals examples", () => {
     // claim) each landing as its own metadataCache update, so wait for the LAST one rather than
     // for "frontmatter exists at all" — that would catch the template-only midpoint, or for mere
     // file existence — that would catch the still-empty first write.
-    await waitForJournalFrontmatter(createdPath, { journal: "daily", date: "1959-02-14" }).catch(() => {
-      // Recorded below either way; a timeout here just means the frontmatter never settled.
-    });
+    await waitForJournalFrontmatter(createdPath, { journal: "daily", date: "1959-02-14" });
     const exists = await noteExists(createdPath);
     const frontmatter = exists ? await frontmatterOf(createdPath) : undefined;
 

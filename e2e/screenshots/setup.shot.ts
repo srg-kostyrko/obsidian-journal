@@ -54,16 +54,12 @@ describe("setup examples", () => {
 
     const sprint1 = "Projects/Apollo/Sprints/Sprint 1.md";
     await openViaUri({ journal: "Apollo", date: "2026-01-05" });
-    await waitForJournalFrontmatter(sprint1, { journal: "Apollo", date: "2026-01-05" }).catch(() => {
-      // Recorded below either way.
-    });
+    await waitForJournalFrontmatter(sprint1, { journal: "Apollo", date: "2026-01-05" });
     const sprint1Exists = await noteExists(sprint1);
 
     const sprint2 = "Projects/Apollo/Sprints/Sprint 2.md";
     await openViaUri({ journal: "Apollo", date: "2026-01-19" });
-    await waitForJournalFrontmatter(sprint2, { journal: "Apollo", date: "2026-01-19" }).catch(() => {
-      // Recorded below either way.
-    });
+    await waitForJournalFrontmatter(sprint2, { journal: "Apollo", date: "2026-01-19" });
     const sprint2Exists = await noteExists(sprint2);
 
     await recordOutcome("setup-apollo", {
@@ -176,9 +172,7 @@ describe("setup examples", () => {
 
     await openViaUri({ journal: "cursor", date: todayAnchor() });
     const path = `cursor/${todayAnchor()}.md`;
-    await waitForCursorLine(5, "waited for the editor cursor to jump to the Templater marker").catch(() => {
-      // Recorded below either way.
-    });
+    await waitForCursorLine(5, "waited for the editor cursor to jump to the Templater marker");
 
     const cursor = await cursorOf();
     const value = await editorValue();
