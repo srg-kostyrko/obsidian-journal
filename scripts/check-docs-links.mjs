@@ -175,8 +175,23 @@ function linkExists(target) {
 
 // A link a release put in the plugin stays in that release's installs for good, so every tag's
 // links must keep landing — directly, or through a redirect written when the section moved.
-const { paths: pluginLinks, releasesWithLinks } = linkedManualPaths(process.cwd());
-const redirects = JSON.parse(readFileSync(path.join(src, ".vitepress", "redirects.json"), "utf8"));
+let pluginLinks, releasesWithLinks;
+try {
+  ({ paths: pluginLinks, releasesWithLinks } = linkedManualPaths(process.cwd()));
+} catch (error) {
+  console.error(`check:docs-links: ${error.message}`);
+  process.exit(1);
+}
+
+const redirectsPath = path.join(src, ".vitepress", "redirects.json");
+let redirects;
+try {
+  redirects = JSON.parse(readFileSync(redirectsPath, "utf8"));
+} catch (error) {
+  console.error(`check:docs-links: could not read ${redirectsPath} — ${error.message}`);
+  process.exit(1);
+}
+
 const pluginFailures = [
   ...verifyRedirects(redirects, linkExists),
   ...verifyManualLinks(pluginLinks, redirects, linkExists),
