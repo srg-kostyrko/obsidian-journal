@@ -18,7 +18,7 @@ writes for, and which properties it records on each note.
   and in code blocks.
 - **I'll be writing** — **daily**, **weekly**, **monthly**, **quarterly**, **annually**, or **Custom
   intervals**. For custom intervals, **Every** sets the length — a number and a unit — and **Start
-  date** is "used to count custom intervals from. It cannot be changed after creating the journal."
+  date** is what intervals are counted from; it cannot be changed after creating the journal.
 
 **Create** opens the new journal's settings page. The period length cannot be changed later; the
 settings page shows it next to the journal's name.
@@ -31,17 +31,16 @@ them at the root of the vault, and formats dates to suit its period.
 **Resolved note path:** shows where the note for today's period goes, so you can see the effect of
 each change as you make it.
 
-**Note name template** — "Template used to generate new note names." Any [template
-variable](/reference/variables) can go in it: `{{date}}`, `{{date:dddd}}`, `{{index}}`, a question's
-answer. Make it name every period differently: two periods that resolve to the same name share one
-note. A name the plugin cannot read a date back out of works, but notes you create yourself will not
-[auto-attach](/notes#auto-attach).
+**Note name template** — any [template variable](/reference/variables) can go in it: `{{date}}`,
+`{{date:dddd}}`, `{{index}}`, a question's answer. Make it name every period differently: two periods
+that resolve to the same name share one note. A name the plugin cannot read a date back out of works,
+but notes you create yourself will not [auto-attach](/notes#auto-attach).
 
-**Folder** — "New notes will be created in this folder." It takes variables too, so notes can be
-filed by date: `Journal/{{date:YYYY}}/{{date:MM}}` puts each note under its year and month.
+**Folder** — where new notes go. It takes variables too, so notes can be filed by date:
+`Journal/{{date:YYYY}}/{{date:MM}}` puts each note under its year and month.
 
-**Default date format** — "Default format for date variables that don't specify their own", written
-with [moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). A variable with its
+**Default date format** — used for a date variable that doesn't specify its own format, written with
+[moment.js format tokens](https://momentjs.com/docs/#/displaying/format/). A variable with its
 own format, like `{{date:DD.MM.YYYY}}`, ignores it.
 
 - On a weekly journal, `{{date}}` is a day inside the week, chosen so year tokens match the week's
@@ -53,8 +52,8 @@ own format, like `{{date:DD.MM.YYYY}}`, ignores it.
 
 ## Templates
 
-"Path to a note that will be used as a template when creating new notes. When multiple are
-configured, the first existing wins." **Add template** adds a path; each path shows its **Resolved
+Each is a path to a note used as a template when creating new notes; when multiple are configured, the
+first that exists wins. **Add template** adds a path; each path shows its **Resolved
 template path:**.
 
 - A template that exists but is empty is skipped, and the next one is tried.
@@ -70,12 +69,12 @@ template path:**.
 
 A journal's timeline is the range of dates it writes notes for.
 
-- **Start writing on** — "New notes prior to this date won't be created." Custom intervals show their
+- **Start writing on** — notes before this date are never created. Custom intervals show their
   start date here and cannot change it.
-- **End writing** — **Never** ("Writing continues indefinitely."), **After date** ("New notes after
-  this date won't be created.") or **After repeating** a number of **times** ("After creating this
-  many notes, new notes won't be created."). Ending after a number of repeats needs a start date to
-  count from; without one the journal is not bounded and the settings page says so.
+- **End writing** — **Never**, **After date**, or **After repeating** a number of **times**: after
+  that date, or after that many notes, the journal creates no new ones. Ending after a number of
+  repeats needs a start date to count from; without one the journal is not bounded and the settings
+  page says so.
 
 A period that straddles the start date is inside the timeline — a week whose first day falls before
 a mid-week start still gets its note.
@@ -86,29 +85,28 @@ where they are, and still open and link.
 
 ## Sequential numbers
 
-For numbered entries (like "Sprint 1"), and for chained ones (like "Release4711Sprint1").
+For numbered entries (like `Sprint 1`), and for chained ones (like `Release4711Sprint1`).
 
-- **Enable sequential numbers** — "Assign numbers to notes (e.g. Day 1, Day 2, …)."
+- **Enable sequential numbers** — assigns numbers to notes, e.g. Day 1, Day 2…
 - A journal's numbering is an ordered list of **digits**, slowest first. The last (fastest) digit
   advances once per note; when it wraps around, it carries into the digit above it, the way a car
   odometer's ones wheel turns the tens wheel. **Add digit** and **Edit digit** open the same dialog:
-  - **Variable name** — "Use this digit in a note name or folder as a template variable." Written as
-    `{{name}}` in the note name template and folder.
-  - **Start number** — "Number assigned at the anchor date."
-  - **Reset** — "How the number changes over time." Only the first (slowest) digit has it:
-    **Continuous** never resets, and **Resets after** a number of **repeats** starts over. Every
-    digit below the first resets after a fixed count instead, set as **How many per** _the digit
-    above it_: "After this many, _this digit_ restarts and _the one above_ goes up by one."
+  - **Variable name** — used in a note name or folder as a template variable, written as `{{name}}`.
+  - **Start number** — the number assigned at the anchor date.
+  - **Reset** — only the first (slowest) digit has it: **Continuous** never resets, and **Resets
+    after** a number of **repeats** starts over. Every digit below the first resets after a fixed
+    count instead, set as **How many per** _the digit above it_: after that many, this digit restarts
+    and the one above it goes up by one.
   - **Property name** — the property the digit's number is stored in.
-- **Anchor date** — "Numbering starts from this date. The note for this date gets the start number,
-  and later notes count up from it." A journal with a start date uses it as the anchor date.
+- **Anchor date** — numbering starts from this date: the note for this date gets the start number, and
+  later notes count up from it. A journal with a start date uses it as the anchor date.
 - Digits can only be added at the bottom (**Add digit**), as a new fastest digit — there is no way to
   insert a slower one above the current top. To turn a single-counter journal into a chained one
   (say, adding Release above an existing Sprint), rename the existing digit to `release`, give it
   its new start number, and add a finer `sprint` digit beneath it.
 - The last remaining digit cannot be deleted; deleting the slowest one promotes the next digit to
   take its place.
-- **Allow before anchor** — "Allow indexing before the anchor date. May produce negative numbers."
+- **Allow before anchor** — allows indexing before the anchor date, which may produce negative numbers.
   Offered only when the journal has no start date and the slowest digit is Continuous.
 - **Preview** shows the full paths of the next five notes, so a digit used only in the folder is
   visible too.
@@ -126,14 +124,13 @@ Every journal note carries a `journal` property naming its journal. That name is
 yours to rename:
 
 - **Date property name** — the period's date. `journal-date` unless you change it.
-- **Add start date property** — "For weekly journals that span two years, the start date can differ
-  from the date property." Turn it on to record the period's first day under **Start date property
+- **Add start date property** — for weekly journals that span two years, the start date can differ
+  from the date property; turn it on to record the period's first day under **Start date property
   name** (`journal-start-date`).
 - **Add end date property** — records the period's last day under **End date property name**
   (`journal-end-date`). A custom interval whose end you moved by hand keeps its end date whether or
   not this is on.
-- **Notelet type property** — "The property that records which notelet type a note is." See
-  [Notelets](/notelets).
+- **Notelet type property** — records which notelet type a note is. See [Notelets](/notelets).
 
 Renaming a property moves the value to the new name on every note the journal already has, notelets
 included, so no note loses its connection.
@@ -152,19 +149,19 @@ included, so no note loses its connection.
 **Rename journal**, next to the journal's name, changes the `journal` property on every note the
 journal already has, notelets included. Shelves and commands follow the new name.
 
-**Clone** makes a copy under a **New journal name**: "Settings and commands are copied. Notes are
-not." **Copy notelet types** — "Adds a command for each type. Turn off to clone without them." The
+**Clone** makes a copy under a **New journal name**: settings and commands are copied, but notes are
+not. **Copy notelet types** adds a command for each type; turn it off to clone without them. The
 copy joins the same [shelf](/shelves). It starts with the source's folder and name template, so the
 two resolve to the same note paths until you change one — **Colliding journal settings** on the main
 settings page says so until you do.
 
 **Delete** says how many notes are connected and asks **What to do with connected notes**:
 
-- **Keep notes** — "Notes stay in your vault unchanged." They keep their `journal` property, so no
+- **Keep notes** — notes stay in your vault, unchanged. They keep their `journal` property, so no
   other journal adopts them, and a journal you create later with the same name picks them up again.
-- **Clear journal data** — "Notes stay in your vault, but the journal properties are removed from
-  their frontmatter."
-- **Delete notes** — "All notes connected to this journal are deleted from your vault."
+- **Clear journal data** — notes stay in your vault, but the journal properties are removed from
+  their frontmatter.
+- **Delete notes** — every note connected to this journal is deleted from your vault.
 
 Commands that target the journal are deleted with it, and it is taken off its shelf.
 

@@ -38,15 +38,15 @@ that jump to the nearest _existing_ note never create one; see [Commands](/comma
 - **Questions.** A journal with [questions](/questions) asks them before the note is created, and
   cancelling creates nothing.
 
-**Confirm creating new notes** — "Show a confirmation dialog when navigating to a date that does not
-yet have a note." Off by default. The dialog, **Create a new journal note?**, names the note it is
+**Confirm creating new notes** — shows a confirmation dialog when navigating to a date that does not
+yet have a note. Off by default. The dialog, **Create a new journal note?**, names the note it is
 about to create. A journal that asks questions shows its question dialog instead, since that dialog
 already names the note and can be cancelled.
 
 ### Auto-create today's note
 
-**Auto-create today's note** — "Automatically create today's note on plugin load and at every local
-midnight." Off by default, set per journal.
+**Auto-create today's note** — creates today's note automatically on plugin load and at every local
+midnight. Off by default, set per journal.
 
 - Nothing is created on a day outside the journal's timeline.
 - The confirmation dialog is never shown for an auto-created note.
@@ -66,9 +66,9 @@ note before the other's copy arrives.
 
 **Startup**, on the main settings page, opens a journal's note for today whenever you open the vault.
 
-- **Open on startup** — "Open a note whenever you open this vault." Pick a journal, or **Don't open**.
-- **Different journal on some days** — "Choose which journal opens on the days you pick. Any day you
-  don't pick opens the journal above." **Add days** adds a group: its **Days of the week** and the
+- **Open on startup** — pick a journal, or **Don't open**.
+- **Different journal on some days** — choose which journal opens on the days you pick; any day you
+  don't pick opens the journal above. **Add days** adds a group: its **Days of the week** and the
   **Journal to open**. A day can belong to one group only. A group can open nothing, so a work journal
   can stay shut at the weekend.
 
@@ -140,8 +140,8 @@ asked here; the note keeps its own name or folder.
 
 An empty note gets the journal's template. A note with content keeps it and only gains properties.
 
-For a note that is already connected, the dialog opens with "This note is connected to
-"_journal_"." and offers **Update** and **Disconnect**. **Disconnect** removes the journal's
+For a note that is already connected, the dialog names the journal it is connected to and offers
+**Update** and **Disconnect**. **Disconnect** removes the journal's
 properties — its date, start and end dates, sequence numbers, question answers and notelet
 properties — and leaves the note where it is. Connecting a note to a different journal removes the
 old journal's properties in the same step.
@@ -154,13 +154,12 @@ listed on that shelf's page. Notelet types have their own bulk add — see [Note
 
 ### Choosing the notes
 
-- **Source folder** — "Select the folder with existing notes you want to process." Subfolders are
-  included. Only markdown notes are considered.
+- **Source folder** — subfolders are included; only markdown notes are considered.
 - **Read the date from** — **Note title** or **A property**. For a property, give its **Property
   name**; its value has to be text.
 - **Date format** — the format the date is written in, prefilled with the journal's own date format.
-  The date can sit anywhere in the title: `Standup 2024-03-05` finds `2024-03-05`. "If your dates
-  include a time component, omit it from the format." A date that falls inside a longer period is
+  The date can sit anywhere in the title: `Standup 2024-03-05` finds `2024-03-05`. If your dates
+  include a time component, omit it from the format. A date that falls inside a longer period is
   read as that period — a day's date connects the note to its week on a weekly journal.
 - **Filter notes** — **No filter**, **Match all conditions** or **Match any condition**, over title,
   tag and property conditions like those a [decoration](/decorations) uses.
@@ -168,18 +167,17 @@ listed on that shelf's page. Notelet types have their own bulk add — see [Note
 ### Deciding what happens
 
 - **When a note is already connected to that date**
-  - **Skip** — "The new note is left untouched and not connected."
-  - **Replace** — "The new note takes over the date; the previously connected note stays in the vault
-    but is disconnected."
-  - **Merge** — "The new note's content is appended to the already-connected note, and the new note
-    is deleted." It is deleted the way Obsidian deletes any file, following your own setting for
-    deleted files.
-  - **Ask for each** — "Decide for each note on the review screen."
+  - **Skip** — the new note is left untouched and not connected.
+  - **Replace** — the new note takes over the date; the previously connected note stays in the vault
+    but is disconnected.
+  - **Merge** — the new note's content is appended to the already-connected note, and the new note
+    is deleted the way Obsidian deletes any file, following your own setting for deleted files.
+  - **Ask for each** — decide for each note on the review screen.
 - **When the folder differs** — **Keep**, **Move** or **Ask for each**.
 - **When the name differs** — **Keep**, **Rename** or **Ask for each**. As with connecting a single
   note, a question whose answer goes into the name or folder keeps that part as it is.
-- **Dry run (preview only)** — "Don't change any notes — just report the changes that would be
-  made." On by default.
+- **Dry run (preview only)** — reports the changes that would be made without changing any notes. On
+  by default.
 
 ### Reviewing and running
 
@@ -190,8 +188,7 @@ to **Ask for each** get their choice here. Notes it will not touch are listed wi
 the journal's timeline**.
 
 **Run** processes the notes and shows what happened to each. A dry run reports what would have
-happened under "Dry run — nothing in your vault was changed."; start again with **Dry run** off to
-apply it.
+happened without changing anything in your vault; start again with **Dry run** off to apply it.
 
 ## Examples
 

@@ -1,8 +1,6 @@
 # Shelves
 
-A shelf groups journals that belong together. The settings page puts it this way: "A shelf groups
-journals that belong together, like work or personal. A calendar view can show one shelf at a time,
-navigation blocks decorate from the shelf's journals, and a command can target a shelf."
+A shelf groups journals that belong together, like work or personal.
 
 A shelf is for keeping areas of your life apart, not for tying period lengths together. Daily,
 weekly and monthly notes are three separate [journals](/journals), one per period length — a shelf
@@ -54,9 +52,9 @@ places it there, and [cloning](/journals) a journal puts the copy on the same sh
 
 ## Scoping a view
 
-- **Default shelf** — "The shelf this view starts on when it opens." Set it on the view's settings
+- **Default shelf** — the shelf the view starts on when it opens. Set it on the view's settings
   page; without one the view shows **All journals**.
-- **Shelf selector** — a toolbar item: "Switches which shelf scopes the view's journals." Its button
+- **Shelf selector** — a toolbar item that switches which shelf scopes the view's journals. Its button
   shows the current shelf, or **All journals**, and opens a menu with **All journals** and every
   shelf. It is hidden while you have no shelves.
 
@@ -69,7 +67,7 @@ default shelf.
 
 Add a command from the **Commands** section of a shelf's page. Besides what every command has, a
 shelf command asks for a **Note type** — day, week, month, quarter or year. Custom intervals cannot be
-targeted through a shelf. In the command palette it appears as "Shelf: _shelf_: _name_".
+targeted through a shelf. In the command palette it appears as Shelf: _shelf_: _name_.
 
 When it runs, the command works on the shelf's journals of that note type. If the shelf has more than
 one, it asks which. See [Commands](/commands) for what each command type does.
@@ -112,9 +110,9 @@ rename, and shows none of its journals until you edit it.
 
 Deleting a shelf asks where its journals go:
 
-- **Move journals to** — "Journals on this shelf are moved to the selected shelf, or off the shelf
-  when none is selected. Notes are not affected." Choose a shelf, or **None**.
-- With no other shelf to move to: "Journals will be moved off the shelf. Notes are not affected."
+- **Move journals to** — moves the shelf's journals to the selected shelf, or off any shelf when
+  none is selected; notes are not affected. Choose a shelf, or **None**.
+- With no other shelf to move to, the journals move off the shelf; notes are not affected.
 
 The shelf's decorations and the commands that target it are deleted with it. A view whose **Default
 shelf** was the deleted shelf shows **All journals**.
@@ -140,6 +138,6 @@ month calendar.
 ### A command on a shelf
 
 On the `office` shelf's page, add a command named `Open today`: **Note type** **Daily note**, **When
-the command runs** "Open today's note", **Context** **Today**. The command palette lists it as
+the command runs** **Open today's note**, **Context** **Today**. The command palette lists it as
 "Shelf: office: Open today", and running it opens `work/2026-09-13.md` — the only daily journal on
 the shelf, so it does not ask which.

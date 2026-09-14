@@ -63,6 +63,9 @@ Every feature page ends with two or three concrete, copyable configurations.
   who meets them. Give each one a single home and link to it from elsewhere, and quote its text
   only when a reader would search for it. Nothing checks a quoted message against
   `messages/en.json`, so every extra quote goes stale on the next reword.
+- A setting's or block's description text is not quoted — describe what it does in the page's own
+  words, and only what its label does not already say; quote UI text only when the reader types or
+  searches for it.
 - A link to another page is a site-absolute path: `/decorations`, `/reference/variables`.
 - Screenshots are generated, never captured by hand, and only where the outcome is seen.
   `npm run docs:screenshots` regenerates all of them; `npx wdio run ./wdio.conf.mts --spec

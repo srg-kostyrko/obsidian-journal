@@ -7,10 +7,9 @@ A journal normally keeps one note per period — one note for today, one for thi
 meeting notes on a day, a retro on a sprint, a reading log on a week. A period can hold any number of
 them.
 
-Every notelet belongs to a **notelet type**: "A notelet type is a kind of extra note this journal can
-create for a period, alongside the period's own note." The type decides where its notes go, what they
-are called and what goes into them; the journal decides which period a notelet belongs to. A type
-has no timeline or calendar of its own.
+Every notelet belongs to a **notelet type**, which decides where its notes go, what they are called
+and what goes into them; the journal decides which period a notelet belongs to. A type has no timeline
+or calendar of its own.
 
 A notelet is recognized by its properties, not its path. The plugin writes the journal's name, the
 period's date and the type's name into each one, so a notelet you move or rename by hand stays
@@ -18,8 +17,8 @@ connected.
 
 ## Adding a notelet type
 
-On a journal's settings page, **Notelet types** → **Add notelet type** asks for a **Name**: "Stored on
-each notelet, and what you rename to change it everywhere." It must be unique within the journal.
+On a journal's settings page, **Notelet types** → **Add notelet type** asks for a **Name**, stored on
+each notelet — rename it here later to change it everywhere. It must be unique within the journal.
 
 The type's own page has:
 
@@ -27,12 +26,12 @@ The type's own page has:
   plus `{{notelet_index}}`. `{{journal_name}} {{notelet_index}}` by default.
 - **Folder** — where they go. Empty by default, which is the vault root; set it, for example to
   `Daily/meetings`.
-- **Confirm creating notelets** — "Show a confirmation dialog before a notelet of this type is
-  created." Off by default. This is the type's own setting; the journal's **Confirm creating new
+- **Confirm creating notelets** — shows a confirmation dialog before a notelet of this type is
+  created. Off by default. This is the type's own setting; the journal's **Confirm creating new
   notes** never applies to notelets. A type that asks questions shows its question dialog instead.
-- **Number each notelet** — "Numbers restart in every period, so the first notelet of a day is always
-  1." On by default. The number is stored under **Property name**, `journal-notelet-index` unless you
-  change it, and is `{{notelet_index}}` in the name.
+- **Number each notelet** — numbers notelets within their period, starting again from 1 in every
+  period. On by default. The number is stored under **Property name**, `journal-notelet-index` unless
+  you change it, and is `{{notelet_index}}` in the name.
 - **Templates** — template notes for new notelets, chosen the way a journal chooses its own. See
   [Templates](/journals#templates).
 - **Questions** — the type's own [questions](/questions). Only the type's answers are available to its
@@ -74,7 +73,7 @@ types:
 [Code blocks](/reference/code-blocks). The **Notelets** view block lists them in a view — see
 [Views and blocks](/views-and-blocks#notelets).
 
-A notelet whose type was deleted is listed as "_type_ (missing type)".
+A notelet whose type was deleted is listed as _type_ (missing type).
 
 ## Adopting notes you already have
 
@@ -91,11 +90,11 @@ they are.
 **Delete notelet type** says how many notelets are connected and asks **What to do with connected
 notelets**:
 
-- **Keep notelets** — "Notelets stay in your vault unchanged." They keep the old type's name, still
-  list as "(missing type)", and the [vault check](/troubleshooting#maintenance) reports them.
-- **Clear notelet type data** — "Notelets stay in your vault, but all journal and notelet type
-  properties are removed from their frontmatter."
-- **Delete notelets** — "All notelets of this type are deleted from your vault."
+- **Keep notelets** — notelets stay in your vault, unchanged. They keep the old type's name, still
+  list as (missing type), and the [vault check](/troubleshooting#maintenance) reports them.
+- **Clear notelet type data** — notelets stay in your vault, but all journal and notelet type
+  properties are removed from their frontmatter.
+- **Delete notelets** — every notelet of this type is deleted from your vault.
 
 Deleting a type also takes it out of every **Check if a notelet exists** decoration condition that named
 it, and removes a condition — or a whole decoration — that named nothing else.

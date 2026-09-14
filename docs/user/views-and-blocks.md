@@ -25,15 +25,14 @@ Edit it, or add views of your own, under **Views** on the main settings page.
 
 **Add a view** creates one, and **Configure** opens its page:
 
-- **Icon** — "Shown in the view's tab header and in the ribbon."
-- **Default shelf** — "The shelf this view starts on when it opens." See [Shelves](/shelves#scoping-a-view).
-- **Show in ribbon** — "Add a ribbon button that opens this view."
-- **Open on startup** — "Open this view whenever you open the vault. Separate from the startup note
-  setting on the main settings page."
-- **Remember last viewed date** — "When off, the calendar opens on today each time you launch. When
-  on, it reopens on the date you last viewed."
-- **Follow active note** — "When on, opening a journal note moves this view to that note's date. You
-  can still navigate away from it."
+- **Icon** — shown in the view's tab header and in the ribbon.
+- **Default shelf** — the shelf the view starts on when it opens. See [Shelves](/shelves#scoping-a-view).
+- **Show in ribbon** — adds a ribbon button that opens the view.
+- **Open on startup** — opens this view whenever you open the vault, separate from the startup note
+  setting on the main settings page.
+- **Remember last viewed date** — reopens the view on the date you last looked at, instead of today.
+- **Follow active note** — moves the view to the date of each journal note you open. You can still
+  step away from it.
 - **Open in** — **Left sidebar**, **Right sidebar** or **New tab**.
 - **Blocks** — the view's blocks, top to bottom. **Add block** adds one; each block can be configured,
   moved and removed.
@@ -57,8 +56,8 @@ open.
 
 ### Month calendar and Week calendar
 
-"Shows one or more month grids around the selected date." / "Shows one or more week strips around the
-selected date."
+A **Month calendar** block shows one or more month grids around the selected date; a **Week calendar**
+block shows the same span as week strips instead.
 
 - **Months before** and **Months after** (**Weeks before**, **Weeks after**) — extra grids around the
   selected one.
@@ -71,13 +70,12 @@ Each cell shows whether a note exists and carries its [decorations](/decorations
 headings open that week's, month's, quarter's or year's note in whichever journal of that length is
 in scope.
 
-**Calendar highlighting**, on the main settings page, sets the colors for **Today** ("the calendar cell
-for today's date"), **Active** ("the calendar cell whose note is currently open") and **Selected date —
-ring**.
+**Calendar highlighting**, on the main settings page, sets the colors for **Today** (today's date),
+**Active** (the note currently open) and **Selected date — ring**.
 
 ### Notes by date
 
-"Lists notes created in the period containing the view's selected date." — any note in the vault, not
+Lists notes created in the period containing the view's selected date — any note in the vault, not
 only journal notes.
 
 - **Period** — **Day**, **Week**, **Month**, **Quarter**, **Year** or **Decade**.
@@ -85,38 +83,37 @@ only journal notes.
 - **Show period heading**, **Show period navigation**.
 
 A note's creation date comes from **Creation date property** on the main settings page — `created`,
-read with **Creation date format** `YYYY-MM-DD` — and "Notes without a valid value use their file
-creation time." File creation times change when a vault is synced or copied, so set the property if
-you rely on this list.
+read with **Creation date format** `YYYY-MM-DD` — and a note without a valid value there falls back to
+its file creation time. File creation times change when a vault is synced or copied, so set the
+property if you rely on this list.
 
 ### Custom intervals
 
-"Lists custom-journal entries that fall within a configurable time window."
+Lists the intervals of every custom interval journal in the view's shelf that fall inside a window
+around the selected date.
 
 - **Window** — **Selected day**, **Selected week**, **Selected month**, **Selected quarter** or **Selected
   year**.
-
-It lists every custom interval journal in the view's shelf.
 
 Each entry is drawn with its journal's **Calendar interval lines** — see
 [Navigation blocks](#navigation-blocks) — and its decorations.
 
 ### Notelets
 
-"Lists the notelets of the note you are reading, or of a window around the view's date."
+Lists the notelets of the note you are reading, or of a window around the view's date.
 
 - **Window** — as above; **Selected day** by default.
-- **Journals** — "Leave all off to include every journal in the view's shelf."
-- **Notelet types** — "Leave all off to include every type."
+- **Journals** — leave all off to include every journal in the view's shelf.
+- **Notelet types** — leave all off to include every type.
 
 See [Notelets](/notelets).
 
 ### Markdown template
 
-"Render a template note as markdown, with journal variables processed." Pick a **Template file**. In it,
-`{{date}}` is "The active note's date, or the view's focused date when no journal note is open.", and
-`{{journal_link(weekly)}}` "Resolves to the vault path of another journal's note for the focused
-date." — wrap it in a link yourself: `[[{{journal_link(weekly)}}|This week]]`. See
+Renders a template note as markdown, with journal variables processed. Pick a **Template file**. In it,
+`{{date}}` is the active note's date, or the view's focused date when no journal note is open, and
+`{{journal_link(weekly)}}` resolves to the vault path of another journal's note for the focused
+date — wrap it in a link yourself: `[[{{journal_link(weekly)}}|This week]]`. See
 [Variables](/reference/variables).
 
 ### Divider
@@ -125,22 +122,22 @@ A horizontal line between blocks.
 
 ### Toolbar
 
-"Container for toolbar items such as buttons and the shelf selector." **Add toolbar item** adds:
+A container for toolbar items such as buttons and the shelf selector. **Add toolbar item** adds:
 
-- **Shelf selector** — "Switches which shelf scopes the view's journals." See
+- **Shelf selector** — switches which shelf scopes the view's journals. See
   [Shelves](/shelves#scoping-a-view).
-- **Period buttons** — "Shows clickable badges for the current week, month, quarter, year periods." Pick
+- **Period buttons** — clickable badges for the current week, month, quarter and year periods. Pick
   them under **Periods**. They carry decorations.
-- **Existing notes navigation** — "A button that jumps to the previous or next note that already
-  exists." **Notes to step through** and **Direction** (**Previous** or **Next**).
+- **Existing notes navigation** — a button that jumps to the previous or next note that already
+  exists. **Notes to step through** and **Direction** (**Previous** or **Next**).
 - **Button** — one of three presets:
-  - **Pick date** — "Opens a date picker to jump to any note."
-  - **Open note** — "Jumps to the current period's note."
-  - **Navigate by step** — "Steps forward or back by a fixed interval."
+  - **Pick date** — opens a date picker to jump to any note.
+  - **Open note** — jumps to the current period's note.
+  - **Navigate by step** — steps forward or back by a fixed interval.
 
   Each has a **Label** and **Tooltip**.
 
-- **Spacer** — "Flexible gap that pushes neighboring items apart."
+- **Spacer** — a flexible gap that pushes neighboring items apart.
 
 ## Navigation blocks
 
@@ -168,7 +165,7 @@ Each segment has:
 
 - **Template** — its text, with [variables](/reference/variables): `{{date:dddd}}`, `Week
 {{date:w}}`.
-- **Font size** — "Relative to the regular font size: 1 means the same size as regular text." — and
+- **Font size** — a multiplier on the regular font size: 1 means the same size as regular text — and
   **Text style** (**Bold**, **Italic**), plus text and background colors.
 - **Link** — what clicking it opens:
   - **None** — nothing;
@@ -178,7 +175,7 @@ Each segment has:
   - **Day**, **Week**, **Month**, **Quarter**, **Year** — the note for the day, week… containing the
     date, from the journal of that length on the same shelf, or from any journal when this one is on
     no shelf.
-- **Link date** — "Shift the date this link opens, using the same syntax as templates:" `+1q`, `-1y`,
+- **Link date** — shifts the date this link opens, using the same syntax as templates: `+1q`, `-1y`,
   `<startOf=month>`.
 - **Add decorations** — paint the segment with decorations. A segment linking to another period or
   journal uses the decorations of the note it opens. A segment with no link, or linking to its own
@@ -189,9 +186,9 @@ Clicking a segment opens its note, creating it if it does not exist.
 ### Block settings
 
 - **Previous and next arrows** — **Step to the adjacent period** or **Jump to the nearest existing
-  note**: "Stepping always moves one period, creating that note if it's missing. Jumping skips periods
+  note**: stepping always moves one period, creating that note if it's missing; jumping skips periods
   that have no note, and never creates one. Clicking a segment always creates its note, whichever you
-  choose."
+  choose.
 - **Show previous and next periods** — off draws only the current period and its arrows. A single note
   can override it with `adjacent: true` or `adjacent: false` in the code block.
 - **Decorate whole block** — paint the whole block with the journal's own decorations for the note's

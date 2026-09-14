@@ -28,29 +28,27 @@ and uses the period's first day. A daily date given to a weekly journal lands on
 ## Weeks
 
 Which day a week starts on, and which week is week 1 of the year, come from **Week configuration** on
-the main settings page: "Define which day starts the week and how the first week of the year is
-determined — this affects week numbers." **Change** opens the choices:
+the main settings page, which also decides week numbers. **Change** opens the choices:
 
-- **Follow system locale** — "Use the week settings defined by Obsidian's current locale."
-- **ISO 8601** — "Week starts on Monday. First week of year includes the first Thursday (Jan 4th)."
-- **Western traditional** — "Week starts on Sunday. First week of year includes the first Saturday
-  (Jan 1st)."
-- **Middle Eastern** — "Week starts on Saturday. First week of year includes the first Friday (Jan
-  1st)."
-- **Custom** — pick **Start week on**, and **First week of year**: "The day of January (1–7) that the
-  first week of the year must contain. For example, 4 means the first week is the one containing Jan
-  4."
+- **Follow system locale** — uses the week settings defined by Obsidian's current locale.
+- **ISO 8601** — week starts on Monday; the first week of the year is the one containing the first
+  Thursday (Jan 4th).
+- **Western traditional** — week starts on Sunday; the first week of the year is the one containing
+  the first Saturday (Jan 1st).
+- **Middle Eastern** — week starts on Saturday; the first week of the year is the one containing the
+  first Friday (Jan 1st).
+- **Custom** — pick **Start week on**, and **First week of year**: the day of January (1–7) that the
+  first week of the year must contain — 4 means the first week is the one containing Jan 4.
 
-With **Custom**, **Apply week configuration to all dates in vault** appears: "If disabled,
-week-configuration settings apply only to dates inside journals and do not affect dates created by
-other plugins or Obsidian itself." You might need to restart Obsidian for it to take effect.
+With **Custom**, **Apply week configuration to all dates in vault** appears: off, week-configuration
+settings apply only to dates inside journals and do not affect dates created by other plugins or
+Obsidian itself. You might need to restart Obsidian for it to take effect.
 
 ### Changing it when you already have weekly notes
 
-"Weekly notes keep their week number. Their dates are updated to match the new configuration." When
-you **Update**, every weekly note — and every notelet in one of those weeks — has its date rewritten
-to the first day of the same-numbered week under the new configuration, so your calendar keeps
-showing them.
+Weekly notes keep their week number, but their dates change. When you **Update**, every weekly note —
+and every notelet in one of those weeks — has its date rewritten to the first day of the
+same-numbered week under the new configuration, so your calendar keeps showing them.
 
 Two things can stop a note being moved, and a notice counts them — "3 weekly notes could not be
 updated to the new week configuration.":
@@ -73,14 +71,14 @@ starting 29 December 2025 `2026-W01`. Use `{{start_date}}` when you want the wee
 ## Custom intervals
 
 A custom interval journal writes one note per run of a fixed length — **Every** a number of days,
-weeks, months, quarters or years — counted from its **Start date**, which "is used to count custom
-intervals from. It cannot be changed after creating the journal."
+weeks, months, quarters or years — counted from its **Start date**, which cannot be changed after
+creating the journal.
 
 - Intervals repeat back to back from the start date, in both directions.
 - Month, quarter and year intervals keep the start date's day of the month. Intervals that start on
   the 31st start on the last day of shorter months, and return to the 31st when a month has one.
-- A new custom interval journal names its notes `{{journal_name}} {{index}}` — "Sprint 1", "Sprint
-  2" — using [sequential numbers](/journals#sequential-numbers).
+- A new custom interval journal names its notes `{{journal_name}} {{index}}` — `Sprint 1`, `Sprint
+2` — using [sequential numbers](/journals#sequential-numbers).
 - Its notes are named by `{{start_date}}` and `{{end_date}}` in lists; see
   [Views and blocks](/views-and-blocks).
 

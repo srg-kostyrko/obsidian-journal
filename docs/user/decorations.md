@@ -13,11 +13,11 @@ applies.
 
 ## Where decorations live
 
-| Section                  | Found on                   | Applies to                                                                  | Conditions                    |
-| ------------------------ | -------------------------- | --------------------------------------------------------------------------- | ----------------------------- |
-| **Calendar decorations** | the main settings page     | "Decorate day cells in every calendar, whatever journals are shown."        | date and weekday only         |
-| **Shelf decorations**    | a [shelf](/shelves)'s page | "Decorate day cells while this shelf is shown, whatever journals it holds." | date and weekday only         |
-| **Journal decorations**  | a journal's settings page  | the journal's own periods                                                   | all of them, by period length |
+| Section                  | Found on                   | Applies to                                                      | Conditions                    |
+| ------------------------ | -------------------------- | --------------------------------------------------------------- | ----------------------------- |
+| **Calendar decorations** | the main settings page     | day cells in every calendar, whatever journals are shown        | date and weekday only         |
+| **Shelf decorations**    | a [shelf](/shelves)'s page | day cells while this shelf is shown, whatever journals it holds | date and weekday only         |
+| **Journal decorations**  | a journal's settings page  | the journal's own periods                                       | all of them, by period length |
 
 A calendar showing **All journals** draws every shelf's decorations.
 
@@ -92,10 +92,10 @@ set of **Weekdays**.
 
 ### Interval offset
 
-For custom intervals: **Count from** **From start** or **From end**, and a **Day**. "Matches the first
-day of the interval." or "Matches day 3 counted back from the end of the interval." A decoration with
-an offset condition marks that day in calendars; the interval's other decorations mark the interval
-in interval lists.
+For custom intervals: **Count from** **From start** or **From end**, and a **Day** — for example, day 1
+from the start matches the interval's first day, and day 3 from the end matches the third-from-last
+day. A decoration with an offset condition marks that day in calendars; the interval's other
+decorations mark the interval in interval lists.
 
 ### Repeating a condition
 
@@ -107,15 +107,15 @@ anything the first does not.
 
 **Add style** on the decoration's canvas:
 
-- **Background** — "Click the cell to add a background."
-- **Color** — the date's text. "Click the number to set a text color."
-- **Border** — "Click the outline to add a border." **Border mode** is **Linked** (one border all round)
+- **Background** — click the cell to add one.
+- **Color** — the date's text; click the number to set it.
+- **Border** — click the outline to add one. **Border mode** is **Linked** (one border all round)
   or **Per side**, each side with a **Width**, a **Style** — **Solid**, **Dashed**, **Dotted**,
   **Groove**, **Double** — and a color.
-- **Shape** — a square, circle or triangle in one of nine positions. "Shape size is relative to the
-  font size: 1 means the shape is the same size as a letter."
+- **Shape** — a square, circle or triangle in one of nine positions, sized relative to the font size:
+  1 means the same size as a letter.
 - **Icon** — any Obsidian icon, in one of nine positions, sized the same way.
-- **Corner** — a triangle in a corner. "Click a corner to add a triangle."
+- **Corner** — a triangle in a corner; click a corner to add one.
 
 Every color can be transparent, a theme color, or a custom color.
 
@@ -133,7 +133,7 @@ Decorations are applied vault-wide first, then the shelf's, then the journal's.
 ### Marks shown per position
 
 **Marks shown per position**, on the main settings page, caps how many shapes and icons each of a
-cell's nine positions draws: "Extra marks collapse into a badge you can hover to see them all." 3 by
+cell's nine positions draws, collapsing the rest into a badge you can hover to see them all. 3 by
 default, or **Unlimited**. The badge reads `+N` and takes one of the places, so a cap of 3 shows two
 marks and `+N`. The marks kept are the most specific ones — the journal's before the shelf's, the
 shelf's before vault-wide. The cap changes only what is drawn, never what matched.

@@ -64,9 +64,8 @@ previous monthly note" and so on — opening in a new tab. Edit or delete them l
 
 ### A command's settings
 
-- **Name** — must be unique among the commands in the same place. For a journal command, "The journal
-  name is added in front of the command name in the palette automatically."; for a shelf command, "The
-  shelf name is added in front of the command name in the palette automatically."
+- **Name** — must be unique among the commands in the same place. For a journal command, the journal's
+  name is added in front of it in the palette automatically; for a shelf command, the shelf's name is.
 - **Icon** and **Show in ribbon** — show it as a ribbon button.
 - **Note type** — for commands on the main settings page or a shelf: **Daily note**, **Weekly note**,
   **Monthly note**, **Quarterly note** or **Yearly note**.
@@ -85,11 +84,12 @@ previous monthly note" and so on — opening in a new tab. Edit or delete them l
   every other choice creates the note if it is missing. A notelet command always creates a new notelet,
   so it has no _existing_ choices.
 
-- **Context** — "Choose which note's date the command treats as the current date."
+- **Context** — which note's date the command treats as the current date.
   - **Today** — always today.
-  - **Open note's date, or today** — "Uses the open journal note's date, or today's date when no
-    journal note is open."
-  - **Open note's date only** — "Runs only while a journal note is open, using that note's date."
+  - **Open note's date, or today** — the open journal note's date, or today's date when no
+    journal note is open.
+  - **Open note's date only** — the open note's date; the command runs only while a journal note is
+    open.
 - **Open note** — **Replacing the active note**, **In a new tab**, **Next to the active note** or **In a
   popout window**.
 
@@ -120,7 +120,7 @@ A link that cannot be followed shows a notice saying why.
 
 A daily journal with **Folder** `day` has notes for 10 and 12 September 2030, and none for the 11th. On
 the main settings page, add a command named `Open last available day's note`: **Note type** **Daily
-note**, **When the command runs** "Open previous existing daily note", **Context** **Open note's date,
+note**, **When the command runs** **Open previous existing daily note**, **Context** **Open note's date,
 or today**.
 
 With `day/2030-09-12.md` open, running it opens `day/2030-09-10.md`. It skips the 11th and does not

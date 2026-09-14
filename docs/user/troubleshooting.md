@@ -117,8 +117,8 @@ snapshot"). **Restore** puts one back.
 
 ## Reporting a bug
 
-1. Under **Logging** on the main settings page, set **Log level** to **Debug** — "Only log messages at or
-   above this level are printed to the console and kept for export."
+1. Under **Logging** on the main settings page, set **Log level** to **Debug** — only messages at or
+   above the chosen level are printed to the console and kept for export, so Debug captures everything.
 2. Make the problem happen again.
 3. **Export logs** → **Dump logs to note** writes a note named `journal-log-` followed by the date and
    time.
