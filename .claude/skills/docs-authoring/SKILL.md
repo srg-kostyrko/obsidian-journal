@@ -57,6 +57,12 @@ Every feature page ends with two or three concrete, copyable configurations.
 ## Page conventions
 
 - One `#` heading per page, matching the sidebar entry in `.vitepress/config.mts`.
+- Document a warning, notice or error message only when its effect shows up somewhere other
+  than where it appears — a settings warning whose consequence is that notes stop attaching —
+  or when the page needs it to explain an outcome. The UI already shows the rest to the reader
+  who meets them. Give each one a single home and link to it from elsewhere, and quote its text
+  only when a reader would search for it. Nothing checks a quoted message against
+  `messages/en.json`, so every extra quote goes stale on the next reword.
 - A link to another page is a site-absolute path: `/decorations`, `/reference/variables`.
 - Screenshots are generated, never captured by hand, and only where the outcome is seen.
   `npm run docs:screenshots` regenerates all of them; `npx wdio run ./wdio.conf.mts --spec

@@ -53,13 +53,11 @@ A question left blank writes nothing into the body.
 
 - **An answer used in the note name or folder must be saved to a property.** The settings page says so
   if you try.
-- **A yes/no answer can't be part of a note name or folder.** "Use a choice question instead."
+- **A yes/no answer can't be part of a note name or folder.** Use a choice question instead.
 - **Auto-create can't answer.** A journal with **Auto-create today's note** on can't have a question in
-  its note name: "This journal creates notes automatically, so nobody can answer a question that goes
-  into the note name. Turn one of them off."
+  its note name, since nobody is there to answer it. Turn one of them off.
 - **Free text in a name stops auto-attach.** A note you make yourself can only be matched back to the
-  journal when the name's answers come from a fixed set — a choice, a number or a date. A text or
-  yes/no answer in the name or folder shows a warning under **Note name template**. See
+  journal when the name's answers come from a fixed set — a choice, a number or a date. See
   [Auto-attach](/notes#auto-attach).
 
 ## The answer dialog
@@ -69,8 +67,7 @@ written. It shows the **Period**, the **Note path** it is about to create — up
 the name depends on an answer — and each question.
 
 - **Create** writes the note with your answers. **Cancel** creates nothing.
-- A required question shows "This question must be answered." when left blank. One whose answer goes
-  into the name shows "This answer is used in the note name, so it can't be left blank."
+- A required question can't be left blank, and neither can one whose answer goes into the note name.
 - A choice question that is not required offers **(none)**.
 - The dialog replaces the confirmation dialog: with **Confirm creating new notes** on, you see this
   dialog and no second one.

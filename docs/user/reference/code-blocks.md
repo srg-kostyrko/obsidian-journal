@@ -126,8 +126,7 @@ A row of links to the current notes: "Today", "This week" and so on. Useful on a
   one such journal, clicking asks which.
 - `custom` adds one link per custom interval journal in scope, labelled with its current interval
   note's name.
-- A `shelf` naming a shelf that does not exist shows "No journals to show. Check the block's show and
-  shelf options."
+- A `shelf` naming a shelf that does not exist shows no links.
 
 ````markdown
 ```journals-home

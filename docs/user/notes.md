@@ -103,15 +103,8 @@ renamed after Obsidian has finished loading, so a folder of notes you had before
 plugin stays as it is. Use [Bulk add](#bulk-add) or [Connect note to a journal](#connect-note-to-a-journal)
 for those.
 
-**When a name cannot be read backwards**, the journal's settings page says so under **Note name
-template**, and notes you make yourself will not auto-attach. The warning names the reason:
-
-- the template uses something that is not a date or a number, such as an unknown variable, a
-  function, or a time of day;
-- the name has no date and the sequence numbers alone cannot identify a period — a digit is missing
-  from the name or folder, or the numbers repeat;
-- the date format is too coarse to tell the journal's periods apart;
-- a free-text or yes/no [question](/questions) goes into the name or folder.
+**When a name cannot be read backwards**, notes you make yourself will not auto-attach. The journal's
+settings page shows a warning under **Note name template** that names the reason.
 
 A link the plugin wrote for a journal that puts a question's answer into the note name is the one
 case where auto-attach asks: clicking the link asks the questions, then names the note from your
@@ -128,8 +121,7 @@ The dialog shows the note's path and asks:
 - **Journal** — which journal to connect it to.
 - **Connect as** — shown only when the journal has [notelet types](/notelets). **The journal's own
   note** connects it as the period's note; picking a type connects it as a notelet.
-- **Date** — the period it belongs to. A date outside the journal's timeline shows "This date is
-  outside the journal's active timeline." and cannot be connected.
+- **Date** — the period it belongs to. A date outside the journal's timeline cannot be connected.
 
 Then, depending on the note and the date:
 

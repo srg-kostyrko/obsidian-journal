@@ -18,8 +18,7 @@ journals you want, and bind to hotkeys or the ribbon.
 | **Change shelf in** _view_                 | Picks the shelf an open view shows.                                                                |
 
 The palette lists a command only where it can do something — **Open next note** only while a journal
-note is open, for example. A hotkey or ribbon button runs it anyway and says why nothing happened:
-"Open a journal note first.", "There is no next note after this one."
+note is open, for example. A hotkey or ribbon button runs it anyway and shows a notice saying why nothing happened.
 
 ### Insert link to journal note
 
@@ -43,8 +42,6 @@ monthly note.
 - A journal whose timeline does not include the date is passed over too.
 - The note is created if it does not exist. Where two journals in scope write the same length, you are
   asked which.
-- Nothing to zoom to: "No journal here covers a longer period." / "No journal here covers a shorter
-  period."
 
 ## Commands you create
 
@@ -115,9 +112,7 @@ obsidian://journals?journal=Work&date=today
 The note is created if it does not exist, with the journal's questions asked. With `type`, if more than
 one journal of that length covers the date, you are asked which.
 
-A link that cannot be followed says why: "Journal URI needs a "journal" or "type" parameter.", "There is
-no journal named "Work".", "Could not understand the date "someday" in the URI.", "A notelet link needs
-a journal. Add `journal=<name>` to the link."
+A link that cannot be followed shows a notice saying why.
 
 ## Examples
 

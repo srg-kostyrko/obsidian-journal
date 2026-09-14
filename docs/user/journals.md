@@ -33,16 +33,9 @@ each change as you make it.
 
 **Note name template** — "Template used to generate new note names." Any [template
 variable](/reference/variables) can go in it: `{{date}}`, `{{date:dddd}}`, `{{index}}`, a question's
-answer. The settings page warns when:
-
-- two periods resolve to the same name — "Entries for _A_ and _B_ both resolve to _path_. They will
-  share one note.";
-- the template resolves to an empty name, so no note can be created;
-- a note you create yourself could not be matched back to this journal. See
-  [Auto-attach](/notes#auto-attach).
-
-A template that contains a `/` gets the offer "Note name template contains a path separator. Move the
-path prefix into the Folder field?" with **Apply recommendation**.
+answer. Make it name every period differently: two periods that resolve to the same name share one
+note. A name the plugin cannot read a date back out of works, but notes you create yourself will not
+[auto-attach](/notes#auto-attach).
 
 **Folder** — "New notes will be created in this folder." It takes variables too, so notes can be
 filed by date: `Journal/{{date:YYYY}}/{{date:MM}}` puts each note under its year and month.
@@ -53,12 +46,7 @@ own format, like `{{date:DD.MM.YYYY}}`, ignores it.
 
 - On a weekly journal, `{{date}}` is a day inside the week, chosen so year tokens match the week's
   year. Use `{{start_date}}` for the week's first day.
-- A format that uses `W` gets a warning: "You use `W` to format weeks, which does not respect custom
-  week settings and may show a different week number than the Calendar view. Use `w` instead (and
-  change the start of the week in the plugin settings if needed)." See
-  [Week configuration](/periods).
-- A format containing a `/` gets the offer "Date format contains a path separator. Move the date
-  variables into the Folder field?"
+- Use `w`, not `W`, for week numbers — see [Week numbers in names](/periods#week-numbers-in-names).
 
 **Confirm creating new notes** and **Auto-create today's note** are covered in
 [Notes](/notes#creating-a-note).
@@ -126,7 +114,7 @@ For numbered entries (like "Sprint 1"), and for chained ones (like "Release4711S
   visible too.
 - A note named only by its digits (no date anywhere in the name or folder) can still be matched back
   to its journal, but only when the slowest digit is Continuous **and** every digit appears in the
-  name or folder template. When it can't, the section warns with the reason.
+  name or folder template.
 
 For example, a name template of `Release{{release}}Sprint{{sprint}}` with `release` starting at 4711
 (Continuous) and `sprint` starting at 1 (6 per release) produces `Release4711Sprint1` …
@@ -170,8 +158,7 @@ copy joins the same [shelf](/shelves). It starts with the source's folder and na
 two resolve to the same note paths until you change one — **Colliding journal settings** on the main
 settings page says so until you do.
 
-**Delete** says how many notes are connected — "This journal has 3 connected notes." — and asks
-**What to do with connected notes**:
+**Delete** says how many notes are connected and asks **What to do with connected notes**:
 
 - **Keep notes** — "Notes stay in your vault unchanged." They keep their `journal` property, so no
   other journal adopts them, and a journal you create later with the same name picks them up again.

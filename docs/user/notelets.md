@@ -48,9 +48,6 @@ questions keeps them apart. Without one, the settings page warns — "This name 
 varies within a period, so every notelet after the first gets a number added to its file name." — and
 the plugin does exactly that, so nothing is overwritten.
 
-A second warning appears when the type's notelets would land on the journal's own note path. The
-plugin names them differently, but the two are easy to confuse.
-
 ## Creating a notelet
 
 - Run the type's **Create** _type_ command, or any command targeted at the type. A notelet command
@@ -64,7 +61,7 @@ Each creates a notelet for the chosen period, numbered after the ones already th
 
 A `journal-notelets` code block lists the notelets of the period the note it sits in belongs to —
 in a period note or in a notelet alike — grouped by type, with **New notelet**. In a note connected to
-no journal it says "Note is not connected to a journal".
+no journal it lists nothing and says so.
 
 ````markdown
 ```journal-notelets
