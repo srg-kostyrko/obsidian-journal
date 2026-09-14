@@ -1,17 +1,11 @@
 import { $, browser } from "@wdio/globals";
 
 import { VISIBLE_LEAF, hostNote, openInReadingMode } from "../journeys/code-blocks.js";
-import { dayAnchor, note } from "../journeys/decorations.js";
+import { note } from "../journeys/decorations.js";
 import { LIVE_LEAF, MONTH_VIEW, openCalendarView } from "../journeys/view.js";
+import { reloadObsidianOn } from "../support/clock.js";
 import { openViaUri } from "../support/uri.js";
-import {
-  activeNotePath,
-  frontmatterOf,
-  markdownLeafCount,
-  noteExists,
-  seedNote,
-  todayAnchor,
-} from "../support/vault.js";
+import { activeNotePath, frontmatterOf, markdownLeafCount, noteExists, seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
 import { captureThemed, recordOutcome, textsOf, widenRightSidebar } from "./capture.js";
@@ -37,6 +31,27 @@ const READING_VIEW = `${VISIBLE_LEAF} .markdown-reading-view`;
 const NAV_BLOCK_JOURNAL = `${READING_VIEW} .block-language-journal-nav`;
 const NAV_VIEW_JOURNAL = `${NAV_BLOCK_JOURNAL} .nav-view`;
 const NAV_CURRENT_JOURNAL = `${NAV_BLOCK_JOURNAL} .nav-block-current`;
+
+// The day views-and-blocks.md quotes; commands.md quotes the next-week link a day earlier.
+const TODAY = "2026-09-14";
+const URI_DAY = "2026-09-13";
+
+// Obsidian dates a file by its filesystem birth time, which the clock pin does not reach and Linux
+// cannot set, so the note is stamped on the pinned clock where the plugin reads it: mtime on disk,
+// ctime on its TFile.
+async function seedNoteOnPinnedClock(path: string, content: string): Promise<void> {
+  await browser.executeObsidian(
+    async ({ app }, notePath, body) => {
+      const folder = notePath.slice(0, notePath.lastIndexOf("/"));
+      if (!(await app.vault.adapter.exists(folder))) await app.vault.createFolder(folder);
+      const now = (window as unknown as { moment: () => { valueOf(): number } }).moment().valueOf();
+      const file = await app.vault.create(notePath, body, { ctime: now, mtime: now });
+      file.stat.ctime = now;
+    },
+    path,
+    content,
+  );
+}
 
 function countMatching(selector: string): Promise<number> {
   return browser.execute((sel) => document.querySelectorAll(sel).length, selector);
@@ -71,7 +86,12 @@ async function clickCurrentNavSegment(text: string): Promise<void> {
 describe("views examples", () => {
   describe("sidebar view (#116)", () => {
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-views-sidebar", plugins: ["journals"] });
+      // At the time the committed image shows on its cards.
+      await reloadObsidianOn(
+        TODAY,
+        { vault: "./e2e/fixtures/e2e-docs-views-sidebar", plugins: ["journals"] },
+        "01:58:00",
+      );
     });
 
     it("shows a populated month calendar with decorations and a filled Notes by date list", async () => {
@@ -79,16 +99,16 @@ describe("views examples", () => {
 
       // A spread of the daily journal's own decoration conditions (title/tag styles), so the
       // hero screenshot shows real, varied marks rather than a bare grid. Days chosen avoid
-      // today (13) so they don't collide with the day-notes seeding below.
+      // today (14) so they don't collide with the day-notes seeding below.
       // cspell:disable
       const decoDays = {
-        title: dayAnchor(7), // filename ends "-07" -> corner condition
-        color: dayAnchor(16), // #scolor tag -> text color
-        border: dayAnchor(19), // #sborder tag -> border
-        shape: dayAnchor(22), // #sshape tag -> shape
-        corner: dayAnchor(25), // #scorner tag -> corner
+        title: "2026-09-07", // filename ends "-07" -> corner condition
+        color: "2026-09-16", // #scolor tag -> text color
+        border: "2026-09-19", // #sborder tag -> border
+        shape: "2026-09-22", // #sshape tag -> shape
+        corner: "2026-09-25", // #scorner tag -> corner
       };
-      // Every seeded note's real file ctime is "now" (today), regardless of its journal-date —
+      // Every seeded note's real file ctime is the machine's today, regardless of its journal-date —
       // so each decoration note also carries its own `created` property, pointing at its own
       // day, or the Notes by date block below (which reads real creation time/property, not
       // journal-date) would sweep all five of them into today's list too.
@@ -111,12 +131,12 @@ describe("views examples", () => {
         note("daily", decoDays.corner, "marker #scorner", [`created: ${decoDays.corner}`]),
       );
 
-      const today = todayAnchor();
-      const differentDay = dayAnchor(2);
+      const today = TODAY;
+      const differentDay = "2026-09-02";
       // A note with the creation-date property, one without (falls back to file ctime — today,
       // since it's created now), and one whose property points at a different day entirely.
-      await seedNote("Inbox/with-created.md", `---\ncreated: ${today}\n---\nGroceries list\n`);
-      await seedNote("Inbox/without-created.md", "No frontmatter here; falls back to file ctime.\n");
+      await seedNoteOnPinnedClock("Inbox/with-created.md", `---\ncreated: ${today}\n---\nGroceries list\n`);
+      await seedNoteOnPinnedClock("Inbox/without-created.md", "No frontmatter here; falls back to file ctime.\n");
       await seedNote("Inbox/different-day.md", `---\ncreated: ${differentDay}\n---\nNot shown today.\n`);
 
       await waitForState(
@@ -157,11 +177,11 @@ describe("views examples", () => {
 
   describe("navigation rows (#106)", () => {
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-views-nav", plugins: ["journals"] });
+      await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-docs-views-nav", plugins: ["journals"] });
     });
 
     it("opens the week's and month's notes from a daily note's default nav rows", async () => {
-      const anchor = todayAnchor();
+      const anchor = TODAY;
       const path = `day/${anchor}.md`;
       await seedNote(path, hostNote("daily", anchor, "```journal-nav\n```"));
 
@@ -211,7 +231,7 @@ describe("views examples", () => {
 
   describe("week numbers after weekdays (#148)", () => {
     before(async () => {
-      await browser.reloadObsidian({
+      await reloadObsidianOn(TODAY, {
         vault: "./e2e/fixtures/e2e-docs-views-week-numbers",
         plugins: ["journals"],
       });
@@ -261,7 +281,7 @@ describe("views examples", () => {
 
   describe("URI: open next week's note in a new tab", () => {
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-uri", plugins: ["journals"] });
+      await reloadObsidianOn(URI_DAY, { vault: "./e2e/fixtures/e2e-uri", plugins: ["journals"] });
     });
 
     it("opens next week's note in a new tab via type=week&date=+1w&mode=tab", async () => {

@@ -1,11 +1,14 @@
 import { $, browser } from "@wdio/globals";
 
 import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView } from "../journeys/view.js";
+import { reloadObsidianOn } from "../support/clock.js";
 import { openPalette, promptChoose } from "../support/commands.js";
-import { activeNotePath, frontmatterOf, seedNote, todayAnchor, waitForActiveNote } from "../support/vault.js";
+import { activeNotePath, frontmatterOf, seedNote, waitForActiveNote } from "../support/vault.js";
 
 import { captureThemed, recordOutcome } from "./capture.js";
 
+// The day shelves.md quotes.
+const TODAY = "2026-09-13";
 const VIEW_ROOT = `${LIVE_LEAF} .journal-view-root`;
 const SHELF_SELECTOR_BUTTON = "button*=All journals";
 
@@ -25,11 +28,11 @@ function markCountFor(anchor: string): Promise<number> {
 
 describe("shelves examples", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-shelves", plugins: ["journals"] });
+    await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-docs-shelves", plugins: ["journals"] });
   });
 
   it("scopes the calendar's decorated notes and note-open target to the picked shelf", async () => {
-    const today = todayAnchor();
+    const today = TODAY;
     await seedNote("work/" + today + ".md", `---\njournal: work\njournal-date: ${today}\n---\n`);
     await seedNote("personal/" + today + ".md", `---\njournal: personal\njournal-date: ${today}\n---\n`);
 
@@ -73,7 +76,7 @@ describe("shelves examples", () => {
   });
 
   it("runs a shelf command that opens the shelf's day journal note", async () => {
-    const today = todayAnchor();
+    const today = TODAY;
 
     await openPalette();
     await promptChoose("Shelf: office: Open today");

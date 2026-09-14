@@ -1,10 +1,11 @@
 import { $, $$, browser } from "@wdio/globals";
 
-import { dayAnchor, decorationBackgroundHex, note } from "../journeys/decorations.js";
+import { decorationBackgroundHex, note } from "../journeys/decorations.js";
 import { calendar, MONTH_VIEW, openSeededCalendarView } from "../journeys/view.js";
+import { reloadObsidianOn } from "../support/clock.js";
 import { getSettings } from "../support/plugin-data.js";
 import { closeSettings, expandSection, openSettings } from "../support/settings.js";
-import { contentOf, seedNote, todayAnchor } from "../support/vault.js";
+import { contentOf, seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
 import { captureThemed, recordOutcome, widenRightSidebar } from "./capture.js";
@@ -12,14 +13,13 @@ import { captureThemed, recordOutcome, widenRightSidebar } from "./capture.js";
 const CHECKBOX_TRUE_HEX = "#2e7d32";
 const CHECKBOX_FALSE_HEX = "#888888";
 
+// The day the committed images show as today; decorations.md quotes no date of its own.
+const TODAY = "2026-09-13";
+
 // Exactly `n` whitespace-separated tokens, matching how Obsidian's own status-bar word count
 // (and the note-size condition it feeds) counts a note — see note-size-decoration.e2e.ts.
 function words(n: number): string {
   return Array.from({ length: n }, (_, i) => `w${i}`).join(" ");
-}
-
-function pad(n: number): string {
-  return String(n).padStart(2, "0");
 }
 
 // Anchors are always plain YYYY-MM-DD, so no CSS.escape is needed when the selector is built
@@ -103,7 +103,7 @@ async function setMarkLimit(value: "0" | "3"): Promise<void> {
 describe("decorations examples", () => {
   describe("checkbox property (#201)", () => {
     before(async () => {
-      await browser.reloadObsidian({
+      await reloadObsidianOn(TODAY, {
         vault: "./e2e/fixtures/e2e-docs-decorations-checkbox",
         plugins: ["journals"],
       });
@@ -112,10 +112,10 @@ describe("decorations examples", () => {
     it("paints true green, false grey, and leaves an absent or valueless checkbox undecorated", async () => {
       await openSeededCalendarView();
 
-      const trueDay = dayAnchor(2);
-      const falseDay = dayAnchor(3);
-      const absentDay = dayAnchor(4);
-      const emptyDay = dayAnchor(5);
+      const trueDay = "2026-09-02";
+      const falseDay = "2026-09-03";
+      const absentDay = "2026-09-04";
+      const emptyDay = "2026-09-05";
 
       await seedNote(`${trueDay}.md`, note("daily", trueDay, "", ["workout: true"]));
       await seedNote(`${falseDay}.md`, note("daily", falseDay, "", ["workout: false"]));
@@ -150,7 +150,7 @@ describe("decorations examples", () => {
     });
 
     it("records the raw frontmatter Obsidian writes for a checkbox property added through its own property UI, left unchecked", async () => {
-      const anchor = dayAnchor(6);
+      const anchor = "2026-09-06";
       const path = `${anchor}.md`;
       await seedNote(path, note("daily", anchor));
 
@@ -234,7 +234,7 @@ describe("decorations examples", () => {
 
   describe("word-count bands and ladder (#105)", () => {
     before(async () => {
-      await browser.reloadObsidian({
+      await reloadObsidianOn(TODAY, {
         vault: "./e2e/fixtures/e2e-docs-decorations-word-count",
         plugins: ["journals"],
       });
@@ -247,20 +247,13 @@ describe("decorations examples", () => {
       // markCount() to see 2 elements in the DOM, but not enough for either to actually paint.
       // Widen the split so every cell has room for its dots.
       //
-      // The default view's ref date starts at real today, and its auto-selected cell carries a
-      // ring that would cover whatever dots sit under it — pick whichever of two disjoint 4-day
-      // blocks does not contain today's day-of-month, keeping the ring off all four seeded days.
-      // Both blocks fit inside every month (max day used is 13).
-      const todayDay = Number(todayAnchor().slice(8, 10));
-      const monthPrefix = todayAnchor().slice(0, 7);
-      const blockA = [10, 11, 12, 13];
-      const blockB = [1, 2, 3, 4];
-      const block = blockA.includes(todayDay) ? blockB : blockA;
-
-      const day100 = `${monthPrefix}-${pad(block[0] ?? 0)}`;
-      const day600 = `${monthPrefix}-${pad(block[1] ?? 0)}`;
-      const day800 = `${monthPrefix}-${pad(block[2] ?? 0)}`;
-      const day1300 = `${monthPrefix}-${pad(block[3] ?? 0)}`;
+      // Today's auto-selected cell carries a ring that would cover whatever dots sit under it, so
+      // the seeded days stay clear of it.
+      const monthPrefix = TODAY.slice(0, 7);
+      const day100 = "2026-09-01";
+      const day600 = "2026-09-02";
+      const day800 = "2026-09-03";
+      const day1300 = "2026-09-04";
 
       const openBoard = async (): Promise<void> => {
         await openSeededCalendarView();
@@ -330,11 +323,11 @@ describe("decorations examples", () => {
 
   describe("shelf/journal cascade and the mark cap (#186)", () => {
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-decorations-cap", plugins: ["journals"] });
+      await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-docs-decorations-cap", plugins: ["journals"] });
     });
 
     it("lets the journal's background win over the shelf's, and caps marks with a badge", async () => {
-      const today = todayAnchor();
+      const today = TODAY;
       const todayCell = monthCellSelector(today);
 
       // 720px gives each of the grid's 7 columns roughly 100px — enough for a day number, two

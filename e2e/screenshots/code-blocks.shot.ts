@@ -1,6 +1,7 @@
-import { $, browser } from "@wdio/globals";
+import { $ } from "@wdio/globals";
 
 import { NAV_FENCE, VISIBLE_LEAF, hostNote, renderBlock } from "../journeys/code-blocks.js";
+import { reloadObsidianOn } from "../support/clock.js";
 
 import { captureThemed, recordOutcome, textsOf } from "./capture.js";
 
@@ -13,7 +14,8 @@ const HOME_VIEW = `${READING_VIEW} .block-language-journals-home`;
 
 describe("code-blocks reference screenshots", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-code-blocks", plugins: ["journals"] });
+    // The nav block's relative line ("3 months ago") counts from today.
+    await reloadObsidianOn("2026-09-13", { vault: "./e2e/fixtures/e2e-docs-code-blocks", plugins: ["journals"] });
   });
 
   it("captures a daily note's navigation block", async () => {

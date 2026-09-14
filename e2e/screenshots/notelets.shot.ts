@@ -1,6 +1,7 @@
 import { $, browser } from "@wdio/globals";
 
 import { hostNote, openInReadingMode, VISIBLE_LEAF } from "../journeys/code-blocks.js";
+import { reloadObsidianOn } from "../support/clock.js";
 import { runCommand } from "../support/commands.js";
 import { setModalText, submitModal, waitForModalOpen } from "../support/settings.js";
 import { openViaUri } from "../support/uri.js";
@@ -8,7 +9,6 @@ import {
   closeAllLeaves,
   frontmatterOf,
   seedNote,
-  todayAnchor,
   waitForActiveNoteIn,
   waitForDistinctActiveNote,
   waitForFrontmatter,
@@ -29,17 +29,20 @@ const TYPE_HEADING = `${NOTELET_BLOCK} .journal-notelet-list__type-heading`;
 // (the dialog's whole rendered text) cannot isolate on its own.
 const DIALOG_TITLE = ".modal-container:not(:has(.mod-settings)) .modal-title";
 
+// The day notelets.md quotes.
+const TODAY = "2026-09-14";
+
 function noteletNote(anchor: string, type: string, extra = ""): string {
   return `---\njournal: daily\njournal-date: ${anchor}\njournal-notelet: ${type}\n${extra}---\n`;
 }
 
 describe("notelets examples", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-notelets", plugins: ["journals"] });
+    await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-notelets", plugins: ["journals"] });
   });
 
   it("numbers a Meeting notelet created twice for today", async () => {
-    const today = todayAnchor();
+    const today = TODAY;
 
     await runCommand("journals:create-meeting");
     const first = await waitForActiveNoteIn("day/meetings");
@@ -72,7 +75,7 @@ describe("notelets examples", () => {
   });
 
   it("suffixes a second Retro notelet whose name does not vary within the day", async () => {
-    const today = todayAnchor();
+    const today = TODAY;
 
     await runCommand("journals:create-retro");
     const first = await waitForActiveNoteIn("day/retros");
@@ -102,7 +105,7 @@ describe("notelets examples", () => {
   });
 
   it("lists today's notelets grouped by type in a journal-notelets fence", async () => {
-    const today = todayAnchor();
+    const today = TODAY;
     const path = `day/${today}.md`;
 
     await seedNote(`day/meetings/${today} Meeting 1.md`, noteletNote(today, "Meeting", "journal-notelet-index: 1\n"));
@@ -126,8 +129,8 @@ describe("notelets examples", () => {
   it("creates a Meeting notelet through an obsidian://journals notelet link", async () => {
     // Reload so this test records Meeting 3 regardless of what earlier tests in this describe
     // block left behind — it seeds its own two prior Meeting notelets.
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-notelets", plugins: ["journals"] });
-    const today = todayAnchor();
+    await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-notelets", plugins: ["journals"] });
+    const today = TODAY;
     await seedNote(`day/meetings/${today} Meeting 1.md`, noteletNote(today, "Meeting", "journal-notelet-index: 1\n"));
     await seedNote(`day/meetings/${today} Meeting 2.md`, noteletNote(today, "Meeting", "journal-notelet-index: 2\n"));
 

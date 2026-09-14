@@ -1,5 +1,6 @@
 import { $$, browser } from "@wdio/globals";
 
+import { pinClock } from "../support/clock.js";
 import { waitForNoticeText } from "../support/notices.js";
 import { openViaUri } from "../support/uri.js";
 import { contentOf, createNote, frontmatterOf, noteExists, waitForJournalFrontmatter } from "../support/vault.js";
@@ -23,6 +24,8 @@ describe("journals examples", () => {
   });
 
   it("files a note by decade through the folder template (#82)", async () => {
+    // The template stamps the creation moment; keep it on the day journals.md quotes.
+    await pinClock("2026-09-13T20:27:19");
     await openViaUri({ journal: "daily", date: "1959-02-14" });
     const createdPath = "Calendar/1950s/1959/02/1959-02-14.md";
     // Note creation is three writes (empty file, template content, then the journal/journal-date
@@ -54,6 +57,8 @@ describe("journals examples", () => {
   });
 
   it("renders current_date and time variables into a template's frontmatter (#154)", async () => {
+    // The moment journals.md quotes; read at creation, so no reboot is needed.
+    await pinClock("2026-09-13T20:27:19");
     await openViaUri({ journal: "daily", date: "2026-06-15" });
     const path = "Calendar/2020s/2026/06/2026-06-15.md";
     await waitForJournalFrontmatter(path, { journal: "daily", date: "2026-06-15" });

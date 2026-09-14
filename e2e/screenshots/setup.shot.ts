@@ -1,5 +1,6 @@
 import { browser } from "@wdio/globals";
 
+import { reloadObsidianOn } from "../support/clock.js";
 import { cursorOf, editorValue, waitForCursorLine } from "../support/editor.js";
 import { waitForNoticeText } from "../support/notices.js";
 import { openViaUri } from "../support/uri.js";
@@ -7,12 +8,14 @@ import {
   contentOf,
   frontmatterOf,
   noteExists,
-  todayAnchor,
   waitForDistinctActiveNote,
   waitForJournalFrontmatter,
 } from "../support/vault.js";
 
 import { recordOutcome } from "./capture.js";
+
+// The day setup-examples.md quotes.
+const TODAY = "2026-09-14";
 
 function markdownFileCount(): Promise<number> {
   return browser.executeObsidian(({ app }) => app.vault.getMarkdownFiles().length);
@@ -27,7 +30,7 @@ function firstPathUnder(prefix: string): Promise<string | undefined> {
 
 describe("setup examples", () => {
   it("auto-creates the daily work journal's note for today at startup (setup-daily)", async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-docs-setup-daily", plugins: ["journals"] });
+    await reloadObsidianOn(TODAY, { vault: "./e2e/fixtures/e2e-docs-setup-daily", plugins: ["journals"] });
 
     let path: string | undefined;
     await browser.waitUntil(
@@ -42,7 +45,7 @@ describe("setup examples", () => {
     const frontmatter = path === undefined ? undefined : await frontmatterOf(path);
 
     await recordOutcome("setup-daily", {
-      today: todayAnchor(),
+      today: TODAY,
       path,
       exists,
       frontmatter,
@@ -165,13 +168,13 @@ describe("setup examples", () => {
 
   it("jumps the editor cursor to the tp.file.cursor marker on creation (setup-templater-cursor)", async () => {
     // Same fixture as the previous test, but reload so this test does not depend on ordering.
-    await browser.reloadObsidian({
+    await reloadObsidianOn(TODAY, {
       vault: "./e2e/fixtures/e2e-docs-setup-templater",
       plugins: ["journals", "templater-obsidian"],
     });
 
-    await openViaUri({ journal: "cursor", date: todayAnchor() });
-    const path = `cursor/${todayAnchor()}.md`;
+    await openViaUri({ journal: "cursor", date: TODAY });
+    const path = `cursor/${TODAY}.md`;
     await waitForCursorLine(5, "waited for the editor cursor to jump to the Templater marker");
 
     const cursor = await cursorOf();

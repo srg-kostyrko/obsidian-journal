@@ -161,6 +161,8 @@ integration --suite migration --suite interop --suite journeys`), omitting
   committed image. `npm run docs:screenshots` regenerates every image; `--spec` regenerates one
   page's. A shot spec asserts nothing — its images are reviewed by eye, and the outcomes it
   records under `e2e/.reports/outcomes/` are what a manual page's claims are compared against.
+  A spec whose page quotes a date pins the renderer's date to it (`e2e/support/clock.ts`), so a rerun
+  on any day reproduces the committed outcomes and images.
   Capture needs a composited window: a Chromium window that is hidden (for example parked on an
   invisible workspace) receives no frame callbacks, so screenshot commands hang with "Timed out
   receiving message from renderer". Run the suite with the Obsidian window visible — on the
