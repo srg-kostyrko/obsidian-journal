@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -29,7 +30,7 @@ function place(): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="hasShelves" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="hasShelves" v-model:expanded="expanded" :help="manual.shelf.placing">
     <template #trigger>
       <UiIconedRow :icon="icons.entity.shelf">{{ m.common_label_shelf() }}</UiIconedRow>
     </template>

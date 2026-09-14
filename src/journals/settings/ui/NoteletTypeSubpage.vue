@@ -9,6 +9,7 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -61,7 +62,7 @@ function remove(): void {
   <div v-if="type">
     <UiBackLink @click="nav.back()" />
 
-    <UiSettingRow heading>
+    <UiSettingRow heading :help="manual.notelet.page">
       <template #name>{{ type.name }}</template>
       <UiIconButton :icon="icons.action.bulkAdd" :tooltip="m.journal_notelet_bulk_add_tooltip()" @click="bulkAdd" />
       <UiIconButton :icon="icons.action.edit" :tooltip="m.journal_notelet_rename_tooltip()" @click="rename" />

@@ -1,5 +1,7 @@
 import { $, browser } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
+
 const PLUGIN_ID = "journals";
 
 // The settings panel is itself an Obsidian modal (a .modal-container wrapping .mod-settings),
@@ -148,6 +150,17 @@ export async function openShelfSubpage(shelf: string): Promise<void> {
 export async function openJournalSubpage(shelf: string, journal: string): Promise<void> {
   await openShelfSubpage(shelf);
   await clickIcon(`Configure ${journal}`);
+}
+
+// The journal subpage carries a "Note creation" section of its own, so a caller that expands
+// one before this push has rendered silently opens the journal's instead of the type's.
+export async function openNoteletTypeSubpage(journal: string): Promise<void> {
+  await clickIcon(m.journal_dashboard_edit({ name: journal }));
+  await expandSection(m.journal_notelet_section_title());
+  await clickIcon(m.journal_notelet_edit());
+  await $(`button[aria-label="${m.journal_notelet_rename_tooltip()}"]`).waitForExist({
+    timeoutMsg: "the notelet type page did not open",
+  });
 }
 
 // Set the first text input in the open modal (the primary field — name/template/new-name).
@@ -324,4 +337,22 @@ export async function clickModalCheckboxByLabel(label: string): Promise<void> {
 // (e.g. a weekday short name like "Sat"). UiToggleGroup renders <button> elements, not checkboxes.
 export async function clickModalToggleOption(label: string): Promise<void> {
   await activeModal().$(`button=${label}`).click();
+}
+
+// A manual link is an anchor named by the shared tooltip; its href is the page the plugin opens.
+// Waits for the page's links to settle on the expected list, then returns what is there, so the
+// spec's assertion reports a readable diff when they never do.
+export async function waitForManualLinks(expected: readonly string[]): Promise<string[]> {
+  const read = (): Promise<string[]> =>
+    browser.execute(
+      (name) =>
+        [...document.querySelectorAll(`.mod-settings a[aria-label="${CSS.escape(name)}"]`)].map(
+          (a) => a.getAttribute("href") ?? "",
+        ),
+      m.ui_manual_link(),
+    );
+  await browser
+    .waitUntil(async () => JSON.stringify(await read()) === JSON.stringify(expected), { timeout: 5000 })
+    .catch(() => null);
+  return read();
 }

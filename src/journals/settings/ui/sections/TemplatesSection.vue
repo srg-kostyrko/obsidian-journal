@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -43,7 +44,7 @@ function removeTemplate(index: number): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="owner && config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="owner && config" v-model:expanded="expanded" :help="manual.journal.templates">
     <template #trigger>
       <UiIconedRow :icon="icons.section.templates">
         {{ m.journal_edit_section_templates() }}

@@ -20,7 +20,7 @@ applies.
 | See more than three marks in a cell                  | [Marks shown per position](#marks-shown-per-position)                            |
 | Find out why a date looks the way it does            | [Finding out why](#finding-out-why-a-date-looks-the-way-it-does)                 |
 
-## Where decorations live
+## Where decorations live {#where-decorations-live}
 
 | Section                  | Found on                   | Applies to                                                      | Conditions                    |
 | ------------------------ | -------------------------- | --------------------------------------------------------------- | ----------------------------- |

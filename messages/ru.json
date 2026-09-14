@@ -1106,6 +1106,7 @@
     }
   ],
   "ui_color_theme_variable_label": "CSS-переменная",
+  "ui_manual_link": "Открыть в руководстве",
   "ui_theme_color_group_label": [
     {
       "declarations": ["input group"],

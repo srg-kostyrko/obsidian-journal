@@ -62,7 +62,7 @@ own: **Desktop and mobile**, **Desktop only** or **Mobile only**. It covers ever
 any device. Use it when sync is slow enough that your phone and your computer each create today's
 note before the other's copy arrives.
 
-### Opening a note when Obsidian starts
+### Opening a note when Obsidian starts {#opening-a-note-when-obsidian-starts}
 
 **Startup**, on the main settings page, opens a journal's note for today whenever you open the vault.
 

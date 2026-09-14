@@ -10,6 +10,7 @@ import { SettingsService } from "@/settings";
 import type { SubpageNav } from "@/settings";
 import { SnapshotService, type SnapshotInfo } from "@/settings/snapshots/snapshot-service";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
@@ -259,7 +260,7 @@ onMounted(runScan);
   <div>
     <UiBackLink @click="nav.back()" />
 
-    <UiSettingRow heading :name="m.maintenance_snapshots_heading()" />
+    <UiSettingRow heading :name="m.maintenance_snapshots_heading()" :help="manual.troubleshooting.snapshots" />
     <UiSettingRow v-if="listFailed">
       <template #description>{{ m.maintenance_snapshots_load_failed() }}</template>
     </UiSettingRow>
@@ -277,7 +278,7 @@ onMounted(runScan);
       <UiButton :disabled="restoring" @click="restore(info)">{{ m.maintenance_snapshot_restore() }}</UiButton>
     </UiSettingRow>
 
-    <UiSettingRow heading :name="m.maintenance_check_heading()" />
+    <UiSettingRow heading :name="m.maintenance_check_heading()" :help="manual.troubleshooting.vaultCheck" />
     <UiSettingRow>
       <template #description>{{ m.maintenance_check_config_note() }}</template>
     </UiSettingRow>

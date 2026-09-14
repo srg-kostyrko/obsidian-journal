@@ -8,6 +8,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { markdownFiles, scanMarkdown } from "./docs-markdown.mjs";
+import { linkedManualPaths, verifyManualLinks, verifyRedirects } from "./docs-manual-links.mjs";
 
 const {
   values: { src, dist },
@@ -166,9 +167,66 @@ for (const mdPath of markdownFiles(src)) {
   }
 }
 
+function linkExists(target) {
+  const { route, frag } = resolveTarget(target, "/");
+  const ids = routes.get(route);
+  return Boolean(ids) && (!frag || ids.has(frag));
+}
+
 for (const { mdPath, lineno, target } of unchecked) console.log(`UNCHECKED: ${mdPath}:${lineno} -> ${target}`);
 for (const { mdPath, lineno, target } of failures) console.log(`DEAD: ${mdPath}:${lineno} -> ${target}`);
 
-console.log(`${unchecked.length} unchecked link(s)`);
-console.log(`${failures.length} dead link(s)`);
-process.exit(failures.length > 0 ? 1 : 0);
+// A setup failure below must not swallow these — printed once here so it survives either path,
+// and skipped at the end of the success path so the two together don't print twice.
+function printMarkdownSummary() {
+  console.log(`${unchecked.length} unchecked link(s)`);
+  console.log(`${failures.length} dead link(s)`);
+}
+
+// A link a release put in the plugin stays in that release's installs for good, so every tag's
+// links must keep landing — directly, or through a redirect written when the section moved.
+let pluginLinks, releasesWithLinks;
+try {
+  ({ paths: pluginLinks, releasesWithLinks } = linkedManualPaths(process.cwd()));
+} catch (error) {
+  printMarkdownSummary();
+  console.error(`check:docs-links: ${error.message}`);
+  process.exit(1);
+}
+
+const redirectsPath = path.join(src, ".vitepress", "redirects.json");
+let redirects;
+try {
+  redirects = JSON.parse(readFileSync(redirectsPath, "utf8"));
+} catch (error) {
+  printMarkdownSummary();
+  console.error(`check:docs-links: could not read ${redirectsPath} — ${error.message}`);
+  process.exit(1);
+}
+
+// verifyRedirects checks every redirect entry, including ones plugin links resolve through, so a
+// dead redirect a manual path also hits can surface from both passes. Dedupe on (target, reason):
+// the two agree on both only when the manual path *is* the redirect entry (an exact key, or a
+// page-level entry reached with no fragment), which is exactly the case where reporting both would
+// print the same defect twice.
+const seen = new Set();
+const pluginFailures = [
+  ...verifyRedirects(redirects, linkExists),
+  ...verifyManualLinks(pluginLinks, redirects, linkExists),
+].filter(({ target, reason }) => {
+  const key = JSON.stringify([target, reason]);
+  if (seen.has(key)) return false;
+  seen.add(key);
+  return true;
+});
+
+for (const { target, shippedIn, reason } of pluginFailures)
+  console.log(
+    `PLUGIN LINK: ${target} (${shippedIn ? `shipped in ${shippedIn}` : "unreleased"}) ${reason} — add an entry to docs/user/.vitepress/redirects.json pointing at where this is explained now`,
+  );
+
+printMarkdownSummary();
+console.log(
+  `${pluginLinks.size} plugin link(s) checked, from ${releasesWithLinks} release(s) and the working tree; ${pluginFailures.length} failing`,
+);
+process.exit(failures.length + pluginFailures.length > 0 ? 1 : 0);

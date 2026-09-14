@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -32,7 +33,7 @@ function editFm(fieldName: FrontmatterFieldName): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded">
+  <UiCollapsibleBlock v-if="config" v-model:expanded="expanded" :help="manual.journal.frontmatter">
     <template #trigger>
       <UiIconedRow :icon="icons.section.properties">{{ m.journal_edit_section_frontmatter() }}</UiIconedRow>
     </template>

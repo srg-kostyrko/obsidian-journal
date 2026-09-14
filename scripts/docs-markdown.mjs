@@ -132,3 +132,7 @@ export function fenceBlocks(text) {
 export function isDarkOnlyImage(line) {
   return /^\s*!\[[^\]]*\]\([^)]*\)\{\.dark-only\}\s*$/.test(line);
 }
+
+export function stripHeadingId(line) {
+  return line.replace(/^(#{1,6}\s.*?)\s+\{#[\w-]+\}\s*$/, "$1");
+}

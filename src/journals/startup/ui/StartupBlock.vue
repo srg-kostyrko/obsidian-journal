@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -74,7 +75,7 @@ function weekdayOptionsFor(index: number): { value: number; label: string; disab
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.startup.openOnStartup">
     <template #trigger>
       <UiIconedRow :icon="icons.section.startup">{{ m.startup_dashboard_section_title() }}</UiIconedRow>
     </template>

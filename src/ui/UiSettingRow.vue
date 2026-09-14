@@ -1,10 +1,15 @@
 <script setup lang="ts">
+import UiManualLink from "./UiManualLink.vue";
+
+import type { ManualPath } from "./manual";
+
 defineProps<{
   name?: string;
   heading?: boolean;
   controlsOnly?: boolean;
   noControls?: boolean;
   stacked?: boolean;
+  help?: ManualPath;
 }>();
 </script>
 
@@ -13,6 +18,7 @@ defineProps<{
     <div v-if="!controlsOnly" class="setting-item-info">
       <div class="setting-item-name">
         <slot name="name">{{ name ?? "" }}</slot>
+        <UiManualLink v-if="help" :path="help" />
       </div>
       <div class="setting-item-description">
         <slot name="description" />

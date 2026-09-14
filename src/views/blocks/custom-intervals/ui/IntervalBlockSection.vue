@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { JournalsViewModel } from "@/journals";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
@@ -21,5 +22,6 @@ const isCustom = computed(() => config.value?.write.type === "custom");
     field="intervalBlock"
     :title="m.interval_block_section_title()"
     :icon="icons.entity.customInterval"
+    :help="manual.navigation.intervalLines"
   />
 </template>

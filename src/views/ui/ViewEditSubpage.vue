@@ -7,6 +7,7 @@ import { Flows } from "@/infrastructure/flows";
 import type { SubpageNav } from "@/settings";
 import { ShelvesViewModel } from "@/shelves";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -108,7 +109,7 @@ function addBlock(): void {
   <div v-if="view">
     <UiBackLink @click="nav.back()" />
 
-    <UiSettingRow heading>
+    <UiSettingRow heading :help="manual.view.settings">
       <template #name>{{ view.name }}</template>
       <UiIconButton :icon="icons.action.edit" :tooltip="m.view_rename()" @click="rename" />
     </UiSettingRow>
@@ -157,7 +158,7 @@ function addBlock(): void {
       </UiDropdown>
     </UiSettingRow>
 
-    <UiCollapsibleBlock v-model:expanded="blocksOpen">
+    <UiCollapsibleBlock v-model:expanded="blocksOpen" :help="manual.view.blocks">
       <template #trigger>
         <UiIconedRow :icon="icons.entity.view">
           {{ m.view_edit_blocks_title() }}

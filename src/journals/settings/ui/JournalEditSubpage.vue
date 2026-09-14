@@ -8,6 +8,7 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { JournalsViewModel } from "@/journals/view-model";
 import type { SubpageNav } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiBackLink from "@/ui/UiBackLink.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -61,7 +62,7 @@ function rename(): void {
   <div v-if="config">
     <UiBackLink @click="nav.back()" />
 
-    <UiSettingRow heading>
+    <UiSettingRow heading :help="manual.journal.page">
       <template #name>
         {{ journalName }}
         <span class="flair">{{ writing }}</span>

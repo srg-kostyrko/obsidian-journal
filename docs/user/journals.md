@@ -19,7 +19,7 @@ writes for, and which properties it records on each note.
 | Rename the properties written into notes                     | [Frontmatter](#frontmatter)                                      |
 | Rename, copy or delete a journal                             | [Renaming, cloning and deleting](#renaming-cloning-and-deleting) |
 
-## Creating a journal
+## Creating a journal {#creating-a-journal}
 
 The **+** button (**Create new journal**) in the **Journals** section of the main settings page opens
 **Add journal**, which asks for:
@@ -36,7 +36,7 @@ settings page shows it next to the journal's name.
 A new journal names its notes `{{date}}` — `{{journal_name}} {{index}}` for custom intervals — keeps
 them at the root of the vault, and formats dates to suit its period.
 
-## Note creation
+## Note creation {#note-creation}
 
 **Resolved note path:** shows where the note for today's period goes, so you can see the effect of
 each change as you make it.
@@ -63,7 +63,7 @@ than `W` — see [Week numbers in names](/periods#week-numbers-in-names).
 
 Examples: [Filing notes by year](#filing-notes-by-year), [Filing notes by decade](#filing-notes-by-decade).
 
-## Templates
+## Templates {#templates}
 
 Each is a path to a note used as a template when creating new notes; when multiple are configured, the
 first that exists wins. **Add template** adds a path; each path shows its **Resolved
@@ -79,7 +79,7 @@ template path:**.
 Examples: [Recording when a note was created](#recording-when-a-note-was-created),
 [A different template on some days](#a-different-template-on-some-days).
 
-## Timeline
+## Timeline {#timeline}
 
 A journal's timeline is the range of dates it writes notes for.
 
@@ -99,7 +99,7 @@ where they are, and still open and link.
 
 Example: [A journal with a start and an end](#a-journal-with-a-start-and-an-end).
 
-## Sequential numbers
+## Sequential numbers {#sequential-numbers}
 
 For numbered entries (like `Sprint 1`), and for chained ones (like `Release4711Sprint1`).
 
@@ -135,7 +135,7 @@ For example, a name template of `Release{{release}}Sprint{{sprint}}` with `relea
 `Release4711Sprint6`, then `Release4712Sprint1`. The whole configuration is under
 [Release and sprint numbering](/guides/setup-examples#release-and-sprint-numbering).
 
-## Frontmatter
+## Frontmatter {#frontmatter}
 
 Every journal note carries a `journal` property naming its journal. That name is fixed. The others are
 yours to rename:

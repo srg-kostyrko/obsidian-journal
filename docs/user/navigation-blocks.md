@@ -76,7 +76,7 @@ Examples: [Week and month lines in a daily note](#week-and-month-lines-in-a-dail
 
 On a narrow pane, such as a phone, the previous, current and next columns stack.
 
-## Calendar interval lines
+## Calendar interval lines {#calendar-interval-lines}
 
 Custom interval journals have a second set of lines, **Calendar interval lines**, edited the same way.
 They draw each interval in the **Custom intervals**

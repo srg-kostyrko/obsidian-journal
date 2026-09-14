@@ -8,6 +8,7 @@ import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
 import { ReloadHintService, SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -89,7 +90,7 @@ function change(): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.period.weeks">
     <template #trigger>
       <UiIconedRow :icon="icons.section.calendar">{{ m.common_label_calendar() }}</UiIconedRow>
     </template>

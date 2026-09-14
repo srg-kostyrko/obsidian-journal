@@ -6,6 +6,7 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiButton from "@/ui/UiButton.vue";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -34,7 +35,7 @@ function dump(): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.troubleshooting.reportingBug">
     <template #trigger>
       <UiIconedRow :icon="icons.section.logging">{{ m.logging_section_title() }}</UiIconedRow>
     </template>

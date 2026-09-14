@@ -955,6 +955,7 @@
     }
   ],
   "ui_color_theme_variable_label": "CSS 变量",
+  "ui_manual_link": "在手册中打开",
   "ui_theme_color_group_label": [
     {
       "declarations": ["input group"],

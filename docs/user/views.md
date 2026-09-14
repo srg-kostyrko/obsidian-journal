@@ -31,7 +31,7 @@ an **Open** _view_ command the same way. It is built from:
 
 Edit it, or add views of your own, under **Views** on the main settings page.
 
-## A view's settings
+## A view's settings {#a-view-s-settings}
 
 **Add a view** creates one, and **Configure** opens its page. The page's heading is the view's name,
 with **Rename view**; below it:
@@ -63,9 +63,9 @@ between cells, Home and End go to the start and end of a row, Enter or Space ope
 Shift+Space selects. Only day cells select; week numbers and month, quarter and year headings always
 open.
 
-## Blocks
+## Blocks {#blocks}
 
-### Month calendar and Week calendar
+### Month calendar and Week calendar {#month-calendar-and-week-calendar}
 
 A **Month calendar** block shows one or more month grids around the selected date; a **Week calendar**
 block shows the same span as week strips instead.
@@ -86,7 +86,7 @@ in scope.
 
 Example: [Week numbers after the weekdays](#week-numbers-after-the-weekdays).
 
-### Notes by date
+### Notes by date {#notes-by-date}
 
 Lists notes created in the period containing the view's selected date — any note in the vault, not
 only journal notes.

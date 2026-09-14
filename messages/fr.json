@@ -1100,6 +1100,7 @@
     }
   ],
   "ui_color_theme_variable_label": "Variable CSS",
+  "ui_manual_link": "Ouvrir dans le manuel",
   "ui_theme_color_group_label": [
     {
       "declarations": ["input group"],

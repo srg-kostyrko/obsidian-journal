@@ -23,7 +23,7 @@ A journal is on at most one shelf. When the journal something starts from is on 
 that scope to a shelf reach every journal instead — with one exception, under
 [Navigation blocks and zoom](#navigation-blocks-and-zoom).
 
-## Creating shelves
+## Creating shelves {#creating-shelves}
 
 Shelves live under **Journal shelves** on the main settings page. **Add shelf** asks for a **Shelf
 name**, which must be unique. Each shelf in the list shows how many journals it holds; **Configure**
@@ -40,7 +40,7 @@ A shelf's page has, from the top:
 Once you have a shelf, the journal list on the main settings page shows only **Journals not on a
 shelf**. Journals on a shelf are listed on that shelf's page.
 
-## Putting a journal on a shelf
+## Putting a journal on a shelf {#putting-a-journal-on-a-shelf}
 
 On a journal's settings page, the **Shelf** section — shown once at least one shelf exists — says
 which shelf the journal is on, or **Not on a shelf**. **Place on a shelf** opens **Place journal**:
@@ -64,7 +64,7 @@ default shelf.
 
 Example: [Work and home on one calendar](#work-and-home-on-one-calendar).
 
-## Commands on a shelf
+## Commands on a shelf {#commands-on-a-shelf}
 
 Add a command from the **Commands** section of a shelf's page. Besides what every command has, a
 shelf command asks for a **Note type** — day, week, month, quarter or year. Custom intervals cannot be

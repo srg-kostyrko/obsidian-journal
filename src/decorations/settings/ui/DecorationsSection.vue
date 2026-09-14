@@ -17,6 +17,7 @@ import { Flows } from "@/infrastructure/flows";
 import { useModalService } from "@/infrastructure/host/modals";
 import { JournalsRepository } from "@/journals";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
@@ -109,7 +110,7 @@ function remove(index: number): void {
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.decorations.owners">
     <template #trigger>
       <UiIconedRow :icon="icons.section.decorations">
         {{ title }}
