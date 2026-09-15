@@ -14,6 +14,15 @@
       "month": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
       "quarter": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
       "year": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" }
+    },
+    {
+      "id": "Work",
+      "ctime": "2026-01-02T00:00:00+00:00",
+      "day": { "enabled": true, "openAtStartup": true, "format": "YYYY-MM-DD", "folder": "Work", "templatePath": "" },
+      "week": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
+      "month": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
+      "quarter": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
+      "year": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" }
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+  "showGettingStartedBanner": false,
+  "daily": { "enabled": true, "format": "", "folder": "Legacy", "template": "" },
+  "weekly": { "enabled": false, "format": "", "folder": "", "template": "" },
+  "monthly": { "enabled": false, "format": "", "folder": "", "template": "" },
+  "quarterly": { "enabled": false, "format": "", "folder": "", "template": "" },
+  "yearly": { "enabled": false, "format": "", "folder": "", "template": "" }
+}
