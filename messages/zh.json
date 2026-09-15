@@ -485,6 +485,8 @@
   "bulk_add_date_place_label": "日期读取自",
   "bulk_add_date_place_title": "笔记标题",
   "bulk_add_date_place_property": "属性",
+  "bulk_add_date_place_path": "笔记路径",
+  "bulk_add_date_place_path_unavailable": "无法使用笔记路径：无法从此日记的笔记路径中读取日期。",
   "common_label_property_name": "属性名称",
   "bulk_add_date_format_label": "日期格式",
   "bulk_add_date_format_omit_time": "如果您的日期包含时间部分，请将其从格式中省略。",

@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Datum lesen aus",
   "bulk_add_date_place_title": "Titel der Notiz",
   "bulk_add_date_place_property": "Eine Eigenschaft",
+  "bulk_add_date_place_path": "Pfad der Notiz",
+  "bulk_add_date_place_path_unavailable": "Der Pfad der Notiz ist nicht verfügbar: Aus den Notizpfaden dieses Journals lässt sich kein Datum zurücklesen.",
   "common_label_property_name": "Eigenschaftsname",
   "bulk_add_date_format_label": "Datumsformat",
   "bulk_add_date_format_omit_time": "Falls deine Datumsangaben eine Uhrzeit enthalten, lasse sie im Format weg.",

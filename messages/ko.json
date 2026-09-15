@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "날짜를 읽을 위치",
   "bulk_add_date_place_title": "노트 제목",
   "bulk_add_date_place_property": "속성",
+  "bulk_add_date_place_path": "노트 경로",
+  "bulk_add_date_place_path_unavailable": "노트 경로를 사용할 수 없습니다. 이 저널의 노트 경로에서 날짜를 읽을 수 없습니다.",
   "common_label_property_name": "속성 이름",
   "bulk_add_date_format_label": "날짜 형식",
   "bulk_add_date_format_omit_time": "날짜에 시간이 포함되어 있다면 형식에서는 시간을 빼세요.",

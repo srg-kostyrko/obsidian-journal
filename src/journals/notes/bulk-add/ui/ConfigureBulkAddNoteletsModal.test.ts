@@ -94,4 +94,12 @@ describe("ConfigureBulkAddNoteletsModal", () => {
     const input = screen.getByRole("textbox", { name: m.bulk_add_date_format_label() });
     expect((input as HTMLInputElement).value).toBe("YYYY-MM");
   });
+
+  it("does not offer reading the date from the note's path", () => {
+    harness.renderModal(ConfigureBulkAddNoteletsModal, {
+      props: { journalName: "daily", typeId: "nt_1", typeName: "Standup" },
+    });
+
+    expect(screen.queryByRole("option", { name: m.bulk_add_date_place_path() })).toBeNull();
+  });
 });

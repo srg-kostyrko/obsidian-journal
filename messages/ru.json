@@ -498,6 +498,8 @@
   "bulk_add_date_place_label": "Читать дату из",
   "bulk_add_date_place_title": "Заголовок заметки",
   "bulk_add_date_place_property": "Свойство",
+  "bulk_add_date_place_path": "Путь к заметке",
+  "bulk_add_date_place_path_unavailable": "Путь к заметке недоступен: из путей заметок этого журнала нельзя прочитать дату.",
   "common_label_property_name": "Название свойства",
   "bulk_add_date_format_label": "Формат даты",
   "bulk_add_date_format_omit_time": "Если ваши даты содержат временную составляющую, опустите её из формата.",

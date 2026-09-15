@@ -436,6 +436,8 @@
   "bulk_add_date_place_label": "Read the date from",
   "bulk_add_date_place_title": "Note title",
   "bulk_add_date_place_property": "A property",
+  "bulk_add_date_place_path": "Note path",
+  "bulk_add_date_place_path_unavailable": "Note path is not available: this journal's note paths cannot be read back into a date.",
   "common_label_property_name": "Property name",
   "bulk_add_date_format_label": "Date format",
   "bulk_add_date_format_omit_time": "If your dates include a time component, omit it from the format.",

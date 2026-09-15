@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Leer la fecha de",
   "bulk_add_date_place_title": "Título de la nota",
   "bulk_add_date_place_property": "Una propiedad",
+  "bulk_add_date_place_path": "Ruta de la nota",
+  "bulk_add_date_place_path_unavailable": "La ruta de la nota no está disponible: no se puede leer una fecha a partir de las rutas de las notas de este diario.",
   "common_label_property_name": "Nombre de la propiedad",
   "bulk_add_date_format_label": "Formato de fecha",
   "bulk_add_date_format_omit_time": "Si tus fechas incluyen una hora, omítela del formato.",

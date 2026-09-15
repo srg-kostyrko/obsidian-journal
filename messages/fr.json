@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Lire la date depuis",
   "bulk_add_date_place_title": "Titre de la note",
   "bulk_add_date_place_property": "Une propriété",
+  "bulk_add_date_place_path": "Chemin de la note",
+  "bulk_add_date_place_path_unavailable": "Le chemin de la note n'est pas disponible : aucune date ne peut être relue à partir des chemins des notes de ce journal.",
   "common_label_property_name": "Nom de la propriété",
   "bulk_add_date_format_label": "Format de date",
   "bulk_add_date_format_omit_time": "Si vos dates incluent une heure, omettez-la du format.",

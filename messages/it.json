@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Leggi la data da",
   "bulk_add_date_place_title": "Titolo della nota",
   "bulk_add_date_place_property": "Una proprietà",
+  "bulk_add_date_place_path": "Percorso della nota",
+  "bulk_add_date_place_path_unavailable": "Il percorso della nota non è disponibile: dai percorsi delle note di questo diario non si può ricavare una data.",
   "common_label_property_name": "Nome della proprietà",
   "bulk_add_date_format_label": "Formato data",
   "bulk_add_date_format_omit_time": "Se le date includono un orario, omettilo dal formato.",

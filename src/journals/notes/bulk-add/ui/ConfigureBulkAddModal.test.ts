@@ -113,4 +113,55 @@ describe("ConfigureBulkAddModal", () => {
     const input = screen.getByRole("textbox", { name: m.bulk_add_date_format_label() });
     expect((input as HTMLInputElement).value).toBe("YYYY-MM");
   });
+
+  it("hides the date format when reading the date from the note's path", async () => {
+    harness.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_date_place_label() }), "path");
+
+    expect(screen.queryByRole("textbox", { name: m.bulk_add_date_format_label() })).toBeNull();
+  });
+
+  it("submits without a date format when reading the date from the note's path", async () => {
+    const { submit } = harness.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    await userEvent.type(screen.getByRole("textbox", { name: m.bulk_add_folder_label() }), "Daily");
+    await userEvent.clear(screen.getByRole("textbox", { name: m.bulk_add_date_format_label() }));
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: m.bulk_add_date_place_label() }), "path");
+    await userEvent.click(screen.getByText(m.bulk_add_next()));
+
+    await waitFor(() =>
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ datePlace: "path", dateFormat: "" })),
+    );
+  });
+
+  it("offers the note path for a journal whose paths read back into a date", () => {
+    harness.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    const option = screen.getByRole<HTMLOptionElement>("option", { name: m.bulk_add_date_place_path() });
+    expect(option.disabled).toBe(false);
+  });
+
+  it("disables the note path for a journal whose paths cannot be read back", async () => {
+    const unreadable = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date}}-{{mystery}}" }) } },
+    });
+
+    unreadable.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    const option = screen.getByRole<HTMLOptionElement>("option", { name: m.bulk_add_date_place_path() });
+    expect(option.disabled).toBe(true);
+  });
+
+  it("says why the note path is unavailable", async () => {
+    const unreadable = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date}}-{{mystery}}" }) } },
+    });
+
+    unreadable.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    expect(screen.getByText(m.bulk_add_date_place_path_unavailable())).toBeTruthy();
+  });
 });

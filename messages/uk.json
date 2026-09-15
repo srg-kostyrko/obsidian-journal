@@ -485,6 +485,8 @@
   "bulk_add_date_place_label": "Читати дату з",
   "bulk_add_date_place_title": "Заголовок нотатки",
   "bulk_add_date_place_property": "Властивість",
+  "bulk_add_date_place_path": "Шлях до нотатки",
+  "bulk_add_date_place_path_unavailable": "Шлях до нотатки недоступний: зі шляхів нотаток цього журналу не можна прочитати дату.",
   "common_label_property_name": "Назва властивості",
   "bulk_add_date_format_label": "Формат дати",
   "bulk_add_date_format_omit_time": "Якщо ваші дати містять компонент часу, пропустіть його з формату.",

@@ -2,6 +2,7 @@
 import { toTypedSchema } from "@vee-validate/valibot";
 import * as v from "valibot";
 import { useFieldArray, useForm } from "vee-validate";
+import { ref } from "vue";
 
 import type { FilterCondition } from "@/decorations/config";
 import { defaultCondition } from "@/decorations/defaults";
@@ -10,8 +11,11 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
+import { invertibilityWarningText } from "@/journals/notes/invertibility";
+import { JournalsRepository } from "@/journals/repository";
 import DateFormatPreview from "@/journals/settings/ui/DateFormatPreview.vue";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
+import { useInvertibilityCheck } from "@/journals/settings/ui/use-invertibility-check";
 import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
@@ -27,10 +31,15 @@ const { journalName } = defineProps<{ journalName: string }>();
 const api = useModal<BulkAddParameters>();
 const journalsVM = useService(JournalsViewModel);
 const notes = useService(NotesService);
+const journals = useService(JournalsRepository);
 
 // Prefill the date format from the journal's own format so a non-ISO journal starts from the
 // right pattern instead of a hardcoded YYYY-MM-DD.
 const journalDateFormat = journalsVM.getJournal(journalName).getOrUndefined()?.dateFormat;
+
+// A path the journal cannot read back would skip every note as off-path, which reads as a
+// wrong folder rather than as the template's fault.
+const pathWarning = useInvertibilityCheck(ref(journals.get(journalName).getOrUndefined()));
 
 // The folder exists only at runtime, so the schema in config.ts cannot check it; without this the
 // typo surfaces as a FolderNotFoundError once the modal has closed, taking the whole form with it.
@@ -81,9 +90,14 @@ const onSubmit = handleSubmit((parameters) => {
 
     <UiSettingRow>
       <template #name>{{ m.bulk_add_date_place_label() }}</template>
+      <template v-if="pathWarning" #description>
+        <div>{{ m.bulk_add_date_place_path_unavailable() }}</div>
+        <div>{{ invertibilityWarningText(pathWarning) }}</div>
+      </template>
       <UiDropdown v-model="datePlace" :aria-label="m.bulk_add_date_place_label()">
         <option value="title">{{ m.bulk_add_date_place_title() }}</option>
         <option value="property">{{ m.bulk_add_date_place_property() }}</option>
+        <option value="path" :disabled="pathWarning !== null">{{ m.bulk_add_date_place_path() }}</option>
       </UiDropdown>
     </UiSettingRow>
 
@@ -95,7 +109,7 @@ const onSubmit = handleSubmit((parameters) => {
       <UiTextInput v-model="propertyName" :aria-label="m.common_label_property_name()" />
     </UiSettingRow>
 
-    <UiSettingRow>
+    <UiSettingRow v-if="values.datePlace !== 'path'">
       <template #name>{{ m.bulk_add_date_format_label() }}</template>
       <template #description>
         <a target="_blank" href="https://momentjs.com/docs/#/displaying/format/">

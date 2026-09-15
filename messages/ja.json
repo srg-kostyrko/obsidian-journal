@@ -485,6 +485,8 @@
   "bulk_add_date_place_label": "日付の読み取り元",
   "bulk_add_date_place_title": "ノートのタイトル",
   "bulk_add_date_place_property": "プロパティ",
+  "bulk_add_date_place_path": "ノートのパス",
+  "bulk_add_date_place_path_unavailable": "ノートのパスは使用できません。このジャーナルのノートのパスから日付を読み取れません。",
   "common_label_property_name": "プロパティ名",
   "bulk_add_date_format_label": "日付形式",
   "bulk_add_date_format_omit_time": "日付に時刻が含まれる場合は、フォーマットから時刻を省略してください。",
