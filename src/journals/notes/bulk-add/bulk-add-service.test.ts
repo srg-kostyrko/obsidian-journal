@@ -271,6 +271,23 @@ describe("BulkAddService", () => {
       });
     });
 
+    it("reads a week-year date out of a title named the Periodic Notes way", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { weekly: fixedJournal("weekly", { type: "week" }) } },
+      });
+      // ISO week 1 of 2026 starts in the previous calendar year, so only the week-year names it.
+      harness.host.putFile("src/2026-W01.md");
+
+      const planResult = await harness
+        .resolve(BulkAddService)
+        .plan("weekly", makeParameters({ folder: "src", dateFormat: "gggg-[W]ww" }));
+
+      expectOk(planResult);
+      const note = planResult.value.notes.find((n) => n.path === "src/2026-W01.md");
+      expect(note?.kind === "action" && note.anchor).toBe("2025-12-29");
+    });
+
     it("skips a note whose date is outside the journal's timeline", async () => {
       const harness = await testContainer({
         modules: [journalsCoreModule],

@@ -17,10 +17,6 @@ there that are already answered here — sometimes in a different enough shape t
 | **Open daily note**, **Open weekly note** and so on               | "Open today's note" and the matching commands for the other period lengths, which a new vault already has. See [Commands you create](/commands#commands-you-create)                                        |
 | **Open next weekly note**, **Open previous daily note** and so on | **Open next note** and **Open previous note**, which step to the nearest note that already exists in the open note's journal. See [Built-in commands](/commands#built-in-commands)                         |
 
-Periodic Notes' default weekly format is `gggg-[W]ww`. In a Journals name, write `YYYY-[W]ww` instead:
-`gggg` stops notes you make yourself from [auto-attaching](/notes#auto-attach), and `YYYY` already
-gives the right year for a week across New Year — see [Variables](/reference/variables#the-variables).
-
 ## Your existing notes
 
 Periodic Notes finds notes by file name. Journals finds them by their properties, and adopts a note

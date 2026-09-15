@@ -37,8 +37,7 @@ so a new journal starts with an empty calendar. For your daily notes:
    what it would do.
 
 Weekly notes go the same way, into a weekly journal. Calendar names them with its **Weekly note
-format**, which it offers while **Show week number** is on and Periodic Notes' weekly notes are off. If that format uses `gggg`, name new notes with `YYYY` instead — see
-[Variables](/reference/variables#the-variables).
+format**, which it offers while **Show week number** is on and Periodic Notes' weekly notes are off.
 
 :::
 

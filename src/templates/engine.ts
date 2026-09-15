@@ -214,6 +214,14 @@ export class TemplateEngine {
     // own fields still agree with the merged date so contradictory captures conflict.
     const candidates: BoundValue[] = [];
     for (const [index, entry] of entries.entries()) {
+      // A capture read on its own loses what the rest of the path supplies: a week number has no
+      // week-year to count in, so week 53 is refused whenever the current year has 52, and a bare year
+      // lands on 1 January, whose week-year can be the previous one. The merged date rendering back to
+      // the capture is agreement outright; only a capture it does not reproduce is read alone.
+      if (merged.format(entry.format) === entry.capture) {
+        candidates.push({ kind: "date", value: merged });
+        continue;
+      }
       const own = CalendarDate.parse(entry.capture, entry.format);
       if (own.kind === "err") {
         return new Err(

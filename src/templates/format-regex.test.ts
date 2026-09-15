@@ -79,6 +79,25 @@ describe("formatToRegexp", () => {
     });
   });
 
+  describe("week-year tokens", () => {
+    it.each(["gggg", "GGGG"])("matches a 4-digit week-year for %s", (format) => {
+      const re = new RegExp(`^${formatToRegexp(format).source}$`);
+      expect(re.test("2026")).toBe(true);
+      expect(re.test("26")).toBe(false);
+    });
+
+    it.each(["gg", "GG"])("matches a 2-digit week-year for %s", (format) => {
+      const re = new RegExp(`^${formatToRegexp(format).source}$`);
+      expect(re.test("26")).toBe(true);
+      expect(re.test("2026")).toBe(false);
+    });
+
+    it("matches the Periodic Notes default weekly format", () => {
+      const re = new RegExp(`^${formatToRegexp("gggg-[W]ww").source}$`);
+      expect(re.test("2026-W03")).toBe(true);
+    });
+  });
+
   describe("combined formats", () => {
     it("matches dates in YYYY-MM-DD format", () => {
       expect(formatToRegexp("YYYY-MM-DD").test("2025-03-14")).toBe(true);
@@ -91,6 +110,10 @@ describe("formatToRegexp", () => {
 
     it("matches week notation with a literal W prefix", () => {
       expect(formatToRegexp("YYYY-[W]w").test("2025-W42")).toBe(true);
+    });
+
+    it("finds a date embedded in a longer title", () => {
+      expect("Daily note 2026-06-01 draft".match(formatToRegexp("YYYY-MM-DD"))?.[0]).toBe("2026-06-01");
     });
   });
 

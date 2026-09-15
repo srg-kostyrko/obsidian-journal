@@ -7,6 +7,7 @@ import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { FolderNotFoundError, NoteMetadata, VaultPath } from "@/infrastructure/host";
 import { AsyncResult, InvariantError, Option, attempt } from "@/infrastructure/result";
+import { formatToRegexp } from "@/templates";
 
 import { CycleService } from "../../cycle";
 import { JournalsIndex } from "../../journals-index";
@@ -17,8 +18,6 @@ import { TimelineService } from "../../timeline";
 import { NoteConnectionService } from "../note-connection";
 import { NotePathService } from "../note-path";
 import { splitVaultPath } from "../vault-path";
-
-import { formatToRegexp } from "./format-to-regexp";
 
 import type { BulkAddParameters } from "./config";
 import type { TypeId } from "../../notelets/config";
