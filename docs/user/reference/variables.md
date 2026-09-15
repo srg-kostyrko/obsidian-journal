@@ -41,12 +41,6 @@ of the journal's, plus `{{notelet_index}}`. The **Markdown template** view block
   Thursday under ISO 8601. That is what makes `{{date:YYYY}}` give the right year for a week that
   straddles New Year, whichever week configuration you use.
 
-  The week-year formats `gggg` and `GGGG` are **not recommended in a note name or a folder**. The
-  representative day already keeps `YYYY` right, and in a name or folder these two tokens stop the
-  plugin reading the date back out of the path — which it does for notes you create yourself and when
-  **Maintenance** repairs a stored date. Week numbers (`w`, `ww`) are fine. Inside a template's content
-  every token is ordinary formatting.
-
 - `{{start_date}}`, `{{end_date}}` — the period's first and last day, formatted and shifted like
   `{{date}}`. For a custom interval whose end you moved by hand, `{{end_date}}` is the moved end.
 - `{{week_of_month}}` — which week of its month the note's week is, counting the week that holds the 1st

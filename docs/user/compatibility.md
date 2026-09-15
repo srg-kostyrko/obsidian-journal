@@ -66,11 +66,9 @@ journal's **Default date format**, so write that format out.
 | ----------------------- | --------------------- | ------------------------------ |
 | `Journal/Daily`         | `{{date:YYYY-MM-DD}}` | `[Journal]/[Daily]/YYYY-MM-DD` |
 | `Journal/{{date:YYYY}}` | `{{date:YYYY-MM}}`    | `[Journal]/YYYY/YYYY-MM`       |
-| `Weekly`                | `{{date:YYYY-[W]ww}}` | `[Weekly]/gggg-[W]ww`          |
+| `Weekly`                | `{{date:gggg-[W]ww}}` | `[Weekly]/gggg-[W]ww`          |
 
-A weekly journal's `{{date:YYYY}}` is already the week's own year — see
-[Week numbers in names](/periods#week-numbers-in-names) — which is what `gggg` gives in Notebook
-Navigator. Notebook Navigator also insists on the parts that name a period: a weekly pattern needs a year
+Notebook Navigator insists on the parts that name a period: a weekly pattern needs a year
 and a week number, a daily one a year, month and day. A weekly journal named by its first day, like
 `{{start_date:YYYY-MM-DD}}`, cannot be written as a pattern it accepts.
 
