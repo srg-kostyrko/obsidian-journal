@@ -1,6 +1,7 @@
 import { WeekPresetApplierToken } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { freeName } from "@/journals/free-name";
 import { JournalsRepository } from "@/journals/repository";
 import { startupSlice } from "@/journals/startup/slice";
@@ -52,6 +53,7 @@ export class ImportService {
   readonly #journals = inject(JournalsRepository);
   readonly #shelves = inject(ShelvesRepository);
   readonly #shelving = inject(ShelvesService);
+  readonly #logger = inject(LoggerFactoryToken).named("import");
 
   #shelve(names: readonly string[]): ShelfOutcome[] {
     return names.map((name): ShelfOutcome => {
@@ -102,9 +104,15 @@ export class ImportService {
       });
       if (updated.isErr()) return { key: row.key, kind: "failed", name, message: updated.error.message };
       if (row.shelf !== undefined && usableShelves.has(row.shelf)) {
-        // No outcome slot exists for a shelving failure; the journal it belongs to still exists
-        // and is reported as created, so the failure is not swallowed but has nowhere else to go.
-        this.#shelving.assign(name, row.shelf);
+        // No outcome slot exists for a shelving failure; the journal itself was created fine.
+        const assigned = this.#shelving.assign(name, row.shelf);
+        if (assigned.isErr()) {
+          this.#logger.warn("could not place an imported journal on its shelf", {
+            journal: name,
+            shelf: row.shelf,
+            error: assigned.error,
+          });
+        }
       }
       return { key: row.key, kind: "created", journalName: name, connect: chosen.connect };
     });
