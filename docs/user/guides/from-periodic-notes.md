@@ -32,9 +32,10 @@ and weekly note, and core Daily notes.
   and template. A journal that already writes the same notes shows as already set up, whatever its
   name. A Daily notes or Calendar setup that Periodic Notes already covers starts switched off. With
   more than one calendar set, each becomes a shelf of the same name.
-- **Week start** — Calendar's week start is offered when it differs from yours. It starts switched
-  off once you have weekly notes connected, because applying it moves them to the new weeks. A week
-  start that cannot keep your current first-week rule is explained instead of offered.
+- **Week start** — when Calendar starts weeks on a named day, that day is offered as your week start,
+  unless you have already set weeks to start on it; Calendar's locale default is not offered. It
+  starts switched off once you have weekly notes connected, because applying it moves them to the new
+  weeks. A week start that cannot keep your current first-week rule is explained instead of offered.
 - **Startup** — the period Periodic Notes opens at startup becomes your startup journal, unless you
   already have one.
 - **Snapshot** — your settings are saved to a snapshot before anything changes, and

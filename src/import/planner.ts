@@ -132,25 +132,19 @@ export class ImportPlanner {
 
   #weekStart(readings: readonly SourceReading[]): WeekStartProposal {
     const hint = readings.find((reading) => reading.weekStart !== undefined)?.weekStart;
-    if (hint === undefined) return { kind: "unchanged" };
+    // Calendar's "locale" is its untouched default, not a choice; offering it would undo a week
+    // grid someone picked in Journals.
+    if (hint?.kind !== "day") return { kind: "unchanged" };
     const current = this.#settings.getSlice(calendarSlice).state;
-    let next: CalendarSliceState;
-    if (hint.kind === "locale") {
-      if (current.mode === "locale") return { kind: "unchanged" };
-      next = { mode: "locale" };
-    } else {
-      // A named weekday changes only the first day; the first-week rule stays the one in force.
-      const doy = current.mode === "custom" ? current.doy : this.#calendar.localeWeek().doy;
-      const firstDayInJanuary = 7 + hint.dow - doy;
-      if (firstDayInJanuary < 1 || firstDayInJanuary > 7) return { kind: "not-applicable", dow: hint.dow };
-      // Compared with the first day actually in force: a locale that already starts weeks on this
-      // day needs no custom grid to say so.
-      const currentDow = current.mode === "custom" ? current.dow : this.#calendar.localeWeek().dow;
-      if (currentDow === hint.dow) return { kind: "unchanged" };
-      // Not global: Calendar patches Obsidian's own locale, but Journals keeps its grid to itself
-      // so other plugins are not moved by an import.
-      next = { mode: "custom", dow: hint.dow, doy, global: false };
-    }
+    if (current.mode === "custom" && current.dow === hint.dow) return { kind: "unchanged" };
+    // A named weekday changes only the first day; the first-week rule stays the one in force.
+    const doy = current.mode === "custom" ? current.doy : this.#calendar.localeWeek().doy;
+    const firstDayInJanuary = 7 + hint.dow - doy;
+    if (firstDayInJanuary < 1 || firstDayInJanuary > 7) return { kind: "not-applicable", dow: hint.dow };
+    // Offered even when the locale already starts weeks on this day: that locale can be Calendar's
+    // own patch of it, and only an explicit grid survives disabling Calendar. Not global: Journals
+    // keeps its grid to itself so other plugins are not moved by an import.
+    const next: CalendarSliceState = { mode: "custom", dow: hint.dow, doy, global: false };
     const today = CalendarDate.today().toAnchor();
     // Applying a week start re-anchors every weekly note, which is not a default to take on
     // behalf of someone who already has weekly notes. A plain for-of avoids materializing the

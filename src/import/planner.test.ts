@@ -275,12 +275,22 @@ describe("ImportPlanner", () => {
       expect(harness.resolve(ImportPlanner).plan().weekStart).toEqual({ kind: "unchanged" });
     });
 
-    it("offers nothing when the locale already starts weeks on Calendar's day", async () => {
+    it("offers custom weeks from Calendar's day even when the locale already starts weeks on it", async () => {
       const harness = await harnessWith();
+      const locale = harness.resolve(Calendar).localeWeek();
       const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-      harness.host.putPlugin("calendar", {
-        options: { weekStart: weekdays[harness.resolve(Calendar).localeWeek().dow] },
+      harness.host.putPlugin("calendar", { options: { weekStart: weekdays[locale.dow] } });
+
+      expect(harness.resolve(ImportPlanner).plan().weekStart).toEqual({
+        kind: "offer",
+        next: { mode: "custom", dow: locale.dow, doy: locale.doy, global: false },
+        tickedByDefault: true,
       });
+    });
+
+    it("offers nothing for Calendar's default week start over a custom week grid", async () => {
+      const harness = await harnessWith({ calendar: { mode: "custom", dow: 1, doy: 4, global: false } });
+      harness.host.putPlugin("calendar", { options: { weekStart: "locale" } });
 
       expect(harness.resolve(ImportPlanner).plan().weekStart).toEqual({ kind: "unchanged" });
     });
