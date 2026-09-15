@@ -2,6 +2,7 @@ version: "0.2"
 language: en
 words:
   - asar
+  - autorun
   - bivariance
   - bivariant
   - callsite
@@ -49,6 +50,7 @@ words:
   - unitless
   - unmappable
   - unpadded
+  - unrecognised
   - unrenderable
   - unshifted
   - vnode
