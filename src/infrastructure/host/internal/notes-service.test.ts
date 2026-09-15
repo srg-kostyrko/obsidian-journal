@@ -76,6 +76,17 @@ describe("NotesService", () => {
       expect(result.value.toSorted()).toEqual(["Daily/2026-05-13.md", "Daily/2026/05/2026-05-14.md"]);
     });
 
+    it("lists every note in the vault from the vault root", async () => {
+      const { service, host } = build();
+      host.putFile("2026-05-13.md");
+      host.putFile("Other/note.md");
+
+      const result = await service.listInFolder("" as VaultPath);
+
+      expectOk(result);
+      expect(result.value.toSorted()).toEqual(["2026-05-13.md", "Other/note.md"]);
+    });
+
     it("returns FolderNotFoundError when the folder does not exist", async () => {
       const { service } = build();
       const result = await service.listInFolder("Nope" as VaultPath);

@@ -55,6 +55,9 @@ export const manual = {
     snapshots: "/troubleshooting#settings-snapshots",
     vaultCheck: "/troubleshooting#vault-check",
   },
+  guides: {
+    importing: "/guides/from-periodic-notes#importing-your-settings",
+  },
 } as const;
 
 export type ManualPath = {

@@ -2,14 +2,16 @@ import userEvent from "@testing-library/user-event";
 import { screen, waitFor, within } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
 
-import { localMoment } from "@/calendar";
+import { calendarSettingsModule, localMoment } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
+import { importCoreModule } from "@/import/module";
 import { PluginDataIOError } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import { startupModule } from "@/journals/startup/module";
 import { CURRENT_VERSION } from "@/settings";
 import { legacyMigrationsModule, pendingNoteMigrationSlice } from "@/settings/legacy";
 import { testContainer, type TestHarness } from "@/testing";
@@ -39,7 +41,15 @@ interface StubOptions {
 
 async function setup(stubs: StubOptions = {}): Promise<TestHarness> {
   const harness = await testContainer({
-    modules: [journalsCoreModule, maintenanceCoreModule, maintenanceUiModule, legacyMigrationsModule],
+    modules: [
+      journalsCoreModule,
+      maintenanceCoreModule,
+      maintenanceUiModule,
+      legacyMigrationsModule,
+      importCoreModule,
+      calendarSettingsModule,
+      startupModule,
+    ],
     data: { journals: {}, [pendingNoteMigrationSlice.key]: [] },
   });
   const files = Object.entries(stubs.files ?? {});
@@ -97,6 +107,22 @@ describe("MaintenanceSubpage", () => {
     mount(harness);
 
     expect(await screen.findByText(m.maintenance_snapshot_row({ version: 3 }))).toBeTruthy();
+  });
+
+  it("offers the import from other plugins", async () => {
+    const harness = await setup();
+
+    mount(harness);
+
+    expect(await screen.findByText(m.import_section_heading())).toBeTruthy();
+  });
+
+  it("labels a snapshot taken before an import", async () => {
+    const harness = await setup({ files: { "backup-import-v5-2026-09-15T10-20-30.json": '{"version":5}' } });
+
+    mount(harness);
+
+    expect(await screen.findByText(m.maintenance_snapshot_row_import())).toBeTruthy();
   });
 
   it("says so when there are no snapshots", async () => {

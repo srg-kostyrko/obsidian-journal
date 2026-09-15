@@ -4,7 +4,7 @@ import { AsyncResult, attempt } from "@/infrastructure/result";
 
 import { SnapshotUnreadableError } from "../errors";
 
-export type SnapshotReason = "migration" | "pre-restore";
+export type SnapshotReason = "migration" | "pre-restore" | "pre-import";
 
 export interface SnapshotInfo {
   readonly name: string;
@@ -14,12 +14,17 @@ export interface SnapshotInfo {
 }
 
 // Colons are legal in an ISO timestamp and illegal in a Windows filename, hence the dashes.
-const NAME_PATTERN = /^backup-(restore-)?v(\d+)-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})\.json$/;
+const NAME_PATTERN = /^backup-(restore-|import-)?v(\d+)-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})\.json$/;
+
+const REASON_BY_PREFIX: Readonly<Record<string, SnapshotReason>> = {
+  "restore-": "pre-restore",
+  "import-": "pre-import",
+};
 
 function parseName(name: string): SnapshotInfo | undefined {
   const match = NAME_PATTERN.exec(name);
   if (!match) return undefined;
-  const [, restore, version, date, hour, minute, second] = match;
+  const [, prefix, version, date, hour, minute, second] = match;
   if (
     version === undefined ||
     date === undefined ||
@@ -33,7 +38,7 @@ function parseName(name: string): SnapshotInfo | undefined {
     name,
     fromVersion: Number(version),
     takenAt: `${date}T${hour}:${minute}:${second}Z`,
-    reason: restore === undefined ? "migration" : "pre-restore",
+    reason: prefix === undefined ? "migration" : (REASON_BY_PREFIX[prefix] ?? "migration"),
   };
 }
 
@@ -50,6 +55,10 @@ export class SnapshotService {
 
   writePreRestore(fromVersion: number, contents: string, takenAt: string): AsyncResult<void, PluginDataIOError> {
     return this.#data.writeFile(`backup-restore-v${fromVersion}-${stampOf(takenAt)}.json`, contents);
+  }
+
+  writePreImport(fromVersion: number, contents: string, takenAt: string): AsyncResult<void, PluginDataIOError> {
+    return this.#data.writeFile(`backup-import-v${fromVersion}-${stampOf(takenAt)}.json`, contents);
   }
 
   prune(reason: SnapshotReason, keep: number): AsyncResult<void, PluginDataIOError> {

@@ -1646,6 +1646,120 @@
   ],
   "journal_clone_copy_name": "{name} (copia)",
   "journal_clone_copy_name_indexed": "{name} (copia) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Diario",
+        "period=week": "Semanal",
+        "period=month": "Mensual",
+        "period=quarter": "Trimestral",
+        "period=year": "Anual"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} diario",
+        "period=week": "{set} semanal",
+        "period=month": "{set} mensual",
+        "period=quarter": "{set} trimestral",
+        "period=year": "{set} anual"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "Importar ajustes desde otros plugins",
+  "import_preview_unrecognised": "No se pudieron leer los ajustes de {source}, así que no se importa nada.",
+  "import_preview_name_label": "Nombre del diario",
+  "import_preview_row_layout": "En {folder}, nombrado según {format}",
+  "import_preview_row_template": "Usa la plantilla {path}.",
+  "import_preview_row_set_up": "Ya configurado como {journalName}.",
+  "import_preview_row_superseded": "{source} ya cubre este período, así que esto está desactivado de forma predeterminada.",
+  "import_preview_include": "Crear este diario",
+  "import_preview_connect": "Conectar notas existentes",
+  "import_preview_shelves": "Los diarios se colocan en los estantes {names}.",
+  "import_preview_week_start_label": "Aplicar el inicio de semana",
+  "import_preview_week_start_description": "Usa el inicio de semana de Calendar. Las notas semanales ya conectadas se mueven a las nuevas semanas.",
+  "import_preview_week_start_not_applicable": "Las semanas que empiezan en {day} no pueden mantener la regla actual de la primera semana, así que el inicio de semana se mantiene como está.",
+  "import_preview_startup_label": "Abrir al iniciar",
+  "import_preview_startup_description": "Abre {name} cuando Obsidian se inicia.",
+  "import_preview_startup_kept": "{journalName} ya se abre al iniciar y seguirá así.",
+  "import_preview_warning_week_start": "Sus notas se nombraron con un inicio de semana diferente, así que es posible que algunas no se emparejen ni se conecten.",
+  "import_preview_warning_iso_week": "El formato usa números de semana ISO, que no siguen la cuadrícula de semana personalizada.",
+  "import_preview_warning_missing_template": "La plantilla {path} no existe.",
+  "import_preview_confirm": "Importar",
+  "import_connect_title": "Conectar notas existentes",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "Se conectará 1 nota.", "count=*": "Se conectarán {count} notas." }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota omitida: {reason}",
+        "count=*": "{count} notas omitidas: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Las notas no se pueden conectar: {reason}",
+  "import_connect_skip_period_has_note": "El período ya tiene una nota",
+  "import_connect_skip_several_journals": "Coincide con más de un diario",
+  "import_connect_by_title_hint": "Una nota que Periodic Notes encontró solo por su nombre no está en la ruta del diario. Agregar notas en bloque por título de la nota puede conectarla.",
+  "import_connect_run": "Conectar",
+  "import_connect_skip": "Omitir",
+  "import_report_heading": "Importación completada",
+  "import_report_snapshot": "Sus ajustes se guardaron primero en una instantánea.",
+  "import_report_snapshot_failed": "Sus ajustes no se pudieron guardar primero en una instantánea.",
+  "import_report_week_start": "Se aplicó el inicio de semana.",
+  "import_report_shelf_created": "Estante {name} creado.",
+  "import_report_shelf_existing": "El estante {name} ya existía y se usó.",
+  "import_report_shelf_failed": "El estante {name} no se pudo crear: {message}",
+  "import_report_journal_created": "Diario {name} creado.",
+  "import_report_journal_existing": "El diario {name} ya estaba configurado.",
+  "import_report_journal_failed": "El diario {name} no se pudo crear: {message}",
+  "import_report_startup_set": "{name} ahora se abre al iniciar.",
+  "import_report_startup_kept": "{name} sigue abriéndose al iniciar.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 1 nota conectada.",
+        "count=*": "{name}: {count} notas conectadas."
+      }
+    }
+  ],
+  "import_report_connect_failed": "No se pudo conectar {path}: {message}",
+  "import_notice_heading": "Importación desde otros plugins",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{sources} puede configurar 1 diario por ti y conectar las notas que ya tienes.",
+        "count=*": "{sources} puede configurar {count} diarios por ti y conectar las notas que ya tienes."
+      }
+    }
+  ],
+  "import_notice_dismiss": "No volver a mostrar",
+  "import_action": "Importar…",
+  "import_section_heading": "Importación desde otros plugins",
+  "import_section_description": "Configura diarios a partir de los ajustes de Periodic Notes, Calendar y el plugin principal Daily notes, y conecta las notas que ya tienes. Solo se leen los plugins habilitados.",
+  "import_section_none": "Ninguno de Periodic Notes, Calendar ni el plugin principal Daily notes está habilitado.",
+  "import_section_nothing": "Los plugins habilitados no tienen nada que importar.",
   "journal_clone_modal_description": "Se copian los ajustes y los comandos. Las notas no.",
   "journal_clone_modal_name_label": "Nuevo nombre del diario",
   "journal_clone_modal_title": "Clonar {name}",
@@ -2135,6 +2249,7 @@
   "maintenance_snapshot_failed": "No se pudo restaurar esa instantánea. Puede estar dañada.",
   "maintenance_snapshots_load_failed": "No se pudieron comprobar las instantáneas. Esto no significa que no exista ninguna: intenta volver a abrir esta página.",
   "maintenance_snapshot_row_restore": "Tomada antes de restaurar una instantánea",
+  "maintenance_snapshot_row_import": "Tomada antes de importar la configuración desde otros complementos",
   "maintenance_check_heading": "Comprobación de la bóveda",
   "maintenance_check_scanning": "Comprobando tus notas…",
   "maintenance_check_indexing": "Tu bóveda todavía se está indexando. Vuelve a abrir esta página en un momento.",

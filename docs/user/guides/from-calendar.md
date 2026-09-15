@@ -24,6 +24,8 @@ property rather than the file, and a day can hold any number of extra notes thro
 
 ## Your existing notes
 
+The [import](/guides/from-periodic-notes#importing-your-settings) reads Calendar's week start and its weekly note when it shows one, and core Daily notes' setup for the daily notes Calendar displays; it sets up the matching journals and connects the notes you already have. The steps below cover only the daily journal, by hand.
+
 Calendar shows the daily notes that the core Daily notes plugin — or Periodic Notes, when it is on —
 creates, and finds them by file name. Journals finds notes by their properties instead, and adopts a
 note that was already in your vault only when you rename or move it onto a path the journal would use —

@@ -1501,6 +1501,114 @@
   ],
   "journal_clone_copy_name": "{name}（副本）",
   "journal_clone_copy_name_indexed": "{name}（副本） {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "每日",
+        "period=week": "每周",
+        "period=month": "每月",
+        "period=quarter": "每季度",
+        "period=year": "每年"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} 每日",
+        "period=week": "{set} 每周",
+        "period=month": "{set} 每月",
+        "period=quarter": "{set} 每季度",
+        "period=year": "{set} 每年"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "从其他插件导入设置",
+  "import_preview_unrecognised": "无法读取 {source} 的设置，因此不会导入任何内容。",
+  "import_preview_name_label": "日记名称",
+  "import_preview_row_layout": "位于 {folder}，以 {format} 命名",
+  "import_preview_row_template": "使用模板 {path}。",
+  "import_preview_row_set_up": "已设置为 {journalName}。",
+  "import_preview_row_superseded": "{source} 已经涵盖此周期，因此默认关闭。",
+  "import_preview_include": "创建此日记",
+  "import_preview_connect": "连接现有笔记",
+  "import_preview_shelves": "日记会放置在书架 {names} 上。",
+  "import_preview_week_start_label": "应用每周起始日",
+  "import_preview_week_start_description": "使用 Calendar 的每周起始日。已连接的每周笔记会移动到新的周。",
+  "import_preview_week_start_not_applicable": "从 {day} 开始的周无法保留当前的第一周规则，因此每周起始日保持不变。",
+  "import_preview_startup_label": "启动时打开",
+  "import_preview_startup_description": "Obsidian 启动时打开 {name}。",
+  "import_preview_startup_kept": "{journalName} 已经在启动时打开，并将继续保持。",
+  "import_preview_warning_week_start": "其笔记是在不同的每周起始日下命名的，因此有些可能无法匹配或连接。",
+  "import_preview_warning_iso_week": "此格式使用 ISO 周数，不遵循自定义的周设置。",
+  "import_preview_warning_missing_template": "模板 {path} 不存在。",
+  "import_preview_confirm": "导入",
+  "import_connect_title": "连接现有笔记",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "将连接 {count} 条笔记。", "count=*": "将连接 {count} 条笔记。" }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": { "count=1": "已跳过 {count} 条笔记：{reason}", "count=*": "已跳过 {count} 条笔记：{reason}" }
+    }
+  ],
+  "import_connect_blocked": "笔记无法连接：{reason}",
+  "import_connect_skip_period_has_note": "该周期已有笔记",
+  "import_connect_skip_several_journals": "匹配多个日记",
+  "import_connect_by_title_hint": "Periodic Notes 仅通过名称找到的笔记不在日记的路径上。按笔记标题批量添加可以连接它。",
+  "import_connect_run": "连接",
+  "import_connect_skip": "跳过",
+  "import_report_heading": "导入完成",
+  "import_report_snapshot": "您的设置已先保存为快照。",
+  "import_report_snapshot_failed": "未能先将您的设置保存为快照。",
+  "import_report_week_start": "已应用每周起始日。",
+  "import_report_shelf_created": "已创建书架 {name}。",
+  "import_report_shelf_existing": "书架 {name} 已存在，已使用。",
+  "import_report_shelf_failed": "无法创建书架 {name}：{message}",
+  "import_report_journal_created": "已创建日记 {name}。",
+  "import_report_journal_existing": "日记 {name} 已经设置好。",
+  "import_report_journal_failed": "无法创建日记 {name}：{message}",
+  "import_report_startup_set": "{name} 现在会在启动时打开。",
+  "import_report_startup_kept": "{name} 仍会在启动时打开。",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "{name}：已连接 {count} 条笔记。", "count=*": "{name}：已连接 {count} 条笔记。" }
+    }
+  ],
+  "import_report_connect_failed": "无法连接 {path}：{message}",
+  "import_notice_heading": "从其他插件导入",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{sources} 可以为您设置 1 个日记，并连接您已有的笔记。",
+        "count=*": "{sources} 可以为您设置 {count} 个日记，并连接您已有的笔记。"
+      }
+    }
+  ],
+  "import_notice_dismiss": "不再显示",
+  "import_action": "导入…",
+  "import_section_heading": "从其他插件导入",
+  "import_section_description": "根据 Periodic Notes、Calendar 和核心插件 Daily notes 的设置来配置日记，并连接您已有的笔记。仅读取已启用的插件。",
+  "import_section_none": "Periodic Notes、Calendar 和核心插件 Daily notes 均未启用。",
+  "import_section_nothing": "已启用的插件没有可导入的内容。",
   "journal_clone_modal_description": "设置和命令会被复制，笔记不会。",
   "journal_clone_modal_name_label": "新日记名称",
   "journal_clone_modal_title": "克隆{name}",
@@ -2135,6 +2243,7 @@
   "maintenance_snapshot_failed": "无法恢复该快照,可能已损坏。",
   "maintenance_snapshots_load_failed": "无法检查快照。这并不意味着不存在快照——请尝试重新打开此页面。",
   "maintenance_snapshot_row_restore": "在恢复快照之前创建",
+  "maintenance_snapshot_row_import": "在从其他插件导入设置之前创建",
   "maintenance_check_heading": "库检查",
   "maintenance_check_scanning": "正在检查您的笔记…",
   "maintenance_check_indexing": "仍在为库建立索引。请稍后重新打开此页面。",

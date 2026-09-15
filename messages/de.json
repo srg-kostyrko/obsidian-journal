@@ -1656,6 +1656,123 @@
   ],
   "journal_clone_copy_name": "{name} (Kopie)",
   "journal_clone_copy_name_indexed": "{name} (Kopie) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Täglich",
+        "period=week": "Wöchentlich",
+        "period=month": "Monatlich",
+        "period=quarter": "Vierteljährlich",
+        "period=year": "Jährlich"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} täglich",
+        "period=week": "{set} wöchentlich",
+        "period=month": "{set} monatlich",
+        "period=quarter": "{set} vierteljährlich",
+        "period=year": "{set} jährlich"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "Einstellungen aus anderen Plugins importieren",
+  "import_preview_unrecognised": "Die Einstellungen von {source} konnten nicht gelesen werden, daher wird nichts daraus importiert.",
+  "import_preview_name_label": "Journalname",
+  "import_preview_row_layout": "In {folder}, benannt nach {format}",
+  "import_preview_row_template": "Verwendet die Vorlage {path}.",
+  "import_preview_row_set_up": "Bereits eingerichtet als {journalName}.",
+  "import_preview_row_superseded": "{source} deckt diesen Zeitraum bereits ab, daher ist dies standardmäßig deaktiviert.",
+  "import_preview_include": "Dieses Journal erstellen",
+  "import_preview_connect": "Vorhandene Notizen verknüpfen",
+  "import_preview_shelves": "Journale werden auf den Regalen {names} platziert.",
+  "import_preview_week_start_label": "Wochenbeginn übernehmen",
+  "import_preview_week_start_description": "Verwendet den Wochenbeginn von Calendar. Bereits verknüpfte Wochennotizen werden in die neuen Wochen verschoben.",
+  "import_preview_week_start_not_applicable": "Wochen, die am {day} beginnen, können die aktuelle Regel für die erste Woche nicht beibehalten, daher bleibt der Wochenbeginn unverändert.",
+  "import_preview_startup_label": "Beim Start öffnen",
+  "import_preview_startup_description": "Öffnet {name}, wenn Obsidian startet.",
+  "import_preview_startup_kept": "{journalName} wird bereits beim Start geöffnet und bleibt es weiterhin.",
+  "import_preview_warning_week_start": "Die Notizen wurden unter einem anderen Wochenbeginn benannt, daher werden einige möglicherweise nicht zugeordnet oder verknüpft.",
+  "import_preview_warning_iso_week": "Das Format verwendet ISO-Wochennummern, die nicht dem benutzerdefinierten Wochenraster folgen.",
+  "import_preview_warning_missing_template": "Die Vorlage {path} existiert nicht.",
+  "import_preview_confirm": "Importieren",
+  "import_connect_title": "Vorhandene Notizen verknüpfen",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Notiz wird verknüpft.",
+        "count=*": "{count} Notizen werden verknüpft."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Notiz übersprungen: {reason}",
+        "count=*": "{count} Notizen übersprungen: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Notizen können nicht verknüpft werden: {reason}",
+  "import_connect_skip_period_has_note": "Für diesen Zeitraum gibt es bereits eine Notiz",
+  "import_connect_skip_several_journals": "Passt zu mehr als einem Journal",
+  "import_connect_by_title_hint": "Eine Notiz, die Periodic Notes nur anhand ihres Namens gefunden hat, liegt nicht auf dem Pfad des Journals. Das Hinzufügen mehrerer Notizen anhand des Notiztitels kann sie verknüpfen.",
+  "import_connect_run": "Verknüpfen",
+  "import_connect_skip": "Überspringen",
+  "import_report_heading": "Import abgeschlossen",
+  "import_report_snapshot": "Deine Einstellungen wurden zuerst in einem Snapshot gespeichert.",
+  "import_report_snapshot_failed": "Deine Einstellungen konnten nicht zuerst in einem Snapshot gespeichert werden.",
+  "import_report_week_start": "Der Wochenbeginn wurde übernommen.",
+  "import_report_shelf_created": "Regal {name} erstellt.",
+  "import_report_shelf_existing": "Regal {name} existierte bereits und wurde verwendet.",
+  "import_report_shelf_failed": "Regal {name} konnte nicht erstellt werden: {message}",
+  "import_report_journal_created": "Journal {name} erstellt.",
+  "import_report_journal_existing": "Journal {name} war bereits eingerichtet.",
+  "import_report_journal_failed": "Journal {name} konnte nicht erstellt werden: {message}",
+  "import_report_startup_set": "{name} wird jetzt beim Start geöffnet.",
+  "import_report_startup_kept": "{name} wird weiterhin beim Start geöffnet.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 1 Notiz verknüpft.",
+        "count=*": "{name}: {count} Notizen verknüpft."
+      }
+    }
+  ],
+  "import_report_connect_failed": "{path} konnte nicht verknüpft werden: {message}",
+  "import_notice_heading": "Import aus anderen Plugins",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Mit {sources} kannst du 1 Journal einrichten und die Notizen verknüpfen, die du bereits hast.",
+        "count=*": "Mit {sources} kannst du {count} Journale einrichten und die Notizen verknüpfen, die du bereits hast."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Nicht mehr anzeigen",
+  "import_action": "Importieren…",
+  "import_section_heading": "Import aus anderen Plugins",
+  "import_section_description": "Richte Journale anhand der Einstellungen von Periodic Notes, Calendar und dem Kern-Plugin Daily notes ein und verknüpfe die Notizen, die du bereits hast. Es werden nur aktivierte Plugins gelesen.",
+  "import_section_none": "Keines von Periodic Notes, Calendar und dem Kern-Plugin Daily notes ist aktiviert.",
+  "import_section_nothing": "Die aktivierten Plugins haben nichts zu importieren.",
   "journal_clone_modal_description": "Einstellungen und Befehle werden kopiert, Notizen nicht.",
   "journal_clone_modal_name_label": "Neuer Journalname",
   "journal_clone_modal_title": "{name} klonen",
@@ -2145,6 +2262,7 @@
   "maintenance_snapshot_failed": "Dieser Snapshot konnte nicht wiederhergestellt werden. Er ist möglicherweise beschädigt.",
   "maintenance_snapshots_load_failed": "Snapshots konnten nicht überprüft werden. Das bedeutet nicht, dass keine vorhanden sind – versuche, diese Seite erneut zu öffnen.",
   "maintenance_snapshot_row_restore": "Erstellt vor dem Wiederherstellen eines Snapshots",
+  "maintenance_snapshot_row_import": "Erstellt vor dem Importieren von Einstellungen aus anderen Plugins",
   "maintenance_check_heading": "Vault-Prüfung",
   "maintenance_check_scanning": "Deine Notizen werden überprüft…",
   "maintenance_check_indexing": "Dein Vault wird noch indiziert. Öffne diese Seite gleich erneut.",
