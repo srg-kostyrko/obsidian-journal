@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Settings sections now link to the manual. A **?** next to a section's heading — on the main settings page and on every journal, notelet type, shelf and view page — opens the part of the manual that explains that section, in your browser.
+- **Bulk add** can now read a note's date from where the note sits in your vault. Choose **Note path** under **Read the date from**, and each note is matched against the folder and name the journal itself would give it — so a daily journal filed under `{{date:YYYY}}/{{date:MM-MMM}}` with notes named `{{date:DD-ddd}}` connects `2024/03-Mar/05-Tue.md`, where the title alone says only `05-Tue` and cannot tell which month or year it belongs to. The date format does not apply and is hidden. A note that is not at a path the journal would use is skipped with its own reason, **Not at a path this journal uses**, rather than as having no date — a note moved out of its date folders is not guessed back into them. The option is unavailable, with the reason, for a journal whose note paths cannot be read back into a date, and notelet bulk add does not offer it, since a notelet's path does not say which notelet it is.
 
 ### Bug Fixes
 
