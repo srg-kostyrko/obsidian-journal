@@ -1654,6 +1654,33 @@
   ],
   "journal_clone_copy_name": "{name} (copie)",
   "journal_clone_copy_name_indexed": "{name} (copie) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Quotidien",
+        "period=week": "Hebdomadaire",
+        "period=month": "Mensuel",
+        "period=quarter": "Trimestriel",
+        "period=year": "Annuel"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} quotidien",
+        "period=week": "{set} hebdomadaire",
+        "period=month": "{set} mensuel",
+        "period=quarter": "{set} trimestriel",
+        "period=year": "{set} annuel"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "Les paramètres et les commandes sont copiés. Les notes ne le sont pas.",
   "journal_clone_modal_name_label": "Nouveau nom du journal",
   "journal_clone_modal_title": "Cloner {name}",

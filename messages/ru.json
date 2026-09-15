@@ -1694,6 +1694,33 @@
   ],
   "journal_clone_copy_name": "{name} (копия)",
   "journal_clone_copy_name_indexed": "{name} (копия) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Ежедневный",
+        "period=week": "Еженедельный",
+        "period=month": "Ежемесячный",
+        "period=quarter": "Ежеквартальный",
+        "period=year": "Ежегодный"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} ежедневный",
+        "period=week": "{set} еженедельный",
+        "period=month": "{set} ежемесячный",
+        "period=quarter": "{set} ежеквартальный",
+        "period=year": "{set} ежегодный"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "Настройки и команды копируются. Заметки — нет.",
   "journal_clone_modal_name_label": "Новое название журнала",
   "journal_clone_modal_title": "Клонировать {name}",

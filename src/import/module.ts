@@ -1,5 +1,6 @@
 import { inject, type Module } from "@/infrastructure/di";
 
+import { ImportPlanner } from "./planner";
 import { ImportSourceToken } from "./source";
 import { CalendarSource } from "./sources/calendar";
 import { DailyNotesSource } from "./sources/daily-notes";
@@ -13,5 +14,6 @@ export const importCoreModule: Module = {
     c.register(ImportSourceToken).useFactory(() => inject(PeriodicNotesSource));
     c.register(ImportSourceToken).useFactory(() => inject(CalendarSource));
     c.register(ImportSourceToken).useFactory(() => inject(DailyNotesSource));
+    c.register(ImportPlanner).useClass(ImportPlanner);
   },
 };

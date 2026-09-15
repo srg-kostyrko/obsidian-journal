@@ -1501,6 +1501,33 @@
   ],
   "journal_clone_copy_name": "{name}（副本）",
   "journal_clone_copy_name_indexed": "{name}（副本） {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "每日",
+        "period=week": "每周",
+        "period=month": "每月",
+        "period=quarter": "每季度",
+        "period=year": "每年"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} 每日",
+        "period=week": "{set} 每周",
+        "period=month": "{set} 每月",
+        "period=quarter": "{set} 每季度",
+        "period=year": "{set} 每年"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "设置和命令会被复制，笔记不会。",
   "journal_clone_modal_name_label": "新日记名称",
   "journal_clone_modal_title": "克隆{name}",

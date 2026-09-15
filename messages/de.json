@@ -1656,6 +1656,33 @@
   ],
   "journal_clone_copy_name": "{name} (Kopie)",
   "journal_clone_copy_name_indexed": "{name} (Kopie) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Täglich",
+        "period=week": "Wöchentlich",
+        "period=month": "Monatlich",
+        "period=quarter": "Vierteljährlich",
+        "period=year": "Jährlich"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} täglich",
+        "period=week": "{set} wöchentlich",
+        "period=month": "{set} monatlich",
+        "period=quarter": "{set} vierteljährlich",
+        "period=year": "{set} jährlich"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "Einstellungen und Befehle werden kopiert, Notizen nicht.",
   "journal_clone_modal_name_label": "Neuer Journalname",
   "journal_clone_modal_title": "{name} klonen",

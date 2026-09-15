@@ -1539,6 +1539,33 @@
   ],
   "journal_clone_copy_name": "{name} (копія)",
   "journal_clone_copy_name_indexed": "{name} (копія) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Щоденний",
+        "period=week": "Щотижневий",
+        "period=month": "Щомісячний",
+        "period=quarter": "Щоквартальний",
+        "period=year": "Щорічний"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} щоденний",
+        "period=week": "{set} щотижневий",
+        "period=month": "{set} щомісячний",
+        "period=quarter": "{set} щоквартальний",
+        "period=year": "{set} щорічний"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "Налаштування та команди копіюються. Нотатки — ні.",
   "journal_clone_modal_name_label": "Нова назва журналу",
   "journal_clone_modal_title": "Клонувати {name}",

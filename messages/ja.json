@@ -1501,6 +1501,33 @@
   ],
   "journal_clone_copy_name": "{name}（コピー）",
   "journal_clone_copy_name_indexed": "{name}（コピー） {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "毎日",
+        "period=week": "毎週",
+        "period=month": "毎月",
+        "period=quarter": "四半期ごと",
+        "period=year": "毎年"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} 毎日",
+        "period=week": "{set} 毎週",
+        "period=month": "{set} 毎月",
+        "period=quarter": "{set} 四半期ごと",
+        "period=year": "{set} 毎年"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
   "journal_clone_modal_name_label": "新しいジャーナル名",
   "journal_clone_modal_title": "{name}を複製",

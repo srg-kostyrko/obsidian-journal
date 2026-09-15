@@ -1654,6 +1654,33 @@
   ],
   "journal_clone_copy_name": "{name} (copia)",
   "journal_clone_copy_name_indexed": "{name} (copia) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Giornaliero",
+        "period=week": "Settimanale",
+        "period=month": "Mensile",
+        "period=quarter": "Trimestrale",
+        "period=year": "Annuale"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} giornaliero",
+        "period=week": "{set} settimanale",
+        "period=month": "{set} mensile",
+        "period=quarter": "{set} trimestrale",
+        "period=year": "{set} annuale"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "Le impostazioni e i comandi vengono copiati. Le note no.",
   "journal_clone_modal_name_label": "Nuovo nome del diario",
   "journal_clone_modal_title": "Clona {name}",

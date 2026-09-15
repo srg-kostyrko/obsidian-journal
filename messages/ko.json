@@ -1646,6 +1646,33 @@
   ],
   "journal_clone_copy_name": "{name} (사본)",
   "journal_clone_copy_name_indexed": "{name} (사본) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "일간",
+        "period=week": "주간",
+        "period=month": "월간",
+        "period=quarter": "계간",
+        "period=year": "연간"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} 일간",
+        "period=week": "{set} 주간",
+        "period=month": "{set} 월간",
+        "period=quarter": "{set} 계간",
+        "period=year": "{set} 연간"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
   "journal_clone_modal_description": "설정과 명령은 복사됩니다. 노트는 복사되지 않습니다.",
   "journal_clone_modal_name_label": "새 저널 이름",
   "journal_clone_modal_title": "{name} 복제",
