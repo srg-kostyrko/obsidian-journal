@@ -1,0 +1,19 @@
+{
+  "installedVersion": "1.0.0-beta.3",
+  "activeCalendarSet": "Default",
+  "showGettingStartedBanner": false,
+  "hasMigratedDailyNoteSettings": true,
+  "hasMigratedWeeklyNoteSettings": true,
+  "enableTimelineComplication": false,
+  "calendarSets": [
+    {
+      "id": "Default",
+      "ctime": "2026-01-01T00:00:00+00:00",
+      "day": { "enabled": true, "openAtStartup": false, "format": "YYYY-MM-DD", "folder": "Daily", "templatePath": "" },
+      "week": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
+      "month": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
+      "quarter": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" },
+      "year": { "enabled": false, "openAtStartup": false, "format": "", "folder": "", "templatePath": "" }
+    }
+  ]
+}

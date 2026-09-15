@@ -83,7 +83,9 @@ export const config: WebdriverIO.Config = {
     smoke: ["./e2e/smoke/**/*.e2e.ts"],
     integration: ["./e2e/integration/**/*.e2e.ts"],
     migration: ["./e2e/migration/**/*.e2e.ts"],
-    interop: ["./e2e/interop/**/*.e2e.ts"],
+    // interop-1x holds the specs that need Periodic Notes 1.x, which can only run under its own
+    // capability: both versions share the plugin id "periodic-notes".
+    interop: ["./e2e/interop/**/*.e2e.ts", "./e2e/interop-1x/**/*.e2e.ts"],
     journeys: ["./e2e/journeys/**/*.e2e.ts"],
     quarantine: ["./e2e/quarantine/**/*.e2e.ts"],
     // Documentation screenshots. No CI job names this suite and the bare glob above matches only
@@ -94,22 +96,54 @@ export const config: WebdriverIO.Config = {
   // One full Obsidian boot per worker; start single-process for determinism.
   maxInstances: 1,
 
-  capabilities: versions.map(([appVersion, installerVersion]) => ({
-    browserName: "obsidian",
-    browserVersion: appVersion,
-    "goog:loggingPrefs": { browser: "ALL" },
-    "wdio:obsidianOptions": {
-      installerVersion,
-      // Templater is installed from the community registry but starts disabled; the
-      // interop specs enable it per-boot via reloadObsidian so other suites are
-      // unaffected. reloadObsidian can only enable plugins declared here. Pinned to
-      // 2.18.0: it requires Obsidian >= 1.5.0, the newest Templater that still loads
-      // across the whole matrix (our floor 1.8.7 .. latest stable). Templater 2.21+
-      // require the 1.13 beta and silently stay unloaded on stable Obsidian.
-      plugins: ["./build", { id: "templater-obsidian", version: "2.18.0", enabled: false }],
-      vault: "./e2e/fixtures/e2e-empty",
+  capabilities: versions.flatMap(([appVersion, installerVersion]) => [
+    {
+      browserName: "obsidian",
+      browserVersion: appVersion,
+      "goog:loggingPrefs": { browser: "ALL" },
+      // Directory excludes, not a spec list: WDIO replaces a capability's `wdio:specs` whenever a
+      // suite is named, and every CI run names suites. `wdio:exclude` is honoured either way.
+      "wdio:exclude": ["./e2e/interop-1x/**"],
+      "wdio:obsidianOptions": {
+        installerVersion,
+        // Templater is installed from the community registry but starts disabled; the
+        // interop specs enable it per-boot via reloadObsidian so other suites are
+        // unaffected. reloadObsidian can only enable plugins declared here. Pinned to
+        // 2.18.0: it requires Obsidian >= 1.5.0, the newest Templater that still loads
+        // across the whole matrix (our floor 1.8.7 .. latest stable). Templater 2.21+
+        // require the 1.13 beta and silently stay unloaded on stable Obsidian.
+        // Periodic Notes 0.0.17 and Calendar 1.5.10 are the community-store versions the import reads.
+        plugins: [
+          "./build",
+          { id: "templater-obsidian", version: "2.18.0", enabled: false },
+          { id: "periodic-notes", version: "0.0.17", enabled: false },
+          { id: "calendar", version: "1.5.10", enabled: false },
+        ],
+        vault: "./e2e/fixtures/e2e-empty",
+      },
     },
-  })),
+    {
+      browserName: "obsidian",
+      browserVersion: appVersion,
+      "goog:loggingPrefs": { browser: "ALL" },
+      "wdio:exclude": [
+        "./e2e/smoke/**",
+        "./e2e/integration/**",
+        "./e2e/migration/**",
+        "./e2e/interop/**",
+        "./e2e/journeys/**",
+        "./e2e/quarantine/**",
+        "./e2e/screenshots/**",
+      ],
+      "wdio:obsidianOptions": {
+        installerVersion,
+        // Pinned by version: "latest" resolves through the repo's HEAD manifest, which still says
+        // 0.0.17 even at the beta tags.
+        plugins: ["./build", { repo: "liamcain/obsidian-periodic-notes", version: "1.0.0-beta.3", enabled: false }],
+        vault: "./e2e/fixtures/e2e-empty",
+      },
+    },
+  ]),
 
   services: ["obsidian"],
 

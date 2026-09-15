@@ -154,6 +154,13 @@ integration --suite migration --suite interop --suite journeys`), omitting
   its file into the `quarantine` suite; it keeps running nightly and never blocks a
   merge — no separate mechanism needed.
 
+- **Periodic Notes 1.x capability.** Periodic Notes 0.x and 1.x share the plugin id `periodic-notes`,
+  so 1.x (`1.0.0-beta.3`, installed from GitHub) gets a second capability per version combo. That
+  capability runs only `e2e/interop-1x/`, and the main capabilities exclude that directory. Both
+  use directory `wdio:exclude` lists, because WDIO replaces `wdio:specs` whenever a suite is named.
+  A new spec needing 1.x goes under `e2e/interop-1x/`; a new top-level spec directory must be added
+  to the 1.x capability's exclude list.
+
 - **Targeted dev runs:** `--spec ./path/or/pattern` for one file/pattern;
   `--mochaOpts.grep "<title>"` to filter by `describe`/`it` title across files.
 - **Documentation screenshots** are the `screenshots` suite (`e2e/screenshots/**/*.shot.ts`). No
