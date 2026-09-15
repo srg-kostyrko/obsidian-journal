@@ -36,6 +36,10 @@ so a new journal starts with an empty calendar. For your daily notes:
    date from** **Note title**, and the same date format. The first run is a dry run, which only lists
    what it would do.
 
+If Periodic Notes was doing the filing behind Calendar and its format put part of the date in
+folders, pick **Note path** instead of **Note title** — it reads the whole folder-and-name layout
+back, where **Note title** alone cannot tell which folder a note came from.
+
 Weekly notes go the same way, into a weekly journal. Calendar names them with its **Weekly note
 format**, which it offers while **Show week number** is on and Periodic Notes' weekly notes are off.
 
