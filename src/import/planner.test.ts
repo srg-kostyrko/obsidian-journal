@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Calendar, calendarSettingsModule } from "@/calendar";
 import { anchor } from "@/calendar/testing";
@@ -26,6 +26,10 @@ function withPeriodicNotesSets(harness: TestHarness, sets: Record<string, unknow
 }
 
 describe("ImportPlanner", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe("rows", () => {
     it("names a new daily journal after its period", async () => {
       const harness = await harnessWith();
@@ -169,6 +173,27 @@ describe("ImportPlanner", () => {
     // built-in "en" locale), a week's representative day is 6 days after its start — so a
     // day-of-month-sensitive format renders a different string for the two, and comparing by
     // `startOf` alone would miss an otherwise identical weekly journal.
+    it("does not count an unpadded day format as set up when today ± 2 days are all two-digit", async () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(new Date("2026-09-15T12:00:00"));
+      const harness = await harnessWith({
+        journals: {
+          days: fixedJournal(
+            "days",
+            { type: "day" },
+            { folder: "Journal", dateFormat: "YYYY-MM-D", nameTemplate: "{{date}}" },
+          ),
+        },
+      });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "Journal" }) }),
+      ]);
+
+      const [row] = harness.resolve(ImportPlanner).plan().rows;
+
+      expect(row?.state).toEqual({ kind: "new" });
+    });
+
     it("recognizes a day-sensitive weekly format as set up despite the week's representative day differing from its start", async () => {
       const harness = await harnessWith({
         journals: {

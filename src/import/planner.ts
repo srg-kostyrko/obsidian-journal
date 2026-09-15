@@ -95,14 +95,33 @@ function sourcePath(journal: SourceJournal, date: CalendarDate): string {
   return normalizePath(journal.folder === "" ? `${name}.md` : `${journal.folder}/${name}.md`);
 }
 
-// Two periods either side of today, and for weeks the weeks around both New Years, where a
-// week-year format and a calendar-year format disagree.
+// Boundary dates a today ± 2 periods sample can miss: two formats can render identically at every
+// offset around today and only disagree at a single- vs two-digit day (the 1st, the 9th), month
+// (January, September) or week number, or across the year edge a week-year format reads
+// differently from a calendar-year one. Covers the current year and the next, since today can fall
+// on either side of that edge.
+function boundaryDates(): CalendarDate[] {
+  const currentYearStart = CalendarDate.today().startOf("year");
+  return [currentYearStart, currentYearStart.shift(1, "y")].flatMap((yearStart) => [
+    yearStart, // Jan 1
+    yearStart.shift(8, "d"), // Jan 9
+    yearStart.shift(8, "m").shift(8, "d"), // Sep 9
+    yearStart.shift(9, "m").shift(9, "d"), // Oct 10
+    yearStart.shift(11, "m").shift(27, "d"), // Dec 28
+    yearStart.endOf("year"), // Dec 31
+  ]);
+}
+
+// Two periods either side of today, the boundary dates above, and for weeks the week before each
+// New Year, where a week-year format and a calendar-year format disagree (the New Year's Day itself
+// is already among the boundary dates, so it is not repeated here).
 function sampleDates(period: PeriodKind): CalendarDate[] {
   const today = CalendarDate.today();
   const around = [-2, -1, 0, 1, 2].map((offset) => today.shift(offset, SHIFT_UNIT[period]));
-  if (period !== "week") return around;
+  const boundaries = boundaryDates();
+  if (period !== "week") return [...around, ...boundaries];
   const newYears = [today.startOf("year"), today.shift(1, "y").startOf("year")];
-  return [...around, ...newYears.flatMap((date) => [date.shift(-1, "w"), date])];
+  return [...around, ...boundaries, ...newYears.map((date) => date.shift(-1, "w"))];
 }
 
 export class ImportPlanner {
