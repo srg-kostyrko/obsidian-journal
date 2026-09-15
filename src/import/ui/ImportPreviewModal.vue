@@ -41,6 +41,10 @@ const notApplicableDay = computed(() =>
   plan.weekStart.kind === "not-applicable" ? (localeData().weekdays()[plan.weekStart.dow] ?? "") : "",
 );
 
+function nameOf(row: PlanRow): string {
+  return row.state.kind === "set-up" ? row.state.journalName : (names.get(row.key) ?? row.name);
+}
+
 function rowsOf(source: SourceId): PlanRow[] {
   return plan.rows.filter((row) => row.journal.source === source);
 }
@@ -64,7 +68,7 @@ function confirm(): void {
   api.submit({
     rows: plan.rows.map((row) => ({
       key: row.key,
-      name: names.get(row.key) ?? row.name,
+      name: nameOf(row),
       include: row.state.kind !== "set-up" && (included.get(row.key) ?? false),
       connect: connected.get(row.key) ?? false,
     })),
@@ -85,7 +89,7 @@ function confirm(): void {
       <UiSettingRow v-for="row of rowsOf(reading.source)" :key="row.key" stacked>
         <template #name>
           <UiTextInput
-            :model-value="names.get(row.key) ?? row.name"
+            :model-value="nameOf(row)"
             :disabled="row.state.kind === 'set-up'"
             :aria-label="m.import_preview_name_label()"
             @update:model-value="(value: string) => names.set(row.key, value)"
@@ -134,7 +138,7 @@ function confirm(): void {
 
     <UiSettingRow v-if="plan.startup.kind === 'set' && startupRow" :name="m.import_preview_startup_label()">
       <template #description>
-        {{ m.import_preview_startup_description({ name: names.get(startupRow.key) ?? startupRow.name }) }}
+        {{ m.import_preview_startup_description({ name: nameOf(startupRow) }) }}
       </template>
       <UiToggle v-model="setStartup" :disabled="!startupAvailable" :tooltip="m.import_preview_startup_label()" />
     </UiSettingRow>

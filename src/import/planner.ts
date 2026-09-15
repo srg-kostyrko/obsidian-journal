@@ -186,6 +186,20 @@ export class ImportPlanner {
     return warnings;
   }
 
+  #proposedName(journal: SourceJournal, shelved: boolean, proposedNames: Set<string>): string {
+    const base =
+      shelved && journal.set !== undefined
+        ? m.import_journal_name_in_set({ set: journal.set, period: journal.period })
+        : m.import_journal_name({ period: journal.period });
+    const name = freeName(
+      base,
+      (index) => m.import_journal_name_indexed({ name: base, index }),
+      (candidate) => this.#journals.exists(candidate) || proposedNames.has(candidate),
+    );
+    proposedNames.add(name);
+    return name;
+  }
+
   plan(): ImportPlan {
     const { readings, unrecognised } = this.#read();
     const existing = [...this.#journals.find().list()];
@@ -218,16 +232,9 @@ export class ImportPlanner {
         };
         extractFromDateFormat(draft);
 
-        const base =
-          shelved && journal.set !== undefined
-            ? m.import_journal_name_in_set({ set: journal.set, period: journal.period })
-            : m.import_journal_name({ period: journal.period });
-        const name = freeName(
-          base,
-          (index) => m.import_journal_name_indexed({ name: base, index }),
-          (candidate) => this.#journals.exists(candidate) || proposedNames.has(candidate),
-        );
-        proposedNames.add(name);
+        // A set-up row creates nothing, so it holds no name. A superseded row still does: it can be
+        // switched on in the preview.
+        const name = state.kind === "set-up" ? state.journalName : this.#proposedName(journal, shelved, proposedNames);
 
         return {
           key: `${journal.source}:${journal.set ?? ""}:${journal.period}`,

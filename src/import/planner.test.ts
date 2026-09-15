@@ -85,6 +85,48 @@ describe("ImportPlanner", () => {
       expect(row?.state).toEqual({ kind: "set-up", journalName: "days" });
     });
 
+    it("names a row that is already set up after the journal that sets it up", async () => {
+      const taken = m.import_journal_name({ period: "day" });
+      const harness = await harnessWith({
+        journals: {
+          [taken]: fixedJournal(
+            taken,
+            { type: "day" },
+            { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+          ),
+        },
+      });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "Journal" }) }),
+      ]);
+
+      const [row] = harness.resolve(ImportPlanner).plan().rows;
+
+      expect(row?.name).toBe(taken);
+    });
+
+    it("keeps a row that is already set up from taking a name a later row would get", async () => {
+      const harness = await harnessWith({
+        journals: {
+          days: fixedJournal(
+            "days",
+            { type: "day" },
+            { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+          ),
+        },
+      });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "Journal" }) }),
+      ]);
+      harness.host.putCorePlugin("daily-notes", { options: { folder: "Daily" } });
+
+      const plan = harness.resolve(ImportPlanner).plan();
+
+      expect(plan.rows.find((row) => row.journal.source === "daily-notes")?.name).toBe(
+        m.import_journal_name({ period: "day" }),
+      );
+    });
+
     it("does not count a journal in the same folder with another format as set up", async () => {
       const harness = await harnessWith({
         journals: {

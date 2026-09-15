@@ -78,6 +78,27 @@ describe("ImportPreviewModal", () => {
     expect(screen.getByText(m.import_preview_row_set_up({ journalName: "days" }))).toBeTruthy();
   });
 
+  it("shows a set-up row under the name of the journal that sets it up", () => {
+    harness.renderModal(ImportPreviewModal, {
+      props: {
+        plan: buildImportPlan({
+          rows: [buildPlanRow({ name: "Daily 2", state: { kind: "set-up", journalName: "Daily" } })],
+        }),
+      },
+    });
+
+    expect(screen.getByLabelText<HTMLInputElement>(m.import_preview_name_label()).value).toBe("Daily");
+  });
+
+  it("names the journal that is already set up in the startup line", () => {
+    const row = buildPlanRow({ name: "Daily 2", state: { kind: "set-up", journalName: "Daily" } });
+    harness.renderModal(ImportPreviewModal, {
+      props: { plan: buildImportPlan({ rows: [row], startup: { kind: "set", rowKey: row.key } }) },
+    });
+
+    expect(screen.getByText(m.import_preview_startup_description({ name: "Daily" }))).toBeTruthy();
+  });
+
   it("warns about weekly notes while the offered week start is switched off", () => {
     harness.renderModal(ImportPreviewModal, {
       props: {
