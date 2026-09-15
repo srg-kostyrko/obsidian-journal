@@ -499,6 +499,7 @@
   "bulk_add_skip_reason_no_date": "No date found",
   "bulk_add_skip_reason_invalid_date": "Date could not be parsed",
   "bulk_add_skip_reason_out_of_bounds": "Outside the journal's timeline",
+  "bulk_add_skip_reason_not_on_journal_path": "Not at a path this journal uses",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],

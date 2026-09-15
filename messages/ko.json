@@ -559,6 +559,7 @@
   "bulk_add_skip_reason_no_date": "날짜를 찾지 못함",
   "bulk_add_skip_reason_invalid_date": "날짜를 해석하지 못함",
   "bulk_add_skip_reason_out_of_bounds": "저널 타임라인 밖",
+  "bulk_add_skip_reason_not_on_journal_path": "이 저널이 사용하는 경로에 없음",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],

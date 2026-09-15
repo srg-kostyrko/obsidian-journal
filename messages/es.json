@@ -559,6 +559,7 @@
   "bulk_add_skip_reason_no_date": "No se encontró ninguna fecha",
   "bulk_add_skip_reason_invalid_date": "No se pudo interpretar la fecha",
   "bulk_add_skip_reason_out_of_bounds": "Fuera de la línea de tiempo del diario",
+  "bulk_add_skip_reason_not_on_journal_path": "No está en una ruta de este diario",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],

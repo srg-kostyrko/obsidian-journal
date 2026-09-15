@@ -5,7 +5,7 @@ import { m } from "@/i18n";
 
 import { typeIdSchema, type TypeId } from "../../notelets/config";
 
-export type DatePlace = "title" | "property";
+export type DatePlace = "title" | "property" | "path";
 export type FilterCombinator = "no" | "and" | "or";
 export type ExistingNoteParameter = "skip" | "override" | "merge" | "ask";
 export type OtherFolderParameter = "keep" | "move" | "ask";
@@ -31,12 +31,9 @@ export interface BulkAddParameters {
 export const bulkAddParametersSchema = v.pipe(
   v.object({
     folder: v.string(),
-    datePlace: v.picklist(["title", "property"]),
+    datePlace: v.picklist(["title", "property", "path"]),
     propertyName: v.string(),
-    dateFormat: v.pipe(
-      v.string(),
-      v.minLength(1, () => m.bulk_add_date_format_required()),
-    ),
+    dateFormat: v.string(),
     filterCombinator: v.picklist(["no", "and", "or"]),
     filters: v.array(filterConditionSchema),
     existingNote: v.picklist(["skip", "override", "merge", "ask"]),
@@ -52,6 +49,14 @@ export const bulkAddParametersSchema = v.pipe(
       () => m.journal_property_name_required(),
     ),
     ["propertyName"],
+  ),
+  v.forward(
+    v.partialCheck(
+      [["datePlace"], ["dateFormat"]],
+      (input) => input.datePlace === "path" || input.dateFormat.length > 0,
+      () => m.bulk_add_date_format_required(),
+    ),
+    ["dateFormat"],
   ),
 );
 

@@ -548,6 +548,7 @@
   "bulk_add_skip_reason_no_date": "未找到日期",
   "bulk_add_skip_reason_invalid_date": "日期无法解析",
   "bulk_add_skip_reason_out_of_bounds": "超出日记的时间范围",
+  "bulk_add_skip_reason_not_on_journal_path": "不在此日记使用的路径上",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],

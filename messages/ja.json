@@ -548,6 +548,7 @@
   "bulk_add_skip_reason_no_date": "日付が見つかりませんでした",
   "bulk_add_skip_reason_invalid_date": "日付を解析できませんでした",
   "bulk_add_skip_reason_out_of_bounds": "ジャーナルの対象期間外",
+  "bulk_add_skip_reason_not_on_journal_path": "このジャーナルが使うパスにありません",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
+import { InvariantError } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -307,6 +308,108 @@ describe("BulkAddService", () => {
 
       expectOk(planResult);
       const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
+      expect(note?.kind === "skip" && note.reason).toBe("out-of-bounds");
+    });
+
+    describe("reading the date from the note's path", () => {
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              daily: fixedJournal(
+                "daily",
+                { type: "day" },
+                { folder: "Journal/{{date:YYYY}}/{{date:MM-MMM}}", nameTemplate: "{{date:DD-ddd}}" },
+              ),
+            },
+          },
+        });
+      });
+
+      it("connects a note filed under its year and month folders", async () => {
+        harness.host.putFile("Journal/2026/06-Jun/01-Mon.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun/01-Mon.md");
+        expect(note).toMatchObject({ kind: "action", anchor: "2026-06-01", folder: "n/a", name: "n/a" });
+      });
+
+      it("skips a note whose name matches but whose folder does not", async () => {
+        harness.host.putFile("Journal/misfiled/01-Mon.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "Journal/misfiled/01-Mon.md");
+        expect(note?.kind === "skip" && note.reason).toBe("not-on-journal-path");
+      });
+
+      it("defers to the existing-note decision when the period already has a note", async () => {
+        harness.resolve(JournalsIndex).register({
+          journalName: "daily",
+          anchor: anchor("2026-06-01"),
+          path: "Inbox/june-first.md" as VaultPath,
+        });
+        harness.host.putFile("Journal/2026/06-Jun/01-Mon.md");
+
+        const planResult = await harness
+          .resolve(BulkAddService)
+          .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "", existingNote: "ask" }));
+
+        expectOk(planResult);
+        const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun/01-Mon.md");
+        expect(note).toMatchObject({ kind: "action", occupant: "Inbox/june-first.md", existing: "ask" });
+      });
+
+      it("refuses to read a notelet's date from its path", () => {
+        expect(() =>
+          harness.resolve(BulkAddService).plan(
+            "daily",
+            makeParameters({
+              folder: "Journal",
+              datePlace: "path",
+              dateFormat: "",
+              noteletTypeId: "nt_1" as TypeId,
+            }),
+          ),
+        ).toThrow(InvariantError);
+      });
+    });
+
+    it("skips a path-read note whose date is outside the journal's timeline", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                folder: "Journal/{{date:YYYY}}/{{date:MM-MMM}}",
+                nameTemplate: "{{date:DD-ddd}}",
+                timeline: { start: anchor("2027-01-01"), end: { kind: "never" } },
+              },
+            ),
+          },
+        },
+      });
+      harness.host.putFile("Journal/2026/06-Jun/01-Mon.md");
+
+      const planResult = await harness
+        .resolve(BulkAddService)
+        .plan("daily", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+
+      expectOk(planResult);
+      const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun/01-Mon.md");
       expect(note?.kind === "skip" && note.reason).toBe("out-of-bounds");
     });
   });

@@ -552,6 +552,7 @@
   "bulk_add_skip_reason_no_date": "Дату не знайдено",
   "bulk_add_skip_reason_invalid_date": "Не вдалося проаналізувати дату",
   "bulk_add_skip_reason_out_of_bounds": "Поза часовою шкалою журналу",
+  "bulk_add_skip_reason_not_on_journal_path": "Шлях не відповідає цьому журналу",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],

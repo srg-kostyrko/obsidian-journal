@@ -56,6 +56,7 @@ function skipReasonLabel(reason: SkipReason): string {
     .with("no-date", () => m.bulk_add_skip_reason_no_date())
     .with("invalid-date", () => m.bulk_add_skip_reason_invalid_date())
     .with("out-of-bounds", () => m.bulk_add_skip_reason_out_of_bounds())
+    .with("not-on-journal-path", () => m.bulk_add_skip_reason_not_on_journal_path())
     .exhaustive();
 }
 
