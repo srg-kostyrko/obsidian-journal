@@ -1,11 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { calendarSettingsModule, WeekPresetApplierToken } from "@/calendar";
+import { calendarSettingsModule } from "@/calendar";
+import { anchor } from "@/calendar/testing";
+import type { VaultPath } from "@/infrastructure/host";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
+import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { startupModule } from "@/journals/startup/module";
+import { fixedJournal } from "@/journals/testing";
 import { shelvesModule } from "@/shelves";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -65,16 +69,26 @@ describe("ImportFromPluginsFlow", () => {
     });
   });
 
-  it("plans connections only after the week start has been applied", async () => {
+  it("plans connections only once the week start it applied has re-anchored weekly notes", async () => {
     const harness = await testContainer({
       modules: MODULES,
-      data: { calendar: { mode: "custom", dow: 1, doy: 4, global: false } },
+      data: {
+        calendar: { mode: "custom", dow: 1, doy: 4, global: false },
+        journals: { weekly: fixedJournal("weekly", { type: "week" }) },
+      },
     });
-    harness.host.putPlugin("calendar", {
-      options: { weekStart: "sunday", showWeeklyNote: true, weeklyNoteFolder: "Weekly" },
+    harness.host.putFile("Weekly/2026-W10.md", "", { journal: "weekly", "journal-date": "2026-03-02" });
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "weekly", anchor: anchor("2026-03-02"), path: "Weekly/2026-W10.md" as VaultPath });
+    harness.host.putPlugin("calendar", { options: { weekStart: "sunday" } });
+    const connections = harness.resolve(ImportConnectService);
+    const planConnections = connections.plan.bind(connections);
+    let weeklyNoteDateAtPlanning: unknown;
+    vi.spyOn(connections, "plan").mockImplementation((outcome) => {
+      weeklyNoteDateAtPlanning = harness.host.files.get("Weekly/2026-W10.md")?.frontmatter["journal-date"];
+      return planConnections(outcome);
     });
-    const weekStart = vi.spyOn(harness.resolve(WeekPresetApplierToken), "apply");
-    const connectPlan = vi.spyOn(harness.resolve(ImportConnectService), "plan");
     const running = harness.resolve(ImportFromPluginsFlow).execute();
     const { plan } = harness.modals.lastOpen<{ plan: ImportPlan }>().props;
 
@@ -87,7 +101,7 @@ describe("ImportFromPluginsFlow", () => {
     harness.modals.lastOpen().submit(undefined);
     await running;
 
-    expect(weekStart.mock.invocationCallOrder[0]).toBeLessThan(connectPlan.mock.invocationCallOrder[0] ?? 0);
+    expect(weeklyNoteDateAtPlanning).toBe("2026-03-01");
   });
 
   it("offers no connection for a journal it failed to create", async () => {
