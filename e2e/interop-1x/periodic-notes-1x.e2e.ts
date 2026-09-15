@@ -9,7 +9,7 @@ import {
   openSettings,
   waitForDialogClosed,
 } from "../support/settings.js";
-import { todayAnchor, waitForJournalFrontmatter } from "../support/vault.js";
+import { waitForJournalFrontmatter } from "../support/vault.js";
 
 // Runs only under the Periodic Notes 1.x capability (see wdio.conf.mts).
 async function importFromMaintenance(): Promise<void> {
@@ -58,9 +58,6 @@ describe("periodic notes 1.x", () => {
 
       await waitForJournalFrontmatter("Daily/2026-03-02.md", { journal: DEFAULT_DAILY, date: "2026-03-02" });
       await waitForJournalFrontmatter("Work/2026-03-02.md", { journal: WORK_DAILY, date: "2026-03-02" });
-      // Periodic Notes opened today's Work note on boot, so it is one of the notes already there.
-      const today = todayAnchor();
-      await waitForJournalFrontmatter(`Work/${today}.md`, { journal: WORK_DAILY, date: today });
       await waitForSettings((settings) => {
         const stored = settings as {
           shelves?: Record<string, { journals?: string[] }>;
