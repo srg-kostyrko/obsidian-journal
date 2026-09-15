@@ -1,3 +1,4 @@
+import type { ImportOutcome, RowOutcome } from "./import-service";
 import type { PeriodKind } from "./source";
 
 function noop(): undefined {
@@ -35,4 +36,8 @@ export function periodicNotesStorePlugin(settings: object): {
       },
     },
   };
+}
+
+export function buildImportOutcome(rows: RowOutcome[]): ImportOutcome {
+  return { snapshotWritten: true, weekStartApplied: false, shelves: [], rows, startup: { kind: "none" } };
 }
