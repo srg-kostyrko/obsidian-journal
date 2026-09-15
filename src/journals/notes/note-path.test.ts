@@ -466,8 +466,6 @@ describe("NotePathService.candidateFor", () => {
     });
   });
 
-  // YYYY/MM-MMM/DD-ddd is Periodic Notes' daily layout. The weekday in the name is redundant beside the
-  // day, but it once sent every part of the date to be read alone, where none of them names a day.
   it("round-trips every day of 2026 filed as {{date:YYYY}}/{{date:MM-MMM}}/{{date:DD-ddd}}", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

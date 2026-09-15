@@ -424,8 +424,8 @@ function dateFields(format: string): Set<DateField> | undefined {
       .with("w", () => "week")
       .with("W", () => "isoWeek")
       .with("D", () => (count < 3 ? "day" : "dayOfYear"))
-      .with("d", "e", "E", () => "weekday")
-      .with("o", () => "unreconcilable")
+      .with("d", () => "weekday")
+      .with("e", "E", "o", () => "unreconcilable")
       .otherwise(() => "no-field");
     if (named === "unreconcilable") unsupported = true;
     else if (named !== "no-field") fields.add(named);
@@ -452,7 +452,8 @@ function dateFields(format: string): Set<DateField> | undefined {
   return unsupported ? undefined : fields;
 }
 
-// A weekday is redundant beside a day of the month, and moment refuses a combined date the weekday
+// A weekday from the d family (d/dd/ddd/dddd, the only tokens moment validates against the date)
+// is redundant beside a day of the month, and moment refuses a combined date the weekday
 // contradicts. Without one it names no date at all: moment resolves it within the current week,
 // overriding even a day of the year, so only a day of the month lets the captures combine.
 function weekdayPinned(fieldSets: (Set<DateField> | undefined)[]): boolean {
