@@ -22,7 +22,8 @@ const notice = useService(SettingsService).getSlice(importNoticeSlice);
 
 // Read at setup and after an import, not continuously: other plugins' settings are not reactive,
 // so a plugin enabled while this page is open shows up only the next time this component is created.
-const plan = ref<ImportPlan | undefined>(planner.plan());
+// A dismissed notice reads nothing: another plugin's getter is foreign code on every dashboard open.
+const plan = ref<ImportPlan | undefined>(notice.state.dismissed ? undefined : planner.plan());
 function refresh(): void {
   plan.value = planner.plan();
 }

@@ -4,6 +4,7 @@ import { Calendar, CalendarDate, calendarSlice, periodOfKind, type CalendarSlice
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
+import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { journalDefaultsFor, type JournalConfig } from "@/journals/config";
 import { freeName } from "@/journals/free-name";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -14,7 +15,15 @@ import { formatHasWrongWeek } from "@/journals/settings/ui/wrong-week";
 import { startupSlice } from "@/journals/startup/slice";
 import { SettingsService } from "@/settings";
 
-import { ImportSourceToken, type PeriodKind, type SourceId, type SourceJournal, type SourceReading } from "./source";
+import {
+  ImportSourceToken,
+  type ImportSource,
+  type PeriodKind,
+  type SourceId,
+  type SourceJournal,
+  type SourceRead,
+  type SourceReading,
+} from "./source";
 
 export type RowState =
   | { readonly kind: "new" }
@@ -104,12 +113,24 @@ export class ImportPlanner {
   readonly #calendar = inject(Calendar);
   readonly #index = inject(JournalsIndex);
   readonly #notes = inject(NotesService);
+  readonly #logger = inject(LoggerFactoryToken).named("import");
+
+  // Another plugin's getters and stores are foreign code; one that throws must not take the
+  // dashboard notice down with it.
+  #readSource(source: ImportSource): SourceRead {
+    try {
+      return source.read();
+    } catch (error) {
+      this.#logger.warn("could not read another plugin's settings", { source: source.id, error });
+      return { kind: "unrecognised", source: source.id };
+    }
+  }
 
   #read(): { readings: SourceReading[]; unrecognised: SourceId[] } {
     const readings: SourceReading[] = [];
     const unrecognised: SourceId[] = [];
     for (const source of this.#sources) {
-      const read = source.read();
+      const read = this.#readSource(source);
       if (read.kind === "read") readings.push(read.reading);
       else if (read.kind === "unrecognised") unrecognised.push(read.source);
     }

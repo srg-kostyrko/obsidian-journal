@@ -16,6 +16,7 @@ import { shelvesModule } from "@/shelves";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { importCoreModule } from "../module";
+import { ImportPlanner } from "../planner";
 import { importNoticeSlice } from "../settings/slice";
 import { buildCalendarSet, buildPeriodicConfig, periodicNotesStorePlugin } from "../testing";
 
@@ -88,6 +89,16 @@ describe("ImportNoticeBlock", () => {
     harness.render(ImportNoticeBlock);
 
     expect(screen.queryByText(m.import_notice_heading())).toBeNull();
+  });
+
+  it("does not read other plugins' settings once dismissed", async () => {
+    const harness = await harnessWith({ importNotice: { dismissed: true } });
+    withPeriodicNotesDay(harness);
+    const plan = vi.spyOn(harness.resolve(ImportPlanner), "plan");
+
+    harness.render(ImportNoticeBlock);
+
+    expect(plan).not.toHaveBeenCalled();
   });
 
   it("remembers being dismissed", async () => {

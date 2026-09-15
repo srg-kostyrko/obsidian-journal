@@ -204,6 +204,19 @@ describe("ImportPlanner", () => {
     });
   });
 
+  describe("sources", () => {
+    it("reports a plugin whose settings throw when read as unrecognised", async () => {
+      const harness = await harnessWith();
+      harness.host.putPlugin("periodic-notes", {
+        get settings(): unknown {
+          throw new Error("settings are not ready");
+        },
+      });
+
+      expect(harness.resolve(ImportPlanner).plan().unrecognised).toEqual(["periodic-notes"]);
+    });
+  });
+
   describe("shelves", () => {
     it("creates no shelf for a single calendar set", async () => {
       const harness = await harnessWith();
