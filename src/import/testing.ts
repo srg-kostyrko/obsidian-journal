@@ -1,5 +1,7 @@
+import { SOURCE_DEFAULT_FORMATS, type PeriodKind, type SourceJournal } from "./source";
+
 import type { ImportOutcome, RowOutcome } from "./import-service";
-import type { PeriodKind } from "./source";
+import type { ImportPlan, PlanRow } from "./planner";
 
 function noop(): undefined {
   return undefined;
@@ -40,4 +42,48 @@ export function periodicNotesStorePlugin(settings: object): {
 
 export function buildImportOutcome(rows: RowOutcome[]): ImportOutcome {
   return { snapshotWritten: true, weekStartApplied: false, shelves: [], rows, startup: { kind: "none" } };
+}
+
+export function buildSourceJournal(overrides: Partial<SourceJournal> = {}): SourceJournal {
+  return {
+    source: "periodic-notes",
+    period: "day",
+    folder: "",
+    format: SOURCE_DEFAULT_FORMATS.day,
+    templates: [],
+    openAtStartup: false,
+    ...overrides,
+  };
+}
+
+export function buildPlanRow(overrides: Partial<PlanRow> = {}): PlanRow {
+  const journal = overrides.journal ?? buildSourceJournal();
+  return {
+    key: `${journal.source}:${journal.set ?? ""}:${journal.period}`,
+    journal,
+    name: "Daily",
+    folder: journal.folder,
+    dateFormat: journal.format,
+    state: { kind: "new" },
+    warnings: [],
+    ...overrides,
+  };
+}
+
+export function buildImportPlan(overrides: Partial<ImportPlan> = {}): ImportPlan {
+  const rows = overrides.rows ?? [buildPlanRow()];
+  const sources = [...new Set(rows.map((row) => row.journal.source))];
+  return {
+    readings: sources.map((source) => ({
+      source,
+      configured: true,
+      journals: rows.filter((row) => row.journal.source === source).map((row) => row.journal),
+    })),
+    unrecognised: [],
+    rows,
+    shelves: [],
+    weekStart: { kind: "unchanged" },
+    startup: { kind: "none" },
+    ...overrides,
+  };
 }
