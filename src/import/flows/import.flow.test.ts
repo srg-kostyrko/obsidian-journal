@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { calendarSettingsModule, WeekPresetApplierToken } from "@/calendar";
-import { expectErr } from "@/infrastructure/result/testing";
+import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { journalsCoreModule } from "@/journals/module";
 import { JournalsRepository } from "@/journals/repository";
 import { journalsSettingsModule } from "@/journals/settings/module";
@@ -103,5 +103,23 @@ describe("ImportFromPluginsFlow", () => {
     await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(2));
 
     expect(harness.modals.lastOpen<{ connect: ConnectPlan }>().props.connect.rows).toEqual([]);
+  });
+
+  it("still reports the import when the connect window is dismissed", async () => {
+    const harness = await withPeriodicNotesDay();
+    const running = harness.resolve(ImportFromPluginsFlow).execute();
+    const { plan } = harness.modals.lastOpen<{ plan: ImportPlan }>().props;
+
+    harness.modals.lastOpen().submit({
+      rows: plan.rows.map((row) => ({ key: row.key, name: row.name, include: true, connect: true })),
+      applyWeekStart: false,
+      setStartup: false,
+    } satisfies ImportSelection);
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(2));
+    harness.modals.lastOpen().cancel();
+    const result = await running;
+
+    expectOk(result);
+    expect([...harness.resolve(JournalsRepository).find().list()]).toHaveLength(1);
   });
 });

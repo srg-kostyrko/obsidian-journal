@@ -28,9 +28,9 @@ export class ImportFromPluginsFlow implements Flow<void, ImportOutcome, NothingT
       // Planned after apply() returns: the week start it applied re-anchors weekly notes on the
       // next tick, and connections must be read under the new grid.
       const connect = await this.#connect.plan(outcome);
-      yield* this.#modals
-        .open(importConnectModal, { outcome, connect })
-        .mapErr(() => new UserAborted("import-connect-modal"));
+      // The import already happened; closing the report does not undo it, so dismissing it is not
+      // an abort.
+      await this.#modals.open(importConnectModal, { outcome, connect });
       return outcome;
     });
   }
