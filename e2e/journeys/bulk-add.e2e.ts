@@ -1,5 +1,6 @@
 import { browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import {
   clickDialogButton,
   clickIcon,
@@ -20,16 +21,22 @@ import { frontmatterOf, seedNote, waitForContent, waitForJournalFrontmatter } fr
 // the Obsidian fake can't drive.
 // Single boot; each it scans its own folder so the accumulating connections stay independent.
 
-const BULK_ADD = "Bulk add notes to daily";
 const EXISTING_LABEL = "When a note is already connected to that date";
 
-async function runBulkAdd(folder: string, options: { existing?: "override" | "merge" } = {}): Promise<void> {
+async function runBulkAdd(
+  folder: string,
+  options: { existing?: "override" | "merge"; datePlace?: "path"; shelf?: string; journal?: string } = {},
+): Promise<void> {
+  const { shelf = "core", journal = "daily" } = options;
   await openSettings();
-  // The dashboard lists only shelf-less journals; daily lives on the "core" shelf, so its
-  // per-row bulk-add icon is reached through the shelf subpage.
-  await openShelfSubpage("core");
-  await clickIcon(BULK_ADD);
+  // The dashboard lists only shelf-less journals, so a shelved journal's per-row bulk-add icon
+  // is reached through its shelf subpage.
+  await openShelfSubpage(shelf);
+  await clickIcon(m.journal_dashboard_bulk_add({ name: journal }));
   await setModalText(folder);
+  if (options.datePlace) {
+    await selectModalDropdownByLabel(m.bulk_add_date_place_label(), options.datePlace);
+  }
   // Set the occupant policy up front in the configure modal so the process modal needs no per-note
   // picker (the per-note dropdown renders only when the policy is "ask").
   if (options.existing) {
@@ -108,6 +115,18 @@ describe("bulk add", () => {
     // the waitForContent guard above this is enough to confirm the merge-and-delete happened.
     const sourceFm = await frontmatterOf("bulk-merge/2031-02-01.md");
     expect(sourceFm).toBeNull();
+    await clickDialogButton("Close");
+    await waitForDialogClosed();
+  });
+
+  it("connects notes filed under date folders by reading the date from their path", async () => {
+    await runBulkAdd("nested", { shelf: "nested-path", journal: "nested-daily", datePlace: "path" });
+
+    await waitForJournalFrontmatter("nested/2030/09-Sep/01-Sun.md", { journal: "nested-daily", date: "2030-09-01" });
+    await waitForJournalFrontmatter("nested/2030/10-Oct/05-Sat.md", { journal: "nested-daily", date: "2030-10-05" });
+    // Named like a note of this journal but filed off its path: reading the name alone would take it.
+    const misfiledFm = await frontmatterOf("nested/misfiled/02-Mon.md");
+    expect(misfiledFm?.journal).toBeUndefined();
     await clickDialogButton("Close");
     await waitForDialogClosed();
   });
