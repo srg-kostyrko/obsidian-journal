@@ -10,7 +10,7 @@ import { splitVaultPath } from "@/journals/notes/vault-path";
 import { JournalsRepository } from "@/journals/repository";
 import { TemplateEngine } from "@/templates";
 
-import type { ImportOutcome } from "./import-service";
+import type { ImportOutcome, RowOutcome } from "./import-service";
 
 export type ConnectSkipReason = SkipReason | "period-has-note" | "matches-several-journals";
 
@@ -55,6 +55,17 @@ function namedByDateFormat(path: VaultPath, dateFormat: string): boolean {
   return CalendarDate.parse(basename, dateFormat).isOk();
 }
 
+// Two rows can name one existing journal, e.g. two calendar sets set up alike. Planned twice, each
+// of its notes would read as matching several journals when it matches only that one.
+function journalsToConnect(rows: readonly RowOutcome[]): { journalName: string }[] {
+  const connect = new Map<string, boolean>();
+  for (const row of rows) {
+    if (row.kind !== "created" && row.kind !== "existing") continue;
+    connect.set(row.journalName, (connect.get(row.journalName) ?? false) || row.connect);
+  }
+  return [...connect].flatMap(([journalName, wanted]) => (wanted ? [{ journalName }] : []));
+}
+
 // A note on two journals' paths is connected to neither — the rule auto-attach follows.
 function withoutShared(rows: readonly ConnectRowPlan[]): ConnectRowPlan[] {
   const claims = new Map<VaultPath, number>();
@@ -84,8 +95,7 @@ export class ImportConnectService {
 
   async plan(outcome: ImportOutcome): Promise<ConnectPlan> {
     const rows: ConnectRowPlan[] = [];
-    for (const row of outcome.rows) {
-      if ((row.kind !== "created" && row.kind !== "existing") || !row.connect) continue;
+    for (const row of journalsToConnect(outcome.rows)) {
       const config = this.#journals.get(row.journalName).getOrUndefined();
       if (config === undefined) continue;
       const blocked = invertibilityOf(config, { engine: this.#engine, cycle: this.#cycle, paths: this.#paths });

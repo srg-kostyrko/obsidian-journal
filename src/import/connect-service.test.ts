@@ -81,6 +81,40 @@ describe("ImportConnectService", () => {
     ]);
   });
 
+  it("plans a journal that two rows name once", async () => {
+    const harness = await harnessWith({ daily: daily("daily") });
+    harness.host.putFile("Journal/2026-06-01.md");
+
+    const plan = await harness.resolve(ImportConnectService).plan(
+      buildImportOutcome([
+        { key: "a", kind: "existing", journalName: "daily", connect: true },
+        { key: "b", kind: "existing", journalName: "daily", connect: true },
+      ]),
+    );
+
+    expect(
+      plan.rows.map((row) => ({
+        journalName: row.journalName,
+        actions: row.actions.map((action) => action.path),
+        skips: row.skips,
+      })),
+    ).toEqual([{ journalName: "daily", actions: ["Journal/2026-06-01.md"], skips: [] }]);
+  });
+
+  it("connects a journal that two rows name when either row asks to", async () => {
+    const harness = await harnessWith({ daily: daily("daily") });
+    harness.host.putFile("Journal/2026-06-01.md");
+
+    const plan = await harness.resolve(ImportConnectService).plan(
+      buildImportOutcome([
+        { key: "a", kind: "existing", journalName: "daily", connect: false },
+        { key: "b", kind: "existing", journalName: "daily", connect: true },
+      ]),
+    );
+
+    expect(plan.rows.map((row) => row.actions.length)).toEqual([1]);
+  });
+
   it("does not plan a journal whose paths cannot be read back", async () => {
     const harness = await harnessWith({ daily: daily("daily", { nameTemplate: "{{date}}-{{mystery}}" }) });
 
