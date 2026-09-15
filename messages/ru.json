@@ -1725,7 +1725,7 @@
   "import_source_calendar": "Calendar",
   "import_source_daily_notes": "Daily notes",
   "import_preview_title": "Импорт настроек из других плагинов",
-  "import_preview_unrecognised": "Журналы не смогли прочитать настройки {source}, поэтому из него ничего не импортируется.",
+  "import_preview_unrecognised": "Не удалось прочитать настройки {source}, поэтому ничего не импортируется.",
   "import_preview_name_label": "Название журнала",
   "import_preview_row_layout": "В {folder}, названо по формату {format}",
   "import_preview_row_template": "Использует шаблон {path}.",

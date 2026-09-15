@@ -1677,7 +1677,7 @@
   "import_source_calendar": "Calendar",
   "import_source_daily_notes": "Daily notes",
   "import_preview_title": "다른 플러그인에서 설정 가져오기",
-  "import_preview_unrecognised": "저널이 {source}의 설정을 읽지 못해서 여기서는 아무것도 가져오지 않습니다.",
+  "import_preview_unrecognised": "{source}의 설정을 읽지 못해서 아무것도 가져오지 않습니다.",
   "import_preview_name_label": "저널 이름",
   "import_preview_row_layout": "{folder}에 {format} 형식으로 이름 지정",
   "import_preview_row_template": "템플릿 {path}을(를) 사용합니다.",

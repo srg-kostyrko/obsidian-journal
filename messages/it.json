@@ -1685,7 +1685,7 @@
   "import_source_calendar": "Calendar",
   "import_source_daily_notes": "Daily notes",
   "import_preview_title": "Importa impostazioni da altri plugin",
-  "import_preview_unrecognised": "Diari non è riuscito a leggere le impostazioni di {source}, quindi non viene importato nulla da esso.",
+  "import_preview_unrecognised": "Impossibile leggere le impostazioni di {source}, quindi non viene importato nulla.",
   "import_preview_name_label": "Nome del diario",
   "import_preview_row_layout": "In {folder}, nominato secondo {format}",
   "import_preview_row_template": "Usa il modello {path}.",

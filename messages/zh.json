@@ -1532,7 +1532,7 @@
   "import_source_calendar": "Calendar",
   "import_source_daily_notes": "Daily notes",
   "import_preview_title": "从其他插件导入设置",
-  "import_preview_unrecognised": "日记无法读取 {source} 的设置，因此不会从中导入任何内容。",
+  "import_preview_unrecognised": "无法读取 {source} 的设置，因此不会导入任何内容。",
   "import_preview_name_label": "日记名称",
   "import_preview_row_layout": "位于 {folder}，以 {format} 命名",
   "import_preview_row_template": "使用模板 {path}。",

@@ -1532,7 +1532,7 @@
   "import_source_calendar": "Calendar",
   "import_source_daily_notes": "Daily notes",
   "import_preview_title": "他のプラグインから設定をインポート",
-  "import_preview_unrecognised": "ジャーナルは{source}の設定を読み取れなかったため、そこからは何もインポートされません。",
+  "import_preview_unrecognised": "{source}の設定を読み取れなかったため、何もインポートされません。",
   "import_preview_name_label": "ジャーナル名",
   "import_preview_row_layout": "{folder} に、{format} の形式で命名",
   "import_preview_row_template": "テンプレート {path} を使用します。",

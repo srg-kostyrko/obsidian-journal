@@ -1685,7 +1685,7 @@
   "import_source_calendar": "Calendar",
   "import_source_daily_notes": "Daily notes",
   "import_preview_title": "Importer les paramètres d’autres plugins",
-  "import_preview_unrecognised": "Journaux n’a pas pu lire les paramètres de {source}, donc rien n’en est importé.",
+  "import_preview_unrecognised": "Impossible de lire les paramètres de {source}, donc rien n’est importé.",
   "import_preview_name_label": "Nom du journal",
   "import_preview_row_layout": "Dans {folder}, nommé selon {format}",
   "import_preview_row_template": "Utilise le modèle {path}.",
