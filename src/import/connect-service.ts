@@ -1,3 +1,4 @@
+import { CalendarDate } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import { CycleService } from "@/journals/cycle";
@@ -5,6 +6,7 @@ import { BulkAddService, type PlannedAction, type SkipReason } from "@/journals/
 import { defaultBulkAddParameters } from "@/journals/notes/bulk-add/config";
 import { invertibilityOf, type InvertibilityWarning } from "@/journals/notes/invertibility";
 import { NotePathService } from "@/journals/notes/note-path";
+import { splitVaultPath } from "@/journals/notes/vault-path";
 import { JournalsRepository } from "@/journals/repository";
 import { TemplateEngine } from "@/templates";
 
@@ -44,6 +46,13 @@ function staticFolderOf(folder: string): string {
   const segments = folder.split("/");
   const firstDynamic = segments.findIndex((segment) => segment.includes("{{"));
   return (firstDynamic === -1 ? segments : segments.slice(0, firstDynamic)).join("/");
+}
+
+// A journal at the vault root scans every note. Only one whose name parses as a date is a note
+// Periodic Notes could have found by name; anything else was never this journal's.
+function namedByDateFormat(path: VaultPath, dateFormat: string): boolean {
+  const basename = splitVaultPath(path)[1].replace(/\.md$/, "");
+  return CalendarDate.parse(basename, dateFormat).isOk();
 }
 
 // A note on two journals' paths is connected to neither — the rule auto-attach follows.
@@ -100,6 +109,9 @@ export class ImportConnectService {
         journalName: row.journalName,
         actions: notes.flatMap((note) => (note.kind === "action" && note.existing === "none" ? [note] : [])),
         skips: notes.flatMap((note): ConnectSkip[] => {
+          if (note.kind === "skip" && note.reason === "not-on-journal-path") {
+            return namedByDateFormat(note.path, config.dateFormat) ? [{ path: note.path, reason: note.reason }] : [];
+          }
           if (note.kind === "skip") return [{ path: note.path, reason: note.reason }];
           return note.existing === "none" ? [] : [{ path: note.path, reason: "period-has-note" }];
         }),

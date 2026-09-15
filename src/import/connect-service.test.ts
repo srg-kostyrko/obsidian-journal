@@ -48,6 +48,22 @@ describe("ImportConnectService", () => {
     expect(plan.rows.at(0)?.actions.map((action) => action.path)).toEqual(["Journal/2026/06-01.md"]);
   });
 
+  it("reports only notes named by the date format as off the path of a journal at the vault root", async () => {
+    const harness = await harnessWith({ daily: daily("daily", { folder: "" }) });
+    harness.host.putFile("2026-06-01.md");
+    harness.host.putFile("Projects/plan.md");
+    harness.host.putFile("Archive/2026-06-02.md");
+
+    const plan = await harness
+      .resolve(ImportConnectService)
+      .plan(buildImportOutcome([{ key: "k", kind: "existing", journalName: "daily", connect: true }]));
+
+    expect({ actions: plan.rows.at(0)?.actions.map((action) => action.path), skips: plan.rows.at(0)?.skips }).toEqual({
+      actions: ["2026-06-01.md"],
+      skips: [{ path: "Archive/2026-06-02.md", reason: "not-on-journal-path" }],
+    });
+  });
+
   it("connects a note on two journals' paths to neither", async () => {
     const harness = await harnessWith({ first: daily("first"), second: daily("second") });
     harness.host.putFile("Journal/2026-06-01.md");

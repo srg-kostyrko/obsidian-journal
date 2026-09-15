@@ -32,8 +32,8 @@ describe("periodic notes 0.x import", () => {
       await clickDialogButton(m.import_preview_confirm());
       await clickDialogButton(m.import_connect_run());
 
-      await waitForJournalFrontmatter("Daily/2026-03-02.md", { journal: DAILY, date: "2026-03-02" });
-      await waitForJournalFrontmatter("Daily/2026-03-03.md", { journal: DAILY, date: "2026-03-03" });
+      await waitForJournalFrontmatter("2026-03-02.md", { journal: DAILY, date: "2026-03-02" });
+      await waitForJournalFrontmatter("2026-03-03.md", { journal: DAILY, date: "2026-03-03" });
       // Named W10 under both week grids: only Monday-start weeks anchor it on 2 March.
       await waitForJournalFrontmatter("Weekly/2026-W10.md", { journal: WEEKLY, date: "2026-03-02" });
       await waitForSettings(
@@ -58,7 +58,7 @@ describe("periodic notes 0.x import", () => {
 
       const settings = await getSettings();
       expect(Object.keys(settings.journals ?? {})).toEqual([]);
-      const frontmatter = await frontmatterOf("Daily/2026-03-02.md");
+      const frontmatter = await frontmatterOf("2026-03-02.md");
       expect(frontmatter?.journal).toBeUndefined();
     });
   });

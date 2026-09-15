@@ -2,7 +2,7 @@
   "showGettingStartedBanner": false,
   "hasMigratedDailyNoteSettings": true,
   "hasMigratedWeeklyNoteSettings": true,
-  "daily": { "enabled": true, "format": "", "folder": "Daily", "template": "" },
+  "daily": { "enabled": true, "format": "", "folder": "", "template": "" },
   "weekly": { "enabled": true, "format": "", "folder": "Weekly", "template": "" },
   "monthly": { "enabled": false, "format": "", "folder": "", "template": "" },
   "quarterly": { "enabled": false, "format": "", "folder": "", "template": "" },
