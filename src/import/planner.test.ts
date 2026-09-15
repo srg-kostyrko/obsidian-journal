@@ -188,7 +188,7 @@ describe("ImportPlanner", () => {
       expect(row?.state).toEqual({ kind: "set-up", journalName: "weeks" });
     });
 
-    it("proposes Daily notes' day journal unticked when Periodic Notes writes days", async () => {
+    it("proposes Daily notes' day journal switched off when Periodic Notes writes days", async () => {
       const harness = await harnessWith();
       withPeriodicNotesSets(harness, [
         buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "Journal" }) }),
@@ -259,7 +259,7 @@ describe("ImportPlanner", () => {
       });
     });
 
-    it("leaves the week start unticked once a weekly journal has a connected note", async () => {
+    it("leaves the week start switched off once a weekly journal has a connected note", async () => {
       const harness = await harnessWith({
         calendar: { mode: "custom", dow: 1, doy: 4, global: false },
         journals: { weekly: fixedJournal("weekly", { type: "week" }) },
