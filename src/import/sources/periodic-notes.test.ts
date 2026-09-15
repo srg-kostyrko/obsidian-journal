@@ -107,6 +107,27 @@ describe("PeriodicNotesSource", () => {
         source: "periodic-notes",
       });
     });
+
+    it("reports calendar sets with a repeated id as unrecognised", async () => {
+      const read = await readWith(
+        periodicNotesStorePlugin({
+          calendarSets: [
+            buildCalendarSet("Default", { day: buildPeriodicConfig() }),
+            buildCalendarSet("Default", { week: buildPeriodicConfig() }),
+          ],
+        }),
+      );
+
+      expect(read).toEqual({ kind: "unrecognised", source: "periodic-notes" });
+    });
+
+    it("reports calendar sets with an empty (after trim) id as unrecognised", async () => {
+      const read = await readWith(
+        periodicNotesStorePlugin({ calendarSets: [buildCalendarSet("  ", { day: buildPeriodicConfig() })] }),
+      );
+
+      expect(read).toEqual({ kind: "unrecognised", source: "periodic-notes" });
+    });
   });
 
   describe("0.x", () => {

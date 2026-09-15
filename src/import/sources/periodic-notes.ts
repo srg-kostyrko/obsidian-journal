@@ -60,6 +60,19 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+// Each row's key includes the calendar set's id (planner.ts), so an empty or repeated one would
+// collide two sets onto the same row and mix their selections. Periodic Notes itself never writes
+// either — only a hand-edited data.json could — so this reads as unreadable rather than repaired.
+function hasInvalidCalendarSetIds(sets: readonly { id: string }[]): boolean {
+  const seen = new Set<string>();
+  for (const set of sets) {
+    const id = set.id.trim();
+    if (id === "" || seen.has(id)) return true;
+    seen.add(id);
+  }
+  return false;
+}
+
 // A Svelte store calls its subscriber synchronously with the current value, so subscribing and
 // unsubscribing at once reads it without importing svelte.
 function unwrapStore(value: unknown): unknown {
@@ -110,7 +123,9 @@ export class PeriodicNotesSource implements ImportSource {
     // 1.x writes its calendar sets back beside the 0.x keys it migrated from, so the sets decide.
     if ("calendarSets" in settings) {
       const current = v.safeParse(currentSettingsSchema, settings);
-      if (!current.success) return { kind: "unrecognised", source: this.id };
+      if (!current.success || hasInvalidCalendarSetIds(current.output.calendarSets)) {
+        return { kind: "unrecognised", source: this.id };
+      }
       const journals = current.output.calendarSets.flatMap((set) =>
         PERIOD_KINDS.flatMap((period) => {
           const config = set[period];
