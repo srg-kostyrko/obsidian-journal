@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { DatePicker, useAnchorField, type Picking } from "@/calendar/ui";
-import { formatConjunction, m } from "@/i18n";
+import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { icons } from "@/ui/icons";
@@ -14,6 +14,7 @@ import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { invertibilityWarningText } from "../../../notes/invertibility";
 import { pickingForWrite } from "../../../picking";
 import { JournalsViewModel } from "../../../view-model";
 import { EditNumberingDigitFlow } from "../../flows/edit-numbering-digit.flow";
@@ -150,28 +151,7 @@ function summaryFor(sourceIndex: number): string {
         <div v-if="sources.length > 1" class="sequence-digits__edge">{{ m.journal_sequence_fastest_label() }}</div>
       </div>
 
-      <div v-if="invertibility" class="journal-hint">
-        <template v-if="invertibility.kind === 'non-invertible'">
-          {{ m.journal_edit_name_template_invertibility_warning(invertibility) }}
-        </template>
-        <template v-else-if="invertibility.kind === 'prompt-in-path'">
-          {{ m.journal_invertibility_prompt_in_path(invertibility) }}
-        </template>
-        <template v-else-if="invertibility.kind === 'coarse-date'">
-          {{ m.journal_edit_name_template_coarse_date_warning() }}
-        </template>
-        <template v-else-if="invertibility.kind === 'cyclic-top'">
-          {{ m.journal_edit_name_template_cyclic_top_warning() }}
-        </template>
-        <template v-else-if="invertibility.kind === 'no-carry'">
-          {{ m.journal_edit_name_template_no_carry_warning(invertibility) }}
-        </template>
-        <template v-else>
-          {{
-            m.journal_edit_name_template_unused_digits_warning({ missing: formatConjunction(invertibility.missing) })
-          }}
-        </template>
-      </div>
+      <div v-if="invertibility" class="journal-hint">{{ invertibilityWarningText(invertibility) }}</div>
 
       <SequencePreview :journal-name="journalName" />
     </template>
