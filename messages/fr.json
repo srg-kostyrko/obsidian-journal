@@ -1720,12 +1720,12 @@
       "declarations": ["input count", "input reason", "local countPlural = count: plural"],
       "selectors": ["countPlural"],
       "match": {
-        "countPlural=one": "{count} note ignorée : {reason}",
-        "countPlural=*": "{count} notes ignorées : {reason}"
+        "countPlural=one": "{count} note ignorée : {reason}",
+        "countPlural=*": "{count} notes ignorées : {reason}"
       }
     }
   ],
-  "import_connect_blocked": "Les notes ne peuvent pas être connectées : {reason}",
+  "import_connect_blocked": "Les notes ne peuvent pas être connectées : {reason}",
   "import_connect_skip_period_has_note": "La période a déjà une note",
   "import_connect_skip_several_journals": "Correspond à plusieurs journaux",
   "import_connect_by_title_hint": "Une note que Periodic Notes a trouvée uniquement par son nom ne se trouve pas sur le chemin du journal. L'ajout en masse par titre de note peut la connecter.",
@@ -1737,10 +1737,10 @@
   "import_report_week_start": "Le début de semaine a été appliqué.",
   "import_report_shelf_created": "Étagère {name} créée.",
   "import_report_shelf_existing": "L'étagère {name} existait déjà et a été utilisée.",
-  "import_report_shelf_failed": "L'étagère {name} n'a pas pu être créée : {message}",
+  "import_report_shelf_failed": "L'étagère {name} n'a pas pu être créée : {message}",
   "import_report_journal_created": "Journal {name} créé.",
   "import_report_journal_existing": "Le journal {name} était déjà configuré.",
-  "import_report_journal_failed": "Le journal {name} n'a pas pu être créé : {message}",
+  "import_report_journal_failed": "Le journal {name} n'a pas pu être créé : {message}",
   "import_report_startup_set": "{name} s'ouvre désormais au démarrage.",
   "import_report_startup_kept": "{name} continue de s'ouvrir au démarrage.",
   "import_report_connected": [
