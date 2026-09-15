@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Leggi la data da",
   "bulk_add_date_place_title": "Titolo della nota",
   "bulk_add_date_place_property": "Una proprietà",
+  "bulk_add_date_place_path": "Percorso della nota",
+  "bulk_add_date_place_path_unavailable": "Il percorso della nota non è disponibile: dai percorsi delle note di questo diario non si può ricavare una data.",
   "common_label_property_name": "Nome della proprietà",
   "bulk_add_date_format_label": "Formato data",
   "bulk_add_date_format_omit_time": "Se le date includono un orario, omettilo dal formato.",
@@ -559,6 +561,7 @@
   "bulk_add_skip_reason_no_date": "Nessuna data trovata",
   "bulk_add_skip_reason_invalid_date": "Impossibile analizzare la data",
   "bulk_add_skip_reason_out_of_bounds": "Al di fuori della cronologia del diario",
+  "bulk_add_skip_reason_not_on_journal_path": "Non si trova in un percorso di questo diario",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1720,6 +1723,17 @@
         "reason=unknown-variable": "Il modello di nome usa \"{offending}\", che non è una variabile nota, quindi le note create fuori dal plugin non possono essere associate a questo diario.",
         "reason=function-token": "Il modello di nome usa la funzione \"{offending}\", quindi le note create fuori dal plugin non possono essere associate a questo diario.",
         "reason=clock-variable": "Il modello di nome usa \"{offending}\", che è un orario, quindi le note create fuori dal plugin non possono essere associate a questo diario."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "La cartella usa \"{offending}\", che non è una variabile nota, quindi le note create fuori dal plugin non possono essere associate a questo diario.",
+        "reason=function-token": "La cartella usa la funzione \"{offending}\", quindi le note create fuori dal plugin non possono essere associate a questo diario.",
+        "reason=clock-variable": "La cartella usa \"{offending}\", che è un orario, quindi le note create fuori dal plugin non possono essere associate a questo diario."
       }
     }
   ],

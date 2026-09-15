@@ -498,6 +498,8 @@
   "bulk_add_date_place_label": "Читать дату из",
   "bulk_add_date_place_title": "Заголовок заметки",
   "bulk_add_date_place_property": "Свойство",
+  "bulk_add_date_place_path": "Путь к заметке",
+  "bulk_add_date_place_path_unavailable": "Путь к заметке недоступен: из путей заметок этого журнала нельзя прочитать дату.",
   "common_label_property_name": "Название свойства",
   "bulk_add_date_format_label": "Формат даты",
   "bulk_add_date_format_omit_time": "Если ваши даты содержат временную составляющую, опустите её из формата.",
@@ -565,6 +567,7 @@
   "bulk_add_skip_reason_no_date": "Дата не найдена",
   "bulk_add_skip_reason_invalid_date": "Не удалось разобрать дату",
   "bulk_add_skip_reason_out_of_bounds": "Вне шкалы времени журнала",
+  "bulk_add_skip_reason_not_on_journal_path": "Путь не соответствует этому журналу",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1760,6 +1763,17 @@
         "reason=unknown-variable": "Шаблон названия использует «{offending}» — это не известная переменная, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
         "reason=function-token": "Шаблон названия использует функцию «{offending}», поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
         "reason=clock-variable": "Шаблон названия использует «{offending}» — это время суток, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "В папке используется «{offending}» — это не известная переменная, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
+        "reason=function-token": "В папке используется функция «{offending}», поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом.",
+        "reason=clock-variable": "В папке используется «{offending}» — это время суток, поэтому заметки, созданные вне плагина, невозможно сопоставить с этим журналом."
       }
     }
   ],

@@ -485,6 +485,8 @@
   "bulk_add_date_place_label": "日付の読み取り元",
   "bulk_add_date_place_title": "ノートのタイトル",
   "bulk_add_date_place_property": "プロパティ",
+  "bulk_add_date_place_path": "ノートのパス",
+  "bulk_add_date_place_path_unavailable": "ノートのパスは使用できません。このジャーナルのノートのパスから日付を読み取れません。",
   "common_label_property_name": "プロパティ名",
   "bulk_add_date_format_label": "日付形式",
   "bulk_add_date_format_omit_time": "日付に時刻が含まれる場合は、フォーマットから時刻を省略してください。",
@@ -548,6 +550,7 @@
   "bulk_add_skip_reason_no_date": "日付が見つかりませんでした",
   "bulk_add_skip_reason_invalid_date": "日付を解析できませんでした",
   "bulk_add_skip_reason_out_of_bounds": "ジャーナルの対象期間外",
+  "bulk_add_skip_reason_not_on_journal_path": "このジャーナルが使うパスにありません",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1567,6 +1570,17 @@
         "reason=unknown-variable": "名前テンプレートで使われている「{offending}」は既知の変数ではないため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
         "reason=function-token": "名前テンプレートで関数「{offending}」を使っているため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
         "reason=clock-variable": "名前テンプレートで使われている「{offending}」は時刻であるため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。"
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "フォルダで使われている「{offending}」は既知の変数ではないため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
+        "reason=function-token": "フォルダで関数「{offending}」を使っているため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
+        "reason=clock-variable": "フォルダで使われている「{offending}」は時刻であるため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。"
       }
     }
   ],

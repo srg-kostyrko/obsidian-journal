@@ -485,6 +485,8 @@
   "bulk_add_date_place_label": "日期读取自",
   "bulk_add_date_place_title": "笔记标题",
   "bulk_add_date_place_property": "属性",
+  "bulk_add_date_place_path": "笔记路径",
+  "bulk_add_date_place_path_unavailable": "无法使用笔记路径：无法从此日记的笔记路径中读取日期。",
   "common_label_property_name": "属性名称",
   "bulk_add_date_format_label": "日期格式",
   "bulk_add_date_format_omit_time": "如果您的日期包含时间部分，请将其从格式中省略。",
@@ -548,6 +550,7 @@
   "bulk_add_skip_reason_no_date": "未找到日期",
   "bulk_add_skip_reason_invalid_date": "日期无法解析",
   "bulk_add_skip_reason_out_of_bounds": "超出日记的时间范围",
+  "bulk_add_skip_reason_not_on_journal_path": "不在此日记使用的路径上",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1567,6 +1570,17 @@
         "reason=unknown-variable": "名称模板使用了“{offending}”，它不是已知变量，因此在插件之外创建的笔记无法与此日记匹配。",
         "reason=function-token": "名称模板使用了函数“{offending}”，因此在插件之外创建的笔记无法与此日记匹配。",
         "reason=clock-variable": "名称模板使用了“{offending}”，它表示一天中的时间，因此在插件之外创建的笔记无法与此日记匹配。"
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "文件夹使用了“{offending}”，它不是已知变量，因此在插件之外创建的笔记无法与此日记匹配。",
+        "reason=function-token": "文件夹使用了函数“{offending}”，因此在插件之外创建的笔记无法与此日记匹配。",
+        "reason=clock-variable": "文件夹使用了“{offending}”，它表示一天中的时间，因此在插件之外创建的笔记无法与此日记匹配。"
       }
     }
   ],

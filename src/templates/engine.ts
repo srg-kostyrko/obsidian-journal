@@ -184,7 +184,7 @@ export class TemplateEngine {
     // requiring the normalized lower bounds to agree.
     const noModifiers = entries.every((entry) => entry.token.modifiers.length === 0);
     const fieldSets = noModifiers ? entries.map((entry) => dateFields(entry.format)) : undefined;
-    if (!fieldSets || fieldSets.includes(undefined)) {
+    if (!fieldSets || fieldSets.includes(undefined) || !weekdayPinned(fieldSets)) {
       const parsed: BoundValue[] = [];
       for (const entry of entries) {
         const value = this.#parseCapture(entry.capture, entry.spec, entry.token);
@@ -383,7 +383,7 @@ interface DateCapture {
   format: string;
 }
 
-type DateField = "year" | "weekYear" | "month" | "day" | "quarter" | "week" | "isoWeek" | "dayOfYear";
+type DateField = "year" | "weekYear" | "month" | "day" | "quarter" | "week" | "isoWeek" | "dayOfYear" | "weekday";
 
 // How each field is read off a date, so a token's own capture can be checked against the combined
 // parse whatever calendar unit it names. moment is the only thing that answers for the week and
@@ -397,15 +397,16 @@ const FIELD_READERS: Record<DateField, (m: ReturnType<typeof localMoment>) => nu
   week: (m) => m.week(),
   isoWeek: (m) => m.isoWeek(),
   dayOfYear: (m) => m.dayOfYear(),
+  weekday: (m) => m.day(),
 };
 
 // A separator that can't occur inside a captured date component, so combining
 // component captures into one moment parse stays unambiguous.
 const DATE_PART_SEP = "\u{0}";
 
-// The calendar fields a date format constrains, or undefined if it names a unit this component
-// combiner can't reconcile — a weekday or a day-of-month ordinal, neither of which a year and a
-// period-within-the-year pin down. Those route back to the agreement-based merge instead.
+// The calendar fields a date format constrains, or undefined if it names a day-of-month ordinal,
+// whose capture moment will not read back out of a combined format. That routes back to the
+// agreement-based merge instead.
 function dateFields(format: string): Set<DateField> | undefined {
   const fields = new Set<DateField>();
   let inLiteral = false;
@@ -423,9 +424,8 @@ function dateFields(format: string): Set<DateField> | undefined {
       .with("w", () => "week")
       .with("W", () => "isoWeek")
       .with("D", () => (count < 3 ? "day" : "dayOfYear"))
-      // A weekday ("d", "e", "E") names no period a year can complete, and "o" is a day-of-month
-      // ordinal whose own capture moment will not read back out of a combined format.
-      .with("d", "e", "E", "o", () => "unreconcilable")
+      .with("d", () => "weekday")
+      .with("e", "E", "o", () => "unreconcilable")
       .otherwise(() => "no-field");
     if (named === "unreconcilable") unsupported = true;
     else if (named !== "no-field") fields.add(named);
@@ -450,6 +450,14 @@ function dateFields(format: string): Set<DateField> | undefined {
   }
   flush();
   return unsupported ? undefined : fields;
+}
+
+// A weekday from the d family (d/dd/ddd/dddd, the only tokens moment validates against the date)
+// is redundant beside a day of the month, and moment refuses a combined date the weekday
+// contradicts. Without one it names no date at all: moment resolves it within the current week,
+// overriding even a day of the year, so only a day of the month lets the captures combine.
+function weekdayPinned(fieldSets: (Set<DateField> | undefined)[]): boolean {
+  return fieldSets.every((fields) => !fields?.has("weekday")) || fieldSets.some((fields) => fields?.has("day"));
 }
 
 function fieldsAgree(fields: Set<DateField>, a: CalendarDate, b: CalendarDate): boolean {

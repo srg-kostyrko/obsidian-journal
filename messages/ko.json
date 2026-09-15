@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "날짜를 읽을 위치",
   "bulk_add_date_place_title": "노트 제목",
   "bulk_add_date_place_property": "속성",
+  "bulk_add_date_place_path": "노트 경로",
+  "bulk_add_date_place_path_unavailable": "노트 경로를 사용할 수 없습니다. 이 저널의 노트 경로에서 날짜를 읽을 수 없습니다.",
   "common_label_property_name": "속성 이름",
   "bulk_add_date_format_label": "날짜 형식",
   "bulk_add_date_format_omit_time": "날짜에 시간이 포함되어 있다면 형식에서는 시간을 빼세요.",
@@ -559,6 +561,7 @@
   "bulk_add_skip_reason_no_date": "날짜를 찾지 못함",
   "bulk_add_skip_reason_invalid_date": "날짜를 해석하지 못함",
   "bulk_add_skip_reason_out_of_bounds": "저널 타임라인 밖",
+  "bulk_add_skip_reason_not_on_journal_path": "이 저널이 사용하는 경로에 없음",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1712,6 +1715,17 @@
         "reason=unknown-variable": "이름 템플릿에서 \"{offending}\" 부분은 알려진 변수가 아니므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다.",
         "reason=function-token": "이름 템플릿이 \"{offending}\" 함수를 사용하므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다.",
         "reason=clock-variable": "이름 템플릿에서 \"{offending}\" 변수는 시각을 나타내므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "폴더에서 \"{offending}\" 부분은 알려진 변수가 아니므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다.",
+        "reason=function-token": "폴더가 \"{offending}\" 함수를 사용하므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다.",
+        "reason=clock-variable": "폴더에서 \"{offending}\" 변수는 시각을 나타내므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다."
       }
     }
   ],

@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Leer la fecha de",
   "bulk_add_date_place_title": "Título de la nota",
   "bulk_add_date_place_property": "Una propiedad",
+  "bulk_add_date_place_path": "Ruta de la nota",
+  "bulk_add_date_place_path_unavailable": "La ruta de la nota no está disponible: no se puede leer una fecha a partir de las rutas de las notas de este diario.",
   "common_label_property_name": "Nombre de la propiedad",
   "bulk_add_date_format_label": "Formato de fecha",
   "bulk_add_date_format_omit_time": "Si tus fechas incluyen una hora, omítela del formato.",
@@ -559,6 +561,7 @@
   "bulk_add_skip_reason_no_date": "No se encontró ninguna fecha",
   "bulk_add_skip_reason_invalid_date": "No se pudo interpretar la fecha",
   "bulk_add_skip_reason_out_of_bounds": "Fuera de la línea de tiempo del diario",
+  "bulk_add_skip_reason_not_on_journal_path": "No está en una ruta de este diario",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1712,6 +1715,17 @@
         "reason=unknown-variable": "La plantilla de nombre usa «{offending}», que no es una variable conocida, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario.",
         "reason=function-token": "La plantilla de nombre usa la función «{offending}», por lo que las notas creadas fuera del complemento no se pueden asociar a este diario.",
         "reason=clock-variable": "La plantilla de nombre usa «{offending}», que es una hora del día, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "La carpeta usa «{offending}», que no es una variable conocida, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario.",
+        "reason=function-token": "La carpeta usa la función «{offending}», por lo que las notas creadas fuera del complemento no se pueden asociar a este diario.",
+        "reason=clock-variable": "La carpeta usa «{offending}», que es una hora del día, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario."
       }
     }
   ],

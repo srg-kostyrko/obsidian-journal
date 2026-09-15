@@ -485,6 +485,8 @@
   "bulk_add_date_place_label": "Читати дату з",
   "bulk_add_date_place_title": "Заголовок нотатки",
   "bulk_add_date_place_property": "Властивість",
+  "bulk_add_date_place_path": "Шлях до нотатки",
+  "bulk_add_date_place_path_unavailable": "Шлях до нотатки недоступний: зі шляхів нотаток цього журналу не можна прочитати дату.",
   "common_label_property_name": "Назва властивості",
   "bulk_add_date_format_label": "Формат дати",
   "bulk_add_date_format_omit_time": "Якщо ваші дати містять компонент часу, пропустіть його з формату.",
@@ -552,6 +554,7 @@
   "bulk_add_skip_reason_no_date": "Дату не знайдено",
   "bulk_add_skip_reason_invalid_date": "Не вдалося проаналізувати дату",
   "bulk_add_skip_reason_out_of_bounds": "Поза часовою шкалою журналу",
+  "bulk_add_skip_reason_not_on_journal_path": "Шлях не відповідає цьому журналу",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1605,6 +1608,17 @@
         "reason=unknown-variable": "Шаблон назви використовує «{offending}» — це не відома змінна, тому нотатки, створені поза плагіном, неможливо зіставити з цим журналом.",
         "reason=function-token": "Шаблон назви використовує функцію «{offending}», тому нотатки, створені поза плагіном, неможливо зіставити з цим журналом.",
         "reason=clock-variable": "Шаблон назви використовує «{offending}» — це час доби, тому нотатки, створені поза плагіном, неможливо зіставити з цим журналом."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "У папці використано «{offending}» — це не відома змінна, тому нотатки, створені поза плагіном, неможливо зіставити з цим журналом.",
+        "reason=function-token": "У папці використано функцію «{offending}», тому нотатки, створені поза плагіном, неможливо зіставити з цим журналом.",
+        "reason=clock-variable": "У папці використано «{offending}» — це час доби, тому нотатки, створені поза плагіном, неможливо зіставити з цим журналом."
       }
     }
   ],

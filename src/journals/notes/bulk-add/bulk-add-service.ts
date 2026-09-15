@@ -22,7 +22,8 @@ import { splitVaultPath } from "../vault-path";
 import type { BulkAddParameters } from "./config";
 import type { TypeId } from "../../notelets/config";
 
-export type SkipReason = "already-connected" | "filtered" | "no-date" | "invalid-date" | "out-of-bounds";
+export type SkipReason =
+  "already-connected" | "filtered" | "no-date" | "invalid-date" | "out-of-bounds" | "not-on-journal-path";
 
 export interface PlannedSkip {
   kind: "skip";
@@ -42,6 +43,9 @@ export interface PlannedAction {
 }
 
 export type PlannedNote = PlannedSkip | PlannedAction;
+
+type AnchorReading = { anchor: AnchorString } | { reason: SkipReason };
+type AnchorReader = (path: VaultPath, metadata: NoteMetadata | null) => AnchorReading;
 
 export interface BulkPlan {
   notes: PlannedNote[];
@@ -188,11 +192,36 @@ export class BulkAddService {
     };
   }
 
+  #anchorReader(journalName: string, parameters: BulkAddParameters): AnchorReader {
+    if (parameters.datePlace === "path") {
+      // Prepared once per plan: candidateFor would re-tokenize the path template for every note.
+      const inverter = this.#path.inverterFor(journalName);
+      return (path) => {
+        const candidate = inverter.flatMap((prepared) => prepared.invert(path));
+        return candidate.isSome() ? { anchor: candidate.value.anchor } : { reason: "not-on-journal-path" };
+      };
+    }
+    const dateRegexp = formatToRegexp(parameters.dateFormat);
+    return (path, metadata) => {
+      const source =
+        parameters.datePlace === "title"
+          ? (metadata?.title ?? splitVaultPath(path)[1].replace(/\.md$/, ""))
+          : this.#stringProperty(metadata, parameters.propertyName);
+      if (source === undefined) return { reason: "no-date" };
+      const dateMatch = source.match(dateRegexp);
+      if (!dateMatch) return { reason: "no-date" };
+      const parsed = CalendarDate.parse(dateMatch[0], parameters.dateFormat);
+      if (!parsed.isOk()) return { reason: "invalid-date" };
+      const anchorOption = this.#cycle.anchorOf(journalName, parsed.value);
+      return anchorOption.isSome() ? { anchor: anchorOption.value } : { reason: "invalid-date" };
+    };
+  }
+
   #planNote(
     journalName: string,
     path: VaultPath,
     parameters: BulkAddParameters,
-    dateRegexp: RegExp,
+    readAnchor: AnchorReader,
     nextCounter: ((anchor: AnchorString) => number) | undefined,
   ): PlannedNote {
     if (this.#index.entryByPath(path).isSome()) return { kind: "skip", path, reason: "already-connected" };
@@ -201,20 +230,9 @@ export class BulkAddService {
     const metadata = metadataOption.isSome() ? metadataOption.value : null;
     if (!this.#passesFilters(parameters, metadata)) return { kind: "skip", path, reason: "filtered" };
 
-    const source =
-      parameters.datePlace === "title"
-        ? (metadata?.title ?? splitVaultPath(path)[1].replace(/\.md$/, ""))
-        : this.#stringProperty(metadata, parameters.propertyName);
-    if (source === undefined) return { kind: "skip", path, reason: "no-date" };
-
-    const dateMatch = source.match(dateRegexp);
-    if (!dateMatch) return { kind: "skip", path, reason: "no-date" };
-    const parsed = CalendarDate.parse(dateMatch[0], parameters.dateFormat);
-    if (!parsed.isOk()) return { kind: "skip", path, reason: "invalid-date" };
-
-    const anchorOption = this.#cycle.anchorOf(journalName, parsed.value);
-    if (anchorOption.isNone()) return { kind: "skip", path, reason: "invalid-date" };
-    const anchor = anchorOption.value;
+    const reading = readAnchor(path, metadata);
+    if ("reason" in reading) return { kind: "skip", path, reason: reading.reason };
+    const { anchor } = reading;
     if (!this.#timeline.contains(journalName, anchor)) return { kind: "skip", path, reason: "out-of-bounds" };
 
     // A notelet has no anchor exclusivity, so there is no occupant and the existing-note
@@ -338,17 +356,20 @@ export class BulkAddService {
   }
 
   plan(journalName: string, parameters: BulkAddParameters): AsyncResult<BulkPlan, FolderNotFoundError> {
+    if (parameters.datePlace === "path" && parameters.noteletTypeId !== undefined) {
+      throw new InvariantError("a notelet's path does not identify it, so its date cannot be read from the path");
+    }
     return attempt.in(this, async function* (this: BulkAddService) {
       const files = yield* this.#notes.listInFolder(parameters.folder as VaultPath);
       // The folder holds attachments too, and a date-named one plans exactly like a note: nothing
       // downstream reads an extension, so connect would write journal frontmatter into a binary.
       const paths = files.filter((path) => path.endsWith(".md"));
-      const dateRegexp = formatToRegexp(parameters.dateFormat);
+      const readAnchor = this.#anchorReader(journalName, parameters);
       // Every path that reaches #targetFor becomes an action, and every action consumes exactly
       // one number in #applyAll — a note skipped here never reaches either — so the two passes
       // walk the same allocation over the same unmoved index.
       const nextCounter = this.#counterFor(journalName, parameters.noteletTypeId);
-      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, dateRegexp, nextCounter));
+      const notes = paths.map((path) => this.#planNote(journalName, path, parameters, readAnchor, nextCounter));
       return { notes };
     });
   }

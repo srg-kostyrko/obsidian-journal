@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Ler a data de",
   "bulk_add_date_place_title": "Título da nota",
   "bulk_add_date_place_property": "Uma propriedade",
+  "bulk_add_date_place_path": "Caminho da nota",
+  "bulk_add_date_place_path_unavailable": "O caminho da nota não está disponível: não é possível ler uma data a partir dos caminhos das notas deste diário.",
   "common_label_property_name": "Nome da propriedade",
   "bulk_add_date_format_label": "Formato de data",
   "bulk_add_date_format_omit_time": "Se as suas datas incluírem um componente de hora, omita-o do formato.",
@@ -559,6 +561,7 @@
   "bulk_add_skip_reason_no_date": "Nenhuma data encontrada",
   "bulk_add_skip_reason_invalid_date": "Não foi possível interpretar a data",
   "bulk_add_skip_reason_out_of_bounds": "Fora da linha do tempo do diário",
+  "bulk_add_skip_reason_not_on_journal_path": "Não está em um caminho usado por este diário",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1720,6 +1723,17 @@
         "reason=unknown-variable": "O modelo de nome usa \"{offending}\", que não é uma variável conhecida, portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
         "reason=function-token": "O modelo de nome usa a função \"{offending}\", portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
         "reason=clock-variable": "O modelo de nome usa \"{offending}\", que é uma hora do dia, portanto as notas criadas fora do plugin não podem ser associadas a este diário."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "A pasta usa \"{offending}\", que não é uma variável conhecida, portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
+        "reason=function-token": "A pasta usa a função \"{offending}\", portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
+        "reason=clock-variable": "A pasta usa \"{offending}\", que é uma hora do dia, portanto as notas criadas fora do plugin não podem ser associadas a este diário."
       }
     }
   ],

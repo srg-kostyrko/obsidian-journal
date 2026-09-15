@@ -958,6 +958,35 @@
         "allowBefore": false,
         "sources": []
       }
+    },
+    "nested-daily": {
+      "name": "nested-daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "nested/{{date:YYYY}}/{{date:MM-MMM}}",
+      "nameTemplate": "{{date:DD-ddd}}",
+      "timeline": {
+        "start": "2019-01-01",
+        "end": {
+          "kind": "date",
+          "date": "2019-12-31"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      }
     }
   },
   "shelves": {
@@ -988,6 +1017,10 @@
     "nav-dates": {
       "name": "nav-dates",
       "journals": ["year-nav", "quarter-nav"]
+    },
+    "nested-path": {
+      "name": "nested-path",
+      "journals": ["nested-daily"]
     }
   },
   "commands": {

@@ -159,12 +159,17 @@ listed on that shelf's page. Notelet types have their own bulk add — see [Note
 ### Choosing the notes
 
 - **Source folder** — subfolders are included; only markdown notes are considered.
-- **Read the date from** — **Note title** or **A property**. For a property, give its **Property
-  name**; its value has to be text.
-- **Date format** — the format the date is written in, prefilled with the journal's own date format.
-  The date can sit anywhere in the title: `Standup 2024-03-05` finds `2024-03-05`. If your dates
-  include a time component, omit it from the format. A date that falls inside a longer period is
-  read as that period — a day's date connects the note to its week on a weekly journal.
+- **Read the date from** — **Note title**, **A property** or **Note path**. For a property, give its
+  **Property name**; its value has to be text. **Note path** reads the date from the note's folder
+  and name together, the way the journal names its own notes, so a note filed under year and month
+  folders is found; **Date format** does not apply and is hidden. It is unavailable, with the reason,
+  for a journal whose note paths cannot be read back into a date, and notelet bulk add does not
+  offer it.
+- **Date format** (not shown for **Note path**) — the format the date is written in, prefilled with
+  the journal's own date format. The date can sit anywhere in the title: `Standup 2024-03-05` finds
+  `2024-03-05`. If your dates include a time component, omit it from the format. A date that falls
+  inside a longer period is read as that period — a day's date connects the note to its week on a
+  weekly journal.
 - **Filter notes** — **No filter**, **Match all conditions** or **Match any condition**, over title,
   tag and property conditions like those a [decoration](/decorations) uses.
 
@@ -188,8 +193,8 @@ listed on that shelf's page. Notelet types have their own bulk add — see [Note
 **Continue** scans the folder and lists every note it would act on, each with the date it read, the
 note already connected to that date, and its new path where it would move or be renamed. Notes set
 to **Ask for each** get their choice here. Notes it will not touch are listed with the reason:
-**Already connected**, **Filtered out**, **No date found**, **Date could not be parsed** or **Outside
-the journal's timeline**.
+**Already connected**, **Filtered out**, **No date found**, **Date could not be parsed**, **Not at a
+path this journal uses** or **Outside the journal's timeline**.
 
 **Run** processes the notes and shows what happened to each. A dry run reports what would have
 happened without changing anything in your vault; start again with **Dry run** off to apply it.

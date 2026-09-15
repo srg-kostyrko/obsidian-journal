@@ -100,9 +100,39 @@ describe("useInvertibilityCheck", () => {
 
     expect(probe(harness, config.name).value).toMatchObject({
       kind: "non-invertible",
+      part: "name",
       reason: "unknown-variable",
       offending: "mystery",
     });
+  });
+
+  it("flags an unknown variable in the folder of a journal whose name names no date", async () => {
+    const config = fixedJournal("daily", { type: "day" }, { nameTemplate: "Log", folder: "Journal/{{mystery}}" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toMatchObject({
+      kind: "non-invertible",
+      part: "folder",
+      reason: "unknown-variable",
+      offending: "mystery",
+    });
+  });
+
+  it("does not report the note name a folder may use as an unknown variable", async () => {
+    const config = fixedJournal(
+      "daily",
+      { type: "day" },
+      { nameTemplate: "{{date}}", folder: "Journal/{{note_name}}" },
+    );
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).not.toMatchObject({ kind: "non-invertible" });
   });
 
   it("does not flag a configured numbering variable alongside a date", async () => {

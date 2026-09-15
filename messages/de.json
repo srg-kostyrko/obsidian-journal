@@ -496,6 +496,8 @@
   "bulk_add_date_place_label": "Datum lesen aus",
   "bulk_add_date_place_title": "Titel der Notiz",
   "bulk_add_date_place_property": "Eine Eigenschaft",
+  "bulk_add_date_place_path": "Pfad der Notiz",
+  "bulk_add_date_place_path_unavailable": "Der Pfad der Notiz ist nicht verfügbar: Aus den Notizpfaden dieses Journals lässt sich kein Datum zurücklesen.",
   "common_label_property_name": "Eigenschaftsname",
   "bulk_add_date_format_label": "Datumsformat",
   "bulk_add_date_format_omit_time": "Falls deine Datumsangaben eine Uhrzeit enthalten, lasse sie im Format weg.",
@@ -559,6 +561,7 @@
   "bulk_add_skip_reason_no_date": "Kein Datum gefunden",
   "bulk_add_skip_reason_invalid_date": "Datum konnte nicht gelesen werden",
   "bulk_add_skip_reason_out_of_bounds": "Außerhalb des Zeitrahmens des Journals",
+  "bulk_add_skip_reason_not_on_journal_path": "Nicht unter einem Pfad dieses Journals",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1722,6 +1725,17 @@
         "reason=unknown-variable": "Die Namensvorlage verwendet „{offending}“, was keine bekannte Variable ist, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
         "reason=function-token": "Die Namensvorlage verwendet die Funktion „{offending}“, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
         "reason=clock-variable": "Die Namensvorlage verwendet „{offending}“, eine Uhrzeit, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "Der Ordner verwendet „{offending}“, was keine bekannte Variable ist, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
+        "reason=function-token": "Der Ordner verwendet die Funktion „{offending}“, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
+        "reason=clock-variable": "Der Ordner verwendet „{offending}“, eine Uhrzeit, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden."
       }
     }
   ],

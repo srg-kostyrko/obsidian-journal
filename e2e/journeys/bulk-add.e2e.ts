@@ -1,14 +1,17 @@
 import { browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import {
   clickDialogButton,
   clickIcon,
   closeSettings,
+  modalText,
   openSettings,
   openShelfSubpage,
   selectModalDropdownByLabel,
   setModalText,
   toggleModalCheckbox,
+  waitForDialogButton,
   waitForDialogClosed,
 } from "../support/settings.js";
 import { frontmatterOf, seedNote, waitForContent, waitForJournalFrontmatter } from "../support/vault.js";
@@ -20,16 +23,28 @@ import { frontmatterOf, seedNote, waitForContent, waitForJournalFrontmatter } fr
 // the Obsidian fake can't drive.
 // Single boot; each it scans its own folder so the accumulating connections stay independent.
 
-const BULK_ADD = "Bulk add notes to daily";
 const EXISTING_LABEL = "When a note is already connected to that date";
 
-async function runBulkAdd(folder: string, options: { existing?: "override" | "merge" } = {}): Promise<void> {
+async function runBulkAdd(
+  folder: string,
+  options: {
+    existing?: "override" | "merge";
+    datePlace?: "path";
+    shelf?: string;
+    journal?: string;
+    beforeRun?: () => Promise<void>;
+  } = {},
+): Promise<void> {
+  const { shelf = "core", journal = "daily" } = options;
   await openSettings();
-  // The dashboard lists only shelf-less journals; daily lives on the "core" shelf, so its
-  // per-row bulk-add icon is reached through the shelf subpage.
-  await openShelfSubpage("core");
-  await clickIcon(BULK_ADD);
+  // The dashboard lists only shelf-less journals, so a shelved journal's per-row bulk-add icon
+  // is reached through its shelf subpage.
+  await openShelfSubpage(shelf);
+  await clickIcon(m.journal_dashboard_bulk_add({ name: journal }));
   await setModalText(folder);
+  if (options.datePlace) {
+    await selectModalDropdownByLabel(m.bulk_add_date_place_label(), options.datePlace);
+  }
   // Set the occupant policy up front in the configure modal so the process modal needs no per-note
   // picker (the per-note dropdown renders only when the policy is "ask").
   if (options.existing) {
@@ -39,6 +54,13 @@ async function runBulkAdd(folder: string, options: { existing?: "override" | "me
   // turn it off so the run actually writes.
   await toggleModalCheckbox();
   await clickDialogButton("Continue");
+  // The process modal opens only once plan() resolves, replacing the configure dialog rather than
+  // updating it in place, and it lists skipped notes and their reasons only until Run is clicked —
+  // a caller that needs to assert on that listing must wait for it here and read it before Run.
+  if (options.beforeRun) {
+    await waitForDialogButton("Run");
+    await options.beforeRun();
+  }
   await clickDialogButton("Run");
 }
 
@@ -108,6 +130,29 @@ describe("bulk add", () => {
     // the waitForContent guard above this is enough to confirm the merge-and-delete happened.
     const sourceFm = await frontmatterOf("bulk-merge/2031-02-01.md");
     expect(sourceFm).toBeNull();
+    await clickDialogButton("Close");
+    await waitForDialogClosed();
+  });
+
+  it("connects notes filed under date folders by reading the date from their path", async () => {
+    let processText = "";
+    await runBulkAdd("nested", {
+      shelf: "nested-path",
+      journal: "nested-daily",
+      datePlace: "path",
+      beforeRun: async () => {
+        processText = await modalText();
+      },
+    });
+
+    // Named like a note of this journal (DD-ddd) but filed outside the year/month folders the
+    // path template requires, so the path-mode inverter — which validates the whole path, not
+    // just the name — lists it as skipped with its own reason, not as merely undated.
+    expect(processText).toContain(m.bulk_add_skip_reason_not_on_journal_path());
+    await waitForJournalFrontmatter("nested/2019/09-Sep/01-Sun.md", { journal: "nested-daily", date: "2019-09-01" });
+    await waitForJournalFrontmatter("nested/2019/10-Oct/05-Sat.md", { journal: "nested-daily", date: "2019-10-05" });
+    const misfiledFm = await frontmatterOf("nested/misfiled/02-Mon.md");
+    expect(misfiledFm?.journal).toBeUndefined();
     await clickDialogButton("Close");
     await waitForDialogClosed();
   });

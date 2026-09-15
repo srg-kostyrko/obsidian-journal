@@ -396,6 +396,38 @@ describe("TemplateEngine.parse", () => {
       expectErr(result);
       expect(result.error.detail.kind).toBe("conflict");
     });
+
+    it("combines a year and a month folder with a day name that also names the weekday", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:MM-MMM}}/{{date:DD-ddd}}.md");
+      const result = engine.parse(stream, "2026/06-Jun/01-Mon.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2026-06-01");
+    });
+
+    it("returns invalid-date when a split date names a weekday its day does not fall on, as moment refuses the combined date", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:MM-MMM}}/{{date:DD-ddd}}.md");
+      const result = engine.parse(stream, "2026/06-Jun/01-Tue.md", buildFakeContext());
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("invalid-date");
+    });
+
+    it("returns conflict when a weekday stands with no day of the month to pin, as it is read alone in the current week", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date:YYYY-MM}}/{{date:ddd}}.md");
+      const result = engine.parse(stream, "2026-06/Tue.md", buildFakeContext());
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("conflict");
+    });
+
+    it("returns conflict for a weekday beside a day of the year, as moment lets the weekday override that day", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date:DDDD-ddd}}.md");
+      const result = engine.parse(stream, "2026/152-Mon.md", buildFakeContext());
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("conflict");
+    });
   });
 
   it("unapplies an offset when parsing a captured number", async () => {

@@ -29,6 +29,10 @@ new journal starts with an empty calendar. For each period length:
    date from** **Note title**, and the format they are named with. The first run is a dry run, which
    only lists what it would do.
 
+If your **Format** put part of the date in folders — the row above notes that a `/` does this —
+pick **Note path** instead of **Note title**: it reads the whole folder-and-name layout back, where
+**Note title** alone cannot tell which folder a note came from.
+
 ## Any cadence, not a fixed ladder
 
 Periodic Notes offers day, week, month, quarter and year, with nothing in between. Here a journal can

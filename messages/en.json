@@ -436,6 +436,8 @@
   "bulk_add_date_place_label": "Read the date from",
   "bulk_add_date_place_title": "Note title",
   "bulk_add_date_place_property": "A property",
+  "bulk_add_date_place_path": "Note path",
+  "bulk_add_date_place_path_unavailable": "Note path is not available: this journal's note paths cannot be read back into a date.",
   "common_label_property_name": "Property name",
   "bulk_add_date_format_label": "Date format",
   "bulk_add_date_format_omit_time": "If your dates include a time component, omit it from the format.",
@@ -499,6 +501,7 @@
   "bulk_add_skip_reason_no_date": "No date found",
   "bulk_add_skip_reason_invalid_date": "Date could not be parsed",
   "bulk_add_skip_reason_out_of_bounds": "Outside the journal's timeline",
+  "bulk_add_skip_reason_not_on_journal_path": "Not at a path this journal uses",
   "bulk_add_log_skipped_occupied": [
     {
       "declarations": ["input mood", "input anchor"],
@@ -1726,6 +1729,17 @@
         "reason=unknown-variable": "The name template uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.",
         "reason=function-token": "The name template uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.",
         "reason=clock-variable": "The name template uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."
+      }
+    }
+  ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "The folder uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.",
+        "reason=function-token": "The folder uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.",
+        "reason=clock-variable": "The folder uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."
       }
     }
   ],

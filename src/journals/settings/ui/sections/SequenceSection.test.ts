@@ -305,6 +305,30 @@ describe("SequenceSection", () => {
       ).toBeTruthy();
     });
 
+    it("warns about a stale numbering variable a rename left in the folder", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              { folder: "Journal/{{index}}", numbering: enabledNumbering(["release", "sprint"]) },
+            ),
+          },
+        },
+      });
+      harness.render(SequenceSection, { props: { journalName: "daily" } });
+
+      await userEvent.click(screen.getByText(m.journal_edit_section_sequential_numbers()));
+
+      expect(
+        await screen.findByText(
+          m.journal_edit_folder_invertibility_warning({ reason: "unknown-variable", offending: "index" }),
+        ),
+      ).toBeTruthy();
+    });
+
     it("warns when the first digit is cyclic", async () => {
       const harness = await testContainer({
         modules: [journalsCoreModule],
