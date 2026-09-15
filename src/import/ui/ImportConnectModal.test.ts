@@ -58,6 +58,17 @@ describe("ImportConnectModal", () => {
     expect(await screen.findByText(m.import_report_connected({ name: "daily", count: 1 }))).toBeTruthy();
   });
 
+  it("points to bulk add by note title in the report when a note is off the journal's path", async () => {
+    await openedOn(existingDaily, (harness) => {
+      harness.host.putFile("Journal/2026-06-01.md");
+      harness.host.putFile("Journal/misfiled/2026-06-02.md");
+    });
+
+    await userEvent.click(screen.getByText(m.import_connect_run()));
+
+    expect(await screen.findByText(m.import_connect_by_title_hint())).toBeTruthy();
+  });
+
   it("keeps notes unconnected when the connection is skipped", async () => {
     const { harness } = await openedOn(existingDaily, (seeded) => seeded.host.putFile("Journal/2026-06-01.md"));
 

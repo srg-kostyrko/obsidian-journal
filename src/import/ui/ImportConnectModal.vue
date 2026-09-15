@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { match } from "ts-pattern";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -27,6 +27,10 @@ const hasWork = connect.rows.some((row) => row.blocked === undefined && row.acti
 const phase = ref<"preview" | "running" | "report">(connect.rows.length === 0 ? "report" : "preview");
 const progress = ref({ done: 0, total: 0 });
 const report = ref<ConnectReport | undefined>(undefined);
+// The hint outlives the preview: once the report replaces it, nothing else says those notes remain.
+const reportRows = computed(() =>
+  connect.rows.map((row) => ({ row, done: report.value?.rows.find((line) => line.journalName === row.journalName) })),
+);
 
 function reasonLabel(reason: ConnectSkipReason): string {
   return match(reason)
@@ -123,11 +127,14 @@ async function run(): Promise<void> {
             <div v-if="rowLine(row)">{{ rowLine(row) }}</div>
           </template>
           <div v-if="startupLine(outcome.startup)">{{ startupLine(outcome.startup) }}</div>
-          <template v-for="row of report?.rows ?? []" :key="row.journalName">
-            <div>{{ m.import_report_connected({ name: row.journalName, count: row.connected }) }}</div>
-            <div v-for="failure of row.failed" :key="failure.path">
-              {{ m.import_report_connect_failed({ path: failure.path, message: failure.message }) }}
-            </div>
+          <template v-for="{ row, done } of reportRows" :key="row.journalName">
+            <template v-if="done">
+              <div>{{ m.import_report_connected({ name: done.journalName, count: done.connected }) }}</div>
+              <div v-for="failure of done.failed" :key="failure.path">
+                {{ m.import_report_connect_failed({ path: failure.path, message: failure.message }) }}
+              </div>
+            </template>
+            <div v-if="hasOffPathSkips(row)">{{ m.import_connect_by_title_hint() }}</div>
           </template>
         </template>
       </UiSettingRow>
