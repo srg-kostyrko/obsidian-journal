@@ -99,6 +99,14 @@ describe("MaintenanceSubpage", () => {
     expect(await screen.findByText(m.maintenance_snapshot_row({ version: 3 }))).toBeTruthy();
   });
 
+  it("labels a snapshot taken before an import", async () => {
+    const harness = await setup({ files: { "backup-import-v5-2026-09-15T10-20-30.json": '{"version":5}' } });
+
+    mount(harness);
+
+    expect(await screen.findByText(m.maintenance_snapshot_row_import())).toBeTruthy();
+  });
+
   it("says so when there are no snapshots", async () => {
     const harness = await setup();
 

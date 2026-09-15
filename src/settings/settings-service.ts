@@ -33,6 +33,7 @@ type AnySchema = BaseSchema<unknown, unknown, BaseIssue<unknown>>;
 
 const DEBOUNCE_MS = 300;
 const PRE_RESTORE_KEEP = 3;
+const PRE_IMPORT_KEEP = 3;
 
 export class SettingsService {
   readonly #pluginData = inject(PluginData);
@@ -100,32 +101,35 @@ export class SettingsService {
     });
   }
 
-  // Restore is the second event that destroys a configuration wholesale, and unlike a migration
-  // it is a single click with no undo. Keep the last few, and never let a failed snapshot block
-  // the restore the user actually asked for.
-  async #snapshotBeforeRestore(): Promise<void> {
+  // Restore and import are the two events that rewrite a whole configuration at the user's click,
+  // with no undo. Keep the last few of each, and never let a failed snapshot block the action the
+  // user asked for.
+  async #snapshotCurrent(reason: "pre-restore" | "pre-import"): Promise<boolean> {
+    const doing = reason === "pre-restore" ? "restoring" : "importing";
     const current = await this.#pluginData.load();
     if (current.kind === "err") {
-      this.#logger.warn("could not read current settings before restoring", { error: current.error });
-      return;
+      this.#logger.warn(`could not read current settings before ${doing}`, { error: current.error });
+      return false;
     }
     const raw = current.value;
-    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return;
+    if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return false;
     const stored = raw as Record<string, unknown>;
     const fromVersion = typeof stored.version === "number" ? stored.version : 0;
-    const written = await this.#snapshots.writePreRestore(
-      fromVersion,
-      JSON.stringify(stored),
-      new Date().toISOString(),
-    );
+    const contents = JSON.stringify(stored);
+    const takenAt = new Date().toISOString();
+    const written =
+      reason === "pre-restore"
+        ? await this.#snapshots.writePreRestore(fromVersion, contents, takenAt)
+        : await this.#snapshots.writePreImport(fromVersion, contents, takenAt);
     if (written.kind === "err") {
-      this.#logger.warn("could not snapshot settings before restoring", { error: written.error });
-      return;
+      this.#logger.warn(`could not snapshot settings before ${doing}`, { error: written.error });
+      return false;
     }
-    const pruned = await this.#snapshots.prune("pre-restore", PRE_RESTORE_KEEP);
+    const pruned = await this.#snapshots.prune(reason, reason === "pre-restore" ? PRE_RESTORE_KEEP : PRE_IMPORT_KEEP);
     pruned.tapErr((error) => {
-      this.#logger.warn("could not prune pre-restore snapshots", { error });
+      this.#logger.warn(`could not prune ${reason} snapshots`, { error });
     });
+    return true;
   }
 
   #hydrate(migrated: Record<string, unknown>): void {
@@ -184,6 +188,11 @@ export class SettingsService {
     this.#events.emit("reloaded");
   }
 
+  /** Snapshots the stored settings before an import writes to them; false when none was written. */
+  snapshotBeforeImport(): Promise<boolean> {
+    return this.#snapshotCurrent("pre-import");
+  }
+
   initialize(): AsyncResult<void, SettingsLoadError | MigrationFailedError | SliceKeyConflictError> {
     return attempt.in(this, async function* () {
       const conflict = this.#findKeyConflict();
@@ -231,7 +240,7 @@ export class SettingsService {
       // Migrations mutate their input in place, so validating against `raw` itself would
       // corrupt it before it reaches save() below — validate a disposable clone instead.
       yield* runMigrations(structuredClone(raw), this.#migrations, CURRENT_VERSION);
-      await this.#snapshotBeforeRestore();
+      await this.#snapshotCurrent("pre-restore");
       yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
       const migrated = yield* this.#loadAndMigrate();
       this.#applyMigrated(migrated);

@@ -2162,6 +2162,7 @@
   "maintenance_snapshot_failed": "No se pudo restaurar esa instantánea. Puede estar dañada.",
   "maintenance_snapshots_load_failed": "No se pudieron comprobar las instantáneas. Esto no significa que no exista ninguna: intenta volver a abrir esta página.",
   "maintenance_snapshot_row_restore": "Tomada antes de restaurar una instantánea",
+  "maintenance_snapshot_row_import": "Tomada antes de importar la configuración desde otros complementos",
   "maintenance_check_heading": "Comprobación de la bóveda",
   "maintenance_check_scanning": "Comprobando tus notas…",
   "maintenance_check_indexing": "Tu bóveda todavía se está indexando. Vuelve a abrir esta página en un momento.",

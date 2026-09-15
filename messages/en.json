@@ -2171,6 +2171,7 @@
   "maintenance_snapshot_failed": "That snapshot could not be restored. It may be damaged.",
   "maintenance_snapshots_load_failed": "Snapshots could not be checked. This does not mean none exist — try reopening this page.",
   "maintenance_snapshot_row_restore": "Taken before restoring a snapshot",
+  "maintenance_snapshot_row_import": "Taken before importing settings from other plugins",
   "maintenance_check_heading": "Vault check",
   "maintenance_check_scanning": "Checking your notes…",
   "maintenance_check_indexing": "Still indexing your vault. Reopen this page in a moment.",

@@ -2237,6 +2237,7 @@
   "maintenance_snapshot_failed": "Не удалось восстановить этот снимок. Возможно, он повреждён.",
   "maintenance_snapshots_load_failed": "Не удалось проверить снимки. Это не значит, что их нет — попробуйте открыть страницу снова.",
   "maintenance_snapshot_row_restore": "Создан перед восстановлением снимка",
+  "maintenance_snapshot_row_import": "Создан перед импортом настроек из других плагинов",
   "maintenance_check_heading": "Проверка хранилища",
   "maintenance_check_scanning": "Проверка ваших заметок…",
   "maintenance_check_indexing": "Хранилище всё ещё индексируется. Откройте эту страницу снова через некоторое время.",

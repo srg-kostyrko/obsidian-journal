@@ -2170,6 +2170,7 @@
   "maintenance_snapshot_failed": "Não foi possível restaurar esse instantâneo. Ele pode estar corrompido.",
   "maintenance_snapshots_load_failed": "Não foi possível verificar os instantâneos. Isso não significa que não existam — tente reabrir esta página.",
   "maintenance_snapshot_row_restore": "Criado antes de restaurar um instantâneo",
+  "maintenance_snapshot_row_import": "Criado antes de importar configurações de outros plugins",
   "maintenance_check_heading": "Verificação do cofre",
   "maintenance_check_scanning": "Verificando suas notas…",
   "maintenance_check_indexing": "Seu cofre ainda está sendo indexado. Reabra esta página em instantes.",

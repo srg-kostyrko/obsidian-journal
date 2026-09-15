@@ -2162,6 +2162,7 @@
   "maintenance_snapshot_failed": "そのスナップショットを復元できませんでした。破損している可能性があります。",
   "maintenance_snapshots_load_failed": "スナップショットを確認できませんでした。存在しないという意味ではありません。このページを再度開いてみてください。",
   "maintenance_snapshot_row_restore": "スナップショットの復元前に作成",
+  "maintenance_snapshot_row_import": "他のプラグインから設定をインポートする前に作成",
   "maintenance_check_heading": "保管庫チェック",
   "maintenance_check_scanning": "ノートを確認しています…",
   "maintenance_check_indexing": "保管庫のインデックスを作成中です。少ししてからこのページを再度開いてください。",

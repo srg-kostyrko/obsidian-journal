@@ -2162,6 +2162,7 @@
   "maintenance_snapshot_failed": "无法恢复该快照,可能已损坏。",
   "maintenance_snapshots_load_failed": "无法检查快照。这并不意味着不存在快照——请尝试重新打开此页面。",
   "maintenance_snapshot_row_restore": "在恢复快照之前创建",
+  "maintenance_snapshot_row_import": "在从其他插件导入设置之前创建",
   "maintenance_check_heading": "库检查",
   "maintenance_check_scanning": "正在检查您的笔记…",
   "maintenance_check_indexing": "仍在为库建立索引。请稍后重新打开此页面。",

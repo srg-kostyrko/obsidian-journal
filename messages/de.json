@@ -2172,6 +2172,7 @@
   "maintenance_snapshot_failed": "Dieser Snapshot konnte nicht wiederhergestellt werden. Er ist möglicherweise beschädigt.",
   "maintenance_snapshots_load_failed": "Snapshots konnten nicht überprüft werden. Das bedeutet nicht, dass keine vorhanden sind – versuche, diese Seite erneut zu öffnen.",
   "maintenance_snapshot_row_restore": "Erstellt vor dem Wiederherstellen eines Snapshots",
+  "maintenance_snapshot_row_import": "Erstellt vor dem Importieren von Einstellungen aus anderen Plugins",
   "maintenance_check_heading": "Vault-Prüfung",
   "maintenance_check_scanning": "Deine Notizen werden überprüft…",
   "maintenance_check_indexing": "Dein Vault wird noch indiziert. Öffne diese Seite gleich erneut.",

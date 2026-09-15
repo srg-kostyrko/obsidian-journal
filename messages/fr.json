@@ -2170,6 +2170,7 @@
   "maintenance_snapshot_failed": "Cet instantané n'a pas pu être restauré. Il est peut-être endommagé.",
   "maintenance_snapshots_load_failed": "Impossible de vérifier les instantanés. Cela ne signifie pas qu'aucun n'existe — essayez de rouvrir cette page.",
   "maintenance_snapshot_row_restore": "Pris avant la restauration d'un instantané",
+  "maintenance_snapshot_row_import": "Pris avant l'importation des paramètres depuis d'autres plugins",
   "maintenance_check_heading": "Vérification du coffre-fort",
   "maintenance_check_scanning": "Vérification de vos notes…",
   "maintenance_check_indexing": "Votre coffre-fort est encore en cours d'indexation. Rouvrez cette page dans un instant.",

@@ -1058,6 +1058,50 @@ describe("SettingsService", () => {
 
       expectOk(await harness.settings.replaceStoredData({ version: CURRENT_VERSION, marker: "restored" }));
     });
+
+    it("snapshots the current data.json before an import", async () => {
+      const data = new FakePluginData({ version: CURRENT_VERSION, journals: { daily: { name: "daily" } } });
+      const harness = await testContainer({ pluginData: data });
+      const snapshots = harness.resolve(SnapshotService);
+
+      expect(await harness.settings.snapshotBeforeImport()).toBe(true);
+
+      const listed = await snapshots.list();
+      expectOk(listed);
+      const preImport = listed.value.filter((info) => info.reason === "pre-import");
+      expect(preImport).toHaveLength(1);
+      const contents = await snapshots.read(preImport.at(0)?.name ?? "");
+      expectOk(contents);
+      expect(contents.value.journals).toEqual({ daily: { name: "daily" } });
+    });
+
+    it("keeps only the three most recent pre-import snapshots", async () => {
+      // A full second apart: stampOf truncates to whole seconds, so back-to-back imports would share
+      // one filename and this would pass with prune() never called.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-09-15T00:00:00.000Z"));
+      const harness = await testContainer({ pluginData: new FakePluginData({ version: CURRENT_VERSION }) });
+      const snapshots = harness.resolve(SnapshotService);
+
+      for (let i = 0; i < 4; i++) {
+        vi.setSystemTime(new Date(Date.now() + 1000));
+        await harness.settings.snapshotBeforeImport();
+      }
+
+      const listed = await snapshots.list();
+      expectOk(listed);
+      expect(listed.value.filter((info) => info.reason === "pre-import")).toHaveLength(3);
+      vi.useRealTimers();
+    });
+
+    it("reports an import snapshot it could not write", async () => {
+      const harness = await testContainer({ pluginData: new FakePluginData({ version: CURRENT_VERSION }) });
+      vi.spyOn(harness.resolve(SnapshotService), "writePreImport").mockReturnValueOnce(
+        AsyncResult.err(new PluginDataIOError("write-file", { message: "disk full" })),
+      );
+
+      expect(await harness.settings.snapshotBeforeImport()).toBe(false);
+    });
   });
 
   describe("dispose", () => {

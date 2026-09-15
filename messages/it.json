@@ -2170,6 +2170,7 @@
   "maintenance_snapshot_failed": "Impossibile ripristinare questa istantanea. Potrebbe essere danneggiata.",
   "maintenance_snapshots_load_failed": "Impossibile controllare le istantanee. Questo non significa che non ce ne siano — prova a riaprire questa pagina.",
   "maintenance_snapshot_row_restore": "Creata prima del ripristino di un'istantanea",
+  "maintenance_snapshot_row_import": "Creata prima dell'importazione delle impostazioni da altri plugin",
   "maintenance_check_heading": "Controllo del vault",
   "maintenance_check_scanning": "Controllo delle tue note…",
   "maintenance_check_indexing": "Il tuo vault è ancora in fase di indicizzazione. Riapri questa pagina tra un momento.",

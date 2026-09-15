@@ -2229,6 +2229,7 @@
   "maintenance_snapshot_failed": "Не вдалося відновити цей знімок. Можливо, він пошкоджений.",
   "maintenance_snapshots_load_failed": "Не вдалося перевірити знімки. Це не означає, що їх немає — спробуйте відкрити сторінку знову.",
   "maintenance_snapshot_row_restore": "Створено перед відновленням знімка",
+  "maintenance_snapshot_row_import": "Створено перед імпортом налаштувань з інших плагінів",
   "maintenance_check_heading": "Перевірка сховища",
   "maintenance_check_scanning": "Перевірка ваших нотаток…",
   "maintenance_check_indexing": "Сховище ще індексується. Відкрийте цю сторінку знову за мить.",
