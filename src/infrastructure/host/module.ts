@@ -11,6 +11,7 @@ import { NotesService } from "./internal/notes-service";
 import { NoticeService } from "./internal/notice-service";
 import { PlatformService } from "./internal/platform-service";
 import { PluginData } from "./internal/plugin-data";
+import { PluginSettingsReader } from "./internal/plugin-settings-reader";
 import { TemplaterService } from "./internal/templater-service";
 import { TemplatesService } from "./internal/templates-service";
 import { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
@@ -33,6 +34,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(MarkdownRenderService).useClass(MarkdownRenderService);
       c.register(NoticeService).useClass(NoticeService);
       c.register(PlatformService).useClass(PlatformService);
+      c.register(PluginSettingsReader).useClass(PluginSettingsReader);
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(TemplaterService).useClass(TemplaterService);
       c.register(TemplatesService).useClass(TemplatesService);

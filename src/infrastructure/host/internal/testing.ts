@@ -116,6 +116,8 @@ export interface FakeHost {
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
   putFolder(path: string): TFolder;
+  putPlugin(id: string, instance: object): void;
+  putCorePlugin(id: string, instance: object, enabled?: boolean): void;
   setPropertyType(name: string, type: string): void;
   assignPropertyType(name: string, type: string): void;
   emitVault(event: "create" | "rename" | "delete" | "modify", ...arguments_: unknown[]): void;
@@ -211,6 +213,8 @@ export function createFakeHost(): FakeHost {
   const windowObjects = new Map<string, Window>();
   const unloadCallbacks: (() => void)[] = [];
   const layoutReadyCallbacks: (() => void)[] = [];
+  const communityPlugins = new Map<string, object>();
+  const corePlugins = new Map<string, { enabled: boolean; instance: object }>();
 
   function ensureFolderChain(path: string): void {
     if (!path) return;
@@ -506,6 +510,15 @@ export function createFakeHost(): FakeHost {
     metadataCache: metadataCacheApi,
     metadataTypeManager: metadataTypeManagerApi,
     fileManager: fileManagerApi,
+    plugins: {
+      getPlugin: (id: string): object | null => communityPlugins.get(id) ?? null,
+    },
+    internalPlugins: {
+      getEnabledPluginById: (id: string): object | null => {
+        const entry = corePlugins.get(id);
+        return entry?.enabled ? entry.instance : null;
+      },
+    },
   } as unknown as App;
 
   const plugin = {
@@ -573,6 +586,12 @@ export function createFakeHost(): FakeHost {
     putFolder(path): TFolder {
       ensureFolderChain(path);
       return folderObjects.get(path)!;
+    },
+    putPlugin(id, instance): void {
+      communityPlugins.set(id, instance);
+    },
+    putCorePlugin(id, instance, enabled = true): void {
+      corePlugins.set(id, { enabled, instance });
     },
     setPropertyType(name, type): void {
       propertyTypes.set(name.toLowerCase(), { name, widget: type });
