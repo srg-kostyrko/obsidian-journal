@@ -96,6 +96,48 @@ describe("ImportPlanner", () => {
       expect(row?.state).toEqual({ kind: "new" });
     });
 
+    it("recognizes an existing weekly journal with the default week format as set up", async () => {
+      const harness = await harnessWith({
+        journals: {
+          weeks: fixedJournal(
+            "weeks",
+            { type: "week" },
+            { folder: "Journal", dateFormat: "gggg-[W]ww", nameTemplate: "{{date}}" },
+          ),
+        },
+      });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { week: buildPeriodicConfig({ folder: "Journal" }) }),
+      ]);
+
+      const [row] = harness.resolve(ImportPlanner).plan().rows;
+
+      expect(row?.state).toEqual({ kind: "set-up", journalName: "weeks" });
+    });
+
+    // Under the test locale's default week grid (western: dow=0, doy=6, seeded from moment's
+    // built-in "en" locale), a week's representative day is 6 days after its start — so a
+    // day-of-month-sensitive format renders a different string for the two, and comparing by
+    // `startOf` alone would miss an otherwise identical weekly journal.
+    it("recognizes a day-sensitive weekly format as set up despite the week's representative day differing from its start", async () => {
+      const harness = await harnessWith({
+        journals: {
+          weeks: fixedJournal(
+            "weeks",
+            { type: "week" },
+            { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}" },
+          ),
+        },
+      });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { week: buildPeriodicConfig({ folder: "Journal", format: "YYYY-MM-DD" }) }),
+      ]);
+
+      const [row] = harness.resolve(ImportPlanner).plan().rows;
+
+      expect(row?.state).toEqual({ kind: "set-up", journalName: "weeks" });
+    });
+
     it("proposes Daily notes' day journal unticked when Periodic Notes writes days", async () => {
       const harness = await harnessWith();
       withPeriodicNotesSets(harness, [

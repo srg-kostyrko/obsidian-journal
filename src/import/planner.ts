@@ -1,6 +1,6 @@
 import { normalizePath } from "obsidian";
 
-import { CalendarDate, type CalendarSliceState } from "@/calendar";
+import { CalendarDate, periodOfKind, type CalendarSliceState } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
 import { journalDefaultsFor, type JournalConfig } from "@/journals/config";
@@ -62,11 +62,17 @@ function rowState(superseded: boolean, setUpBy: string | undefined): RowState {
   return { kind: "new" };
 }
 
-const START_UNIT = { day: "day", week: "week", month: "month", quarter: "quarter", year: "year" } as const;
 const SHIFT_UNIT = { day: "d", week: "w", month: "m", quarter: "q", year: "y" } as const;
 
+// Journals names a period's note from its representative day, not its start — for a week that's
+// the day whose calendar year equals the week-year (`WeekPeriod.representative` in
+// `@/calendar/period-week.ts`), which a day-of-week-sensitive format renders differently from the
+// start. Day/month/quarter/year periods have `representative === start`, so this changes nothing
+// for them. `NotePathService.pathForDate` reaches the same value through
+// `CycleService.representativeOf`; `periodOfKind` is the same computation without needing an
+// existing journal to look a cycle up from.
 function sourcePath(journal: SourceJournal, date: CalendarDate): string {
-  const name = date.startOf(START_UNIT[journal.period]).format(journal.format);
+  const name = periodOfKind(journal.period, date).format(journal.format);
   return normalizePath(journal.folder === "" ? `${name}.md` : `${journal.folder}/${name}.md`);
 }
 
