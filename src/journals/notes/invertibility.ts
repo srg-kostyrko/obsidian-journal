@@ -29,7 +29,7 @@ export interface InvertibilityServices {
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
 
-/** Why a note this journal writes cannot be read back into the period it was written for, if it cannot. */
+/** Why a note this journal writes cannot be read back into the period it was written for, if it cannot. `config` must be a saved journal's, since the round-trip probe resolves `config.name` against the saved config. */
 export function invertibilityOf(
   config: JournalConfig,
   { engine, cycle, paths }: InvertibilityServices,

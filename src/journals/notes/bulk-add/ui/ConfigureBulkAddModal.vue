@@ -12,7 +12,6 @@ import { useService } from "@/infrastructure/di";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
 import { invertibilityWarningText } from "@/journals/notes/invertibility";
-import { JournalsRepository } from "@/journals/repository";
 import DateFormatPreview from "@/journals/settings/ui/DateFormatPreview.vue";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
 import { useInvertibilityCheck } from "@/journals/settings/ui/use-invertibility-check";
@@ -31,15 +30,16 @@ const { journalName } = defineProps<{ journalName: string }>();
 const api = useModal<BulkAddParameters>();
 const journalsVM = useService(JournalsViewModel);
 const notes = useService(NotesService);
-const journals = useService(JournalsRepository);
+
+const journal = journalsVM.getJournal(journalName).getOrUndefined();
 
 // Prefill the date format from the journal's own format so a non-ISO journal starts from the
 // right pattern instead of a hardcoded YYYY-MM-DD.
-const journalDateFormat = journalsVM.getJournal(journalName).getOrUndefined()?.dateFormat;
+const journalDateFormat = journal?.dateFormat;
 
 // A path the journal cannot read back would skip every note as off-path, which reads as a
 // wrong folder rather than as the template's fault.
-const pathWarning = useInvertibilityCheck(ref(journals.get(journalName).getOrUndefined()));
+const pathWarning = useInvertibilityCheck(ref(journal));
 
 // The folder exists only at runtime, so the schema in config.ts cannot check it; without this the
 // typo surfaces as a FolderNotFoundError once the modal has closed, taking the whole form with it.
