@@ -466,6 +466,35 @@ describe("NotePathService.candidateFor", () => {
     });
   });
 
+  // YYYY/MM-MMM/DD-ddd is Periodic Notes' daily layout. The weekday in the name is redundant beside the
+  // day, but it once sent every part of the date to be read alone, where none of them names a day.
+  it("round-trips every day of 2026 filed as {{date:YYYY}}/{{date:MM-MMM}}/{{date:DD-ddd}}", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { folder: "{{date:YYYY}}/{{date:MM-MMM}}", nameTemplate: "{{date:DD-ddd}}" },
+          ),
+        },
+      },
+    });
+    const service = harness.resolve(NotePathService);
+
+    const failures: string[] = [];
+    for (let offset = 0; offset < 365; offset++) {
+      const day = anchor(new Date(Date.UTC(2026, 0, 1 + offset)).toISOString().slice(0, 10));
+      const path = service.pathFor("daily", { journalName: "daily", anchor: day });
+      assert(path.isOk());
+      const candidate = service.candidateFor("daily", path.value);
+      if (candidate.isNone() || candidate.value.anchor !== day) failures.push(`${day} ${path.value}`);
+    }
+
+    expect(failures).toEqual([]);
+  });
+
   it("recovers the period anchor from a note named by its start date", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
