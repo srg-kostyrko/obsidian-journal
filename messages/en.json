@@ -1694,6 +1694,7 @@
   "import_preview_unrecognised": "Journals could not read the settings of {source}, so nothing is imported from it.",
   "import_preview_name_label": "Journal name",
   "import_preview_row_layout": "In {folder}, named by {format}",
+  "import_preview_row_template": "Uses the template {path}.",
   "import_preview_row_set_up": "Already set up as {journalName}.",
   "import_preview_row_superseded": "{source} already covers this period, so this is off by default.",
   "import_preview_include": "Create this journal",

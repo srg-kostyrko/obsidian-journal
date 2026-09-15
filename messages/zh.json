@@ -1535,6 +1535,7 @@
   "import_preview_unrecognised": "日记无法读取 {source} 的设置，因此不会从中导入任何内容。",
   "import_preview_name_label": "日记名称",
   "import_preview_row_layout": "位于 {folder}，以 {format} 命名",
+  "import_preview_row_template": "使用模板 {path}。",
   "import_preview_row_set_up": "已设置为 {journalName}。",
   "import_preview_row_superseded": "{source} 已经涵盖此周期，因此默认关闭。",
   "import_preview_include": "创建此日记",

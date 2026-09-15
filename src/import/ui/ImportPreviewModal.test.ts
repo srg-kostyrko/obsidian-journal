@@ -58,6 +58,18 @@ describe("ImportPreviewModal", () => {
     );
   });
 
+  it("shows the template a journal will use", () => {
+    harness.renderModal(ImportPreviewModal, {
+      props: {
+        plan: buildImportPlan({
+          rows: [buildPlanRow({ journal: buildSourceJournal({ templates: ["Templates/Day"] }) })],
+        }),
+      },
+    });
+
+    expect(screen.getByText(m.import_preview_row_template({ path: "Templates/Day" }))).toBeTruthy();
+  });
+
   it("names the journal that already sets up a period", () => {
     harness.renderModal(ImportPreviewModal, {
       props: { plan: buildImportPlan({ rows: [buildPlanRow({ state: { kind: "set-up", journalName: "days" } })] }) },

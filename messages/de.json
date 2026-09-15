@@ -1690,6 +1690,7 @@
   "import_preview_unrecognised": "Journale konnten die Einstellungen von {source} nicht lesen, daher wird nichts daraus importiert.",
   "import_preview_name_label": "Journalname",
   "import_preview_row_layout": "In {folder}, benannt nach {format}",
+  "import_preview_row_template": "Verwendet die Vorlage {path}.",
   "import_preview_row_set_up": "Bereits eingerichtet als {journalName}.",
   "import_preview_row_superseded": "{source} deckt diesen Zeitraum bereits ab, daher ist dies standardmäßig deaktiviert.",
   "import_preview_include": "Dieses Journal erstellen",

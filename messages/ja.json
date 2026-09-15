@@ -1535,6 +1535,7 @@
   "import_preview_unrecognised": "ジャーナルは{source}の設定を読み取れなかったため、そこからは何もインポートされません。",
   "import_preview_name_label": "ジャーナル名",
   "import_preview_row_layout": "{folder} に、{format} の形式で命名",
+  "import_preview_row_template": "テンプレート {path} を使用します。",
   "import_preview_row_set_up": "すでに{journalName}として設定されています。",
   "import_preview_row_superseded": "{source} がすでにこの期間をカバーしているため、これは既定でオフになっています。",
   "import_preview_include": "このジャーナルを作成",

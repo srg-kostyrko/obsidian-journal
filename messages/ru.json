@@ -1728,6 +1728,7 @@
   "import_preview_unrecognised": "Журналы не смогли прочитать настройки {source}, поэтому из него ничего не импортируется.",
   "import_preview_name_label": "Название журнала",
   "import_preview_row_layout": "В {folder}, названо по формату {format}",
+  "import_preview_row_template": "Использует шаблон {path}.",
   "import_preview_row_set_up": "Уже настроено как {journalName}.",
   "import_preview_row_superseded": "{source} уже покрывает этот период, поэтому это отключено по умолчанию.",
   "import_preview_include": "Создать этот журнал",

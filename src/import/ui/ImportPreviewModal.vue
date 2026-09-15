@@ -95,6 +95,9 @@ function confirm(): void {
           <div>
             {{ m.import_preview_row_layout({ folder: row.folder || m.common_vault_root(), format: row.dateFormat }) }}
           </div>
+          <div v-if="row.journal.templates.length > 0">
+            {{ m.import_preview_row_template({ path: formatConjunction(row.journal.templates) }) }}
+          </div>
           <div v-if="stateText(row)">{{ stateText(row) }}</div>
           <div v-if="row.journal.period === 'week' && weekStartMissed" class="import-warning">
             {{ m.import_preview_warning_week_start() }}

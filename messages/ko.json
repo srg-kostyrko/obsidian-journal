@@ -1680,6 +1680,7 @@
   "import_preview_unrecognised": "저널이 {source}의 설정을 읽지 못해서 여기서는 아무것도 가져오지 않습니다.",
   "import_preview_name_label": "저널 이름",
   "import_preview_row_layout": "{folder}에 {format} 형식으로 이름 지정",
+  "import_preview_row_template": "템플릿 {path}을(를) 사용합니다.",
   "import_preview_row_set_up": "이미 {journalName}(으)로 설정되어 있습니다.",
   "import_preview_row_superseded": "{source}이(가) 이미 이 기간을 다루고 있어서 기본적으로 꺼져 있습니다.",
   "import_preview_include": "이 저널 만들기",

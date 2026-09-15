@@ -1688,6 +1688,7 @@
   "import_preview_unrecognised": "Diari non è riuscito a leggere le impostazioni di {source}, quindi non viene importato nulla da esso.",
   "import_preview_name_label": "Nome del diario",
   "import_preview_row_layout": "In {folder}, nominato secondo {format}",
+  "import_preview_row_template": "Usa il modello {path}.",
   "import_preview_row_set_up": "Già configurato come {journalName}.",
   "import_preview_row_superseded": "{source} copre già questo periodo, quindi questo è disattivato per impostazione predefinita.",
   "import_preview_include": "Crea questo diario",

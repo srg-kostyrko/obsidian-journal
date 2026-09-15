@@ -1688,6 +1688,7 @@
   "import_preview_unrecognised": "Journaux n’a pas pu lire les paramètres de {source}, donc rien n’en est importé.",
   "import_preview_name_label": "Nom du journal",
   "import_preview_row_layout": "Dans {folder}, nommé selon {format}",
+  "import_preview_row_template": "Utilise le modèle {path}.",
   "import_preview_row_set_up": "Déjà configuré comme {journalName}.",
   "import_preview_row_superseded": "{source} couvre déjà cette période, donc ceci est désactivé par défaut.",
   "import_preview_include": "Créer ce journal",
