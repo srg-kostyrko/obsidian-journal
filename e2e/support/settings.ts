@@ -288,9 +288,15 @@ export async function deleteInModal(): Promise<void> {
 // for the dialog to close — multi-step dialogs swap content in place, and closing callers wait
 // explicitly via waitForDialogClosed.
 export async function clickDialogButton(label: string): Promise<void> {
+  await waitForDialogButton(label);
+  await activeModal().$(`button=${label}`).click();
+}
+
+// Waits for a dialog button to render without clicking it, for a caller that needs to read the
+// dialog's content once a step's async work (bulk-add's plan()) has landed but before advancing.
+export async function waitForDialogButton(label: string): Promise<void> {
   const button = activeModal().$(`button=${label}`);
   await button.waitForClickable({ timeoutMsg: `dialog button "${label}" did not become clickable` });
-  await button.click();
 }
 
 // Read the dialog's rendered text, for assertions on copy the dialog derives rather than echoes

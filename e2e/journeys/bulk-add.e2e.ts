@@ -5,11 +5,13 @@ import {
   clickDialogButton,
   clickIcon,
   closeSettings,
+  modalText,
   openSettings,
   openShelfSubpage,
   selectModalDropdownByLabel,
   setModalText,
   toggleModalCheckbox,
+  waitForDialogButton,
   waitForDialogClosed,
 } from "../support/settings.js";
 import { frontmatterOf, seedNote, waitForContent, waitForJournalFrontmatter } from "../support/vault.js";
@@ -25,7 +27,13 @@ const EXISTING_LABEL = "When a note is already connected to that date";
 
 async function runBulkAdd(
   folder: string,
-  options: { existing?: "override" | "merge"; datePlace?: "path"; shelf?: string; journal?: string } = {},
+  options: {
+    existing?: "override" | "merge";
+    datePlace?: "path";
+    shelf?: string;
+    journal?: string;
+    beforeRun?: () => Promise<void>;
+  } = {},
 ): Promise<void> {
   const { shelf = "core", journal = "daily" } = options;
   await openSettings();
@@ -46,6 +54,13 @@ async function runBulkAdd(
   // turn it off so the run actually writes.
   await toggleModalCheckbox();
   await clickDialogButton("Continue");
+  // The process modal opens only once plan() resolves, replacing the configure dialog rather than
+  // updating it in place, and it lists skipped notes and their reasons only until Run is clicked —
+  // a caller that needs to assert on that listing must wait for it here and read it before Run.
+  if (options.beforeRun) {
+    await waitForDialogButton("Run");
+    await options.beforeRun();
+  }
   await clickDialogButton("Run");
 }
 
@@ -120,11 +135,22 @@ describe("bulk add", () => {
   });
 
   it("connects notes filed under date folders by reading the date from their path", async () => {
-    await runBulkAdd("nested", { shelf: "nested-path", journal: "nested-daily", datePlace: "path" });
+    let processText = "";
+    await runBulkAdd("nested", {
+      shelf: "nested-path",
+      journal: "nested-daily",
+      datePlace: "path",
+      beforeRun: async () => {
+        processText = await modalText();
+      },
+    });
 
-    await waitForJournalFrontmatter("nested/2030/09-Sep/01-Sun.md", { journal: "nested-daily", date: "2030-09-01" });
-    await waitForJournalFrontmatter("nested/2030/10-Oct/05-Sat.md", { journal: "nested-daily", date: "2030-10-05" });
-    // Named like a note of this journal but filed off its path: reading the name alone would take it.
+    // Named like a note of this journal (DD-ddd) but filed outside the year/month folders the
+    // path template requires, so the path-mode inverter — which validates the whole path, not
+    // just the name — lists it as skipped with its own reason, not as merely undated.
+    expect(processText).toContain(m.bulk_add_skip_reason_not_on_journal_path());
+    await waitForJournalFrontmatter("nested/2019/09-Sep/01-Sun.md", { journal: "nested-daily", date: "2019-09-01" });
+    await waitForJournalFrontmatter("nested/2019/10-Oct/05-Sat.md", { journal: "nested-daily", date: "2019-10-05" });
     const misfiledFm = await frontmatterOf("nested/misfiled/02-Mon.md");
     expect(misfiledFm?.journal).toBeUndefined();
     await clickDialogButton("Close");

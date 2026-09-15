@@ -385,6 +385,30 @@ describe("BulkAddService", () => {
       });
     });
 
+    it("connects a monthly note filed under its year folder and named by month", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            monthly: fixedJournal(
+              "monthly",
+              { type: "month" },
+              { folder: "Journal/{{date:YYYY}}", nameTemplate: "{{date:MM-MMM}}" },
+            ),
+          },
+        },
+      });
+      harness.host.putFile("Journal/2026/06-Jun.md");
+
+      const planResult = await harness
+        .resolve(BulkAddService)
+        .plan("monthly", makeParameters({ folder: "Journal", datePlace: "path", dateFormat: "" }));
+
+      expectOk(planResult);
+      const note = planResult.value.notes.find((n) => n.path === "Journal/2026/06-Jun.md");
+      expect(note).toMatchObject({ kind: "action", anchor: "2026-06-01" });
+    });
+
     it("skips a path-read note whose date is outside the journal's timeline", async () => {
       const harness = await testContainer({
         modules: [journalsCoreModule],

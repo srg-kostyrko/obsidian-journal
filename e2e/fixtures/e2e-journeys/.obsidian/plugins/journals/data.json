@@ -967,10 +967,10 @@
       "folder": "nested/{{date:YYYY}}/{{date:MM-MMM}}",
       "nameTemplate": "{{date:DD-ddd}}",
       "timeline": {
-        "start": "2030-01-01",
+        "start": "2019-01-01",
         "end": {
           "kind": "date",
-          "date": "2030-12-31"
+          "date": "2019-12-31"
         }
       },
       "dateFormat": "YYYY-MM-DD",
