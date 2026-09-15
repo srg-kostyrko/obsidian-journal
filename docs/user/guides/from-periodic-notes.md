@@ -17,7 +17,40 @@ there that are already answered here — sometimes in a different enough shape t
 | **Open daily note**, **Open weekly note** and so on               | "Open today's note" and the matching commands for the other period lengths, which a new vault already has. See [Commands you create](/commands#commands-you-create)                                        |
 | **Open next weekly note**, **Open previous daily note** and so on | **Open next note** and **Open previous note**, which step to the nearest note that already exists in the open note's journal. See [Built-in commands](/commands#built-in-commands)                         |
 
+## Importing your settings {#importing-your-settings}
+
+Journals can read Periodic Notes' settings, set up matching journals, and connect the notes you
+already have. It reads the community-store version and the 1.0 beta, and also Calendar's week start
+and weekly note, and core Daily notes.
+
+- **Where** — the main settings page offers **Import…** while an enabled plugin can set up a journal
+  you do not have yet; **Don't show again** hides the offer for good. **Maintenance** always shows
+  **Import…**, disabled with a line saying so when no supported plugin is enabled or the enabled
+  plugins have nothing to import. Core Daily notes is on in every vault, so it counts toward the
+  offer only once you have changed its settings.
+- **Preview** — each period you use becomes a journal named after it, with its folder, date format
+  and template. A journal that already writes the same notes shows as already set up, whatever its
+  name. A Daily notes or Calendar setup that Periodic Notes already covers starts switched off. With
+  more than one calendar set, each becomes a shelf of the same name.
+- **Week start** — Calendar's week start is offered when it differs from yours. It starts switched
+  off once you have weekly notes connected, because applying it moves them to the new weeks. A week
+  start that cannot keep your current first-week rule is explained instead of offered.
+- **Startup** — the period Periodic Notes opens at startup becomes your startup journal, unless you
+  already have one.
+- **Snapshot** — your settings are saved to a snapshot before anything changes, and
+  [Maintenance](/troubleshooting#settings-snapshots) can restore it. A snapshot restores settings
+  only, not connected notes.
+- **Connecting notes** — once the journals exist, a second step lists how many notes each will
+  connect and why others are skipped, then connects them, or you skip it; either way, closing the
+  report finishes the import and does not undo it. A note that fits two journals is connected to
+  neither. A note Periodic Notes found by its name alone is not at the journal's path; connect it
+  with [Bulk add](/notes#bulk-add) by **Note title**.
+
+Only enabled plugins are read, so enable Periodic Notes or Calendar before importing.
+
 ## Your existing notes
+
+The [import](#importing-your-settings) connects them for you; the steps below do the same by hand.
 
 Periodic Notes finds notes by file name. Journals finds them by their properties, and adopts a note
 that was already in your vault only when you rename or move it onto a path the journal would use — so a
