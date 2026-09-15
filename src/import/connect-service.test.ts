@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { anchor } from "@/calendar/testing";
+import { CalendarDate, calendarSettingsModule, type CalendarSliceState } from "@/calendar";
+import { anchor, date } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import type { JournalConfig } from "@/journals/config";
 import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import { NotePathService } from "@/journals/notes/note-path";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -23,7 +25,60 @@ const daily = (name: string, overrides: Partial<JournalConfig> = {}): JournalCon
     { folder: "Journal", dateFormat: "YYYY-MM-DD", nameTemplate: "{{date}}", ...overrides },
   );
 
+const WEEKS_AROUND_NEW_YEAR = ["2025-12-22", "2025-12-29", "2026-01-05", "2026-12-21", "2026-12-28", "2027-01-04"];
+
+// Writes the imported weekly journal's note for each week around two New Years, then reads the
+// connect plan back: each note must return to the week it was written for, and to the same path.
+async function weekYearRoundTrip(calendar?: CalendarSliceState) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, calendarSettingsModule, importCoreModule],
+    data: {
+      journals: {
+        weekly: fixedJournal(
+          "weekly",
+          { type: "week" },
+          { folder: "Weekly", dateFormat: "gggg-[W]ww", nameTemplate: "{{date}}" },
+        ),
+      },
+      ...(calendar !== undefined && { calendar }),
+    },
+  });
+  const written = WEEKS_AROUND_NEW_YEAR.map((day) => {
+    const path = harness.resolve(NotePathService).pathForDate("weekly", date(day));
+    return {
+      path: path.isOk() ? path.value : undefined,
+      anchor: CalendarDate.fromAnchor(anchor(day)).startOf("week").toAnchor(),
+    };
+  });
+  for (const { path } of written) if (path !== undefined) harness.host.putFile(path);
+
+  const plan = await harness
+    .resolve(ImportConnectService)
+    .plan(buildImportOutcome([{ key: "k", kind: "created", journalName: "weekly", connect: true }]));
+
+  return {
+    expected: written.map(({ path, anchor: week }) => ({ path, anchor: week, targetPath: path })),
+    actual: (plan.rows.at(0)?.actions ?? [])
+      .map((action) => ({ path: action.path, anchor: action.anchor, targetPath: action.targetPath }))
+      .toSorted((a, b) => a.anchor.localeCompare(b.anchor)),
+  };
+}
+
 describe("ImportConnectService", () => {
+  describe("an imported week-year weekly journal", () => {
+    it("reads its notes back across New Year under the locale's week grid", async () => {
+      const { expected, actual } = await weekYearRoundTrip();
+
+      expect(actual).toEqual(expected);
+    });
+
+    it("reads its notes back across New Year under a custom Monday week grid", async () => {
+      const { expected, actual } = await weekYearRoundTrip({ mode: "custom", dow: 1, doy: 4, global: false });
+
+      expect(actual).toEqual(expected);
+    });
+  });
+
   it("plans every note at the journal's path", async () => {
     const harness = await harnessWith({ daily: daily("daily") });
     harness.host.putFile("Journal/2026-06-01.md");
