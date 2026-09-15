@@ -253,11 +253,12 @@ export function createFakeHost(): FakeHost {
   const vaultApi = {
     on: (event: string, callback: AnyHandler): EventRef => vault.on(event, callback),
     offref: (ref: EventRef): void => vault.detach(ref),
+    // Obsidian addresses the vault root as "/", while this fake keys it as "".
     getAbstractFileByPath(path: string): TFile | TFolder | null {
-      return fileObjects.get(path) ?? folderObjects.get(path) ?? null;
+      return fileObjects.get(path) ?? folderObjects.get(path === "/" ? "" : path) ?? null;
     },
     getFolderByPath(path: string): TFolder | null {
-      return folderObjects.get(path) ?? null;
+      return folderObjects.get(path === "/" ? "" : path) ?? null;
     },
     getMarkdownFiles(): TFile[] {
       return [...fileObjects.values()];
