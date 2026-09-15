@@ -1,13 +1,18 @@
 import { normalizePath } from "obsidian";
 
-import { CalendarDate, periodOfKind, type CalendarSliceState } from "@/calendar";
+import { Calendar, CalendarDate, calendarSlice, periodOfKind, type CalendarSliceState } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
+import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { journalDefaultsFor, type JournalConfig } from "@/journals/config";
 import { freeName } from "@/journals/free-name";
+import { JournalsIndex } from "@/journals/journals-index";
 import { NotePathService } from "@/journals/notes/note-path";
 import { JournalsRepository } from "@/journals/repository";
 import { extractFromDateFormat } from "@/journals/settings/ui/use-folder-extractor";
+import { formatHasWrongWeek } from "@/journals/settings/ui/wrong-week";
+import { startupSlice } from "@/journals/startup/slice";
+import { SettingsService } from "@/settings";
 
 import { ImportSourceToken, type PeriodKind, type SourceId, type SourceJournal, type SourceReading } from "./source";
 
@@ -90,6 +95,10 @@ export class ImportPlanner {
   readonly #sources = inject(ImportSourceToken);
   readonly #journals = inject(JournalsRepository);
   readonly #paths = inject(NotePathService);
+  readonly #settings = inject(SettingsService);
+  readonly #calendar = inject(Calendar);
+  readonly #index = inject(JournalsIndex);
+  readonly #notes = inject(NotesService);
 
   #read(): { readings: SourceReading[]; unrecognised: SourceId[] } {
     const readings: SourceReading[] = [];
@@ -116,6 +125,62 @@ export class ImportPlanner {
       )?.name;
   }
 
+  #weekStart(readings: readonly SourceReading[]): WeekStartProposal {
+    const hint = readings.find((reading) => reading.weekStart !== undefined)?.weekStart;
+    if (hint === undefined) return { kind: "unchanged" };
+    const current = this.#settings.getSlice(calendarSlice).state;
+    let next: CalendarSliceState;
+    if (hint.kind === "locale") {
+      if (current.mode === "locale") return { kind: "unchanged" };
+      next = { mode: "locale" };
+    } else {
+      // A named weekday changes only the first day; the first-week rule stays the one in force.
+      const doy = current.mode === "custom" ? current.doy : this.#calendar.localeWeek().doy;
+      const firstDayInJanuary = 7 + hint.dow - doy;
+      if (firstDayInJanuary < 1 || firstDayInJanuary > 7) return { kind: "not-applicable", dow: hint.dow };
+      // Compared with the first day actually in force: a locale that already starts weeks on this
+      // day needs no custom grid to say so.
+      const currentDow = current.mode === "custom" ? current.dow : this.#calendar.localeWeek().dow;
+      if (currentDow === hint.dow) return { kind: "unchanged" };
+      // Not global: Calendar patches Obsidian's own locale, but Journals keeps its grid to itself
+      // so other plugins are not moved by an import.
+      next = { mode: "custom", dow: hint.dow, doy, global: false };
+    }
+    const today = CalendarDate.today().toAnchor();
+    // Applying a week start re-anchors every weekly note, which is not a default to take on
+    // behalf of someone who already has weekly notes. A plain for-of avoids materializing the
+    // repository's generator into an array: `IterableIterator` in this project's lib setup does
+    // not type the Iterator Helpers proposal's `.some()`, so that would need `.list()` spread
+    // into an array first.
+    let hasWeeklyNotes = false;
+    for (const config of this.#journals.find().list()) {
+      if (config.write.type === "week" && this.#index.findClosestAnchor(config.name, today).isSome()) {
+        hasWeeklyNotes = true;
+        break;
+      }
+    }
+    return { kind: "offer", next, tickedByDefault: !hasWeeklyNotes };
+  }
+
+  #startup(rows: readonly PlanRow[]): StartupProposal {
+    const flagged = rows.find((row) => row.state.kind !== "superseded" && row.journal.openAtStartup);
+    if (flagged === undefined) return { kind: "none" };
+    const { journalName } = this.#settings.getSlice(startupSlice).state;
+    return journalName === "" ? { kind: "set", rowKey: flagged.key } : { kind: "kept", journalName };
+  }
+
+  #warnings(journal: SourceJournal, customGridAfterImport: boolean): RowWarning[] {
+    const warnings: RowWarning[] = [];
+    if (journal.period === "week" && customGridAfterImport && formatHasWrongWeek(journal.format)) {
+      warnings.push({ kind: "iso-week-under-custom-grid" });
+    }
+    for (const path of journal.templates) {
+      const withExtension = path.endsWith(".md") ? path : `${path}.md`;
+      if (this.#notes.find(withExtension as VaultPath).isNone()) warnings.push({ kind: "missing-template", path });
+    }
+    return warnings;
+  }
+
   plan(): ImportPlan {
     const { readings, unrecognised } = this.#read();
     const existing = [...this.#journals.find().list()];
@@ -125,6 +190,12 @@ export class ImportPlanner {
     );
     const shelved = sets.size > 1;
     const proposedNames = new Set<string>();
+
+    const weekStart = this.#weekStart(readings);
+    const customGridAfterImport =
+      weekStart.kind === "offer"
+        ? weekStart.next.mode === "custom"
+        : this.#settings.getSlice(calendarSlice).state.mode === "custom";
 
     const rows = readings.flatMap((reading) =>
       reading.journals.map((journal): PlanRow => {
@@ -161,7 +232,7 @@ export class ImportPlanner {
           dateFormat: draft.dateFormat,
           ...(shelved && journal.set !== undefined && { shelf: journal.set }),
           state,
-          warnings: [],
+          warnings: this.#warnings(journal, customGridAfterImport),
         };
       }),
     );
@@ -171,8 +242,8 @@ export class ImportPlanner {
       unrecognised,
       rows,
       shelves: shelved ? [...sets] : [],
-      weekStart: { kind: "unchanged" },
-      startup: { kind: "none" },
+      weekStart,
+      startup: this.#startup(rows),
     };
   }
 }

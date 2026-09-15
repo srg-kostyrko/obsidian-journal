@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { Calendar, calendarSettingsModule } from "@/calendar";
+import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
+import type { VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
+import { startupModule } from "@/journals/startup/module";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestContainerOptions, type TestHarness } from "@/testing";
 
@@ -10,7 +15,10 @@ import { ImportPlanner } from "./planner";
 import { buildCalendarSet, buildPeriodicConfig, periodicNotesStorePlugin } from "./testing";
 
 async function harnessWith(data: TestContainerOptions["data"] = {}): Promise<TestHarness> {
-  return testContainer({ modules: [journalsCoreModule, importCoreModule], data });
+  return testContainer({
+    modules: [journalsCoreModule, importCoreModule, calendarSettingsModule, startupModule],
+    data,
+  });
 }
 
 function withPeriodicNotesSets(harness: TestHarness, sets: Record<string, unknown>[]): void {
@@ -181,6 +189,117 @@ describe("ImportPlanner", () => {
           { name: m.import_journal_name_in_set({ set: "Work", period: "day" }), shelf: "Work" },
         ],
       });
+    });
+  });
+
+  describe("week start", () => {
+    it("offers Calendar's week start as custom weeks from that day, keeping the current first-week rule", async () => {
+      const harness = await harnessWith({ calendar: { mode: "custom", dow: 1, doy: 4, global: false } });
+      harness.host.putPlugin("calendar", { options: { weekStart: "sunday" } });
+
+      expect(harness.resolve(ImportPlanner).plan().weekStart).toEqual({
+        kind: "offer",
+        next: { mode: "custom", dow: 0, doy: 4, global: false },
+        tickedByDefault: true,
+      });
+    });
+
+    it("leaves the week start unticked once a weekly journal has a connected note", async () => {
+      const harness = await harnessWith({
+        calendar: { mode: "custom", dow: 1, doy: 4, global: false },
+        journals: { weekly: fixedJournal("weekly", { type: "week" }) },
+      });
+      harness
+        .resolve(JournalsIndex)
+        .register({ journalName: "weekly", anchor: anchor("2026-01-05"), path: "Weekly/2026-W02.md" as VaultPath });
+      harness.host.putPlugin("calendar", { options: { weekStart: "sunday" } });
+
+      const weekStart = harness.resolve(ImportPlanner).plan().weekStart;
+
+      expect(weekStart.kind === "offer" && weekStart.tickedByDefault).toBe(false);
+    });
+
+    it("reports a week start the current first-week rule cannot express as not applicable", async () => {
+      const harness = await harnessWith({ calendar: { mode: "custom", dow: 1, doy: 4, global: false } });
+      harness.host.putPlugin("calendar", { options: { weekStart: "saturday" } });
+
+      expect(harness.resolve(ImportPlanner).plan().weekStart).toEqual({ kind: "not-applicable", dow: 6 });
+    });
+
+    it("offers nothing when Calendar's week start already matches", async () => {
+      const harness = await harnessWith({ calendar: { mode: "custom", dow: 0, doy: 4, global: false } });
+      harness.host.putPlugin("calendar", { options: { weekStart: "sunday" } });
+
+      expect(harness.resolve(ImportPlanner).plan().weekStart).toEqual({ kind: "unchanged" });
+    });
+
+    it("offers nothing when the locale already starts weeks on Calendar's day", async () => {
+      const harness = await harnessWith();
+      const weekdays = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      harness.host.putPlugin("calendar", {
+        options: { weekStart: weekdays[harness.resolve(Calendar).localeWeek().dow] },
+      });
+
+      expect(harness.resolve(ImportPlanner).plan().weekStart).toEqual({ kind: "unchanged" });
+    });
+  });
+
+  describe("startup journal", () => {
+    it("offers the flagged journal while no startup journal is set", async () => {
+      const harness = await harnessWith();
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ openAtStartup: true }) }),
+      ]);
+
+      const plan = harness.resolve(ImportPlanner).plan();
+
+      expect(plan.startup).toEqual({ kind: "set", rowKey: plan.rows.at(0)?.key });
+    });
+
+    it("keeps an existing startup journal", async () => {
+      const harness = await harnessWith({
+        journals: { mine: fixedJournal("mine", { type: "day" }, { folder: "Mine" }) },
+        startup: { journalName: "mine", overrides: [] },
+      });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ openAtStartup: true }) }),
+      ]);
+
+      expect(harness.resolve(ImportPlanner).plan().startup).toEqual({ kind: "kept", journalName: "mine" });
+    });
+  });
+
+  describe("warnings", () => {
+    it("warns about ISO week numbers under a custom week grid", async () => {
+      const harness = await harnessWith({ calendar: { mode: "custom", dow: 0, doy: 6, global: false } });
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { week: buildPeriodicConfig({ format: "GGGG-[W]WW" }) }),
+      ]);
+
+      expect(harness.resolve(ImportPlanner).plan().rows.at(0)?.warnings).toEqual([
+        { kind: "iso-week-under-custom-grid" },
+      ]);
+    });
+
+    it("warns about a template note that does not exist", async () => {
+      const harness = await harnessWith();
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ templatePath: "Templates/Day" }) }),
+      ]);
+
+      expect(harness.resolve(ImportPlanner).plan().rows.at(0)?.warnings).toEqual([
+        { kind: "missing-template", path: "Templates/Day" },
+      ]);
+    });
+
+    it("accepts a template path written without its extension", async () => {
+      const harness = await harnessWith();
+      harness.host.putFile("Templates/Day.md", "template");
+      withPeriodicNotesSets(harness, [
+        buildCalendarSet("Default", { day: buildPeriodicConfig({ templatePath: "Templates/Day" }) }),
+      ]);
+
+      expect(harness.resolve(ImportPlanner).plan().rows.at(0)?.warnings).toEqual([]);
     });
   });
 });
