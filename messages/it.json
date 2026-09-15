@@ -1704,6 +1704,56 @@
   "import_preview_warning_iso_week": "Il formato usa numeri di settimana ISO, che non seguono la griglia della settimana personalizzata.",
   "import_preview_warning_missing_template": "Il modello {path} non esiste.",
   "import_preview_confirm": "Importa",
+  "import_connect_title": "Collega le note esistenti",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota verrà collegata.",
+        "count=*": "{count} note verranno collegate."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota saltata: {reason}",
+        "count=*": "{count} note saltate: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Le note non possono essere collegate: {reason}",
+  "import_connect_skip_period_has_note": "Il periodo ha già una nota",
+  "import_connect_skip_several_journals": "Corrisponde a più di un diario",
+  "import_connect_by_title_hint": "Una nota trovata da Periodic Notes solo in base al nome non si trova nel percorso del diario. L'aggiunta in blocco in base al titolo della nota può collegarla.",
+  "import_connect_run": "Collega",
+  "import_connect_skip": "Salta",
+  "import_report_heading": "Importazione completata",
+  "import_report_snapshot": "Le tue impostazioni sono state salvate prima in uno snapshot.",
+  "import_report_snapshot_failed": "Le tue impostazioni non hanno potuto essere salvate prima in uno snapshot.",
+  "import_report_week_start": "L'inizio settimana è stato applicato.",
+  "import_report_shelf_created": "Scaffale {name} creato.",
+  "import_report_shelf_existing": "Lo scaffale {name} esisteva già ed è stato usato.",
+  "import_report_shelf_failed": "Lo scaffale {name} non ha potuto essere creato: {message}",
+  "import_report_journal_created": "Diario {name} creato.",
+  "import_report_journal_existing": "Il diario {name} era già configurato.",
+  "import_report_journal_failed": "Il diario {name} non ha potuto essere creato: {message}",
+  "import_report_startup_set": "{name} ora si apre all'avvio.",
+  "import_report_startup_kept": "{name} continua ad aprirsi all'avvio.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 1 nota collegata.",
+        "count=*": "{name}: {count} note collegate."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Impossibile collegare {path}: {message}",
   "journal_clone_modal_description": "Le impostazioni e i comandi vengono copiati. Le note no.",
   "journal_clone_modal_name_label": "Nuovo nome del diario",
   "journal_clone_modal_title": "Clona {name}",

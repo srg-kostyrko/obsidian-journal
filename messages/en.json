@@ -1710,6 +1710,56 @@
   "import_preview_warning_iso_week": "The format uses ISO week numbers, which do not follow the custom week grid.",
   "import_preview_warning_missing_template": "The template {path} does not exist.",
   "import_preview_confirm": "Import",
+  "import_connect_title": "Connect existing notes",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 note will be connected.",
+        "count=*": "{count} notes will be connected."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 note skipped: {reason}",
+        "count=*": "{count} notes skipped: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Notes cannot be connected: {reason}",
+  "import_connect_skip_period_has_note": "Period already has a note",
+  "import_connect_skip_several_journals": "Matches more than one journal",
+  "import_connect_by_title_hint": "A note Periodic Notes found by its name alone is not on the journal's path. Bulk add by note title can connect it.",
+  "import_connect_run": "Connect",
+  "import_connect_skip": "Skip",
+  "import_report_heading": "Import complete",
+  "import_report_snapshot": "Your settings were saved to a snapshot first.",
+  "import_report_snapshot_failed": "Your settings could not be saved to a snapshot first.",
+  "import_report_week_start": "The week start was applied.",
+  "import_report_shelf_created": "Shelf {name} created.",
+  "import_report_shelf_existing": "Shelf {name} already existed and was used.",
+  "import_report_shelf_failed": "Shelf {name} could not be created: {message}",
+  "import_report_journal_created": "Journal {name} created.",
+  "import_report_journal_existing": "Journal {name} was already set up.",
+  "import_report_journal_failed": "Journal {name} could not be created: {message}",
+  "import_report_startup_set": "{name} now opens on startup.",
+  "import_report_startup_kept": "{name} still opens on startup.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 1 note connected.",
+        "count=*": "{name}: {count} notes connected."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Could not connect {path}: {message}",
   "journal_clone_modal_description": "Settings and commands are copied. Notes are not.",
   "journal_clone_modal_name_label": "New journal name",
   "journal_clone_modal_title": "Clone {name}",

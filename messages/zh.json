@@ -1551,6 +1551,47 @@
   "import_preview_warning_iso_week": "此格式使用 ISO 周数，不遵循自定义的周设置。",
   "import_preview_warning_missing_template": "模板 {path} 不存在。",
   "import_preview_confirm": "导入",
+  "import_connect_title": "连接现有笔记",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "将连接 {count} 条笔记。", "count=*": "将连接 {count} 条笔记。" }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": { "count=1": "已跳过 {count} 条笔记：{reason}", "count=*": "已跳过 {count} 条笔记：{reason}" }
+    }
+  ],
+  "import_connect_blocked": "笔记无法连接：{reason}",
+  "import_connect_skip_period_has_note": "该周期已有笔记",
+  "import_connect_skip_several_journals": "匹配多个日记",
+  "import_connect_by_title_hint": "Periodic Notes 仅通过名称找到的笔记不在日记的路径上。按笔记标题批量添加可以连接它。",
+  "import_connect_run": "连接",
+  "import_connect_skip": "跳过",
+  "import_report_heading": "导入完成",
+  "import_report_snapshot": "您的设置已先保存为快照。",
+  "import_report_snapshot_failed": "未能先将您的设置保存为快照。",
+  "import_report_week_start": "已应用每周起始日。",
+  "import_report_shelf_created": "已创建书架 {name}。",
+  "import_report_shelf_existing": "书架 {name} 已存在，已使用。",
+  "import_report_shelf_failed": "无法创建书架 {name}：{message}",
+  "import_report_journal_created": "已创建日记 {name}。",
+  "import_report_journal_existing": "日记 {name} 已经设置好。",
+  "import_report_journal_failed": "无法创建日记 {name}：{message}",
+  "import_report_startup_set": "{name} 现在会在启动时打开。",
+  "import_report_startup_kept": "{name} 仍会在启动时打开。",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "{name}：已连接 {count} 条笔记。", "count=*": "{name}：已连接 {count} 条笔记。" }
+    }
+  ],
+  "import_report_connect_failed": "无法连接 {path}：{message}",
   "journal_clone_modal_description": "设置和命令会被复制，笔记不会。",
   "journal_clone_modal_name_label": "新日记名称",
   "journal_clone_modal_title": "克隆{name}",

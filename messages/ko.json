@@ -1696,6 +1696,50 @@
   "import_preview_warning_iso_week": "이 형식은 ISO 주차 번호를 사용하므로 사용자 지정 주 설정을 따르지 않습니다.",
   "import_preview_warning_missing_template": "템플릿 {path}이(가) 없습니다.",
   "import_preview_confirm": "가져오기",
+  "import_connect_title": "기존 노트 연결",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "노트 1개가 연결됩니다.", "count=*": "노트 {count}개가 연결됩니다." }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": { "count=1": "노트 1개 건너뜀: {reason}", "count=*": "노트 {count}개 건너뜀: {reason}" }
+    }
+  ],
+  "import_connect_blocked": "노트를 연결할 수 없습니다: {reason}",
+  "import_connect_skip_period_has_note": "해당 기간에 이미 노트가 있습니다",
+  "import_connect_skip_several_journals": "둘 이상의 저널과 일치합니다",
+  "import_connect_by_title_hint": "Periodic Notes가 이름만으로 찾은 노트는 저널의 경로에 있지 않습니다. 노트 제목으로 일괄 추가하면 연결할 수 있습니다.",
+  "import_connect_run": "연결",
+  "import_connect_skip": "건너뛰기",
+  "import_report_heading": "가져오기 완료",
+  "import_report_snapshot": "설정이 먼저 스냅샷으로 저장되었습니다.",
+  "import_report_snapshot_failed": "설정을 먼저 스냅샷으로 저장하지 못했습니다.",
+  "import_report_week_start": "주 시작 요일이 적용되었습니다.",
+  "import_report_shelf_created": "선반 {name}이(가) 생성되었습니다.",
+  "import_report_shelf_existing": "선반 {name}이(가) 이미 있어 사용되었습니다.",
+  "import_report_shelf_failed": "선반 {name}을(를) 생성할 수 없습니다: {message}",
+  "import_report_journal_created": "저널 {name}이(가) 생성되었습니다.",
+  "import_report_journal_existing": "저널 {name}은(는) 이미 설정되어 있었습니다.",
+  "import_report_journal_failed": "저널 {name}을(를) 생성할 수 없습니다: {message}",
+  "import_report_startup_set": "{name}은(는) 이제 시작 시 열립니다.",
+  "import_report_startup_kept": "{name}은(는) 계속 시작 시 열립니다.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 노트 1개가 연결되었습니다.",
+        "count=*": "{name}: 노트 {count}개가 연결되었습니다."
+      }
+    }
+  ],
+  "import_report_connect_failed": "{path}을(를) 연결할 수 없습니다: {message}",
   "journal_clone_modal_description": "설정과 명령은 복사됩니다. 노트는 복사되지 않습니다.",
   "journal_clone_modal_name_label": "새 저널 이름",
   "journal_clone_modal_title": "{name} 복제",

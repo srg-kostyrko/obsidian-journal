@@ -1706,6 +1706,56 @@
   "import_preview_warning_iso_week": "Das Format verwendet ISO-Wochennummern, die nicht dem benutzerdefinierten Wochenraster folgen.",
   "import_preview_warning_missing_template": "Die Vorlage {path} existiert nicht.",
   "import_preview_confirm": "Importieren",
+  "import_connect_title": "Vorhandene Notizen verknüpfen",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Notiz wird verknüpft.",
+        "count=*": "{count} Notizen werden verknüpft."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Notiz übersprungen: {reason}",
+        "count=*": "{count} Notizen übersprungen: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Notizen können nicht verknüpft werden: {reason}",
+  "import_connect_skip_period_has_note": "Für diesen Zeitraum gibt es bereits eine Notiz",
+  "import_connect_skip_several_journals": "Passt zu mehr als einem Journal",
+  "import_connect_by_title_hint": "Eine Notiz, die Periodic Notes nur anhand ihres Namens gefunden hat, liegt nicht auf dem Pfad des Journals. Das Hinzufügen mehrerer Notizen anhand des Notiztitels kann sie verknüpfen.",
+  "import_connect_run": "Verknüpfen",
+  "import_connect_skip": "Überspringen",
+  "import_report_heading": "Import abgeschlossen",
+  "import_report_snapshot": "Ihre Einstellungen wurden zuerst in einem Snapshot gespeichert.",
+  "import_report_snapshot_failed": "Ihre Einstellungen konnten nicht zuerst in einem Snapshot gespeichert werden.",
+  "import_report_week_start": "Der Wochenbeginn wurde übernommen.",
+  "import_report_shelf_created": "Regal {name} erstellt.",
+  "import_report_shelf_existing": "Regal {name} existierte bereits und wurde verwendet.",
+  "import_report_shelf_failed": "Regal {name} konnte nicht erstellt werden: {message}",
+  "import_report_journal_created": "Journal {name} erstellt.",
+  "import_report_journal_existing": "Journal {name} war bereits eingerichtet.",
+  "import_report_journal_failed": "Journal {name} konnte nicht erstellt werden: {message}",
+  "import_report_startup_set": "{name} wird jetzt beim Start geöffnet.",
+  "import_report_startup_kept": "{name} wird weiterhin beim Start geöffnet.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 1 Notiz verknüpft.",
+        "count=*": "{name}: {count} Notizen verknüpft."
+      }
+    }
+  ],
+  "import_report_connect_failed": "{path} konnte nicht verknüpft werden: {message}",
   "journal_clone_modal_description": "Einstellungen und Befehle werden kopiert, Notizen nicht.",
   "journal_clone_modal_name_label": "Neuer Journalname",
   "journal_clone_modal_title": "{name} klonen",

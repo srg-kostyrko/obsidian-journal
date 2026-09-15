@@ -1589,6 +1589,62 @@
   "import_preview_warning_iso_week": "Формат використовує номери тижнів ISO, які не відповідають власній сітці тижня.",
   "import_preview_warning_missing_template": "Шаблон {path} не існує.",
   "import_preview_confirm": "Імпорт",
+  "import_connect_title": "Підключити наявні нотатки",
+  "import_connect_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Буде підключено {count} нотатку.",
+        "countPlural=few": "Буде підключено {count} нотатки.",
+        "countPlural=many": "Буде підключено {count} нотаток.",
+        "countPlural=*": "Буде підключено {count} нотатки."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Пропущено {count} нотатку: {reason}",
+        "countPlural=few": "Пропущено {count} нотатки: {reason}",
+        "countPlural=many": "Пропущено {count} нотаток: {reason}",
+        "countPlural=*": "Пропущено {count} нотатки: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Нотатки не можна підключити: {reason}",
+  "import_connect_skip_period_has_note": "У цьому періоді вже є нотатка",
+  "import_connect_skip_several_journals": "Відповідає більш ніж одному журналу",
+  "import_connect_by_title_hint": "Нотатка, яку Periodic Notes знайшов лише за назвою, не перебуває на шляху журналу. Масове додавання за заголовком нотатки може її підключити.",
+  "import_connect_run": "Підключити",
+  "import_connect_skip": "Пропустити",
+  "import_report_heading": "Імпорт завершено",
+  "import_report_snapshot": "Ваші налаштування спочатку збережено в знімку.",
+  "import_report_snapshot_failed": "Ваші налаштування не вдалося спочатку зберегти в знімку.",
+  "import_report_week_start": "Початок тижня застосовано.",
+  "import_report_shelf_created": "Полицю {name} створено.",
+  "import_report_shelf_existing": "Полиця {name} вже існувала і була використана.",
+  "import_report_shelf_failed": "Полицю {name} не вдалося створити: {message}",
+  "import_report_journal_created": "Журнал {name} створено.",
+  "import_report_journal_existing": "Журнал {name} вже був налаштований.",
+  "import_report_journal_failed": "Журнал {name} не вдалося створити: {message}",
+  "import_report_startup_set": "{name} тепер відкривається під час запуску.",
+  "import_report_startup_kept": "{name} і надалі відкривається під час запуску.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{name}: підключено {count} нотатку.",
+        "countPlural=few": "{name}: підключено {count} нотатки.",
+        "countPlural=many": "{name}: підключено {count} нотаток.",
+        "countPlural=*": "{name}: підключено {count} нотатки."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Не вдалося підключити {path}: {message}",
   "journal_clone_modal_description": "Налаштування та команди копіюються. Нотатки — ні.",
   "journal_clone_modal_name_label": "Нова назва журналу",
   "journal_clone_modal_title": "Клонувати {name}",

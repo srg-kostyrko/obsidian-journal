@@ -1704,6 +1704,56 @@
   "import_preview_warning_iso_week": "Le format utilise des numéros de semaine ISO, qui ne suivent pas la grille de semaine personnalisée.",
   "import_preview_warning_missing_template": "Le modèle {path} n’existe pas.",
   "import_preview_confirm": "Importer",
+  "import_connect_title": "Connecter les notes existantes",
+  "import_connect_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} note sera connectée.",
+        "countPlural=*": "{count} notes seront connectées."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} note ignorée : {reason}",
+        "countPlural=*": "{count} notes ignorées : {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Les notes ne peuvent pas être connectées : {reason}",
+  "import_connect_skip_period_has_note": "La période a déjà une note",
+  "import_connect_skip_several_journals": "Correspond à plusieurs journaux",
+  "import_connect_by_title_hint": "Une note que Periodic Notes a trouvée uniquement par son nom ne se trouve pas sur le chemin du journal. L'ajout en masse par titre de note peut la connecter.",
+  "import_connect_run": "Connecter",
+  "import_connect_skip": "Ignorer",
+  "import_report_heading": "Import terminé",
+  "import_report_snapshot": "Vos paramètres ont d'abord été enregistrés dans un instantané.",
+  "import_report_snapshot_failed": "Vos paramètres n'ont pas pu être enregistrés dans un instantané au préalable.",
+  "import_report_week_start": "Le début de semaine a été appliqué.",
+  "import_report_shelf_created": "Étagère {name} créée.",
+  "import_report_shelf_existing": "L'étagère {name} existait déjà et a été utilisée.",
+  "import_report_shelf_failed": "L'étagère {name} n'a pas pu être créée : {message}",
+  "import_report_journal_created": "Journal {name} créé.",
+  "import_report_journal_existing": "Le journal {name} était déjà configuré.",
+  "import_report_journal_failed": "Le journal {name} n'a pas pu être créé : {message}",
+  "import_report_startup_set": "{name} s'ouvre désormais au démarrage.",
+  "import_report_startup_kept": "{name} continue de s'ouvrir au démarrage.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{name} : {count} note connectée.",
+        "countPlural=*": "{name} : {count} notes connectées."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Impossible de connecter {path} : {message}",
   "journal_clone_modal_description": "Les paramètres et les commandes sont copiés. Les notes ne le sont pas.",
   "journal_clone_modal_name_label": "Nouveau nom du journal",
   "journal_clone_modal_title": "Cloner {name}",

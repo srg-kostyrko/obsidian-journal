@@ -1704,6 +1704,53 @@
   "import_preview_warning_iso_week": "O formato usa números de semana ISO, que não seguem a grade de semana personalizada.",
   "import_preview_warning_missing_template": "O modelo {path} não existe.",
   "import_preview_confirm": "Importar",
+  "import_connect_title": "Conectar notas existentes",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "1 nota será conectada.", "count=*": "{count} notas serão conectadas." }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota ignorada: {reason}",
+        "count=*": "{count} notas ignoradas: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "As notas não podem ser conectadas: {reason}",
+  "import_connect_skip_period_has_note": "O período já tem uma nota",
+  "import_connect_skip_several_journals": "Corresponde a mais de um diário",
+  "import_connect_by_title_hint": "Uma nota que o Periodic Notes encontrou apenas pelo nome não está no caminho do diário. Adicionar em massa pelo título da nota pode conectá-la.",
+  "import_connect_run": "Conectar",
+  "import_connect_skip": "Ignorar",
+  "import_report_heading": "Importação concluída",
+  "import_report_snapshot": "Suas configurações foram salvas primeiro em um instantâneo.",
+  "import_report_snapshot_failed": "Suas configurações não puderam ser salvas primeiro em um instantâneo.",
+  "import_report_week_start": "O início da semana foi aplicado.",
+  "import_report_shelf_created": "Prateleira {name} criada.",
+  "import_report_shelf_existing": "A prateleira {name} já existia e foi usada.",
+  "import_report_shelf_failed": "A prateleira {name} não pôde ser criada: {message}",
+  "import_report_journal_created": "Diário {name} criado.",
+  "import_report_journal_existing": "O diário {name} já estava configurado.",
+  "import_report_journal_failed": "O diário {name} não pôde ser criado: {message}",
+  "import_report_startup_set": "{name} agora abre ao iniciar.",
+  "import_report_startup_kept": "{name} continua abrindo ao iniciar.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 1 nota conectada.",
+        "count=*": "{name}: {count} notas conectadas."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Não foi possível conectar {path}: {message}",
   "journal_clone_modal_description": "As configurações e os comandos são copiados. As notas não.",
   "journal_clone_modal_name_label": "Novo nome do diário",
   "journal_clone_modal_title": "Clonar {name}",

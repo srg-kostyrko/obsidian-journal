@@ -1744,6 +1744,62 @@
   "import_preview_warning_iso_week": "Формат использует номера недель ISO, которые не следуют пользовательской сетке недели.",
   "import_preview_warning_missing_template": "Шаблон {path} не существует.",
   "import_preview_confirm": "Импорт",
+  "import_connect_title": "Связать существующие заметки",
+  "import_connect_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Будет связана {count} заметка.",
+        "countPlural=few": "Будут связаны {count} заметки.",
+        "countPlural=many": "Будет связано {count} заметок.",
+        "countPlural=*": "Будет связано {count} заметки."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Пропущена {count} заметка: {reason}",
+        "countPlural=few": "Пропущены {count} заметки: {reason}",
+        "countPlural=many": "Пропущено {count} заметок: {reason}",
+        "countPlural=*": "Пропущено {count} заметки: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Заметки не могут быть связаны: {reason}",
+  "import_connect_skip_period_has_note": "В этом периоде уже есть заметка",
+  "import_connect_skip_several_journals": "Соответствует нескольким журналам",
+  "import_connect_by_title_hint": "Заметка, которую Periodic Notes нашёл только по имени, не находится на пути журнала. Массовое добавление по заголовку заметки может её связать.",
+  "import_connect_run": "Связать",
+  "import_connect_skip": "Пропустить",
+  "import_report_heading": "Импорт завершён",
+  "import_report_snapshot": "Ваши настройки были сначала сохранены в снимок.",
+  "import_report_snapshot_failed": "Ваши настройки не удалось сначала сохранить в снимок.",
+  "import_report_week_start": "Начало недели было применено.",
+  "import_report_shelf_created": "Полка {name} создана.",
+  "import_report_shelf_existing": "Полка {name} уже существовала и была использована.",
+  "import_report_shelf_failed": "Полку {name} не удалось создать: {message}",
+  "import_report_journal_created": "Журнал {name} создан.",
+  "import_report_journal_existing": "Журнал {name} уже был настроен.",
+  "import_report_journal_failed": "Журнал {name} не удалось создать: {message}",
+  "import_report_startup_set": "{name} теперь открывается при запуске.",
+  "import_report_startup_kept": "{name} по-прежнему открывается при запуске.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{name}: связана {count} заметка.",
+        "countPlural=few": "{name}: связаны {count} заметки.",
+        "countPlural=many": "{name}: связано {count} заметок.",
+        "countPlural=*": "{name}: связано {count} заметки."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Не удалось связать {path}: {message}",
   "journal_clone_modal_description": "Настройки и команды копируются. Заметки — нет.",
   "journal_clone_modal_name_label": "Новое название журнала",
   "journal_clone_modal_title": "Клонировать {name}",

@@ -1551,6 +1551,53 @@
   "import_preview_warning_iso_week": "この形式はISO週番号を使用しており、カスタムの週設定に従いません。",
   "import_preview_warning_missing_template": "テンプレート {path} は存在しません。",
   "import_preview_confirm": "インポート",
+  "import_connect_title": "既存のノートを接続",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "1件のノートが接続されます。", "count=*": "{count}件のノートが接続されます。" }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1件のノートをスキップしました：{reason}",
+        "count=*": "{count}件のノートをスキップしました：{reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "ノートを接続できません：{reason}",
+  "import_connect_skip_period_has_note": "この期間にはすでにノートがあります",
+  "import_connect_skip_several_journals": "複数のジャーナルに一致します",
+  "import_connect_by_title_hint": "Periodic Notesが名前だけで見つけたノートは、ジャーナルのパス上にありません。ノートのタイトルによる一括追加でこれを接続できます。",
+  "import_connect_run": "接続",
+  "import_connect_skip": "スキップ",
+  "import_report_heading": "インポート完了",
+  "import_report_snapshot": "設定は先にスナップショットとして保存されました。",
+  "import_report_snapshot_failed": "設定を先にスナップショットとして保存できませんでした。",
+  "import_report_week_start": "週の開始日が適用されました。",
+  "import_report_shelf_created": "棚「{name}」を作成しました。",
+  "import_report_shelf_existing": "棚「{name}」はすでに存在していたため、それを使用しました。",
+  "import_report_shelf_failed": "棚「{name}」を作成できませんでした：{message}",
+  "import_report_journal_created": "ジャーナル「{name}」を作成しました。",
+  "import_report_journal_existing": "ジャーナル「{name}」はすでに設定済みでした。",
+  "import_report_journal_failed": "ジャーナル「{name}」を作成できませんでした：{message}",
+  "import_report_startup_set": "{name} が起動時に開くようになりました。",
+  "import_report_startup_kept": "{name} は引き続き起動時に開きます。",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}：1件のノートを接続しました。",
+        "count=*": "{name}：{count}件のノートを接続しました。"
+      }
+    }
+  ],
+  "import_report_connect_failed": "{path} を接続できませんでした：{message}",
   "journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
   "journal_clone_modal_name_label": "新しいジャーナル名",
   "journal_clone_modal_title": "{name}を複製",
