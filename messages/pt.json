@@ -1726,6 +1726,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "A pasta usa \"{offending}\", que não é uma variável conhecida, portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
+        "reason=function-token": "A pasta usa a função \"{offending}\", portanto as notas criadas fora do plugin não podem ser associadas a este diário.",
+        "reason=clock-variable": "A pasta usa \"{offending}\", que é uma hora do dia, portanto as notas criadas fora do plugin não podem ser associadas a este diário."
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "O modelo de nome não tem variável de data, portanto todas as variáveis de numeração precisam aparecer no nome da nota ou na pasta. Adicione {missing} ou adicione uma variável de data, para que as notas criadas fora do plugin possam ser associadas a este diário.",
   "journal_edit_name_template_no_carry_warning": "\"{offending}\" nunca é reiniciado, portanto os dígitos acima dele nunca mudam e os números não podem ser convertidos de volta em uma data. Configure-o para reiniciar após uma quantidade ou adicione uma variável de data, para que as notas criadas fora do plugin possam ser associadas a este diário.",
   "journal_edit_name_template_cyclic_top_warning": "O primeiro dígito da numeração é reiniciado, portanto os números se repetem e não podem ser convertidos de volta em uma data. Adicione uma variável de data ao modelo de nome ou defina o primeiro dígito como \"Contínuo\", para que as notas criadas fora do plugin possam ser associadas a este diário.",

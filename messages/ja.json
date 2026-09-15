@@ -1573,6 +1573,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "フォルダで使われている「{offending}」は既知の変数ではないため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
+        "reason=function-token": "フォルダで関数「{offending}」を使っているため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。",
+        "reason=clock-variable": "フォルダで使われている「{offending}」は時刻であるため、プラグイン外で作成されたノートをこのジャーナルに関連付けられません。"
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "名前テンプレートに日付変数がないため、すべての番号付け変数をノート名かフォルダに含める必要があります。{missing}を追加するか、日付変数を追加してください。そうすればプラグイン外で作成されたノートをこのジャーナルに関連付けられます。",
   "journal_edit_name_template_no_carry_warning": "「{offending}」はリセットされないため、その上の桁が変化せず、番号を日付に戻せません。指定回数ごとにリセットするよう設定するか、日付変数を追加してください。そうすればプラグイン外で作成されたノートをこのジャーナルに関連付けられます。",
   "journal_edit_name_template_cyclic_top_warning": "連番の最初の桁がリセットされるため、番号が繰り返され、日付に戻せません。名前テンプレートに日付変数を追加するか、最初の桁を「連続」に設定してください。そうすればプラグイン外で作成されたノートをこのジャーナルに関連付けられます。",

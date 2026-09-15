@@ -233,6 +233,44 @@ describe("NoteCreationSection", () => {
 
       expect(screen.queryByText(m.journal_edit_wrong_week_warning())).toBeNull();
     });
+
+    it("blames the folder, not the name template, for a variable the folder cannot read back", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "Log", folder: "Journal/{{mystery}}" }),
+          },
+        },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
+      expect(
+        screen.getByText(
+          m.journal_edit_folder_invertibility_warning({ reason: "unknown-variable", offending: "mystery" }),
+        ),
+      ).toBeTruthy();
+    });
+
+    it("keeps a folder's unreadable variable out of the name template's warning", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "Log", folder: "Journal/{{mystery}}" }),
+          },
+        },
+      });
+
+      harness.render(NoteCreationSection, { props: { journalName: "daily" } });
+
+      expect(
+        screen.queryByText(
+          m.journal_edit_name_template_invertibility_warning({ reason: "unknown-variable", offending: "mystery" }),
+        ),
+      ).toBeNull();
+    });
   });
 
   describe("autoCreate field", () => {

@@ -1726,6 +1726,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "La cartella usa \"{offending}\", che non è una variabile nota, quindi le note create fuori dal plugin non possono essere associate a questo diario.",
+        "reason=function-token": "La cartella usa la funzione \"{offending}\", quindi le note create fuori dal plugin non possono essere associate a questo diario.",
+        "reason=clock-variable": "La cartella usa \"{offending}\", che è un orario, quindi le note create fuori dal plugin non possono essere associate a questo diario."
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "Il modello di nome non ha una variabile di data, quindi ogni variabile di numerazione deve comparire nel nome della nota o nella cartella. Aggiungi {missing}, oppure aggiungi una variabile di data, così le note create fuori dal plugin possono essere associate a questo diario.",
   "journal_edit_name_template_no_carry_warning": "\"{offending}\" non si azzera mai, quindi le cifre superiori non cambiano mai e i numeri non possono essere riconvertiti in una data. Impostala perché si azzeri dopo un certo numero, oppure aggiungi una variabile di data, così le note create fuori dal plugin possono essere associate a questo diario.",
   "journal_edit_name_template_cyclic_top_warning": "La prima cifra della numerazione si azzera, quindi i numeri si ripetono e non possono essere riconvertiti in una data. Aggiungi una variabile di data al modello di nome oppure imposta la prima cifra su \"Continuo\", così le note create fuori dal plugin possono essere associate a questo diario.",

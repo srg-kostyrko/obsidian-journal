@@ -1718,6 +1718,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "폴더에서 \"{offending}\" 부분은 알려진 변수가 아니므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다.",
+        "reason=function-token": "폴더가 \"{offending}\" 함수를 사용하므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다.",
+        "reason=clock-variable": "폴더에서 \"{offending}\" 변수는 시각을 나타내므로, 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 없습니다."
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "이름 템플릿에 날짜 변수가 없으므로 모든 번호 매기기 변수가 노트 이름이나 폴더에 나타나야 합니다. {missing}을(를) 추가하거나 날짜 변수를 추가하세요. 그러면 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 있습니다.",
   "journal_edit_name_template_no_carry_warning": "\"{offending}\" 자리는 초기화되지 않으므로 그 위의 자리가 전혀 바뀌지 않아 번호를 날짜로 되돌릴 수 없습니다. 지정한 횟수 후 초기화되도록 설정하거나 날짜 변수를 추가하세요. 그러면 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 있습니다.",
   "journal_edit_name_template_cyclic_top_warning": "번호의 첫 자리가 초기화되어 번호가 반복되므로 날짜로 되돌릴 수 없습니다. 이름 템플릿에 날짜 변수를 추가하거나 첫 자리를 \"연속\"으로 설정하세요. 그러면 플러그인 밖에서 만든 노트를 이 저널에 연결할 수 있습니다.",

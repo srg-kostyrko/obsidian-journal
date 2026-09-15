@@ -1573,6 +1573,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "文件夹使用了“{offending}”，它不是已知变量，因此在插件之外创建的笔记无法与此日记匹配。",
+        "reason=function-token": "文件夹使用了函数“{offending}”，因此在插件之外创建的笔记无法与此日记匹配。",
+        "reason=clock-variable": "文件夹使用了“{offending}”，它表示一天中的时间，因此在插件之外创建的笔记无法与此日记匹配。"
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "名称模板中没有日期变量，因此每个编号变量都必须出现在笔记名称或文件夹中。请添加 {missing}，或者添加日期变量，这样在插件之外创建的笔记才能与此日记匹配。",
   "journal_edit_name_template_no_carry_warning": "“{offending}”从不重置，因此它上面的位永远不变，号码也无法还原成日期。请将其设为达到次数后重置，或添加日期变量，这样在插件之外创建的笔记才能与此日记匹配。",
   "journal_edit_name_template_cyclic_top_warning": "编号的第一位会重置，因此号码会重复，无法还原成日期。请在名称模板中添加日期变量，或将第一位设为“连续”，这样在插件之外创建的笔记才能与此日记匹配。",

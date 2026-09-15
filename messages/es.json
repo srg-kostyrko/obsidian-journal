@@ -1718,6 +1718,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "La carpeta usa «{offending}», que no es una variable conocida, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario.",
+        "reason=function-token": "La carpeta usa la función «{offending}», por lo que las notas creadas fuera del complemento no se pueden asociar a este diario.",
+        "reason=clock-variable": "La carpeta usa «{offending}», que es una hora del día, por lo que las notas creadas fuera del complemento no se pueden asociar a este diario."
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "La plantilla de nombre no tiene ninguna variable de fecha, por lo que todas las variables de numeración deben aparecer en el nombre de la nota o en la carpeta. Agrega {missing}, o agrega una variable de fecha, para que las notas creadas fuera del complemento se puedan asociar a este diario.",
   "journal_edit_name_template_no_carry_warning": "«{offending}» nunca se reinicia, por lo que los dígitos superiores no cambian nunca y los números no se pueden convertir de nuevo en una fecha. Configúralo para que se reinicie tras una cantidad, o agrega una variable de fecha, para que las notas creadas fuera del complemento se puedan asociar a este diario.",
   "journal_edit_name_template_cyclic_top_warning": "El primer dígito de la numeración se reinicia, por lo que los números se repiten y no se pueden convertir de nuevo en una fecha. Agrega una variable de fecha a la plantilla de nombre o pon el primer dígito en «Continuo», para que las notas creadas fuera del complemento se puedan asociar a este diario.",

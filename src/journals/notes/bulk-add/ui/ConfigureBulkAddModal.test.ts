@@ -164,4 +164,39 @@ describe("ConfigureBulkAddModal", () => {
 
     expect(screen.getByText(m.bulk_add_date_place_path_unavailable())).toBeTruthy();
   });
+
+  it("disables the note path for a journal whose folder cannot be read back", async () => {
+    const unreadable = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "Log", folder: "Journal/{{mystery}}" }),
+        },
+      },
+    });
+
+    unreadable.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    const option = screen.getByRole<HTMLOptionElement>("option", { name: m.bulk_add_date_place_path() });
+    expect(option.disabled).toBe(true);
+  });
+
+  it("names the folder as what keeps the note path unavailable", async () => {
+    const unreadable = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "Log", folder: "Journal/{{mystery}}" }),
+        },
+      },
+    });
+
+    unreadable.renderModal(ConfigureBulkAddModal, { props: { journalName: "daily" } });
+
+    expect(
+      screen.getByText(
+        m.journal_edit_folder_invertibility_warning({ reason: "unknown-variable", offending: "mystery" }),
+      ),
+    ).toBeTruthy();
+  });
 });

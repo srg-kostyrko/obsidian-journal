@@ -14,7 +14,12 @@ import type { NotePathService } from "./note-path";
 import type { Prompt } from "../prompts/config";
 
 export type InvertibilityWarning =
-  | { kind: "non-invertible"; reason: "function-token" | "unknown-variable" | "clock-variable"; offending: string }
+  | {
+      kind: "non-invertible";
+      part: "name" | "folder";
+      reason: "function-token" | "unknown-variable" | "clock-variable";
+      offending: string;
+    }
   | { kind: "coarse-date" }
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
@@ -29,7 +34,7 @@ export interface InvertibilityServices {
 
 const DATE_VARIABLES = new Set(["date", "start_date", "end_date"]);
 
-/** Why a note this journal writes cannot be read back into the period it was written for, if it cannot. `config` must be a saved journal's, since the round-trip probe resolves `config.name` against the saved config. */
+/** Why a saved journal's note paths cannot be read back into their periods, if they cannot. */
 export function invertibilityOf(
   config: JournalConfig,
   { engine, cycle, paths }: InvertibilityServices,
@@ -69,7 +74,20 @@ export function invertibilityOf(
   if (parsed.isErr()) {
     const detail = parsed.error.detail;
     if (detail.kind === "not-invertible") {
-      return { kind: "non-invertible", reason: detail.reason, offending: detail.offending };
+      return { kind: "non-invertible", part: "name", reason: detail.reason, offending: detail.offending };
+    }
+  }
+  // The round-trip probe below fails on the same token but cannot say which one, and falls through
+  // to verdicts that blame the date or pass the template outright.
+  if (config.folder) {
+    // The folder offers the rendered note name as a variable; it is known here, not a typo.
+    const folderContext = context.string("note_name", "preview").string("title", "preview");
+    const parsedFolder = engine.parse(tokenize(config.folder), "preview", folderContext);
+    if (parsedFolder.isErr()) {
+      const detail = parsedFolder.error.detail;
+      if (detail.kind === "not-invertible") {
+        return { kind: "non-invertible", part: "folder", reason: detail.reason, offending: detail.offending };
+      }
     }
   }
   // Neither a text nor a yes/no answer has a bounded pattern — parseSpecFor gives both only
@@ -127,7 +145,8 @@ function probeDate(config: JournalConfig): CalendarDate {
 
 export function invertibilityWarningText(warning: InvertibilityWarning): string {
   return match(warning)
-    .with({ kind: "non-invertible" }, (w) => m.journal_edit_name_template_invertibility_warning(w))
+    .with({ kind: "non-invertible", part: "folder" }, (w) => m.journal_edit_folder_invertibility_warning(w))
+    .with({ kind: "non-invertible", part: "name" }, (w) => m.journal_edit_name_template_invertibility_warning(w))
     .with({ kind: "prompt-in-path" }, (w) => m.journal_invertibility_prompt_in_path(w))
     .with({ kind: "coarse-date" }, () => m.journal_edit_name_template_coarse_date_warning())
     .with({ kind: "cyclic-top" }, () => m.journal_edit_name_template_cyclic_top_warning())

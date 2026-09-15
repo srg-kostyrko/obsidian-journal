@@ -1732,6 +1732,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "The folder uses \"{offending}\", which is not a known variable, so notes created outside the plugin cannot be matched to this journal.",
+        "reason=function-token": "The folder uses the function \"{offending}\", so notes created outside the plugin cannot be matched to this journal.",
+        "reason=clock-variable": "The folder uses \"{offending}\", which is a time of day, so notes created outside the plugin cannot be matched to this journal."
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "The name template has no date variable, so every numbering variable must appear in the note name or folder. Add {missing}, or add a date variable, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_no_carry_warning": "\"{offending}\" never resets, so the digits above it never change and the numbers cannot be turned back into a date. Set it to reset after a count, or add a date variable, so notes created outside the plugin can be matched to this journal.",
   "journal_edit_name_template_cyclic_top_warning": "The first numbering digit resets, so the numbers repeat and cannot be turned back into a date. Add a date variable to the name template, or set the first digit to continuous, so notes created outside the plugin can be matched to this journal.",

@@ -55,6 +55,10 @@ const numberingVariableNames = computed<readonly string[]>(() =>
 const promptVariables = computed(() => config.value?.prompts ?? []);
 
 const invertibility = useInvertibilityCheck(config);
+const folderInvertibility = computed(() =>
+  invertibility.value?.kind === "non-invertible" && invertibility.value.part === "folder" ? invertibility.value : null,
+);
+const nameInvertibility = computed(() => (folderInvertibility.value ? null : invertibility.value));
 const collision = useCollisionCheck(config);
 
 function applyNameTemplateRecommendation(): void {
@@ -92,7 +96,7 @@ function applyDateFormatRecommendation(): void {
             {{ m.journal_edit_name_template_collision_warning(collision) }}
           </template>
         </div>
-        <div v-if="invertibility" class="journal-hint">{{ invertibilityWarningText(invertibility) }}</div>
+        <div v-if="nameInvertibility" class="journal-hint">{{ invertibilityWarningText(nameInvertibility) }}</div>
         <div v-if="config.nameTemplate.includes('/')" class="journal-recommendation">
           {{ m.journal_edit_move_to_folder_recommendation_name_template() }}
           <a href="#" @click.prevent="applyNameTemplateRecommendation">
@@ -115,6 +119,7 @@ function applyDateFormatRecommendation(): void {
           :prompt-variables="promptVariables"
         />
         <WrongWeekWarning v-if="templateHasWrongWeek(config.folder)" />
+        <div v-if="folderInvertibility" class="journal-hint">{{ invertibilityWarningText(folderInvertibility) }}</div>
       </template>
       <FolderInput v-model="config.folder" />
     </UiSettingRow>

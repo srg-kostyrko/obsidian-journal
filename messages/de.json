@@ -1728,6 +1728,17 @@
       }
     }
   ],
+  "journal_edit_folder_invertibility_warning": [
+    {
+      "declarations": ["input reason", "input offending"],
+      "selectors": ["reason"],
+      "match": {
+        "reason=unknown-variable": "Der Ordner verwendet „{offending}“, was keine bekannte Variable ist, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
+        "reason=function-token": "Der Ordner verwendet die Funktion „{offending}“, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden.",
+        "reason=clock-variable": "Der Ordner verwendet „{offending}“, eine Uhrzeit, daher können außerhalb des Plugins erstellte Notizen diesem Journal nicht zugeordnet werden."
+      }
+    }
+  ],
   "journal_edit_name_template_unused_digits_warning": "Die Namensvorlage enthält keine Datumsvariable, daher muss jede Nummerierungsvariable im Notiznamen oder im Ordner vorkommen. Füge {missing} hinzu oder ergänze eine Datumsvariable, damit außerhalb des Plugins erstellte Notizen diesem Journal zugeordnet werden können.",
   "journal_edit_name_template_no_carry_warning": "„{offending}“ wird nie zurückgesetzt, daher ändern sich die Stellen darüber nie und die Nummern lassen sich nicht in ein Datum zurückrechnen. Lass die Stelle nach einer Anzahl zurücksetzen oder füge eine Datumsvariable hinzu, damit außerhalb des Plugins erstellte Notizen diesem Journal zugeordnet werden können.",
   "journal_edit_name_template_cyclic_top_warning": "Die erste Nummernstelle wird zurückgesetzt, daher wiederholen sich die Nummern und lassen sich nicht in ein Datum zurückrechnen. Füge der Namensvorlage eine Datumsvariable hinzu oder setze die erste Stelle auf „Fortlaufend“, damit außerhalb des Plugins erstellte Notizen diesem Journal zugeordnet werden können.",
