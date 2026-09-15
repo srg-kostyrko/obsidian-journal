@@ -350,6 +350,16 @@ describe("useInvertibilityCheck", () => {
     expect(probe(harness, config.name).value).toEqual({ kind: "coarse-date" });
   });
 
+  it.each(["gggg-[W]ww", "GGGG-[W]WW"])("stays silent for a weekly name written with week-year %s", async (format) => {
+    const config = fixedJournal("weekly", { type: "week" }, { nameTemplate: `{{date:${format}}}` });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
+  });
+
   it("stays silent for a static name, which names no date to be too coarse", async () => {
     const config = customJournal("sprints", "week", 2, "2026-01-05", {
       nameTemplate: "static-note",

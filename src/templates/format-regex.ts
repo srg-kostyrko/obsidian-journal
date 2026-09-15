@@ -31,9 +31,13 @@ const formatRegExpParts = new Map<string, string>([
   ["WW", "[0-9]{2}"],
   ["YY", "[0-9]{2}"],
   ["YYYY", "[0-9]{4}"],
+  ["gg", "[0-9]{2}"],
+  ["gggg", "[0-9]{4}"],
+  ["GG", "[0-9]{2}"],
+  ["GGGG", "[0-9]{4}"],
 ]);
 
-const supportedSymbols = new Set(["o", "M", "Q", "D", "d", "w", "W", "Y"]);
+const supportedSymbols = new Set(["o", "M", "Q", "D", "d", "w", "W", "Y", "g", "G"]);
 
 export function formatToRegexp(format: string): RegExp {
   const parts: string[] = [];
