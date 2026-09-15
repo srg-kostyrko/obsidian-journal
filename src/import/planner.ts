@@ -54,6 +54,11 @@ export interface ImportPlan {
   readonly startup: StartupProposal;
 }
 
+/** Whether a plan offers anything to preview: a journal, an unreadable source, or a week start. */
+export function hasAnythingToImport(plan: ImportPlan): boolean {
+  return plan.rows.length > 0 || plan.unrecognised.length > 0 || plan.weekStart.kind !== "unchanged";
+}
+
 // Periodic Notes supersedes core Daily notes for days and Calendar's weekly note for weeks, the
 // same precedence the plugins apply among themselves.
 const SOURCE_ORDER: readonly SourceId[] = ["periodic-notes", "calendar", "daily-notes"];

@@ -1,6 +1,7 @@
 import { inject, type Module } from "@/infrastructure/di";
 
 import { ImportConnectService } from "./connect-service";
+import { ImportFromPluginsFlow } from "./flows/import.flow";
 import { ImportService } from "./import-service";
 import { ImportPlanner } from "./planner";
 import { ImportSourceToken } from "./source";
@@ -19,5 +20,6 @@ export const importCoreModule: Module = {
     c.register(ImportPlanner).useClass(ImportPlanner);
     c.register(ImportService).useClass(ImportService);
     c.register(ImportConnectService).useClass(ImportConnectService);
+    c.register(ImportFromPluginsFlow).useClass(ImportFromPluginsFlow);
   },
 };

@@ -11,8 +11,8 @@ import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestContainerOptions, type TestHarness } from "@/testing";
 
 import { importCoreModule } from "./module";
-import { ImportPlanner } from "./planner";
-import { buildCalendarSet, buildPeriodicConfig, periodicNotesStorePlugin } from "./testing";
+import { hasAnythingToImport, ImportPlanner } from "./planner";
+import { buildCalendarSet, buildImportPlan, buildPeriodicConfig, periodicNotesStorePlugin } from "./testing";
 
 async function harnessWith(data: TestContainerOptions["data"] = {}): Promise<TestHarness> {
   return testContainer({
@@ -300,6 +300,17 @@ describe("ImportPlanner", () => {
       ]);
 
       expect(harness.resolve(ImportPlanner).plan().rows.at(0)?.warnings).toEqual([]);
+    });
+  });
+
+  describe("hasAnythingToImport", () => {
+    it("counts a week start alone as something to import", () => {
+      const plan = buildImportPlan({
+        rows: [],
+        weekStart: { kind: "offer", next: { mode: "custom", dow: 0, doy: 6, global: false }, tickedByDefault: true },
+      });
+
+      expect(hasAnythingToImport(plan)).toBe(true);
     });
   });
 });
