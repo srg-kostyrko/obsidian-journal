@@ -1592,6 +1592,23 @@
     }
   ],
   "import_report_connect_failed": "无法连接 {path}：{message}",
+  "import_notice_heading": "从其他插件导入",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{sources} 可以为您设置 1 个日记，并连接您已有的笔记。",
+        "count=*": "{sources} 可以为您设置 {count} 个日记，并连接您已有的笔记。"
+      }
+    }
+  ],
+  "import_notice_dismiss": "不再显示",
+  "import_action": "导入…",
+  "import_section_heading": "从其他插件导入",
+  "import_section_description": "根据 Periodic Notes、Calendar 和核心插件 Daily notes 的设置来配置日记，并连接您已有的笔记。仅读取已启用的插件。",
+  "import_section_none": "Periodic Notes、Calendar 和核心插件 Daily notes 均未启用。",
+  "import_section_nothing": "已启用的插件没有可导入的内容。",
   "journal_clone_modal_description": "设置和命令会被复制，笔记不会。",
   "journal_clone_modal_name_label": "新日记名称",
   "journal_clone_modal_title": "克隆{name}",

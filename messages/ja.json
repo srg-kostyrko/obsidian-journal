@@ -1598,6 +1598,23 @@
     }
   ],
   "import_report_connect_failed": "{path} を接続できませんでした：{message}",
+  "import_notice_heading": "他のプラグインからのインポート",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{sources}で1件のジャーナルを設定し、既存のノートを接続できます。",
+        "count=*": "{sources}で{count}件のジャーナルを設定し、既存のノートを接続できます。"
+      }
+    }
+  ],
+  "import_notice_dismiss": "今後表示しない",
+  "import_action": "インポート…",
+  "import_section_heading": "他のプラグインからのインポート",
+  "import_section_description": "Periodic Notes、Calendar、コアプラグインのDaily notesの設定からジャーナルを設定し、既存のノートを接続します。有効なプラグインのみが読み込まれます。",
+  "import_section_none": "Periodic Notes、Calendar、コアプラグインのDaily notesのいずれも有効になっていません。",
+  "import_section_nothing": "有効なプラグインにインポートできるものはありません。",
   "journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
   "journal_clone_modal_name_label": "新しいジャーナル名",
   "journal_clone_modal_title": "{name}を複製",

@@ -4,6 +4,7 @@ import { computed, onMounted, ref } from "vue";
 
 import { localMoment } from "@/calendar";
 import { m } from "@/i18n";
+import ImportFromPluginsSection from "@/import/ui/ImportFromPluginsSection.vue";
 import { useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -280,6 +281,8 @@ onMounted(runScan);
       <template #description>{{ snapshotLabel(info) }}</template>
       <UiButton :disabled="restoring" @click="restore(info)">{{ m.maintenance_snapshot_restore() }}</UiButton>
     </UiSettingRow>
+
+    <ImportFromPluginsSection />
 
     <UiSettingRow heading :name="m.maintenance_check_heading()" :help="manual.troubleshooting.vaultCheck" />
     <UiSettingRow>

@@ -1800,6 +1800,25 @@
     }
   ],
   "import_report_connect_failed": "Не удалось связать {path}: {message}",
+  "import_notice_heading": "Импорт из других плагинов",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{sources} может настроить для вас {count} журнал и связать уже имеющиеся заметки.",
+        "countPlural=few": "{sources} может настроить для вас {count} журнала и связать уже имеющиеся заметки.",
+        "countPlural=many": "{sources} может настроить для вас {count} журналов и связать уже имеющиеся заметки.",
+        "countPlural=*": "{sources} может настроить для вас {count} журнала и связать уже имеющиеся заметки."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Больше не показывать",
+  "import_action": "Импорт…",
+  "import_section_heading": "Импорт из других плагинов",
+  "import_section_description": "Настройте журналы на основе параметров Periodic Notes, Calendar и основного плагина Daily notes и свяжите уже имеющиеся заметки. Читаются только включённые плагины.",
+  "import_section_none": "Ни один из Periodic Notes, Calendar и основного плагина Daily notes не включён.",
+  "import_section_nothing": "Включённым плагинам нечего импортировать.",
   "journal_clone_modal_description": "Настройки и команды копируются. Заметки — нет.",
   "journal_clone_modal_name_label": "Новое название журнала",
   "journal_clone_modal_title": "Клонировать {name}",

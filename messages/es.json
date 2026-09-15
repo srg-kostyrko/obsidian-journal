@@ -1743,6 +1743,23 @@
     }
   ],
   "import_report_connect_failed": "No se pudo conectar {path}: {message}",
+  "import_notice_heading": "Importación desde otros plugins",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{sources} puede configurar 1 diario por ti y conectar las notas que ya tienes.",
+        "count=*": "{sources} puede configurar {count} diarios por ti y conectar las notas que ya tienes."
+      }
+    }
+  ],
+  "import_notice_dismiss": "No volver a mostrar",
+  "import_action": "Importar…",
+  "import_section_heading": "Importación desde otros plugins",
+  "import_section_description": "Configura diarios a partir de los ajustes de Periodic Notes, Calendar y el plugin principal Daily notes, y conecta las notas que ya tienes. Solo se leen los plugins habilitados.",
+  "import_section_none": "Ninguno de Periodic Notes, Calendar ni el plugin principal Daily notes está habilitado.",
+  "import_section_nothing": "Los plugins habilitados no tienen nada que importar.",
   "journal_clone_modal_description": "Se copian los ajustes y los comandos. Las notas no.",
   "journal_clone_modal_name_label": "Nuevo nombre del diario",
   "journal_clone_modal_title": "Clonar {name}",

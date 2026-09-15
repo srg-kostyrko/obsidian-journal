@@ -1645,6 +1645,25 @@
     }
   ],
   "import_report_connect_failed": "Не вдалося підключити {path}: {message}",
+  "import_notice_heading": "Імпорт з інших плагінів",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{sources} може налаштувати для вас {count} журнал і підключити наявні нотатки.",
+        "countPlural=few": "{sources} може налаштувати для вас {count} журнали і підключити наявні нотатки.",
+        "countPlural=many": "{sources} може налаштувати для вас {count} журналів і підключити наявні нотатки.",
+        "countPlural=*": "{sources} може налаштувати для вас {count} журналу і підключити наявні нотатки."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Більше не показувати",
+  "import_action": "Імпорт…",
+  "import_section_heading": "Імпорт з інших плагінів",
+  "import_section_description": "Налаштуйте журнали на основі параметрів Periodic Notes, Calendar та основного плагіна Daily notes і підключіть наявні нотатки. Читаються лише увімкнені плагіни.",
+  "import_section_none": "Жоден із Periodic Notes, Calendar та основного плагіна Daily notes не увімкнено.",
+  "import_section_nothing": "Увімкненим плагінам нічого імпортувати.",
   "journal_clone_modal_description": "Налаштування та команди копіюються. Нотатки — ні.",
   "journal_clone_modal_name_label": "Нова назва журналу",
   "journal_clone_modal_title": "Клонувати {name}",

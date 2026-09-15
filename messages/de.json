@@ -1756,6 +1756,23 @@
     }
   ],
   "import_report_connect_failed": "{path} konnte nicht verknüpft werden: {message}",
+  "import_notice_heading": "Import aus anderen Plugins",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Mit {sources} kannst du 1 Journal einrichten und die Notizen verknüpfen, die du bereits hast.",
+        "count=*": "Mit {sources} kannst du {count} Journale einrichten und die Notizen verknüpfen, die du bereits hast."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Nicht mehr anzeigen",
+  "import_action": "Importieren…",
+  "import_section_heading": "Import aus anderen Plugins",
+  "import_section_description": "Richte Journale anhand der Einstellungen von Periodic Notes, Calendar und dem Kern-Plugin Daily notes ein und verknüpfe die Notizen, die du bereits hast. Es werden nur aktivierte Plugins gelesen.",
+  "import_section_none": "Keines von Periodic Notes, Calendar und dem Kern-Plugin Daily notes ist aktiviert.",
+  "import_section_nothing": "Die aktivierten Plugins haben nichts zu importieren.",
   "journal_clone_modal_description": "Einstellungen und Befehle werden kopiert, Notizen nicht.",
   "journal_clone_modal_name_label": "Neuer Journalname",
   "journal_clone_modal_title": "{name} klonen",
