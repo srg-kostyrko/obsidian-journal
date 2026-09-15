@@ -157,6 +157,23 @@ describe("ImportService", () => {
     ]);
   });
 
+  it("creates no shelf for a calendar set whose journals were all switched off", async () => {
+    const { harness, plan } = await planned([
+      buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "A" }) }),
+      buildCalendarSet("Work", { day: buildPeriodicConfig({ folder: "B" }) }),
+    ]);
+    const selection = everything(plan);
+    const workRowKey = plan.rows.find((row) => row.shelf === "Work")?.key;
+
+    const outcome = await harness.resolve(ImportService).apply(plan, {
+      ...selection,
+      rows: selection.rows.map((row) => (row.key === workRowKey ? { ...row, include: false } : row)),
+    });
+
+    expect(outcome.shelves).toEqual([{ name: "Default", kind: "created" }]);
+    expect(harness.resolve(ShelvesRepository).exists("Work")).toBe(false);
+  });
+
   it("leaves a journal that is already set up untouched", async () => {
     const { harness, plan } = await planned(
       [buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "Journal" }) })],

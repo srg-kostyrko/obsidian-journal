@@ -55,12 +55,22 @@ export class ImportService {
   readonly #shelving = inject(ShelvesService);
   readonly #logger = inject(LoggerFactoryToken).named("import");
 
-  #shelve(names: readonly string[]): ShelfOutcome[] {
-    return names.map((name): ShelfOutcome => {
-      if (this.#shelves.exists(name)) return { name, kind: "existing" };
+  // Creating every planned shelf up front would leave an empty shelf behind for a calendar set
+  // whose journals were all switched off, or all failed to create — so a shelf is created (or
+  // reused) only once the first journal that actually lands on it exists, and the outcome is
+  // cached so a later journal on the same shelf does not create it twice.
+  #shelfFor(name: string, cache: Map<string, ShelfOutcome>): ShelfOutcome {
+    const cached = cache.get(name);
+    if (cached !== undefined) return cached;
+    let outcome: ShelfOutcome;
+    if (this.#shelves.exists(name)) {
+      outcome = { name, kind: "existing" };
+    } else {
       const created = this.#shelves.create(name);
-      return created.isOk() ? { name, kind: "created" } : { name, kind: "failed", message: created.error.message };
-    });
+      outcome = created.isOk() ? { name, kind: "created" } : { name, kind: "failed", message: created.error.message };
+    }
+    cache.set(name, outcome);
+    return outcome;
   }
 
   // Each step is best-effort: a failure is reported and only what depends on it is dropped.
@@ -75,8 +85,9 @@ export class ImportService {
       weekStartApplied = true;
     }
 
-    const shelves = this.#shelve(plan.shelves);
-    const usableShelves = new Set(shelves.filter((shelf) => shelf.kind !== "failed").map((shelf) => shelf.name));
+    // Insertion order doubles as first-use order: a shelf enters this only from inside the rows
+    // loop below, the first time a row that actually creates a journal names it.
+    const shelfOutcomes = new Map<string, ShelfOutcome>();
 
     const rows = plan.rows.map((row): RowOutcome => {
       const chosen = selection.rows.find((candidate) => candidate.key === row.key);
@@ -103,7 +114,7 @@ export class ImportService {
         templates: [...row.journal.templates],
       });
       if (updated.isErr()) return { key: row.key, kind: "failed", name, message: updated.error.message };
-      if (row.shelf !== undefined && usableShelves.has(row.shelf)) {
+      if (row.shelf !== undefined && this.#shelfFor(row.shelf, shelfOutcomes).kind !== "failed") {
         // No outcome slot exists for a shelving failure; the journal itself was created fine.
         const assigned = this.#shelving.assign(name, row.shelf);
         if (assigned.isErr()) {
@@ -116,6 +127,8 @@ export class ImportService {
       }
       return { key: row.key, kind: "created", journalName: name, connect: chosen.connect };
     });
+
+    const shelves = [...shelfOutcomes.values()];
 
     let startup: StartupOutcome = { kind: "none" };
     if (plan.startup.kind === "kept") {
