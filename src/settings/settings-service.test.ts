@@ -915,7 +915,7 @@ describe("SettingsService", () => {
       expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(1);
     });
 
-    it("cancels a pending save so it cannot land on top of the replacement", async () => {
+    it("flushes a pending save before the replacement, with no third save once the old timer would have fired", async () => {
       vi.useFakeTimers();
       const harness = await testContainer({
         modules: [testSettingsModule()],
@@ -929,12 +929,14 @@ describe("SettingsService", () => {
       vi.advanceTimersByTime(1000);
       await Promise.resolve();
 
-      // #flush() reads the live #root, so a stale timer firing after replaceStoredData
-      // finishes would just re-save the already-correct state — asserting the restored
-      // dow alone can't tell a cancelled timer from one that fired harmlessly. The call
-      // count is what actually distinguishes them: replaceStoredData's own write is the
-      // only save that should happen.
-      expect(saveSpy).toHaveBeenCalledTimes(1);
+      // #flush() reads the live #root, so a stale timer firing after replaceStoredData finishes
+      // would just re-save the already-correct state — asserting the restored dow alone can't
+      // tell a cancelled timer from one that fired harmlessly. The call count is what actually
+      // distinguishes them: one save for the pending edit (flushed by #snapshotCurrent before it
+      // builds the pre-restore snapshot) and one for the replacement itself, with the timer gone
+      // by then so advancing the clock adds no third.
+      expect(saveSpy).toHaveBeenCalledTimes(2);
+      expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(6);
       vi.useRealTimers();
     });
 
@@ -1027,6 +1029,27 @@ describe("SettingsService", () => {
       expect(contents.value.journals).toEqual({ daily: { name: "daily" } });
     });
 
+    it("includes a settings change made immediately before the restore, ahead of the debounced save", async () => {
+      vi.useFakeTimers();
+      const harness = await testContainer({
+        modules: [testSettingsModule()],
+        data: { calendar: { dow: 1, global: true } },
+      });
+      const snapshots = harness.resolve(SnapshotService);
+      harness.settings.getSlice(calendarSlice).state.dow = 9;
+      await nextTick();
+
+      expectOk(await harness.settings.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+
+      const listed = await snapshots.list();
+      expectOk(listed);
+      const preRestore = listed.value.filter((info) => info.reason === "pre-restore");
+      const contents = await snapshots.read(preRestore.at(0)?.name ?? "");
+      expectOk(contents);
+      expect(contents.value.calendar).toEqual({ dow: 9, global: true });
+      vi.useRealTimers();
+    });
+
     it("keeps only the three most recent pre-restore snapshots", async () => {
       // Advance the clock a full second between restores: stampOf truncates to whole
       // seconds, so four restores issued back-to-back on the real clock would collide
@@ -1073,6 +1096,27 @@ describe("SettingsService", () => {
       const contents = await snapshots.read(preImport.at(0)?.name ?? "");
       expectOk(contents);
       expect(contents.value.journals).toEqual({ daily: { name: "daily" } });
+    });
+
+    it("includes a settings change made immediately before the import snapshot, ahead of the debounced save", async () => {
+      vi.useFakeTimers();
+      const harness = await testContainer({
+        modules: [testSettingsModule()],
+        data: { calendar: { dow: 1, global: true } },
+      });
+      const snapshots = harness.resolve(SnapshotService);
+      harness.settings.getSlice(calendarSlice).state.dow = 9;
+      await nextTick();
+
+      expect(await harness.settings.snapshotBeforeImport()).toBe(true);
+
+      const listed = await snapshots.list();
+      expectOk(listed);
+      const preImport = listed.value.filter((info) => info.reason === "pre-import");
+      const contents = await snapshots.read(preImport.at(0)?.name ?? "");
+      expectOk(contents);
+      expect(contents.value.calendar).toEqual({ dow: 9, global: true });
+      vi.useRealTimers();
     });
 
     it("keeps only the three most recent pre-import snapshots", async () => {

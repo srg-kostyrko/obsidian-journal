@@ -106,6 +106,14 @@ export class SettingsService {
   // user asked for.
   async #snapshotCurrent(reason: "pre-restore" | "pre-import"): Promise<boolean> {
     const doing = reason === "pre-restore" ? "restoring" : "importing";
+    // A save debounced from an edit made just before this call has not reached data.json yet;
+    // flush it first so the snapshot (and, for a restore, the file this overwrites) is not
+    // missing that edit.
+    if (this.#saveTimer !== undefined) {
+      window.clearTimeout(this.#saveTimer);
+      this.#saveTimer = undefined;
+      await this.#flush();
+    }
     const current = await this.#pluginData.load();
     if (current.kind === "err") {
       this.#logger.warn(`could not read current settings before ${doing}`, { error: current.error });
@@ -218,9 +226,12 @@ export class SettingsService {
     });
   }
 
-  // Restoring a snapshot. The pending flush must be cancelled before the write, not after:
-  // a debounce scheduled from an edit made just beforehand would otherwise fire between the
-  // save and the re-hydrate and put the replaced state straight back.
+  // Restoring a snapshot. No debounced save may fire between the write below and the re-hydrate,
+  // or it would put the replaced state straight back — but the timer must not simply be cancelled
+  // here, or a change made just beforehand would be missing from the pre-restore snapshot too.
+  // #snapshotCurrent's own flush (below) clears it and writes the pending edit to disk before this
+  // reaches save(), so nothing here needs to touch it; if runMigrations short-circuits first, the
+  // pending save was never touched and simply fires as normal.
   //
   // Whether the payload can migrate is checked before data.json is touched. A payload runMigrations rejects —
   // a snapshot written by a newer plugin version and restored after a downgrade, or a
@@ -233,10 +244,6 @@ export class SettingsService {
   ): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsSaveError> {
     return attempt.in(this, async function* () {
       if (!this.#initialized) return;
-      if (this.#saveTimer !== undefined) {
-        window.clearTimeout(this.#saveTimer);
-        this.#saveTimer = undefined;
-      }
       // Migrations mutate their input in place, so validating against `raw` itself would
       // corrupt it before it reaches save() below — validate a disposable clone instead.
       yield* runMigrations(structuredClone(raw), this.#migrations, CURRENT_VERSION);
