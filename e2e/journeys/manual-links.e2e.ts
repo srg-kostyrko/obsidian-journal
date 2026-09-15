@@ -81,10 +81,10 @@ describe("manual links in settings", () => {
       await expectLinks([manual.view.settings, manual.view.blocks]);
     });
 
-    it("links both sections of the maintenance page", async () => {
+    it("links every section of the maintenance page", async () => {
       await clickButton(m.maintenance_open());
 
-      await expectLinks([manual.troubleshooting.snapshots, manual.troubleshooting.vaultCheck]);
+      await expectLinks([manual.troubleshooting.snapshots, manual.guides.importing, manual.troubleshooting.vaultCheck]);
     });
   });
 
