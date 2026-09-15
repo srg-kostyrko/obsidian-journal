@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach, assert } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
-import { anchor } from "@/calendar/testing";
+import { anchor, installTestCalendar } from "@/calendar/testing";
 import { m } from "@/i18n";
 import type { VaultPath } from "@/infrastructure/host";
 import { TemplateEngine, type TemplateContext } from "@/templates";
@@ -416,6 +416,50 @@ describe("NotePathService.candidateFor", () => {
       assert(path.isOk());
       expect(unwrap(service.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
     }
+  });
+
+  // A year folder and a week name each hold only part of the date. Read back alone, the year landed on
+  // 1 January -- whose ISO week-year can be the previous one -- and the week in today's year, which has
+  // no week 53 when it runs to 52. So whether a path read back hung on the calendar and on the clock.
+  describe.each([
+    { grid: "ISO", week: { dow: 1, doy: 4 } },
+    { grid: "Western", week: { dow: 0, doy: 6 } },
+  ])("on the $grid week grid", ({ week }) => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    // 2022 has a week 53 on the Western grid only, 2026 on ISO only, and 2027 on neither.
+    describe.each(["2022-06-15", "2026-06-15", "2027-06-15"])("with today at %s", (today) => {
+      it.each([{ nameTemplate: "{{date:[W]ww}}", folder: "{{date:YYYY}}" }])(
+        "round-trips every week from 2020 to 2028 named $folder/$nameTemplate",
+        async ({ nameTemplate, folder }) => {
+          vi.useFakeTimers({ toFake: ["Date"] });
+          vi.setSystemTime(new Date(`${today}T12:00:00`));
+          installTestCalendar(week);
+          const harness = await testContainer({
+            modules: [journalsCoreModule],
+            data: { journals: { weekly: fixedJournal("weekly", { type: "week" }, { folder, nameTemplate }) } },
+          });
+          const service = harness.resolve(NotePathService);
+          const cycle = harness.resolve(CycleService);
+
+          const failures: string[] = [];
+          for (let offset = 0; offset < 9 * 53; offset++) {
+            const seed = new Date(Date.UTC(2020, 0, 1 + offset * 7)).toISOString().slice(0, 10);
+            const expected = cycle.anchorOf("weekly", CalendarDate.fromAnchor(anchor(seed)));
+            assert(expected.isSome());
+            const path = service.pathFor("weekly", { journalName: "weekly", anchor: expected.value });
+            assert(path.isOk());
+            const candidate = service.candidateFor("weekly", path.value);
+            if (candidate.isNone() || candidate.value.anchor !== expected.value)
+              failures.push(`${expected.value} ${path.value}`);
+          }
+
+          expect(failures).toEqual([]);
+        },
+      );
+    });
   });
 
   it("recovers the period anchor from a note named by its start date", async () => {
