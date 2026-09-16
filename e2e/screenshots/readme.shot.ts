@@ -45,9 +45,10 @@ const WRITTEN_DAYS = [
 
 const DAY_DOTS = `${MONTH_VIEW} .cell-marks .place-center_bottom`;
 
-// Chrome that belongs to the desktop rather than to Obsidian or the plugin: the frameless
-// window's own buttons, the status bar, and the vault name — which in the harness is the
-// fixture's throwaway copy ("e2e-docs-readme-ThB5rx") and would ship in the image.
+// Chrome that belongs to the desktop rather than to Obsidian or the plugin: the window controls
+// Obsidian draws where the OS title bar would be, the status bar, and the vault name — which in
+// the harness is the fixture's throwaway copy ("e2e-docs-readme-ThB5rx") and would ship in the
+// image.
 // cspell:disable
 const HOST_CHROME_CSS =
   ".titlebar-button-container, .status-bar, .workspace-sidedock-vault-profile { display: none !important; }";
