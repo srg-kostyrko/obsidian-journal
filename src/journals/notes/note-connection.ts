@@ -174,26 +174,39 @@ export class NoteConnectionService {
 
   // The type is resolved by its stored name, the same reference parseEntry uses. Counter and
   // answers ride along from the index when the note is in it; a re-anchor never recomputes them.
-  #noteletMetadataAt(
+  //
+  // An orphaned notelet — its type deleted in "keep" mode, so only the name in its frontmatter
+  // survives — has no config to rebuild a mutator from, and nothing here can tell which of the
+  // note's remaining keys that type owned. Its date moves alone: a notelet left holding the old
+  // grid's week start is one parseEntry stops accepting, which drops it out of the index over a
+  // file that looks untouched.
+  #noteletMutatorAt(
     journalName: string,
     path: VaultPath,
     anchor: AnchorString,
     typeName: string,
-  ): Result<NoteletMetadata, NoteletTypeNotFoundError | JournalNotFoundError> {
+  ): Result<(fm: Record<string, unknown>) => void, NoteletTypeNotFoundError | JournalNotFoundError> {
     return this.#journals.require(journalName).flatMap((config) => {
       const match = noteletTypeByName(config, typeName);
-      if (match.isNone()) return new Err(new NoteletTypeNotFoundError(journalName, typeName));
+      if (match.isNone()) {
+        const { dateField } = config.frontmatter;
+        return new Ok((fm: Record<string, unknown>) => {
+          fm[dateField] = anchor;
+        });
+      }
       const existing = this.#index.entryByPath(path).getOrUndefined();
       const carried = existing !== undefined && isNotelet(existing) ? existing : undefined;
-      return new Ok(this.#buildNoteletMetadata(journalName, anchor, match.value[0], carried));
+      return this.#frontmatter.writeMutator(
+        journalName,
+        this.#buildNoteletMetadata(journalName, anchor, match.value[0], carried),
+      );
     });
   }
 
   #reanchorOne(journalName: string, path: VaultPath, target: ReanchorTarget): AsyncResult<void, ReanchorError> {
     return attempt.in(this, async function* (this: NoteConnectionService) {
       if (target.noteletTypeName !== undefined) {
-        const metadata = yield* this.#noteletMetadataAt(journalName, path, target.anchor, target.noteletTypeName);
-        const noteletMutator = yield* this.#frontmatter.writeMutator(journalName, metadata);
+        const noteletMutator = yield* this.#noteletMutatorAt(journalName, path, target.anchor, target.noteletTypeName);
         yield* this.#notes.updateFrontmatter(path, noteletMutator).tapErr((error) => {
           this.#logger.warn("failed to re-anchor notelet", { path, anchor: target.anchor, error });
         });
@@ -520,7 +533,7 @@ export class NoteConnectionService {
     // Several notelets per anchor is the design, so a notelet neither claims a period slot nor
     // can be blocked out of one: every notelet with a moving target moves, and none of them can
     // reach the "couldn't move N notes" count through `blocked`, which stays fed only by the
-    // period loop above. A notelet write that fails does count — see the split below.
+    // period loop above. A notelet write that fails does count.
     for (const entry of this.#index.noteletsFor(journalName)) {
       const target = targets.get(entry.path);
       if (target === undefined || target.anchor === entry.anchor) continue;
@@ -533,17 +546,12 @@ export class NoteConnectionService {
     ]).then(([periodResults, noteletResults]) => {
       const periodRewritten = periodResults.filter((result) => result.isOk()).length;
       const noteletRewritten = noteletResults.filter((result) => result.isOk()).length;
-      // An orphaned notelet — its type deleted in keep mode, so only the name in its frontmatter
-      // survives — can never re-anchor, and counting it would show the "N notes could not be
-      // updated" notice to that user on every grid change forever. Every other error is a
-      // well-formed notelet whose write did not land, which costs exactly what an un-re-anchored
-      // period note costs: the parser rejects the stale date and the note falls out of the index.
-      const noteletFailed = noteletResults.filter(
-        (result) => result.isErr() && !(result.error instanceof NoteletTypeNotFoundError),
-      ).length;
+      // A notelet whose write did not land costs exactly what an un-re-anchored period note
+      // costs: the parser rejects the stale date and the note falls out of the index, over a
+      // file that looks untouched. An orphan is no exception: it moves like any other notelet.
       return {
         rewritten: periodRewritten + noteletRewritten,
-        failed: blocked + periodResults.length - periodRewritten + noteletFailed,
+        failed: blocked + periodResults.length - periodRewritten + (noteletResults.length - noteletRewritten),
       };
     });
     return AsyncResult.fromPromise(settled, () => undefined as never);

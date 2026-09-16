@@ -74,6 +74,25 @@ function seedNotelet(harness: TestHarness, path: string, anchorDate: string): vo
   });
 }
 
+function seedOrphanNotelet(harness: TestHarness, path: string, anchorDate: string): void {
+  const vaultPath = path as VaultPath;
+  harness.host.putFile(vaultPath, "", {
+    journal: "weekly",
+    "journal-date": anchorDate,
+    "journal-notelet": "Retired",
+  });
+  // typeId null is what the index records for a notelet whose type was deleted in "keep" mode:
+  // the name in its frontmatter is all that is left of the type.
+  harness.resolve(JournalsIndex).register({
+    kind: "notelet",
+    journalName: "weekly",
+    anchor: anchorDate as AnchorString,
+    path: vaultPath,
+    typeName: "Retired",
+    typeId: null,
+  });
+}
+
 function frontmatterOf(harness: TestHarness, path: string): Record<string, unknown> | undefined {
   return harness.host.files.get(path)?.frontmatter;
 }
@@ -268,6 +287,23 @@ describe("WeekPresetService", () => {
     const frontmatter = frontmatterOf(harness, "week/standup.md") ?? {};
     expect(frontmatter).toMatchObject({ "journal-date": "2025-11-03", "journal-notelet": "Standup" });
     expect(frontmatter).not.toHaveProperty("journal-end-date");
+  });
+
+  it("carries an orphaned notelet's week identity forward with the rest of the journal", async () => {
+    const harness = await testContainer({
+      modules: MODULES,
+      data: { journals: weeklyWithNotelet(), calendar: WESTERN, calendarDisplay: {} },
+    });
+    seedOrphanNotelet(harness, "week/retired.md", "2025-11-02");
+
+    await harness.resolve(WeekPresetService).apply(ISO);
+
+    // The same boundary anchor as the notelet test above: 2025-10-27 would be the containment
+    // answer, which is also where the vault check's repair would later put this note. Only the
+    // sweep itself knows the week it belonged to, so an orphan it leaves behind cannot be
+    // recovered afterwards — it has to move here, with its type name left untouched.
+    const frontmatter = frontmatterOf(harness, "week/retired.md") ?? {};
+    expect(frontmatter).toMatchObject({ "journal-date": "2025-11-03", "journal-notelet": "Retired" });
   });
 
   // A week grid can also arrive from Obsidian Sync, which never passes through apply(): reload()
