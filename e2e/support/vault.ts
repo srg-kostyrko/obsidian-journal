@@ -179,15 +179,21 @@ export function waitForFrontmatter(
   path: string,
   predicate: (frontmatter: Frontmatter) => boolean,
   timeoutMsg: string,
+  timeout?: number,
 ): Promise<void> {
-  return waitForState(() => frontmatterOf(path), predicate, timeoutMsg);
+  return waitForState(() => frontmatterOf(path), predicate, timeoutMsg, timeout);
 }
 
-export function waitForJournalFrontmatter(path: string, expected: { journal: string; date: string }): Promise<void> {
+export function waitForJournalFrontmatter(
+  path: string,
+  expected: { journal: string; date: string },
+  timeout?: number,
+): Promise<void> {
   return waitForFrontmatter(
     path,
     (frontmatter) => frontmatter.journal === expected.journal && frontmatter["journal-date"] === expected.date,
     `waited for ${path} to attach journal frontmatter (journal=${expected.journal}, journal-date=${expected.date})`,
+    timeout,
   );
 }
 
