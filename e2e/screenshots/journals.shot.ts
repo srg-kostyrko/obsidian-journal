@@ -48,8 +48,12 @@ describe("journals examples", () => {
     // no frontmatter of its own — does auto-attach read the decade-boundary folder segment back?
     const nextDayPath = "Calendar/1950s/1959/02/1959-02-15.md";
     await createNote(nextDayPath, "");
+    // Bounded well under the config's waitforTimeout: the decade folder cannot be reverse-parsed
+    // at all — `{{date<startOf=decade>:YYYY}}` normalizes to 1950-01-01 while the finer tokens
+    // normalize to their own ranges' starts, so no candidate ever survives the merge. There is no
+    // slow path for this wait to be waiting on, only the full budget to burn.
     let connected = true;
-    await waitForJournalFrontmatter(nextDayPath, { journal: "daily", date: "1959-02-15" }).catch(() => {
+    await waitForJournalFrontmatter(nextDayPath, { journal: "daily", date: "1959-02-15" }, 3000).catch(() => {
       connected = false;
     });
     const nextDayFrontmatter = await frontmatterOf(nextDayPath);

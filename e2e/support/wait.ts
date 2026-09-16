@@ -4,10 +4,16 @@ import { browser } from "@wdio/globals";
 // it yields a defined value the predicate accepts. No fixed sleeps — real state
 // (metadataCache catch-up, debounced saveData, the live editor) converges on its
 // own clock, observable only by re-reading.
+//
+// `timeout` overrides the config's `waitforTimeout`, and is only for a wait whose
+// failure is the expected outcome: a caller that catches the rejection to record
+// "this never happened" otherwise pays the full positive-wait budget to learn it.
+// A wait that must succeed leaves it unset — shortening one buys a flake.
 export async function waitForState<T>(
   read: () => Promise<T | undefined | null>,
   predicate: (value: T) => boolean,
   timeoutMsg: string,
+  timeout?: number,
 ): Promise<void> {
   await browser.waitUntil(
     async () => {
@@ -18,6 +24,6 @@ export async function waitForState<T>(
       // out of waitUntil instead of polling again — the retry this primitive exists to provide.
       return value !== undefined && value !== null && predicate(value);
     },
-    { timeoutMsg },
+    { timeoutMsg, timeout },
   );
 }
