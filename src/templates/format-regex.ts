@@ -35,10 +35,10 @@ const formatRegExpParts = new Map<string, string>([
   ["gggg", "[0-9]{4}"],
   ["GG", "[0-9]{2}"],
   ["GGGG", "[0-9]{4}"],
-  // Seconds and milliseconds since the epoch. Both are fixed-width for every date Obsidian can
-  // hold, so neither needs the locale.
-  ["X", "[0-9]{10}"],
-  ["x", "[0-9]{13}"],
+  // Seconds and milliseconds since the epoch, which is neither fixed-width nor unsigned: a date
+  // before September 2001 renders one digit shorter, and one before 1970 renders negative.
+  ["X", "-?[0-9]+"],
+  ["x", "-?[0-9]+"],
 ]);
 
 const supportedSymbols = new Set(["o", "M", "Q", "D", "d", "w", "W", "Y", "g", "G", "X", "x"]);

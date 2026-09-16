@@ -40,17 +40,27 @@ describe("formatToRegexp", () => {
     });
   });
 
+  // An epoch stamp is neither fixed-width nor unsigned, and a pattern pinned to today's width
+  // rejects the very dates a journal reaches back over.
   describe("epoch tokens", () => {
-    it("matches ten digits for X", () => {
+    it("matches a present-day stamp for X", () => {
       expect(formatToRegexp("X").test("1641333600")).toBe(true);
     });
 
-    it("matches thirteen digits for x", () => {
+    it("matches a present-day stamp for x", () => {
       expect(formatToRegexp("x").test("1641333600000")).toBe(true);
     });
 
-    it("rejects a ten-digit stamp for x", () => {
-      expect(formatToRegexp("x").test("1641333600")).toBe(false);
+    it("matches a stamp from before September 2001, which is a digit shorter", () => {
+      expect(formatToRegexp("X").test("915141600")).toBe(true);
+    });
+
+    it("matches a stamp from before 1970, which is negative", () => {
+      expect(formatToRegexp("X").test("-301287600")).toBe(true);
+    });
+
+    it("rejects text where a stamp belongs", () => {
+      expect(formatToRegexp("X").test("yesterday")).toBe(false);
     });
   });
 

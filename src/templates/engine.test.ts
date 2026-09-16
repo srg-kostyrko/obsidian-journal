@@ -379,6 +379,20 @@ describe("TemplateEngine.parse", () => {
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
   });
 
+  // A journal reaching back past 2001 renders a shorter stamp, and one past 1970 a negative one.
+  // A pattern pinned to the width of today's would refuse exactly the notes it was added for.
+  it.each(["1999-01-01", "1969-07-20", "1901-12-13"])("round-trips an epoch name for %s", async (day) => {
+    const engine = await installTestEngine();
+    const context = TemplateContext.empty().date("date", CalendarDate.fromAnchor(anchor(day)), "X");
+    const template = "{{date:X}}.md";
+    const rendered = engine.renderString(template, context);
+
+    const result = engine.parse(tokenize(template), rendered, context);
+
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe(day);
+  });
+
   describe("multi-binding resolution", () => {
     it("resolves consistent boundary captures to start-of-range source", async () => {
       const engine = await installTestEngine();
