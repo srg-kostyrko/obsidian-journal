@@ -258,9 +258,13 @@ audit reads the release branch as it stands and, if it needs to open a fix branc
   fix goes on the release branch, and step 5a runs again after it. That re-run is safe: the fix PR,
   if one was opened on the first pass, already exists, so `/docs-audit`'s own guard skips stages 2–3
   and the re-run is stage 1 only.
-- The docs fix PR and the uncovered issue do not block the release. The fix PR can merge before or
-  after the release PR — `main` does not require branches to be up to date, so it never restarts
-  the release gate.
+- The uncovered issue does not block the release. **The docs fix PR must merge before the tag is
+  pushed in step 7**, though — the published manual's root is built from the latest stable tag
+  (`.github/workflows/pages.yml`), so a correction that lands after the tag reaches `/next/` only,
+  and readers running the version just shipped keep seeing the wrong prose until the release after
+  it. Merging it before the release PR is fine too; `main` does not require branches to be up to
+  date, so neither order restarts the release gate. Where the fix genuinely cannot make the tag,
+  publish it by hand afterwards: `gh workflow run pages.yml -f stable_ref=<branch off the tag>`.
 
 ### Step 6 — Merge with a merge commit
 

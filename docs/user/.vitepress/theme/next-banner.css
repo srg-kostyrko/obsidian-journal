@@ -1,0 +1,15 @@
+.manual-next-banner {
+  background-color: var(--vp-c-warning-soft);
+  color: var(--vp-c-text-1);
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 10px 24px;
+  text-align: center;
+}
+
+.manual-next-banner a {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

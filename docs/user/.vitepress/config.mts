@@ -8,6 +8,11 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   buildEnd: emitLlmsTxt,
+  // The released manual is the one the plugin deep-links into and the one a search result should
+  // reach; `/next/` describes behavior nobody can install yet. Read off the base the build was
+  // actually given rather than a flag of its own, which could be set without it.
+  transformHead: ({ siteData }) =>
+    siteData.base.endsWith("/next/") ? [["meta", { name: "robots", content: "noindex" }]] : [],
   themeConfig: {
     nav: [{ text: "Manual", link: "/" }],
     sidebar: [

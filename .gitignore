@@ -63,4 +63,5 @@ coverage
 docs/superpowers/
 
 docs/user/.vitepress/dist/
+docs/user/.vitepress/dist-next/
 docs/user/.vitepress/cache/

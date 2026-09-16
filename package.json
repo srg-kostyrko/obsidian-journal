@@ -32,6 +32,7 @@
     "prepare": "husky && npm run compile:i18n",
     "docs:dev": "vitepress dev docs/user",
     "docs:build": "vitepress build docs/user",
+    "docs:build:next": "vitepress build docs/user --base /obsidian-journal/next/ --outDir docs/user/.vitepress/dist-next",
     "docs:preview": "vitepress preview docs/user",
     "docs:screenshots": "npm run build && wdio run ./wdio.conf.mts --suite screenshots"
   },

@@ -1,5 +1,9 @@
 name: Deploy manual
 
+# The site carries two manuals. The root is the latest stable release, because the plugin itself
+# deep-links into it — `MANUAL_BASE` in `src/ui/manual.ts` is unversioned, so a `?` link fired from
+# an installed 3.4.0 has to land on prose describing 3.4.0. `/next/` is `main`, for anyone who wants
+# to read ahead.
 on:
   push:
     branches: [main]
@@ -10,7 +14,16 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/pages.yml"
+  # Not the tag push: `release.yml` creates a *draft*, so the tag exists for as long as it takes to
+  # write the notes before anyone can install the version the root would start describing.
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      stable_ref:
+        description: "Ref to build the root manual from (default: the latest stable tag)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -35,15 +48,86 @@ jobs:
           # `lastUpdated` reads each page's date from `git log`; a depth-1 clone stamps every page
           # with the merge commit's date.
           fetch-depth: 0
+          # A `release` event's default ref is the tag, not the default branch, so the upcoming
+          # manual has to name its ref or a release would publish the tag to `/next/` as well.
+          ref: main
+          path: next
+
+      - id: stable
+        name: Resolve the released manual's ref
+        working-directory: next
+        run: |
+          ref='${{ inputs.stable_ref }}'
+          if [ -z "$ref" ]; then
+            # `release-beta.yml` tags prereleases off the same repository; they are never the root.
+            ref=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' | grep -v -- '-' | sort -V | tail -1)
+          fi
+          # The manual was scaffolded after 3.4.0 and is in no tag yet, so until the first release
+          # that carries it there is no released manual to put at the root — serve `main` there and
+          # let the fallback retire itself. It is also the honest answer if the manual is ever
+          # dropped from a release by accident, which is why it says so rather than failing.
+          if [ -z "$ref" ] || ! git cat-file -e "$ref:docs/user/index.md" 2>/dev/null; then
+            echo "::notice::no released manual in '${ref:-<no tag>}' — serving main at the root"
+            ref=main
+            echo "bootstrap=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse "$ref^{commit}")" >> "$GITHUB_OUTPUT"
+
+      # A tag's build never changes, so it is built once per release and restored on each of the
+      # docs pushes that follow — which are frequent, and would otherwise each repeat a full
+      # `npm ci` for a byte-identical result.
+      - id: stable-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: stable-dist
+          key: manual-stable-${{ steps.stable.outputs.sha }}
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: steps.stable.outputs.bootstrap != 'true' && steps.stable-cache.outputs.cache-hit != 'true'
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.stable.outputs.ref }}
+          path: stable
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24.x"
           cache: npm
-      - run: npm ci
-      - run: npm run docs:build
+          # Only `main`'s lockfile: the tag's install runs once per release, on a `stable-dist`
+          # cache miss, so keying the npm cache to it as well would buy nothing.
+          cache-dependency-path: next/package-lock.json
+
+      - name: Install
+        working-directory: next
+        run: npm ci
+
+      # Built through the tag's own `docs:build`, so the released manual is rendered by the config
+      # that shipped with it rather than by whatever `main` has since changed.
+      - name: Build the released manual
+        if: steps.stable.outputs.bootstrap != 'true' && steps.stable-cache.outputs.cache-hit != 'true'
+        working-directory: stable
+        run: |
+          npm ci
+          npm run docs:build -- --outDir "$GITHUB_WORKSPACE/stable-dist"
+
+      - name: Build the released manual (no release carries one yet)
+        if: steps.stable.outputs.bootstrap == 'true' && steps.stable-cache.outputs.cache-hit != 'true'
+        working-directory: next
+        run: npm run docs:build -- --outDir "$GITHUB_WORKSPACE/stable-dist"
+
+      - name: Assemble the site
+        run: |
+          rm -rf site
+          cp -r stable-dist site
+
+      - name: Build the upcoming manual
+        working-directory: next
+        run: npm run docs:build -- --base /obsidian-journal/next/ --outDir "$GITHUB_WORKSPACE/site/next"
+
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
         with:
-          path: docs/user/.vitepress/dist
+          path: site
       - id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
