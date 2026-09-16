@@ -393,9 +393,9 @@ describe("useInvertibilityCheck", () => {
   });
 
   // "Too coarse" is a claim about two periods sharing a name, and these name every day differently:
-  // a localized format and a timestamp are written correctly and match nothing on the way back, so
-  // the reason the user is given has to be the one that fits.
-  it.each(["LL", "ll", "X"])(
+  // a format carrying a time of day is written correctly and matches nothing on the way back, so the
+  // reason the user is given has to be the one that fits.
+  it.each(["LLL", "llll", "YYYY-MM-DD HH:mm"])(
     "flags a date format that renders a unique name it cannot read back: %s",
     async (format) => {
       const config = fixedJournal("daily", { type: "day" }, { nameTemplate: `{{date:${format}}}` });

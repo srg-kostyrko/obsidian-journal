@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { localMoment } from "@/calendar";
+
 import { formatToRegexp } from "./format-regex";
 
 describe("formatToRegexp", () => {
@@ -14,6 +16,41 @@ describe("formatToRegexp", () => {
 
     it("matches a 2-digit year for YY", () => {
       expect(formatToRegexp("YY").test("25")).toBe(true);
+    });
+  });
+
+  // A localized format is a shorthand the locale expands; the pattern has to see the tokens
+  // underneath it, or a name written with one matches nothing. The expansion is the locale's own, so
+  // these assert the shape rather than the exact separators.
+  describe("localized formats", () => {
+    it("matches the date L renders", () => {
+      expect(formatToRegexp("L").test(localMoment("2025-09-16", "YYYY-MM-DD", true).format("L"))).toBe(true);
+    });
+
+    it("matches the date LL renders", () => {
+      expect(formatToRegexp("LL").test(localMoment("2025-09-16", "YYYY-MM-DD", true).format("LL"))).toBe(true);
+    });
+
+    it("matches the date ll renders", () => {
+      expect(formatToRegexp("ll").test(localMoment("2025-09-16", "YYYY-MM-DD", true).format("ll"))).toBe(true);
+    });
+
+    it("leaves a localized token inside brackets as the user's own text", () => {
+      expect(formatToRegexp("[LL] YYYY").test("LL 2025")).toBe(true);
+    });
+  });
+
+  describe("epoch tokens", () => {
+    it("matches ten digits for X", () => {
+      expect(formatToRegexp("X").test("1641333600")).toBe(true);
+    });
+
+    it("matches thirteen digits for x", () => {
+      expect(formatToRegexp("x").test("1641333600000")).toBe(true);
+    });
+
+    it("rejects a ten-digit stamp for x", () => {
+      expect(formatToRegexp("x").test("1641333600")).toBe(false);
     });
   });
 

@@ -335,6 +335,20 @@ describe("TemplateEngine.parse", () => {
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2021-12-27");
   });
 
+  // These are ordinary moment formats, and a note named with one was written correctly and matched
+  // nothing on the way back, so it never reached its journal.
+  it.each(["L", "LL", "l", "ll", "X", "x"])("round-trips a name written with %s", async (format) => {
+    const engine = await installTestEngine();
+    const context = buildFakeContext();
+    const template = `{{date:${format}}}.md`;
+    const rendered = engine.renderString(template, context);
+
+    const result = engine.parse(tokenize(template), rendered, context);
+
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-05");
+  });
+
   describe("multi-binding resolution", () => {
     it("resolves consistent boundary captures to start-of-range source", async () => {
       const engine = await installTestEngine();
