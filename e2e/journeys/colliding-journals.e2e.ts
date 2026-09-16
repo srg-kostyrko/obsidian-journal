@@ -4,15 +4,16 @@ import { closeSettings, openSettings } from "../support/settings.js";
 
 // e2e-colliding defines two day journals (alpha, beta) sharing folder + dateFormat + the
 // default {{date}} template, so their notes resolve to the same path. The dashboard's
-// colliding-journals block warns about the clash, framing the warning in the theme error
-// color (a solid border plus an error-colored heading).
+// colliding-journals block warns about the clash, marking the warning in the theme error
+// color (a rail on its leading edge plus an error-colored heading). The other three edges
+// take the ordinary theme border, so the card reads as a notice rather than an outlined box.
 const WARNING = ".journal-warning";
 
 // Resolves --text-error to its computed rgb in this theme so color assertions stay
 // theme-independent: an unstyled element's border/text default to currentColor, never the
 // error color, so matching the resolved variable is what discriminates fix from regression.
-// Reads the warning's border color and heading color and reports whether each equals the
-// resolved error color (comparison done in-page; the runner only sees the verdict strings).
+// Reads the warning's leading-edge color and heading color and reports whether each equals
+// the resolved error color (comparison done in-page; the runner only sees the verdict strings).
 function colorVerdicts(): Promise<string> {
   return browser.execute(() => {
     const warning = document.querySelector(".journal-warning");
@@ -22,9 +23,9 @@ function colorVerdicts(): Promise<string> {
     document.body.append(probe);
     const error = getComputedStyle(probe).color;
     probe.remove();
-    const border = warning ? getComputedStyle(warning).borderTopColor : "none";
+    const rail = warning ? getComputedStyle(warning).borderInlineStartColor : "none";
     const heading = name ? getComputedStyle(name).color : "none";
-    return [`border:${border === error}`, `heading:${heading === error}`].join(" ");
+    return [`rail:${rail === error}`, `heading:${heading === error}`].join(" ");
   });
 }
 
@@ -48,9 +49,9 @@ describe("colliding journals warning", () => {
     expect(style.value).toBe("solid");
   });
 
-  it("draws the border in the theme error color", async () => {
+  it("draws the leading edge in the theme error color", async () => {
     await $(WARNING).waitForExist();
-    expect(await colorVerdicts()).toContain("border:true");
+    expect(await colorVerdicts()).toContain("rail:true");
   });
 
   it("colors the heading with the theme error color", async () => {
