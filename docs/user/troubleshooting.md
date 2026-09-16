@@ -25,7 +25,10 @@ The calendar shows a note when its properties name the journal and a date the jo
 Auto-attach reacts to notes created or renamed while Obsidian runs, and only when exactly one journal's
 folder and name template match the note's whole path. Notes that were already there when you installed
 the plugin are not adopted. See [Auto-attach](/notes#auto-attach) for the full list, and look for a
-warning under the journal's **Note name template** — it says when names cannot be read back.
+warning under the journal's **Note name template** — it says when names cannot be read back. A date
+format the plugin cannot read back is one cause, and it is easy to miss because the notes themselves
+look right: a localized format such as `LL`, or a timestamp, is written correctly and matches nothing
+on the way back. Build the format from date symbols such as `YYYY-MM-DD`.
 
 ## A note was created in the wrong place
 

@@ -265,6 +265,9 @@ const LITERALS = [
   { key: "journal_edit_variable_current_time_description", contains: ["HH:mm"] },
   { key: "journal_edit_variable_time_description", contains: ["HH:mm"] },
   { key: "view_block_markdown_template_variables_intro", contains: ["YYYY-MM-DD", "HH:mm"] },
+  // The warning's whole point is which symbols survive a round trip, so both the format it
+  // recommends and the one it warns about have to reach the reader untranslated.
+  { key: "journal_edit_name_template_unreadable_date_warning", contains: ["YYYY-MM-DD", "LL"] },
   // Templater ships no localization, so its UI is English in every Obsidian language.
   // A translated setting name points at a control the user cannot find.
   { key: "templater_support_option_trigger_off", contains: ["Trigger Templater on new file creation"] },

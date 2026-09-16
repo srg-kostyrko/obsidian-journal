@@ -349,6 +349,22 @@ describe("useInvertibilityCheck", () => {
     expect(probe(harness, config.name).value).toBeNull();
   });
 
+  // "Too coarse" is a claim about two periods sharing a name, and these name every day differently:
+  // a localized format and a timestamp are written correctly and match nothing on the way back, so
+  // the reason the user is given has to be the one that fits.
+  it.each(["LL", "ll", "X"])(
+    "flags a date format that renders a unique name it cannot read back: %s",
+    async (format) => {
+      const config = fixedJournal("daily", { type: "day" }, { nameTemplate: `{{date:${format}}}` });
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { [config.name]: config } },
+      });
+
+      expect(probe(harness, config.name).value).toEqual({ kind: "unreadable-date" });
+    },
+  );
+
   it("flags a date variable too coarse to tell the periods apart when nothing numbers the notes", async () => {
     const config = customJournal("sprints", "week", 2, "2026-01-05", {
       nameTemplate: "{{date:YYYY}}",

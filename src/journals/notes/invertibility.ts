@@ -3,6 +3,7 @@ import { match } from "ts-pattern";
 import { CalendarDate, weekOfMonth } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { formatConjunction, m } from "@/i18n";
+import type { VaultPath } from "@/infrastructure/host";
 import { TemplateContext, tokenize, variableNames, type TemplateEngine } from "@/templates";
 
 import { parseSpecFor } from "../prompts/prompt-binding";
@@ -21,6 +22,7 @@ export type InvertibilityWarning =
       offending: string;
     }
   | { kind: "coarse-date" }
+  | { kind: "unreadable-date" }
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
   | { kind: "unused-digits"; missing: readonly string[] }
@@ -39,15 +41,19 @@ export function invertibilityOf(
   config: JournalConfig,
   { engine, cycle, paths }: InvertibilityServices,
 ): InvertibilityWarning | null {
+  const pathAt = (anchor: AnchorString): VaultPath | undefined => {
+    const path = paths.pathForDate(config.name, CalendarDate.fromAnchor(anchor));
+    return path.isOk() ? path.value : undefined;
+  };
   // Whether a note this journal writes for `anchor` names the period it was written for.
   // Nothing shorter answers that: a date variable identifies the period only when its format
   // is finer than the cycle, and the numbering only when the odometer inverts.
   const roundTripsAt = (name: string, anchor: AnchorString): boolean => {
-    const path = paths.pathForDate(name, CalendarDate.fromAnchor(anchor));
+    const path = pathAt(anchor);
     return (
-      path.isOk() &&
+      path !== undefined &&
       paths
-        .candidateFor(name, path.value)
+        .candidateFor(name, path)
         .filter((meta) => meta.anchor === anchor)
         .isSome()
     );
@@ -119,11 +125,22 @@ export function invertibilityOf(
   // A template with no date at all is answered by the numbering verdicts alone — a name that
   // never names a date is not the same defect as one whose date names too many periods.
   const dated = [...pathVariables].some((name) => DATE_VARIABLES.has(name.toLowerCase()));
+  // "Too coarse" is a claim about two periods sharing a note name, so ask that outright rather
+  // than read it off a failed round trip. A path that names every period differently and still
+  // cannot be read back is a different defect with a different fix -- a localized date format or a
+  // timestamp renders fine and matches nothing. Where a path does not render at all there is
+  // nothing to compare, and the older verdict stands.
+  const dateVerdict = (): InvertibilityWarning => {
+    const first = start.isSome() ? pathAt(start.value) : undefined;
+    const second = next.isSome() ? pathAt(next.value) : undefined;
+    return first !== undefined && second !== undefined && first !== second
+      ? { kind: "unreadable-date" }
+      : { kind: "coarse-date" };
+  };
   // A disabled sequence renders its digits as empty strings, which is a separate defect;
   // none of the numbering verdicts below describes it.
-  if (!numbering.enabled) return dated ? { kind: "coarse-date" } : null;
-  if (numbering.sources.every((source) => !pathVariables.has(source.variable)))
-    return dated ? { kind: "coarse-date" } : null;
+  if (!numbering.enabled) return dated ? dateVerdict() : null;
+  if (numbering.sources.every((source) => !pathVariables.has(source.variable))) return dated ? dateVerdict() : null;
   // A wrapping most significant digit repeats, so no template arrangement recovers a date.
   if (numbering.sources.at(0)?.reset.kind === "after") return { kind: "cyclic-top" };
   // A `never` digit below the top emits no carry, so every digit above it stays frozen.
@@ -149,6 +166,7 @@ export function invertibilityWarningText(warning: InvertibilityWarning): string 
     .with({ kind: "non-invertible", part: "name" }, (w) => m.journal_edit_name_template_invertibility_warning(w))
     .with({ kind: "prompt-in-path" }, (w) => m.journal_invertibility_prompt_in_path(w))
     .with({ kind: "coarse-date" }, () => m.journal_edit_name_template_coarse_date_warning())
+    .with({ kind: "unreadable-date" }, () => m.journal_edit_name_template_unreadable_date_warning())
     .with({ kind: "cyclic-top" }, () => m.journal_edit_name_template_cyclic_top_warning())
     .with({ kind: "no-carry" }, (w) => m.journal_edit_name_template_no_carry_warning(w))
     .with({ kind: "unused-digits" }, (w) =>
