@@ -19,10 +19,10 @@ import {
   renderNumber,
   renderString,
 } from "./kinds";
-import { applyModifiers, isBoundaryUnit, unapplyModifiers, unapplyOffsets } from "./modifiers";
+import { applyModifiers, isBoundaryUnit, sourceDateOf, unapplyOffsets } from "./modifiers";
 
 import type { TemplateContext } from "./context";
-import type { Bindings, BoundValue, Modifier, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
+import type { Bindings, BoundValue, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
 
 export class TemplateEngine {
   readonly #injector = inject(InjectorToken);
@@ -154,9 +154,9 @@ export class TemplateEngine {
         const format = token.format ?? dateSpec.defaultFormat;
         const result = parseDate(capture, format, token.modifiers, token.name);
         if (result.kind === "err") return err(result.error);
-        // Arithmetic-shift modifiers were already unapplied by parseDate; what remains is
-        // unmodified or boundary-only, which lowerBoundOf answers for.
-        return ok({ kind: "date", value: lowerBoundOf(result.value, token.modifiers) });
+        // parseDate answers with the earliest source date, so candidates of one variable compare
+        // by value equality however each was modified.
+        return ok({ kind: "date", value: result.value });
       })
       .with({ kind: "clock" }, () =>
         err(new TemplateParseError({ kind: "not-invertible", reason: "clock-variable", offending: token.name })),
@@ -471,15 +471,22 @@ function weekdayPinned(fieldSets: (Set<DateField> | undefined)[]): boolean {
 // from today.
 function dateRenderingPath(entries: DateCapture[]): CalendarDate | undefined {
   const chains = [...groupByModifiers(entries).values()];
-  const readings = chains
-    .map((chain) => readChain(chain))
-    .filter((reading): reading is CalendarDate => reading !== undefined);
   const candidates = new Map<string, CalendarDate>();
-  for (const reading of readings) candidates.set(reading.toAnchor(), reading);
-  for (const reference of readings) {
-    for (const chain of chains) {
-      const seeded = readChain(chain, reference);
-      if (seeded) candidates.set(seeded.toAnchor(), seeded);
+  let frontier: CalendarDate[] = [];
+  const remember = (reading: CalendarDate | undefined): void => {
+    if (!reading || candidates.has(reading.toAnchor())) return;
+    candidates.set(reading.toAnchor(), reading);
+    frontier.push(reading);
+  };
+  for (const chain of chains) remember(readChain(chain));
+  // A pass carries one more chain's components into a reading, so a date split across three chains
+  // needs two: the month reaches the year, then the day reaches both. Only readings the last pass
+  // found are worth seeding from again, and a pass that finds none ends the walk.
+  for (let pass = 1; pass < chains.length && frontier.length > 0; pass++) {
+    const references = frontier;
+    frontier = [];
+    for (const reference of references) {
+      for (const chain of chains) remember(readChain(chain, reference));
     }
   }
   // Ties go to the earliest date: a path built from boundaries names a range, and every day in it
@@ -502,10 +509,9 @@ function groupByModifiers(entries: DateCapture[]): Map<string, DateCapture[]> {
   return chains;
 }
 
-// One chain's captures as a date, brought back to the value they were rendered from: shifts
-// unapplied and a bare <endOf=unit> taken to the start of the unit it ends, the lower bound
-// #parseCapture normalizes to. A reference date, when given, is parsed ahead of the captures so
-// they override only the components they name.
+// One chain's captures as a date, brought back through sourceDateOf to the value they were rendered
+// from. A reference date, when given, is parsed ahead of the captures so they override only the
+// components they name.
 function readChain(chain: DateCapture[], reference?: CalendarDate): CalendarDate | undefined {
   const captures = chain.map((entry) => entry.capture);
   const formats = chain.map((entry) => entry.format);
@@ -515,21 +521,7 @@ function readChain(chain: DateCapture[], reference?: CalendarDate): CalendarDate
   }
   const parsed = CalendarDate.parse(captures.join(DATE_PART_SEP), formats.join(`[${DATE_PART_SEP}]`));
   if (parsed.kind === "err") return undefined;
-  const modifiers = chain[0].token.modifiers;
-  return lowerBoundOf(unapplyModifiers(parsed.value, modifiers), modifiers);
-}
-
-// Normalize to "lower bound of source range" so two readings of one date compare equal. A bare
-// `<endOf=unit>` makes a parsed value the upper bound of its source's range; bring it back to the
-// range start. Bare `<startOf=unit>` already IS the lower bound.
-function lowerBoundOf(date: CalendarDate, modifiers: readonly Modifier[]): CalendarDate {
-  let value = date;
-  for (const modifier of modifiers) {
-    if (modifier.kind === "boundary" && modifier.direction === "end" && isBoundaryUnit(modifier.unit)) {
-      value = value.startOf(modifier.unit);
-    }
-  }
-  return value;
+  return sourceDateOf(parsed.value, chain[0].token.modifiers);
 }
 
 function rendersBack(entry: DateCapture, date: CalendarDate): boolean {

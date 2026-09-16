@@ -300,6 +300,18 @@ describe("TemplateEngine.parse", () => {
     expect(result.error.detail.kind).toBe("not-invertible");
   });
 
+  // Rendering shifts and then snaps, so reading back snaps and then takes the shift off. 2 January
+  // renders as 28 February -- shifted into February, then taken to that month's end -- and it is the
+  // earliest date that does; taking the shift off first would reach 29 January and snap to 1 January,
+  // which renders as 31 January and names a different note.
+  it("reads a capture that shifts the date and then takes the end of its month", async () => {
+    const engine = await installTestEngine();
+    const stream = tokenize("{{date+30d<endOf=month>:YYYY-MM-DD}}.md");
+    const result = engine.parse(stream, "2022-02-28.md", buildFakeContext());
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-02");
+  });
+
   describe("multi-binding resolution", () => {
     it("resolves consistent boundary captures to start-of-range source", async () => {
       const engine = await installTestEngine();
@@ -489,6 +501,16 @@ describe("TemplateEngine.parse", () => {
       const result = engine.parse(stream, "2023/Sep 11 - Sep 17.md", buildFakeContext());
       expectOk(result);
       expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2023-09-11");
+    });
+
+    // Three chains, so no one reading of a chain can name the whole date: the month has to be read
+    // against the year before the day can be read against both.
+    it("combines a year, a month and a day held under three different modifications", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date<startOf=year>:YYYY}}/{{date<startOf=month>:MM}}/{{date:DD}}.md");
+      const result = engine.parse(stream, "1959/02/15.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("1959-02-15");
     });
 
     it("returns conflict when the boundary folder names a period the rest of the path is not in", async () => {

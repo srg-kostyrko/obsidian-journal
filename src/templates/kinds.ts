@@ -3,7 +3,7 @@ import { Err, Ok, type Result } from "@/infrastructure/result";
 
 import { TemplateParseError } from "./errors";
 import { escapeRegexLiteral, formatToRegexp, ordinalPattern } from "./format-regex";
-import { applyModifiers, applyOffsets, unapplyModifiers } from "./modifiers";
+import { applyModifiers, applyOffsets, sourceDateOf } from "./modifiers";
 
 import type { Modifier, VariableSpec } from "./types";
 
@@ -106,5 +106,5 @@ export function parseDate(
   if (parsed.kind === "err") {
     return new Err(new TemplateParseError({ kind: "invalid-date", capture, variableName, format }));
   }
-  return new Ok(unapplyModifiers(parsed.value, modifiers));
+  return new Ok(sourceDateOf(parsed.value, modifiers));
 }
