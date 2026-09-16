@@ -201,11 +201,6 @@ A daily journal with **Folder** `Calendar/{{date<startOf=decade>:YYYY}}s/{{date:
 **Note name template** `{{date}}`. Opening its note for 14 February 1959 creates
 `Calendar/1950s/1959/02/1959-02-14.md`.
 
-The plugin cannot read a date back out of the decade part of that folder, so a note you make yourself
-at `Calendar/1950s/1959/02/1959-02-15.md` is not [auto-attached](/notes#auto-attach). Create notes in
-this layout from a calendar, a command or a link, or connect them with
-[Connect note to a journal](/notes#connect-note-to-a-journal).
-
 ### Recording when a note was created
 
 The journal's template note starts with:
