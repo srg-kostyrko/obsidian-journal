@@ -324,6 +324,17 @@ describe("TemplateEngine.parse", () => {
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2026-08-31");
   });
 
+  // A `<startOf>` gives back the whole unit it starts, so it is the boundaries beside it that decide
+  // how far back the reading reaches: the week end still comes off, landing on the Monday whose week
+  // ends in the month the capture names.
+  it("reads a capture that takes the end of a week and then the start of that month", async () => {
+    const engine = await installTestEngine();
+    const stream = tokenize("{{date<endOf=week><startOf=month>:YYYY-MM-DD}}.md");
+    const result = engine.parse(stream, "2022-01-01.md", buildFakeContext());
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2021-12-27");
+  });
+
   describe("multi-binding resolution", () => {
     it("resolves consistent boundary captures to start-of-range source", async () => {
       const engine = await installTestEngine();
