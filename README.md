@@ -49,7 +49,7 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 
 ## What it looks like
 
-**Every note links to the ones around it.** A navigation block in a daily note opens the day before and after, and the week or month that day belongs to — creating the note if it is not there yet.
+**Every note links to the ones around it.** A navigation block in a daily note opens the day before and after, and the week, month and year that day belongs to — creating the note if it is not there yet.
 
 <picture>
   <source

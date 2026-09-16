@@ -22,7 +22,9 @@ const VIEW_BLOCK_ENTRY = `${BLOCKS_SECTION} .jv-block-entry`;
 // A markdown leaf mounts a live-preview and a reading-view copy of every fence, so each block
 // selector is scoped to the reading view — the copy with a laid-out width.
 const READING_VIEW = `${ROOT_SPLIT} .markdown-reading-view`;
-const NAV_VIEW = `${READING_VIEW} .block-language-journal-nav .nav-view`;
+const NAV_BLOCK = `${READING_VIEW} .block-language-journal-nav`;
+const NAV_VIEW = `${NAV_BLOCK} .nav-view`;
+const NAV_CURRENT_ROWS = `${NAV_BLOCK} .nav-block-current .nav-row`;
 const NOTELET_BLOCK = `${READING_VIEW} .block-language-journal-notelets`;
 const TIMELINE_BLOCK = `${READING_VIEW} .block-language-calendar-timeline`;
 
@@ -122,6 +124,23 @@ async function settleForCapture(): Promise<void> {
   await browser.pause(400);
 }
 
+// Every block in these images is the one a journal is created with — the README's claim is that
+// this is what the plugin gives you, so a hand-authored layout would be a different claim. These
+// assertions are what holds the fixtures to it: they fail on a fixture edited away from the
+// defaults in src/journals/config.ts, and on a default that changes under them.
+class StockBlockDriftError extends Error {
+  constructor(what: string, actual: readonly string[], expected: readonly string[]) {
+    super(`${what} rendered ${JSON.stringify(actual)}, not the stock ${JSON.stringify(expected)}`);
+    this.name = "StockBlockDriftError";
+  }
+}
+
+function assertStockRows(what: string, actual: readonly string[], expected: readonly string[]): void {
+  if (actual.length !== expected.length || actual.some((row, index) => row !== expected[index])) {
+    throw new StockBlockDriftError(what, actual, expected);
+  }
+}
+
 class ClippedGridError extends Error {
   constructor(contentWidth: number, frameWidth: number) {
     super(`the month grid needs ${contentWidth}px but its view is ${frameWidth}px, so a column is cut off`);
@@ -197,7 +216,7 @@ describe("readme screenshots", () => {
     await seedWrittenDays();
     await createThroughPlugin({ type: "week", date: "2026-09-14" });
     await createThroughPlugin({ type: "week", date: "2026-09-07" });
-    await createThroughPlugin({ journal: "Sprints", date: "2026-09-14" });
+    await createThroughPlugin({ journal: "Sprint", date: "2026-09-14" });
     await seedNote(dayNotePath(TODAY), hostNote("Daily", TODAY, TODAY_NOTE_BODY));
     await closeAllLeaves();
   });
@@ -205,7 +224,7 @@ describe("readme screenshots", () => {
   after(closeSettings);
 
   it("shows the seeded Calendar view beside today's note", async () => {
-    await sizeWindow(1360, 620);
+    await sizeWindow(1360, 700);
     await openInReadingMode(dayNotePath(TODAY));
     await openSeededCalendarView();
     await $(CUSTOM_INTERVALS).waitForExist({ timeoutMsg: "the custom-intervals block did not render" });
@@ -221,6 +240,14 @@ describe("readme screenshots", () => {
     await settleForCapture();
 
     const intervalRows = await textsOf(`${CUSTOM_INTERVALS} .nav-row`);
+    assertStockRows("the custom-interval block", intervalRows, [
+      "Sprint 1",
+      "2026-08-31 to 2026-09-13",
+      "Sprint 2",
+      "2026-09-14 to 2026-09-27",
+      "Sprint 3",
+      "2026-09-28 to 2026-10-11",
+    ]);
 
     await captureThemed(WORKSPACE, "readme-calendar");
 
@@ -234,16 +261,26 @@ describe("readme screenshots", () => {
 
   it("shows a daily note's navigation block", async () => {
     await browser.executeObsidian(({ app }) => app.workspace.rightSplit.collapse());
-    await sizeWindow(1040, 620);
+    await sizeWindow(1040, 700);
     await closeAllLeaves();
     await openInReadingMode(dayNotePath(TODAY));
     await $(NAV_VIEW).waitForExist({ timeoutMsg: "the journal-nav block did not render" });
+    const currentRows = await textsOf(NAV_CURRENT_ROWS);
+    assertStockRows("the day journal's navigation block", currentRows, [
+      "Mon",
+      "14",
+      "Today",
+      "W38",
+      "September",
+      "2026",
+    ]);
     await settleForCapture();
 
     await captureThemed(ROOT_SPLIT, "readme-nav-block");
 
     await recordOutcome("readme-nav-block", {
       hostPath: dayNotePath(TODAY),
+      currentRows,
       segmentTexts: await textsOf(`${NAV_VIEW} .nav-row`),
     });
   });

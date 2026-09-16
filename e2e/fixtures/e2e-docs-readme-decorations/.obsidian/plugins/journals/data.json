@@ -194,7 +194,7 @@
               "linkDate": "",
               "color": {
                 "type": "theme",
-                "name": "text-muted"
+                "name": "text-normal"
               },
               "background": {
                 "type": "transparent"
@@ -219,13 +219,34 @@
                 "type": "transparent"
               },
               "addDecorations": false
-            },
+            }
+          ],
+          [
             {
               "template": "{{date:MMMM}}",
               "fontSize": 1,
               "bold": false,
               "italic": false,
               "link": "month",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{date:YYYY}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "link": "year",
               "journal": "",
               "linkDate": "",
               "color": {
@@ -294,8 +315,8 @@
         }
       ]
     },
-    "Sprints": {
-      "name": "Sprints",
+    "Sprint": {
+      "name": "Sprint",
       "write": {
         "type": "custom",
         "every": "week",
@@ -304,7 +325,7 @@
       },
       "folder": "Journal/Sprints",
       "dateFormat": "YYYY-MM-DD",
-      "nameTemplate": "Sprint {{index}}",
+      "nameTemplate": "{{journal_name}} {{index}}",
       "templates": [],
       "timeline": {
         "start": "",
@@ -338,11 +359,12 @@
       "intervalBlock": {
         "type": "create",
         "decorateWholeBlock": true,
+        "showAdjacent": true,
         "lines": [
           [
             {
-              "template": "Sprint {{index}}",
-              "fontSize": 1.1,
+              "template": "{{journal_name}} {{index}}",
+              "fontSize": 1.2,
               "bold": true,
               "italic": false,
               "link": "self",
@@ -360,8 +382,8 @@
           ],
           [
             {
-              "template": "{{start_date:MMM D}} \u2013 {{end_date:MMM D}}",
-              "fontSize": 0.8,
+              "template": "{{start_date}} to {{end_date}}",
+              "fontSize": 1,
               "bold": false,
               "italic": false,
               "link": "none",
@@ -369,7 +391,7 @@
               "linkDate": "",
               "color": {
                 "type": "theme",
-                "name": "text-muted"
+                "name": "text-normal"
               },
               "background": {
                 "type": "transparent"
@@ -384,7 +406,7 @@
   "shelves": {
     "Work": {
       "name": "Work",
-      "journals": ["Daily", "Weekly", "Sprints"],
+      "journals": ["Daily", "Weekly", "Sprint"],
       "decorations": []
     }
   },
