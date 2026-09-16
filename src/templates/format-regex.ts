@@ -35,11 +35,29 @@ const formatRegExpParts = new Map<string, string>([
   ["gggg", "[0-9]{4}"],
   ["GG", "[0-9]{2}"],
   ["GGGG", "[0-9]{4}"],
+  // Seconds and milliseconds since the epoch, which is neither fixed-width nor unsigned: a date
+  // before September 2001 renders one digit shorter, and one before 1970 renders negative.
+  ["X", "-?[0-9]+"],
+  ["x", "-?[0-9]+"],
 ]);
 
-const supportedSymbols = new Set(["o", "M", "Q", "D", "d", "w", "W", "Y", "g", "G"]);
+const supportedSymbols = new Set(["o", "M", "Q", "D", "d", "w", "W", "Y", "g", "G", "X", "x"]);
 
-export function formatToRegexp(format: string): RegExp {
+// moment's localized formats are shorthands for a format the locale supplies -- LL is "MMMM D, YYYY"
+// in en-US and "D. MMMM YYYY" in de -- and its own parser expands them before reading a date, which
+// is why a name written with one is written correctly and matched nothing. Expanding them here is
+// what lets the pattern see the tokens underneath. Anything inside [] is the user's own text and is
+// left alone.
+const LONG_DATE_TOKEN = /(\[[^\]]*\])|(L{1,4}|l{1,4}|LTS?)/g;
+
+function expandLocalizedFormats(format: string): string {
+  return format.replaceAll(LONG_DATE_TOKEN, (whole, literal: string | undefined, token: string | undefined) =>
+    literal !== undefined || token === undefined ? whole : (locale.longDateFormat(token as "LL") ?? whole),
+  );
+}
+
+export function formatToRegexp(source: string): RegExp {
+  const format = expandLocalizedFormats(source);
   const parts: string[] = [];
 
   let lastChar = "";
