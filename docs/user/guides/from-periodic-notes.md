@@ -29,9 +29,12 @@ and weekly note, and core Daily notes.
   plugins have nothing to import. Core Daily notes is on in every vault, so it counts toward the
   offer only once you have changed its settings.
 - **Preview** — each period you use becomes a journal named after it, with its folder, date format
-  and template. A journal that already writes the same notes shows as already set up, whatever its
-  name. A Daily notes or Calendar setup that Periodic Notes already covers starts switched off. With
-  more than one calendar set, each becomes a shelf of the same name.
+  and template, and each row carries **Create this journal** and **Connect existing notes**; nothing
+  is connected to a journal you are not creating. A journal that already writes the same notes shows
+  as already set up, whatever its name, and offers only **Connect existing notes**. A Daily notes or
+  Calendar setup that Periodic Notes already covers starts switched off. With more than one calendar
+  set, each becomes a **Shelf** above the journals that land on it, named after the set — rename it
+  there if you like, and a name you already use joins that shelf instead of making a new one.
 - **Week start** — when Calendar starts weeks on a named day, that day is offered as your week start,
   unless you have already set weeks to start on it; Calendar's locale default is not offered. It
   starts switched off once you have weekly notes connected, because applying it moves them to the new

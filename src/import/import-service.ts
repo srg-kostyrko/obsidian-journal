@@ -18,8 +18,15 @@ export interface RowSelection {
   readonly connect: boolean;
 }
 
+export interface ShelfSelection {
+  /** The shelf name the plan proposed, which the preview may have renamed. */
+  readonly planned: string;
+  readonly name: string;
+}
+
 export interface ImportSelection {
   readonly rows: readonly RowSelection[];
+  readonly shelves: readonly ShelfSelection[];
   readonly applyWeekStart: boolean;
   readonly setStartup: boolean;
 }
@@ -114,13 +121,17 @@ export class ImportService {
         templates: [...row.journal.templates],
       });
       if (updated.isErr()) return { key: row.key, kind: "failed", name, message: updated.error.message };
-      if (row.shelf !== undefined && this.#shelfFor(row.shelf, shelfOutcomes).kind !== "failed") {
+      const shelf =
+        row.shelf === undefined
+          ? undefined
+          : (selection.shelves.find((candidate) => candidate.planned === row.shelf)?.name ?? row.shelf);
+      if (shelf !== undefined && this.#shelfFor(shelf, shelfOutcomes).kind !== "failed") {
         // No outcome slot exists for a shelving failure; the journal itself was created fine.
-        const assigned = this.#shelving.assign(name, row.shelf);
+        const assigned = this.#shelving.assign(name, shelf);
         if (assigned.isErr()) {
           this.#logger.warn("could not place an imported journal on its shelf", {
             journal: name,
-            shelf: row.shelf,
+            shelf,
             error: assigned.error,
           });
         }

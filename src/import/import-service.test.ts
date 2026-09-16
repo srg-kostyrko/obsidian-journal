@@ -38,6 +38,7 @@ async function planned(
 function everything(plan: ImportPlan): ImportSelection {
   return {
     rows: plan.rows.map((row) => ({ key: row.key, name: row.name, include: row.state.kind === "new", connect: true })),
+    shelves: plan.shelves.map((name) => ({ planned: name, name })),
     applyWeekStart: true,
     setStartup: true,
   };
@@ -172,6 +173,41 @@ describe("ImportService", () => {
 
     expect(outcome.shelves).toEqual([{ name: "Default", kind: "created" }]);
     expect(harness.resolve(ShelvesRepository).exists("Work")).toBe(false);
+  });
+
+  it("shelves a calendar set's journals under the name given in the preview", async () => {
+    const { harness, plan } = await planned([
+      buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "A" }) }),
+      buildCalendarSet("Work", { day: buildPeriodicConfig({ folder: "B" }) }),
+    ]);
+    const selection = everything(plan);
+
+    const outcome = await harness.resolve(ImportService).apply(plan, {
+      ...selection,
+      shelves: selection.shelves.map((shelf) => (shelf.planned === "Work" ? { ...shelf, name: "Home" } : shelf)),
+    });
+
+    expect(outcome.shelves).toEqual([
+      { name: "Default", kind: "created" },
+      { name: "Home", kind: "created" },
+    ]);
+    expect(harness.resolve(ShelvesRepository).exists("Work")).toBe(false);
+  });
+
+  it("merges two calendar sets renamed to the same shelf", async () => {
+    const { harness, plan } = await planned([
+      buildCalendarSet("Default", { day: buildPeriodicConfig({ folder: "A" }) }),
+      buildCalendarSet("Work", { day: buildPeriodicConfig({ folder: "B" }) }),
+    ]);
+    const selection = everything(plan);
+
+    const outcome = await harness.resolve(ImportService).apply(plan, {
+      ...selection,
+      shelves: selection.shelves.map((shelf) => ({ ...shelf, name: "Everything" })),
+    });
+
+    expect(outcome.shelves).toEqual([{ name: "Everything", kind: "created" }]);
+    expect(harness.resolve(ShelvesRepository).get("Everything").getOrUndefined()?.journals).toHaveLength(2);
   });
 
   it("leaves a journal that is already set up untouched", async () => {

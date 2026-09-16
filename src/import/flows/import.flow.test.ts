@@ -94,6 +94,7 @@ describe("ImportFromPluginsFlow", () => {
 
     harness.modals.lastOpen().submit({
       rows: plan.rows.map((row) => ({ key: row.key, name: row.name, include: true, connect: true })),
+      shelves: [],
       applyWeekStart: true,
       setStartup: false,
     } satisfies ImportSelection);
@@ -111,6 +112,7 @@ describe("ImportFromPluginsFlow", () => {
 
     harness.modals.lastOpen().submit({
       rows: plan.rows.map((row) => ({ key: row.key, name: "", include: true, connect: true })),
+      shelves: [],
       applyWeekStart: false,
       setStartup: false,
     } satisfies ImportSelection);
@@ -126,6 +128,7 @@ describe("ImportFromPluginsFlow", () => {
 
     harness.modals.lastOpen().submit({
       rows: plan.rows.map((row) => ({ key: row.key, name: row.name, include: true, connect: true })),
+      shelves: [],
       applyWeekStart: false,
       setStartup: false,
     } satisfies ImportSelection);
