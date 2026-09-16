@@ -35,12 +35,26 @@ function openJournal(journalName: string): void {
 </template>
 
 <style scoped>
+/* One card rather than a box around cards, matching the import notice: Obsidian fills and rounds
+   every .setting-item and spaces it with a bottom margin of its own, so a row has to be flattened
+   on all three or the warning reads as a container of separate things and outgrows its contents. */
 .journal-warning {
-  border: 1px solid var(--text-error);
-  padding: var(--size-2-2);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-inline-start: 3px solid var(--text-error);
+  border-radius: var(--radius-m);
+  padding: var(--size-4-3) var(--size-4-4);
+  margin-block-end: var(--size-4-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
 }
 .journal-warning :deep(.setting-item) {
   padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
 }
 .journal-warning :deep(.setting-item-heading .setting-item-name) {
   color: var(--text-error);

@@ -1660,6 +1660,124 @@
   ],
   "journal_clone_copy_name": "{name} (copy)",
   "journal_clone_copy_name_indexed": "{name} (copy) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Daily",
+        "period=week": "Weekly",
+        "period=month": "Monthly",
+        "period=quarter": "Quarterly",
+        "period=year": "Yearly"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} daily",
+        "period=week": "{set} weekly",
+        "period=month": "{set} monthly",
+        "period=quarter": "{set} quarterly",
+        "period=year": "{set} yearly"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "Import settings from other plugins",
+  "import_preview_unrecognised": "Journals could not read the settings of {source}, so nothing is imported from it.",
+  "import_preview_name_label": "Journal name",
+  "import_preview_row_layout": "In {folder}, named by {format}",
+  "import_preview_row_template": "Uses the template {path}.",
+  "import_preview_row_set_up": "Already set up, so nothing is created.",
+  "import_preview_row_superseded": "{source} already covers this period, so this is off by default.",
+  "import_preview_shelf_label": "Shelf",
+  "import_preview_include": "Create this journal",
+  "import_preview_connect": "Connect existing notes",
+  "import_preview_settings_heading": "Settings this changes",
+  "import_preview_week_start_label": "Apply the week start",
+  "import_preview_week_start_description": "Use the week start from Calendar. Weekly notes that are already connected move to the new weeks.",
+  "import_preview_week_start_not_applicable": "Weeks starting on {day} cannot keep the current first-week rule, so the week start stays as it is.",
+  "import_preview_startup_label": "Open on startup",
+  "import_preview_startup_description": "Open {name} when Obsidian starts.",
+  "import_preview_startup_kept": "{journalName} already opens on startup and stays.",
+  "import_preview_warning_week_start": "Its notes were named under a different week start, so some may not be matched or connected.",
+  "import_preview_warning_iso_week": "The format uses ISO week numbers, which do not follow the custom week grid.",
+  "import_preview_warning_missing_template": "The template {path} does not exist.",
+  "import_preview_confirm": "Import",
+  "import_connect_title": "Connect existing notes",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 note will be connected.",
+        "count=*": "{count} notes will be connected."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 note skipped: {reason}",
+        "count=*": "{count} notes skipped: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Notes cannot be connected: {reason}",
+  "import_connect_skip_period_has_note": "Period already has a note",
+  "import_connect_skip_several_journals": "Matches more than one journal",
+  "import_connect_by_title_hint": "A note Periodic Notes found by its name alone is not on the journal's path. Bulk add by note title can connect it.",
+  "import_connect_run": "Connect",
+  "import_connect_skip": "Skip",
+  "import_report_heading": "Import complete",
+  "import_report_snapshot": "Your settings were saved to a snapshot first.",
+  "import_report_snapshot_failed": "Your settings could not be saved to a snapshot first.",
+  "import_report_week_start": "The week start was applied.",
+  "import_report_shelf_created": "Shelf {name} created.",
+  "import_report_shelf_existing": "Shelf {name} already existed and was used.",
+  "import_report_shelf_failed": "Shelf {name} could not be created: {message}",
+  "import_report_journal_created": "Journal {name} created.",
+  "import_report_journal_existing": "Journal {name} was already set up.",
+  "import_report_journal_failed": "Journal {name} could not be created: {message}",
+  "import_report_startup_set": "{name} now opens on startup.",
+  "import_report_startup_kept": "{name} still opens on startup.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}: 1 note connected.",
+        "count=*": "{name}: {count} notes connected."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Could not connect {path}: {message}",
+  "import_notice_heading": "Import from other plugins",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{sources} can set up 1 journal for you, and connect the notes you already have.",
+        "count=*": "{sources} can set up {count} journals for you, and connect the notes you already have."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Don't show again",
+  "import_action": "Import…",
+  "import_section_heading": "Import from other plugins",
+  "import_section_description": "Set up journals from the settings of Periodic Notes, Calendar and core Daily notes, and connect the notes you already have. Only enabled plugins are read.",
+  "import_section_none": "None of Periodic Notes, Calendar and core Daily notes is enabled.",
+  "import_section_nothing": "The enabled plugins have nothing to import.",
   "journal_clone_modal_description": "Settings and commands are copied. Notes are not.",
   "journal_clone_modal_name_label": "New journal name",
   "journal_clone_modal_title": "Clone {name}",
@@ -2144,6 +2262,7 @@
   "maintenance_snapshot_failed": "That snapshot could not be restored. It may be damaged.",
   "maintenance_snapshots_load_failed": "Snapshots could not be checked. This does not mean none exist — try reopening this page.",
   "maintenance_snapshot_row_restore": "Taken before restoring a snapshot",
+  "maintenance_snapshot_row_import": "Taken before importing settings from other plugins",
   "maintenance_check_heading": "Vault check",
   "maintenance_check_scanning": "Checking your notes…",
   "maintenance_check_indexing": "Still indexing your vault. Reopen this page in a moment.",

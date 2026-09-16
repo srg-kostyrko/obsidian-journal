@@ -1654,6 +1654,124 @@
   ],
   "journal_clone_copy_name": "{name} (copie)",
   "journal_clone_copy_name_indexed": "{name} (copie) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Quotidien",
+        "period=week": "Hebdomadaire",
+        "period=month": "Mensuel",
+        "period=quarter": "Trimestriel",
+        "period=year": "Annuel"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} quotidien",
+        "period=week": "{set} hebdomadaire",
+        "period=month": "{set} mensuel",
+        "period=quarter": "{set} trimestriel",
+        "period=year": "{set} annuel"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "Importer les paramètres d’autres plugins",
+  "import_preview_unrecognised": "Impossible de lire les paramètres de {source}, donc rien n’est importé.",
+  "import_preview_name_label": "Nom du journal",
+  "import_preview_row_layout": "Dans {folder}, nommé selon {format}",
+  "import_preview_row_template": "Utilise le modèle {path}.",
+  "import_preview_row_set_up": "Déjà configuré, rien n’est créé.",
+  "import_preview_row_superseded": "{source} couvre déjà cette période, donc ceci est désactivé par défaut.",
+  "import_preview_shelf_label": "Étagère",
+  "import_preview_include": "Créer ce journal",
+  "import_preview_connect": "Connecter les notes existantes",
+  "import_preview_settings_heading": "Paramètres que cela modifie",
+  "import_preview_week_start_label": "Appliquer le début de semaine",
+  "import_preview_week_start_description": "Utilise le début de semaine de Calendar. Les notes hebdomadaires déjà connectées sont déplacées vers les nouvelles semaines.",
+  "import_preview_week_start_not_applicable": "Les semaines commençant le {day} ne peuvent pas conserver la règle actuelle de la première semaine, donc le début de semaine reste inchangé.",
+  "import_preview_startup_label": "Ouvrir au démarrage",
+  "import_preview_startup_description": "Ouvre {name} au démarrage d’Obsidian.",
+  "import_preview_startup_kept": "{journalName} s’ouvre déjà au démarrage et le reste.",
+  "import_preview_warning_week_start": "Ses notes ont été nommées sous un début de semaine différent, donc certaines pourraient ne pas être associées ou connectées.",
+  "import_preview_warning_iso_week": "Le format utilise des numéros de semaine ISO, qui ne suivent pas la grille de semaine personnalisée.",
+  "import_preview_warning_missing_template": "Le modèle {path} n’existe pas.",
+  "import_preview_confirm": "Importer",
+  "import_connect_title": "Connecter les notes existantes",
+  "import_connect_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} note sera connectée.",
+        "countPlural=*": "{count} notes seront connectées."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} note ignorée : {reason}",
+        "countPlural=*": "{count} notes ignorées : {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Les notes ne peuvent pas être connectées : {reason}",
+  "import_connect_skip_period_has_note": "La période a déjà une note",
+  "import_connect_skip_several_journals": "Correspond à plusieurs journaux",
+  "import_connect_by_title_hint": "Une note que Periodic Notes a trouvée uniquement par son nom ne se trouve pas sur le chemin du journal. L'ajout en masse par titre de note peut la connecter.",
+  "import_connect_run": "Connecter",
+  "import_connect_skip": "Ignorer",
+  "import_report_heading": "Import terminé",
+  "import_report_snapshot": "Vos paramètres ont d'abord été enregistrés dans un instantané.",
+  "import_report_snapshot_failed": "Vos paramètres n'ont pas pu être enregistrés dans un instantané au préalable.",
+  "import_report_week_start": "Le début de semaine a été appliqué.",
+  "import_report_shelf_created": "Étagère {name} créée.",
+  "import_report_shelf_existing": "L'étagère {name} existait déjà et a été utilisée.",
+  "import_report_shelf_failed": "L'étagère {name} n'a pas pu être créée : {message}",
+  "import_report_journal_created": "Journal {name} créé.",
+  "import_report_journal_existing": "Le journal {name} était déjà configuré.",
+  "import_report_journal_failed": "Le journal {name} n'a pas pu être créé : {message}",
+  "import_report_startup_set": "{name} s'ouvre désormais au démarrage.",
+  "import_report_startup_kept": "{name} continue de s'ouvrir au démarrage.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{name} : {count} note connectée.",
+        "countPlural=*": "{name} : {count} notes connectées."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Impossible de connecter {path} : {message}",
+  "import_notice_heading": "Import depuis d’autres plugins",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{sources} peut configurer 1 journal pour vous et connecter les notes que vous avez déjà.",
+        "countPlural=*": "{sources} peut configurer {count} journaux pour vous et connecter les notes que vous avez déjà."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Ne plus afficher",
+  "import_action": "Importer…",
+  "import_section_heading": "Import depuis d’autres plugins",
+  "import_section_description": "Configurez des journaux à partir des paramètres de Periodic Notes, Calendar et du plugin principal Daily notes, et connectez les notes que vous avez déjà. Seuls les plugins activés sont lus.",
+  "import_section_none": "Aucun de Periodic Notes, Calendar et le plugin principal Daily notes n’est activé.",
+  "import_section_nothing": "Les plugins activés n’ont rien à importer.",
   "journal_clone_modal_description": "Les paramètres et les commandes sont copiés. Les notes ne le sont pas.",
   "journal_clone_modal_name_label": "Nouveau nom du journal",
   "journal_clone_modal_title": "Cloner {name}",
@@ -2143,6 +2261,7 @@
   "maintenance_snapshot_failed": "Cet instantané n'a pas pu être restauré. Il est peut-être endommagé.",
   "maintenance_snapshots_load_failed": "Impossible de vérifier les instantanés. Cela ne signifie pas qu'aucun n'existe — essayez de rouvrir cette page.",
   "maintenance_snapshot_row_restore": "Pris avant la restauration d'un instantané",
+  "maintenance_snapshot_row_import": "Pris avant l'importation des paramètres depuis d'autres plugins",
   "maintenance_check_heading": "Vérification du coffre-fort",
   "maintenance_check_scanning": "Vérification de vos notes…",
   "maintenance_check_indexing": "Votre coffre-fort est encore en cours d'indexation. Rouvrez cette page dans un instant.",

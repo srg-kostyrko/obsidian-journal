@@ -127,4 +127,21 @@ describe("SnapshotService", () => {
 
     expect([...data.files.keys()]).toHaveLength(2);
   });
+
+  it("lists a snapshot taken before an import as a pre-import snapshot", async () => {
+    const { service } = await build();
+    expectOk(await service.writePreImport(5, "{}", "2026-09-15T10:20:30.000Z"));
+
+    const listed = await service.list();
+
+    expectOk(listed);
+    expect(listed.value).toEqual([
+      {
+        name: "backup-import-v5-2026-09-15T10-20-30.json",
+        fromVersion: 5,
+        takenAt: "2026-09-15T10:20:30Z",
+        reason: "pre-import",
+      },
+    ]);
+  });
 });

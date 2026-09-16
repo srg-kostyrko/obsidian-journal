@@ -139,8 +139,9 @@ restore a snapshot first. The page checks again after every repair.
 ### Settings snapshots {#settings-snapshots}
 
 A copy of your settings is saved before the plugin migrates them to a new version ("Taken before
-upgrading from settings version 4"), and before a snapshot is restored ("Taken before restoring a
-snapshot"). **Restore** puts one back.
+upgrading from settings version 4"), before a snapshot is restored ("Taken before restoring a
+snapshot"), and before an import from other plugins ("Taken before importing settings from other
+plugins"). **Restore** puts one back.
 
 ## Reporting a bug {#reporting-a-bug}
 

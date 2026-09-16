@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { match } from "ts-pattern";
 import { computed, onMounted, ref } from "vue";
 
 import { localMoment } from "@/calendar";
 import { m } from "@/i18n";
+import ImportFromPluginsSection from "@/import/ui/ImportFromPluginsSection.vue";
 import { useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
@@ -81,6 +83,14 @@ const groups = computed<FindingGroup[]>(() => {
   }
   return [...byKey.values()];
 });
+
+function snapshotLabel(info: SnapshotInfo): string {
+  return match(info.reason)
+    .with("migration", () => m.maintenance_snapshot_row({ version: info.fromVersion }))
+    .with("pre-restore", () => m.maintenance_snapshot_row_restore())
+    .with("pre-import", () => m.maintenance_snapshot_row_import())
+    .exhaustive();
+}
 
 async function refresh(): Promise<void> {
   const listed = await snapshots.list();
@@ -268,15 +278,11 @@ onMounted(runScan);
       <template #description>{{ m.maintenance_snapshots_empty() }}</template>
     </UiSettingRow>
     <UiSettingRow v-for="info of available" :key="info.name" :name="info.takenAt">
-      <template #description>
-        {{
-          info.reason === "pre-restore"
-            ? m.maintenance_snapshot_row_restore()
-            : m.maintenance_snapshot_row({ version: info.fromVersion })
-        }}
-      </template>
+      <template #description>{{ snapshotLabel(info) }}</template>
       <UiButton :disabled="restoring" @click="restore(info)">{{ m.maintenance_snapshot_restore() }}</UiButton>
     </UiSettingRow>
+
+    <ImportFromPluginsSection />
 
     <UiSettingRow heading :name="m.maintenance_check_heading()" :help="manual.troubleshooting.vaultCheck" />
     <UiSettingRow>

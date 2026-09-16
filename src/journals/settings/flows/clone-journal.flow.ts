@@ -8,6 +8,7 @@ import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import type { JournalConfig } from "@/journals/config";
 import { toFlowError, UnknownJournalError } from "@/journals/errors";
+import { freeName } from "@/journals/free-name";
 import type { TypeId } from "@/journals/notelets/config";
 import { NoteletCommandService } from "@/journals/notelets/notelet-commands";
 import { JournalsRepository } from "@/journals/repository";
@@ -23,13 +24,11 @@ export class CloneJournalFlow implements Flow<{ journalName: string }, { name: s
   readonly #ui = inject(SettingsUiService);
 
   #suggestName(sourceName: string): string {
-    let candidate = m.journal_clone_copy_name({ name: sourceName });
-    let index = 1;
-    while (this.#repository.exists(candidate)) {
-      index += 1;
-      candidate = m.journal_clone_copy_name_indexed({ name: sourceName, index });
-    }
-    return candidate;
+    return freeName(
+      m.journal_clone_copy_name({ name: sourceName }),
+      (index) => m.journal_clone_copy_name_indexed({ name: sourceName, index }),
+      (candidate) => this.#repository.exists(candidate),
+    );
   }
 
   // The cloned decorations arrive from clone() still naming the source's notelet types, which the

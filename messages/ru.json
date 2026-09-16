@@ -1694,6 +1694,132 @@
   ],
   "journal_clone_copy_name": "{name} (копия)",
   "journal_clone_copy_name_indexed": "{name} (копия) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Ежедневный",
+        "period=week": "Еженедельный",
+        "period=month": "Ежемесячный",
+        "period=quarter": "Ежеквартальный",
+        "period=year": "Ежегодный"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} ежедневный",
+        "period=week": "{set} еженедельный",
+        "period=month": "{set} ежемесячный",
+        "period=quarter": "{set} ежеквартальный",
+        "period=year": "{set} ежегодный"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "Импорт настроек из других плагинов",
+  "import_preview_unrecognised": "Не удалось прочитать настройки {source}, поэтому ничего не импортируется.",
+  "import_preview_name_label": "Название журнала",
+  "import_preview_row_layout": "В {folder}, названо по формату {format}",
+  "import_preview_row_template": "Использует шаблон {path}.",
+  "import_preview_row_set_up": "Уже настроено, поэтому ничего не создаётся.",
+  "import_preview_row_superseded": "{source} уже покрывает этот период, поэтому это отключено по умолчанию.",
+  "import_preview_shelf_label": "Полка",
+  "import_preview_include": "Создать этот журнал",
+  "import_preview_connect": "Связать существующие заметки",
+  "import_preview_settings_heading": "Настройки, которые это меняет",
+  "import_preview_week_start_label": "Применить начало недели",
+  "import_preview_week_start_description": "Использовать начало недели из Calendar. Уже связанные еженедельные заметки переносятся в новые недели.",
+  "import_preview_week_start_not_applicable": "Недели, начинающиеся с {day}, не могут сохранить текущее правило первой недели, поэтому начало недели остаётся прежним.",
+  "import_preview_startup_label": "Открывать при запуске",
+  "import_preview_startup_description": "Открывать {name} при запуске Obsidian.",
+  "import_preview_startup_kept": "{journalName} уже открывается при запуске и останется так.",
+  "import_preview_warning_week_start": "Его заметки были названы при другом начале недели, поэтому некоторые из них могут не сопоставиться или не связаться.",
+  "import_preview_warning_iso_week": "Формат использует номера недель ISO, которые не следуют пользовательской сетке недели.",
+  "import_preview_warning_missing_template": "Шаблон {path} не существует.",
+  "import_preview_confirm": "Импорт",
+  "import_connect_title": "Связать существующие заметки",
+  "import_connect_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Будет связана {count} заметка.",
+        "countPlural=few": "Будут связаны {count} заметки.",
+        "countPlural=many": "Будет связано {count} заметок.",
+        "countPlural=*": "Будет связано {count} заметки."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Пропущена {count} заметка: {reason}",
+        "countPlural=few": "Пропущены {count} заметки: {reason}",
+        "countPlural=many": "Пропущено {count} заметок: {reason}",
+        "countPlural=*": "Пропущено {count} заметки: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Заметки не могут быть связаны: {reason}",
+  "import_connect_skip_period_has_note": "В этом периоде уже есть заметка",
+  "import_connect_skip_several_journals": "Соответствует нескольким журналам",
+  "import_connect_by_title_hint": "Заметка, которую Periodic Notes нашёл только по имени, не находится на пути журнала. Массовое добавление по заголовку заметки может её связать.",
+  "import_connect_run": "Связать",
+  "import_connect_skip": "Пропустить",
+  "import_report_heading": "Импорт завершён",
+  "import_report_snapshot": "Ваши настройки были сначала сохранены в снимок.",
+  "import_report_snapshot_failed": "Ваши настройки не удалось сначала сохранить в снимок.",
+  "import_report_week_start": "Начало недели было применено.",
+  "import_report_shelf_created": "Полка {name} создана.",
+  "import_report_shelf_existing": "Полка {name} уже существовала и была использована.",
+  "import_report_shelf_failed": "Полку {name} не удалось создать: {message}",
+  "import_report_journal_created": "Журнал {name} создан.",
+  "import_report_journal_existing": "Журнал {name} уже был настроен.",
+  "import_report_journal_failed": "Журнал {name} не удалось создать: {message}",
+  "import_report_startup_set": "{name} теперь открывается при запуске.",
+  "import_report_startup_kept": "{name} по-прежнему открывается при запуске.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{name}: связана {count} заметка.",
+        "countPlural=few": "{name}: связаны {count} заметки.",
+        "countPlural=many": "{name}: связано {count} заметок.",
+        "countPlural=*": "{name}: связано {count} заметки."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Не удалось связать {path}: {message}",
+  "import_notice_heading": "Импорт из других плагинов",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{sources} может настроить для вас {count} журнал и связать уже имеющиеся заметки.",
+        "countPlural=few": "{sources} может настроить для вас {count} журнала и связать уже имеющиеся заметки.",
+        "countPlural=many": "{sources} может настроить для вас {count} журналов и связать уже имеющиеся заметки.",
+        "countPlural=*": "{sources} может настроить для вас {count} журнала и связать уже имеющиеся заметки."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Больше не показывать",
+  "import_action": "Импорт…",
+  "import_section_heading": "Импорт из других плагинов",
+  "import_section_description": "Настройте журналы на основе параметров Periodic Notes, Calendar и основного плагина Daily notes и свяжите уже имеющиеся заметки. Читаются только включённые плагины.",
+  "import_section_none": "Ни один из Periodic Notes, Calendar и основного плагина Daily notes не включён.",
+  "import_section_nothing": "Включённым плагинам нечего импортировать.",
   "journal_clone_modal_description": "Настройки и команды копируются. Заметки — нет.",
   "journal_clone_modal_name_label": "Новое название журнала",
   "journal_clone_modal_title": "Клонировать {name}",
@@ -2210,6 +2336,7 @@
   "maintenance_snapshot_failed": "Не удалось восстановить этот снимок. Возможно, он повреждён.",
   "maintenance_snapshots_load_failed": "Не удалось проверить снимки. Это не значит, что их нет — попробуйте открыть страницу снова.",
   "maintenance_snapshot_row_restore": "Создан перед восстановлением снимка",
+  "maintenance_snapshot_row_import": "Создан перед импортом настроек из других плагинов",
   "maintenance_check_heading": "Проверка хранилища",
   "maintenance_check_scanning": "Проверка ваших заметок…",
   "maintenance_check_indexing": "Хранилище всё ещё индексируется. Откройте эту страницу снова через некоторое время.",

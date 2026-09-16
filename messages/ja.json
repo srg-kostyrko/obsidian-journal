@@ -1501,6 +1501,121 @@
   ],
   "journal_clone_copy_name": "{name}（コピー）",
   "journal_clone_copy_name_indexed": "{name}（コピー） {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "毎日",
+        "period=week": "毎週",
+        "period=month": "毎月",
+        "period=quarter": "四半期ごと",
+        "period=year": "毎年"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} 毎日",
+        "period=week": "{set} 毎週",
+        "period=month": "{set} 毎月",
+        "period=quarter": "{set} 四半期ごと",
+        "period=year": "{set} 毎年"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "他のプラグインから設定をインポート",
+  "import_preview_unrecognised": "{source}の設定を読み取れなかったため、何もインポートされません。",
+  "import_preview_name_label": "ジャーナル名",
+  "import_preview_row_layout": "{folder} に、{format} の形式で命名",
+  "import_preview_row_template": "テンプレート {path} を使用します。",
+  "import_preview_row_set_up": "すでに設定されているため、何も作成されません。",
+  "import_preview_row_superseded": "{source} がすでにこの期間をカバーしているため、これは既定でオフになっています。",
+  "import_preview_shelf_label": "棚",
+  "import_preview_include": "このジャーナルを作成",
+  "import_preview_connect": "既存のノートを接続",
+  "import_preview_settings_heading": "これによって変わる設定",
+  "import_preview_week_start_label": "週の開始日を適用",
+  "import_preview_week_start_description": "Calendar の週の開始日を使用します。すでに接続されている週次ノートは新しい週に移動します。",
+  "import_preview_week_start_not_applicable": "{day} から始まる週は現在の第1週のルールを維持できないため、週の開始日は変更されません。",
+  "import_preview_startup_label": "起動時に開く",
+  "import_preview_startup_description": "Obsidian の起動時に{name}を開きます。",
+  "import_preview_startup_kept": "{journalName} はすでに起動時に開かれており、そのままになります。",
+  "import_preview_warning_week_start": "そのノートは別の週の開始日で命名されているため、一部が一致しなかったり接続されなかったりする場合があります。",
+  "import_preview_warning_iso_week": "この形式はISO週番号を使用しており、カスタムの週設定に従いません。",
+  "import_preview_warning_missing_template": "テンプレート {path} は存在しません。",
+  "import_preview_confirm": "インポート",
+  "import_connect_title": "既存のノートを接続",
+  "import_connect_count": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": { "count=1": "1件のノートが接続されます。", "count=*": "{count}件のノートが接続されます。" }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1件のノートをスキップしました：{reason}",
+        "count=*": "{count}件のノートをスキップしました：{reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "ノートを接続できません：{reason}",
+  "import_connect_skip_period_has_note": "この期間にはすでにノートがあります",
+  "import_connect_skip_several_journals": "複数のジャーナルに一致します",
+  "import_connect_by_title_hint": "Periodic Notesが名前だけで見つけたノートは、ジャーナルのパス上にありません。ノートのタイトルによる一括追加でこれを接続できます。",
+  "import_connect_run": "接続",
+  "import_connect_skip": "スキップ",
+  "import_report_heading": "インポート完了",
+  "import_report_snapshot": "設定は先にスナップショットとして保存されました。",
+  "import_report_snapshot_failed": "設定を先にスナップショットとして保存できませんでした。",
+  "import_report_week_start": "週の開始日が適用されました。",
+  "import_report_shelf_created": "棚「{name}」を作成しました。",
+  "import_report_shelf_existing": "棚「{name}」はすでに存在していたため、それを使用しました。",
+  "import_report_shelf_failed": "棚「{name}」を作成できませんでした：{message}",
+  "import_report_journal_created": "ジャーナル「{name}」を作成しました。",
+  "import_report_journal_existing": "ジャーナル「{name}」はすでに設定済みでした。",
+  "import_report_journal_failed": "ジャーナル「{name}」を作成できませんでした：{message}",
+  "import_report_startup_set": "{name} が起動時に開くようになりました。",
+  "import_report_startup_kept": "{name} は引き続き起動時に開きます。",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{name}：1件のノートを接続しました。",
+        "count=*": "{name}：{count}件のノートを接続しました。"
+      }
+    }
+  ],
+  "import_report_connect_failed": "{path} を接続できませんでした：{message}",
+  "import_notice_heading": "他のプラグインからのインポート",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{sources}で1件のジャーナルを設定し、既存のノートを接続できます。",
+        "count=*": "{sources}で{count}件のジャーナルを設定し、既存のノートを接続できます。"
+      }
+    }
+  ],
+  "import_notice_dismiss": "今後表示しない",
+  "import_action": "インポート…",
+  "import_section_heading": "他のプラグインからのインポート",
+  "import_section_description": "Periodic Notes、Calendar、コアプラグインのDaily notesの設定からジャーナルを設定し、既存のノートを接続します。有効なプラグインのみが読み込まれます。",
+  "import_section_none": "Periodic Notes、Calendar、コアプラグインのDaily notesのいずれも有効になっていません。",
+  "import_section_nothing": "有効なプラグインにインポートできるものはありません。",
   "journal_clone_modal_description": "設定とコマンドはコピーされます。ノートはコピーされません。",
   "journal_clone_modal_name_label": "新しいジャーナル名",
   "journal_clone_modal_title": "{name}を複製",
@@ -2135,6 +2250,7 @@
   "maintenance_snapshot_failed": "そのスナップショットを復元できませんでした。破損している可能性があります。",
   "maintenance_snapshots_load_failed": "スナップショットを確認できませんでした。存在しないという意味ではありません。このページを再度開いてみてください。",
   "maintenance_snapshot_row_restore": "スナップショットの復元前に作成",
+  "maintenance_snapshot_row_import": "他のプラグインから設定をインポートする前に作成",
   "maintenance_check_heading": "保管庫チェック",
   "maintenance_check_scanning": "ノートを確認しています…",
   "maintenance_check_indexing": "保管庫のインデックスを作成中です。少ししてからこのページを再度開いてください。",

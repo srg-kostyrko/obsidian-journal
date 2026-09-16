@@ -1539,6 +1539,132 @@
   ],
   "journal_clone_copy_name": "{name} (копія)",
   "journal_clone_copy_name_indexed": "{name} (копія) {index}",
+  "import_journal_name": [
+    {
+      "declarations": ["input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "Щоденний",
+        "period=week": "Щотижневий",
+        "period=month": "Щомісячний",
+        "period=quarter": "Щоквартальний",
+        "period=year": "Щорічний"
+      }
+    }
+  ],
+  "import_journal_name_in_set": [
+    {
+      "declarations": ["input set", "input period"],
+      "selectors": ["period"],
+      "match": {
+        "period=day": "{set} щоденний",
+        "period=week": "{set} щотижневий",
+        "period=month": "{set} щомісячний",
+        "period=quarter": "{set} щоквартальний",
+        "period=year": "{set} щорічний"
+      }
+    }
+  ],
+  "import_journal_name_indexed": "{name} {index}",
+  "import_source_periodic_notes": "Periodic Notes",
+  "import_source_calendar": "Calendar",
+  "import_source_daily_notes": "Daily notes",
+  "import_preview_title": "Імпорт налаштувань з інших плагінів",
+  "import_preview_unrecognised": "Не вдалося прочитати налаштування {source}, тому нічого не імпортується.",
+  "import_preview_name_label": "Назва журналу",
+  "import_preview_row_layout": "У {folder}, названо за форматом {format}",
+  "import_preview_row_template": "Використовує шаблон {path}.",
+  "import_preview_row_set_up": "Вже налаштовано, тому нічого не створюється.",
+  "import_preview_row_superseded": "{source} вже охоплює цей період, тому це вимкнено за замовчуванням.",
+  "import_preview_shelf_label": "Полиця",
+  "import_preview_include": "Створити цей журнал",
+  "import_preview_connect": "Підключити наявні нотатки",
+  "import_preview_settings_heading": "Налаштування, які це змінює",
+  "import_preview_week_start_label": "Застосувати початок тижня",
+  "import_preview_week_start_description": "Використовувати початок тижня з Calendar. Вже підключені щотижневі нотатки переносяться в нові тижні.",
+  "import_preview_week_start_not_applicable": "Тижні, що починаються з {day}, не можуть зберегти поточне правило першого тижня, тому початок тижня залишається без змін.",
+  "import_preview_startup_label": "Відкривати під час запуску",
+  "import_preview_startup_description": "Відкривати {name}, коли Obsidian запускається.",
+  "import_preview_startup_kept": "{journalName} вже відкривається під час запуску і залишається так.",
+  "import_preview_warning_week_start": "Її нотатки було названо за іншим початком тижня, тому деякі можуть не збігтися або не підключитися.",
+  "import_preview_warning_iso_week": "Формат використовує номери тижнів ISO, які не відповідають власній сітці тижня.",
+  "import_preview_warning_missing_template": "Шаблон {path} не існує.",
+  "import_preview_confirm": "Імпорт",
+  "import_connect_title": "Підключити наявні нотатки",
+  "import_connect_count": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Буде підключено {count} нотатку.",
+        "countPlural=few": "Буде підключено {count} нотатки.",
+        "countPlural=many": "Буде підключено {count} нотаток.",
+        "countPlural=*": "Буде підключено {count} нотатки."
+      }
+    }
+  ],
+  "import_connect_skipped": [
+    {
+      "declarations": ["input count", "input reason", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "Пропущено {count} нотатку: {reason}",
+        "countPlural=few": "Пропущено {count} нотатки: {reason}",
+        "countPlural=many": "Пропущено {count} нотаток: {reason}",
+        "countPlural=*": "Пропущено {count} нотатки: {reason}"
+      }
+    }
+  ],
+  "import_connect_blocked": "Нотатки не можна підключити: {reason}",
+  "import_connect_skip_period_has_note": "У цьому періоді вже є нотатка",
+  "import_connect_skip_several_journals": "Відповідає більш ніж одному журналу",
+  "import_connect_by_title_hint": "Нотатка, яку Periodic Notes знайшов лише за назвою, не перебуває на шляху журналу. Масове додавання за заголовком нотатки може її підключити.",
+  "import_connect_run": "Підключити",
+  "import_connect_skip": "Пропустити",
+  "import_report_heading": "Імпорт завершено",
+  "import_report_snapshot": "Ваші налаштування спочатку збережено в знімку.",
+  "import_report_snapshot_failed": "Ваші налаштування не вдалося спочатку зберегти в знімку.",
+  "import_report_week_start": "Початок тижня застосовано.",
+  "import_report_shelf_created": "Полицю {name} створено.",
+  "import_report_shelf_existing": "Полиця {name} вже існувала і була використана.",
+  "import_report_shelf_failed": "Полицю {name} не вдалося створити: {message}",
+  "import_report_journal_created": "Журнал {name} створено.",
+  "import_report_journal_existing": "Журнал {name} вже був налаштований.",
+  "import_report_journal_failed": "Журнал {name} не вдалося створити: {message}",
+  "import_report_startup_set": "{name} тепер відкривається під час запуску.",
+  "import_report_startup_kept": "{name} і надалі відкривається під час запуску.",
+  "import_report_connected": [
+    {
+      "declarations": ["input name", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{name}: підключено {count} нотатку.",
+        "countPlural=few": "{name}: підключено {count} нотатки.",
+        "countPlural=many": "{name}: підключено {count} нотаток.",
+        "countPlural=*": "{name}: підключено {count} нотатки."
+      }
+    }
+  ],
+  "import_report_connect_failed": "Не вдалося підключити {path}: {message}",
+  "import_notice_heading": "Імпорт з інших плагінів",
+  "import_notice_message": [
+    {
+      "declarations": ["input sources", "input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{sources} може налаштувати для вас {count} журнал і підключити наявні нотатки.",
+        "countPlural=few": "{sources} може налаштувати для вас {count} журнали і підключити наявні нотатки.",
+        "countPlural=many": "{sources} може налаштувати для вас {count} журналів і підключити наявні нотатки.",
+        "countPlural=*": "{sources} може налаштувати для вас {count} журналу і підключити наявні нотатки."
+      }
+    }
+  ],
+  "import_notice_dismiss": "Більше не показувати",
+  "import_action": "Імпорт…",
+  "import_section_heading": "Імпорт з інших плагінів",
+  "import_section_description": "Налаштуйте журнали на основі параметрів Periodic Notes, Calendar та основного плагіна Daily notes і підключіть наявні нотатки. Читаються лише увімкнені плагіни.",
+  "import_section_none": "Жоден із Periodic Notes, Calendar та основного плагіна Daily notes не увімкнено.",
+  "import_section_nothing": "Увімкненим плагінам нічого імпортувати.",
   "journal_clone_modal_description": "Налаштування та команди копіюються. Нотатки — ні.",
   "journal_clone_modal_name_label": "Нова назва журналу",
   "journal_clone_modal_title": "Клонувати {name}",
@@ -2202,6 +2328,7 @@
   "maintenance_snapshot_failed": "Не вдалося відновити цей знімок. Можливо, він пошкоджений.",
   "maintenance_snapshots_load_failed": "Не вдалося перевірити знімки. Це не означає, що їх немає — спробуйте відкрити сторінку знову.",
   "maintenance_snapshot_row_restore": "Створено перед відновленням знімка",
+  "maintenance_snapshot_row_import": "Створено перед імпортом налаштувань з інших плагінів",
   "maintenance_check_heading": "Перевірка сховища",
   "maintenance_check_scanning": "Перевірка ваших нотаток…",
   "maintenance_check_indexing": "Сховище ще індексується. Відкрийте цю сторінку знову за мить.",

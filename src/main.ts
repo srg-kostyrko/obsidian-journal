@@ -12,6 +12,7 @@ import { DynamicCommandRegistry } from "@/commands/command-registry";
 import { decorationsModule } from "@/decorations";
 import { decorationsSettingsModule } from "@/decorations/settings/module";
 import { initLocale, m } from "@/i18n";
+import { importModule } from "@/import";
 import { Container } from "@/infrastructure/di";
 import { FlowsModule } from "@/infrastructure/flows";
 import { createHostModule } from "@/infrastructure/host";
@@ -63,6 +64,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(commandsModule);
     container.addModule(startupModule);
     container.addModule(loggingModule);
+    container.addModule(importModule);
     container.addModule(maintenanceModule);
     container.addModule(apiModule);
 
