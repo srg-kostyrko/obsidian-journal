@@ -335,6 +335,36 @@ describe("TemplateEngine.parse", () => {
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2021-12-27");
   });
 
+  // Undoing `<startOf=month>` from 1 January gives the whole of January, and only over that range is
+  // there a week starting inside the month. Keeping 1 January alone -- a Saturday, which no week
+  // starts on -- answered with a date that renders a different name, so the note never matched.
+  it("reads a capture that takes the start of a week and then the start of that month", async () => {
+    const engine = await installTestEngine();
+    const stream = tokenize("{{date<startOf=week><startOf=month>:YYYY-MM-DD}}.md");
+    const result = engine.parse(stream, "2022-01-01.md", buildFakeContext());
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-03");
+  });
+
+  it("reads a capture that takes the start of a week and then the end of that month", async () => {
+    const engine = await installTestEngine();
+    const stream = tokenize("{{date<startOf=week><endOf=month>:YYYY-MM-DD}}.md");
+    const result = engine.parse(stream, "2022-01-31.md", buildFakeContext());
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-03");
+  });
+
+  // A format naming only part of a date parses the rest in from today, so this capture arrives as a
+  // 1 January that no week starts on while the year it carries is real. Reading the range back as
+  // empty and refusing the capture would take this template's notes with it.
+  it("reads a year captured under a week boundary, which pins no day at all", async () => {
+    const engine = await installTestEngine();
+    const stream = tokenize("{{date<startOf=week>:YYYY}}.md");
+    const result = engine.parse(stream, "2026.md", buildFakeContext());
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).format("YYYY")).toBe("2026");
+  });
+
   // These are ordinary moment formats, and a note named with one was written correctly and matched
   // nothing on the way back, so it never reached its journal.
   it.each(["L", "LL", "l", "ll", "X", "x"])("round-trips a name written with %s", async (format) => {

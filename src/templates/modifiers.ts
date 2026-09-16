@@ -56,16 +56,62 @@ export function applyModifiers<S extends Shiftable<S>>(value: S, modifiers: read
 /** The earliest date that renders as `rendered` under `modifiers`. */
 export function sourceDateOf(rendered: CalendarDate, modifiers: readonly Modifier[]): CalendarDate {
   // Rendering shifts and then snaps, in written order, so inversion runs the whole chain backwards:
-  // the last boundary comes off first, and the shifts come off what is left. A bare `<endOf=unit>`
-  // names the whole unit it ends, whose earliest source is that unit's start; `<startOf=unit>`
-  // already names its own. Taking a shift off first would leave a date in the wrong unit to snap.
-  let value = rendered;
+  // the last boundary comes off first, and the shifts come off what is left.
+  //
+  // A boundary takes a whole unit to one date, so undoing one turns a date into the range that
+  // renders it, and the next boundary back has to be answered for the whole range rather than for
+  // its earliest date alone. Keeping only that date is what made a chain misread: undoing
+  // `<startOf=month>` from 1 January gives all of January, and only over that range is there a
+  // week starting inside the month -- from 1 January by itself there is none, and the walk stopped
+  // on a date no week ever starts on.
+  let range: DateRange = { from: rendered, to: rendered };
   for (const modifier of modifiers.toReversed()) {
-    if (modifier.kind === "boundary" && modifier.direction === "end" && isBoundaryUnit(modifier.unit)) {
-      value = value.startOf(modifier.unit);
-    }
+    if (modifier.kind !== "boundary" || !isBoundaryUnit(modifier.unit)) continue;
+    range = sourcesOf(range, modifier.direction, modifier.unit);
   }
-  return unapplyModifiers(value, modifiers);
+  return unapplyModifiers(range.from, modifiers);
+}
+
+interface DateRange {
+  from: CalendarDate;
+  to: CalendarDate;
+}
+
+// Every date that `direction`/`unit` maps into `range`.
+//
+// An empty answer means no date renders what the range holds, which is not the caller's cue to
+// refuse: a format naming only part of a date parses the rest in from today, so a `<startOf=week>`
+// capture of "2026" arrives as a 1 January that no week starts on while the year it does carry is
+// perfectly real. The range collapses to the date it was asked about, which is the reading this
+// took before it looked at ranges at all.
+function sourcesOf(range: DateRange, direction: "start" | "end", unit: BoundaryUnit): DateRange {
+  if (direction === "end") {
+    // A date's unit-end lands in the range when its unit ends at or after `from`, so the unit
+    // holding `from` is the earliest. The last is `to` itself where `to` ends a unit, and otherwise
+    // the day before its unit began -- the previous unit's end, the last one finishing by `to`.
+    const from = range.from.startOf(unit);
+    const to = range.to.endOf(unit).isAfter(range.to) ? range.to.startOf(unit).shift(-1, "d") : range.to;
+    return from.isAfter(to) ? { from, to: from } : { from, to };
+  }
+  // A date's unit-start lands in the range when its unit begins at or after `from`, so the earliest
+  // is the first unit start that is not before `from`, and the last is the end of `to`'s own unit.
+  const ownStart = range.from.startOf(unit);
+  const from = ownStart.isSame(range.from) ? range.from : nextStartOf(ownStart, unit);
+  const to = range.to.endOf(unit);
+  return from.isAfter(to) ? { from: range.from, to: range.from } : { from, to };
+}
+
+// One unit on from a date that already starts one. A decade is ten years; an hour cannot move a
+// date at all, and reads as the day it sits in.
+function nextStartOf(unitStart: CalendarDate, unit: BoundaryUnit): CalendarDate {
+  return match(unit)
+    .with("decade", () => unitStart.shift(10, "y"))
+    .with("year", () => unitStart.shift(1, "y"))
+    .with("quarter", () => unitStart.shift(1, "q"))
+    .with("month", () => unitStart.shift(1, "m"))
+    .with("week", () => unitStart.shift(1, "w"))
+    .with("day", "hour", () => unitStart.shift(1, "d"))
+    .exhaustive();
 }
 
 export function unapplyModifiers(date: CalendarDate, modifiers: readonly Modifier[]): CalendarDate {
