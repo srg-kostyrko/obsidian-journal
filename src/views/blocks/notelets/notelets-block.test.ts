@@ -45,6 +45,10 @@ describe("noteletsBlock", () => {
     expect(() => v.parse(noteletsBlock.schema, { window: "fortnight" })).toThrow();
   });
 
+  it("summarizes a stored config that predates the window field", () => {
+    expect(noteletsBlock.summary?.({})).toBe("Selected day");
+  });
+
   it("summarizes the window alone, then adds each filter's count", () => {
     expect(noteletsBlock.summary?.({ window: "day" })).toBe("Selected day");
     expect(noteletsBlock.summary?.({ window: "day", journals: ["a", "b"] })).toBe("Selected day · 2 journals");
