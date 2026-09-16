@@ -258,13 +258,10 @@ audit reads the release branch as it stands and, if it needs to open a fix branc
   fix goes on the release branch, and step 5a runs again after it. That re-run is safe: the fix PR,
   if one was opened on the first pass, already exists, so `/docs-audit`'s own guard skips stages 2–3
   and the re-run is stage 1 only.
-- The uncovered issue does not block the release. **The docs fix PR must merge before the tag is
-  pushed in step 7**, though — the published manual's root is built from the latest stable tag
-  (`.github/workflows/pages.yml`), so a correction that lands after the tag reaches `/next/` only,
-  and readers running the version just shipped keep seeing the wrong prose until the release after
-  it. Merging it before the release PR is fine too; `main` does not require branches to be up to
-  date, so neither order restarts the release gate. Where the fix genuinely cannot make the tag,
-  publish it by hand afterwards: `gh workflow run pages.yml -f stable_ref=<branch off the tag>`.
+- The uncovered issue does not block the release. The docs fix PR does not either, but **it has to
+  merge before step 7 pushes the tag** — step 7 carries the check and the reason. Merging it before
+  the release PR is fine too; `main` does not require branches to be up to date, so neither order
+  restarts the release gate.
 
 ### Step 6 — Merge with a merge commit
 
@@ -298,6 +295,19 @@ with "remote ref does not exist"; that is the expected outcome, not a problem.
 
 `versions.json` is read from the default branch and the tag starts the build, so
 the branch must reach GitHub first.
+
+**The docs fix PR, if step 5a opened one, has to be merged before this push** —
+the published manual's root is built from the latest published release, so a
+correction merged after the tag reaches `/next/` only and readers on the version
+just shipped keep the wrong prose until the release after it. This is the check
+a resumed release skips, since the resume table enters here directly:
+
+```bash
+gh pr list --head "docs/audit-$VER" --state all --json number,state
+```
+
+An open PR merges first. Where it genuinely cannot, publish it by hand after the
+release with `gh workflow run pages.yml -f stable_ref=<branch off the tag>`.
 
 ```bash
 git push origin "$VER"

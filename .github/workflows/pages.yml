@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       stable_ref:
-        description: "Ref to build the root manual from (default: the latest stable tag)"
+        description: "Ref to build the root manual from (default: the latest published release)"
         required: false
         type: string
 
@@ -56,18 +56,29 @@ jobs:
       - id: stable
         name: Resolve the released manual's ref
         working-directory: next
+        env:
+          # Never interpolated into the shell source: a `${{ }}` expression is substituted before
+          # the script runs, so a quote in the value would end the assignment and the rest would
+          # execute in a job holding Pages-write and an OIDC token.
+          STABLE_REF: ${{ inputs.stable_ref }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          ref='${{ inputs.stable_ref }}'
+          ref="$STABLE_REF"
           if [ -z "$ref" ]; then
-            # `release-beta.yml` tags prereleases off the same repository; they are never the root.
-            ref=$(git tag --list '[0-9]*.[0-9]*.[0-9]*' | grep -v -- '-' | sort -V | tail -1)
+            # The latest *published* release, not the newest tag. Step 7 of the release runbook
+            # pushes the tag and step 8 publishes the draft it produces, so between them a tag
+            # exists that nobody can install yet — and a docs push landing in that window would
+            # otherwise promote it to the root, which is the failure this whole change is about.
+            # The endpoint excludes drafts and prereleases, so `release-beta.yml`'s tags are out
+            # on both counts.
+            ref=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || true)
           fi
-          # The manual was scaffolded after 3.4.0 and is in no tag yet, so until the first release
+          # The manual was scaffolded after 3.4.0 and is in no release yet, so until the first one
           # that carries it there is no released manual to put at the root — serve `main` there and
           # let the fallback retire itself. It is also the honest answer if the manual is ever
           # dropped from a release by accident, which is why it says so rather than failing.
           if [ -z "$ref" ] || ! git cat-file -e "$ref:docs/user/index.md" 2>/dev/null; then
-            echo "::notice::no released manual in '${ref:-<no tag>}' — serving main at the root"
+            echo "::notice::no released manual in '${ref:-<no release>}' — serving main at the root"
             ref=main
             echo "bootstrap=true" >> "$GITHUB_OUTPUT"
           fi
