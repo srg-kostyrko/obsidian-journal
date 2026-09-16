@@ -319,6 +319,17 @@ describe("TemplateEngine.parse", () => {
       expect(result.error.detail.kind).toBe("conflict");
     });
 
+    // An ordinal day has no reading inside a combined parse, so captures carrying one are read one
+    // at a time and have to agree outright -- the last resort behind both combining and rendering back.
+    it("accepts two ordinal captures naming the same date", async () => {
+      const engine = await installTestEngine();
+      const context = buildFakeContext();
+      const stream = tokenize("{{date:MMMM Do}} - {{date:MMMM Do}}.md");
+      const result = engine.parse(stream, "June 1st - June 1st.md", context);
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).format("MM-DD")).toBe("06-01");
+    });
+
     it("combines complementary date components split across tokens", async () => {
       const engine = await installTestEngine();
       const context = buildFakeContext();
@@ -425,6 +436,83 @@ describe("TemplateEngine.parse", () => {
       const engine = await installTestEngine();
       const stream = tokenize("{{date:YYYY}}/{{date:DDDD-ddd}}.md");
       const result = engine.parse(stream, "2026/152-Mon.md", buildFakeContext());
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("conflict");
+    });
+  });
+
+  // A date modification on one use of the date and not another (#421): the modified capture
+  // renders a different date than the rest of the path, so the captures cannot be read as
+  // components of one value, yet the path still names a single date.
+  describe("captures of one date carrying different modifiers", () => {
+    it("combines a decade folder with the year, month and day the rest of the path names", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize(
+        "Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}/{{date:MM}}/{{date:YYYY-MM-DD}}.md",
+      );
+      const result = engine.parse(stream, "Calendar/1950s/1959/02/1959-02-15.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("1959-02-15");
+    });
+
+    it("combines a decade folder with a date on the decade's own first day", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize(
+        "Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}/{{date:MM}}/{{date:YYYY-MM-DD}}.md",
+      );
+      const result = engine.parse(stream, "Calendar/1950s/1950/01/1950-01-01.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("1950-01-01");
+    });
+
+    it("combines a month-start folder with the day the name gives", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date<startOf=month>:YYYY-MM-DD}}/{{date:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2026-09-01/2026-09-13.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2026-09-13");
+    });
+
+    it("combines a year folder with a week-start name", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date<startOf=week>:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2026/2026-09-14.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2026-09-14");
+    });
+
+    // The year the boundary captures never name: read on their own they fall in the current year,
+    // so a path from any other year is the only input that tells the two apart.
+    it("takes the year from the folder when the boundary captures name none", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date<startOf=week>:MMM D}} - {{date<endOf=week>:MMM D}}.md");
+      const result = engine.parse(stream, "2023/Sep 11 - Sep 17.md", buildFakeContext());
+      expectOk(result);
+      expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2023-09-11");
+    });
+
+    it("returns conflict when the boundary folder names a period the rest of the path is not in", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date<startOf=month>:YYYY-MM-DD}}/{{date:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2026-08-01/2026-09-13.md", buildFakeContext());
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("conflict");
+    });
+
+    // The pattern a format compiles to admits a day the calendar does not have, so a capture can
+    // match the path and still be no date; the reading it would have given is simply missing.
+    it("reports the invalid date when a modified capture names a day that does not exist", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date<startOf=month>:YYYY-MM-DD}}/{{date:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2026-09-31/2026-09-13.md", buildFakeContext());
+      expectErr(result);
+      expect(result.error.detail.kind).toBe("invalid-date");
+    });
+
+    it("returns conflict when a week-start capture holds a day no week starts on", async () => {
+      const engine = await installTestEngine();
+      const stream = tokenize("{{date:YYYY}}/{{date<startOf=week>:YYYY-MM-DD}}.md");
+      const result = engine.parse(stream, "2026/2026-09-15.md", buildFakeContext());
       expectErr(result);
       expect(result.error.detail.kind).toBe("conflict");
     });

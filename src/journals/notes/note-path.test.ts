@@ -358,6 +358,74 @@ describe("NotePathService.candidateFor", () => {
     expect(unwrap(result).anchor).toBe("2026-05-19");
   });
 
+  // A date modification on one use of the date and not another: the folder renders the decade the
+  // day falls in, the name the day itself. The two captures name different dates and are still one
+  // date -- which is what a note written by hand in this layout has to be read back through.
+  describe("a folder carrying a date modification the name does not", () => {
+    let harness: TestHarness;
+
+    beforeEach(async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal(
+              "daily",
+              { type: "day" },
+              {
+                folder: "Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}/{{date:MM}}",
+                nameTemplate: "{{date:YYYY-MM-DD}}",
+              },
+            ),
+          },
+        },
+      });
+    });
+
+    it("inverts a note written by hand at the decade path", () => {
+      const result = harness
+        .resolve(NotePathService)
+        .candidateFor("daily", "Calendar/1950s/1959/02/1959-02-15.md" as VaultPath);
+
+      expect(unwrap(result).anchor).toBe("1959-02-15");
+    });
+
+    it("round-trips every part of the decade, its first day included", () => {
+      const service = harness.resolve(NotePathService);
+
+      for (const a of ["1950-01-01", "1959-02-15", "2026-09-13"]) {
+        const path = service.pathFor("daily", { journalName: "daily", anchor: anchor(a) });
+        assert(path.isOk());
+        expect(unwrap(service.candidateFor("daily", path.value)).anchor).toBe(a);
+      }
+    });
+  });
+
+  it("round-trips a weekly journal whose year folder stands beside a week-start name", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          weekly: fixedJournal(
+            "weekly",
+            { type: "week" },
+            { folder: "{{date:YYYY}}", nameTemplate: "{{date<startOf=week>:YYYY-MM-DD}}" },
+          ),
+        },
+      },
+    });
+    const service = harness.resolve(NotePathService);
+    const cycle = harness.resolve(CycleService);
+
+    for (const seed of ["2026-09-16", "2023-03-02"]) {
+      const expected = cycle.anchorOf("weekly", CalendarDate.fromAnchor(anchor(seed)));
+      assert(expected.isSome());
+      const path = service.pathFor("weekly", { journalName: "weekly", anchor: expected.value });
+      assert(path.isOk());
+      expect(unwrap(service.candidateFor("weekly", path.value)).anchor).toBe(expected.value);
+    }
+  });
+
   describe("a quarter split between a year folder and the filename", () => {
     let harness: TestHarness;
 

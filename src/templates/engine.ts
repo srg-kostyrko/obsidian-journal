@@ -19,10 +19,10 @@ import {
   renderNumber,
   renderString,
 } from "./kinds";
-import { isBoundaryUnit, unapplyOffsets } from "./modifiers";
+import { applyModifiers, isBoundaryUnit, unapplyModifiers, unapplyOffsets } from "./modifiers";
 
 import type { TemplateContext } from "./context";
-import type { Bindings, BoundValue, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
+import type { Bindings, BoundValue, Modifier, Token, TokenStream, ValidationProblem, VariableSpec } from "./types";
 
 export class TemplateEngine {
   readonly #injector = inject(InjectorToken);
@@ -154,19 +154,9 @@ export class TemplateEngine {
         const format = token.format ?? dateSpec.defaultFormat;
         const result = parseDate(capture, format, token.modifiers, token.name);
         if (result.kind === "err") return err(result.error);
-        // Normalize to "lower bound of source range" so multi-binding resolution
-        // can compare candidates by value equality. A bare `<endOf=unit>` modifier
-        // makes parsed value the upper bound of the source's range; bring it back
-        // to the range start. Bare `<startOf=unit>` already IS the lower bound.
-        // Arithmetic-shift modifiers were already unapplied by parseDate; what
-        // remains is unmodified or boundary-only.
-        let lowerBound = result.value;
-        for (const modifier of token.modifiers) {
-          if (modifier.kind === "boundary" && modifier.direction === "end" && isBoundaryUnit(modifier.unit)) {
-            lowerBound = lowerBound.startOf(modifier.unit);
-          }
-        }
-        return ok({ kind: "date", value: lowerBound });
+        // Arithmetic-shift modifiers were already unapplied by parseDate; what remains is
+        // unmodified or boundary-only, which lowerBoundOf answers for.
+        return ok({ kind: "date", value: lowerBoundOf(result.value, token.modifiers) });
       })
       .with({ kind: "clock" }, () =>
         err(new TemplateParseError({ kind: "not-invertible", reason: "clock-variable", offending: token.name })),
@@ -174,24 +164,34 @@ export class TemplateEngine {
       .exhaustive();
   }
 
+  // Every capture read on its own, requiring the normalized lower bounds to agree. What is left
+  // when neither combining components nor rendering a whole path back can answer.
+  #mergeIndependently(name: string, entries: DateCapture[]): Result<BoundValue, TemplateParseError> {
+    const parsed: BoundValue[] = [];
+    for (const entry of entries) {
+      const value = this.#parseCapture(entry.capture, entry.spec, entry.token);
+      if (value.kind === "err") return new Err(value.error);
+      parsed.push(value.value);
+    }
+    return mergeCandidates(name, parsed);
+  }
+
   #resolveDate(name: string, entries: DateCapture[]): Result<BoundValue, TemplateParseError> {
     if (entries.length === 1) {
       return this.#parseCapture(entries[0].capture, entries[0].spec, entries[0].token);
     }
-    // Combining relies on moment reassembling components from one format string, which
-    // can't account for arithmetic/boundary modifiers. When any token carries a modifier
-    // (e.g. a week's <startOf>/<endOf> pair), fall back to parsing each independently and
-    // requiring the normalized lower bounds to agree.
-    const noModifiers = entries.every((entry) => entry.token.modifiers.length === 0);
-    const fieldSets = noModifiers ? entries.map((entry) => dateFields(entry.format)) : undefined;
-    if (!fieldSets || fieldSets.includes(undefined) || !weekdayPinned(fieldSets)) {
-      const parsed: BoundValue[] = [];
-      for (const entry of entries) {
-        const value = this.#parseCapture(entry.capture, entry.spec, entry.token);
-        if (value.kind === "err") return new Err(value.error);
-        parsed.push(value.value);
-      }
-      return mergeCandidates(name, parsed);
+    // Combining relies on moment reassembling components from one format string, which can't
+    // account for arithmetic/boundary modifiers: captures under different modifiers render
+    // different dates and are not components of one value. Those go to the search below, which
+    // reads each modifier chain on its own and keeps the date the whole path renders back from.
+    if (entries.some((entry) => entry.token.modifiers.length > 0)) {
+      const found = dateRenderingPath(entries);
+      if (found) return new Ok({ kind: "date", value: found });
+      return this.#mergeIndependently(name, entries);
+    }
+    const fieldSets = entries.map((entry) => dateFields(entry.format));
+    if (fieldSets.includes(undefined) || !weekdayPinned(fieldSets)) {
+      return this.#mergeIndependently(name, entries);
     }
     const definiteFields = withWeekYearReading(
       fieldSets.filter((fields): fields is Set<DateField> => fields !== undefined),
@@ -404,6 +404,9 @@ const FIELD_READERS: Record<DateField, (m: ReturnType<typeof localMoment>) => nu
 // component captures into one moment parse stays unambiguous.
 const DATE_PART_SEP = "\u{0}";
 
+// The format a reference date is written in when it is parsed ahead of a chain's own captures.
+const REFERENCE_FORMAT = "YYYY-MM-DD";
+
 // The calendar fields a date format constrains, or undefined if it names a day-of-month ordinal,
 // whose capture moment will not read back out of a combined format. That routes back to the
 // agreement-based merge instead.
@@ -458,6 +461,79 @@ function dateFields(format: string): Set<DateField> | undefined {
 // overriding even a day of the year, so only a day of the month lets the captures combine.
 function weekdayPinned(fieldSets: (Set<DateField> | undefined)[]): boolean {
   return fieldSets.every((fields) => !fields?.has("weekday")) || fieldSets.some((fields) => fields?.has("day"));
+}
+
+// The date a path names when its captures of that date do not all carry the same modifiers. Captures
+// sharing a chain of modifiers describe one value and combine as components of it; each chain is then
+// read back to the date it was rendered from, and the answer is the earliest such reading that renders
+// every capture in the path back exactly. Reading a chain against another chain's date supplies the
+// components its own formats never name — "MMM D" has no year — which moment would otherwise take
+// from today.
+function dateRenderingPath(entries: DateCapture[]): CalendarDate | undefined {
+  const chains = [...groupByModifiers(entries).values()];
+  const readings = chains
+    .map((chain) => readChain(chain))
+    .filter((reading): reading is CalendarDate => reading !== undefined);
+  const candidates = new Map<string, CalendarDate>();
+  for (const reading of readings) candidates.set(reading.toAnchor(), reading);
+  for (const reference of readings) {
+    for (const chain of chains) {
+      const seeded = readChain(chain, reference);
+      if (seeded) candidates.set(seeded.toAnchor(), seeded);
+    }
+  }
+  // Ties go to the earliest date: a path built from boundaries names a range, and every day in it
+  // renders the same path.
+  return [...candidates.values()]
+    .toSorted((a, b) => a.compareTo(b))
+    .find((candidate) => entries.every((entry) => rendersBack(entry, candidate)));
+}
+
+// Grouped on the chain as written: two chains that mean the same date by a different spelling are
+// read as two, which costs a reading and nothing else — the verification below decides between them.
+function groupByModifiers(entries: DateCapture[]): Map<string, DateCapture[]> {
+  const chains = new Map<string, DateCapture[]>();
+  for (const entry of entries) {
+    const key = JSON.stringify(entry.token.modifiers);
+    const chain = chains.get(key) ?? [];
+    chain.push(entry);
+    chains.set(key, chain);
+  }
+  return chains;
+}
+
+// One chain's captures as a date, brought back to the value they were rendered from: shifts
+// unapplied and a bare <endOf=unit> taken to the start of the unit it ends, the lower bound
+// #parseCapture normalizes to. A reference date, when given, is parsed ahead of the captures so
+// they override only the components they name.
+function readChain(chain: DateCapture[], reference?: CalendarDate): CalendarDate | undefined {
+  const captures = chain.map((entry) => entry.capture);
+  const formats = chain.map((entry) => entry.format);
+  if (reference) {
+    captures.unshift(reference.toAnchor());
+    formats.unshift(REFERENCE_FORMAT);
+  }
+  const parsed = CalendarDate.parse(captures.join(DATE_PART_SEP), formats.join(`[${DATE_PART_SEP}]`));
+  if (parsed.kind === "err") return undefined;
+  const modifiers = chain[0].token.modifiers;
+  return lowerBoundOf(unapplyModifiers(parsed.value, modifiers), modifiers);
+}
+
+// Normalize to "lower bound of source range" so two readings of one date compare equal. A bare
+// `<endOf=unit>` makes a parsed value the upper bound of its source's range; bring it back to the
+// range start. Bare `<startOf=unit>` already IS the lower bound.
+function lowerBoundOf(date: CalendarDate, modifiers: readonly Modifier[]): CalendarDate {
+  let value = date;
+  for (const modifier of modifiers) {
+    if (modifier.kind === "boundary" && modifier.direction === "end" && isBoundaryUnit(modifier.unit)) {
+      value = value.startOf(modifier.unit);
+    }
+  }
+  return value;
+}
+
+function rendersBack(entry: DateCapture, date: CalendarDate): boolean {
+  return applyModifiers(date, entry.token.modifiers).format(entry.format) === entry.capture;
 }
 
 function fieldsAgree(fields: Set<DateField>, a: CalendarDate, b: CalendarDate): boolean {
