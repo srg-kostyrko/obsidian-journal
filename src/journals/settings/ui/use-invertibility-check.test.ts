@@ -349,6 +349,26 @@ describe("useInvertibilityCheck", () => {
     expect(probe(harness, config.name).value).toBeNull();
   });
 
+  // The round-trip probe is the only thing that answers for a folder, and a folder rendering the
+  // date under a modification the name does not carry used to fail it -- reported as a date too
+  // coarse to tell the periods apart, for a layout that names every day uniquely.
+  it("stays silent for a decade folder standing beside a day name", async () => {
+    const config = fixedJournal(
+      "daily",
+      { type: "day" },
+      {
+        folder: "Calendar/{{date<startOf=decade>:YYYY}}s/{{date:YYYY}}/{{date:MM}}",
+        nameTemplate: "{{date:YYYY-MM-DD}}",
+      },
+    );
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
+  });
+
   // "Too coarse" is a claim about two periods sharing a name, and these name every day differently:
   // a localized format and a timestamp are written correctly and match nothing on the way back, so
   // the reason the user is given has to be the one that fits.
