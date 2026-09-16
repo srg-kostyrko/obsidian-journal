@@ -1018,7 +1018,44 @@ describe("NoteConnectionService", () => {
         expect(harness.host.files.get(secondPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
       });
 
-      it("keeps an orphaned notelet out of both failed and rewritten", async () => {
+      it("re-anchors an orphaned notelet by rewriting its date alone", async () => {
+        harness.host.putFile(noteletPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Retired",
+          "standup-count": 2,
+        });
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: noteletPath,
+          typeName: "Retired",
+          typeId: null,
+        });
+
+        // "Retired" matches no configured type, so no mutator can be rebuilt from config — and
+        // nothing here can tell which of the surviving keys that type owned. The date is the only
+        // field a re-anchor has to move, and a notelet left holding the old week's start is one
+        // parseEntry stops accepting the next time the note is read. Routing the orphan down the
+        // period arm instead would move it, but would also add an end date no notelet may carry.
+        await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll(
+            "weekly",
+            new Map([[noteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Retired" }]]),
+          );
+
+        const frontmatter = harness.host.files.get(noteletPath)?.frontmatter ?? {};
+        expect(frontmatter).toMatchObject({
+          "journal-date": "2026-06-01",
+          "journal-notelet": "Retired",
+          "standup-count": 2,
+        });
+        expect(frontmatter).not.toHaveProperty("journal-end-date");
+      });
+
+      it("counts an orphaned notelet among the notes it rewrote", async () => {
         const periodPath = "week/2026-W23.md" as VaultPath;
         const movingNoteletPath = "notelet-moving.md" as VaultPath;
         harness.host.putFile(periodPath, "", { journal: "weekly", "journal-date": "2026-06-01" });
@@ -1054,12 +1091,8 @@ describe("NoteConnectionService", () => {
           typeId: "nt_1" as TypeId,
         });
 
-        // "Retired" matches no configured type, so #noteletMetadataAt yields
-        // NoteletTypeNotFoundError: an orphan, whose type was deleted in keep mode and which can
-        // never re-anchor. Counting it would put the notice in front of that user on every grid
-        // change, forever — so this one error alone stays out of `failed`. The period note and the
-        // "Standup" notelet both move cleanly, so rewritten must count both of them and neither
-        // the exempt failure nor a dropped notelet success may go unseen.
+        // All three move, so none of them may go unseen in the tally — an orphan that is written
+        // like any other notelet is counted like any other notelet.
         const result = await harness.resolve(NoteConnectionService).reanchorAll(
           "weekly",
           new Map([
@@ -1071,10 +1104,42 @@ describe("NoteConnectionService", () => {
 
         expectOk(result);
         expect(result.value.failed).toBe(0);
-        expect(result.value.rewritten).toBe(2);
+        expect(result.value.rewritten).toBe(3);
         expect(harness.host.files.get(periodPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-08" });
-        expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-05-31" });
+        expect(harness.host.files.get(noteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
         expect(harness.host.files.get(movingNoteletPath)?.frontmatter).toMatchObject({ "journal-date": "2026-06-01" });
+      });
+
+      it("counts an orphaned notelet whose write failed as failed", async () => {
+        harness.host.putFile(noteletPath, "content", {
+          journal: "weekly",
+          "journal-date": "2026-05-31",
+          "journal-notelet": "Retired",
+        });
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "weekly",
+          anchor: anchor("2026-05-31"),
+          path: noteletPath,
+          typeName: "Retired",
+          typeId: null,
+        });
+        vi.spyOn(harness.resolve(NotesService), "updateFrontmatter").mockImplementation(() =>
+          AsyncResult.err(new NoteNotFoundError(noteletPath)),
+        );
+
+        // Now that an orphan is movable, a write of one that does not land strands the note
+        // exactly as a live notelet's would, and the user has to hear about it.
+        const result = await harness
+          .resolve(NoteConnectionService)
+          .reanchorAll(
+            "weekly",
+            new Map([[noteletPath, { anchor: anchor("2026-06-01"), noteletTypeName: "Retired" }]]),
+          );
+
+        expectOk(result);
+        expect(result.value.failed).toBe(1);
+        expect(result.value.rewritten).toBe(0);
       });
 
       it("counts a notelet whose write failed as failed", async () => {
@@ -1123,6 +1188,28 @@ describe("NoteConnectionService", () => {
       const result = await harness
         .resolve(NoteConnectionService)
         .reanchor("weekly", "Weeks/W03.md" as VaultPath, { anchor: anchor("2026-01-12") });
+
+      expectOk(result);
+      expect(harness.host.files.get("Weeks/W03.md")?.frontmatter["journal-date"]).toBe("2026-01-12");
+    });
+
+    it("rewrites the date of an orphaned notelet the index never accepted", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: weeklyWith() },
+      });
+      harness.host.putFile("Weeks/W03.md", "", {
+        journal: "weekly",
+        "journal-date": "2026-01-14",
+        "journal-notelet": "Retired",
+      });
+      // Deliberately not registering in the index: this is the vault check's repair route, which
+      // only ever runs over notes parseEntry rejected. The stored type name is all it can pass,
+      // and for an orphan that name resolves to nothing.
+
+      const result = await harness
+        .resolve(NoteConnectionService)
+        .reanchor("weekly", "Weeks/W03.md" as VaultPath, { anchor: anchor("2026-01-12"), noteletTypeName: "Retired" });
 
       expectOk(result);
       expect(harness.host.files.get("Weeks/W03.md")?.frontmatter["journal-date"]).toBe("2026-01-12");
