@@ -286,9 +286,17 @@ on it.
   module per message, which dominates unit-suite wall clock through every test
   file that touches `@/i18n`. A bare `npx paraglide-js compile` silently
   restores it.
-- JSON is in the nano-staged prettier glob, `messages/*.json` included, so the
-  old "never reformat, edit line-wise" rule is retired — prettier owns the shape
-  and a round-trip is no longer destructive. What survives is the release script:
+- **Never parse and re-serialize `messages/*.json`.** Not `JSON.stringify`, not
+  `json.dumps`, not `jq` — whatever adds the key. Those files carry authored
+  blank lines between key blocks; prettier preserves them, but a parse drops them
+  and nothing puts them back, so one added message rewrites ~50 lines and
+  `check:format` passes on the wreckage. Insert the line, in place, in each of the
+  eleven files, and read `git diff --stat` before committing: a new key is one
+  insertion per locale and nothing else. JSON _is_ in the nano-staged prettier
+  glob, `messages/*.json` included, so prettier owns indentation and wrapping and
+  reformatting by hand is pointless — but that is a narrower claim than the file
+  surviving a round trip, which it does not. What also survives is the release
+  script:
   `version-bump.mjs` rewrites `manifest.json`, `manifest-beta.json` and
   `versions.json` on every `npm version`, and its `writeJson` helper has to keep
   matching prettier exactly — two spaces **and** a trailing newline, which bare
