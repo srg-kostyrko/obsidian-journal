@@ -63,15 +63,19 @@ jobs:
           STABLE_REF: ${{ inputs.stable_ref }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           ref="$STABLE_REF"
           if [ -z "$ref" ]; then
             # The latest *published* release, not the newest tag. Step 7 of the release runbook
             # pushes the tag and step 8 publishes the draft it produces, so between them a tag
             # exists that nobody can install yet — and a docs push landing in that window would
             # otherwise promote it to the root, which is the failure this whole change is about.
-            # The endpoint excludes drafts and prereleases, so `release-beta.yml`'s tags are out
-            # on both counts.
-            ref=$(gh api "repos/$GITHUB_REPOSITORY/releases/latest" --jq .tag_name 2>/dev/null || true)
+            # Drafts and prereleases are filtered here rather than by asking for `releases/latest`,
+            # which answers 404 both when no release qualifies and when the call simply failed:
+            # an empty ref means "no published release", and a rate-limited or unauthenticated
+            # call fails the job instead of quietly serving unreleased `main` at the root.
+            ref=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+              --jq 'map(select(.draft == false and .prerelease == false)) | .[0].tag_name // ""')
           fi
           # The manual was scaffolded after 3.4.0 and is in no release yet, so until the first one
           # that carries it there is no released manual to put at the root — serve `main` there and
@@ -82,8 +86,12 @@ jobs:
             ref=main
             echo "bootstrap=true" >> "$GITHUB_OUTPUT"
           fi
+          # Resolved into its own variable: `set -e` does not fire on a command substitution that
+          # sits inside an argument, so an inline `$(git rev-parse …)` would write an empty sha and
+          # key the cache on nothing.
+          sha=$(git rev-parse "$ref^{commit}")
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
-          echo "sha=$(git rev-parse "$ref^{commit}")" >> "$GITHUB_OUTPUT"
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
 
       # A tag's build never changes, so it is built once per release and restored on each of the
       # docs pushes that follow — which are frequent, and would otherwise each repeat a full
