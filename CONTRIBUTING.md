@@ -80,6 +80,16 @@ npm run build:api    # regenerates packages/api/index.d.ts — commit the result
 npm run check:api    # proves the published package compiles for a consumer
 ```
 
+The manual is published in two channels. Merging a change to `docs/user/`
+deploys it to `/next/` — the upcoming release, which carries a banner saying so
+and is kept out of search results. The site's root stays on the latest published
+release, because the plugin's own **?** links point there unversioned and a reader
+who clicks one is running a released version. So a page you write for an
+unreleased feature goes live at `/next/` immediately and reaches the root when
+that version ships; a correction to behavior that is already out has to ride the
+next release (or a `stable_ref` dispatch of `pages.yml`). Preview a channel with
+`npm run docs:build` or `npm run docs:build:next`.
+
 `npm test` is not one of the gates. `coverage` runs the same suite and adds the
 floor, so CI pays for the suite once; a green `npm test` says nothing about the
 floor.

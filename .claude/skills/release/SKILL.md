@@ -258,9 +258,11 @@ audit reads the release branch as it stands and, if it needs to open a fix branc
   fix goes on the release branch, and step 5a runs again after it. That re-run is safe: the fix PR,
   if one was opened on the first pass, already exists, so `/docs-audit`'s own guard skips stages 2–3
   and the re-run is stage 1 only.
-- The docs fix PR and the uncovered issue do not block the release. The fix PR can merge before or
-  after the release PR — `main` does not require branches to be up to date, so it never restarts
-  the release gate.
+- The uncovered issue does not block the release. **The docs fix PR does** — it has to merge before
+  step 7 pushes the tag, and step 7 carries the check and the reason. That costs almost nothing on
+  the critical path: step 6 already waits for the audit to finish, so the PR is already open by
+  then. Merging it before the release PR is fine too; `main` does not require branches to be up to
+  date, so neither order restarts the release gate.
 
 ### Step 6 — Merge with a merge commit
 
@@ -294,6 +296,23 @@ with "remote ref does not exist"; that is the expected outcome, not a problem.
 
 `versions.json` is read from the default branch and the tag starts the build, so
 the branch must reach GitHub first.
+
+**The docs fix PR, if step 5a opened one, has to be merged before this push** —
+the published manual's root is built from the latest published release, so a
+correction merged after the tag reaches `/next/` only and readers on the version
+just shipped keep the wrong prose until the release after it. This is the check
+a resumed release skips, since the resume table enters here directly:
+
+```bash
+gh pr list --head "docs/audit-$VER" --state all --json number,state
+```
+
+An open PR merges first — step 5a's audit has already finished by step 6, so it is
+open and waiting rather than something this step starts. Where one genuinely
+cannot make the tag, the root keeps the stale prose until the next release; the
+manual escape is `gh workflow run pages.yml -f stable_ref=<ref>`, and the ref has
+to be cut from the tag with the fix applied, **not** `main`, which carries
+unreleased work the root must not show.
 
 ```bash
 git push origin "$VER"
