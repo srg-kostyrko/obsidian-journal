@@ -6,8 +6,11 @@ import { browser } from "@wdio/globals";
 import ObsidianLauncher from "obsidian-launcher";
 import { parseObsidianVersions } from "wdio-obsidian-service";
 
-// Mirrors wdio-obsidian-service's own default; it resolves this against the project root too.
-const CACHE_DIR = env.WEBDRIVER_CACHE_DIR ?? env.OBSIDIAN_CACHE ?? "./.obsidian-cache";
+// The one cache directory: `config.cacheDir` below, and the registry prefetch in onPrepare. The
+// service takes `config.cacheDir` ahead of any default of its own, so deriving the prefetch's
+// path separately would let the two drift apart and leave the prefetch warming a file nothing
+// reads.
+const CACHE_DIR = path.resolve(".obsidian-cache");
 
 const SCREENSHOT_DIR = "./e2e/.reports/screenshots";
 const LOG_DIR = "./e2e/.reports/logs";
@@ -161,7 +164,7 @@ export const config: WebdriverIO.Config = {
     ["junit", { outputDir: "./e2e/.reports", outputFileFormat: ({ cid }: { cid: string }) => `e2e-junit-${cid}.xml` }],
   ],
 
-  cacheDir: path.resolve(".obsidian-cache"),
+  cacheDir: CACHE_DIR,
 
   logLevel: "warn",
   injectGlobals: false,
@@ -183,8 +186,8 @@ export const config: WebdriverIO.Config = {
   // service's own onPrepare -- a red shard with no junit and no screenshots. Fetching once here
   // leaves the file fresh inside the launcher's 30-minute cache window, so the fan-out reads it
   // instead of racing to write it. wdio awaits this hook before any service's onPrepare, and the
-  // handoff is the cache file on disk: the service builds a private launcher we cannot reach, so
-  // sharing its in-memory cache is not an option.
+  // handoff is the cache file on disk under the shared CACHE_DIR: the service builds a private
+  // launcher we cannot reach, so sharing its in-memory cache is not an option.
   onPrepare: async function () {
     await new ObsidianLauncher({ cacheDir: CACHE_DIR }).getCommunityPlugins();
   },
