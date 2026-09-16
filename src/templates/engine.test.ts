@@ -312,6 +312,18 @@ describe("TemplateEngine.parse", () => {
     expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2022-01-02");
   });
 
+  // Boundaries snap in written order, so they come off in the opposite one. The week is snapped
+  // last here and so comes off first, which reaches 31 August -- the earliest date whose week ends
+  // inside September. Coming off in written order stops at 1 September, which renders the same name
+  // and is not the earliest date that does.
+  it("reads a capture that takes the end of a week and then the end of that month", async () => {
+    const engine = await installTestEngine();
+    const stream = tokenize("{{date<endOf=week><endOf=month>:YYYY-MM-DD}}.md");
+    const result = engine.parse(stream, "2026-09-30.md", buildFakeContext());
+    expectOk(result);
+    expect(asDateBinding(result.value.get("date")).toAnchor()).toBe("2026-08-31");
+  });
+
   describe("multi-binding resolution", () => {
     it("resolves consistent boundary captures to start-of-range source", async () => {
       const engine = await installTestEngine();

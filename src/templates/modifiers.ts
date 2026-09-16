@@ -53,17 +53,14 @@ export function applyModifiers<S extends Shiftable<S>>(value: S, modifiers: read
   return result;
 }
 
-/**
- * The earliest date that renders as `rendered` under `modifiers`.
- *
- * Rendering applies shifts and then boundaries, so inversion undoes them the other way round: a
- * bare `<endOf=unit>` names the whole unit it ends, whose earliest source is that unit's start,
- * and `<startOf=unit>` already names its own. The shifts come off what is left. Undoing the shift
- * first would leave a date inside the wrong unit for the boundary to snap.
- */
+/** The earliest date that renders as `rendered` under `modifiers`. */
 export function sourceDateOf(rendered: CalendarDate, modifiers: readonly Modifier[]): CalendarDate {
+  // Rendering shifts and then snaps, in written order, so inversion runs the whole chain backwards:
+  // the last boundary comes off first, and the shifts come off what is left. A bare `<endOf=unit>`
+  // names the whole unit it ends, whose earliest source is that unit's start; `<startOf=unit>`
+  // already names its own. Taking a shift off first would leave a date in the wrong unit to snap.
   let value = rendered;
-  for (const modifier of modifiers) {
+  for (const modifier of modifiers.toReversed()) {
     if (modifier.kind === "boundary" && modifier.direction === "end" && isBoundaryUnit(modifier.unit)) {
       value = value.startOf(modifier.unit);
     }
