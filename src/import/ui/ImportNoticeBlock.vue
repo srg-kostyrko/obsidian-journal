@@ -57,11 +57,29 @@ function dismiss(): void {
 </template>
 
 <style scoped>
+/* One card, not a box around cards: Obsidian fills and rounds every .setting-item itself, so the
+   rows have to be flattened or the notice reads as a container of three separate things. Sized from
+   Obsidian's own variables rather than the values it happens to use today — the settings chrome has
+   already drifted once across the range this plugin supports. */
 .import-notice {
-  border: 1px solid var(--interactive-accent);
-  padding: var(--size-2-2);
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-inline-start: 3px solid var(--interactive-accent);
+  border-radius: var(--radius-m);
+  padding: var(--size-4-3) var(--size-4-4);
+  margin-block-end: var(--size-4-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
 }
+/* The margin matters as much as the padding: Obsidian spaces settings rows with a bottom margin of
+   its own — 16px under a heading — which stacks on top of the gap here and leaves the last row's
+   share of it sitting above the card's own padding. */
 .import-notice :deep(.setting-item) {
   padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  border-radius: 0;
 }
 </style>
