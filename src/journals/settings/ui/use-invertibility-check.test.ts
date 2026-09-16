@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, ref, type Ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
@@ -40,6 +40,10 @@ const weatherPrompt: Prompt = {
     { label: "Rainy", value: "rainy" },
   ],
 };
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 function probe(harness: TestHarness, journalName: string): Ref<unknown> {
   const journal = ref(harness.resolve(JournalsRepository).get(journalName).getOrUndefined());
@@ -367,6 +371,25 @@ describe("useInvertibilityCheck", () => {
     });
 
     expect(probe(harness, config.name).value).toBeNull();
+  });
+
+  // Two probe periods rendering different paths does not make a path unique per period: this journal
+  // names every week of a month alike, and any probe pair straddling a month boundary renders two
+  // different paths. The date does come back out of the path -- just not this period's -- which is
+  // what "too coarse" means, so a path-difference test would give the wrong reason on that date and
+  // the right one a week later.
+  it("flags a coarse date as coarse even where the probe periods straddle a month", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    // A week renders from its representative day, so the pair has to straddle on *those*: the weeks
+    // of 26 October and 2 November render from Thursday 29 October and Thursday 5 November.
+    vi.setSystemTime(new Date("2026-10-26T12:00:00"));
+    const config = fixedJournal("weekly", { type: "week" }, { folder: "{{date:MM}}", nameTemplate: "{{date:YYYY}}" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "coarse-date" });
   });
 
   // "Too coarse" is a claim about two periods sharing a name, and these name every day differently:

@@ -125,17 +125,17 @@ export function invertibilityOf(
   // A template with no date at all is answered by the numbering verdicts alone — a name that
   // never names a date is not the same defect as one whose date names too many periods.
   const dated = [...pathVariables].some((name) => DATE_VARIABLES.has(name.toLowerCase()));
-  // "Too coarse" is a claim about two periods sharing a note name, so ask that outright rather
-  // than read it off a failed round trip. A path that names every period differently and still
-  // cannot be read back is a different defect with a different fix -- a localized date format or a
-  // timestamp renders fine and matches nothing. Where a path does not render at all there is
-  // nothing to compare, and the older verdict stands.
+  // Two defects reach this point and they need different words. "Too coarse" means a date the
+  // path does give back, just not the period's own -- the probe landed on an earlier period that
+  // renders the same name. A localized date format or a timestamp gives nothing back at all: the
+  // path compiles to a pattern its own rendering never matches. So ask whether any date comes back,
+  // not whether two paths differ -- they differ whenever some other segment moved, which a journal
+  // naming every week of a month alike does at every month boundary. Where a path does not render
+  // at all there is nothing to read, and the older verdict stands.
   const dateVerdict = (): InvertibilityWarning => {
-    const first = start.isSome() ? pathAt(start.value) : undefined;
-    const second = next.isSome() ? pathAt(next.value) : undefined;
-    return first !== undefined && second !== undefined && first !== second
-      ? { kind: "unreadable-date" }
-      : { kind: "coarse-date" };
+    const path = start.isSome() ? pathAt(start.value) : undefined;
+    if (path === undefined) return { kind: "coarse-date" };
+    return paths.candidateFor(config.name, path).isSome() ? { kind: "coarse-date" } : { kind: "unreadable-date" };
   };
   // A disabled sequence renders its digits as empty strings, which is a separate defect;
   // none of the numbering verdicts below describes it.
