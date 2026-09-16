@@ -1,3 +1,5 @@
+import * as v from "valibot";
+
 import type { BlockInstanceId } from "./config";
 import type { BaseIssue, BaseSchema } from "valibot";
 import type { Component } from "vue";
@@ -29,5 +31,16 @@ export interface ViewBlockDefinition<TConfig = unknown> extends Omit<ViewBlockDe
 }
 
 export function defineViewBlock<TConfig>(input: ViewBlockDefinitionInput<TConfig>): ViewBlockDefinition<TConfig> {
-  return { ...input, __brand: "view-block" } as ViewBlockDefinition<TConfig>;
+  const { schema, summary } = input;
+  // A stored block config is persisted unparsed — viewBlockInstanceSchema keeps it a bare record —
+  // so a summary reading it raw sees whatever a past version wrote: the legacy "current-month"
+  // window every vault seeded before 3.5 still holds, or a field the schema would have defaulted.
+  // Either matches no variant of a selector message, which then renders as its own key.
+  const safeSummary =
+    summary &&
+    ((config: unknown): string | undefined => {
+      const parsed = v.safeParse(schema, config);
+      return parsed.success ? summary(parsed.output) : undefined;
+    });
+  return { ...input, summary: safeSummary, __brand: "view-block" };
 }

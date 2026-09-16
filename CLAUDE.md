@@ -368,7 +368,12 @@ on it.
   the old literal when changing one.
 - `browser.setWindowSize` is unsupported and `app.emulateMobile(true)` reloads
   the app and detaches `executeObsidian`. Exercise responsive reflow by forcing
-  a width on the block root through `browser.execute`.
+  a width on the block root through `browser.execute`. The Obsidian window
+  itself _can_ be resized, through the Electron bridge the capture already uses
+  — `electron.remote.getCurrentWindow().setSize(w, h)`, which `innerWidth` then
+  matches exactly — but that moves every pane at once, so it frames a screenshot
+  (`sizeWindow` in `e2e/screenshots/readme.shot.ts`) rather than testing one
+  block's reflow.
 - Per [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)'s
   `reloadObsidian` behavior, notes written with `seedNote` do not survive a
   reboot. Seed-then-reload therefore cannot stage a note that must already

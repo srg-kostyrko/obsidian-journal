@@ -1,0 +1,435 @@
+{
+  "version": 4,
+  "logging": {
+    "level": "debug"
+  },
+  "journals": {
+    "Daily": {
+      "name": "Daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "Journal/Daily",
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "templates": [],
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "shape": "circle",
+              "size": 0.3,
+              "color": {
+                "type": "theme",
+                "name": "text-accent"
+              },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "tag",
+              "condition": "contains",
+              "value": "holiday"
+            }
+          ],
+          "styles": [
+            {
+              "type": "background",
+              "color": {
+                "type": "theme",
+                "name": "text-highlight-bg"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-open-task"
+            }
+          ],
+          "styles": [
+            {
+              "type": "corner",
+              "placement": "top-right",
+              "color": {
+                "type": "theme",
+                "name": "text-warning"
+              }
+            }
+          ]
+        },
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "all-tasks-completed"
+            }
+          ],
+          "styles": [
+            {
+              "type": "icon",
+              "icon": "check",
+              "size": 1.2,
+              "color": {
+                "type": "theme",
+                "name": "text-success"
+              },
+              "placement_x": "right",
+              "placement_y": "top"
+            }
+          ]
+        }
+      ],
+      "notelets": {
+        "meeting": {
+          "id": "meeting",
+          "name": "Meeting",
+          "folder": "Journal/Daily/{{date}}",
+          "nameTemplate": "Meeting {{notelet_index}}",
+          "templates": [],
+          "counter": {
+            "enabled": true,
+            "frontmatterKey": "journal-notelet-index"
+          },
+          "prompts": []
+        },
+        "retro": {
+          "id": "retro",
+          "name": "Retro",
+          "folder": "Journal/Daily/{{date}}",
+          "nameTemplate": "Retro",
+          "templates": [],
+          "counter": {
+            "enabled": false,
+            "frontmatterKey": "journal-notelet-index"
+          },
+          "prompts": []
+        }
+      },
+      "navBlock": {
+        "type": "create",
+        "showAdjacent": true,
+        "decorateWholeBlock": false,
+        "lines": [
+          [
+            {
+              "template": "{{date:ddd}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "link": "none",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{date:D}}",
+              "fontSize": 3,
+              "bold": true,
+              "italic": false,
+              "link": "self",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": true
+            }
+          ],
+          [
+            {
+              "template": "{{relative_date}}",
+              "fontSize": 0.7,
+              "bold": false,
+              "italic": false,
+              "link": "none",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{date:[W]w}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "link": "week",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{date:MMMM}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "link": "month",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{date:YYYY}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "link": "year",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ]
+        ]
+      }
+    },
+    "Weekly": {
+      "name": "Weekly",
+      "write": {
+        "type": "week"
+      },
+      "folder": "Journal/Weekly",
+      "dateFormat": "YYYY-[W]ww",
+      "nameTemplate": "{{date}}",
+      "templates": [],
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "has-note"
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "shape": "circle",
+              "size": 0.3,
+              "color": {
+                "type": "theme",
+                "name": "text-accent"
+              },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            }
+          ]
+        }
+      ]
+    },
+    "Sprint": {
+      "name": "Sprint",
+      "write": {
+        "type": "custom",
+        "every": "week",
+        "duration": 2,
+        "anchorDate": "2026-08-31"
+      },
+      "folder": "Journal/Sprints",
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{journal_name}} {{index}}",
+      "templates": [],
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": true,
+        "addEndDate": true
+      },
+      "numbering": {
+        "enabled": true,
+        "anchorDate": "2026-08-31",
+        "allowBefore": false,
+        "sources": [
+          {
+            "variable": "index",
+            "frontmatterKey": "journal-index",
+            "anchorValue": 1,
+            "reset": {
+              "kind": "never"
+            }
+          }
+        ]
+      },
+      "intervalBlock": {
+        "type": "create",
+        "decorateWholeBlock": true,
+        "showAdjacent": true,
+        "lines": [
+          [
+            {
+              "template": "{{journal_name}} {{index}}",
+              "fontSize": 1.2,
+              "bold": true,
+              "italic": false,
+              "link": "self",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ],
+          [
+            {
+              "template": "{{start_date}} to {{end_date}}",
+              "fontSize": 1,
+              "bold": false,
+              "italic": false,
+              "link": "none",
+              "journal": "",
+              "linkDate": "",
+              "color": {
+                "type": "theme",
+                "name": "text-normal"
+              },
+              "background": {
+                "type": "transparent"
+              },
+              "addDecorations": false
+            }
+          ]
+        ]
+      }
+    }
+  },
+  "shelves": {
+    "Work": {
+      "name": "Work",
+      "journals": ["Daily", "Weekly", "Sprint"],
+      "decorations": []
+    }
+  },
+  "decorations": {
+    "decorations": [
+      {
+        "mode": "and",
+        "conditions": [
+          {
+            "type": "weekday",
+            "weekdays": [0, 6]
+          }
+        ],
+        "styles": [
+          {
+            "type": "color",
+            "color": {
+              "type": "theme",
+              "name": "text-faint"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

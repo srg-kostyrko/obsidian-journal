@@ -5,12 +5,9 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 <picture>
   <source
     media="(prefers-color-scheme: dark)"
-    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-dark.png"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-calendar-dark.png"
   />
-  <img
-    alt="A Journals view in the Obsidian sidebar: toolbars, a decorated month calendar and the notes written on the selected day"
-    src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/views-sidebar-light.png"
-  />
+  <img alt="Obsidian with today's daily note open beside the Calendar view: a month grid marking the days that have notes, and the sprints of the current month" src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-calendar-light.png" />
 </picture>
 
 ## Key Features
@@ -49,6 +46,58 @@ A comprehensive journaling solution for [Obsidian](https://obsidian.md/) that tr
 - **Translated Interface**: The interface follows Obsidian's language setting, with translations for ten languages besides English (Chinese, German, French, Russian, Spanish, Portuguese, Japanese, Korean, Italian, Ukrainian)
 - **Theming Hooks**: Stable class names on the plugin's code blocks, so themes and CSS snippets can restyle them
 - **Logging**: Capture plugin activity and dump it to a note for troubleshooting
+
+## What it looks like
+
+**Every note links to the ones around it.** A navigation block in a daily note opens the day before and after, and the week, month and year that day belongs to — creating the note if it is not there yet.
+
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-nav-block-dark.png"
+  />
+  <img alt="A daily note whose navigation block shows yesterday, today and tomorrow, each linking to its own note" src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-nav-block-light.png" />
+</picture>
+
+**A period can hold more than one note.** Notelets are extra kinds of note a journal writes for the same period — meetings on a day, a retro at the end of one — listed in the note itself.
+
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-notelets-dark.png"
+  />
+  <img alt="A daily note listing its notelets grouped by type: two meetings and a retro" src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-notelets-light.png" />
+</picture>
+
+**Calendars work inside notes too.** A timeline block renders any span you ask for — here a whole quarter — with the days that have notes marked.
+
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-timeline-dark.png"
+  />
+  <img alt="A note holding a quarter timeline: three month grids for July, August and September" src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-timeline-light.png" />
+</picture>
+
+**Dates carry what their notes say.** Decorations style a date by its note's tags, tasks, properties, length or weekday — a highlighted holiday, a corner where tasks are still open, a check where they are all done.
+
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-decorations-dark.png"
+  />
+  <img alt="A month calendar with a highlighted holiday, a corner marking a day with open tasks, a check on a day whose tasks are done, and muted weekends" src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-decorations-light.png" />
+</picture>
+
+**Views are yours to compose.** Each view is a stack of blocks — toolbars, calendars, note lists, dividers — that you add, reorder and configure.
+
+<picture>
+  <source
+    media="(prefers-color-scheme: dark)"
+    srcset="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-view-editor-dark.png"
+  />
+  <img alt="The Calendar view's settings, listing the blocks it is built from: two toolbars, a month calendar, a divider and a custom-intervals list" src="https://raw.githubusercontent.com/srg-kostyrko/obsidian-journal/main/docs/user/public/assets/readme-view-editor-light.png" />
+</picture>
 
 ## Installation
 
