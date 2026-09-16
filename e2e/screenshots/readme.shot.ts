@@ -5,7 +5,7 @@ import { LIVE_LEAF, MONTH_VIEW, openSeededCalendarView } from "../journeys/view.
 import { reloadObsidianOn } from "../support/clock.js";
 import { clickIcon, closeSettings, expandSection, openSettings } from "../support/settings.js";
 import { openViaUri } from "../support/uri.js";
-import { closeAllLeaves, noteExists, seedNote } from "../support/vault.js";
+import { activeNotePath, closeAllLeaves, seedNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
 import { captureThemed, recordOutcome, textsOf, widenRightSidebar } from "./capture.js";
@@ -120,8 +120,13 @@ async function settleForCapture(): Promise<void> {
     .action("pointer")
     .move({ x: Math.round(viewport.width / 2), y: viewport.height - 4 })
     .perform();
-  // Long enough for a tooltip an earlier hover opened to fade out.
-  await browser.pause(400);
+  // Obsidian removes the tooltip element an earlier hover opened; its absence is the condition,
+  // rather than a duration guessed to outlast the fade.
+  await waitForState(
+    () => countMatching(".tooltip"),
+    (open) => open === 0,
+    "waited for the tooltip an earlier hover opened to close",
+  );
 }
 
 // Every block in these images is the one a journal is created with — the README's claim is that
@@ -164,6 +169,59 @@ async function assertGridFits(): Promise<void> {
   if (measured.content > measured.frame) throw new ClippedGridError(measured.content, measured.frame);
 }
 
+interface CellMarks {
+  readonly corners: number;
+  readonly icons: number;
+  readonly dots: number;
+  readonly background: string;
+  readonly color: string;
+}
+
+class MissingMarkError extends Error {
+  constructor(what: string, marks: Record<string, CellMarks>) {
+    super(`${what} is missing from the decorated month: ${JSON.stringify(marks)}`);
+    this.name = "MissingMarkError";
+  }
+}
+
+class AmbiguousCellError extends Error {
+  constructor(anchor: string, matches: number) {
+    super(`${anchor} matches ${matches} day cells in the month grid`);
+    this.name = "AmbiguousCellError";
+  }
+}
+
+/** Read one day cell's marks and resolved colors — what the decoration image is a picture of. */
+async function marksOn(anchor: string): Promise<CellMarks> {
+  const read = await browser.execute(
+    (grid: string, day: string) => {
+      const cells = document.querySelectorAll(`${grid} .notes-month-view__day[data-anchor="${CSS.escape(day)}"]`);
+      const cell = cells[0];
+      if (cells.length !== 1 || cell === undefined) return { matches: cells.length };
+      const decoration = cell.querySelector(".cell-decoration");
+      const styles = decoration === null ? undefined : getComputedStyle(decoration);
+      return {
+        matches: 1,
+        corners: cell.querySelectorAll(".decoration-corner").length,
+        icons: cell.querySelectorAll(".cell-marks svg").length,
+        dots: cell.querySelectorAll(".cell-marks .place-center_bottom").length,
+        background: styles?.backgroundColor ?? "",
+        color: styles?.color ?? "",
+      };
+    },
+    MONTH_VIEW,
+    anchor,
+  );
+  if (read.matches !== 1) throw new AmbiguousCellError(anchor, read.matches);
+  return {
+    corners: read.corners ?? 0,
+    icons: read.icons ?? 0,
+    dots: read.dots ?? 0,
+    background: read.background ?? "",
+    color: read.color ?? "",
+  };
+}
+
 /** What the image would show as selected or focused, for the outcome record. */
 function selectionState(): Promise<{ focused: string; selectedCells: string[] }> {
   return browser.execute(() => ({
@@ -190,8 +248,15 @@ async function seedWrittenDays(bodies: Readonly<Record<string, string>> = {}): P
 // journal's own anchor date, neither of which a hand-written frontmatter date can be trusted to
 // reproduce — so those notes are created through the plugin's own URI handler.
 async function createThroughPlugin(params: Record<string, string>): Promise<void> {
+  const before = await activeNotePath();
   await openViaUri(params);
-  await browser.pause(300);
+  // The URI opens what it created, so the active path moving off the previous note is the
+  // observable outcome — every call here creates a different note.
+  await waitForState(
+    activeNotePath,
+    (path) => path !== undefined && path !== before,
+    `waited for ${JSON.stringify(params)} to create and open its note`,
+  );
 }
 
 const TODAY_NOTE_BODY = [
@@ -379,9 +444,8 @@ describe("readme screenshots — decorations", () => {
   const HOLIDAY = "2026-09-07";
   const OPEN_TASKS = "2026-09-09";
   const DONE_TASKS = "2026-09-10";
-  const LONG_NOTE = "2026-09-11";
-  // The word-count decoration's threshold is 120 words; this clears it with room to spare.
-  const LONG_BODY = `${"The migration runs in two passes so the index never goes cold. ".repeat(20)}\n`;
+  const PLAIN_WEEKDAY = "2026-09-11";
+  const WEEKEND = "2026-09-12";
 
   before(async () => {
     await reloadObsidianOn(
@@ -392,12 +456,11 @@ describe("readme screenshots — decorations", () => {
     await prepareWorkspace();
   });
 
-  it("marks a month of days by their tags, tasks and length", async () => {
+  it("marks a month of days by their tags, their tasks and the weekend", async () => {
     await seedWrittenDays({
       [HOLIDAY]: "#holiday\n\nOut of office.\n",
       [OPEN_TASKS]: "## Today\n\n- [x] Standup\n- [ ] Write up the storage migration\n",
       [DONE_TASKS]: "## Today\n\n- [x] Standup\n- [x] Release notes\n",
-      [LONG_NOTE]: LONG_BODY,
     });
     // No weekly note here, and no note left open: following an opened note moves the view's date
     // to that note's period — for a week, to its representative day — which the grid then marks
@@ -422,17 +485,33 @@ describe("readme screenshots — decorations", () => {
     await assertGridFits();
     await settleForCapture();
 
+    // Each mark the image is published for, read off the cell that should carry it. A decoration
+    // that stops matching — or a condition dropped from the fixture — renders nothing and throws
+    // nothing, so without this the image would just quietly lose its subject.
+    const marks = {
+      holiday: await marksOn(HOLIDAY),
+      openTasks: await marksOn(OPEN_TASKS),
+      doneTasks: await marksOn(DONE_TASKS),
+      plainWeekday: await marksOn(PLAIN_WEEKDAY),
+      weekend: await marksOn(WEEKEND),
+    };
+    if (marks.holiday.background === marks.plainWeekday.background) {
+      throw new MissingMarkError("the holiday tag's background", marks);
+    }
+    if (marks.openTasks.corners < 1) throw new MissingMarkError("the open-task corner", marks);
+    if (marks.doneTasks.icons < 1) throw new MissingMarkError("the completed-task check", marks);
+    if (marks.weekend.color === marks.plainWeekday.color) {
+      throw new MissingMarkError("the muted weekend", marks);
+    }
+    if (marks.plainWeekday.dots < 1) throw new MissingMarkError("the has-note dot", marks);
+
     // The one image where the marks themselves are the subject, so it is framed on the view
     // rather than on the workspace around it.
     await captureThemed(VIEW_ROOT, "readme-decorations", { padding: 12 });
 
     await recordOutcome("readme-decorations", {
       today: TODAY,
-      holiday: HOLIDAY,
-      openTasks: OPEN_TASKS,
-      doneTasks: DONE_TASKS,
-      longNote: LONG_NOTE,
-      longNoteExists: await noteExists(dayNotePath(LONG_NOTE)),
+      marks,
       corners: await countMatching(`${MONTH_VIEW} .decoration-corner`),
       dayDots: await countMatching(DAY_DOTS),
       selection: await selectionState(),
