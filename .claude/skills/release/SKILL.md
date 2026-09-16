@@ -258,10 +258,11 @@ audit reads the release branch as it stands and, if it needs to open a fix branc
   fix goes on the release branch, and step 5a runs again after it. That re-run is safe: the fix PR,
   if one was opened on the first pass, already exists, so `/docs-audit`'s own guard skips stages 2–3
   and the re-run is stage 1 only.
-- The uncovered issue does not block the release. The docs fix PR does not either, but **it has to
-  merge before step 7 pushes the tag** — step 7 carries the check and the reason. Merging it before
-  the release PR is fine too; `main` does not require branches to be up to date, so neither order
-  restarts the release gate.
+- The uncovered issue does not block the release. **The docs fix PR does** — it has to merge before
+  step 7 pushes the tag, and step 7 carries the check and the reason. That costs almost nothing on
+  the critical path: step 6 already waits for the audit to finish, so the PR is already open by
+  then. Merging it before the release PR is fine too; `main` does not require branches to be up to
+  date, so neither order restarts the release gate.
 
 ### Step 6 — Merge with a merge commit
 
@@ -306,8 +307,12 @@ a resumed release skips, since the resume table enters here directly:
 gh pr list --head "docs/audit-$VER" --state all --json number,state
 ```
 
-An open PR merges first. Where it genuinely cannot, publish it by hand after the
-release with `gh workflow run pages.yml -f stable_ref=<branch off the tag>`.
+An open PR merges first — step 5a's audit has already finished by step 6, so it is
+open and waiting rather than something this step starts. Where one genuinely
+cannot make the tag, the root keeps the stale prose until the next release; the
+manual escape is `gh workflow run pages.yml -f stable_ref=<ref>`, and the ref has
+to be cut from the tag with the fix applied, **not** `main`, which carries
+unreleased work the root must not show.
 
 ```bash
 git push origin "$VER"
