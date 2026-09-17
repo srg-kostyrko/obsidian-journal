@@ -18,3 +18,21 @@ export class PromptsUnansweredError extends JournalsError {
     );
   }
 }
+
+/** The user dismissed the journal or date picker while choosing a journal note to link. */
+export class JournalNoteLinkCancelledError extends JournalsError {
+  override name = "JournalNoteLinkCancelledError";
+
+  constructor() {
+    super("Choosing a journal note to link was cancelled");
+  }
+}
+
+/** A journal whose note names use answers has no path for a note it has not created yet. */
+export class NamedByAnswersError extends JournalsError {
+  override name = "NamedByAnswersError";
+
+  constructor(readonly journalName: string) {
+    super(`Journal ${journalName} names its notes after answers, so a note it has not created has no path to link`);
+  }
+}
