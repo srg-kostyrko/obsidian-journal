@@ -348,7 +348,6 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
     if (blockIndent !== undefined && (content.trim() === "" || indent > blockIndent)) {
       out += renderIndented(content, render, eol) + ending;
       commandOpen = commandOpenAfter(content, commandOpen);
-      if (flowDepth > 0) flowDepth = flowDepthAfter(content, flowDepth);
       continue;
     }
     blockIndent = undefined;
