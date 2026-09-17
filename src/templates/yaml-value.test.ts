@@ -21,6 +21,7 @@ const values: Record<string, string> = {
   plain: "Daily",
   lead: " spaced",
   blank: "  ",
+  link: "[[Note]]",
   tag: "#happy",
   mood: "happy",
   date: "2026-09-17",
@@ -282,6 +283,56 @@ describe("renderFrontmatter", () => {
       const frontmatter = 'tags: ["a #b", {{colon}}] # c\n';
       expect(rendered(frontmatter)).toBe('tags: ["a #b", "rough: day"] # c\n');
       expect(read(frontmatter).tags).toEqual(["a #b", "rough: day"]);
+    });
+
+    it.each([
+      ["empty", "", { x: 1, mood: null }],
+      ["link", "[[Note]]", { x: 1, mood: [["Note"]] }],
+    ])("leaves the lines of a collection spanning several lines as renderString would (%s)", (name, text, meta) => {
+      const frontmatter = `meta: {x: 1,\n  mood: {{${name}}}}\nb: {{colon}}\n`;
+      expect(rendered(frontmatter)).toBe(`meta: {x: 1,\n  mood: ${text}}\nb: "rough: day"\n`);
+      expect(read(frontmatter)).toEqual({ meta, b: "rough: day" });
+    });
+
+    it.each([
+      ["empty", "", { mood: null, x: 1 }],
+      ["link", "[[Note]]", { mood: [["Note"]], x: 1 }],
+    ])("leaves a collection whose brackets sit on their own lines as renderString would (%s)", (name, text, meta) => {
+      const frontmatter = `meta: {\n  mood: {{${name}}},\n  x: 1\n}\nb: {{colon}}\n`;
+      expect(rendered(frontmatter)).toBe(`meta: {\n  mood: ${text},\n  x: 1\n}\nb: "rough: day"\n`);
+      expect(read(frontmatter)).toEqual({ meta, b: "rough: day" });
+    });
+
+    it("leaves the opening line of a collection spanning several lines as renderString would", () => {
+      expect(rendered("meta: {a: {{colon}},\n  x: 1}\n")).toBe("meta: {a: rough: day,\n  x: 1}\n");
+    });
+
+    it.each([
+      ["a double-quoted", '"a"'],
+      ["a single-quoted", "'a'"],
+    ])("escapes only the value of %s key followed straight by a colon", (_label, key) => {
+      expect(rendered(`x: [${key}:{{mood}}]\n`)).toBe(`x: [${key}:happy]\n`);
+      expect(read(`x: [${key}:{{mood}}]\n`).x).toEqual([{ a: "happy" }]);
+      expect(read(`x: [${key}:{{num}}]\n`).x).toEqual([{ a: 42 }]);
+      expect(rendered(`x: [${key}:{{empty}}]\n`)).toBe(`x: [${key}:]\n`);
+      expect(read(`x: [${key}:{{empty}}]\n`).x).toEqual([{ a: null }]);
+      expect(rendered(`x: [${key}:{{colon}}]\n`)).toBe(`x: [${key}:"rough: day"]\n`);
+      expect(read(`x: [${key}:{{colon}}]\n`).x).toEqual([{ a: "rough: day" }]);
+    });
+
+    it("leaves an explicit key indicator as renderString would", () => {
+      expect(rendered("x: [? {{mood}}]\n")).toBe("x: [? happy]\n");
+      expect(read("x: [? {{mood}}]\n").x).toEqual([{ happy: null }]);
+    });
+
+    it("leaves a tag as renderString would", () => {
+      expect(rendered("x: [!!str {{num}}]\n")).toBe("x: [!!str 42]\n");
+      expect(read("x: [!!str {{num}}]\n").x).toEqual(["42"]);
+    });
+
+    it("leaves an anchor as renderString would", () => {
+      expect(rendered("x: [&a {{mood}}, *a]\n")).toBe("x: [&a happy, *a]\n");
+      expect(read("x: [&a {{mood}}, *a]\n").x).toEqual(["happy", "happy"]);
     });
 
     it("leaves an unclosed collection as renderString would", () => {

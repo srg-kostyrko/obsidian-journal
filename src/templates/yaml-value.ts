@@ -9,6 +9,7 @@ const ENTRY_RE =
   /^([ \t]*)((?:- +)*)((?:[^\s#'"{[\]:][^:]*?|"(?:[^"\\]|\\.)*"[ \t]*|'(?:[^']|'')*'[ \t]*):(?: +|$))?(.*?)([ \t]*)$/;
 const BLOCK_INDICATOR_RE = /^[|>][+-]?\d?[+-]?$/;
 const INDENT_RE = /^[ \t]*/;
+const FLOW_INDICATOR_RE = /^(?:\?(?:\s|$)|[!&])/;
 const NULL_WORDS = new Set(["null", "Null", "NULL", "~"]);
 
 interface Line {
@@ -208,11 +209,20 @@ function renderFlowItem(written: string, masked: string, inMapping: boolean, ren
   const end = written.trimEnd().length;
   const core = written.slice(start, end);
   const coreMasked = masked.slice(start, end);
+  // An explicit key, a tag or an anchor belongs to what follows it; escaping would quote it in.
+  if (FLOW_INDICATOR_RE.test(coreMasked)) return renderTokens(tokenize(written), render);
   const top = topLevel(coreMasked) ?? [];
-  const colon = [...coreMasked].findIndex(
-    (char, at) =>
-      char === ":" && top.at(at) === true && (at + 1 === coreMasked.length || /\s/.test(coreMasked.charAt(at + 1))),
-  );
+  // A JSON-style quoted key needs no space after its colon.
+  const quotedKeyEnd = /^["']/.test(coreMasked) ? scalarEnd(coreMasked) : undefined;
+  const colon =
+    quotedKeyEnd !== undefined && coreMasked.charAt(quotedKeyEnd) === ":"
+      ? quotedKeyEnd
+      : [...coreMasked].findIndex(
+          (char, at) =>
+            char === ":" &&
+            top.at(at) === true &&
+            (at + 1 === coreMasked.length || /\s/.test(coreMasked.charAt(at + 1))),
+        );
   if (colon === -1 && inMapping) return renderTokens(tokenize(written), render);
   const valueFrom = colon === -1 ? 0 : colon + 1 + (/^\s*/.exec(core.slice(colon + 1))?.[0].length ?? 0);
   return (
@@ -226,6 +236,7 @@ function renderFlowItem(written: string, masked: string, inMapping: boolean, ren
 function renderFlowScalar(value: string, masked: string, render: RenderToken): string {
   const tokens = tokenize(value);
   if (tokens.every((token) => token.kind === "literal")) return value;
+  if (FLOW_INDICATOR_RE.test(masked)) return renderTokens(tokens, render);
   const closesAtEnd = scalarEnd(masked) === masked.length;
   if (closesAtEnd && masked.startsWith('"')) return renderDoubleQuoted(value.slice(1, -1), render);
   if (closesAtEnd && masked.startsWith("'")) return renderSingleQuoted(value.slice(1, -1), render);
@@ -289,6 +300,31 @@ function renderIndented(content: string, render: RenderToken, eol: LineEnding): 
 // to parse, not ours — escaping a continuation line would rewrite the command's own quotes. A line
 // stays open past its end when its last `<%` comes after its last `%>` (an unclosed open), or when
 // it was already open and carries no `%>` of its own to close it.
+// How many flow collections are still open after this line, read from the template's own text. A
+// bracket opens one only at the start of a value, or anywhere inside a collection already open.
+function flowDepthAfter(content: string, depth: number): number {
+  const masked = mask(content);
+  if (masked === undefined) return depth;
+  let open = depth;
+  let previous = "";
+  for (let at = 0; at < masked.length; at++) {
+    const char = masked.charAt(at);
+    const afterSpace = at === 0 || /\s/.test(masked.charAt(at - 1));
+    if (char === "#" && afterSpace) break;
+    if ((char === '"' || char === "'") && (previous === "" || "[{,:?-".includes(previous))) {
+      const end = closingQuote(masked, char, at);
+      if (end === undefined) break;
+      at = end - 1;
+    } else if (char === "[" || char === "{") {
+      if (open > 0 || (afterSpace && (previous === "" || ":-?".includes(previous)))) open++;
+    } else if ((char === "]" || char === "}") && open > 0) {
+      open--;
+    }
+    if (!/\s/.test(char)) previous = char;
+  }
+  return open;
+}
+
 function commandOpenAfter(content: string, wasOpen: boolean): boolean {
   const lastOpen = content.lastIndexOf("<%");
   const lastClose = content.lastIndexOf("%>");
@@ -301,6 +337,7 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
   let out = "";
   let blockIndent: number | undefined;
   let commandOpen = false;
+  let flowDepth = 0;
   for (const { content, ending } of linesOf(text)) {
     const indent = INDENT_RE.exec(content)?.[0].length ?? 0;
     // A block-scalar body line is the author's literal text, `<%` included, and it keeps its own
@@ -319,6 +356,14 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
     if (commandOpen || content.includes("<%")) {
       out += renderTokens(tokenize(content), render) + ending;
       commandOpen = commandOpenAfter(content, commandOpen);
+      continue;
+    }
+    // A flow collection spanning several lines is left as renderString would leave it: its lines
+    // are not entries, and the line that opens it can't be escaped without its closing bracket.
+    const depthBefore = flowDepth;
+    flowDepth = flowDepthAfter(content, flowDepth);
+    if (depthBefore > 0 || flowDepth > 0) {
+      out += renderTokens(tokenize(content), render) + ending;
       continue;
     }
     const entry = ENTRY_RE.exec(content);
