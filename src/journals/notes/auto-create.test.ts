@@ -21,7 +21,7 @@ const neverSettles = (): ReturnType<NoteCreationService["ensureNote"]> =>
   AsyncResult.fromPromise(new Promise<never>(() => undefined), () => new JournalNotFoundError("unreachable"));
 
 const onDevice = (device: DeviceKind): ReturnType<typeof overrideWith> =>
-  overrideWith(PlatformService, { current: () => device });
+  overrideWith(PlatformService, { current: () => device, usesCommandKey: () => false });
 
 const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
 

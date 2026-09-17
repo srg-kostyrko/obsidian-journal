@@ -2,9 +2,9 @@ import { parse as yamlParse } from "yaml";
 
 export { default as moment } from "moment";
 
-// Only the flag PlatformService reads. Tests that need the mobile app override PlatformService
+// Only the flags PlatformService reads. Tests that need another platform override PlatformService
 // through the container rather than mutating this.
-export const Platform = { isMobileApp: false };
+export const Platform = { isMobileApp: false, isMacOS: false };
 
 export class TAbstractFile {
   path = "";
