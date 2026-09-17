@@ -495,3 +495,37 @@ describe("VariableReferenceModal — a notelet type's variables", () => {
     expect(screen.queryByText("{{notelet_index}}")).toBeNull();
   });
 });
+
+describe("VariableReferenceModal — answers that cannot be part of a path", () => {
+  const promptVariables = [
+    { variable: "mood", question: "How do you feel?", type: "text" },
+    { variable: "challenge", question: "Biggest challenge?", type: "text", multiline: true },
+    { variable: "done", question: "Done?", type: "toggle" },
+  ] as const;
+
+  function renderIn(context: VariableModalContext): void {
+    render(VariableReferenceModal, {
+      props: {
+        journalName: "daily",
+        dateFormat: "YYYY-MM-DD",
+        hasCycle: false,
+        numberingVariableNames: [],
+        promptVariables,
+        openModifications: vi.fn(),
+        context,
+      },
+    });
+  }
+
+  it.each(["name-template", "folder-path"] as const)("omits long text and yes/no answers from %s", (context) => {
+    renderIn(context);
+    expect(screen.getByText("{{mood}}")).toBeTruthy();
+    expect(screen.queryByText("{{challenge}}")).toBeNull();
+    expect(screen.queryByText("{{done}}")).toBeNull();
+  });
+
+  it("lists a long text answer for template content", () => {
+    renderIn("template-path");
+    expect(screen.getByText("{{challenge}}")).toBeTruthy();
+  });
+});

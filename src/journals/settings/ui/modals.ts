@@ -18,7 +18,7 @@ import VariableReferenceModal from "./VariableReferenceModal.vue";
 
 import type { VariableModalContext } from "./variable-context";
 import type { JournalWrite, NumberingReset } from "../../config";
-import type { Prompt } from "../../prompts/config";
+import type { Prompt, PromptKind } from "../../prompts/config";
 
 export const addJournalModal = defineModal<{ name: string; write: JournalWrite }>()({
   component: AddJournalModal,
@@ -101,7 +101,7 @@ export interface VariableReferenceModalProps {
   dateFormat: string;
   hasCycle: boolean;
   numberingVariableNames: readonly string[];
-  promptVariables: readonly Pick<Prompt, "variable" | "question" | "type">[];
+  promptVariables: readonly (Pick<Prompt, "variable" | "question"> & PromptKind)[];
   notelet?: boolean;
   openModifications: () => void;
 }

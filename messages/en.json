@@ -1874,6 +1874,7 @@
       "selectors": ["reason"],
       "match": {
         "reason=text": "\"{offending}\" is a free-text answer, so notes carrying it in their name or folder can't be matched back to this journal by their path alone.",
+        "reason=longtext": "\"{offending}\" is a long text answer, so it can't be part of a note name or folder.",
         "reason=toggle": "\"{offending}\" is a yes/no answer, so notes carrying it in their name or folder can't be matched back to this journal by their path alone. Use a choice question instead."
       }
     }

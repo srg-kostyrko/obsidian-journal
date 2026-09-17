@@ -1706,6 +1706,7 @@
       "selectors": ["reason"],
       "match": {
         "reason=text": "“{offending}”是自由文本答案，因此名称或文件夹中包含它的笔记无法仅凭路径与此日记匹配。",
+        "reason=longtext": "“{offending}”是长文本回答，因此不能作为笔记名称或文件夹的一部分。",
         "reason=toggle": "“{offending}”是是/否的回答，因此名称或文件夹中包含它的笔记无法仅凭路径与此日记匹配。请改用选择型问题。"
       }
     }

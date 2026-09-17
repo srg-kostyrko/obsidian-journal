@@ -2,6 +2,7 @@
 import { computed } from "vue";
 
 import { m } from "@/i18n";
+import { fitsInPath } from "@/journals/prompts/config";
 import VariableChip from "@/templates/ui/VariableChip.vue";
 import I18nWithSlot from "@/ui/I18nWithSlot.vue";
 
@@ -13,10 +14,10 @@ const props = withDefaults(defineProps<VariableReferenceModalProps>(), { notelet
 // readable back out of it. Both the clock warning and the yes/no omission below follow from that.
 const PATH_CONTEXTS = new Set<VariableReferenceModalProps["context"]>(["name-template", "folder-path"]);
 const showInvertibilityWarning = computed(() => PATH_CONTEXTS.has(props.context));
-// A yes/no answer renders a localized "Yes"/"No" that no path pattern matches, so the question
-// editor refuses one in a name or folder. Listing it here would advertise what cannot be saved.
+// The question editor refuses a yes/no or long text answer in a name or folder, so listing one
+// here would advertise what cannot be saved.
 const promptRows = computed(() =>
-  props.promptVariables.filter((prompt) => !(prompt.type === "toggle" && PATH_CONTEXTS.has(props.context))),
+  props.promptVariables.filter((prompt) => fitsInPath(prompt) || !PATH_CONTEXTS.has(props.context)),
 );
 const showNavRowVariables = computed(() => props.context === "nav-row");
 const showTemplateContentVariables = computed(() => props.context === "template-path");

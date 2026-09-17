@@ -1870,6 +1870,7 @@
       "selectors": ["reason"],
       "match": {
         "reason=text": "„{offending}“ ist eine Freitextantwort, daher können Notizen, die sie im Namen oder Ordner tragen, nicht allein anhand ihres Pfads diesem Journal zugeordnet werden.",
+        "reason=longtext": "„{offending}“ ist eine Antwort vom Typ „Langer Text“ und kann daher nicht Teil eines Notiznamens oder Ordners sein.",
         "reason=toggle": "„{offending}“ ist eine Ja/Nein-Antwort, daher können Notizen, die sie im Namen oder Ordner tragen, nicht allein anhand ihres Pfads diesem Journal zugeordnet werden. Verwende stattdessen eine Auswahlfrage."
       }
     }
