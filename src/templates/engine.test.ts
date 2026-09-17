@@ -910,3 +910,42 @@ describe("validation", () => {
     expect(problems).toEqual([]);
   });
 });
+
+const withAnswer = (): TemplateContext => buildFakeContext().string("answer", "a\nb\n\nc");
+
+describe("TemplateEngine.renderDocument", () => {
+  it("renders a template without multi-line values exactly as renderString does", async () => {
+    const engine = await installTestEngine();
+    const template = "---\ntitle: {{journal_name}}\n---\n# {{date}}\n\n- Sprint {{index}}\n";
+    expect(engine.renderDocument(template, buildFakeContext())).toBe(engine.renderString(template, buildFakeContext()));
+  });
+
+  it("continues a multi-line value under a quote", async () => {
+    const engine = await installTestEngine();
+    expect(engine.renderDocument("> {{answer}}", withAnswer())).toBe("> a\n> b\n>\n> c");
+  });
+
+  it("counts an earlier value on the same line towards the prefix", async () => {
+    const engine = await installTestEngine();
+    expect(engine.renderDocument("- {{journal_name}}: {{answer}}", withAnswer())).toBe("- Daily: a\n  b\n- c");
+  });
+
+  it("writes the template's own line ending", async () => {
+    const engine = await installTestEngine();
+    expect(engine.renderDocument("# {{date}}\r\n> {{answer}}\r\n", withAnswer())).toBe(
+      "# 2022-01-05\r\n> a\r\n> b\r\n>\r\n> c\r\n",
+    );
+  });
+
+  it("leaves a note name render untouched", async () => {
+    const engine = await installTestEngine();
+    expect(engine.renderString("> {{answer}}", withAnswer())).toBe("> a\nb\n\nc");
+  });
+
+  it("does not apply markdown structure inside the frontmatter block", async () => {
+    const engine = await installTestEngine();
+    expect(engine.renderDocument("---\n> {{journal_name}}\n---\n> {{answer}}", withAnswer())).toBe(
+      "---\n> Daily\n---\n> a\n> b\n>\n> c",
+    );
+  });
+});

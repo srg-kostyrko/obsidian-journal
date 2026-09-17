@@ -4,6 +4,7 @@ import { CalendarDate, localMoment } from "@/calendar";
 import { inject, InjectorToken } from "@/infrastructure/di";
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
+import { renderDocumentWith } from "./document";
 import { TemplateParseError } from "./errors";
 import { tokenize } from "./grammar";
 import { FunctionHandlerToken, type FunctionHandler } from "./handlers";
@@ -251,6 +252,11 @@ export class TemplateEngine {
       output += this.#renderToken(token, context);
     }
     return output;
+  }
+
+  /** Renders a note's content: multi-line values keep the structure of the line they start on. */
+  renderDocument(template: string, context: TemplateContext): string {
+    return renderDocumentWith(template, (token) => this.#renderToken(token, context));
   }
 
   validate(

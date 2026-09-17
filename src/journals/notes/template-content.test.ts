@@ -116,6 +116,41 @@ describe("TemplateContentService.renderFor", () => {
 
     expect(result.isOk() && result.value).toBe("");
   });
+
+  it("keeps a multi-line answer inside the quote the template puts it in", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              templates: ["Templates/daily.md"],
+              prompts: [
+                {
+                  variable: "challenge",
+                  question: "Challenge?",
+                  type: "text",
+                  multiline: true,
+                  frontmatterKey: "",
+                  required: false,
+                },
+              ],
+            },
+          ),
+        },
+      },
+    });
+    harness.host.putFile("Templates/daily.md", "> {{challenge}}");
+
+    const result = await harness
+      .resolve(TemplateContentService)
+      .renderFor("daily", { ...meta, answers: { challenge: "one\ntwo" } }, "2026-05-19", "2026-05-19.md" as VaultPath);
+
+    expectOk(result);
+    expect(result.value).toBe("> one\n> two");
+  });
 });
 
 describe("TemplateContentService.renderFor — note_name binding", () => {

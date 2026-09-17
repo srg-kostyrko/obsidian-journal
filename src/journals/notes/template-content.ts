@@ -37,11 +37,11 @@ export class TemplateContentService {
           // An empty template falls through to the next candidate; only a template with
           // content wins the slot.
           if (readResult.value === "") continue;
-          const rendered = this.#engine.renderString(readResult.value, context);
+          const rendered = this.#engine.renderDocument(readResult.value, context);
           // Templater pulls a `tp.file.include` sub-template straight off disk, so the same
           // context has to travel with it or the sub-template keeps its variables literal.
           const applied = await this.#templater.apply(renderedPath, targetPath, rendered, (raw) =>
-            this.#engine.renderString(raw, context),
+            this.#engine.renderDocument(raw, context),
           );
           return applied.match({ ok: (content) => content, err: () => rendered });
         }

@@ -28,6 +28,8 @@ export type BoundValue =
 
 export type Bindings = ReadonlyMap<string, BoundValue>;
 
+export type RenderToken = (token: Token) => string;
+
 export interface ValidationProblem {
   token: Token;
   position: number;
