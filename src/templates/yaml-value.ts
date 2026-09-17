@@ -41,12 +41,45 @@ function plainOrQuoted(value: string): string {
   }
 }
 
-function blockScalar(prefix: string, indent: string, extraWidth: number, value: string, eol: LineEnding): string {
+// Found in the template as written, never in rendered output: a substituted value containing ` #`
+// is still a value and has to be quoted, not split. A `#` only starts a comment after whitespace
+// and outside the author's quotes, which YAML recognizes only at the start of the value.
+function splitComment(written: string): { value: string; comment: string } {
+  const masked = tokenize(written)
+    .map((token) => (token.kind === "literal" ? token.text : "x".repeat(token.raw.length)))
+    .join("");
+  if (masked.length !== written.length) return { value: written, comment: "" };
+  const quote = masked.at(0);
+  const from = quote === '"' || quote === "'" ? closingQuote(masked, quote) : 0;
+  const match = /[ \t]+#/.exec(masked.slice(from));
+  if (match === null) return { value: written, comment: "" };
+  const at = from + match.index;
+  return { value: written.slice(0, at), comment: written.slice(at) };
+}
+
+function closingQuote(text: string, quote: string): number {
+  for (let at = 1; at < text.length; at++) {
+    const char = text[at];
+    const escaped = quote === '"' ? char === "\\" : char === "'" && text[at + 1] === "'";
+    if (escaped) at++;
+    else if (char === quote) return at + 1;
+  }
+  return text.length;
+}
+
+function blockScalar(
+  prefix: string,
+  indent: string,
+  extraWidth: number,
+  value: string,
+  suffix: string,
+  eol: LineEnding,
+): string {
   // A first line that starts with a space would otherwise set the block's indentation itself.
   const indicator = value.startsWith(" ") ? "|2-" : "|-";
   const pad = `${indent}${" ".repeat(extraWidth)}`;
   const lines = value.split("\n").map((line) => (line === "" ? "" : pad + line));
-  return [`${prefix.endsWith(" ") ? prefix : `${prefix} `}${indicator}`, ...lines].join(eol);
+  return [`${prefix.endsWith(" ") ? prefix : `${prefix} `}${indicator}${suffix}`, ...lines].join(eol);
 }
 
 function renderDoubleQuoted(inner: string, render: RenderToken): string {
@@ -77,20 +110,21 @@ function renderEntry(
   dashRun: string,
   key: string | undefined,
   value: string,
+  suffix: string,
   render: RenderToken,
   eol: LineEnding,
 ): string {
   const prefix = indent + renderTokens(tokenize(dashRun + (key ?? "")), render);
   const tokens = tokenize(value);
-  if (tokens.every((token) => token.kind === "literal")) return prefix + value;
+  if (tokens.every((token) => token.kind === "literal")) return prefix + value + suffix;
   if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
-    return prefix + renderDoubleQuoted(value.slice(1, -1), render);
+    return prefix + renderDoubleQuoted(value.slice(1, -1), render) + suffix;
   }
   if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) {
-    return prefix + renderSingleQuoted(value.slice(1, -1), render);
+    return prefix + renderSingleQuoted(value.slice(1, -1), render) + suffix;
   }
   if (value.startsWith("[") || (value.startsWith("{") && !value.startsWith("{{"))) {
-    return prefix + renderTokens(tokens, render);
+    return prefix + renderTokens(tokens, render) + suffix;
   }
   // A block scalar's content must clear the column of whatever line it hangs off: the full dash
   // run (a nested list's innermost `- ` starts only after every outer one) plus, when a key
@@ -99,12 +133,14 @@ function renderEntry(
   const only = tokens.length === 1 ? tokens[0] : undefined;
   if (only !== undefined && only.kind !== "literal") {
     const whole = normalizeMultiline(render(only));
-    return whole.includes("\n") ? blockScalar(prefix, indent, extraWidth, whole, eol) : prefix + plainOrQuoted(whole);
+    return whole.includes("\n")
+      ? blockScalar(prefix, indent, extraWidth, whole, suffix, eol)
+      : prefix + plainOrQuoted(whole) + suffix;
   }
   const joined = tokens
     .map((token) => (token.kind === "literal" ? token.text : normalizeMultiline(render(token))))
     .join("");
-  return prefix + (joined.includes("\n") ? JSON.stringify(joined) : plainOrQuoted(joined));
+  return prefix + (joined.includes("\n") ? JSON.stringify(joined) : plainOrQuoted(joined)) + suffix;
 }
 
 function renderIndented(content: string, render: RenderToken, eol: LineEnding): string {
@@ -126,21 +162,29 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
       continue;
     }
     blockIndent = undefined;
+    // Templater runs after this and parses its own commands out of the line, so escaping a value
+    // beside one would rewrite the command's own quotes.
+    if (content.includes("<%")) {
+      out += renderTokens(tokenize(content), render) + ending;
+      continue;
+    }
     const entry = ENTRY_RE.exec(content);
     if (entry === null) {
       out += renderTokens(tokenize(content), render) + ending;
       continue;
     }
-    const [, lineIndent = "", dashRun = "", key, value = "", trailing = ""] = entry;
+    const [, lineIndent = "", dashRun = "", key, written = "", trailing = ""] = entry;
     // A value that already starts with `#` in the template itself is a comment the author wrote,
     // not a value the engine owns — render the line as renderString would rather than quoting it.
     // A rendered value that only starts with `#` after substitution is handled by plainOrQuoted.
-    if ((dashRun === "" && key === undefined) || value.startsWith("#")) {
+    if ((dashRun === "" && key === undefined) || written.startsWith("#")) {
       out += renderTokens(tokenize(content), render) + ending;
       continue;
     }
+    const { value, comment } = splitComment(written);
     if (BLOCK_INDICATOR_RE.test(value)) blockIndent = indent;
-    out += renderEntry(lineIndent, dashRun, key, value, render, eol) + trailing + ending;
+    const suffix = renderTokens(tokenize(comment), render) + trailing;
+    out += renderEntry(lineIndent, dashRun, key, value, suffix, render, eol) + ending;
   }
   return out;
 }

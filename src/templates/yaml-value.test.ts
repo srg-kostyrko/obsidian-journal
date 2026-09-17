@@ -21,6 +21,8 @@ const values: Record<string, string> = {
   plain: "Daily",
   lead: " spaced",
   tag: "#happy",
+  mood: "happy",
+  date: "2026-09-17",
 };
 
 const render: RenderToken = (token) => (token.kind === "literal" ? token.text : (values[token.name] ?? token.raw));
@@ -140,6 +142,54 @@ describe("renderFrontmatter", () => {
     });
   });
 
+  describe("a value followed by a comment in the template", () => {
+    it("keeps a plain value apart from the comment after it", () => {
+      expect(rendered("mood: {{mood}} # how I feel\n")).toBe("mood: happy # how I feel\n");
+      expect(read("mood: {{mood}} # how I feel\n").mood).toBe("happy");
+    });
+
+    it("still quotes a value that needs it, leaving the comment outside the quotes", () => {
+      expect(rendered("title: {{colon}}   # c\n")).toBe('title: "rough: day"   # c\n');
+      expect(read("title: {{colon}}   # c\n").title).toBe("rough: day");
+    });
+
+    it("recognizes the author's double quotes before a comment", () => {
+      expect(rendered('key: "{{mood}}" # c\n')).toBe('key: "happy" # c\n');
+      expect(read('key: "{{mood}}" # c\n').key).toBe("happy");
+    });
+
+    it("recognizes the author's single quotes before a comment", () => {
+      expect(rendered("key: 'it''s {{mood}}' # c\n")).toBe("key: 'it''s happy' # c\n");
+      expect(read("key: 'it''s {{mood}}' # c\n").key).toBe("it's happy");
+    });
+
+    it("keeps a # inside the author's quotes as part of the value", () => {
+      expect(read('key: "a #b {{mood}}" # c\n').key).toBe("a #b happy");
+    });
+
+    it("writes a multi-line value as a block with the comment on its header", () => {
+      expect(rendered("summary: {{answer}} # c\n")).toBe("summary: |- # c\n  a\n  b\n\n  c\n");
+      expect(read("summary: {{answer}} # c\n").summary).toBe("a\nb\n\nc");
+    });
+
+    it("quotes a substituted value containing a space and hash when the template has no comment", () => {
+      expect(rendered("title: {{hash}}\n")).toBe('title: "great #win"\n');
+      expect(read("title: {{hash}}\n").title).toBe("great #win");
+    });
+
+    it("recognizes a block header whose indicator is followed by a comment", () => {
+      const frontmatter = "summary: | # c\n  k: {{colon}}\n";
+      expect(rendered(frontmatter)).toBe("summary: | # c\n  k: rough: day\n");
+      expect(read(frontmatter).summary).toBe("k: rough: day\n");
+    });
+
+    it("recognizes a list entry's folded block header followed by a comment", () => {
+      const frontmatter = "items:\n  - > # c\n    k: {{colon}}\n";
+      expect(rendered(frontmatter)).toBe("items:\n  - > # c\n    k: rough: day\n");
+      expect(read(frontmatter).items).toEqual(["k: rough: day\n"]);
+    });
+  });
+
   describe("other lines", () => {
     it("continues a value inside a block the template opens with indentation only", () => {
       expect(rendered("summary: |\n  > {{answer}}\n")).toBe("summary: |\n  > a\n  b\n\n  c\n");
@@ -153,6 +203,12 @@ describe("renderFrontmatter", () => {
       const frontmatter = "tags: # {{plain}}\n  - a\n";
       expect(rendered(frontmatter)).toBe("tags: # Daily\n  - a\n");
       expect(read(frontmatter)).toEqual({ tags: ["a"] });
+    });
+
+    it("leaves a line carrying a Templater command as renderString would", () => {
+      expect(rendered('title: {{date}} <% tp.system.prompt("Mood: ") %>\n')).toBe(
+        'title: 2026-09-17 <% tp.system.prompt("Mood: ") %>\n',
+      );
     });
 
     it("leaves a value in key position as renderString would", () => {
