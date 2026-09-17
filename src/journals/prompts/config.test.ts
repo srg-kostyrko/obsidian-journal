@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { isRequired, promptsSchema } from "./config";
+import { displayTypeOf, fitsInPath, isLongText, isRequired, promptsSchema } from "./config";
 
 import type { Prompt } from "./config";
 
@@ -98,5 +98,44 @@ describe("isRequired", () => {
 
   it("is false for a yes/no question even when the stored object still carries the flag", () => {
     expect(isRequired({ ...done, required: true } as Prompt)).toBe(false);
+  });
+});
+
+describe("a long text question", () => {
+  const text = { variable: "challenge", question: "Biggest challenge?", type: "text" };
+
+  it("keeps the multiline flag", () => {
+    const parsed = v.safeParse(promptsSchema, [{ ...text, multiline: true }]);
+    expect(parsed.success && parsed.output[0]).toMatchObject({ type: "text", multiline: true });
+  });
+
+  it("stores nothing for a one-line text question", () => {
+    const parsed = v.safeParse(promptsSchema, [text]);
+    expect(parsed.success && "multiline" in parsed.output[0]).toBe(false);
+  });
+
+  // An older plugin version reads a stored question through its own schema; an unknown key is
+  // dropped there, where an unknown answer type would fail the item and wipe every question.
+  it("reads as a plain text question under a schema that does not know the flag", () => {
+    const older = v.object({ variable: v.string(), question: v.string(), type: v.literal("text") });
+    expect(v.parse(older, { ...text, multiline: true })).toEqual(text);
+  });
+});
+
+describe("isLongText, fitsInPath and displayTypeOf", () => {
+  const cases = [
+    { prompt: { type: "text" }, longText: false, fits: true, display: "text" },
+    { prompt: { type: "text", multiline: false }, longText: false, fits: true, display: "text" },
+    { prompt: { type: "text", multiline: true }, longText: true, fits: false, display: "longtext" },
+    { prompt: { type: "number" }, longText: false, fits: true, display: "number" },
+    { prompt: { type: "date" }, longText: false, fits: true, display: "date" },
+    { prompt: { type: "select" }, longText: false, fits: true, display: "select" },
+    { prompt: { type: "toggle" }, longText: false, fits: false, display: "toggle" },
+  ] as const;
+
+  it.each(cases)("$prompt", ({ prompt, longText, fits, display }) => {
+    expect(isLongText(prompt)).toBe(longText);
+    expect(fitsInPath(prompt)).toBe(fits);
+    expect(displayTypeOf(prompt)).toBe(display);
   });
 });
