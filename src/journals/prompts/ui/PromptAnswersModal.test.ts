@@ -700,6 +700,25 @@ describe("PromptAnswersModal", () => {
       });
     });
 
+    it("does not submit on Ctrl+Enter while an input method is composing", async () => {
+      const { submit } = await renderReflect(false);
+      const box = screen.getByRole("textbox");
+      await userEvent.type(box, "one");
+      const enter = new KeyboardEvent("keydown", {
+        key: "Enter",
+        ctrlKey: true,
+        isComposing: true,
+        bubbles: true,
+        cancelable: true,
+      });
+      box.dispatchEvent(enter);
+
+      // Submitting settles asynchronously, so the synchronous proof is that the key went on to the
+      // input method untouched rather than being claimed for the form.
+      expect(enter.defaultPrevented).toBe(false);
+      expect(submit).not.toHaveBeenCalled();
+    });
+
     it("still validates when submitted from the keyboard", async () => {
       const { submit } = await renderReflect(false);
       await userEvent.type(screen.getByRole("textbox"), "{Control>}{Enter}{/Control}");

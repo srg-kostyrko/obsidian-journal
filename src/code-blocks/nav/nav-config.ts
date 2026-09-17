@@ -8,9 +8,9 @@ function asAdjacent(value: unknown): boolean | undefined {
 
 const navBlockEntries = {
   // Unset follows the journal's own "show previous and next periods" setting. A boolean is
-  // required rather than an on/off word: YAML 1.2 (the `yaml` library Obsidian bundles) reads only true/false as booleans, so `on`
-  // would arrive as the string "on" and degrade to unset — the same contract the timeline's
-  // `navigation` option keeps.
+  // required rather than an on/off word: YAML 1.2 (the `yaml` library Obsidian bundles) reads
+  // only true/false as booleans, so `on` would arrive as the string "on" and degrade to unset —
+  // the same contract the timeline's `navigation` option keeps.
   adjacent: v.pipe(v.optional(v.unknown()), v.transform(asAdjacent)),
 };
 
