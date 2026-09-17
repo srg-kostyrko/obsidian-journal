@@ -1,4 +1,4 @@
-import { load as yamlLoad } from "js-yaml";
+import { parse as yamlParse } from "yaml";
 
 export { default as moment } from "moment";
 
@@ -431,9 +431,11 @@ export interface MarkdownPostProcessorContext {
   addChild(child: MarkdownRenderChild): void;
 }
 
+// Obsidian parses with eemeli `yaml`, not js-yaml, and the frontmatter escaping decides by what
+// the parser accepts — a fake on a different parser would pass tests Obsidian fails.
 export function parseYaml(source: string): unknown {
   if (source.trim() === "") return null;
-  return yamlLoad(source);
+  return yamlParse(source);
 }
 
 // Obsidian augments HTMLElement with a handful of helpers. Stub them here so

@@ -70,7 +70,6 @@
     "@testing-library/user-event": "^14.6.4",
     "@testing-library/vue": "^8.1.0",
     "@tsconfig/node24": "^24.0.0",
-    "@types/js-yaml": "^4.0.9",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.2.0",
     "@types/sortablejs": "^1.15.9",
@@ -97,7 +96,6 @@
     "globals": "^17.11.0",
     "happy-dom": "^20.11.2",
     "husky": "^9.1.7",
-    "js-yaml": "^5.0.0",
     "mocha": "^12.0.0",
     "nano-staged": "^1.0.2",
     "obsidian-launcher": "^3.2.0",
@@ -112,7 +110,8 @@
     "vitest": "^5.0.0",
     "vue-tsc": "^3.3.9",
     "wdio-obsidian-reporter": "^3.1.3",
-    "wdio-obsidian-service": "^3.1.3"
+    "wdio-obsidian-service": "^3.1.3",
+    "yaml": "2.6.1"
   },
   "nano-staged": {
     "*.{ts,vue}": "eslint --max-warnings=0",
