@@ -604,4 +604,34 @@ describe("useInvertibilityCheck", () => {
 
     expect(probe(harness, config.name).value).toBeNull();
   });
+
+  // Adjacent periods cannot see a name that repeats over a longer cycle than the journal's own:
+  // every March is named "March", and so is next year's, which reads back as this year's.
+  it.each([
+    ["month", "{{date:MMMM}}"],
+    ["day", "{{date:MM-DD}}"],
+    ["week", "[W]{{date:ww}}"],
+  ] as const)("flags a %s name that repeats a year later: %s", async (type, nameTemplate) => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-17T12:00:00"));
+    const config = fixedJournal("journal", { type }, { nameTemplate });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "coarse-date" });
+  });
+
+  it("stays silent for a name that repeats a year later inside a year folder", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-17T12:00:00"));
+    const config = fixedJournal("daily", { type: "day" }, { folder: "{{date:YYYY}}", nameTemplate: "{{date:MM-DD}}" });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toBeNull();
+  });
 });

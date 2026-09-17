@@ -111,14 +111,20 @@ export function invertibilityOf(
   // The template compiles, but auto-attach still needs to recover an anchor from the path.
   // Two adjacent periods, because a coarse date variable pins one period of its own range —
   // a year on a two-week cycle names every note of the year alike, yet the interval holding
-  // January 1st still round-trips.
-  const start = cycle.anchorOf(config.name, probeDate(config));
+  // January 1st still round-trips. And the period a year on, because a name can tell adjacent
+  // periods apart and still repeat every year — `MMMM` names next March as this March, and the
+  // note for one silently becomes the other's.
+  const probe = probeDate(config);
+  const start = cycle.anchorOf(config.name, probe);
   const next = start.flatMap((anchor) => cycle.nextAnchor(config.name, anchor));
+  const yearOn = cycle.anchorOf(config.name, probe.shift(1, "y"));
   if (
     start.isSome() &&
     next.isSome() &&
+    yearOn.isSome() &&
     roundTripsAt(config.name, start.value) &&
-    roundTripsAt(config.name, next.value)
+    roundTripsAt(config.name, next.value) &&
+    roundTripsAt(config.name, yearOn.value)
   )
     return null;
   const pathVariables = new Set([...variableNames(config.nameTemplate), ...variableNames(config.folder)]);
