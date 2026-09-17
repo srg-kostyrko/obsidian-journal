@@ -55,11 +55,15 @@ describe("renderFrontmatter", () => {
     it.each([
       ["a colon and space", "colon", "rough: day"],
       ["a space and hash", "hash", "great #win"],
-      ["double quotes", "quote", 'say "hi"'],
       ["a leading space", "lead", " spaced"],
     ])("quotes a value containing %s", (_label, name, expected) => {
       expect(rendered(`title: {{${name}}}\n`)).toBe(`title: ${JSON.stringify(expected)}\n`);
       expect(read(`title: {{${name}}}\n`).title).toBe(expected);
+    });
+
+    it("keeps a value with quotes inside it as written, since it reads back unchanged", () => {
+      expect(rendered("title: {{quote}}\n")).toBe('title: say "hi"\n');
+      expect(read("title: {{quote}}\n").title).toBe('say "hi"');
     });
 
     it.each(["-", "[", "{", "*", "&", "!", "%", "@", "`", "|", ">", "?"])(
