@@ -303,6 +303,24 @@ describe("renderFrontmatter", () => {
       expect(read(frontmatter)).toEqual({ meta, b: "rough: day" });
     });
 
+    it.each([
+      ["empty", "", null],
+      ["link", "[[Note]]", [["Note"]]],
+    ])("tracks a collection opened on a line holding a Templater command (%s)", (name, text, b) => {
+      const frontmatter = `m: {t: <% tp.date.now() %>,\n  b: {{${name}}}}\n`;
+      expect(rendered(frontmatter)).toBe(`m: {t: <% tp.date.now() %>,\n  b: ${text}}\n`);
+      expect(read(frontmatter)).toEqual({ m: { t: "<% tp.date.now() %>", b } });
+      const sequence = `m: [<% tp.x %>,\n  b: {{${name}}}]\n`;
+      expect(rendered(sequence)).toBe(`m: [<% tp.x %>,\n  b: ${text}]\n`);
+      expect(read(sequence)).toEqual({ m: ["<% tp.x %>", { b }] });
+    });
+
+    it("resumes escaping after a collection closed on a line holding a Templater command", () => {
+      const frontmatter = "t: [a,\n  <% tp.x %>]\nafter: {{colon}}\n";
+      expect(rendered(frontmatter)).toBe('t: [a,\n  <% tp.x %>]\nafter: "rough: day"\n');
+      expect(read(frontmatter)).toEqual({ t: ["a", "<% tp.x %>"], after: "rough: day" });
+    });
+
     it("leaves the opening line of a collection spanning several lines as renderString would", () => {
       expect(rendered("meta: {a: {{colon}},\n  x: 1}\n")).toBe("meta: {a: rough: day,\n  x: 1}\n");
     });

@@ -296,10 +296,6 @@ function renderIndented(content: string, render: RenderToken, eol: LineEnding): 
   return out;
 }
 
-// A `<%* ... %>` Templater command can span several lines, and every line inside it is Templater's
-// to parse, not ours — escaping a continuation line would rewrite the command's own quotes. A line
-// stays open past its end when its last `<%` comes after its last `%>` (an unclosed open), or when
-// it was already open and carries no `%>` of its own to close it.
 // How many flow collections are still open after this line, read from the template's own text. A
 // bracket opens one only at the start of a value, or anywhere inside a collection already open.
 function flowDepthAfter(content: string, depth: number): number {
@@ -325,6 +321,10 @@ function flowDepthAfter(content: string, depth: number): number {
   return open;
 }
 
+// A `<%* ... %>` Templater command can span several lines, and every line inside it is Templater's
+// to parse, not ours — escaping a continuation line would rewrite the command's own quotes. A line
+// stays open past its end when its last `<%` comes after its last `%>` (an unclosed open), or when
+// it was already open and carries no `%>` of its own to close it.
 function commandOpenAfter(content: string, wasOpen: boolean): boolean {
   const lastOpen = content.lastIndexOf("<%");
   const lastClose = content.lastIndexOf("%>");
@@ -348,6 +348,7 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
     if (blockIndent !== undefined && (content.trim() === "" || indent > blockIndent)) {
       out += renderIndented(content, render, eol) + ending;
       commandOpen = commandOpenAfter(content, commandOpen);
+      if (flowDepth > 0) flowDepth = flowDepthAfter(content, flowDepth);
       continue;
     }
     blockIndent = undefined;
@@ -356,6 +357,7 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
     if (commandOpen || content.includes("<%")) {
       out += renderTokens(tokenize(content), render) + ending;
       commandOpen = commandOpenAfter(content, commandOpen);
+      flowDepth = flowDepthAfter(content, flowDepth);
       continue;
     }
     // A flow collection spanning several lines is left as renderString would leave it: its lines
