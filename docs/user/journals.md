@@ -75,7 +75,7 @@ template path:**.
   installed, its commands run afterwards — see [Compatibility](/compatibility).
 - Variables in a template's properties are written so the properties stay readable: a value that
   would break them — one containing `: `, ` #` or a line break — is quoted or written over
-  several lines. Numbers, yes/no values and lists keep their type.
+  several lines. Numbers, `true`/`false` values and lists keep their type.
 - A template only ever fills a new note, or an empty note being connected. A note with content is
   never overwritten.
 
