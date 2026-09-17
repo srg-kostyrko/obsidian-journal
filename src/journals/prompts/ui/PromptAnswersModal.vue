@@ -18,6 +18,7 @@ import { NotePathService } from "@/journals/notes/note-path";
 import { isNoteletMetadata } from "@/journals/types";
 import { JournalsViewModel } from "@/journals/view-model";
 import { icons } from "@/ui/icons";
+import { hasUnlinkableCharacters } from "@/ui/note-link-characters";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
@@ -31,7 +32,7 @@ import UiToggle from "@/ui/UiToggle.vue";
 import { isLongText, isRequired } from "../config";
 import { NamedByAnswersError } from "../errors";
 import { JournalNoteLinkPicker, type JournalNoteLinkError } from "../journal-note-link";
-import { hasUnlinkableCharacters, toNoteLink } from "../note-link";
+import { toNoteLink } from "../note-link";
 import { isPlaceholder } from "../placeholder";
 import { promptsInPath } from "../prompts-in-path";
 
@@ -208,7 +209,7 @@ function given(entered: Record<string, PromptAnswer | undefined>): Record<string
 // confirmation's entire content, so suppressing it would delete what the setting is for.
 const previewPath = computed(() => {
   if (config.value === undefined) return "";
-  const answers = isLive.value ? given(values) : {};
+  const answers = isLive.value ? given(asAnswers(values)) : {};
   if (isNoteletMetadata(props.metadata)) {
     const type = noteletType.value;
     if (type === undefined) return "";
@@ -242,7 +243,7 @@ function pickRefusal(error: JournalNoteLinkError): string | undefined {
   if (error instanceof NamedByAnswersError) {
     return m.journal_prompt_journal_note_named_by_answers({ journal: error.journalName });
   }
-  if (error instanceof EmptyNoteNameError) return m.journal_note_name_empty_notice({ journalName: error.journalName });
+  if (error instanceof EmptyNoteNameError) return error.userNotice;
   return undefined;
 }
 

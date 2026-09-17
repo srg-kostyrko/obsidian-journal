@@ -3,6 +3,7 @@ import { computed } from "vue";
 
 import { useService } from "@/infrastructure/di";
 import { defineInputSuggest, NotesService, type VaultPath } from "@/infrastructure/host";
+import { hasUnlinkableCharacters } from "@/ui/note-link-characters";
 import UiInputSuggestInput from "@/ui/UiInputSuggestInput.vue";
 
 defineProps<{ modelValue: string; placeholder?: string; disabled?: boolean }>();
@@ -22,7 +23,7 @@ const definition = computed(() =>
       const q = query.toLowerCase();
       return notes
         .listFiles()
-        .filter((path) => path.toLowerCase().includes(q))
+        .filter((path) => path.toLowerCase().includes(q) && !hasUnlinkableCharacters(path))
         .toSorted((a, b) => Number(isNote(b)) - Number(isNote(a)) || a.localeCompare(b));
     },
     render: (path, element) => {

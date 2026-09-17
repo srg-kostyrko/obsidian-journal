@@ -17,6 +17,16 @@ describe("UiNoteInput", () => {
     expect(handle.query("road")).toEqual(["Projects/Roadmap 2027.md", "Attachments/roadmap.png"]);
   });
 
+  it("excludes a file whose path holds a character the note-link dialog would refuse", async () => {
+    const harness = await testContainer();
+    harness.host.putFile("Projects/Roadmap [2027].md");
+    harness.host.putFile("Projects/Roadmap 2027.md");
+
+    harness.render(UiNoteInput, { props: { modelValue: "", "onUpdate:modelValue": vi.fn() } });
+
+    expect(harness.inputSuggests.attachments[0].query("road")).toEqual(["Projects/Roadmap 2027.md"]);
+  });
+
   it("offers nothing until something is typed", async () => {
     const harness = await testContainer();
     harness.host.putFile("Projects/Roadmap 2027.md");
