@@ -129,6 +129,20 @@ export class NotesService {
       .map((folder) => folder.path as VaultPath);
   }
 
+  listFiles(): VaultPath[] {
+    return this.#app.vault.getFiles().map((file) => file.path as VaultPath);
+  }
+
+  // An existing file gets Obsidian's own link text, which follows the vault's link format; an empty
+  // source path makes "relative" resolve from the vault root, so the text works from any note. A
+  // file that does not exist yet is named by its full path, so following the link creates it
+  // where it belongs instead of in the default folder for new notes.
+  linkTextFor(path: VaultPath): string {
+    const file = this.#app.vault.getAbstractFileByPath(path);
+    if (file instanceof TFile) return this.#app.metadataCache.fileToLinktext(file, "");
+    return path.replace(/\.md$/, "");
+  }
+
   create(path: VaultPath, content: string): AsyncResult<Note, NoteAlreadyExistsError | NoteCreateError> {
     if (this.#app.vault.getAbstractFileByPath(path)) {
       return AsyncResult.err(new NoteAlreadyExistsError(path));

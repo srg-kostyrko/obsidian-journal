@@ -114,6 +114,42 @@ describe("NotesService", () => {
     });
   });
 
+  describe("listFiles", () => {
+    it("returns every file whatever its extension, and no folders", () => {
+      const { service, host } = build();
+      host.putFile("Daily/2026-05-13.md");
+      host.putFile("Attachments/scan.pdf");
+      host.putFolder("Empty");
+      expect(service.listFiles().toSorted()).toEqual(["Attachments/scan.pdf", "Daily/2026-05-13.md"]);
+    });
+  });
+
+  describe("linkTextFor", () => {
+    it("names a note by its name alone when no other file shares it", () => {
+      const { service, host } = build();
+      host.putFile("Projects/Roadmap.md");
+      expect(service.linkTextFor("Projects/Roadmap.md" as VaultPath)).toBe("Roadmap");
+    });
+
+    it("names a note by its path when another file shares its name", () => {
+      const { service, host } = build();
+      host.putFile("Projects/Roadmap.md");
+      host.putFile("Archive/Roadmap.md");
+      expect(service.linkTextFor("Projects/Roadmap.md" as VaultPath)).toBe("Projects/Roadmap");
+    });
+
+    it("keeps the extension of a file that is not a note", () => {
+      const { service, host } = build();
+      host.putFile("Attachments/scan.pdf");
+      expect(service.linkTextFor("Attachments/scan.pdf" as VaultPath)).toBe("scan.pdf");
+    });
+
+    it("names a note that does not exist yet by its full path", () => {
+      const { service } = build();
+      expect(service.linkTextFor("Daily/2026-05-13.md" as VaultPath)).toBe("Daily/2026-05-13");
+    });
+  });
+
   describe("create", () => {
     it("creates the file with the given content", async () => {
       const { service, host } = build();

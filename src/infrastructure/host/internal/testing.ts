@@ -136,14 +136,22 @@ export interface FakeHost {
 
 const MAIN_WINDOW = "main";
 
+function nameParts(name: string): { basename: string; extension: string } {
+  const dot = name.lastIndexOf(".");
+  return dot <= 0
+    ? { basename: name, extension: "" }
+    : { basename: name.slice(0, dot), extension: name.slice(dot + 1) };
+}
+
 function makeFile(path: string): TFile {
   const file = new TFile();
   file.path = path;
   const parts = path.split("/");
   const last = parts.pop() ?? path;
   file.name = last;
-  file.basename = last.replace(/\.md$/, "");
-  file.extension = "md";
+  const { basename, extension } = nameParts(last);
+  file.basename = basename;
+  file.extension = extension;
   return file;
 }
 
@@ -263,6 +271,9 @@ export function createFakeHost(): FakeHost {
     getMarkdownFiles(): TFile[] {
       return [...fileObjects.values()];
     },
+    getFiles(): TFile[] {
+      return [...fileObjects.values()];
+    },
     getAllLoadedFiles(): (TFile | TFolder)[] {
       return [...folderObjects.values(), ...fileObjects.values()];
     },
@@ -305,7 +316,9 @@ export function createFakeHost(): FakeHost {
       files.set(newPath, existing);
       file.path = newPath;
       file.name = newPath.split("/").pop() ?? newPath;
-      file.basename = file.name.replace(/\.md$/, "");
+      const { basename, extension } = nameParts(file.name);
+      file.basename = basename;
+      file.extension = extension;
       setParent(file);
       fileObjects.set(newPath, file);
       attachChild(file);
@@ -330,6 +343,14 @@ export function createFakeHost(): FakeHost {
     },
     getFileCache(file: TFile): CachedMetadata | null {
       return files.get(file.path)?.metadata ?? null;
+    },
+    // Models Obsidian's "shortest" link format only: the name alone when it is unique in the
+    // vault, the path otherwise. The absolute and relative formats are Obsidian's to get right.
+    fileToLinktext(file: TFile, _sourcePath: string, omitMdExtension = true): string {
+      const bare = file.extension === "md" && omitMdExtension;
+      const unique = [...fileObjects.values()].filter((other) => other.name === file.name).length === 1;
+      if (unique) return bare ? file.basename : file.name;
+      return bare ? file.path.replace(/\.md$/, "") : file.path;
     },
   };
 
