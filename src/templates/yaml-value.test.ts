@@ -20,6 +20,7 @@ const values: Record<string, string> = {
   dashes: "a\n---\nb",
   plain: "Daily",
   lead: " spaced",
+  blank: "  ",
   tag: "#happy",
   mood: "happy",
   date: "2026-09-17",
@@ -244,9 +245,20 @@ describe("renderFrontmatter", () => {
       expect(read("values: [{{num}}, {{bool}}, {{list}}]\n").values).toEqual([42, true, ["a", "b"]]);
     });
 
-    it("quotes an empty sequence item, which would otherwise vanish or be refused", () => {
-      expect(rendered("tags: [{{empty}}, journal]\n")).toBe('tags: ["", journal]\n');
-      expect(read("tags: [{{empty}}, journal]\n").tags).toEqual(["", "journal"]);
+    it("leaves an empty last sequence item as renderString would, dropping it", () => {
+      expect(rendered("tags: [journal, {{empty}}]\n")).toBe("tags: [journal, ]\n");
+      expect(read("tags: [journal, {{empty}}]\n").tags).toEqual(["journal"]);
+    });
+
+    it("leaves an empty first sequence item as renderString would", () => {
+      expect(rendered("tags: [{{empty}}, journal]\n")).toBe("tags: [, journal]\n");
+    });
+
+    it("leaves a whitespace-only item as renderString would", () => {
+      expect(rendered("tags: [journal, {{blank}}]\n")).toBe("tags: [journal,   ]\n");
+      expect(read("tags: [journal, {{blank}}]\n").tags).toEqual(["journal"]);
+      expect(rendered("meta: {a: {{blank}}}\n")).toBe("meta: {a:   }\n");
+      expect(read("meta: {a: {{blank}}}\n").meta).toEqual({ a: null });
     });
 
     it("keeps an empty flow mapping value as written", () => {

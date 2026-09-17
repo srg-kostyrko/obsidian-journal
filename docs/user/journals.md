@@ -74,8 +74,10 @@ template path:**.
 - Variables in the template's text are filled in for the note being created. With Templater
   installed, its commands run afterwards — see [Compatibility](/compatibility).
 - Variables in a template's properties are written so the properties stay readable: a value that
-  would break them — one containing `: `, ` #` or a line break — is quoted or written over
-  several lines. Numbers, `true`/`false` values and lists keep their type.
+  would break them — one containing `: `, ` #` or a line break — is quoted. A value with line
+  breaks is written over several lines when it is the whole of a property's value or of a list
+  item, and as a single quoted string otherwise. Numbers, `true`/`false` values and lists keep
+  their type.
 - A template only ever fills a new note, or an empty note being connected. A note with content is
   never overwritten.
 

@@ -160,10 +160,10 @@ function renderSingleQuoted(inner: string, render: RenderToken): string {
 }
 
 // Kept as written when it reads back as itself, or as a typed value, as the one item of a flow
-// sequence. An item that would split, close the collection early, become a mapping, or vanish is
-// quoted. An empty mapping value reads back as null, as it does outside a collection.
-function flowPlainOrQuoted(value: string, inMappingValue: boolean): string {
-  if (value === "") return inMappingValue ? value : '""';
+// sequence. An item that would split, close the collection early, or become a mapping is quoted.
+// An empty item stays empty, as an empty value outside a collection does.
+function flowPlainOrQuoted(value: string): string {
+  if (value.trim() === "") return value;
   try {
     const read = (parseYaml(`value: [${value}]`) as Record<string, unknown> | null)?.value;
     if (!Array.isArray(read) || read.length !== 1) return JSON.stringify(value);
@@ -218,12 +218,12 @@ function renderFlowItem(written: string, masked: string, inMapping: boolean, ren
   return (
     written.slice(0, start) +
     renderTokens(tokenize(core.slice(0, valueFrom)), render) +
-    renderFlowScalar(core.slice(valueFrom), coreMasked.slice(valueFrom), colon !== -1, render) +
+    renderFlowScalar(core.slice(valueFrom), coreMasked.slice(valueFrom), render) +
     written.slice(end)
   );
 }
 
-function renderFlowScalar(value: string, masked: string, inMappingValue: boolean, render: RenderToken): string {
+function renderFlowScalar(value: string, masked: string, render: RenderToken): string {
   const tokens = tokenize(value);
   if (tokens.every((token) => token.kind === "literal")) return value;
   const closesAtEnd = scalarEnd(masked) === masked.length;
@@ -235,7 +235,7 @@ function renderFlowScalar(value: string, masked: string, inMappingValue: boolean
   const joined = tokens
     .map((token) => (token.kind === "literal" ? token.text : normalizeMultiline(render(token))))
     .join("");
-  return joined.includes("\n") ? JSON.stringify(joined) : flowPlainOrQuoted(joined, inMappingValue);
+  return joined.includes("\n") ? JSON.stringify(joined) : flowPlainOrQuoted(joined);
 }
 
 function renderEntry(
