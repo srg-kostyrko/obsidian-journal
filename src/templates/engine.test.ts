@@ -948,4 +948,12 @@ describe("TemplateEngine.renderDocument", () => {
       "---\n> Daily\n---\n> a\n> b\n>\n> c",
     );
   });
+
+  it("escapes values in the frontmatter block and continues them in the body", async () => {
+    const engine = await installTestEngine();
+    const context = withAnswer().string("colon", "rough: day");
+    expect(engine.renderDocument("---\nsummary: {{answer}}\ntitle: {{colon}}\n---\n> {{answer}}", context)).toBe(
+      '---\nsummary: |-\n  a\n  b\n\n  c\ntitle: "rough: day"\n---\n> a\n> b\n>\n> c',
+    );
+  });
 });

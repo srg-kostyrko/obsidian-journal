@@ -1,5 +1,6 @@
 import { tokenize } from "./grammar";
 import { continueMultiline, lineEndingOf, type LineEnding } from "./multiline";
+import { renderFrontmatter } from "./yaml-value";
 
 import type { RenderToken } from "./types";
 
@@ -29,12 +30,6 @@ export function splitFrontmatter(template: string): FrontmatterSplit | undefined
   };
 }
 
-export function renderRaw(text: string, render: RenderToken): string {
-  return tokenize(text)
-    .map((token) => (token.kind === "literal" ? token.text : render(token)))
-    .join("");
-}
-
 export function renderBody(text: string, render: RenderToken, eol: LineEnding): string {
   let out = "";
   for (const token of tokenize(text)) {
@@ -52,5 +47,5 @@ export function renderDocumentWith(template: string, render: RenderToken): strin
   const eol = lineEndingOf(template);
   const split = splitFrontmatter(template);
   if (split === undefined) return renderBody(template, render, eol);
-  return split.open + renderRaw(split.body, render) + split.close + renderBody(split.rest, render, eol);
+  return split.open + renderFrontmatter(split.body, render, eol) + split.close + renderBody(split.rest, render, eol);
 }
