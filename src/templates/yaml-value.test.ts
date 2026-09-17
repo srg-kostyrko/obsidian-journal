@@ -47,14 +47,23 @@ describe("renderFrontmatter", () => {
 
     it("quotes only the value in a list entry that is itself a mapping", () => {
       const frontmatter = "links:\n  - name: {{colon}}\n    url: x\n";
+      expect(rendered(frontmatter)).toBe('links:\n  - name: "rough: day"\n    url: x\n');
       const parsed = read(frontmatter);
       expect(parsed.links).toEqual([{ name: "rough: day", url: "x" }]);
     });
 
     it("writes a multi-line value under a list entry's own key as a literal block", () => {
       const frontmatter = "items:\n  - k: {{answer}}\n";
+      expect(rendered(frontmatter)).toBe("items:\n  - k: |-\n      a\n      b\n\n      c\n");
       const parsed = read(frontmatter);
       expect(parsed.items).toEqual([{ k: "a\nb\n\nc" }]);
+    });
+
+    it("writes a multi-line value under a nested list entry's own dash as a literal block", () => {
+      const frontmatter = "items:\n  - - {{answer}}\n  - x\n";
+      expect(rendered(frontmatter)).toBe("items:\n  - - |-\n      a\n      b\n\n      c\n  - x\n");
+      const parsed = read(frontmatter);
+      expect(parsed.items).toEqual([["a\nb\n\nc"], "x"]);
     });
 
     it("keeps a first line's own indentation with an explicit indentation indicator", () => {
@@ -138,6 +147,12 @@ describe("renderFrontmatter", () => {
 
     it("leaves a flow collection as renderString would", () => {
       expect(rendered("meta: {a: {{colon}}}\n")).toBe("meta: {a: rough: day}\n");
+    });
+
+    it("leaves a template-authored comment as renderString would, not as a quoted value", () => {
+      const frontmatter = "tags: # {{plain}}\n  - a\n";
+      expect(rendered(frontmatter)).toBe("tags: # Daily\n  - a\n");
+      expect(read(frontmatter)).toEqual({ tags: ["a"] });
     });
 
     it("leaves a value in key position as renderString would", () => {

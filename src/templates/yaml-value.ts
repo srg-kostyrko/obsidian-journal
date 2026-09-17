@@ -41,10 +41,10 @@ function plainOrQuoted(value: string): string {
   }
 }
 
-function blockScalar(prefix: string, indent: string, dashWidth: number, value: string, eol: LineEnding): string {
+function blockScalar(prefix: string, indent: string, extraWidth: number, value: string, eol: LineEnding): string {
   // A first line that starts with a space would otherwise set the block's indentation itself.
   const indicator = value.startsWith(" ") ? "|2-" : "|-";
-  const pad = `${indent}${" ".repeat(dashWidth)}  `;
+  const pad = `${indent}${" ".repeat(extraWidth)}`;
   const lines = value.split("\n").map((line) => (line === "" ? "" : pad + line));
   return [`${prefix.endsWith(" ") ? prefix : `${prefix} `}${indicator}`, ...lines].join(eol);
 }
@@ -92,14 +92,14 @@ function renderEntry(
   if (value.startsWith("[") || (value.startsWith("{") && !value.startsWith("{{"))) {
     return prefix + renderTokens(tokens, render);
   }
-  // A list entry's own indentation ends at the dash run; a key nested inside it (a list entry
-  // that is itself a mapping) pushes the entry one level deeper, so a block scalar under that
-  // key must clear the key's column, not just the dash's.
-  const dashWidth = key === undefined ? 0 : dashRun.length;
+  // A block scalar's content must clear the column of whatever line it hangs off: the full dash
+  // run (a nested list's innermost `- ` starts only after every outer one) plus, when a key
+  // follows the dashes, 2 more to clear the key's own column too.
+  const extraWidth = dashRun.length + (key === undefined ? 0 : 2);
   const only = tokens.length === 1 ? tokens[0] : undefined;
   if (only !== undefined && only.kind !== "literal") {
     const whole = normalizeMultiline(render(only));
-    return whole.includes("\n") ? blockScalar(prefix, indent, dashWidth, whole, eol) : prefix + plainOrQuoted(whole);
+    return whole.includes("\n") ? blockScalar(prefix, indent, extraWidth, whole, eol) : prefix + plainOrQuoted(whole);
   }
   const joined = tokens
     .map((token) => (token.kind === "literal" ? token.text : normalizeMultiline(render(token))))
@@ -132,7 +132,10 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
       continue;
     }
     const [, lineIndent = "", dashRun = "", key, value = "", trailing = ""] = entry;
-    if (dashRun === "" && key === undefined) {
+    // A value that already starts with `#` in the template itself is a comment the author wrote,
+    // not a value the engine owns — render the line as renderString would rather than quoting it.
+    // A rendered value that only starts with `#` after substitution is handled by plainOrQuoted.
+    if ((dashRun === "" && key === undefined) || value.startsWith("#")) {
       out += renderTokens(tokenize(content), render) + ending;
       continue;
     }
