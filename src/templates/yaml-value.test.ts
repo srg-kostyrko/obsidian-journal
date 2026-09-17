@@ -70,6 +70,43 @@ describe("renderFrontmatter", () => {
       expect(parsed.items).toEqual([["a\nb\n\nc"], "x"]);
     });
 
+    it.each([
+      ["double-quoted", '"display: name"', "display: name"],
+      ["single-quoted", "'k: x'", "k: x"],
+    ])("keeps a list entry with a %s key as a mapping", (_label, key, name) => {
+      const frontmatter = `items:\n  - ${key}: {{mood}}\n`;
+      expect(rendered(frontmatter)).toBe(`items:\n  - ${key}: happy\n`);
+      expect(read(frontmatter).items).toEqual([{ [name]: "happy" }]);
+    });
+
+    it("quotes only the value under a quoted key in a list entry", () => {
+      const frontmatter = 'items:\n  - "display: name": {{colon}}\n';
+      expect(rendered(frontmatter)).toBe('items:\n  - "display: name": "rough: day"\n');
+      expect(read(frontmatter).items).toEqual([{ "display: name": "rough: day" }]);
+    });
+
+    it("writes a multi-line value under a quoted key in a list entry as a literal block", () => {
+      const frontmatter = 'items:\n  - "k: x": {{answer}}\n';
+      expect(rendered(frontmatter)).toBe('items:\n  - "k: x": |-\n      a\n      b\n\n      c\n');
+      expect(read(frontmatter).items).toEqual([{ "k: x": "a\nb\n\nc" }]);
+    });
+
+    it.each([
+      ["a double-quoted key", '"quoted: key"', "quoted: key"],
+      ["a double-quoted key with an escaped quote", String.raw`"say \"hi\": x"`, 'say "hi": x'],
+      ["a single-quoted key with a doubled quote", "'it''s: x'", "it's: x"],
+    ])("quotes only the value under %s", (_label, key, name) => {
+      expect(rendered(`${key}: {{mood}}\n`)).toBe(`${key}: happy\n`);
+      expect(rendered(`${key}: {{colon}}\n`)).toBe(`${key}: "rough: day"\n`);
+      expect(read(`${key}: {{colon}}\n`)).toEqual({ [name]: "rough: day" });
+    });
+
+    it("recognizes a block header under a quoted key, leaving its body literal", () => {
+      const frontmatter = '"k: x": |\n  a: {{colon}}\n';
+      expect(rendered(frontmatter)).toBe('"k: x": |\n  a: rough: day\n');
+      expect(read(frontmatter)).toEqual({ "k: x": "a: rough: day\n" });
+    });
+
     it("keeps a first line's own indentation with an explicit indentation indicator", () => {
       expect(read("summary: {{indented}}\n").summary).toBe("  lead\nnext");
     });

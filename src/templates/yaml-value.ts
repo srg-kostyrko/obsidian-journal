@@ -5,7 +5,8 @@ import { continueMultiline, normalizeMultiline, type LineEnding } from "./multil
 
 import type { RenderToken, Token } from "./types";
 
-const ENTRY_RE = /^([ \t]*)((?:- +)*)([^\s#'"{[\]:][^:]*?:(?: +|$))?(.*?)([ \t]*)$/;
+const ENTRY_RE =
+  /^([ \t]*)((?:- +)*)((?:[^\s#'"{[\]:][^:]*?|"(?:[^"\\]|\\.)*"[ \t]*|'(?:[^']|'')*'[ \t]*):(?: +|$))?(.*?)([ \t]*)$/;
 const BLOCK_INDICATOR_RE = /^[|>][+-]?\d?[+-]?$/;
 const INDENT_RE = /^[ \t]*/;
 const NULL_WORDS = new Set(["null", "Null", "NULL", "~"]);
