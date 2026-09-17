@@ -3,6 +3,7 @@ import { browser, expect } from "@wdio/globals";
 import { m } from "../../src/i18n/paraglide/messages.js";
 import {
   clickDialogButton,
+  modalText,
   modalTextAreaValue,
   setModalRowText,
   typeModalTextArea,
@@ -10,7 +11,7 @@ import {
   waitForModalOpen,
 } from "../support/settings.js";
 import { openViaUri } from "../support/uri.js";
-import { contentOf, seedNote, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
+import { contentOf, noteExists, seedNote, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
 
 // Obsidian binds Cmd on macOS and Ctrl elsewhere; the dialog follows it.
 const SUBMIT_MODIFIER = process.platform === "darwin" ? "Meta" : "Control";
@@ -103,18 +104,36 @@ describe("the long text box", () => {
     await writeTemplate("Templates/reflect.md", "{{challenge}}\n");
   });
 
-  it("adds a line on Enter, ignores the other platform's modifier, and needs an answer", async () => {
+  it("needs an answer, adds a line on Enter, ignores the other platform's modifier, and creates no note when cancelled", async () => {
     await openViaUri({ journal: "reflect", date: "2030-07-21" });
     await waitForModalOpen();
+
+    // Empty box: submitting must be refused rather than silently creating a note with a blank
+    // required answer.
+    await typeModalTextArea([]);
+    await browser.keys([SUBMIT_MODIFIER, "Enter"]);
+    await waitForModalOpen();
+    await browser.waitUntil(
+      async () => {
+        const text = await modalText();
+        return text.includes(m.journal_prompt_answer_required());
+      },
+      { timeoutMsg: "expected the required-answer error to render for an empty long text answer" },
+    );
 
     await typeModalTextArea(["one", "two"]);
     expect(await modalTextAreaValue()).toBe("one\ntwo");
 
     await browser.keys([OTHER_MODIFIER, "Enter"]);
     await waitForModalOpen();
+    // A broken guard would start an async submit rather than doing nothing; waitForModalOpen
+    // above only proves the dialog hadn't closed yet, not that no submit is in flight, so give a
+    // stray one time to land before checking either the box or the vault.
+    await browser.pause(1000);
     expect(await modalTextAreaValue()).toBe("one\ntwo");
 
     await clickDialogButton(m.common_action_cancel());
     await waitForDialogClosed();
+    expect(await noteExists("2030-07-21.md")).toBe(false);
   });
 });
