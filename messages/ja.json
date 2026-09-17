@@ -1460,6 +1460,7 @@
   "journal_note_name_empty_notice": "ジャーナル「{journalName}」の名前テンプレートはノート名が空になるため、ノートを作成できません。ジャーナル設定で名前テンプレートを設定してください。",
   "journal_note_path_claimed_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成しようとしましたが、そのノートはすでにジャーナル「{claimedBy}」のものです。何も変更していません。いずれかのフォルダまたは名前テンプレートを変更してください。",
   "journal_note_path_notelet_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成できません。そこにはすでにそのジャーナル自身のサブノートがあります。ジャーナルの名前テンプレートかフォルダを変更するか、そのサブノートを移動してください。",
+  "journal_note_path_held_by_period_notice": "ジャーナル「{journalName}」はノートを「{path}」に作成しようとしましたが、そのノートはすでに {date} から始まる期間のノートです。何も変更していません。期間ごとに異なるノート名になるよう、名前テンプレートまたはフォルダを変更してください。",
   "journal_dashboard_bulk_add": "{name}にノートを一括追加",
   "journal_dashboard_clone": "{name}を複製",
   "journal_dashboard_edit": "{name}を設定",

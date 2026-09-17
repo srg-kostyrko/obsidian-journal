@@ -1,3 +1,4 @@
+import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
 import { basenameOf, NoteMetadataService, NotesService } from "@/infrastructure/host";
@@ -14,6 +15,7 @@ import { AsyncResult, Err, attempt } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
 import { FRONTMATTER_NAME_KEY } from "../config";
+import { CycleService } from "../cycle";
 import { JournalNotFoundError } from "../errors";
 import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
@@ -22,15 +24,21 @@ import { GatherPromptAnswersFlow } from "../prompts/flows/gather-prompt-answers.
 import { promptsInPath } from "../prompts/prompts-in-path";
 import { unattendedOutcome } from "../prompts/unattended-rule";
 import { JournalsRepository } from "../repository";
+import { isNotelet, type JournalMetadata } from "../types";
 
-import { AnchorOccupiedError, NoteletHoldsPathError, NotePathClaimedError, type EmptyNoteNameError } from "./errors";
+import {
+  AnchorOccupiedError,
+  NoteletHoldsPathError,
+  NotePathClaimedError,
+  NotePathHeldByPeriodError,
+  type EmptyNoteNameError,
+} from "./errors";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { TemplateContentService } from "./template-content";
 import { confirmCreationModal } from "./ui/modals";
 
 import type { PromptAnswer } from "../prompts/config";
-import type { JournalMetadata } from "../types";
 
 export type NoteCreationError =
   | JournalNotFoundError
@@ -44,6 +52,7 @@ export type NoteCreationError =
   | AnchorOccupiedError
   | NotePathClaimedError
   | NoteletHoldsPathError
+  | NotePathHeldByPeriodError
   | PromptsUnansweredError
   | UserAborted;
 
@@ -58,6 +67,7 @@ export class NoteCreationService {
   readonly #modals = inject(ModalService);
   readonly #guard = inject(SelfWriteGuard);
   readonly #flows = inject(Flows);
+  readonly #cycle = inject(CycleService);
 
   // Whether a file already at the journal's derived path is THIS journal's own note rather
   // than a stray the journal is about to adopt, or a note a different journal already claims.
@@ -104,6 +114,25 @@ export class NoteCreationService {
     return this.#journals.get(claimed).isSome() ? claimed : undefined;
   }
 
+  // A name template can repeat over a longer cycle than it separates — `{{date:MMMM}}` names
+  // every March alike — so the file at the derived path may be this journal's own note for a
+  // different period. Adopting it rewrites its date and the earlier period loses its note with
+  // nothing on screen. Only a canonical stored date says which period a note belongs to; one that
+  // names no period start is the fallen-out-of-the-index case adoption exists for, and stays so.
+  #heldForOtherPeriod(name: string, path: VaultPath, anchor: AnchorString): AnchorString | undefined {
+    const indexed = this.#index.entryByPath(path);
+    if (indexed.isSome() && indexed.value.journalName === name && !isNotelet(indexed.value)) {
+      return indexed.value.anchor === anchor ? undefined : indexed.value.anchor;
+    }
+    const metadata = this.#metadata.get(path);
+    if (metadata.isNone()) return undefined;
+    const parsed = this.#frontmatter.parseEntry(path, metadata.value.properties);
+    if (parsed.isNone() || parsed.value.journalName !== name || isNotelet(parsed.value)) return undefined;
+    const held = parsed.value.anchor;
+    if (held === anchor) return undefined;
+    return this.#cycle.isCanonicalAnchor(name, held).getOr(false) ? held : undefined;
+  }
+
   ensureNote(
     name: string,
     metadata: JournalMetadata,
@@ -143,6 +172,8 @@ export class NoteCreationService {
         if (this.#holdsOwnNotelet(name, derived)) {
           return yield* new Err(new NoteletHoldsPathError(name, derived));
         }
+        const heldFor = this.#heldForOtherPeriod(name, derived, metadata.anchor);
+        if (heldFor !== undefined) return yield* new Err(new NotePathHeldByPeriodError(name, derived, heldFor));
         if (this.#carriesJournalClaim(name, derived)) {
           const claimedMutator = yield* this.#frontmatter.writeMutator(name, metadata);
           yield* this.#notes.updateFrontmatter(derived, claimedMutator);
@@ -184,6 +215,8 @@ export class NoteCreationService {
         if (this.#holdsOwnNotelet(name, path)) {
           return yield* new Err(new NoteletHoldsPathError(name, path));
         }
+        const heldFor = this.#heldForOtherPeriod(name, path, metadata.anchor);
+        if (heldFor !== undefined) return yield* new Err(new NotePathHeldByPeriodError(name, path, heldFor));
         const owner = this.#claimedByOtherJournal(name, path);
         if (owner !== undefined) return yield* new Err(new NotePathClaimedError(name, path, owner));
         yield* this.#notes.updateFrontmatter(path, mutator);

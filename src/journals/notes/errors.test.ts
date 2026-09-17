@@ -4,7 +4,7 @@ import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import { isBenignFlowError, isUserFacingFlowError } from "@/infrastructure/flows";
 
-import { NoApplicableJournals, NoteletHoldsPathError, NotePathClaimedError } from "./errors";
+import { NoApplicableJournals, NoteletHoldsPathError, NotePathClaimedError, NotePathHeldByPeriodError } from "./errors";
 
 describe("NoApplicableJournals", () => {
   it("is treated as a benign flow error", () => {
@@ -20,6 +20,17 @@ describe("NotePathClaimedError", () => {
     expect(error.userNotice).toContain("daily");
     expect(error.userNotice).toContain("logbook");
     expect(error.userNotice).toContain("Journal/2026-05-19.md");
+  });
+});
+
+describe("NotePathHeldByPeriodError", () => {
+  it("carries a notice naming the journal, the path and the period already held", () => {
+    const error = new NotePathHeldByPeriodError("Monthly", "March.md", anchor("2025-03-01"));
+
+    expect(isUserFacingFlowError(error)).toBe(true);
+    expect(error.userNotice).toBe(
+      m.journal_note_path_held_by_period_notice({ journalName: "Monthly", path: "March.md", date: "2025-03-01" }),
+    );
   });
 });
 
