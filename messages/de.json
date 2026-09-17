@@ -2071,6 +2071,7 @@
   "journal_prompt_key_required_in_path": "Eine Antwort, die im Notiznamen oder Ordner verwendet wird, muss in einer Eigenschaft gespeichert werden.",
   "journal_prompt_toggle_not_in_path": "Eine Ja/Nein-Antwort kann nicht Teil eines Notiznamens oder Ordners sein. Verwende stattdessen eine Auswahlfrage.",
   "journal_prompt_long_text_not_in_path": "Eine Antwort vom Typ „Langer Text“ kann nicht Teil eines Notiznamens oder Ordners sein.",
+  "journal_prompt_note_not_in_path": "Ein Notizlink kann nicht Teil eines Notiznamens oder Ordners sein.",
   "journal_prompt_note_link_characters": "Ein Notizlink darf #, ^, |, [ und ] nicht enthalten.",
   "journal_prompt_pick_journal_note": "Mit einer Journalnotiz verknüpfen",
   "journal_prompt_journal_note_out_of_timeline": "{journal} hat für diesen Zeitraum keine Notiz und legt dort auch keine an.",

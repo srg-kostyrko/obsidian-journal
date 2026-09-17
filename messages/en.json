@@ -2075,6 +2075,7 @@
   "journal_prompt_key_required_in_path": "An answer used in the note name or folder must be saved to a property.",
   "journal_prompt_toggle_not_in_path": "A yes/no answer can't be part of a note name or folder. Use a choice question instead.",
   "journal_prompt_long_text_not_in_path": "A long text answer can't be part of a note name or folder.",
+  "journal_prompt_note_not_in_path": "A note link can't be part of a note name or folder.",
   "journal_prompt_note_link_characters": "A note link can't contain #, ^, |, [ or ].",
   "journal_prompt_pick_journal_note": "Link to a journal note",
   "journal_prompt_journal_note_out_of_timeline": "{journal} has no note for that period and doesn't write one.",

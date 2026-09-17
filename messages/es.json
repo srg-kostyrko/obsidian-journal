@@ -2058,6 +2058,7 @@
   "journal_prompt_key_required_in_path": "Una respuesta usada en el nombre de la nota o en la carpeta debe guardarse en una propiedad.",
   "journal_prompt_toggle_not_in_path": "Una respuesta de sí o no no puede formar parte de un nombre de nota o carpeta. Usa en su lugar una pregunta de opción.",
   "journal_prompt_long_text_not_in_path": "Una respuesta de texto largo no puede formar parte de un nombre de nota o carpeta.",
+  "journal_prompt_note_not_in_path": "Un enlace a una nota no puede formar parte de un nombre de nota o carpeta.",
   "journal_prompt_note_link_characters": "Un enlace a una nota no puede contener #, ^, |, [ ni ].",
   "journal_prompt_pick_journal_note": "Enlazar a una nota de diario",
   "journal_prompt_journal_note_out_of_timeline": "{journal} no tiene una nota para ese periodo ni la crea.",

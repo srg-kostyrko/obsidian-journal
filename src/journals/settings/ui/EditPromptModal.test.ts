@@ -342,6 +342,66 @@ describe("EditPromptModal", () => {
     expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("multiline");
   });
 
+  it("offers Note link and saves it as a note link question", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("project");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "note");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalledWith({
+        variable: "project",
+        question: "q",
+        type: "note",
+        frontmatterKey: "journal-project",
+        required: false,
+      });
+    });
+  });
+
+  it("errors when a note link question is used in the note name or folder", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "{{project}}" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("project");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "note");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_note_not_in_path())).toBeTruthy();
+    });
+    expect(screen.queryByText(m.journal_prompt_long_text_not_in_path())).toBeNull();
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("opens a saved note link question as Note link", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            {
+              prompts: [
+                { variable: "project", question: "Which?", type: "note", frontmatterKey: "project", required: true },
+              ],
+            },
+          ),
+        },
+      },
+    });
+    harness.renderModal(EditPromptModal, { props: { journalName: "daily", promptIndex: 0 } });
+
+    expect(screen.getByRole<HTMLSelectElement>("combobox").value).toBe("note");
+  });
+
   it("errors when a toggle prompt is used in the note name or folder", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

@@ -1907,6 +1907,7 @@
   "journal_prompt_key_required_in_path": "在笔记名称或文件夹中使用的回答必须保存到属性中。",
   "journal_prompt_toggle_not_in_path": "是/否的回答不能作为笔记名称或文件夹的一部分。请改用选择型问题。",
   "journal_prompt_long_text_not_in_path": "长文本回答不能作为笔记名称或文件夹的一部分。",
+  "journal_prompt_note_not_in_path": "笔记链接不能作为笔记名称或文件夹的一部分。",
   "journal_prompt_note_link_characters": "笔记链接不能包含 #、^、|、[ 或 ]。",
   "journal_prompt_pick_journal_note": "链接到日记笔记",
   "journal_prompt_journal_note_out_of_timeline": "{journal} 没有该时段的笔记，也不会创建。",

@@ -2119,6 +2119,7 @@
   "journal_prompt_key_required_in_path": "Ответ, используемый в названии заметки или папке, нужно сохранить в свойство.",
   "journal_prompt_toggle_not_in_path": "Ответ да/нет не может быть частью названия заметки или папки. Используйте вместо этого вопрос с вариантами ответа.",
   "journal_prompt_long_text_not_in_path": "Ответ с длинным текстом не может быть частью названия заметки или папки.",
+  "journal_prompt_note_not_in_path": "Ссылка на заметку не может быть частью названия заметки или папки.",
   "journal_prompt_note_link_characters": "Ссылка на заметку не может содержать #, ^, |, [ или ].",
   "journal_prompt_pick_journal_note": "Сослаться на заметку журнала",
   "journal_prompt_journal_note_out_of_timeline": "В журнале {journal} нет заметки за этот период, и он её не создаёт.",
