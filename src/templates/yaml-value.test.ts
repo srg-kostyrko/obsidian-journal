@@ -23,6 +23,8 @@ const values: Record<string, string> = {
   tag: "#happy",
   mood: "happy",
   date: "2026-09-17",
+  comma: "a, b",
+  bracket: "a]",
 };
 
 const render: RenderToken = (token) => (token.kind === "literal" ? token.text : (values[token.name] ?? token.raw));
@@ -142,6 +144,102 @@ describe("renderFrontmatter", () => {
     });
   });
 
+  describe("a value inside a flow collection", () => {
+    it("keeps an item that reads back as written byte for byte", () => {
+      expect(rendered("tags: [journal, {{mood}}]\n")).toBe("tags: [journal, happy]\n");
+      expect(read("tags: [journal, {{mood}}]\n").tags).toEqual(["journal", "happy"]);
+    });
+
+    it.each([
+      ["a colon and space, which would turn it into a mapping", "colon", "rough: day"],
+      ["a space and hash, which would cut the collection short", "hash", "great #win"],
+      ["a comma, which would split it in two", "comma", "a, b"],
+      ["a closing bracket", "bracket", "a]"],
+    ])("quotes a sequence item containing %s", (_label, name, expected) => {
+      const frontmatter = `tags: [journal, {{${name}}}]\n`;
+      expect(rendered(frontmatter)).toBe(`tags: [journal, ${JSON.stringify(expected)}]\n`);
+      expect(read(frontmatter).tags).toEqual(["journal", expected]);
+    });
+
+    it("quotes a mapping value that would not read back", () => {
+      expect(rendered("meta: {a: {{colon}}}\n")).toBe('meta: {a: "rough: day"}\n');
+      expect(read("meta: {a: {{colon}}}\n").meta).toEqual({ a: "rough: day" });
+    });
+
+    it("escapes each entry of a flow mapping on its own", () => {
+      const frontmatter = "meta: {a: {{colon}}, b: {{mood}}}\n";
+      expect(rendered(frontmatter)).toBe('meta: {a: "rough: day", b: happy}\n');
+      expect(read(frontmatter).meta).toEqual({ a: "rough: day", b: "happy" });
+    });
+
+    it("escapes only the value of a single-pair mapping inside a sequence", () => {
+      const frontmatter = "links: [x, name: {{colon}}]\n";
+      expect(rendered(frontmatter)).toBe('links: [x, name: "rough: day"]\n');
+      expect(read(frontmatter).links).toEqual(["x", { name: "rough: day" }]);
+    });
+
+    it("renders a variable in a flow mapping's key as written, escaping its value", () => {
+      const frontmatter = "meta: {k{{plain}}: {{colon}}}\n";
+      expect(rendered(frontmatter)).toBe('meta: {kDaily: "rough: day"}\n');
+      expect(read(frontmatter).meta).toEqual({ kDaily: "rough: day" });
+    });
+
+    it("escapes an item the author quoted for its own quote style", () => {
+      expect(rendered('tags: ["{{quote}}", x]\n')).toBe('tags: ["say \\"hi\\"", x]\n');
+      expect(read('tags: ["{{quote}}", x]\n').tags).toEqual(['say "hi"', "x"]);
+      expect(rendered("tags: ['{{apos}}', x]\n")).toBe("tags: ['it''s', x]\n");
+      expect(read("tags: ['{{apos}}', x]\n").tags).toEqual(["it's", "x"]);
+    });
+
+    it("writes a multi-line item as one double-quoted string", () => {
+      expect(rendered("tags: [journal, {{answer}}]\n")).toBe('tags: [journal, "a\\nb\\n\\nc"]\n');
+      expect(read("tags: [journal, {{answer}}]\n").tags).toEqual(["journal", "a\nb\n\nc"]);
+    });
+
+    it("escapes inside a nested collection", () => {
+      expect(rendered("tags: [a, [{{colon}}]]\n")).toBe('tags: [a, ["rough: day"]]\n');
+      expect(read("tags: [a, [{{colon}}]]\n").tags).toEqual(["a", ["rough: day"]]);
+      expect(read("meta: {a: [x, {{hash}}]}\n").meta).toEqual({ a: ["x", "great #win"] });
+    });
+
+    it("keeps typed items as written", () => {
+      expect(rendered("values: [{{num}}, {{bool}}, {{list}}]\n")).toBe("values: [42, true, [a, b]]\n");
+      expect(read("values: [{{num}}, {{bool}}, {{list}}]\n").values).toEqual([42, true, ["a", "b"]]);
+    });
+
+    it("quotes an empty sequence item, which would otherwise vanish or be refused", () => {
+      expect(rendered("tags: [{{empty}}, journal]\n")).toBe('tags: ["", journal]\n');
+      expect(read("tags: [{{empty}}, journal]\n").tags).toEqual(["", "journal"]);
+    });
+
+    it("keeps an empty flow mapping value as written", () => {
+      expect(rendered("meta: {a: {{empty}}}\n")).toBe("meta: {a: }\n");
+      expect(read("meta: {a: {{empty}}}\n").meta).toEqual({ a: null });
+    });
+
+    it("escapes a flow collection that is a list entry", () => {
+      const frontmatter = "items:\n  - [x, {{colon}}]\n";
+      expect(rendered(frontmatter)).toBe('items:\n  - [x, "rough: day"]\n');
+      expect(read(frontmatter).items).toEqual([["x", "rough: day"]]);
+    });
+
+    it("keeps a comment after the collection outside it", () => {
+      const frontmatter = "tags: [journal, {{colon}}] # c\n";
+      expect(rendered(frontmatter)).toBe('tags: [journal, "rough: day"] # c\n');
+      expect(read(frontmatter).tags).toEqual(["journal", "rough: day"]);
+    });
+
+    it("keeps a # inside the author's quotes in a collection as part of the item", () => {
+      const frontmatter = 'tags: ["a #b", {{colon}}] # c\n';
+      expect(rendered(frontmatter)).toBe('tags: ["a #b", "rough: day"] # c\n');
+      expect(read(frontmatter).tags).toEqual(["a #b", "rough: day"]);
+    });
+
+    it("leaves an unclosed collection as renderString would", () => {
+      expect(rendered("tags: [journal, {{colon}}\n")).toBe("tags: [journal, rough: day\n");
+    });
+  });
+
   describe("a value followed by a comment in the template", () => {
     it("keeps a plain value apart from the comment after it", () => {
       expect(rendered("mood: {{mood}} # how I feel\n")).toBe("mood: happy # how I feel\n");
@@ -193,10 +291,6 @@ describe("renderFrontmatter", () => {
   describe("other lines", () => {
     it("continues a value inside a block the template opens with indentation only", () => {
       expect(rendered("summary: |\n  > {{answer}}\n")).toBe("summary: |\n  > a\n  b\n\n  c\n");
-    });
-
-    it("leaves a flow collection as renderString would", () => {
-      expect(rendered("meta: {a: {{colon}}}\n")).toBe("meta: {a: rough: day}\n");
     });
 
     it("leaves a template-authored comment as renderString would, not as a quoted value", () => {

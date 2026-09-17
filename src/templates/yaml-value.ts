@@ -45,26 +45,79 @@ function plainOrQuoted(value: string): string {
 // is still a value and has to be quoted, not split. A `#` only starts a comment after whitespace
 // and outside the author's quotes, which YAML recognizes only at the start of the value.
 function splitComment(written: string): { value: string; comment: string } {
-  const masked = tokenize(written)
-    .map((token) => (token.kind === "literal" ? token.text : "x".repeat(token.raw.length)))
-    .join("");
-  if (masked.length !== written.length) return { value: written, comment: "" };
-  const quote = masked.at(0);
-  const from = quote === '"' || quote === "'" ? closingQuote(masked, quote) : 0;
+  const masked = mask(written);
+  if (masked === undefined) return { value: written, comment: "" };
+  const from =
+    masked.startsWith('"') || masked.startsWith("'") || masked.startsWith("[") || masked.startsWith("{")
+      ? (scalarEnd(masked) ?? masked.length)
+      : 0;
   const match = /[ \t]+#/.exec(masked.slice(from));
   if (match === null) return { value: written, comment: "" };
   const at = from + match.index;
   return { value: written.slice(0, at), comment: written.slice(at) };
 }
 
-function closingQuote(text: string, quote: string): number {
-  for (let at = 1; at < text.length; at++) {
+// The template's text with every `{{…}}` blanked out, so structure is read from what the author
+// wrote and never from a substituted value.
+function mask(text: string): string | undefined {
+  const masked = tokenize(text)
+    .map((token) => (token.kind === "literal" ? token.text : "x".repeat(token.raw.length)))
+    .join("");
+  return masked.length === text.length ? masked : undefined;
+}
+
+function closingQuote(text: string, quote: string, open = 0): number | undefined {
+  for (let at = open + 1; at < text.length; at++) {
     const char = text[at];
     const escaped = quote === '"' ? char === "\\" : char === "'" && text[at + 1] === "'";
     if (escaped) at++;
     else if (char === quote) return at + 1;
   }
-  return text.length;
+  return undefined;
+}
+
+// For each position: whether it sits outside every quoted scalar and nested flow collection.
+// Undefined when the brackets or quotes don't balance, or a comment starts inside a collection.
+// A quote opens a scalar only where one can start in flow context — `it's` is a plain scalar.
+function topLevel(masked: string): boolean[] | undefined {
+  const top: boolean[] = [];
+  const open: string[] = [];
+  let previous = "";
+  for (let at = 0; at < masked.length; at++) {
+    const char = masked.charAt(at);
+    if (char === "#" && at > 0 && /\s/.test(masked.charAt(at - 1))) {
+      if (open.length > 0) return undefined;
+      break;
+    }
+    if ((char === '"' || char === "'") && (previous === "" || "[{,:?".includes(previous))) {
+      const end = closingQuote(masked, char, at);
+      if (end === undefined) return undefined;
+      for (let inside = at; inside < end; inside++) top[inside] = false;
+      at = end - 1;
+      previous = char;
+      continue;
+    }
+    if (char === "[" || char === "{") {
+      top[at] = open.length === 0;
+      open.push(char === "[" ? "]" : "}");
+    } else if (char === "]" || char === "}") {
+      if (open.pop() !== char) return undefined;
+      top[at] = open.length === 0;
+    } else {
+      top[at] = open.length === 0;
+    }
+    if (!/\s/.test(char)) previous = char;
+  }
+  return open.length === 0 ? top : undefined;
+}
+
+// Where a value that opens with a quote or a flow bracket closes, or undefined if it never does.
+function scalarEnd(masked: string): number | undefined {
+  const first = masked.charAt(0);
+  if (first === '"' || first === "'") return closingQuote(masked, first);
+  const top = topLevel(masked);
+  const close = top?.indexOf(true, 1) ?? -1;
+  return close === -1 ? undefined : close + 1;
 }
 
 function blockScalar(
@@ -105,6 +158,85 @@ function renderSingleQuoted(inner: string, render: RenderToken): string {
   return `'${parts.map((part) => (part.literal ? part.text : part.text.replaceAll("'", "''"))).join("")}'`;
 }
 
+// Kept as written when it reads back as itself, or as a typed value, as the one item of a flow
+// sequence. An item that would split, close the collection early, become a mapping, or vanish is
+// quoted. An empty mapping value reads back as null, as it does outside a collection.
+function flowPlainOrQuoted(value: string, inMappingValue: boolean): string {
+  if (value === "") return inMappingValue ? value : '""';
+  try {
+    const read = (parseYaml(`value: [${value}]`) as Record<string, unknown> | null)?.value;
+    if (!Array.isArray(read) || read.length !== 1) return JSON.stringify(value);
+    const item: unknown = read[0];
+    if (typeof item === "string") return item === value ? value : JSON.stringify(value);
+    if (item === null || item === undefined) return NULL_WORDS.has(value) ? value : JSON.stringify(value);
+    if (typeof item === "object" && !Array.isArray(item) && !value.startsWith("{")) return JSON.stringify(value);
+    return value;
+  } catch {
+    return JSON.stringify(value);
+  }
+}
+
+function renderFlowValue(value: string, masked: string, render: RenderToken): string {
+  const end = scalarEnd(masked);
+  if (end === undefined) return renderTokens(tokenize(value), render);
+  return (
+    renderFlowCollection(value.slice(0, end), masked.slice(0, end), render) +
+    renderTokens(tokenize(value.slice(end)), render)
+  );
+}
+
+// Items split on the commas the template itself wrote, so a substituted comma stays inside its item.
+function renderFlowCollection(written: string, masked: string, render: RenderToken): string {
+  const inner = written.slice(1, -1);
+  const innerMasked = masked.slice(1, -1);
+  const top = topLevel(innerMasked) ?? [];
+  const inMapping = written.startsWith("{");
+  const items: string[] = [];
+  let from = 0;
+  for (let at = 0; at <= inner.length; at++) {
+    if (at < inner.length && !(top.at(at) === true && innerMasked[at] === ",")) continue;
+    items.push(renderFlowItem(inner.slice(from, at), innerMasked.slice(from, at), inMapping, render));
+    from = at + 1;
+  }
+  return written.charAt(0) + items.join(",") + written.at(-1);
+}
+
+function renderFlowItem(written: string, masked: string, inMapping: boolean, render: RenderToken): string {
+  if (tokenize(written).every((token) => token.kind === "literal")) return written;
+  const start = written.length - written.trimStart().length;
+  const end = written.trimEnd().length;
+  const core = written.slice(start, end);
+  const coreMasked = masked.slice(start, end);
+  const top = topLevel(coreMasked) ?? [];
+  const colon = [...coreMasked].findIndex(
+    (char, at) =>
+      char === ":" && top.at(at) === true && (at + 1 === coreMasked.length || /\s/.test(coreMasked.charAt(at + 1))),
+  );
+  if (colon === -1 && inMapping) return renderTokens(tokenize(written), render);
+  const valueFrom = colon === -1 ? 0 : colon + 1 + (/^\s*/.exec(core.slice(colon + 1))?.[0].length ?? 0);
+  return (
+    written.slice(0, start) +
+    renderTokens(tokenize(core.slice(0, valueFrom)), render) +
+    renderFlowScalar(core.slice(valueFrom), coreMasked.slice(valueFrom), colon !== -1, render) +
+    written.slice(end)
+  );
+}
+
+function renderFlowScalar(value: string, masked: string, inMappingValue: boolean, render: RenderToken): string {
+  const tokens = tokenize(value);
+  if (tokens.every((token) => token.kind === "literal")) return value;
+  const closesAtEnd = scalarEnd(masked) === masked.length;
+  if (closesAtEnd && masked.startsWith('"')) return renderDoubleQuoted(value.slice(1, -1), render);
+  if (closesAtEnd && masked.startsWith("'")) return renderSingleQuoted(value.slice(1, -1), render);
+  if (masked.startsWith("[") || masked.startsWith("{")) {
+    return closesAtEnd ? renderFlowCollection(value, masked, render) : renderTokens(tokens, render);
+  }
+  const joined = tokens
+    .map((token) => (token.kind === "literal" ? token.text : normalizeMultiline(render(token))))
+    .join("");
+  return joined.includes("\n") ? JSON.stringify(joined) : flowPlainOrQuoted(joined, inMappingValue);
+}
+
 function renderEntry(
   indent: string,
   dashRun: string,
@@ -123,8 +255,9 @@ function renderEntry(
   if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) {
     return prefix + renderSingleQuoted(value.slice(1, -1), render) + suffix;
   }
-  if (value.startsWith("[") || (value.startsWith("{") && !value.startsWith("{{"))) {
-    return prefix + renderTokens(tokens, render) + suffix;
+  const masked = mask(value);
+  if (masked?.startsWith("[") === true || masked?.startsWith("{") === true) {
+    return prefix + renderFlowValue(value, masked, render) + suffix;
   }
   // A block scalar's content must clear the column of whatever line it hangs off: the full dash
   // run (a nested list's innermost `- ` starts only after every outer one) plus, when a key
