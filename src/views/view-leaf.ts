@@ -86,6 +86,10 @@ export class JournalViewLeaf extends ItemView {
       // Mutate in-place so the reactive() proxy — and all closures captured in
       // buildRootComponent — observe the update without needing a new reference.
       for (const key of Object.keys(this.#state) as (keyof JournalViewLeafState)[]) {
+        // An absent refDate is getState declining to persist one, not a reset. setViewState
+        // mounts the view before calling this, so dropping it would discard the date the
+        // mount already followed to.
+        if (key === "refDate") continue;
         delete this.#state[key];
       }
       Object.assign(this.#state, state);
