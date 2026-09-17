@@ -48,6 +48,15 @@ do.
 
 When a note path already belongs to another journal, nothing is written and a notice says which.
 
+## Opening a period says its note belongs to another period
+
+A name that tells neighboring periods apart can still repeat over a longer stretch: a monthly journal
+named `{{date:MMMM}}` calls every March `March`, and a daily one named `{{date:MM-DD}}` gives every
+17 September the same name. Opening next March would find this March's note at that path, so the
+plugin leaves it alone and shows a notice naming the period the note already belongs to. The journal's
+settings warn about such a name under **Note name template**. Add the year to the name or the folder —
+`{{date:YYYY}}` as the folder keeps the short names.
+
 ## Clicking a date asks which journal
 
 Two journals of the same period length are in scope and both cover the date. Pick a shelf in the
