@@ -78,25 +78,49 @@ function closingQuote(text: string, quote: string, open = 0): number | undefined
   return undefined;
 }
 
+// Whether a quote at `at` opens a scalar: it must start a node, so it follows the start of the text,
+// one of `openers`, or node properties the author wrote (a `!tag` or `&anchor`, each followed by
+// whitespace) that themselves start one.
+function quoteOpens(masked: string, at: number, openers: string): boolean {
+  let end = at;
+  for (;;) {
+    let start = end;
+    while (start > 0 && /\s/.test(masked.charAt(start - 1))) start--;
+    if (start === 0) return true;
+    const before = masked.charAt(start - 1);
+    if (openers.includes(before)) return true;
+    if (start === end) return false;
+    let wordStart = start;
+    while (
+      wordStart > 0 &&
+      !/\s/.test(masked.charAt(wordStart - 1)) &&
+      !openers.includes(masked.charAt(wordStart - 1))
+    ) {
+      wordStart--;
+    }
+    const word = masked.slice(wordStart, start);
+    if (!/^[!&]\S*$/.test(word)) return false;
+    end = wordStart;
+  }
+}
+
 // For each position: whether it sits outside every quoted scalar and nested flow collection.
 // Undefined when the brackets or quotes don't balance, or a comment starts inside a collection.
 // A quote opens a scalar only where one can start in flow context — `it's` is a plain scalar.
 function topLevel(masked: string): boolean[] | undefined {
   const top: boolean[] = [];
   const open: string[] = [];
-  let previous = "";
   for (let at = 0; at < masked.length; at++) {
     const char = masked.charAt(at);
     if (char === "#" && at > 0 && /\s/.test(masked.charAt(at - 1))) {
       if (open.length > 0) return undefined;
       break;
     }
-    if ((char === '"' || char === "'") && (previous === "" || "[{,:?".includes(previous))) {
+    if ((char === '"' || char === "'") && quoteOpens(masked, at, "[{,:?")) {
       const end = closingQuote(masked, char, at);
       if (end === undefined) return undefined;
       for (let inside = at; inside < end; inside++) top[inside] = false;
       at = end - 1;
-      previous = char;
       continue;
     }
     if (char === "[" || char === "{") {
@@ -108,7 +132,6 @@ function topLevel(masked: string): boolean[] | undefined {
     } else {
       top[at] = open.length === 0;
     }
-    if (!/\s/.test(char)) previous = char;
   }
   return open.length === 0 ? top : undefined;
 }
@@ -307,7 +330,7 @@ function flowDepthAfter(content: string, depth: number): number {
     const char = masked.charAt(at);
     const afterSpace = at === 0 || /\s/.test(masked.charAt(at - 1));
     if (char === "#" && afterSpace) break;
-    if ((char === '"' || char === "'") && (previous === "" || "[{,:?-".includes(previous))) {
+    if ((char === '"' || char === "'") && quoteOpens(masked, at, "[{,:?-")) {
       const end = closingQuote(masked, char, at);
       if (end === undefined) break;
       at = end - 1;

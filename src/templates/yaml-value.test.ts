@@ -356,6 +356,33 @@ describe("renderFrontmatter", () => {
     it("leaves an unclosed collection as renderString would", () => {
       expect(rendered("tags: [journal, {{colon}}\n")).toBe("tags: [journal, rough: day\n");
     });
+
+    it.each([
+      ["a tag", '!!str "a #b"'],
+      ["an anchor", '&x "a #b"'],
+      ["a tag and an anchor", '!!str &x "a #b"'],
+      ["a single-quoted tagged scalar", "!!str 'a #b'"],
+    ])("still escapes a later item after %s before a quoted scalar holding ` #`", (_label, item) => {
+      const frontmatter = `tags: [${item}, {{colon}}]\n`;
+      expect(rendered(frontmatter)).toBe(`tags: [${item}, "rough: day"]\n`);
+      expect(read(frontmatter).tags).toEqual(["a #b", "rough: day"]);
+    });
+
+    it("still escapes a later value in a mapping after a tagged quoted scalar holding ` #`", () => {
+      const frontmatter = 'meta: {k: !!str "a #b", v: {{colon}}}\n';
+      expect(rendered(frontmatter)).toBe('meta: {k: !!str "a #b", v: "rough: day"}\n');
+      expect(read(frontmatter).meta).toEqual({ k: "a #b", v: "rough: day" });
+    });
+
+    it("keeps escaping the lines after a multi-line collection whose tagged quoted item holds a bracket", () => {
+      const frontmatter = 'tags: [\n  !!str "a [b",\n  x\n]\nafter: {{colon}}\n';
+      expect(rendered(frontmatter)).toBe('tags: [\n  !!str "a [b",\n  x\n]\nafter: "rough: day"\n');
+      expect(read(frontmatter)).toEqual({ tags: ["a [b", "x"], after: "rough: day" });
+    });
+
+    it("does not read a quote inside a plain word as opening a scalar", () => {
+      expect(rendered('tags: [!tag"a, {{colon}}]\n')).toBe('tags: [!tag"a, "rough: day"]\n');
+    });
   });
 
   describe("a value followed by a comment in the template", () => {
