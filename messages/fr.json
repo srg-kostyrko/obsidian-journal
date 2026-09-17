@@ -1869,6 +1869,7 @@
       "match": {
         "reason=text": "« {offending} » est une réponse en texte libre ; les notes qui la portent dans leur nom ou leur dossier ne peuvent donc pas être associées à ce journal par leur seul chemin.",
         "reason=longtext": "« {offending} » est une réponse en texte long ; elle ne peut donc pas faire partie d'un nom de note ou d'un dossier.",
+        "reason=note": "« {offending} » est un lien vers une note ; il ne peut donc pas faire partie d'un nom de note ou d'un dossier.",
         "reason=toggle": "« {offending} » est une réponse oui/non ; les notes qui la portent dans leur nom ou leur dossier ne peuvent donc pas être associées à ce journal par leur seul chemin. Utilisez plutôt une question à choix."
       }
     }
@@ -2104,6 +2105,7 @@
       "match": {
         "type=text": "Texte",
         "type=longtext": "Texte long",
+        "type=note": "Lien vers une note",
         "type=number": "Nombre",
         "type=date": "Date",
         "type=toggle": "Oui/Non",

@@ -1855,6 +1855,7 @@
       "match": {
         "reason=text": "\"{offending}\"은(는) 자유 텍스트 답변이므로, 이를 이름이나 폴더에 포함한 노트는 경로만으로는 이 저널에 연결할 수 없습니다.",
         "reason=longtext": "\"{offending}\"은(는) 긴 텍스트 답변이므로 노트 이름이나 폴더의 일부가 될 수 없습니다.",
+        "reason=note": "\"{offending}\"은(는) 노트 링크이므로 노트 이름이나 폴더의 일부가 될 수 없습니다.",
         "reason=toggle": "\"{offending}\"은(는) 예/아니요 답변이므로, 이를 이름이나 폴더에 포함한 노트는 경로만으로는 이 저널에 연결할 수 없습니다. 대신 선택형 질문을 사용하세요."
       }
     }
@@ -2090,6 +2091,7 @@
       "match": {
         "type=text": "텍스트",
         "type=longtext": "긴 텍스트",
+        "type=note": "노트 링크",
         "type=number": "숫자",
         "type=date": "날짜",
         "type=toggle": "예/아니요",

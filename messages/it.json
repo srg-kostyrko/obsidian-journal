@@ -1869,6 +1869,7 @@
       "match": {
         "reason=text": "\"{offending}\" è una risposta di testo libero, quindi le note che la riportano nel nome o nella cartella non possono essere associate a questo diario solo dal percorso.",
         "reason=longtext": "\"{offending}\" è una risposta di testo lungo, quindi non può far parte di un nome di nota o di una cartella.",
+        "reason=note": "\"{offending}\" è un collegamento a una nota, quindi non può far parte di un nome di nota o di una cartella.",
         "reason=toggle": "\"{offending}\" è una risposta sì/no, quindi le note che la riportano nel nome o nella cartella non possono essere associate a questo diario solo dal percorso. Usa invece una domanda a scelta."
       }
     }
@@ -2104,6 +2105,7 @@
       "match": {
         "type=text": "Testo",
         "type=longtext": "Testo lungo",
+        "type=note": "Collegamento a nota",
         "type=number": "Numero",
         "type=date": "Data",
         "type=toggle": "Sì/No",

@@ -63,6 +63,17 @@ describe("promptsSchema", () => {
     expect(parsed.issues?.[0]?.path?.map((p) => p.key)).toEqual([0, "variable"]);
   });
 
+  it("reads a note link question with its required flag", () => {
+    const parsed = v.safeParse(promptsSchema, [{ ...text, type: "note", required: true }]);
+    expect(parsed.success && parsed.output[0]).toEqual({
+      variable: "mood",
+      question: "How was today?",
+      type: "note",
+      frontmatterKey: "",
+      required: true,
+    });
+  });
+
   describe("a date prompt's format", () => {
     const dated = { ...text, type: "date" };
 
@@ -137,5 +148,9 @@ describe("isLongText, fitsInPath and displayTypeOf", () => {
     expect(isLongText(prompt)).toBe(longText);
     expect(fitsInPath(prompt)).toBe(fits);
     expect(displayTypeOf(prompt)).toBe(display);
+  });
+
+  it("keeps a note link answer out of note names and folders", () => {
+    expect(fitsInPath({ type: "note" })).toBe(false);
   });
 });

@@ -515,6 +515,17 @@ describe("useInvertibilityCheck", () => {
     });
   });
 
+  it("reports a note link prompt in the note name with its own reason", async () => {
+    const config = withName("{{date}}-{{mood}}");
+    config.prompts = [{ variable: "mood", question: "?", type: "note", frontmatterKey: "mood", required: false }];
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({ kind: "prompt-in-path", reason: "note", offending: "mood" });
+  });
+
   // EditPromptModal refuses to save a yes/no question that reaches the path, but it checks the
   // question against the templates as they stand — putting {{done}} into the name template
   // afterwards reaches the same state by the other order, and only this verdict catches it.

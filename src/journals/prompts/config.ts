@@ -48,6 +48,7 @@ export const promptSchema = v.variant("type", [
     type: v.literal("select"),
     options: v.pipe(v.array(promptOptionSchema), v.minLength(1)),
   }),
+  v.object({ ...promptBase.entries, ...requiredFlag, type: v.literal("note") }),
 ]);
 
 export const promptsSchema = v.pipe(
@@ -82,11 +83,11 @@ export function isLongText(prompt: PromptKind): boolean {
 /**
  * Whether an answer may be part of a note name or folder.
  *
- * A yes/no answer renders a localized word no path pattern matches, and a long answer would put
- * line breaks into a file name.
+ * A yes/no answer renders a localized word no path pattern matches, a long answer would put
+ * line breaks into a file name, and a note link carries brackets no linkable file name can hold.
  */
 export function fitsInPath(prompt: PromptKind): boolean {
-  return prompt.type !== "toggle" && !isLongText(prompt);
+  return prompt.type !== "toggle" && prompt.type !== "note" && !isLongText(prompt);
 }
 
 export type PromptDisplayType = PromptType | "longtext";

@@ -1858,6 +1858,7 @@
       "match": {
         "reason=text": "«{offending}» es una respuesta de texto libre, por lo que las notas que la incluyen en su nombre o carpeta no se pueden asociar a este diario solo por su ruta.",
         "reason=longtext": "«{offending}» es una respuesta de texto largo, por lo que no puede formar parte de un nombre de nota o carpeta.",
+        "reason=note": "«{offending}» es un enlace a una nota, por lo que no puede formar parte de un nombre de nota o carpeta.",
         "reason=toggle": "«{offending}» es una respuesta de sí o no, por lo que las notas que la incluyen en su nombre o carpeta no se pueden asociar a este diario solo por su ruta. Usa en su lugar una pregunta de opción."
       }
     }
@@ -2093,6 +2094,7 @@
       "match": {
         "type=text": "Texto",
         "type=longtext": "Texto largo",
+        "type=note": "Enlace a nota",
         "type=number": "Número",
         "type=date": "Fecha",
         "type=toggle": "Sí/No",

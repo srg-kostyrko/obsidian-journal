@@ -1707,6 +1707,7 @@
       "match": {
         "reason=text": "“{offending}”是自由文本答案，因此名称或文件夹中包含它的笔记无法仅凭路径与此日记匹配。",
         "reason=longtext": "“{offending}”是长文本回答，因此不能作为笔记名称或文件夹的一部分。",
+        "reason=note": "“{offending}”是笔记链接，因此不能作为笔记名称或文件夹的一部分。",
         "reason=toggle": "“{offending}”是是/否的回答，因此名称或文件夹中包含它的笔记无法仅凭路径与此日记匹配。请改用选择型问题。"
       }
     }
@@ -1942,6 +1943,7 @@
       "match": {
         "type=text": "文本",
         "type=longtext": "长文本",
+        "type=note": "笔记链接",
         "type=number": "数字",
         "type=date": "日期",
         "type=toggle": "是/否",

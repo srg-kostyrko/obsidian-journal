@@ -65,6 +65,7 @@ const PROMPT_TYPES = [
   "date",
   "toggle",
   "select",
+  "note",
 ] as const satisfies readonly PromptDisplayType[];
 const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
 interface FormValues {
