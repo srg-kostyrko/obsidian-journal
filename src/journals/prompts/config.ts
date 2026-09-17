@@ -34,11 +34,12 @@ export const promptSchema = v.variant("type", [
     ...promptBase.entries,
     ...requiredFlag,
     type: v.literal("date"),
-    // Clearable, so no minLength: a validation issue under `prompts` makes
-    // repairCollectionEntry substitute the whole array with `[]`, wiping every question.
-    // The schema default only covers an absent key; a present-but-empty value must fall
-    // back on read (dateFormatFor), because moment().format("") is not "YYYY-MM-DD" and
-    // formatToRegexp("") does not invert a note name.
+    // Clearable, so no minLength: a `minLength` here would fail only the one question that holds
+    // it, and the settings-service repair drops just that question rather than the whole
+    // `prompts` array — a `format` issue would silently lose that one question, no louder than
+    // any other per-item drop. The schema default only covers an absent key; a present-but-empty
+    // value must fall back on read (dateFormatFor), because moment().format("") is not
+    // "YYYY-MM-DD" and formatToRegexp("") does not invert a note name.
     format: v.optional(v.string(), DEFAULT_DATE_FORMAT),
   }),
   v.object({ ...promptBase.entries, type: v.literal("toggle") }),
