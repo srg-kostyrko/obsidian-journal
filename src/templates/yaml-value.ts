@@ -5,9 +5,10 @@ import { continueMultiline, normalizeMultiline, type LineEnding } from "./multil
 
 import type { RenderToken, Token } from "./types";
 
-const ENTRY_RE = /^([ \t]*)(- +|[^\s#'"{[\]:][^:]*?:(?: +|$))(.*?)([ \t]*)$/;
+const ENTRY_RE = /^([ \t]*)((?:- +)*)([^\s#'"{[\]:][^:]*?:(?: +|$))?(.*?)([ \t]*)$/;
 const BLOCK_INDICATOR_RE = /^[|>][+-]?\d?[+-]?$/;
 const INDENT_RE = /^[ \t]*/;
+const NULL_WORDS = new Set(["null", "Null", "NULL", "~"]);
 
 interface Line {
   readonly content: string;
@@ -26,21 +27,24 @@ function renderTokens(tokens: readonly Token[], render: RenderToken): string {
 }
 
 // Kept as written whenever it reads back as itself or as a typed value a template may rely on —
-// a number, a boolean, a list. Only what YAML would refuse or silently change is quoted.
+// a number, a boolean, a list. Only what YAML would refuse, silently change, or silently drop
+// (a bare `#` turning a real value into a comment, and the whole entry into null) is quoted.
 function plainOrQuoted(value: string): string {
   if (value === "") return value;
   try {
     const read = (parseYaml(`value: ${value}`) as Record<string, unknown> | null)?.value;
-    return typeof read === "string" && read !== value ? JSON.stringify(value) : value;
+    if (typeof read === "string") return read === value ? value : JSON.stringify(value);
+    if ((read === null || read === undefined) && !NULL_WORDS.has(value)) return JSON.stringify(value);
+    return value;
   } catch {
     return JSON.stringify(value);
   }
 }
 
-function blockScalar(prefix: string, indent: string, value: string, eol: LineEnding): string {
+function blockScalar(prefix: string, indent: string, dashWidth: number, value: string, eol: LineEnding): string {
   // A first line that starts with a space would otherwise set the block's indentation itself.
   const indicator = value.startsWith(" ") ? "|2-" : "|-";
-  const pad = `${indent}  `;
+  const pad = `${indent}${" ".repeat(dashWidth)}  `;
   const lines = value.split("\n").map((line) => (line === "" ? "" : pad + line));
   return [`${prefix.endsWith(" ") ? prefix : `${prefix} `}${indicator}`, ...lines].join(eol);
 }
@@ -68,8 +72,15 @@ function renderSingleQuoted(inner: string, render: RenderToken): string {
   return `'${parts.map((part) => (part.literal ? part.text : part.text.replaceAll("'", "''"))).join("")}'`;
 }
 
-function renderEntry(indent: string, lead: string, value: string, render: RenderToken, eol: LineEnding): string {
-  const prefix = indent + lead;
+function renderEntry(
+  indent: string,
+  dashRun: string,
+  key: string | undefined,
+  value: string,
+  render: RenderToken,
+  eol: LineEnding,
+): string {
+  const prefix = indent + renderTokens(tokenize(dashRun + (key ?? "")), render);
   const tokens = tokenize(value);
   if (tokens.every((token) => token.kind === "literal")) return prefix + value;
   if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
@@ -81,10 +92,14 @@ function renderEntry(indent: string, lead: string, value: string, render: Render
   if (value.startsWith("[") || (value.startsWith("{") && !value.startsWith("{{"))) {
     return prefix + renderTokens(tokens, render);
   }
+  // A list entry's own indentation ends at the dash run; a key nested inside it (a list entry
+  // that is itself a mapping) pushes the entry one level deeper, so a block scalar under that
+  // key must clear the key's column, not just the dash's.
+  const dashWidth = key === undefined ? 0 : dashRun.length;
   const only = tokens.length === 1 ? tokens[0] : undefined;
   if (only !== undefined && only.kind !== "literal") {
     const whole = normalizeMultiline(render(only));
-    return whole.includes("\n") ? blockScalar(prefix, indent, whole, eol) : prefix + plainOrQuoted(whole);
+    return whole.includes("\n") ? blockScalar(prefix, indent, dashWidth, whole, eol) : prefix + plainOrQuoted(whole);
   }
   const joined = tokens
     .map((token) => (token.kind === "literal" ? token.text : normalizeMultiline(render(token))))
@@ -116,9 +131,13 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
       out += renderTokens(tokenize(content), render) + ending;
       continue;
     }
-    const [, lineIndent = "", lead = "", value = "", trailing = ""] = entry;
+    const [, lineIndent = "", dashRun = "", key, value = "", trailing = ""] = entry;
+    if (dashRun === "" && key === undefined) {
+      out += renderTokens(tokenize(content), render) + ending;
+      continue;
+    }
     if (BLOCK_INDICATOR_RE.test(value)) blockIndent = indent;
-    out += renderEntry(lineIndent, lead, value, render, eol) + trailing + ending;
+    out += renderEntry(lineIndent, dashRun, key, value, render, eol) + trailing + ending;
   }
   return out;
 }

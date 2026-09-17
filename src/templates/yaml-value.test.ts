@@ -20,6 +20,7 @@ const values: Record<string, string> = {
   dashes: "a\n---\nb",
   plain: "Daily",
   lead: " spaced",
+  tag: "#happy",
 };
 
 const render: RenderToken = (token) => (token.kind === "literal" ? token.text : (values[token.name] ?? token.raw));
@@ -44,6 +45,18 @@ describe("renderFrontmatter", () => {
       expect(read("items:\n  - {{answer}}\n").items).toEqual(["a\nb\n\nc"]);
     });
 
+    it("quotes only the value in a list entry that is itself a mapping", () => {
+      const frontmatter = "links:\n  - name: {{colon}}\n    url: x\n";
+      const parsed = read(frontmatter);
+      expect(parsed.links).toEqual([{ name: "rough: day", url: "x" }]);
+    });
+
+    it("writes a multi-line value under a list entry's own key as a literal block", () => {
+      const frontmatter = "items:\n  - k: {{answer}}\n";
+      const parsed = read(frontmatter);
+      expect(parsed.items).toEqual([{ k: "a\nb\n\nc" }]);
+    });
+
     it("keeps a first line's own indentation with an explicit indentation indicator", () => {
       expect(read("summary: {{indented}}\n").summary).toBe("  lead\nnext");
     });
@@ -66,7 +79,7 @@ describe("renderFrontmatter", () => {
       expect(read("title: {{quote}}\n").title).toBe('say "hi"');
     });
 
-    it.each(["-", "[", "{", "*", "&", "!", "%", "@", "`", "|", ">", "?"])(
+    it.each(["-", "[", "{", "*", "&", "!", "%", "@", "`", "|", ">", "?", "#"])(
       "reads back a value starting with %s as written",
       (start) => {
         const frontmatter = "title: {{v}}\n";
@@ -74,6 +87,10 @@ describe("renderFrontmatter", () => {
         expect((parseYaml(text) as Record<string, unknown>).title).toBe(`${start} value`);
       },
     );
+
+    it("quotes a value that would otherwise read back as a dropped comment", () => {
+      expect(read("mood: {{tag}}\n").mood).toBe("#happy");
+    });
 
     it.each([
       ["a number", "num", 42],
@@ -125,6 +142,10 @@ describe("renderFrontmatter", () => {
 
     it("leaves a value in key position as renderString would", () => {
       expect(rendered("{{plain}}: 1\n")).toBe("Daily: 1\n");
+    });
+
+    it("renders a variable inside a key that also has literal text", () => {
+      expect(rendered("note_{{plain}}: 1\n")).toBe("note_Daily: 1\n");
     });
 
     it("leaves lines without values untouched, including invalid ones", () => {
