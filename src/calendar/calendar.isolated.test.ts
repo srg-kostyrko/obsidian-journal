@@ -169,4 +169,21 @@ describe("Calendar", () => {
       expect(months.every((name) => typeof name === "string" && name.length > 0)).toBe(true);
     });
   });
+
+  // moment remembers a failed lookup as a `null` entry that `moment.locales()` still lists, so a
+  // date built before the first Calendar leaves the name looking defined when it is not.
+  describe("when the custom locale was looked up before any Calendar defined it", () => {
+    beforeEach(() => {
+      moment.defineLocale(CUSTOM_LOCALE, null);
+      moment.localeData(CUSTOM_LOCALE);
+    });
+
+    it("still defines it from the global locale, ordinals included", () => {
+      new Calendar();
+
+      const parsed = localMoment("June 1st", "MMMM Do", true);
+      expect(parsed.isValid()).toBe(true);
+      expect(parsed.format("MMMM Do")).toBe("June 1st");
+    });
+  });
 });

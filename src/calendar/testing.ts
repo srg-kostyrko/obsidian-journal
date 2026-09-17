@@ -1,6 +1,4 @@
-import { moment } from "obsidian";
-
-import { Calendar, CUSTOM_LOCALE, type WeekConfig } from "./calendar";
+import { Calendar, CUSTOM_LOCALE, isLocaleDefined, type WeekConfig } from "./calendar";
 import { CalendarDate } from "./calendar-date";
 
 import type { AnchorString } from "./types";
@@ -25,7 +23,7 @@ export function installTestCalendar(week?: Partial<WeekConfig>): { teardown: () 
 // handle installTestCalendar returns — nothing else reaches it. A test that changed the grid cannot
 // hand it to the next one regardless: the global beforeEach re-pins the grid before every test.
 export function resetCalendarLocale(): void {
-  if (!moment.locales().includes(CUSTOM_LOCALE)) return;
+  if (!isLocaleDefined(CUSTOM_LOCALE)) return;
   installed?.applyWeekConfig(DEFAULT_TEST_WEEK, { propagateToGlobal: false });
 }
 

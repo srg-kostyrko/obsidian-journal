@@ -27,6 +27,15 @@ type MomentConstructor = (
   strict?: boolean,
 ) => moment.Moment;
 
+// Not `moment.locales().includes(name)`: a lookup of a name moment has never seen stores `null`
+// under it, which `locales()` still lists. A date built before the first Calendar leaves exactly
+// that behind, and treating it as defined makes the following `updateLocale` build the locale from
+// moment's bare defaults — English ordinals gone. `localeData` falls back to the global locale for
+// such an entry, so only a locale really registered under the name answers with it.
+export function isLocaleDefined(name: string): boolean {
+  return (moment.localeData(name) as unknown as { _abbr?: string })._abbr === name;
+}
+
 export class Calendar {
   readonly #initial: WeekConfig;
   readonly #globalLocale: string;
@@ -40,13 +49,13 @@ export class Calendar {
     // we don't corrupt the global locale's _config.abbr (which breaks moment.locale()).
     const sourceConfig = (data as unknown as { _config: moment.LocaleSpecification })._config;
 
-    if (!moment.locales().includes(PRISTINE_LOCALE)) {
+    if (!isLocaleDefined(PRISTINE_LOCALE)) {
       moment.defineLocale(PRISTINE_LOCALE, { ...sourceConfig });
     }
     const pristine = moment.localeData(PRISTINE_LOCALE);
     this.#initial = { dow: pristine.firstDayOfWeek(), doy: pristine.firstDayOfYear() };
 
-    if (!moment.locales().includes(CUSTOM_LOCALE)) {
+    if (!isLocaleDefined(CUSTOM_LOCALE)) {
       moment.defineLocale(CUSTOM_LOCALE, { ...sourceConfig });
     }
     moment.updateLocale(CUSTOM_LOCALE, { week: this.#initial });
