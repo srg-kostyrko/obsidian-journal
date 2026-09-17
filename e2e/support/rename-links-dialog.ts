@@ -48,3 +48,26 @@ export async function confirmUpdateLinksDialog(): Promise<void> {
     timeoutMsg: '"Update links?" dialog did not close after confirming',
   });
 }
+
+// Closes the dialog on the fast-fail path of renameNote: the caller asked for a rename it
+// expected to have no inbound links, got this dialog instead, and is about to throw
+// RenameRequiresLinkUpdateError to say so. Left unanswered, the dialog is a real leftover
+// modal — this suite reuses one Obsidian instance across specs and has no general modal
+// cleanup, so a later test's own dialog-driving code (or a plain click) can land on this one
+// instead. Dismissal picks the third button, "Don't update", by the same position-not-text
+// reasoning confirmUpdateLinksDialog documents above: it completes the rename without
+// rewriting any note's links, whereas "Always update" would additionally flip the vault's
+// alwaysUpdateLinks permanently — a side effect an error path must never cause. Waits for the
+// dialog to actually close before returning, so the caller's throw can't race a later test into
+// the still-closing overlay.
+export async function dismissUpdateLinksDialog(): Promise<void> {
+  await waitForUpdateLinksDialogOpen();
+  const buttons = await updateLinksDialog().$$(".modal-button-container button").getElements();
+  const skipUpdateButton = buttons[2];
+  if (!skipUpdateButton) throw new UpdateLinksDialogButtonMissingError();
+  await skipUpdateButton.click();
+  await updateLinksDialog().waitForExist({
+    reverse: true,
+    timeoutMsg: '"Update links?" dialog did not close after dismissing',
+  });
+}

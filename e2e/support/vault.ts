@@ -1,7 +1,7 @@
 import { browser } from "@wdio/globals";
 
 import { FixtureFileMissingError, RenameFileFailedError, RenameRequiresLinkUpdateError } from "./errors.js";
-import { confirmUpdateLinksDialog, isUpdateLinksDialogOpen } from "./rename-links-dialog.js";
+import { confirmUpdateLinksDialog, dismissUpdateLinksDialog, isUpdateLinksDialogOpen } from "./rename-links-dialog.js";
 import { waitForState } from "./wait.js";
 
 export type Frontmatter = Record<string, unknown>;
@@ -130,7 +130,13 @@ export async function renameNote(from: string, to: string): Promise<void> {
   if (!started) throw new FixtureFileMissingError(from);
   const { dialogOpened, failure } = await waitForRenameOutcome(to);
   if (failure !== undefined) throw new RenameFileFailedError(from, to, failure);
-  if (dialogOpened) throw new RenameRequiresLinkUpdateError(from, to);
+  if (dialogOpened) {
+    // Close Obsidian's own dialog before failing: this suite reuses one Obsidian instance
+    // across specs with no general modal cleanup, so an unanswered dialog would sit open and
+    // could swallow a later test's click.
+    await dismissUpdateLinksDialog();
+    throw new RenameRequiresLinkUpdateError(from, to);
+  }
 }
 
 // Renames a note that is expected to have at least one inbound link, so Obsidian's native
