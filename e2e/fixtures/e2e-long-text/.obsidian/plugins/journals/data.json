@@ -1,0 +1,59 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "reflect": {
+      "name": "reflect",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "templates": ["Templates/reflect.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        {
+          "variable": "challenge",
+          "question": "What was the biggest challenge?",
+          "type": "text",
+          "multiline": true,
+          "frontmatterKey": "challenge",
+          "required": true
+        },
+        {
+          "variable": "word",
+          "question": "One word for today",
+          "type": "text",
+          "frontmatterKey": "",
+          "required": false
+        }
+      ]
+    },
+    "summarized": {
+      "name": "summarized",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "templates": ["Templates/summarized.md"],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        { "variable": "headline", "question": "Headline?", "type": "text", "frontmatterKey": "", "required": false },
+        { "variable": "label", "question": "Label?", "type": "text", "frontmatterKey": "", "required": false }
+      ]
+    }
+  }
+}
