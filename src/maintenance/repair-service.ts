@@ -8,6 +8,8 @@ import { FRONTMATTER_NAME_KEY } from "@/journals/config";
 import { FrontmatterService } from "@/journals/frontmatter";
 import { JournalsIndex } from "@/journals/journals-index";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
+import { NoteCreationService } from "@/journals/notes/note-creation";
+import { NotePathService } from "@/journals/notes/note-path";
 
 import type { RepairAction } from "./findings";
 
@@ -15,7 +17,11 @@ const INDEX_SETTLE_TIMEOUT_MS = 2000;
 
 export type RepairOutcome =
   | { kind: "repaired" }
-  | { kind: "failed"; reason: "write-failed" | "still-rejected" | "still-claimed" | "contested"; message?: string };
+  | {
+      kind: "failed";
+      reason: "write-failed" | "still-rejected" | "still-claimed" | "contested" | "no-longer-matches";
+      message?: string;
+    };
 
 export interface RepairLogEntry {
   readonly path: VaultPath;
@@ -31,6 +37,8 @@ interface Intent {
 
 export class RepairService {
   readonly #connection = inject(NoteConnectionService);
+  readonly #creation = inject(NoteCreationService);
+  readonly #path = inject(NotePathService);
   readonly #index = inject(JournalsIndex);
   readonly #notes = inject(NotesService);
   readonly #metadata = inject(NoteMetadataService);
@@ -159,6 +167,57 @@ export class RepairService {
       }
 
       const anchor = action.repair.anchor;
+
+      if (action.repair.kind === "attach") {
+        // Re-derived rather than trusted from the scan: the note may have been claimed, renamed or
+        // edited since, or the journal's settings changed. The metadata is auto-attach's own, so a
+        // note connected here is the note auto-attach would have written had only one journal matched.
+        const claimedNow = this.#metadata.get(action.path).getOrUndefined()?.properties[FRONTMATTER_NAME_KEY];
+        const candidate =
+          typeof claimedNow === "string"
+            ? undefined
+            : this.#path
+                .attachCandidatesFor(action.path)
+                .find((match) => match.journalName === action.journalName && match.metadata.anchor === anchor);
+        if (candidate === undefined) {
+          results.push({
+            entry: {
+              path: action.path,
+              journalName: action.journalName,
+              outcome: { kind: "failed", reason: "no-longer-matches" },
+            },
+          });
+          continue;
+        }
+        if (!claim(action.journalName, anchor, action.path)) {
+          results.push({
+            entry: {
+              path: action.path,
+              journalName: action.journalName,
+              outcome: { kind: "failed", reason: "contested" },
+            },
+          });
+          continue;
+        }
+        const attached = await this.#creation.attachNote(action.journalName, action.path, candidate.metadata);
+        if (attached.isErr()) {
+          results.push({
+            entry: {
+              path: action.path,
+              journalName: action.journalName,
+              outcome: { kind: "failed", reason: "write-failed", message: attached.error.message },
+            },
+          });
+          continue;
+        }
+        const intent: Intent = { path: action.path, journalName: action.journalName, anchor };
+        intents.push(intent);
+        results.push({
+          entry: { path: action.path, journalName: action.journalName, outcome: { kind: "repaired" } },
+          intent,
+        });
+        continue;
+      }
       // A notelet never contests a period slot, so it neither consumes one nor can be refused one.
       if (action.noteletTypeName === undefined && !claim(action.journalName, anchor, action.path)) {
         results.push({

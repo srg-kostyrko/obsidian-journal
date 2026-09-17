@@ -2269,6 +2269,7 @@
   "maintenance_check_group_duplicate": "{journal}: {anchor} に2件のノート",
   "maintenance_check_group_orphaned": "{journal}: このジャーナルはもう存在しません",
   "maintenance_check_group_orphaned_type": "{journal}: 不明なサブノートの種類",
+  "maintenance_check_group_ambiguous": "{journals}: 複数のジャーナルがこれらのノートに一致します",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: 読み取れる日付がありません。ファイル名は {to} を示しています。",
   "maintenance_detail_path_overrides_date": "{path}: ファイル名は {pathAnchor}、ノートは {dateAnchor} を示しています。ノートを開いて判断してください。",
@@ -2278,6 +2279,7 @@
   "maintenance_detail_duplicate": "{path}: {size} バイト、更新日時 {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}: 「{typeName}」という名前のサブノートの種類はこのジャーナルにもう存在しません。",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "別のノートがすでに同じ期間を主張しているため、この修復は取り下げられました。",
   "maintenance_reason_path_and_date_disagree": "ファイル名とノートの内容が一致しないため、自動的な変更は行われませんでした。",
   "maintenance_reason_path_not_invertible": "自動的に修復することができませんでした。",
@@ -2285,6 +2287,8 @@
   "maintenance_duplicate_keep": "これを残す",
   "maintenance_orphan_clear": "ジャーナルキーを削除",
   "maintenance_orphan_reassign_hint": "これらのノートを別のジャーナルに割り当てるには、コマンド「ノートをジャーナルに接続」を使用してください。",
+  "maintenance_ambiguous_connect": "{journal} に接続",
+  "maintenance_ambiguous_occupied": "{journals} では別のノートがすでにこの期間を使用しています。",
   "maintenance_repair_done": "{repaired} 件のノートを修復しました。{failed} 件は修復できませんでした。",
   "maintenance_unreadable_row": "{path}: {message}"
 }

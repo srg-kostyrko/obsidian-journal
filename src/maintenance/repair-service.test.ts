@@ -10,6 +10,7 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import { NoteConnectionService } from "@/journals/notes/note-connection";
+import { NoteCreationService } from "@/journals/notes/note-creation";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer, type FakeHost } from "@/testing";
 
@@ -35,6 +36,7 @@ async function buildRepairs(journals: Record<string, JournalConfig> = WEEKLY) {
     // and only the tests that pin down timing or inject a failure override an implementation.
     reanchor: vi.spyOn(connection, "reanchor"),
     disconnect: vi.spyOn(connection, "disconnect"),
+    creation: vi.spyOn(harness.resolve(NoteCreationService), "attachNote"),
   };
 }
 
@@ -340,4 +342,63 @@ describe("RepairService", () => {
     expect(result.value.at(0)?.outcome).toEqual({ kind: "repaired" });
     vi.useRealTimers();
   });
+
+  describe("attaching a note several journals would adopt", () => {
+    const TWINS = {
+      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}" }),
+      diary: fixedJournal("diary", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" }),
+    };
+
+    it("claims the note for the chosen journal only", async () => {
+      const { service, host } = await buildRepairs(TWINS);
+      claim(host, "2026-01-12.md", undefined);
+
+      await run(service, attach("diary"));
+
+      expect(host.files.get("2026-01-12.md")?.frontmatter).toEqual({ journal: "diary", "journal-date": "2026-01-12" });
+    });
+
+    it("reports the note repaired once the index holds it", async () => {
+      const { service, host, index, creation } = await buildRepairs(TWINS);
+      claim(host, "2026-01-12.md", undefined);
+      creation.mockImplementation((journalName, path, metadata) => {
+        index.register({ journalName, anchor: metadata.anchor, path });
+        return AsyncResult.ok(undefined);
+      });
+
+      expect(await run(service, attach("diary"))).toEqual({ kind: "repaired" });
+    });
+
+    it("leaves a note that was claimed after the scan alone", async () => {
+      const { service, host } = await buildRepairs(TWINS);
+      claim(host, "2026-01-12.md", "daily");
+
+      expect(await run(service, attach("diary"))).toEqual({ kind: "failed", reason: "no-longer-matches" });
+      expect(host.files.get("2026-01-12.md")?.frontmatter).toEqual({ journal: "daily" });
+    });
+
+    it("refuses a period another note took after the scan", async () => {
+      const { service, host, index } = await buildRepairs(TWINS);
+      claim(host, "2026-01-12.md", undefined);
+      host.putFile("Other.md", "", { journal: "diary", "journal-date": "2026-01-12" });
+      index.register({ journalName: "diary", anchor: anchor("2026-01-12"), path: "Other.md" as VaultPath });
+
+      expect(await run(service, attach("diary"))).toEqual({ kind: "failed", reason: "contested" });
+      expect(host.files.get("2026-01-12.md")?.frontmatter).toEqual({});
+    });
+  });
 });
+
+function attach(journalName: string, to = "2026-01-12"): RepairAction {
+  return { path: "2026-01-12.md" as VaultPath, journalName, repair: { kind: "attach", anchor: anchor(to) } };
+}
+
+async function run(service: RepairService, action: RepairAction) {
+  vi.useFakeTimers();
+  const running = service.apply([action]);
+  await vi.runAllTimersAsync();
+  const result = await running;
+  vi.useRealTimers();
+  expectOk(result);
+  return result.value.at(0)?.outcome;
+}

@@ -503,4 +503,66 @@ describe("MaintenanceSubpage", () => {
     expect(fixButton?.disabled).toBe(true);
     expect(fixAll?.disabled).toBe(true);
   });
+
+  describe("a note several journals would adopt", () => {
+    it("names every journal that matches the note", async () => {
+      const { wrapper } = await mountSubpage({ scan: ambiguous() });
+      await flushPromises();
+
+      expect(wrapper.text()).toContain(m.maintenance_check_group_ambiguous({ journals: "daily and diary" }));
+    });
+
+    it("connects the note to the journal the user picks", async () => {
+      const apply = vi.fn(() => AsyncResult.ok([]));
+      const { wrapper } = await mountSubpage({ apply, scan: ambiguous() });
+      await flushPromises();
+
+      await wrapper
+        .findAll("button")
+        .find((b) => b.text() === m.maintenance_ambiguous_connect({ journal: "diary" }))
+        ?.trigger("click");
+
+      expect(apply).toHaveBeenCalledWith([
+        { path: "2026-01-12.md", journalName: "diary", repair: { kind: "attach", anchor: anchor("2026-01-12") } },
+      ]);
+    });
+
+    it("offers no connection to a journal whose period is taken, and says why", async () => {
+      const { wrapper } = await mountSubpage({ scan: ambiguous(["daily"]) });
+      await flushPromises();
+
+      const labels = wrapper.findAll("button").map((b) => b.text());
+      expect(labels).not.toContain(m.maintenance_ambiguous_connect({ journal: "daily" }));
+      expect(labels).toContain(m.maintenance_ambiguous_connect({ journal: "diary" }));
+      expect(wrapper.text()).toContain(m.maintenance_ambiguous_occupied({ journals: "daily" }));
+    });
+
+    it("offers no group fix, since only the user can pick the journal", async () => {
+      const { wrapper } = await mountSubpage({ scan: ambiguous() });
+      await flushPromises();
+
+      expect(wrapper.findAll(".collapsible-trigger-controls button")).toHaveLength(0);
+    });
+  });
 });
+
+function ambiguous(occupied: readonly string[] = []): ScanReport {
+  return {
+    findings: [
+      {
+        check: "ambiguous-note",
+        path: "2026-01-12.md" as VaultPath,
+        candidates: ["daily", "diary"].map((journalName) => ({
+          journalName,
+          anchor: anchor("2026-01-12"),
+          occupied: occupied.includes(journalName),
+        })),
+        repair: { kind: "undecidable", reason: "needs-choice" },
+      },
+    ],
+    analyzed: 0,
+    unreadable: [],
+    unparsed: 0,
+    pendingMigration: false,
+  };
+}

@@ -2347,6 +2347,7 @@
   "maintenance_check_group_duplicate": "{journal} — дві нотатки для {anchor}",
   "maintenance_check_group_orphaned": "{journal} — цього журналу більше не існує",
   "maintenance_check_group_orphaned_type": "{journal} — невідомий тип піднотатки",
+  "maintenance_check_group_ambiguous": "{journals} — цим нотаткам відповідає кілька журналів",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: немає придатної для читання дати. Ім'я файлу вказує на {to}.",
   "maintenance_detail_path_overrides_date": "{path}: ім'я файлу вказує на {pathAnchor}, а нотатка — на {dateAnchor}. Відкрийте нотатку й вирішіть.",
@@ -2356,6 +2357,7 @@
   "maintenance_detail_duplicate": "{path} — {size} байт, змінено {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}: тип піднотатки «{typeName}» більше не існує в цьому журналі.",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "Це виправлення було скасовано, оскільки інша нотатка вже претендує на той самий період.",
   "maintenance_reason_path_and_date_disagree": "Нічого не було змінено автоматично, оскільки ім'я файлу та нотатка не збігаються.",
   "maintenance_reason_path_not_invertible": "Це не вдалося виправити автоматично.",
@@ -2363,6 +2365,8 @@
   "maintenance_duplicate_keep": "Залишити цю",
   "maintenance_orphan_clear": "Видалити ключі журналу",
   "maintenance_orphan_reassign_hint": "Щоб прив’язати ці нотатки до іншого журналу, скористайтеся командою «Підключити нотатку до журналу».",
+  "maintenance_ambiguous_connect": "Підключити до журналу {journal}",
+  "maintenance_ambiguous_occupied": "Цей період уже зайнято іншою нотаткою: {journals}.",
   "maintenance_repair_done": "{repaired} нотаток виправлено. {failed} не вдалося виправити.",
   "maintenance_unreadable_row": "{path}: {message}"
 }

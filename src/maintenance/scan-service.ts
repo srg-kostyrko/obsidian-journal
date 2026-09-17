@@ -12,7 +12,7 @@ import { checkRejectedAnchor } from "./checks/rejected-anchor";
 import { checkStaleRange } from "./checks/stale-range";
 import { ScannedNoteResolver } from "./scanned-note";
 
-import type { Finding, ScanReport, UnreadableNote } from "./findings";
+import type { AmbiguousNoteFinding, ClaimFinding, Finding, ScanReport, UnreadableNote } from "./findings";
 import type { ScannedNote } from "./scanned-note";
 
 function keyOf(journalName: string, anchor: AnchorString): string {
@@ -22,7 +22,10 @@ function keyOf(journalName: string, anchor: AnchorString): string {
 // A repair's target collides with wherever the vault will be *after* the repairs, not where it
 // is now — and that collision does not exist until the repair is planned, so no ordering of
 // writes can avoid it. Compute it here and withdraw every repair that contests an anchor.
-export function gateCollisions(notes: readonly ScannedNote[], findings: readonly Finding[]): readonly Finding[] {
+export function gateCollisions(
+  notes: readonly ScannedNote[],
+  findings: readonly ClaimFinding[],
+): readonly ClaimFinding[] {
   const rewriteByPath = new Map<VaultPath, AnchorString>();
   for (const finding of findings) {
     if (finding.repair.kind === "rewrite") rewriteByPath.set(finding.path, finding.repair.anchor);
@@ -53,7 +56,7 @@ export function gateCollisions(notes: readonly ScannedNote[], findings: readonly
   }
   if (contested.size === 0) return findings;
 
-  const gated: Finding[] = findings.map((finding) =>
+  const gated: ClaimFinding[] = findings.map((finding) =>
     finding.repair.kind === "rewrite" && contested.has(finding.path)
       ? { ...finding, repair: { kind: "undecidable", reason: "anchor-contested" } }
       : finding,
@@ -83,8 +86,11 @@ export function pendingOldIdsOf(markers: readonly PendingNoteMigration[]): Set<s
 // records nothing, so nothing in the data tells it apart from a failed migration — and a note
 // still keyed by a legacy id is excluded outright, because stripping that key strands its
 // legacy frontmatter forever (the same reason auto-attach refuses to adopt one).
-export function orphanFindings(notes: readonly ScannedNote[], pendingOldIds: ReadonlySet<string>): readonly Finding[] {
-  const out: Finding[] = [];
+export function orphanFindings(
+  notes: readonly ScannedNote[],
+  pendingOldIds: ReadonlySet<string>,
+): readonly ClaimFinding[] {
+  const out: ClaimFinding[] = [];
   for (const note of notes) {
     if (note.journalExists) continue;
     if (pendingOldIds.has(note.claimedJournal)) continue;
@@ -115,6 +121,7 @@ export class ScanService {
 
     const resolved: ScannedNote[] = [];
     const unreadable: UnreadableNote[] = [];
+    const ambiguous: AmbiguousNoteFinding[] = [];
     let unparsed = 0;
 
     for (const path of this.#notes.allMarkdownNotes()) {
@@ -132,15 +139,26 @@ export class ScanService {
           unreadable.push({ path, message: outcome.message });
           break;
         }
+        case "not-a-claim": {
+          if (outcome.candidates.length > 1) {
+            ambiguous.push({
+              check: "ambiguous-note",
+              path,
+              candidates: outcome.candidates,
+              repair: { kind: "undecidable", reason: "needs-choice" },
+            });
+          }
+          break;
+        }
         default: {
           break;
         }
       }
     }
 
-    const classified: Finding[] = [];
+    const classified: ClaimFinding[] = [];
     for (const note of resolved) {
-      const tagged = (finding: Finding | undefined): Finding | undefined =>
+      const tagged = (finding: ClaimFinding | undefined): ClaimFinding | undefined =>
         finding === undefined
           ? undefined
           : { ...finding, ...(note.noteletTypeName !== undefined && { noteletTypeName: note.noteletTypeName }) };
@@ -153,7 +171,11 @@ export class ScanService {
     }
 
     const pendingOldIds = pendingOldIdsOf(this.#pending.state);
-    const findings = [...gateCollisions(resolved, classified), ...orphanFindings(resolved, pendingOldIds)];
+    const findings: Finding[] = [
+      ...gateCollisions(resolved, classified),
+      ...orphanFindings(resolved, pendingOldIds),
+      ...ambiguous,
+    ];
 
     return {
       findings,

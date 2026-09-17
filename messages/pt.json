@@ -2277,6 +2277,7 @@
   "maintenance_check_group_duplicate": "{journal} — duas notas para {anchor}",
   "maintenance_check_group_orphaned": "{journal} — esse diário não existe mais",
   "maintenance_check_group_orphaned_type": "{journal} — tipo de nota breve desconhecido",
+  "maintenance_check_group_ambiguous": "{journals} — mais de um diário corresponde a estas notas",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: nenhuma data legível. O nome do arquivo indica {to}.",
   "maintenance_detail_path_overrides_date": "{path}: o nome do arquivo indica {pathAnchor}, a nota indica {dateAnchor}. Abra a nota e decida.",
@@ -2286,6 +2287,7 @@
   "maintenance_detail_duplicate": "{path} — {size} bytes, modificado {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}: não existe mais nenhum tipo de nota breve chamado \"{typeName}\" neste diário.",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "Este reparo foi retirado porque outra nota já reivindica o mesmo período.",
   "maintenance_reason_path_and_date_disagree": "Nada foi alterado automaticamente porque o nome do arquivo e a nota não coincidem.",
   "maintenance_reason_path_not_invertible": "Não foi possível reparar isso automaticamente.",
@@ -2293,6 +2295,8 @@
   "maintenance_duplicate_keep": "Manter esta",
   "maintenance_orphan_clear": "Remover chaves de diário",
   "maintenance_orphan_reassign_hint": "Para associar essas notas a outro diário, use o comando \"Conectar nota a um diário\".",
+  "maintenance_ambiguous_connect": "Conectar a {journal}",
+  "maintenance_ambiguous_occupied": "Outra nota já ocupa este período em {journals}.",
   "maintenance_repair_done": "{repaired} notas reparadas. {failed} não puderam ser reparadas.",
   "maintenance_unreadable_row": "{path}: {message}"
 }

@@ -139,6 +139,31 @@ export class NotePathService {
     return this.inverterFor(name).flatMap((inverter) => inverter.invert(path));
   }
 
+  /**
+   * Every journal that would adopt an unclaimed note at `path`, with the metadata it would write.
+   *
+   * Auto-attach adopts only when this holds exactly one; the vault check reports the rest.
+   * `inverterFor` lets a caller walking many paths reuse inverters it has already prepared.
+   */
+  attachCandidatesFor(
+    path: VaultPath,
+    inverterFor: (name: string) => PathInverter | undefined = (name) => this.inverterFor(name).getOrUndefined(),
+  ): { journalName: string; metadata: JournalMetadata }[] {
+    const candidates: { journalName: string; metadata: JournalMetadata }[] = [];
+    for (const name of this.#journals.find().ids()) {
+      const candidate = inverterFor(name)?.invert(path);
+      if (candidate === undefined || candidate.isNone()) continue;
+      if (!this.#timeline.contains(name, candidate.value.anchor)) continue;
+      const built = this.#frontmatter.buildMetadata(name, candidate.value.anchor);
+      if (built.isErr()) continue;
+      candidates.push({
+        journalName: name,
+        metadata: { ...built.value, ...(candidate.value.numbers && { numbers: candidate.value.numbers }) },
+      });
+    }
+    return candidates;
+  }
+
   inverterFor(name: string): Option<PathInverter> {
     const config = this.configFor(name);
     if (!config) return Option.none();

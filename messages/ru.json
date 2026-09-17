@@ -2355,6 +2355,7 @@
   "maintenance_check_group_duplicate": "{journal} — две заметки для {anchor}",
   "maintenance_check_group_orphaned": "{journal} — этого журнала больше не существует",
   "maintenance_check_group_orphaned_type": "{journal} — неизвестный тип подзаметки",
+  "maintenance_check_group_ambiguous": "{journals} — этим заметкам соответствует несколько журналов",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: нет читаемой даты. Имя файла указывает на {to}.",
   "maintenance_detail_path_overrides_date": "{path}: имя файла указывает на {pathAnchor}, а заметка — на {dateAnchor}. Откройте заметку и решите.",
@@ -2364,6 +2365,7 @@
   "maintenance_detail_duplicate": "{path} — {size} байт, изменён {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}: тип подзаметки «{typeName}» больше не существует в этом журнале.",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "Это исправление было отменено, поскольку на этот же период уже претендует другая заметка.",
   "maintenance_reason_path_and_date_disagree": "Ничего не было изменено автоматически, так как имя файла и заметка не совпадают.",
   "maintenance_reason_path_not_invertible": "Это не удалось исправить автоматически.",
@@ -2371,6 +2373,8 @@
   "maintenance_duplicate_keep": "Оставить эту",
   "maintenance_orphan_clear": "Удалить ключи журнала",
   "maintenance_orphan_reassign_hint": "Чтобы привязать эти заметки к другому журналу, используйте команду «Связать заметку с журналом».",
+  "maintenance_ambiguous_connect": "Связать с журналом {journal}",
+  "maintenance_ambiguous_occupied": "Этот период уже занят другой заметкой: {journals}.",
   "maintenance_repair_done": "{repaired} заметок исправлено. {failed} не удалось исправить.",
   "maintenance_unreadable_row": "{path}: {message}"
 }

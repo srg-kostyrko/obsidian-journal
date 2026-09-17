@@ -2281,6 +2281,7 @@
   "maintenance_check_group_duplicate": "{journal} — two notes for {anchor}",
   "maintenance_check_group_orphaned": "{journal} — this journal no longer exists",
   "maintenance_check_group_orphaned_type": "{journal} — unknown notelet type",
+  "maintenance_check_group_ambiguous": "{journals} — more than one journal matches these notes",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: no readable date. The file name says {to}.",
   "maintenance_detail_path_overrides_date": "{path}: the file name says {pathAnchor}, the note says {dateAnchor}. Open the note and decide.",
@@ -2290,6 +2291,7 @@
   "maintenance_detail_duplicate": "{path} — {size} bytes, changed {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}: no notelet type named \"{typeName}\" exists in this journal any more.",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "This repair was withdrawn because another note already claims the same period.",
   "maintenance_reason_path_and_date_disagree": "Nothing was changed automatically because the file name and the note disagree.",
   "maintenance_reason_path_not_invertible": "This could not be repaired automatically.",
@@ -2297,6 +2299,8 @@
   "maintenance_duplicate_keep": "Keep this one",
   "maintenance_orphan_clear": "Remove journal keys",
   "maintenance_orphan_reassign_hint": "To point these notes at a different journal, use the \"Connect note to a journal\" command.",
+  "maintenance_ambiguous_connect": "Connect to {journal}",
+  "maintenance_ambiguous_occupied": "Another note already holds this period in {journals}.",
   "maintenance_repair_done": "Repaired {repaired} notes. {failed} could not be repaired.",
   "maintenance_unreadable_row": "{path}: {message}"
 }

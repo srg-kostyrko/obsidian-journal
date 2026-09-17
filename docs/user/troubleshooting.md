@@ -23,8 +23,9 @@ The calendar shows a note when its properties name the journal and a date the jo
 ## A note you made yourself was not picked up
 
 Auto-attach reacts to notes created or renamed while Obsidian runs, and only when exactly one journal's
-folder and name template match the note's whole path. Notes that were already there when you installed
-the plugin are not adopted. See [Auto-attach](/notes#auto-attach) for the full list, and look for a
+folder and name template match the note's whole path. When two journals match, the
+[vault check](#vault-check) lists the note and **Connect to** _journal_ settles it. Notes that were
+already there when you installed the plugin are not adopted. See [Auto-attach](/notes#auto-attach) for the full list, and look for a
 warning under the journal's **Note name template** — it says when names cannot be read back. A date
 format the plugin cannot read back is one cause, and it is easy to miss because the notes themselves
 look right: a format that also carries a time zone — `Z` or `ZZ` — is written correctly and matches
@@ -41,10 +42,17 @@ nothing on the way back. Build the format from date symbols such as `YYYY-MM-DD`
 
 ## Two journals fight over the same notes {#two-journals-fight-over-the-same-notes}
 
-**Colliding journal settings** on the main settings page names journals whose folder and name template
-resolve to the same paths: "Journals … have colliding configurations, so their notes will overwrite each
-other." Change the folder or name template of one. A freshly cloned journal always collides until you
-do.
+**Colliding journal settings** on the main settings page names journals that write the same note path
+for some period: "Journals … have colliding configurations, so their notes will overwrite each other."
+It compares the paths the journals actually produce, so it also catches journals whose settings look
+different — a day journal and a week journal both named `{{date:YYYY-MM-DD}}` and
+`{{start_date:YYYY-MM-DD}}` share every Monday's note. Change the folder or name template of one. A
+freshly cloned journal always collides until you do.
+
+Notes that arrived while the journals collided are connected to neither. Run the
+[vault check](#vault-check) before changing the settings — it lists those notes only while more than
+one journal matches them. Afterwards, [Bulk add](/notes#bulk-add) adopts them into the journal that
+kept the path.
 
 When a note path already belongs to another journal, nothing is written and a notice says which.
 
@@ -131,15 +139,17 @@ it.
 
 ### Vault check {#vault-check}
 
-Scans every note that claims a journal and groups what it finds by journal:
+Scans every note that claims a journal, and every note that claims none but whose path more than one
+journal would adopt, and groups what it finds:
 
-| Group                                           | What it means                                                                    |
-| ----------------------------------------------- | -------------------------------------------------------------------------------- |
-| _journal_ — the calendar cannot see these notes | the stored date is not a period of the journal; the check proposes the right one |
-| _journal_ — these notes cover the wrong period  | the start or end date does not match the note's own period                       |
-| _journal_ — two notes for _date_                | two notes claim one period; **Keep this one** removes the claim from the others  |
-| _journal_ — this journal no longer exists       | notes of a deleted journal; **Remove journal keys**, or reconnect them           |
-| _journal_ — unknown notelet type                | notelets of a deleted type; **Remove journal keys**, or reconnect them           |
+| Group                                                  | What it means                                                                    |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| _journal_ — the calendar cannot see these notes        | the stored date is not a period of the journal; the check proposes the right one |
+| _journal_ — these notes cover the wrong period         | the start or end date does not match the note's own period                       |
+| _journal_ — two notes for _date_                       | two notes claim one period; **Keep this one** removes the claim from the others  |
+| _journal_ — this journal no longer exists              | notes of a deleted journal; **Remove journal keys**, or reconnect them           |
+| _journal_ — unknown notelet type                       | notelets of a deleted type; **Remove journal keys**, or reconnect them           |
+| _journals_ — more than one journal matches these notes | auto-attach could not tell whose note it is; **Connect to** _journal_ picks one  |
 
 Each row is marked **Will be fixed** or **Needs your decision**. **Fix** _count_ repairs a group and
 **Fix everything safe** repairs every safe finding. Where the file name and the note disagree on
