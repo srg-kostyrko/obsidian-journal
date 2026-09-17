@@ -903,6 +903,32 @@ describe("PromptAnswersModal", () => {
       expect(screen.getByRole<HTMLInputElement>("textbox").value).toBe("keep me");
     });
 
+    it("drops the refusal once the field is edited", async () => {
+      await renderLog(project, {
+        sprints: fixedJournal(
+          "sprints",
+          { type: "day" },
+          { timeline: { start: anchor("2030-01-01"), end: { kind: "never" } } },
+        ),
+      });
+
+      await userEvent.click(screen.getByRole("button", { name: m.journal_prompt_pick_journal_note() }));
+      await tick();
+      harness.suggests.lastOpen().choose("sprints");
+      await tick();
+      harness.modals.lastOpen().submit(DayPeriod.containing(date("2026-01-01")));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_journal_note_out_of_timeline({ journal: "sprints" }))).toBeTruthy();
+      });
+
+      await userEvent.type(screen.getByRole("textbox"), "Projects/Roadmap");
+
+      await waitFor(() => {
+        expect(screen.queryByText(m.journal_prompt_journal_note_out_of_timeline({ journal: "sprints" }))).toBeNull();
+      });
+    });
+
     it("changes nothing when the journal choice is cancelled", async () => {
       await renderLog();
       await userEvent.type(screen.getByRole("textbox"), "keep me");

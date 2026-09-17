@@ -246,11 +246,25 @@ function pickRefusal(error: JournalNoteLinkError): string | undefined {
   return undefined;
 }
 
+// The absent key is the one representation of "no refusal" — both the success path below and
+// a manual edit to the field clear it the same way, rather than one clearing to "" and the
+// other deleting the key.
+function clearPickError(variable: string): void {
+  const next = { ...pickErrors.value };
+  delete next[variable];
+  pickErrors.value = next;
+}
+
+function updateNoteField(field: PromptField, value: string | undefined): void {
+  field.value.value = value;
+  clearPickError(field.prompt.variable);
+}
+
 async function pickJournalNote(field: PromptField): Promise<void> {
   const result = await noteLinks.pick();
   if (result.isOk()) {
     field.value.value = result.value;
-    pickErrors.value = { ...pickErrors.value, [field.prompt.variable]: "" };
+    clearPickError(field.prompt.variable);
     return;
   }
   const refusal = pickRefusal(result.error);
@@ -304,7 +318,7 @@ function submitOnModifierEnter(event: KeyboardEvent): void {
         <UiNoteInput
           :model-value="asText(field.value.value)"
           v-bind="field.attrs"
-          @update:model-value="(value) => (field.value.value = value)"
+          @update:model-value="(value) => updateNoteField(field, value)"
         />
         <UiIconButton
           :icon="icons.action.calendar"
