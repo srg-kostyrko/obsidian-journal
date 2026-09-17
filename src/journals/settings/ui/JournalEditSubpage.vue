@@ -16,8 +16,8 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import { describeWrite } from "../describe-write";
 import { RenameJournalFlow } from "../flows/rename-journal.flow";
 
-import { findCollidingJournals } from "./colliding-journals";
 import { JournalEditSectionToken } from "./journal-edit-section";
+import { useCollidingJournals } from "./use-colliding-journals";
 
 const { journalName, nav } = defineProps<{ journalName: string; nav: SubpageNav<{ journalName: string }> }>();
 
@@ -45,10 +45,9 @@ const writing = computed(() => {
   return m.journal_write({ every: "day", duration: 1, ...desc });
 });
 
+const collidingJournals = useCollidingJournals();
 const collidingJournalNames = computed<string>(() => {
-  const group = findCollidingJournals(journalsVM.journals.value).find((journals) =>
-    journals.some((journal) => journal.name === journalName),
-  );
+  const group = collidingJournals.value.find((journals) => journals.some((journal) => journal.name === journalName));
   if (!group) return "";
   return formatConjunction(group.filter((journal) => journal.name !== journalName).map((journal) => journal.name));
 });
