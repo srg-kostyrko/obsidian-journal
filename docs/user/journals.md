@@ -73,6 +73,9 @@ template path:**.
 - Paths take variables, so a journal can use a different template on some days — a weekday, a month.
 - Variables in the template's text are filled in for the note being created. With Templater
   installed, its commands run afterwards — see [Compatibility](/compatibility).
+- Variables in a template's properties are written so the properties stay readable: a value that
+  would break them — one containing `: `, ` #` or a line break — is quoted or written over
+  several lines. Numbers, yes/no values and lists keep their type.
 - A template only ever fills a new note, or an empty note being connected. A note with content is
   never overwritten.
 
