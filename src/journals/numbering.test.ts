@@ -230,6 +230,60 @@ describe("NumberingService", () => {
       const n = resolve(NumberingService);
       expect(unwrap(n.assignNumbers("s", "2024-01-15" as AnchorString))).toEqual({ index: 3 });
     });
+
+    describe("a start date inside its period", () => {
+      // A week-configuration change or a v3→v4 migration can leave the start mid-period. The
+      // period straddling it is in the timeline, so it is the first numbered one.
+      let harness: TestHarness;
+
+      beforeEach(async () => {
+        harness = await testContainer({
+          modules: [journalsCoreModule],
+          data: {
+            journals: {
+              m: fixedJournal(
+                "m",
+                { type: "month" },
+                {
+                  timeline: { start: "2026-01-15" as AnchorString, end: { kind: "never" } },
+                  numbering: {
+                    enabled: true,
+                    anchorDate: "" as AnchorString,
+                    allowBefore: false,
+                    sources: [
+                      { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+                    ],
+                  },
+                },
+              ),
+              c: customJournal("c", "week", 1, "2024-01-01", {
+                timeline: { start: "2024-01-03" as AnchorString, end: { kind: "never" } },
+              }),
+            },
+          },
+        });
+      });
+
+      it("numbers the period that straddles the start", () => {
+        const n = harness.resolve(NumberingService);
+        expect(unwrap(n.assignNumbers("m", "2026-01-01" as AnchorString))).toEqual({ index: 1 });
+        expect(unwrap(n.assignNumbers("m", "2026-02-01" as AnchorString))).toEqual({ index: 2 });
+        expect(unwrap(n.assignNumbers("c", "2024-01-01" as AnchorString))).toEqual({ index: 1 });
+      });
+
+      it("reads the straddling period's digits back for name inversion", () => {
+        const n = harness.resolve(NumberingService);
+        expect(unwrap(n.sequenceNumbersFor("m", "2026-01-01" as AnchorString))).toEqual({ index: 1 });
+        expect(unwrap(n.anchorForNumbers("m", { index: 1 }))).toBe("2026-01-01");
+      });
+
+      it("still leaves the period before the straddling one unnumbered", () => {
+        const n = harness.resolve(NumberingService);
+        expect(n.assignNumbers("m", "2025-12-01" as AnchorString).isNone()).toBe(true);
+        expect(n.sequenceNumbersFor("m", "2025-12-01" as AnchorString).isNone()).toBe(true);
+        expect(n.assignNumbers("c", "2023-12-25" as AnchorString).isNone()).toBe(true);
+      });
+    });
   });
 
   describe("assignNumbers — multi-source cascade", () => {
