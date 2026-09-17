@@ -691,6 +691,24 @@ describe("NotePathService.candidateFor", () => {
     expect(metadata.numbers?.index).toBe(3);
   });
 
+  it("inverts an index-only name onto the grid when the start date falls inside an interval", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          sprints: customJournal("sprints", "week", 1, "2024-01-01", {
+            nameTemplate: "Sprint {{index}}",
+            timeline: { start: "2024-01-03" as AnchorString, end: { kind: "never" } },
+          }),
+        },
+      },
+    });
+    const paths = harness.resolve(NotePathService);
+
+    expect(unwrap(paths.candidateFor("sprints", "Sprint 3.md" as VaultPath)).anchor).toBe("2024-01-15");
+    expect(unwrap(paths.candidateFor("sprints", "Sprint 1.md" as VaultPath)).anchor).toBe("2024-01-01");
+  });
+
   describe("a name template carrying the journal name", () => {
     let harness: TestHarness;
 

@@ -137,10 +137,13 @@ export class NumberingService {
   // A start can sit inside a period (a week-configuration change or a migration leaves it there).
   // The timeline admits the period straddling it and countRepeats counts from it, so comparing
   // against the raw date would keep that period in the timeline but leave it unnumbered.
+  #startAnchor(name: string, anchorDate: AnchorString): AnchorString {
+    if (anchorDate === "") return anchorDate;
+    return this.#cycle.anchorOf(name, CalendarDate.fromAnchor(anchorDate)).getOr(anchorDate);
+  }
+
   #precedesStart(name: string, anchor: AnchorString, anchorDate: AnchorString): boolean {
-    if (anchorDate === "") return false;
-    const startAnchor = this.#cycle.anchorOf(name, CalendarDate.fromAnchor(anchorDate)).getOr(anchorDate);
-    return anchor < startAnchor;
+    return anchor < this.#startAnchor(name, anchorDate);
   }
 
   assignNumbers(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
@@ -219,6 +222,7 @@ export class NumberingService {
     }
 
     if (steps < 0 && !numbering.allowBefore) return Option.none();
-    return this.#cycle.anchorAtOffset(name, anchorDate, steps);
+    // A custom cycle steps whole durations from the date it is handed, off-grid or not.
+    return this.#cycle.anchorAtOffset(name, this.#startAnchor(name, anchorDate), steps);
   }
 }
