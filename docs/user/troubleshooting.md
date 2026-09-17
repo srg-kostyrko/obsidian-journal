@@ -27,9 +27,8 @@ folder and name template match the note's whole path. Notes that were already th
 the plugin are not adopted. See [Auto-attach](/notes#auto-attach) for the full list, and look for a
 warning under the journal's **Note name template** — it says when names cannot be read back. A date
 format the plugin cannot read back is one cause, and it is easy to miss because the notes themselves
-look right: a format that also carries a time of day — `LLL`, or anything holding `HH:mm` — is
-written correctly and matches nothing on the way back. Build the format from date symbols such as
-`YYYY-MM-DD`.
+look right: a format that also carries a time zone — `Z` or `ZZ` — is written correctly and matches
+nothing on the way back. Build the format from date symbols such as `YYYY-MM-DD`.
 
 ## A note was created in the wrong place
 

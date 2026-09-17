@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { localMoment } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import type { VaultPath } from "@/infrastructure/host";
 import { InvariantError } from "@/infrastructure/result";
@@ -136,6 +137,26 @@ describe("BulkAddService", () => {
         const note = planResult.value.notes.find((n) => n.path === "src/2026-06-01.md");
         expect(note?.kind === "skip" && note.reason).toBe("no-date");
       });
+
+      // Importers write a timestamp, so the format a user types is the one the property visibly holds.
+      it.each(["YYYY-MM-DDTHH:mm", "YYYY-MM-DD HH:mm:ss", "YYYY-MM-DD h:mm a"])(
+        "reads a property holding a time of day with the format %s",
+        async (dateFormat) => {
+          const value = localMoment("2026-06-01 21:31", "YYYY-MM-DD HH:mm", true).format(dateFormat);
+          harness.host.putFile("src/entry.md", "", { creationDate: value });
+
+          const planResult = await harness
+            .resolve(BulkAddService)
+            .plan(
+              "daily",
+              makeParameters({ folder: "src", datePlace: "property", propertyName: "creationDate", dateFormat }),
+            );
+
+          expectOk(planResult);
+          const note = planResult.value.notes.find((n) => n.path === "src/entry.md");
+          expect(note?.kind === "action" && note.anchor).toBe("2026-06-01");
+        },
+      );
 
       it("marks the existing-note decision as ask when an occupant exists and params say ask", async () => {
         harness.host.putFile("Journal/2026-06-01.md", "", {

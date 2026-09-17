@@ -167,9 +167,10 @@ listed on that shelf's page. Notelet types have their own bulk add — see [Note
   offer it.
 - **Date format** (not shown for **Note path**) — the format the date is written in, prefilled with
   the journal's own date format. The date can sit anywhere in the title: `Standup 2024-03-05` finds
-  `2024-03-05`. If your dates include a time component, omit it from the format. A date that falls
-  inside a longer period is read as that period — a day's date connects the note to its week on a
-  weekly journal.
+  `2024-03-05`. A value that carries a time as well, such as `2024-03-05T09:31`, is read with the
+  format it is written in, `YYYY-MM-DDTHH:mm`, or with its date part alone, `YYYY-MM-DD`; the time is
+  ignored either way. A date that falls inside a longer period is read as that period — a day's date
+  connects the note to its week on a weekly journal.
 - **Filter notes** — **No filter**, **Match all conditions** or **Match any condition**, over title,
   tag and property conditions like those a [decoration](/decorations) uses.
 

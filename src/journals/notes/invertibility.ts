@@ -127,7 +127,7 @@ export function invertibilityOf(
   const dated = [...pathVariables].some((name) => DATE_VARIABLES.has(name.toLowerCase()));
   // Two defects reach this point and they need different words. "Too coarse" means a date the
   // path does give back, just not the period's own -- the probe landed on an earlier period that
-  // renders the same name. A localized date format or a timestamp gives nothing back at all: the
+  // renders the same name. A date format carrying a time zone gives nothing back at all: the
   // path compiles to a pattern its own rendering never matches. So ask whether any date comes back,
   // not whether two paths differ -- they differ whenever some other segment moved, which a journal
   // naming every week of a month alike does at every month boundary. Where a path does not render

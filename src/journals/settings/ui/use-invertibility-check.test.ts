@@ -393,9 +393,22 @@ describe("useInvertibilityCheck", () => {
   });
 
   // "Too coarse" is a claim about two periods sharing a name, and these name every day differently:
-  // a format carrying a time of day is written correctly and matches nothing on the way back, so the
+  // a format carrying a time zone is written correctly and matches nothing on the way back, so the
   // reason the user is given has to be the one that fits.
-  it.each(["LLL", "llll", "YYYY-MM-DD HH:mm"])(
+  it.each(["YYYY-MM-DD HH:mm", "YYYY-MM-DD h.mm a", "LLL", "llll"])(
+    "passes a date format that also carries a time of day: %s",
+    async (format) => {
+      const config = fixedJournal("daily", { type: "day" }, { nameTemplate: `{{date:${format}}}` });
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { [config.name]: config } },
+      });
+
+      expect(probe(harness, config.name).value).toBeNull();
+    },
+  );
+
+  it.each(["YYYY-MM-DD Z", "YYYY-MM-DD ZZ", "LLL Z"])(
     "flags a date format that renders a unique name it cannot read back: %s",
     async (format) => {
       const config = fixedJournal("daily", { type: "day" }, { nameTemplate: `{{date:${format}}}` });
