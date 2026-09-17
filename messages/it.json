@@ -2066,6 +2066,7 @@
   "journal_prompt_edit": "Modifica domanda",
   "journal_prompt_key_required_in_path": "Una risposta usata nel nome della nota o nella cartella deve essere salvata in una proprietà.",
   "journal_prompt_toggle_not_in_path": "Una risposta sì/no non può far parte di un nome di nota o di una cartella. Usa invece una domanda a scelta.",
+  "journal_prompt_long_text_not_in_path": "Una risposta di testo lungo non può far parte di un nome di nota o di una cartella.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2101,6 +2102,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Testo",
+        "type=longtext": "Testo lungo",
         "type=number": "Numero",
         "type=date": "Data",
         "type=toggle": "Sì/No",

@@ -2055,6 +2055,7 @@
   "journal_prompt_edit": "Editar pregunta",
   "journal_prompt_key_required_in_path": "Una respuesta usada en el nombre de la nota o en la carpeta debe guardarse en una propiedad.",
   "journal_prompt_toggle_not_in_path": "Una respuesta de sí o no no puede formar parte de un nombre de nota o carpeta. Usa en su lugar una pregunta de opción.",
+  "journal_prompt_long_text_not_in_path": "Una respuesta de texto largo no puede formar parte de un nombre de nota o carpeta.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2090,6 +2091,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Texto",
+        "type=longtext": "Texto largo",
         "type=number": "Número",
         "type=date": "Fecha",
         "type=toggle": "Sí/No",

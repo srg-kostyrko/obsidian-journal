@@ -2063,6 +2063,7 @@
   "journal_prompt_edit": "Editar pergunta",
   "journal_prompt_key_required_in_path": "Uma resposta usada no nome da nota ou na pasta precisa ser salva em uma propriedade.",
   "journal_prompt_toggle_not_in_path": "Uma resposta sim/não não pode fazer parte de um nome de nota ou pasta. Use uma pergunta de escolha em vez disso.",
+  "journal_prompt_long_text_not_in_path": "Uma resposta de texto longo não pode fazer parte de um nome de nota ou pasta.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2098,6 +2099,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Texto",
+        "type=longtext": "Texto longo",
         "type=number": "Número",
         "type=date": "Data",
         "type=toggle": "Sim/Não",

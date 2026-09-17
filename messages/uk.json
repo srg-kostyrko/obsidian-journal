@@ -1961,6 +1961,7 @@
   "journal_prompt_edit": "Редагувати запитання",
   "journal_prompt_key_required_in_path": "Відповідь, яка використовується в назві нотатки або папці, потрібно зберегти у властивість.",
   "journal_prompt_toggle_not_in_path": "Відповідь так/ні не може бути частиною назви нотатки або папки. Використайте натомість запитання з варіантами відповіді.",
+  "journal_prompt_long_text_not_in_path": "Відповідь із довгим текстом не може бути частиною назви нотатки або папки.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -1996,6 +1997,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Текст",
+        "type=longtext": "Довгий текст",
         "type=number": "Число",
         "type=date": "Дата",
         "type=toggle": "Так/Ні",

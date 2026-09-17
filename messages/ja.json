@@ -1910,6 +1910,7 @@
   "journal_prompt_edit": "質問を編集",
   "journal_prompt_key_required_in_path": "ノート名やフォルダに使われる回答は、プロパティに保存する必要があります。",
   "journal_prompt_toggle_not_in_path": "はい/いいえの回答はノート名やフォルダの一部にできません。代わりに選択式の質問を使ってください。",
+  "journal_prompt_long_text_not_in_path": "長文テキストの回答はノート名やフォルダの一部にできません。",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -1945,6 +1946,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "テキスト",
+        "type=longtext": "長文テキスト",
         "type=number": "数値",
         "type=date": "日付",
         "type=toggle": "はい/いいえ",

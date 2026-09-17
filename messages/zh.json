@@ -1904,6 +1904,7 @@
   "journal_prompt_edit": "编辑问题",
   "journal_prompt_key_required_in_path": "在笔记名称或文件夹中使用的回答必须保存到属性中。",
   "journal_prompt_toggle_not_in_path": "是/否的回答不能作为笔记名称或文件夹的一部分。请改用选择型问题。",
+  "journal_prompt_long_text_not_in_path": "长文本回答不能作为笔记名称或文件夹的一部分。",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -1939,6 +1940,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "文本",
+        "type=longtext": "长文本",
         "type=number": "数字",
         "type=date": "日期",
         "type=toggle": "是/否",

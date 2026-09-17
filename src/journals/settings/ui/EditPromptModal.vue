@@ -7,7 +7,7 @@ import { computed, ref, watch } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
-import { isRequired } from "@/journals/prompts/config";
+import { displayTypeOf, fitsInPath, isRequired } from "@/journals/prompts/config";
 import { promptsInPath } from "@/journals/prompts/prompts-in-path";
 import { isReservedVariable, TEMPLATE_VARIABLE_RE } from "@/journals/reserved-variables";
 import { JournalsViewModel } from "@/journals/view-model";
@@ -23,7 +23,7 @@ import { reservedFrontmatterKeys } from "../../config";
 
 import DateFormatPreview from "./DateFormatPreview.vue";
 
-import type { Prompt } from "../../prompts/config";
+import type { Prompt, PromptDisplayType } from "../../prompts/config";
 
 const props = withDefaults(defineProps<{ journalName: string; typeId?: string; promptIndex?: number }>(), {
   typeId: undefined,
@@ -58,7 +58,14 @@ const takenKeys = computed(() =>
   ].filter((key) => key !== ""),
 );
 
-const PROMPT_TYPES = ["text", "number", "date", "toggle", "select"] as const;
+const PROMPT_TYPES = [
+  "text",
+  "longtext",
+  "number",
+  "date",
+  "toggle",
+  "select",
+] as const satisfies readonly PromptDisplayType[];
 const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
 interface FormValues {
   variable: string;
@@ -84,6 +91,7 @@ function candidateFrom(entered: FormValues): Prompt {
   const withRequired = { ...base, required: entered.required };
   if (entered.type === "select") return { ...withRequired, type: "select", options: entered.options };
   if (entered.type === "date") return { ...withRequired, type: "date", format: entered.format };
+  if (entered.type === "longtext") return { ...withRequired, type: "text", multiline: true };
   return { ...withRequired, type: entered.type };
 }
 
@@ -117,7 +125,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
   initialValues: {
     variable: current.value?.variable ?? "",
     question: current.value?.question ?? "",
-    type: current.value?.type ?? "text",
+    type: current.value === undefined ? "text" : displayTypeOf(current.value),
     format: current.value?.type === "date" ? current.value.format : DEFAULT_DATE_FORMAT,
     frontmatterKey: current.value?.frontmatterKey ?? "",
     required: current.value !== undefined && isRequired(current.value),
@@ -161,8 +169,11 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
       ),
       v.forward(
         v.check(
-          (entered) => !(entered.type === "toggle" && reachesPath(entered)),
-          m.journal_prompt_toggle_not_in_path(),
+          (entered) => fitsInPath(candidateFrom(entered)) || !reachesPath(entered),
+          (issue) =>
+            issue.input.type === "toggle"
+              ? m.journal_prompt_toggle_not_in_path()
+              : m.journal_prompt_long_text_not_in_path(),
         ),
         ["type"],
       ),

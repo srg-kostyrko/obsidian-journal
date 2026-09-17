@@ -2066,6 +2066,7 @@
   "journal_prompt_edit": "Modifier la question",
   "journal_prompt_key_required_in_path": "Une réponse utilisée dans le nom de la note ou le dossier doit être enregistrée dans une propriété.",
   "journal_prompt_toggle_not_in_path": "Une réponse oui/non ne peut pas faire partie d'un nom de note ou d'un dossier. Utilisez plutôt une question à choix.",
+  "journal_prompt_long_text_not_in_path": "Une réponse en texte long ne peut pas faire partie d'un nom de note ou d'un dossier.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2101,6 +2102,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Texte",
+        "type=longtext": "Texte long",
         "type=number": "Nombre",
         "type=date": "Date",
         "type=toggle": "Oui/Non",

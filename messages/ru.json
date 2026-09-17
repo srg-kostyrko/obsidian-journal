@@ -2116,6 +2116,7 @@
   "journal_prompt_edit": "Изменить вопрос",
   "journal_prompt_key_required_in_path": "Ответ, используемый в названии заметки или папке, нужно сохранить в свойство.",
   "journal_prompt_toggle_not_in_path": "Ответ да/нет не может быть частью названия заметки или папки. Используйте вместо этого вопрос с вариантами ответа.",
+  "journal_prompt_long_text_not_in_path": "Ответ с длинным текстом не может быть частью названия заметки или папки.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2151,6 +2152,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Текст",
+        "type=longtext": "Длинный текст",
         "type=number": "Число",
         "type=date": "Дата",
         "type=toggle": "Да/Нет",
