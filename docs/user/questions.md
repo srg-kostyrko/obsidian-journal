@@ -21,7 +21,8 @@ has its own questions, separate from its journal's.
 - For a choice question, its choices: each with a **Label**, shown in the dialog, and a **Value**,
   which is what gets saved and written. **Add choice** adds another.
 - **Property name** — the property the answer is saved under. Leave it empty to not save the answer:
-  it is written into the note once and then gone.
+  it is written into the note once and then gone. A new question fills it in as `journal-` and the
+  variable name until you type your own; a long text question starts with it empty.
 - **Required** — the note cannot be created without an answer. Not offered for yes/no questions,
   which always have one.
 

@@ -232,15 +232,16 @@ function addOption(): void {
 }
 
 // Only a new question's key auto-fills, and only until the user edits it themselves — an
-// existing question's key is never overwritten from a variable rename.
+// existing question's key is never overwritten from a variable rename. A long answer is body
+// content first, so saving one to a property is opted into rather than suggested.
 const keyTouched = ref(current.value !== undefined);
 function onFrontmatterKeyInput(value: string | undefined): void {
   keyTouched.value = true;
   frontmatterKey.value = value ?? "";
 }
-watch(variable, (value) => {
+watch([variable, type], ([name, promptType]) => {
   if (keyTouched.value) return;
-  frontmatterKey.value = value ? `journal-${value}` : "";
+  frontmatterKey.value = name && promptType !== "longtext" ? `journal-${name}` : "";
 });
 
 const onSubmit = handleSubmit((entered) => api.submit(candidateFrom(entered)));

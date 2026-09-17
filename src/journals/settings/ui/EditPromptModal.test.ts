@@ -592,6 +592,56 @@ describe("EditPromptModal", () => {
       expect((textInputs().at(-1) as HTMLInputElement).value).toBe("journal-mood");
     });
 
+    it("leaves the key empty for a new long text question", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+      await fillRequiredFields("challenge");
+
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("");
+      await submitForm();
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ multiline: true, frontmatterKey: "" }));
+      });
+    });
+
+    it("clears an auto-filled key on switching to long text and fills it again on switching back", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      await fillRequiredFields("challenge");
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("journal-challenge");
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("");
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "text");
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("journal-challenge");
+    });
+
+    it("keeps a key typed by hand when switching to long text", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      await fillRequiredFields("challenge");
+      const keyInput = textInputs().at(-1) as HTMLInputElement;
+      await userEvent.clear(keyInput);
+      await userEvent.type(keyInput, "challenge");
+      await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("challenge");
+    });
+
     it("stops auto-filling once the key has been edited by hand", async () => {
       const harness = await testContainer({
         modules: [journalsCoreModule],
