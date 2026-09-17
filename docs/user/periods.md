@@ -99,7 +99,9 @@ Either way, the next interval starts the day after the new end. What happens aft
 unit the journal counts in:
 
 - **Days or weeks** — the schedule moves. Every later interval starts a whole interval after the one
-  before it, so all of them shift by the change.
+  before it, so all of them shift by the change. Intervals before the **Start date** are the exception:
+  they hold like months do, because the start date always begins an interval. The interval after the
+  edited one runs up to the next regular start date.
 - **Months, quarters or years** — the schedule holds. The interval after the edited one runs only up to
   the next regular start date, and every interval after that is where it always was. Shortening a
   monthly interval to the 20th, for example, gives a short interval from the 21st to the end of the

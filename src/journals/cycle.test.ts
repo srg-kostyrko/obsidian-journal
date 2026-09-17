@@ -516,6 +516,48 @@ describe("CycleService", () => {
 
       expect(result.isSome() && result.value).toBe("2026-02-11");
     });
+    // Before the configured anchor the backward walk counts intervals back from it, so the forward
+    // walk has to rejoin that grid after a shortening rather than shift everything past it: a
+    // week-unit schedule cannot move and still land on its start date.
+    describe("week interval shortened before the configured anchor", () => {
+      let cycle: CycleService;
+
+      beforeEach(async () => {
+        const { resolve } = await testContainer({
+          modules: [journalsCoreModule],
+          data: { journals: { s: customJournal("s", "week", 2, "2026-03-02") } },
+        });
+        resolve(JournalsIndex).register({
+          journalName: "s",
+          anchor: anchor("2026-02-02"),
+          path: "S/short.md" as VaultPath,
+          endDate: anchor("2026-02-07"),
+        });
+        cycle = resolve(CycleService);
+      });
+
+      it("walks forward back onto the configured anchor's grid", () => {
+        expect(unwrap(cycle.nextAnchor("s", anchor("2026-02-02")))).toBe("2026-02-08");
+        expect(unwrap(cycle.nextAnchor("s", anchor("2026-02-08")))).toBe("2026-02-16");
+        expect(unwrap(cycle.nextAnchor("s", anchor("2026-02-16")))).toBe("2026-03-02");
+      });
+
+      it("ends the interval the shortening created where the grid resumes", () => {
+        expect(unwrap(cycle.endOf("s", anchor("2026-02-08"))).toAnchor()).toBe("2026-02-15");
+      });
+
+      it("agrees with anchorOf and previousAnchor across the range", () => {
+        const grid = cycle.intervalsInRange("s", anchor("2026-02-02"), anchor("2026-03-16"));
+
+        expect([...grid]).toEqual(["2026-02-02", "2026-02-08", "2026-02-16", "2026-03-02", "2026-03-16"]);
+        expect(unwrap(cycle.anchorOf("s", date("2026-02-24")))).toBe("2026-02-16");
+        for (const a of grid) {
+          expect(unwrap(cycle.isCanonicalAnchor("s", a))).toBe(true);
+          const next = unwrap(cycle.nextAnchor("s", a));
+          expect(unwrap(cycle.previousAnchor("s", next))).toBe(a);
+        }
+      });
+    });
   });
 
   describe("offsets", () => {

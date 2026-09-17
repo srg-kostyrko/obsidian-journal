@@ -74,8 +74,16 @@ function customStep(from: AnchorString, c: CustomCycle, direction: 1 | -1): Anch
   return stepped.format("YYYY-MM-DD") as AnchorString;
 }
 
-function customStepForward(anchor: AnchorString, c: CustomCycle): AnchorString {
-  return customStep(anchor, c, 1);
+// Day and week units shift every later interval after a shortening, but only past the configured
+// anchor. Before it the backward walk counts intervals back from that anchor, and a shifted
+// schedule could never land on it again, so a step taken before it rejoins that grid instead.
+function customStepForward(from: AnchorString, c: CustomCycle): AnchorString {
+  const stepped = customStep(from, c, 1);
+  if (monthsPerStep(c).isSome() || from >= c.anchor || !isParseableAnchor(c.anchor)) return stepped;
+  const start = localMoment(c.anchor, "YYYY-MM-DD", true);
+  const step = start.clone().add(c.duration, c.every).diff(start, "days");
+  const behind = start.diff(localMoment(from, "YYYY-MM-DD", true), "days");
+  return start.subtract(Math.floor((behind - 1) / step) * step, "days").format("YYYY-MM-DD") as AnchorString;
 }
 
 function customStepBackward(anchor: AnchorString, c: CustomCycle): AnchorString {
