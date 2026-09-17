@@ -5,10 +5,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { DayPeriod } from "@/calendar";
 import { anchor, date } from "@/calendar/testing";
 import { m } from "@/i18n";
+import { PlatformService } from "@/infrastructure/host";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import { buildNoteletMetadata, buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { PROMPT_PLACEHOLDER } from "../placeholder";
 
@@ -629,6 +630,143 @@ describe("PromptAnswersModal", () => {
       await waitFor(() => {
         expect(pathText()).toBe("Standup Alice.md");
       });
+    });
+  });
+
+  describe("a long text question", () => {
+    const challenge: Prompt = {
+      variable: "challenge",
+      question: "Biggest challenge?",
+      type: "text",
+      multiline: true,
+      frontmatterKey: "challenge",
+      required: true,
+    };
+
+    async function renderReflect(usesCommandKey = false): Promise<ReturnType<TestHarness["renderModal"]>> {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { reflect: fixedJournal("reflect", { type: "day" }, { prompts: [challenge] }) } },
+        overrides: [overrideWith(PlatformService, { current: () => "desktop", usesCommandKey: () => usesCommandKey })],
+      });
+      return harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "reflect", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
+      });
+    }
+
+    it("asks in a text box on a stacked row", async () => {
+      await renderReflect();
+      const box = screen.getByRole("textbox");
+      expect(box.tagName).toBe("TEXTAREA");
+      expect(box.closest(".setting-item")?.classList.contains("setting-item--stacked")).toBe(true);
+    });
+
+    it("adds a line on Enter without submitting", async () => {
+      const { submit } = await renderReflect();
+      await userEvent.type(screen.getByRole("textbox"), "one{Enter}two");
+
+      expect(screen.getByRole<HTMLTextAreaElement>("textbox").value).toBe("one\ntwo");
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("submits on Ctrl+Enter where Obsidian uses Ctrl", async () => {
+      const { submit } = await renderReflect(false);
+      await userEvent.type(screen.getByRole("textbox"), "one{Enter}two{Control>}{Enter}{/Control}");
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ challenge: "one\ntwo" });
+      });
+    });
+
+    it("does not submit on Cmd+Enter where Obsidian uses Ctrl", async () => {
+      const { submit } = await renderReflect(false);
+      await userEvent.type(screen.getByRole("textbox"), "one{Meta>}{Enter}{/Meta}");
+
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("submits on Cmd+Enter and not on Ctrl+Enter where Obsidian uses Cmd", async () => {
+      const { submit } = await renderReflect(true);
+      await userEvent.type(screen.getByRole("textbox"), "one{Control>}{Enter}{/Control}");
+      expect(submit).not.toHaveBeenCalled();
+
+      await userEvent.type(screen.getByRole("textbox"), "{Meta>}{Enter}{/Meta}");
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalled();
+      });
+    });
+
+    it("does not submit on Ctrl+Enter while an input method is composing", async () => {
+      const { submit } = await renderReflect(false);
+      const box = screen.getByRole("textbox");
+      await userEvent.type(box, "one");
+      const enter = new KeyboardEvent("keydown", {
+        key: "Enter",
+        ctrlKey: true,
+        isComposing: true,
+        bubbles: true,
+        cancelable: true,
+      });
+      box.dispatchEvent(enter);
+
+      // Submitting settles asynchronously, so the synchronous proof is that the key went on to the
+      // input method untouched rather than being claimed for the form.
+      expect(enter.defaultPrevented).toBe(false);
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("still validates when submitted from the keyboard", async () => {
+      const { submit } = await renderReflect(false);
+      await userEvent.type(screen.getByRole("textbox"), "{Control>}{Enter}{/Control}");
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_answer_required())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("refuses an answer of only blank lines as unanswered", async () => {
+      const { submit } = await renderReflect();
+      await userEvent.type(screen.getByRole("textbox"), "  {Enter}{Enter}  ");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_answer_required())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("stores Windows line breaks as plain line breaks", async () => {
+      const { submit } = await renderReflect();
+      await userEvent.click(screen.getByRole("textbox"));
+      await userEvent.paste("one\r\ntwo");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ challenge: "one\ntwo" });
+      });
+    });
+
+    it("keeps a one-line text question in a one-line input", async () => {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { plain: fixedJournal("plain", { type: "day" }, { prompts: [moodBodyOnly] }) } },
+      });
+      harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "plain", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
+      });
+
+      const input = screen.getByRole("textbox");
+      expect(input.tagName).toBe("INPUT");
+      expect(input.closest(".setting-item")?.classList.contains("setting-item--stacked")).toBe(false);
     });
   });
 });

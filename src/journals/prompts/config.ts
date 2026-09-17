@@ -21,7 +21,14 @@ const promptBase = v.object({
 const requiredFlag = { required: v.optional(v.boolean(), false) };
 
 export const promptSchema = v.variant("type", [
-  v.object({ ...promptBase.entries, ...requiredFlag, type: v.literal("text") }),
+  v.object({
+    ...promptBase.entries,
+    ...requiredFlag,
+    type: v.literal("text"),
+    // No default on purpose: absent means one line, so nothing is written for the common case
+    // and a version that predates the flag reads the question as ordinary text.
+    multiline: v.optional(v.boolean()),
+  }),
   v.object({ ...promptBase.entries, ...requiredFlag, type: v.literal("number") }),
   v.object({
     ...promptBase.entries,
@@ -64,6 +71,28 @@ export const promptsSchema = v.pipe(
  */
 export function isRequired(prompt: Prompt): boolean {
   return prompt.type !== "toggle" && prompt.required;
+}
+
+export type PromptKind = Pick<Prompt, "type"> & { readonly multiline?: boolean | undefined };
+
+export function isLongText(prompt: PromptKind): boolean {
+  return prompt.type === "text" && prompt.multiline === true;
+}
+
+/**
+ * Whether an answer may be part of a note name or folder.
+ *
+ * A yes/no answer renders a localized word no path pattern matches, and a long answer would put
+ * line breaks into a file name.
+ */
+export function fitsInPath(prompt: PromptKind): boolean {
+  return prompt.type !== "toggle" && !isLongText(prompt);
+}
+
+export type PromptDisplayType = PromptType | "longtext";
+
+export function displayTypeOf(prompt: PromptKind): PromptDisplayType {
+  return isLongText(prompt) ? "longtext" : prompt.type;
 }
 
 export function dateFormatFor(prompt: Extract<Prompt, { type: "date" }>): string {

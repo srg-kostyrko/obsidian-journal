@@ -11,7 +11,7 @@ import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
-import { isRequired } from "../../../prompts/config";
+import { displayTypeOf, isRequired } from "../../../prompts/config";
 import { JournalsViewModel } from "../../../view-model";
 import { EditPromptFlow } from "../../flows/edit-prompt.flow";
 import { usePromptAutocreateGuard } from "../use-prompt-autocreate-guard";
@@ -72,7 +72,7 @@ function deletePrompt(promptIndex: number): void {
     <div v-for="(prompt, promptIndex) of prompts" :key="prompt.variable" class="prompt-row">
       <span class="prompt-row__main">
         <span class="prompt-row__question">{{ prompt.question }}</span>
-        <span class="flair">{{ m.journal_prompt_type_option({ type: prompt.type }) }}</span>
+        <span class="flair">{{ m.journal_prompt_type_option({ type: displayTypeOf(prompt) }) }}</span>
       </span>
       <span class="prompt-row__variable">{{ prompt.variable }}</span>
       <span class="prompt-row__actions">

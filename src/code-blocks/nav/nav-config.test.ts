@@ -21,7 +21,8 @@ describe("navBlockSchema", () => {
   });
 
   it("degrades a non-boolean adjacent to unset rather than an error panel", () => {
-    // js-yaml 4 reads only true/false as booleans, so an on/off word arrives as a string.
+    // YAML 1.2 (the `yaml` library Obsidian bundles) reads only true/false as booleans, so an
+    // on/off word arrives as a string.
     expect(v.parse(navBlockSchema, { adjacent: "no" })).toEqual({ adjacent: undefined });
     expect(v.parse(navBlockSchema, { adjacent: 0 })).toEqual({ adjacent: undefined });
     expect(v.parse(navBlockSchema, { adjacent: null })).toEqual({ adjacent: undefined });

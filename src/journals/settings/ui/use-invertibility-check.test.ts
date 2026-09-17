@@ -500,6 +500,21 @@ describe("useInvertibilityCheck", () => {
     expect(probe(harness, config.name).value).toEqual({ kind: "prompt-in-path", reason: "text", offending: "mood" });
   });
 
+  it("reports a long text prompt in the note name with its own reason", async () => {
+    const config = withName("{{date}}-{{mood}}");
+    config.prompts = [{ ...moodPrompt, type: "text", multiline: true }];
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { [config.name]: config } },
+    });
+
+    expect(probe(harness, config.name).value).toEqual({
+      kind: "prompt-in-path",
+      reason: "longtext",
+      offending: "mood",
+    });
+  });
+
   // EditPromptModal refuses to save a yes/no question that reaches the path, but it checks the
   // question against the templates as they stand — putting {{done}} into the name template
   // afterwards reaches the same state by the other order, and only this verdict catches it.

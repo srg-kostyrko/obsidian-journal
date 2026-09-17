@@ -7,7 +7,7 @@ import { dateModificationsModal } from "@/templates/ui/modals";
 import { variableReferenceModal } from "./modals";
 
 import type { VariableModalContext } from "./variable-context";
-import type { Prompt } from "../../prompts/config";
+import type { Prompt, PromptKind } from "../../prompts/config";
 
 const props = withDefaults(
   defineProps<{
@@ -16,7 +16,7 @@ const props = withDefaults(
     dateFormat: string;
     hasCycle: boolean;
     numberingVariableNames: readonly string[];
-    promptVariables: readonly Pick<Prompt, "variable" | "question" | "type">[];
+    promptVariables: readonly (Pick<Prompt, "variable" | "question"> & PromptKind)[];
     notelet?: boolean;
   }>(),
   { notelet: false },

@@ -345,6 +345,20 @@ export async function clickModalToggleOption(label: string): Promise<void> {
   await activeModal().$(`button=${label}`).click();
 }
 
+// Types into the open dialog's text box with real keystrokes, one Enter between lines — setValue
+// would bypass the keydown handling the dialog's shortcuts depend on.
+export async function typeModalTextArea(lines: readonly string[]): Promise<void> {
+  await activeModal().$("textarea").click();
+  for (const [index, line] of lines.entries()) {
+    if (index > 0) await browser.keys("Enter");
+    if (line !== "") await browser.keys(line);
+  }
+}
+
+export function modalTextAreaValue(): Promise<string> {
+  return activeModal().$("textarea").getValue();
+}
+
 // A manual link is an anchor named by the shared tooltip; its href is the page the plugin opens.
 // Waits for the page's links to settle on the expected list, then returns what is there, so the
 // spec's assertion reports a readable diff when they never do.

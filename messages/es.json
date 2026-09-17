@@ -1857,6 +1857,7 @@
       "selectors": ["reason"],
       "match": {
         "reason=text": "«{offending}» es una respuesta de texto libre, por lo que las notas que la incluyen en su nombre o carpeta no se pueden asociar a este diario solo por su ruta.",
+        "reason=longtext": "«{offending}» es una respuesta de texto largo, por lo que no puede formar parte de un nombre de nota o carpeta.",
         "reason=toggle": "«{offending}» es una respuesta de sí o no, por lo que las notas que la incluyen en su nombre o carpeta no se pueden asociar a este diario solo por su ruta. Usa en su lugar una pregunta de opción."
       }
     }
@@ -2055,6 +2056,7 @@
   "journal_prompt_edit": "Editar pregunta",
   "journal_prompt_key_required_in_path": "Una respuesta usada en el nombre de la nota o en la carpeta debe guardarse en una propiedad.",
   "journal_prompt_toggle_not_in_path": "Una respuesta de sí o no no puede formar parte de un nombre de nota o carpeta. Usa en su lugar una pregunta de opción.",
+  "journal_prompt_long_text_not_in_path": "Una respuesta de texto largo no puede formar parte de un nombre de nota o carpeta.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2090,6 +2092,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Texto",
+        "type=longtext": "Texto largo",
         "type=number": "Número",
         "type=date": "Fecha",
         "type=toggle": "Sí/No",

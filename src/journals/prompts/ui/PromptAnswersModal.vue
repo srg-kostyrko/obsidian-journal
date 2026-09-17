@@ -9,6 +9,7 @@ import { CalendarDate, periodOfKind, type AnchorString, type Period } from "@/ca
 import { DatePicker } from "@/calendar/ui";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { PlatformService } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
 import { NoteletPathService } from "@/journals/notelets/notelet-path";
 import { NotePathService } from "@/journals/notes/note-path";
@@ -18,10 +19,11 @@ import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiTextArea from "@/ui/UiTextArea.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
-import { isRequired } from "../config";
+import { isLongText, isRequired } from "../config";
 import { isPlaceholder } from "../placeholder";
 import { promptsInPath } from "../prompts-in-path";
 
@@ -33,6 +35,7 @@ const api = useModal<Record<string, PromptAnswer>>();
 const journalsVM = useService(JournalsViewModel);
 const paths = useService(NotePathService);
 const noteletPaths = useService(NoteletPathService);
+const platform = useService(PlatformService);
 
 const config = computed(() => journalsVM.getJournal(props.metadata.journalName).getOrUndefined());
 const noteletType = computed(() =>
@@ -91,7 +94,16 @@ function schemaFor(prompt: Prompt): v.GenericSchema<unknown, PromptAnswer | unde
       (value: string) => !isPlaceholder(value),
       (issue) => m.journal_prompt_answer_reserved({ name: issue.input }),
     );
-    return required ? v.pipe(v.string(), v.minLength(1, message()), reserved) : v.pipe(v.string(), reserved);
+    if (!required) return v.pipe(v.string(), reserved);
+    // A box of empty lines reads as unanswered in a way a single input holding a space does not.
+    if (isLongText(prompt)) {
+      return v.pipe(
+        v.string(),
+        v.check((value: string) => value.trim() !== "", message()),
+        reserved,
+      );
+    }
+    return v.pipe(v.string(), v.minLength(1, message()), reserved);
   }
   // date and select answers are never typed freely, so the placeholder-reservation check that
   // guards free text does not apply to them.
@@ -188,6 +200,13 @@ const previewPath = computed(() => {
 });
 
 const onSubmit = handleSubmit((entered) => api.submit(given(entered)));
+
+function submitOnModifierEnter(event: KeyboardEvent): void {
+  if (event.isComposing) return;
+  if (!(platform.usesCommandKey() ? event.metaKey : event.ctrlKey)) return;
+  event.preventDefault();
+  void onSubmit();
+}
 </script>
 
 <template>
@@ -200,12 +219,24 @@ const onSubmit = handleSubmit((entered) => api.submit(given(entered)));
       <span>{{ previewPath }}</span>
     </UiSettingRow>
 
-    <UiSettingRow v-for="field in fields" :key="field.prompt.variable" :name="field.prompt.question">
+    <UiSettingRow
+      v-for="field in fields"
+      :key="field.prompt.variable"
+      :name="field.prompt.question"
+      :stacked="isLongText(field.prompt)"
+    >
       <template #description>
         <span v-for="error of errorBag[field.prompt.variable]" :key="error" class="prompt-form-error">{{ error }}</span>
       </template>
+      <UiTextArea
+        v-if="isLongText(field.prompt)"
+        :model-value="asText(field.value.value)"
+        v-bind="field.attrs"
+        @update:model-value="(value) => (field.value.value = (value ?? '').replaceAll('\r\n', '\n'))"
+        @keydown.enter="submitOnModifierEnter"
+      />
       <UiTextInput
-        v-if="field.prompt.type === 'text'"
+        v-else-if="field.prompt.type === 'text'"
         :model-value="asText(field.value.value)"
         v-bind="field.attrs"
         @update:model-value="(value) => (field.value.value = value ?? '')"

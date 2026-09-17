@@ -1870,6 +1870,7 @@
       "selectors": ["reason"],
       "match": {
         "reason=text": "„{offending}“ ist eine Freitextantwort, daher können Notizen, die sie im Namen oder Ordner tragen, nicht allein anhand ihres Pfads diesem Journal zugeordnet werden.",
+        "reason=longtext": "„{offending}“ ist eine Antwort vom Typ „Langer Text“ und kann daher nicht Teil eines Notiznamens oder Ordners sein.",
         "reason=toggle": "„{offending}“ ist eine Ja/Nein-Antwort, daher können Notizen, die sie im Namen oder Ordner tragen, nicht allein anhand ihres Pfads diesem Journal zugeordnet werden. Verwende stattdessen eine Auswahlfrage."
       }
     }
@@ -2068,6 +2069,7 @@
   "journal_prompt_edit": "Frage bearbeiten",
   "journal_prompt_key_required_in_path": "Eine Antwort, die im Notiznamen oder Ordner verwendet wird, muss in einer Eigenschaft gespeichert werden.",
   "journal_prompt_toggle_not_in_path": "Eine Ja/Nein-Antwort kann nicht Teil eines Notiznamens oder Ordners sein. Verwende stattdessen eine Auswahlfrage.",
+  "journal_prompt_long_text_not_in_path": "Eine Antwort vom Typ „Langer Text“ kann nicht Teil eines Notiznamens oder Ordners sein.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2103,6 +2105,7 @@
       "selectors": ["type"],
       "match": {
         "type=text": "Text",
+        "type=longtext": "Langer Text",
         "type=number": "Zahl",
         "type=date": "Datum",
         "type=toggle": "Ja/Nein",

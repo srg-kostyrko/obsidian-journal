@@ -94,6 +94,28 @@ describe("PromptsSection", () => {
     expect(rowText.indexOf(moodPrompt.question)).toBeLessThan(rowText.indexOf(moodPrompt.variable));
   });
 
+  it("labels a long text question as Long text, not Text", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { prompts: [{ ...moodPrompt, type: "text", multiline: true }] },
+          ),
+        },
+      },
+    });
+    harness.render(PromptsSection, { props: { journalName: "daily" } });
+
+    await userEvent.click(screen.getByText(m.journal_prompt_section_title()));
+
+    const questionEl = await screen.findByText(moodPrompt.question);
+    const row = questionEl.closest(".prompt-row");
+    expect(row?.querySelector(".flair")?.textContent).toBe(m.journal_prompt_type_option({ type: "longtext" }));
+  });
+
   it("invokes the prompt flow with no index when adding", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],

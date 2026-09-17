@@ -22,7 +22,7 @@ const SATURDAY = 6;
 const CONNECTED_PATH = "Daily/Tuesday standup.md" as VaultPath;
 
 const onDevice = (device: DeviceKind): ReturnType<typeof overrideWith> =>
-  overrideWith(PlatformService, { current: () => device });
+  overrideWith(PlatformService, { current: () => device, usesCommandKey: () => false });
 
 async function excludedDevice(): Promise<TestHarness> {
   const harness = await testContainer({

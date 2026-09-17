@@ -14,14 +14,15 @@ has its own questions, separate from its journal's.
 **Add question** opens:
 
 - **Question** — the text the dialog shows.
-- **Answer type** — **Text**, **Number**, **Date**, **Yes/No** or **Choice**.
+- **Answer type** — **Text**, **Long text**, **Number**, **Date**, **Yes/No** or **Choice**.
 - **Date format** — for a date question, the format its answer is written in. `YYYY-MM-DD` by
   default. It is the question's own format, never the journal's.
 - **Variable name** — what you type to use the answer: a question named `mood` is `{{mood}}`.
 - For a choice question, its choices: each with a **Label**, shown in the dialog, and a **Value**,
   which is what gets saved and written. **Add choice** adds another.
 - **Property name** — the property the answer is saved under. Leave it empty to not save the answer:
-  it is written into the note once and then gone.
+  it is written into the note once and then gone. A new question fills it in as `journal-` and the
+  variable name until you type your own; a long text question starts with it empty.
 - **Required** — the note cannot be created without an answer. Not offered for yes/no questions,
   which always have one.
 
@@ -45,6 +46,8 @@ How each type reads as text:
 - **Number** — as typed, and it takes the offsets and ordinals a numbering digit does:
   `{{pages+1}}`, `{{pages:o}}`.
 - **Text** — as typed.
+- **Long text** — as typed, over as many lines as the answer has. See [Multi-line answers in
+  templates](#multi-line-answers-in-templates).
 
 A question left blank writes nothing into the body.
 
@@ -52,7 +55,8 @@ A question left blank writes nothing into the body.
 
 - **An answer used in the note name or folder must be saved to a property.** The settings page says so
   if you try.
-- **A yes/no answer can't be part of a note name or folder.** Use a choice question instead.
+- **A yes/no or long text answer can't be part of a note name or folder.** Use a choice question
+  instead of yes/no.
 - **Auto-create can't answer.** A journal with **Auto-create today's note** on can't have a question in
   its note name, since nobody is there to answer it. Turn one of them off.
 - **Free text in a name stops auto-attach.** A note you make yourself can only be matched back to the
@@ -60,6 +64,45 @@ A question left blank writes nothing into the body.
   [Auto-attach](/notes#auto-attach).
 
 Example: [Name each day after its mood](#name-each-day-after-its-mood).
+
+### Multi-line answers in templates
+
+A long text answer can span several lines. Written into a template with `{{...}}`, it keeps the
+shape of the template line it starts on:
+
+- Inside a quote or callout, every line of the answer stays inside it.
+- Under an indented line, every line of the answer keeps that indentation.
+- Inside a list item, a line break in the answer continues the item, indented under it; a blank
+  line starts the next item instead, with the marker repeated — a numbered list keeps counting,
+  and a task item repeats its checkbox.
+
+Blank lines at the start and end of the answer are dropped.
+
+A callout `> {{mood}}`, answered with `a`, `b`, a blank line, then `c`:
+
+```markdown
+> {{mood}}
+```
+
+```markdown
+> a
+> b
+>
+> c
+```
+
+A task `- [ ] {{task}}`, answered with `Call Anna`, `about the lease`, a blank line, then `Book
+the dentist`:
+
+```markdown
+- [ ] {{task}}
+```
+
+```markdown
+- [ ] Call Anna
+      about the lease
+- [ ] Book the dentist
+```
 
 ## The answer dialog
 
@@ -70,6 +113,8 @@ the name depends on an answer — and each question.
 - **Create** writes the note with your answers. **Cancel** creates nothing.
 - A required question can't be left blank, and neither can one whose answer goes into the note name.
 - A choice question that is not required offers **(none)**.
+- A long text question has a box that spans the dialog. **Enter** starts a new line;
+  **Ctrl+Enter** (**Cmd+Enter** on macOS) creates the note.
 - The dialog replaces the confirmation dialog: with **Confirm creating new notes** on, you see this
   dialog and no second one.
 

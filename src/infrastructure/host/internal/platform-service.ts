@@ -8,4 +8,10 @@ export class PlatformService {
   current(): DeviceKind {
     return Platform.isMobileApp ? "mobile" : "desktop";
   }
+
+  // Obsidian binds Cmd on macOS where it binds Ctrl elsewhere; a shortcut following that
+  // convention must not fire on the other key.
+  usesCommandKey(): boolean {
+    return Platform.isMacOS;
+  }
 }

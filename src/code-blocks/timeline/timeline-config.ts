@@ -53,8 +53,8 @@ const timelineBlockEntries = {
   before: v.pipe(v.optional(v.unknown()), v.transform(asPadding)),
   after: v.pipe(v.optional(v.unknown()), v.transform(asPadding)),
   // Unset follows the plugin's calendar setting, as `weeks` does. A boolean is required
-  // rather than an on/off word: js-yaml 4 reads only true/false as booleans, so `on` would
-  // arrive as the string "on" and degrade to unset.
+  // rather than an on/off word: YAML 1.2 (the `yaml` library Obsidian bundles) reads only
+  // true/false as booleans, so `on` would arrive as the string "on" and degrade to unset.
   navigation: v.pipe(v.optional(v.unknown()), v.transform(asNavigation)),
 };
 

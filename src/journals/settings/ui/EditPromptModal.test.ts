@@ -267,6 +267,81 @@ describe("EditPromptModal", () => {
     });
   });
 
+  it("offers Long text and saves it as a multi-line text question", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("challenge");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalledWith(expect.objectContaining({ type: "text", multiline: true }));
+    });
+  });
+
+  it("saves a Text question without the multiline flag", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("mood");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalled();
+    });
+    expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("multiline");
+  });
+
+  it("errors when a long text question is used in the note name or folder", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { folder: "{{challenge}}" }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+    await fillRequiredFields("challenge");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+    await userEvent.type(textInputs().at(-1)!, "journal-challenge");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(screen.getByText(m.journal_prompt_long_text_not_in_path())).toBeTruthy();
+    });
+    expect(screen.queryByText(m.journal_prompt_toggle_not_in_path())).toBeNull();
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("opens a saved long text question as Long text and keeps its property and required setting", async () => {
+    const challenge: Prompt = {
+      variable: "challenge",
+      question: "Biggest challenge?",
+      type: "text",
+      multiline: true,
+      frontmatterKey: "challenge",
+      required: true,
+    };
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [challenge] }) } },
+    });
+    const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily", promptIndex: 0 } });
+
+    expect(screen.getByRole<HTMLSelectElement>("combobox").value).toBe("longtext");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "text");
+    await submitForm();
+
+    await waitFor(() => {
+      expect(submit).toHaveBeenCalledWith(
+        expect.objectContaining({ type: "text", frontmatterKey: "challenge", required: true }),
+      );
+    });
+    expect(submit.mock.calls[0]?.[0]).not.toHaveProperty("multiline");
+  });
+
   it("errors when a toggle prompt is used in the note name or folder", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
@@ -515,6 +590,56 @@ describe("EditPromptModal", () => {
       await userEvent.type(variableInput, "mood");
 
       expect((textInputs().at(-1) as HTMLInputElement).value).toBe("journal-mood");
+    });
+
+    it("leaves the key empty for a new long text question", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      const { submit } = harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+      await fillRequiredFields("challenge");
+
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("");
+      await submitForm();
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith(expect.objectContaining({ multiline: true, frontmatterKey: "" }));
+      });
+    });
+
+    it("clears an auto-filled key on switching to long text and fills it again on switching back", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      await fillRequiredFields("challenge");
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("journal-challenge");
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("");
+
+      await userEvent.selectOptions(screen.getByRole("combobox"), "text");
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("journal-challenge");
+    });
+
+    it("keeps a key typed by hand when switching to long text", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+      });
+      harness.renderModal(EditPromptModal, { props: { journalName: "daily" } });
+
+      await fillRequiredFields("challenge");
+      const keyInput = textInputs().at(-1) as HTMLInputElement;
+      await userEvent.clear(keyInput);
+      await userEvent.type(keyInput, "challenge");
+      await userEvent.selectOptions(screen.getByRole("combobox"), "longtext");
+
+      expect((textInputs().at(-1) as HTMLInputElement).value).toBe("challenge");
     });
 
     it("stops auto-filling once the key has been edited by hand", async () => {
