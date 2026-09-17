@@ -13,6 +13,7 @@ import { buildNoteletType, customJournal, fixedJournal, unwrap } from "./testing
 import { isNotelet } from "./types";
 
 import type { JournalConfig } from "./config";
+import type { Prompt } from "./prompts/config";
 
 const dailyWithStandupNotelet = () =>
   fixedJournal(
@@ -886,6 +887,111 @@ describe("FrontmatterService", () => {
         typeId: entry.typeId,
       });
       expect(rewritten.isOk()).toBe(true);
+    });
+  });
+
+  describe("note link answers", () => {
+    const project: Prompt = {
+      variable: "project",
+      question: "Which project?",
+      type: "note",
+      frontmatterKey: "project",
+      required: false,
+    };
+
+    it("writes a period note's answer as a one-item list and reads it back", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [project] }) } },
+      });
+      const fm = harness.resolve(FrontmatterService);
+      const mutator = fm.writeMutator("daily", {
+        journalName: "daily",
+        anchor: anchor("2024-01-01"),
+        answers: { project: "[[Roadmap]]" },
+      });
+      const target: Record<string, unknown> = {};
+      assert(mutator.isOk());
+      mutator.value(target);
+
+      expect(target.project).toEqual(["[[Roadmap]]"]);
+      const entry = unwrap(fm.parseEntry("D/2024-01-01.md" as VaultPath, { ...target }));
+      expect(entry.answers).toEqual({ project: "[[Roadmap]]" });
+    });
+
+    it("leaves a period note's hand-edited list of two links untouched", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [project] }) } },
+      });
+      const fm = harness.resolve(FrontmatterService);
+      const stored = { journal: "daily", "journal-date": "2024-01-01", project: ["[[Roadmap]]", "[[Budget]]"] };
+      const entry = unwrap(fm.parseEntry("D/2024-01-01.md" as VaultPath, stored));
+      const mutator = fm.writeMutator("daily", {
+        journalName: "daily",
+        anchor: anchor("2024-01-01"),
+        ...(entry.answers && { answers: entry.answers }),
+      });
+      const target: Record<string, unknown> = structuredClone(stored);
+      assert(mutator.isOk());
+      mutator.value(target);
+
+      expect(target.project).toEqual(["[[Roadmap]]", "[[Budget]]"]);
+    });
+
+    it("writes a notelet's answer as a one-item list and reads it back", async () => {
+      const config = fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as never, name: "Standup", prompts: [project] }) } },
+      );
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
+      const fm = harness.resolve(FrontmatterService);
+      const mutator = fm.writeMutator("daily", {
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-01-01"),
+        typeId: "nt_1" as never,
+        answers: { project: "[[Roadmap]]" },
+      });
+      const target: Record<string, unknown> = {};
+      assert(mutator.isOk());
+      mutator.value(target);
+
+      expect(target.project).toEqual(["[[Roadmap]]"]);
+      const entry = unwrap(fm.parseEntry("a.md" as VaultPath, { ...target }));
+      assert(isNotelet(entry));
+      expect(entry.answers).toEqual({ project: "[[Roadmap]]" });
+    });
+
+    it("leaves a notelet's hand-edited list of two links untouched", async () => {
+      const config = fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { nt_1: buildNoteletType({ id: "nt_1" as never, name: "Standup", prompts: [project] }) } },
+      );
+      const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { daily: config } } });
+      const fm = harness.resolve(FrontmatterService);
+      const stored = {
+        journal: "daily",
+        "journal-date": "2026-01-01",
+        "journal-notelet": "Standup",
+        project: ["[[Roadmap]]", "[[Budget]]"],
+      };
+      const entry = unwrap(fm.parseEntry("a.md" as VaultPath, stored));
+      assert(isNotelet(entry));
+      const mutator = fm.writeMutator("daily", {
+        kind: "notelet",
+        journalName: "daily",
+        anchor: anchor("2026-01-01"),
+        typeId: "nt_1" as never,
+        ...(entry.answers && { answers: entry.answers }),
+      });
+      const target: Record<string, unknown> = structuredClone(stored);
+      assert(mutator.isOk());
+      mutator.value(target);
+
+      expect(target.project).toEqual(["[[Roadmap]]", "[[Budget]]"]);
     });
   });
 });

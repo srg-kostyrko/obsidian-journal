@@ -106,6 +106,20 @@ describe("renderBindingFor", () => {
       answered: true,
     });
   });
+
+  it("binds a note link answer as the link itself, brackets included", () => {
+    const linked: Prompt = {
+      variable: "project",
+      question: "?",
+      type: "note",
+      frontmatterKey: "project",
+      required: false,
+    };
+    expect(renderBindingFor(linked, "[[Roadmap 2027]]")).toEqual({
+      spec: { kind: "string", value: "[[Roadmap 2027]]", alternatives: [PROMPT_PLACEHOLDER] },
+      answered: true,
+    });
+  });
 });
 
 describe("empty date format falls back to YYYY-MM-DD", () => {
