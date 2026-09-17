@@ -116,18 +116,18 @@ Answer it by typing: suggestions list every file in your vault, notes first. A n
 file is kept as a link to a note you have not written yet. A name can't contain `#`, `^`, `|`, `[`
 or `]`.
 
-The calendar button beside the field links a journal's note instead: choose the journal, then the
-period. A note that does not exist yet is linked by its full path, such as `[[Daily/2026-09-17]]`,
-so opening the link creates it in the journal's folder. Such a link is written once and not
-revisited, so it stops matching if you change the journal's **Note name template** or **Folder**
-before the note is created. A journal whose note name uses an answer can only link notes that
-already exist.
+The calendar button beside the field links a journal's note instead: choose the period, and the
+journal too if your vault has more than one. A note that does not exist yet is linked by its full
+path, such as `[[Daily/2026-09-17]]`, so opening the link creates it in the journal's folder. Such
+a link is written once and not revisited, so it stops matching if you change the journal's **Note
+name template** or **Folder** before the note is created. A journal whose note name uses an answer
+can only link notes that already exist.
 
 :::
 
 ::: warning Update every device first
-Versions before this one discard every question of a journal that has a note link question.
-Update Journals on each device that syncs this vault before adding one.
+Versions before this one discard every question of a journal or notelet type that has a note link
+question. Update Journals on each device that syncs this vault before adding one.
 :::
 
 ::: v-pre
