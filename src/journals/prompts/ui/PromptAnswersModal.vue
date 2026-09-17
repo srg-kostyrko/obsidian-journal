@@ -3,7 +3,7 @@ import { toTypedSchema } from "@vee-validate/valibot";
 import { match } from "ts-pattern";
 import * as v from "valibot";
 import { useForm, type BaseFieldProps, type TypedSchema } from "vee-validate";
-import { computed, type Ref } from "vue";
+import { computed, ref, type Ref } from "vue";
 
 import { CalendarDate, periodOfKind, type AnchorString, type Period } from "@/calendar";
 import { DatePicker } from "@/calendar/ui";
@@ -11,12 +11,17 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { PlatformService } from "@/infrastructure/host";
 import { useModal } from "@/infrastructure/host/modals";
+import { OutOfTimelineError } from "@/journals/errors";
 import { NoteletPathService } from "@/journals/notelets/notelet-path";
+import { EmptyNoteNameError } from "@/journals/notes/errors";
 import { NotePathService } from "@/journals/notes/note-path";
 import { isNoteletMetadata } from "@/journals/types";
 import { JournalsViewModel } from "@/journals/view-model";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
+import UiNoteInput from "@/ui/UiNoteInput.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextArea from "@/ui/UiTextArea.vue";
@@ -24,6 +29,9 @@ import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
 import { isLongText, isRequired } from "../config";
+import { NamedByAnswersError } from "../errors";
+import { JournalNoteLinkPicker, type JournalNoteLinkError } from "../journal-note-link";
+import { hasUnlinkableCharacters, toNoteLink } from "../note-link";
 import { isPlaceholder } from "../placeholder";
 import { promptsInPath } from "../prompts-in-path";
 
@@ -86,6 +94,18 @@ function schemaFor(prompt: Prompt): v.GenericSchema<unknown, PromptAnswer | unde
   // A toggle always holds one of its two values, so it has no blank state to refuse.
   if (prompt.type === "toggle") return v.boolean();
   const { required, message } = requirementOf(prompt);
+  if (prompt.type === "note") {
+    const linkable = v.check(
+      (value: string) => !hasUnlinkableCharacters(value),
+      m.journal_prompt_note_link_characters(),
+    );
+    if (!required) return v.pipe(v.string(), linkable);
+    return v.pipe(
+      v.string(),
+      v.check((value: string) => value.trim() !== "", message()),
+      linkable,
+    );
+  }
   // An unanswered number is undefined, never 0 — the required check is what refuses it, and a
   // typed 0 is an answer like any other.
   if (prompt.type === "number") return required ? v.number(message()) : v.optional(v.number());
@@ -199,7 +219,43 @@ const previewPath = computed(() => {
   return path.isOk() ? path.value : "";
 });
 
-const onSubmit = handleSubmit((entered) => api.submit(given(entered)));
+// The field holds link text as typed; the answer is the link itself, and a blank field is unanswered.
+function asAnswers(entered: Record<string, PromptAnswer | undefined>): Record<string, PromptAnswer | undefined> {
+  const answers = { ...entered };
+  for (const prompt of prompts) {
+    if (prompt.type !== "note") continue;
+    const text = answers[prompt.variable];
+    answers[prompt.variable] = typeof text === "string" ? toNoteLink(text) : undefined;
+  }
+  return answers;
+}
+
+const onSubmit = handleSubmit((entered) => api.submit(given(asAnswers(entered))));
+
+const noteLinks = useService(JournalNoteLinkPicker);
+const pickErrors = ref<Record<string, string>>({});
+
+function pickRefusal(error: JournalNoteLinkError): string | undefined {
+  if (error instanceof OutOfTimelineError) {
+    return m.journal_prompt_journal_note_out_of_timeline({ journal: error.journalName });
+  }
+  if (error instanceof NamedByAnswersError) {
+    return m.journal_prompt_journal_note_named_by_answers({ journal: error.journalName });
+  }
+  if (error instanceof EmptyNoteNameError) return m.journal_note_name_empty_notice({ journalName: error.journalName });
+  return undefined;
+}
+
+async function pickJournalNote(field: PromptField): Promise<void> {
+  const result = await noteLinks.pick();
+  if (result.isOk()) {
+    field.value.value = result.value;
+    pickErrors.value = { ...pickErrors.value, [field.prompt.variable]: "" };
+    return;
+  }
+  const refusal = pickRefusal(result.error);
+  if (refusal !== undefined) pickErrors.value = { ...pickErrors.value, [field.prompt.variable]: refusal };
+}
 
 function submitOnModifierEnter(event: KeyboardEvent): void {
   if (event.isComposing) return;
@@ -227,6 +283,9 @@ function submitOnModifierEnter(event: KeyboardEvent): void {
     >
       <template #description>
         <span v-for="error of errorBag[field.prompt.variable]" :key="error" class="prompt-form-error">{{ error }}</span>
+        <span v-if="pickErrors[field.prompt.variable]" class="prompt-form-error">{{
+          pickErrors[field.prompt.variable]
+        }}</span>
       </template>
       <UiTextArea
         v-if="isLongText(field.prompt)"
@@ -241,6 +300,18 @@ function submitOnModifierEnter(event: KeyboardEvent): void {
         v-bind="field.attrs"
         @update:model-value="(value) => (field.value.value = value ?? '')"
       />
+      <template v-else-if="field.prompt.type === 'note'">
+        <UiNoteInput
+          :model-value="asText(field.value.value)"
+          v-bind="field.attrs"
+          @update:model-value="(value) => (field.value.value = value)"
+        />
+        <UiIconButton
+          :icon="icons.action.calendar"
+          :tooltip="m.journal_prompt_pick_journal_note()"
+          @click="pickJournalNote(field)"
+        />
+      </template>
       <UiNumberInput
         v-else-if="field.prompt.type === 'number'"
         :model-value="asNumber(field.value.value)"

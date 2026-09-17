@@ -42,6 +42,8 @@ function renderMisc(harness: TestHarness): ReturnType<TestHarness["renderModal"]
   });
 }
 
+const tick = (): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, 0));
+
 function renderLogged(harness: TestHarness): ReturnType<TestHarness["renderModal"]> {
   return harness.renderModal(PromptAnswersModal, {
     props: {
@@ -767,6 +769,151 @@ describe("PromptAnswersModal", () => {
       const input = screen.getByRole("textbox");
       expect(input.tagName).toBe("INPUT");
       expect(input.closest(".setting-item")?.classList.contains("setting-item--stacked")).toBe(false);
+    });
+  });
+
+  describe("a note link question", () => {
+    const project: Prompt = {
+      variable: "project",
+      question: "Which project?",
+      type: "note",
+      frontmatterKey: "project",
+      required: false,
+    };
+
+    async function renderLog(
+      prompt: Prompt = project,
+      extra: Record<string, ReturnType<typeof fixedJournal>> = {},
+    ): Promise<ReturnType<TestHarness["renderModal"]>> {
+      harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: {
+          journals: {
+            log: fixedJournal("log", { type: "day" }, { prompts: [prompt] }),
+            daily: fixedJournal("daily", { type: "day" }, { folder: "Daily" }),
+            ...extra,
+          },
+        },
+      });
+      harness.host.putFile("Projects/Roadmap 2027.md");
+      return harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "log", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
+      });
+    }
+
+    it("stores a file picked from the suggestions as a link", async () => {
+      const { submit } = await renderLog();
+
+      harness.inputSuggests.attachments[0].select("Projects/Roadmap 2027.md");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ project: "[[Roadmap 2027]]" });
+      });
+    });
+
+    it("stores a typed name that matches no file as a link", async () => {
+      const { submit } = await renderLog();
+
+      await userEvent.type(screen.getByRole("textbox"), "  Someone new ");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ project: "[[Someone new]]" });
+      });
+    });
+
+    it("leaves a blank answer out", async () => {
+      const { submit } = await renderLog();
+
+      await userEvent.type(screen.getByRole("textbox"), " ".repeat(3));
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({});
+      });
+    });
+
+    it.each(["#", "^", "|", "[", "]"])("refuses a name holding %s", async (character) => {
+      const { submit } = await renderLog();
+
+      await userEvent.click(screen.getByRole("textbox"));
+      await userEvent.paste(`Alice ${character} 1`);
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_note_link_characters())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("refuses a blank answer to a required question", async () => {
+      const { submit } = await renderLog({ ...project, required: true });
+
+      await userEvent.type(screen.getByRole("textbox"), "  ");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_answer_required())).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
+
+    it("fills the field with a journal note picked through the button", async () => {
+      const { submit } = await renderLog();
+
+      await userEvent.click(screen.getByRole("button", { name: m.journal_prompt_pick_journal_note() }));
+      await tick();
+      harness.suggests.lastOpen().choose("daily");
+      await tick();
+      harness.modals.lastOpen().submit(DayPeriod.containing(date("2026-01-01")));
+
+      await waitFor(() => {
+        expect(screen.getByRole<HTMLInputElement>("textbox").value).toBe("Daily/2026-01-01");
+      });
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ project: "[[Daily/2026-01-01]]" });
+      });
+    });
+
+    it("says why a journal note can't be linked and keeps what was typed", async () => {
+      await renderLog(project, {
+        sprints: fixedJournal(
+          "sprints",
+          { type: "day" },
+          { timeline: { start: anchor("2030-01-01"), end: { kind: "never" } } },
+        ),
+      });
+      await userEvent.type(screen.getByRole("textbox"), "keep me");
+
+      await userEvent.click(screen.getByRole("button", { name: m.journal_prompt_pick_journal_note() }));
+      await tick();
+      harness.suggests.lastOpen().choose("sprints");
+      await tick();
+      harness.modals.lastOpen().submit(DayPeriod.containing(date("2026-01-01")));
+
+      await waitFor(() => {
+        expect(screen.getByText(m.journal_prompt_journal_note_out_of_timeline({ journal: "sprints" }))).toBeTruthy();
+      });
+      expect(screen.getByRole<HTMLInputElement>("textbox").value).toBe("keep me");
+    });
+
+    it("changes nothing when the journal choice is cancelled", async () => {
+      await renderLog();
+      await userEvent.type(screen.getByRole("textbox"), "keep me");
+
+      await userEvent.click(screen.getByRole("button", { name: m.journal_prompt_pick_journal_note() }));
+      await tick();
+      harness.suggests.lastOpen().cancel();
+      await tick();
+
+      expect(screen.getByRole<HTMLInputElement>("textbox").value).toBe("keep me");
+      expect(screen.queryByText(m.journal_prompt_journal_note_out_of_timeline({ journal: "daily" }))).toBeNull();
     });
   });
 });

@@ -2069,6 +2069,10 @@
   "journal_prompt_key_required_in_path": "Une réponse utilisée dans le nom de la note ou le dossier doit être enregistrée dans une propriété.",
   "journal_prompt_toggle_not_in_path": "Une réponse oui/non ne peut pas faire partie d'un nom de note ou d'un dossier. Utilisez plutôt une question à choix.",
   "journal_prompt_long_text_not_in_path": "Une réponse en texte long ne peut pas faire partie d'un nom de note ou d'un dossier.",
+  "journal_prompt_note_link_characters": "Un lien vers une note ne peut pas contenir #, ^, |, [ ou ].",
+  "journal_prompt_pick_journal_note": "Lier à une note de journal",
+  "journal_prompt_journal_note_out_of_timeline": "{journal} n'a pas de note pour cette période et n'en crée pas.",
+  "journal_prompt_journal_note_named_by_answers": "{journal} nomme ses notes d'après des réponses ; une note qu'il n'a pas encore créée ne peut donc pas être liée.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],

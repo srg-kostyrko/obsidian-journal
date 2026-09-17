@@ -2055,6 +2055,10 @@
   "journal_prompt_key_required_in_path": "노트 이름이나 폴더에 사용되는 답변은 속성에 저장해야 합니다.",
   "journal_prompt_toggle_not_in_path": "예/아니요 답변은 노트 이름이나 폴더의 일부가 될 수 없습니다. 대신 선택형 질문을 사용하세요.",
   "journal_prompt_long_text_not_in_path": "긴 텍스트 답변은 노트 이름이나 폴더의 일부가 될 수 없습니다.",
+  "journal_prompt_note_link_characters": "노트 링크에는 #, ^, |, [, ]를 포함할 수 없습니다.",
+  "journal_prompt_pick_journal_note": "저널 노트에 연결",
+  "journal_prompt_journal_note_out_of_timeline": "{journal}에는 해당 기간의 노트가 없으며 새로 만들지도 않습니다.",
+  "journal_prompt_journal_note_named_by_answers": "{journal}은(는) 답변으로 노트 이름을 정하므로 아직 만들지 않은 노트에는 연결할 수 없습니다.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
