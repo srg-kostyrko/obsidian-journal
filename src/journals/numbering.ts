@@ -1,5 +1,6 @@
 import { match } from "ts-pattern";
 
+import { CalendarDate } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
@@ -48,7 +49,7 @@ export class NumberingService {
     anchorDate: AnchorString,
   ): Option<Readonly<Record<string, number>>> {
     if (!numbering.enabled) return Option.none();
-    if (!numbering.allowBefore && anchor < anchorDate) return Option.none();
+    if (!numbering.allowBefore && this.#precedesStart(name, anchor, anchorDate)) return Option.none();
 
     // Derive from the nearest previous existing note, else back-compute from the
     // nearest next existing note, else fall to the config anchor. A manually renumbered note
@@ -133,6 +134,15 @@ export class NumberingService {
     return config.timeline.start || config.numbering.anchorDate;
   }
 
+  // A start can sit inside a period (a week-configuration change or a migration leaves it there).
+  // The timeline admits the period straddling it and countRepeats counts from it, so comparing
+  // against the raw date would keep that period in the timeline but leave it unnumbered.
+  #precedesStart(name: string, anchor: AnchorString, anchorDate: AnchorString): boolean {
+    if (anchorDate === "") return false;
+    const startAnchor = this.#cycle.anchorOf(name, CalendarDate.fromAnchor(anchorDate)).getOr(anchorDate);
+    return anchor < startAnchor;
+  }
+
   assignNumbers(name: string, anchor: AnchorString): Option<Readonly<Record<string, number>>> {
     const configOpt = this.#journals.get(name);
     if (configOpt.isNone()) return Option.none();
@@ -170,7 +180,7 @@ export class NumberingService {
     const config = configOpt.value;
     const anchorDate = this.#anchorDateFor(config);
     if (!config.numbering.enabled) return Option.none();
-    if (!config.numbering.allowBefore && anchor < anchorDate) return Option.none();
+    if (!config.numbering.allowBefore && this.#precedesStart(name, anchor, anchorDate)) return Option.none();
     return this.#fromAnchorDate(name, anchor, config.numbering, anchorDate);
   }
 
