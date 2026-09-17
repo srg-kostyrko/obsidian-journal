@@ -145,6 +145,42 @@ describe("formatToRegexp", () => {
     });
   });
 
+  // A date carries no time, but a property an importer wrote does, and a name rendered with one
+  // holds midnight -- either way the format has to match what it renders.
+  describe("time-of-day tokens", () => {
+    it.each([
+      "HH:mm",
+      "H:mm",
+      "hh:mm A",
+      "h:mm a",
+      "kk:mm",
+      "k:mm",
+      "HH:mm:ss",
+      "H:m:s",
+      "HH:mm:ss.SSS",
+      "HH:mm:ss.S",
+      "YYYY-MM-DDTHH:mm",
+      "YYYY-MM-DD[T]HH:mm",
+      "LT",
+      "LTS",
+      "LLL",
+      "llll",
+    ])("matches what %s renders, whole", (format) => {
+      const re = new RegExp(`^${formatToRegexp(format).source}$`);
+      for (const time of ["00:00:00.000", "09:05:07.004", "12:30:00.500", "23:59:59.999"]) {
+        expect(re.test(localMoment(`2026-06-01 ${time}`, "YYYY-MM-DD HH:mm:ss.SSS", true).format(format))).toBe(true);
+      }
+    });
+
+    it("rejects an hour where HH wants two digits", () => {
+      expect(new RegExp(`^${formatToRegexp("HH:mm").source}$`).test("9:05")).toBe(false);
+    });
+
+    it("no longer reads the time symbols as literal letters", () => {
+      expect(new RegExp(`^${formatToRegexp("HH:mm").source}$`).test("HH:mm")).toBe(false);
+    });
+  });
+
   describe("combined formats", () => {
     it("matches dates in YYYY-MM-DD format", () => {
       expect(formatToRegexp("YYYY-MM-DD").test("2025-03-14")).toBe(true);
