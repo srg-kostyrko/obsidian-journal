@@ -60,3 +60,19 @@ export class UpdateLinksDialogButtonMissingError extends Error {
     this.name = "UpdateLinksDialogButtonMissingError";
   }
 }
+
+export class RenameRequiresLinkUpdateError extends Error {
+  constructor(from: string, to: string) {
+    super(
+      `renaming ${from} to ${to} opened Obsidian's native "Update links?" dialog — this note has an inbound link, use renameNoteAcceptingLinkUpdates instead of renameNote`,
+    );
+    this.name = "RenameRequiresLinkUpdateError";
+  }
+}
+
+export class RenameFileFailedError extends Error {
+  constructor(from: string, to: string, reason: string) {
+    super(`renaming ${from} to ${to} failed in the renderer: ${reason}`);
+    this.name = "RenameFileFailedError";
+  }
+}

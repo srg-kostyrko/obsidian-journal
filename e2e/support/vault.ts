@@ -1,6 +1,7 @@
 import { browser } from "@wdio/globals";
 
-import { FixtureFileMissingError } from "./errors.js";
+import { FixtureFileMissingError, RenameFileFailedError, RenameRequiresLinkUpdateError } from "./errors.js";
+import { confirmUpdateLinksDialog, isUpdateLinksDialogOpen } from "./rename-links-dialog.js";
 import { waitForState } from "./wait.js";
 
 export type Frontmatter = Record<string, unknown>;
@@ -40,21 +41,111 @@ export async function writeNote(path: string, content: string): Promise<void> {
   if (!written) throw new FixtureFileMissingError(path);
 }
 
-export async function renameNote(from: string, to: string): Promise<void> {
-  // The TFile lookup must run in-browser, but the callback is stringified and
-  // can't reach an imported error; report via sentinel and raise in Node.
-  const renamed = await browser.executeObsidian(
-    async ({ app, obsidian }, fromPath, toPath) => {
+// A window-scoped sentinel, not a return value, because the fire-and-forget renameFile call that
+// records against it (triggerRename below) has already returned to Node by the time it could
+// reject. `window.__journalsRenameFailure` is one extra global for one narrow purpose: without
+// it, a renderer-side rejection (e.g. a destination path that already exists) becomes an
+// unhandled promise rejection nobody reads, and the poll that follows keeps waiting for a file
+// that will never appear — reading, from Node, as indistinguishable from "the dialog just never
+// opened" until the full timeout budget is spent.
+interface RenameWindow extends Window {
+  __journalsRenameFailure?: string;
+}
+
+// Fires app.fileManager.renameFile without awaiting its own promise, and returns only whether
+// the source file existed to be renamed at all. That promise does not settle until Obsidian's
+// native "Update links?" dialog is answered, whenever the renamed file has at least one inbound
+// link and the vault's alwaysUpdateLinks is off (the default) — and nothing can answer that
+// dialog while this very executeObsidian round trip is the thing blocking on it. Awaiting it
+// here would deadlock: chromedriver's own script-execution timeout (30s) eventually gives up on
+// the still-pending call, and webdriverio silently retries the identical script (a timeout is
+// one of its retryable conditions), re-running this callback a second time against a file the
+// first, actually-successful attempt already renamed — surfacing downstream as a confusing "no
+// fixture file" error, not a real gap in whatever the test was exercising. Firing the rename and
+// returning immediately, then polling for its outcome from Node (waitForRenameOutcome below),
+// keeps this round trip itself always under the timeout, dialog or no dialog.
+async function triggerRename(from: string, to: string): Promise<boolean> {
+  return browser.executeObsidian(
+    ({ app, obsidian }, fromPath, toPath) => {
       console.debug("[e2e]", "rename", `${fromPath} -> ${toPath}`);
       const file = app.vault.getAbstractFileByPath(fromPath);
       if (!(file instanceof obsidian.TFile)) return false;
-      await app.fileManager.renameFile(file, toPath);
+      const win = window as RenameWindow;
+      delete win.__journalsRenameFailure;
+      app.fileManager.renameFile(file, toPath).catch((error: unknown) => {
+        win.__journalsRenameFailure = error instanceof Error ? error.message : String(error);
+      });
       return true;
     },
     from,
     to,
   );
-  if (!renamed) throw new FixtureFileMissingError(from);
+}
+
+// The WebDriver wire serializes `undefined` to `null` (see waitForState above), so "no failure
+// recorded" arrives here as `null`, not the `undefined` the sentinel is declared to hold when
+// unset. Callers must treat both as "nothing to report", the same rule waitForState enforces for
+// every other executeObsidian read.
+function renameFailure(): Promise<string | null | undefined> {
+  return browser.executeObsidian(() => (window as RenameWindow).__journalsRenameFailure);
+}
+
+// Distinguishes the three outcomes a fire-and-forget rename (triggerRename) can reach, none of
+// which are visible from the boolean triggerRename returned: the rename landed, Obsidian opened
+// the native Update links? dialog and is waiting on an answer, or the renameFile promise
+// rejected in the renderer (recorded by triggerRename's .catch, since nothing else would ever
+// read that rejection). All three are polled together rather than waiting out noteExists(to)
+// first and checking the others only on a timeout: whichever happens must be reported within one
+// poll interval, not after paying the full wait budget.
+async function waitForRenameOutcome(to: string): Promise<{ dialogOpened: boolean; failure?: string }> {
+  let dialogOpened = false;
+  let failure: string | undefined;
+  await waitForState(
+    async () => {
+      const rejected = await renameFailure();
+      if (rejected !== undefined && rejected !== null) {
+        failure = rejected;
+        return true;
+      }
+      if (await isUpdateLinksDialogOpen()) {
+        dialogOpened = true;
+        return true;
+      }
+      return noteExists(to);
+    },
+    (settled) => settled,
+    `waited for ${to} to exist after rename`,
+  );
+  return { dialogOpened, failure };
+}
+
+// Renames a note with no inbound link. If the rename instead opens Obsidian's native "Update
+// links?" dialog — meaning the note DOES have an inbound link — this fails fast with a named
+// error rather than answering the dialog itself or waiting out a timeout: this helper doesn't
+// know which button the caller would want pressed, and guessing "Update" silently would hide a
+// fixture that grew a link it didn't have when the test was written. Use
+// renameNoteAcceptingLinkUpdates for a rename that is expected to raise the dialog.
+export async function renameNote(from: string, to: string): Promise<void> {
+  const started = await triggerRename(from, to);
+  if (!started) throw new FixtureFileMissingError(from);
+  const { dialogOpened, failure } = await waitForRenameOutcome(to);
+  if (failure !== undefined) throw new RenameFileFailedError(from, to, failure);
+  if (dialogOpened) throw new RenameRequiresLinkUpdateError(from, to);
+}
+
+// Renames a note that is expected to have at least one inbound link, so Obsidian's native
+// "Update links?" dialog is expected to open. Shares triggerRename's fire-and-forget trigger
+// with renameNote — the same deadlock, and the same renderer-rejection blind spot, apply here,
+// dialog or not — but then drives the dialog to a close instead of treating its appearance as a
+// caller error. Deliberately does not click "Always update": that flips alwaysUpdateLinks for
+// the whole vault, permanently skipping the dialog from then on, which would make this helper
+// stop exercising the path it exists to cover.
+export async function renameNoteAcceptingLinkUpdates(from: string, to: string): Promise<void> {
+  const started = await triggerRename(from, to);
+  if (!started) throw new FixtureFileMissingError(from);
+  await confirmUpdateLinksDialog();
+  const { failure } = await waitForRenameOutcome(to);
+  if (failure !== undefined) throw new RenameFileFailedError(from, to, failure);
 }
 
 // Reads what Obsidian has parsed (post-metadataCache), not raw bytes — the bytes

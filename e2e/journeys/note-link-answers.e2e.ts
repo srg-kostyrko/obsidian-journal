@@ -2,11 +2,15 @@ import { $, browser } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { promptChoose } from "../support/commands.js";
-import { FixtureFileMissingError } from "../support/errors.js";
-import { confirmUpdateLinksDialog } from "../support/rename-links-dialog.js";
 import { clickDialogButton, waitForDialogClosed, waitForModalOpen } from "../support/settings.js";
 import { openViaUri } from "../support/uri.js";
-import { seedNote, todayAnchor, waitForFrontmatter, waitForJournalFrontmatter } from "../support/vault.js";
+import {
+  renameNoteAcceptingLinkUpdates,
+  seedNote,
+  todayAnchor,
+  waitForFrontmatter,
+  waitForJournalFrontmatter,
+} from "../support/vault.js";
 
 function holdsOnly(value: unknown, link: string): boolean {
   return Array.isArray(value) && value.length === 1 && value[0] === link;
@@ -42,29 +46,6 @@ async function pickNoteSuggestion(query: string, name: string): Promise<void> {
   await row.click();
 }
 
-// vault.ts's renameNote awaits app.fileManager.renameFile's own promise inside the executeObsidian
-// round trip, but that promise does not settle until Obsidian's native "Update links?" dialog is
-// answered — and nothing can answer it while the call raising it is the one Node is still waiting
-// on. Chromedriver's own script-execution timeout (30s) then gives up on that pending request and
-// webdriverio retries the identical script (a 500 response is one of its retryable statuses),
-// re-running the callback a second time against a file the first, actually-successful attempt
-// already renamed — surfacing as vault.ts's own "no fixture file" error, not a real gap in the
-// feature. Fire the rename without awaiting its settlement, then drive the dialog to a close.
-async function renameAndAcceptLinkUpdate(from: string, to: string): Promise<void> {
-  const started = await browser.executeObsidian(
-    ({ app, obsidian }, fromPath, toPath) => {
-      const file = app.vault.getAbstractFileByPath(fromPath);
-      if (!(file instanceof obsidian.TFile)) return false;
-      void app.fileManager.renameFile(file, toPath);
-      return true;
-    },
-    from,
-    to,
-  );
-  if (!started) throw new FixtureFileMissingError(from);
-  await confirmUpdateLinksDialog();
-}
-
 describe("a note link question", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-note-link", plugins: ["journals"] });
@@ -94,7 +75,7 @@ describe("a note link question", () => {
       { timeoutMsg: "Obsidian never indexed the property as a link" },
     );
 
-    await renameAndAcceptLinkUpdate("Projects/Roadmap 2027.md", "Projects/Roadmap 2028.md");
+    await renameNoteAcceptingLinkUpdates("Projects/Roadmap 2027.md", "Projects/Roadmap 2028.md");
     await waitForFrontmatter(
       path,
       (frontmatter) => holdsOnly(frontmatter.project, "[[Roadmap 2028]]"),
