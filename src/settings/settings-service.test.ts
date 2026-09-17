@@ -659,6 +659,28 @@ describe("SettingsService", () => {
       expect(stored?.prompts.map((prompt) => prompt.variable)).toEqual(["mood", "energy"]);
     });
 
+    it("resets a notelet type's prompts, not the type itself, when dropping the question leaves two questions with one variable", async () => {
+      // folder is not part of the failing "prompts" field: a whole-entry fallback (resetting to
+      // defaultItem) would lose it just as surely as it would lose the sibling type below, since
+      // defaultItem only carries the name forward from the raw value.
+      const type = {
+        ...buildNoteletType({ id: "nt_1" as never, name: "Standup", folder: "Notes/Standups" }),
+        prompts: [known, unknown, { ...later, variable: "mood" }],
+      };
+      const sibling = buildNoteletType({ id: "nt_2" as never, name: "Retro" });
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [journalConfigCollection] })],
+        data: {
+          journals: { daily: { ...fixedJournal("daily", { type: "day" }), notelets: { nt_1: type, nt_2: sibling } } },
+        },
+        allow: { dataRepair: true },
+      });
+
+      const notelets = harness.settings.recordOf(journalConfigCollection).daily.notelets;
+      expect(notelets.nt_1).toMatchObject({ name: "Standup", folder: "Notes/Standups", prompts: [] });
+      expect(notelets.nt_2?.name).toBe("Retro");
+    });
+
     it("resets the list when dropping the question leaves two questions with one variable", async () => {
       const harness = await testContainer({
         modules: [testSettingsModule({ collections: [journalConfigCollection] })],
