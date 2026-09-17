@@ -1,0 +1,50 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "log": {
+      "name": "log",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "folder": "Log",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        {
+          "variable": "project",
+          "question": "Which project?",
+          "type": "note",
+          "frontmatterKey": "project",
+          "required": false
+        }
+      ]
+    },
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "folder": "Daily",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": []
+    }
+  }
+}
