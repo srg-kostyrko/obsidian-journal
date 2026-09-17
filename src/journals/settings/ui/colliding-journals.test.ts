@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { AnchorString } from "@/calendar";
+import { CalendarDate, type AnchorString } from "@/calendar";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import { CycleService } from "../../cycle";
@@ -17,12 +17,16 @@ import type { JournalConfig } from "../../config";
 
 async function collisions(journals: Record<string, JournalConfig>): Promise<string[][]> {
   const harness = await testContainer({ modules: [journalsCoreModule], data: { journals } });
-  const groups = findCollidingJournals([...harness.resolve(JournalsRepository).find().list()], {
-    cycle: harness.resolve(CycleService),
-    frontmatter: harness.resolve(FrontmatterService),
-    paths: harness.resolve(NotePathService),
-    timeline: harness.resolve(TimelineService),
-  });
+  const groups = findCollidingJournals(
+    [...harness.resolve(JournalsRepository).find().list()],
+    {
+      cycle: harness.resolve(CycleService),
+      frontmatter: harness.resolve(FrontmatterService),
+      paths: harness.resolve(NotePathService),
+      timeline: harness.resolve(TimelineService),
+    },
+    CalendarDate.fromAnchor("2026-09-17" as AnchorString),
+  );
   return groups.map((group) => group.map((journal) => journal.name));
 }
 
@@ -128,5 +132,18 @@ describe("findCollidingJournals", () => {
     });
 
     expect(groups).toEqual([["a", "b", "c"]]);
+  });
+
+  it("flags a custom interval that shares only its first day with a month journal, years ago", async () => {
+    const groups = await collisions({
+      // The literal day keeps a mid-month sprint note from reading back as the month's.
+      monthly: fixedJournal("monthly", { type: "month" }, { nameTemplate: "{{date:YYYY-MM}}-01" }),
+      sprint: customJournal("sprint", "day", 25, "2010-01-01", {
+        nameTemplate: "{{start_date:YYYY-MM-DD}}",
+        timeline: { start: "2010-01-01" as AnchorString, end: { kind: "date", date: "2015-01-01" as AnchorString } },
+      }),
+    });
+
+    expect(groups).toEqual([["monthly", "sprint"]]);
   });
 });

@@ -15,6 +15,14 @@ import type { RepairAction } from "./findings";
 
 const INDEX_SETTLE_TIMEOUT_MS = 2000;
 
+class ClaimedMeanwhile extends Error {}
+
+// attachNote awaits a read before it writes, and a sync merge can claim the note in that gap.
+// Checked inside the write itself, a throw leaves the file untouched.
+function refuseIfClaimed(fm: Record<string, unknown>): void {
+  if (typeof fm[FRONTMATTER_NAME_KEY] === "string") throw new ClaimedMeanwhile();
+}
+
 export type RepairOutcome =
   | { kind: "repaired" }
   | {
@@ -199,15 +207,18 @@ export class RepairService {
           });
           continue;
         }
-        const attached = await this.#creation.attachNote(action.journalName, action.path, candidate.metadata);
+        const attached = await this.#creation.attachNote(
+          action.journalName,
+          action.path,
+          candidate.metadata,
+          refuseIfClaimed,
+        );
         if (attached.isErr()) {
-          results.push({
-            entry: {
-              path: action.path,
-              journalName: action.journalName,
-              outcome: { kind: "failed", reason: "write-failed", message: attached.error.message },
-            },
-          });
+          const outcome: RepairOutcome =
+            attached.error.cause instanceof ClaimedMeanwhile
+              ? { kind: "failed", reason: "no-longer-matches" }
+              : { kind: "failed", reason: "write-failed", message: attached.error.message };
+          results.push({ entry: { path: action.path, journalName: action.journalName, outcome } });
           continue;
         }
         const intent: Intent = { path: action.path, journalName: action.journalName, anchor };

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
-import type { VaultPath } from "@/infrastructure/host";
+import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
 import { FRONTMATTER_NAME_KEY, type JournalConfig } from "@/journals/config";
@@ -37,6 +37,7 @@ async function buildRepairs(journals: Record<string, JournalConfig> = WEEKLY) {
     reanchor: vi.spyOn(connection, "reanchor"),
     disconnect: vi.spyOn(connection, "disconnect"),
     creation: vi.spyOn(harness.resolve(NoteCreationService), "attachNote"),
+    notes: harness.resolve(NotesService),
   };
 }
 
@@ -372,6 +373,19 @@ describe("RepairService", () => {
     it("leaves a note that was claimed after the scan alone", async () => {
       const { service, host } = await buildRepairs(TWINS);
       claim(host, "2026-01-12.md", "daily");
+
+      expect(await run(service, attach("diary"))).toEqual({ kind: "failed", reason: "no-longer-matches" });
+      expect(host.files.get("2026-01-12.md")?.frontmatter).toEqual({ journal: "daily" });
+    });
+
+    it("leaves a note alone when it is claimed while the attach is underway", async () => {
+      const { service, host, notes } = await buildRepairs(TWINS);
+      claim(host, "2026-01-12.md", undefined);
+      const read = notes.read.bind(notes);
+      vi.spyOn(notes, "read").mockImplementation((path) => {
+        claim(host, "2026-01-12.md", "daily");
+        return read(path);
+      });
 
       expect(await run(service, attach("diary"))).toEqual({ kind: "failed", reason: "no-longer-matches" });
       expect(host.files.get("2026-01-12.md")?.frontmatter).toEqual({ journal: "daily" });

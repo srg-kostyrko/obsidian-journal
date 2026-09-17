@@ -85,8 +85,7 @@ export class AutoAttachService {
       this.#logger.debug("no matches", { path });
       return;
     }
-    // Guessing an owner would write a claim nobody asked for. The vault check lists these notes
-    // and lets the user pick.
+    // Guessing an owner would write a claim nobody asked for.
     if (matches.length > 1) {
       this.#logger.debug("ambiguous", { path, candidates: matches.map((m) => m.journalName) });
       return;

@@ -1,5 +1,6 @@
 import { computed, type ComputedRef } from "vue";
 
+import { useToday } from "@/calendar/ui/use-today";
 import { useService } from "@/infrastructure/di";
 
 import { CycleService } from "../../cycle";
@@ -20,5 +21,6 @@ export function useCollidingJournals(): ComputedRef<JournalConfig[][]> {
     paths: useService(NotePathService),
     timeline: useService(TimelineService),
   };
-  return computed(() => findCollidingJournals(journalsVM.journals.value, services));
+  const today = useToday();
+  return computed(() => findCollidingJournals(journalsVM.journals.value, services, today.value));
 }
