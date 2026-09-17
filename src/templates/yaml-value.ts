@@ -151,23 +151,38 @@ function renderIndented(content: string, render: RenderToken, eol: LineEnding): 
   return out;
 }
 
+// A `<%* ... %>` Templater command can span several lines, and every line inside it is Templater's
+// to parse, not ours — escaping a continuation line would rewrite the command's own quotes. A line
+// stays open past its end when its last `<%` comes after its last `%>` (an unclosed open), or when
+// it was already open and carries no `%>` of its own to close it.
+function commandOpenAfter(content: string, wasOpen: boolean): boolean {
+  const lastOpen = content.lastIndexOf("<%");
+  const lastClose = content.lastIndexOf("%>");
+  if (lastOpen === -1) return wasOpen && lastClose === -1;
+  return lastOpen > lastClose;
+}
+
 /** Renders a template's frontmatter lines so every substituted value reads back as written. */
 export function renderFrontmatter(text: string, render: RenderToken, eol: LineEnding): string {
   let out = "";
   let blockIndent: number | undefined;
+  let commandOpen = false;
   for (const { content, ending } of linesOf(text)) {
+    // Templater runs after this and parses its own commands out of the line, so escaping a value
+    // on or inside one would rewrite the command's own quotes. A block scalar's indentation never
+    // carries into or out of a command span: the command owns every line it spans, unconditionally.
+    if (commandOpen || content.includes("<%")) {
+      out += renderTokens(tokenize(content), render) + ending;
+      blockIndent = undefined;
+      commandOpen = commandOpenAfter(content, commandOpen);
+      continue;
+    }
     const indent = INDENT_RE.exec(content)?.[0].length ?? 0;
     if (blockIndent !== undefined && (content.trim() === "" || indent > blockIndent)) {
       out += renderIndented(content, render, eol) + ending;
       continue;
     }
     blockIndent = undefined;
-    // Templater runs after this and parses its own commands out of the line, so escaping a value
-    // beside one would rewrite the command's own quotes.
-    if (content.includes("<%")) {
-      out += renderTokens(tokenize(content), render) + ending;
-      continue;
-    }
     const entry = ENTRY_RE.exec(content);
     if (entry === null) {
       out += renderTokens(tokenize(content), render) + ending;

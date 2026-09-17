@@ -211,6 +211,21 @@ describe("renderFrontmatter", () => {
       );
     });
 
+    it("leaves every line of a multi-line Templater command as renderString would", () => {
+      const frontmatter = '<%*\ntR += "mood: {{colon}}";\n%>\n';
+      expect(rendered(frontmatter)).toBe('<%*\ntR += "mood: rough: day";\n%>\n');
+    });
+
+    it("resumes escaping only after a multi-line command closes, not on its opening line", () => {
+      const frontmatter = '<%*\ntR += "mood: {{colon}}";\n%>\ntitle: {{colon}}\n';
+      expect(rendered(frontmatter)).toBe('<%*\ntR += "mood: rough: day";\n%>\ntitle: "rough: day"\n');
+    });
+
+    it("resumes escaping on the line after a command that opens and closes on one line", () => {
+      const frontmatter = "a: <% x %> {{colon}}\nb: {{colon}}\n";
+      expect(rendered(frontmatter)).toBe('a: <% x %> rough: day\nb: "rough: day"\n');
+    });
+
     it("leaves a value in key position as renderString would", () => {
       expect(rendered("{{plain}}: 1\n")).toBe("Daily: 1\n");
     });
