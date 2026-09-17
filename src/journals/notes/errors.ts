@@ -57,6 +57,26 @@ export class NotePathClaimedError extends JournalsError implements UserFacingFlo
   }
 }
 
+export class NotePathHeldByPeriodError extends JournalsError implements UserFacingFlowError {
+  override name = "NotePathHeldByPeriodError";
+
+  constructor(
+    readonly journalName: string,
+    readonly path: string,
+    readonly heldFor: AnchorString,
+  ) {
+    super(`Path ${path} derived for journal ${journalName} already holds its note for ${heldFor}`);
+  }
+
+  get userNotice(): string {
+    return m.journal_note_path_held_by_period_notice({
+      journalName: this.journalName,
+      path: this.path,
+      date: this.heldFor,
+    });
+  }
+}
+
 export class NoteletHoldsPathError extends JournalsError implements UserFacingFlowError {
   override name = "NoteletHoldsPathError";
 

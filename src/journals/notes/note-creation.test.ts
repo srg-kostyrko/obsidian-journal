@@ -12,9 +12,9 @@ import { testContainer, type TestHarness } from "@/testing";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { PromptsUnansweredError } from "../prompts/errors";
-import { buildNoteletType, fixedJournal } from "../testing";
+import { buildNoteletType, customJournal, fixedJournal } from "../testing";
 
-import { AnchorOccupiedError, EmptyNoteNameError, NotePathClaimedError } from "./errors";
+import { AnchorOccupiedError, EmptyNoteNameError, NotePathClaimedError, NotePathHeldByPeriodError } from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { SelfWriteGuard } from "./self-write-guard";
 
@@ -767,5 +767,108 @@ describe("a notelet at the derived period path", () => {
 
     expectOk(ensured);
     expect(ensured.value).toMatchObject({ created: false });
+  });
+});
+
+describe("a derived path this journal's note for another period already holds", () => {
+  const monthly = fixedJournal("monthly", { type: "month" }, { nameTemplate: "{{date:MMMM}}" });
+  const march2026: JournalMetadata = { journalName: "monthly", anchor: anchor("2026-03-01") };
+
+  async function monthlyHarness(overrides: Partial<JournalConfig> = {}): Promise<TestHarness> {
+    return testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { monthly: { ...monthly, ...overrides } } },
+    });
+  }
+
+  it("refuses rather than re-dating the note", async () => {
+    const harness = await monthlyHarness();
+    harness.host.putFile("March.md", "2025", { journal: "monthly", "journal-date": "2025-03-01" });
+
+    const ensured = await harness.resolve(NoteCreationService).ensureNote("monthly", march2026);
+
+    expect(ensured.kind === "err" && ensured.error).toBeInstanceOf(NotePathHeldByPeriodError);
+  });
+
+  it("leaves the other period's date on disk untouched", async () => {
+    const harness = await monthlyHarness();
+    harness.host.putFile("March.md", "2025", { journal: "monthly", "journal-date": "2025-03-01" });
+
+    await harness.resolve(NoteCreationService).ensureNote("monthly", march2026);
+
+    expect(harness.host.files.get("March.md")?.frontmatter).toMatchObject({ "journal-date": "2025-03-01" });
+  });
+
+  it("refuses a note the index holds for another period after its frontmatter claim was stripped", async () => {
+    const harness = await monthlyHarness();
+    harness.host.putFile("March.md", "2025");
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "monthly", anchor: anchor("2025-03-01"), path: "March.md" as VaultPath });
+
+    const ensured = await harness.resolve(NoteCreationService).ensureNote("monthly", march2026);
+
+    expect(ensured.kind === "err" && ensured.error).toBeInstanceOf(NotePathHeldByPeriodError);
+  });
+
+  it("refuses when a prompt in the note name leads to the other period's note", async () => {
+    const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+    const harness = await monthlyHarness({ nameTemplate: "{{date:MMMM}} {{mood}}", prompts: [mood] });
+    harness.host.putFile("March good.md", "2025", { journal: "monthly", "journal-date": "2025-03-01" });
+
+    const promise = harness.resolve(NoteCreationService).ensureNote("monthly", march2026);
+    await answerPrompt(harness, { mood: "good" });
+    const ensured = await promise;
+
+    expect(ensured.kind === "err" && ensured.error).toBeInstanceOf(NotePathHeldByPeriodError);
+    expect(harness.host.files.get("March good.md")?.frontmatter).toMatchObject({ "journal-date": "2025-03-01" });
+  });
+
+  it("still adopts this journal's note for the same period", async () => {
+    const harness = await monthlyHarness();
+    harness.host.putFile("March.md", "2026", { journal: "monthly", "journal-date": "2026-03-01" });
+
+    const ensured = await harness.resolve(NoteCreationService).ensureNote("monthly", march2026);
+
+    expectOk(ensured);
+    expect(ensured.value).toMatchObject({ path: "March.md", created: false });
+  });
+
+  // A date that is no period's start names no period, so it cannot say the note belongs
+  // elsewhere — this is the fallen-out-of-the-index note the adoption exists for.
+  it("still adopts this journal's note whose stored date is not a period start", async () => {
+    const harness = await monthlyHarness();
+    harness.host.putFile("March.md", "mangled", { journal: "monthly", "journal-date": "2026-03-15" });
+
+    const ensured = await harness.resolve(NoteCreationService).ensureNote("monthly", march2026);
+
+    expectOk(ensured);
+    expect(harness.host.files.get("March.md")?.frontmatter).toMatchObject({ "journal-date": "2026-03-01" });
+  });
+});
+
+// A custom-interval journal's stored date is not checked against its grid when the note is
+// parsed, so the refusal has to tell an interval start from a stray date itself.
+describe("a derived path a custom-interval journal's note for another interval already holds", () => {
+  const weekly = customJournal("weekly", "week", 1, "2026-03-02", { nameTemplate: "{{date:YYYY}}" });
+  const secondWeek: JournalMetadata = { journalName: "weekly", anchor: anchor("2026-03-09") };
+
+  it("refuses when the stored date starts another interval", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { weekly } } });
+    harness.host.putFile("2026.md", "", { journal: "weekly", "journal-date": "2026-03-02" });
+
+    const ensured = await harness.resolve(NoteCreationService).ensureNote("weekly", secondWeek);
+
+    expect(ensured.kind === "err" && ensured.error).toBeInstanceOf(NotePathHeldByPeriodError);
+  });
+
+  it("still adopts the note when the stored date starts no interval", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: { weekly } } });
+    harness.host.putFile("2026.md", "", { journal: "weekly", "journal-date": "2026-03-04" });
+
+    const ensured = await harness.resolve(NoteCreationService).ensureNote("weekly", secondWeek);
+
+    expectOk(ensured);
+    expect(harness.host.files.get("2026.md")?.frontmatter).toMatchObject({ "journal-date": "2026-03-09" });
   });
 });
