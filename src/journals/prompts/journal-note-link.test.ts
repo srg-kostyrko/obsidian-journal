@@ -9,6 +9,7 @@ import { testContainer, type TestHarness } from "@/testing";
 import { OutOfTimelineError } from "../errors";
 import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
+import { JournalsRepository } from "../repository";
 import { fixedJournal } from "../testing";
 
 import { JournalNoteLinkCancelledError, NamedByAnswersError } from "./errors";
@@ -103,6 +104,22 @@ describe("JournalNoteLinkPicker", () => {
     const picked = harness.resolve(JournalNoteLinkPicker).pick();
     await tick();
     harness.modals.lastOpen().cancel();
+    const result = await picked;
+
+    expectErr(result);
+    expect(result.error).toBeInstanceOf(JournalNoteLinkCancelledError);
+  });
+
+  it("cancels the pick when the journal's write configuration changes while the date picker is open", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: dailyIn("Daily") } },
+    });
+
+    const picked = harness.resolve(JournalNoteLinkPicker).pick();
+    await tick();
+    harness.resolve(JournalsRepository).update("daily", { write: { type: "week" } });
+    harness.modals.lastOpen().submit(DayPeriod.containing(date("2026-01-01")));
     const result = await picked;
 
     expectErr(result);

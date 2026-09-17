@@ -40,9 +40,21 @@ export class JournalNoteLinkPicker {
         .open(datePickerModal, { picking: pickingForWrite(config.write) })
         .mapErr(() => new JournalNoteLinkCancelledError());
 
+      // Re-read across the await: the picker's granularity came from the write configuration
+      // read before it opened, and a settings write landing while it was open (a sync merge, or
+      // any other write reaching JournalsRepository) can swap that configuration for one with a
+      // different granularity before the pick resolves — the same hazard RenameNoteletTypeFlow
+      // and DeleteNoteletTypeFlow re-read for. Compare by value, since the stored config is a
+      // reactive proxy a write can also just re-create, and treat a mismatch as a cancelled pick
+      // rather than resolving the period the user saw against a granularity they never chose.
+      const current = yield* this.#journals.get(journalName).okOrElse(() => new JournalNotFoundError(journalName));
+      if (JSON.stringify(current.write) !== JSON.stringify(config.write)) {
+        return yield* new Err(new JournalNoteLinkCancelledError());
+      }
+
       const path = yield* this.#paths.linkTargetForDate(journalName, period.anchor);
       // An unanswered name renders the placeholder, so the link would point at a note that can never exist.
-      if (this.#notes.find(path).isNone() && promptsInPath(config).length > 0) {
+      if (this.#notes.find(path).isNone() && promptsInPath(current).length > 0) {
         return yield* new Err(new NamedByAnswersError(journalName));
       }
       return this.#notes.linkTextFor(path);
