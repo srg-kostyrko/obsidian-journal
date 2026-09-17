@@ -168,21 +168,25 @@ export function renderFrontmatter(text: string, render: RenderToken, eol: LineEn
   let blockIndent: number | undefined;
   let commandOpen = false;
   for (const { content, ending } of linesOf(text)) {
-    // Templater runs after this and parses its own commands out of the line, so escaping a value
-    // on or inside one would rewrite the command's own quotes. A block scalar's indentation never
-    // carries into or out of a command span: the command owns every line it spans, unconditionally.
-    if (commandOpen || content.includes("<%")) {
-      out += renderTokens(tokenize(content), render) + ending;
-      blockIndent = undefined;
+    const indent = INDENT_RE.exec(content)?.[0].length ?? 0;
+    // A block-scalar body line is the author's literal text, `<%` included, and it keeps its own
+    // indentation regardless: it always renders through renderIndented and never ends the body,
+    // even while it also opens or closes a Templater command — only a line at or left of the
+    // body's own indentation does that (below). The command state still has to track a `<%`/`%>`
+    // on this line, so a command opened inside the body and closed after it still reads as open.
+    if (blockIndent !== undefined && (content.trim() === "" || indent > blockIndent)) {
+      out += renderIndented(content, render, eol) + ending;
       commandOpen = commandOpenAfter(content, commandOpen);
       continue;
     }
-    const indent = INDENT_RE.exec(content)?.[0].length ?? 0;
-    if (blockIndent !== undefined && (content.trim() === "" || indent > blockIndent)) {
-      out += renderIndented(content, render, eol) + ending;
+    blockIndent = undefined;
+    // Templater runs after this and parses its own commands out of the line, so escaping a value
+    // on or inside one would rewrite the command's own quotes.
+    if (commandOpen || content.includes("<%")) {
+      out += renderTokens(tokenize(content), render) + ending;
+      commandOpen = commandOpenAfter(content, commandOpen);
       continue;
     }
-    blockIndent = undefined;
     const entry = ENTRY_RE.exec(content);
     if (entry === null) {
       out += renderTokens(tokenize(content), render) + ending;

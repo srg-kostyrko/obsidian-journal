@@ -226,6 +226,29 @@ describe("renderFrontmatter", () => {
       expect(rendered(frontmatter)).toBe('a: <% x %> rough: day\nb: "rough: day"\n');
     });
 
+    it("keeps a block-scalar continuation indented when its line also carries a self-contained command", () => {
+      const frontmatter = "body: |\n  start <% x %> {{answer}}\nx: 1\n";
+      expect(rendered(frontmatter)).toBe("body: |\n  start <% x %> a\n  b\n\n  c\nx: 1\n");
+      expect(read(frontmatter)).toEqual({ body: "start <% x %> a\nb\n\nc\n", x: 1 });
+    });
+
+    it("keeps escaping off a plain block-scalar line that follows a self-contained command line", () => {
+      const frontmatter = "body: |\n  <% tp.date.now() %>\n  mood: {{colon}}\n";
+      expect(rendered(frontmatter)).toBe("body: |\n  <% tp.date.now() %>\n  mood: rough: day\n");
+      expect(read(frontmatter)).toEqual({ body: "<% tp.date.now() %>\nmood: rough: day\n" });
+    });
+
+    it("indents a multi-line value on a block-scalar line that follows a self-contained command line", () => {
+      const frontmatter = "body: |\n  <% tp.date.now() %>\n  {{answer}}\n";
+      expect(rendered(frontmatter)).toBe("body: |\n  <% tp.date.now() %>\n  a\n  b\n\n  c\n");
+      expect(read(frontmatter)).toEqual({ body: "<% tp.date.now() %>\na\nb\n\nc\n" });
+    });
+
+    it("keeps a command open past the block-scalar body it opened in, onto a following top-level line", () => {
+      const frontmatter = "body: |\n  <%*\ntitle: {{colon}}\n";
+      expect(rendered(frontmatter)).toBe("body: |\n  <%*\ntitle: rough: day\n");
+    });
+
     it("leaves a value in key position as renderString would", () => {
       expect(rendered("{{plain}}: 1\n")).toBe("Daily: 1\n");
     });
