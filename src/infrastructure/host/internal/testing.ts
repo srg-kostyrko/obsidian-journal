@@ -269,7 +269,7 @@ export function createFakeHost(): FakeHost {
       return folderObjects.get(path === "/" ? "" : path) ?? null;
     },
     getMarkdownFiles(): TFile[] {
-      return [...fileObjects.values()];
+      return [...fileObjects.values()].filter((file) => file.extension === "md");
     },
     getFiles(): TFile[] {
       return [...fileObjects.values()];

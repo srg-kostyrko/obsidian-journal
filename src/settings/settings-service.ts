@@ -424,10 +424,11 @@ function repairCollectionEntry<TItem extends AnySchema>(
   if (parsed.success) return { value: parsed.output, fields };
   if (partiallyRepaired.size === 0) return undefined;
 
-  // A repair that only touched one entry inside a nested field can still fail a check spanning
-  // the whole item (a nested default colliding with a sibling field, say). Retry with the old
-  // whole-field reset for every field a nested repair touched, and only give up if that also
-  // fails — never widen the loss past what the pre-nested-repair code discarded.
+  // A repair that only touched one entry inside a nested field, or only dropped a few items out
+  // of a list field, can still fail a check spanning the whole item (a nested default colliding
+  // with a sibling field, or a list that is still invalid once the dropped items are gone, say).
+  // Retry with the old whole-field reset for every field either mechanism touched, and only give
+  // up if that also fails — never widen the loss past what the pre-nested-repair code discarded.
   for (const field of partiallyRepaired) candidate[field] = defaults[field];
   const retryFields = [...plain, ...nested.keys(), ...droppedItems.keys()];
   const retried = v.safeParse(definition.itemSchema, candidate);
