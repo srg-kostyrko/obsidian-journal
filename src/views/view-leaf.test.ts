@@ -134,13 +134,47 @@ describe("JournalViewLeaf", () => {
       expect(harness.host.workspace.saveLayoutCalls).toBe(before + 1);
     });
 
-    it("replaces full state on each call (keys absent from incoming state are dropped)", async () => {
+    it("drops a shelf absent from incoming state", async () => {
       const { leafInstance } = await buildLeaf(buildView(VIEW_A));
+      await leafInstance.setState({ shelf: "A" }, {});
+      await leafInstance.setState({}, {});
+      const state = leafInstance.getState() as { shelf?: string | null };
+      expect(state.shelf).toBeUndefined();
+    });
+
+    it("keeps the date it already holds when incoming state carries none", async () => {
+      const { leafInstance } = await buildLeaf(buildView(VIEW_A, { rememberDate: true }));
       await leafInstance.setState({ refDate: "2026-06-01", shelf: "A" }, {});
       await leafInstance.setState({ shelf: "B" }, {});
       const state = leafInstance.getState() as { refDate?: AnchorString; shelf?: string | null };
-      expect(state.refDate).toBeUndefined();
+      expect(state.refDate).toBe("2026-06-01");
       expect(state.shelf).toBe("B");
+    });
+
+    describe("on a view opened while a journal note is active", () => {
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      // Obsidian's setViewState mounts the view and only then hands it the state, so the
+      // mount-time follow has already written refDate by the time setState runs. The note opens
+      // ahead of onOpen on purpose here — it is the already-active case.
+      it("keeps the followed date through the state Obsidian hands over after mounting", async () => {
+        vi.useFakeTimers({ toFake: ["Date"] });
+        vi.setSystemTime(new Date(2026, 5, 15, 12, 0, 0));
+        const { harness, leaf, leafInstance, probe } = await buildFollowingView();
+        openDailyNote(harness);
+
+        try {
+          await leaf.onOpen();
+          await leafInstance.setState({}, {});
+
+          expect(probe.context?.refDate.value).toBe(DAILY_ANCHOR);
+          expect(probe.context?.refDateOrigin.value).toBe("follow");
+        } finally {
+          await leaf.onClose();
+        }
+      });
     });
   });
 

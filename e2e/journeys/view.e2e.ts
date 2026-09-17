@@ -794,6 +794,30 @@ describe("calendar view", () => {
       );
     });
 
+    // Obsidian mounts a view before handing it its state, so the ribbon's setViewState has to
+    // run against a closed view for the follow to race the state write.
+    it("opens on the month of a note that was already active", async () => {
+      await browser.executeObsidian(({ app }) => {
+        app.workspace.detachLeavesOfType("journal-view:b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c");
+      });
+      const base = new Date(`${todayAnchor()}T00:00:00Z`);
+      base.setUTCDate(base.getUTCDate() + 120);
+      const far = base.toISOString().slice(0, 10);
+      const path = `day/${far}.md`;
+      await seedNote(path, `---\njournal: daily\njournal-date: ${far}\n---\n`);
+      await waitForJournalFrontmatter(path, { journal: "daily", date: far });
+      await openNote(path);
+      await waitForActiveNote(path);
+
+      await openCalendarView();
+
+      await waitForState(
+        headerMonthAnchor,
+        (anchor) => anchor === monthStartOf(far),
+        "calendar opened after the note did not move to the note's month",
+      );
+    });
+
     it("names the same month in the toolbar as the grid heading", async () => {
       await openCalendarView();
       const spillover = await spilloverDayAnchor();
