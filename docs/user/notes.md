@@ -91,7 +91,8 @@ The note is connected when all of these hold:
 
 - its whole path — folder and name — matches the journal's folder and name template;
 - the date it reads falls inside that journal's timeline;
-- exactly one journal matches. When two journals could both own the path, the note is left alone;
+- exactly one journal matches. When two journals could both own the path, the note is left alone —
+  the [vault check](/troubleshooting#vault-check) lists it and lets you pick the journal;
 - it is not connected already, and its properties do not name a journal that no longer exists.
   Such a note keeps its old claim so the journal's notes can be recovered.
 

@@ -2263,6 +2263,7 @@
   "maintenance_check_group_duplicate": "{journal}——{anchor} 有两篇笔记",
   "maintenance_check_group_orphaned": "{journal}——此日记已不存在",
   "maintenance_check_group_orphaned_type": "{journal}——未知子笔记类型",
+  "maintenance_check_group_ambiguous": "{journals}——多个日记与这些笔记匹配",
   "maintenance_detail_moved": "{path}：{from} → {to}",
   "maintenance_detail_no_usable_date": "{path}：没有可读取的日期。文件名显示为 {to}。",
   "maintenance_detail_path_overrides_date": "{path}：文件名显示为 {pathAnchor}，笔记内容显示为 {dateAnchor}。请打开笔记并决定。",
@@ -2272,6 +2273,7 @@
   "maintenance_detail_duplicate": "{path}——{size} 字节，修改于 {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}：此日记中已不存在名为“{typeName}”的子笔记类型。",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "由于另一篇笔记已声明相同的周期，此修复已被撤回。",
   "maintenance_reason_path_and_date_disagree": "由于文件名与笔记内容不一致，未自动进行任何更改。",
   "maintenance_reason_path_not_invertible": "无法自动修复此项。",
@@ -2279,6 +2281,8 @@
   "maintenance_duplicate_keep": "保留此项",
   "maintenance_orphan_clear": "移除日记键",
   "maintenance_orphan_reassign_hint": "要将这些笔记关联到另一个日记，请使用“将笔记连接到日记”命令。",
+  "maintenance_ambiguous_connect": "连接到 {journal}",
+  "maintenance_ambiguous_occupied": "{journals} 中已有另一篇笔记占用此周期。",
   "maintenance_repair_done": "已修复 {repaired} 篇笔记。{failed} 篇无法修复。",
   "maintenance_unreadable_row": "{path}：{message}"
 }

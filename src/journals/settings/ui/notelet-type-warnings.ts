@@ -23,10 +23,9 @@ export function hasNoWithinPeriodVariable(type: Pick<NoteletType, "nameTemplate"
 }
 
 /**
- * True when the type's own note path resolves onto the journal's period-note path, using the
- * same structural key `findCollidingJournals` compares: the name template with
- * `{{journal_name}}` substituted, plus the folder. A type has no `dateFormat` of its own — it
- * inherits the journal's — so that component of the key always matches and is not compared.
+ * True when the type's own note path resolves onto the journal's period-note path, compared
+ * structurally: the name template with `{{journal_name}}` substituted, plus the folder. A type
+ * has no `dateFormat` of its own — it inherits the journal's — so it is not compared.
  *
  * Advisory only: `NoteletPathService.availablePathFor` already reserves the journal's derived
  * period-note path unconditionally, so a match here is guidance, not a live path conflict.

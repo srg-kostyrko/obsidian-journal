@@ -2282,6 +2282,7 @@
   "maintenance_check_group_duplicate": "{journal} – zwei Notizen für {anchor}",
   "maintenance_check_group_orphaned": "{journal} – dieses Journal existiert nicht mehr",
   "maintenance_check_group_orphaned_type": "{journal} – unbekannter Kurznotiz-Typ",
+  "maintenance_check_group_ambiguous": "{journals} – mehr als ein Journal passt zu diesen Notizen",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: kein lesbares Datum. Der Dateiname besagt {to}.",
   "maintenance_detail_path_overrides_date": "{path}: der Dateiname besagt {pathAnchor}, die Notiz besagt {dateAnchor}. Öffne die Notiz und entscheide.",
@@ -2291,6 +2292,7 @@
   "maintenance_detail_duplicate": "{path} – {size} Bytes, geändert {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}: Es gibt in diesem Journal keinen Kurznotiz-Typ namens „{typeName}“ mehr.",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "Diese Reparatur wurde zurückgezogen, weil eine andere Notiz bereits denselben Zeitraum beansprucht.",
   "maintenance_reason_path_and_date_disagree": "Es wurde nichts automatisch geändert, da der Dateiname und die Notiz nicht übereinstimmen.",
   "maintenance_reason_path_not_invertible": "Dies konnte nicht automatisch repariert werden.",
@@ -2298,6 +2300,8 @@
   "maintenance_duplicate_keep": "Diese behalten",
   "maintenance_orphan_clear": "Journal-Schlüssel entfernen",
   "maintenance_orphan_reassign_hint": "Um diese Notizen einem anderen Journal zuzuordnen, verwende den Befehl „Notiz mit einem Journal verknüpfen“.",
+  "maintenance_ambiguous_connect": "Mit {journal} verknüpfen",
+  "maintenance_ambiguous_occupied": "In {journals} belegt bereits eine andere Notiz diesen Zeitraum.",
   "maintenance_repair_done": "{repaired} Notizen repariert. {failed} konnten nicht repariert werden.",
   "maintenance_unreadable_row": "{path}: {message}"
 }

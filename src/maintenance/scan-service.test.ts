@@ -16,9 +16,9 @@ import { gateCollisions, orphanFindings, pendingOldIdsOf, ScanService } from "./
 import { ScannedNoteResolver } from "./scanned-note";
 import { buildScannedNote } from "./testing";
 
-import type { Finding } from "./findings";
+import type { ClaimFinding } from "./findings";
 
-function rewrite(path: string, to: string): Finding {
+function rewrite(path: string, to: string): ClaimFinding {
   return {
     check: "rejected-anchor",
     path: path as VaultPath,
@@ -149,7 +149,7 @@ describe("gateCollisions", () => {
         canonicalAnchor: anchor("2026-01-20"),
       }),
     ];
-    const undecidable: Finding = {
+    const undecidable: ClaimFinding = {
       check: "rejected-anchor",
       path: "unplaced.md" as VaultPath,
       journalName: "weekly",
@@ -342,7 +342,7 @@ describe("ScanService", () => {
     const report = await service.scan();
 
     expect(report.findings.filter((f) => f.check === "orphaned-claim")).toHaveLength(1);
-    expect(report.findings.at(0)?.journalName).toBe("gone");
+    expect(report.findings.at(0)).toMatchObject({ journalName: "gone" });
   });
 
   it("does not report a period note as a duplicate when notelets share its anchor", async () => {
@@ -383,5 +383,58 @@ describe("ScanService", () => {
     expect(report.analyzed).toBe(1);
     expect(report.unparsed).toBe(0);
     expect(report.unreadable).toHaveLength(0);
+  });
+
+  describe("a note several journals would adopt", () => {
+    const TWINS = {
+      daily: fixedJournal("daily", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}" }),
+      diary: fixedJournal("diary", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" }),
+    };
+
+    it("reports it with every journal that could take it", async () => {
+      const { service, index, host } = await buildScan(TWINS);
+      host.putFile("2026-01-12.md", "", {});
+      index.markReady();
+
+      const report = await service.scan();
+
+      expect(report.findings).toEqual([
+        {
+          check: "ambiguous-note",
+          path: "2026-01-12.md",
+          candidates: [
+            { journalName: "daily", anchor: anchor("2026-01-12"), occupied: false },
+            { journalName: "diary", anchor: anchor("2026-01-12"), occupied: false },
+          ],
+          repair: { kind: "undecidable", reason: "needs-choice" },
+        },
+      ]);
+    });
+
+    it("marks a journal whose period already has a note", async () => {
+      const { service, index, host } = await buildScan(TWINS);
+      host.putFile("Elsewhere.md", "", { journal: "daily", "journal-date": "2026-01-12" });
+      index.register({ journalName: "daily", anchor: anchor("2026-01-12"), path: "Elsewhere.md" as VaultPath });
+      host.putFile("2026-01-12.md", "", {});
+      index.markReady();
+
+      const report = await service.scan();
+
+      const finding = report.findings.find((f) => f.check === "ambiguous-note");
+      expect(finding?.check === "ambiguous-note" && finding.candidates).toEqual([
+        { journalName: "daily", anchor: anchor("2026-01-12"), occupied: true },
+        { journalName: "diary", anchor: anchor("2026-01-12"), occupied: false },
+      ]);
+    });
+
+    it("does not report an unclaimed note only one journal would adopt", async () => {
+      const { service, index, host } = await buildScan({ daily: TWINS.daily });
+      host.putFile("2026-01-12.md", "", {});
+      index.markReady();
+
+      const report = await service.scan();
+
+      expect(report.findings).toEqual([]);
+    });
   });
 });

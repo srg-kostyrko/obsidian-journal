@@ -515,4 +515,51 @@ describe("AutoAttachService — a note Obsidian created from a link carrying the
 
     expect(harness.resolve(SelfWriteGuard).suppresses("2026-05-19 good.md" as VaultPath)).toBe(false);
   });
+
+  describe("two journals that both read a path back", () => {
+    it("leaves a note both journals would adopt unclaimed", async () => {
+      const harness = await createIn(
+        {
+          daily: fixedJournal(
+            "daily",
+            { type: "day" },
+            { timeline: TIMELINE_OPEN, nameTemplate: "{{date:YYYY-MM-DD}}" },
+          ),
+          diary: fixedJournal(
+            "diary",
+            { type: "day" },
+            { timeline: TIMELINE_OPEN, nameTemplate: "{{date:YYYY-MM-DD}}", dateFormat: "DD.MM.YYYY" },
+          ),
+        },
+        "2026-05-19.md",
+      );
+
+      expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toEqual({});
+    });
+
+    it("attaches to the one journal whose timeline covers the date", async () => {
+      const harness = await createIn(
+        {
+          daily: fixedJournal("daily", { type: "day" }, { timeline: TIMELINE_OPEN }),
+          future: fixedJournal(
+            "future",
+            { type: "day" },
+            { timeline: { start: anchor("2030-01-01"), end: { kind: "never" } } },
+          ),
+        },
+        "2026-05-19.md",
+      );
+
+      expect(harness.host.files.get("2026-05-19.md")?.frontmatter).toMatchObject({ journal: "daily" });
+    });
+  });
 });
+
+async function createIn(journals: Record<string, JournalConfig>, path: string): Promise<TestHarness> {
+  const harness = await testContainer({ modules: [journalsCoreModule], data: { journals } });
+  await harness.resolve(AutoAttachService).initialize();
+  await harness.resolve(NotesService).create(path as VaultPath, "");
+  harness.host.emitMetadata(path);
+  await settle();
+  return harness;
+}

@@ -1,13 +1,15 @@
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 
-export type CheckKey = "rejected-anchor" | "stale-range" | "duplicate-anchor" | "orphaned-claim" | "orphaned-type";
+export type CheckKey =
+  "rejected-anchor" | "stale-range" | "duplicate-anchor" | "orphaned-claim" | "orphaned-type" | "ambiguous-note";
 
 export type UndecidableReason = "path-not-invertible" | "path-and-date-disagree" | "anchor-contested" | "needs-choice";
 
 export type Repair =
   | { kind: "rewrite"; anchor: AnchorString }
   | { kind: "strip-claim" }
+  | { kind: "attach"; anchor: AnchorString }
   | { kind: "undecidable"; reason: UndecidableReason };
 
 // Data, not prose: only the UI can localize, and only the UI knows whether it is describing
@@ -24,8 +26,15 @@ export type FindingDetail =
   | { kind: "orphaned" }
   | { kind: "orphaned-type"; typeName: string };
 
-export interface Finding {
-  readonly check: CheckKey;
+export interface AttachCandidate {
+  readonly journalName: string;
+  readonly anchor: AnchorString;
+  // Another note already holds this journal's period, so attaching here would only be refused.
+  readonly occupied: boolean;
+}
+
+export interface ClaimFinding {
+  readonly check: Exclude<CheckKey, "ambiguous-note">;
   readonly path: VaultPath;
   readonly journalName: string;
   readonly detail: FindingDetail;
@@ -33,6 +42,17 @@ export interface Finding {
   // Presence routes a rewrite repair to the notelet mutator instead of the period one.
   readonly noteletTypeName?: string;
 }
+
+// A note that claims nothing but whose path several journals read back as theirs. It has no
+// journal to file it under — which one it belongs to is the question it asks.
+export interface AmbiguousNoteFinding {
+  readonly check: "ambiguous-note";
+  readonly path: VaultPath;
+  readonly candidates: readonly AttachCandidate[];
+  readonly repair: { kind: "undecidable"; reason: "needs-choice" };
+}
+
+export type Finding = ClaimFinding | AmbiguousNoteFinding;
 
 // What the user chose to do, which is not always what the finding suggested: a duplicate group
 // suggests `undecidable` and yields strip-claims once the user picks a keeper.

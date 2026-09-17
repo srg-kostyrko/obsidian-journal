@@ -5,9 +5,12 @@ import { NoteMetadataService, NotesService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { FRONTMATTER_NAME_KEY } from "@/journals/config";
 import { CycleService } from "@/journals/cycle";
+import { JournalsIndex } from "@/journals/journals-index";
 import { NotePathService } from "@/journals/notes/note-path";
 import type { PathInverter } from "@/journals/notes/note-path";
 import { JournalsRepository } from "@/journals/repository";
+
+import type { AttachCandidate } from "./findings";
 
 export interface ScannedNote {
   readonly path: VaultPath;
@@ -33,7 +36,9 @@ export interface ScannedNote {
 
 export type ResolveOutcome =
   | { kind: "resolved"; note: ScannedNote }
-  | { kind: "not-a-claim" }
+  // Candidates are every journal auto-attach would have adopted the note into — at most one of
+  // them is ever acted on, so more than one is a note auto-attach refused.
+  | { kind: "not-a-claim"; candidates: readonly AttachCandidate[] }
   | { kind: "unparsed" }
   | { kind: "custom" }
   | { kind: "unreadable"; message: string };
@@ -44,6 +49,7 @@ export class ScannedNoteResolver {
   readonly #path = inject(NotePathService);
   readonly #metadata = inject(NoteMetadataService);
   readonly #notes = inject(NotesService);
+  readonly #index = inject(JournalsIndex);
   readonly #inverters = new Map<string, PathInverter | undefined>();
 
   // One tokenize + one parse context per journal, not per note: on a vault where every note is
@@ -55,12 +61,22 @@ export class ScannedNoteResolver {
     return prepared;
   }
 
+  #candidatesFor(path: VaultPath): AttachCandidate[] {
+    return this.#path
+      .attachCandidatesFor(path, (name) => this.#inverterFor(name))
+      .map(({ journalName, metadata }) => ({
+        journalName,
+        anchor: metadata.anchor,
+        occupied: this.#index.entryByAnchor(journalName, metadata.anchor).isSome(),
+      }));
+  }
+
   #resolve(path: VaultPath): ResolveOutcome {
     const metadata = this.#metadata.get(path);
     if (metadata.isNone()) return { kind: "unparsed" };
     const properties = metadata.value.properties;
     const claimed = properties[FRONTMATTER_NAME_KEY];
-    if (typeof claimed !== "string") return { kind: "not-a-claim" };
+    if (typeof claimed !== "string") return { kind: "not-a-claim", candidates: this.#candidatesFor(path) };
 
     const found = this.#notes.find(path);
     const size = found.isSome() ? found.value.size : 0;

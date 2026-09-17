@@ -2280,6 +2280,7 @@
   "maintenance_check_group_duplicate": "{journal} — deux notes pour {anchor}",
   "maintenance_check_group_orphaned": "{journal} — ce journal n'existe plus",
   "maintenance_check_group_orphaned_type": "{journal} — type de note brève inconnu",
+  "maintenance_check_group_ambiguous": "{journals} — plusieurs journaux correspondent à ces notes",
   "maintenance_detail_moved": "{path} : {from} → {to}",
   "maintenance_detail_no_usable_date": "{path} : aucune date lisible. Le nom du fichier indique {to}.",
   "maintenance_detail_path_overrides_date": "{path} : le nom du fichier indique {pathAnchor}, la note indique {dateAnchor}. Ouvrez la note et décidez.",
@@ -2289,6 +2290,7 @@
   "maintenance_detail_duplicate": "{path} — {size} octets, modifié {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path} : il n'existe plus de type de note brève appelé « {typeName} » dans ce journal.",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "Cette réparation a été annulée car une autre note revendique déjà la même période.",
   "maintenance_reason_path_and_date_disagree": "Rien n'a été modifié automatiquement car le nom du fichier et la note ne concordent pas.",
   "maintenance_reason_path_not_invertible": "Cela n'a pas pu être réparé automatiquement.",
@@ -2296,6 +2298,8 @@
   "maintenance_duplicate_keep": "Conserver celle-ci",
   "maintenance_orphan_clear": "Supprimer les clés de journal",
   "maintenance_orphan_reassign_hint": "Pour associer ces notes à un autre journal, utilisez la commande « Connecter la note à un journal ».",
+  "maintenance_ambiguous_connect": "Connecter à {journal}",
+  "maintenance_ambiguous_occupied": "Une autre note occupe déjà cette période dans {journals}.",
   "maintenance_repair_done": "{repaired} notes réparées. {failed} n'ont pas pu être réparées.",
   "maintenance_unreadable_row": "{path} : {message}"
 }

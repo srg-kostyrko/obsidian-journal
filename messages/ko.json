@@ -2266,6 +2266,7 @@
   "maintenance_check_group_duplicate": "{journal}: {anchor}에 대한 노트 2개",
   "maintenance_check_group_orphaned": "{journal}: 이 저널은 더 이상 존재하지 않습니다",
   "maintenance_check_group_orphaned_type": "{journal}: 알 수 없는 서브노트 유형",
+  "maintenance_check_group_ambiguous": "{journals}: 여러 저널이 이 노트와 일치합니다",
   "maintenance_detail_moved": "{path}: {from} → {to}",
   "maintenance_detail_no_usable_date": "{path}: 읽을 수 있는 날짜가 없습니다. 파일 이름은 {to}을(를) 나타냅니다.",
   "maintenance_detail_path_overrides_date": "{path}: 파일 이름은 {pathAnchor}, 노트는 {dateAnchor}를 나타냅니다. 노트를 열어 결정하세요.",
@@ -2275,6 +2276,7 @@
   "maintenance_detail_duplicate": "{path}: {size} 바이트, 수정됨 {mtime}",
   "maintenance_detail_orphaned": "{path}",
   "maintenance_detail_orphaned_type": "{path}: \"{typeName}\"라는 이름의 서브노트 유형이 이 저널에 더 이상 없습니다.",
+  "maintenance_detail_ambiguous": "{path}",
   "maintenance_reason_anchor_contested": "다른 노트가 이미 같은 기간을 사용하고 있어 이 복구가 철회되었습니다.",
   "maintenance_reason_path_and_date_disagree": "파일 이름과 노트 내용이 일치하지 않아 자동으로 변경되지 않았습니다.",
   "maintenance_reason_path_not_invertible": "자동으로 복구할 수 없습니다.",
@@ -2282,6 +2284,8 @@
   "maintenance_duplicate_keep": "이것 유지",
   "maintenance_orphan_clear": "저널 키 제거",
   "maintenance_orphan_reassign_hint": "이 노트를 다른 저널에 연결하려면 \"노트를 저널에 연결\" 명령을 사용하세요.",
+  "maintenance_ambiguous_connect": "{journal}에 연결",
+  "maintenance_ambiguous_occupied": "{journals}에서는 다른 노트가 이미 이 기간을 사용하고 있습니다.",
   "maintenance_repair_done": "{repaired}개의 노트를 복구했습니다. {failed}개는 복구할 수 없었습니다.",
   "maintenance_unreadable_row": "{path}: {message}"
 }

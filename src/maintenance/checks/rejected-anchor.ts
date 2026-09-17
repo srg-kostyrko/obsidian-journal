@@ -1,9 +1,9 @@
-import type { Finding } from "../findings";
+import type { ClaimFinding } from "../findings";
 import type { ScannedNote } from "../scanned-note";
 
 // The path wins whenever it is applied, and the reason is worth keeping: nothing in the damage
 // path that strands these notes renames a file, so the path is the one artifact it never touched.
-export function checkRejectedAnchor(note: ScannedNote): Finding | undefined {
+export function checkRejectedAnchor(note: ScannedNote): ClaimFinding | undefined {
   if (!note.journalExists) return undefined;
 
   const base = { check: "rejected-anchor", path: note.path, journalName: note.claimedJournal } as const;

@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import { computed, onMounted, ref } from "vue";
 
 import { localMoment } from "@/calendar";
-import { m } from "@/i18n";
+import { formatConjunction, m } from "@/i18n";
 import ImportFromPluginsSection from "@/import/ui/ImportFromPluginsSection.vue";
 import { useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
@@ -22,7 +22,15 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import { RepairService } from "../repair-service";
 import { ScanService } from "../scan-service";
 
-import type { CheckKey, Finding, RepairAction, ScanReport, UndecidableReason } from "../findings";
+import type {
+  AmbiguousNoteFinding,
+  AttachCandidate,
+  ClaimFinding,
+  Finding,
+  RepairAction,
+  ScanReport,
+  UndecidableReason,
+} from "../findings";
 
 const { nav } = defineProps<{ nav: SubpageNav }>();
 
@@ -41,11 +49,15 @@ const report = ref<ScanReport | undefined>(undefined);
 const scanning = ref(false);
 const indexReady = ref(index.isReady());
 
-const safeActions = computed<RepairAction[]>(() =>
-  (report.value?.findings ?? [])
-    .filter((finding) => finding.repair.kind === "rewrite")
-    .map((finding) => ({ path: finding.path, journalName: finding.journalName, repair: finding.repair })),
-);
+function rewritesOf(findings: readonly Finding[]): RepairAction[] {
+  return findings.flatMap((finding) =>
+    finding.check !== "ambiguous-note" && finding.repair.kind === "rewrite"
+      ? [{ path: finding.path, journalName: finding.journalName, repair: finding.repair }]
+      : [],
+  );
+}
+
+const safeActions = computed<RepairAction[]>(() => rewritesOf(report.value?.findings ?? []));
 
 // Findings are computed against the config live when the scan ran; a restore invalidates them,
 // and the page says so above (maintenance_check_pending_migration / config_note).
@@ -57,17 +69,19 @@ const fixAllDisabled = computed(
   () => fixDisabled.value || safeActions.value.length === 0 || (report.value?.unreadable.length ?? 0) > 0,
 );
 
-interface FindingGroup {
-  readonly key: string;
-  readonly check: CheckKey;
-  readonly journalName: string;
-  readonly findings: Finding[];
-}
+type FindingGroup =
+  | { readonly key: string; readonly kind: "claim"; readonly head: ClaimFinding; readonly findings: ClaimFinding[] }
+  | {
+      readonly key: string;
+      readonly kind: "ambiguous";
+      readonly head: AmbiguousNoteFinding;
+      readonly findings: AmbiguousNoteFinding[];
+    };
 
 // A journal can carry two independent duplicate-anchor collisions at once (different anchors,
 // different note pairs), so the anchor must be part of the key — check + journalName alone would
 // merge them into one group, and keepOnly would then strip claims from notes the user never chose.
-function groupKeyOf(finding: Finding): string {
+function claimKeyOf(finding: ClaimFinding): string {
   const anchorPart = finding.detail.kind === "duplicate" ? finding.detail.anchor : "";
   return `${finding.check}::${finding.journalName}::${anchorPart}`;
 }
@@ -76,10 +90,17 @@ const groups = computed<FindingGroup[]>(() => {
   const byKey = new Map<string, FindingGroup>();
   const findings = report.value?.findings ?? [];
   for (const finding of findings) {
-    const key = groupKeyOf(finding);
+    if (finding.check === "ambiguous-note") {
+      const key = JSON.stringify([finding.check, ...finding.candidates.map((candidate) => candidate.journalName)]);
+      const bucket = byKey.get(key);
+      if (bucket?.kind === "ambiguous") bucket.findings.push(finding);
+      else byKey.set(key, { key, kind: "ambiguous", head: finding, findings: [finding] });
+      continue;
+    }
+    const key = claimKeyOf(finding);
     const bucket = byKey.get(key);
-    if (bucket) bucket.findings.push(finding);
-    else byKey.set(key, { key, check: finding.check, journalName: finding.journalName, findings: [finding] });
+    if (bucket?.kind === "claim") bucket.findings.push(finding);
+    else byKey.set(key, { key, kind: "claim", head: finding, findings: [finding] });
   }
   return [...byKey.values()];
 });
@@ -121,34 +142,37 @@ async function applyAndRescan(actions: readonly RepairAction[]): Promise<void> {
 }
 
 function groupTitle(group: FindingGroup): string {
-  switch (group.check) {
+  if (group.kind === "ambiguous") {
+    const names = group.head.candidates.map((candidate) => candidate.journalName);
+    return m.maintenance_check_group_ambiguous({ journals: formatConjunction(names) });
+  }
+  const { journalName: journal, detail } = group.head;
+  switch (group.head.check) {
     case "rejected-anchor": {
-      return m.maintenance_check_group_rejected({ journal: group.journalName });
+      return m.maintenance_check_group_rejected({ journal });
     }
     case "stale-range": {
-      return m.maintenance_check_group_stale({ journal: group.journalName });
+      return m.maintenance_check_group_stale({ journal });
     }
     case "duplicate-anchor": {
-      const detail = group.findings.at(0)?.detail;
-      const anchor = detail?.kind === "duplicate" ? detail.anchor : "";
-      return m.maintenance_check_group_duplicate({ journal: group.journalName, anchor });
+      const anchor = detail.kind === "duplicate" ? detail.anchor : "";
+      return m.maintenance_check_group_duplicate({ journal, anchor });
     }
     case "orphaned-claim": {
-      return m.maintenance_check_group_orphaned({ journal: group.journalName });
+      return m.maintenance_check_group_orphaned({ journal });
     }
     case "orphaned-type": {
-      return m.maintenance_check_group_orphaned_type({ journal: group.journalName });
+      return m.maintenance_check_group_orphaned_type({ journal });
     }
   }
 }
 
 function groupActions(group: FindingGroup): RepairAction[] {
-  return group.findings
-    .filter((finding) => finding.repair.kind === "rewrite")
-    .map((finding) => ({ path: finding.path, journalName: finding.journalName, repair: finding.repair }));
+  return rewritesOf(group.findings);
 }
 
 function detailText(finding: Finding): string {
+  if (finding.check === "ambiguous-note") return m.maintenance_detail_ambiguous({ path: finding.path });
   const { path, detail } = finding;
   switch (detail.kind) {
     case "corroborated":
@@ -233,13 +257,34 @@ function setExpanded(key: string, expanded: boolean | undefined): void {
   collapsed.value = next;
 }
 
-function stripOf(finding: Finding): RepairAction {
+function stripOf(finding: ClaimFinding): RepairAction {
   return { path: finding.path, journalName: finding.journalName, repair: { kind: "strip-claim" } };
 }
 
 async function keepOnly(group: FindingGroup, keeper: Finding): Promise<void> {
+  if (group.kind !== "claim") return;
   const actions = group.findings.filter((finding) => finding.path !== keeper.path).map(stripOf);
   await applyAndRescan(actions);
+}
+
+function attachableOf(finding: Finding): AttachCandidate[] {
+  return finding.check === "ambiguous-note" ? finding.candidates.filter((candidate) => !candidate.occupied) : [];
+}
+
+// An occupied candidate gets no button, and without this line nothing would say why.
+function occupiedText(finding: Finding): string | undefined {
+  if (finding.check !== "ambiguous-note") return undefined;
+  const occupied = finding.candidates.filter((candidate) => candidate.occupied);
+  if (occupied.length === 0) return undefined;
+  return m.maintenance_ambiguous_occupied({
+    journals: formatConjunction(occupied.map((candidate) => candidate.journalName)),
+  });
+}
+
+async function attachTo(finding: Finding, candidate: AttachCandidate): Promise<void> {
+  await applyAndRescan([
+    { path: finding.path, journalName: candidate.journalName, repair: { kind: "attach", anchor: candidate.anchor } },
+  ]);
 }
 
 async function restore(info: SnapshotInfo): Promise<void> {
@@ -338,19 +383,32 @@ onMounted(runScan);
           <div class="maintenance-finding-body">
             <div class="maintenance-finding-detail">{{ detailText(finding) }}</div>
             <div v-if="rowReason(finding)" class="maintenance-finding-reason">{{ rowReason(finding) }}</div>
+            <div v-if="occupiedText(finding)" class="maintenance-finding-reason">{{ occupiedText(finding) }}</div>
           </div>
-          <UiButton v-if="group.check === 'duplicate-anchor'" :disabled="fixDisabled" @click="keepOnly(group, finding)">
+          <UiButton
+            v-if="finding.check === 'duplicate-anchor'"
+            :disabled="fixDisabled"
+            @click="keepOnly(group, finding)"
+          >
             {{ m.maintenance_duplicate_keep() }}
           </UiButton>
           <UiButton
-            v-else-if="group.check === 'orphaned-claim' || group.check === 'orphaned-type'"
+            v-else-if="finding.check === 'orphaned-claim' || finding.check === 'orphaned-type'"
             :disabled="fixDisabled"
             @click="applyAndRescan([stripOf(finding)])"
           >
             {{ m.maintenance_orphan_clear() }}
           </UiButton>
+          <UiButton
+            v-for="candidate of attachableOf(finding)"
+            :key="candidate.journalName"
+            :disabled="fixDisabled"
+            @click="attachTo(finding, candidate)"
+          >
+            {{ m.maintenance_ambiguous_connect({ journal: candidate.journalName }) }}
+          </UiButton>
         </div>
-        <div v-if="group.check === 'orphaned-claim'" class="maintenance-finding-reason">
+        <div v-if="group.head.check === 'orphaned-claim'" class="maintenance-finding-reason">
           {{ m.maintenance_orphan_reassign_hint() }}
         </div>
       </UiCollapsibleBlock>

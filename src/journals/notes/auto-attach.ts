@@ -6,30 +6,24 @@ import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
 
 import { FRONTMATTER_NAME_KEY } from "../config";
-import { FrontmatterService } from "../frontmatter";
 import { JournalsIndex } from "../journals-index";
 import { GatherPromptAnswersFlow } from "../prompts/flows/gather-prompt-answers.flow";
 import { PROMPT_PLACEHOLDER } from "../prompts/placeholder";
 import { promptsInPath } from "../prompts/prompts-in-path";
 import { JournalsRepository } from "../repository";
-import { TimelineService } from "../timeline";
 
 import { NoteCreationService } from "./note-creation";
 import { NotePathService } from "./note-path";
 import { SelfWriteGuard } from "./self-write-guard";
 import { splitVaultPath } from "./vault-path";
 
-import type { JournalMetadata } from "../types";
-
 export class AutoAttachService {
   readonly #notes = inject(NotesService);
   readonly #metadata = inject(NoteMetadataService);
   readonly #workspace = inject(WorkspaceService);
   readonly #path = inject(NotePathService);
-  readonly #timeline = inject(TimelineService);
   readonly #creation = inject(NoteCreationService);
   readonly #guard = inject(SelfWriteGuard);
-  readonly #frontmatter = inject(FrontmatterService);
   readonly #index = inject(JournalsIndex);
   readonly #journals = inject(JournalsRepository);
   readonly #flows = inject(Flows);
@@ -86,32 +80,21 @@ export class AutoAttachService {
       this.#logger.debug("note claims an unknown journal", { path });
       return;
     }
-    const matches: { name: string; metadata: JournalMetadata }[] = [];
-    for (const name of this.#journals.find().ids()) {
-      const candidate = this.#path.candidateFor(name, path);
-      if (candidate.isNone()) continue;
-      if (!this.#timeline.contains(name, candidate.value.anchor)) continue;
-      const builtResult = this.#frontmatter.buildMetadata(name, candidate.value.anchor);
-      if (builtResult.kind === "err") continue;
-      const merged: JournalMetadata = {
-        ...builtResult.value,
-        ...(candidate.value.numbers && { numbers: candidate.value.numbers }),
-      };
-      matches.push({ name, metadata: merged });
-    }
+    const matches = this.#path.attachCandidatesFor(path);
     if (matches.length === 0) {
       this.#logger.debug("no matches", { path });
       return;
     }
+    // Guessing an owner would write a claim nobody asked for.
     if (matches.length > 1) {
-      this.#logger.debug("ambiguous", { path, candidates: matches.map((m) => m.name) });
+      this.#logger.debug("ambiguous", { path, candidates: matches.map((m) => m.journalName) });
       return;
     }
     const [match] = matches;
     if (!match) return;
     // Only a plugin-authored link produces a name carrying the placeholder, so this is the one
     // unattended path that may ask. A pre-existing file adopted by pattern must never prompt.
-    const config = this.#journals.get(match.name).getOrUndefined();
+    const config = this.#journals.get(match.journalName).getOrUndefined();
     let metadata = match.metadata;
     let target = path;
     if (config && promptsInPath(config).length > 0 && path.includes(PROMPT_PLACEHOLDER)) {
@@ -129,7 +112,7 @@ export class AutoAttachService {
       // pass then held the stale path would rename from a file that is no longer there.
       if (this.#notes.find(path).isNone()) return;
       metadata = { ...metadata, answers: { ...metadata.answers, ...gathered.value } };
-      const renamed = this.#path.pathFor(match.name, metadata);
+      const renamed = this.#path.pathFor(match.journalName, metadata);
       if (renamed.isOk() && renamed.value !== path) {
         // Marked before the rename, not after: the rename re-enters #handle through the renamed
         // handler, and the filled name failing to invert is not a guarantee, only a coincidence.
@@ -143,11 +126,11 @@ export class AutoAttachService {
         await this.#removeEmptyPlaceholderFolder(path);
       }
     }
-    const result = await this.#creation.attachNote(match.name, target, metadata);
+    const result = await this.#creation.attachNote(match.journalName, target, metadata);
     if (result.isErr()) {
       this.#logger.error("attach failed", { path: target, error: result.error });
     } else {
-      this.#logger.info("attached", { path: target, journal: match.name });
+      this.#logger.info("attached", { path: target, journal: match.journalName });
     }
   }
 
