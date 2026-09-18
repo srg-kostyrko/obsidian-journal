@@ -333,6 +333,15 @@ on it.
   keep only _why_ — non-obvious edge cases, invariants, workarounds, surprising
   host behavior. JSDoc on an exported API is one short line of intent, never a
   paragraph or a file-header narrative.
+- `@types/express`'s own `.d.ts` files carry `/// <reference types="node" />`, which bypasses
+  `tsconfig.app.json`'s `"types": []` the moment anything imports from `"express"` (as
+  `src/api/rest/` does) — Node's ambient globals (`Buffer`, `process`, `require`, `global`,
+  `__dirname`, `__filename`, `module`, and the ambient `setTimeout`/`clearInterval` overloads that
+  return `NodeJS.Timeout`) then typecheck across all of `src/`, even though Obsidian mobile has no
+  Node runtime to back them. `no-restricted-globals` bans the bare identifiers in production source
+  for this reason; a timer field or variable that needs to survive this must be typed `number`, not
+  derived through `ReturnType<typeof window.setTimeout>` — see the comment at each of the three
+  sites that already do this.
 
 ### e2e traps and harness limits
 

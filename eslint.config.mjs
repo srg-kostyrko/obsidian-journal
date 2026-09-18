@@ -108,6 +108,15 @@ const noProductionOverride = {
   message: "Container.override exists for the test host boundary. Production wiring registers once, in a module.",
 };
 
+// `@types/express`'s `/// <reference types="node" />` (see CLAUDE.md, "Lint and tooling") makes
+// these typecheck across the whole program, but Obsidian mobile has no Node runtime to back them.
+const noNodeGlobalsMessage =
+  'Obsidian mobile has no Node runtime. This only typechecks because @types/express pulls Node\'s globals into the program (see CLAUDE.md, "Lint and tooling").';
+const noNodeGlobals = ["Buffer", "process", "require", "global", "__dirname", "__filename", "module"].map((name) => ({
+  name,
+  message: noNodeGlobalsMessage,
+}));
+
 export default [
   {
     ignores: [
@@ -293,6 +302,25 @@ export default [
     ignores: ["src/infrastructure/di/**"],
     rules: {
       "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noProductionOverride],
+    },
+  },
+  {
+    // Plugin source only — never the test/*.testing.ts fakes and harness, which are excluded here
+    // the same way the campaign selectors exclude them elsewhere in this file, and which may
+    // legitimately need a Node shim (see the `declare const process` in the two
+    // `*.isolated.test.ts` files that assert on `process.on("unhandledRejection", ...)`).
+    files: ["src/**/*.ts", "src/**/*.vue"],
+    ignores: [
+      "**/*.test.ts",
+      "**/*.bench.ts",
+      "**/testing.ts",
+      "**/*.testing.ts",
+      "**/testing/**",
+      "vitest.setup.ts",
+      "vitest.setup.shared.ts",
+    ],
+    rules: {
+      "no-restricted-globals": ["error", ...noNodeGlobals],
     },
   },
   {
