@@ -4,9 +4,10 @@ import { noteJson, noteletJson } from "./json";
 import type { JournalsApi } from "../public-api";
 import type { IRoute, Request, Response } from "express";
 
-// The host parses a JSON body only for Content-Type: application/json, so req.body may arrive as
-// undefined or a Buffer for any other request. Reading the prototype (rather than naming Buffer,
-// which no-restricted-globals bans in production source — see CLAUDE.md) rejects those the same
+// The host parses a body as JSON only for application/json and three JSON media types of its own;
+// a text/* body arrives as a string, anything else as raw bytes (a Buffer), and a
+// request with no body leaves req.body as {}. Reading the prototype (rather than naming Buffer,
+// which no-restricted-globals bans in production source — see CLAUDE.md) rejects bytes the same
 // way it rejects an array or a primitive.
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== "object" || value === null) return false;
@@ -340,8 +341,9 @@ export interface NoteContent {
 }
 
 // A request with no body at all still arrives as {}, body-parser's placeholder, so an empty PUT
-// is told apart from a JSON object by its headers, the way body-parser itself decides whether a
-// request carries a body.
+// is told apart from a JSON object by its headers: a Transfer-Encoding, or a Content-Length other
+// than "0", counts as a body. Stricter than body-parser's own hasBody, which counts
+// Content-Length: 0 as one too — here that reads as an empty body, so it clears the note.
 function carriesBody(request: Request): boolean {
   const length = request.headers["content-length"];
   return request.headers["transfer-encoding"] !== undefined || (length !== undefined && length !== "0");
