@@ -16,6 +16,9 @@ export interface McpTool {
 
 export const McpToolToken = createMultiToken<McpTool>("api.mcpTool");
 
+/** Carries a tool call's JSON error body as its message — the host turns it into tool-error text. */
+export class McpToolError extends Error {}
+
 export const journalEntry = v.pipe(v.string(), v.description("The journal's name, as journal_list reports it."));
 export const dateEntry = v.pipe(
   v.string(),

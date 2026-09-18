@@ -538,10 +538,20 @@ export default defineConfig({
         //
         // New tip: 94.14 / 89.18 / 91.1 / 96.09 (11757/12488 statements, 5196/5826 branches,
         // 4198/4608 functions, 10240/10656 lines).
-        statements: 94.14,
-        branches: 89.18,
-        functions: 91.1,
-        lines: 96.09,
+        //
+        // GH #400 PR 3 (feat/mcp-tools-400, tasks 1-4: the zod-3 adapter, the McpTool contract,
+        // the four journal tools, and the bridge wiring them onto addMcpTool) landed on this
+        // branch without ever re-measuring the floor, so this step's rise is that whole branch's
+        // net effect rather than an attributed single commit. Task 4's own additions —
+        // `local-rest-api-bridge.ts`'s addMcpTool branch and `tool.ts`'s `McpToolError` — measure
+        // 100% on all four metrics (36/36 statements, 8/8 branches, 9/9 functions, 33/33 lines for
+        // the bridge; 4/4 statements and lines for tool.ts), so none of the rise is unexercised
+        // new code. New tip: 94.47 / 90 / 91.62 / 96.36 (15635/16550 statements, 7721/8578
+        // branches, 5394/5887 functions, 13554/14065 lines).
+        statements: 94.47,
+        branches: 90,
+        functions: 91.62,
+        lines: 96.36,
       },
     },
     projects: [

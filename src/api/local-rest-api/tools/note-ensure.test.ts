@@ -10,6 +10,7 @@ import { testContainer } from "@/testing";
 
 import { JournalsApiService } from "../../journals-api";
 import { apiModule } from "../../module";
+import { restHarness } from "../testing";
 
 import { NoteEnsureTool } from "./note-ensure";
 
@@ -76,5 +77,30 @@ describe("NoteEnsureTool", () => {
     await expect(tool.call({ journal: "nope", date: "2026-09-10" })).rejects.toMatchObject({
       code: "journal-not-found",
     });
+  });
+});
+
+describe("NoteEnsureTool through the bridge", () => {
+  it("rejects with an Error whose message is the coded JSON error body", async () => {
+    const rest = await restHarness();
+
+    const error = await rest
+      .callTool("journal_note_ensure", { journal: "nope", date: "today" })
+      .catch((error_: unknown) => error_);
+
+    expect(error).toBeInstanceOf(Error);
+    expect(JSON.parse((error as Error).message)).toEqual({
+      code: "journal-not-found",
+      message: "Journal not found: nope",
+      journal: "nope",
+    });
+  });
+
+  it("resolves to the plain object on a successful call", async () => {
+    const rest = await restHarness();
+
+    const result = await rest.callTool("journal_note_ensure", { journal: "work", date: "2026-09-10" });
+
+    expect(result).toMatchObject({ created: true, path: "2026-09-10.md" });
   });
 });

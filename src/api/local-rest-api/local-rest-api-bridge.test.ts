@@ -26,7 +26,16 @@ function fakeLocalRestApi() {
     apiVersion: 2,
     addRoute: vi.fn(() => chainableRoute()),
     addPublicRoute: vi.fn(),
-    addMcpTool: vi.fn(),
+    addMcpTool:
+      vi.fn<
+        (
+          name: string,
+          description: string,
+          schema: Record<string, unknown>,
+          callback: (arguments_: Record<string, unknown>) => Promise<unknown>,
+          annotations: unknown,
+        ) => void
+      >(),
     unregister: vi.fn(),
   };
 }
@@ -175,5 +184,41 @@ describe("LocalRestApiBridge route registration", () => {
         expect(host.handlers.has(`${method} ${path}`)).toBe(true);
       }
     }
+  });
+});
+
+describe("LocalRestApiBridge tool registration", () => {
+  it("registers every journal tool on a host that implements API version 2", async () => {
+    const harness = await buildHarness();
+    const api = fakeLocalRestApi();
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => api });
+    harness.resolve(LocalRestApiBridge).initialize();
+
+    expect(api.addMcpTool.mock.calls.map(([name]) => name)).toEqual([
+      "journal_list",
+      "journal_notes",
+      "journal_note_ensure",
+      "journal_notelet_create",
+    ]);
+  });
+
+  it("registers routes but no tools on a host older than API version 2", async () => {
+    const harness = await buildHarness();
+    const { apiVersion: _dropped, ...api } = fakeLocalRestApi();
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => ({ ...api, apiVersion: 1 }) });
+    harness.resolve(LocalRestApiBridge).initialize();
+
+    expect(api.addRoute).toHaveBeenCalled();
+    expect(api.addMcpTool).not.toHaveBeenCalled();
+  });
+
+  it("registers routes but no tools on a host that predates the apiVersion field", async () => {
+    const harness = await buildHarness();
+    const { apiVersion: _dropped, ...api } = fakeLocalRestApi();
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => api });
+    harness.resolve(LocalRestApiBridge).initialize();
+
+    expect(api.addRoute).toHaveBeenCalled();
+    expect(api.addMcpTool).not.toHaveBeenCalled();
   });
 });

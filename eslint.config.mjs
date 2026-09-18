@@ -550,9 +550,9 @@ export default [
   },
   {
     // obsidian-local-rest-api 5.1.0 registers MCP tools through the SDK's deprecated
-    // `McpServer.tool` overload, whose argument sniffing is what the contract test pins, so the
-    // test must make that same call.
-    files: ["src/api/local-rest-api/zod3-shape.test.ts"],
+    // `McpServer.tool` overload, whose argument sniffing is what the contract tests pin, so both
+    // must make that same call.
+    files: ["src/api/local-rest-api/zod3-shape.test.ts", "src/api/local-rest-api/tools.contract.test.ts"],
     rules: {
       "@typescript-eslint/no-deprecated": "off",
     },

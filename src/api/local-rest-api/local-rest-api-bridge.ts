@@ -4,8 +4,10 @@ import { inject } from "@/infrastructure/di";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
-import { sendError } from "./errors";
+import { errorBody, sendError } from "./errors";
 import { RestRouteToken, type RestVerb } from "./route";
+import { McpToolError, McpToolToken } from "./tool";
+import { zod3Shape } from "./zod3-shape";
 
 import type { Events } from "obsidian";
 
@@ -17,6 +19,7 @@ export class LocalRestApiBridge {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
   readonly #routes = inject(RestRouteToken);
+  readonly #tools = inject(McpToolToken);
   readonly #logger = inject(LoggerFactoryToken).named("local-rest-api");
   #handle: LocalRestApiPublicApi | undefined;
 
@@ -41,6 +44,24 @@ export class LocalRestApiBridge {
                 void handler(request, response).catch((error: unknown) => sendError(response, error)),
             );
           }
+        }
+      }
+      // addMcpTool arrived with API version 2; a host predating the apiVersion field is version 1.
+      // Read through a widened type because the published declaration calls the field mandatory.
+      if (((handle as { apiVersion?: number }).apiVersion ?? 1) >= 2) {
+        for (const tool of this.#tools) {
+          handle.addMcpTool(
+            tool.name,
+            tool.description,
+            zod3Shape(tool.input),
+            // The host turns a thrown error into tool-error text from its message, so the message
+            // carries the same {code, message, journal?, issues?} body a REST caller gets.
+            (arguments_) =>
+              tool.call(arguments_).catch((error: unknown) => {
+                throw new McpToolError(JSON.stringify(errorBody(error)));
+              }),
+            tool.annotations,
+          );
         }
       }
     } catch (error) {
