@@ -14,11 +14,15 @@ const STATUS_BY_CODE: Readonly<Record<string, number>> = {
   "prompts-required": 409,
 };
 
-/** REST-only codes (`note-not-found`, `invalid-request`) that `JournalsApi` never throws. */
+/**
+ * REST-only codes (`note-not-found`, `invalid-request`) that `JournalsApi` never throws, plus
+ * `journal-not-found` raised locally when a route's own `journalInfo` lookup comes back null.
+ */
 export class RestError extends Error {
   constructor(
     readonly code: string,
     message: string,
+    readonly journal?: string,
   ) {
     super(message);
   }
@@ -45,7 +49,9 @@ export function sendError(response: Response, error: unknown): void {
 
   // readErrorCode already confirmed error is a non-null object, so this record read is safe.
   const record = error as Record<string, unknown>;
-  const message = typeof record.message === "string" ? record.message : String(record.message);
+  // Falling back to the code (rather than String(record.message), which reads "undefined" for a
+  // genuinely missing message) keeps the body meaningful when a caller throws a bare {code}.
+  const message = typeof record.message === "string" ? record.message : code;
   const body: Record<string, unknown> = { code, message };
   if (record.journal !== undefined) body.journal = record.journal;
   if (record.issues !== undefined) body.issues = record.issues;

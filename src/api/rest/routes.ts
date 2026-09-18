@@ -14,9 +14,14 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return prototype === null || prototype === Object.prototype;
 }
 
-function readAnswers(body: unknown): Record<string, unknown> {
-  if (!isPlainObject(body)) return {};
-  return isPlainObject(body.answers) ? body.answers : {};
+// Forwards `body.answers` exactly as given — undefined when the body isn't a plain object, or
+// when it is one but carries no `answers` key. The API's own #answers already treats null as
+// absent and rejects any other non-plain-object with invalid-answers; turning an absent answers
+// into {} here would change behavior, since a required-question journal validates {} as a
+// (failed) attempt to answer rather than as "no answers were supplied", producing 400
+// invalid-answers instead of the documented 409 prompts-required.
+function readAnswers(body: unknown): unknown {
+  return isPlainObject(body) ? body.answers : undefined;
 }
 
 function readNoteletType(body: unknown): string | undefined {
@@ -24,12 +29,30 @@ function readNoteletType(body: unknown): string | undefined {
   return typeof body.type === "string" ? body.type : undefined;
 }
 
-function readQueryString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
+// A sentinel distinct from any real query value (including the string "invalid"), so a query
+// param that arrived as an array or a nested object (?from=a&from=b, ?type[x]=1) is rejected
+// rather than silently treated as absent.
+const INVALID_QUERY_VALUE = Symbol("invalid-query-value");
+
+function readQueryString(value: unknown): string | undefined | typeof INVALID_QUERY_VALUE {
+  if (value === undefined) return undefined;
+  return typeof value === "string" ? value : INVALID_QUERY_VALUE;
 }
 
 function journalNotFound(name: string): RestError {
-  return new RestError("journal-not-found", `No journal named "${name}".`);
+  // Matches JournalsApiService's own wording (src/api/journals-api.ts) so a client sees the same
+  // message whether the 404 came from a route's own journalInfo check or from the API itself.
+  return new RestError("journal-not-found", `Journal not found: ${name}`, name);
+}
+
+function noteletTypeError(body: unknown): RestError {
+  if (!isPlainObject(body)) {
+    return new RestError(
+      "invalid-request",
+      "No JSON body was received. Send the request with Content-Type: application/json and a type field.",
+    );
+  }
+  return new RestError("invalid-request", "type must be a string.");
 }
 
 async function handleListJournals(response: Response, api: JournalsApi): Promise<void> {
@@ -65,6 +88,12 @@ async function handleListNotes(request: Request, response: Response, api: Journa
 
     const from = readQueryString(request.query.from);
     const to = readQueryString(request.query.to);
+    const type = readQueryString(request.query.type);
+    if (from === INVALID_QUERY_VALUE || to === INVALID_QUERY_VALUE || type === INVALID_QUERY_VALUE) {
+      sendError(response, new RestError("invalid-request", "from, to and type must each be a single string value."));
+      return;
+    }
+
     if ((from === undefined) !== (to === undefined)) {
       sendError(response, new RestError("invalid-request", "from and to must be supplied together."));
       return;
@@ -77,7 +106,6 @@ async function handleListNotes(request: Request, response: Response, api: Journa
       return;
     }
 
-    const type = readQueryString(request.query.type);
     const range = { from, to };
     const [notes, notelets] = await Promise.all([
       api.existingNotes(name, range),
@@ -98,7 +126,10 @@ async function handleCreateNote(request: Request, response: Response, api: Journ
       return;
     }
 
-    const answers = readAnswers(request.body as unknown);
+    // Forwarded as-is (not validated here) — the API rejects a non-plain-object, non-null
+    // answers with invalid-answers, and the cast just tells the compiler what the REST boundary
+    // cannot: JSON.parse's output has no static shape.
+    const answers = readAnswers(request.body as unknown) as Record<string, unknown> | undefined;
     // confirm: false too: a confirming journal with no questions would otherwise still open a
     // dialog nobody is watching for, and an HTTP call would hang on it.
     const result = await api.ensureNote(name, request.params.date, { prompt: false, confirm: false, answers });
@@ -110,16 +141,27 @@ async function handleCreateNote(request: Request, response: Response, api: Journ
 
 async function handleCreateNotelet(request: Request, response: Response, api: JournalsApi): Promise<void> {
   try {
-    const body: unknown = request.body as unknown;
-    const type = readNoteletType(body);
-    if (type === undefined) {
-      sendError(response, new RestError("invalid-request", "type must be a string."));
+    const name = request.params.name;
+    const info = await api.journalInfo(name);
+    if (info === null) {
+      sendError(response, journalNotFound(name));
       return;
     }
 
-    const notelet = await api.createNotelet(request.params.name, request.params.date, type, {
+    const body: unknown = request.body as unknown;
+    const type = readNoteletType(body);
+    if (type === undefined) {
+      sendError(response, noteletTypeError(body));
+      return;
+    }
+
+    const answers = readAnswers(body) as Record<string, unknown> | undefined;
+    // confirm: false alongside notes' own call, for consistency: prompt: false already suppresses
+    // the creation prompts here, but nothing should be left open to a confirming type's dialog.
+    const notelet = await api.createNotelet(name, request.params.date, type, {
       prompt: false,
-      answers: readAnswers(body),
+      confirm: false,
+      answers,
     });
     response.status(201).json(noteletJson(notelet));
   } catch (error) {

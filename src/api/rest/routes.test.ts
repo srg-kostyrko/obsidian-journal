@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { statusFor } from "./errors";
+import { sendError, statusFor } from "./errors";
 import { registerJournalRoutes } from "./routes";
 
 import type { JournalsApi } from "../public-api";
@@ -220,7 +220,11 @@ describe("registerJournalRoutes", () => {
       await invoke(findRoute(recorded, "/journals/:name/", "get"), fakeRequest({ params: { name: "nope" } }), response);
 
       expect(response.statusCode).toBe(404);
-      expect(response.body).toMatchObject({ code: "journal-not-found" });
+      expect(response.body).toEqual({
+        code: "journal-not-found",
+        message: "Journal not found: nope",
+        journal: "nope",
+      });
     });
   });
 
@@ -289,8 +293,26 @@ describe("registerJournalRoutes", () => {
       expect(response.body).toMatchObject({ code: "invalid-request" });
     });
 
-    it("gives 404 for an unknown journal", async () => {
-      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue(null) });
+    it("gives 400 invalid-request when a query param arrives as an array, not a string", async () => {
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }) });
+      const recorded = register(api);
+      const response = fakeResponse();
+
+      await invoke(
+        findRoute(recorded, "/journals/:name/notes", "get"),
+        // Express/qs parses a repeated key (?from=a&from=b) into an array.
+        fakeRequest({ params: { name: "work" }, query: { from: ["2026-08-01", "2026-08-02"], to: "2026-08-31" } }),
+        response,
+      );
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toMatchObject({ code: "invalid-request" });
+    });
+
+    it("gives 404 for an unknown journal without reading any notes or notelets", async () => {
+      const existingNotes = vi.fn();
+      const noteletsInRange = vi.fn();
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue(null), existingNotes, noteletsInRange });
       const recorded = register(api);
       const response = fakeResponse();
 
@@ -301,6 +323,8 @@ describe("registerJournalRoutes", () => {
       );
 
       expect(response.statusCode).toBe(404);
+      expect(existingNotes).not.toHaveBeenCalled();
+      expect(noteletsInRange).not.toHaveBeenCalled();
     });
 
     it("never puts a file key anywhere in the response", async () => {
@@ -339,6 +363,7 @@ describe("registerJournalRoutes", () => {
 
       expect(response.statusCode).toBe(201);
       expect(response.body).toMatchObject({ created: true, path: "work/2026-08-18.md" });
+      expect(JSON.stringify(response.body)).not.toContain('"file"');
     });
 
     it("returns 200 with created: false when the note already exists", async () => {
@@ -376,7 +401,7 @@ describe("registerJournalRoutes", () => {
       });
     });
 
-    it("treats a missing body as {} answers", async () => {
+    it("treats a missing body as undefined answers", async () => {
       const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
       const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
       const recorded = register(api);
@@ -391,11 +416,11 @@ describe("registerJournalRoutes", () => {
       expect(ensureNote).toHaveBeenCalledWith("work", "2026-08-18", {
         prompt: false,
         confirm: false,
-        answers: {},
+        answers: undefined,
       });
     });
 
-    it("treats a Buffer body as {} answers", async () => {
+    it("treats a Buffer body as undefined answers", async () => {
       const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
       const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
       const recorded = register(api);
@@ -414,8 +439,48 @@ describe("registerJournalRoutes", () => {
       expect(ensureNote).toHaveBeenCalledWith("work", "2026-08-18", {
         prompt: false,
         confirm: false,
-        answers: {},
+        answers: undefined,
       });
+    });
+
+    it("forwards a non-object answers value unchanged, letting the API reject it", async () => {
+      const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+      const recorded = register(api);
+      const response = fakeResponse();
+
+      await invoke(
+        findRoute(recorded, "/journals/:name/notes/:date", "post"),
+        fakeRequest({ params: { name: "work", date: "2026-08-18" }, body: { answers: "x" } }),
+        response,
+      );
+
+      expect(ensureNote).toHaveBeenCalledWith("work", "2026-08-18", {
+        prompt: false,
+        confirm: false,
+        answers: "x",
+      });
+    });
+
+    it("surfaces the API's prompts-required as 409 when no answers were sent to a required question", async () => {
+      const error = Object.assign(new Error("Answers required"), { code: "prompts-required" });
+      const ensureNote = vi.fn().mockRejectedValue(error);
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+      const recorded = register(api);
+      const response = fakeResponse();
+
+      await invoke(
+        findRoute(recorded, "/journals/:name/notes/:date", "post"),
+        fakeRequest({ params: { name: "work", date: "2026-08-18" } }),
+        response,
+      );
+
+      expect(ensureNote).toHaveBeenCalledWith("work", "2026-08-18", {
+        prompt: false,
+        confirm: false,
+        answers: undefined,
+      });
+      expect(response.statusCode).toBe(409);
     });
 
     it("gives 404 for an unknown journal", async () => {
@@ -438,7 +503,7 @@ describe("registerJournalRoutes", () => {
   describe("POST /journals/:name/notelets/:date", () => {
     it("gives 400 invalid-request when type is missing", async () => {
       const createNotelet = vi.fn();
-      const api = fakeApi({ createNotelet });
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), createNotelet });
       const recorded = register(api);
       const response = fakeResponse();
 
@@ -453,9 +518,28 @@ describe("registerJournalRoutes", () => {
       expect(createNotelet).not.toHaveBeenCalled();
     });
 
+    it("mentions Content-Type: application/json when the body never parsed as JSON", async () => {
+      const createNotelet = vi.fn();
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), createNotelet });
+      const recorded = register(api);
+      const response = fakeResponse();
+
+      await invoke(
+        findRoute(recorded, "/journals/:name/notelets/:date", "post"),
+        fakeRequest({ params: { name: "work", date: "2026-08-18" } }),
+        response,
+      );
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body).toMatchObject({
+        code: "invalid-request",
+        message: expect.stringContaining("Content-Type: application/json") as unknown,
+      });
+    });
+
     it("gives 400 invalid-request when type is not a string", async () => {
       const createNotelet = vi.fn();
-      const api = fakeApi({ createNotelet });
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), createNotelet });
       const recorded = register(api);
       const response = fakeResponse();
 
@@ -469,9 +553,26 @@ describe("registerJournalRoutes", () => {
       expect(createNotelet).not.toHaveBeenCalled();
     });
 
-    it("returns 201 and calls createNotelet with prompt: false and the answers, no confirm/openMode", async () => {
+    it("gives 404 for an unknown journal before validating the body", async () => {
+      const createNotelet = vi.fn();
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue(null), createNotelet });
+      const recorded = register(api);
+      const response = fakeResponse();
+
+      await invoke(
+        findRoute(recorded, "/journals/:name/notelets/:date", "post"),
+        // No type in the body either — the 404 must still win.
+        fakeRequest({ params: { name: "nope", date: "2026-08-18" }, body: {} }),
+        response,
+      );
+
+      expect(response.statusCode).toBe(404);
+      expect(createNotelet).not.toHaveBeenCalled();
+    });
+
+    it("returns 201, no file key, and calls createNotelet with prompt: false, confirm: false and the answers", async () => {
       const createNotelet = vi.fn().mockResolvedValue(createdNotelet());
-      const api = fakeApi({ createNotelet });
+      const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), createNotelet });
       const recorded = register(api);
       const response = fakeResponse();
 
@@ -486,8 +587,10 @@ describe("registerJournalRoutes", () => {
 
       expect(response.statusCode).toBe(201);
       expect(response.body).toMatchObject({ path: "work/2026-08-18-1.md", counter: 1 });
+      expect(JSON.stringify(response.body)).not.toContain('"file"');
       expect(createNotelet).toHaveBeenCalledWith("work", "2026-08-18", "mood", {
         prompt: false,
+        confirm: false,
         answers: { mood: "good" },
       });
     });
@@ -568,6 +671,17 @@ describe("registerJournalRoutes", () => {
       expect(response.statusCode).toBe(500);
       expect(response.body).toEqual({ code: "internal-error", message: "boom" });
     });
+  });
+});
+
+describe("sendError", () => {
+  it("falls back to the code, not the literal 'undefined', when the error carries no message", () => {
+    const response = fakeResponse();
+
+    sendError(response, { code: "unmappable-date" });
+
+    expect(response.statusCode).toBe(422);
+    expect(response.body).toEqual({ code: "unmappable-date", message: "unmappable-date" });
   });
 });
 
