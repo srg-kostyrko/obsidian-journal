@@ -438,10 +438,14 @@ on it.
 - An e2e proving a "target a specific journal" feature must pin a target whose
   result **differs** from what the default path resolves. A pin that agrees with
   shelf scope passes even with the feature code deleted.
-- Pin Templater to 2.18.0. From 2.21 it declares `minAppVersion: 1.13.0`, so on
-  stable Obsidian it lands in `enabledPlugins` but never instantiates:
+- Pin Templater to 2.18.0. From 2.21 (`minAppVersion: 1.13.0`), on stable
+  Obsidian it lands in `enabledPlugins` but never instantiates:
   `getPlugin("templater-obsidian")` returns null and `<% %>` passes through
-  literally with nothing failing loudly.
+  literally with nothing failing loudly. The declared floor is not the cause:
+  Obsidian reads `minAppVersion` only in the community browser's version picker,
+  never when loading a plugin (`app.js`, 1.8.7 and 1.13.7), which is why Local
+  REST API 5.1.0 (`1.13.1`) loads on the 1.8.7 floor. Don't gate a harness
+  plugin on its manifest; measure whether it loads.
 - Five areas have **no automated coverage of any kind**, and nothing else
   records that any more: the manual checklist that used to list them was
   retired on 2026-09-11 because it had become a committed ledger of one v3-era

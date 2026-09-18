@@ -118,11 +118,13 @@ export const config: WebdriverIO.Config = {
         // unaffected. reloadObsidian can only enable plugins declared here. Pinned to
         // 2.18.0: it requires Obsidian >= 1.5.0, the newest Templater that still loads
         // across the whole matrix (our floor 1.8.7 .. latest stable). Templater 2.21+
-        // require the 1.13 beta and silently stay unloaded on stable Obsidian.
+        // silently stay unloaded on stable Obsidian; not because of their 1.13.0
+        // minAppVersion, which loading never reads (see Local REST API below).
         // Periodic Notes 0.0.17 and Calendar 1.5.10 are the community-store versions the import reads.
-        // Local REST API 5.1.0 declares minAppVersion 1.13.1, but Obsidian only checks that at
-        // store install time: installed this way it loads and passes its spec on the 1.8.7 floor
-        // too (measured), and its spec fails outright if getPlugin() ever comes back null.
+        // Local REST API 5.1.0 declares minAppVersion 1.13.1, but Obsidian reads minAppVersion only
+        // in the community browser's version picker, never when loading a plugin (app.js, 1.8.7
+        // and 1.13.7): installed this way it loads and passes its spec on the 1.8.7 floor too
+        // (measured), and its spec fails outright if getPlugin() ever comes back null.
         plugins: [
           "./build",
           { id: "templater-obsidian", version: "2.18.0", enabled: false },
