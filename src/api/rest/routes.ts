@@ -39,18 +39,59 @@ function readQueryString(value: unknown): string | undefined | typeof INVALID_QU
   return typeof value === "string" ? value : INVALID_QUERY_VALUE;
 }
 
-// Express 4 matches "/journals/:name/:date/*" only when the URL has that trailing slash (verified
-// against a real express instance — the plain "/journals/:name/:date" pattern never sees a
-// suffix), so req.params[0] is undefined on the no-suffix route and "" on a bare trailing slash.
-function readSuffix(request: Request): string[] {
-  const raw: unknown = request.params[0];
-  if (typeof raw !== "string" || raw === "") return [];
-  return raw.split("/").filter((segment) => segment !== "");
+// A sentinel distinct from a real (possibly empty) segment list, for a suffix that fails to
+// decode or that names "." or "..".
+const INVALID_SUFFIX = Symbol("invalid-suffix");
+
+// Express decodes req.params[0] before the handler runs, collapsing an encoded %2F into a segment
+// boundary — a heading named "A/B" (sent as A%2FB) would come back as three suffix segments
+// instead of two. The periodic companion's own suffixSegments has exactly this bug and says so
+// (coddingtonbear/obsidian-local-rest-api-periodic-notes, src/routes.ts) — it reads off
+// req.params[0] the same way our first cut did. The host's own extractVaultPath/rawSuffixSegments
+// (obsidian-local-rest-api's requestHandler.ts) avoid it by recovering the suffix from req.path,
+// which is still percent-encoded, splitting on its *real* slashes, and decoding each segment on
+// its own; %2F then stays literal content inside the one segment it belongs to. This mirrors that.
+// req.path is the whole path here (registerApiExtension mounts every extension router with
+// `use(router)`, no prefix), and PREFIX_SEGMENTS is the segment count before the suffix in
+// "/journals/:name/:date/*": "", "journals", ":name", ":date".
+const PREFIX_SEGMENTS = 4;
+
+function readSuffix(request: Request, hasSuffix: boolean): string[] | typeof INVALID_SUFFIX {
+  if (!hasSuffix) return [];
+  const rawSegments = request.path
+    .split("/")
+    .slice(PREFIX_SEGMENTS)
+    .filter((segment) => segment.length > 0);
+
+  const segments: string[] = [];
+  for (const raw of rawSegments) {
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch {
+      return INVALID_SUFFIX;
+    }
+    // The alias must resolve inside the note it redirects to; a client normalizes dot segments in
+    // the Location, so "." or ".." here would otherwise point the request somewhere else entirely.
+    if (decoded === "." || decoded === "..") return INVALID_SUFFIX;
+    segments.push(decoded);
+  }
+  return segments;
 }
 
-// Matches the periodic companion (coddingtonbear/obsidian-local-rest-api-periodic-notes,
-// src/routes.ts:50-77): per-segment encodeURIComponent for the Location the host resolves against
-// its vault root, and a whole-path encodeURI for Content-Location.
+function invalidSuffix(): RestError {
+  return new RestError(
+    "invalid-request",
+    'The path suffix is not valid: every segment must be well-formed percent-encoding, and neither "." nor ".." is allowed.',
+  );
+}
+
+// Matches the periodic companion's redirectToVault (coddingtonbear/obsidian-local-rest-api-periodic-notes,
+// src/routes.ts): per-segment encodeURIComponent for the Location the host resolves against its
+// vault root, and a whole-path encodeURI for Content-Location. Unlike that function, the segments
+// handed in here already went through readSuffix's raw-path decode, so a suffix segment carrying a
+// literal "/" (from a decoded %2F) round-trips as one encoded segment rather than reopening as a
+// path boundary.
 function redirectToNote(response: Response, path: string, suffix: readonly string[]): void {
   const segments = [...path.split("/"), ...suffix];
   const location = "/vault/" + segments.map((segment) => encodeURIComponent(segment)).join("/");
@@ -208,8 +249,19 @@ async function handleCreateNotelet(request: Request, response: Response, api: Jo
   }
 }
 
-async function handleRedirectToExistingNote(request: Request, response: Response, api: JournalsApi): Promise<void> {
+async function handleRedirectToExistingNote(
+  request: Request,
+  response: Response,
+  api: JournalsApi,
+  hasSuffix: boolean,
+): Promise<void> {
   try {
+    const suffix = readSuffix(request, hasSuffix);
+    if (suffix === INVALID_SUFFIX) {
+      sendError(response, invalidSuffix());
+      return;
+    }
+
     const name = request.params.name;
     const info = await api.journalInfo(name);
     if (info === null) {
@@ -232,14 +284,25 @@ async function handleRedirectToExistingNote(request: Request, response: Response
       return;
     }
 
-    redirectToNote(response, note.path, readSuffix(request));
+    redirectToNote(response, note.path, suffix);
   } catch (error) {
     sendError(response, error);
   }
 }
 
-async function handleEnsureNoteAndRedirect(request: Request, response: Response, api: JournalsApi): Promise<void> {
+async function handleEnsureNoteAndRedirect(
+  request: Request,
+  response: Response,
+  api: JournalsApi,
+  hasSuffix: boolean,
+): Promise<void> {
   try {
+    const suffix = readSuffix(request, hasSuffix);
+    if (suffix === INVALID_SUFFIX) {
+      sendError(response, invalidSuffix());
+      return;
+    }
+
     const name = request.params.name;
     const info = await api.journalInfo(name);
     if (info === null) {
@@ -251,14 +314,15 @@ async function handleEnsureNoteAndRedirect(request: Request, response: Response,
     let result;
     try {
       // No answers: this is the redirect family, handing content to the host's own vault routes,
-      // not the notes endpoint that accepts answers. confirm: false too — see the notes above.
+      // not the notes endpoint that accepts answers. confirm: false too — see handleCreateNote's
+      // own comment above.
       result = await api.ensureNote(name, date, { prompt: false, confirm: false });
     } catch (error) {
       sendError(response, wrapPromptsRequired(error, name, date));
       return;
     }
 
-    redirectToNote(response, result.note.path, readSuffix(request));
+    redirectToNote(response, result.note.path, suffix);
   } catch (error) {
     sendError(response, error);
   }
@@ -285,13 +349,29 @@ export function registerJournalRoutes(addRoute: (path: string) => IRoute, api: J
   // Registered after the literal routes above, or "notes"/"notelets" would themselves match
   // :date here first (see the order test in routes.test.ts). Both paths are needed: Express 4
   // matches "/journals/:name/:date/*" only when the URL carries that trailing slash, never
-  // against a bare "/journals/:name/:date" (verified against a real express instance).
-  for (const path of ["/journals/:name/:date", "/journals/:name/:date/*"]) {
+  // against a bare "/journals/:name/:date" (verified against a real express instance) — so
+  // hasSuffix, passed to each handler below, is known at registration time rather than sniffed
+  // from the request.
+  const redirectRoutes: readonly { path: string; hasSuffix: boolean }[] = [
+    { path: "/journals/:name/:date", hasSuffix: false },
+    { path: "/journals/:name/:date/*", hasSuffix: true },
+  ];
+  for (const { path, hasSuffix } of redirectRoutes) {
     addRoute(path)
-      .get((request: Request, response: Response) => void handleRedirectToExistingNote(request, response, api))
-      .delete((request: Request, response: Response) => void handleRedirectToExistingNote(request, response, api))
-      .put((request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api))
-      .post((request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api))
-      .patch((request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api));
+      .get(
+        (request: Request, response: Response) => void handleRedirectToExistingNote(request, response, api, hasSuffix),
+      )
+      .delete(
+        (request: Request, response: Response) => void handleRedirectToExistingNote(request, response, api, hasSuffix),
+      )
+      .put(
+        (request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api, hasSuffix),
+      )
+      .post(
+        (request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api, hasSuffix),
+      )
+      .patch(
+        (request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api, hasSuffix),
+      );
   }
 }

@@ -72,6 +72,8 @@ function fakeRequest(
     query: Record<string, unknown>;
     body: unknown;
     method: string;
+    // Still percent-encoded, exactly as Express's own req.path is — see readSuffix in routes.ts.
+    path: string;
   }> = {},
 ): Request {
   return {
@@ -79,6 +81,7 @@ function fakeRequest(
     query: {},
     body: undefined,
     method: "GET",
+    path: "",
     ...overrides,
   } as unknown as Request;
 }
@@ -665,7 +668,10 @@ describe("registerJournalRoutes", () => {
 
         await invokeRedirect(
           findRoute(recorded, "/journals/:name/:date/*", "get"),
-          fakeRequest({ params: { name: "work", date: "2026-08-18", 0: "Tasks/Sub" } }),
+          fakeRequest({
+            params: { name: "work", date: "2026-08-18", 0: "Tasks/Sub" },
+            path: "/journals/work/2026-08-18/Tasks/Sub",
+          }),
           response,
         );
 
@@ -674,6 +680,107 @@ describe("registerJournalRoutes", () => {
           url: "/vault/work/2026-08-18.md/Tasks/Sub",
         });
         expect(response.headers["Content-Location"]).toBe("work/2026-08-18.md/Tasks/Sub");
+      });
+
+      it("round-trips a heading segment carrying an encoded slash (%2F) as one segment, not two", async () => {
+        // Express would decode req.params[0] to "heading/A/B" for this request, collapsing the
+        // encoded %2F into a segment boundary indistinguishable from the real one before it — that
+        // is exactly the bug this recovers from by reading req.path (still encoded) instead.
+        const notesFor = vi.fn().mockResolvedValue([noteWithFile("work/2026-08-18.md")]);
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), notesFor });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invokeRedirect(
+          findRoute(recorded, "/journals/:name/:date/*", "get"),
+          fakeRequest({
+            params: { name: "work", date: "2026-08-18", 0: "heading/A/B" },
+            path: "/journals/work/2026-08-18/heading/A%2FB",
+          }),
+          response,
+        );
+
+        expect(response.redirected).toEqual({
+          status: 307,
+          url: "/vault/work/2026-08-18.md/heading/A%2FB",
+        });
+      });
+
+      it("gives 400 invalid-request when a suffix segment is a malformed percent-encoding", async () => {
+        const notesFor = vi.fn();
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), notesFor });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invoke(
+          findRoute(recorded, "/journals/:name/:date/*", "get"),
+          fakeRequest({
+            params: { name: "work", date: "2026-08-18", 0: "%" },
+            path: "/journals/work/2026-08-18/%",
+          }),
+          response,
+        );
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toMatchObject({ code: "invalid-request" });
+        expect(notesFor).not.toHaveBeenCalled();
+      });
+
+      it.each(["..", "."])("gives 400 invalid-request when a suffix segment decodes to %s", async (segment) => {
+        const notesFor = vi.fn();
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), notesFor });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invoke(
+          findRoute(recorded, "/journals/:name/:date/*", "get"),
+          fakeRequest({
+            params: { name: "work", date: "2026-08-18", 0: segment },
+            path: `/journals/work/2026-08-18/${segment}`,
+          }),
+          response,
+        );
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toMatchObject({ code: "invalid-request" });
+        expect(notesFor).not.toHaveBeenCalled();
+      });
+
+      it("gives 400 invalid-request when a percent-encoded suffix segment decodes to ..", async () => {
+        const notesFor = vi.fn();
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), notesFor });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invoke(
+          findRoute(recorded, "/journals/:name/:date/*", "get"),
+          fakeRequest({
+            params: { name: "work", date: "2026-08-18", 0: ".." },
+            path: "/journals/work/2026-08-18/%2e%2e",
+          }),
+          response,
+        );
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toMatchObject({ code: "invalid-request" });
+        expect(notesFor).not.toHaveBeenCalled();
+      });
+
+      it("gives 400 invalid-date when the date is invalid, over the redirect family", async () => {
+        const error = Object.assign(new Error("bad date"), { code: "invalid-date" });
+        const notesFor = vi.fn().mockRejectedValue(error);
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), notesFor });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invoke(
+          findRoute(recorded, "/journals/:name/:date", "get"),
+          fakeRequest({ params: { name: "work", date: "not-a-date" } }),
+          response,
+        );
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toMatchObject({ code: "invalid-date" });
       });
 
       it.each(["get", "delete"] as const)(
@@ -768,6 +875,26 @@ describe("registerJournalRoutes", () => {
           message: expect.stringContaining("POST /journals/work/notes/2026-08-18") as unknown,
         });
       });
+
+      it("put on the wildcard path calls ensureNote and redirects with the suffix appended", async () => {
+        const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invokeRedirect(
+          findRoute(recorded, "/journals/:name/:date/*", "put"),
+          fakeRequest({
+            params: { name: "work", date: "2026-08-18", 0: "Tasks/Sub" },
+            path: "/journals/work/2026-08-18/Tasks/Sub",
+            method: "put",
+          }),
+          response,
+        );
+
+        expect(ensureNote).toHaveBeenCalledWith("work", "2026-08-18", { prompt: false, confirm: false });
+        expect(response.redirected).toEqual({ status: 307, url: "/vault/work/2026-08-18.md/Tasks/Sub" });
+      });
     });
 
     it.each(["get", "put", "post", "patch", "delete"] as const)(
@@ -782,6 +909,32 @@ describe("registerJournalRoutes", () => {
         await invoke(
           findRoute(recorded, "/journals/:name/:date", method),
           fakeRequest({ params: { name: "nope", date: "2026-08-18" }, method }),
+          response,
+        );
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body).toMatchObject({ code: "journal-not-found" });
+        expect(notesFor).not.toHaveBeenCalled();
+        expect(ensureNote).not.toHaveBeenCalled();
+      },
+    );
+
+    it.each(["get", "put", "post", "patch", "delete"] as const)(
+      "%s gives 404 for an unknown journal on the wildcard path",
+      async (method) => {
+        const notesFor = vi.fn();
+        const ensureNote = vi.fn();
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue(null), notesFor, ensureNote });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invoke(
+          findRoute(recorded, "/journals/:name/:date/*", method),
+          fakeRequest({
+            params: { name: "nope", date: "2026-08-18", 0: "" },
+            path: "/journals/nope/2026-08-18/",
+            method,
+          }),
           response,
         );
 
