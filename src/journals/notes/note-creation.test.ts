@@ -1,3 +1,4 @@
+import { getFrontMatterInfo, parseYaml } from "obsidian";
 import { beforeEach, describe, it, expect, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
@@ -22,7 +23,13 @@ import { PromptsUnansweredError } from "../prompts/errors";
 import { buildNoteletType, customJournal, fixedJournal } from "../testing";
 import { VaultSubscriptionService } from "../vault-subscription";
 
-import { AnchorOccupiedError, EmptyNoteNameError, NotePathClaimedError, NotePathHeldByPeriodError } from "./errors";
+import {
+  AnchorOccupiedError,
+  BodyFrontmatterError,
+  EmptyNoteNameError,
+  NotePathClaimedError,
+  NotePathHeldByPeriodError,
+} from "./errors";
 import { NoteCreationService } from "./note-creation";
 import { SelfWriteGuard } from "./self-write-guard";
 
@@ -958,17 +965,17 @@ describe("a derived path a custom-interval journal's note for another interval a
   });
 });
 
-// The fake's modify leaves a file's frontmatter alone; Obsidian re-parses the new body and
-// fires metadata-changed for it. This stages that re-parse, so the frontmatter a test sees
-// after the write is the body's own, not the note's old claim.
-function bodyCarries(harness: TestHarness, frontmatter: Record<string, unknown>): void {
-  const notes = harness.resolve(NotesService);
-  const write = notes.write.bind(notes);
-  vi.spyOn(notes, "write").mockImplementation((target, content) =>
-    write(target, content).tap(() => {
-      harness.host.emitMetadata(target, { frontmatter });
-    }),
-  );
+// The fake's modify stores text and leaves the frontmatter it tracks alone, so what the note now
+// says is read back from the written text, the way Obsidian's metadata cache would.
+function writtenFrontmatter(harness: TestHarness, path: string): unknown {
+  const content = harness.host.files.get(path)?.content ?? "";
+  const info = getFrontMatterInfo(content);
+  return info.exists ? parseYaml(info.frontmatter) : undefined;
+}
+
+function writtenBody(harness: TestHarness, path: string): string {
+  const content = harness.host.files.get(path)?.content ?? "";
+  return content.slice(getFrontMatterInfo(content).contentStart);
 }
 
 describe("NoteCreationService.replaceContent", () => {
@@ -991,55 +998,87 @@ describe("NoteCreationService.replaceContent", () => {
     return harness;
   }
 
-  it("replaces the note's body", async () => {
+  it("writes the body with the journal claim in front of it", async () => {
     const harness = await harnessWithNote();
-    bodyCarries(harness, {});
 
-    const result = await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body");
+    const result = await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body\n");
 
     expectOk(result);
     expect(result.value.path).toBe(path);
-    expect(harness.host.files.get(path)?.content).toBe("new body");
+    expect(writtenBody(harness, path)).toBe("new body\n");
+    expect(writtenFrontmatter(harness, path)).toEqual({ journal: "daily", "journal-date": "2026-05-19" });
   });
 
-  it("writes the journal claim back over a body that carries none", async () => {
+  it("writes the file once, claim included", async () => {
     const harness = await harnessWithNote();
-    bodyCarries(harness, {});
+    const notes = harness.resolve(NotesService);
+    const write = vi.spyOn(notes, "write");
+    const updateFrontmatter = vi.spyOn(notes, "updateFrontmatter");
 
     expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
 
-    expect(harness.host.files.get(path)?.frontmatter).toMatchObject({
-      journal: "daily",
-      "journal-date": "2026-05-19",
-    });
+    expect(write).toHaveBeenCalledTimes(1);
+    expect(updateFrontmatter).not.toHaveBeenCalled();
   });
 
   it("keeps the frontmatter the body carries, answers included", async () => {
     const harness = await harnessWithNote();
-    bodyCarries(harness, { tags: ["x"], mood: "happy" });
 
-    expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
+    expectOk(
+      await harness
+        .resolve(NoteCreationService)
+        .replaceContent("daily", meta.anchor, "---\ntags:\n  - x\nmood: happy\n---\nnew body"),
+    );
 
-    expect(harness.host.files.get(path)?.frontmatter).toMatchObject({ tags: ["x"], mood: "happy", journal: "daily" });
+    expect(writtenFrontmatter(harness, path)).toEqual({
+      tags: ["x"],
+      mood: "happy",
+      journal: "daily",
+      "journal-date": "2026-05-19",
+    });
+    expect(writtenBody(harness, path)).toBe("new body");
   });
 
   it("drops an answer the old note had and the body does not", async () => {
     const harness = await harnessWithNote();
-    bodyCarries(harness, {});
 
     expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
 
-    expect(harness.host.files.get(path)?.frontmatter).not.toHaveProperty("mood");
+    expect(writtenFrontmatter(harness, path)).not.toHaveProperty("mood");
   });
 
-  it("leaves the note registered in the index with no metadata event after the claim", async () => {
+  it("registers the entry it wrote with no metadata event", async () => {
     const harness = await harnessWithNote();
-    bodyCarries(harness, {});
 
-    expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
+    expectOk(
+      await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "---\nmood: happy\n---\nbody"),
+    );
 
     const entry = harness.resolve(JournalsIndex).entryByAnchor("daily", meta.anchor);
-    expect(entry.isSome() && entry.value.path).toBe(path);
+    expect(entry.isSome() && entry.value).toMatchObject({ path, answers: { mood: "happy" } });
+  });
+
+  it.each([
+    ["malformed YAML", "---\ntags: [x\n---\nbody"],
+    ["YAML that is not a mapping", "---\n- a\n- b\n---\nbody"],
+  ])("refuses a body whose frontmatter is %s and leaves the note untouched", async (_label, body) => {
+    const harness = await harnessWithNote();
+    const write = vi.spyOn(harness.resolve(NotesService), "write");
+
+    const result = await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, body);
+
+    expect(result.isErr() && result.error).toBeInstanceOf(BodyFrontmatterError);
+    expect(write).not.toHaveBeenCalled();
+    expect(harness.host.files.get(path)?.content).toBe("old body");
+  });
+
+  it("treats an empty frontmatter block as no frontmatter", async () => {
+    const harness = await harnessWithNote();
+
+    expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "---\n---\nbody"));
+
+    expect(writtenFrontmatter(harness, path)).toEqual({ journal: "daily", "journal-date": "2026-05-19" });
+    expect(writtenBody(harness, path)).toBe("body");
   });
 
   it("keeps a custom interval's stored end date", async () => {
@@ -1060,11 +1099,10 @@ describe("NoteCreationService.replaceContent", () => {
       path: "2026-03-02.md" as VaultPath,
       endDate: anchor("2026-03-05"),
     });
-    bodyCarries(harness, {});
 
     expectOk(await harness.resolve(NoteCreationService).replaceContent("weekly", anchor("2026-03-02"), "new body"));
 
-    expect(harness.host.files.get("2026-03-02.md")?.frontmatter).toMatchObject({ "journal-end-date": "2026-03-05" });
+    expect(writtenFrontmatter(harness, "2026-03-02.md")).toMatchObject({ "journal-end-date": "2026-03-05" });
   });
 
   it("fails without writing when the journal has no note at the anchor", async () => {

@@ -1,7 +1,9 @@
 import { LOCAL_REST_API_PLUGIN_ID } from "obsidian-local-rest-api";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type MockInstance } from "vitest";
 
+import { NoteNotFoundError, NoteWriteError, type VaultPath } from "@/infrastructure/host";
 import { LogLevelGateToken } from "@/infrastructure/logger";
+import { AsyncResult } from "@/infrastructure/result";
 import { journalsCoreModule } from "@/journals/module";
 import { NoteCreationService } from "@/journals/notes/note-creation";
 import { fixedJournal } from "@/journals/testing";
@@ -134,45 +136,6 @@ describe("LocalRestApiBridge", () => {
     expect(api.addRoute).toHaveBeenCalled();
   });
 
-  it("answers a whole-file PUT through NoteCreationService.replaceContent", async () => {
-    const harness = await testContainer({
-      modules: [journalsCoreModule, shelvesCoreModule, apiModule],
-      data: { journals: { work: fixedJournal("work", { type: "day" }) }, shelves: {} },
-      initialize: [VaultSubscriptionService],
-    });
-    const host = recordingLocalRestApi();
-    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
-    const replaceContent = vi.spyOn(harness.resolve(NoteCreationService), "replaceContent");
-    harness.resolve(LocalRestApiBridge).initialize();
-    const handler = host.handlers.get("put /journals/:name/:date");
-    if (handler === undefined) throw new Error("no whole-file PUT route registered");
-    let status: number | undefined;
-    const response = {
-      status(code: number) {
-        status = code;
-        return response;
-      },
-      json: vi.fn(),
-      end: vi.fn(),
-    };
-
-    handler(
-      {
-        params: { name: "work", date: "2026-08-18" },
-        body: "new body",
-        path: "/journals/work/2026-08-18",
-      } as unknown as Request,
-      response as unknown as Response,
-    );
-    await vi.waitFor(() => {
-      expect(status).not.toBeUndefined();
-    });
-
-    expect(status).toBe(204);
-    expect(replaceContent).toHaveBeenCalledWith("work", "2026-08-18", "new body");
-    expect(harness.host.files.get("2026-08-18.md")?.content).toBe("new body");
-  });
-
   it("unregisters the active handle on dispose", async () => {
     const harness = await buildHarness();
     const api = fakeLocalRestApi();
@@ -204,5 +167,83 @@ describe("LocalRestApiBridge", () => {
         message: "local rest api registration failed",
       }),
     );
+  });
+});
+
+describe("LocalRestApiBridge whole-file PUT", () => {
+  async function wholeFilePut(
+    body: string,
+    stage?: (harness: TestHarness) => void,
+  ): Promise<{ harness: TestHarness; status: number | undefined; json: unknown }> {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+      data: { journals: { work: fixedJournal("work", { type: "day" }) }, shelves: {} },
+      initialize: [VaultSubscriptionService],
+    });
+    stage?.(harness);
+    const host = recordingLocalRestApi();
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
+    harness.resolve(LocalRestApiBridge).initialize();
+    const handler = host.handlers.get("put /journals/:name/:date");
+    if (handler === undefined) throw new Error("no whole-file PUT route registered");
+    const sent: { status: number | undefined; json: unknown } = { status: undefined, json: undefined };
+    const response = {
+      status(code: number) {
+        sent.status = code;
+        return response;
+      },
+      json(value: unknown) {
+        sent.json = value;
+        return response;
+      },
+      end: vi.fn(),
+    };
+
+    handler(
+      {
+        params: { name: "work", date: "2026-08-18" },
+        headers: { "content-length": String(body.length) },
+        body,
+        path: "/journals/work/2026-08-18",
+      } as unknown as Request,
+      response as unknown as Response,
+    );
+    await vi.waitFor(() => {
+      expect(sent.status).not.toBeUndefined();
+    });
+    return { harness, ...sent };
+  }
+
+  it("reaches NoteCreationService.replaceContent", async () => {
+    let replaceContent: MockInstance | undefined;
+    const { harness, status } = await wholeFilePut("new body", (staged) => {
+      replaceContent = vi.spyOn(staged.resolve(NoteCreationService), "replaceContent");
+    });
+
+    expect(status).toBe(204);
+    expect(replaceContent).toHaveBeenCalledWith("work", "2026-08-18", "new body");
+    expect(harness.host.files.get("2026-08-18.md")?.content).toMatch(/\nnew body$/);
+  });
+
+  it("answers 400 invalid-request when the body's frontmatter cannot be read", async () => {
+    const { status, json } = await wholeFilePut("---\ntags: [x\n---\nbody");
+
+    expect(status).toBe(400);
+    expect(json).toMatchObject({
+      code: "invalid-request",
+      message: expect.stringContaining("frontmatter") as unknown,
+    });
+  });
+
+  it.each([
+    ["note-not-found", 404, new NoteNotFoundError("2026-08-18.md" as VaultPath)],
+    ["write-failed", 500, new NoteWriteError("2026-08-18.md" as VaultPath, new Error("disk full"))],
+  ])("maps a %s failure to %i", async (code, expected, error) => {
+    const { status, json } = await wholeFilePut("new body", (staged) => {
+      vi.spyOn(staged.resolve(NoteCreationService), "replaceContent").mockReturnValue(AsyncResult.err(error));
+    });
+
+    expect(status).toBe(expected);
+    expect(json).toMatchObject({ code, journal: "work" });
   });
 });

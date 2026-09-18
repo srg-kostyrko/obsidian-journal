@@ -1,4 +1,4 @@
-import { parse as yamlParse } from "yaml";
+import { parse as yamlParse, stringify as yamlStringify } from "yaml";
 
 export { default as moment } from "moment";
 
@@ -436,6 +436,40 @@ export interface MarkdownPostProcessorContext {
 export function parseYaml(source: string): unknown {
   if (source.trim() === "") return null;
   return yamlParse(source);
+}
+
+// Obsidian's own options (app.js, 1.8.7 through 1.13.x): a null prints bare, and no line folds.
+export function stringifyYaml(value: unknown): string {
+  return yamlStringify(value, null, { nullStr: "", lineWidth: 0, aliasDuplicateObjects: false });
+}
+
+export interface FrontMatterInfo {
+  readonly exists: boolean;
+  readonly frontmatter: string;
+  readonly from: number;
+  readonly to: number;
+  readonly contentStart: number;
+}
+
+// A transcription of Obsidian's getFrontMatterInfo (app.js, identical at 1.8.7 and 1.13.7): the
+// block opens on a first-line `---` and closes on the first later `---` that starts a line.
+export function getFrontMatterInfo(content: string): FrontMatterInfo {
+  const none: FrontMatterInfo = { exists: false, frontmatter: "", from: 0, to: 0, contentStart: 0 };
+  const open = /^---(\r?\n)/g;
+  if (open.exec(content) === null) return none;
+  const from = open.lastIndex;
+  const close = /---(\r?\n|$)/g;
+  close.lastIndex = from;
+  let match = close.exec(content);
+  while (match !== null && content.charAt(match.index - 1) !== "\n") match = close.exec(content);
+  if (match === null) return none;
+  return {
+    exists: true,
+    frontmatter: content.slice(from, match.index),
+    from,
+    to: match.index,
+    contentStart: close.lastIndex,
+  };
 }
 
 // Obsidian augments HTMLElement with a handful of helpers. Stub them here so

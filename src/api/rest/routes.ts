@@ -333,10 +333,20 @@ export interface NoteContent {
   replace(journal: string, date: string, body: string): Promise<void>;
 }
 
+// A request with no body at all still arrives as {}, body-parser's placeholder, so an empty PUT
+// is told apart from a JSON object by its headers, the way body-parser itself decides whether a
+// request carries a body.
+function carriesBody(request: Request): boolean {
+  const length = request.headers["content-length"];
+  return request.headers["transfer-encoding"] !== undefined || (length !== undefined && length !== "0");
+}
+
 // The host parses a text/* body to a string and leaves anything else it does not parse as raw
 // bytes; application/json arrives as an object, which is not the note's text.
-function readTextBody(body: unknown): string | undefined {
+function readTextBody(request: Request): string | undefined {
+  const body: unknown = request.body;
   if (typeof body === "string") return body;
+  if (!carriesBody(request)) return "";
   if (body instanceof Uint8Array) return new TextDecoder().decode(body);
   return undefined;
 }
@@ -360,7 +370,7 @@ async function handleReplaceNote(
     }
 
     // Read before ensureNote, so a malformed request creates nothing.
-    const body = readTextBody(request.body as unknown);
+    const body = readTextBody(request);
     if (body === undefined) {
       sendError(
         response,

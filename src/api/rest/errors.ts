@@ -15,8 +15,8 @@ const STATUS_BY_CODE: Readonly<Record<string, number>> = {
 };
 
 /**
- * REST-only codes (`note-not-found`, `invalid-request`) that `JournalsApi` never throws, plus
- * `journal-not-found` raised locally when a route's own `journalInfo` lookup comes back null.
+ * REST-only codes (`note-not-found`, `invalid-request`, `write-failed`) that `JournalsApi` never
+ * throws, plus `journal-not-found` raised locally when a route's own `journalInfo` lookup comes back null.
  */
 export class RestError extends Error {
   constructor(

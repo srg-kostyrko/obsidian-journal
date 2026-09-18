@@ -83,6 +83,7 @@ function fakeRequest(
     params: Record<string, string>;
     query: Record<string, unknown>;
     body: unknown;
+    headers: Record<string, string>;
     method: string;
     // Still percent-encoded, exactly as Express's own req.path is — see readSuffix in routes.ts.
     path: string;
@@ -92,6 +93,7 @@ function fakeRequest(
     params: {},
     query: {},
     body: undefined,
+    headers: {},
     method: "GET",
     path: "",
     ...overrides,
@@ -147,8 +149,10 @@ async function invokeRedirect(
   });
 }
 
-function putRequest(body: unknown): Request {
-  return fakeRequest({ params: { name: "work", date: "2026-08-18" }, method: "PUT", body });
+const CARRIES_BODY: Readonly<Record<string, string>> = { "content-length": "1" };
+
+function putRequest(body: unknown, headers: Readonly<Record<string, string>> = CARRIES_BODY): Request {
+  return fakeRequest({ params: { name: "work", date: "2026-08-18" }, method: "PUT", body, headers: { ...headers } });
 }
 
 function noteWithFile(path: string) {
@@ -985,8 +989,26 @@ describe("registerJournalRoutes", () => {
       });
 
       it.each([
+        ["an empty body the host left as {}", {}, { "content-length": "0" }],
+        ["no body at all", undefined, {}],
+      ])("clears the note for %s", async (_label, body, headers) => {
+        const content = fakeContent();
+        const api = fakeApi({
+          journalInfo: vi.fn().mockResolvedValue({ name: "work" }),
+          ensureNote: vi.fn().mockResolvedValue(ensureResult(false)),
+        });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(findRoute(recorded, "/journals/:name/:date", "put"), putRequest(body, headers), response);
+
+        expect(content.replace).toHaveBeenCalledWith("work", "2026-08-18", "");
+        expect(response.statusCode).toBe(204);
+      });
+
+      it.each([
         ["a parsed JSON object", { content: "x" }],
-        ["no body at all", undefined],
+        ["an empty JSON object", {}],
       ])("gives 400 invalid-request for %s, before creating anything", async (_label, body) => {
         const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
         const content = fakeContent();

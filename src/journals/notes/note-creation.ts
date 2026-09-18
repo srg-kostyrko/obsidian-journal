@@ -1,3 +1,5 @@
+import { getFrontMatterInfo, parseYaml, stringifyYaml } from "obsidian";
+
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
@@ -10,7 +12,7 @@ import type {
   VaultPath,
 } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
-import { AsyncResult, Err, attempt } from "@/infrastructure/result";
+import { AsyncResult, Err, Ok, attempt, type Result } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
 import { FRONTMATTER_NAME_KEY } from "../config";
@@ -27,6 +29,7 @@ import { isNotelet, type JournalMetadata } from "../types";
 
 import {
   AnchorOccupiedError,
+  BodyFrontmatterError,
   NoteletHoldsPathError,
   NotePathClaimedError,
   NotePathHeldByPeriodError,
@@ -53,7 +56,30 @@ export type NoteCreationError =
   | NoteletHoldsPathError
   | NotePathHeldByPeriodError
   | PromptsUnansweredError
+  | BodyFrontmatterError
   | UserAborted;
+
+// Splits a note's text the way Obsidian's metadata cache reads it, so the frontmatter parsed here
+// is the frontmatter Obsidian will see once the text is written.
+function splitFrontmatter(
+  path: VaultPath,
+  content: string,
+): Result<{ frontmatter: Record<string, unknown>; body: string }, BodyFrontmatterError> {
+  const info = getFrontMatterInfo(content);
+  if (!info.exists) return new Ok({ frontmatter: {}, body: content });
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(info.frontmatter);
+  } catch (error) {
+    return new Err(new BodyFrontmatterError(path, error instanceof Error ? error.message : String(error)));
+  }
+  const body = content.slice(info.contentStart);
+  if (parsed === null || parsed === undefined) return new Ok({ frontmatter: {}, body });
+  if (typeof parsed !== "object" || Array.isArray(parsed)) {
+    return new Err(new BodyFrontmatterError(path, "it is not a set of properties"));
+  }
+  return new Ok({ frontmatter: { ...(parsed as Record<string, unknown>) }, body });
+}
 
 export class NoteCreationService {
   readonly #notes = inject(NotesService);
@@ -79,10 +105,13 @@ export class NoteCreationService {
         written = { ...fm };
       })
       .map(() => {
-        if (written === undefined) return;
-        const entry = this.#frontmatter.parseEntry(path, written);
-        if (entry.isSome()) this.#index.register(entry.value);
+        if (written !== undefined) this.#registerWritten(path, written);
       });
+  }
+
+  #registerWritten(path: VaultPath, frontmatter: Record<string, unknown>): void {
+    const entry = this.#frontmatter.parseEntry(path, frontmatter);
+    if (entry.isSome()) this.#index.register(entry.value);
   }
 
   // Whether a file already at the journal's derived path is THIS journal's own note rather
@@ -287,9 +316,9 @@ export class NoteCreationService {
     content: string,
   ): AsyncResult<{ path: VaultPath }, NoteCreationError> {
     return attempt.in(this, async function* () {
-      // Built before the write, while the index still holds the entry's endDate: the new body
-      // carries no claim, and its re-parse drops the entry. Stored answers are left out: the
-      // mutator would write them over the ones the new body carries, or bring back ones it dropped.
+      // Stored answers are left out: the mutator would write them over the ones the new body
+      // carries, or bring back ones it dropped. The stored endDate stays: a custom interval's
+      // span lives nowhere else.
       const { answers: _stored, ...metadata } = yield* this.#frontmatter.buildMetadata(name, anchor);
       const claim = yield* this.#frontmatter.writeMutator(name, metadata);
       const indexed = this.#index.entryByAnchor(name, anchor);
@@ -297,8 +326,12 @@ export class NoteCreationService {
         return yield* new Err(new NoteNotFoundError(yield* this.#path.pathFor(name, metadata)));
       }
       const path = indexed.value.path;
-      yield* this.#notes.write(path, content);
-      yield* this.#writeClaim(path, claim);
+      // One write, claim included: writing the body and then claiming it leaves a claimless file
+      // for the metadata cache to parse in between, and a claim that fails to apply orphans it.
+      const { frontmatter, body } = yield* splitFrontmatter(path, content);
+      claim(frontmatter);
+      yield* this.#notes.write(path, `---\n${stringifyYaml(frontmatter)}---\n${body}`);
+      this.#registerWritten(path, frontmatter);
       return { path };
     });
   }

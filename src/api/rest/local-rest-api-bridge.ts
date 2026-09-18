@@ -6,6 +6,7 @@ import { NoteNotFoundError } from "@/infrastructure/host";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { JournalNotFoundError } from "@/journals/errors";
+import { BodyFrontmatterError } from "@/journals/notes/errors";
 import { NoteCreationService } from "@/journals/notes/note-creation";
 
 import { JournalsApiService } from "../journals-api";
@@ -33,6 +34,13 @@ export class LocalRestApiBridge {
       const error = result.error;
       if (error instanceof JournalNotFoundError) {
         throw new RestError("journal-not-found", `Journal not found: ${journal}`, journal);
+      }
+      if (error instanceof BodyFrontmatterError) {
+        throw new RestError(
+          "invalid-request",
+          `The frontmatter in the request body could not be read: ${error.reason}`,
+          journal,
+        );
       }
       if (error instanceof NoteNotFoundError) {
         throw new RestError("note-not-found", `Note not found: ${journal} ${date}`, journal);
