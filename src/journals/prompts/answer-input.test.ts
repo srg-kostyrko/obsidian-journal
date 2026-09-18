@@ -80,6 +80,29 @@ describe("readAnswerInput", () => {
     expect(issuesOf([ctor], {})).toEqual([{ variable: "constructor", reason: expect.any(String) as string }]);
   });
 
+  // `answers[variable] = …` on a plain object hits the inherited prototype setter for this name
+  // instead of creating an own property, silently dropping the answer.
+  it("keeps an answer to a question whose variable is __proto__", () => {
+    const reservedNameQuestion: Prompt = { ...mood, variable: "__proto__" };
+
+    // Computed key syntax is load-bearing: `{ __proto__: "x" }` sets the object's prototype
+    // instead of creating an own property, and would make this test pass for the wrong reason.
+    const result = read([reservedNameQuestion], { ["__proto__"]: "x" });
+
+    expect(result.isOk()).toBe(true);
+    const value = result.isOk() ? result.value : {};
+    expect(Object.hasOwn(value, "__proto__")).toBe(true);
+    expect(Object.getOwnPropertyDescriptor(value, "__proto__")).toMatchObject({ value: "x" });
+  });
+
+  // A getter runs arbitrary code the caller does not control, so it is rejected rather than read.
+  it("rejects a getter in place of a plain answer", () => {
+    const input: Record<string, unknown> = {};
+    Object.defineProperty(input, "mood", { get: () => "good", enumerable: true, configurable: true });
+
+    expect(issuesOf([mood], input)).toEqual([{ variable: "mood", reason: expect.any(String) as string }]);
+  });
+
   it("requires an answer to a required question", () => {
     expect(issuesOf([{ ...mood, required: true }], {})).toEqual([
       { variable: "mood", reason: expect.any(String) as string },

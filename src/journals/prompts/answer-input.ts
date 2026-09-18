@@ -82,14 +82,25 @@ export function readAnswerInput(
   }
 
   const inPath = new Set(promptsInPath(owner).map((prompt) => prompt.variable));
-  const answers: Record<string, PromptAnswer> = {};
+  // Collected as entries and turned into a record at the end, rather than assigned key by key:
+  // a variable named `__proto__` assigned with `answers[variable] = …` hits the inherited
+  // prototype setter instead of creating an own property, so `Object.fromEntries` is load-bearing
+  // here, not cosmetic.
+  const entries: [string, PromptAnswer][] = [];
   for (const prompt of owner.prompts) {
     const { variable } = prompt;
-    const read = readOne(prompt, Object.hasOwn(input, variable) ? input[variable] : undefined, linkTextFor);
-    if (read.kind === "answer") answers[variable] = read.value;
+    // Own data properties only: an inherited value must not read as an answer, and neither must
+    // an accessor — a getter runs arbitrary code the caller does not control.
+    const descriptor = Object.getOwnPropertyDescriptor(input, variable);
+    if (descriptor !== undefined && !("value" in descriptor)) {
+      issues.push({ variable, reason: "expected a plain value, not a getter" });
+      continue;
+    }
+    const read = readOne(prompt, descriptor === undefined ? undefined : descriptor.value, linkTextFor);
+    if (read.kind === "answer") entries.push([variable, read.value]);
     else if (read.kind === "issue") issues.push({ variable, reason: read.reason });
     else if (inPath.has(variable)) issues.push({ variable, reason: "the note name or folder uses this answer" });
     else if (isRequired(prompt)) issues.push({ variable, reason: "this question is required" });
   }
-  return issues.length > 0 ? new Err(issues) : new Ok(answers);
+  return issues.length > 0 ? new Err(issues) : new Ok(Object.fromEntries(entries));
 }
