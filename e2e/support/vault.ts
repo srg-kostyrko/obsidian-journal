@@ -260,10 +260,14 @@ export async function pinNote(path: string): Promise<void> {
 // Puts the user back in the main window after a popout opened — the state a report of "it takes me
 // to a different window" starts from, since opening in a popout leaves that popout focused. Focus
 // has to reach the window itself: the plugin reads Obsidian's `activeWindow`, which only moves on a
-// real window focus, not on a leaf becoming active.
+// real window focus, not on a leaf becoming active. Obsidian moves it from each window's DOM
+// `focus` listener, and `win.focus()` alone only asks the OS window manager, which may refuse
+// (focus-stealing prevention) — so the event is dispatched too, reaching that same listener.
 export async function focusMainWindow(): Promise<void> {
   await browser.executeObsidian(({ app }) => {
-    app.workspace.containerEl.win.focus();
+    const win = app.workspace.containerEl.win;
+    win.focus();
+    win.dispatchEvent(new FocusEvent("focus"));
     const inMain = app.workspace.getLeavesOfType("markdown").find((leaf) => leaf.getRoot() === app.workspace.rootSplit);
     if (inMain) app.workspace.setActiveLeaf(inMain, { focus: true });
   });

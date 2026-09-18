@@ -174,9 +174,11 @@ on it.
   window happens to hold it. The focused window is
   `workspace.containerEl.win.activeWindow` — same value as the `activeWindow`
   global but reachable through the injected `App`, where the global is not
-  fakeable and `workspace.activeLeaf` is deprecated. e2e can drive it:
-  `containerEl.win.focus()` moves `activeWindow` inside the WDIO harness, which
-  a leaf merely becoming active does not. The one deliberate exception is a
+  fakeable and `workspace.activeLeaf` is deprecated. Obsidian moves it only
+  from each window's DOM `focus` listener, so e2e drives it by dispatching
+  `new FocusEvent("focus")` on the window (`focusMainWindow`): `win.focus()`
+  alone asks the OS window manager, which may refuse, and a leaf merely becoming
+  active moves nothing. The one deliberate exception is a
   **pinned** open (`#findPinnedLeaf`): it searches every window and focuses the
   journal's pinned tab wherever it is, because that tab is where the user chose
   to keep the journal and a window-scoped search would pin a second one. Its
