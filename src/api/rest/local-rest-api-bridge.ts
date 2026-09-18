@@ -1,66 +1,48 @@
 import { getAPI, type LocalRestApiPublicApi } from "obsidian-local-rest-api";
 
-import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { NoteNotFoundError } from "@/infrastructure/host";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
-import { JournalNotFoundError } from "@/journals/errors";
-import { BodyFrontmatterError } from "@/journals/notes/errors";
-import { NoteCreationService } from "@/journals/notes/note-creation";
 
-import { JournalsApiService } from "../journals-api";
-
-import { RestError } from "./errors";
-import { registerJournalRoutes, type NoteContent } from "./routes";
+import { sendError } from "./errors";
+import { RestRouteToken, type RestVerb } from "./route";
 
 import type { Events } from "obsidian";
 
 const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
-function unreadableFrontmatter(journal: string, reason: string): RestError {
-  return new RestError("invalid-request", `The frontmatter in the request body could not be read: ${reason}`, journal);
-}
+const VERBS: readonly RestVerb[] = ["get", "put", "post", "patch", "delete"];
 
 export class LocalRestApiBridge {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
-  readonly #api = inject(JournalsApiService);
-  readonly #creation = inject(NoteCreationService);
+  readonly #routes = inject(RestRouteToken);
   readonly #logger = inject(LoggerFactoryToken).named("local-rest-api");
   #handle: LocalRestApiPublicApi | undefined;
-
-  // The route hands over the date ensureNote answered with, which is the note's anchor.
-  readonly #content: NoteContent = {
-    check: (journal, body) => {
-      const checked = this.#creation.checkContent(body);
-      if (checked.isErr()) throw unreadableFrontmatter(journal, checked.error);
-    },
-    replace: async (journal, date, body) => {
-      const result = await this.#creation.replaceContent(journal, date as AnchorString, body);
-      if (result.isOk()) return;
-      const error = result.error;
-      if (error instanceof JournalNotFoundError) {
-        throw new RestError("journal-not-found", `Journal not found: ${journal}`, journal);
-      }
-      if (error instanceof BodyFrontmatterError) throw unreadableFrontmatter(journal, error.reason);
-      if (error instanceof NoteNotFoundError) {
-        throw new RestError("note-not-found", `Note not found: ${journal} ${date}`, journal);
-      }
-      throw new RestError("write-failed", error.message, journal);
-    },
-  };
 
   #register(): void {
     this.#release();
     try {
       const handle = getAPI(this.#app, this.#plugin.manifest);
       if (!handle) return;
-      // Held before registering: a throw partway through registerJournalRoutes must still leave
+      // Held before registering: a throw partway through the routes below must still leave
       // #release() something to unregister, or whatever routes it did add before throwing are
       // stuck on the host forever.
       this.#handle = handle;
-      registerJournalRoutes((path) => handle.addRoute(path), this.#api, this.#content);
+      for (const route of this.#routes) {
+        const hostRoute = handle.addRoute(route.path);
+        for (const verb of VERBS) {
+          const handler = route.handlers[verb];
+          // Express 4 does not catch a rejected handler promise, so the host sees a void-returning
+          // handler and the rejection is answered here.
+          if (handler !== undefined) {
+            hostRoute[verb](
+              (request, response) =>
+                void handler(request, response).catch((error: unknown) => sendError(response, error)),
+            );
+          }
+        }
+      }
     } catch (error) {
       this.#logger.debug("local rest api registration failed", { cause: String(error) });
       this.#release();

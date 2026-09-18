@@ -1,30 +1,24 @@
 import { LOCAL_REST_API_PLUGIN_ID } from "obsidian-local-rest-api";
-import { describe, expect, it, vi, type MockInstance } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { NoteNotFoundError, NoteWriteError, type VaultPath } from "@/infrastructure/host";
 import { LogLevelGateToken } from "@/infrastructure/logger";
-import { AsyncResult } from "@/infrastructure/result";
-import { JournalNotFoundError } from "@/journals/errors";
 import { journalsCoreModule } from "@/journals/module";
-import { NoteCreationService } from "@/journals/notes/note-creation";
-import { fixedJournal } from "@/journals/testing";
-import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { apiModule } from "../module";
 
 import { LocalRestApiBridge } from "./local-rest-api-bridge";
+import { recordingLocalRestApi } from "./testing";
 
-import type { IRoute, Request, Response } from "express";
+import type { IRoute } from "express";
 
 const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
 function chainableRoute(): IRoute {
-  const get = vi.fn();
-  const route = { get } as unknown as IRoute;
-  get.mockReturnValue(route);
-  return route;
+  const route: Record<string, unknown> = {};
+  for (const method of ["get", "post", "put", "patch", "delete"]) route[method] = vi.fn(() => route);
+  return route as unknown as IRoute;
 }
 
 function fakeLocalRestApi() {
@@ -34,26 +28,6 @@ function fakeLocalRestApi() {
     addPublicRoute: vi.fn(),
     addMcpTool: vi.fn(),
     unregister: vi.fn(),
-  };
-}
-
-type Handler = (request: Request, response: Response) => void;
-
-function recordingLocalRestApi() {
-  const handlers = new Map<string, Handler>();
-  const addRoute = vi.fn((path: string) => {
-    const route: Record<string, unknown> = {};
-    for (const method of ["get", "post", "put", "patch", "delete"]) {
-      route[method] = (handler: Handler) => {
-        handlers.set(`${method} ${path}`, handler);
-        return route;
-      };
-    }
-    return route as unknown as IRoute;
-  });
-  return {
-    handlers,
-    api: { apiVersion: 2, addRoute, addPublicRoute: vi.fn(), addMcpTool: vi.fn(), unregister: vi.fn() },
   };
 }
 
@@ -101,9 +75,8 @@ describe("LocalRestApiBridge", () => {
 
   it("releases the handle when registration throws partway through", async () => {
     const harness = await buildHarness();
-    // Exercises routes.ts's real addRoute("/journals/").get(handler) chain: addRoute itself
-    // succeeds (so the handle is already held), and the throw comes from the second call in
-    // the chain, the same shape a host-side route collision would take.
+    // addRoute itself succeeds (so the handle is already held), and the throw comes from the verb
+    // chained onto the first route, the same shape a host-side route collision would take.
     const throwingRoute = {
       get: vi.fn(() => {
         throw new Error("route collides with one the host already owns");
@@ -171,83 +144,36 @@ describe("LocalRestApiBridge", () => {
   });
 });
 
-describe("LocalRestApiBridge whole-file PUT", () => {
-  async function wholeFilePut(
-    body: string,
-    stage?: (harness: TestHarness) => void,
-  ): Promise<{ harness: TestHarness; status: number | undefined; json: unknown }> {
-    const harness = await testContainer({
-      modules: [journalsCoreModule, shelvesCoreModule, apiModule],
-      data: { journals: { work: fixedJournal("work", { type: "day" }) }, shelves: {} },
-      initialize: [VaultSubscriptionService],
-    });
-    stage?.(harness);
+describe("LocalRestApiBridge route registration", () => {
+  it("registers the notes and notelets routes before any :name/:date route", async () => {
+    const harness = await buildHarness();
     const host = recordingLocalRestApi();
     harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
+
     harness.resolve(LocalRestApiBridge).initialize();
-    const handler = host.handlers.get("put /journals/:name/:date");
-    if (handler === undefined) throw new Error("no whole-file PUT route registered");
-    const sent: { status: number | undefined; json: unknown } = { status: undefined, json: undefined };
-    const response = {
-      status(code: number) {
-        sent.status = code;
-        return response;
-      },
-      json(value: unknown) {
-        sent.json = value;
-        return response;
-      },
-      end: vi.fn(),
-    };
 
-    handler(
-      {
-        params: { name: "work", date: "2026-08-18" },
-        headers: { "content-length": String(body.length) },
-        body,
-        path: "/journals/work/2026-08-18",
-      } as unknown as Request,
-      response as unknown as Response,
-    );
-    await vi.waitFor(() => {
-      expect(sent.status).not.toBeUndefined();
-    });
-    return { harness, ...sent };
-  }
-
-  it("reaches NoteCreationService.replaceContent", async () => {
-    let replaceContent: MockInstance | undefined;
-    const { harness, status } = await wholeFilePut("new body", (staged) => {
-      replaceContent = vi.spyOn(staged.resolve(NoteCreationService), "replaceContent");
-    });
-
-    expect(status).toBe(204);
-    expect(replaceContent).toHaveBeenCalledWith("work", "2026-08-18", "new body");
-    expect(harness.host.files.get("2026-08-18.md")?.content).toMatch(/\nnew body$/);
+    expect(host.api.addRoute.mock.calls.map(([path]) => path)).toEqual([
+      "/journals/",
+      "/journals/:name/",
+      "/journals/:name/notes",
+      "/journals/:name/notes/:date",
+      "/journals/:name/notelets/:date",
+      "/journals/:name/:date",
+      "/journals/:name/:date/*",
+    ]);
   });
 
-  it("answers 400 invalid-request when the body's frontmatter cannot be read", async () => {
-    const { harness, status, json } = await wholeFilePut("---\ntags: [x\n---\nbody");
+  it("registers the redirect family for both the plain and the wildcard path", async () => {
+    const harness = await buildHarness();
+    const host = recordingLocalRestApi();
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
 
-    expect(status).toBe(400);
-    expect(json).toMatchObject({
-      code: "invalid-request",
-      journal: "work",
-      message: expect.stringContaining("frontmatter") as unknown,
-    });
-    expect(harness.host.files.get("2026-08-18.md")).toBeUndefined();
-  });
+    harness.resolve(LocalRestApiBridge).initialize();
 
-  it.each([
-    ["journal-not-found", 404, new JournalNotFoundError("work")],
-    ["note-not-found", 404, new NoteNotFoundError("2026-08-18.md" as VaultPath)],
-    ["write-failed", 500, new NoteWriteError("2026-08-18.md" as VaultPath, new Error("disk full"))],
-  ])("maps a %s failure to %i", async (code, expected, error) => {
-    const { status, json } = await wholeFilePut("new body", (staged) => {
-      vi.spyOn(staged.resolve(NoteCreationService), "replaceContent").mockReturnValue(AsyncResult.err(error));
-    });
-
-    expect(status).toBe(expected);
-    expect(json).toMatchObject({ code, journal: "work" });
+    for (const path of ["/journals/:name/:date", "/journals/:name/:date/*"]) {
+      for (const method of ["get", "post", "put", "patch", "delete"]) {
+        expect(host.handlers.has(`${method} ${path}`)).toBe(true);
+      }
+    }
   });
 });
