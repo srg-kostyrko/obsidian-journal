@@ -8,6 +8,8 @@ import { JournalsApiService } from "../journals-api";
 
 import { registerJournalRoutes } from "./routes";
 
+import type { Events } from "obsidian";
+
 const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
 export class LocalRestApiBridge {
@@ -22,10 +24,14 @@ export class LocalRestApiBridge {
     try {
       const handle = getAPI(this.#app, this.#plugin.manifest);
       if (!handle) return;
-      registerJournalRoutes((path) => handle.addRoute(path), this.#api);
+      // Held before registering: a throw partway through registerJournalRoutes must still leave
+      // #release() something to unregister, or whatever routes it did add before throwing are
+      // stuck on the host forever.
       this.#handle = handle;
+      registerJournalRoutes((path) => handle.addRoute(path), this.#api);
     } catch (error) {
       this.#logger.debug("local rest api registration failed", { cause: String(error) });
+      this.#release();
     }
   }
 
@@ -41,12 +47,11 @@ export class LocalRestApiBridge {
   initialize(): void {
     this.#register();
     // The host fires this on every load, so it covers both an install after us and a host reload,
-    // which discards every route registered on its previous instance. Workspace's `on` overloads
-    // are all specific string literals with no plain-`string` fallback reachable from a `const`
-    // whose type widened, so a bare `HOST_LOADED_EVENT` fails every overload (TS2769). Casting to
-    // "quit" — rather than widening the signature some other way — picks an existing overload whose
-    // callback we can satisfy with zero parameters; we never read its `tasks` argument.
-    this.#plugin.registerEvent(this.#app.workspace.on(HOST_LOADED_EVENT as "quit", () => this.#register()));
+    // which discards every route registered on its previous instance. Widened to Events: Workspace's
+    // own `on` overloads are all specific string literals, which shadow the plain-`string` overload
+    // this custom event name needs.
+    const events: Events = this.#app.workspace;
+    this.#plugin.registerEvent(events.on(HOST_LOADED_EVENT, () => this.#register()));
   }
 
   [Symbol.dispose](): void {

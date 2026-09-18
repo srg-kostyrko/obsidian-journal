@@ -57,7 +57,7 @@ describe("LocalRestApiBridge", () => {
     expect(api.addRoute).toHaveBeenCalled();
   });
 
-  it("unregisters the previous handle and registers again when the host reloads", async () => {
+  it("unregisters the previous handle before registering again when the host reloads", async () => {
     const harness = await buildHarness();
     const first = fakeLocalRestApi();
     harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => first });
@@ -70,6 +70,33 @@ describe("LocalRestApiBridge", () => {
 
     expect(first.unregister).toHaveBeenCalled();
     expect(second.addRoute).toHaveBeenCalled();
+    expect(first.unregister.mock.invocationCallOrder[0]).toBeLessThan(second.addRoute.mock.invocationCallOrder[0]);
+  });
+
+  it("releases the handle when registration throws partway through", async () => {
+    const harness = await buildHarness();
+    // Exercises routes.ts's real addRoute("/journals/").get(handler) chain: addRoute itself
+    // succeeds (so the handle is already held), and the throw comes from the second call in
+    // the chain, the same shape a host-side route collision would take.
+    const throwingRoute = {
+      get: vi.fn(() => {
+        throw new Error("route collides with one the host already owns");
+      }),
+    } as unknown as IRoute;
+    const api = {
+      apiVersion: 2,
+      addRoute: vi.fn(() => throwingRoute),
+      addPublicRoute: vi.fn(),
+      addMcpTool: vi.fn(),
+      unregister: vi.fn(),
+    };
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => api });
+    const bridge = harness.resolve(LocalRestApiBridge);
+
+    expect(() => bridge.initialize()).not.toThrow();
+
+    expect(api.addRoute).toHaveBeenCalled();
+    expect(api.unregister).toHaveBeenCalledTimes(1);
   });
 
   it("registers journal routes once the host installs after initialize", async () => {

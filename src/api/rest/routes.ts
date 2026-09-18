@@ -1,11 +1,6 @@
 import type { JournalsApi } from "../public-api";
 import type { IRoute, Request, Response } from "express";
 
-/**
- * Registers Journals' surface on the Local REST API host. `addRoute` is `LocalRestApiPublicApi.addRoute`,
- * already scoped to this extension's handle, so every route registered through it is torn down
- * together when the bridge unregisters.
- */
 async function listJournals(response: Response, api: JournalsApi): Promise<void> {
   try {
     response.status(200).json({ journals: await api.listJournals() });
@@ -17,6 +12,7 @@ async function listJournals(response: Response, api: JournalsApi): Promise<void>
   }
 }
 
+/** Registers Journals' surface on the Local REST API host, scoped to `addRoute`'s own handle. */
 export function registerJournalRoutes(addRoute: (path: string) => IRoute, api: JournalsApi): void {
   // Express 4 does not catch a rejected handler promise, so the handler itself must stay
   // void-returning; listJournals is where the actual awaiting (and its own try/catch) live.
