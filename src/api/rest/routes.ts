@@ -91,10 +91,14 @@ function invalidSuffix(): RestError {
 // vault root, and a whole-path encodeURI for Content-Location. Unlike that function, the segments
 // handed in here already went through readSuffix's raw-path decode, so a suffix segment carrying a
 // literal "/" (from a decoded %2F) round-trips as one encoded segment rather than reopening as a
-// path boundary.
-function redirectToNote(response: Response, path: string, suffix: readonly string[]): void {
+// path boundary. The original query string rides along verbatim: the host's own vault routes read
+// parameters of their own (DELETE's ?permanent=true among them), and a 307 that dropped them would
+// quietly change what the redirected request does.
+function redirectToNote(request: Request, response: Response, path: string, suffix: readonly string[]): void {
   const segments = [...path.split("/"), ...suffix];
-  const location = "/vault/" + segments.map((segment) => encodeURIComponent(segment)).join("/");
+  const queryStart = request.originalUrl.indexOf("?");
+  const query = queryStart === -1 ? "" : request.originalUrl.slice(queryStart);
+  const location = "/vault/" + segments.map((segment) => encodeURIComponent(segment)).join("/") + query;
   response.set("Content-Location", encodeURI(segments.join("/")));
   response.redirect(307, location);
 }
@@ -284,7 +288,7 @@ async function handleRedirectToExistingNote(
       return;
     }
 
-    redirectToNote(response, note.path, suffix);
+    redirectToNote(request, response, note.path, suffix);
   } catch (error) {
     sendError(response, error);
   }
@@ -322,7 +326,7 @@ async function handleEnsureNoteAndRedirect(
       return;
     }
 
-    redirectToNote(response, result.note.path, suffix);
+    redirectToNote(request, response, result.note.path, suffix);
   } catch (error) {
     sendError(response, error);
   }

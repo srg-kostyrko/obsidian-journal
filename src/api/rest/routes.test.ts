@@ -87,6 +87,8 @@ function fakeRequest(
     method: string;
     // Still percent-encoded, exactly as Express's own req.path is — see readSuffix in routes.ts.
     path: string;
+    // Express's req.originalUrl: the path as received, query string included.
+    originalUrl: string;
   }> = {},
 ): Request {
   return {
@@ -96,6 +98,7 @@ function fakeRequest(
     headers: {},
     method: "GET",
     path: "",
+    originalUrl: "",
     ...overrides,
   } as unknown as Request;
 }
@@ -728,6 +731,30 @@ describe("registerJournalRoutes", () => {
           status: 307,
           url: "/vault/work/2026-08-18.md/heading/A%2FB",
         });
+      });
+
+      it("forwards the request's whole query string onto the Location", async () => {
+        const notesFor = vi.fn().mockResolvedValue([noteWithFile("work/2026-08-18.md")]);
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), notesFor });
+        const recorded = register(api);
+        const response = fakeResponse();
+
+        await invokeRedirect(
+          findRoute(recorded, "/journals/:name/:date/*", "delete"),
+          fakeRequest({
+            params: { name: "work", date: "2026-08-18", 0: "Tasks" },
+            method: "DELETE",
+            path: "/journals/work/2026-08-18/Tasks",
+            originalUrl: "/journals/work/2026-08-18/Tasks?permanent=true&other=a%20b",
+          }),
+          response,
+        );
+
+        expect(response.redirected).toEqual({
+          status: 307,
+          url: "/vault/work/2026-08-18.md/Tasks?permanent=true&other=a%20b",
+        });
+        expect(response.headers["Content-Location"]).toBe("work/2026-08-18.md/Tasks");
       });
 
       it("gives 400 invalid-request when a suffix segment is a malformed percent-encoding", async () => {

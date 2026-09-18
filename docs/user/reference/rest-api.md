@@ -49,7 +49,9 @@ overlaps; a period with no note or notelet is left out, not listed empty.
 same route you would reach by working out the note's path yourself, including the host's own
 targeting of a heading, a block or frontmatter by appending it to the path. A client has to follow
 the redirect and keep sending the `Authorization` header, which `curl -L` does on a same-host
-redirect like this one. `POST`, `PATCH` and a targeted `PUT` create the note first (asking its
+redirect like this one. The request's query string is passed through to the host unchanged, so the
+host's own parameters — `?permanent=true` on a `DELETE`, for one — still apply. `POST`, `PATCH`
+and a targeted `PUT` create the note first (asking its
 questions, same as the notes route below) before redirecting; `GET` and `DELETE` never create
 anything — with no note there, they answer `404 note-not-found` instead of redirecting. A `PUT`
 with no target is not part of this family at all — see the next section.
