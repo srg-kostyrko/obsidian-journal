@@ -2,14 +2,14 @@ import { inject, type Module } from "@/infrastructure/di";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 
 import { JournalsApiService } from "./journals-api";
-import { LocalRestApiBridge } from "./rest/local-rest-api-bridge";
-import { RestRouteToken } from "./rest/route";
-import { CreateNoteRoute } from "./rest/routes/create-note";
-import { CreateNoteletRoute } from "./rest/routes/create-notelet";
-import { JournalInfoRoute } from "./rest/routes/journal-info";
-import { JournalListRoute } from "./rest/routes/journal-list";
-import { NoteRedirectRoute, NoteSectionRedirectRoute } from "./rest/routes/note-redirect";
-import { NotesListingRoute } from "./rest/routes/notes-listing";
+import { LocalRestApiBridge } from "./local-rest-api/local-rest-api-bridge";
+import { RestRouteToken } from "./local-rest-api/route";
+import { CreateNoteRoute } from "./local-rest-api/routes/create-note";
+import { CreateNoteletRoute } from "./local-rest-api/routes/create-notelet";
+import { JournalInfoRoute } from "./local-rest-api/routes/journal-info";
+import { JournalListRoute } from "./local-rest-api/routes/journal-list";
+import { NoteRedirectRoute, NoteSectionRedirectRoute } from "./local-rest-api/routes/note-redirect";
+import { NotesListingRoute } from "./local-rest-api/routes/notes-listing";
 
 export const apiModule: Module = {
   register(c) {
