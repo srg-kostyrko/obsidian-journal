@@ -48,4 +48,10 @@ describe("unattendedOutcome", () => {
     const owner = { nameTemplate: "{{date}} {{mood}}", folder: "", prompts: [mood, sleep] };
     expect(unattendedOutcome(owner, { sleep: "8" })).toEqual({ kind: "refuse", reason: "in-path" });
   });
+
+  it("still refuses required when only a different question is answered", () => {
+    const sleep: Prompt = { ...mood, variable: "sleep", frontmatterKey: "sleep" };
+    const owner = { nameTemplate: "{{date}}", folder: "", prompts: [{ ...mood, required: true }, sleep] };
+    expect(unattendedOutcome(owner, { sleep: "8" })).toEqual({ kind: "refuse", reason: "required" });
+  });
 });

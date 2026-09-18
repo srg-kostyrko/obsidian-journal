@@ -158,10 +158,13 @@ export class NoteCreationService {
 
     return attempt.in(this, async function* () {
       const config = this.#journals.get(name).getOrUndefined();
-      // For a period note confirm and prompt are independent levers (unlike a notelet, where
-      // unattended suppresses both): a bare `unattended` must still show the plain confirmation.
-      // Only supplied answers — which stand in for the modal itself — skip it, because whoever
-      // supplied them was never going to see that dialog either.
+      // For a period note with no questions, confirm and prompt are independent levers (unlike a
+      // notelet, where unattended suppresses both): a bare `unattended` must still show this plain
+      // confirmation. A journal with questions has no second dialog to independently suppress —
+      // the answer modal below doubles as the confirmation, reading `confirming` to decide whether
+      // to offer one — so `prompt: false` with no answers supplied skips asking anything at all,
+      // confirmCreation notwithstanding. Only supplied answers — which stand in for either modal —
+      // skip confirmation outright, because whoever supplied them was never going to see one.
       const confirming =
         options?.answers === undefined && !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
 
