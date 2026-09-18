@@ -4,7 +4,7 @@ import { openViaUri } from "../support/uri.js";
 import {
   closeAllLeaves,
   closePopoutWindows,
-  focusMainWindow,
+  mainWindowHoldsNote,
   markdownLeafCount,
   openNote,
   pinNote,
@@ -58,12 +58,24 @@ describe("open a journal note pinned", () => {
     expect(await pinnedNotePaths()).toEqual(["personal/2027-07-04.md", "work/2027-07-04.md"]);
   });
 
-  it("moves the journal's pinned tab in a popout while the main window has focus", async () => {
+  it("moves the journal's pinned tab in the main window while a popout has focus", async () => {
     await closeAllLeaves();
     await openNote("baseline.md");
-    await openViaUri({ journal: "work", date: "2027-07-05", mode: "window", pinned: "true" });
+    await openViaUri({ journal: "work", date: "2027-07-05", mode: "tab", pinned: "true" });
     await waitForActiveNote("work/2027-07-05.md");
-    await focusMainWindow();
+
+    // An unrelated note opened into a popout takes focus there naturally — no need to drive focus
+    // ourselves, which is what made the previous version of this test unable to reach its own
+    // assertions (see focusMainWindow's popout-focus flake).
+    await openViaUri({ journal: "personal", date: "2027-07-05", mode: "window" });
+    await waitForActiveNote("personal/2027-07-05.md");
+    await browser.waitUntil(
+      async () =>
+        browser.executeObsidian(
+          ({ app }) => app.workspace.containerEl.win.activeWindow !== app.workspace.containerEl.win,
+        ),
+      { timeoutMsg: "focus never moved to the popout window" },
+    );
     const before = await markdownLeafCount();
 
     await openViaUri({ journal: "work", date: "2027-07-06", pinned: "true" });
@@ -71,5 +83,6 @@ describe("open a journal note pinned", () => {
 
     expect(await markdownLeafCount()).toBe(before);
     expect(await pinnedNotePaths()).toEqual(["work/2027-07-06.md"]);
+    expect(await mainWindowHoldsNote("work/2027-07-06.md")).toBe(true);
   });
 });
