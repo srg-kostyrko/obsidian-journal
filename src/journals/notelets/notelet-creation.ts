@@ -59,6 +59,8 @@ export type NoteletAttachError =
 export interface CreateNoteletOptions {
   readonly unattended?: boolean;
   readonly skipConfirmation?: boolean;
+  /** Stand in for the type's questions; implies unattended. */
+  readonly answers?: Readonly<Record<string, PromptAnswer>>;
 }
 
 export class NoteletCreationService {
@@ -87,6 +89,8 @@ export class NoteletCreationService {
       if (!this.#timeline.contains(journalName, anchor)) {
         return yield* new Err(new OutOfTimelineError(journalName, anchor));
       }
+      // Supplied answers stand in for the modal, so whoever supplied them is unattended too.
+      const unattended = (options?.unattended ?? false) || options?.answers !== undefined;
 
       // An empty index restarts the counter at 1 and duplicates a name, so the count has to be
       // taken against a settled index rather than whatever has been parsed so far.
@@ -96,18 +100,19 @@ export class NoteletCreationService {
       // Creating a notelet is always an explicit act, so the journal's own confirmation setting —
       // which guards the note a calendar click can create by accident — does not reach here. The
       // type carries its own, and an unattended caller has already said nobody is watching.
-      const confirming =
-        !(options?.unattended ?? false) && !(options?.skipConfirmation ?? false) && type.confirmCreation;
+      const confirming = !unattended && !(options?.skipConfirmation ?? false) && type.confirmCreation;
 
       // Questions run before the name renders, because an answer can reach the filename and a
       // placeholder must never be persisted into one.
       let answers: Record<string, PromptAnswer> = {};
       if (type.prompts.length > 0) {
-        if (options?.unattended ?? false) {
-          const outcome = unattendedOutcome(type);
+        if (unattended) {
+          const supplied = options?.answers ?? {};
+          const outcome = unattendedOutcome(type, supplied);
           if (outcome.kind === "refuse") {
             return yield* new Err(new PromptsUnansweredError(journalName, outcome.reason));
           }
+          answers = { ...supplied };
         } else {
           const asked: NoteletMetadata = {
             kind: "notelet",

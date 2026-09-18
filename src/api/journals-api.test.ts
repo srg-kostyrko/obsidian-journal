@@ -1076,6 +1076,34 @@ describe("JournalsApiService writes", () => {
 
     expect(flows).toHaveBeenCalledTimes(2);
   });
+
+  // The dedupe key's answers segment: two calls for the same period with different answers must
+  // not collapse onto one run, or the second's answers would silently apply to a note the first
+  // already decided how to create.
+  it("does not share a running ensure with one asking for different answers", async () => {
+    const { api, flows } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], nameTemplate: "{{date}} {{mood}}" }),
+    });
+
+    const [first, second] = await Promise.all([
+      api.ensureNote("daily", "2026-08-18", { answers: { mood: "good" } }),
+      api.ensureNote("daily", "2026-08-18", { answers: { mood: "bad" } }),
+    ]);
+
+    expect(flows.mock.calls.filter(([flow]) => flow === EnsureJournalEntryFlow)).toHaveLength(2);
+    expect(first.note.path).not.toBe(second.note.path);
+  });
+
+  it("creates with no modal when confirm and empty answers are both passed on a confirming journal", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }),
+    });
+
+    const result = await api.ensureNote("daily", "2026-08-18", { confirm: true, answers: {} });
+
+    expect(result.created).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
 });
 
 describe("JournalsApiService notelet creation", () => {
@@ -1645,6 +1673,265 @@ describe("JournalsApiService unloading", () => {
     });
     await expect(api.noteletOf({ path: "Journal/Meeting 1.md" })).rejects.toMatchObject({
       code: "plugin-unloaded",
+    });
+  });
+});
+
+describe("JournalsApiService answers", () => {
+  const who: Prompt = { variable: "who", question: "Who?", type: "note", frontmatterKey: "who", required: false };
+  const due: Prompt = {
+    variable: "due",
+    question: "Due?",
+    type: "date",
+    frontmatterKey: "due",
+    required: false,
+    format: "DD.MM.YYYY",
+  };
+
+  it("creates a note named by its answers without asking", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], nameTemplate: "{{date}} {{mood}}" }),
+    });
+
+    const result = await api.ensureNote("daily", "2026-08-18", { answers: { mood: "good" } });
+
+    expect(result).toMatchObject({ created: true, note: { path: "2026-08-18 good.md" } });
+    expect(harness.host.files.get("2026-08-18 good.md")?.frontmatter).toMatchObject({ mood: "good" });
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("rejects with invalid-answers listing every problem, and creates nothing", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...mood, required: true }, due] }),
+    });
+
+    const call = api.ensureNote("daily", "2026-08-18", { answers: { due: "18.08.2026", typo: 1 } });
+
+    await expect(call).rejects.toMatchObject({
+      code: "invalid-answers",
+      journal: "daily",
+      issues: expect.arrayContaining([
+        expect.objectContaining({ variable: "mood" }),
+        expect.objectContaining({ variable: "due" }),
+        expect.objectContaining({ variable: "typo" }),
+      ]) as unknown,
+    });
+    expect(harness.host.files.has("2026-08-18.md")).toBe(false);
+  });
+
+  it("stores a date answer as the ISO date given", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [due] }) });
+
+    await api.ensureNote("daily", "2026-08-18", { answers: { due: "2026-09-01" } });
+
+    expect(harness.host.files.get("2026-08-18.md")?.frontmatter).toMatchObject({ due: "2026-09-01" });
+  });
+
+  it("turns a note answer's path into a link", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [who] }) });
+    harness.host.putFile("People/Ann.md", "");
+
+    await api.ensureNote("daily", "2026-08-18", { answers: { who: "People/Ann.md" } });
+
+    expect(harness.host.files.get("2026-08-18.md")?.frontmatter).toMatchObject({ who: ["[[Ann]]"] });
+  });
+
+  it("rejects a note answer whose path has no file", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [who] }) });
+
+    await expect(api.ensureNote("daily", "2026-08-18", { answers: { who: "People/Bob.md" } })).rejects.toMatchObject({
+      code: "invalid-answers",
+      issues: [expect.objectContaining({ variable: "who" }) as unknown],
+    });
+  });
+
+  it("skips the creation confirmation when answers are supplied", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }),
+    });
+
+    const result = await api.ensureNote("daily", "2026-08-18", { answers: {} });
+
+    expect(result.created).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("checks answers even when the note already exists, then leaves the note as it is", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    await api.ensureNote("daily", "2026-08-18", { answers: { mood: "good" } });
+
+    await expect(api.ensureNote("daily", "2026-08-18", { answers: { mood: 5 } })).rejects.toMatchObject({
+      code: "invalid-answers",
+    });
+    await expect(api.ensureNote("daily", "2026-08-18", { answers: { mood: "bad" } })).resolves.toMatchObject({
+      created: false,
+    });
+  });
+
+  it("opens a note named by its answers", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], nameTemplate: "{{date}} {{mood}}" }),
+    });
+
+    const result = await api.openNote("daily", "2026-08-18", { answers: { mood: "good" } });
+
+    expect(result.note.path).toBe("2026-08-18 good.md");
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("creates a notelet named by its answers", async () => {
+    const { api, harness } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          notelets: {
+            nt_meeting: buildNoteletType({
+              id: "nt_meeting" as TypeId,
+              name: "Meeting",
+              nameTemplate: "Meeting {{mood}}",
+              prompts: [mood],
+            }),
+          },
+        },
+      ),
+    });
+
+    const notelet = await api.createNotelet("weekly", "2026-08-19", "Meeting", { answers: { mood: "calm" } });
+
+    expect(notelet.path).toMatch(/Meeting calm\.md$/);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("checks a notelet's answers against its type's questions, not the journal's", async () => {
+    const { api } = await buildApi({
+      weekly: fixedJournal(
+        "weekly",
+        { type: "week" },
+        {
+          prompts: [mood],
+          notelets: { nt_meeting: buildNoteletType({ id: "nt_meeting" as TypeId, name: "Meeting" }) },
+        },
+      ),
+    });
+
+    await expect(
+      api.createNotelet("weekly", "2026-08-19", "Meeting", { answers: { mood: "calm" } }),
+    ).rejects.toMatchObject({
+      code: "invalid-answers",
+      issues: [expect.objectContaining({ variable: "mood" }) as unknown],
+    });
+  });
+
+  it("describes questions through listJournals", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+
+    const [info] = await api.listJournals();
+
+    expect(info?.prompts.map((prompt) => prompt.variable)).toEqual(["mood"]);
+  });
+
+  it("treats a null answers bag as absent on a journal with no prompts", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    const result = await api.ensureNote("daily", "2026-08-18", { answers: null as unknown as Record<string, never> });
+
+    expect(result.created).toBe(true);
+    expect(harness.host.files.has("2026-08-18.md")).toBe(true);
+  });
+
+  it("treats a null answers bag the same as none on a journal with a required prompt", async () => {
+    const { api } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...mood, required: true }] }),
+    });
+
+    await expect(
+      api.ensureNote("daily", "2026-08-18", {
+        prompt: false,
+        answers: null as unknown as Record<string, never>,
+      }),
+    ).rejects.toMatchObject({ code: "prompts-required" });
+  });
+
+  it("rejects a non-object answers value with a single invalid-answers issue", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await expect(
+      api.ensureNote("daily", "2026-08-18", { answers: "abc" as unknown as Record<string, never> }),
+    ).rejects.toMatchObject({
+      code: "invalid-answers",
+      issues: [expect.objectContaining({ variable: "" }) as unknown],
+    });
+  });
+
+  it("rejects an array answers value with a single invalid-answers issue", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await expect(
+      api.ensureNote("daily", "2026-08-18", { answers: ["x"] as unknown as Record<string, never> }),
+    ).rejects.toMatchObject({
+      code: "invalid-answers",
+      issues: [expect.objectContaining({ variable: "" }) as unknown],
+    });
+  });
+
+  it("rejects a Date as answers, creating nothing and opening no modal", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+
+    await expect(
+      api.ensureNote("daily", "2026-08-18", { answers: new Date() as unknown as Record<string, never> }),
+    ).rejects.toMatchObject({ code: "invalid-answers" });
+    expect(harness.host.files.has("2026-08-18.md")).toBe(false);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("rejects a class instance as answers", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    class AnswersBag {
+      mood = "good";
+    }
+
+    await expect(
+      api.ensureNote("daily", "2026-08-18", { answers: new AnswersBag() as unknown as Record<string, never> }),
+    ).rejects.toMatchObject({ code: "invalid-answers" });
+  });
+
+  it("accepts a null-prototype object as answers", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    const answers: Record<string, unknown> = Object.assign(Object.create(null) as Record<string, unknown>, {
+      mood: "good",
+    });
+
+    const result = await api.ensureNote("daily", "2026-08-18", { answers });
+
+    expect(result.created).toBe(true);
+    expect(harness.host.files.get("2026-08-18.md")?.frontmatter).toMatchObject({ mood: "good" });
+  });
+
+  it("rejects a getter for a question's variable, with an issue naming it", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    const answers: Record<string, unknown> = {};
+    Object.defineProperty(answers, "mood", { get: () => "good", enumerable: true, configurable: true });
+
+    await expect(api.ensureNote("daily", "2026-08-18", { answers })).rejects.toMatchObject({
+      code: "invalid-answers",
+      issues: [expect.objectContaining({ variable: "mood" }) as unknown],
+    });
+  });
+
+  it("rejects a Proxy whose ownKeys trap throws, as invalid-answers rather than a raw error", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    const answers = new Proxy(
+      {},
+      {
+        ownKeys() {
+          throw new Error("boom");
+        },
+      },
+    );
+
+    await expect(api.ensureNote("daily", "2026-08-18", { answers })).rejects.toMatchObject({
+      code: "invalid-answers",
     });
   });
 });

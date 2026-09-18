@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { TypeId } from "@/journals/notelets/config";
+import type { Prompt } from "@/journals/prompts/config";
 import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
@@ -58,6 +59,8 @@ describe("toJournalInfo", () => {
       shelf: null,
       write: { type: "day" },
       notelets: [],
+      prompts: [],
+      noteletTypes: [],
     });
   });
 
@@ -67,6 +70,8 @@ describe("toJournalInfo", () => {
       shelf: "Work",
       write: { type: "custom", every: "week", duration: 3 },
       notelets: [],
+      prompts: [],
+      noteletTypes: [],
     });
   });
 
@@ -83,5 +88,84 @@ describe("toJournalInfo", () => {
     );
 
     expect(toJournalInfo("daily", config, "").notelets).toEqual(["1o1", "Meeting"]);
+  });
+});
+
+describe("toJournalInfo questions", () => {
+  const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+  const place: Prompt = {
+    variable: "place",
+    question: "Where?",
+    type: "select",
+    frontmatterKey: "",
+    required: true,
+    options: [{ label: "Home", value: "home" }],
+  };
+  const diary: Prompt = {
+    variable: "diary",
+    question: "Diary",
+    type: "text",
+    frontmatterKey: "diary",
+    required: false,
+    multiline: true,
+  };
+
+  it("describes the journal's own questions", () => {
+    const config = fixedJournal(
+      "daily",
+      { type: "day" },
+      { nameTemplate: "{{date}} {{mood}}", prompts: [mood, place, diary] },
+    );
+
+    expect(toJournalInfo("daily", config, "").prompts).toEqual([
+      {
+        variable: "mood",
+        question: "Mood?",
+        type: "text",
+        required: false,
+        inPath: true,
+        multiline: false,
+        options: [],
+      },
+      {
+        variable: "place",
+        question: "Where?",
+        type: "select",
+        required: true,
+        inPath: false,
+        multiline: false,
+        options: [{ label: "Home", value: "home" }],
+      },
+      {
+        variable: "diary",
+        question: "Diary",
+        type: "text",
+        required: false,
+        inPath: false,
+        multiline: true,
+        options: [],
+      },
+    ]);
+  });
+
+  it("describes each notelet type's questions, sorted by name, leaving notelets as names", () => {
+    const config = fixedJournal(
+      "daily",
+      { type: "day" },
+      {
+        notelets: {
+          nt_b: buildNoteletType({ id: "nt_b" as TypeId, name: "Retro", prompts: [] }),
+          nt_a: buildNoteletType({ id: "nt_a" as TypeId, name: "Meeting", prompts: [mood] }),
+        },
+      },
+    );
+
+    const info = toJournalInfo("daily", config, "");
+
+    expect(info.notelets).toEqual(["Meeting", "Retro"]);
+    expect(info.noteletTypes.map((type) => [type.name, type.prompts.map((prompt) => prompt.variable)])).toEqual([
+      ["Meeting", ["mood"]],
+      ["Retro", []],
+    ]);
   });
 });

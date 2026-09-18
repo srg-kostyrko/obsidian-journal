@@ -8,6 +8,7 @@ import type { AsyncResult } from "@/infrastructure/result";
 
 import { NoteletCreationService } from "../notelet-creation";
 
+import type { PromptAnswer } from "../../prompts/config";
 import type { TypeId } from "../config";
 import type { NoteletCreationError } from "../notelet-creation";
 
@@ -19,6 +20,7 @@ export interface CreateNoteletParameters {
   openMode?: OpenMode | null;
   unattended?: boolean;
   skipConfirmation?: boolean;
+  answers?: Readonly<Record<string, PromptAnswer>>;
 }
 
 export class CreateNoteletFlow implements Flow<
@@ -37,6 +39,7 @@ export class CreateNoteletFlow implements Flow<
       const { path, counter } = yield* this.#creation.createNotelet(p.journalName, p.typeId, p.anchor, {
         unattended: p.unattended,
         skipConfirmation: p.skipConfirmation,
+        answers: p.answers,
       });
       if (p.openMode !== null) {
         yield* this.#workspace.openNote(path, p.openMode ?? "active");

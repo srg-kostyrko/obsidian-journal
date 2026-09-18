@@ -139,6 +139,27 @@ describe("NoteCreationService.ensureNote", () => {
 
       expect(result.isOk() && result.value.created).toBe(true);
     });
+
+    // A caller supplying answers has already said nobody is watching, as an unattended one has.
+    it("skips the confirmation when answers are supplied", async () => {
+      const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta, { answers: {} });
+
+      expectOk(result);
+      expect(harness.modals.opens).toHaveLength(0);
+    });
+
+    // Unlike a notelet, a period note's confirm and prompt are independent levers when the
+    // journal has no questions — a bare `unattended` (with no supplied answers) must still show
+    // the plain confirmation dialog.
+    it("still opens the confirmation for a bare unattended request", async () => {
+      const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta, { unattended: true });
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+      harness.modals.lastOpen<{ journalName: string; noteName: string }, boolean>().submit(true);
+
+      const result = await promise;
+
+      expect(result.isOk() && result.value.created).toBe(true);
+    });
   });
 
   describe("a journal whose name template resolves to an empty name", () => {
@@ -534,6 +555,41 @@ describe("NoteCreationService.ensureNote — creation prompts", () => {
       .ensureNote("daily", meta, { skipConfirmation: true, unattended: true });
 
     expect(result.isOk() && result.value.created).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  // A journal with questions has no separate confirmation dialog — the answer modal doubles as
+  // it — so a bare `unattended` (no answers supplied) skips asking anything, confirmCreation
+  // notwithstanding. This is the opposite of the no-questions case above, where a bare
+  // `unattended` still opens the plain confirmation.
+  it("creates unattended without any modal when confirmCreation is on but the prompt is optional and out of the path", async () => {
+    const harness = await promptingHarness({ confirmCreation: true });
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta, { unattended: true });
+
+    expect(result.isOk() && result.value.created).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("names the note from supplied answers without asking", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}} {{mood}}" });
+
+    const result = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta, { skipConfirmation: true, answers: { mood: "good" } });
+
+    expectOk(result);
+    expect(result.value.path).toBe("2026-05-19 good.md");
+    expect(harness.host.files.get("2026-05-19 good.md")?.frontmatter).toMatchObject({ mood: "good" });
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("refuses when the supplied answers leave the note name's question open", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}} {{mood}}" });
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta, { answers: {} });
+
+    expect(result.isErr() && result.error instanceof PromptsUnansweredError).toBe(true);
     expect(harness.modals.opens).toHaveLength(0);
   });
 

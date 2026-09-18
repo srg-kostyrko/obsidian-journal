@@ -136,7 +136,11 @@ export class NoteCreationService {
   ensureNote(
     name: string,
     metadata: JournalMetadata,
-    options?: { skipConfirmation?: boolean; unattended?: boolean },
+    options?: {
+      skipConfirmation?: boolean;
+      unattended?: boolean;
+      answers?: Readonly<Record<string, PromptAnswer>>;
+    },
   ): AsyncResult<{ path: VaultPath; created: boolean }, NoteCreationError> {
     // A connected note may live away from the config-derived path (renamed, moved,
     // or connected in place); the index knows its real location — reuse it instead
@@ -154,7 +158,15 @@ export class NoteCreationService {
 
     return attempt.in(this, async function* () {
       const config = this.#journals.get(name).getOrUndefined();
-      const confirming = !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
+      // For a period note with no questions, confirm and prompt are independent levers (unlike a
+      // notelet, where unattended suppresses both): a bare `unattended` must still show this plain
+      // confirmation. A journal with questions has no second dialog to independently suppress —
+      // the answer modal below doubles as the confirmation, reading `confirming` to decide whether
+      // to offer one — so `prompt: false` with no answers supplied skips asking anything at all,
+      // confirmCreation notwithstanding. Only supplied answers — which stand in for either modal —
+      // skip confirmation outright, because whoever supplied them was never going to see one.
+      const confirming =
+        options?.answers === undefined && !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
 
       // With an answer reaching the note name or folder the path genuinely cannot be known
       // before asking, so those journals keep the prompt-then-derive order below. Everywhere
@@ -183,13 +195,16 @@ export class NoteCreationService {
 
       // The unattended rule is a pure function; only the attended path opens a modal, and it
       // does so through a flow so aborts, timing and failure notices match every other modal.
+      // Supplied answers stand in for the modal: whoever supplied them is not watching one.
       let answers: Record<string, PromptAnswer> = {};
       if (config !== undefined && config.prompts.length > 0) {
-        if (options?.unattended ?? false) {
-          const outcome = unattendedOutcome(config);
+        if (options?.answers !== undefined || (options?.unattended ?? false)) {
+          const supplied = options?.answers ?? {};
+          const outcome = unattendedOutcome(config, supplied);
           if (outcome.kind === "refuse") {
             return yield* new Err(new PromptsUnansweredError(name, outcome.reason));
           }
+          answers = { ...supplied };
         } else {
           answers = yield* this.#flows
             .invoke(GatherPromptAnswersFlow, { metadata, confirming }, { notify: false })

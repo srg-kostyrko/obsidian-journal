@@ -197,6 +197,36 @@ describe("NoteletCreationService", () => {
 
     expect(created.isErr()).toBe(true);
   });
+
+  it("names the notelet from supplied answers without asking", async () => {
+    const harness = await boot(
+      workWith({
+        nameTemplate: "Standup {{attendee}}",
+        prompts: [
+          { type: "text", variable: "attendee", question: "Who with?", frontmatterKey: "with", required: false },
+        ],
+      }),
+    );
+
+    const created = await harness
+      .resolve(NoteletCreationService)
+      .createNotelet("Work", TYPE, ANCHOR, { answers: { attendee: "Ann" } });
+
+    expectOk(created);
+    expect(created.value.path).toBe("Standup Ann.md");
+    expect(harness.host.files.get("Standup Ann.md")?.frontmatter).toMatchObject({ with: "Ann" });
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  // A caller supplying answers has already said nobody is watching, as an unattended one has.
+  it("skips the type's confirmation when answers are supplied", async () => {
+    const harness = await boot(workWith({ confirmCreation: true }));
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR, { answers: {} });
+
+    expectOk(created);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
 });
 
 async function answering(harness: TestHarness, answers: Record<string, PromptAnswer>): Promise<void> {

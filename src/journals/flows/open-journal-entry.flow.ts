@@ -13,6 +13,7 @@ import { NoteCreationService } from "../notes/note-creation";
 import { journalPinGroup } from "./journal-pin-group";
 
 import type { NoteCreationError } from "../notes/note-creation";
+import type { PromptAnswer } from "../prompts/config";
 
 export interface OpenJournalEntryParameters {
   journalName: string;
@@ -20,6 +21,7 @@ export interface OpenJournalEntryParameters {
   openMode?: OpenMode;
   skipConfirmation?: boolean;
   unattended?: boolean;
+  answers?: Readonly<Record<string, PromptAnswer>>;
   pinned?: boolean;
 }
 
@@ -45,6 +47,7 @@ export class OpenJournalEntryFlow implements Flow<
       const { path, created } = yield* this.#creation.ensureNote(p.journalName, metadata, {
         skipConfirmation: p.skipConfirmation,
         unattended: p.unattended,
+        answers: p.answers,
       });
       const pin = p.pinned ? journalPinGroup(this.#index, p.journalName) : undefined;
       yield* this.#workspace.openNote(path, p.openMode ?? "active", pin);

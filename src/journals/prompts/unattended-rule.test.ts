@@ -32,4 +32,26 @@ describe("unattendedOutcome", () => {
     const owner = { nameTemplate: "{{date}} {{mood}}", folder: "", prompts: [required] };
     expect(unattendedOutcome(owner)).toEqual({ kind: "refuse", reason: "in-path" });
   });
+
+  it("proceeds when the answer the note name uses is supplied", () => {
+    const owner = { nameTemplate: "{{date}} {{mood}}", folder: "", prompts: [mood] };
+    expect(unattendedOutcome(owner, { mood: "good" })).toEqual({ kind: "proceed" });
+  });
+
+  it("proceeds when a required question is answered", () => {
+    const owner = { nameTemplate: "{{date}}", folder: "", prompts: [{ ...mood, required: true }] };
+    expect(unattendedOutcome(owner, { mood: "good" })).toEqual({ kind: "proceed" });
+  });
+
+  it("still refuses when only a different question is answered", () => {
+    const sleep: Prompt = { ...mood, variable: "sleep", frontmatterKey: "sleep" };
+    const owner = { nameTemplate: "{{date}} {{mood}}", folder: "", prompts: [mood, sleep] };
+    expect(unattendedOutcome(owner, { sleep: "8" })).toEqual({ kind: "refuse", reason: "in-path" });
+  });
+
+  it("still refuses required when only a different question is answered", () => {
+    const sleep: Prompt = { ...mood, variable: "sleep", frontmatterKey: "sleep" };
+    const owner = { nameTemplate: "{{date}}", folder: "", prompts: [{ ...mood, required: true }, sleep] };
+    expect(unattendedOutcome(owner, { sleep: "8" })).toEqual({ kind: "refuse", reason: "required" });
+  });
 });

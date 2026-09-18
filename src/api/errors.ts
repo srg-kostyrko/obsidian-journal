@@ -1,4 +1,4 @@
-import type { JournalsApiErrorCode } from "./public-api";
+import type { AnswerIssue, JournalsApiErrorCode } from "./public-api";
 
 /**
  * The only error shape that crosses the plugin boundary. Consumers discriminate on
@@ -9,6 +9,7 @@ export class ApiError extends Error {
     readonly code: JournalsApiErrorCode,
     message: string,
     readonly journal?: string,
+    readonly issues?: readonly AnswerIssue[],
   ) {
     super(message);
     this.name = "JournalsApiError";
