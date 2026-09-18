@@ -1,6 +1,6 @@
 import type { JournalNote, NoteletNote } from "../public-api";
 
-/** Strips the TFile a JournalNote carries — JSON never ships one. */
+// Copied field by field: a TFile holds back-references into the vault, so it cannot go out as JSON.
 export function noteJson(note: JournalNote) {
   return {
     journal: note.journal,
