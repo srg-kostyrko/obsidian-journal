@@ -373,24 +373,34 @@ export class JournalsApiService implements JournalsApi {
   // Checked before anything is created, and even when the note already exists: the same call
   // must fail the same way whatever state the vault is in. `null` counts as absent — a caller
   // reading a nullable field straight from JSON should not have to filter it out first — but
-  // anything else that is not a plain object (an array, a string, …) cannot be read as answers
-  // keyed by variable, so it is reported the same way a bad individual answer is, rather than
-  // reaching `Object.keys` and throwing a raw TypeError.
+  // anything else that is not a plain object (its prototype must be `Object.prototype` or
+  // `null`; this also rejects an array, a `Date`, or any other class instance) cannot be read as
+  // answers keyed by variable, so it is reported the same way a bad individual answer is.
+  // Reading is wrapped: a Proxy or a getter can throw arbitrary code during that read, and that
+  // must not escape as a raw error either.
   #answers(
     owner: PromptOwner | undefined,
     input: Readonly<Record<string, unknown>> | undefined | null,
     journal: string,
   ): Record<string, PromptAnswer> | undefined {
     if (input === undefined || input === null || owner === undefined) return undefined;
-    if (typeof input !== "object" || Array.isArray(input)) {
-      throw new ApiError("invalid-answers", `Invalid answers for ${journal}: answers must be an object`, journal, [
-        { variable: "", reason: "answers must be an object keyed by question variable" },
-      ]);
+    const notPlainObject = new ApiError(
+      "invalid-answers",
+      `Invalid answers for ${journal}: answers must be a plain object`,
+      journal,
+      [{ variable: "", reason: "answers must be a plain object keyed by question variable" }],
+    );
+    try {
+      const prototype: unknown = typeof input === "object" ? Object.getPrototypeOf(input) : undefined;
+      if (typeof input !== "object" || (prototype !== null && prototype !== Object.prototype)) throw notPlainObject;
+      const read = readAnswerInput(owner, input, this.#linkTextFor);
+      if (read.isOk()) return read.value;
+      const summary = read.error.map(({ variable, reason }) => `${variable}: ${reason}`).join("; ");
+      throw new ApiError("invalid-answers", `Invalid answers for ${journal}: ${summary}`, journal, read.error);
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      throw notPlainObject;
     }
-    const read = readAnswerInput(owner, input, this.#linkTextFor);
-    if (read.isOk()) return read.value;
-    const summary = read.error.map(({ variable, reason }) => `${variable}: ${reason}`).join("; ");
-    throw new ApiError("invalid-answers", `Invalid answers for ${journal}: ${summary}`, journal, read.error);
   }
 
   #toApiError(cause: unknown, journal: string): ApiError {

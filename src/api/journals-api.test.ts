@@ -1874,4 +1874,64 @@ describe("JournalsApiService answers", () => {
       issues: [expect.objectContaining({ variable: "" }) as unknown],
     });
   });
+
+  it("rejects a Date as answers, creating nothing and opening no modal", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+
+    await expect(
+      api.ensureNote("daily", "2026-08-18", { answers: new Date() as unknown as Record<string, never> }),
+    ).rejects.toMatchObject({ code: "invalid-answers" });
+    expect(harness.host.files.has("2026-08-18.md")).toBe(false);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("rejects a class instance as answers", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    class AnswersBag {
+      mood = "good";
+    }
+
+    await expect(
+      api.ensureNote("daily", "2026-08-18", { answers: new AnswersBag() as unknown as Record<string, never> }),
+    ).rejects.toMatchObject({ code: "invalid-answers" });
+  });
+
+  it("accepts a null-prototype object as answers", async () => {
+    const { api, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    const answers: Record<string, unknown> = Object.assign(Object.create(null) as Record<string, unknown>, {
+      mood: "good",
+    });
+
+    const result = await api.ensureNote("daily", "2026-08-18", { answers });
+
+    expect(result.created).toBe(true);
+    expect(harness.host.files.get("2026-08-18.md")?.frontmatter).toMatchObject({ mood: "good" });
+  });
+
+  it("rejects a getter for a question's variable, with an issue naming it", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    const answers: Record<string, unknown> = {};
+    Object.defineProperty(answers, "mood", { get: () => "good", enumerable: true, configurable: true });
+
+    await expect(api.ensureNote("daily", "2026-08-18", { answers })).rejects.toMatchObject({
+      code: "invalid-answers",
+      issues: [expect.objectContaining({ variable: "mood" }) as unknown],
+    });
+  });
+
+  it("rejects a Proxy whose ownKeys trap throws, as invalid-answers rather than a raw error", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) });
+    const answers = new Proxy(
+      {},
+      {
+        ownKeys() {
+          throw new Error("boom");
+        },
+      },
+    );
+
+    await expect(api.ensureNote("daily", "2026-08-18", { answers })).rejects.toMatchObject({
+      code: "invalid-answers",
+    });
+  });
 });
