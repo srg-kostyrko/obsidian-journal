@@ -333,15 +333,16 @@ on it.
   keep only _why_ — non-obvious edge cases, invariants, workarounds, surprising
   host behavior. JSDoc on an exported API is one short line of intent, never a
   paragraph or a file-header narrative.
-- `@types/express`'s own `.d.ts` files carry `/// <reference types="node" />`, which bypasses
-  `tsconfig.app.json`'s `"types": []` the moment anything imports from `"express"` (as
+- Express's type dependencies (`@types/express-serve-static-core`, `@types/serve-static`,
+  `@types/body-parser`) carry `/// <reference types="node" />`, which bypasses the `"types": []`
+  `tsconfig.app.json` inherits from `@vue/tsconfig` the moment anything imports from `"express"` (as
   `src/api/rest/` does) — Node's ambient globals (`Buffer`, `process`, `require`, `global`,
   `__dirname`, `__filename`, `module`, and the ambient `setTimeout`/`clearInterval` overloads that
   return `NodeJS.Timeout`) then typecheck across all of `src/`, even though Obsidian mobile has no
   Node runtime to back them. `no-restricted-globals` bans the bare identifiers in production source
   for this reason; a timer field or variable that needs to survive this must be typed `number`, not
-  derived through `ReturnType<typeof window.setTimeout>` — see the comment at each of the three
-  sites that already do this.
+  derived through `ReturnType<typeof window.setTimeout>` — see the comment at each site that
+  already does this.
 
 ### e2e traps and harness limits
 
@@ -442,8 +443,9 @@ on it.
   Obsidian it lands in `enabledPlugins` but never instantiates:
   `getPlugin("templater-obsidian")` returns null and `<% %>` passes through
   literally with nothing failing loudly. The declared floor is not the cause:
-  Obsidian reads `minAppVersion` only in the community browser's version picker,
-  never when loading a plugin (`app.js`, 1.8.7 and 1.13.7), which is why Local
+  Obsidian reads `minAppVersion` only to pick a compatible release from the
+  plugin's `versions.json` when installing or updating it, never when loading
+  one (`app.js`, 1.8.7 and 1.13.7), which is why Local
   REST API 5.1.0 (`1.13.1`) loads on the 1.8.7 floor. Don't gate a harness
   plugin on its manifest; measure whether it loads.
 - Five areas have **no automated coverage of any kind**, and nothing else

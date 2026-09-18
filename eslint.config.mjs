@@ -108,10 +108,10 @@ const noProductionOverride = {
   message: "Container.override exists for the test host boundary. Production wiring registers once, in a module.",
 };
 
-// `@types/express`'s `/// <reference types="node" />` (see CLAUDE.md, "Lint and tooling") makes
-// these typecheck across the whole program, but Obsidian mobile has no Node runtime to back them.
+// The `/// <reference types="node" />` in Express's type dependencies (see CLAUDE.md, "Lint and
+// tooling") makes these typecheck across the whole program, but Obsidian mobile has no Node runtime to back them.
 const noNodeGlobalsMessage =
-  'Obsidian mobile has no Node runtime. This only typechecks because @types/express pulls Node\'s globals into the program (see CLAUDE.md, "Lint and tooling").';
+  "Obsidian mobile has no Node runtime. This only typechecks because Express's type dependencies pull Node's globals into the program (see CLAUDE.md, \"Lint and tooling\").";
 const noNodeGlobals = ["Buffer", "process", "require", "global", "__dirname", "__filename", "module"].map((name) => ({
   name,
   message: noNodeGlobalsMessage,
