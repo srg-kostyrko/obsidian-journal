@@ -176,7 +176,13 @@ on it.
   global but reachable through the injected `App`, where the global is not
   fakeable and `workspace.activeLeaf` is deprecated. e2e can drive it:
   `containerEl.win.focus()` moves `activeWindow` inside the WDIO harness, which
-  a leaf merely becoming active does not.
+  a leaf merely becoming active does not. The one deliberate exception is a
+  **pinned** open (`#findPinnedLeaf`): it searches every window and focuses the
+  journal's pinned tab wherever it is, because that tab is where the user chose
+  to keep the journal and a window-scoped search would pin a second one. Its
+  unpinned fallback stays window-scoped.
+- `iterateRootLeaves` walks `rootSplit` only — no popout windows — at 1.8.7
+  through 1.13.x, so it cannot stand in for an all-window walk.
 - `app.metadataTypeManager` is undocumented and its shape changed at Obsidian
   1.9: property entries lost their `type` field in favor of `widget`, and
   `getPropertyInfo` now returns a fallback object instead of null, so it can no
