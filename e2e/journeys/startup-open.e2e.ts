@@ -1,6 +1,6 @@
 import { browser } from "@wdio/globals";
 
-import { waitForActiveNoteIn, waitForFrontmatter } from "../support/vault.js";
+import { pinnedNotePaths, waitForActiveNoteIn, waitForFrontmatter } from "../support/vault.js";
 
 // The open-on-startup seam: StartupOpenService captures appStartup from layoutReady at onload and,
 // when the plugin boots with the app (layout not yet ready), opens the configured journal's entry
@@ -40,6 +40,23 @@ describe("open on startup with a weekday override", () => {
       path,
       (frontmatter) => frontmatter.journal === "private",
       `${path} did not attach journal=private frontmatter`,
+    );
+  });
+});
+
+describe("open on startup, pinned", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-startup-pinned", plugins: ["journals"] });
+  });
+
+  it("opens the startup note in a pinned tab", async () => {
+    const path = await waitForActiveNoteIn("day");
+    await browser.waitUntil(
+      async () => {
+        const pinned = await pinnedNotePaths();
+        return pinned.includes(path);
+      },
+      { timeoutMsg: `${path} did not open pinned at startup` },
     );
   });
 });

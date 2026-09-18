@@ -236,6 +236,27 @@ export function mainWindowHoldsNote(path: string): Promise<boolean> {
   );
 }
 
+// Paths held by pinned markdown leaves, across every window. getViewState().pinned is the public
+// spelling of the leaf's pin.
+export function pinnedNotePaths(): Promise<string[]> {
+  return browser.executeObsidian(({ app }) =>
+    app.workspace
+      .getLeavesOfType("markdown")
+      .filter((leaf) => leaf.getViewState().pinned === true)
+      .map((leaf) => (leaf.view as { file?: { path: string } | null }).file?.path ?? "")
+      .toSorted(),
+  );
+}
+
+export async function pinNote(path: string): Promise<void> {
+  await browser.executeObsidian(({ app }, notePath) => {
+    const leaf = app.workspace
+      .getLeavesOfType("markdown")
+      .find((candidate) => (candidate.view as { file?: { path: string } | null }).file?.path === notePath);
+    leaf?.setPinned(true);
+  }, path);
+}
+
 // Puts the user back in the main window after a popout opened — the state a report of "it takes me
 // to a different window" starts from, since opening in a popout leaves that popout focused. Focus
 // has to reach the window itself: the plugin reads Obsidian's `activeWindow`, which only moves on a
