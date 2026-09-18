@@ -69,6 +69,23 @@ export class NoteCreationService {
   readonly #flows = inject(Flows);
   readonly #cycle = inject(CycleService);
 
+  // The index hears about a note only when Obsidian's metadata cache re-parses it, a moment after
+  // this write; a second call arriving in between would find no note and create another. The entry
+  // is registered from the exact frontmatter written, so the later metadata event matches it.
+  #writeClaim(path: VaultPath, mutator: (fm: Record<string, unknown>) => void): AsyncResult<void, NoteCreationError> {
+    let written: Record<string, unknown> | undefined;
+    return this.#notes
+      .updateFrontmatter(path, (fm) => {
+        mutator(fm);
+        written = { ...fm };
+      })
+      .map(() => {
+        if (written === undefined) return;
+        const entry = this.#frontmatter.parseEntry(path, written);
+        if (entry.isSome()) this.#index.register(entry.value);
+      });
+  }
+
   // Whether a file already at the journal's derived path is THIS journal's own note rather
   // than a stray the journal is about to adopt, or a note a different journal already claims.
   // The claim key is what this plugin writes, so a match means the note has been through this
@@ -151,9 +168,10 @@ export class NoteCreationService {
       const indexedPath = indexed.value.path;
       const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
       if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
-      return this.#notes
-        .updateFrontmatter(indexedPath, mutatorResult.value)
-        .map(() => ({ path: indexedPath, created: false as const }));
+      return this.#writeClaim(indexedPath, mutatorResult.value).map(() => ({
+        path: indexedPath,
+        created: false as const,
+      }));
     }
 
     return attempt.in(this, async function* () {
@@ -188,7 +206,7 @@ export class NoteCreationService {
         if (heldFor !== undefined) return yield* new Err(new NotePathHeldByPeriodError(name, derived, heldFor));
         if (this.#carriesJournalClaim(name, derived)) {
           const claimedMutator = yield* this.#frontmatter.writeMutator(name, metadata);
-          yield* this.#notes.updateFrontmatter(derived, claimedMutator);
+          yield* this.#writeClaim(derived, claimedMutator);
           return { path: derived, created: false as const };
         }
       }
@@ -234,7 +252,7 @@ export class NoteCreationService {
         if (heldFor !== undefined) return yield* new Err(new NotePathHeldByPeriodError(name, path, heldFor));
         const owner = this.#claimedByOtherJournal(name, path);
         if (owner !== undefined) return yield* new Err(new NotePathClaimedError(name, path, owner));
-        yield* this.#notes.updateFrontmatter(path, mutator);
+        yield* this.#writeClaim(path, mutator);
         return { path, created: false as const };
       }
 
@@ -258,7 +276,7 @@ export class NoteCreationService {
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }
-      yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#guard.release(path));
+      yield* this.#writeClaim(path, mutator).tapErr(() => this.#guard.release(path));
       return { path, created: true as const };
     });
   }

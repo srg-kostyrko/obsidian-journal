@@ -88,6 +88,27 @@ describe("NoteCreationService.ensureNote", () => {
       expect(result.value.path).toBe("2026-05-19.md");
       expect(result.value.created).toBe(true);
     });
+
+    it("registers the created note in the index before any metadata event", async () => {
+      const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+
+      expectOk(result);
+      expect(harness.resolve(JournalsIndex).entryByPath(result.value.path).isSome()).toBe(true);
+    });
+
+    it("fires no second entryChanged when a matching metadata event follows the write", async () => {
+      const index = harness.resolve(JournalsIndex);
+      const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta);
+      expectOk(result);
+      const seen: unknown[] = [];
+      index.events.on("entryChanged", (event) => {
+        seen.push(event);
+      });
+
+      harness.host.emitMetadata(result.value.path);
+
+      expect(seen).toHaveLength(0);
+    });
   });
 
   describe("a journal that confirms creation", () => {

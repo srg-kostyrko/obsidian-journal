@@ -91,6 +91,32 @@ describe("NoteletCreationService", () => {
     expect(second.value.path).toBe("Standup 2.md");
   });
 
+  it("gives back-to-back notelets distinct counters without waiting for metadata", async () => {
+    const harness = await boot(workWith());
+    const creation = harness.resolve(NoteletCreationService);
+
+    const first = await creation.createNotelet("Work", TYPE, ANCHOR);
+    const second = await creation.createNotelet("Work", TYPE, ANCHOR);
+
+    expectOk(first);
+    expectOk(second);
+    expect([first.value.counter, second.value.counter]).toEqual([1, 2]);
+  });
+
+  it("registers the created notelet in the index before any metadata event", async () => {
+    const harness = await boot(workWith());
+
+    const created = await harness.resolve(NoteletCreationService).createNotelet("Work", TYPE, ANCHOR);
+
+    expectOk(created);
+    expect(
+      harness
+        .resolve(JournalsIndex)
+        .noteletsAt("Work", ANCHOR)
+        .map((entry) => entry.path),
+    ).toContain(created.value.path);
+  });
+
   it("refuses a type the journal does not own", async () => {
     const harness = await boot(workWith());
 
