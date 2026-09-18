@@ -44,14 +44,15 @@ overlaps; a period with no note or notelet is left out, not listed empty.
 
 ## Following the redirect
 
-`GET`, `POST`, `PATCH` and `DELETE` on `/journals/<name>/<date>/…` answer with a `307` to the
-host's own `/vault/<path>/…` route — the same route you would reach by working out the note's path
-yourself, including the host's own targeting of a heading, a block or frontmatter by appending it
-to the path. A client has to follow the redirect and keep sending the `Authorization` header,
-which `curl -L` does on a same-host redirect like this one. `POST` and `PATCH` create the note
-first (asking its questions, same as the notes route below) before redirecting; `GET` and `DELETE`
-do not create anything — with no note there, they answer `404 note-not-found` instead of
-redirecting.
+`GET`, `POST`, `PATCH`, `DELETE`, and a `PUT` carrying a heading or block target, on
+`/journals/<name>/<date>/…` answer with a `307` to the host's own `/vault/<path>/…` route — the
+same route you would reach by working out the note's path yourself, including the host's own
+targeting of a heading, a block or frontmatter by appending it to the path. A client has to follow
+the redirect and keep sending the `Authorization` header, which `curl -L` does on a same-host
+redirect like this one. `POST`, `PATCH` and a targeted `PUT` create the note first (asking its
+questions, same as the notes route below) before redirecting; `GET` and `DELETE` never create
+anything — with no note there, they answer `404 note-not-found` instead of redirecting. A `PUT`
+with no target is not part of this family at all — see the next section.
 
 ## Whole-file PUT is not redirected
 
@@ -89,17 +90,17 @@ a caller can build an answers object without reading the journal's settings.
 Every error answers `{ code, message }`, with `journal` when one journal is implicated and
 `issues` for `invalid-answers`.
 
-| Code                     | Status | When                                                                      |
-| ------------------------ | ------ | ------------------------------------------------------------------------- |
-| `journal-not-found`      | 404    | `<name>` does not match a journal                                         |
-| `note-not-found`         | 404    | the redirect family's `GET`/`DELETE` found no note for the period         |
-| `notelet-type-not-found` | 404    | the notelet `type` does not belong to the journal                         |
-| `outside-timeline`       | 404    | a write maps the date to a period, but one outside the journal's timeline |
-| `invalid-date`           | 400    | `<date>` could not be parsed                                              |
-| `invalid-answers`        | 400    | the answers object failed a question — `issues` lists every problem       |
-| `invalid-request`        | 400    | a malformed request the routes themselves reject — see below              |
-| `unmappable-date`        | 422    | a write's date cannot be placed in any period of the journal at all       |
-| `prompts-required`       | 409    | a write through the redirect family hit a journal that needs answers      |
+| Code                     | Status | When                                                                                                                                      |
+| ------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `journal-not-found`      | 404    | `<name>` does not match a journal                                                                                                         |
+| `note-not-found`         | 404    | the redirect family's `GET`/`DELETE` found no note for the period, or a whole-file `PUT`'s note vanished between its create and its write |
+| `notelet-type-not-found` | 404    | the notelet `type` does not belong to the journal                                                                                         |
+| `outside-timeline`       | 404    | a write maps the date to a period, but one outside the journal's timeline                                                                 |
+| `invalid-date`           | 400    | `<date>` could not be parsed                                                                                                              |
+| `invalid-answers`        | 400    | the answers object failed a question — `issues` lists every problem                                                                       |
+| `invalid-request`        | 400    | a malformed request the routes themselves reject — see below                                                                              |
+| `unmappable-date`        | 422    | a write's date cannot be placed in any period of the journal at all                                                                       |
+| `prompts-required`       | 409    | a write through the redirect family hit a journal that needs answers                                                                      |
 
 `outside-timeline` and `unmappable-date` come only from a route that creates a note — the notes
 and notelets routes, and `POST`/`PATCH`/`PUT` on the redirect family. `GET` and `DELETE` there
@@ -129,20 +130,25 @@ curl -k -H "Authorization: Bearer <your-api-key>" \
 
 ### Create a note, answering its questions
 
-A daily journal `mood`, folder `mood`, with one required question — variable `mood`, saved to a
-property of the same name:
+::: v-pre
+
+A daily journal `mood`, folder `mood`, note name template `{{date}} {{mood}}`, with one required
+question — variable `mood`:
+
+:::
 
 ```sh
 curl -k -X POST -H "Authorization: Bearer <your-api-key>" \
   -H "Content-Type: application/json" \
-  -d '{"answers": {"mood": "good"}}' \
-  https://127.0.0.1:27124/journals/mood/notes/2027-07-12
+  -d '{"answers": {"mood": "great"}}' \
+  https://127.0.0.1:27124/journals/mood/notes/2027-07-16
 ```
 
-`201` with `{ "created": true, "path": "mood/2027-07-12.md", ... }` on the first call for that day;
-a later call for the same day answers `200` with `"created": false` and the existing note. Two
-such calls arriving at once for the same day never create two notes — one wins the creation and
-the other reuses its result, even when their answers differ.
+`201` with `{ "created": true, "path": "mood/2027-07-16 great.md", ... }` — the answer renders
+into the note's name, the same as it would into its content or a property. A later call for the
+same day answers `200` with `"created": false` and the existing note. Two such calls arriving at
+once for the same day never create two notes, even when their answers differ — one wins the
+creation and the other reuses its result.
 
 ### Read a note through the redirect
 
@@ -197,11 +203,12 @@ a read or a delete.
 ```sh
 curl -k -X POST -H "Authorization: Bearer <your-api-key>" \
   -H "Content-Type: application/json" \
-  -d '{"type": "Meeting", "answers": {"topic": "Kickoff"}}' \
-  https://127.0.0.1:27124/journals/work/notelets/2027-07-14
+  -d '{"type": "mood", "answers": {"mood": "good"}}' \
+  https://127.0.0.1:27124/journals/work/notelets/2026-08-18
 ```
 
-`201` with the created notelet: `{ "journal": "work", "type": "Meeting", "date": "2027-07-14", ... }`.
+`201` with the created notelet: `{ "journal": "work", "type": "mood", "path": "work/2026-08-18-1.md", "counter": 1, ... }`.
+`counter` is `null` for a type with no counter, and otherwise orders siblings within the period.
 
 ## What it does not do
 

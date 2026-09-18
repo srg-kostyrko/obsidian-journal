@@ -26,14 +26,16 @@ function postJson(path: string, body: unknown): Promise<Response> {
   });
 }
 
-function notePathsIn(folder: string): Promise<string[]> {
+// Takes the prefix literally — a caller matching a whole folder passes its own trailing "/", so
+// this can also scope to one date within a folder whose name template appends more after it.
+function notePathsMatching(prefix: string): Promise<string[]> {
   return browser.executeObsidian(
     ({ app }, prefix) =>
       app.vault
         .getMarkdownFiles()
         .map((file) => file.path)
         .filter((path) => path.startsWith(prefix)),
-    `${folder}/`,
+    prefix,
   );
 }
 
@@ -78,8 +80,27 @@ describe("local rest api interop", () => {
   it("lists every journal", async () => {
     const response = await rest("/journals/");
     expect(response.status).toBe(200);
-    const body = (await response.json()) as { journals: { name: string }[] };
+    const body = (await response.json()) as {
+      journals: {
+        name: string;
+        shelf: string | null;
+        write: unknown;
+        notelets: string[];
+        prompts: unknown[];
+        noteletTypes: unknown[];
+      }[];
+    };
     expect(body.journals.map((journal) => journal.name).toSorted()).toEqual(["confirming", "mood", "work"]);
+    // work has no notelet types and no questions, so this also pins JournalInfo's full shape —
+    // the docs example is this journal's entry verbatim.
+    expect(body.journals.find((journal) => journal.name === "work")).toEqual({
+      name: "work",
+      shelf: null,
+      write: { type: "day" },
+      notelets: [],
+      prompts: [],
+      noteletTypes: [],
+    });
   });
 
   it("creates a journal note on POST and claims it for the journal", async () => {
@@ -178,13 +199,25 @@ describe("local rest api interop", () => {
     expect(frontmatter?.journal).toBe("work");
   });
 
+  it("renders an answer into the created note's name", async () => {
+    const response = await postJson("/journals/mood/notes/2027-07-16", { answers: { mood: "great" } });
+    expect(response.status).toBe(201);
+    const body = (await response.json()) as { path: string; created: boolean };
+    // mood's name template is "{{date}} {{mood}}" — the path is not the plain date-named one a
+    // journal without a question in its name would get.
+    expect(body.path).toBe("mood/2027-07-16 great.md");
+
+    await waitForJournalFrontmatter("mood/2027-07-16 great.md", { journal: "mood", date: "2027-07-16" });
+  });
+
   it("creates one note when two POSTs for the same answer-named period race", async () => {
     const [good, bad] = await Promise.all([
       postJson("/journals/mood/notes/2027-07-12", { answers: { mood: "good" } }),
       postJson("/journals/mood/notes/2027-07-12", { answers: { mood: "bad" } }),
     ]);
-    // The vault first: two notes is the damage, and the statuses only say who noticed.
-    expect(await notePathsIn("mood")).toHaveLength(1);
+    // The vault first: two notes is the damage, and the statuses only say who noticed. Scoped to
+    // this date, not the whole mood/ folder, since another test seeds a note there too.
+    expect(await notePathsMatching("mood/2027-07-12")).toHaveLength(1);
     expect([good.status, bad.status].toSorted()).toEqual([200, 201]);
   });
 
