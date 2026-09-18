@@ -35,8 +35,9 @@ by finding a note from a journal's name and a date instead.
 `-3d` — the same syntax `obsidian://journals` links use; see [Links](/reference/links) for the
 full table. A name matching several journals is not possible: a route always names one journal.
 
-`GET /journals/<name>/notes` takes `from` and `to` as `YYYY-MM-DD`, and an optional `type` that
-narrows the notelets to one type. Give `from` and `to` together, or leave both off — one without
+`GET /journals/<name>/notes` takes `from` and `to` in the same `<date>` syntax as above — `today`,
+`YYYY-MM-DD`, or a shift such as `+1w` — and an optional `type` that narrows the notelets to one
+type. Give `from` and `to` together, or leave both off — one without
 the other answers `400 invalid-request`. Without them, the route answers every note the journal has
 ever written, with an empty `notelets` list — it never lists notelets on its own, only alongside a
 range. With `from` and `to`, it answers the notes and notelets that exist in periods the window
