@@ -9,12 +9,14 @@ import { NoteCreationService } from "../notes/note-creation";
 
 import type { OpenJournalEntryResult } from "./open-journal-entry.flow";
 import type { NoteCreationError } from "../notes/note-creation";
+import type { PromptAnswer } from "../prompts/config";
 
 export interface EnsureJournalEntryParameters {
   journalName: string;
   anchor: AnchorString;
   skipConfirmation?: boolean;
   unattended?: boolean;
+  answers?: Readonly<Record<string, PromptAnswer>>;
 }
 
 /**
@@ -35,6 +37,7 @@ export class EnsureJournalEntryFlow implements Flow<
       return yield* this.#creation.ensureNote(p.journalName, metadata, {
         skipConfirmation: p.skipConfirmation,
         unattended: p.unattended,
+        answers: p.answers,
       });
     });
   }

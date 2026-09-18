@@ -537,6 +537,28 @@ describe("NoteCreationService.ensureNote — creation prompts", () => {
     expect(harness.modals.opens).toHaveLength(0);
   });
 
+  it("names the note from supplied answers without asking", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}} {{mood}}" });
+
+    const result = await harness
+      .resolve(NoteCreationService)
+      .ensureNote("daily", meta, { skipConfirmation: true, answers: { mood: "good" } });
+
+    expectOk(result);
+    expect(result.value.path).toBe("2026-05-19 good.md");
+    expect(harness.host.files.get("2026-05-19 good.md")?.frontmatter).toMatchObject({ mood: "good" });
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
+  it("refuses when the supplied answers leave the note name's question open", async () => {
+    const harness = await promptingHarness({ nameTemplate: "{{date}} {{mood}}" });
+
+    const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta, { answers: {} });
+
+    expect(result.isErr() && result.error instanceof PromptsUnansweredError).toBe(true);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
+
   describe("a note at the derived path that the index does not know", () => {
     it("does not re-ask a note that already carries this journal's claim", async () => {
       const harness = await promptingHarness();

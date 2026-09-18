@@ -136,7 +136,11 @@ export class NoteCreationService {
   ensureNote(
     name: string,
     metadata: JournalMetadata,
-    options?: { skipConfirmation?: boolean; unattended?: boolean },
+    options?: {
+      skipConfirmation?: boolean;
+      unattended?: boolean;
+      answers?: Readonly<Record<string, PromptAnswer>>;
+    },
   ): AsyncResult<{ path: VaultPath; created: boolean }, NoteCreationError> {
     // A connected note may live away from the config-derived path (renamed, moved,
     // or connected in place); the index knows its real location — reuse it instead
@@ -183,13 +187,16 @@ export class NoteCreationService {
 
       // The unattended rule is a pure function; only the attended path opens a modal, and it
       // does so through a flow so aborts, timing and failure notices match every other modal.
+      // Supplied answers stand in for the modal: whoever supplied them is not watching one.
       let answers: Record<string, PromptAnswer> = {};
       if (config !== undefined && config.prompts.length > 0) {
-        if (options?.unattended ?? false) {
-          const outcome = unattendedOutcome(config);
+        if (options?.answers !== undefined || (options?.unattended ?? false)) {
+          const supplied = options?.answers ?? {};
+          const outcome = unattendedOutcome(config, supplied);
           if (outcome.kind === "refuse") {
             return yield* new Err(new PromptsUnansweredError(name, outcome.reason));
           }
+          answers = { ...supplied };
         } else {
           answers = yield* this.#flows
             .invoke(GatherPromptAnswersFlow, { metadata, confirming }, { notify: false })
