@@ -64,7 +64,7 @@ describe("readAnswerInput", () => {
   });
 
   it("leaves blank, null and absent answers out", () => {
-    const result = read([mood, hours, place], { mood: "  ", hours: null });
+    const result = read([mood, hours, place], { mood: "  ", hours: null, place: "" });
 
     expect(result.isOk() && result.value).toEqual({});
   });
