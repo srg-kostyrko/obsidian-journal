@@ -506,4 +506,121 @@ describe("WorkspaceService", () => {
       expect(recorded?.arguments_[2]).toBe(path);
     });
   });
+
+  describe("openNote pinned", () => {
+    const a = "Daily/2026-05-12.md" as VaultPath;
+    const b = "Daily/2026-05-13.md" as VaultPath;
+    const c = "Daily/2026-05-14.md" as VaultPath;
+    const otherJournal = "Work/2026-05-12.md" as VaultPath;
+    const notelet = "Daily/notelets/Standup.md" as VaultPath;
+    const daily = { sameGroup: (p: VaultPath) => p.startsWith("Daily/") && !p.includes("/notelets/") };
+
+    function withFiles(): { service: WorkspaceService; host: FakeHost } {
+      const built = build();
+      for (const p of [a, b, c, otherJournal, notelet]) built.host.putFile(p);
+      return built;
+    }
+
+    it("opens the note per the mode and pins it when the journal has no pinned tab", async () => {
+      const { service, host } = withFiles();
+
+      expectOk(await service.openNote(a, "tab", daily));
+
+      expect(host.workspace.openCalls).toEqual([{ path: a, mode: "tab" }]);
+      expect([...host.workspace.pinnedPaths]).toEqual([a]);
+    });
+
+    it("moves the journal's pinned tab to the note instead of opening another", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a, "active", daily);
+
+      await service.openNote(b, "tab", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([{ from: a, to: b }]);
+      expect(host.workspace.openCalls).toHaveLength(1);
+      expect([...host.workspace.pinnedPaths]).toEqual([b]);
+      expect(host.workspace.focusedPaths.at(-1)).toBe(b);
+    });
+
+    it("leaves another journal's pinned tab and a pinned notelet where they are", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(otherJournal);
+      await service.openNote(notelet);
+      host.workspace.pinnedPaths.add(otherJournal);
+      host.workspace.pinnedPaths.add(notelet);
+
+      await service.openNote(b, "active", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([]);
+      expect(host.workspace.pinnedPaths).toEqual(new Set([otherJournal, notelet, b]));
+    });
+
+    it("does not move an unpinned tab of the journal", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a);
+
+      await service.openNote(b, "active", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([]);
+      expect(host.workspace.openPaths).toEqual(new Set([a, b]));
+    });
+
+    it("focuses the pinned tab that already holds the note", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a, "active", daily);
+
+      await service.openNote(a, "tab", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([]);
+      expect(host.workspace.openCalls).toHaveLength(1);
+      expect(host.workspace.focusedPaths).toEqual([a]);
+    });
+
+    it("moves the journal's pinned tab in a popout while the main window has focus", async () => {
+      const { service, host } = withFiles();
+      host.workspace.activeWindow = "popout";
+      await service.openNote(a, "window", daily);
+      host.workspace.activeWindow = "main";
+
+      await service.openNote(b, "active", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([{ from: a, to: b }]);
+      expect(host.workspace.openWindows.get(b)).toBe("popout");
+    });
+
+    it("prefers the journal's pinned tab in the focused window", async () => {
+      const { service, host } = withFiles();
+      host.workspace.activeWindow = "popout";
+      await service.openNote(a, "window", daily);
+      host.workspace.activeWindow = "main";
+      await service.openNote(c);
+      host.workspace.pinnedPaths.add(c);
+
+      await service.openNote(b, "active", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([{ from: c, to: b }]);
+    });
+
+    it("pins the unpinned tab already holding the note in this window", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a);
+
+      await service.openNote(a, "tab", daily);
+
+      expect(host.workspace.openCalls).toHaveLength(1);
+      expect([...host.workspace.pinnedPaths]).toEqual([a]);
+      expect(host.workspace.focusedPaths).toEqual([a]);
+    });
+
+    it("ignores a pinned journal note in a sidebar", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a, "active", daily);
+      host.workspace.leafRoots.set(a, "right");
+
+      await service.openNote(b, "active", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([]);
+      expect(host.workspace.pinnedPaths).toEqual(new Set([a, b]));
+    });
+  });
 });

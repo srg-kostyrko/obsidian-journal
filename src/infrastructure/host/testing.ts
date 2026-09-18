@@ -32,6 +32,7 @@ import type {
   NotesEvents,
   NoteSize,
   OpenMode,
+  PinTarget,
   VaultPath,
   WorkspaceEvents,
 } from "./types";
@@ -325,7 +326,7 @@ export class FakeWorkspaceService implements Pick<
     return this.#open.has(path);
   }
 
-  openNote(path: VaultPath, _mode: OpenMode = "active"): AsyncResult<void, WorkspaceOpenError> {
+  openNote(path: VaultPath, _mode: OpenMode = "active", _pin?: PinTarget): AsyncResult<void, WorkspaceOpenError> {
     this.#open.add(path);
     this.#active = new Some<VaultPath>(path);
     return AsyncResult.ok(undefined);

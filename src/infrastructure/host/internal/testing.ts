@@ -65,6 +65,12 @@ export interface FakeWorkspaceState {
   saveLayoutCalls: number;
   revealLeafCalls: number;
   layoutReady: boolean;
+  // The fake keys leaves by the path they hold, so a pin is a property of that path. A retarget
+  // moves the path's window and pin to the new path, the way Obsidian's openFile keeps the leaf.
+  pinnedPaths: Set<string>;
+  retargetCalls: { from: string; to: string }[];
+  // Open paths whose leaf sits in a sidebar rather than the main area.
+  leafRoots: Map<string, "left" | "right">;
 }
 
 export interface FakeRegisteredView {
@@ -76,12 +82,16 @@ interface FakeLeaf {
   openFile(file: TFile): Promise<void>;
   setViewState(state: { type: string; active?: boolean }): Promise<void>;
   updateHeader(): void;
+  setPinned(pinned: boolean): void;
 }
 
 interface FakeMarkdownLeaf {
-  view: { file: TFile | null };
-  openFile(): Promise<undefined>;
+  readonly view: { file: TFile | null };
+  openFile(file: TFile): Promise<void>;
   getContainer(): { win: Window };
+  getRoot(): object;
+  getViewState(): { type: string; pinned?: boolean };
+  setPinned(pinned: boolean): void;
 }
 
 export interface FakeFileSystemEntry {
@@ -208,6 +218,9 @@ export function createFakeHost(): FakeHost {
     saveLayoutCalls: 0,
     revealLeafCalls: 0,
     layoutReady: true,
+    pinnedPaths: new Set(),
+    retargetCalls: [],
+    leafRoots: new Map(),
   };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
@@ -432,6 +445,8 @@ export function createFakeHost(): FakeHost {
     },
   };
 
+  const splits = { root: {}, left: {}, right: {} };
+
   // Every window answers `activeWindow` the way Obsidian's does — with whichever window currently
   // holds focus — so a service can reach the focused window from any window it already holds.
   function windowFor(id: string): Window {
@@ -449,12 +464,19 @@ export function createFakeHost(): FakeHost {
 
   function makeLeaf(placement: "left" | "right" | "tab", openMode: PaneType | false = false) {
     let assignedType: string | null = null;
+    let held: string | null = null;
     const leaf = {
       async openFile(file: TFile): Promise<void> {
+        held = file.path;
         workspaceState.openPaths.add(file.path);
         workspaceState.openWindows.set(file.path, workspaceState.activeWindow);
         workspaceState.openCalls.push({ path: file.path, mode: openMode });
         workspaceState.activeFile = file;
+      },
+      setPinned(pinned: boolean): void {
+        if (held === null) return;
+        if (pinned) workspaceState.pinnedPaths.add(held);
+        else workspaceState.pinnedPaths.delete(held);
       },
       async setViewState(state: { type: string; active?: boolean }): Promise<void> {
         assignedType = state.type;
@@ -472,6 +494,37 @@ export function createFakeHost(): FakeHost {
     return leaf;
   }
 
+  function markdownLeafFor(initialPath: string): FakeMarkdownLeaf {
+    let path = initialPath;
+    return {
+      get view() {
+        return { file: fileObjects.get(path) ?? null };
+      },
+      async openFile(file: TFile): Promise<void> {
+        const win = workspaceState.openWindows.get(path) ?? MAIN_WINDOW;
+        const pinned = workspaceState.pinnedPaths.delete(path);
+        workspaceState.openPaths.delete(path);
+        workspaceState.openWindows.delete(path);
+        workspaceState.openPaths.add(file.path);
+        workspaceState.openWindows.set(file.path, win);
+        if (pinned) workspaceState.pinnedPaths.add(file.path);
+        workspaceState.retargetCalls.push({ from: path, to: file.path });
+        workspaceState.activeFile = file;
+        path = file.path;
+      },
+      getContainer: () => ({ win: windowFor(workspaceState.openWindows.get(path) ?? MAIN_WINDOW) }),
+      getRoot: () => {
+        const side = workspaceState.leafRoots.get(path);
+        return side === undefined ? splits.root : splits[side];
+      },
+      getViewState: () => ({ type: "markdown", ...(workspaceState.pinnedPaths.has(path) && { pinned: true }) }),
+      setPinned(pinned: boolean): void {
+        if (pinned) workspaceState.pinnedPaths.add(path);
+        else workspaceState.pinnedPaths.delete(path);
+      },
+    };
+  }
+
   const workspaceApi = {
     leftRibbon,
     on: (event: string, callback: AnyHandler): EventRef => workspaceEvents.on(event, callback),
@@ -484,13 +537,12 @@ export function createFakeHost(): FakeHost {
       // so it never collides with the note-path fallback used for `"markdown"` lookups.
       const tracked = viewLeavesByType.get(type);
       if (tracked) return tracked;
-      return [...workspaceState.openPaths].map((path) => ({
-        view: { file: fileObjects.get(path) ?? null },
-        openFile: async () => undefined,
-        getContainer: () => ({ win: windowFor(workspaceState.openWindows.get(path) ?? MAIN_WINDOW) }),
-      }));
+      return [...workspaceState.openPaths].map(markdownLeafFor);
     },
     containerEl: { win: windowFor(MAIN_WINDOW) },
+    rootSplit: splits.root,
+    leftSplit: splits.left,
+    rightSplit: splits.right,
     setActiveLeaf(leaf: FakeMarkdownLeaf): void {
       const file = leaf.view.file;
       if (file) workspaceState.focusedPaths.push(file.path);

@@ -15,7 +15,7 @@ import { buildMarkdownLink } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-import type { MenuItemSpec, OpenMode, VaultPath, WorkspaceEvents } from "../types";
+import type { MenuItemSpec, OpenMode, PinTarget, VaultPath, WorkspaceEvents } from "../types";
 import type { Editor, MarkdownView, WorkspaceLeaf } from "obsidian";
 
 // Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
@@ -85,7 +85,11 @@ export class WorkspaceService {
     );
   }
 
-  async #open(path: VaultPath, mode: OpenMode): Promise<void> {
+  async #open(path: VaultPath, mode: OpenMode, pin?: PinTarget): Promise<void> {
+    if (pin) {
+      await this.#openPinned(path, mode, pin);
+      return;
+    }
     // A tab/split/window request is the user asking for a new pane; only the default "active"
     // mode may collapse onto a leaf that already holds the note.
     const existing = mode === "active" ? this.#findOpenLeaf(path, this.#activeWindow()) : null;
@@ -96,6 +100,44 @@ export class WorkspaceService {
     const file = this.#app.vault.getAbstractFileByPath(path);
     if (!(file instanceof TFile)) throw new InvariantError(`not a file: ${path}`);
     await this.#app.workspace.getLeaf(toPaneType(mode)).openFile(file, { active: true });
+  }
+
+  async #openPinned(path: VaultPath, mode: OpenMode, pin: PinTarget): Promise<void> {
+    const file = this.#app.vault.getAbstractFileByPath(path);
+    if (!(file instanceof TFile)) throw new InvariantError(`not a file: ${path}`);
+    const pinned = this.#findPinnedLeaf(path, pin);
+    if (pinned) {
+      if (this.#fileOf(pinned)?.path !== path) await pinned.openFile(file, { active: true });
+      this.#app.workspace.setActiveLeaf(pinned, { focus: true });
+      return;
+    }
+    const existing = this.#findOpenLeaf(path, this.#activeWindow());
+    if (existing) {
+      existing.setPinned(true);
+      this.#app.workspace.setActiveLeaf(existing, { focus: true });
+      return;
+    }
+    const leaf = this.#app.workspace.getLeaf(toPaneType(mode));
+    await leaf.openFile(file, { active: true });
+    leaf.setPinned(true);
+  }
+
+  // Unlike #findOpenLeaf this spans every window on purpose: the pinned tab is the place the user
+  // chose for the group, so a window-scoped search would pin a second one from the main window.
+  // Sidebars are skipped because no open mode puts a note there.
+  #findPinnedLeaf(path: VaultPath, pin: PinTarget): WorkspaceLeaf | null {
+    const { workspace } = this.#app;
+    const win = this.#activeWindow();
+    const rank = (leaf: WorkspaceLeaf): number =>
+      (this.#fileOf(leaf)?.path === path ? 0 : 2) + (leaf.getContainer().win === win ? 0 : 1);
+    const candidates = workspace.getLeavesOfType("markdown").filter((leaf) => {
+      const root = leaf.getRoot();
+      if (root === workspace.leftSplit || root === workspace.rightSplit) return false;
+      if (leaf.getViewState().pinned !== true) return false;
+      const held = this.#fileOf(leaf)?.path as VaultPath | undefined;
+      return held !== undefined && (held === path || pin.sameGroup(held));
+    });
+    return candidates.toSorted((x, y) => rank(x) - rank(y)).at(0) ?? null;
   }
 
   // Obsidian tracks the focused window here, differing from the main window only while a popout
@@ -164,8 +206,8 @@ export class WorkspaceService {
     return this.#findOpenLeaf(path) !== null;
   }
 
-  openNote(path: VaultPath, mode: OpenMode = "active"): AsyncResult<void, WorkspaceOpenError> {
-    return AsyncResult.fromPromise(this.#open(path, mode), (cause) => new WorkspaceOpenError(path, cause));
+  openNote(path: VaultPath, mode: OpenMode = "active", pin?: PinTarget): AsyncResult<void, WorkspaceOpenError> {
+    return AsyncResult.fromPromise(this.#open(path, mode, pin), (cause) => new WorkspaceOpenError(path, cause));
   }
 
   hasActiveEditor(): boolean {

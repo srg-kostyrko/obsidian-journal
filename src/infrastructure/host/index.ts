@@ -76,6 +76,7 @@ export type {
   NoteTask,
   NotesEvents,
   OpenMode,
+  PinTarget,
   VaultPath,
   VaultProperty,
   WorkspaceEvents,
