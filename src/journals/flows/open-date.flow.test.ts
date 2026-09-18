@@ -103,6 +103,21 @@ describe("OpenDateFlow", () => {
       expect(harness.resolve(WorkspaceService).isOpen("B/2026-05-19.md" as VaultPath)).toBe(true);
     });
 
+    it("passes pinned through to OpenJournalEntryFlow for the chosen journal", async () => {
+      const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
+      const promise = harness.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), pinned: true });
+      await Promise.resolve();
+      await Promise.resolve();
+      harness.suggests.lastOpen<string[], string>().choose("b");
+      const result = await promise;
+
+      expect(result.isOk()).toBe(true);
+      expect(invokeSpy).toHaveBeenCalledWith(
+        OpenJournalEntryFlow,
+        expect.objectContaining({ journalName: "b", pinned: true }),
+      );
+    });
+
     it("picks via a menu at the mouse event when pickAt is provided", async () => {
       // Mouse-driven clicks disambiguate with a native menu at the pointer; the
       // centered suggest stays for keyboard/command/URI entry points.
