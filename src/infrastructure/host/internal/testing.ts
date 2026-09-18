@@ -75,7 +75,8 @@ export interface FakeWorkspaceState {
   // `view.file`, the path only in `getViewState().state.file`, until the leaf is shown.
   deferredPaths: Set<string>;
   // Open paths that also sit, unpinned, in a second leaf docked in a sidebar — listed ahead of
-  // the main-area leaf, the way a sidebar can precede the root split in leaf iteration.
+  // the main-area leaf. Obsidian iterates the root split first, so this order is defensive: it
+  // proves the pinned lookup filters by area rather than relying on iteration order.
   sidebarCopies: Map<string, "left" | "right">;
 }
 
