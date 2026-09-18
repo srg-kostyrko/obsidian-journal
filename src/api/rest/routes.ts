@@ -39,10 +39,49 @@ function readQueryString(value: unknown): string | undefined | typeof INVALID_QU
   return typeof value === "string" ? value : INVALID_QUERY_VALUE;
 }
 
+// Express 4 matches "/journals/:name/:date/*" only when the URL has that trailing slash (verified
+// against a real express instance — the plain "/journals/:name/:date" pattern never sees a
+// suffix), so req.params[0] is undefined on the no-suffix route and "" on a bare trailing slash.
+function readSuffix(request: Request): string[] {
+  const raw: unknown = request.params[0];
+  if (typeof raw !== "string" || raw === "") return [];
+  return raw.split("/").filter((segment) => segment !== "");
+}
+
+// Matches the periodic companion (coddingtonbear/obsidian-local-rest-api-periodic-notes,
+// src/routes.ts:50-77): per-segment encodeURIComponent for the Location the host resolves against
+// its vault root, and a whole-path encodeURI for Content-Location.
+function redirectToNote(response: Response, path: string, suffix: readonly string[]): void {
+  const segments = [...path.split("/"), ...suffix];
+  const location = "/vault/" + segments.map((segment) => encodeURIComponent(segment)).join("/");
+  response.set("Content-Location", encodeURI(segments.join("/")));
+  response.redirect(307, location);
+}
+
+// sendError passes an error's own message straight through, and the API's prompts-required
+// message says nothing about the redirect family's own write path — a caller needs to be told
+// where the answers actually go. Spreading (rather than naming code/journal/issues one by one)
+// keeps whatever fields the thrown error carries; Error#message itself is non-enumerable, so the
+// spread drops the original message on its own and the explicit key below is the only one that
+// lands.
+function wrapPromptsRequired(error: unknown, name: string, date: string): unknown {
+  if (typeof error !== "object" || error === null) return error;
+  const record = error as Record<string, unknown>;
+  if (record.code !== "prompts-required") return error;
+  return {
+    ...record,
+    message: `This journal needs answers before a note can be created. Use POST /journals/${name}/notes/${date} with an answers object instead.`,
+  };
+}
+
 function journalNotFound(name: string): RestError {
   // Matches JournalsApiService's own wording (src/api/journals-api.ts) so a client sees the same
   // message whether the 404 came from a route's own journalInfo check or from the API itself.
   return new RestError("journal-not-found", `Journal not found: ${name}`, name);
+}
+
+function noteNotFound(name: string, date: string): RestError {
+  return new RestError("note-not-found", `Note not found: ${name} ${date}`, name);
 }
 
 function noteletTypeError(body: unknown): RestError {
@@ -169,6 +208,62 @@ async function handleCreateNotelet(request: Request, response: Response, api: Jo
   }
 }
 
+async function handleRedirectToExistingNote(request: Request, response: Response, api: JournalsApi): Promise<void> {
+  try {
+    const name = request.params.name;
+    const info = await api.journalInfo(name);
+    if (info === null) {
+      sendError(response, journalNotFound(name));
+      return;
+    }
+
+    const date = request.params.date;
+    const notes = await api.notesFor(name, date);
+    const note = notes[0];
+    if (note === undefined) {
+      sendError(response, noteNotFound(name, date));
+      return;
+    }
+    // Separate from the "no note at all" check above (rather than one ||-chain) so
+    // @typescript-eslint/prefer-optional-chain doesn't propose collapsing it into an optional
+    // chain that would read note.path on a possibly-undefined note.
+    if (note.file === null || note.path === null) {
+      sendError(response, noteNotFound(name, date));
+      return;
+    }
+
+    redirectToNote(response, note.path, readSuffix(request));
+  } catch (error) {
+    sendError(response, error);
+  }
+}
+
+async function handleEnsureNoteAndRedirect(request: Request, response: Response, api: JournalsApi): Promise<void> {
+  try {
+    const name = request.params.name;
+    const info = await api.journalInfo(name);
+    if (info === null) {
+      sendError(response, journalNotFound(name));
+      return;
+    }
+
+    const date = request.params.date;
+    let result;
+    try {
+      // No answers: this is the redirect family, handing content to the host's own vault routes,
+      // not the notes endpoint that accepts answers. confirm: false too — see the notes above.
+      result = await api.ensureNote(name, date, { prompt: false, confirm: false });
+    } catch (error) {
+      sendError(response, wrapPromptsRequired(error, name, date));
+      return;
+    }
+
+    redirectToNote(response, result.note.path, readSuffix(request));
+  } catch (error) {
+    sendError(response, error);
+  }
+}
+
 /** Registers Journals' surface on the Local REST API host, scoped to `addRoute`'s own handle. */
 export function registerJournalRoutes(addRoute: (path: string) => IRoute, api: JournalsApi): void {
   // Express 4 does not catch a rejected handler promise, so every handler stays void-returning at
@@ -186,4 +281,17 @@ export function registerJournalRoutes(addRoute: (path: string) => IRoute, api: J
   addRoute("/journals/:name/notelets/:date").post(
     (request: Request, response: Response) => void handleCreateNotelet(request, response, api),
   );
+
+  // Registered after the literal routes above, or "notes"/"notelets" would themselves match
+  // :date here first (see the order test in routes.test.ts). Both paths are needed: Express 4
+  // matches "/journals/:name/:date/*" only when the URL carries that trailing slash, never
+  // against a bare "/journals/:name/:date" (verified against a real express instance).
+  for (const path of ["/journals/:name/:date", "/journals/:name/:date/*"]) {
+    addRoute(path)
+      .get((request: Request, response: Response) => void handleRedirectToExistingNote(request, response, api))
+      .delete((request: Request, response: Response) => void handleRedirectToExistingNote(request, response, api))
+      .put((request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api))
+      .post((request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api))
+      .patch((request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api));
+  }
 }
