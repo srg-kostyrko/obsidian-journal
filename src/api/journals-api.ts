@@ -68,7 +68,7 @@ export class JournalsApiService implements JournalsApi {
   readonly #resolver = inject(JournalDateResolver);
   readonly #flows = inject(Flows);
   readonly #workspace = inject(WorkspaceService);
-  readonly #inFlight = new Map<string, Promise<EnsureResult>>();
+  readonly #inFlight = new Map<string, { readonly request: string; readonly promise: Promise<EnsureResult> }[]>();
   readonly #noteletListingDependencies = { journals: this.#journals, index: this.#index, cycle: this.#cycle };
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
@@ -309,14 +309,40 @@ export class JournalsApiService implements JournalsApi {
 
   // Between the existence check and the write, NoteCreationService may await a confirmation
   // modal — seconds wide. Two callers ensuring the same period would otherwise get two
-  // prompts and one NoteAlreadyExistsError.
-  #dedupe(name: string, anchor: AnchorString, run: () => Promise<EnsureResult>): Promise<EnsureResult> {
+  // prompts and one NoteAlreadyExistsError. Calls for one period run one after another, and a
+  // call identical to any of them shares that run; a different one waits its turn and then does
+  // its own, by which point the note exists and nothing prompts again.
+  #dedupe(
+    name: string,
+    anchor: AnchorString,
+    request: string,
+    run: () => Promise<EnsureResult>,
+  ): Promise<EnsureResult> {
     const key = `${name}\u{0}${anchor}`;
-    const pending = this.#inFlight.get(key);
-    if (pending) return pending;
-    const started = run().finally(() => this.#inFlight.delete(key));
-    this.#inFlight.set(key, started);
+    const queue = this.#inFlight.get(key) ?? [];
+    const same = queue.find((entry) => entry.request === request);
+    if (same) return same.promise;
+    const settled = queue.at(-1)?.promise.catch(() => null) ?? Promise.resolve(null);
+    const started: Promise<EnsureResult> = settled.then(run).finally(() => {
+      const rest = (this.#inFlight.get(key) ?? []).filter((entry) => entry.promise !== started);
+      if (rest.length === 0) this.#inFlight.delete(key);
+      else this.#inFlight.set(key, rest);
+    });
+    this.#inFlight.set(key, [...queue, { request, promise: started }]);
     return started;
+  }
+
+  // Built from the values the flows receive, not the raw options, so a call spelling out a
+  // default shares a run with one that omits it. An explicit `confirm` is not a default: omitting
+  // it defers to the journal's own setting.
+  #request(kind: "ensure" | "open", options: OpenNoteOptions = {}): string {
+    return [
+      kind,
+      options.openMode ?? "active",
+      options.pinned === true,
+      this.#skipConfirmation(options) ?? "journal",
+      this.#unattended(options),
+    ].join("\u{0}");
   }
 
   #skipConfirmation(options: { readonly confirm?: boolean } | undefined): boolean | undefined {
@@ -410,7 +436,7 @@ export class JournalsApiService implements JournalsApi {
   async ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult> {
     await this.#readyForNotes();
     const { name, anchor } = await this.#resolveOne(selector, date);
-    return this.#dedupe(name, anchor, async () => {
+    return this.#dedupe(name, anchor, this.#request("ensure", options), async () => {
       const result = await this.#flows.invoke(
         EnsureJournalEntryFlow,
         {
@@ -429,13 +455,14 @@ export class JournalsApiService implements JournalsApi {
   async openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult> {
     await this.#readyForNotes();
     const { name, anchor } = await this.#resolveOne(selector, date);
-    return this.#dedupe(name, anchor, async () => {
+    return this.#dedupe(name, anchor, this.#request("open", options), async () => {
       const result = await this.#flows.invoke(
         OpenJournalEntryFlow,
         {
           journalName: name,
           anchor,
           openMode: options?.openMode,
+          pinned: options?.pinned,
           skipConfirmation: this.#skipConfirmation(options),
           unattended: this.#unattended(options),
         },

@@ -320,6 +320,8 @@
   "common_label_name": "Name",
   "command_modal_open_mode_label": "Notiz öffnen",
   "common_show_in_ribbon": "In der Werkzeugleiste anzeigen",
+  "common_pin_note_label": "Notiz anheften",
+  "common_pin_note_desc": "In einem angehefteten Tab öffnen. Hat dieses Journal schon einen angehefteten Tab, wechselt stattdessen dieser Tab zu dieser Notiz.",
   "command_modal_type_label": "Beim Ausführen des Befehls",
   "command_modal_write_type_label": "Notiztyp",
   "command_name_prefix_hint": [
@@ -1258,6 +1260,7 @@
   "startup_dashboard_section_title": "Programmstart",
   "startup_open_note_title": "Beim Start öffnen",
   "startup_open_note_desc": "Öffnet eine Notiz, wenn du diesen Vault öffnest.",
+  "startup_open_mode_title": "Notiz öffnen",
   "startup_dont_open_option": "Nicht öffnen",
   "startup_weekday_title": "Anderes Journal an bestimmten Tagen",
   "startup_weekday_desc": "Wähle, welches Journal an den ausgewählten Tagen geöffnet wird. An allen anderen Tagen wird das Journal oben geöffnet.",
@@ -1275,6 +1278,8 @@
   "uri_invalid_date": "Das Datum „{date}“ in der URI konnte nicht interpretiert werden.",
   "uri_invalid_mode": "Unbekannter Öffnungsmodus „{mode}“ in der URI.",
   "uri_notelet_requires_journal": "Ein Kurznotiz-Link benötigt ein Journal. Füge journal=<Name> zum Link hinzu.",
+  "uri_invalid_pinned": "Unbekannter pinned-Wert „{value}“ in der URI. Verwende true oder false.",
+  "uri_notelet_pinned": "Ein Kurznotiz-Link kann nicht angeheftet werden. Entferne pinned= aus dem Link.",
   "uri_unknown_journal": "Es gibt kein Journal mit dem Namen „{journal}“.",
   "uri_no_journal": "Für dieses Datum gibt es kein Journal.",
   "uri_no_journal_of_type": [

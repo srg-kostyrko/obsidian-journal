@@ -76,3 +76,10 @@ export class RenameFileFailedError extends Error {
     this.name = "RenameFileFailedError";
   }
 }
+
+export class NoteNotOpenError extends Error {
+  constructor(path: string) {
+    super(`no open tab holds ${path}`);
+    this.name = "NoteNotOpenError";
+  }
+}

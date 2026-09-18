@@ -309,6 +309,8 @@
   "common_label_name": "Назва",
   "command_modal_open_mode_label": "Відкрити нотатку",
   "common_show_in_ribbon": "Показати на стрічці",
+  "common_pin_note_label": "Закріпити нотатку",
+  "common_pin_note_desc": "Відкривати в закріпленій вкладці. Якщо цей журнал уже має закріплену вкладку, у ній відкриється ця нотатка.",
   "command_modal_type_label": "Коли виконується команда",
   "command_modal_write_type_label": "Тип нотатки",
   "command_name_prefix_hint": [
@@ -1143,6 +1145,7 @@
   "startup_dashboard_section_title": "Запуск",
   "startup_open_note_title": "Відкривати під час запуску",
   "startup_open_note_desc": "Відкривати нотатку щоразу, коли ви відкриваєте це сховище.",
+  "startup_open_mode_title": "Відкрити нотатку",
   "startup_dont_open_option": "Не відкривати",
   "startup_weekday_title": "Інший журнал у деякі дні",
   "startup_weekday_desc": "Виберіть, який журнал відкривати у вибрані дні. В інші дні відкриється журнал вище.",
@@ -1160,6 +1163,8 @@
   "uri_invalid_date": "Не вдалося розпізнати дату «{date}» в URI.",
   "uri_invalid_mode": "Невідомий режим відкриття «{mode}» в URI.",
   "uri_notelet_requires_journal": "Посиланню на піднотатку потрібен журнал. Додайте до посилання journal=<назва>.",
+  "uri_invalid_pinned": "Невідоме значення pinned «{value}» в URI. Використовуйте true або false.",
+  "uri_notelet_pinned": "Посилання на піднотатку не можна закріпити. Приберіть із посилання pinned=.",
   "uri_unknown_journal": "Немає журналу з назвою «{journal}».",
   "uri_no_journal": "Жоден журнал не охоплює цю дату.",
   "uri_no_journal_of_type": [

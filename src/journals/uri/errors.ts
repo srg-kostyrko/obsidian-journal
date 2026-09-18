@@ -43,9 +43,29 @@ export class NoteletUriRequiresJournalError extends Error {
   }
 }
 
+export class InvalidUriPinnedError extends Error {
+  readonly kind = "invalid-pinned" as const;
+
+  constructor(readonly value: string) {
+    super(`Unknown pinned value in URI: ${value}`);
+    this.name = "InvalidUriPinnedError";
+  }
+}
+
+export class NoteletUriPinnedError extends Error {
+  readonly kind = "notelet-pinned" as const;
+
+  constructor() {
+    super("A notelet URI cannot be pinned");
+    this.name = "NoteletUriPinnedError";
+  }
+}
+
 export type UriError =
   | MissingUriTargetError
   | UnknownUriWriteTypeError
   | InvalidUriDateError
   | InvalidUriOpenModeError
-  | NoteletUriRequiresJournalError;
+  | NoteletUriRequiresJournalError
+  | InvalidUriPinnedError
+  | NoteletUriPinnedError;

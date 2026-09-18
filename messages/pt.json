@@ -320,6 +320,8 @@
   "common_label_name": "Nome",
   "command_modal_open_mode_label": "Abrir nota",
   "common_show_in_ribbon": "Mostrar na faixa de opções",
+  "common_pin_note_label": "Fixar a nota",
+  "common_pin_note_desc": "Abrir numa aba fixada. Se este diário já tiver uma aba fixada, essa aba passa para esta nota.",
   "command_modal_type_label": "Quando o comando é executado",
   "command_modal_write_type_label": "Tipo de nota",
   "command_name_prefix_hint": [
@@ -1258,6 +1260,7 @@
   "startup_dashboard_section_title": "Inicialização",
   "startup_open_note_title": "Abrir ao iniciar",
   "startup_open_note_desc": "Abre uma nota sempre que você abrir este cofre.",
+  "startup_open_mode_title": "Abrir nota",
   "startup_dont_open_option": "Não abrir",
   "startup_weekday_title": "Diário diferente em alguns dias",
   "startup_weekday_desc": "Escolha qual diário abrir nos dias selecionados. Nos dias não selecionados abre o diário acima.",
@@ -1275,6 +1278,8 @@
   "uri_invalid_date": "Não foi possível entender a data \"{date}\" no URI.",
   "uri_invalid_mode": "Modo de abertura desconhecido \"{mode}\" no URI.",
   "uri_notelet_requires_journal": "Um link de nota breve precisa de um diário. Adicione journal=<nome> ao link.",
+  "uri_invalid_pinned": "Valor de pinned desconhecido \"{value}\" no URI. Use true ou false.",
+  "uri_notelet_pinned": "Um link de nota breve não pode ser fixado. Remova pinned= do link.",
   "uri_unknown_journal": "Não existe nenhum diário chamado \"{journal}\".",
   "uri_no_journal": "Nenhum diário cobre essa data.",
   "uri_no_journal_of_type": [

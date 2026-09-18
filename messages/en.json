@@ -257,6 +257,8 @@
   "common_label_name": "Name",
   "command_modal_open_mode_label": "Open note",
   "common_show_in_ribbon": "Show in ribbon",
+  "common_pin_note_label": "Pin the note",
+  "common_pin_note_desc": "Open it in a pinned tab. If this journal already has a pinned tab, that tab switches to this note instead.",
   "command_modal_type_label": "When the command runs",
   "command_modal_write_type_label": "Note type",
   "command_name_prefix_hint": [
@@ -1264,6 +1266,7 @@
   "startup_dashboard_section_title": "Startup",
   "startup_open_note_title": "Open on startup",
   "startup_open_note_desc": "Open a note whenever you open this vault.",
+  "startup_open_mode_title": "Open note",
   "startup_dont_open_option": "Don't open",
   "startup_weekday_title": "Different journal on some days",
   "startup_weekday_desc": "Choose which journal opens on the days you pick. Any day you don't pick opens the journal above.",
@@ -1282,6 +1285,8 @@
   "uri_invalid_date": "Could not understand the date \"{date}\" in the URI.",
   "uri_invalid_mode": "Unknown open mode \"{mode}\" in the URI.",
   "uri_notelet_requires_journal": "A notelet link needs a journal. Add journal=<name> to the link.",
+  "uri_invalid_pinned": "Unknown pinned value \"{value}\" in the URI. Use true or false.",
+  "uri_notelet_pinned": "A notelet link can't be pinned. Remove pinned= from the link.",
   "uri_unknown_journal": "There is no journal named \"{journal}\".",
   "uri_no_journal": "No journal covers that date.",
   "uri_no_journal_of_type": [

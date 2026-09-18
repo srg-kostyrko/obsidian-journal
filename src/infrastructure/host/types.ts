@@ -13,6 +13,12 @@ export interface Note {
 
 export type OpenMode = "active" | "tab" | "split" | "window";
 
+// Which open notes count as the same pinned tab: a pinned open reuses a pinned tab whose note is
+// in the group rather than pinning a second one.
+export interface PinTarget {
+  readonly sameGroup: (path: VaultPath) => boolean;
+}
+
 export interface NotesEvents {
   created: (note: Note) => void;
   renamed: (event: { from: VaultPath; to: VaultPath }) => void;

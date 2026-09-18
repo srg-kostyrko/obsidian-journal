@@ -96,6 +96,8 @@ const GLOSSARY = {
     { term: "view", banned: /punti di vista/i, use: "vista" },
     // "registrato"/"registrare" stay legal elsewhere; only the log feature is scoped.
     { term: "log", banned: /registr(o|i|azione)/i, use: "log", only: /^logging_/ },
+    // Obsidian's own tab menu says "Appunta"; "fisso" stays legal elsewhere, where it means fixed.
+    { term: "pin", banned: /fiss/i, use: "appunta", only: /(^|_)pin(ned)?(_|$)/ },
   ],
   ja: [
     { term: "journal", banned: /雑誌|仕訳帳|定期刊行物|本誌|日記/, use: "ジャーナル" },
@@ -235,6 +237,8 @@ const GLOSSARY = {
     { term: "create", banned: /创造/, use: "创建" },
     { term: "value", banned: /价值/, use: "值" },
     { term: "context", banned: /语境/, use: "上下文" },
+    // Obsidian's own tab menu says 锁定; 固定 stays legal elsewhere, where it means fixed.
+    { term: "pin", banned: /固定/, use: "锁定", only: /(^|_)pin(ned)?(_|$)/ },
   ],
 };
 

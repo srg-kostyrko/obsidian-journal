@@ -320,6 +320,8 @@
   "common_label_name": "Nom",
   "command_modal_open_mode_label": "Ouvrir la note",
   "common_show_in_ribbon": "Afficher dans le ruban",
+  "common_pin_note_label": "Épingler la note",
+  "common_pin_note_desc": "L’ouvrir dans un onglet épinglé. Si ce journal a déjà un onglet épinglé, c’est cet onglet qui passe à cette note.",
   "command_modal_type_label": "Lorsque la commande s’exécute",
   "command_modal_write_type_label": "Type de note",
   "command_name_prefix_hint": [
@@ -1258,6 +1260,7 @@
   "startup_dashboard_section_title": "Démarrage",
   "startup_open_note_title": "Ouvrir au démarrage",
   "startup_open_note_desc": "Ouvrir une note chaque fois que vous ouvrez ce coffre-fort.",
+  "startup_open_mode_title": "Ouvrir la note",
   "startup_dont_open_option": "Ne pas ouvrir",
   "startup_weekday_title": "Journal différent certains jours",
   "startup_weekday_desc": "Choisissez le journal à ouvrir les jours sélectionnés. Les jours non sélectionnés ouvrent le journal ci-dessus.",
@@ -1275,6 +1278,8 @@
   "uri_invalid_date": "Impossible de comprendre la date « {date} » dans l’URI.",
   "uri_invalid_mode": "Mode d’ouverture inconnu « {mode} » dans l’URI.",
   "uri_notelet_requires_journal": "Un lien de note brève nécessite un journal. Ajoutez journal=<nom> au lien.",
+  "uri_invalid_pinned": "Valeur pinned inconnue « {value} » dans l’URI. Utilisez true ou false.",
+  "uri_notelet_pinned": "Un lien de note brève ne peut pas être épinglé. Retirez pinned= du lien.",
   "uri_unknown_journal": "Il n’existe aucun journal nommé « {journal} ».",
   "uri_no_journal": "Aucun journal ne couvre cette date.",
   "uri_no_journal_of_type": [

@@ -2,12 +2,19 @@ import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import { commandCollection, sameCommandOwner } from "./config";
+import { buildCommand } from "./testing";
 
 describe("commandCollection", () => {
   it("produces a schema-valid config from defaultItem", () => {
     const item = commandCollection.defaultItem("cmd-1");
     const parsed = v.safeParse(commandCollection.itemSchema, item);
     expect(parsed.success).toBe(true);
+  });
+
+  it("reads a stored command without a pin setting as unpinned", () => {
+    const stored = { ...buildCommand() } as Record<string, unknown>;
+    delete stored.pinned;
+    expect(v.parse(commandCollection.itemSchema, stored).pinned).toBe(false);
   });
 
   it("rejects an all-target command whose write type is custom", () => {

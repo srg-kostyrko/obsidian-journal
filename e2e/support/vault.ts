@@ -1,6 +1,11 @@
 import { browser } from "@wdio/globals";
 
-import { FixtureFileMissingError, RenameFileFailedError, RenameRequiresLinkUpdateError } from "./errors.js";
+import {
+  FixtureFileMissingError,
+  NoteNotOpenError,
+  RenameFileFailedError,
+  RenameRequiresLinkUpdateError,
+} from "./errors.js";
 import { confirmUpdateLinksDialog, dismissUpdateLinksDialog, isUpdateLinksDialogOpen } from "./rename-links-dialog.js";
 import { waitForState } from "./wait.js";
 
@@ -236,13 +241,46 @@ export function mainWindowHoldsNote(path: string): Promise<boolean> {
   );
 }
 
+// Paths held by pinned markdown leaves, across every window. getViewState().pinned is the public
+// spelling of the leaf's pin. A tab restored in the background is deferred and has no view.file,
+// so the path falls back to its view state, as WorkspaceService reads it.
+export function pinnedNotePaths(): Promise<string[]> {
+  return browser.executeObsidian(({ app }) =>
+    app.workspace
+      .getLeavesOfType("markdown")
+      .filter((leaf) => leaf.getViewState().pinned === true)
+      .map((leaf) => {
+        const file = (leaf.view as { file?: { path: string } | null }).file?.path;
+        const restored = leaf.getViewState().state?.file;
+        return file ?? (typeof restored === "string" ? restored : "");
+      })
+      .toSorted(),
+  );
+}
+
+export async function pinNote(path: string): Promise<void> {
+  const pinned = await browser.executeObsidian(({ app }, notePath) => {
+    const leaf = app.workspace.getLeavesOfType("markdown").find((candidate) => {
+      const file = (candidate.view as { file?: { path: string } | null }).file?.path;
+      return (file ?? candidate.getViewState().state?.file) === notePath;
+    });
+    leaf?.setPinned(true);
+    return leaf !== undefined;
+  }, path);
+  if (!pinned) throw new NoteNotOpenError(path);
+}
+
 // Puts the user back in the main window after a popout opened — the state a report of "it takes me
 // to a different window" starts from, since opening in a popout leaves that popout focused. Focus
 // has to reach the window itself: the plugin reads Obsidian's `activeWindow`, which only moves on a
-// real window focus, not on a leaf becoming active.
+// real window focus, not on a leaf becoming active. Obsidian moves it from each window's DOM
+// `focus` listener, and `win.focus()` alone only asks the OS window manager, which may refuse
+// (focus-stealing prevention) — so the event is dispatched too, reaching that same listener.
 export async function focusMainWindow(): Promise<void> {
   await browser.executeObsidian(({ app }) => {
-    app.workspace.containerEl.win.focus();
+    const win = app.workspace.containerEl.win;
+    win.focus();
+    win.dispatchEvent(new FocusEvent("focus"));
     const inMain = app.workspace.getLeavesOfType("markdown").find((leaf) => leaf.getRoot() === app.workspace.rootSplit);
     if (inMain) app.workspace.setActiveLeaf(inMain, { focus: true });
   });

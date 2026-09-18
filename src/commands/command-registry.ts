@@ -250,6 +250,7 @@ export class DynamicCommandRegistry {
         journalNames: plan.value.journalNames,
         openMode: command.openMode,
         existingOnly: isAvailableType(command.type),
+        pinned: command.pinned,
       },
       { context: { command: command.name } },
     );

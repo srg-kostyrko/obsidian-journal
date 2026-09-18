@@ -309,6 +309,8 @@
   "common_label_name": "名前",
   "command_modal_open_mode_label": "ノートを開く場所",
   "common_show_in_ribbon": "リボンに表示",
+  "common_pin_note_label": "ノートをピン留め",
+  "common_pin_note_desc": "ピン留めしたタブで開きます。このジャーナルのピン留めタブが既にある場合は、そのタブがこのノートに切り替わります。",
   "command_modal_type_label": "コマンド実行時の動作",
   "command_modal_write_type_label": "ノートの種類",
   "command_name_prefix_hint": [
@@ -1113,6 +1115,7 @@
   "startup_dashboard_section_title": "起動時",
   "startup_open_note_title": "起動時に開く",
   "startup_open_note_desc": "この保管庫を開くたびにノートを開きます。",
+  "startup_open_mode_title": "ノートを開く場所",
   "startup_dont_open_option": "開かない",
   "startup_weekday_title": "特定の曜日は別のジャーナル",
   "startup_weekday_desc": "選択した曜日に開くジャーナルを選びます。選択していない曜日は上のジャーナルを開きます。",
@@ -1130,6 +1133,8 @@
   "uri_invalid_date": "URI 内の日付「{date}」を解釈できませんでした。",
   "uri_invalid_mode": "URI に不明なオープンモード「{mode}」があります。",
   "uri_notelet_requires_journal": "サブノートのリンクにはジャーナルが必要です。リンクに journal=<名前> を追加してください。",
+  "uri_invalid_pinned": "URI に不明な pinned の値「{value}」があります。true か false を指定してください。",
+  "uri_notelet_pinned": "サブノートのリンクはピン留めできません。リンクから pinned= を削除してください。",
   "uri_unknown_journal": "「{journal}」という名前のジャーナルはありません。",
   "uri_no_journal": "その日付を含むジャーナルがありません。",
   "uri_no_journal_of_type": [

@@ -4,6 +4,7 @@ import { computed, ref } from "vue";
 import { Calendar } from "@/calendar";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import type { OpenMode } from "@/infrastructure/host";
 import { SettingsService } from "@/settings";
 import { icons } from "@/ui/icons";
 import { manual } from "@/ui/manual";
@@ -13,6 +14,7 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiToggle from "@/ui/UiToggle.vue";
 import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
 import { noteCreationSlice } from "../../notes/creation-slice";
@@ -43,6 +45,20 @@ const devices = computed({
   get: () => noteCreation.state.devices,
   set: (value: CreationDevices) => {
     noteCreation.state = { ...noteCreation.state, devices: value };
+  },
+});
+
+const openMode = computed({
+  get: () => slice.state.openMode,
+  set: (mode: OpenMode) => {
+    slice.state = { ...slice.state, openMode: mode };
+  },
+});
+
+const pinned = computed({
+  get: () => slice.state.pinned,
+  set: (value: boolean) => {
+    slice.state = { ...slice.state, pinned: value };
   },
 });
 
@@ -85,6 +101,18 @@ function weekdayOptionsFor(index: number): { value: number; label: string; disab
         <option value="">{{ m.startup_dont_open_option() }}</option>
         <option v-for="option in options" :key="option.value" :value="option.value">{{ option.label }}</option>
       </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow :name="m.startup_open_mode_title()">
+      <UiDropdown v-model="openMode" :aria-label="m.startup_open_mode_title()">
+        <option value="active">{{ m.command_open_mode_option({ mode: "active" }) }}</option>
+        <option value="tab">{{ m.command_open_mode_option({ mode: "tab" }) }}</option>
+        <option value="split">{{ m.command_open_mode_option({ mode: "split" }) }}</option>
+        <option value="window">{{ m.command_open_mode_option({ mode: "window" }) }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow :name="m.common_pin_note_label()">
+      <template #description>{{ m.common_pin_note_desc() }}</template>
+      <UiToggle v-model="pinned" :tooltip="m.common_pin_note_label()" />
     </UiSettingRow>
     <UiSettingRow :name="m.note_creation_devices_title()">
       <template #description>{{ m.note_creation_devices_desc() }}</template>

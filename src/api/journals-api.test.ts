@@ -833,6 +833,18 @@ describe("JournalsApiService writes", () => {
     );
   });
 
+  it("opens through the open flow, passing the pin setting", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await api.openNote("daily", "2026-08-18", { pinned: true });
+
+    expect(flows).toHaveBeenLastCalledWith(
+      OpenJournalEntryFlow,
+      expect.objectContaining({ pinned: true }),
+      expect.anything(),
+    );
+  });
+
   it("rejects with no-matching-journal when the selector matches nothing", async () => {
     const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
@@ -998,6 +1010,63 @@ describe("JournalsApiService writes", () => {
 
     expect(flows).toHaveBeenCalledTimes(1);
     expect(first.note.path).toBe(second.note.path);
+  });
+
+  it("still pins when an unpinned open of the same period is already running", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await Promise.all([api.openNote("daily", "2026-08-18"), api.openNote("daily", "2026-08-18", { pinned: true })]);
+
+    const opens = flows.mock.calls
+      .filter(([flow]) => flow === OpenJournalEntryFlow)
+      .map(([, parameters]) => parameters);
+    expect(opens).toEqual([expect.objectContaining({ pinned: undefined }), expect.objectContaining({ pinned: true })]);
+  });
+
+  it("shares a running open with an identical one queued behind a different open", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await Promise.all([
+      api.openNote("daily", "2026-08-18", { openMode: "tab" }),
+      api.openNote("daily", "2026-08-18", { pinned: true }),
+      api.openNote("daily", "2026-08-18", { openMode: "tab" }),
+    ]);
+
+    const opens = flows.mock.calls.filter(([flow]) => flow === OpenJournalEntryFlow);
+    expect(opens).toHaveLength(2);
+  });
+
+  it("shares a running open with one spelling out the same defaults", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await Promise.all([
+      api.openNote("daily", "2026-08-18", { openMode: "tab" }),
+      api.openNote("daily", "2026-08-18", { openMode: "tab", prompt: true, pinned: false }),
+    ]);
+
+    expect(flows.mock.calls.filter(([flow]) => flow === OpenJournalEntryFlow)).toHaveLength(1);
+  });
+
+  it("does not share a running ensure with one asking for different prompting", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await Promise.all([
+      api.ensureNote("daily", "2026-08-18"),
+      api.ensureNote("daily", "2026-08-18", { prompt: false }),
+    ]);
+
+    expect(flows.mock.calls.map(([, parameters]) => parameters)).toEqual([
+      expect.objectContaining({ unattended: false }),
+      expect.objectContaining({ unattended: true }),
+    ]);
+  });
+
+  it("still opens when an ensure of the same period is already running", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await Promise.all([api.ensureNote("daily", "2026-08-18"), api.openNote("daily", "2026-08-18")]);
+
+    expect(flows.mock.calls.map(([flow]) => flow)).toEqual([EnsureJournalEntryFlow, OpenJournalEntryFlow]);
   });
 
   it("does not share invocations across different periods", async () => {

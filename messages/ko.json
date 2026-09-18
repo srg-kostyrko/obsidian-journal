@@ -320,6 +320,8 @@
   "common_label_name": "이름",
   "command_modal_open_mode_label": "노트 열기",
   "common_show_in_ribbon": "리본에 표시",
+  "common_pin_note_label": "노트 고정",
+  "common_pin_note_desc": "고정된 탭에서 엽니다. 이 저널에 이미 고정된 탭이 있으면 그 탭이 이 노트로 바뀝니다.",
   "command_modal_type_label": "명령어 실행 시점",
   "command_modal_write_type_label": "노트 유형",
   "command_name_prefix_hint": [
@@ -1258,6 +1260,7 @@
   "startup_dashboard_section_title": "시작",
   "startup_open_note_title": "시작 시 열기",
   "startup_open_note_desc": "이 보관함을 열 때마다 노트를 엽니다.",
+  "startup_open_mode_title": "노트 열기",
   "startup_dont_open_option": "열지 않음",
   "startup_weekday_title": "특정 요일에 다른 저널",
   "startup_weekday_desc": "선택한 요일에 열 저널을 고르세요. 선택하지 않은 요일에는 위의 저널이 열립니다.",
@@ -1275,6 +1278,8 @@
   "uri_invalid_date": "URI의 날짜를 이해할 수 없습니다: \"{date}\".",
   "uri_invalid_mode": "URI에 알 수 없는 열기 모드가 있습니다: \"{mode}\".",
   "uri_notelet_requires_journal": "서브노트 링크에는 저널이 필요합니다. 링크에 journal=<이름>을 추가하세요.",
+  "uri_invalid_pinned": "URI에 알 수 없는 pinned 값이 있습니다: \"{value}\". true 또는 false를 사용하세요.",
+  "uri_notelet_pinned": "서브노트 링크는 고정할 수 없습니다. 링크에서 pinned=를 제거하세요.",
   "uri_unknown_journal": "\"{journal}\" 저널을 찾을 수 없습니다.",
   "uri_no_journal": "그 날짜를 담당하는 저널이 없습니다.",
   "uri_no_journal_of_type": [

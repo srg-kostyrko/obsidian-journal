@@ -6,7 +6,9 @@ import type { Result } from "@/infrastructure/result";
 import {
   InvalidUriDateError,
   InvalidUriOpenModeError,
+  InvalidUriPinnedError,
   MissingUriTargetError,
+  NoteletUriPinnedError,
   NoteletUriRequiresJournalError,
   UnknownUriWriteTypeError,
 } from "./errors";
@@ -27,6 +29,7 @@ export interface JournalUriRequest {
   readonly date: CalendarDate;
   readonly openMode: OpenMode;
   readonly notelet?: string;
+  readonly pinned: boolean;
 }
 
 export function parseJournalUriRequest(
@@ -49,10 +52,16 @@ export function parseJournalUriRequest(
   const openMode = parseOpenMode(parameters.mode);
   if (openMode.isErr()) return new Err(openMode.error);
 
+  const pinned = parsePinned(parameters.pinned);
+  if (pinned.isErr()) return new Err(pinned.error);
+  // A notelet is created fresh each time, so there is no pinned tab for it to reuse.
+  if (pinned.value && notelet !== undefined) return new Err(new NoteletUriPinnedError());
+
   return new Ok({
     target: target.value,
     date: date.value,
     openMode: openMode.value,
+    pinned: pinned.value,
     ...(notelet !== undefined && { notelet }),
   });
 }
@@ -78,6 +87,13 @@ function parseOpenMode(raw: string | undefined): Result<OpenMode, UriError> {
   if (!value) return new Ok("active");
   if (!isOpenMode(value)) return new Err(new InvalidUriOpenModeError(value));
   return new Ok(value);
+}
+
+function parsePinned(raw: string | undefined): Result<boolean, UriError> {
+  const value = raw?.trim();
+  if (!value || value === "false") return new Ok(false);
+  if (value === "true") return new Ok(true);
+  return new Err(new InvalidUriPinnedError(value));
 }
 
 function isWriteType(value: string): value is JournalUriWriteType {

@@ -67,6 +67,12 @@ note before the other's copy arrives.
 **Startup**, on the main settings page, opens a journal's note for today whenever you open the vault.
 
 - **Open on startup** — pick a journal, or **Don't open**.
+- **Open note** — **Replacing the active note**, **In a new tab**, **Next to the active note** or **In
+  a popout window**. Applies to whichever journal the day resolves to.
+- **Pin the note** — opens that note in a pinned tab, the same [pinning commands
+  use](/commands#a-command-s-settings). With it on, each launch moves the journal's pinned tab to
+  today's note instead of pinning a second one. With **Different journal on some days**, each journal
+  keeps its own pinned tab.
 - **Different journal on some days** — choose which journal opens on the days you pick; any day you
   don't pick opens the journal above. **Add days** adds a group: its **Days of the week** and the
   **Journal to open**. A day can belong to one group only. A group can open nothing, so a work journal

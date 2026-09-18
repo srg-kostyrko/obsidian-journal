@@ -15,7 +15,7 @@ import { buildMarkdownLink } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-import type { MenuItemSpec, OpenMode, VaultPath, WorkspaceEvents } from "../types";
+import type { MenuItemSpec, OpenMode, PinTarget, VaultPath, WorkspaceEvents } from "../types";
 import type { Editor, MarkdownView, WorkspaceLeaf } from "obsidian";
 
 // Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
@@ -85,7 +85,11 @@ export class WorkspaceService {
     );
   }
 
-  async #open(path: VaultPath, mode: OpenMode): Promise<void> {
+  async #open(path: VaultPath, mode: OpenMode, pin?: PinTarget): Promise<void> {
+    if (pin) {
+      await this.#openPinned(path, mode, pin);
+      return;
+    }
     // A tab/split/window request is the user asking for a new pane; only the default "active"
     // mode may collapse onto a leaf that already holds the note.
     const existing = mode === "active" ? this.#findOpenLeaf(path, this.#activeWindow()) : null;
@@ -98,6 +102,52 @@ export class WorkspaceService {
     await this.#app.workspace.getLeaf(toPaneType(mode)).openFile(file, { active: true });
   }
 
+  async #openPinned(path: VaultPath, mode: OpenMode, pin: PinTarget): Promise<void> {
+    const file = this.#app.vault.getAbstractFileByPath(path);
+    if (!(file instanceof TFile)) throw new InvariantError(`not a file: ${path}`);
+    const pinned = this.#findPinnedLeaf(path, pin);
+    if (pinned) {
+      if (this.#pathIn(pinned) !== path) await pinned.openFile(file, { active: true });
+      this.#app.workspace.setActiveLeaf(pinned, { focus: true });
+      return;
+    }
+    // A leaf sitting unpinned in a sidebar is not a candidate to pin in place either — no open
+    // mode puts a note there, so pinning it would leave the note stuck outside the main area.
+    const existing = this.#findOpenLeaf(path, this.#activeWindow(), (leaf) => this.#inMainArea(leaf));
+    if (existing) {
+      existing.setPinned(true);
+      this.#app.workspace.setActiveLeaf(existing, { focus: true });
+      return;
+    }
+    const leaf = this.#app.workspace.getLeaf(toPaneType(mode));
+    await leaf.openFile(file, { active: true });
+    leaf.setPinned(true);
+  }
+
+  // Unlike #findOpenLeaf this spans every window on purpose: the pinned tab is the place the user
+  // chose for the group, so a window-scoped search would pin a second one from the main window.
+  #findPinnedLeaf(path: VaultPath, pin: PinTarget): WorkspaceLeaf | null {
+    const { workspace } = this.#app;
+    const win = this.#activeWindow();
+    const rank = (leaf: WorkspaceLeaf): number =>
+      (this.#pathIn(leaf) === path ? 0 : 2) + (leaf.getContainer().win === win ? 0 : 1);
+    const candidates = workspace.getLeavesOfType("markdown").filter((leaf) => {
+      if (!this.#inMainArea(leaf)) return false;
+      if (leaf.getViewState().pinned !== true) return false;
+      const held = this.#pathIn(leaf);
+      return held !== null && (held === path || pin.sameGroup(held));
+    });
+    return candidates.toSorted((x, y) => rank(x) - rank(y)).at(0) ?? null;
+  }
+
+  // No open mode puts a note in a sidebar, so a pinned open must never treat a sidebar-docked
+  // leaf as a tab it can pin or retarget in place — shared by the pinned lookup and the
+  // reuse-and-pin fallback.
+  #inMainArea(leaf: WorkspaceLeaf): boolean {
+    const root = leaf.getRoot();
+    return root !== this.#app.workspace.leftSplit && root !== this.#app.workspace.rightSplit;
+  }
+
   // Obsidian tracks the focused window here, differing from the main window only while a popout
   // holds focus. Read off containerEl rather than the `activeWindow` global so it stays injectable.
   #activeWindow(): Window {
@@ -106,11 +156,10 @@ export class WorkspaceService {
 
   // getLeavesOfType spans popout windows, so reuse has to be pinned to one window or opening a
   // note already open elsewhere drags the user's focus to that other window.
-  #findOpenLeaf(path: VaultPath, win?: Window): WorkspaceLeaf | null {
+  #findOpenLeaf(path: VaultPath, win?: Window, accept?: (leaf: WorkspaceLeaf) => boolean): WorkspaceLeaf | null {
     for (const leaf of this.#app.workspace.getLeavesOfType("markdown")) {
       if (win && leaf.getContainer().win !== win) continue;
-      const file = this.#fileOf(leaf);
-      if (file?.path === path) return leaf;
+      if (this.#pathIn(leaf) === path && (accept?.(leaf) ?? true)) return leaf;
     }
     return null;
   }
@@ -143,6 +192,16 @@ export class WorkspaceService {
     return view?.file ?? null;
   }
 
+  // Since Obsidian 1.7.2 a leaf restored into a background tab holds a deferred view until it is
+  // first shown: it reports the "markdown" type but has no file, which survives only in the view
+  // state it was restored with.
+  #pathIn(leaf: WorkspaceLeaf): VaultPath | null {
+    const file = this.#fileOf(leaf);
+    if (file) return file.path as VaultPath;
+    const held = leaf.getViewState().state?.file;
+    return typeof held === "string" ? (held as VaultPath) : null;
+  }
+
   #pathOf(file: TFile | null): Option<VaultPath> {
     if (!(file instanceof TFile)) return new None<VaultPath>();
     return new Some<VaultPath>(file.path as VaultPath);
@@ -164,8 +223,8 @@ export class WorkspaceService {
     return this.#findOpenLeaf(path) !== null;
   }
 
-  openNote(path: VaultPath, mode: OpenMode = "active"): AsyncResult<void, WorkspaceOpenError> {
-    return AsyncResult.fromPromise(this.#open(path, mode), (cause) => new WorkspaceOpenError(path, cause));
+  openNote(path: VaultPath, mode: OpenMode = "active", pin?: PinTarget): AsyncResult<void, WorkspaceOpenError> {
+    return AsyncResult.fromPromise(this.#open(path, mode, pin), (cause) => new WorkspaceOpenError(path, cause));
   }
 
   hasActiveEditor(): boolean {

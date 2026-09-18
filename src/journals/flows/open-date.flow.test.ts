@@ -13,6 +13,7 @@ import { NoApplicableJournals } from "../notes/errors";
 import { fixedJournal } from "../testing";
 
 import { OpenDateFlow } from "./open-date.flow";
+import { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 
 const TIMELINE_OPEN = { start: anchor("2020-01-01"), end: { kind: "never" as const } };
 
@@ -64,6 +65,15 @@ describe("OpenDateFlow", () => {
 
       expect(result.isErr() && result.error instanceof NoApplicableJournals).toBe(true);
     });
+
+    it("passes pinned through to OpenJournalEntryFlow", async () => {
+      const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
+
+      const result = await harness.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), pinned: true });
+
+      expect(result.isOk()).toBe(true);
+      expect(invokeSpy).toHaveBeenCalledWith(OpenJournalEntryFlow, expect.objectContaining({ pinned: true }));
+    });
   });
 
   describe("disambiguating between multiple applicable journals", () => {
@@ -91,6 +101,21 @@ describe("OpenDateFlow", () => {
 
       expect(result.isOk()).toBe(true);
       expect(harness.resolve(WorkspaceService).isOpen("B/2026-05-19.md" as VaultPath)).toBe(true);
+    });
+
+    it("passes pinned through to OpenJournalEntryFlow for the chosen journal", async () => {
+      const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
+      const promise = harness.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), pinned: true });
+      await Promise.resolve();
+      await Promise.resolve();
+      harness.suggests.lastOpen<string[], string>().choose("b");
+      const result = await promise;
+
+      expect(result.isOk()).toBe(true);
+      expect(invokeSpy).toHaveBeenCalledWith(
+        OpenJournalEntryFlow,
+        expect.objectContaining({ journalName: "b", pinned: true }),
+      );
     });
 
     it("picks via a menu at the mouse event when pickAt is provided", async () => {

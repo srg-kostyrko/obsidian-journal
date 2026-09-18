@@ -174,9 +174,25 @@ on it.
   window happens to hold it. The focused window is
   `workspace.containerEl.win.activeWindow` — same value as the `activeWindow`
   global but reachable through the injected `App`, where the global is not
-  fakeable and `workspace.activeLeaf` is deprecated. e2e can drive it:
-  `containerEl.win.focus()` moves `activeWindow` inside the WDIO harness, which
-  a leaf merely becoming active does not.
+  fakeable and `workspace.activeLeaf` is deprecated. Obsidian moves it only
+  from each window's DOM `focus` listener, so e2e drives it by dispatching
+  `new FocusEvent("focus")` on the window (`focusMainWindow`): `win.focus()`
+  alone asks the OS window manager, which may refuse, and a leaf merely becoming
+  active moves nothing. The one deliberate exception is a
+  **pinned** open (`#findPinnedLeaf`): it searches every window and focuses the
+  journal's pinned tab wherever it is, because that tab is where the user chose
+  to keep the journal and a window-scoped search would pin a second one. Its
+  unpinned fallback stays window-scoped.
+- `iterateRootLeaves` walks `rootSplit` only — no popout windows — at 1.8.7
+  through 1.13.x, so it cannot stand in for an all-window walk.
+- A leaf restored into a background tab holds a **deferred** view (1.7.2+,
+  `leaf.isDeferred`) until its tab is first shown. It still reports type
+  `markdown`, so `getLeavesOfType("markdown")` returns it, but it has no
+  `view.file` — the path survives only in `getViewState().state.file`, the state
+  it was restored with. A lookup reading `view.file` alone misses every
+  unvisited tab after a restart; read both (`#pathIn` in `workspace-service.ts`).
+  `openFile` and focusing the leaf need nothing extra — both go through
+  `setViewState` or the tab switch that loads it.
 - `app.metadataTypeManager` is undocumented and its shape changed at Obsidian
   1.9: property entries lost their `type` field in favor of `widget`, and
   `getPropertyInfo` now returns a fallback object instead of null, so it can no

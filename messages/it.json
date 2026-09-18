@@ -320,6 +320,8 @@
   "common_label_name": "Nome",
   "command_modal_open_mode_label": "Apri la nota",
   "common_show_in_ribbon": "Mostra nella barra multifunzione",
+  "common_pin_note_label": "Appunta la nota",
+  "common_pin_note_desc": "Aprila in una scheda appuntata. Se questo diario ha già una scheda appuntata, quella scheda passa a questa nota.",
   "command_modal_type_label": "Quando il comando viene eseguito",
   "command_modal_write_type_label": "Tipo di nota",
   "command_name_prefix_hint": [
@@ -1258,6 +1260,7 @@
   "startup_dashboard_section_title": "Avvio",
   "startup_open_note_title": "Apri all'avvio",
   "startup_open_note_desc": "Apri una nota ogni volta che apri questo vault.",
+  "startup_open_mode_title": "Apri la nota",
   "startup_dont_open_option": "Non aprire",
   "startup_weekday_title": "Diario diverso in alcuni giorni",
   "startup_weekday_desc": "Scegli quale diario aprire nei giorni selezionati. Nei giorni non selezionati si apre il diario qui sopra.",
@@ -1275,6 +1278,8 @@
   "uri_invalid_date": "Impossibile interpretare la data \"{date}\" nell'URI.",
   "uri_invalid_mode": "Modalità di apertura sconosciuta \"{mode}\" nell'URI.",
   "uri_notelet_requires_journal": "Un link a una nota breve richiede un diario. Aggiungi journal=<nome> al link.",
+  "uri_invalid_pinned": "Valore pinned sconosciuto \"{value}\" nell'URI. Usa true o false.",
+  "uri_notelet_pinned": "Un link a una nota breve non può essere appuntato. Rimuovi pinned= dal link.",
   "uri_unknown_journal": "Non esiste alcun diario denominato \"{journal}\".",
   "uri_no_journal": "Nessun diario copre quella data.",
   "uri_no_journal_of_type": [

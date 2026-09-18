@@ -58,6 +58,7 @@ everything below. Adding a locale or a new domain noun means extending it there.
 | **prompt**      | Frage       | pregunta      | question    | domanda      | 質問             | 질문       | pergunta     | вопрос        | запитання      | 问题        |
 | **answer**      | Antwort     | respuesta     | réponse     | risposta     | 回答             | 답변       | resposta     | ответ         | відповідь      | 回答        |
 | **notelet**     | Kurznotiz   | nota breve    | note brève  | nota breve   | サブノート       | 서브노트   | nota breve   | подзаметка    | піднотатка     | 子笔记      |
+| **pin** (a tab) | anheften    | fijar         | épingler    | appuntare    | ピン留め         | 고정       | fixar        | закрепить     | закріпити      | 锁定        |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
@@ -125,6 +126,12 @@ Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Reg
   an established word and ja/ko `サブノート` / `서브노트` follow Obsidian's own katakana
   register, but the Romance locales' `nota breve` and the Slavic `подзаметка` /
   `піднотатка` are constructions, not idiom.
+- **`pin`.** Pinning a tab so it is not navigated away. The words are Obsidian's own, from
+  `interface.menu.pin` in its bundled `i18n/*.txt` (1.13.7), so the setting reads like the tab
+  menu it acts on. Two locales have a plausible second word that is wrong here: zh 固定 and
+  it `fissare` both mean "to fix", and both are already correct elsewhere for "fixed interval"
+  — so the checker bans them under pin keys only. ja uses the verb form ピン留め where the menu
+  says ピン.
 
 ## Literal tokens
 

@@ -6,6 +6,7 @@ import { WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { fixedJournal } from "../testing";
 
@@ -64,5 +65,61 @@ describe("OpenJournalEntryFlow", () => {
 
     expect(result.isErr() && result.error instanceof UserAborted).toBe(true);
     expect(harness.resolve(WorkspaceService).isOpen("2026-05-19.md" as VaultPath)).toBe(false);
+  });
+});
+
+describe("OpenJournalEntryFlow — pinned", () => {
+  const YESTERDAY = "2026-05-18.md" as VaultPath;
+  const WORK_YESTERDAY = "work/2026-05-18.md" as VaultPath;
+  const STANDUP = "Standup.md" as VaultPath;
+
+  async function withPinnedTabs(): Promise<TestHarness> {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: {
+        journals: {
+          daily: fixedJournal("daily", { type: "day" }),
+          work: fixedJournal("work", { type: "day" }, { folder: "work" }),
+        },
+      },
+    });
+    const index = harness.resolve(JournalsIndex);
+    index.register({ journalName: "daily", anchor: anchor("2026-05-18"), path: YESTERDAY });
+    index.register({ journalName: "work", anchor: anchor("2026-05-18"), path: WORK_YESTERDAY });
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: anchor("2026-05-18"),
+      path: STANDUP,
+      typeName: "Standup",
+      typeId: null,
+    });
+    const workspace = harness.resolve(WorkspaceService);
+    for (const path of [STANDUP, YESTERDAY, WORK_YESTERDAY]) {
+      harness.host.putFile(path, "");
+      await workspace.openNote(path);
+      harness.host.workspace.pinnedPaths.add(path);
+    }
+    return harness;
+  }
+
+  it("moves the journal's pinned tab to the entry", async () => {
+    const harness = await withPinnedTabs();
+
+    await harness
+      .resolve(Flows)
+      .invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19"), pinned: true });
+
+    expect(harness.host.workspace.retargetCalls).toEqual([{ from: YESTERDAY, to: "2026-05-19.md" }]);
+    expect(harness.host.workspace.pinnedPaths).toEqual(new Set(["2026-05-19.md", WORK_YESTERDAY, STANDUP]));
+  });
+
+  it("opens without pinning when pinned is not asked for", async () => {
+    const harness = await withPinnedTabs();
+
+    await harness.resolve(Flows).invoke(OpenJournalEntryFlow, { journalName: "daily", anchor: anchor("2026-05-19") });
+
+    expect(harness.host.workspace.retargetCalls).toEqual([]);
+    expect(harness.host.workspace.pinnedPaths.has("2026-05-19.md")).toBe(false);
   });
 });

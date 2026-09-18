@@ -103,8 +103,12 @@ command — built in or your own — is listed.
     open.
 - **Open note** — **Replacing the active note**, **In a new tab**, **Next to the active note** or **In a
   popout window**.
+- **Pin the note** — opens the note in a pinned tab. If the journal already has a pinned tab — any
+  pinned tab holding one of its notes, notelets excluded — that tab switches to this note instead of a
+  second one being pinned. Nothing is ever unpinned. Not offered on notelet commands.
 
-Example: [Step back over missing days](#step-back-over-missing-days).
+Examples: [Step back over missing days](#step-back-over-missing-days),
+[Keep today's note pinned](#keep-today-s-note-pinned).
 
 ## Examples
 
@@ -117,6 +121,13 @@ or today**.
 
 With `day/2030-09-12.md` open, running it opens `day/2030-09-10.md`. It skips the 11th and does not
 create a note for it.
+
+### Keep today's note pinned
+
+On a daily journal's settings page, add a command: **When the command runs** **Open today's note**,
+**Pin the note** on, **Show in ribbon** on. Click its ribbon button each morning — the first click
+pins today's note; every click after that moves that same pinned tab to the new today's note instead
+of pinning another one.
 
 For a shelf command, see [A command on a shelf](/shelves#a-command-on-a-shelf); for opening a note from
 outside Obsidian, [Links](/reference/links#examples).

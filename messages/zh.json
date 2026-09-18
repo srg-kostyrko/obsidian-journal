@@ -309,6 +309,8 @@
   "common_label_name": "名称",
   "command_modal_open_mode_label": "打开笔记",
   "common_show_in_ribbon": "在功能区中显示",
+  "common_pin_note_label": "锁定笔记",
+  "common_pin_note_desc": "在锁定的标签页中打开。如果此日记已有锁定的标签页，则改为在该标签页中打开此笔记。",
   "command_modal_type_label": "命令运行时",
   "command_modal_write_type_label": "笔记类型",
   "command_name_prefix_hint": [
@@ -1113,6 +1115,7 @@
   "startup_dashboard_section_title": "启动",
   "startup_open_note_title": "启动时打开",
   "startup_open_note_desc": "每次打开此库时自动打开一条笔记。",
+  "startup_open_mode_title": "打开笔记",
   "startup_dont_open_option": "不打开",
   "startup_weekday_title": "某些星期几使用其他日记",
   "startup_weekday_desc": "选择在所选的星期几打开哪个日记。未选择的日子将打开上方的日记。",
@@ -1130,6 +1133,8 @@
   "uri_invalid_date": "无法识别 URI 中的日期“{date}”。",
   "uri_invalid_mode": "URI 中的打开模式“{mode}”未知。",
   "uri_notelet_requires_journal": "子笔记链接需要一个日记。请在链接中添加 journal=<名称>。",
+  "uri_invalid_pinned": "URI 中的 pinned 值“{value}”未知。请使用 true 或 false。",
+  "uri_notelet_pinned": "子笔记链接无法锁定。请从链接中移除 pinned=。",
   "uri_unknown_journal": "没有名为“{journal}”的日记。",
   "uri_no_journal": "没有日记覆盖该日期。",
   "uri_no_journal_of_type": [
