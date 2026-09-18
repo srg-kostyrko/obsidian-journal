@@ -101,12 +101,20 @@ describe("toJournalInfo questions", () => {
     required: true,
     options: [{ label: "Home", value: "home" }],
   };
+  const diary: Prompt = {
+    variable: "diary",
+    question: "Diary",
+    type: "text",
+    frontmatterKey: "diary",
+    required: false,
+    multiline: true,
+  };
 
   it("describes the journal's own questions", () => {
     const config = fixedJournal(
       "daily",
       { type: "day" },
-      { nameTemplate: "{{date}} {{mood}}", prompts: [mood, place] },
+      { nameTemplate: "{{date}} {{mood}}", prompts: [mood, place, diary] },
     );
 
     expect(toJournalInfo("daily", config, "").prompts).toEqual([
@@ -127,6 +135,15 @@ describe("toJournalInfo questions", () => {
         inPath: false,
         multiline: false,
         options: [{ label: "Home", value: "home" }],
+      },
+      {
+        variable: "diary",
+        question: "Diary",
+        type: "text",
+        required: false,
+        inPath: false,
+        multiline: true,
+        options: [],
       },
     ]);
   });
