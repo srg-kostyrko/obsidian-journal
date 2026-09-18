@@ -92,6 +92,53 @@ describe("StartupOpenService", () => {
 
       expect(harness.settings.getSlice(startupSlice).state.journalName).toBe("");
     });
+
+    it("opens today's note pinned in the chosen mode", async () => {
+      const pinnedHarness = await testContainer({
+        modules: MODULES,
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }) },
+          startup: { journalName: "daily", openMode: "tab", pinned: true },
+        },
+      });
+      pinnedHarness.host.workspace.layoutReady = false;
+
+      await pinnedHarness.resolve(StartupOpenService).initialize();
+      pinnedHarness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(pinnedHarness.host.workspace.openCalls.at(-1)).toEqual({ path: TODAY_PATH, mode: "tab" });
+      expect(pinnedHarness.host.workspace.pinnedPaths.has(TODAY_PATH)).toBe(true);
+    });
+
+    it("keeps the pin setting when the journal is renamed", async () => {
+      harness.settings.getSlice(startupSlice).state = {
+        ...harness.settings.getSlice(startupSlice).state,
+        pinned: true,
+        openMode: "split",
+      };
+      harness.resolve(StartupOpenService);
+
+      harness.resolve(JournalsRepository).rename("daily", "work");
+
+      expect(harness.settings.getSlice(startupSlice).state).toMatchObject({ pinned: true, openMode: "split" });
+    });
+
+    it("keeps the pin setting when the journal is deleted", async () => {
+      harness.settings.getSlice(startupSlice).state = {
+        ...harness.settings.getSlice(startupSlice).state,
+        pinned: true,
+      };
+      harness.resolve(StartupOpenService);
+
+      harness.resolve(JournalsRepository).delete("daily");
+
+      expect(harness.settings.getSlice(startupSlice).state.pinned).toBe(true);
+    });
+
+    it("reads a stored startup setting without mode or pin as today's behavior", () => {
+      expect(harness.settings.getSlice(startupSlice).state).toMatchObject({ openMode: "active", pinned: false });
+    });
   });
 
   describe("a journal named by a weekday override", () => {
@@ -354,6 +401,29 @@ describe("StartupOpenService", () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(harness.host.workspace.openPaths.size).toBe(0);
+    });
+
+    it("pins the existing note when the startup note is pinned", async () => {
+      const harness = await testContainer({
+        modules: MODULES,
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }) },
+          startup: { journalName: "daily", pinned: true },
+          noteCreation: { devices: "desktop" },
+        },
+        overrides: [onDevice("mobile")],
+      });
+      harness.host.workspace.layoutReady = false;
+      harness.host.putFile(CONNECTED_PATH, "");
+      const index = harness.resolve(JournalsIndex);
+      index.register({ journalName: "daily", anchor: anchor("2026-05-19"), path: CONNECTED_PATH });
+      index.markReady();
+
+      await harness.resolve(StartupOpenService).initialize();
+      harness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(harness.host.workspace.pinnedPaths.has(CONNECTED_PATH)).toBe(true);
     });
 
     it("still creates on the device the rule names", async () => {

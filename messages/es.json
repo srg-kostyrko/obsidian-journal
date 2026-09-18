@@ -1260,6 +1260,7 @@
   "startup_dashboard_section_title": "Inicio",
   "startup_open_note_title": "Abrir al iniciar",
   "startup_open_note_desc": "Abre una nota cada vez que abras esta bóveda.",
+  "startup_open_mode_title": "Abrir nota",
   "startup_dont_open_option": "No abrir",
   "startup_weekday_title": "Diario diferente en algunos días",
   "startup_weekday_desc": "Elige qué diario se abre en los días que selecciones. Los días que no selecciones abrirán el diario de arriba.",

@@ -1145,6 +1145,7 @@
   "startup_dashboard_section_title": "Запуск",
   "startup_open_note_title": "Відкривати під час запуску",
   "startup_open_note_desc": "Відкривати нотатку щоразу, коли ви відкриваєте це сховище.",
+  "startup_open_mode_title": "Відкрити нотатку",
   "startup_dont_open_option": "Не відкривати",
   "startup_weekday_title": "Інший журнал у деякі дні",
   "startup_weekday_desc": "Виберіть, який журнал відкривати у вибрані дні. В інші дні відкриється журнал вище.",

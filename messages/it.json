@@ -1260,6 +1260,7 @@
   "startup_dashboard_section_title": "Avvio",
   "startup_open_note_title": "Apri all'avvio",
   "startup_open_note_desc": "Apri una nota ogni volta che apri questo vault.",
+  "startup_open_mode_title": "Apri la nota",
   "startup_dont_open_option": "Non aprire",
   "startup_weekday_title": "Diario diverso in alcuni giorni",
   "startup_weekday_desc": "Scegli quale diario aprire nei giorni selezionati. Nei giorni non selezionati si apre il diario qui sopra.",

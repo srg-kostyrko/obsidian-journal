@@ -8,6 +8,7 @@ import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { CycleService } from "../cycle";
+import { journalPinGroup } from "../flows/journal-pin-group";
 import { OpenJournalEntryFlow } from "../flows/open-journal-entry.flow";
 import { JournalsIndex } from "../journals-index";
 import { creationAllowedOn, noteCreationSlice } from "../notes/creation-slice";
@@ -40,6 +41,7 @@ export class StartupOpenService {
       const { journalName, overrides } = this.#slice.state;
       if (journalName !== oldName && overrides.every((entry) => entry.journalName !== oldName)) return;
       this.#slice.state = {
+        ...this.#slice.state,
         journalName: journalName === oldName ? newName : journalName,
         overrides: overrides.map((entry) =>
           entry.journalName === oldName ? { ...entry, journalName: newName } : entry,
@@ -54,6 +56,7 @@ export class StartupOpenService {
       // lets the day fall back to the default journal. The default itself has nothing to fall back
       // to, so it still clears to "".
       this.#slice.state = {
+        ...this.#slice.state,
         journalName: journalName === name ? "" : journalName,
         overrides: overrides.filter((entry) => entry.journalName !== name),
       };
@@ -79,7 +82,9 @@ export class StartupOpenService {
     if (this.#isDisposed) return;
     const path = this.#index.get(journalName, anchor);
     if (path.isNone()) return;
-    const result = await this.#workspace.openNote(path.value, "active");
+    const { openMode, pinned } = this.#slice.state;
+    const pin = pinned ? journalPinGroup(this.#index, journalName) : undefined;
+    const result = await this.#workspace.openNote(path.value, openMode, pin);
     if (result.isErr()) {
       this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });
     }
@@ -98,7 +103,8 @@ export class StartupOpenService {
       await this.#openExisting(journalName, anchor);
       return;
     }
-    const result = await this.#flows.invoke(OpenJournalEntryFlow, { journalName, anchor, openMode: "active" });
+    const { openMode, pinned } = this.#slice.state;
+    const result = await this.#flows.invoke(OpenJournalEntryFlow, { journalName, anchor, openMode, pinned });
     if (result.isErr() && !(result.error instanceof UserAborted)) {
       this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });
     }

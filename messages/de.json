@@ -1260,6 +1260,7 @@
   "startup_dashboard_section_title": "Programmstart",
   "startup_open_note_title": "Beim Start öffnen",
   "startup_open_note_desc": "Öffnet eine Notiz, wenn du diesen Vault öffnest.",
+  "startup_open_mode_title": "Notiz öffnen",
   "startup_dont_open_option": "Nicht öffnen",
   "startup_weekday_title": "Anderes Journal an bestimmten Tagen",
   "startup_weekday_desc": "Wähle, welches Journal an den ausgewählten Tagen geöffnet wird. An allen anderen Tagen wird das Journal oben geöffnet.",

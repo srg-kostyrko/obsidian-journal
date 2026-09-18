@@ -1260,6 +1260,7 @@
   "startup_dashboard_section_title": "시작",
   "startup_open_note_title": "시작 시 열기",
   "startup_open_note_desc": "이 보관함을 열 때마다 노트를 엽니다.",
+  "startup_open_mode_title": "노트 열기",
   "startup_dont_open_option": "열지 않음",
   "startup_weekday_title": "특정 요일에 다른 저널",
   "startup_weekday_desc": "선택한 요일에 열 저널을 고르세요. 선택하지 않은 요일에는 위의 저널이 열립니다.",

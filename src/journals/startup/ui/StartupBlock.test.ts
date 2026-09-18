@@ -146,6 +146,22 @@ describe("StartupBlock", () => {
     });
   });
 
+  describe("how the note opens", () => {
+    it("writes the chosen open mode to the slice", async () => {
+      harness.render(StartupBlock);
+      await expand();
+      await userEvent.selectOptions(screen.getByLabelText(m.startup_open_mode_title()), "tab");
+      expect(harness.settings.getSlice(startupSlice).state.openMode).toBe("tab");
+    });
+
+    it("writes the pin setting to the slice", async () => {
+      harness.render(StartupBlock);
+      await expand();
+      await userEvent.click(screen.getByRole("checkbox", { name: m.common_pin_note_label() }));
+      expect(harness.settings.getSlice(startupSlice).state.pinned).toBe(true);
+    });
+  });
+
   describe("automatic note creation", () => {
     it("offers one choice per device rule", async () => {
       harness.render(StartupBlock);

@@ -1292,6 +1292,7 @@
   "startup_dashboard_section_title": "Запуск",
   "startup_open_note_title": "Открывать при запуске",
   "startup_open_note_desc": "Открывать заметку при каждом открытии этого хранилища.",
+  "startup_open_mode_title": "Открывать заметку",
   "startup_dont_open_option": "Не открывать",
   "startup_weekday_title": "Другой журнал в некоторые дни",
   "startup_weekday_desc": "Выберите, какой журнал открывать в выбранные дни. В остальные дни откроется журнал выше.",

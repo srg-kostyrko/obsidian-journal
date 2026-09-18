@@ -1260,6 +1260,7 @@
   "startup_dashboard_section_title": "Inicialização",
   "startup_open_note_title": "Abrir ao iniciar",
   "startup_open_note_desc": "Abre uma nota sempre que você abrir este cofre.",
+  "startup_open_mode_title": "Abrir nota",
   "startup_dont_open_option": "Não abrir",
   "startup_weekday_title": "Diário diferente em alguns dias",
   "startup_weekday_desc": "Escolha qual diário abrir nos dias selecionados. Nos dias não selecionados abre o diário acima.",
