@@ -2,7 +2,7 @@ import { getLanguage, Notice, Plugin } from "obsidian";
 
 import "./styles.css";
 
-import { apiModule, JournalsApiService } from "@/api";
+import { apiModule, JournalsApiService, LocalRestApiBridge } from "@/api";
 import type { JournalsApi } from "@/api";
 import { CalendarModule, calendarSettingsModule } from "@/calendar";
 import { codeBlocksModule } from "@/code-blocks";
@@ -90,6 +90,7 @@ export default class JournalPlugin extends Plugin {
     container.resolve(ViewHostService).initialize();
     container.resolve(DynamicCommandRegistry).initialize();
     container.resolve(JournalUriHandler).initialize();
+    container.resolve(LocalRestApiBridge).initialize();
 
     this.#container = container;
     // The boot boundary every timing question is asked against: onload is async, so Obsidian's

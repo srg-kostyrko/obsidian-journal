@@ -145,6 +145,8 @@ export interface FakeHost {
   emitActiveLeafChange(file: TFile | null): void;
   emitFileOpen(file: TFile | null): void;
   emitProtocol(action: string, parameters: Record<string, string>): void;
+  /** Emits on the fake workspace's event bus — for a plugin's own custom events (e.g. a reload signal). */
+  emitWorkspace(event: string, ...arguments_: unknown[]): void;
   triggerUnload(): void;
   setLayoutReady(): void;
   runCodeBlockProcessor(
@@ -249,6 +251,16 @@ export function createFakeHost(): FakeHost {
   const layoutReadyCallbacks: (() => void)[] = [];
   const communityPlugins = new Map<string, object>();
   const corePlugins = new Map<string, { enabled: boolean; instance: object }>();
+  // obsidian-local-rest-api's getAPI reads `app.plugins.plugins[id]` directly rather than through
+  // getPlugin, so this has to stay a live view over the same map — not a snapshot taken once.
+  const communityPluginsRecord = new Proxy<Record<string, object>>(
+    {},
+    {
+      get: (_target, property): object | undefined =>
+        typeof property === "string" ? communityPlugins.get(property) : undefined,
+      has: (_target, property): boolean => typeof property === "string" && communityPlugins.has(property),
+    },
+  );
 
   function ensureFolderChain(path: string): void {
     if (!path) return;
@@ -617,6 +629,7 @@ export function createFakeHost(): FakeHost {
     fileManager: fileManagerApi,
     plugins: {
       getPlugin: (id: string): object | null => communityPlugins.get(id) ?? null,
+      plugins: communityPluginsRecord,
     },
     internalPlugins: {
       getEnabledPluginById: (id: string): object | null => {
@@ -728,6 +741,9 @@ export function createFakeHost(): FakeHost {
     },
     emitProtocol(action, parameters): void {
       protocolHandlers.get(action)?.(parameters);
+    },
+    emitWorkspace(event, ...arguments_): void {
+      workspaceEvents.emit(event, ...arguments_);
     },
     triggerUnload(): void {
       for (const callback of unloadCallbacks) callback();
