@@ -276,8 +276,11 @@ These tools only ever return vault paths — reading or writing a note's content
 host's own `vault_read`, `vault_patch`, `vault_append` and the rest of its `vault_*` tools, the same
 way a REST client follows the redirect above.
 
-A failed call raises a tool error whose text is the same JSON body a REST error answers — see
-[Errors](#errors).
+A failed call raises a tool error. An error Journals raises carries the same JSON body a REST error
+answers — see [Errors](#errors) — except that a `prompts-required` message tells the agent to call
+again with `answers`. Arguments that do not match a tool's schema, such as a missing `journal`, are
+refused by the host before Journals sees them, so that text is the host's own validation message
+instead.
 
 ## What it does not do
 
