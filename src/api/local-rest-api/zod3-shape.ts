@@ -14,8 +14,6 @@ interface ParseInput {
   readonly parent: ParseContext;
 }
 
-type Schema = v.GenericSchema | v.GenericSchemaAsync;
-
 /** Thrown when a tool's shape uses a valibot kind the adapter has no zod-3 layout for. */
 export class UnmappedSchemaError extends Error {}
 
@@ -62,29 +60,31 @@ class ForgedNode {
         };
   }
 
+  // Mirrors zod 3's own isOptional, so whether a field is required follows validation, not the kind.
   isOptional(): boolean {
-    return this._def.typeName === "ZodOptional";
+    return v.safeParse(this.#schema, undefined).success;
   }
 }
 
-function forge(schema: Schema): ForgedNode {
+function forge(schema: v.GenericSchema | v.GenericSchemaAsync): ForgedNode {
+  // An async pipe still reports its base kind, and sync `v.safeParse` over it would accept anything.
+  if (schema.async) throw new UnmappedSchemaError(`No zod-3 layout for async valibot schema "${schema.type}".`);
   const description = v.getDescription(schema);
   const kind = schema.type;
-  const base = schema as v.GenericSchema;
   switch (kind) {
     case "string": {
-      return new ForgedNode(base, { typeName: "ZodString", checks: [], coerce: false, description });
+      return new ForgedNode(schema, { typeName: "ZodString", checks: [], coerce: false, description });
     }
     case "unknown": {
-      return new ForgedNode(base, { typeName: "ZodUnknown", description });
+      return new ForgedNode(schema, { typeName: "ZodUnknown", description });
     }
     case "optional": {
       const inner = forge((schema as v.OptionalSchema<v.GenericSchema, undefined>).wrapped);
-      return new ForgedNode(base, { typeName: "ZodOptional", innerType: inner, description });
+      return new ForgedNode(schema, { typeName: "ZodOptional", innerType: inner, description });
     }
     case "record": {
       const record = schema as v.RecordSchema<v.GenericSchema<string>, v.GenericSchema, undefined>;
-      return new ForgedNode(base, {
+      return new ForgedNode(schema, {
         typeName: "ZodRecord",
         keyType: forge(record.key),
         valueType: forge(record.value),

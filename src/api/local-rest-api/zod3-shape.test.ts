@@ -43,7 +43,7 @@ describe("zod3Shape", () => {
       properties: {
         journal: { type: "string", description: "Journal name." },
         to: { type: "string", description: "Last day, inclusive." },
-        answers: { type: "object", description: "Answers by variable." },
+        answers: { type: "object", additionalProperties: {}, description: "Answers by variable." },
       },
       required: ["journal"],
     });
@@ -76,6 +76,19 @@ describe("zod3Shape", () => {
 
   it("throws when the shape is built for a kind it does not map", () => {
     expect(() => zod3Shape({ n: v.number() })).toThrow(UnmappedSchemaError);
+  });
+
+  it("throws when the shape is built for an async schema of a mapped kind", () => {
+    const asyncEntry = v.pipeAsync(v.string()) as unknown as v.GenericSchema;
+    expect(() => zod3Shape({ journal: asyncEntry })).toThrow(UnmappedSchemaError);
+  });
+
+  it("leaves an entry that accepts undefined out of the required list", () => {
+    const json = zodToJsonSchema(z.object(zod3Shape({ journal: v.string(), extra: v.unknown() })), {
+      strictUnions: true,
+      pipeStrategy: "input",
+    });
+    expect(json).toMatchObject({ required: ["journal"] });
   });
 
   describe("on the MCP SDK the host registers tools with", () => {
