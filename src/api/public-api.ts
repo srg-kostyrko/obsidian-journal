@@ -125,11 +125,7 @@ export interface EnsureNoteOptions {
    * create such a note without asking.
    */
   readonly prompt?: boolean;
-  /**
-   * Answers keyed by each question's `variable` — see `JournalInfo.prompts`. Implies no modal:
-   * neither the questions nor the creation confirmation are shown. Fails with `invalid-answers`
-   * listing every problem. Ignored, though still checked, when the note already exists.
-   */
+  /** Answers keyed by question variable; creates without any dialog — see "Answering questions" in the docs. */
   readonly answers?: Readonly<Record<string, unknown>>;
 }
 
@@ -151,11 +147,7 @@ export interface CreateNoteletOptions {
   readonly prompt?: boolean;
   /** Omit to create without opening; pass a mode to create and show. */
   readonly openMode?: "active" | "tab" | "split" | "window";
-  /**
-   * Answers keyed by each question's `variable` — see `NoteletTypeInfo.prompts`. Implies no
-   * modal: neither the questions nor the creation confirmation are shown. Fails with
-   * `invalid-answers` listing every problem.
-   */
+  /** Answers keyed by question variable; creates without any dialog — see "Answering questions" in the docs. */
   readonly answers?: Readonly<Record<string, unknown>>;
 }
 
