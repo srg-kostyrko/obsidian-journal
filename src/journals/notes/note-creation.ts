@@ -158,7 +158,10 @@ export class NoteCreationService {
 
     return attempt.in(this, async function* () {
       const config = this.#journals.get(name).getOrUndefined();
-      const confirming = !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
+      // Supplied answers stand in for the modal, so whoever supplied them is unattended too —
+      // and that must skip the plain confirmation dialog exactly as an explicit unattended does.
+      const unattended = (options?.unattended ?? false) || options?.answers !== undefined;
+      const confirming = !unattended && !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
 
       // With an answer reaching the note name or folder the path genuinely cannot be known
       // before asking, so those journals keep the prompt-then-derive order below. Everywhere
@@ -190,7 +193,7 @@ export class NoteCreationService {
       // Supplied answers stand in for the modal: whoever supplied them is not watching one.
       let answers: Record<string, PromptAnswer> = {};
       if (config !== undefined && config.prompts.length > 0) {
-        if (options?.answers !== undefined || (options?.unattended ?? false)) {
+        if (unattended) {
           const supplied = options?.answers ?? {};
           const outcome = unattendedOutcome(config, supplied);
           if (outcome.kind === "refuse") {

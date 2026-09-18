@@ -139,6 +139,14 @@ describe("NoteCreationService.ensureNote", () => {
 
       expect(result.isOk() && result.value.created).toBe(true);
     });
+
+    // A caller supplying answers has already said nobody is watching, as an unattended one has.
+    it("skips the confirmation when answers are supplied", async () => {
+      const result = await harness.resolve(NoteCreationService).ensureNote("daily", meta, { answers: {} });
+
+      expectOk(result);
+      expect(harness.modals.opens).toHaveLength(0);
+    });
   });
 
   describe("a journal whose name template resolves to an empty name", () => {
