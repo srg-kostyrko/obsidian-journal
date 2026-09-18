@@ -158,10 +158,12 @@ export class NoteCreationService {
 
     return attempt.in(this, async function* () {
       const config = this.#journals.get(name).getOrUndefined();
-      // Supplied answers stand in for the modal, so whoever supplied them is unattended too —
-      // and that must skip the plain confirmation dialog exactly as an explicit unattended does.
-      const unattended = (options?.unattended ?? false) || options?.answers !== undefined;
-      const confirming = !unattended && !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
+      // For a period note confirm and prompt are independent levers (unlike a notelet, where
+      // unattended suppresses both): a bare `unattended` must still show the plain confirmation.
+      // Only supplied answers — which stand in for the modal itself — skip it, because whoever
+      // supplied them was never going to see that dialog either.
+      const confirming =
+        options?.answers === undefined && !(options?.skipConfirmation ?? false) && (config?.confirmCreation ?? false);
 
       // With an answer reaching the note name or folder the path genuinely cannot be known
       // before asking, so those journals keep the prompt-then-derive order below. Everywhere
@@ -193,7 +195,7 @@ export class NoteCreationService {
       // Supplied answers stand in for the modal: whoever supplied them is not watching one.
       let answers: Record<string, PromptAnswer> = {};
       if (config !== undefined && config.prompts.length > 0) {
-        if (unattended) {
+        if (options?.answers !== undefined || (options?.unattended ?? false)) {
           const supplied = options?.answers ?? {};
           const outcome = unattendedOutcome(config, supplied);
           if (outcome.kind === "refuse") {

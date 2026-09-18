@@ -147,6 +147,18 @@ describe("NoteCreationService.ensureNote", () => {
       expectOk(result);
       expect(harness.modals.opens).toHaveLength(0);
     });
+
+    // Unlike a notelet, a period note's confirm and prompt are independent levers — a bare
+    // `unattended` (with no supplied answers) must still show the plain confirmation dialog.
+    it("still opens the confirmation for a bare unattended request", async () => {
+      const promise = harness.resolve(NoteCreationService).ensureNote("daily", meta, { unattended: true });
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+      harness.modals.lastOpen<{ journalName: string; noteName: string }, boolean>().submit(true);
+
+      const result = await promise;
+
+      expect(result.isOk() && result.value.created).toBe(true);
+    });
   });
 
   describe("a journal whose name template resolves to an empty name", () => {
