@@ -125,7 +125,14 @@ curl -k -H "Authorization: Bearer <your-api-key>" \
 ```json
 {
   "journals": [
-    { "name": "work", "shelf": null, "write": { "type": "day" }, "notelets": [], "prompts": [], "noteletTypes": [] }
+    {
+      "name": "work",
+      "shelf": null,
+      "write": { "type": "day" },
+      "notelets": ["Meeting"],
+      "prompts": [],
+      "noteletTypes": [{ "name": "Meeting", "prompts": [] }]
+    }
   ]
 }
 ```
@@ -202,14 +209,34 @@ a read or a delete.
 
 ### Create a notelet
 
+::: v-pre
+
+The `work` journal has a notelet type `Meeting`, folder `work/meetings`, note name template
+`{{date}} Meeting {{notelet_index}}`, numbered:
+
+:::
+
 ```sh
 curl -k -X POST -H "Authorization: Bearer <your-api-key>" \
   -H "Content-Type: application/json" \
-  -d '{"type": "mood", "answers": {"mood": "good"}}' \
-  https://127.0.0.1:27124/journals/work/notelets/2026-08-18
+  -d '{"type": "Meeting"}' \
+  https://127.0.0.1:27124/journals/work/notelets/2027-07-17
 ```
 
-`201` with the created notelet: `{ "journal": "work", "type": "mood", "path": "work/2026-08-18-1.md", "counter": 1, ... }`.
+`201` with the created notelet:
+
+```json
+{
+  "journal": "work",
+  "type": "Meeting",
+  "date": "2027-07-17",
+  "displayDate": "2027-07-17",
+  "endDate": "2027-07-17",
+  "path": "work/meetings/2027-07-17 Meeting 1.md",
+  "counter": 1
+}
+```
+
 `counter` is `null` for a type with no counter, and otherwise orders siblings within the period.
 
 ## What it does not do

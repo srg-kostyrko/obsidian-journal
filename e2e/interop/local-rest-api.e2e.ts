@@ -91,15 +91,14 @@ describe("local rest api interop", () => {
       }[];
     };
     expect(body.journals.map((journal) => journal.name).toSorted()).toEqual(["confirming", "mood", "work"]);
-    // work has no notelet types and no questions, so this also pins JournalInfo's full shape —
-    // the docs example is this journal's entry verbatim.
+    // This pins JournalInfo's full shape — the docs example is this journal's entry verbatim.
     expect(body.journals.find((journal) => journal.name === "work")).toEqual({
       name: "work",
       shelf: null,
       write: { type: "day" },
-      notelets: [],
+      notelets: ["Meeting"],
       prompts: [],
-      noteletTypes: [],
+      noteletTypes: [{ name: "Meeting", prompts: [] }],
     });
   });
 
@@ -140,8 +139,7 @@ describe("local rest api interop", () => {
       (content) => content.includes("written over REST"),
       "waited for the PUT body to land in work/2027-07-11.md",
     );
-    // Polled rather than read once: the metadata cache re-parses each of the two writes a moment
-    // after it, and the claim must be what it settles on.
+    // Polled rather than read once: the metadata cache parses the write a moment after it lands.
     await waitForJournalFrontmatter("work/2027-07-11.md", { journal: "work", date: "2027-07-11" });
     const content = (await contentOf("work/2027-07-11.md")) ?? "";
     expect(content.replace(/^---\n[\s\S]*?\n---\n/, "")).toBe(sent);
@@ -226,6 +224,22 @@ describe("local rest api interop", () => {
     expect(response.status).toBe(201);
     await waitForJournalFrontmatter("confirming/2027-07-13.md", { journal: "confirming", date: "2027-07-13" });
     expect(await openModalCount()).toBe(0);
+  });
+
+  it("creates a notelet at the path its type's folder and name template give", async () => {
+    // work's Meeting type: folder "work/meetings", name template "{{date}} Meeting {{notelet_index}}".
+    const response = await postJson("/journals/work/notelets/2027-07-17", { type: "Meeting" });
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({
+      journal: "work",
+      type: "Meeting",
+      date: "2027-07-17",
+      displayDate: "2027-07-17",
+      endDate: "2027-07-17",
+      path: "work/meetings/2027-07-17 Meeting 1.md",
+      counter: 1,
+    });
+    expect(await notePathsMatching("work/meetings/")).toEqual(["work/meetings/2027-07-17 Meeting 1.md"]);
   });
 
   describe("errors", () => {

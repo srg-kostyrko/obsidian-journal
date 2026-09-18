@@ -15,7 +15,18 @@
         "addStartDate": false,
         "addEndDate": false
       },
-      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "notelets": {
+        "meeting": {
+          "id": "meeting",
+          "name": "Meeting",
+          "folder": "work/meetings",
+          "nameTemplate": "{{date}} Meeting {{notelet_index}}",
+          "templates": [],
+          "counter": { "enabled": true, "frontmatterKey": "journal-notelet-index" },
+          "prompts": []
+        }
+      }
     },
     "mood": {
       "name": "mood",
