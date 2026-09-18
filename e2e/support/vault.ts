@@ -1,6 +1,11 @@
 import { browser } from "@wdio/globals";
 
-import { FixtureFileMissingError, RenameFileFailedError, RenameRequiresLinkUpdateError } from "./errors.js";
+import {
+  FixtureFileMissingError,
+  NoteNotOpenError,
+  RenameFileFailedError,
+  RenameRequiresLinkUpdateError,
+} from "./errors.js";
 import { confirmUpdateLinksDialog, dismissUpdateLinksDialog, isUpdateLinksDialogOpen } from "./rename-links-dialog.js";
 import { waitForState } from "./wait.js";
 
@@ -237,24 +242,32 @@ export function mainWindowHoldsNote(path: string): Promise<boolean> {
 }
 
 // Paths held by pinned markdown leaves, across every window. getViewState().pinned is the public
-// spelling of the leaf's pin.
+// spelling of the leaf's pin. A tab restored in the background is deferred and has no view.file,
+// so the path falls back to its view state, as WorkspaceService reads it.
 export function pinnedNotePaths(): Promise<string[]> {
   return browser.executeObsidian(({ app }) =>
     app.workspace
       .getLeavesOfType("markdown")
       .filter((leaf) => leaf.getViewState().pinned === true)
-      .map((leaf) => (leaf.view as { file?: { path: string } | null }).file?.path ?? "")
+      .map((leaf) => {
+        const file = (leaf.view as { file?: { path: string } | null }).file?.path;
+        const restored = leaf.getViewState().state?.file;
+        return file ?? (typeof restored === "string" ? restored : "");
+      })
       .toSorted(),
   );
 }
 
 export async function pinNote(path: string): Promise<void> {
-  await browser.executeObsidian(({ app }, notePath) => {
-    const leaf = app.workspace
-      .getLeavesOfType("markdown")
-      .find((candidate) => (candidate.view as { file?: { path: string } | null }).file?.path === notePath);
+  const pinned = await browser.executeObsidian(({ app }, notePath) => {
+    const leaf = app.workspace.getLeavesOfType("markdown").find((candidate) => {
+      const file = (candidate.view as { file?: { path: string } | null }).file?.path;
+      return (file ?? candidate.getViewState().state?.file) === notePath;
+    });
     leaf?.setPinned(true);
+    return leaf !== undefined;
   }, path);
+  if (!pinned) throw new NoteNotOpenError(path);
 }
 
 // Puts the user back in the main window after a popout opened — the state a report of "it takes me
