@@ -121,10 +121,7 @@ export interface RestHarness {
   readonly harness: TestHarness;
   readonly api: JournalsApiService;
   readonly host: RecordingLocalRestApi;
-  /**
-   * Runs the handler the bridge registered for `verb path` and waits for it to answer, through
-   * the same error wrapper the host sees.
-   */
+  /** Runs the handler the bridge registered for `verb path` through the host-facing error wrapper. */
   send(
     verb: RestVerb,
     path: string,

@@ -36,10 +36,9 @@ function wrapPromptsRequired(error: unknown, name: string, date: string): unknow
   };
 }
 
-// No answers: this is the redirect family, handing content to the host's own vault routes, not
-// the notes endpoint that accepts answers. confirm: false for the same reason the notes endpoint
-// passes it: nobody is watching for a dialog.
-async function ensureNote(api: JournalsApi, name: string, date: string) {
+// The request body here is note content, never answers — answers go through the notes endpoint,
+// which the prompts-required message points at. confirm: false because nobody is watching for a dialog.
+async function ensureWithoutAnswers(api: JournalsApi, name: string, date: string) {
   try {
     return await api.ensureNote(name, date, { prompt: false, confirm: false });
   } catch (error) {
@@ -72,7 +71,7 @@ function ensureAndRedirect(api: JournalsApi, suffixOf: (request: Request) => str
     const name = request.params.name;
     await requireJournal(api, name);
 
-    const result = await ensureNote(api, name, request.params.date);
+    const result = await ensureWithoutAnswers(api, name, request.params.date);
     redirectToNote(request, response, result.note.path, suffix);
   };
 }
@@ -115,7 +114,7 @@ export class NoteRedirectRoute implements RestRoute {
     const checked = this.#creation.checkContent(body);
     if (checked.isErr()) throw unreadableFrontmatter(name, checked.error);
 
-    const { note } = await ensureNote(this.#api, name, request.params.date);
+    const { note } = await ensureWithoutAnswers(this.#api, name, request.params.date);
     // The note's own date, which is its anchor — not the date the request named.
     const replaced = await this.#creation.replaceContent(name, note.date as AnchorString, body);
     if (replaced.isErr()) {
