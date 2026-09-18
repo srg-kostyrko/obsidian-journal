@@ -104,6 +104,8 @@ export interface EnsureNoteOptions {
 
 export interface OpenNoteOptions extends EnsureNoteOptions {
   readonly openMode?: "active" | "tab" | "split" | "window";
+  /** Open in the journal's pinned tab, moving it to this note; pins a new tab when there is none. */
+  readonly pinned?: boolean;
 }
 
 export interface EnsureResult {

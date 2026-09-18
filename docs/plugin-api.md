@@ -448,6 +448,10 @@ Two behaviours with no equivalent, worth knowing before you port:
   it expects would be unusable. A discovery API — reading a journal's prompts
   before calling — is a separate, additive change this one does not attempt.
 
+- **`openNote` can open in the journal's pinned tab.** Pass `{ pinned: true }` to
+  open the note in the journal's pinned tab — moving that tab to the note, or
+  pinning a new one when the journal has none; other pinned tabs are left alone.
+
 - **Custom journals exist.** A journal can write every N days/weeks/months rather
   than on a calendar boundary. They appear as `write.type === "custom"` with
   `every` and `duration`, and they are reachable by name — no `writeType` maps

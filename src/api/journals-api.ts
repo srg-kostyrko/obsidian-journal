@@ -436,6 +436,7 @@ export class JournalsApiService implements JournalsApi {
           journalName: name,
           anchor,
           openMode: options?.openMode,
+          pinned: options?.pinned,
           skipConfirmation: this.#skipConfirmation(options),
           unattended: this.#unattended(options),
         },

@@ -833,6 +833,18 @@ describe("JournalsApiService writes", () => {
     );
   });
 
+  it("opens through the open flow, passing the pin setting", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await api.openNote("daily", "2026-08-18", { pinned: true });
+
+    expect(flows).toHaveBeenLastCalledWith(
+      OpenJournalEntryFlow,
+      expect.objectContaining({ pinned: true }),
+      expect.anything(),
+    );
+  });
+
   it("rejects with no-matching-journal when the selector matches nothing", async () => {
     const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
