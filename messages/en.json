@@ -1285,6 +1285,8 @@
   "uri_invalid_date": "Could not understand the date \"{date}\" in the URI.",
   "uri_invalid_mode": "Unknown open mode \"{mode}\" in the URI.",
   "uri_notelet_requires_journal": "A notelet link needs a journal. Add journal=<name> to the link.",
+  "uri_invalid_pinned": "Unknown pinned value \"{value}\" in the URI. Use true or false.",
+  "uri_notelet_pinned": "A notelet link can't be pinned. Remove pinned= from the link.",
   "uri_unknown_journal": "There is no journal named \"{journal}\".",
   "uri_no_journal": "No journal covers that date.",
   "uri_no_journal_of_type": [

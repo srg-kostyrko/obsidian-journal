@@ -110,3 +110,29 @@ describe("parseJournalUriRequest notelet", () => {
     expect(errKind({ type: "day", notelet: "Meeting" })).toBe("notelet-requires-journal");
   });
 });
+
+describe("parseJournalUriRequest pinned", () => {
+  it("defaults to unpinned", () => {
+    expect(ok({ journal: "work" }).pinned).toBe(false);
+  });
+
+  it("reads pinned=true", () => {
+    expect(ok({ journal: "work", pinned: "true" }).pinned).toBe(true);
+  });
+
+  it("reads pinned=false", () => {
+    expect(ok({ journal: "work", pinned: "false" }).pinned).toBe(false);
+  });
+
+  it("refuses any other value", () => {
+    expect(errKind({ journal: "work", pinned: "yes" })).toBe("invalid-pinned");
+  });
+
+  it("refuses a pinned notelet link", () => {
+    expect(errKind({ journal: "work", notelet: "Meeting", pinned: "true" })).toBe("notelet-pinned");
+  });
+
+  it("accepts pinned=false on a notelet link", () => {
+    expect(ok({ journal: "work", notelet: "Meeting", pinned: "false" }).pinned).toBe(false);
+  });
+});

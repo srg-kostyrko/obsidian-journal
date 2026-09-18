@@ -1278,6 +1278,8 @@
   "uri_invalid_date": "No se pudo entender la fecha «{date}» en la URI.",
   "uri_invalid_mode": "Modo de apertura desconocido «{mode}» en la URI.",
   "uri_notelet_requires_journal": "Un enlace de nota breve necesita un diario. Añade journal=<nombre> al enlace.",
+  "uri_invalid_pinned": "Valor de pinned desconocido «{value}» en la URI. Usa true o false.",
+  "uri_notelet_pinned": "Un enlace de nota breve no se puede fijar. Quita pinned= del enlace.",
   "uri_unknown_journal": "No existe ningún diario llamado «{journal}».",
   "uri_no_journal": "Ningún diario cubre esa fecha.",
   "uri_no_journal_of_type": [

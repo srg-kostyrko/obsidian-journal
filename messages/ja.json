@@ -1133,6 +1133,8 @@
   "uri_invalid_date": "URI 内の日付「{date}」を解釈できませんでした。",
   "uri_invalid_mode": "URI に不明なオープンモード「{mode}」があります。",
   "uri_notelet_requires_journal": "サブノートのリンクにはジャーナルが必要です。リンクに journal=<名前> を追加してください。",
+  "uri_invalid_pinned": "URI に不明な pinned の値「{value}」があります。true か false を指定してください。",
+  "uri_notelet_pinned": "サブノートのリンクはピン留めできません。リンクから pinned= を削除してください。",
   "uri_unknown_journal": "「{journal}」という名前のジャーナルはありません。",
   "uri_no_journal": "その日付を含むジャーナルがありません。",
   "uri_no_journal_of_type": [

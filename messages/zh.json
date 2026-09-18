@@ -1133,6 +1133,8 @@
   "uri_invalid_date": "无法识别 URI 中的日期“{date}”。",
   "uri_invalid_mode": "URI 中的打开模式“{mode}”未知。",
   "uri_notelet_requires_journal": "子笔记链接需要一个日记。请在链接中添加 journal=<名称>。",
+  "uri_invalid_pinned": "URI 中的 pinned 值“{value}”未知。请使用 true 或 false。",
+  "uri_notelet_pinned": "子笔记链接无法锁定。请从链接中移除 pinned=。",
   "uri_unknown_journal": "没有名为“{journal}”的日记。",
   "uri_no_journal": "没有日记覆盖该日期。",
   "uri_no_journal_of_type": [

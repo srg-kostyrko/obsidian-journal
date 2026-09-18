@@ -1278,6 +1278,8 @@
   "uri_invalid_date": "Das Datum „{date}“ in der URI konnte nicht interpretiert werden.",
   "uri_invalid_mode": "Unbekannter Öffnungsmodus „{mode}“ in der URI.",
   "uri_notelet_requires_journal": "Ein Kurznotiz-Link benötigt ein Journal. Füge journal=<Name> zum Link hinzu.",
+  "uri_invalid_pinned": "Unbekannter pinned-Wert „{value}“ in der URI. Verwende true oder false.",
+  "uri_notelet_pinned": "Ein Kurznotiz-Link kann nicht angeheftet werden. Entferne pinned= aus dem Link.",
   "uri_unknown_journal": "Es gibt kein Journal mit dem Namen „{journal}“.",
   "uri_no_journal": "Für dieses Datum gibt es kein Journal.",
   "uri_no_journal_of_type": [

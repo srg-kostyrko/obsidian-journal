@@ -65,6 +65,20 @@ describe("JournalUriHandler dispatch", () => {
     });
   });
 
+  it("passes pinned through to OpenDateFlow", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { work: WORK } },
+      initialize: [JournalUriHandler],
+    });
+    const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
+
+    trigger(harness, { journal: "work", date: "2026-05-19", pinned: "true" });
+    await flush();
+
+    expect(invokeSpy).toHaveBeenCalledWith(OpenDateFlow, expect.objectContaining({ pinned: true }), expect.anything());
+  });
+
   it("passes every journal of a write type as candidates", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule],
@@ -127,6 +141,28 @@ describe("JournalUriHandler errors", () => {
 
     expect(harness.host.workspace.openCalls).toEqual([]);
     expect(harness.notices.messages).toHaveLength(1);
+  });
+
+  it("notifies for an unknown pinned value", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { work: WORK } },
+      initialize: [JournalUriHandler],
+    });
+
+    trigger(harness, { journal: "work", pinned: "maybe" });
+    await flush();
+
+    expect(harness.notices.messages).toEqual([m.uri_invalid_pinned({ value: "maybe" })]);
+  });
+
+  it("notifies for a pinned notelet link", async () => {
+    const harness = await noteletHarness(withMeetingType());
+
+    trigger(harness, { journal: "Work", notelet: "Meeting", pinned: "true" });
+    await flush();
+
+    expect(harness.notices.messages).toEqual([m.uri_notelet_pinned()]);
   });
 
   it("notifies when the flow reports no applicable journals", async () => {

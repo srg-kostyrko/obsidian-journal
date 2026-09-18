@@ -1310,6 +1310,8 @@
   "uri_invalid_date": "Не удалось распознать дату «{date}» в URI.",
   "uri_invalid_mode": "Неизвестный режим открытия «{mode}» в URI.",
   "uri_notelet_requires_journal": "Ссылке на подзаметку нужен журнал. Добавьте в ссылку journal=<название>.",
+  "uri_invalid_pinned": "Неизвестное значение pinned «{value}» в URI. Используйте true или false.",
+  "uri_notelet_pinned": "Ссылку на подзаметку нельзя закрепить. Уберите из ссылки pinned=.",
   "uri_unknown_journal": "Журнала с названием «{journal}» не существует.",
   "uri_no_journal": "Ни один журнал не охватывает эту дату.",
   "uri_no_journal_of_type": [

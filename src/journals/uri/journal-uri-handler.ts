@@ -37,7 +37,7 @@ export class JournalUriHandler {
       return;
     }
 
-    const { target, date, openMode } = parsed.value;
+    const { target, date, openMode, pinned } = parsed.value;
 
     if (target.kind === "journal") {
       const config = this.#journals.get(target.name);
@@ -75,6 +75,7 @@ export class JournalUriHandler {
         journalNames: candidates,
         openMode,
         existingOnly: false,
+        pinned,
       },
       // This handler distinguishes the URI failure modes below with better copy.
       { notify: false },
@@ -149,6 +150,8 @@ export class JournalUriHandler {
       .with({ kind: "invalid-date" }, (dateError) => m.uri_invalid_date({ date: dateError.value }))
       .with({ kind: "invalid-mode" }, (modeError) => m.uri_invalid_mode({ mode: modeError.value }))
       .with({ kind: "notelet-requires-journal" }, () => m.uri_notelet_requires_journal())
+      .with({ kind: "invalid-pinned" }, (pinnedError) => m.uri_invalid_pinned({ value: pinnedError.value }))
+      .with({ kind: "notelet-pinned" }, () => m.uri_notelet_pinned())
       .exhaustive();
   }
 
