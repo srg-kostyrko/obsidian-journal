@@ -117,13 +117,7 @@ export interface NoteletNote {
 export interface EnsureNoteOptions {
   /** Show the journal's creation-confirmation prompt. Defaults to the journal's own setting. */
   readonly confirm?: boolean;
-  /**
-   * Ask the journal's creation prompts. Defaults to true, since a caller is typically
-   * user-triggered and asking is what makes this behave like the UI. Pass false when the
-   * call must not block on a modal; a journal that cannot proceed without an answer then
-   * fails with `prompts-required` instead of hanging. Supply `answers` instead to
-   * create such a note without asking.
-   */
+  /** Ask the journal's creation prompts (default true); when false, a note needing an answer fails with `prompts-required`. */
   readonly prompt?: boolean;
   /** Answers keyed by question variable; creates without any dialog — see "Answering questions" in the docs. */
   readonly answers?: Readonly<Record<string, unknown>>;
