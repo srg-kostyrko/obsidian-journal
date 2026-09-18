@@ -1,0 +1,7 @@
+{
+  "apiKey": "e2e-rest-key",
+  "port": 27124,
+  "insecurePort": 27123,
+  "enableInsecureServer": true,
+  "enableSecureServer": false
+}

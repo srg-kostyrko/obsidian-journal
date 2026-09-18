@@ -83,3 +83,10 @@ export class NoteNotOpenError extends Error {
     this.name = "NoteNotOpenError";
   }
 }
+
+export class HostPluginNotLoadedError extends Error {
+  constructor(id: string) {
+    super(`the ${id} plugin was installed and enabled but never loaded`);
+    this.name = "HostPluginNotLoadedError";
+  }
+}

@@ -120,11 +120,15 @@ export const config: WebdriverIO.Config = {
         // across the whole matrix (our floor 1.8.7 .. latest stable). Templater 2.21+
         // require the 1.13 beta and silently stay unloaded on stable Obsidian.
         // Periodic Notes 0.0.17 and Calendar 1.5.10 are the community-store versions the import reads.
+        // Local REST API 5.1.0 declares minAppVersion 1.13.1, but Obsidian only checks that at
+        // store install time: installed this way it loads and passes its spec on the 1.8.7 floor
+        // too (measured), and its spec fails outright if getPlugin() ever comes back null.
         plugins: [
           "./build",
           { id: "templater-obsidian", version: "2.18.0", enabled: false },
           { id: "periodic-notes", version: "0.0.17", enabled: false },
           { id: "calendar", version: "1.5.10", enabled: false },
+          { id: "obsidian-local-rest-api", version: "5.1.0", enabled: false },
         ],
         vault: "./e2e/fixtures/e2e-empty",
       },

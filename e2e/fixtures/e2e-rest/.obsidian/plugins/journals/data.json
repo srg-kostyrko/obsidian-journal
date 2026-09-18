@@ -1,0 +1,62 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "work": {
+      "name": "work",
+      "write": { "type": "day" },
+      "folder": "work",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "mood": {
+      "name": "mood",
+      "write": { "type": "day" },
+      "folder": "mood",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}} {{mood}}",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "prompts": [
+        {
+          "variable": "mood",
+          "question": "How was today?",
+          "type": "text",
+          "frontmatterKey": "mood",
+          "required": true
+        }
+      ]
+    },
+    "confirming": {
+      "name": "confirming",
+      "write": { "type": "day" },
+      "folder": "confirming",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "confirmCreation": true,
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  }
+}

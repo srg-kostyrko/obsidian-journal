@@ -336,6 +336,9 @@ export default [
       ...mocha.configs.recommended.rules,
       ...Object.fromEntries(Object.keys(obsidianmd.rules).map((rule) => [`obsidianmd/${rule}`, "off"])),
       "unicorn/name-replacements": "off",
+      // The obsidianmd preset also sets this core rule to steer plugin code from `fetch` to
+      // `requestUrl`. Specs run in the Mocha process, where `requestUrl` does not exist.
+      "no-restricted-globals": "off",
       // A forgotten `.only` silently shrinks the CI run, so fail the lint gate on it.
       "mocha/no-exclusive-tests": "error",
       "mocha/no-pending-tests": "error",
