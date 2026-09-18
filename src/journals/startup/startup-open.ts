@@ -104,6 +104,12 @@ export class StartupOpenService {
       return;
     }
     const { openMode, pinned } = this.#slice.state;
+    // The pin group is read off the index, so before the boot walk lands yesterday's pinned note is
+    // not yet the journal's and a second tab would be pinned beside it.
+    if (pinned) {
+      await Promise.race([this.#index.whenReady(), this.#disposed]);
+      if (this.#isDisposed) return;
+    }
     const result = await this.#flows.invoke(OpenJournalEntryFlow, { journalName, anchor, openMode, pinned });
     if (result.isErr() && !(result.error instanceof UserAborted)) {
       this.#logger.error("startup-open: failed to open note", { journalName, error: result.error });

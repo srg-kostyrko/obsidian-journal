@@ -102,6 +102,7 @@ describe("StartupOpenService", () => {
         },
       });
       pinnedHarness.host.workspace.layoutReady = false;
+      pinnedHarness.resolve(JournalsIndex).markReady();
 
       await pinnedHarness.resolve(StartupOpenService).initialize();
       pinnedHarness.host.setLayoutReady();
@@ -137,7 +138,40 @@ describe("StartupOpenService", () => {
     });
 
     it("reads a stored startup setting without mode or pin as today's behavior", () => {
-      expect(harness.settings.getSlice(startupSlice).state).toMatchObject({ openMode: "active", pinned: false });
+      expect(harness.settings.getSlice(startupSlice).state).toMatchObject({
+        journalName: "daily",
+        openMode: "active",
+        pinned: false,
+      });
+    });
+
+    it("moves yesterday's pinned tab to today once the index knows yesterday's note", async () => {
+      // At layout-ready the boot walk has not landed, so yesterday's pinned note is not yet an
+      // entry of the journal — pinning then would leave two pinned tabs.
+      const yesterday = "2026-05-18.md" as VaultPath;
+      const pinnedHarness = await testContainer({
+        modules: MODULES,
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }) },
+          startup: { journalName: "daily", pinned: true },
+        },
+      });
+      const { workspace } = pinnedHarness.host;
+      workspace.layoutReady = false;
+      pinnedHarness.host.putFile(yesterday, "");
+      workspace.openPaths.add(yesterday);
+      workspace.pinnedPaths.add(yesterday);
+      const index = pinnedHarness.resolve(JournalsIndex);
+
+      await pinnedHarness.resolve(StartupOpenService).initialize();
+      pinnedHarness.host.setLayoutReady();
+      await vi.advanceTimersByTimeAsync(0);
+      index.register({ journalName: "daily", anchor: anchor("2026-05-18"), path: yesterday });
+      index.markReady();
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(workspace.retargetCalls).toEqual([{ from: yesterday, to: TODAY_PATH }]);
+      expect(workspace.pinnedPaths).toEqual(new Set([TODAY_PATH]));
     });
   });
 
