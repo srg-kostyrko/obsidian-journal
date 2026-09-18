@@ -542,6 +542,32 @@ describe("WorkspaceService", () => {
       expect([...host.workspace.pinnedPaths]).toEqual([a]);
     });
 
+    it("pins the new tab before the note finishes loading into it", async () => {
+      const { service, host } = withFiles();
+      const load = Promise.withResolvers<void>();
+      host.workspace.pendingLoad = load.promise;
+
+      const opening = service.openNote(a, "tab", daily);
+      await Promise.resolve();
+
+      expect(host.workspace.activeFile?.path).toBe(a);
+      expect([...host.workspace.pinnedPaths]).toEqual([a]);
+      load.resolve();
+      expectOk(await opening);
+    });
+
+    it("unpins the new tab and fails when the note does not load", async () => {
+      const { service, host } = withFiles();
+      host.workspace.pendingLoad = Promise.reject(new Error("read failed"));
+
+      const result = await service.openNote(a, "tab", daily);
+
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(WorkspaceOpenError);
+      expect(host.workspace.openCalls).toEqual([{ path: a, mode: "tab" }]);
+      expect(host.workspace.pinnedPaths).toEqual(new Set());
+    });
+
     it("moves the journal's pinned tab to the note instead of opening another", async () => {
       const { service, host } = withFiles();
       await service.openNote(a, "active", daily);

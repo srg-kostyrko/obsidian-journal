@@ -119,9 +119,17 @@ export class WorkspaceService {
       this.#app.workspace.setActiveLeaf(existing, { focus: true });
       return;
     }
+    // Pinned before the load: Obsidian makes the note the active file while it is still reading it
+    // from disk, so pinning afterwards shows the note in an unpinned tab for that long — and a
+    // second pinned open landing in that window misses this tab and pins another.
     const leaf = this.#app.workspace.getLeaf(toPaneType(mode));
-    await leaf.openFile(file, { active: true });
     leaf.setPinned(true);
+    try {
+      await leaf.openFile(file, { active: true });
+    } catch (error) {
+      leaf.setPinned(false);
+      throw error;
+    }
   }
 
   // Unlike #findOpenLeaf this spans every window on purpose: the pinned tab is the place the user
