@@ -90,3 +90,17 @@ export class HostPluginNotLoadedError extends Error {
     this.name = "HostPluginNotLoadedError";
   }
 }
+
+export class McpSessionIdMissingError extends Error {
+  constructor() {
+    super("the MCP host's initialize response carried no mcp-session-id header");
+    this.name = "McpSessionIdMissingError";
+  }
+}
+
+export class McpStreamEmptyError extends Error {
+  constructor() {
+    super("the MCP host's text/event-stream response carried no data: line");
+    this.name = "McpStreamEmptyError";
+  }
+}
