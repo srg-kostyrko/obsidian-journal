@@ -51,8 +51,9 @@ targeting of a heading, a block or frontmatter by appending it to the path. A cl
 the redirect and keep sending the `Authorization` header, which `curl -L` does on a same-host
 redirect like this one. The request's query string is passed through to the host unchanged, so the
 host's own parameters — `?permanent=true` on a `DELETE`, for one — still apply. `POST`, `PATCH`
-and a targeted `PUT` create the note first (asking its
-questions, same as the notes route below) before redirecting; `GET` and `DELETE` never create
+and a targeted `PUT` create the note first before redirecting — without answers, so on a journal
+whose questions cannot be skipped they answer `409 prompts-required` instead (see
+[Journals with questions](#journals-with-questions)); `GET` and `DELETE` never create
 anything — with no note there, they answer `404 note-not-found` instead of redirecting. A `PUT`
 with no target is not part of this family at all — see the next section.
 
@@ -64,8 +65,9 @@ note, taking the properties that tie it to its journal with it — so Journals c
 needed and writes the body itself, adding its own journal properties on top of whatever
 frontmatter the body carries. It answers `204` with no body.
 
-- Frontmatter in the request body is kept; Journals' journal properties (`journal-date` and so on)
-  are added on top of it.
+- Frontmatter in the request body keeps its values; Journals' journal properties (`journal-date`
+  and so on) are added on top of it. The YAML itself is written back out fresh, so comments,
+  quoting and flow-style lists in it are not preserved.
 - Answer properties saved from [questions](/questions) come only from the request body — a PUT
   does not restore ones an earlier version of the note had that the new body leaves out.
 - A custom interval journal's end date cannot be changed this way; the note keeps the span it was
@@ -73,7 +75,8 @@ frontmatter the body carries. It answers `204` with no body.
 - If the note's name or folder uses an answer, the name stays as it is even when the new body
   drops that property — a PUT never renames or moves the note.
 - An empty body clears the note down to its frontmatter.
-- Frontmatter that is not valid YAML answers `400 invalid-request` and leaves the note untouched.
+- Frontmatter that is not valid YAML answers `400 invalid-request` and writes nothing: an existing
+  note is left untouched, and a missing one is not created.
 
 Send the body as `Content-Type: text/markdown`.
 
