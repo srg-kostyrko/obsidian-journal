@@ -309,6 +309,8 @@
   "common_label_name": "Назва",
   "command_modal_open_mode_label": "Відкрити нотатку",
   "common_show_in_ribbon": "Показати на стрічці",
+  "common_pin_note_label": "Закріпити нотатку",
+  "common_pin_note_desc": "Відкривати в закріпленій вкладці. Якщо цей журнал уже має закріплену вкладку, у ній відкриється ця нотатка.",
   "command_modal_type_label": "Коли виконується команда",
   "command_modal_write_type_label": "Тип нотатки",
   "command_name_prefix_hint": [

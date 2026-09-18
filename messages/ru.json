@@ -322,6 +322,8 @@
   "common_label_name": "Название",
   "command_modal_open_mode_label": "Открывать заметку",
   "common_show_in_ribbon": "Показывать на ленте",
+  "common_pin_note_label": "Закрепить заметку",
+  "common_pin_note_desc": "Открывать в закреплённой вкладке. Если у этого журнала уже есть закреплённая вкладка, в ней откроется эта заметка.",
   "command_modal_type_label": "Когда выполняется команда",
   "command_modal_write_type_label": "Тип заметки",
   "command_name_prefix_hint": [

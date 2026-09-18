@@ -257,6 +257,8 @@
   "common_label_name": "Name",
   "command_modal_open_mode_label": "Open note",
   "common_show_in_ribbon": "Show in ribbon",
+  "common_pin_note_label": "Pin the note",
+  "common_pin_note_desc": "Open it in a pinned tab. If this journal already has a pinned tab, that tab switches to this note instead.",
   "command_modal_type_label": "When the command runs",
   "command_modal_write_type_label": "Note type",
   "command_name_prefix_hint": [

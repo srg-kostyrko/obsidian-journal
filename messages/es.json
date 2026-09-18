@@ -320,6 +320,8 @@
   "common_label_name": "Nombre",
   "command_modal_open_mode_label": "Abrir nota",
   "common_show_in_ribbon": "Mostrar en la cinta",
+  "common_pin_note_label": "Fijar la nota",
+  "common_pin_note_desc": "Ábrela en una pestaña fijada. Si este diario ya tiene una pestaña fijada, esa pestaña pasa a esta nota.",
   "command_modal_type_label": "Cuando se ejecuta el comando",
   "command_modal_write_type_label": "Tipo de nota",
   "command_name_prefix_hint": [

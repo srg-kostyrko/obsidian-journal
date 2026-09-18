@@ -320,6 +320,8 @@
   "common_label_name": "Name",
   "command_modal_open_mode_label": "Notiz öffnen",
   "common_show_in_ribbon": "In der Werkzeugleiste anzeigen",
+  "common_pin_note_label": "Notiz anheften",
+  "common_pin_note_desc": "In einem angehefteten Tab öffnen. Hat dieses Journal schon einen angehefteten Tab, wechselt stattdessen dieser Tab zu dieser Notiz.",
   "command_modal_type_label": "Beim Ausführen des Befehls",
   "command_modal_write_type_label": "Notiztyp",
   "command_name_prefix_hint": [

@@ -227,7 +227,7 @@ describe("DynamicCommandRegistry execution", () => {
     const { host, flows } = await buildRegistry({
       journals: { daily: fixedJournal("daily", { type: "day" }) },
       commands: {
-        "cmd-1": buildCommand({ name: "Cmd", type: "same", context: "today", openMode: "split" }),
+        "cmd-1": buildCommand({ name: "Cmd", type: "same", context: "today", openMode: "split", pinned: true }),
       },
     });
     const invokeSpy = vi.spyOn(flows, "invoke").mockReturnValue(AsyncResult.ok({ path: "daily/x.md", created: false }));
@@ -241,6 +241,7 @@ describe("DynamicCommandRegistry execution", () => {
         journalNames: ["daily"],
         openMode: "split",
         existingOnly: false,
+        pinned: true,
       },
       { context: { command: "Cmd" } },
     );
@@ -315,6 +316,7 @@ describe("DynamicCommandRegistry execution", () => {
         journalNames: ["daily"],
         openMode: "active",
         existingOnly: false,
+        pinned: false,
       },
       { context: { command: "Cmd" } },
     );
@@ -388,6 +390,7 @@ describe("DynamicCommandRegistry execution", () => {
         journalNames: ["daily"],
         openMode: "active",
         existingOnly: false,
+        pinned: false,
       },
       { context: { command: "Cmd" } },
     );
@@ -419,6 +422,7 @@ describe("DynamicCommandRegistry execution", () => {
         journalNames: ["daily"],
         openMode: "active",
         existingOnly: false,
+        pinned: false,
       },
       { context: { command: "Cmd" } },
     );
@@ -465,6 +469,7 @@ describe("DynamicCommandRegistry available types", () => {
         journalNames: ["daily"],
         openMode: "active",
         existingOnly: true,
+        pinned: false,
       },
       { context: { command: "Cmd" } },
     );

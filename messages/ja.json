@@ -309,6 +309,8 @@
   "common_label_name": "名前",
   "command_modal_open_mode_label": "ノートを開く場所",
   "common_show_in_ribbon": "リボンに表示",
+  "common_pin_note_label": "ノートをピン留め",
+  "common_pin_note_desc": "ピン留めしたタブで開きます。このジャーナルのピン留めタブが既にある場合は、そのタブがこのノートに切り替わります。",
   "command_modal_type_label": "コマンド実行時の動作",
   "command_modal_write_type_label": "ノートの種類",
   "command_name_prefix_hint": [

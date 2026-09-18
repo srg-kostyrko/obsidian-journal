@@ -21,6 +21,7 @@ export class NoteletCommandService {
       icon: "",
       showInRibbon: false,
       openMode: "tab",
+      pinned: false,
       target: { kind: "notelet", journalName, typeId: type.id },
       type: "same",
       context: "today",

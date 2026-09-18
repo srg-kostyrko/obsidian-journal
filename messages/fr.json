@@ -320,6 +320,8 @@
   "common_label_name": "Nom",
   "command_modal_open_mode_label": "Ouvrir la note",
   "common_show_in_ribbon": "Afficher dans le ruban",
+  "common_pin_note_label": "Épingler la note",
+  "common_pin_note_desc": "L’ouvrir dans un onglet épinglé. Si ce journal a déjà un onglet épinglé, c’est cet onglet qui passe à cette note.",
   "command_modal_type_label": "Lorsque la commande s’exécute",
   "command_modal_write_type_label": "Type de note",
   "command_name_prefix_hint": [

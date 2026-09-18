@@ -320,6 +320,8 @@
   "common_label_name": "Nome",
   "command_modal_open_mode_label": "Abrir nota",
   "common_show_in_ribbon": "Mostrar na faixa de opções",
+  "common_pin_note_label": "Fixar a nota",
+  "common_pin_note_desc": "Abrir numa aba fixada. Se este diário já tiver uma aba fixada, essa aba passa para esta nota.",
   "command_modal_type_label": "Quando o comando é executado",
   "command_modal_write_type_label": "Tipo de nota",
   "command_name_prefix_hint": [

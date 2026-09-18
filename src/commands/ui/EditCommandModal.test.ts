@@ -61,6 +61,7 @@ describe("EditCommandModal", () => {
         icon: "",
         showInRibbon: false,
         openMode: "active",
+        pinned: false,
         target: { kind: "all", writeType: "day" },
         type: "same",
         context: "today",
@@ -158,6 +159,7 @@ describe("EditCommandModal", () => {
         icon: "",
         showInRibbon: false,
         openMode: "active",
+        pinned: false,
         target: { kind: "shelf", shelfName: "work", writeType: "day" },
         type: "same",
         context: "today",
@@ -175,6 +177,26 @@ describe("EditCommandModal", () => {
         expect.objectContaining({ target: { kind: "shelf", shelfName: "work", writeType: "week" } }),
       ),
     );
+  });
+
+  it("submits the pin setting", async () => {
+    const { submit } = await mountModal({ target: { kind: "all", writeType: "day" } });
+    await userEvent.type(screen.getByRole("textbox"), "Pinned today");
+    await userEvent.click(screen.getByRole("checkbox", { name: m.common_pin_note_label() }));
+    await userEvent.click(screen.getByText(m.common_action_create()));
+    await waitFor(() => expect(submit).toHaveBeenCalledWith(expect.objectContaining({ pinned: true })));
+  });
+
+  it("offers no pin setting for a notelet command", async () => {
+    const journals: Record<string, JournalConfig> = {
+      daily: fixedJournal(
+        "daily",
+        { type: "day" },
+        { notelets: { t1: buildNoteletType({ id: "t1" as TypeId, name: "Standup" }) } },
+      ),
+    };
+    await mountModal({ target: { kind: "notelet", journalName: "daily", typeId: "t1" }, journals });
+    expect(screen.queryByRole("checkbox", { name: m.common_pin_note_label() })).toBeNull();
   });
 
   describe("notelet target", () => {

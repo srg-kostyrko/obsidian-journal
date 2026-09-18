@@ -320,6 +320,8 @@
   "common_label_name": "이름",
   "command_modal_open_mode_label": "노트 열기",
   "common_show_in_ribbon": "리본에 표시",
+  "common_pin_note_label": "노트 고정",
+  "common_pin_note_desc": "고정된 탭에서 엽니다. 이 저널에 이미 고정된 탭이 있으면 그 탭이 이 노트로 바뀝니다.",
   "command_modal_type_label": "명령어 실행 시점",
   "command_modal_write_type_label": "노트 유형",
   "command_name_prefix_hint": [

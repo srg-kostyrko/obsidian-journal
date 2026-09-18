@@ -309,6 +309,8 @@
   "common_label_name": "名称",
   "command_modal_open_mode_label": "打开笔记",
   "common_show_in_ribbon": "在功能区中显示",
+  "common_pin_note_label": "锁定笔记",
+  "common_pin_note_desc": "在锁定的标签页中打开。如果此日记已有锁定的标签页，则改为在该标签页中打开此笔记。",
   "command_modal_type_label": "命令运行时",
   "command_modal_write_type_label": "笔记类型",
   "command_name_prefix_hint": [

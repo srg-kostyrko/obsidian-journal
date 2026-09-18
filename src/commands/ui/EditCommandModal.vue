@@ -54,6 +54,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
     showInRibbon: initial.showInRibbon,
     icon: initial.icon,
     openMode: initial.openMode,
+    pinned: initial.pinned,
   },
   validationSchema: toTypedSchema(
     v.pipe(
@@ -80,6 +81,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
         showInRibbon: v.boolean(),
         icon: v.string(),
         openMode: v.picklist(["active", "tab", "split", "window"]),
+        pinned: v.boolean(),
       }),
       v.forward(
         v.partialCheck(
@@ -99,6 +101,7 @@ const [context, contextAttrs] = defineField("context");
 const [showInRibbon, showInRibbonAttrs] = defineField("showInRibbon");
 const [icon, iconAttrs] = defineField("icon");
 const [openMode, openModeAttrs] = defineField("openMode");
+const [pinned, pinnedAttrs] = defineField("pinned");
 
 // A notelet command shares the journal's palette prefix, so its hint reads the same way.
 const namePrefixHintKind = computed<"journal" | "shelf">(() => (props.target.kind === "shelf" ? "shelf" : "journal"));
@@ -140,6 +143,7 @@ const onSubmit = handleSubmit((values) => {
     icon: values.icon,
     showInRibbon: values.showInRibbon,
     openMode: values.openMode,
+    pinned: props.target.kind === "notelet" ? false : values.pinned,
     type: values.type,
     context: values.context,
     target: submittedTarget,
@@ -209,6 +213,11 @@ const onSubmit = handleSubmit((values) => {
         <option value="split">{{ m.command_open_mode_option({ mode: "split" }) }}</option>
         <option value="window">{{ m.command_open_mode_option({ mode: "window" }) }}</option>
       </UiDropdown>
+    </UiSettingRow>
+
+    <UiSettingRow v-if="props.target.kind !== 'notelet'" :name="m.common_pin_note_label()">
+      <template #description>{{ m.common_pin_note_desc() }}</template>
+      <UiToggle v-model="pinned" v-bind="pinnedAttrs" :tooltip="m.common_pin_note_label()" />
     </UiSettingRow>
 
     <UiSettingRow controls-only>

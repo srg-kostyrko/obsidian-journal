@@ -320,6 +320,8 @@
   "common_label_name": "Nome",
   "command_modal_open_mode_label": "Apri la nota",
   "common_show_in_ribbon": "Mostra nella barra multifunzione",
+  "common_pin_note_label": "Fissa la nota",
+  "common_pin_note_desc": "Aprila in una scheda fissata. Se questo diario ha già una scheda fissata, quella scheda passa a questa nota.",
   "command_modal_type_label": "Quando il comando viene eseguito",
   "command_modal_write_type_label": "Tipo di nota",
   "command_name_prefix_hint": [
