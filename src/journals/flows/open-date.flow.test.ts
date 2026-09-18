@@ -13,6 +13,7 @@ import { NoApplicableJournals } from "../notes/errors";
 import { fixedJournal } from "../testing";
 
 import { OpenDateFlow } from "./open-date.flow";
+import { OpenJournalEntryFlow } from "./open-journal-entry.flow";
 
 const TIMELINE_OPEN = { start: anchor("2020-01-01"), end: { kind: "never" as const } };
 
@@ -63,6 +64,15 @@ describe("OpenDateFlow", () => {
         .invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), existingOnly: true });
 
       expect(result.isErr() && result.error instanceof NoApplicableJournals).toBe(true);
+    });
+
+    it("passes pinned through to OpenJournalEntryFlow", async () => {
+      const invokeSpy = vi.spyOn(harness.resolve(Flows), "invoke");
+
+      const result = await harness.resolve(Flows).invoke(OpenDateFlow, { anchor: anchor("2026-05-19"), pinned: true });
+
+      expect(result.isOk()).toBe(true);
+      expect(invokeSpy).toHaveBeenCalledWith(OpenJournalEntryFlow, expect.objectContaining({ pinned: true }));
     });
   });
 

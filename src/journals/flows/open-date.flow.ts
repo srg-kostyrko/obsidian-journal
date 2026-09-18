@@ -21,6 +21,7 @@ export interface OpenDateParameters {
   // The originating mouse event, when there is one: multi-journal disambiguation then
   // shows a menu at the pointer instead of the centered suggest.
   pickAt?: MouseEvent;
+  pinned?: boolean;
 }
 
 export interface OpenDateResult {
@@ -50,6 +51,7 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
         journalName: only.name,
         anchor: only.anchor,
         openMode: p.openMode,
+        pinned: p.pinned,
       });
     }
 
@@ -64,6 +66,7 @@ export class OpenDateFlow implements Flow<OpenDateParameters, OpenDateResult, Op
           journalName: chosen.name,
           anchor: chosen.anchor,
           openMode: p.openMode,
+          pinned: p.pinned,
         });
         if (dispatched.isErr()) throw dispatched.error;
         return dispatched.value;
