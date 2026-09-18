@@ -415,7 +415,10 @@ this.register(
 Available events: `journalCreated`, `journalRenamed`, `journalDeleted`,
 `noteAdded`, `noteRemoved`, `noteletAdded`, `noteletRemoved`. Note and notelet
 events carry `path` rather than a `TFile`, because on removal the file is
-already gone.
+already gone. `noteAdded` and `noteletAdded` for a note Journals creates fire as
+soon as it is written, possibly before Obsidian's metadata cache has parsed it —
+if the handler needs the note's content, read the file itself (`vault.read`)
+rather than `metadataCache.getFileCache`.
 
 ## `path` is for display, not for writing
 
