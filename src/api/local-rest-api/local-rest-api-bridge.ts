@@ -50,18 +50,26 @@ export class LocalRestApiBridge {
       // Read through a widened type because the published declaration calls the field mandatory.
       if (((handle as { apiVersion?: number }).apiVersion ?? 1) >= 2) {
         for (const tool of this.#tools) {
-          handle.addMcpTool(
-            tool.name,
-            tool.description,
-            zod3Shape(tool.input),
-            // The host turns a thrown error into tool-error text from its message, so the message
-            // carries the same {code, message, journal?, issues?} body a REST caller gets.
-            (arguments_) =>
-              tool.call(arguments_).catch((error: unknown) => {
-                throw new McpToolError(JSON.stringify(errorBody(error)));
-              }),
-            tool.annotations,
-          );
+          // Each tool gets its own try/catch: a name collision (another plugin already registered
+          // "journal_list") must not disable the REST routes above, which the shared try/catch
+          // below would do by releasing the whole handle.
+          try {
+            handle.addMcpTool(
+              tool.name,
+              tool.description,
+              zod3Shape(tool.input),
+              // The host turns a thrown error into tool-error text from its message, so the
+              // message carries the same {code, message, journal?, issues?} body a REST caller
+              // gets.
+              (arguments_) =>
+                tool.call(arguments_).catch((error: unknown) => {
+                  throw new McpToolError(JSON.stringify(errorBody(error)));
+                }),
+              tool.annotations,
+            );
+          } catch (error) {
+            this.#logger.warn("mcp tool registration failed", { tool: tool.name, cause: String(error) });
+          }
         }
       }
     } catch (error) {

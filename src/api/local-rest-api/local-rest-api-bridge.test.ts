@@ -10,6 +10,8 @@ import { apiModule } from "../module";
 
 import { LocalRestApiBridge } from "./local-rest-api-bridge";
 import { recordingLocalRestApi } from "./testing";
+import { JournalListTool } from "./tools/journal-list";
+import { NoteEnsureTool } from "./tools/note-ensure";
 
 import type { IRoute } from "express";
 
@@ -220,5 +222,54 @@ describe("LocalRestApiBridge tool registration", () => {
 
     expect(api.addRoute).toHaveBeenCalled();
     expect(api.addMcpTool).not.toHaveBeenCalled();
+  });
+
+  it("carries each tool's own description and annotations through to the host", async () => {
+    const harness = await buildHarness();
+    const host = recordingLocalRestApi();
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
+    harness.resolve(LocalRestApiBridge).initialize();
+
+    const journalList = harness.resolve(JournalListTool);
+    const noteEnsure = harness.resolve(NoteEnsureTool);
+
+    expect(host.tools.get("journal_list")).toMatchObject({
+      description: journalList.description,
+      annotations: journalList.annotations,
+    });
+    expect(host.tools.get("journal_note_ensure")).toMatchObject({
+      description: noteEnsure.description,
+      annotations: noteEnsure.annotations,
+    });
+  });
+
+  it("keeps routes and the remaining tools registered when one tool's addMcpTool throws", async () => {
+    const harness = await buildHarness();
+    harness.resolve(LogLevelGateToken).setThreshold("warn");
+    const api = fakeLocalRestApi();
+    // A name another plugin already holds must not take the REST routes down with it.
+    api.addMcpTool.mockImplementation((name) => {
+      if (name === "journal_list") throw new Error("journal_list is already registered by another plugin");
+    });
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => api });
+
+    harness.resolve(LocalRestApiBridge).initialize();
+
+    expect(api.addRoute).toHaveBeenCalled();
+    expect(api.addMcpTool.mock.calls.map(([name]) => name)).toEqual([
+      "journal_list",
+      "journal_notes",
+      "journal_note_ensure",
+      "journal_notelet_create",
+    ]);
+    expect(api.unregister).not.toHaveBeenCalled();
+    expect(harness.logs.records).toContainEqual(
+      expect.objectContaining({
+        level: "warn",
+        name: "local-rest-api",
+        message: "mcp tool registration failed",
+        fields: expect.objectContaining({ tool: "journal_list" }) as unknown,
+      }),
+    );
   });
 });
