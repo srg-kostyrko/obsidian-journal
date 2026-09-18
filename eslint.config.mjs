@@ -108,6 +108,24 @@ const noProductionOverride = {
   message: "Container.override exists for the test host boundary. Production wiring registers once, in a module.",
 };
 
+// The `/// <reference types="node" />` in Express's type dependencies (see CLAUDE.md, "Lint and
+// tooling") makes these typecheck across the whole program, but Obsidian mobile has no Node runtime to back them.
+const noNodeGlobalsMessage =
+  "Obsidian mobile has no Node runtime. This only typechecks because Express's type dependencies pull Node's globals into the program (see CLAUDE.md, \"Lint and tooling\").";
+const noNodeGlobals = ["Buffer", "process", "require", "global", "__dirname", "__filename", "module"].map((name) => ({
+  name,
+  message: noNodeGlobalsMessage,
+}));
+
+// Rule options replace rather than merge, so the block below must re-list the preset's own
+// `fetch`/`localStorage`/`app` bans. Its options array carries a stray "warn" string among the
+// entries, which would ban a global named `warn` if spread in as-is.
+const presetRestrictedGlobals = [...obsidianmd.configs.recommended]
+  .map((config) => config.rules?.["no-restricted-globals"])
+  .findLast(Array.isArray)
+  .slice(1)
+  .filter((entry) => typeof entry === "object");
+
 export default [
   {
     ignores: [
@@ -296,6 +314,25 @@ export default [
     },
   },
   {
+    // Plugin source only — never the test/*.testing.ts fakes and harness, which are excluded here
+    // the same way the campaign selectors exclude them elsewhere in this file, and which may
+    // legitimately need a Node shim (see the `declare const process` in the two
+    // `*.isolated.test.ts` files that assert on `process.on("unhandledRejection", ...)`).
+    files: ["src/**/*.ts", "src/**/*.vue"],
+    ignores: [
+      "**/*.test.ts",
+      "**/*.bench.ts",
+      "**/testing.ts",
+      "**/*.testing.ts",
+      "**/testing/**",
+      "vitest.setup.ts",
+      "vitest.setup.shared.ts",
+    ],
+    rules: {
+      "no-restricted-globals": ["error", ...presetRestrictedGlobals, ...noNodeGlobals],
+    },
+  },
+  {
     // e2e specs and the WebdriverIO config are not part of the plugin bundle:
     // Mocha drives them, `WebdriverIO` is an ambient type namespace, and `e2e`/
     // `wdio`/`conf` are intentional domain names, not abbreviations to expand.
@@ -314,6 +351,15 @@ export default [
       // Timeouts are configured globally in wdio.conf.mts, never via `this.timeout()`
       // inside a spec, so arrow callbacks carry no `this`-binding hazard here.
       "mocha/no-mocha-arrows": "off",
+    },
+  },
+  {
+    // The obsidianmd preset also sets this core rule to steer plugin code from `fetch` to
+    // `requestUrl`. This spec calls the REST host from the Mocha process, where `requestUrl`
+    // does not exist.
+    files: ["e2e/interop/local-rest-api.e2e.ts"],
+    rules: {
+      "no-restricted-globals": "off",
     },
   },
   {

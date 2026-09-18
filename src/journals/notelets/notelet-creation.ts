@@ -75,6 +75,26 @@ export class NoteletCreationService {
   readonly #flows = inject(Flows);
   readonly #modals = inject(ModalService);
 
+  // The index hears about a note only when Obsidian's metadata cache re-parses it, a moment after
+  // this write; a second call arriving in between would find no note and create another. The entry
+  // is registered from the exact frontmatter written, so the later metadata event matches it.
+  #writeClaim(
+    path: VaultPath,
+    mutator: (fm: Record<string, unknown>) => void,
+  ): AsyncResult<void, NoteletCreationError> {
+    let written: Record<string, unknown> | undefined;
+    return this.#notes
+      .updateFrontmatter(path, (fm) => {
+        mutator(fm);
+        written = { ...fm };
+      })
+      .map(() => {
+        if (written === undefined) return;
+        const entry = this.#frontmatter.parseEntry(path, written);
+        if (entry.isSome()) this.#index.register(entry.value);
+      });
+  }
+
   /** Creates one notelet of `typeId` anchored at `anchor`. Never idempotent — several per anchor is the point. */
   createNotelet(
     journalName: string,
@@ -161,7 +181,7 @@ export class NoteletCreationService {
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }
-      yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#guard.release(path));
+      yield* this.#writeClaim(path, mutator).tapErr(() => this.#guard.release(path));
       return { path, ...(counter !== undefined && { counter }) };
     });
   }

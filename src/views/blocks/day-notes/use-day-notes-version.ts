@@ -14,7 +14,8 @@ export function useDayNotesVersion(): Readonly<ShallowRef<number>> {
   const index = useService(JournalsIndex);
   const version = shallowRef(0);
   const dispose: (() => void)[] = [];
-  let refreshTimer: ReturnType<typeof window.setTimeout> | undefined;
+  // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
+  let refreshTimer: number | undefined;
 
   const refresh = (): void => {
     if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);

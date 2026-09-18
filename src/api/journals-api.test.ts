@@ -807,16 +807,17 @@ describe("JournalsApiService writes", () => {
     expect(flows).toHaveBeenLastCalledWith(EnsureJournalEntryFlow, expect.anything(), expect.anything());
   });
 
-  it("returns the created note before the index has caught up", async () => {
+  it("returns the created note with the index already caught up", async () => {
     const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 
     const result = await api.ensureNote("daily", "2026-08-18");
 
-    expect(index.entryByAnchor("daily", "2026-08-18" as AnchorString).isNone()).toBe(true);
+    // NoteCreationService registers the entry it writes from the same frontmatter, so the index
+    // knows the note the moment ensureNote resolves — it does not wait for Obsidian's metadata
+    // cache to re-parse the file, which is what used to leave a window for a concurrent call to
+    // find no entry and create a second note.
+    expect(index.entryByAnchor("daily", "2026-08-18" as AnchorString).isSome()).toBe(true);
     expect(result.note.path).toBe("2026-08-18.md");
-    // The index is still empty, and a lookup reports `file: null` for a note it does not know
-    // yet — so a non-null file is what proves the result came from the write. The path cannot
-    // prove it: a lookup renders the same path from the same template on the same miss.
     expect(result.note.file).not.toBeNull();
     expect(result.note.endDate).toBe("2026-08-18");
   });
@@ -1078,8 +1079,13 @@ describe("JournalsApiService writes", () => {
   });
 
   // The dedupe key's answers segment: two calls for the same period with different answers must
-  // not collapse onto one run, or the second's answers would silently apply to a note the first
-  // already decided how to create.
+  // not collapse onto one shared flow run, or the second's answers would never even be evaluated.
+  // Each still runs its own EnsureJournalEntryFlow — #dedupe queues the second run behind the
+  // first's promise (`settled.then(run)`), so by the time it starts, NoteCreationService has
+  // already registered the first's note in the index. The second's own entryByAnchor check then
+  // finds that note already there and reuses it, the same as reopening an existing note; its
+  // differing answers are not applied. See "does not create a second note when concurrent calls
+  // answer the note name differently" under `JournalsApiService answers`.
   it("does not share a running ensure with one asking for different answers", async () => {
     const { api, flows } = await buildApi({
       daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], nameTemplate: "{{date}} {{mood}}" }),
@@ -1091,7 +1097,7 @@ describe("JournalsApiService writes", () => {
     ]);
 
     expect(flows.mock.calls.filter(([flow]) => flow === EnsureJournalEntryFlow)).toHaveLength(2);
-    expect(first.note.path).not.toBe(second.note.path);
+    expect(second.note.path).toBe(first.note.path);
   });
 
   it("creates with no modal when confirm and empty answers are both passed on a confirming journal", async () => {
@@ -1700,6 +1706,21 @@ describe("JournalsApiService answers", () => {
     expect(harness.modals.opens).toHaveLength(0);
   });
 
+  it("does not create a second note when concurrent calls answer the note name differently", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], nameTemplate: "{{date}} {{mood}}" }),
+    });
+
+    const [first, second] = await Promise.all([
+      api.ensureNote("daily", "2026-08-18", { answers: { mood: "good" } }),
+      api.ensureNote("daily", "2026-08-18", { answers: { mood: "bad" } }),
+    ]);
+
+    expect([first.created, second.created].toSorted()).toEqual([false, true]);
+    expect(second.note.path).toBe(first.note.path);
+    expect([...harness.host.files.keys()].filter((p) => p.startsWith("2026-08-18"))).toHaveLength(1);
+  });
+
   it("rejects with invalid-answers listing every problem, and creates nothing", async () => {
     const { api, harness } = await buildApi({
       daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...mood, required: true }, due] }),
@@ -1838,6 +1859,23 @@ describe("JournalsApiService answers", () => {
 
     expect(result.created).toBe(true);
     expect(harness.host.files.has("2026-08-18.md")).toBe(true);
+  });
+
+  // #answers must map null to undefined, not {}: an empty answers bag skips a confirming
+  // journal's confirmation modal (see "creates with no modal when confirm and empty answers
+  // are both passed on a confirming journal"), while undefined leaves the flow's own default
+  // in place, which still asks. That difference is what this test pins.
+  it("still opens the creation confirmation when answers is null on a confirming journal", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }),
+    });
+
+    const pending = api.ensureNote("daily", "2026-08-18", { answers: null as unknown as Record<string, never> });
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen<unknown, boolean>().submit(true);
+
+    const result = await pending;
+    expect(result.created).toBe(true);
   });
 
   it("treats a null answers bag the same as none on a journal with a required prompt", async () => {

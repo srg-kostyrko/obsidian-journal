@@ -3,7 +3,8 @@ import type { VaultPath } from "@/infrastructure/host";
 const SELF_WRITE_TIMEOUT_MS = 5000;
 
 export class SelfWriteGuard {
-  readonly #pending = new Map<VaultPath, ReturnType<typeof window.setTimeout>>();
+  // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
+  readonly #pending = new Map<VaultPath, number>();
 
   mark(path: VaultPath): void {
     this.release(path);

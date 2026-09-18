@@ -103,3 +103,14 @@ export class EmptyNoteNameError extends JournalsError implements UserFacingFlowE
     return m.journal_note_name_empty_notice({ journalName: this.journalName });
   }
 }
+
+export class BodyFrontmatterError extends JournalsError {
+  override name = "BodyFrontmatterError";
+
+  constructor(
+    readonly path: string,
+    readonly reason: string,
+  ) {
+    super(`The frontmatter of the content for ${path} could not be read: ${reason}`);
+  }
+}

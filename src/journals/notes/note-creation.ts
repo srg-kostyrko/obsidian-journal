@@ -1,17 +1,18 @@
+import { getFrontMatterInfo, parseYaml, stringifyYaml } from "obsidian";
+
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { basenameOf, NoteMetadataService, NotesService } from "@/infrastructure/host";
+import { basenameOf, NoteMetadataService, NoteNotFoundError, NotesService } from "@/infrastructure/host";
 import type {
   FrontmatterError,
   NoteCreateError,
-  NoteNotFoundError,
   NoteReadError,
   NoteWriteError,
   VaultPath,
 } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
-import { AsyncResult, Err, attempt } from "@/infrastructure/result";
+import { AsyncResult, Err, Ok, attempt, type Result } from "@/infrastructure/result";
 import type { TemplateRenderError } from "@/templates";
 
 import { FRONTMATTER_NAME_KEY } from "../config";
@@ -28,6 +29,7 @@ import { isNotelet, type JournalMetadata } from "../types";
 
 import {
   AnchorOccupiedError,
+  BodyFrontmatterError,
   NoteletHoldsPathError,
   NotePathClaimedError,
   NotePathHeldByPeriodError,
@@ -54,7 +56,25 @@ export type NoteCreationError =
   | NoteletHoldsPathError
   | NotePathHeldByPeriodError
   | PromptsUnansweredError
+  | BodyFrontmatterError
   | UserAborted;
+
+// Splits a note's text the way Obsidian's metadata cache reads it, so the frontmatter parsed here
+// is the frontmatter Obsidian will see once the text is written. Fails with the reason it cannot.
+function splitFrontmatter(content: string): Result<{ frontmatter: Record<string, unknown>; body: string }, string> {
+  const info = getFrontMatterInfo(content);
+  if (!info.exists) return new Ok({ frontmatter: {}, body: content });
+  let parsed: unknown;
+  try {
+    parsed = parseYaml(info.frontmatter);
+  } catch (error) {
+    return new Err(error instanceof Error ? error.message : String(error));
+  }
+  const body = content.slice(info.contentStart);
+  if (parsed === null || parsed === undefined) return new Ok({ frontmatter: {}, body });
+  if (typeof parsed !== "object" || Array.isArray(parsed)) return new Err("it is not a set of properties");
+  return new Ok({ frontmatter: { ...(parsed as Record<string, unknown>) }, body });
+}
 
 export class NoteCreationService {
   readonly #notes = inject(NotesService);
@@ -68,6 +88,26 @@ export class NoteCreationService {
   readonly #guard = inject(SelfWriteGuard);
   readonly #flows = inject(Flows);
   readonly #cycle = inject(CycleService);
+
+  // The index hears about a note only when Obsidian's metadata cache re-parses it, a moment after
+  // this write; a second call arriving in between would find no note and create another. The entry
+  // is registered from the exact frontmatter written, so the later metadata event matches it.
+  #writeClaim(path: VaultPath, mutator: (fm: Record<string, unknown>) => void): AsyncResult<void, NoteCreationError> {
+    let written: Record<string, unknown> | undefined;
+    return this.#notes
+      .updateFrontmatter(path, (fm) => {
+        mutator(fm);
+        written = { ...fm };
+      })
+      .map(() => {
+        if (written !== undefined) this.#registerWritten(path, written);
+      });
+  }
+
+  #registerWritten(path: VaultPath, frontmatter: Record<string, unknown>): void {
+    const entry = this.#frontmatter.parseEntry(path, frontmatter);
+    if (entry.isSome()) this.#index.register(entry.value);
+  }
 
   // Whether a file already at the journal's derived path is THIS journal's own note rather
   // than a stray the journal is about to adopt, or a note a different journal already claims.
@@ -151,9 +191,10 @@ export class NoteCreationService {
       const indexedPath = indexed.value.path;
       const mutatorResult = this.#frontmatter.writeMutator(name, metadata);
       if (mutatorResult.kind === "err") return AsyncResult.err(mutatorResult.error);
-      return this.#notes
-        .updateFrontmatter(indexedPath, mutatorResult.value)
-        .map(() => ({ path: indexedPath, created: false as const }));
+      return this.#writeClaim(indexedPath, mutatorResult.value).map(() => ({
+        path: indexedPath,
+        created: false as const,
+      }));
     }
 
     return attempt.in(this, async function* () {
@@ -188,7 +229,7 @@ export class NoteCreationService {
         if (heldFor !== undefined) return yield* new Err(new NotePathHeldByPeriodError(name, derived, heldFor));
         if (this.#carriesJournalClaim(name, derived)) {
           const claimedMutator = yield* this.#frontmatter.writeMutator(name, metadata);
-          yield* this.#notes.updateFrontmatter(derived, claimedMutator);
+          yield* this.#writeClaim(derived, claimedMutator);
           return { path: derived, created: false as const };
         }
       }
@@ -234,7 +275,7 @@ export class NoteCreationService {
         if (heldFor !== undefined) return yield* new Err(new NotePathHeldByPeriodError(name, path, heldFor));
         const owner = this.#claimedByOtherJournal(name, path);
         if (owner !== undefined) return yield* new Err(new NotePathClaimedError(name, path, owner));
-        yield* this.#notes.updateFrontmatter(path, mutator);
+        yield* this.#writeClaim(path, mutator);
         return { path, created: false as const };
       }
 
@@ -258,8 +299,43 @@ export class NoteCreationService {
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }
-      yield* this.#notes.updateFrontmatter(path, mutator).tapErr(() => this.#guard.release(path));
+      yield* this.#writeClaim(path, mutator).tapErr(() => this.#guard.release(path));
       return { path, created: true as const };
+    });
+  }
+
+  /** Why `replaceContent` would refuse `content`'s frontmatter, checked before any note exists. */
+  checkContent(content: string): Result<void, string> {
+    const split = splitFrontmatter(content);
+    return split.isErr() ? new Err(split.error) : new Ok(undefined);
+  }
+
+  /** Replaces the whole file of the journal's note at `anchor`, keeping the note's journal claim. */
+  replaceContent(
+    name: string,
+    anchor: AnchorString,
+    content: string,
+  ): AsyncResult<{ path: VaultPath }, NoteCreationError> {
+    return attempt.in(this, async function* () {
+      // Stored answers are left out: the mutator would write them over the ones the new body
+      // carries, or bring back ones it dropped. The stored endDate stays: a custom interval's
+      // span lives nowhere else.
+      const { answers: _stored, ...metadata } = yield* this.#frontmatter.buildMetadata(name, anchor);
+      const claim = yield* this.#frontmatter.writeMutator(name, metadata);
+      const indexed = this.#index.entryByAnchor(name, anchor);
+      if (indexed.isNone() || this.#notes.find(indexed.value.path).isNone()) {
+        return yield* new Err(new NoteNotFoundError(yield* this.#path.pathFor(name, metadata)));
+      }
+      const path = indexed.value.path;
+      // One write, claim included: writing the body and then claiming it leaves a claimless file
+      // for the metadata cache to parse in between, and a claim that fails to apply orphans it.
+      const { frontmatter, body } = yield* splitFrontmatter(content).mapErr(
+        (reason) => new BodyFrontmatterError(path, reason),
+      );
+      claim(frontmatter);
+      yield* this.#notes.write(path, `---\n${stringifyYaml(frontmatter)}---\n${body}`);
+      this.#registerWritten(path, frontmatter);
+      return { path };
     });
   }
 
