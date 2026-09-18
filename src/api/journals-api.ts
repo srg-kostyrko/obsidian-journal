@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import type { CalendarDate, AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
+import { NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { Option } from "@/infrastructure/result";
@@ -18,7 +18,10 @@ import { CreateNoteletFlow } from "@/journals/notelets/flows/create-notelet.flow
 import { buildNoteletListing } from "@/journals/notelets/listing";
 import type { NoteletListing } from "@/journals/notelets/listing";
 import { NotePathService } from "@/journals/notes/note-path";
+import { readAnswerInput } from "@/journals/prompts/answer-input";
+import type { PromptAnswer } from "@/journals/prompts/config";
 import { PromptsUnansweredError } from "@/journals/prompts/errors";
+import type { PromptOwner } from "@/journals/prompts/prompts-in-path";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
 import { JournalsEventsToken } from "@/journals/tokens";
@@ -65,6 +68,7 @@ export class JournalsApiService implements JournalsApi {
   readonly #frontmatter = inject(FrontmatterService);
   readonly #paths = inject(NotePathService);
   readonly #files = inject(NoteFileService);
+  readonly #notes = inject(NotesService);
   readonly #resolver = inject(JournalDateResolver);
   readonly #flows = inject(Flows);
   readonly #workspace = inject(WorkspaceService);
@@ -73,6 +77,11 @@ export class JournalsApiService implements JournalsApi {
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
   #disposed = false;
+
+  #linkTextFor = (path: string): string | undefined => {
+    const vaultPath = path as VaultPath;
+    return this.#notes.find(vaultPath).isSome() ? this.#notes.linkTextFor(vaultPath) : undefined;
+  };
 
   readonly apiVersion = API_VERSION;
 
@@ -335,22 +344,41 @@ export class JournalsApiService implements JournalsApi {
   // Built from the values the flows receive, not the raw options, so a call spelling out a
   // default shares a run with one that omits it. An explicit `confirm` is not a default: omitting
   // it defers to the journal's own setting.
-  #request(kind: "ensure" | "open", options: OpenNoteOptions = {}): string {
+  #request(kind: "ensure" | "open", options: OpenNoteOptions = {}, answers?: Record<string, PromptAnswer>): string {
     return [
       kind,
       options.openMode ?? "active",
       options.pinned === true,
       this.#skipConfirmation(options) ?? "journal",
       this.#unattended(options),
+      answers === undefined ? "" : JSON.stringify(Object.entries(answers).toSorted(([a], [b]) => a.localeCompare(b))),
     ].join("\u{0}");
   }
 
-  #skipConfirmation(options: { readonly confirm?: boolean } | undefined): boolean | undefined {
+  #skipConfirmation(
+    options: { readonly confirm?: boolean; readonly answers?: unknown } | undefined,
+  ): boolean | undefined {
+    // A caller supplying answers is not watching for a dialog either.
+    if (options?.answers !== undefined) return true;
     return options?.confirm === undefined ? undefined : !options.confirm;
   }
 
-  #unattended(options: { readonly prompt?: boolean } | undefined): boolean | undefined {
-    return options?.prompt === false;
+  #unattended(options: { readonly prompt?: boolean; readonly answers?: unknown } | undefined): boolean | undefined {
+    return options?.prompt === false || options?.answers !== undefined;
+  }
+
+  // Checked before anything is created, and even when the note already exists: the same call
+  // must fail the same way whatever state the vault is in.
+  #answers(
+    owner: PromptOwner | undefined,
+    input: Readonly<Record<string, unknown>> | undefined,
+    journal: string,
+  ): Record<string, PromptAnswer> | undefined {
+    if (input === undefined || owner === undefined) return undefined;
+    const read = readAnswerInput(owner, input, this.#linkTextFor);
+    if (read.isOk()) return read.value;
+    const summary = read.error.map(({ variable, reason }) => `${variable}: ${reason}`).join("; ");
+    throw new ApiError("invalid-answers", `Invalid answers for ${journal}: ${summary}`, journal, read.error);
   }
 
   #toApiError(cause: unknown, journal: string): ApiError {
@@ -436,7 +464,8 @@ export class JournalsApiService implements JournalsApi {
   async ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult> {
     await this.#readyForNotes();
     const { name, anchor } = await this.#resolveOne(selector, date);
-    return this.#dedupe(name, anchor, this.#request("ensure", options), async () => {
+    const answers = this.#answers(this.#journals.get(name).getOrUndefined(), options?.answers, name);
+    return this.#dedupe(name, anchor, this.#request("ensure", options, answers), async () => {
       const result = await this.#flows.invoke(
         EnsureJournalEntryFlow,
         {
@@ -444,6 +473,7 @@ export class JournalsApiService implements JournalsApi {
           anchor,
           skipConfirmation: this.#skipConfirmation(options),
           unattended: this.#unattended(options),
+          answers,
         },
         { notify: false, context: { via: "api" } },
       );
@@ -455,7 +485,8 @@ export class JournalsApiService implements JournalsApi {
   async openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult> {
     await this.#readyForNotes();
     const { name, anchor } = await this.#resolveOne(selector, date);
-    return this.#dedupe(name, anchor, this.#request("open", options), async () => {
+    const answers = this.#answers(this.#journals.get(name).getOrUndefined(), options?.answers, name);
+    return this.#dedupe(name, anchor, this.#request("open", options, answers), async () => {
       const result = await this.#flows.invoke(
         OpenJournalEntryFlow,
         {
@@ -465,6 +496,7 @@ export class JournalsApiService implements JournalsApi {
           pinned: options?.pinned,
           skipConfirmation: this.#skipConfirmation(options),
           unattended: this.#unattended(options),
+          answers,
         },
         { notify: false, context: { via: "api" } },
       );
@@ -487,6 +519,7 @@ export class JournalsApiService implements JournalsApi {
       throw new ApiError("notelet-type-not-found", `Journal ${name} has no notelet type named ${type}`, name);
     }
     const [typeId, noteletType] = found.value;
+    const answers = this.#answers(noteletType, options?.answers, name);
     // No #dedupe: notelet creation is never idempotent, so two concurrent calls must produce two
     // notelets rather than collapsing onto one.
     const result = await this.#flows.invoke(
@@ -498,6 +531,7 @@ export class JournalsApiService implements JournalsApi {
         openMode: options?.openMode ?? null,
         unattended: this.#unattended(options),
         skipConfirmation: this.#skipConfirmation(options),
+        answers,
       },
       { notify: false, context: { via: "api" } },
     );
