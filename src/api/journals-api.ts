@@ -353,11 +353,9 @@ export class JournalsApiService implements JournalsApi {
       this.#unattended(options),
       // Two calls with different answers must not share a run even when nothing else about them
       // differs, or the second's answers would silently apply to the first's already-decided
-      // creation. This does not by itself guarantee one note per distinct answers, though: on a
-      // journal whose note name uses an answer, the queued second call finds the first's note only
-      // once the index has it, and that lags the write — so two concurrent calls can still each
-      // name and create their own note. That race predates answers; it is the same gap a queued
-      // call with an unrelated difference already has.
+      // creation: each waits its turn in the per-period queue above and then makes its own
+      // decision, by which point NoteCreationService has already registered the first's note in
+      // the index, so a repeat for the same period reuses it instead of naming a second one.
       answers === undefined ? "" : JSON.stringify(Object.entries(answers).toSorted(([a], [b]) => a.localeCompare(b))),
     ].join("\u{0}");
   }

@@ -1080,11 +1080,12 @@ describe("JournalsApiService writes", () => {
 
   // The dedupe key's answers segment: two calls for the same period with different answers must
   // not collapse onto one shared flow run, or the second's answers would never even be evaluated.
-  // Each still runs its own EnsureJournalEntryFlow — but NoteCreationService registers the winner's
-  // note in the index as it writes it (the race Task 1 of #400 closes), so the loser's own
-  // entryByAnchor check now finds that note already there and reuses it, the same as reopening an
-  // existing note; its differing answers are not applied. See "does not create a second note when
-  // concurrent calls answer the note name differently" under `JournalsApiService answers`.
+  // Each still runs its own EnsureJournalEntryFlow — #dedupe queues the second run behind the
+  // first's promise (`settled.then(run)`), so by the time it starts, NoteCreationService has
+  // already registered the first's note in the index. The second's own entryByAnchor check then
+  // finds that note already there and reuses it, the same as reopening an existing note; its
+  // differing answers are not applied. See "does not create a second note when concurrent calls
+  // answer the note name differently" under `JournalsApiService answers`.
   it("does not share a running ensure with one asking for different answers", async () => {
     const { api, flows } = await buildApi({
       daily: fixedJournal("daily", { type: "day" }, { prompts: [mood], nameTemplate: "{{date}} {{mood}}" }),
