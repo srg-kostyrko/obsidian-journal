@@ -85,4 +85,40 @@ describe("open a journal note pinned", () => {
     expect(await pinnedNotePaths()).toEqual(["work/2027-07-06.md"]);
     expect(await mainWindowHoldsNote("work/2027-07-06.md")).toBe(true);
   });
+
+  // Obsidian makes a note the active file before it has read it from disk, so a pin set only after
+  // the load leaves the note showing in an unpinned tab for that long. Stalling the read widens
+  // that window past the first poll of waitForActiveNote; nested so it runs after the tests above
+  // and cannot leave a patched vault under them.
+  describe("while the note is still loading", () => {
+    const target = "work/2027-07-07.md";
+
+    before(async () => {
+      await browser.executeObsidian(({ app }, stalledPath) => {
+        const vault = app.vault as unknown as { read(file: { path: string }): Promise<string> };
+        const read = vault.read.bind(app.vault);
+        vault.read = async (file) => {
+          const text = await read(file);
+          if (file.path === stalledPath) await new Promise((resolve) => setTimeout(resolve, 1000));
+          return text;
+        };
+      }, target);
+    });
+
+    after(async () => {
+      await browser.executeObsidian(({ app }) => {
+        delete (app.vault as unknown as { read?: unknown }).read;
+      });
+    });
+
+    it("pins the new tab before the note shows in it", async () => {
+      await closeAllLeaves();
+      await openNote("baseline.md");
+
+      await openViaUri({ journal: "work", date: "2027-07-07", mode: "tab", pinned: "true" });
+      await waitForActiveNote(target);
+
+      expect(await pinnedNotePaths()).toEqual([target]);
+    });
+  });
 });

@@ -69,6 +69,9 @@ export interface FakeWorkspaceState {
   // moves the path's window and pin to the new path, the way Obsidian's openFile keeps the leaf.
   pinnedPaths: Set<string>;
   retargetCalls: { from: string; to: string }[];
+  // While set, a new leaf's openFile holds the note — active, in view — and only settles with this
+  // promise, the way Obsidian assigns view.file before it awaits the disk read.
+  pendingLoad: Promise<void> | null;
   // Open paths whose leaf sits in a sidebar rather than the main area.
   leafRoots: Map<string, "left" | "right">;
   // Open paths whose leaf was restored into a background tab and holds a deferred view: no
@@ -227,6 +230,7 @@ export function createFakeHost(): FakeHost {
     layoutReady: true,
     pinnedPaths: new Set(),
     retargetCalls: [],
+    pendingLoad: null,
     leafRoots: new Map(),
     deferredPaths: new Set(),
     sidebarCopies: new Map(),
@@ -474,6 +478,9 @@ export function createFakeHost(): FakeHost {
   function makeLeaf(placement: "left" | "right" | "tab", openMode: PaneType | false = false) {
     let assignedType: string | null = null;
     let held: string | null = null;
+    // A pin belongs to the leaf, as in Obsidian: set on an empty leaf, it carries over to the file
+    // opened into it. pinnedPaths can only show it once the leaf holds a path.
+    let pinned = false;
     const leaf = {
       async openFile(file: TFile): Promise<void> {
         held = file.path;
@@ -481,12 +488,16 @@ export function createFakeHost(): FakeHost {
         workspaceState.openWindows.set(file.path, workspaceState.activeWindow);
         workspaceState.openCalls.push({ path: file.path, mode: openMode });
         workspaceState.activeFile = file;
+        if (pinned) workspaceState.pinnedPaths.add(file.path);
+        if (workspaceState.pendingLoad) await workspaceState.pendingLoad;
       },
-      setPinned(pinned: boolean): void {
+      setPinned(value: boolean): void {
+        pinned = value;
         if (held === null) return;
-        if (pinned) workspaceState.pinnedPaths.add(held);
+        if (value) workspaceState.pinnedPaths.add(held);
         else workspaceState.pinnedPaths.delete(held);
       },
+      getViewState: () => ({ type: assignedType ?? "markdown", state: held === null ? {} : { file: held } }),
       async setViewState(state: { type: string; active?: boolean }): Promise<void> {
         assignedType = state.type;
         workspaceState.viewStateCalls.push({ type: state.type, placement });
