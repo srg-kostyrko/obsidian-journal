@@ -88,6 +88,9 @@ if (today?.file) await this.app.vault.process(today.file, (text) => `${text}\n- 
 // Create it if it is not there. Idempotent.
 const { note, created } = await journals.ensureNote("Work Daily", "today");
 
+// Open the note in the journal's pinned tab, moving it to this note, or pins a new one.
+await journals.openNote("Work Daily", "today", { pinned: true });
+
 // A whole window at once, rather than one call per cell.
 const year = await journals.notesInRange("Work Daily", { from: "2026-01-01", to: "2026-12-31" });
 //  one entry per period, on disk or not — 365 of them, one call
@@ -447,10 +450,6 @@ Two behaviours with no equivalent, worth knowing before you port:
   `select` with values `😀`/`😐`. An answers bag with no way to discover what
   it expects would be unusable. A discovery API — reading a journal's prompts
   before calling — is a separate, additive change this one does not attempt.
-
-- **`openNote` can open in the journal's pinned tab.** Pass `{ pinned: true }` to
-  open the note in the journal's pinned tab — moving that tab to the note, or
-  pinning a new one when the journal has none; other pinned tabs are left alone.
 
 - **Custom journals exist.** A journal can write every N days/weeks/months rather
   than on a calendar boundary. They appear as `write.type === "custom"` with
