@@ -183,6 +183,14 @@ on it.
   unpinned fallback stays window-scoped.
 - `iterateRootLeaves` walks `rootSplit` only — no popout windows — at 1.8.7
   through 1.13.x, so it cannot stand in for an all-window walk.
+- A leaf restored into a background tab holds a **deferred** view (1.7.2+,
+  `leaf.isDeferred`) until its tab is first shown. It still reports type
+  `markdown`, so `getLeavesOfType("markdown")` returns it, but it has no
+  `view.file` — the path survives only in `getViewState().state.file`, the state
+  it was restored with. A lookup reading `view.file` alone misses every
+  unvisited tab after a restart; read both (`#pathIn` in `workspace-service.ts`).
+  `openFile` and focusing the leaf need nothing extra — both go through
+  `setViewState` or the tab switch that loads it.
 - `app.metadataTypeManager` is undocumented and its shape changed at Obsidian
   1.9: property entries lost their `type` field in favor of `widget`, and
   `getPropertyInfo` now returns a fallback object instead of null, so it can no

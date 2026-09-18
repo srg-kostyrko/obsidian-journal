@@ -86,6 +86,18 @@ describe("WorkspaceService", () => {
       expect(host.workspace.openCalls).toHaveLength(1);
     });
 
+    it("focuses a background-restored leaf already holding the note", async () => {
+      const { service, host } = build();
+      host.putFile(path);
+      await service.openNote(path, "tab");
+      host.workspace.deferredPaths.add(path);
+
+      expectOk(await service.openNote(path));
+
+      expect(host.workspace.openCalls).toHaveLength(1);
+      expect(host.workspace.focusedPaths).toEqual([path]);
+    });
+
     it("opens a new leaf when the note is only open in another window", async () => {
       const { service, host } = build();
       host.putFile(path);
@@ -660,6 +672,42 @@ describe("WorkspaceService", () => {
       expect(host.workspace.openCalls).toHaveLength(2);
       expect(host.workspace.retargetCalls).toEqual([]);
       expect([...host.workspace.pinnedPaths]).toEqual([a]);
+    });
+
+    it("moves the journal's pinned tab restored into the background instead of pinning another", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a, "active", daily);
+      host.workspace.deferredPaths.add(a);
+
+      await service.openNote(b, "tab", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([{ from: a, to: b }]);
+      expect(host.workspace.openCalls).toHaveLength(1);
+      expect([...host.workspace.pinnedPaths]).toEqual([b]);
+    });
+
+    it("focuses the background-restored pinned tab that already holds the note", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a, "active", daily);
+      host.workspace.deferredPaths.add(a);
+
+      await service.openNote(a, "tab", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([]);
+      expect(host.workspace.openCalls).toHaveLength(1);
+      expect(host.workspace.focusedPaths).toEqual([a]);
+    });
+
+    it("pins the target's main-area tab when an unpinned copy also sits in a sidebar", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a);
+      host.workspace.sidebarCopies.set(a, "right");
+
+      await service.openNote(a, "tab", daily);
+
+      expect(host.workspace.openCalls).toHaveLength(1);
+      expect([...host.workspace.pinnedPaths]).toEqual([a]);
+      expect(host.workspace.focusedPaths).toEqual([a]);
     });
   });
 });

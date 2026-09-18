@@ -71,6 +71,12 @@ export interface FakeWorkspaceState {
   retargetCalls: { from: string; to: string }[];
   // Open paths whose leaf sits in a sidebar rather than the main area.
   leafRoots: Map<string, "left" | "right">;
+  // Open paths whose leaf was restored into a background tab and holds a deferred view: no
+  // `view.file`, the path only in `getViewState().state.file`, until the leaf is shown.
+  deferredPaths: Set<string>;
+  // Open paths that also sit, unpinned, in a second leaf docked in a sidebar — listed ahead of
+  // the main-area leaf, the way a sidebar can precede the root split in leaf iteration.
+  sidebarCopies: Map<string, "left" | "right">;
 }
 
 export interface FakeRegisteredView {
@@ -90,7 +96,7 @@ interface FakeMarkdownLeaf {
   openFile(file: TFile): Promise<void>;
   getContainer(): { win: Window };
   getRoot(): object;
-  getViewState(): { type: string; pinned?: boolean };
+  getViewState(): { type: string; state: { file: string }; pinned?: boolean };
   setPinned(pinned: boolean): void;
 }
 
@@ -221,6 +227,8 @@ export function createFakeHost(): FakeHost {
     pinnedPaths: new Set(),
     retargetCalls: [],
     leafRoots: new Map(),
+    deferredPaths: new Set(),
+    sidebarCopies: new Map(),
   };
   const pluginData: FakeHost["pluginData"] = { current: undefined };
   const registeredEventReferences: EventRef[] = [];
@@ -494,15 +502,16 @@ export function createFakeHost(): FakeHost {
     return leaf;
   }
 
-  function markdownLeafFor(initialPath: string): FakeMarkdownLeaf {
+  function markdownLeafFor(initialPath: string, sidebarCopy?: "left" | "right"): FakeMarkdownLeaf {
     let path = initialPath;
     return {
       get view() {
-        return { file: fileObjects.get(path) ?? null };
+        return { file: workspaceState.deferredPaths.has(path) ? null : (fileObjects.get(path) ?? null) };
       },
       async openFile(file: TFile): Promise<void> {
         const win = workspaceState.openWindows.get(path) ?? MAIN_WINDOW;
         const pinned = workspaceState.pinnedPaths.delete(path);
+        workspaceState.deferredPaths.delete(path);
         workspaceState.openPaths.delete(path);
         workspaceState.openWindows.delete(path);
         workspaceState.openPaths.add(file.path);
@@ -514,10 +523,14 @@ export function createFakeHost(): FakeHost {
       },
       getContainer: () => ({ win: windowFor(workspaceState.openWindows.get(path) ?? MAIN_WINDOW) }),
       getRoot: () => {
-        const side = workspaceState.leafRoots.get(path);
+        const side = sidebarCopy ?? workspaceState.leafRoots.get(path);
         return side === undefined ? splits.root : splits[side];
       },
-      getViewState: () => ({ type: "markdown", ...(workspaceState.pinnedPaths.has(path) && { pinned: true }) }),
+      getViewState: () => ({
+        type: "markdown",
+        state: { file: path },
+        ...(sidebarCopy === undefined && workspaceState.pinnedPaths.has(path) && { pinned: true }),
+      }),
       setPinned(pinned: boolean): void {
         if (pinned) workspaceState.pinnedPaths.add(path);
         else workspaceState.pinnedPaths.delete(path);
@@ -537,15 +550,21 @@ export function createFakeHost(): FakeHost {
       // so it never collides with the note-path fallback used for `"markdown"` lookups.
       const tracked = viewLeavesByType.get(type);
       if (tracked) return tracked;
-      return [...workspaceState.openPaths].map(markdownLeafFor);
+      return [...workspaceState.openPaths].flatMap((path) => {
+        const side = workspaceState.sidebarCopies.get(path);
+        const main = markdownLeafFor(path);
+        return side === undefined ? [main] : [markdownLeafFor(path, side), main];
+      });
     },
     containerEl: { win: windowFor(MAIN_WINDOW) },
     rootSplit: splits.root,
     leftSplit: splits.left,
     rightSplit: splits.right,
+    // Showing a leaf's tab loads a deferred view, so focusing one leaves it holding its file.
     setActiveLeaf(leaf: FakeMarkdownLeaf): void {
-      const file = leaf.view.file;
-      if (file) workspaceState.focusedPaths.push(file.path);
+      const path = leaf.view.file?.path ?? leaf.getViewState().state.file;
+      workspaceState.deferredPaths.delete(path);
+      workspaceState.focusedPaths.push(path);
     },
     getLeaf(mode: PaneType | false) {
       return makeLeaf("tab", mode);
