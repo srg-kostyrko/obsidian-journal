@@ -1036,6 +1036,17 @@ describe("JournalsApiService writes", () => {
     expect(opens).toHaveLength(2);
   });
 
+  it("shares a running open with one spelling out the same defaults", async () => {
+    const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await Promise.all([
+      api.openNote("daily", "2026-08-18", { openMode: "tab" }),
+      api.openNote("daily", "2026-08-18", { openMode: "tab", prompt: true, pinned: false }),
+    ]);
+
+    expect(flows.mock.calls.filter(([flow]) => flow === OpenJournalEntryFlow)).toHaveLength(1);
+  });
+
   it("does not share a running ensure with one asking for different prompting", async () => {
     const { api, flows } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
 

@@ -332,11 +332,17 @@ export class JournalsApiService implements JournalsApi {
     return started;
   }
 
-  // Everything that changes what a call does: two calls differing in any of it must not share a run.
+  // Built from the values the flows receive, not the raw options, so a call spelling out a
+  // default shares a run with one that omits it. An explicit `confirm` is not a default: omitting
+  // it defers to the journal's own setting.
   #request(kind: "ensure" | "open", options: OpenNoteOptions = {}): string {
-    return [kind, options.openMode ?? "", options.pinned === true, options.confirm ?? "", options.prompt ?? ""].join(
-      "\u{0}",
-    );
+    return [
+      kind,
+      options.openMode ?? "active",
+      options.pinned === true,
+      this.#skipConfirmation(options) ?? "journal",
+      this.#unattended(options),
+    ].join("\u{0}");
   }
 
   #skipConfirmation(options: { readonly confirm?: boolean } | undefined): boolean | undefined {
