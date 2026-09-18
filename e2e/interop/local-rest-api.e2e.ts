@@ -8,7 +8,7 @@ import { waitForState } from "../support/wait.js";
 // exercises its express router, its auth middleware and the /vault/ handlers our 307s land on.
 // The fixture turns on the host's plain-HTTP server with a fixed key, so Node's fetch reaches it
 // without the self-signed certificate the HTTPS server would need trusted.
-const BASE = "http://127.0.0.1:27123";
+const BASE = "http://127.0.0.1:27183";
 const KEY = "e2e-rest-key";
 const HOST_ID = "obsidian-local-rest-api";
 
@@ -104,31 +104,30 @@ describe("local rest api interop", () => {
     expect(await followed.text()).toBe(await contentOf("work/2027-07-10.md"));
   });
 
-  it("creates the note through the journal before the host writes a PUT body into it", async () => {
-    const redirect = await rest("/journals/work/2027-07-11/", {
+  it("replaces the whole note on PUT and keeps its journal claim", async () => {
+    const sent = "# Replaced\n\nwritten over REST\n";
+    const response = await rest("/journals/work/2027-07-11/", {
       method: "PUT",
       headers: { "Content-Type": "text/markdown" },
-      body: "written by the host",
+      body: sent,
       redirect: "manual",
     });
-    expect(redirect.status).toBe(307);
-    const location = redirect.headers.get("location");
-    expect(location).toBe("/vault/work/2027-07-11.md");
-    // Asserted between the two hops: the host's whole-file PUT that follows replaces the note,
-    // frontmatter included, so the claim is only observable before it lands.
-    await waitForJournalFrontmatter("work/2027-07-11.md", { journal: "work", date: "2027-07-11" });
+    expect(response.status).toBe(204);
 
-    const written = await rest(location ?? "", {
-      method: "PUT",
-      headers: { "Content-Type": "text/markdown" },
-      body: "written by the host",
-    });
-    expect(written.status).toBe(204);
     await waitForContent(
       "work/2027-07-11.md",
-      (content) => content.includes("written by the host"),
-      "waited for the host to write the PUT body into work/2027-07-11.md",
+      (content) => content.includes("written over REST"),
+      "waited for the PUT body to land in work/2027-07-11.md",
     );
+    // Polled rather than read once: the metadata cache re-parses each of the two writes a moment
+    // after it, and the claim must be what it settles on.
+    await waitForJournalFrontmatter("work/2027-07-11.md", { journal: "work", date: "2027-07-11" });
+    const content = (await contentOf("work/2027-07-11.md")) ?? "";
+    expect(content.replace(/^---\n[\s\S]*?\n---\n/, "")).toBe(sent);
+
+    const resolved = await rest("/journals/work/2027-07-11/", { redirect: "manual" });
+    expect(resolved.status).toBe(307);
+    expect(resolved.headers.get("location")).toBe("/vault/work/2027-07-11.md");
   });
 
   it("appends under a heading through the host's markdown-patch URL target", async () => {
