@@ -7,14 +7,14 @@ script, another app:
 obsidian://journals?journal=Work&date=today
 ```
 
-| Parameter | Value                                                                                                                                   |
-| --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `journal` | the journal's name                                                                                                                      |
-| `type`    | instead of `journal`: `day`, `week`, `month`, `quarter` or `year` — every journal of that length                                        |
-| `date`    | `today` (the default), `YYYY-MM-DD`, or a shift from today: `+1d`, `-2w`, `+1m`, `-1q`, `+1y`                                           |
-| `mode`    | `active` (the default), `tab`, `split` or `window`                                                                                      |
-| `pinned`  | `true` or `false` (the default): `true` opens in the journal's [pinned tab](/commands#a-command-s-settings); not allowed with `notelet` |
-| `notelet` | with `journal`: create a [notelet](/notelets) of that type instead of opening the period's note                                         |
+| Parameter | Value                                                                                                                                         |
+| --------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `journal` | the journal's name                                                                                                                            |
+| `type`    | instead of `journal`: `day`, `week`, `month`, `quarter` or `year` — every journal of that length                                              |
+| `date`    | `today` (the default), `YYYY-MM-DD`, or a shift from today: `+1d`, `-2w`, `+1m`, `-1q`, `+1y`                                                 |
+| `mode`    | `active` (the default), `tab`, `split` or `window`                                                                                            |
+| `pinned`  | `true` or `false` (the default): `true` opens in the journal's [pinned tab](/commands#a-command-s-settings) and is not allowed with `notelet` |
+| `notelet` | with `journal`: create a [notelet](/notelets) of that type instead of opening the period's note                                               |
 
 The note is created if it does not exist, with the journal's [questions](/questions) asked. With
 `type`, if more than one journal of that length covers the date, you are asked which.
