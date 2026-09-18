@@ -622,5 +622,44 @@ describe("WorkspaceService", () => {
       expect(host.workspace.retargetCalls).toEqual([]);
       expect(host.workspace.pinnedPaths).toEqual(new Set([a, b]));
     });
+
+    it("opens a new pinned tab instead of pinning the target's unpinned copy in a sidebar", async () => {
+      const { service, host } = withFiles();
+      await service.openNote(a);
+      host.workspace.leafRoots.set(a, "right");
+
+      await service.openNote(a, "tab", daily);
+
+      expect(host.workspace.openCalls).toHaveLength(2);
+      expect(host.workspace.openCalls.at(-1)).toEqual({ path: a, mode: "tab" });
+      expect(host.workspace.retargetCalls).toEqual([]);
+    });
+
+    it("prefers an exact pinned match in another window over a same-group match in this one", async () => {
+      const { service, host } = withFiles();
+      host.workspace.activeWindow = "popout";
+      await service.openNote(b, "window", daily);
+      host.workspace.activeWindow = "main";
+      await service.openNote(a);
+      host.workspace.pinnedPaths.add(a);
+
+      await service.openNote(b, "active", daily);
+
+      expect(host.workspace.retargetCalls).toEqual([]);
+      expect(host.workspace.focusedPaths.at(-1)).toBe(b);
+    });
+
+    it("does not reuse an unpinned copy of the target open in another window", async () => {
+      const { service, host } = withFiles();
+      host.workspace.activeWindow = "popout";
+      await service.openNote(a);
+      host.workspace.activeWindow = "main";
+
+      await service.openNote(a, "tab", daily);
+
+      expect(host.workspace.openCalls).toHaveLength(2);
+      expect(host.workspace.retargetCalls).toEqual([]);
+      expect([...host.workspace.pinnedPaths]).toEqual([a]);
+    });
   });
 });

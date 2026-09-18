@@ -111,8 +111,10 @@ export class WorkspaceService {
       this.#app.workspace.setActiveLeaf(pinned, { focus: true });
       return;
     }
+    // A leaf sitting unpinned in a sidebar is not a candidate to pin in place either — no open
+    // mode puts a note there, so pinning it would leave the note stuck outside the main area.
     const existing = this.#findOpenLeaf(path, this.#activeWindow());
-    if (existing) {
+    if (existing && this.#inMainArea(existing)) {
       existing.setPinned(true);
       this.#app.workspace.setActiveLeaf(existing, { focus: true });
       return;
@@ -124,20 +126,26 @@ export class WorkspaceService {
 
   // Unlike #findOpenLeaf this spans every window on purpose: the pinned tab is the place the user
   // chose for the group, so a window-scoped search would pin a second one from the main window.
-  // Sidebars are skipped because no open mode puts a note there.
   #findPinnedLeaf(path: VaultPath, pin: PinTarget): WorkspaceLeaf | null {
     const { workspace } = this.#app;
     const win = this.#activeWindow();
     const rank = (leaf: WorkspaceLeaf): number =>
       (this.#fileOf(leaf)?.path === path ? 0 : 2) + (leaf.getContainer().win === win ? 0 : 1);
     const candidates = workspace.getLeavesOfType("markdown").filter((leaf) => {
-      const root = leaf.getRoot();
-      if (root === workspace.leftSplit || root === workspace.rightSplit) return false;
+      if (!this.#inMainArea(leaf)) return false;
       if (leaf.getViewState().pinned !== true) return false;
       const held = this.#fileOf(leaf)?.path as VaultPath | undefined;
       return held !== undefined && (held === path || pin.sameGroup(held));
     });
     return candidates.toSorted((x, y) => rank(x) - rank(y)).at(0) ?? null;
+  }
+
+  // No open mode puts a note in a sidebar, so a pinned open must never treat a sidebar-docked
+  // leaf as a tab it can pin or retarget in place — shared by the pinned lookup and rule 3's
+  // reuse-and-pin fallback.
+  #inMainArea(leaf: WorkspaceLeaf): boolean {
+    const root = leaf.getRoot();
+    return root !== this.#app.workspace.leftSplit && root !== this.#app.workspace.rightSplit;
   }
 
   // Obsidian tracks the focused window here, differing from the main window only while a popout
