@@ -68,7 +68,7 @@ export class JournalsApiService implements JournalsApi {
   readonly #resolver = inject(JournalDateResolver);
   readonly #flows = inject(Flows);
   readonly #workspace = inject(WorkspaceService);
-  readonly #inFlight = new Map<string, Promise<EnsureResult>>();
+  readonly #inFlight = new Map<string, { readonly request: string; readonly promise: Promise<EnsureResult> }>();
   readonly #noteletListingDependencies = { journals: this.#journals, index: this.#index, cycle: this.#cycle };
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
@@ -309,13 +309,23 @@ export class JournalsApiService implements JournalsApi {
 
   // Between the existence check and the write, NoteCreationService may await a confirmation
   // modal — seconds wide. Two callers ensuring the same period would otherwise get two
-  // prompts and one NoteAlreadyExistsError.
-  #dedupe(name: string, anchor: AnchorString, run: () => Promise<EnsureResult>): Promise<EnsureResult> {
+  // prompts and one NoteAlreadyExistsError. Only an identical request shares the running one: a
+  // caller asking for a different open (or for an open at all) waits for it and then does its
+  // own, by which point the note exists and nothing prompts again.
+  #dedupe(
+    name: string,
+    anchor: AnchorString,
+    request: string,
+    run: () => Promise<EnsureResult>,
+  ): Promise<EnsureResult> {
     const key = `${name}\u{0}${anchor}`;
     const pending = this.#inFlight.get(key);
-    if (pending) return pending;
-    const started = run().finally(() => this.#inFlight.delete(key));
-    this.#inFlight.set(key, started);
+    if (pending?.request === request) return pending.promise;
+    const settled = pending?.promise.catch(() => null) ?? Promise.resolve(null);
+    const started: Promise<EnsureResult> = settled.then(run).finally(() => {
+      if (this.#inFlight.get(key)?.promise === started) this.#inFlight.delete(key);
+    });
+    this.#inFlight.set(key, { request, promise: started });
     return started;
   }
 
@@ -410,7 +420,7 @@ export class JournalsApiService implements JournalsApi {
   async ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult> {
     await this.#readyForNotes();
     const { name, anchor } = await this.#resolveOne(selector, date);
-    return this.#dedupe(name, anchor, async () => {
+    return this.#dedupe(name, anchor, "ensure", async () => {
       const result = await this.#flows.invoke(
         EnsureJournalEntryFlow,
         {
@@ -429,22 +439,27 @@ export class JournalsApiService implements JournalsApi {
   async openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult> {
     await this.#readyForNotes();
     const { name, anchor } = await this.#resolveOne(selector, date);
-    return this.#dedupe(name, anchor, async () => {
-      const result = await this.#flows.invoke(
-        OpenJournalEntryFlow,
-        {
-          journalName: name,
-          anchor,
-          openMode: options?.openMode,
-          pinned: options?.pinned,
-          skipConfirmation: this.#skipConfirmation(options),
-          unattended: this.#unattended(options),
-        },
-        { notify: false, context: { via: "api" } },
-      );
-      if (result.isErr()) throw this.#toApiError(result.error, name);
-      return { note: this.#existing(name, anchor, result.value.path), created: result.value.created };
-    });
+    return this.#dedupe(
+      name,
+      anchor,
+      `open\u{0}${options?.openMode ?? ""}\u{0}${options?.pinned === true}`,
+      async () => {
+        const result = await this.#flows.invoke(
+          OpenJournalEntryFlow,
+          {
+            journalName: name,
+            anchor,
+            openMode: options?.openMode,
+            pinned: options?.pinned,
+            skipConfirmation: this.#skipConfirmation(options),
+            unattended: this.#unattended(options),
+          },
+          { notify: false, context: { via: "api" } },
+        );
+        if (result.isErr()) throw this.#toApiError(result.error, name);
+        return { note: this.#existing(name, anchor, result.value.path), created: result.value.created };
+      },
+    );
   }
 
   async createNotelet(
