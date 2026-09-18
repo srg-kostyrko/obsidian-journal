@@ -1,6 +1,6 @@
 import type { Response } from "express";
 
-// The Global Constraints status map. Anything not listed here answers 500.
+// Anything not listed answers 500, so an unknown code never reads as the caller's fault.
 const STATUS_BY_CODE: Readonly<Record<string, number>> = {
   "journal-not-found": 404,
   "no-matching-journal": 404,
@@ -14,10 +14,7 @@ const STATUS_BY_CODE: Readonly<Record<string, number>> = {
   "prompts-required": 409,
 };
 
-/**
- * REST-only codes (`note-not-found`, `invalid-request`, `write-failed`) that `JournalsApi` never
- * throws, plus `journal-not-found` raised locally when a route's own `journalInfo` lookup comes back null.
- */
+/** An error raised at the REST boundary, carrying a code `JournalsApi` itself may never throw. */
 export class RestError extends Error {
   constructor(
     readonly code: string,
