@@ -334,6 +334,8 @@ async function handleEnsureNoteAndRedirect(
 
 /** Writes a journal note's whole file while keeping its journal claim. */
 export interface NoteContent {
+  /** Throws when `replace` would refuse `body`, so a request it would fail creates no note first. */
+  check(journal: string, body: string): void;
   replace(journal: string, date: string, body: string): Promise<void>;
 }
 
@@ -373,7 +375,7 @@ async function handleReplaceNote(
       return;
     }
 
-    // Read before ensureNote, so a malformed request creates nothing.
+    // Read and checked before ensureNote, so a malformed request creates nothing.
     const body = readTextBody(request);
     if (body === undefined) {
       sendError(
@@ -385,6 +387,7 @@ async function handleReplaceNote(
       );
       return;
     }
+    content.check(name, body);
 
     const date = request.params.date;
     let result;

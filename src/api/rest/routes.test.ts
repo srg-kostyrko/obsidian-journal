@@ -117,7 +117,10 @@ function fakeApi(overrides: Partial<JournalsApi> = {}): JournalsApi {
 }
 
 function fakeContent() {
-  return { replace: vi.fn<NoteContent["replace"]>().mockResolvedValue(undefined) };
+  return {
+    check: vi.fn<NoteContent["check"]>(),
+    replace: vi.fn<NoteContent["replace"]>().mockResolvedValue(undefined),
+  };
 }
 
 function register(api: JournalsApi, content: NoteContent = fakeContent()): RecordedRoute[] {
@@ -1050,6 +1053,25 @@ describe("registerJournalRoutes", () => {
           code: "invalid-request",
           message: expect.stringContaining("Content-Type: text/markdown") as unknown,
         });
+        expect(ensureNote).not.toHaveBeenCalled();
+        expect(content.replace).not.toHaveBeenCalled();
+      });
+
+      it("gives the check's error before creating anything when the body is refused", async () => {
+        const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
+        const content = fakeContent();
+        content.check.mockImplementation(() => {
+          throw Object.assign(new Error("unreadable frontmatter"), { code: "invalid-request", journal: "work" });
+        });
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(findRoute(recorded, "/journals/:name/:date", "put"), putRequest("---\nx: [\n---\n"), response);
+
+        expect(content.check).toHaveBeenCalledWith("work", "---\nx: [\n---\n");
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toMatchObject({ code: "invalid-request", journal: "work" });
         expect(ensureNote).not.toHaveBeenCalled();
         expect(content.replace).not.toHaveBeenCalled();
       });

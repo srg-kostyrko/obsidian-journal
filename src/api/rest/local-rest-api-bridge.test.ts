@@ -226,13 +226,15 @@ describe("LocalRestApiBridge whole-file PUT", () => {
   });
 
   it("answers 400 invalid-request when the body's frontmatter cannot be read", async () => {
-    const { status, json } = await wholeFilePut("---\ntags: [x\n---\nbody");
+    const { harness, status, json } = await wholeFilePut("---\ntags: [x\n---\nbody");
 
     expect(status).toBe(400);
     expect(json).toMatchObject({
       code: "invalid-request",
+      journal: "work",
       message: expect.stringContaining("frontmatter") as unknown,
     });
+    expect(harness.host.files.get("2026-08-18.md")).toBeUndefined();
   });
 
   it.each([

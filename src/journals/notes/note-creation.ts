@@ -60,24 +60,19 @@ export type NoteCreationError =
   | UserAborted;
 
 // Splits a note's text the way Obsidian's metadata cache reads it, so the frontmatter parsed here
-// is the frontmatter Obsidian will see once the text is written.
-function splitFrontmatter(
-  path: VaultPath,
-  content: string,
-): Result<{ frontmatter: Record<string, unknown>; body: string }, BodyFrontmatterError> {
+// is the frontmatter Obsidian will see once the text is written. Fails with the reason it cannot.
+function splitFrontmatter(content: string): Result<{ frontmatter: Record<string, unknown>; body: string }, string> {
   const info = getFrontMatterInfo(content);
   if (!info.exists) return new Ok({ frontmatter: {}, body: content });
   let parsed: unknown;
   try {
     parsed = parseYaml(info.frontmatter);
   } catch (error) {
-    return new Err(new BodyFrontmatterError(path, error instanceof Error ? error.message : String(error)));
+    return new Err(error instanceof Error ? error.message : String(error));
   }
   const body = content.slice(info.contentStart);
   if (parsed === null || parsed === undefined) return new Ok({ frontmatter: {}, body });
-  if (typeof parsed !== "object" || Array.isArray(parsed)) {
-    return new Err(new BodyFrontmatterError(path, "it is not a set of properties"));
-  }
+  if (typeof parsed !== "object" || Array.isArray(parsed)) return new Err("it is not a set of properties");
   return new Ok({ frontmatter: { ...(parsed as Record<string, unknown>) }, body });
 }
 
@@ -309,6 +304,12 @@ export class NoteCreationService {
     });
   }
 
+  /** Why `replaceContent` would refuse `content`'s frontmatter, checked before any note exists. */
+  checkContent(content: string): Result<void, string> {
+    const split = splitFrontmatter(content);
+    return split.isErr() ? new Err(split.error) : new Ok(undefined);
+  }
+
   /** Replaces the whole file of the journal's note at `anchor`, keeping the note's journal claim. */
   replaceContent(
     name: string,
@@ -328,7 +329,9 @@ export class NoteCreationService {
       const path = indexed.value.path;
       // One write, claim included: writing the body and then claiming it leaves a claimless file
       // for the metadata cache to parse in between, and a claim that fails to apply orphans it.
-      const { frontmatter, body } = yield* splitFrontmatter(path, content);
+      const { frontmatter, body } = yield* splitFrontmatter(content).mapErr(
+        (reason) => new BodyFrontmatterError(path, reason),
+      );
       claim(frontmatter);
       yield* this.#notes.write(path, `---\n${stringifyYaml(frontmatter)}---\n${body}`);
       this.#registerWritten(path, frontmatter);

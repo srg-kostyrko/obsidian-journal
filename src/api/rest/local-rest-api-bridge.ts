@@ -18,6 +18,10 @@ import type { Events } from "obsidian";
 
 const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
+function unreadableFrontmatter(journal: string, reason: string): RestError {
+  return new RestError("invalid-request", `The frontmatter in the request body could not be read: ${reason}`, journal);
+}
+
 export class LocalRestApiBridge {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
@@ -28,6 +32,10 @@ export class LocalRestApiBridge {
 
   // The route hands over the date ensureNote answered with, which is the note's anchor.
   readonly #content: NoteContent = {
+    check: (journal, body) => {
+      const checked = this.#creation.checkContent(body);
+      if (checked.isErr()) throw unreadableFrontmatter(journal, checked.error);
+    },
     replace: async (journal, date, body) => {
       const result = await this.#creation.replaceContent(journal, date as AnchorString, body);
       if (result.isOk()) return;
@@ -35,13 +43,7 @@ export class LocalRestApiBridge {
       if (error instanceof JournalNotFoundError) {
         throw new RestError("journal-not-found", `Journal not found: ${journal}`, journal);
       }
-      if (error instanceof BodyFrontmatterError) {
-        throw new RestError(
-          "invalid-request",
-          `The frontmatter in the request body could not be read: ${error.reason}`,
-          journal,
-        );
-      }
+      if (error instanceof BodyFrontmatterError) throw unreadableFrontmatter(journal, error.reason);
       if (error instanceof NoteNotFoundError) {
         throw new RestError("note-not-found", `Note not found: ${journal} ${date}`, journal);
       }
