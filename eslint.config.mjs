@@ -117,6 +117,15 @@ const noNodeGlobals = ["Buffer", "process", "require", "global", "__dirname", "_
   message: noNodeGlobalsMessage,
 }));
 
+// Rule options replace rather than merge, so the block below must re-list the preset's own
+// `fetch`/`localStorage`/`app` bans. Its options array carries a stray "warn" string among the
+// entries, which would ban a global named `warn` if spread in as-is.
+const presetRestrictedGlobals = [...obsidianmd.configs.recommended]
+  .map((config) => config.rules?.["no-restricted-globals"])
+  .findLast(Array.isArray)
+  .slice(1)
+  .filter((entry) => typeof entry === "object");
+
 export default [
   {
     ignores: [
@@ -320,7 +329,7 @@ export default [
       "vitest.setup.shared.ts",
     ],
     rules: {
-      "no-restricted-globals": ["error", ...noNodeGlobals],
+      "no-restricted-globals": ["error", ...presetRestrictedGlobals, ...noNodeGlobals],
     },
   },
   {
