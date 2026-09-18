@@ -92,8 +92,13 @@ const hostSchemaImports = ["zod", "zod-to-json-schema", "@modelcontextprotocol/s
   message: hostSchemaMessage,
 }));
 const hostSchemaSubpathImport = {
-  group: ["@modelcontextprotocol/sdk/*"],
+  group: ["zod/*", "zod-to-json-schema/*", "@modelcontextprotocol/sdk/*"],
   allowTypeImports: true,
+  message: hostSchemaMessage,
+};
+// no-restricted-imports never sees an `import()` expression.
+const noHostSchemaDynamicImport = {
+  selector: "ImportExpression[source.value=/^(zod|zod-to-json-schema|@modelcontextprotocol\\/sdk)/]",
   message: hostSchemaMessage,
 };
 
@@ -320,7 +325,14 @@ export default [
     files: ["src/**/*.ts"],
     ignores: ["src/infrastructure/di/**"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noEagerMessage, noProductionOverride],
+      "no-restricted-syntax": [
+        "error",
+        noRawError,
+        noStrayDefineModal,
+        noEagerMessage,
+        noProductionOverride,
+        noHostSchemaDynamicImport,
+      ],
     },
   },
   {
@@ -330,7 +342,13 @@ export default [
     files: ["src/**/*.vue"],
     ignores: ["src/infrastructure/di/**"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noProductionOverride],
+      "no-restricted-syntax": [
+        "error",
+        noRawError,
+        noStrayDefineModal,
+        noProductionOverride,
+        noHostSchemaDynamicImport,
+      ],
     },
   },
   {
@@ -615,7 +633,7 @@ export default [
     // re-listed because rule options replace rather than merge.
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noEagerMessage, noProductionOverride],
+      "no-restricted-syntax": ["error", noRawError, noEagerMessage, noProductionOverride, noHostSchemaDynamicImport],
     },
   },
   {
