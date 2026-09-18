@@ -1861,6 +1861,23 @@ describe("JournalsApiService answers", () => {
     expect(harness.host.files.has("2026-08-18.md")).toBe(true);
   });
 
+  // #answers must map null to undefined, not {}: an empty answers bag skips a confirming
+  // journal's confirmation modal (see "creates with no modal when confirm and empty answers
+  // are both passed on a confirming journal"), while undefined leaves the flow's own default
+  // in place, which still asks. That difference is what this test pins.
+  it("still opens the creation confirmation when answers is null on a confirming journal", async () => {
+    const { api, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }, { confirmCreation: true }),
+    });
+
+    const pending = api.ensureNote("daily", "2026-08-18", { answers: null as unknown as Record<string, never> });
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen<unknown, boolean>().submit(true);
+
+    const result = await pending;
+    expect(result.created).toBe(true);
+  });
+
   it("treats a null answers bag the same as none on a journal with a required prompt", async () => {
     const { api } = await buildApi({
       daily: fixedJournal("daily", { type: "day" }, { prompts: [{ ...mood, required: true }] }),

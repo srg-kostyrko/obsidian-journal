@@ -501,7 +501,10 @@ Two behaviours with no equivalent, worth knowing before you port:
   `{ prompt: false }` for a call that must not block on a modal — a backfill, a
   background sync — and a journal that cannot proceed without an answer fails
   with `prompts-required` instead of hanging one open, unless you supply
-  `answers` instead. `JournalInfo.prompts` lists a journal's questions — a
+  `answers` instead. On a journal with _Confirm creation_ on and no questions of
+  its own, `prompt: false` alone changes nothing — the confirmation dialog
+  above still opens, so a call that must not block needs `confirm: false` (or
+  `answers`) as well. `JournalInfo.prompts` lists a journal's questions — a
   `mood` prompt's `type` and `options` included — so a caller can discover what
   an answers bag expects before building one. See
   [Answering questions](#answering-questions).
