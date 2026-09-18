@@ -65,6 +65,7 @@ const PROMPT_TYPES = [
   "date",
   "toggle",
   "select",
+  "note",
 ] as const satisfies readonly PromptDisplayType[];
 const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
 interface FormValues {
@@ -170,10 +171,11 @@ const { defineField, errorBag, handleSubmit, values } = useForm<FormValues>({
       v.forward(
         v.check(
           (entered) => fitsInPath(candidateFrom(entered)) || !reachesPath(entered),
-          (issue) =>
-            issue.input.type === "toggle"
-              ? m.journal_prompt_toggle_not_in_path()
-              : m.journal_prompt_long_text_not_in_path(),
+          (issue) => {
+            if (issue.input.type === "toggle") return m.journal_prompt_toggle_not_in_path();
+            if (issue.input.type === "note") return m.journal_prompt_note_not_in_path();
+            return m.journal_prompt_long_text_not_in_path();
+          },
         ),
         ["type"],
       ),

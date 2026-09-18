@@ -8,6 +8,7 @@ import { FakePluginData } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { journalConfigCollection } from "@/journals/config";
+import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import { SliceKeyConflictError, MigrationFailedError, SettingsSaveError, UnregisteredSliceError } from "./errors";
@@ -103,6 +104,23 @@ const checkedPetCollection = defineCollection(
     petSchema,
     v.check((pet) => pet.name !== pet.sound, "name and sound must differ"),
   ),
+  petDefaults,
+);
+
+const uniqueToysPetCollection = defineCollection(
+  "pets",
+  v.object({
+    name: v.pipe(v.string(), v.minLength(1)),
+    kind: v.picklist(["cat", "dog"]),
+    sound: v.pipe(v.string(), v.minLength(1)),
+    toys: v.optional(
+      v.pipe(
+        v.array(v.string()),
+        v.check((toys) => new Set(toys).size === toys.length, "toys must be unique"),
+      ),
+      [],
+    ),
+  }),
   petDefaults,
 );
 
@@ -511,6 +529,44 @@ describe("SettingsService", () => {
         treats: {},
       });
     });
+
+    it("drops only the unreadable items of a list field, keeping the rest of it", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [petCollection] })],
+        data: { pets: { Rex: { name: "Rex", kind: "dog", sound: "woof", toys: ["ball", 7, "rope"] } } },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(petCollection).Rex.toys).toEqual(["ball", "rope"]);
+    });
+
+    it("names each dropped item in the warning", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [petCollection] })],
+        data: { pets: { Rex: { name: "Rex", kind: "dog", sound: "woof", toys: ["ball", 7, "rope"] } } },
+        allow: { dataRepair: true },
+      });
+
+      const reset = harness.logs.records.find(
+        (record) => record.message === "collection entry fields reset to defaults",
+      );
+      expect(reset?.fields).toMatchObject({ fields: ["toys.1"] });
+    });
+
+    it("resets the whole list when what is left after dropping still fails", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [uniqueToysPetCollection] })],
+        data: { pets: { Rex: { name: "Rex", kind: "dog", sound: "woof", toys: ["ball", 7, "ball"] } } },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(uniqueToysPetCollection).Rex).toEqual({
+        name: "Rex",
+        kind: "dog",
+        sound: "woof",
+        toys: [],
+      });
+    });
   });
 
   // A v2 vault whose journals cleared the date format loaded every journal as a *day*
@@ -570,6 +626,76 @@ describe("SettingsService", () => {
         folder: "02 - Journal/Weekly",
         templates: ["99 - Meta/Templates/Weekly Note Template.md"],
       });
+    });
+  });
+
+  describe("initialize — a question of a type this version does not know", () => {
+    const known = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+    const later = { variable: "energy", question: "Energy?", type: "text", frontmatterKey: "energy", required: false };
+    const unknown = { variable: "who", question: "Who?", type: "from-a-newer-version", frontmatterKey: "who" };
+
+    it("drops that question and keeps the journal's others", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [journalConfigCollection] })],
+        data: { journals: { daily: { ...fixedJournal("daily", { type: "day" }), prompts: [known, unknown, later] } } },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(journalConfigCollection).daily.prompts.map((prompt) => prompt.variable)).toEqual(
+        ["mood", "energy"],
+      );
+    });
+
+    it("drops that question from a notelet type and keeps the type's others", async () => {
+      const type = { ...buildNoteletType({ id: "nt_1" as never, name: "Standup" }), prompts: [known, unknown, later] };
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [journalConfigCollection] })],
+        data: { journals: { daily: { ...fixedJournal("daily", { type: "day" }), notelets: { nt_1: type } } } },
+        allow: { dataRepair: true },
+      });
+
+      const stored = harness.settings.recordOf(journalConfigCollection).daily.notelets.nt_1;
+      expect(stored?.name).toBe("Standup");
+      expect(stored?.prompts.map((prompt) => prompt.variable)).toEqual(["mood", "energy"]);
+    });
+
+    it("resets a notelet type's prompts, not the type itself, when dropping the question leaves two questions with one variable", async () => {
+      // folder is not part of the failing "prompts" field: a whole-entry fallback (resetting to
+      // defaultItem) would lose it just as surely as it would lose the sibling type below, since
+      // defaultItem only carries the name forward from the raw value.
+      const type = {
+        ...buildNoteletType({ id: "nt_1" as never, name: "Standup", folder: "Notes/Standups" }),
+        prompts: [known, unknown, { ...later, variable: "mood" }],
+      };
+      const sibling = buildNoteletType({ id: "nt_2" as never, name: "Retro" });
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [journalConfigCollection] })],
+        data: {
+          journals: { daily: { ...fixedJournal("daily", { type: "day" }), notelets: { nt_1: type, nt_2: sibling } } },
+        },
+        allow: { dataRepair: true },
+      });
+
+      const notelets = harness.settings.recordOf(journalConfigCollection).daily.notelets;
+      expect(notelets.nt_1).toMatchObject({ name: "Standup", folder: "Notes/Standups", prompts: [] });
+      expect(notelets.nt_2?.name).toBe("Retro");
+    });
+
+    it("resets the list when dropping the question leaves two questions with one variable", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [journalConfigCollection] })],
+        data: {
+          journals: {
+            daily: {
+              ...fixedJournal("daily", { type: "day" }),
+              prompts: [known, unknown, { ...later, variable: "mood" }],
+            },
+          },
+        },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.recordOf(journalConfigCollection).daily.prompts).toEqual([]);
     });
   });
 

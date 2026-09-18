@@ -501,6 +501,7 @@ describe("VariableReferenceModal — answers that cannot be part of a path", () 
     { variable: "mood", question: "How do you feel?", type: "text" },
     { variable: "challenge", question: "Biggest challenge?", type: "text", multiline: true },
     { variable: "done", question: "Done?", type: "toggle" },
+    { variable: "project", question: "Which project?", type: "note" },
   ] as const;
 
   function renderIn(context: VariableModalContext): void {
@@ -527,5 +528,16 @@ describe("VariableReferenceModal — answers that cannot be part of a path", () 
   it("lists a long text answer for template content", () => {
     renderIn("template-path");
     expect(screen.getByText("{{challenge}}")).toBeTruthy();
+  });
+
+  it.each(["name-template", "folder-path"] as const)("omits a note link answer from %s", (context) => {
+    renderIn(context);
+    expect(screen.getByText("{{mood}}")).toBeTruthy();
+    expect(screen.queryByText("{{project}}")).toBeNull();
+  });
+
+  it("lists a note link answer for template content", () => {
+    renderIn("template-path");
+    expect(screen.getByText("{{project}}")).toBeTruthy();
   });
 });

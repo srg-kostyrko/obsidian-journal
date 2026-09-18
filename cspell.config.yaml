@@ -22,6 +22,7 @@ words:
   - lezer
   - liamcain
   - linkpath
+  - linktext
   - longtext
   - macrotask
   - multitext
@@ -51,6 +52,7 @@ words:
   - tfile
   - unapplies
   - unitless
+  - unlinkable
   - unmappable
   - unpadded
   - unrecognised

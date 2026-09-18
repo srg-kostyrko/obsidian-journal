@@ -368,21 +368,32 @@ function repairCollectionEntry<TItem extends AnySchema>(
   const nestedMap = definition.nested as Readonly<Record<string, AnyNestedCollectionDefinition>> | undefined;
 
   const plain = new Set<string>();
+  // A list field whose failures all sit on individual items keeps the items that still read: a
+  // question of a type a newer version added would otherwise wipe every question beside it.
+  const droppedItems = new Map<string, Set<number>>();
   const nested = new Map<string, { definition: AnyNestedCollectionDefinition; issues: BaseIssue<unknown>[] }>();
   for (const issue of issues) {
     // A root-level check reports no path, so there is no field to swap out.
     const key = issue.path?.[0]?.key;
     if (typeof key !== "string") return undefined;
     const nestedDefinition = nestedMap?.[key];
-    if (nestedDefinition === undefined) {
-      plain.add(key);
+    if (nestedDefinition !== undefined) {
+      const existing = nested.get(key);
+      if (existing) existing.issues.push(issue);
+      else nested.set(key, { definition: nestedDefinition, issues: [issue] });
       continue;
     }
-    const existing = nested.get(key);
-    if (existing) existing.issues.push(issue);
-    else nested.set(key, { definition: nestedDefinition, issues: [issue] });
+    const index = issue.path?.[1]?.key;
+    if (typeof index === "number" && Array.isArray((value as Record<string, unknown>)[key])) {
+      const indexes = droppedItems.get(key) ?? new Set<number>();
+      indexes.add(index);
+      droppedItems.set(key, indexes);
+      continue;
+    }
+    plain.add(key);
   }
-  if (plain.size === 0 && nested.size === 0) return undefined;
+  for (const field of plain) droppedItems.delete(field);
+  if (plain.size === 0 && nested.size === 0 && droppedItems.size === 0) return undefined;
 
   const defaults = definition.defaultItem(id, value) as Record<string, unknown>;
   const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
@@ -391,6 +402,11 @@ function repairCollectionEntry<TItem extends AnySchema>(
   for (const field of plain) {
     candidate[field] = defaults[field];
     fields.push(field);
+  }
+  for (const [field, indexes] of droppedItems) {
+    candidate[field] = (candidate[field] as unknown[]).filter((_, index) => !indexes.has(index));
+    fields.push(...[...indexes].map((index) => `${field}.${index}`));
+    partiallyRepaired.add(field);
   }
   for (const [field, entry] of nested) {
     const repaired = repairNestedCollection(entry.definition, candidate[field], entry.issues);
@@ -408,12 +424,13 @@ function repairCollectionEntry<TItem extends AnySchema>(
   if (parsed.success) return { value: parsed.output, fields };
   if (partiallyRepaired.size === 0) return undefined;
 
-  // A repair that only touched one entry inside a nested field can still fail a check spanning
-  // the whole item (a nested default colliding with a sibling field, say). Retry with the old
-  // whole-field reset for every field a nested repair touched, and only give up if that also
-  // fails — never widen the loss past what the pre-nested-repair code discarded.
+  // A repair that only touched one entry inside a nested field, or only dropped a few items out
+  // of a list field, can still fail a check spanning the whole item (a nested default colliding
+  // with a sibling field, or a list that is still invalid once the dropped items are gone, say).
+  // Retry with the old whole-field reset for every field either mechanism touched, and only give
+  // up if that also fails — never widen the loss past what the pre-nested-repair code discarded.
   for (const field of partiallyRepaired) candidate[field] = defaults[field];
-  const retryFields = [...plain, ...nested.keys()];
+  const retryFields = [...plain, ...nested.keys(), ...droppedItems.keys()];
   const retried = v.safeParse(definition.itemSchema, candidate);
   return retried.success ? { value: retried.output, fields: retryFields } : undefined;
 }
@@ -465,12 +482,21 @@ function repairNestedEntry(
   if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
 
   const fields = new Set<string>();
+  const droppedItems = new Map<string, Set<number>>();
   for (const issue of issues) {
     const key = issue.path?.[2]?.key;
     if (typeof key !== "string") return undefined;
+    const index = issue.path?.[3]?.key;
+    if (typeof index === "number" && Array.isArray((value as Record<string, unknown>)[key])) {
+      const indexes = droppedItems.get(key) ?? new Set<number>();
+      indexes.add(index);
+      droppedItems.set(key, indexes);
+      continue;
+    }
     fields.add(key);
   }
-  if (fields.size === 0) return undefined;
+  for (const field of fields) droppedItems.delete(field);
+  if (fields.size === 0 && droppedItems.size === 0) return undefined;
 
   const defaults = definition.defaultItem(entryId, value) as Record<string, unknown>;
   const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
@@ -479,8 +505,20 @@ function repairNestedEntry(
   // Store the pre-parse candidate, not parsed.output: repairNestedCollection's caller re-parses
   // the whole item, so returning the already-transformed output would run any v.transform in
   // the entry schema twice for a repaired entry while its untouched siblings run it once.
+  const dropped: Record<string, unknown> = { ...candidate };
+  for (const [field, indexes] of droppedItems) {
+    dropped[field] = (dropped[field] as unknown[]).filter((_, index) => !indexes.has(index));
+  }
+  if (v.safeParse(definition.itemSchema, dropped).success) {
+    const droppedFields = [...droppedItems].flatMap(([field, indexes]) =>
+      [...indexes].map((index) => `${field}.${index}`),
+    );
+    return { value: dropped, fields: [...fields, ...droppedFields] };
+  }
+
+  for (const field of droppedItems.keys()) candidate[field] = defaults[field];
   const parsed = v.safeParse(definition.itemSchema, candidate);
-  return parsed.success ? { value: candidate, fields: [...fields] } : undefined;
+  return parsed.success ? { value: candidate, fields: [...fields, ...droppedItems.keys()] } : undefined;
 }
 
 function parseSliceValue<TSchema extends AnySchema>(

@@ -11,6 +11,7 @@ import { NoteletTypeNotFoundError } from "./errors";
 import { JournalsIndex } from "./journals-index";
 import { noteletTypeByName } from "./notelets/config";
 import { NumberingService } from "./numbering";
+import { readStoredAnswer, storedValueOf } from "./prompts/stored-answer";
 import { JournalsRepository } from "./repository";
 import { isNoteletMetadata } from "./types";
 
@@ -47,10 +48,8 @@ export class FrontmatterService {
     const prompts = type?.prompts ?? [];
     for (const prompt of prompts) {
       if (prompt.frontmatterKey === "") continue;
-      const value = frontmatter[prompt.frontmatterKey];
-      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-        answers[prompt.variable] = value;
-      }
+      const answer = readStoredAnswer(prompt, frontmatter[prompt.frontmatterKey]);
+      if (answer !== undefined) answers[prompt.variable] = answer;
     }
 
     return {
@@ -87,7 +86,7 @@ export class FrontmatterService {
       for (const prompt of type.prompts) {
         if (prompt.frontmatterKey === "") continue;
         const value = metadata.answers?.[prompt.variable];
-        if (value !== undefined) fm[prompt.frontmatterKey] = value;
+        if (value !== undefined) fm[prompt.frontmatterKey] = storedValueOf(prompt, value);
       }
     });
   }
@@ -143,7 +142,7 @@ export class FrontmatterService {
       for (const prompt of config.prompts) {
         if (prompt.frontmatterKey === "") continue;
         const value = metadata.answers?.[prompt.variable];
-        if (value !== undefined) fm[prompt.frontmatterKey] = value;
+        if (value !== undefined) fm[prompt.frontmatterKey] = storedValueOf(prompt, value);
       }
     };
   }
@@ -193,10 +192,8 @@ export class FrontmatterService {
     const answers: Record<string, PromptAnswer> = {};
     for (const prompt of config.prompts) {
       if (prompt.frontmatterKey === "") continue;
-      const value = frontmatter[prompt.frontmatterKey];
-      if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-        answers[prompt.variable] = value;
-      }
+      const answer = readStoredAnswer(prompt, frontmatter[prompt.frontmatterKey]);
+      if (answer !== undefined) answers[prompt.variable] = answer;
     }
 
     const entry: JournalEntry = {

@@ -1866,6 +1866,7 @@
       "match": {
         "reason=text": "\"{offending}\" é uma resposta de texto livre, portanto as notas que a carregam no nome ou na pasta não podem ser associadas a este diário apenas pelo caminho.",
         "reason=longtext": "\"{offending}\" é uma resposta de texto longo, portanto não pode fazer parte de um nome de nota ou pasta.",
+        "reason=note": "\"{offending}\" é um link para nota, portanto não pode fazer parte de um nome de nota ou pasta.",
         "reason=toggle": "\"{offending}\" é uma resposta sim/não, portanto as notas que a carregam no nome ou na pasta não podem ser associadas a este diário apenas pelo caminho. Use uma pergunta de escolha em vez disso."
       }
     }
@@ -2065,6 +2066,11 @@
   "journal_prompt_key_required_in_path": "Uma resposta usada no nome da nota ou na pasta precisa ser salva em uma propriedade.",
   "journal_prompt_toggle_not_in_path": "Uma resposta sim/não não pode fazer parte de um nome de nota ou pasta. Use uma pergunta de escolha em vez disso.",
   "journal_prompt_long_text_not_in_path": "Uma resposta de texto longo não pode fazer parte de um nome de nota ou pasta.",
+  "journal_prompt_note_not_in_path": "Um link para nota não pode fazer parte de um nome de nota ou pasta.",
+  "journal_prompt_note_link_characters": "Um link para nota não pode conter #, ^, |, [ ou ].",
+  "journal_prompt_pick_journal_note": "Vincular a uma nota de diário",
+  "journal_prompt_journal_note_out_of_timeline": "{journal} não tem nota para esse período e não cria uma.",
+  "journal_prompt_journal_note_named_by_answers": "{journal} nomeia as notas com base nas respostas, então não é possível vincular uma nota que ainda não foi criada.",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -2101,6 +2107,7 @@
       "match": {
         "type=text": "Texto",
         "type=longtext": "Texto longo",
+        "type=note": "Link para nota",
         "type=number": "Número",
         "type=date": "Data",
         "type=toggle": "Sim/Não",

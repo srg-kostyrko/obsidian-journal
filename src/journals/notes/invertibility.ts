@@ -27,7 +27,7 @@ export type InvertibilityWarning =
   | { kind: "cyclic-top" }
   | { kind: "no-carry"; offending: string }
   | { kind: "unused-digits"; missing: readonly string[] }
-  | { kind: "prompt-in-path"; reason: "text" | "longtext" | "toggle"; offending: string };
+  | { kind: "prompt-in-path"; reason: "text" | "longtext" | "toggle" | "note"; offending: string };
 
 export interface InvertibilityServices {
   engine: TemplateEngine;
@@ -103,11 +103,12 @@ export function invertibilityOf(
   // its own verdict rather than passing silently as a template that "compiles". The round-trip
   // probe below cannot stand in for this: it renders the unanswered path, which does match.
   // A yes/no reaches a template only by being added to it after the fact — EditPromptModal
-  // refuses the reverse order — so this is the only place that catches it. Long text is refused
-  // the same way, and gets its own reason so the message can name what actually blocked it.
+  // refuses the reverse order — so this is the only place that catches it. Long text and note
+  // links are refused the same way, and each gets its own reason so the message can name what
+  // actually blocked it.
   const promptInPath = promptsInPath(config).find(
-    (prompt): prompt is Extract<Prompt, { type: "text" | "toggle" }> =>
-      prompt.type === "text" || prompt.type === "toggle",
+    (prompt): prompt is Extract<Prompt, { type: "text" | "toggle" | "note" }> =>
+      prompt.type === "text" || prompt.type === "toggle" || prompt.type === "note",
   );
   if (promptInPath) {
     const reason = isLongText(promptInPath) ? "longtext" : promptInPath.type;

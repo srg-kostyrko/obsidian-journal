@@ -1713,6 +1713,7 @@
       "match": {
         "reason=text": "「{offending}」は自由記述の回答のため、これを名前やフォルダに含むノートはパスだけではこのジャーナルに関連付けられません。",
         "reason=longtext": "「{offending}」は長文テキストの回答のため、ノート名やフォルダの一部にできません。",
+        "reason=note": "「{offending}」はノートへのリンクのため、ノート名やフォルダの一部にできません。",
         "reason=toggle": "「{offending}」ははい/いいえの回答のため、これを名前やフォルダに含むノートはパスだけではこのジャーナルに関連付けられません。代わりに選択式の質問を使ってください。"
       }
     }
@@ -1912,6 +1913,11 @@
   "journal_prompt_key_required_in_path": "ノート名やフォルダに使われる回答は、プロパティに保存する必要があります。",
   "journal_prompt_toggle_not_in_path": "はい/いいえの回答はノート名やフォルダの一部にできません。代わりに選択式の質問を使ってください。",
   "journal_prompt_long_text_not_in_path": "長文テキストの回答はノート名やフォルダの一部にできません。",
+  "journal_prompt_note_not_in_path": "ノートへのリンクはノート名やフォルダの一部にできません。",
+  "journal_prompt_note_link_characters": "ノートへのリンクには #、^、|、[、] を含められません。",
+  "journal_prompt_pick_journal_note": "ジャーナルノートにリンク",
+  "journal_prompt_journal_note_out_of_timeline": "{journal} にはその期間のノートがなく、作成もしません。",
+  "journal_prompt_journal_note_named_by_answers": "{journal} は回答をもとにノート名を決めるため、まだ作成されていないノートにはリンクできません。",
   "journal_prompt_modal_title": [
     {
       "declarations": ["input mode"],
@@ -1948,6 +1954,7 @@
       "match": {
         "type=text": "テキスト",
         "type=longtext": "長文テキスト",
+        "type=note": "ノートへのリンク",
         "type=number": "数値",
         "type=date": "日付",
         "type=toggle": "はい/いいえ",
