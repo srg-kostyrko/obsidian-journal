@@ -130,6 +130,23 @@ describe("local rest api interop", () => {
     expect(resolved.headers.get("location")).toBe("/vault/work/2027-07-11.md");
   });
 
+  it("refuses a PUT whose frontmatter does not parse and leaves the note as it was", async () => {
+    await postJson("/journals/work/notes/2027-07-15", {});
+    await waitForJournalFrontmatter("work/2027-07-15.md", { journal: "work", date: "2027-07-15" });
+    const before = await contentOf("work/2027-07-15.md");
+
+    const response = await rest("/journals/work/2027-07-15/", {
+      method: "PUT",
+      headers: { "Content-Type": "text/markdown" },
+      body: "---\ntags: [x\n---\nbody",
+    });
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { code: string }).code).toBe("invalid-request");
+
+    expect(await contentOf("work/2027-07-15.md")).toBe(before);
+    expect(await frontmatterOf("work/2027-07-15.md")).toMatchObject({ journal: "work" });
+  });
+
   it("appends under a heading through the host's markdown-patch URL target", async () => {
     await postJson("/journals/work/notes/2027-07-14", {});
     await waitForJournalFrontmatter("work/2027-07-14.md", { journal: "work", date: "2027-07-14" });
