@@ -28,7 +28,9 @@ export class AutoCreateService {
 
   readonly #noteCreation = inject(SettingsService).getSlice(noteCreationSlice);
 
-  #timer: ReturnType<typeof window.setTimeout> | undefined;
+  // `number`, not `ReturnType<typeof window.setTimeout>` — see self-write-guard.ts for why that
+  // derivation stops being `number` once Node's ambient timer globals enter the program.
+  #timer: number | undefined;
   #disposed = false;
 
   async #tick(): Promise<void> {

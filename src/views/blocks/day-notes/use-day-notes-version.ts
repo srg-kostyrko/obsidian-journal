@@ -14,7 +14,9 @@ export function useDayNotesVersion(): Readonly<ShallowRef<number>> {
   const index = useService(JournalsIndex);
   const version = shallowRef(0);
   const dispose: (() => void)[] = [];
-  let refreshTimer: ReturnType<typeof window.setTimeout> | undefined;
+  // `number`, not `ReturnType<typeof window.setTimeout>` — see self-write-guard.ts for why that
+  // derivation stops being `number` once Node's ambient timer globals enter the program.
+  let refreshTimer: number | undefined;
 
   const refresh = (): void => {
     if (refreshTimer !== undefined) window.clearTimeout(refreshTimer);
