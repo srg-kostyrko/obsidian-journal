@@ -351,30 +351,42 @@ export class JournalsApiService implements JournalsApi {
       options.pinned === true,
       this.#skipConfirmation(options) ?? "journal",
       this.#unattended(options),
+      // Two calls with different answers must not share a run even when nothing else about them
+      // differs, or the second's answers would silently apply to the first's already-decided
+      // creation. This does not by itself guarantee one note per distinct answers, though: on a
+      // journal whose note name uses an answer, the queued second call finds the first's note only
+      // once the index has it, and that lags the write — so two concurrent calls can still each
+      // name and create their own note. That race predates answers; it is the same gap a queued
+      // call with an unrelated difference already has.
       answers === undefined ? "" : JSON.stringify(Object.entries(answers).toSorted(([a], [b]) => a.localeCompare(b))),
     ].join("\u{0}");
   }
 
-  #skipConfirmation(
-    options: { readonly confirm?: boolean; readonly answers?: unknown } | undefined,
-  ): boolean | undefined {
-    // A caller supplying answers is not watching for a dialog either.
-    if (options?.answers !== undefined) return true;
+  #skipConfirmation(options: { readonly confirm?: boolean } | undefined): boolean | undefined {
     return options?.confirm === undefined ? undefined : !options.confirm;
   }
 
-  #unattended(options: { readonly prompt?: boolean; readonly answers?: unknown } | undefined): boolean | undefined {
-    return options?.prompt === false || options?.answers !== undefined;
+  #unattended(options: { readonly prompt?: boolean } | undefined): boolean | undefined {
+    return options?.prompt === false;
   }
 
   // Checked before anything is created, and even when the note already exists: the same call
-  // must fail the same way whatever state the vault is in.
+  // must fail the same way whatever state the vault is in. `null` counts as absent — a caller
+  // reading a nullable field straight from JSON should not have to filter it out first — but
+  // anything else that is not a plain object (an array, a string, …) cannot be read as answers
+  // keyed by variable, so it is reported the same way a bad individual answer is, rather than
+  // reaching `Object.keys` and throwing a raw TypeError.
   #answers(
     owner: PromptOwner | undefined,
-    input: Readonly<Record<string, unknown>> | undefined,
+    input: Readonly<Record<string, unknown>> | undefined | null,
     journal: string,
   ): Record<string, PromptAnswer> | undefined {
-    if (input === undefined || owner === undefined) return undefined;
+    if (input === undefined || input === null || owner === undefined) return undefined;
+    if (typeof input !== "object" || Array.isArray(input)) {
+      throw new ApiError("invalid-answers", `Invalid answers for ${journal}: answers must be an object`, journal, [
+        { variable: "", reason: "answers must be an object keyed by question variable" },
+      ]);
+    }
     const read = readAnswerInput(owner, input, this.#linkTextFor);
     if (read.isOk()) return read.value;
     const summary = read.error.map(({ variable, reason }) => `${variable}: ${reason}`).join("; ");
