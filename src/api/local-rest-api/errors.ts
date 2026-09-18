@@ -29,7 +29,7 @@ export function statusFor(code: string): number {
   return STATUS_BY_CODE[code] ?? 500;
 }
 
-function readErrorCode(error: unknown): string | undefined {
+export function readErrorCode(error: unknown): string | undefined {
   if (typeof error !== "object" || error === null) return undefined;
   const code: unknown = (error as Record<string, unknown>).code;
   return typeof code === "string" ? code : undefined;

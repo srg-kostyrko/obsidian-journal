@@ -42,11 +42,13 @@ describe("NoteEnsureTool", () => {
     expect(second).toMatchObject({ created: false, path: "2026-09-10.md" });
   });
 
-  it("rejects with prompts-required when a required question has no answer", async () => {
+  it("rejects with prompts-required, reworded to point the agent at answers and journal_list", async () => {
     const { tool } = await build(journalAsking({ ...mood, required: true }));
 
     await expect(tool.call({ journal: "work", date: "2026-09-10" })).rejects.toMatchObject({
       code: "prompts-required",
+      journal: "work",
+      message: expect.stringMatching(/answers.*journal_list/) as unknown,
     });
   });
 

@@ -74,4 +74,33 @@ describe("MCP tools contract", () => {
     const journalList = tools.find((tool) => tool.name === "journal_list");
     expect(journalList?.inputSchema).toMatchObject({ type: "object", properties: {} });
   });
+
+  it("advertises every tool as neither destructive nor open-world, which MCP otherwise assumes", async () => {
+    const { client } = await connectedTools();
+
+    const { tools } = await client.listTools();
+
+    expect(tools).toHaveLength(4);
+    for (const tool of tools) {
+      expect(tool.annotations).toMatchObject({ destructiveHint: false, openWorldHint: false });
+    }
+  });
+
+  it("advertises each tool's read-only and idempotent hints", async () => {
+    const { client } = await connectedTools();
+
+    const { tools } = await client.listTools();
+
+    expect(Object.fromEntries(tools.map((tool) => [tool.name, tool.annotations]))).toEqual({
+      journal_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      journal_notes: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      journal_note_ensure: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      journal_notelet_create: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false,
+      },
+    });
+  });
 });

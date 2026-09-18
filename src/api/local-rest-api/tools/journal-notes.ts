@@ -23,7 +23,7 @@ export class JournalNotesTool implements McpTool {
   readonly description =
     "Finds a journal's existing notes and notelets for one day or a date range, without creating anything. A single date also finds the week, month or other period note that contains it. Returns vault paths; read or edit a note with vault_read, vault_patch or vault_append.";
   readonly input = entries;
-  readonly annotations = { readOnlyHint: true };
+  readonly annotations = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
   async call(arguments_: Record<string, unknown>): Promise<unknown> {
     const { journal, from, to, type } = v.parse(v.object(entries), arguments_);
