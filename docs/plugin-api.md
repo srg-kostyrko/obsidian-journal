@@ -281,7 +281,8 @@ period note and any number of notelets.
 - **A type can ask before it creates.** Its own _Confirm creating notelets_ setting is separate
   from the journal's, which guards period notes only. The dialog opens for an API call the way
   the type's questions do; pass `{ confirm: false }` for a call that must not raise one, or
-  `{ prompt: false }`, which suppresses both.
+  `{ prompt: false }`, which suppresses both — or answer the type's questions with
+  [`answers`](#answering-questions).
 - **Results are grouped by journal, not globally sorted.** `noteletsFor` builds one listing per
   matching journal, so a multi-journal selector's results appear in the order journals were
   matched; the type/counter/filename ordering applies only within each journal's group.
@@ -291,24 +292,77 @@ period note and any number of notelets.
   periods, each period once. It has no unbounded form — `noteletsFor` answers a single period,
   and a notelet only exists where one was created.
 
+## Answering questions
+
+A journal or notelet type can ask questions before it creates a note. By default `ensureNote`,
+`openNote` and `createNotelet` show them, as a click in the calendar would. Pass `answers` to
+create the note without any dialog — neither the questions nor the creation confirmation:
+
+```ts
+const [info] = await journals.listJournals("Work Daily");
+info.prompts; // [{ variable: "mood", type: "select", required: true, inPath: false, options: [...] , ... }]
+
+await journals.ensureNote("Work Daily", "today", { answers: { mood: "calm" } });
+```
+
+`answers` skips the questions and the creation confirmation, but not journal selection — a
+selector matching several journals still shows the journal picker, so address one journal by
+name when nobody is watching; the answers are checked against the journal that is chosen. For a
+period note, `prompt: false` alone skips only the questions — the creation confirmation still
+follows `confirm`, or the journal's own setting when `confirm` is not passed either — while
+`answers` skips both.
+
+`JournalInfo.prompts` lists the journal's questions and `JournalInfo.noteletTypes` each notelet
+type's. Answers are keyed by `variable`:
+
+| `type`   | pass                                                                       |
+| -------- | -------------------------------------------------------------------------- |
+| `text`   | a string — one line unless `multiline`                                     |
+| `number` | a finite number                                                            |
+| `date`   | `"YYYY-MM-DD"`, whatever format the question renders with                  |
+| `toggle` | `true` or `false`                                                          |
+| `select` | one option's `value`, not its `label`                                      |
+| `note`   | the vault path of an existing file, extension included — Journals links it |
+
+Leave a question out, or pass `""` or `null`, to leave it unanswered. That fails when the
+question is `required` or `inPath` — the note name or folder uses the answer.
+
+Anything wrong fails the whole call with `invalid-answers`, and `error.issues` lists every
+problem at once — unknown variables included, so a misspelled key cannot pass as an unanswered
+question:
+
+```ts
+try {
+  await journals.ensureNote("Work Daily", "today", { answers });
+} catch (error) {
+  if (error.code === "invalid-answers") {
+    for (const { variable, reason } of error.issues) console.warn(variable, reason);
+  }
+}
+```
+
+Answers are checked even when the note already exists, so a call fails the same way whatever
+the vault holds; an existing note is then returned as it is, its answers untouched.
+
 ## Errors
 
 Failures reject with an error carrying a stable string `code`. Absence is not a
 failure — no note for a period is `file: null`.
 
-| code                     | meaning                                                                   |
-| ------------------------ | ------------------------------------------------------------------------- |
-| `journal-not-found`      | no journal by that name — usually a stale stored reference                |
-| `no-matching-journal`    | the selector matched no journal                                           |
-| `invalid-date`           | the `DateInput` could not be read                                         |
-| `unmappable-date`        | the journal's configuration cannot place that date in a period            |
-| `outside-timeline`       | the period falls outside the journal's timeline, and no note exists there |
-| `notelet-type-not-found` | the journal owns no notelet type by that name                             |
-| `creation-failed`        | the note could not be created or written                                  |
-| `open-failed`            | the note could not be opened                                              |
-| `aborted`                | the user dismissed the confirmation prompt or the journal picker          |
-| `prompts-required`       | the journal has creation prompts and `prompt: false` was passed           |
-| `plugin-unloaded`        | Journals was unloaded while the call was in flight                        |
+| code                     | meaning                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| `journal-not-found`      | no journal by that name — usually a stale stored reference                          |
+| `no-matching-journal`    | the selector matched no journal                                                     |
+| `invalid-date`           | the `DateInput` could not be read                                                   |
+| `unmappable-date`        | the journal's configuration cannot place that date in a period                      |
+| `outside-timeline`       | the period falls outside the journal's timeline, and no note exists there           |
+| `notelet-type-not-found` | the journal owns no notelet type by that name                                       |
+| `creation-failed`        | the note could not be created or written                                            |
+| `open-failed`            | the note could not be opened                                                        |
+| `aborted`                | the user dismissed the confirmation prompt or the journal picker                    |
+| `prompts-required`       | the journal has creation prompts, `prompt: false` was passed, and no `answers` were |
+| `invalid-answers`        | the `answers` passed were rejected — see `error.issues`                             |
+| `plugin-unloaded`        | Journals was unloaded while the call was in flight                                  |
 
 ```ts
 try {
@@ -443,14 +497,11 @@ Two behaviours with no equivalent, worth knowing before you port:
   is what makes the call behave like clicking the calendar cell would. Pass
   `{ prompt: false }` for a call that must not block on a modal — a backfill, a
   background sync — and a journal that cannot proceed without an answer fails
-  with `prompts-required` instead of hanging one open.
-
-  **There is no way to supply answers programmatically.** The API exposes
-  selectors and notes, never journal configuration, so a caller has no way to
-  discover that a journal even has a `mood` prompt, let alone that it is a
-  `select` with values `😀`/`😐`. An answers bag with no way to discover what
-  it expects would be unusable. A discovery API — reading a journal's prompts
-  before calling — is a separate, additive change this one does not attempt.
+  with `prompts-required` instead of hanging one open, unless you supply
+  `answers` instead. `JournalInfo.prompts` lists a journal's questions — a
+  `mood` prompt's `type` and `options` included — so a caller can discover what
+  an answers bag expects before building one. See
+  [Answering questions](#answering-questions).
 
 - **Custom journals exist.** A journal can write every N days/weeks/months rather
   than on a calendar boundary. They appear as `write.type === "custom"` with
