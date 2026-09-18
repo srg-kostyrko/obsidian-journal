@@ -88,7 +88,8 @@ if (today?.file) await this.app.vault.process(today.file, (text) => `${text}\n- 
 // Create it if it is not there. Idempotent.
 const { note, created } = await journals.ensureNote("Work Daily", "today");
 
-// Open the note in the journal's pinned tab, moving it to this note, or pins a new one.
+// Open it in the journal's pinned tab, moving that tab here, or pin a new tab when there is none.
+// Other pinned tabs are left alone; nothing is ever unpinned.
 await journals.openNote("Work Daily", "today", { pinned: true });
 
 // A whole window at once, rather than one call per cell.
