@@ -166,6 +166,18 @@ describe("local rest api interop", () => {
     expect(await frontmatterOf("work/2027-07-15.md")).toMatchObject({ journal: "work" });
   });
 
+  it("refuses a PUT whose frontmatter does not parse before creating a note for it", async () => {
+    const response = await rest("/journals/work/2027-07-18/", {
+      method: "PUT",
+      headers: { "Content-Type": "text/markdown" },
+      body: "---\ntags: [x\n---\nbody",
+    });
+    expect(response.status).toBe(400);
+    expect(((await response.json()) as { code: string }).code).toBe("invalid-request");
+
+    expect(await notePathsMatching("work/2027-07-18")).toEqual([]);
+  });
+
   it("appends under a heading through the host's markdown-patch URL target", async () => {
     await postJson("/journals/work/notes/2027-07-14", {});
     await waitForJournalFrontmatter("work/2027-07-14.md", { journal: "work", date: "2027-07-14" });
