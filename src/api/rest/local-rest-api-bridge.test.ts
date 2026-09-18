@@ -4,6 +4,7 @@ import { describe, expect, it, vi, type MockInstance } from "vitest";
 import { NoteNotFoundError, NoteWriteError, type VaultPath } from "@/infrastructure/host";
 import { LogLevelGateToken } from "@/infrastructure/logger";
 import { AsyncResult } from "@/infrastructure/result";
+import { JournalNotFoundError } from "@/journals/errors";
 import { journalsCoreModule } from "@/journals/module";
 import { NoteCreationService } from "@/journals/notes/note-creation";
 import { fixedJournal } from "@/journals/testing";
@@ -238,6 +239,7 @@ describe("LocalRestApiBridge whole-file PUT", () => {
   });
 
   it.each([
+    ["journal-not-found", 404, new JournalNotFoundError("work")],
     ["note-not-found", 404, new NoteNotFoundError("2026-08-18.md" as VaultPath)],
     ["write-failed", 500, new NoteWriteError("2026-08-18.md" as VaultPath, new Error("disk full"))],
   ])("maps a %s failure to %i", async (code, expected, error) => {
