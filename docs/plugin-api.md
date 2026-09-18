@@ -308,21 +308,24 @@ await journals.ensureNote("Work Daily", "today", { answers: { mood: "calm" } });
 `answers` skips the questions and the creation confirmation, but not journal selection — a
 selector matching several journals still shows the journal picker, so address one journal by
 name when nobody is watching; the answers are checked against the journal that is chosen. For a
-period note, `prompt: false` alone skips only the questions — the creation confirmation still
-follows `confirm`, or the journal's own setting when `confirm` is not passed either — while
-`answers` skips both.
+period note with no questions, `prompt: false` changes nothing about confirmation — it still
+follows `confirm`, or the journal's own setting when `confirm` is not passed either. For a period
+note that has questions, there is no separate confirmation dialog to control — the answer modal
+is the confirmation — so `prompt: false` with no `answers` skips asking anything at all, whatever
+the journal's confirmation setting is. `answers` skips confirmation either way, because whoever
+supplied them was never going to see a modal.
 
 `JournalInfo.prompts` lists the journal's questions and `JournalInfo.noteletTypes` each notelet
 type's. Answers are keyed by `variable`:
 
-| `type`   | pass                                                                       |
-| -------- | -------------------------------------------------------------------------- |
-| `text`   | a string — one line unless `multiline`                                     |
-| `number` | a finite number                                                            |
-| `date`   | `"YYYY-MM-DD"`, whatever format the question renders with                  |
-| `toggle` | `true` or `false`                                                          |
-| `select` | one option's `value`, not its `label`                                      |
-| `note`   | the vault path of an existing file, extension included — Journals links it |
+| `type`   | pass                                                                                      |
+| -------- | ----------------------------------------------------------------------------------------- |
+| `text`   | a string — one line unless `multiline`                                                    |
+| `number` | a finite number                                                                           |
+| `date`   | always `"YYYY-MM-DD"` — the question's own date format applies only when the note renders |
+| `toggle` | `true` or `false`                                                                         |
+| `select` | one option's `value`, not its `label`                                                     |
+| `note`   | the vault path of an existing file, extension included — Journals links it                |
 
 Leave a question out, or pass `""` or `null`, to leave it unanswered. That fails when the
 question is `required` or `inPath` — the note name or folder uses the answer.
@@ -342,27 +345,27 @@ try {
 ```
 
 Answers are checked even when the note already exists, so a call fails the same way whatever
-the vault holds; an existing note is then returned as it is, its answers untouched.
+the vault holds; a note the journal already has is then returned as it is, its answers untouched.
 
 ## Errors
 
 Failures reject with an error carrying a stable string `code`. Absence is not a
 failure — no note for a period is `file: null`.
 
-| code                     | meaning                                                                             |
-| ------------------------ | ----------------------------------------------------------------------------------- |
-| `journal-not-found`      | no journal by that name — usually a stale stored reference                          |
-| `no-matching-journal`    | the selector matched no journal                                                     |
-| `invalid-date`           | the `DateInput` could not be read                                                   |
-| `unmappable-date`        | the journal's configuration cannot place that date in a period                      |
-| `outside-timeline`       | the period falls outside the journal's timeline, and no note exists there           |
-| `notelet-type-not-found` | the journal owns no notelet type by that name                                       |
-| `creation-failed`        | the note could not be created or written                                            |
-| `open-failed`            | the note could not be opened                                                        |
-| `aborted`                | the user dismissed the confirmation prompt or the journal picker                    |
-| `prompts-required`       | the journal has creation prompts, `prompt: false` was passed, and no `answers` were |
-| `invalid-answers`        | the `answers` passed were rejected — see `error.issues`                             |
-| `plugin-unloaded`        | Journals was unloaded while the call was in flight                                  |
+| code                     | meaning                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `journal-not-found`      | no journal by that name — usually a stale stored reference                                              |
+| `no-matching-journal`    | the selector matched no journal                                                                         |
+| `invalid-date`           | the `DateInput` could not be read                                                                       |
+| `unmappable-date`        | the journal's configuration cannot place that date in a period                                          |
+| `outside-timeline`       | the period falls outside the journal's timeline, and no note exists there                               |
+| `notelet-type-not-found` | the journal owns no notelet type by that name                                                           |
+| `creation-failed`        | the note could not be created or written                                                                |
+| `open-failed`            | the note could not be opened                                                                            |
+| `aborted`                | the user dismissed the confirmation prompt or the journal picker                                        |
+| `prompts-required`       | the journal has creation prompts, `prompt: false` was passed, and no `answers` were                     |
+| `invalid-answers`        | the `answers` passed were rejected — see [Answering questions](#answering-questions) and `error.issues` |
+| `plugin-unloaded`        | Journals was unloaded while the call was in flight                                                      |
 
 ```ts
 try {
