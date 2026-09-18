@@ -141,7 +141,7 @@ export class WorkspaceService {
   }
 
   // No open mode puts a note in a sidebar, so a pinned open must never treat a sidebar-docked
-  // leaf as a tab it can pin or retarget in place — shared by the pinned lookup and rule 3's
+  // leaf as a tab it can pin or retarget in place — shared by the pinned lookup and the
   // reuse-and-pin fallback.
   #inMainArea(leaf: WorkspaceLeaf): boolean {
     const root = leaf.getRoot();
