@@ -6,7 +6,7 @@ import { LoggerFactoryToken } from "@/infrastructure/logger";
 
 import { errorBody, sendError } from "./errors";
 import { RestRouteToken, type RestVerb } from "./route";
-import { McpToolError, McpToolToken } from "./tool";
+import { McpToolError, McpToolToken, type McpTool } from "./tool";
 import { zod3Shape } from "./zod3-shape";
 
 import type { Events } from "obsidian";
@@ -14,6 +14,21 @@ import type { Events } from "obsidian";
 const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
 const VERBS: readonly RestVerb[] = ["get", "put", "post", "patch", "delete"];
+
+/**
+ * The callback the host runs for a tool. The host turns a thrown error into tool-error text from its
+ * message, so the message carries the same {code, message, journal?, issues?} body a REST caller gets.
+ */
+export function hostToolCallback(tool: McpTool): (arguments_: Record<string, unknown>) => Promise<unknown> {
+  // try/await rather than .catch() so a call that throws before returning its promise is wrapped too.
+  return async (arguments_) => {
+    try {
+      return await tool.call(arguments_);
+    } catch (error) {
+      throw new McpToolError(JSON.stringify(errorBody(error)));
+    }
+  };
+}
 
 export class LocalRestApiBridge {
   readonly #app = inject(InternalObsidianAppToken);
@@ -58,13 +73,7 @@ export class LocalRestApiBridge {
               tool.name,
               tool.description,
               zod3Shape(tool.input),
-              // The host turns a thrown error into tool-error text from its message, so the
-              // message carries the same {code, message, journal?, issues?} body a REST caller
-              // gets.
-              (arguments_) =>
-                tool.call(arguments_).catch((error: unknown) => {
-                  throw new McpToolError(JSON.stringify(errorBody(error)));
-                }),
+              hostToolCallback(tool),
               tool.annotations,
             );
           } catch (error) {

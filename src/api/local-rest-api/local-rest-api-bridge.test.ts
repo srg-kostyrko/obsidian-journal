@@ -8,8 +8,9 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { apiModule } from "../module";
 
-import { LocalRestApiBridge } from "./local-rest-api-bridge";
+import { hostToolCallback, LocalRestApiBridge } from "./local-rest-api-bridge";
 import { recordingLocalRestApi } from "./testing";
+import { McpToolError, type McpTool } from "./tool";
 import { JournalListTool } from "./tools/journal-list";
 import { NoteEnsureTool } from "./tools/note-ensure";
 
@@ -271,5 +272,28 @@ describe("LocalRestApiBridge tool registration", () => {
         fields: expect.objectContaining({ tool: "journal_list" }) as unknown,
       }),
     );
+  });
+});
+
+describe("hostToolCallback", () => {
+  it("wraps a call that throws synchronously, before returning a promise", async () => {
+    const tool: McpTool = {
+      name: "sync_throw",
+      description: "Throws before returning a promise.",
+      input: {},
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      call: () => {
+        throw Object.assign(new TypeError("journal gone"), { code: "journal-not-found", journal: "work" });
+      },
+    };
+
+    const error = await hostToolCallback(tool)({}).catch((error_: unknown) => error_);
+
+    expect(error).toBeInstanceOf(McpToolError);
+    expect(JSON.parse((error as McpToolError).message)).toEqual({
+      code: "journal-not-found",
+      message: "journal gone",
+      journal: "work",
+    });
   });
 });
