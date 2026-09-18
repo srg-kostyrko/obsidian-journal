@@ -40,12 +40,40 @@ export type JournalWrite =
       readonly duration: number;
     };
 
+/** A question a journal or notelet type asks before it creates a note. */
+export interface PromptInfo {
+  readonly variable: string;
+  readonly question: string;
+  readonly type: "text" | "number" | "date" | "toggle" | "select" | "note";
+  readonly required: boolean;
+  /** The note name or folder uses the answer, so creating without it fails. */
+  readonly inPath: boolean;
+  readonly multiline: boolean;
+  readonly options: readonly { readonly label: string; readonly value: string }[];
+}
+
+/** A notelet type and the questions it asks. */
+export interface NoteletTypeInfo {
+  readonly name: string;
+  readonly prompts: readonly PromptInfo[];
+}
+
+/** One problem with the answers a call supplied. */
+export interface AnswerIssue {
+  readonly variable: string;
+  readonly reason: string;
+}
+
 export interface JournalInfo {
   readonly name: string;
   readonly shelf: string | null;
   readonly write: JournalWrite;
   /** The journal's notelet type names, sorted. Empty when the journal defines none. */
   readonly notelets: readonly string[];
+  /** The questions this journal asks before creating a period note. */
+  readonly prompts: readonly PromptInfo[];
+  /** Each notelet type with its questions, sorted by name. `notelets` stays the list of names. */
+  readonly noteletTypes: readonly NoteletTypeInfo[];
 }
 
 /** The journal's note for a period — on disk, or where it would go. */
@@ -96,10 +124,16 @@ export interface EnsureNoteOptions {
    * Ask the journal's creation prompts. Defaults to true, since a caller is typically
    * user-triggered and asking is what makes this behave like the UI. Pass false when the
    * call must not block on a modal; a journal that cannot proceed without an answer then
-   * fails with `prompts-required` instead of hanging. There is no way to supply answers
-   * programmatically — see the Errors section.
+   * fails with `prompts-required` instead of hanging. Supply `answers` instead to
+   * create such a note without asking.
    */
   readonly prompt?: boolean;
+  /**
+   * Answers keyed by each question's `variable` — see `JournalInfo.prompts`. Implies no modal:
+   * neither the questions nor the creation confirmation are shown. Fails with `invalid-answers`
+   * listing every problem. Ignored, though still checked, when the note already exists.
+   */
+  readonly answers?: Readonly<Record<string, unknown>>;
 }
 
 export interface OpenNoteOptions extends EnsureNoteOptions {
@@ -120,6 +154,12 @@ export interface CreateNoteletOptions {
   readonly prompt?: boolean;
   /** Omit to create without opening; pass a mode to create and show. */
   readonly openMode?: "active" | "tab" | "split" | "window";
+  /**
+   * Answers keyed by each question's `variable` — see `NoteletTypeInfo.prompts`. Implies no
+   * modal: neither the questions nor the creation confirmation are shown. Fails with
+   * `invalid-answers` listing every problem.
+   */
+  readonly answers?: Readonly<Record<string, unknown>>;
 }
 
 export interface OpenNoteletOptions {
@@ -136,6 +176,7 @@ export type JournalsApiErrorCode =
   | "notelet-type-not-found"
   | "creation-failed"
   | "prompts-required"
+  | "invalid-answers"
   | "open-failed"
   | "aborted"
   | "plugin-unloaded"
@@ -144,6 +185,8 @@ export type JournalsApiErrorCode =
 export interface JournalsApiError extends Error {
   readonly code: JournalsApiErrorCode;
   readonly journal?: string;
+  /** Set on `invalid-answers`: every rejected, unknown or missing answer. */
+  readonly issues?: readonly AnswerIssue[];
 }
 
 export interface JournalsApiEvents {
