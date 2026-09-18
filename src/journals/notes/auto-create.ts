@@ -28,8 +28,7 @@ export class AutoCreateService {
 
   readonly #noteCreation = inject(SettingsService).getSlice(noteCreationSlice);
 
-  // `number`, not `ReturnType<typeof window.setTimeout>` — see self-write-guard.ts for why that
-  // derivation stops being `number` once Node's ambient timer globals enter the program.
+  // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
   #timer: number | undefined;
   #disposed = false;
 
