@@ -568,6 +568,25 @@ describe("WorkspaceService", () => {
       expect(host.workspace.pinnedPaths).toEqual(new Set());
     });
 
+    it("keeps the pin when another pinned open moved the tab on before the failed load settled", async () => {
+      const { service, host } = withFiles();
+      const load = Promise.withResolvers<void>();
+      host.workspace.pendingLoad = load.promise;
+
+      // The fake keys leaves by path, so a second openNote would retarget a different stand-in; the
+      // leaf this open pinned is moved on directly instead, as a concurrent pinned open would.
+      const getLeaf = vi.spyOn(host.app.workspace, "getLeaf");
+      const failing = service.openNote(a, "tab", daily);
+      await Promise.resolve();
+      const leaf = getLeaf.mock.results.at(0)?.value as { openFile(file: unknown): Promise<void> } | undefined;
+      host.workspace.pendingLoad = null;
+      await leaf?.openFile(host.app.vault.getAbstractFileByPath(b));
+      load.reject(new Error("read failed"));
+
+      expectErr(await failing);
+      expect([...host.workspace.pinnedPaths]).toContain(b);
+    });
+
     it("moves the journal's pinned tab to the note instead of opening another", async () => {
       const { service, host } = withFiles();
       await service.openNote(a, "active", daily);

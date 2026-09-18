@@ -497,6 +497,7 @@ export function createFakeHost(): FakeHost {
         if (value) workspaceState.pinnedPaths.add(held);
         else workspaceState.pinnedPaths.delete(held);
       },
+      getViewState: () => ({ type: assignedType ?? "markdown", state: held === null ? {} : { file: held } }),
       async setViewState(state: { type: string; active?: boolean }): Promise<void> {
         assignedType = state.type;
         workspaceState.viewStateCalls.push({ type: state.type, placement });

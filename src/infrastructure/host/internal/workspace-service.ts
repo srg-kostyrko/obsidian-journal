@@ -127,7 +127,10 @@ export class WorkspaceService {
     try {
       await leaf.openFile(file, { active: true });
     } catch (error) {
-      leaf.setPinned(false);
+      // A concurrent pinned open of the same journal may have moved this tab on to its own note
+      // while the load was pending; that pin is now its, not ours to take back.
+      const held = this.#pathIn(leaf);
+      if (held === null || held === path) leaf.setPinned(false);
       throw error;
     }
   }
