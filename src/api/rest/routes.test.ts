@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { sendError, statusFor } from "./errors";
-import { registerJournalRoutes } from "./routes";
+import { registerJournalRoutes, type NoteContent } from "./routes";
 
 import type { JournalsApi } from "../public-api";
 import type { IRoute, Request, Response } from "express";
@@ -32,6 +32,7 @@ interface FakeResponse {
   body: unknown;
   headers: Record<string, string>;
   redirected: { status: number; url: string } | undefined;
+  ended: boolean;
 }
 
 // onRedirect lets a test observe when redirect() fires relative to other work, without reaching
@@ -39,7 +40,13 @@ interface FakeResponse {
 // type with a deprecated single-arg signature, and @typescript-eslint/no-deprecated flags any
 // reference to the member, not just calls matching the deprecated overload.
 function fakeResponse(onRedirect?: () => void): FakeResponse & Response {
-  const state: FakeResponse = { statusCode: undefined, body: undefined, headers: {}, redirected: undefined };
+  const state: FakeResponse = {
+    statusCode: undefined,
+    body: undefined,
+    headers: {},
+    redirected: undefined,
+    ended: false,
+  };
   const response = {
     ...state,
     status(code: number) {
@@ -55,6 +62,11 @@ function fakeResponse(onRedirect?: () => void): FakeResponse & Response {
     set(name: string, value: string) {
       state.headers[name] = value;
       response.headers[name] = value;
+      return response;
+    },
+    end() {
+      state.ended = true;
+      response.ended = true;
       return response;
     },
     redirect(status: number, url: string) {
@@ -99,9 +111,13 @@ function fakeApi(overrides: Partial<JournalsApi> = {}): JournalsApi {
   } as unknown as JournalsApi;
 }
 
-function register(api: JournalsApi): RecordedRoute[] {
+function fakeContent() {
+  return { replace: vi.fn<NoteContent["replace"]>().mockResolvedValue(undefined) };
+}
+
+function register(api: JournalsApi, content: NoteContent = fakeContent()): RecordedRoute[] {
   const recorded: RecordedRoute[] = [];
-  registerJournalRoutes(fakeAddRoute(recorded), api);
+  registerJournalRoutes(fakeAddRoute(recorded), api, content);
   return recorded;
 }
 
@@ -129,6 +145,10 @@ async function invokeRedirect(
   await vi.waitFor(() => {
     expect(response.redirected).not.toBeUndefined();
   });
+}
+
+function putRequest(body: unknown): Request {
+  return fakeRequest({ params: { name: "work", date: "2026-08-18" }, method: "PUT", body });
 }
 
 function noteWithFile(path: string) {
@@ -831,7 +851,7 @@ describe("registerJournalRoutes", () => {
     });
 
     describe("PUT, POST and PATCH: ensure the note exists first, then redirect", () => {
-      it.each(["put", "post", "patch"] as const)(
+      it.each(["post", "patch"] as const)(
         "%s calls ensureNote with prompt: false, confirm: false, then redirects to its path",
         async (method) => {
           const order: string[] = [];
@@ -855,26 +875,32 @@ describe("registerJournalRoutes", () => {
         },
       );
 
-      it("wraps a prompts-required rejection with a message pointing at the notes endpoint", async () => {
-        const error = Object.assign(new Error("Answers required"), { code: "prompts-required", journal: "work" });
-        const ensureNote = vi.fn().mockRejectedValue(error);
-        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
-        const recorded = register(api);
-        const response = fakeResponse();
+      it.each([
+        ["/journals/:name/:date", "/journals/work/2026-08-18"],
+        ["/journals/:name/:date/*", "/journals/work/2026-08-18/Tasks"],
+      ])(
+        "wraps a prompts-required rejection on PUT %s with a message pointing at the notes endpoint",
+        async (route, path) => {
+          const error = Object.assign(new Error("Answers required"), { code: "prompts-required", journal: "work" });
+          const ensureNote = vi.fn().mockRejectedValue(error);
+          const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+          const recorded = register(api);
+          const response = fakeResponse();
 
-        await invoke(
-          findRoute(recorded, "/journals/:name/:date", "put"),
-          fakeRequest({ params: { name: "work", date: "2026-08-18" }, method: "PUT" }),
-          response,
-        );
+          await invoke(
+            findRoute(recorded, route, "put"),
+            fakeRequest({ params: { name: "work", date: "2026-08-18" }, path, method: "PUT", body: "body" }),
+            response,
+          );
 
-        expect(response.statusCode).toBe(409);
-        expect(response.body).toMatchObject({
-          code: "prompts-required",
-          journal: "work",
-          message: expect.stringContaining("POST /journals/work/notes/2026-08-18") as unknown,
-        });
-      });
+          expect(response.statusCode).toBe(409);
+          expect(response.body).toMatchObject({
+            code: "prompts-required",
+            journal: "work",
+            message: expect.stringContaining("POST /journals/work/notes/2026-08-18") as unknown,
+          });
+        },
+      );
 
       it("put on the wildcard path calls ensureNote and redirects with the suffix appended", async () => {
         const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
@@ -894,6 +920,117 @@ describe("registerJournalRoutes", () => {
 
         expect(ensureNote).toHaveBeenCalledWith("work", "2026-08-18", { prompt: false, confirm: false });
         expect(response.redirected).toEqual({ status: 307, url: "/vault/work/2026-08-18.md/Tasks/Sub" });
+      });
+    });
+
+    describe("PUT without a suffix: replace the whole note, keeping its journal claim", () => {
+      it("ensures the note, replaces its content with the body, then answers 204 with no body", async () => {
+        const order: string[] = [];
+        const ensureNote = vi.fn().mockImplementation(async () => {
+          order.push("ensureNote");
+          return ensureResult(false);
+        });
+        const content = fakeContent();
+        content.replace.mockImplementation(() => {
+          order.push("replace");
+          return Promise.resolve();
+        });
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(findRoute(recorded, "/journals/:name/:date", "put"), putRequest("# New body\n"), response);
+
+        expect(ensureNote).toHaveBeenCalledWith("work", "2026-08-18", { prompt: false, confirm: false });
+        expect(content.replace).toHaveBeenCalledWith("work", "2026-08-18", "# New body\n");
+        expect(order).toEqual(["ensureNote", "replace"]);
+        expect(response.statusCode).toBe(204);
+        expect(response.ended).toBe(true);
+        expect(response.body).toBeUndefined();
+        expect(response.redirected).toBeUndefined();
+      });
+
+      it("replaces with the note's own date, not the date the request named", async () => {
+        const ensureNote = vi.fn().mockResolvedValue({
+          ...ensureResult(false),
+          note: { ...ensureResult(false).note, date: "2026-08-17" },
+        });
+        const content = fakeContent();
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(findRoute(recorded, "/journals/:name/:date", "put"), putRequest("body"), response);
+
+        expect(content.replace).toHaveBeenCalledWith("work", "2026-08-17", "body");
+      });
+
+      it("decodes a byte body as UTF-8", async () => {
+        const content = fakeContent();
+        const api = fakeApi({
+          journalInfo: vi.fn().mockResolvedValue({ name: "work" }),
+          ensureNote: vi.fn().mockResolvedValue(ensureResult(false)),
+        });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(
+          findRoute(recorded, "/journals/:name/:date", "put"),
+          putRequest(new TextEncoder().encode("Café ✓")),
+          response,
+        );
+
+        expect(content.replace).toHaveBeenCalledWith("work", "2026-08-18", "Café ✓");
+        expect(response.statusCode).toBe(204);
+      });
+
+      it.each([
+        ["a parsed JSON object", { content: "x" }],
+        ["no body at all", undefined],
+      ])("gives 400 invalid-request for %s, before creating anything", async (_label, body) => {
+        const ensureNote = vi.fn().mockResolvedValue(ensureResult(true));
+        const content = fakeContent();
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue({ name: "work" }), ensureNote });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(findRoute(recorded, "/journals/:name/:date", "put"), putRequest(body), response);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toMatchObject({
+          code: "invalid-request",
+          message: expect.stringContaining("Content-Type: text/markdown") as unknown,
+        });
+        expect(ensureNote).not.toHaveBeenCalled();
+        expect(content.replace).not.toHaveBeenCalled();
+      });
+
+      it("gives 404 for an unknown journal without touching content", async () => {
+        const content = fakeContent();
+        const api = fakeApi({ journalInfo: vi.fn().mockResolvedValue(null) });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(findRoute(recorded, "/journals/:name/:date", "put"), putRequest("body"), response);
+
+        expect(response.statusCode).toBe(404);
+        expect(content.replace).not.toHaveBeenCalled();
+      });
+
+      it("maps a failed replace through the error body", async () => {
+        const content = fakeContent();
+        content.replace.mockRejectedValue(Object.assign(new Error("Note not found"), { code: "note-not-found" }));
+        const api = fakeApi({
+          journalInfo: vi.fn().mockResolvedValue({ name: "work" }),
+          ensureNote: vi.fn().mockResolvedValue(ensureResult(false)),
+        });
+        const recorded = register(api, content);
+        const response = fakeResponse();
+
+        await invoke(findRoute(recorded, "/journals/:name/:date", "put"), putRequest("body"), response);
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body).toMatchObject({ code: "note-not-found" });
       });
     });
 

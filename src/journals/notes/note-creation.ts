@@ -1,11 +1,10 @@
 import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { basenameOf, NoteMetadataService, NotesService } from "@/infrastructure/host";
+import { basenameOf, NoteMetadataService, NoteNotFoundError, NotesService } from "@/infrastructure/host";
 import type {
   FrontmatterError,
   NoteCreateError,
-  NoteNotFoundError,
   NoteReadError,
   NoteWriteError,
   VaultPath,
@@ -278,6 +277,29 @@ export class NoteCreationService {
       }
       yield* this.#writeClaim(path, mutator).tapErr(() => this.#guard.release(path));
       return { path, created: true as const };
+    });
+  }
+
+  /** Replaces the whole file of the journal's note at `anchor`, keeping the note's journal claim. */
+  replaceContent(
+    name: string,
+    anchor: AnchorString,
+    content: string,
+  ): AsyncResult<{ path: VaultPath }, NoteCreationError> {
+    return attempt.in(this, async function* () {
+      // Built before the write, while the index still holds the entry's endDate: the new body
+      // carries no claim, and its re-parse drops the entry. Stored answers are left out: the
+      // mutator would write them over the ones the new body carries, or bring back ones it dropped.
+      const { answers: _stored, ...metadata } = yield* this.#frontmatter.buildMetadata(name, anchor);
+      const claim = yield* this.#frontmatter.writeMutator(name, metadata);
+      const indexed = this.#index.entryByAnchor(name, anchor);
+      if (indexed.isNone() || this.#notes.find(indexed.value.path).isNone()) {
+        return yield* new Err(new NoteNotFoundError(yield* this.#path.pathFor(name, metadata)));
+      }
+      const path = indexed.value.path;
+      yield* this.#notes.write(path, content);
+      yield* this.#writeClaim(path, claim);
+      return { path };
     });
   }
 

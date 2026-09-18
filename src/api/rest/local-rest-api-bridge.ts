@@ -1,12 +1,17 @@
 import { getAPI, type LocalRestApiPublicApi } from "obsidian-local-rest-api";
 
+import type { AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
+import { NoteNotFoundError } from "@/infrastructure/host";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
+import { JournalNotFoundError } from "@/journals/errors";
+import { NoteCreationService } from "@/journals/notes/note-creation";
 
 import { JournalsApiService } from "../journals-api";
 
-import { registerJournalRoutes } from "./routes";
+import { RestError } from "./errors";
+import { registerJournalRoutes, type NoteContent } from "./routes";
 
 import type { Events } from "obsidian";
 
@@ -16,8 +21,25 @@ export class LocalRestApiBridge {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
   readonly #api = inject(JournalsApiService);
+  readonly #creation = inject(NoteCreationService);
   readonly #logger = inject(LoggerFactoryToken).named("local-rest-api");
   #handle: LocalRestApiPublicApi | undefined;
+
+  // The route hands over the date ensureNote answered with, which is the note's anchor.
+  readonly #content: NoteContent = {
+    replace: async (journal, date, body) => {
+      const result = await this.#creation.replaceContent(journal, date as AnchorString, body);
+      if (result.isOk()) return;
+      const error = result.error;
+      if (error instanceof JournalNotFoundError) {
+        throw new RestError("journal-not-found", `Journal not found: ${journal}`, journal);
+      }
+      if (error instanceof NoteNotFoundError) {
+        throw new RestError("note-not-found", `Note not found: ${journal} ${date}`, journal);
+      }
+      throw new RestError("write-failed", error.message, journal);
+    },
+  };
 
   #register(): void {
     this.#release();
@@ -28,7 +50,7 @@ export class LocalRestApiBridge {
       // #release() something to unregister, or whatever routes it did add before throwing are
       // stuck on the host forever.
       this.#handle = handle;
-      registerJournalRoutes((path) => handle.addRoute(path), this.#api);
+      registerJournalRoutes((path) => handle.addRoute(path), this.#api, this.#content);
     } catch (error) {
       this.#logger.debug("local rest api registration failed", { cause: String(error) });
       this.#release();

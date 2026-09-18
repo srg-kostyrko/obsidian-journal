@@ -3,7 +3,14 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { UserAborted } from "@/infrastructure/flows";
-import { FrontmatterError, NoteCreateError, NoteReadError, NoteWriteError, NotesService } from "@/infrastructure/host";
+import {
+  FrontmatterError,
+  NoteCreateError,
+  NoteNotFoundError,
+  NoteReadError,
+  NoteWriteError,
+  NotesService,
+} from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
@@ -13,6 +20,7 @@ import { JournalsIndex } from "../journals-index";
 import { journalsCoreModule } from "../module";
 import { PromptsUnansweredError } from "../prompts/errors";
 import { buildNoteletType, customJournal, fixedJournal } from "../testing";
+import { VaultSubscriptionService } from "../vault-subscription";
 
 import { AnchorOccupiedError, EmptyNoteNameError, NotePathClaimedError, NotePathHeldByPeriodError } from "./errors";
 import { NoteCreationService } from "./note-creation";
@@ -947,5 +955,127 @@ describe("a derived path a custom-interval journal's note for another interval a
 
     expectOk(ensured);
     expect(harness.host.files.get("2026.md")?.frontmatter).toMatchObject({ "journal-date": "2026-03-09" });
+  });
+});
+
+// The fake's modify leaves a file's frontmatter alone; Obsidian re-parses the new body and
+// fires metadata-changed for it. This stages that re-parse, so the frontmatter a test sees
+// after the write is the body's own, not the note's old claim.
+function bodyCarries(harness: TestHarness, frontmatter: Record<string, unknown>): void {
+  const notes = harness.resolve(NotesService);
+  const write = notes.write.bind(notes);
+  vi.spyOn(notes, "write").mockImplementation((target, content) =>
+    write(target, content).tap(() => {
+      harness.host.emitMetadata(target, { frontmatter });
+    }),
+  );
+}
+
+describe("NoteCreationService.replaceContent", () => {
+  const path = "2026-05-19.md" as VaultPath;
+  const mood: Prompt = { variable: "mood", question: "Mood?", type: "text", frontmatterKey: "mood", required: false };
+
+  async function harnessWithNote(): Promise<TestHarness> {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }, { prompts: [mood] }) } },
+      initialize: [VaultSubscriptionService],
+    });
+    harness.host.putFile(path, "old body", { journal: "daily", "journal-date": "2026-05-19", mood: "sad" });
+    harness.resolve(JournalsIndex).register({
+      journalName: "daily",
+      anchor: meta.anchor,
+      path,
+      answers: { mood: "sad" },
+    });
+    return harness;
+  }
+
+  it("replaces the note's body", async () => {
+    const harness = await harnessWithNote();
+    bodyCarries(harness, {});
+
+    const result = await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body");
+
+    expectOk(result);
+    expect(result.value.path).toBe(path);
+    expect(harness.host.files.get(path)?.content).toBe("new body");
+  });
+
+  it("writes the journal claim back over a body that carries none", async () => {
+    const harness = await harnessWithNote();
+    bodyCarries(harness, {});
+
+    expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
+
+    expect(harness.host.files.get(path)?.frontmatter).toMatchObject({
+      journal: "daily",
+      "journal-date": "2026-05-19",
+    });
+  });
+
+  it("keeps the frontmatter the body carries, answers included", async () => {
+    const harness = await harnessWithNote();
+    bodyCarries(harness, { tags: ["x"], mood: "happy" });
+
+    expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
+
+    expect(harness.host.files.get(path)?.frontmatter).toMatchObject({ tags: ["x"], mood: "happy", journal: "daily" });
+  });
+
+  it("drops an answer the old note had and the body does not", async () => {
+    const harness = await harnessWithNote();
+    bodyCarries(harness, {});
+
+    expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
+
+    expect(harness.host.files.get(path)?.frontmatter).not.toHaveProperty("mood");
+  });
+
+  it("leaves the note registered in the index with no metadata event after the claim", async () => {
+    const harness = await harnessWithNote();
+    bodyCarries(harness, {});
+
+    expectOk(await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body"));
+
+    const entry = harness.resolve(JournalsIndex).entryByAnchor("daily", meta.anchor);
+    expect(entry.isSome() && entry.value.path).toBe(path);
+  });
+
+  it("keeps a custom interval's stored end date", async () => {
+    const weekly = customJournal("weekly", "week", 1, "2026-03-02");
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { weekly } },
+      initialize: [VaultSubscriptionService],
+    });
+    harness.host.putFile("2026-03-02.md", "old body", {
+      journal: "weekly",
+      "journal-date": "2026-03-02",
+      "journal-end-date": "2026-03-05",
+    });
+    harness.resolve(JournalsIndex).register({
+      journalName: "weekly",
+      anchor: anchor("2026-03-02"),
+      path: "2026-03-02.md" as VaultPath,
+      endDate: anchor("2026-03-05"),
+    });
+    bodyCarries(harness, {});
+
+    expectOk(await harness.resolve(NoteCreationService).replaceContent("weekly", anchor("2026-03-02"), "new body"));
+
+    expect(harness.host.files.get("2026-03-02.md")?.frontmatter).toMatchObject({ "journal-end-date": "2026-03-05" });
+  });
+
+  it("fails without writing when the journal has no note at the anchor", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    });
+
+    const result = await harness.resolve(NoteCreationService).replaceContent("daily", meta.anchor, "new body");
+
+    expect(result.isErr() && result.error).toBeInstanceOf(NoteNotFoundError);
+    expect(harness.host.files.has(path)).toBe(false);
   });
 });

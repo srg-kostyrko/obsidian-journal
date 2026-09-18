@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { LogLevelGateToken } from "@/infrastructure/logger";
 import { journalsCoreModule } from "@/journals/module";
+import { NoteCreationService } from "@/journals/notes/note-creation";
+import { fixedJournal } from "@/journals/testing";
+import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -10,7 +13,7 @@ import { apiModule } from "../module";
 
 import { LocalRestApiBridge } from "./local-rest-api-bridge";
 
-import type { IRoute } from "express";
+import type { IRoute, Request, Response } from "express";
 
 const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
@@ -28,6 +31,26 @@ function fakeLocalRestApi() {
     addPublicRoute: vi.fn(),
     addMcpTool: vi.fn(),
     unregister: vi.fn(),
+  };
+}
+
+type Handler = (request: Request, response: Response) => void;
+
+function recordingLocalRestApi() {
+  const handlers = new Map<string, Handler>();
+  const addRoute = vi.fn((path: string) => {
+    const route: Record<string, unknown> = {};
+    for (const method of ["get", "post", "put", "patch", "delete"]) {
+      route[method] = (handler: Handler) => {
+        handlers.set(`${method} ${path}`, handler);
+        return route;
+      };
+    }
+    return route as unknown as IRoute;
+  });
+  return {
+    handlers,
+    api: { apiVersion: 2, addRoute, addPublicRoute: vi.fn(), addMcpTool: vi.fn(), unregister: vi.fn() },
   };
 }
 
@@ -109,6 +132,45 @@ describe("LocalRestApiBridge", () => {
     harness.host.emitWorkspace(HOST_LOADED_EVENT);
 
     expect(api.addRoute).toHaveBeenCalled();
+  });
+
+  it("answers a whole-file PUT through NoteCreationService.replaceContent", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+      data: { journals: { work: fixedJournal("work", { type: "day" }) }, shelves: {} },
+      initialize: [VaultSubscriptionService],
+    });
+    const host = recordingLocalRestApi();
+    harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
+    const replaceContent = vi.spyOn(harness.resolve(NoteCreationService), "replaceContent");
+    harness.resolve(LocalRestApiBridge).initialize();
+    const handler = host.handlers.get("put /journals/:name/:date");
+    if (handler === undefined) throw new Error("no whole-file PUT route registered");
+    let status: number | undefined;
+    const response = {
+      status(code: number) {
+        status = code;
+        return response;
+      },
+      json: vi.fn(),
+      end: vi.fn(),
+    };
+
+    handler(
+      {
+        params: { name: "work", date: "2026-08-18" },
+        body: "new body",
+        path: "/journals/work/2026-08-18",
+      } as unknown as Request,
+      response as unknown as Response,
+    );
+    await vi.waitFor(() => {
+      expect(status).not.toBeUndefined();
+    });
+
+    expect(status).toBe(204);
+    expect(replaceContent).toHaveBeenCalledWith("work", "2026-08-18", "new body");
+    expect(harness.host.files.get("2026-08-18.md")?.content).toBe("new body");
   });
 
   it("unregisters the active handle on dispose", async () => {

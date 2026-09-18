@@ -328,8 +328,72 @@ async function handleEnsureNoteAndRedirect(
   }
 }
 
+/** Writes a journal note's whole file while keeping its journal claim. */
+export interface NoteContent {
+  replace(journal: string, date: string, body: string): Promise<void>;
+}
+
+// The host parses a text/* body to a string and leaves anything else it does not parse as raw
+// bytes; application/json arrives as an object, which is not the note's text.
+function readTextBody(body: unknown): string | undefined {
+  if (typeof body === "string") return body;
+  if (body instanceof Uint8Array) return new TextDecoder().decode(body);
+  return undefined;
+}
+
+// The host's /vault/ PUT would replace the frontmatter along with the body, taking the journal
+// claim with it: the note drops out of the journal and sits orphaned at the period's path. So a
+// whole-file PUT is answered here. A section PUT (with a suffix) still redirects, since the host
+// leaves the frontmatter alone for those.
+async function handleReplaceNote(
+  request: Request,
+  response: Response,
+  api: JournalsApi,
+  content: NoteContent,
+): Promise<void> {
+  try {
+    const name = request.params.name;
+    const info = await api.journalInfo(name);
+    if (info === null) {
+      sendError(response, journalNotFound(name));
+      return;
+    }
+
+    // Read before ensureNote, so a malformed request creates nothing.
+    const body = readTextBody(request.body as unknown);
+    if (body === undefined) {
+      sendError(
+        response,
+        new RestError(
+          "invalid-request",
+          "PUT takes the note's whole content as text. Send it with Content-Type: text/markdown.",
+        ),
+      );
+      return;
+    }
+
+    const date = request.params.date;
+    let result;
+    try {
+      result = await api.ensureNote(name, date, { prompt: false, confirm: false });
+    } catch (error) {
+      sendError(response, wrapPromptsRequired(error, name, date));
+      return;
+    }
+
+    await content.replace(name, result.note.date, body);
+    response.status(204).end();
+  } catch (error) {
+    sendError(response, error);
+  }
+}
+
 /** Registers Journals' surface on the Local REST API host, scoped to `addRoute`'s own handle. */
-export function registerJournalRoutes(addRoute: (path: string) => IRoute, api: JournalsApi): void {
+export function registerJournalRoutes(
+  addRoute: (path: string) => IRoute,
+  api: JournalsApi,
+  content: NoteContent,
+): void {
   // Express 4 does not catch a rejected handler promise, so every handler stays void-returning at
   // the addRoute call site; the actual awaiting (and its own try/catch) lives one level down.
   addRoute("/journals/").get((_request: Request, response: Response) => void handleListJournals(response, api));
@@ -364,8 +428,10 @@ export function registerJournalRoutes(addRoute: (path: string) => IRoute, api: J
       .delete(
         (request: Request, response: Response) => void handleRedirectToExistingNote(request, response, api, hasSuffix),
       )
-      .put(
-        (request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api, hasSuffix),
+      .put((request: Request, response: Response) =>
+        hasSuffix
+          ? void handleEnsureNoteAndRedirect(request, response, api, hasSuffix)
+          : void handleReplaceNote(request, response, api, content),
       )
       .post(
         (request: Request, response: Response) => void handleEnsureNoteAndRedirect(request, response, api, hasSuffix),
