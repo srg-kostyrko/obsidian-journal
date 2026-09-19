@@ -4,8 +4,10 @@ import { inject } from "@/infrastructure/di";
 import { InternalObsidianAppToken, InternalPluginToken } from "@/infrastructure/host/internal/tokens";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 
-import { sendError } from "./errors";
+import { errorBody, sendError } from "./errors";
 import { RestRouteToken, type RestVerb } from "./route";
+import { McpToolError, McpToolToken, type McpTool } from "./tool";
+import { zod3Shape } from "./zod3-shape";
 
 import type { Events } from "obsidian";
 
@@ -13,10 +15,25 @@ const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
 const VERBS: readonly RestVerb[] = ["get", "put", "post", "patch", "delete"];
 
+/** Builds the callback the host runs for an MCP tool. */
+export function hostToolCallback(tool: McpTool): (arguments_: Record<string, unknown>) => Promise<unknown> {
+  // try/await rather than .catch() so a call that throws before returning its promise is wrapped too.
+  return async (arguments_) => {
+    try {
+      return await tool.call(arguments_);
+    } catch (error) {
+      // The host turns a thrown error into tool-error text from its message alone, so the message
+      // carries the same {code, message, journal?, issues?} body a REST caller gets.
+      throw new McpToolError(JSON.stringify(errorBody(error)));
+    }
+  };
+}
+
 export class LocalRestApiBridge {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
   readonly #routes = inject(RestRouteToken);
+  readonly #tools = inject(McpToolToken);
   readonly #logger = inject(LoggerFactoryToken).named("local-rest-api");
   #handle: LocalRestApiPublicApi | undefined;
 
@@ -40,6 +57,26 @@ export class LocalRestApiBridge {
               (request, response) =>
                 void handler(request, response).catch((error: unknown) => sendError(response, error)),
             );
+          }
+        }
+      }
+      // addMcpTool arrived with API version 2; a host predating the apiVersion field is version 1.
+      // Read through a widened type because the published declaration calls the field mandatory.
+      if (((handle as { apiVersion?: number }).apiVersion ?? 1) >= 2) {
+        for (const tool of this.#tools) {
+          // Each tool gets its own try/catch: a name collision (another plugin already registered
+          // "journal_list") must not disable the REST routes above, which the shared try/catch
+          // below would do by releasing the whole handle.
+          try {
+            handle.addMcpTool(
+              tool.name,
+              tool.description,
+              zod3Shape(tool.input),
+              hostToolCallback(tool),
+              tool.annotations,
+            );
+          } catch (error) {
+            this.#logger.warn("mcp tool registration failed", { tool: tool.name, cause: String(error) });
           }
         }
       }

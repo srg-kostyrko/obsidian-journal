@@ -1,6 +1,11 @@
 import { browser, expect } from "@wdio/globals";
 
-import { FixtureFileMissingError, HostPluginNotLoadedError } from "../support/errors.js";
+import {
+  FixtureFileMissingError,
+  HostPluginNotLoadedError,
+  McpSessionIdMissingError,
+  McpStreamEmptyError,
+} from "../support/errors.js";
 import { contentOf, frontmatterOf, waitForContent, waitForJournalFrontmatter } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -48,6 +53,86 @@ async function hostIsLoaded(): Promise<boolean> {
     const plugins = (app as unknown as { plugins: { getPlugin(id: string): unknown } }).plugins;
     return plugins.getPlugin(id) !== null;
   }, HOST_ID);
+}
+
+// The MCP tools ride the host's Streamable HTTP transport (SDK 1.30), a JSON-RPC 2.0 endpoint
+// distinct from the plain REST routes above: a session starts with `initialize`, whose response
+// carries the `mcp-session-id` header every later call must echo, followed by a fire-and-forget
+// `notifications/initialized`. A response body is either plain JSON or SSE framing — only the
+// last `data:` line of an SSE body is the JSON-RPC envelope.
+interface McpRpcResponse {
+  readonly jsonrpc: "2.0";
+  readonly id?: number;
+  readonly result?: unknown;
+  readonly error?: { code: number; message: string; data?: unknown };
+}
+
+async function readMcpBody(response: Response): Promise<McpRpcResponse> {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/event-stream")) return (await response.json()) as McpRpcResponse;
+  const text = await response.text();
+  const last = text.split("\n").findLast((line) => line.startsWith("data:"));
+  if (last === undefined) throw new McpStreamEmptyError();
+  return JSON.parse(last.slice("data:".length).trim()) as McpRpcResponse;
+}
+
+type McpCall = (method: string, params?: Record<string, unknown>) => Promise<McpRpcResponse>;
+
+interface McpSession {
+  readonly call: McpCall;
+  /** Ends the session with the transport's DELETE, so sessions do not pile up on the host across tests. */
+  close(): Promise<void>;
+}
+
+async function mcpSession(): Promise<McpSession> {
+  let sessionId: string | undefined;
+  let nextId = 1;
+
+  function headers(): Record<string, string> {
+    const result: Record<string, string> = {
+      Authorization: `Bearer ${KEY}`,
+      "Content-Type": "application/json",
+      Accept: "application/json, text/event-stream",
+    };
+    if (sessionId !== undefined) result["mcp-session-id"] = sessionId;
+    return result;
+  }
+
+  function send(body: Record<string, unknown>): Promise<Response> {
+    return fetch(`${BASE}/mcp/`, { method: "POST", headers: headers(), body: JSON.stringify(body) });
+  }
+
+  const initResponse = await send({
+    jsonrpc: "2.0",
+    id: nextId++,
+    method: "initialize",
+    params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "e2e", version: "1" } },
+  });
+  const header = initResponse.headers.get("mcp-session-id");
+  if (header === null) throw new McpSessionIdMissingError();
+  sessionId = header;
+  await readMcpBody(initResponse);
+
+  const initializedResponse = await send({ jsonrpc: "2.0", method: "notifications/initialized" });
+  expect(initializedResponse.status).toBe(202);
+
+  return {
+    call: (method, params) => send({ jsonrpc: "2.0", id: nextId++, method, params }).then(readMcpBody),
+    async close() {
+      const response = await fetch(`${BASE}/mcp/`, { method: "DELETE", headers: headers() });
+      expect(response.status).toBe(200);
+    },
+  };
+}
+
+interface McpToolResult {
+  readonly isError?: boolean;
+  readonly content: { type: string; text: string }[];
+}
+
+function toolContentJson<T>(response: McpRpcResponse): T {
+  const result = response.result as McpToolResult;
+  return JSON.parse(result.content[0]?.text ?? "{}") as T;
 }
 
 describe("local rest api interop", () => {
@@ -270,6 +355,102 @@ describe("local rest api interop", () => {
     it("leaves an unauthenticated request to the host's 401", async () => {
       const response = await rest("/journals/", {}, false);
       expect(response.status).toBe(401);
+    });
+  });
+
+  describe("mcp tools", () => {
+    const sessions: McpSession[] = [];
+
+    async function openSession(): Promise<McpCall> {
+      const session = await mcpSession();
+      sessions.push(session);
+      return session.call;
+    }
+
+    afterEach(async () => {
+      const open = [...sessions];
+      sessions.length = 0;
+      await Promise.all(open.map((session) => session.close()));
+    });
+
+    it("lists all four journal tools, with journal_note_ensure requiring journal and date", async () => {
+      const call = await openSession();
+      const response = await call("tools/list");
+      const result = response.result as { tools: { name: string; inputSchema: { required?: string[] } }[] };
+
+      // The host also lists its own built-in tools (vault_read, search_query, …) on the same
+      // endpoint, so this only asserts that ours are present among them, not the whole listing.
+      const names = result.tools.map((tool) => tool.name);
+      expect(names).toEqual(
+        expect.arrayContaining(["journal_list", "journal_note_ensure", "journal_notelet_create", "journal_notes"]),
+      );
+      const noteEnsure = result.tools.find((tool) => tool.name === "journal_note_ensure");
+      expect(noteEnsure?.inputSchema.required).toEqual(expect.arrayContaining(["journal", "date"]));
+    });
+
+    it("creates a work note through journal_note_ensure and claims it for the journal", async () => {
+      const call = await openSession();
+      const response = await call("tools/call", {
+        name: "journal_note_ensure",
+        arguments: { journal: "work", date: "2026-10-05" },
+      });
+
+      const result = response.result as McpToolResult;
+      expect(result.isError).toBeFalsy();
+      const body = toolContentJson<{ created: boolean; path: string }>(response);
+      expect(body.created).toBe(true);
+      expect(body.path).toBe("work/2026-10-05.md");
+
+      await waitForJournalFrontmatter("work/2026-10-05.md", { journal: "work", date: "2026-10-05" });
+      expect(await openModalCount()).toBe(0);
+    });
+
+    it("finds a note journal_note_ensure created through journal_notes", async () => {
+      const call = await openSession();
+      const ensured = await call("tools/call", {
+        name: "journal_note_ensure",
+        arguments: { journal: "work", date: "2026-10-06" },
+      });
+      expect((ensured.result as McpToolResult).isError).toBeFalsy();
+      await waitForJournalFrontmatter("work/2026-10-06.md", { journal: "work", date: "2026-10-06" });
+
+      const response = await call("tools/call", {
+        name: "journal_notes",
+        arguments: { journal: "work", from: "2026-10-06" },
+      });
+
+      const result = response.result as McpToolResult;
+      expect(result.isError).toBeFalsy();
+      const body = toolContentJson<{ notes: { path: string }[] }>(response);
+      expect(body.notes.map((note) => note.path)).toContain("work/2026-10-06.md");
+    });
+
+    it("returns tool-error content for an unknown journal", async () => {
+      const call = await openSession();
+      const response = await call("tools/call", {
+        name: "journal_note_ensure",
+        arguments: { journal: "nope", date: "today" },
+      });
+
+      const result = response.result as McpToolResult;
+      expect(result.isError).toBe(true);
+      const body = toolContentJson<{ code: string }>(response);
+      expect(body.code).toBe("journal-not-found");
+    });
+
+    it("refuses a call missing the required journal argument, naming the field", async () => {
+      const call = await openSession();
+      const response = await call("tools/call", {
+        name: "journal_note_ensure",
+        arguments: { date: "today" },
+      });
+
+      // The host's SDK (1.30) validates arguments before our tool runs and answers a failure as a
+      // tool error, each issue reading "<message> at <field path>". "journal" alone would match
+      // the tool's own name.
+      const result = response.result as McpToolResult;
+      expect(result.isError).toBe(true);
+      expect(result.content[0]?.text).toContain("at journal");
     });
   });
 });

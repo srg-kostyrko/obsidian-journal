@@ -35,8 +35,9 @@ by finding a note from a journal's name and a date instead.
 `-3d` — the same syntax `obsidian://journals` links use; see [Links](/reference/links) for the
 full table. A name matching several journals is not possible: a route always names one journal.
 
-`GET /journals/<name>/notes` takes `from` and `to` as `YYYY-MM-DD`, and an optional `type` that
-narrows the notelets to one type. Give `from` and `to` together, or leave both off — one without
+`GET /journals/<name>/notes` takes `from` and `to` in the same `<date>` syntax as above — `today`,
+`YYYY-MM-DD`, or a shift such as `+1w` — and an optional `type` that narrows the notelets to one
+type. Give `from` and `to` together, or leave both off — one without
 the other answers `400 invalid-request`. Without them, the route answers every note the journal has
 ever written, with an empty `notelets` list — it never lists notelets on its own, only alongside a
 range. With `from` and `to`, it answers the notes and notelets that exist in periods the window
@@ -241,6 +242,45 @@ curl -k -X POST -H "Authorization: Bearer <your-api-key>" \
 ```
 
 `counter` is `null` for a type with no counter, and otherwise orders siblings within the period.
+
+## MCP tools
+
+The host also runs a [Model Context Protocol](https://modelcontextprotocol.io/) server, at `/mcp/`
+on the same port, for MCP-compatible agents rather than scripts. It needs host version 5.1 or
+later. Journals adds four tools to that server automatically — there is nothing to configure.
+Connect a client the way the host's own README describes, under
+[MCP clients](https://github.com/coddingtonbear/obsidian-local-rest-api#mcp-clients): the endpoint,
+the API key header, and example configs for Claude Code, Claude Desktop, Cursor and other clients.
+If another plugin already registered a tool under one of these names, Journals' tool of that name
+is skipped and a warning is logged — the REST routes above, and the host's own tools, keep working
+regardless.
+
+| Tool                     | Arguments                                             | Returns                                                               | Kind           |
+| ------------------------ | ----------------------------------------------------- | --------------------------------------------------------------------- | -------------- |
+| `journal_list`           | none                                                  | `{ journals }`, the same info as [`GET /journals/`](#routes)          | Read-only      |
+| `journal_notes`          | `journal`; `from`; `to` (optional); `type` (optional) | `{ notes, notelets }`, the same shape as `GET /journals/<name>/notes` | Read-only      |
+| `journal_note_ensure`    | `journal`; `date`; `answers` (optional)               | the note, plus whether it was just created                            | Creates a note |
+| `journal_notelet_create` | `journal`; `date`; `type`; `answers` (optional)       | the new notelet                                                       | Creates a note |
+
+`journal`, `date`, `from` and `to` take the same values as the routes above: a date is `today`,
+`YYYY-MM-DD`, or a shift such as `+1w`, and a single day also finds the week, month or other period
+note that contains it. `to` defaults to `from` when left out, so `journal_notes` covers one day or a
+range with the same tool. `answers` follows the same rules as
+[Journals with questions](#journals-with-questions) — keyed by each question's variable name.
+
+`journal_note_ensure` reuses an existing note for the day instead of making a second one, the same
+as `POST /journals/<name>/notes/<date>`. `journal_notelet_create` has no such reuse: every call
+creates another notelet, so do not retry a call that already succeeded.
+
+These tools only ever return vault paths — reading or writing a note's content goes through the
+host's own `vault_read`, `vault_patch`, `vault_append` and the rest of its `vault_*` tools, the same
+way a REST client follows the redirect above.
+
+A failed call raises a tool error. An error Journals raises carries the same JSON body a REST error
+answers — see [Errors](#errors) — except that a `prompts-required` message tells the agent to call
+again with `answers`. Arguments that do not match a tool's schema, such as a missing `journal`, are
+refused by the host before Journals sees them, so that text is the host's own validation message
+instead.
 
 ## What it does not do
 

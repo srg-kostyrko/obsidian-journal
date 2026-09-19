@@ -336,7 +336,7 @@ on it.
 - Express's type dependencies (`@types/express-serve-static-core`, `@types/serve-static`,
   `@types/body-parser`) carry `/// <reference types="node" />`, which bypasses the `"types": []`
   `tsconfig.app.json` inherits from `@vue/tsconfig` the moment anything imports from `"express"` (as
-  `src/api/rest/` does) — Node's ambient globals (`Buffer`, `process`, `require`, `global`,
+  `src/api/local-rest-api/` does) — Node's ambient globals (`Buffer`, `process`, `require`, `global`,
   `__dirname`, `__filename`, `module`, and the ambient `setTimeout`/`clearInterval` overloads that
   return `NodeJS.Timeout`) then typecheck across all of `src/`, even though Obsidian mobile has no
   Node runtime to back them. `no-restricted-globals` bans the bare identifiers in production source

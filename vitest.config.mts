@@ -538,10 +538,14 @@ export default defineConfig({
         //
         // New tip: 94.14 / 89.18 / 91.1 / 96.09 (11757/12488 statements, 5196/5826 branches,
         // 4198/4608 functions, 10240/10656 lines).
-        statements: 94.14,
-        branches: 89.18,
-        functions: 91.1,
-        lines: 96.09,
+        //
+        // Re-measured 2026-09-18; the floor had not been re-measured for several merged PRs before:
+        // 94.47 / 90.01 / 91.62 / 96.36 (15645/16560 statements, 7723/8580 branches,
+        // 5396/5889 functions, 13563/14074 lines).
+        statements: 94.47,
+        branches: 90.01,
+        functions: 91.62,
+        lines: 96.36,
       },
     },
     projects: [

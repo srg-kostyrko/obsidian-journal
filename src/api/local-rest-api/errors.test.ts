@@ -1,7 +1,31 @@
 import { describe, expect, it } from "vitest";
 
-import { sendError, statusFor } from "./errors";
+import { errorBody, sendError, statusFor } from "./errors";
 import { fakeResponse } from "./testing";
+
+describe("errorBody", () => {
+  it("carries code, message, journal and issues from a coded error", () => {
+    const error = Object.assign(new Error("bad answers"), {
+      code: "invalid-answers",
+      journal: "work",
+      issues: [{ variable: "mood", reason: "required" }],
+    });
+    expect(errorBody(error)).toEqual({
+      code: "invalid-answers",
+      message: "bad answers",
+      journal: "work",
+      issues: [{ variable: "mood", reason: "required" }],
+    });
+  });
+
+  it("reports an uncoded error as internal-error with its message", () => {
+    expect(errorBody(new Error("boom"))).toEqual({ code: "internal-error", message: "boom" });
+  });
+
+  it("falls back to the code when a coded error has no message", () => {
+    expect(errorBody({ code: "note-not-found" })).toEqual({ code: "note-not-found", message: "note-not-found" });
+  });
+});
 
 describe("sendError", () => {
   it("falls back to the code, not the literal 'undefined', when the error carries no message", () => {

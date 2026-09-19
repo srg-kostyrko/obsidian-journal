@@ -83,6 +83,25 @@ const obsidianMomentImport = {
 
 const momentImportPaths = [bareMomentImport, obsidianMomentImport];
 
+// The host's MCP schemas are zod 3, but Journals ships none: tool shapes are forged from valibot
+// (src/api/local-rest-api/zod3-shape.ts). These packages are dev-only, for the contract test.
+const hostSchemaMessage = "Dev-only: the MCP contract test uses it; production source forges the shapes from valibot.";
+const hostSchemaImports = ["zod", "zod-to-json-schema", "@modelcontextprotocol/sdk"].map((name) => ({
+  name,
+  allowTypeImports: true,
+  message: hostSchemaMessage,
+}));
+const hostSchemaSubpathImport = {
+  group: ["zod/*", "zod-to-json-schema/*", "@modelcontextprotocol/sdk/*"],
+  allowTypeImports: true,
+  message: hostSchemaMessage,
+};
+// no-restricted-imports never sees an `import()` expression.
+const noHostSchemaDynamicImport = {
+  selector: "ImportExpression[source.value=/^(zod|zod-to-json-schema|@modelcontextprotocol\\/sdk)/]",
+  message: hostSchemaMessage,
+};
+
 // `NoteFileService` is the single place a raw `TFile` leaves the host layer, and it exists
 // only so the public API can hand integrators one. Every other consumer takes the domain
 // `Note` from `NotesService`; the exemption below is `src/api/` and the host itself.
@@ -271,7 +290,13 @@ export default [
       // domain-meaningful check at every site it flags.
       "unicorn/prefer-simple-condition-first": "off",
 
-      "no-restricted-imports": ["error", { paths: momentImportPaths, patterns: [noteFileServiceImport] }],
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [...momentImportPaths, ...hostSchemaImports],
+          patterns: [noteFileServiceImport, hostSchemaSubpathImport],
+        },
+      ],
       "no-restricted-syntax": ["error", noRawError, noStrayDefineModal],
 
       "@eslint-community/eslint-comments/no-use": ["error", { allow: [] }],
@@ -300,7 +325,14 @@ export default [
     files: ["src/**/*.ts"],
     ignores: ["src/infrastructure/di/**"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noEagerMessage, noProductionOverride],
+      "no-restricted-syntax": [
+        "error",
+        noRawError,
+        noStrayDefineModal,
+        noEagerMessage,
+        noProductionOverride,
+        noHostSchemaDynamicImport,
+      ],
     },
   },
   {
@@ -310,7 +342,13 @@ export default [
     files: ["src/**/*.vue"],
     ignores: ["src/infrastructure/di/**"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noStrayDefineModal, noProductionOverride],
+      "no-restricted-syntax": [
+        "error",
+        noRawError,
+        noStrayDefineModal,
+        noProductionOverride,
+        noHostSchemaDynamicImport,
+      ],
     },
   },
   {
@@ -529,6 +567,15 @@ export default [
     },
   },
   {
+    // obsidian-local-rest-api 5.1.0 registers MCP tools through the SDK's deprecated
+    // `McpServer.tool` overload, whose argument sniffing is what the contract tests pin, so both
+    // must make that same call.
+    files: ["src/api/local-rest-api/zod3-shape.test.ts", "src/api/local-rest-api/tools.contract.test.ts"],
+    rules: {
+      "@typescript-eslint/no-deprecated": "off",
+    },
+  },
+  {
     // The other half of that same version floor: the rule wants getSettingDefinitions() so the
     // settings appear in Obsidian's search, and that API is 1.13.0. Revisit when minAppVersion
     // reaches 1.13 — this is a deferred feature, not a rule we disagree with.
@@ -586,7 +633,7 @@ export default [
     // re-listed because rule options replace rather than merge.
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
     rules: {
-      "no-restricted-syntax": ["error", noRawError, noEagerMessage, noProductionOverride],
+      "no-restricted-syntax": ["error", noRawError, noEagerMessage, noProductionOverride, noHostSchemaDynamicImport],
     },
   },
   {
@@ -594,7 +641,13 @@ export default [
     rules: {
       // The calendar module IS the abstraction, so `import { moment } from "obsidian"` belongs
       // here and nowhere else. The bare-package ban still applies.
-      "no-restricted-imports": ["error", { paths: [bareMomentImport], patterns: [noteFileServiceImport] }],
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [bareMomentImport, ...hostSchemaImports],
+          patterns: [noteFileServiceImport, hostSchemaSubpathImport],
+        },
+      ],
     },
   },
   {
@@ -649,8 +702,13 @@ export default [
     // The two directories the TFile escape hatch is for: the API that returns one, and the
     // host layer that owns it.
     files: ["src/api/**/*.ts", "src/infrastructure/host/**/*.ts"],
+    // Listed after the test block, so without this it would switch the rule back on for tests.
+    ignores: ["**/*.test.ts", "**/testing.ts", "**/*.testing.ts", "**/testing/**"],
     rules: {
-      "no-restricted-imports": ["error", { paths: momentImportPaths }],
+      "no-restricted-imports": [
+        "error",
+        { paths: [...momentImportPaths, ...hostSchemaImports], patterns: [hostSchemaSubpathImport] },
+      ],
     },
   },
   {

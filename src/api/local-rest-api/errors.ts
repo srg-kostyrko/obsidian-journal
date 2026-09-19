@@ -29,28 +29,39 @@ export function statusFor(code: string): number {
   return STATUS_BY_CODE[code] ?? 500;
 }
 
-function readErrorCode(error: unknown): string | undefined {
+export function readErrorCode(error: unknown): string | undefined {
   if (typeof error !== "object" || error === null) return undefined;
   const code: unknown = (error as Record<string, unknown>).code;
   return typeof code === "string" ? code : undefined;
 }
 
-export function sendError(response: Response, error: unknown): void {
+export interface ErrorBody {
+  readonly code: string;
+  readonly message: string;
+  readonly journal?: unknown;
+  readonly issues?: unknown;
+}
+
+export function errorBody(error: unknown): ErrorBody {
   const code = readErrorCode(error);
-
   if (code === undefined) {
-    const message = error instanceof Error ? error.message : String(error);
-    response.status(500).json({ code: "internal-error", message });
-    return;
+    return { code: "internal-error", message: error instanceof Error ? error.message : String(error) };
   }
-
   // readErrorCode already confirmed error is a non-null object, so this record read is safe.
   const record = error as Record<string, unknown>;
   // Falling back to the code (rather than String(record.message), which reads "undefined" for a
   // genuinely missing message) keeps the body meaningful when a caller throws a bare {code}.
   const message = typeof record.message === "string" ? record.message : code;
-  const body: Record<string, unknown> = { code, message };
-  if (record.journal !== undefined) body.journal = record.journal;
-  if (record.issues !== undefined) body.issues = record.issues;
-  response.status(statusFor(code)).json(body);
+  return {
+    code,
+    message,
+    ...(record.journal !== undefined && { journal: record.journal }),
+    ...(record.issues !== undefined && { issues: record.issues }),
+  };
+}
+
+export function sendError(response: Response, error: unknown): void {
+  const body = errorBody(error);
+  // statusFor answers 500 for internal-error, like any code it does not list.
+  response.status(statusFor(body.code)).json(body);
 }
