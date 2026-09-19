@@ -43,6 +43,10 @@ export const timelineCalendar: CalendarSurface = calendarSurface(TIMELINE_BLOCK)
 export const NAV_FENCE = "```calendar-nav\n```";
 // The per-note override of the journal's "show previous and next periods" setting.
 export const NAV_SOLO_FENCE = "```calendar-nav\nadjacent: false\n```";
+// The same override by device kind. The suite runs on desktop only, so `mobile` is the one whose
+// result differs from the journal's default.
+export const NAV_MOBILE_ONLY_FENCE = "```calendar-nav\nadjacent: mobile\n```";
+export const NAV_DESKTOP_ONLY_FENCE = "```calendar-nav\nadjacent: desktop\n```";
 export const TIMELINE_FENCE = "```calendar-timeline\nmode: month\nweeks: left\n```";
 // Quarter mode stacks three month grids; adjacent-month days are blanked so a neighbor
 // month's own cells aren't shadowed by duplicated dates.

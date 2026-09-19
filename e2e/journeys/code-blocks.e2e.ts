@@ -9,7 +9,9 @@ import {
   NAV_BLOCK,
   NAV_CURRENT,
   NAV_CURRENT_BLOCK,
+  NAV_DESKTOP_ONLY_FENCE,
   NAV_FENCE,
+  NAV_MOBILE_ONLY_FENCE,
   NAV_NEXT,
   NAV_NEXT_BLOCK,
   NAV_PANE_WIDTHS,
@@ -206,6 +208,22 @@ describe("code blocks", () => {
         await expect($(`${NAV_VIEW} .nav-block-placeholder`)).not.toExist();
         const { group, content } = await navCurrentGroupWidths();
         expect(group).toBeLessThan(content);
+      });
+
+      it("hides the adjacent periods on desktop when the fence shows them on mobile only", async () => {
+        await renderBlock("nav/mobile-only.md", hostNote("daily", "2026-07-20", NAV_MOBILE_ONLY_FENCE), NAV_VIEW);
+        await $(NAV_CURRENT_BLOCK).waitForExist({ timeoutMsg: "current nav block did not render" });
+
+        await expect($(NAV_PREVIOUS_BLOCK)).not.toExist();
+        await expect($(NAV_NEXT_BLOCK)).not.toExist();
+        await expect($(NAV_NEXT)).toExist();
+      });
+
+      it("shows the adjacent periods on desktop when the fence shows them on desktop only", async () => {
+        await renderBlock("nav/desktop-only.md", hostNote("daily", "2026-07-22", NAV_DESKTOP_ONLY_FENCE), NAV_VIEW);
+
+        await $(NAV_PREVIOUS_BLOCK).waitForExist({ timeoutMsg: "previous nav block did not render on desktop" });
+        await expect($(NAV_NEXT_BLOCK)).toExist();
       });
 
       it("still opens the next period from the arrow when the adjacent periods are hidden", async () => {

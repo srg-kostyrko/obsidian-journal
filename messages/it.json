@@ -223,6 +223,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "Mostra i periodi precedente e successivo",
+  "nav_block_section_adjacent_all": "Desktop e dispositivi mobili",
+  "nav_block_section_adjacent_desktop": "Solo desktop",
+  "nav_block_section_adjacent_mobile": "Solo dispositivi mobili",
+  "nav_block_section_adjacent_none": "Mai",
   "block_lines_decorate_whole_label": "Decora l'intero blocco",
   "block_lines_empty": "Nessuna riga finora. Aggiungine una.",
   "block_lines_add_line": "Aggiungi riga",

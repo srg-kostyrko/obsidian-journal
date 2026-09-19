@@ -223,6 +223,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "Vorherigen und nächsten Zeitraum anzeigen",
+  "nav_block_section_adjacent_all": "Desktop und Mobilgeräte",
+  "nav_block_section_adjacent_desktop": "Nur Desktop",
+  "nav_block_section_adjacent_mobile": "Nur Mobilgeräte",
+  "nav_block_section_adjacent_none": "Nie",
   "block_lines_decorate_whole_label": "Gesamten Block dekorieren",
   "block_lines_empty": "Noch keine Zeilen. Füge eine hinzu.",
   "block_lines_add_line": "Zeile hinzufügen",

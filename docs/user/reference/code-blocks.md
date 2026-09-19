@@ -34,12 +34,13 @@ Draws the journal's [navigation block](/navigation-blocks) for the note it sits 
 its lines, segments and arrows are set in the journal's settings, not here. It needs a note connected
 to a journal. `calendar-nav` and `interval-nav` are older names for the same block and still work.
 
-| Option     | Values          | Default                                          |
-| ---------- | --------------- | ------------------------------------------------ |
-| `adjacent` | `true`, `false` | the journal's **Show previous and next periods** |
+| Option     | Values                               | Default                                          |
+| ---------- | ------------------------------------ | ------------------------------------------------ |
+| `adjacent` | `true`, `false`, `desktop`, `mobile` | the journal's **Show previous and next periods** |
 
 `adjacent: false` shows only the current period and its arrows; `adjacent: true` shows the previous and
-next periods where the journal hides them.
+next periods where the journal hides them. `adjacent: desktop` shows them on a computer and not on a phone
+or tablet, and `adjacent: mobile` the other way round.
 
 ````markdown
 ```journal-nav

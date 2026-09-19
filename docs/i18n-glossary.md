@@ -310,6 +310,11 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   a **desktop** and a **mobile** device — the Romance and Slavic locales say "computer"
   and "mobile device" rather than transliterating, while de/it/ja/ko/zh keep Obsidian's own
   Desktop/Mobile pair — and whether that matches what each language's Obsidian UI says.
+- The four `nav_block_section_adjacent_{all,desktop,mobile,none}` keys reuse each locale's
+  `note_creation_devices_*` wording verbatim for the three device choices, so the two
+  device-scoped settings name the devices alike; `none` is that locale's "Never" from
+  `journal_edit_end_kind`, except ja, ko and zh, whose "never" there reads as "no end" and
+  which say "don't show" instead. Not native-verified.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

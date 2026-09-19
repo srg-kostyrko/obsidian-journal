@@ -16,14 +16,22 @@ describe("navBlockSchema", () => {
   });
 
   it("reads a boolean adjacent as the override of the journal's setting", () => {
-    expect(v.parse(navBlockSchema, { adjacent: false })).toEqual({ adjacent: false });
     expect(v.parse(navBlockSchema, { adjacent: true })).toEqual({ adjacent: true });
+    expect(v.parse(navBlockSchema, { adjacent: false })).toEqual({ adjacent: false });
   });
 
-  it("degrades a non-boolean adjacent to unset rather than an error panel", () => {
+  it("reads a device name as the override of the journal's setting", () => {
+    expect(v.parse(navBlockSchema, { adjacent: "desktop" })).toEqual({ adjacent: "desktop" });
+    expect(v.parse(navBlockSchema, { adjacent: "mobile" })).toEqual({ adjacent: "mobile" });
+  });
+
+  it("degrades any other adjacent to unset rather than an error panel", () => {
     // YAML 1.2 (the `yaml` library Obsidian bundles) reads only true/false as booleans, so an
-    // on/off word arrives as a string.
+    // on/off word arrives as a string. The stored setting's own words are not fence values:
+    // true and false already say them.
     expect(v.parse(navBlockSchema, { adjacent: "no" })).toEqual({ adjacent: undefined });
+    expect(v.parse(navBlockSchema, { adjacent: "all" })).toEqual({ adjacent: undefined });
+    expect(v.parse(navBlockSchema, { adjacent: "Desktop" })).toEqual({ adjacent: undefined });
     expect(v.parse(navBlockSchema, { adjacent: 0 })).toEqual({ adjacent: undefined });
     expect(v.parse(navBlockSchema, { adjacent: null })).toEqual({ adjacent: undefined });
   });

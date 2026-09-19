@@ -6,7 +6,7 @@ import { hasOffsetCondition, useCellDecorations } from "@/decorations";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
-import { defineOpenMode, type CodeBlockProps } from "@/infrastructure/host";
+import { defineOpenMode, PlatformService, type CodeBlockProps } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 import {
   CycleService,
@@ -20,6 +20,7 @@ import { ShelvesRepository, type ShelfConfig } from "@/shelves";
 import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
+import { adjacentShownOn, fenceAdjacentDevices } from "../adjacent-devices";
 import { navBlockDecorationScope, navSegmentFixedScope, navSegmentIntervalScope } from "../decoration-scopes";
 import { periodForJournal } from "../period-for-journal";
 import { resolveSegmentDecoration, type SegmentDecorationCell } from "../segment-decoration";
@@ -37,6 +38,7 @@ const cycle = useService(CycleService);
 const timeline = useService(TimelineService);
 const shelves = useService(ShelvesRepository);
 const flows = useService(Flows);
+const platform = useService(PlatformService);
 
 const indexVersion = useIndexVersion();
 
@@ -79,8 +81,14 @@ const adjacent = computed<{ previous: AnchorString | undefined; next: AnchorStri
   };
 });
 
-// The fence overrides the journal in both directions; unset there leaves the journal in charge.
-const showAdjacent = computed(() => config.adjacent ?? journal.value?.navBlock.showAdjacent ?? true);
+// The fence overrides the journal in every direction; unset there leaves the journal in charge.
+const showAdjacent = computed(() => {
+  const devices =
+    config.adjacent === undefined
+      ? (journal.value?.navBlock.showAdjacent ?? "all")
+      : fenceAdjacentDevices(config.adjacent);
+  return adjacentShownOn(devices, platform.current());
+});
 
 const periods = computed<Period[]>(() => {
   const currentJournal = journal.value;
