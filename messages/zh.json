@@ -1904,6 +1904,7 @@
   "journal_picker_placeholder": "搜索日记",
   "journal_prompt_answer_required": "此问题必须回答。",
   "journal_prompt_answer_required_in_path": "此回答会用于笔记名称，因此不能留空。",
+  "journal_prompt_answer_path_characters": "此回答会用于笔记名称或文件夹，因此不能包含 {characters} 或换行。",
   "journal_prompt_answer_reserved": "“{name}”是为未回答的问题保留的。请输入其他内容。",
   "journal_prompt_answers_modal_title": "在“{journal}”中新建笔记",
   "journal_prompt_answers_notelet_modal_title": "在“{journal}”中新建 {type} 子笔记",

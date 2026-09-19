@@ -6,6 +6,7 @@ import { hasUnlinkableCharacters } from "@/ui/note-link-characters";
 
 import { isLongText, isRequired, type Prompt, type PromptAnswer } from "./config";
 import { toNoteLink } from "./note-link";
+import { hasUnsafePathCharacters, UNSAFE_PATH_CHARACTERS } from "./path-characters";
 import { isPlaceholder } from "./placeholder";
 import { promptsInPath, type PromptOwner } from "./prompts-in-path";
 
@@ -23,11 +24,16 @@ const blank: Read = { kind: "blank" };
 const issue = (reason: string): Read => ({ kind: "issue", reason });
 const answer = (value: PromptAnswer): Read => ({ kind: "answer", value });
 
-function readText(prompt: Prompt, value: unknown): Read {
+function readText(prompt: Prompt, value: unknown, inPath: boolean): Read {
   if (typeof value !== "string") return issue("expected a string");
   if (value.trim() === "") return blank;
   if (isPlaceholder(value)) return issue(`"${value}" is reserved for an unanswered question`);
   if (!isLongText(prompt) && /[\r\n]/.test(value)) return issue("this question takes one line");
+  if (inPath && hasUnsafePathCharacters(value)) {
+    return issue(
+      `the note name or folder uses this answer, so it cannot hold ${UNSAFE_PATH_CHARACTERS} or a line break`,
+    );
+  }
   return answer(value);
 }
 
@@ -43,10 +49,10 @@ function readNote(value: unknown, linkTextFor: LinkTextResolver): Read {
   return link === undefined ? blank : answer(link);
 }
 
-function readOne(prompt: Prompt, value: unknown, linkTextFor: LinkTextResolver): Read {
+function readOne(prompt: Prompt, value: unknown, linkTextFor: LinkTextResolver, inPath: boolean): Read {
   if (value === undefined || value === null) return blank;
   return match(prompt)
-    .with({ type: "text" }, (text) => readText(text, value))
+    .with({ type: "text" }, (text) => readText(text, value, inPath))
     .with({ type: "number" }, () =>
       typeof value === "number" && Number.isFinite(value) ? answer(value) : issue("expected a finite number"),
     )
@@ -96,7 +102,12 @@ export function readAnswerInput(
       issues.push({ variable, reason: "expected a plain value, not a getter" });
       continue;
     }
-    const read = readOne(prompt, descriptor === undefined ? undefined : descriptor.value, linkTextFor);
+    const read = readOne(
+      prompt,
+      descriptor === undefined ? undefined : descriptor.value,
+      linkTextFor,
+      inPath.has(variable),
+    );
     if (read.kind === "answer") entries.push([variable, read.value]);
     else if (read.kind === "issue") issues.push({ variable, reason: read.reason });
     else if (inPath.has(variable)) issues.push({ variable, reason: "the note name or folder uses this answer" });

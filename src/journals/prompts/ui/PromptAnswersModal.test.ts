@@ -11,6 +11,7 @@ import type { TypeId } from "@/journals/notelets/config";
 import { buildNoteletMetadata, buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
+import { UNSAFE_PATH_CHARACTERS } from "../path-characters";
 import { PROMPT_PLACEHOLDER } from "../placeholder";
 
 import PromptAnswersModal from "./PromptAnswersModal.vue";
@@ -126,6 +127,26 @@ describe("PromptAnswersModal", () => {
       });
       expect(submit).not.toHaveBeenCalled();
     });
+
+    it("refuses an answer holding a character a file name cannot", async () => {
+      const { submit } = harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "named", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
+      });
+
+      await userEvent.type(screen.getByRole("textbox"), "work: urgent");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(m.journal_prompt_answer_path_characters({ characters: UNSAFE_PATH_CHARACTERS })),
+        ).toBeTruthy();
+      });
+      expect(submit).not.toHaveBeenCalled();
+    });
   });
 
   describe("when no prompt reaches the note name", () => {
@@ -168,6 +189,23 @@ describe("PromptAnswersModal", () => {
 
       await waitFor(() => {
         expect(submit).toHaveBeenCalledWith({ mood: "" });
+      });
+    });
+
+    it("keeps a character a file name cannot hold when the answer reaches only the body", async () => {
+      const { submit } = harness.renderModal(PromptAnswersModal, {
+        props: {
+          metadata: { journalName: "plain", anchor: anchor("2024-01-01") },
+          confirming: false,
+          periodLabel: "2024-01-01",
+        },
+      });
+
+      await userEvent.type(screen.getByRole("textbox"), "work: urgent");
+      await userEvent.click(screen.getByText(m.journal_prompt_submit()));
+
+      await waitFor(() => {
+        expect(submit).toHaveBeenCalledWith({ mood: "work: urgent" });
       });
     });
 

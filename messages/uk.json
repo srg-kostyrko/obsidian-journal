@@ -1961,6 +1961,7 @@
   "journal_picker_placeholder": "Пошук журналів",
   "journal_prompt_answer_required": "На це запитання потрібно відповісти.",
   "journal_prompt_answer_required_in_path": "Ця відповідь використовується в назві нотатки, тому вона не може бути порожньою.",
+  "journal_prompt_answer_path_characters": "Ця відповідь використовується в назві або папці нотатки, тому вона не може містити {characters} або розрив рядка.",
   "journal_prompt_answer_reserved": "«{name}» зарезервовано для запитання без відповіді. Введіть щось інше.",
   "journal_prompt_answers_modal_title": "Нова нотатка в журналі «{journal}»",
   "journal_prompt_answers_notelet_modal_title": "Нова піднотатка типу {type} в журналі «{journal}»",

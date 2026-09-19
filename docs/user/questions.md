@@ -60,6 +60,9 @@ A question left blank writes nothing into the body.
   if you try.
 - **A yes/no, long text or note link answer can't be part of a note name or folder.** Use a choice
   question instead of yes/no.
+- **A typed answer there can't hold `* " \ / < > : | ? # ^ [ ]` or a line break.** Windows can't
+  save those in a file name and links break on them, so they are refused on every device, since
+  the vault may sync to one that can't. A `/` doesn't make a subfolder either.
 - **Auto-create can't answer.** A journal with **Auto-create today's note** on can't have a question in
   its note name, since nobody is there to answer it. Turn one of them off.
 - **Free text in a name stops auto-attach.** A note you make yourself can only be matched back to the
@@ -140,6 +143,8 @@ the name depends on an answer — and each question.
 
 - **Create** writes the note with your answers. **Cancel** creates nothing.
 - A required question can't be left blank, and neither can one whose answer goes into the note name.
+  An answer that goes into the note name or folder is also refused if it holds a character a
+  file name can't.
 - A choice question that is not required offers **(none)**.
 - A long text question has a box that spans the dialog. **Enter** starts a new line;
   **Ctrl+Enter** (**Cmd+Enter** on macOS) creates the note.

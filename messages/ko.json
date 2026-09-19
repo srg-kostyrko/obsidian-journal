@@ -2052,6 +2052,7 @@
   "journal_picker_placeholder": "저널 검색",
   "journal_prompt_answer_required": "이 질문에는 답변이 필요합니다.",
   "journal_prompt_answer_required_in_path": "이 답변은 노트 이름에 사용되므로 비워 둘 수 없습니다.",
+  "journal_prompt_answer_path_characters": "이 답변은 노트 이름 또는 폴더에 사용되므로 {characters} 또는 줄바꿈을 포함할 수 없습니다.",
   "journal_prompt_answer_reserved": "\"{name}\"은(는) 답변하지 않은 질문을 위해 예약되어 있습니다. 다른 내용을 입력하세요.",
   "journal_prompt_answers_modal_title": "'{journal}'의 새 노트",
   "journal_prompt_answers_notelet_modal_title": "'{journal}'의 새 {type} 서브노트",

@@ -133,6 +133,32 @@ describe("readAnswerInput", () => {
     it("rejects the unanswered placeholder as an answer", () => {
       expect(issuesOf([mood], { mood: PROMPT_PLACEHOLDER })).toHaveLength(1);
     });
+
+    it.each(["a:b", "a/b", "a?b", "a|b", "a#b"])("rejects %j when the note name uses the answer", (value) => {
+      expect(issuesOf([mood], { mood: value }, "{{date}} {{mood}}")).toEqual([
+        { variable: "mood", reason: expect.stringContaining("note name or folder") as string },
+      ]);
+    });
+
+    it("rejects a subfolder in an answer the folder uses", () => {
+      const result = readAnswerInput(
+        { nameTemplate: "{{date}}", folder: "Logs/{{mood}}", prompts: [mood] },
+        { mood: "work/urgent" },
+        linkTextFor,
+      );
+
+      expect(result.isErr() && result.error).toEqual([{ variable: "mood", reason: expect.any(String) as string }]);
+    });
+
+    it("rejects a line break in a long answer the note name uses", () => {
+      expect(issuesOf([diary], { diary: "one\ntwo" }, "{{date}} {{diary}}")).toHaveLength(1);
+    });
+
+    it("keeps those characters in an answer that reaches only the body", () => {
+      const result = read([mood], { mood: "a:b/c?d|e#f" });
+
+      expect(result.isOk() && result.value).toEqual({ mood: "a:b/c?d|e#f" });
+    });
   });
 
   describe("number", () => {
