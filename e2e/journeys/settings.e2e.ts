@@ -472,9 +472,7 @@ describe("settings", () => {
 
       // SortableJS runs in native HTML5 drag mode here; WDIO's pointer Actions don't trigger it,
       // so the drag is driven by synthetic native DragEvents dispatched at element coordinates,
-      // sharing one DataTransfer across the sequence. SortableJS finishes its drag-start setup
-      // (BZ.active, the document dragover listener) inside a requestAnimationFrame scheduled from
-      // its dragstart handler, so the move/onEnd only run if dragover is dispatched a frame later.
+      // sharing one DataTransfer across the sequence.
       await browser.execute(async () => {
         const frames = [...document.querySelectorAll<HTMLElement>(".jv-item-frame")];
         const sourceFrame = frames[0];
@@ -506,11 +504,18 @@ describe("settings", () => {
           );
         };
 
+        // SortableJS arms the drag (Sortable.active) in a setTimeout(0) from its dragstart handler,
+        // marking the dragged element with its ghost class; a dragover before then is ignored.
+        // Counting animation frames instead races that timer, and loses on a loaded CI runner.
+        const waitForDragArmed = async (): Promise<void> => {
+          for (let i = 0; i < 200 && !document.querySelector(".sortable-ghost"); i++) {
+            await new Promise<void>((resolve) => window.setTimeout(resolve, 10));
+          }
+        };
         // pointerdown on the grip flips SortableJS into drag-start prep (sets draggable=true).
         firePointer(grip, "pointerdown", source);
         fireDrag(sourceFrame, "dragstart", source);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await waitForDragArmed();
         fireDrag(targetFrame, "dragenter", target);
         fireDrag(targetFrame, "dragover", target);
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -574,10 +579,15 @@ describe("settings", () => {
           );
         };
 
+        // The toolbar drag test explains this wait; an execute body is serialized, so it can't be shared.
+        const waitForDragArmed = async (): Promise<void> => {
+          for (let i = 0; i < 200 && !document.querySelector(".sortable-ghost"); i++) {
+            await new Promise<void>((resolve) => window.setTimeout(resolve, 10));
+          }
+        };
         firePointer(sourceFrame, "pointerdown", source);
         fireDrag(sourceFrame, "dragstart", source);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await waitForDragArmed();
         fireDrag(targetFrame, "dragenter", target);
         fireDrag(targetFrame, "dragover", target);
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -629,23 +639,21 @@ describe("settings", () => {
             new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer, clientX: p.x, clientY: p.y }),
           );
         };
+        // The toolbar drag test explains this wait; an execute body is serialized, so it can't be shared.
+        const waitForDragArmed = async (): Promise<void> => {
+          for (let i = 0; i < 200 && !document.querySelector(".sortable-ghost"); i++) {
+            await new Promise<void>((resolve) => window.setTimeout(resolve, 10));
+          }
+        };
         const from = centerOf(source);
         firePointer(source, "pointerdown", from);
         fireDrag(source, "dragstart", from);
-        // SortableJS finishes its drag-start setup inside a requestAnimationFrame scheduled from
-        // its own dragstart handler, so the move only registers a frame later.
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await waitForDragArmed();
 
         const to = centerOf(zone);
         fireDrag(zone, "dragenter", to);
+        // An empty container takes the dragged node on its first armed dragover.
         fireDrag(zone, "dragover", to);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        // SortableJS's first dragover after entering a container only sets its state up; the
-        // node is parked on a later one. One dragover is enough on a fast machine and is not
-        // on CI, so drive a second rather than racing it — the sibling drag test does the same.
-        fireDrag(zone, "dragover", to);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         const all = [...document.querySelectorAll<HTMLElement>(".nav-line-drop")];
         const armed = {
           occupied: all.filter((z) => z.childElementCount > 0).length,
