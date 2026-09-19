@@ -15,16 +15,15 @@ const HOST_LOADED_EVENT = "obsidian-local-rest-api:loaded";
 
 const VERBS: readonly RestVerb[] = ["get", "put", "post", "patch", "delete"];
 
-/**
- * The callback the host runs for a tool. The host turns a thrown error into tool-error text from its
- * message, so the message carries the same {code, message, journal?, issues?} body a REST caller gets.
- */
+/** Builds the callback the host runs for an MCP tool. */
 export function hostToolCallback(tool: McpTool): (arguments_: Record<string, unknown>) => Promise<unknown> {
   // try/await rather than .catch() so a call that throws before returning its promise is wrapped too.
   return async (arguments_) => {
     try {
       return await tool.call(arguments_);
     } catch (error) {
+      // The host turns a thrown error into tool-error text from its message alone, so the message
+      // carries the same {code, message, journal?, issues?} body a REST caller gets.
       throw new McpToolError(JSON.stringify(errorBody(error)));
     }
   };
