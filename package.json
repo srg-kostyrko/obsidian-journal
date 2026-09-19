@@ -50,8 +50,8 @@
   "dependencies": {
     "@inlang/paraglide-js": "^2.23.2",
     "@vee-validate/valibot": "^4.15.1",
-    "@vueuse/core": "^14.4.0",
-    "@vueuse/integrations": "^14.4.0",
+    "@vueuse/core": "^15.0.0",
+    "@vueuse/integrations": "^15.0.0",
     "nanoevents": "^10.0.0",
     "nanoid": "^6.0.1",
     "obsidian": "^1.13.1",
