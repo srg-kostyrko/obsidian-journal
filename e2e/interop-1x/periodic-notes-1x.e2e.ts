@@ -9,7 +9,7 @@ import {
   openSettings,
   waitForDialogClosed,
 } from "../support/settings.js";
-import { waitForJournalFrontmatter } from "../support/vault.js";
+import { waitForDistinctActiveNote, waitForJournalFrontmatter } from "../support/vault.js";
 
 // Runs only under the Periodic Notes 1.x capability (see wdio.conf.mts).
 async function importFromMaintenance(): Promise<void> {
@@ -50,6 +50,10 @@ describe("periodic notes 1.x", () => {
 
     before(async () => {
       await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-import-pn1", plugins: ["journals", "periodic-notes"] });
+      // The Work set opens today's note at startup from Periodic Notes' own onLayoutReady callback,
+      // which can run after reloadObsidian resolves; opening that note closes the settings modal, so
+      // settings must not open until it has landed.
+      await waitForDistinctActiveNote(undefined, { timeoutMsg: "Periodic Notes did not open its startup note" });
     });
     after(closeSettings);
 
