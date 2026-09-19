@@ -132,7 +132,12 @@ function onDropAtStart(orderedIds: string[]): void {
     </UiSettingRow>
 
     <UiSettingRow v-if="navigation" :name="m.nav_block_section_adjacent_label()">
-      <UiToggle v-model="config[field].showAdjacent" />
+      <UiDropdown v-model="config[field].showAdjacent" :aria-label="m.nav_block_section_adjacent_label()">
+        <option value="all">{{ m.nav_block_section_adjacent_all() }}</option>
+        <option value="desktop">{{ m.nav_block_section_adjacent_desktop() }}</option>
+        <option value="mobile">{{ m.nav_block_section_adjacent_mobile() }}</option>
+        <option value="none">{{ m.nav_block_section_adjacent_none() }}</option>
+      </UiDropdown>
     </UiSettingRow>
 
     <UiSettingRow :name="m.block_lines_decorate_whole_label()">

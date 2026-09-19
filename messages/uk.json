@@ -212,6 +212,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "Показувати попередній і наступний періоди",
+  "nav_block_section_adjacent_all": "Комп'ютер і мобільні пристрої",
+  "nav_block_section_adjacent_desktop": "Лише комп'ютер",
+  "nav_block_section_adjacent_mobile": "Лише мобільні пристрої",
+  "nav_block_section_adjacent_none": "Ніколи",
   "block_lines_decorate_whole_label": "Оформлювати весь блок",
   "block_lines_empty": "Ще немає рядків. Додайте один.",
   "block_lines_add_line": "Додати рядок",

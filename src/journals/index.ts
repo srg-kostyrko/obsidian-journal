@@ -38,6 +38,7 @@ export type {
   NavBlockSegmentLink,
   NavBlockSegment,
   JournalNavBlock,
+  AdjacentDevices,
 } from "./config";
 
 export type { Prompt, PromptOption, PromptType, PromptAnswer } from "./prompts/config";

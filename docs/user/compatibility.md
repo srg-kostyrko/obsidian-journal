@@ -6,7 +6,9 @@ Journals needs Obsidian 1.8.7 or later and runs on desktop and mobile. The inter
 language setting.
 
 Automatic note creation can be limited to desktop or mobile, which helps when a slow sync lets two
-devices each create today's note — see [Notes](/notes#auto-create-today-s-note).
+devices each create today's note — see [Notes](/notes#auto-create-today-s-note). A navigation block's
+previous and next periods can be limited the same way, to keep a phone's block to the current period —
+see [Navigation blocks](/navigation-blocks#block-settings).
 
 ## Plugins that do the same job
 

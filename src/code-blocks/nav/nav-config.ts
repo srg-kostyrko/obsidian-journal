@@ -2,15 +2,18 @@ import * as v from "valibot";
 
 import { asRecord } from "../fence-record";
 
-function asAdjacent(value: unknown): boolean | undefined {
-  return typeof value === "boolean" ? value : undefined;
+import type { FenceAdjacent } from "./adjacent-devices";
+
+function asAdjacent(value: unknown): FenceAdjacent | undefined {
+  return typeof value === "boolean" || value === "desktop" || value === "mobile" ? value : undefined;
 }
 
 const navBlockEntries = {
-  // Unset follows the journal's own "show previous and next periods" setting. A boolean is
-  // required rather than an on/off word: YAML 1.2 (the `yaml` library Obsidian bundles) reads
-  // only true/false as booleans, so `on` would arrive as the string "on" and degrade to unset —
-  // the same contract the timeline's `navigation` option keeps.
+  // Unset follows the journal's own "show previous and next periods" setting. Everywhere and
+  // nowhere take a boolean rather than an on/off word: YAML 1.2 (the `yaml` library Obsidian
+  // bundles) reads only true/false as booleans, so `on` would arrive as the string "on" and
+  // degrade to unset — the same contract the timeline's `navigation` option keeps. `desktop` and
+  // `mobile` name the one device kind that shows them.
   adjacent: v.pipe(v.optional(v.unknown()), v.transform(asAdjacent)),
 };
 

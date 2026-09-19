@@ -69,8 +69,11 @@ Examples: [Week and month lines in a daily note](#week-and-month-lines-in-a-dail
   note**: stepping always moves one period, creating that note if it's missing; jumping skips periods
   that have no note, and never creates one. Clicking a segment always creates its note, whichever you
   choose.
-- **Show previous and next periods** — off draws only the current period and its arrows. A single note
-  can override it with `adjacent: true` or `adjacent: false` in the code block.
+- **Show previous and next periods** — **Desktop and mobile**, **Desktop only**, **Mobile only** or
+  **Never**. Where they are not shown, the block draws only the current period and its arrows. **Desktop
+  only** keeps the neighbors on a computer and leaves a phone with the current period alone; tablets
+  count as mobile. A single note can override it with `adjacent: true`, `adjacent: false`,
+  `adjacent: desktop` or `adjacent: mobile` in the code block.
 - **Decorate whole block** — paint the whole block with the journal's own decorations for the note's
   period.
 

@@ -212,6 +212,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "显示上一个和下一个时段",
+  "nav_block_section_adjacent_all": "桌面端和移动端",
+  "nav_block_section_adjacent_desktop": "仅桌面端",
+  "nav_block_section_adjacent_mobile": "仅移动端",
+  "nav_block_section_adjacent_none": "不显示",
   "block_lines_decorate_whole_label": "装饰整个块",
   "block_lines_empty": "暂无行。添加一行。",
   "block_lines_add_line": "添加行",

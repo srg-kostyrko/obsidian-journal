@@ -159,6 +159,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "Show previous and next periods",
+  "nav_block_section_adjacent_all": "Desktop and mobile",
+  "nav_block_section_adjacent_desktop": "Desktop only",
+  "nav_block_section_adjacent_mobile": "Mobile only",
+  "nav_block_section_adjacent_none": "Never",
   "block_lines_decorate_whole_label": "Decorate whole block",
   "block_lines_empty": "No lines yet. Add one.",
   "block_lines_add_line": "Add line",

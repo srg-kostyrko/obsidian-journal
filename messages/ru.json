@@ -225,6 +225,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "Показывать предыдущий и следующий периоды",
+  "nav_block_section_adjacent_all": "Компьютер и мобильные устройства",
+  "nav_block_section_adjacent_desktop": "Только компьютер",
+  "nav_block_section_adjacent_mobile": "Только мобильные устройства",
+  "nav_block_section_adjacent_none": "Никогда",
   "block_lines_decorate_whole_label": "Оформлять весь блок",
   "block_lines_empty": "Строк пока нет. Добавьте одну.",
   "block_lines_add_line": "Добавить строку",

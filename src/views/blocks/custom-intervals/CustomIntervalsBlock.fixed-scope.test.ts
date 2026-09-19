@@ -91,7 +91,7 @@ describe("CustomIntervalsBlock fixed-scope decoration", () => {
         intervalBlock: {
           type: "create",
           decorateWholeBlock: false,
-          showAdjacent: true,
+          showAdjacent: "all",
           lines: [[segment({ template: "{{date:YYYY}}", link: "year", addDecorations: true })]],
         },
       }),
@@ -120,7 +120,7 @@ describe("CustomIntervalsBlock fixed-scope decoration", () => {
         intervalBlock: {
           type: "create",
           decorateWholeBlock: false,
-          showAdjacent: true,
+          showAdjacent: "all",
           lines: [[segment({ template: "{{date:YYYY}}", link: "journal", journal: "sprint2", addDecorations: true })]],
         },
       }),

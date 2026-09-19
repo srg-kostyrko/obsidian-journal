@@ -212,6 +212,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "前と次の期間を表示",
+  "nav_block_section_adjacent_all": "デスクトップとモバイル",
+  "nav_block_section_adjacent_desktop": "デスクトップのみ",
+  "nav_block_section_adjacent_mobile": "モバイルのみ",
+  "nav_block_section_adjacent_none": "表示しない",
   "block_lines_decorate_whole_label": "ブロック全体を装飾",
   "block_lines_empty": "行がまだありません。1行追加してください。",
   "block_lines_add_line": "行を追加",

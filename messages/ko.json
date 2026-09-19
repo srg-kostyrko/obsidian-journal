@@ -223,6 +223,10 @@
     }
   ],
   "nav_block_section_adjacent_label": "이전 및 다음 기간 표시",
+  "nav_block_section_adjacent_all": "데스크톱과 모바일",
+  "nav_block_section_adjacent_desktop": "데스크톱만",
+  "nav_block_section_adjacent_mobile": "모바일만",
+  "nav_block_section_adjacent_none": "표시 안 함",
   "block_lines_decorate_whole_label": "블록 전체 장식",
   "block_lines_empty": "아직 행이 없습니다. 행을 추가하세요.",
   "block_lines_add_line": "행 추가",

@@ -13,6 +13,7 @@ import { testContainer } from "@/testing";
 
 import { SliceKeyConflictError, MigrationFailedError, SettingsSaveError, UnregisteredSliceError } from "./errors";
 import { v4ToV5Migration } from "./legacy/v4-to-v5";
+import { v5ToV6Migration } from "./legacy/v5-to-v6";
 import {
   defineCollection,
   defineNestedCollection,
@@ -253,7 +254,7 @@ describe("SettingsService", () => {
     it("treats a missing root version as 0 and runs migrations up to current", async () => {
       const bumpToCurrent: Migration = {
         fromVersion: 0,
-        toVersion: 5,
+        toVersion: CURRENT_VERSION,
         migrate: (r) => ({ ...r, calendar: { dow: 5, global: true } }),
       };
       const harness = await testContainer({
@@ -715,10 +716,14 @@ describe("SettingsService", () => {
   });
 
   describe("initialize — snapshot before migration", () => {
-    const bump: Migration = { fromVersion: 4, toVersion: 5, migrate: (raw) => ({ ...raw, migrated: true }) };
+    const bump: Migration = {
+      fromVersion: CURRENT_VERSION - 1,
+      toVersion: CURRENT_VERSION,
+      migrate: (raw) => ({ ...raw, migrated: true }),
+    };
 
     it("writes the pre-migration data when the stored version is behind", async () => {
-      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const raw = { version: CURRENT_VERSION - 1, calendar: { dow: 5, global: false } };
       const harness = await testContainer({ modules: [testSettingsModule({ migrations: [bump] })], data: raw });
 
       const names = [...harness.data.files.keys()];
@@ -742,7 +747,7 @@ describe("SettingsService", () => {
     });
 
     it("still loads when the snapshot cannot be written", async () => {
-      const data = new FakePluginData({ version: 4, calendar: { dow: 5, global: false } });
+      const data = new FakePluginData({ version: CURRENT_VERSION - 1, calendar: { dow: 5, global: false } });
       vi.spyOn(data, "writeFile").mockReturnValueOnce(
         AsyncResult.err(new PluginDataIOError("write-file", new Error("disk full"))),
       );
@@ -764,7 +769,7 @@ describe("SettingsService", () => {
       // dedupe by accident, which would make this pass whether or not the fix is present.
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2026-08-16T10:20:30.000Z"));
-      const raw = { version: 4, calendar: { dow: 5, global: false } };
+      const raw = { version: CURRENT_VERSION - 1, calendar: { dow: 5, global: false } };
       const data = new FakePluginData(raw);
       await testContainer({ modules: [testSettingsModule({ migrations: [bump] })], pluginData: data });
       expect([...data.files.keys()]).toHaveLength(1);
@@ -893,7 +898,7 @@ describe("SettingsService", () => {
         modules: [testSettingsModule()],
         data: { calendar: { dow: 0, global: false } },
       });
-      await harness.data.save({ version: 5, calendar: { dow: 6, global: true } });
+      await harness.data.save({ version: CURRENT_VERSION, calendar: { dow: 6, global: true } });
       const reload = await harness.settings.reload();
       expectOk(reload);
       expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(6);
@@ -905,7 +910,7 @@ describe("SettingsService", () => {
         data: { journals: { a: { name: "a" } } },
       });
       const record = harness.settings.recordOf(journalCollection);
-      await harness.data.save({ version: 5, journals: { a: { name: "a-renamed" }, b: { name: "b" } } });
+      await harness.data.save({ version: CURRENT_VERSION, journals: { a: { name: "a-renamed" }, b: { name: "b" } } });
       await harness.settings.reload();
       expect(record.a).toEqual({ name: "a-renamed" });
       expect(record.b).toEqual({ name: "b" });
@@ -917,7 +922,7 @@ describe("SettingsService", () => {
         data: { journals: { a: { name: "a" }, b: { name: "b" } } },
       });
       const record = harness.settings.recordOf(journalCollection);
-      await harness.data.save({ version: 5, journals: { a: { name: "a" } } });
+      await harness.data.save({ version: CURRENT_VERSION, journals: { a: { name: "a" } } });
       await harness.settings.reload();
       expect(record.b).toBeUndefined();
     });
@@ -935,7 +940,7 @@ describe("SettingsService", () => {
       const events = harness.resolve(SettingsEventsToken);
       const listener = vi.fn();
       events.on("reloaded", listener);
-      await harness.data.save({ version: 5, calendar: { dow: 3, global: true } });
+      await harness.data.save({ version: CURRENT_VERSION, calendar: { dow: 3, global: true } });
       await harness.settings.reload();
       expect(listener).toHaveBeenCalledTimes(1);
     });
@@ -954,7 +959,7 @@ describe("SettingsService", () => {
         modules: [testSettingsModule()],
         data: { calendar: { dow: 0, global: false } },
       });
-      await harness.data.save({ version: 5, calendar: { dow: 2, global: true } });
+      await harness.data.save({ version: CURRENT_VERSION, calendar: { dow: 2, global: true } });
       const saveSpy = vi.spyOn(harness.data, "save");
       const reload = await harness.settings.reload();
       expectOk(reload);
@@ -1017,12 +1022,14 @@ describe("SettingsService", () => {
         data: { calendar: { dow: 1, global: true } },
       });
 
-      expectOk(await harness.settings.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+      expectOk(
+        await harness.settings.replaceStoredData({ version: CURRENT_VERSION, calendar: { dow: 6, global: false } }),
+      );
 
       expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(6);
       const stored = await harness.data.load();
       expectOk(stored);
-      expect(stored.value).toEqual({ version: 5, calendar: { dow: 6, global: false } });
+      expect(stored.value).toEqual({ version: CURRENT_VERSION, calendar: { dow: 6, global: false } });
     });
 
     it("leaves data.json untouched when the replacement cannot be migrated", async () => {
@@ -1037,7 +1044,7 @@ describe("SettingsService", () => {
       expect(replaced.error).toBeInstanceOf(MigrationFailedError);
       const stored = await harness.data.load();
       expectOk(stored);
-      expect(stored.value).toEqual({ version: 5, calendar: { dow: 1, global: true } });
+      expect(stored.value).toEqual({ version: CURRENT_VERSION, calendar: { dow: 1, global: true } });
       expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(1);
     });
 
@@ -1051,7 +1058,9 @@ describe("SettingsService", () => {
       harness.settings.getSlice(calendarSlice).state = { dow: 3, global: true };
       await nextTick();
 
-      expectOk(await harness.settings.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+      expectOk(
+        await harness.settings.replaceStoredData({ version: CURRENT_VERSION, calendar: { dow: 6, global: false } }),
+      );
       vi.advanceTimersByTime(1000);
       await Promise.resolve();
 
@@ -1076,7 +1085,10 @@ describe("SettingsService", () => {
         .spyOn(harness.data, "save")
         .mockReturnValueOnce(AsyncResult.err(new PluginDataIOError("save", new Error("disk full"))));
 
-      const replaced = await harness.settings.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } });
+      const replaced = await harness.settings.replaceStoredData({
+        version: CURRENT_VERSION,
+        calendar: { dow: 6, global: false },
+      });
       expectErr(replaced);
       expect(replaced.error).toBeInstanceOf(SettingsSaveError);
 
@@ -1096,7 +1108,7 @@ describe("SettingsService", () => {
       let reloaded = 0;
       events.on("reloaded", () => (reloaded += 1));
 
-      await harness.settings.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } });
+      await harness.settings.replaceStoredData({ version: CURRENT_VERSION, calendar: { dow: 6, global: false } });
 
       expect(reloaded).toBe(1);
     });
@@ -1105,7 +1117,7 @@ describe("SettingsService", () => {
       const harness = await testContainer({ modules: [testSettingsModule(), secondSettingsServiceModule()] });
       const second = harness.resolve(secondSettingsServiceToken);
 
-      expectOk(await second.replaceStoredData({ version: 5 }));
+      expectOk(await second.replaceStoredData({ version: CURRENT_VERSION }));
 
       const stored = await harness.data.load();
       expectOk(stored);
@@ -1114,7 +1126,7 @@ describe("SettingsService", () => {
 
     it("saves a behind-current payload byte-for-byte, not the object the validation pass mutated in place", async () => {
       const harness = await testContainer({
-        modules: [testSettingsModule({ collections: [], migrations: [v4ToV5Migration] })],
+        modules: [testSettingsModule({ collections: [], migrations: [v4ToV5Migration, v5ToV6Migration] })],
         data: { calendar: { dow: 1, global: true } },
       });
 
@@ -1165,7 +1177,9 @@ describe("SettingsService", () => {
       harness.settings.getSlice(calendarSlice).state.dow = 9;
       await nextTick();
 
-      expectOk(await harness.settings.replaceStoredData({ version: 5, calendar: { dow: 6, global: false } }));
+      expectOk(
+        await harness.settings.replaceStoredData({ version: CURRENT_VERSION, calendar: { dow: 6, global: false } }),
+      );
 
       const listed = await snapshots.list();
       expectOk(listed);

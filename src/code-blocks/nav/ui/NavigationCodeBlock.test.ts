@@ -11,7 +11,13 @@ import { decorationsSettingsCoreModule } from "@/decorations/settings/module";
 import { buildCalendarDecoration, buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { initLocale, m } from "@/i18n";
 import { Flows } from "@/infrastructure/flows";
-import { WorkspaceOpenError, WorkspaceService, type VaultPath } from "@/infrastructure/host";
+import {
+  PlatformService,
+  WorkspaceOpenError,
+  WorkspaceService,
+  type DeviceKind,
+  type VaultPath,
+} from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import {
   JournalsIndex,
@@ -26,9 +32,11 @@ import { buildNavSegment, customJournal, fixedJournal } from "@/journals/testing
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import NavigationCodeBlock from "./NavigationCodeBlock.vue";
+
+import type { FenceAdjacent } from "../adjacent-devices";
 
 // Every segment in this suite was authored transparent, predating buildNavSegment's
 // theme-colored default; nothing here asserts on color, so this only keeps the fixtures
@@ -44,7 +52,9 @@ interface NavScenario {
   /** Notes that must exist in the vault for a real open or file menu to resolve. */
   readonly notes?: readonly string[];
   /** The parsed fence body. Unset keys leave the journal's own settings in charge. */
-  readonly fence?: { adjacent?: boolean };
+  readonly fence?: { adjacent?: FenceAdjacent };
+  /** The device the block renders on. Unset is whatever the Obsidian fake reports. */
+  readonly device?: DeviceKind;
 }
 
 async function renderNav(path: string, scenario: NavScenario) {
@@ -55,6 +65,10 @@ async function renderNav(path: string, scenario: NavScenario) {
       shelves: scenario.shelves ?? {},
       decorations: { decorations: scenario.calendarDecorations ?? [] },
     },
+    overrides:
+      scenario.device === undefined
+        ? []
+        : [overrideWith(PlatformService, { current: () => scenario.device ?? "desktop", usesCommandKey: () => false })],
   });
   const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
@@ -219,7 +233,7 @@ describe("NavigationCodeBlock adjacent periods", () => {
 
   it("renders the current period alone when the journal hides the adjacent ones", async () => {
     await renderNav("Daily/2026-05-27.md", {
-      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      journals: { daily: dailyWithNavBlock({ showAdjacent: "none" }) },
       shelves,
       entries,
     });
@@ -231,7 +245,7 @@ describe("NavigationCodeBlock adjacent periods", () => {
 
   it("drops the placeholders that hold the side columns open, so the current period can centre", async () => {
     const { view } = await renderNav("Daily/2026-05-27.md", {
-      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      journals: { daily: dailyWithNavBlock({ showAdjacent: "none" }) },
       shelves,
       entries,
     });
@@ -242,7 +256,7 @@ describe("NavigationCodeBlock adjacent periods", () => {
 
   it("keeps both arrows working when the adjacent periods are hidden", async () => {
     const { flows } = await renderNav("Daily/2026-05-27.md", {
-      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      journals: { daily: dailyWithNavBlock({ showAdjacent: "none" }) },
       shelves,
       entries,
     });
@@ -269,7 +283,7 @@ describe("NavigationCodeBlock adjacent periods", () => {
 
   it("shows the adjacent periods for one note when the fence says so and the journal hides them", async () => {
     await renderNav("Daily/2026-05-27.md", {
-      journals: { daily: dailyWithNavBlock({ showAdjacent: false }) },
+      journals: { daily: dailyWithNavBlock({ showAdjacent: "none" }) },
       shelves,
       entries,
       fence: { adjacent: true },
@@ -277,6 +291,61 @@ describe("NavigationCodeBlock adjacent periods", () => {
 
     expect(screen.getByText("26")).toBeTruthy();
     expect(screen.getByText("28")).toBeTruthy();
+  });
+});
+
+describe("NavigationCodeBlock adjacent periods by device", () => {
+  const shelves = { main: buildShelf("main", { journals: ["daily"] }) };
+  const entries = [journalEntry("daily", "2026-05-27", "Daily/2026-05-27.md")];
+
+  it.each([
+    ["all", "desktop", true],
+    ["all", "mobile", true],
+    ["desktop", "desktop", true],
+    ["desktop", "mobile", false],
+    ["mobile", "desktop", false],
+    ["mobile", "mobile", true],
+    ["none", "desktop", false],
+    ["none", "mobile", false],
+  ] as const)(
+    "with the journal set to %s, a %s device shows the adjacent periods: %s",
+    async (setting, device, shown) => {
+      await renderNav("Daily/2026-05-27.md", {
+        journals: { daily: dailyWithNavBlock({ showAdjacent: setting }) },
+        shelves,
+        entries,
+        device,
+      });
+
+      expect(screen.getByText("27")).toBeTruthy();
+      expect(screen.queryByText("26") !== null).toBe(shown);
+      expect(screen.queryByText("28") !== null).toBe(shown);
+    },
+  );
+
+  it("follows the fence's device over the journal's", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ showAdjacent: "all" }) },
+      shelves,
+      entries,
+      fence: { adjacent: "desktop" },
+      device: "mobile",
+    });
+
+    expect(screen.getByText("27")).toBeTruthy();
+    expect(screen.queryByText("26")).toBeNull();
+  });
+
+  it("keeps both arrows on a device that hides the adjacent periods", async () => {
+    await renderNav("Daily/2026-05-27.md", {
+      journals: { daily: dailyWithNavBlock({ showAdjacent: "desktop" }) },
+      shelves,
+      entries,
+      device: "mobile",
+    });
+
+    expect(screen.getByRole("button", { name: /previous/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /next/i })).toBeTruthy();
   });
 });
 
