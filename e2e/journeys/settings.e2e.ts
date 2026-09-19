@@ -472,10 +472,8 @@ describe("settings", () => {
 
       // SortableJS runs in native HTML5 drag mode here; WDIO's pointer Actions don't trigger it,
       // so the drag is driven by synthetic native DragEvents dispatched at element coordinates,
-      // sharing one DataTransfer across the sequence. SortableJS finishes its drag-start setup
-      // (BZ.active, the document dragover listener) inside a requestAnimationFrame scheduled from
-      // its dragstart handler, so the move/onEnd only run if dragover is dispatched a frame later.
-      await browser.execute(async () => {
+      // sharing one DataTransfer across the sequence.
+      const dragArmed = await browser.execute(async () => {
         const frames = [...document.querySelectorAll<HTMLElement>(".jv-item-frame")];
         const sourceFrame = frames[0];
         const targetFrame = frames[1];
@@ -506,11 +504,29 @@ describe("settings", () => {
           );
         };
 
+        // SortableJS arms the drag (Sortable.active) in a setTimeout(0) from its dragstart handler
+        // and announces it with a bubbling `start` DOM event; a dragover before then is ignored.
+        // Counting animation frames instead races that timer, and loses on a loaded CI runner. Its
+        // ghost class is no signal either: Vue re-renders a `:class`-bound frame on `onStart` and
+        // strips it. The verdict is asserted outside, so a drag that never arms fails as that.
+        const watchDragArmed = (): Promise<boolean> =>
+          new Promise((resolve) => {
+            const timeout = window.setTimeout(() => resolve(false), 2000);
+            const onStart = (): void => {
+              window.clearTimeout(timeout);
+              resolve(true);
+            };
+            document.addEventListener("start", onStart, { once: true });
+          });
         // pointerdown on the grip flips SortableJS into drag-start prep (sets draggable=true).
+        const armed = watchDragArmed();
         firePointer(grip, "pointerdown", source);
         fireDrag(sourceFrame, "dragstart", source);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        if (!(await armed)) {
+          fireDrag(sourceFrame, "dragend", source);
+          firePointer(sourceFrame, "pointerup", source);
+          return false;
+        }
         fireDrag(targetFrame, "dragenter", target);
         fireDrag(targetFrame, "dragover", target);
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -518,7 +534,9 @@ describe("settings", () => {
         fireDrag(targetFrame, "drop", target);
         fireDrag(sourceFrame, "dragend", target);
         firePointer(sourceFrame, "pointerup", target);
+        return true;
       });
+      expect(dragArmed).toBe(true);
 
       await waitForSettings((s) => {
         const now = calendarToolbarItems(s.views).map((item) => item.id);
@@ -542,7 +560,7 @@ describe("settings", () => {
 
       // Same native-HTML5-drag recipe as the toolbar reorder above — this composable
       // (useSortableList) backs both. The `.nav-row` element is its own drag handle.
-      await browser.execute(async () => {
+      const dragArmed = await browser.execute(async () => {
         const sourceFrame = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="1:0"]');
         const targetFrame = document.querySelector<HTMLElement>('.nav-block-preview .nav-row[data-id="0:0"]');
         // Both rows are confirmed present by the waitForExist calls above this execute block;
@@ -574,10 +592,24 @@ describe("settings", () => {
           );
         };
 
+        // The toolbar drag test explains this wait; an execute body is serialized, so it can't be shared.
+        const watchDragArmed = (): Promise<boolean> =>
+          new Promise((resolve) => {
+            const timeout = window.setTimeout(() => resolve(false), 2000);
+            const onStart = (): void => {
+              window.clearTimeout(timeout);
+              resolve(true);
+            };
+            document.addEventListener("start", onStart, { once: true });
+          });
+        const armed = watchDragArmed();
         firePointer(sourceFrame, "pointerdown", source);
         fireDrag(sourceFrame, "dragstart", source);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        if (!(await armed)) {
+          fireDrag(sourceFrame, "dragend", source);
+          firePointer(sourceFrame, "pointerup", source);
+          return false;
+        }
         fireDrag(targetFrame, "dragenter", target);
         fireDrag(targetFrame, "dragover", target);
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
@@ -585,7 +617,9 @@ describe("settings", () => {
         fireDrag(targetFrame, "drop", target);
         fireDrag(sourceFrame, "dragend", target);
         firePointer(sourceFrame, "pointerup", target);
+        return true;
       });
+      expect(dragArmed).toBe(true);
 
       // applySegmentReorder prunes a line once it's emptied by the drag, so a successful
       // cross-line move collapses the two lines into one holding all three segments.
@@ -629,35 +663,44 @@ describe("settings", () => {
             new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer, clientX: p.x, clientY: p.y }),
           );
         };
+        // The toolbar drag test explains this wait; an execute body is serialized, so it can't be shared.
+        const watchDragArmed = (): Promise<boolean> =>
+          new Promise((resolve) => {
+            const timeout = window.setTimeout(() => resolve(false), 2000);
+            const onStart = (): void => {
+              window.clearTimeout(timeout);
+              resolve(true);
+            };
+            document.addEventListener("start", onStart, { once: true });
+          });
+        const armed = watchDragArmed();
         const from = centerOf(source);
         firePointer(source, "pointerdown", from);
         fireDrag(source, "dragstart", from);
-        // SortableJS finishes its drag-start setup inside a requestAnimationFrame scheduled from
-        // its own dragstart handler, so the move only registers a frame later.
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const dragArmed = await armed;
+        if (!dragArmed) {
+          fireDrag(source, "dragend", from);
+          firePointer(source, "pointerup", from);
+          return { dragArmed };
+        }
 
         const to = centerOf(zone);
         fireDrag(zone, "dragenter", to);
+        // An empty container takes the dragged node on its first armed dragover.
         fireDrag(zone, "dragover", to);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        // SortableJS's first dragover after entering a container only sets its state up; the
-        // node is parked on a later one. One dragover is enough on a fast machine and is not
-        // on CI, so drive a second rather than racing it — the sibling drag test does the same.
-        fireDrag(zone, "dragover", to);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
         const all = [...document.querySelectorAll<HTMLElement>(".nav-line-drop")];
-        const armed = {
+        const result = {
+          dragArmed,
           occupied: all.filter((z) => z.childElementCount > 0).length,
           hoveredIsOccupied: zone.childElementCount > 0,
         };
 
         fireDrag(source, "dragend", to);
         firePointer(source, "pointerup", to);
-        return armed;
+        return result;
       });
 
-      expect(occupancy).toEqual({ occupied: 1, hoveredIsOccupied: true });
+      expect(occupancy).toEqual({ dragArmed: true, occupied: 1, hoveredIsOccupied: true });
     });
   });
 
