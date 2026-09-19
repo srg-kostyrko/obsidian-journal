@@ -33,6 +33,7 @@ import { isLongText, isRequired } from "../config";
 import { NamedByAnswersError } from "../errors";
 import { JournalNoteLinkPicker, type JournalNoteLinkError } from "../journal-note-link";
 import { toNoteLink } from "../note-link";
+import { hasUnsafePathCharacters, UNSAFE_PATH_CHARACTERS } from "../path-characters";
 import { isPlaceholder } from "../placeholder";
 import { promptsInPath } from "../prompts-in-path";
 
@@ -115,16 +116,21 @@ function schemaFor(prompt: Prompt): v.GenericSchema<unknown, PromptAnswer | unde
       (value: string) => !isPlaceholder(value),
       (issue) => m.journal_prompt_answer_reserved({ name: issue.input }),
     );
-    if (!required) return v.pipe(v.string(), reserved);
+    const fileSafe = v.check(
+      (value: string) => !inPathVariables.has(prompt.variable) || !hasUnsafePathCharacters(value),
+      m.journal_prompt_answer_path_characters({ characters: UNSAFE_PATH_CHARACTERS }),
+    );
+    if (!required) return v.pipe(v.string(), reserved, fileSafe);
     // A box of empty lines reads as unanswered in a way a single input holding a space does not.
     if (isLongText(prompt)) {
       return v.pipe(
         v.string(),
         v.check((value: string) => value.trim() !== "", message()),
         reserved,
+        fileSafe,
       );
     }
-    return v.pipe(v.string(), v.minLength(1, message()), reserved);
+    return v.pipe(v.string(), v.minLength(1, message()), reserved, fileSafe);
   }
   // date and select answers are never typed freely, so the placeholder-reservation check that
   // guards free text does not apply to them.
