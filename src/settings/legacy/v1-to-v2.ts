@@ -59,10 +59,9 @@ export const v1ToV2Migration: Migration = {
         shelfJournals.push(name);
         sectionToName[section] = name;
       }
-      if (shelfJournals.length > 0) {
-        shelves[shelfName] = { name: shelfName, journals: shelfJournals, commands: [] };
-        marker.push({ oldJournalId: config.id, kind: "calendar", sectionToName });
-      }
+      if (shelfJournals.length === 0) continue;
+      shelves[shelfName] = { name: shelfName, journals: shelfJournals, commands: [] };
+      marker.push({ oldJournalId: config.id, kind: "calendar", sectionToName });
     }
 
     const dow = old.calendar.firstDayOfWeek;

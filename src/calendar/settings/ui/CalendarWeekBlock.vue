@@ -63,7 +63,7 @@ const activeDescription = computed(() => {
 });
 
 const globalRef = computed({
-  get: () => (slice.state.mode === "custom" ? slice.state.global : false),
+  get: () => slice.state.mode === "custom" && slice.state.global,
   set: (v: boolean) => {
     if (slice.state.mode !== "custom") return;
     slice.state = { ...slice.state, global: v };

@@ -32,9 +32,9 @@ export function useCalendarGrid(options: UseCalendarGridOptions): ComputedRef<re
     return periods.map((period) => {
       const key = `${period.kind}:${period.anchor.toAnchor()}`;
       const isSelected =
-        selected !== null && selected.kind === period.kind
-          ? (period as unknown as { isSame(o: Period): boolean }).isSame(selected)
-          : false;
+        selected !== null &&
+        selected.kind === period.kind &&
+        (period as unknown as { isSame(o: Period): boolean }).isSame(selected);
       const isDisabled = bounds ? !bounds.overlapsPeriod(period) : false;
       const isOutside = outside ? outside(period) : false;
       const isToday = period.contains(today);

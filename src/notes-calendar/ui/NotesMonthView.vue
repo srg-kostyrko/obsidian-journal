@@ -105,8 +105,7 @@ const visiblePeriods = computed<readonly Period[]>(() => {
 const cells = useCellDecorations({
   periods: () => visiblePeriods.value,
   journalNames: () => scope.all.value,
-  filter: (binding) =>
-    scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true,
+  filter: (binding) => !scope.custom.value.includes(binding.journalName) || hasOffsetCondition(binding.decoration),
   calendarDecorations: { shelf: () => props.shelf },
 });
 

@@ -107,11 +107,12 @@ describe("Option", () => {
 
     it("passes None through without invoking the predicate", () => {
       let called = false;
-      Option.none<number>().filter(() => {
+      const opt = Option.none<number>().filter(() => {
         called = true;
         return true;
       });
       expect(called).toBe(false);
+      expect(opt.isNone()).toBe(true);
     });
   });
 

@@ -86,7 +86,7 @@ const { defineField, errorBag, handleSubmit } = useForm({
       v.forward(
         v.partialCheck(
           [["showInRibbon"], ["icon"]],
-          (input) => (input.showInRibbon ? validIcons.has(input.icon) : true),
+          (input) => !input.showInRibbon || validIcons.has(input.icon),
           m.command_icon_required_error(),
         ),
         ["icon"],
@@ -143,7 +143,7 @@ const onSubmit = handleSubmit((values) => {
     icon: values.icon,
     showInRibbon: values.showInRibbon,
     openMode: values.openMode,
-    pinned: props.target.kind === "notelet" ? false : values.pinned,
+    pinned: props.target.kind !== "notelet" && values.pinned,
     type: values.type,
     context: values.context,
     target: submittedTarget,
