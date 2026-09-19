@@ -290,6 +290,21 @@ export default [
       // domain-meaningful check at every site it flags.
       "unicorn/prefer-simple-condition-first": "off",
 
+      // Rule changes from v75–v76, likewise not adopted.
+      // Since v75 this flags every `if (x) return a; return b;` and cannot tell a choice
+      // between two values from a guard that rejects before the happy path — it folds
+      // error returns (including `yield*` exits) into value expressions.
+      "unicorn/prefer-ternary": "off",
+      // Merging consecutive guards into one `||` blurs guards that reject for distinct reasons.
+      "unicorn/prefer-combined-guards": "off",
+      // Inverting an optional trailing step into a guard means a statement later appended to
+      // the function is silently skipped whenever the guard exits.
+      "unicorn/prefer-early-return": "off",
+      // `Set#isDisjointFrom` and friends and `Map.groupBy` postdate the mobile WebViews the
+      // manifest still admits; same runtime-support risk as `prefer-iterator-to-array`.
+      "unicorn/prefer-set-methods": "off",
+      "unicorn/prefer-group-by": "off",
+
       "no-restricted-imports": [
         "error",
         {

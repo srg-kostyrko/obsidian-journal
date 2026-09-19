@@ -35,7 +35,7 @@ const effectiveWeek =
   props.current.mode === "custom" ? { dow: props.current.dow, doy: props.current.doy } : calendar.localeWeek();
 const customDow = ref<string>(String(effectiveWeek.dow));
 const customFirstDay = ref<number>(7 + effectiveWeek.dow - effectiveWeek.doy);
-const stagedGlobal = props.current.mode === "custom" ? props.current.global : false;
+const stagedGlobal = props.current.mode === "custom" && props.current.global;
 
 const dowOptions = computed(() => calendar.weekdays().map((label, dow) => ({ value: String(dow), label })));
 

@@ -268,14 +268,13 @@ export function createFakeHost(): FakeHost {
     let current = "";
     for (const segment of segments) {
       current = current ? `${current}/${segment}` : segment;
-      if (!folders.has(current)) {
-        folders.add(current);
-        const folder = makeFolder(current);
-        folderObjects.set(current, folder);
-        const parentFolder = folderObjects.get(parentPath(current));
-        if (parentFolder && !parentFolder.children.includes(folder)) {
-          parentFolder.children.push(folder);
-        }
+      if (folders.has(current)) continue;
+      folders.add(current);
+      const folder = makeFolder(current);
+      folderObjects.set(current, folder);
+      const parentFolder = folderObjects.get(parentPath(current));
+      if (parentFolder && !parentFolder.children.includes(folder)) {
+        parentFolder.children.push(folder);
       }
     }
   }

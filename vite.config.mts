@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     target: "esnext",
-    sourcemap: isWatch ? "inline" : false,
+    sourcemap: isWatch && "inline",
     minify: !isWatch,
     commonjsOptions: {
       ignoreTryCatch: false,

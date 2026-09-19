@@ -45,7 +45,7 @@ const { defineField, errorBag, handleSubmit, values } = useForm({
       v.forward(
         v.partialCheck(
           [["type"], ["anchorDate"]],
-          ({ type, anchorDate }) => (type === "custom" ? anchorDate.length > 0 : true),
+          ({ type, anchorDate }) => type !== "custom" || anchorDate.length > 0,
           m.journal_add_modal_anchor_required_error(),
         ),
         ["anchorDate"],

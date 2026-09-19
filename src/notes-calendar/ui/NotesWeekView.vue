@@ -77,8 +77,7 @@ const allPeriods = computed<readonly Period[]>(() => {
 const cells = useCellDecorations({
   periods: () => allPeriods.value,
   journalNames: () => scope.all.value,
-  filter: (binding) =>
-    scope.custom.value.includes(binding.journalName) ? hasOffsetCondition(binding.decoration) : true,
+  filter: (binding) => !scope.custom.value.includes(binding.journalName) || hasOffsetCondition(binding.decoration),
   calendarDecorations: { shelf: () => props.shelf },
 });
 

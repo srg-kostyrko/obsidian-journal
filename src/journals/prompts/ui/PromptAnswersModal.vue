@@ -184,7 +184,7 @@ function asNumber(value: PromptAnswer | undefined): number | undefined {
 }
 
 function asBoolean(value: PromptAnswer | undefined): boolean {
-  return typeof value === "boolean" ? value : false;
+  return typeof value === "boolean" && value;
 }
 
 function asDate(value: PromptAnswer | undefined): Period | null {
