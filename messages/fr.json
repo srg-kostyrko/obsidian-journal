@@ -2066,7 +2066,7 @@
   "journal_picker_placeholder": "Rechercher un journal",
   "journal_prompt_answer_required": "Cette question doit recevoir une réponse.",
   "journal_prompt_answer_required_in_path": "Cette réponse est utilisée dans le nom de la note, elle ne peut donc pas rester vide.",
-  "journal_prompt_answer_path_characters": "Cette réponse est utilisée dans le nom de la note, elle ne peut donc contenir ni {characters} ni saut de ligne.",
+  "journal_prompt_answer_path_characters": "Cette réponse est utilisée dans le nom ou le dossier de la note, elle ne peut donc contenir ni {characters} ni saut de ligne.",
   "journal_prompt_answer_reserved": "« {name} » est réservé aux questions sans réponse. Saisissez autre chose.",
   "journal_prompt_answers_modal_title": "Nouvelle note dans « {journal} »",
   "journal_prompt_answers_notelet_modal_title": "Nouvelle note brève {type} dans « {journal} »",

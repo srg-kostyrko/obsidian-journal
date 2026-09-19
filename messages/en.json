@@ -2072,7 +2072,7 @@
   "journal_picker_placeholder": "Search journals",
   "journal_prompt_answer_required": "This question must be answered.",
   "journal_prompt_answer_required_in_path": "This answer is used in the note name, so it can't be left blank.",
-  "journal_prompt_answer_path_characters": "This answer is used in the note name, so it can't contain {characters} or a line break.",
+  "journal_prompt_answer_path_characters": "This answer is used in the note name or folder, so it can't contain {characters} or a line break.",
   "journal_prompt_answer_reserved": "\"{name}\" is reserved for an unanswered question. Enter something else.",
   "journal_prompt_answers_modal_title": "New note in {journal}",
   "journal_prompt_answers_notelet_modal_title": "New {type} notelet in {journal}",

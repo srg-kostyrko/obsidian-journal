@@ -4,7 +4,7 @@
 // folder too — an answer fills one segment, and a subfolder nobody configured is not intent.
 export const UNSAFE_PATH_CHARACTERS = String.raw`* " \ / < > : | ? # ^ [ ]`;
 
-const UNSAFE = /[*"\\/<>:|?#^[\]\p{Cc}]/u;
+const UNSAFE = /[*"\\/<>:|?#^[\]\p{Cc}\p{Zl}\p{Zp}]/u;
 
 /** Whether `text` holds a character, line break included, that no note name or folder may carry. */
 export function hasUnsafePathCharacters(text: string): boolean {

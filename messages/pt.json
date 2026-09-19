@@ -2063,7 +2063,7 @@
   "journal_picker_placeholder": "Pesquisar diários",
   "journal_prompt_answer_required": "Esta pergunta precisa de uma resposta.",
   "journal_prompt_answer_required_in_path": "Esta resposta é usada no nome da nota, por isso não pode ficar em branco.",
-  "journal_prompt_answer_path_characters": "Esta resposta é usada no nome da nota, por isso não pode conter {characters} nem quebras de linha.",
+  "journal_prompt_answer_path_characters": "Esta resposta é usada no nome ou na pasta da nota, por isso não pode conter {characters} nem quebras de linha.",
   "journal_prompt_answer_reserved": "\"{name}\" está reservado para uma pergunta sem resposta. Digite outra coisa.",
   "journal_prompt_answers_modal_title": "Nova nota em \"{journal}\"",
   "journal_prompt_answers_notelet_modal_title": "Nova nota breve de {type} em \"{journal}\"",

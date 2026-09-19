@@ -1910,7 +1910,7 @@
   "journal_picker_placeholder": "ジャーナルを検索",
   "journal_prompt_answer_required": "この質問には回答が必要です。",
   "journal_prompt_answer_required_in_path": "この回答はノート名に使われるため、空欄のままにはできません。",
-  "journal_prompt_answer_path_characters": "この回答はノート名に使われるため、{characters} や改行を含められません。",
+  "journal_prompt_answer_path_characters": "この回答はノート名またはフォルダーに使われるため、{characters} や改行を含められません。",
   "journal_prompt_answer_reserved": "「{name}」は未回答の質問用に予約されています。別の内容を入力してください。",
   "journal_prompt_answers_modal_title": "「{journal}」の新しいノート",
   "journal_prompt_answers_notelet_modal_title": "「{journal}」の新しい{type}サブノート",

@@ -2066,7 +2066,7 @@
   "journal_picker_placeholder": "Cerca diari",
   "journal_prompt_answer_required": "Questa domanda deve ricevere una risposta.",
   "journal_prompt_answer_required_in_path": "Questa risposta viene usata nel nome della nota, quindi non può essere lasciata vuota.",
-  "journal_prompt_answer_path_characters": "Questa risposta viene usata nel nome della nota, quindi non può contenere {characters} né interruzioni di riga.",
+  "journal_prompt_answer_path_characters": "Questa risposta viene usata nel nome o nella cartella della nota, quindi non può contenere {characters} né interruzioni di riga.",
   "journal_prompt_answer_reserved": "\"{name}\" è riservato a una domanda senza risposta. Inserisci qualcos'altro.",
   "journal_prompt_answers_modal_title": "Nuova nota in \"{journal}\"",
   "journal_prompt_answers_notelet_modal_title": "Nuova nota breve {type} in \"{journal}\"",

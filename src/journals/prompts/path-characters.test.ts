@@ -4,9 +4,12 @@ import { hasUnsafePathCharacters, UNSAFE_PATH_CHARACTERS } from "./path-characte
 import { PROMPT_PLACEHOLDER } from "./placeholder";
 
 describe("hasUnsafePathCharacters", () => {
-  it.each([...UNSAFE_PATH_CHARACTERS.split(" "), "\n", "\r", "\t", "\u{0}"])("refuses %j", (character) => {
-    expect(hasUnsafePathCharacters(`a${character}b`)).toBe(true);
-  });
+  it.each([...UNSAFE_PATH_CHARACTERS.split(" "), "\n", "\r", "\t", "\u{0}", "\u{2028}", "\u{2029}"])(
+    "refuses %j",
+    (character) => {
+      expect(hasUnsafePathCharacters(`a${character}b`)).toBe(true);
+    },
+  );
 
   it.each(["good day", "café-2024.01", "(tired)", "semi;colon", "50% done", "a, b & c", "日本語"])(
     "accepts %j",

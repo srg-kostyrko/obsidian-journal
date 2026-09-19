@@ -2116,7 +2116,7 @@
   "journal_picker_placeholder": "Поиск журналов",
   "journal_prompt_answer_required": "На этот вопрос нужно ответить.",
   "journal_prompt_answer_required_in_path": "Этот ответ используется в названии заметки, поэтому он не может быть пустым.",
-  "journal_prompt_answer_path_characters": "Этот ответ используется в названии заметки, поэтому он не может содержать {characters} или перенос строки.",
+  "journal_prompt_answer_path_characters": "Этот ответ используется в названии или папке заметки, поэтому он не может содержать {characters} или перенос строки.",
   "journal_prompt_answer_reserved": "«{name}» зарезервировано для неотвеченного вопроса. Введите что-нибудь другое.",
   "journal_prompt_answers_modal_title": "Новая заметка в журнале «{journal}»",
   "journal_prompt_answers_notelet_modal_title": "Новая подзаметка типа {type} в журнале «{journal}»",
