@@ -146,4 +146,14 @@ describe("findCollidingJournals", () => {
 
     expect(groups).toEqual([["monthly", "sprint"]]);
   });
+  it("flags journals sharing a name template whose date cannot be read back", async () => {
+    // A clone keeps its source's template, so the pair writes one path per period. Neither
+    // template inverts, so neither journal can recognize the other's note by reading it back.
+    const groups = await collisions({
+      a: fixedJournal("a", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}} {{current_date}}" }),
+      b: fixedJournal("b", { type: "day" }, { nameTemplate: "{{date:YYYY-MM-DD}} {{current_date}}" }),
+    });
+
+    expect(groups).toEqual([["a", "b"]]);
+  });
 });

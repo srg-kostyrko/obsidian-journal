@@ -39,6 +39,13 @@ export function findCollidingJournals(
     for (const member of merged) groupOf.set(member, merged);
   };
 
+  // Reading a path back is the only way to catch journals whose periods differ, but it needs a
+  // template that inverts. A clone keeps its source's template, so where that template cannot be
+  // read back neither journal has an inverter and the probe below sees nothing — while the two
+  // still write one path per period. Two journals that render the same path collide whatever
+  // their templates do, so that is checked on its own.
+  const pathOwners = new Map<string, string>();
+
   for (const config of configs) {
     const { name } = config;
     for (let anchor of runStartsOf(config, cycle, today)) {
@@ -46,6 +53,9 @@ export function findCollidingJournals(
         if (!timeline.contains(name, anchor)) break;
         const path = frontmatter.buildMetadata(name, anchor).flatMap((metadata) => paths.pathFor(name, metadata));
         if (path.isOk()) {
+          const owner = pathOwners.get(path.value);
+          if (owner === undefined) pathOwners.set(path.value, name);
+          else if (owner !== name) join(name, owner);
           for (const [other, inverter] of inverters) {
             if (other === name || groupOf.get(name)?.has(other)) continue;
             const candidate = inverter.invert(path.value);
