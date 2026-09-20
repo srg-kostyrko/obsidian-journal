@@ -5,11 +5,13 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 
 import { ReloadHintService } from "../reload-hint";
+import { SettingsService } from "../settings-service";
 
 import { SettingsUiService } from "./settings-ui-service";
 
 const ui = useService(SettingsUiService);
 const reloadHint = useService(ReloadHintService);
+const settings = useService(SettingsService);
 const current = computed(() => ui.current.value);
 const nav = {
   back: () => ui.pop(),
@@ -39,6 +41,9 @@ watch(
 <template>
   <div ref="root">
     <div v-if="current === null" class="journal-settings-dashboard">
+      <div v-if="settings.lockedByNewerVersion.value" class="journal-too-new-banner">
+        {{ m.settings_too_new_banner() }}
+      </div>
       <div v-if="reloadHint.pending.value" class="journal-reload-banner">
         {{ m.settings_reload_required_banner() }}
       </div>
@@ -49,11 +54,16 @@ watch(
 </template>
 
 <style scoped>
-.journal-reload-banner {
+.journal-reload-banner,
+.journal-too-new-banner {
   padding: var(--size-4-2) var(--size-4-3);
   margin-bottom: var(--size-4-3);
   border-radius: var(--radius-s);
   background-color: var(--background-modifier-message);
   color: var(--text-warning);
+}
+
+.journal-too-new-banner {
+  color: var(--text-error);
 }
 </style>

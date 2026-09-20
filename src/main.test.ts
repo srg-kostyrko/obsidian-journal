@@ -70,6 +70,18 @@ describe("JournalPlugin", () => {
     expect(plugin.api).toBeUndefined();
   });
 
+  // "Stuck at vN" describes a migration that could not run, and says nothing a user can act on
+  // when the real situation is that this build is behind its own settings.
+  it("tells a user booting against newer settings to update rather than reporting a migration failure", async () => {
+    const plugin = buildPlugin();
+    vi.spyOn(plugin, "loadData").mockResolvedValue({ version: CURRENT_VERSION + 1 });
+    const noticeSpy = vi.spyOn(obsidian, "Notice");
+
+    await plugin.onload();
+
+    expect(noticeSpy).toHaveBeenCalledWith(m.settings_too_new_boot());
+  });
+
   describe("onExternalSettingsChange", () => {
     it("returns early when the container is unset", () => {
       const plugin = buildPlugin();
@@ -89,6 +101,19 @@ describe("JournalPlugin", () => {
 
       await vi.waitFor(() => {
         expect(noticeSpy).toHaveBeenCalledWith(m.settings_reload_failed({ error: "Failed to load plugin settings" }));
+      });
+    });
+
+    it("tells the user their edits stop being saved when the synced settings are newer", async () => {
+      const plugin = buildPlugin();
+      await plugin.onload();
+      vi.spyOn(plugin, "loadData").mockResolvedValue({ version: CURRENT_VERSION + 1 });
+      const noticeSpy = vi.spyOn(obsidian, "Notice");
+
+      plugin.onExternalSettingsChange();
+
+      await vi.waitFor(() => {
+        expect(noticeSpy).toHaveBeenCalledWith(m.settings_too_new_notice());
       });
     });
   });

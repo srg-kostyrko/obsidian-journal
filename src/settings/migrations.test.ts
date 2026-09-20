@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MigrationFailedError } from "./errors";
+import { MigrationFailedError, SettingsTooNewError } from "./errors";
 import { runMigrations } from "./migrations";
 
 import type { Migration } from "./schema";
@@ -74,6 +74,7 @@ describe("runMigrations", () => {
       expect(result.kind).toBe("err");
       if (result.kind !== "err") return;
       expect(result.error).toBeInstanceOf(MigrationFailedError);
+      if (!(result.error instanceof MigrationFailedError)) return;
       expect(result.error.stuckAt).toBe(1);
     });
 
@@ -82,7 +83,7 @@ describe("runMigrations", () => {
       const b: Migration = { fromVersion: 1, toVersion: 3, migrate: (r) => r };
       const result = runMigrations({ version: 1 }, [a, b], 3);
       expect(result.kind).toBe("err");
-      if (result.kind !== "err") return;
+      if (result.kind !== "err" || !(result.error instanceof MigrationFailedError)) return;
       expect(result.error.stuckAt).toBe(1);
     });
 
@@ -100,11 +101,23 @@ describe("runMigrations", () => {
       expect(result.error.cause).toBeInstanceOf(Error);
     });
 
-    it("rejects roots whose version is ahead of the target", () => {
+    // Settings written by a newer plugin are a different failure from a migration that cannot
+    // run: nothing is wrong with the data, this build is simply behind it. Callers key the
+    // "stop writing until restart" latch off the distinction, so it lives in the type.
+    it("rejects roots whose version is ahead of the target as written by a newer version", () => {
       const result = runMigrations({ version: 5 }, [], 3);
       expect(result.kind).toBe("err");
       if (result.kind !== "err") return;
-      expect(result.error.stuckAt).toBe(5);
+      expect(result.error).toBeInstanceOf(SettingsTooNewError);
+      expect(result.error).not.toBeInstanceOf(MigrationFailedError);
+    });
+
+    it("reports both the stored version and the one this build understands", () => {
+      const result = runMigrations({ version: 9 }, [], 3);
+      expect(result.kind).toBe("err");
+      if (result.kind !== "err" || !(result.error instanceof SettingsTooNewError)) return;
+      expect(result.error.storedVersion).toBe(9);
+      expect(result.error.currentVersion).toBe(3);
     });
   });
 });

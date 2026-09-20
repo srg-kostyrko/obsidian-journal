@@ -37,6 +37,20 @@ export class MigrationFailedError extends SettingsError {
   }
 }
 
+// Distinct from MigrationFailedError on purpose: the stored data is not broken, this build is
+// behind it. That is the one failure a running instance must answer by refusing to write, so the
+// latch keys off the type rather than off a version comparison repeated at each call site.
+export class SettingsTooNewError extends SettingsError {
+  readonly kind = "settings-too-new" as const;
+  constructor(
+    readonly storedVersion: number,
+    readonly currentVersion: number,
+  ) {
+    super(`Settings were saved by a newer version of the plugin (v${storedVersion} > v${currentVersion})`);
+    this.name = "SettingsTooNewError";
+  }
+}
+
 export class UnregisteredSliceError extends SettingsError {
   readonly kind = "unregistered-slice" as const;
   constructor(readonly key: string) {

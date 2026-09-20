@@ -2,20 +2,31 @@ import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
+import { SettingsService } from "@/settings";
 
 import { ImportConnectService } from "../connect-service";
-import { NothingToImport } from "../errors";
+import { NothingToImport, SettingsLocked } from "../errors";
 import { ImportService, type ImportOutcome } from "../import-service";
 import { hasAnythingToImport, ImportPlanner } from "../planner";
 import { importConnectModal, importPreviewModal } from "../ui/modals";
 
-export class ImportFromPluginsFlow implements Flow<void, ImportOutcome, NothingToImport | UserAborted> {
+export class ImportFromPluginsFlow implements Flow<
+  void,
+  ImportOutcome,
+  NothingToImport | SettingsLocked | UserAborted
+> {
   readonly #planner = inject(ImportPlanner);
   readonly #imports = inject(ImportService);
   readonly #connect = inject(ImportConnectService);
   readonly #modals = inject(ModalService);
+  readonly #settings = inject(SettingsService);
 
-  execute(): AsyncResult<ImportOutcome, NothingToImport | UserAborted> {
+  execute(): AsyncResult<ImportOutcome, NothingToImport | SettingsLocked | UserAborted> {
+    // Ahead of the preview: an import that ran to completion here would create journals and
+    // re-anchor notes, then lose every settings write it made to the locked save.
+    if (this.#settings.lockedByNewerVersion.value) {
+      return AsyncResult.err(new SettingsLocked());
+    }
     const plan = this.#planner.plan();
     if (!hasAnythingToImport(plan)) {
       return AsyncResult.err(new NothingToImport());

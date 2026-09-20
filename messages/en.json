@@ -1264,6 +1264,10 @@
 
   "settings_load_failed": "Journal: failed to load settings — {error}",
   "settings_reload_failed": "Journal: failed to reload settings — {error}",
+  "settings_replaced_by_older": "Journal: an older version of Journals replaced your settings. A snapshot of the previous settings was saved — restore it from Maintenance.",
+  "settings_too_new_notice": "Journal: your settings were saved by a newer version of Journals on another device. Restart Obsidian, or update Journals here — changes you make until then are discarded.",
+  "settings_too_new_banner": "These settings were saved by a newer version of Journals on another device. Restart Obsidian, or update Journals here — changes you make until then are discarded.",
+  "settings_too_new_boot": "Journal: your settings were saved by a newer version of Journals. Update Journals on this device to use it here.",
   "settings_reload_required_banner": "Reload Obsidian to apply the changed settings.",
   "settings_tab_title": "Journals",
 
@@ -1788,6 +1792,7 @@
   "import_section_description": "Set up journals from the settings of Periodic Notes, Calendar and core Daily notes, and connect the notes you already have. Only enabled plugins are read.",
   "import_section_none": "None of Periodic Notes, Calendar and core Daily notes is enabled.",
   "import_section_nothing": "The enabled plugins have nothing to import.",
+  "import_section_locked": "Settings here were saved by a newer version of Journals. Restart Obsidian before importing.",
   "journal_clone_modal_description": "Settings and commands are copied. Notes are not.",
   "journal_clone_modal_name_label": "New journal name",
   "journal_clone_modal_title": "Clone {name}",
@@ -2285,6 +2290,9 @@
   "maintenance_snapshots_load_failed": "Snapshots could not be checked. This does not mean none exist — try reopening this page.",
   "maintenance_snapshot_row_restore": "Taken before restoring a snapshot",
   "maintenance_snapshot_row_import": "Taken before importing settings from other plugins",
+  "maintenance_snapshot_row_downgrade": "Taken when an older version replaced these settings",
+  "maintenance_snapshot_restore_locked": "Settings here were saved by a newer version of Journals. Restart Obsidian before restoring a snapshot.",
+  "maintenance_snapshot_too_new": "That snapshot was saved by a newer version of Journals and cannot be restored.",
   "maintenance_check_heading": "Vault check",
   "maintenance_check_scanning": "Checking your notes…",
   "maintenance_check_indexing": "Still indexing your vault. Reopen this page in a moment.",

@@ -2,6 +2,7 @@ import * as v from "valibot";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
+import { m } from "@/i18n";
 import { createToken, type Module } from "@/infrastructure/di";
 import { PluginDataIOError } from "@/infrastructure/host";
 import { FakePluginData } from "@/infrastructure/host/testing";
@@ -11,7 +12,13 @@ import { journalConfigCollection } from "@/journals/config";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
-import { SliceKeyConflictError, MigrationFailedError, SettingsSaveError, UnregisteredSliceError } from "./errors";
+import {
+  SliceKeyConflictError,
+  MigrationFailedError,
+  SettingsSaveError,
+  SettingsTooNewError,
+  UnregisteredSliceError,
+} from "./errors";
 import { v4ToV5Migration } from "./legacy/v4-to-v5";
 import { v5ToV6Migration } from "./legacy/v5-to-v6";
 import {
@@ -225,6 +232,17 @@ function testSettingsModule(
 // (`Object.keys(target)`), so a registered collection is what makes an un-guarded reload()/
 // replaceStoredData() throw on this un-hydrated instance instead of silently doing nothing —
 // with zero collections registered the guard's absence is invisible.
+// An initialized service whose data.json has since been replaced by a build one version ahead,
+// exactly as a sync client delivers it: the in-memory settings are still this build's own.
+async function withNewerDataOnDisk(): ReturnType<typeof testContainer> {
+  const harness = await testContainer({
+    modules: [testSettingsModule()],
+    data: { calendar: { dow: 1, global: true } },
+  });
+  await harness.data.save({ version: CURRENT_VERSION + 1, calendar: { dow: 1, global: true }, future: "kept" });
+  return harness;
+}
+
 const secondSettingsServiceToken = createToken<SettingsService>("test.settings.second");
 
 function secondSettingsServiceModule(): Module {
@@ -928,8 +946,8 @@ describe("SettingsService", () => {
     });
 
     it("propagates a migration failure as an error", async () => {
-      const harness = await testContainer({ modules: [testSettingsModule()], data: {} });
-      await harness.data.save({ version: 99 });
+      const harness = await testContainer({ modules: [testSettingsModule({ migrations: [] })], data: {} });
+      await harness.data.save({ version: 1 });
       const reload = await harness.settings.reload();
       expectErr(reload);
       expect(reload.error).toBeInstanceOf(MigrationFailedError);
@@ -1041,7 +1059,7 @@ describe("SettingsService", () => {
       const replaced = await harness.settings.replaceStoredData({ version: 99 });
 
       expectErr(replaced);
-      expect(replaced.error).toBeInstanceOf(MigrationFailedError);
+      expect(replaced.error).toBeInstanceOf(SettingsTooNewError);
       const stored = await harness.data.load();
       expectOk(stored);
       expect(stored.value).toEqual({ version: CURRENT_VERSION, calendar: { dow: 1, global: true } });
@@ -1285,6 +1303,222 @@ describe("SettingsService", () => {
       );
 
       expect(await harness.settings.snapshotBeforeImport()).toBe(false);
+    });
+  });
+
+  // The stale-instance overwrite: a device still running this build when a newer one's data.json
+  // syncs in must stop writing settings until it restarts, or its next save puts the old shape
+  // back over the newer file and every value only the newer shape can express is lost.
+  describe("settings saved by a newer version", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("reports a reload against newer settings as settings this build is behind", async () => {
+      const harness = await withNewerDataOnDisk();
+
+      const reload = await harness.settings.reload();
+
+      expectErr(reload);
+      expect(reload.error).toBeInstanceOf(SettingsTooNewError);
+    });
+
+    it("stops saving for the rest of the session once a reload has seen them", async () => {
+      const harness = await withNewerDataOnDisk();
+      await harness.settings.reload();
+      const saveSpy = vi.spyOn(harness.data, "save");
+
+      harness.settings.getSlice(calendarSlice).state.dow = 4;
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(saveSpy).not.toHaveBeenCalled();
+    });
+
+    // The reload path depends on Obsidian noticing the file changed, which is not guaranteed for
+    // every sync client. The check inside the save itself is what makes the protection hold when
+    // no reload ever ran.
+    it("refuses a save against newer settings no reload ever reported", async () => {
+      const harness = await withNewerDataOnDisk();
+
+      harness.settings.getSlice(calendarSlice).state.dow = 4;
+      await vi.advanceTimersByTimeAsync(300);
+
+      const stored = await harness.data.load();
+      expectOk(stored);
+      expect(stored.value).toEqual({
+        version: CURRENT_VERSION + 1,
+        calendar: { dow: 1, global: true },
+        future: "kept",
+      });
+    });
+
+    it("tells the user the changes they are making now are discarded", async () => {
+      const harness = await withNewerDataOnDisk();
+
+      harness.settings.getSlice(calendarSlice).state.dow = 4;
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(harness.notices.messages).toEqual([m.settings_too_new_notice()]);
+    });
+
+    it("exposes the lock so the settings UI can warn before any edit is made", async () => {
+      const harness = await withNewerDataOnDisk();
+      expect(harness.settings.lockedByNewerVersion.value).toBe(false);
+
+      await harness.settings.reload();
+
+      expect(harness.settings.lockedByNewerVersion.value).toBe(true);
+    });
+
+    it("refuses a snapshot restore while locked, leaving the newer settings on disk", async () => {
+      const harness = await withNewerDataOnDisk();
+      await harness.settings.reload();
+
+      const replaced = await harness.settings.replaceStoredData({ version: CURRENT_VERSION, calendar: { dow: 9 } });
+
+      expectErr(replaced);
+      const stored = await harness.data.load();
+      expectOk(stored);
+      expect(stored.value).toEqual({
+        version: CURRENT_VERSION + 1,
+        calendar: { dow: 1, global: true },
+        future: "kept",
+      });
+    });
+
+    it("refuses to snapshot for an import while locked", async () => {
+      const harness = await withNewerDataOnDisk();
+      await harness.settings.reload();
+
+      expect(await harness.settings.snapshotBeforeImport()).toBe(false);
+    });
+
+    // A snapshot written by a newer plugin and restored after a downgrade fails the same version
+    // check, but it is a rejected input the user handed us — not evidence that data.json on disk
+    // is ahead of this build. Locking the session on it would strand a user who merely clicked
+    // the wrong row in Maintenance.
+    it("does not lock the session when the snapshot offered for restore is the newer one", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule()],
+        data: { calendar: { dow: 1, global: true } },
+      });
+
+      const replaced = await harness.settings.replaceStoredData({ version: CURRENT_VERSION + 1 });
+
+      expectErr(replaced);
+      expect(harness.settings.lockedByNewerVersion.value).toBe(false);
+      const saveSpy = vi.spyOn(harness.data, "save");
+      harness.settings.getSlice(calendarSlice).state.dow = 4;
+      await vi.advanceTimersByTimeAsync(300);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // The other side of the same sync window: this build is the newer one, and the older device's
+  // save has just landed on top of our settings. Our own state survives only in memory, so it is
+  // what has to be snapshotted — the incoming older data is on disk and migrates forward anyway.
+  describe("settings replaced by an older version", () => {
+    const bump: Migration = {
+      fromVersion: CURRENT_VERSION - 1,
+      toVersion: CURRENT_VERSION,
+      migrate: (raw) => ({ ...raw, migrated: true }),
+    };
+
+    async function olderDataArrives(): ReturnType<typeof testContainer> {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ migrations: [bump] })],
+        data: { version: CURRENT_VERSION, calendar: { dow: 3, global: true } },
+      });
+      await harness.data.save({ version: CURRENT_VERSION - 1, calendar: { dow: 0, global: false } });
+      return harness;
+    }
+
+    it("snapshots the settings this device held before the older data replaced them", async () => {
+      const harness = await olderDataArrives();
+
+      expectOk(await harness.settings.reload());
+
+      const snapshots = harness.resolve(SnapshotService);
+      const listed = await snapshots.list();
+      expectOk(listed);
+      const downgrade = listed.value.filter((info) => info.reason === "pre-downgrade");
+      expect(downgrade).toHaveLength(1);
+      const contents = await snapshots.read(downgrade.at(0)?.name ?? "");
+      expectOk(contents);
+      expect(contents.value.calendar).toEqual({ dow: 3, global: true });
+      expect(contents.value.version).toBe(CURRENT_VERSION);
+    });
+
+    it("writes no migration snapshot for the same load", async () => {
+      const harness = await olderDataArrives();
+
+      await harness.settings.reload();
+
+      const listed = await harness.resolve(SnapshotService).list();
+      expectOk(listed);
+      expect(listed.value.filter((info) => info.reason === "migration")).toEqual([]);
+    });
+
+    it("applies the older data as the live settings, migrated forward", async () => {
+      const harness = await olderDataArrives();
+
+      await harness.settings.reload();
+
+      expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(0);
+    });
+
+    it("tells the user their settings were replaced and a backup was kept", async () => {
+      const harness = await olderDataArrives();
+
+      await harness.settings.reload();
+
+      expect(harness.notices.messages).toEqual([m.settings_replaced_by_older()]);
+    });
+
+    it("keeps only the three most recent pre-downgrade snapshots", async () => {
+      // A full second apart: stampOf truncates to whole seconds, so back-to-back arrivals would
+      // share one filename and this would pass with prune() never called.
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-09-18T00:00:00.000Z"));
+      const harness = await olderDataArrives();
+
+      for (let i = 0; i < 4; i++) {
+        vi.setSystemTime(new Date(Date.now() + 1000));
+        await harness.data.save({ version: CURRENT_VERSION - 1, calendar: { dow: i, global: false } });
+        await harness.settings.reload();
+      }
+
+      const listed = await harness.resolve(SnapshotService).list();
+      expectOk(listed);
+      expect(listed.value.filter((info) => info.reason === "pre-downgrade")).toHaveLength(3);
+      vi.useRealTimers();
+    });
+
+    it("takes no pre-downgrade snapshot at boot, where behind-version data is an ordinary upgrade", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ migrations: [bump] })],
+        data: { version: CURRENT_VERSION - 1, calendar: { dow: 5, global: false } },
+      });
+
+      const listed = await harness.resolve(SnapshotService).list();
+      expectOk(listed);
+      expect(listed.value.map((info) => info.reason)).toEqual(["migration"]);
+    });
+
+    it("takes no pre-downgrade snapshot when the user restores an older snapshot on purpose", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ migrations: [bump] })],
+        data: { version: CURRENT_VERSION, calendar: { dow: 3, global: true } },
+      });
+
+      expectOk(await harness.settings.replaceStoredData({ version: CURRENT_VERSION - 1, calendar: { dow: 0 } }));
+
+      const listed = await harness.resolve(SnapshotService).list();
+      expectOk(listed);
+      expect(listed.value.filter((info) => info.reason === "pre-downgrade")).toEqual([]);
     });
   });
 

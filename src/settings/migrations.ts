@@ -1,6 +1,6 @@
 import { Err, Ok, type Result } from "@/infrastructure/result";
 
-import { MigrationFailedError } from "./errors";
+import { MigrationFailedError, SettingsTooNewError } from "./errors";
 
 import type { Migration } from "./schema";
 
@@ -8,7 +8,7 @@ export function runMigrations(
   raw: Record<string, unknown>,
   migrations: readonly Migration[],
   targetVersion: number,
-): Result<Record<string, unknown>, MigrationFailedError> {
+): Result<Record<string, unknown>, MigrationFailedError | SettingsTooNewError> {
   const byFrom = new Map<number, Migration[]>();
   for (const m of migrations) {
     if (m.fromVersion === m.toVersion) continue;
@@ -20,7 +20,7 @@ export function runMigrations(
   let current: Record<string, unknown> = raw;
   let version = typeof current.version === "number" ? current.version : 0;
 
-  if (version > targetVersion) return new Err(new MigrationFailedError(version));
+  if (version > targetVersion) return new Err(new SettingsTooNewError(version, targetVersion));
 
   while (version < targetVersion) {
     const steps = byFrom.get(version);
