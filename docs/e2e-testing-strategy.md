@@ -116,9 +116,23 @@ behind. The version unpin of 2026-09-08 moved every key from `1.13.7/*` to
   bug (test or plugin) to triage, or a candidate for the nightly-only `quarantine`
   lane — never a retry. (Earlier iterations used `specFileRetries: 1`; it masked
   more than it surfaced and is gone.)
-- **Parallelism: `maxInstances: 1` to start.** Each instance is a full Obsidian
-  boot under xvfb; "one shared Obsidian process" is therefore **per worker**.
-  Revisit sharding only if nightly wall-clock forces it.
+- **Parallelism: `maxInstances` reads `E2E_MAX_INSTANCES`, defaulting to 2.**
+  Each instance is a full Obsidian boot under xvfb; "one shared Obsidian process"
+  is therefore **per worker**. The service sandboxes every session and supports
+  several at once, so the ceiling is the runner rather than the harness — the
+  macOS leg that sets the gate is the narrowest in the matrix. Sweep the value
+  with `workflow_dispatch` (`max_instances`, `full_matrix` off to mirror the PR
+  gate) rather than editing the config.
+
+  Two was settled over 16 runs, not one: the gate leg's median fell from 596s to
+  475s across 13 samples, and the runs surfaced **ten** tests that asserted on
+  state the step before them had not established. Every one passed serially only
+  because the runner was fast enough, so the contention is doing gate work rather
+  than being tolerated — a wait that is too tight now fails on the pull request
+  that writes it. Expect that, and triage such a failure as the bug it is; do not
+  lower the worker count to make it go away. Raising the value further needs the
+  same evidence, and three has never been measured green here.
+
 - **TypeScript, async-only** (v9 removed sync), explicit `@wdio/globals` imports
   (`browser`, `$`, `expect`) over injected globals — needs `@wdio/globals/types` +
   service types in an e2e `tsconfig`.
@@ -188,8 +202,8 @@ docs:screenshots`), which is not part of this repository.
 - **Vault instance** — the running copy a test mutates: a **fresh temp copy of the
   named template per spec file**. Copying is cheap (filesystem, milliseconds);
   the expensive thing is the Obsidian boot.
-- **One shared Obsidian process per worker** (`maxInstances: 1` to start, so one
-  process overall). Two run modes map onto this:
+- **One shared Obsidian process per worker** (`maxInstances` defaults to 2). Two
+  run modes map onto this:
   - **`obsidianPage.resetVault(path)`** — updates vault files in place **without
     restarting**. The **default** between B/A tests; cheap.
   - **`browser.reloadObsidian({vault})`** — reboots with a fresh vault copy.
@@ -353,14 +367,21 @@ What makes that worth doing is where the time actually goes: measured on the run
 2026-09-08, test bodies were 38% of the Linux suite step and 25% of the Windows one.
 The rest is Obsidian process lifecycle — 71 sessions, one per spec file, plus the
 ~100 `reloadObsidian` boots the specs ask for — which is work that splits across
-runners almost linearly. Windows sets the gate at roughly twice Linux's wall clock
-for identical work, so it is the leg the split is aimed at.
+runners almost linearly. Windows and macOS each cost about 1.4x Linux for identical
+work (836s and 833s against 581s on 2026-09-20, summed across both shards), so the
+split is aimed at those two. Which of them actually sets the gate is a property of
+the split, not of the host — see the next paragraph.
 
 `--shard current/total` slices the spec list **after** suite filtering, contiguously
 and by file count rather than by duration, so the halves are only as balanced as the
-file order happens to make them (387s/440s on Windows for the run above). Nightly
-stays unsharded: it already fans out over the version axis, and its wall clock is
-nobody's feedback loop.
+file order happens to make them. Windows is the flattering case (387s/440s on the run
+above); **macOS is not**, and macOS sets the gate. `journeys` is both last in the
+suite order and the expensive suite, so a two-way split by file count hands shard 2
+the whole of it: 267s against 566s on the run of 2026-09-20. Adding shards is not the
+answer — each one re-pays ~75s of setup and spends a macOS runner against the
+concurrency cap. Workers are, because WDIO gives each free worker the next spec file
+and so balances by duration on its own. Nightly stays unsharded: it already fans out
+over the version axis, and its wall clock is nobody's feedback loop.
 
 The nightly run is specifically the defense against **Obsidian** shipping a
 breaking change under us — it can go red with zero code change. It is also the only

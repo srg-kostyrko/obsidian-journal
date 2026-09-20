@@ -13,6 +13,10 @@ on:
         description: "Add the nightly version axis (floor + installer mismatch)"
         type: boolean
         default: true
+      max_instances:
+        description: "Obsidian instances per leg. 2 is what every other trigger runs; sweep with full_matrix off to mirror the PR gate"
+        type: string
+        default: "2"
 
 concurrency:
   group: e2e-${{ github.ref }}-${{ github.event_name }}
@@ -35,9 +39,11 @@ jobs:
         # the suite is dominated by Obsidian process lifecycle rather than by assertions (test
         # bodies are 38% of the Linux run and 25% of the Windows one — 71 sessions plus ~100
         # reloadObsidian boots), so it splits across runners almost linearly. `--shard c/t` slices
-        # the spec list *after* suite filtering, contiguously and by file count, not by duration;
-        # measured against the run of 2026-09-08 the two halves come out 387s/440s on Windows, the
-        # leg that sets the gate. Nightly stays on one shard: it already fans out over the version
+        # the spec list *after* suite filtering, contiguously and by file count, not by duration,
+        # so `journeys` — last in the suite order and the expensive suite — lands whole in shard 2.
+        # Windows absorbs that (387s/440s); macOS does not (267s/566s on 2026-09-20) and is the leg
+        # that sets the gate. The fix for the skew is workers, not more shards: see E2E_MAX_INSTANCES
+        # below. Nightly stays on one shard: it already fans out over the version
         # axis, its wall clock is nobody's feedback loop, and 3 versions x 3 OS x 2 shards would
         # queue against the concurrent-job limit.
         shard: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["1/1"]') || fromJSON('["1/2", "2/2"]') }}
@@ -54,6 +60,18 @@ jobs:
       # in a GitHub expression, because the empty string is falsy — the old form silently
       # gave every run the same list, so quarantine had never run.
       WDIO_SUITES: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && '--suite smoke --suite integration --suite migration --suite interop --suite journeys --suite quarantine' || '--suite smoke --suite integration --suite migration --suite interop --suite journeys' }}
+      # Workers per leg (wdio.conf.mts `maxInstances`). Only a dispatch sets it; on every other
+      # trigger `inputs.max_instances` is the empty string, which is falsy in a GitHub expression,
+      # so `|| '1'` yields the shipped default. That is the same operand shape the WDIO_SUITES
+      # comment above warns about, used deliberately here: falling through to the default is
+      # exactly what a non-dispatch run wants.
+      #
+      # Two, and the sweep that settled it is the reason the number is trustworthy: 13 runs put
+      # the gate leg's median at 475s against 596s serial, and 16 runs surfaced ten tests that
+      # asserted on state the step before them had not established. Those were bugs either way —
+      # they passed at one worker only because the runner was fast enough — so the contention is
+      # doing gate work, not being tolerated. Raising it further needs the same evidence.
+      E2E_MAX_INSTANCES: ${{ inputs.max_instances || '2' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -65,7 +83,13 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        # --prefer-offline reads the tarballs setup-node just restored instead of revalidating
+        # every one against the registry; --no-audit and --no-fund drop two requests whose output
+        # no one reads here. Six runners pay this step on every run, and it is the only part of
+        # the ~75s pre-test setup that is ours to shorten without a second cache: caching
+        # node_modules itself does not fit the repo's 10 GB budget at this lockfile's churn rate
+        # (see scripts/prune-actions-caches.mjs for what the budget is already spent on).
+        run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Cache Obsidian binaries
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
