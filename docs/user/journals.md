@@ -42,9 +42,12 @@ them at the root of the vault, and formats dates to suit its period.
 each change as you make it.
 
 **Note name template** — any [template variable](/reference/variables) can go in it: `{{date}}`,
-`{{date:dddd}}`, `{{index}}`, a question's answer. Make it name every period differently: two periods
-that resolve to the same name share one note. A name the plugin cannot read a date back out of works,
-but notes you create yourself will not [auto-attach](/notes#auto-attach).
+`{{date:dddd}}`, `{{index}}`, a question's answer. Make it name every period differently: when a
+second period resolves to a name the first already took, opening it is refused and that period gets
+no note at all — see [Opening a period says its note belongs to another
+period](/troubleshooting#opening-a-period-says-its-note-belongs-to-another-period). A name the plugin
+cannot read a date back out of works, but notes you create yourself will not
+[auto-attach](/notes#auto-attach).
 
 **Folder** — where new notes go. It takes variables too, so notes can be filed by date:
 `Journal/{{date:YYYY}}/{{date:MM}}` puts each note under its year and month. Changing **Folder** later
@@ -127,8 +130,10 @@ For numbered entries (like `Sprint 1`), and for chained ones (like `Release4711S
   its new start number, and add a finer `sprint` digit beneath it.
 - The last remaining digit cannot be deleted; deleting the slowest one promotes the next digit to
   take its place.
-- **Allow before anchor** — allows indexing before the anchor date, which may produce negative numbers.
-  Offered only when the journal has no start date and the slowest digit is Continuous.
+- **Allow before anchor** — allows indexing before the period holding the anchor date, which may
+  produce negative numbers. That period itself is numbered either way, even when the anchor date falls
+  part-way through it. Offered only when the journal has no start date and the slowest digit is
+  Continuous.
 - **Preview** shows the full paths of the next five notes, so a digit used only in the folder is
   visible too.
 - A note named only by its digits (no date anywhere in the name or folder) can still be matched back
