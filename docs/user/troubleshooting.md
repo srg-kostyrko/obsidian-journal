@@ -26,10 +26,11 @@ Auto-attach reacts to notes created or renamed while Obsidian runs, and only whe
 folder and name template match the note's whole path. When two journals match, the
 [vault check](#vault-check) lists the note and **Connect to** _journal_ settles it. Notes that were
 already there when you installed the plugin are not adopted. See [Auto-attach](/notes#auto-attach) for the full list, and look for a
-warning under the journal's **Note name template** — it says when names cannot be read back. A date
-format the plugin cannot read back is one cause, and it is easy to miss because the notes themselves
-look right: a format that also carries a time zone — `Z` or `ZZ` — is written correctly and matches
-nothing on the way back. Build the format from date symbols such as `YYYY-MM-DD`.
+warning under the journal's **Folder** or **Note name template**, whichever is at fault — it says when
+paths cannot be read back. A date format the plugin cannot read back is one cause, and it is easy to
+miss because the notes themselves look right: a format that also carries a time zone — `Z` or `ZZ` —
+is written correctly and matches nothing on the way back. Build the format from date symbols such as
+`YYYY-MM-DD`.
 
 ## A note was created in the wrong place
 
@@ -138,7 +139,11 @@ this is resolved. Without that, this copy would write its older settings back ov
 and lose whatever only the newer version can express.
 
 Restart Obsidian — this device has most likely already received the newer Journals and only needs
-to load it. If the banner comes back after the restart, update Journals here.
+to load it. If it has not, the restart is louder than the banner rather than bringing it back: the
+newer settings are on disk before Journals loads, so Journals does not start at all and shows a
+notice asking you to update it on this device. There is no Journals settings page to open then —
+update Journals from Obsidian's **Community plugins** page. The banner itself can only come back
+when this copy started against settings it could read and newer ones arrived while it was running.
 
 ## An older version replaced your settings {#an-older-version-replaced-your-settings}
 
@@ -153,8 +158,10 @@ See [Templater](/compatibility#templater) for the setup that keeps the two from 
 
 ## Maintenance {#maintenance}
 
-**Maintenance**, at the bottom of the main settings page, has two tools. It does nothing unless you use
-it.
+**Maintenance**, at the bottom of the main settings page, has three tools — **Settings snapshots**,
+**Import from other plugins** (see [Importing your
+settings](/guides/from-periodic-notes#importing-your-settings)) and **Vault check**. It does nothing
+unless you use it.
 
 ### Vault check {#vault-check}
 
