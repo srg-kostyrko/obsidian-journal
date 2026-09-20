@@ -1,4 +1,5 @@
 import { browser, expect } from "@wdio/globals";
+import { obsidianPage } from "wdio-obsidian-service";
 
 import { createNote, frontmatterOf, waitForJournalFrontmatter } from "../support/vault.js";
 
@@ -36,7 +37,7 @@ describe("auto-attach with an index-only template", () => {
 // numbering inversion would never run.
 describe("auto-attach with an offset index template", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-sprint-index", plugins: ["journals"] });
+    await obsidianPage.resetVault("./e2e/fixtures/e2e-sprint-index");
   });
 
   it("subtracts the offset before reversing the index to an anchor date", async () => {

@@ -1,4 +1,5 @@
 import { $, $$, browser, expect } from "@wdio/globals";
+import { obsidianPage } from "wdio-obsidian-service";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { paletteCount } from "../support/commands.js";
@@ -626,7 +627,7 @@ describe("calendar view", () => {
 
   describe("toolbar", () => {
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+      await obsidianPage.resetVault("./e2e/fixtures/e2e-journeys");
     });
 
     it("advances the calendar a month when the next-month button is clicked", async () => {
@@ -845,7 +846,7 @@ describe("calendar view", () => {
     const sprintSection = `${LIVE_LEAF} .journal-view-custom-intervals [data-journal="sprint"]`;
 
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-journeys", plugins: ["journals"] });
+      await obsidianPage.resetVault("./e2e/fixtures/e2e-journeys");
     });
 
     // The block projects the sprint's recurring schedule (every 2 weeks, never-ending) through
