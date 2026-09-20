@@ -198,7 +198,11 @@ describe("settings", () => {
       await clickIcon("Add a view");
       await setModalText("icon-pick-view");
       await pickModalIcon("lucide-book-open");
-      await submitModal();
+      // Not submitModal(): the icon-suggest input refocuses after the pick and its dropdown sits
+      // over the CTA, so a physical click lands on the overlay and the close hangs. That the
+      // dropdown is in the way is the documented behavior, not something this test can assert
+      // its way past -- it passed at one worker only because the refocus usually lost the race.
+      await submitOverlaidModal();
 
       await waitForSettings(
         (s) => s.views?.[viewIdByName(s.views, "icon-pick-view") ?? ""]?.icon === "lucide-book-open",

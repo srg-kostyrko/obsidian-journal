@@ -187,8 +187,11 @@ export async function pickModalIcon(icon: string): Promise<void> {
   const suggestion = $(`.journal-suggestion-icon=${icon}`);
   await activeModal().$(".ui-icon-suggest input").setValue(icon);
   await suggestion.click();
-  // The popup overlays the dialog's CTA, so a submit sent before it has gone lands on the overlay
-  // and the modal never closes. Waiting here keeps the caller's submit a real click.
+  // Waiting for the picked suggestion to go proves the click was consumed and the icon committed,
+  // which the caller then asserts on. It does NOT make the dialog's CTA clickable: the input
+  // refocuses a beat later and reopens its dropdown over the CTA, so callers that submit after a
+  // pick need submitOverlaidModal(). Measured -- waiting only for this element let the modal-close
+  // flake recur under load.
   await suggestion.waitForExist({
     reverse: true,
     timeoutMsg: `the "${icon}" icon suggestion popup did not close after the pick`,
