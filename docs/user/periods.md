@@ -44,6 +44,12 @@ With anything but **Follow system locale**, **Apply week configuration to all da
 appears: off, week-configuration settings apply only to dates inside journals and do not affect dates
 created by other plugins or Obsidian itself. You might need to restart Obsidian for it to take effect.
 
+Two more rows of the same block set defaults explained elsewhere: **Default week numbers**, where the
+week-number column sits in calendar blocks left on **Use global default** — see [Month calendar and
+Week calendar](/views#month-calendar-and-week-calendar) — and **Default timeline navigation**, whether
+a `calendar-timeline` block shows previous and next controls unless its own `navigation` option says
+otherwise — see [Timeline](/reference/code-blocks).
+
 ### Changing it when you already have weekly notes
 
 Weekly notes keep their week number, but their dates change. When you **Update**, every weekly note —
