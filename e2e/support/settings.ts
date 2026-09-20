@@ -184,8 +184,12 @@ export async function setModalRowText(rowName: string, value: string): Promise<v
 // it: Obsidian prefixes the bundled Lucide set ("lucide-book-open"), unlike the bare names our
 // own icon map authors.
 export async function pickModalIcon(icon: string): Promise<void> {
-  const suggestion = $(`.journal-suggestion-icon=${icon}`);
+  // Resolve the suggestion only after the typing that renders it, and wait for it: a click on a
+  // selector that matches nothing yet reaches the driver with an undefined element id and fails
+  // as "Malformed type for elementId", which reads like a harness fault rather than a race.
   await activeModal().$(".ui-icon-suggest input").setValue(icon);
+  const suggestion = $(`.journal-suggestion-icon=${icon}`);
+  await suggestion.waitForExist({ timeoutMsg: `the "${icon}" icon was never suggested` });
   await suggestion.click();
   // Waiting for the picked suggestion to go proves the click was consumed and the icon committed,
   // which the caller then asserts on. It does NOT make the dialog's CTA clickable: the input
