@@ -148,13 +148,13 @@ behind. The version unpin of 2026-09-08 moved every key from `1.13.7/*` to
 
   ```ts
   suites: {
-    smoke: ["./e2e/smoke/**/*.e2e.ts"],
-    integration: ["./e2e/integration/**/*.e2e.ts"], // slice A
-    migration: ["./e2e/migration/**/*.e2e.ts"], // slice C
-    interop: ["./e2e/interop/**/*.e2e.ts"], // slice D
-    journeys: ["./e2e/journeys/**/*.e2e.ts"], // slice B
-    quarantine: ["./e2e/quarantine/**/*.e2e.ts"],
-    screenshots: ["./e2e/screenshots/**/*.shot.ts"],
+    smoke: ["./e2e-tests/smoke/**/*.e2e.ts"],
+    integration: ["./e2e-tests/integration/**/*.e2e.ts"], // slice A
+    migration: ["./e2e-tests/migration/**/*.e2e.ts"], // slice C
+    interop: ["./e2e-tests/interop/**/*.e2e.ts"], // slice D
+    journeys: ["./e2e-tests/journeys/**/*.e2e.ts"], // slice B
+    quarantine: ["./e2e-tests/quarantine/**/*.e2e.ts"],
+    screenshots: ["./e2e-tests/screenshots/**/*.shot.ts"],
   }
   ```
 
@@ -170,19 +170,19 @@ integration --suite migration --suite interop --suite journeys`), omitting
 
 - **Periodic Notes 1.x capability.** Periodic Notes 0.x and 1.x share the plugin id `periodic-notes`,
   so 1.x (`1.0.0-beta.3`, installed from GitHub) gets a second capability per version combo. That
-  capability runs only `e2e/interop-1x/`, and the main capabilities exclude that directory. Both
+  capability runs only `e2e-tests/interop-1x/`, and the main capabilities exclude that directory. Both
   use directory `wdio:exclude` lists, because WDIO replaces `wdio:specs` whenever a suite is named.
-  A new spec needing 1.x goes under `e2e/interop-1x/`; a new top-level spec directory must be added
+  A new spec needing 1.x goes under `e2e-tests/interop-1x/`; a new top-level spec directory must be added
   to the 1.x capability's exclude list.
 
 - **Targeted dev runs:** `--spec ./path/or/pattern` for one file/pattern;
   `--mochaOpts.grep "<title>"` to filter by `describe`/`it` title across files.
-- **Documentation screenshots** are the `screenshots` suite (`e2e/screenshots/**/*.shot.ts`). No
+- **Documentation screenshots** are the `screenshots` suite (`e2e-tests/screenshots/**/*.shot.ts`). No
   CI job names it and the bare glob matches only `*.e2e.ts`, so no ordinary run rewrites a
   committed image. `npm run docs:screenshots` regenerates every image; `--spec` regenerates one
   page's. A shot spec asserts nothing — its images are reviewed by eye, and the outcomes it
-  records under `e2e/.reports/outcomes/` are what a manual page's claims are compared against.
-  A spec whose page quotes a date pins the renderer's date to it (`e2e/support/clock.ts`), so a rerun
+  records under `e2e-tests/.reports/outcomes/` are what a manual page's claims are compared against.
+  A spec whose page quotes a date pins the renderer's date to it (`e2e-tests/support/clock.ts`), so a rerun
   on any day reproduces the committed outcomes and images.
   Capture needs a composited window: a Chromium window that is hidden (for example parked on an
   invisible workspace) receives no frame callbacks, so screenshot commands hang with "Timed out
@@ -249,7 +249,7 @@ informatively — it reads as "menu did not open" whatever actually broke.
 ordinary menu spec means the same thing on every OS and a macOS failure is a
 finding rather than an artifact.
 
-A spec that needs the _native_ path opts in with `e2e/support/native-menu.ts`,
+A spec that needs the _native_ path opts in with `e2e-tests/support/native-menu.ts`,
 which flips Obsidian's static and swaps Electron's `buildFromTemplate` for a
 capture. That is not a simulation — it is the real native branch of
 `showAtPosition`, with only the OS popup replaced by something WebDriver can
@@ -260,7 +260,7 @@ The capture also replays what makes the native menu different: it closes first
 and delivers the pick afterwards, the reverse of the DOM menu. **Anything whose
 result is a value — a promise the pick resolves and the close would cancel —
 must be tested under both orderings**, because the two disagree about what a
-close means. `e2e/journeys/multi-journal-pick.e2e.ts` is the worked example, one
+close means. `e2e-tests/journeys/multi-journal-pick.e2e.ts` is the worked example, one
 test per ordering; issue #238 is what it costs to cover only one.
 
 ### Waiting and flakiness budget

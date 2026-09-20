@@ -12,8 +12,8 @@ import { parseObsidianVersions } from "wdio-obsidian-service";
 // reads.
 const CACHE_DIR = path.resolve(".obsidian-cache");
 
-const SCREENSHOT_DIR = "./e2e/.reports/screenshots";
-const LOG_DIR = "./e2e/.reports/logs";
+const SCREENSHOT_DIR = "./e2e-tests/.reports/screenshots";
+const LOG_DIR = "./e2e-tests/.reports/logs";
 
 // Two streams, merged by timestamp into one ordered story. The plugin's own records come from
 // its in-memory buffer (fields intact; e2e fixtures run it at "debug"), and the renderer console
@@ -101,19 +101,19 @@ export const config: WebdriverIO.Config = {
 
   // Suites are the grouping axis (see docs/e2e-testing-strategy.md). Every CI run names
   // its suites; nightly names `quarantine` too. The bare glob is a local-run convenience.
-  specs: ["./e2e/**/*.e2e.ts"],
+  specs: ["./e2e-tests/**/*.e2e.ts"],
   suites: {
-    smoke: ["./e2e/smoke/**/*.e2e.ts"],
-    integration: ["./e2e/integration/**/*.e2e.ts"],
-    migration: ["./e2e/migration/**/*.e2e.ts"],
+    smoke: ["./e2e-tests/smoke/**/*.e2e.ts"],
+    integration: ["./e2e-tests/integration/**/*.e2e.ts"],
+    migration: ["./e2e-tests/migration/**/*.e2e.ts"],
     // interop-1x holds the specs that need Periodic Notes 1.x, which can only run under its own
     // capability: both versions share the plugin id "periodic-notes".
-    interop: ["./e2e/interop/**/*.e2e.ts", "./e2e/interop-1x/**/*.e2e.ts"],
-    journeys: ["./e2e/journeys/**/*.e2e.ts"],
-    quarantine: ["./e2e/quarantine/**/*.e2e.ts"],
+    interop: ["./e2e-tests/interop/**/*.e2e.ts", "./e2e-tests/interop-1x/**/*.e2e.ts"],
+    journeys: ["./e2e-tests/journeys/**/*.e2e.ts"],
+    quarantine: ["./e2e-tests/quarantine/**/*.e2e.ts"],
     // Documentation screenshots. No CI job names this suite and the bare glob above matches only
     // *.e2e.ts, so no ordinary run rewrites a committed image.
-    screenshots: ["./e2e/screenshots/**/*.shot.ts"],
+    screenshots: ["./e2e-tests/screenshots/**/*.shot.ts"],
   },
 
   maxInstances,
@@ -125,7 +125,7 @@ export const config: WebdriverIO.Config = {
       "goog:loggingPrefs": { browser: "ALL" },
       // Directory excludes, not a spec list: WDIO replaces a capability's `wdio:specs` whenever a
       // suite is named, and every CI run names suites. `wdio:exclude` is honoured either way.
-      "wdio:exclude": ["./e2e/interop-1x/**"],
+      "wdio:exclude": ["./e2e-tests/interop-1x/**"],
       "wdio:obsidianOptions": {
         installerVersion,
         // Templater is installed from the community registry but starts disabled; the
@@ -147,7 +147,7 @@ export const config: WebdriverIO.Config = {
           { id: "calendar", version: "1.5.10", enabled: false },
           { id: "obsidian-local-rest-api", version: "5.1.0", enabled: false },
         ],
-        vault: "./e2e/fixtures/e2e-empty",
+        vault: "./e2e-tests/fixtures/e2e-empty",
       },
     },
     {
@@ -155,20 +155,20 @@ export const config: WebdriverIO.Config = {
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
       "wdio:exclude": [
-        "./e2e/smoke/**",
-        "./e2e/integration/**",
-        "./e2e/migration/**",
-        "./e2e/interop/**",
-        "./e2e/journeys/**",
-        "./e2e/quarantine/**",
-        "./e2e/screenshots/**",
+        "./e2e-tests/smoke/**",
+        "./e2e-tests/integration/**",
+        "./e2e-tests/migration/**",
+        "./e2e-tests/interop/**",
+        "./e2e-tests/journeys/**",
+        "./e2e-tests/quarantine/**",
+        "./e2e-tests/screenshots/**",
       ],
       "wdio:obsidianOptions": {
         installerVersion,
         // Pinned by version: "latest" resolves through the repo's HEAD manifest, which still says
         // 0.0.17 even at the beta tags.
         plugins: ["./build", { repo: "liamcain/obsidian-periodic-notes", version: "1.0.0-beta.3", enabled: false }],
-        vault: "./e2e/fixtures/e2e-empty",
+        vault: "./e2e-tests/fixtures/e2e-empty",
       },
     },
   ]),
@@ -182,7 +182,10 @@ export const config: WebdriverIO.Config = {
     // One report per spec file: getLogFile resolves this once per runner and `cid` is unique per
     // spec, so a fixed name would leave the whole suite's report holding only the last spec to
     // finish — which is why CI's junit check reported "1 tests run" beside a failed job.
-    ["junit", { outputDir: "./e2e/.reports", outputFileFormat: ({ cid }: { cid: string }) => `e2e-junit-${cid}.xml` }],
+    [
+      "junit",
+      { outputDir: "./e2e-tests/.reports", outputFileFormat: ({ cid }: { cid: string }) => `e2e-junit-${cid}.xml` },
+    ],
   ],
 
   cacheDir: CACHE_DIR,
@@ -218,7 +221,7 @@ export const config: WebdriverIO.Config = {
   // for `.menu-item-title` to find. Left alone, every menu assertion in the suite passes on
   // Linux and Windows and fails on macOS as "menu did not open" — a platform accident, not a
   // finding. Pin the DOM rendering so menu specs mean the same thing on every OS; a spec that
-  // wants the native path opts into it explicitly with e2e/support/native-menu.ts, which
+  // wants the native path opts into it explicitly with e2e-tests/support/native-menu.ts, which
   // reproduces it on all three. Re-applied per test because reloadObsidian resets the static.
   beforeTest: async function () {
     await browser.executeObsidian(({ obsidian }) => {
@@ -228,7 +231,7 @@ export const config: WebdriverIO.Config = {
 
   // Headless CI failures are near-impossible to debug without a capture (see
   // docs/e2e-testing-strategy.md, Authoring conventions). Saved as a junit-sibling
-  // artifact under e2e/.reports.
+  // artifact under e2e-tests/.reports.
   afterTest: async function (test, _context, result: { passed: boolean }) {
     if (result.passed) return;
     const screenshot = await browser.takeScreenshot();

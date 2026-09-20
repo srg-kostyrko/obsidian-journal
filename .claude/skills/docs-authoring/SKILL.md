@@ -62,8 +62,8 @@ Every feature page ends with two or three concrete, copyable configurations.
   with the config copied from that spec's fixture, rather than running a new one.
 - Examples go inside the feature page they demonstrate. `docs/user/guides/` is a
   closed set of three; do not add a fourth.
-- Run the example in a fixture vault through a `e2e/screenshots/<page>.shot.ts` spec, which
-  records what actually happened in `e2e/.reports/outcomes/`. If the outcome disagrees with
+- Run the example in a fixture vault through a `e2e-tests/screenshots/<page>.shot.ts` spec, which
+  records what actually happened in `e2e-tests/.reports/outcomes/`. If the outcome disagrees with
   the page, the page changes.
 - A fence meant to show a wrong option must use the `yaml` language: the unit suite parses
   every code-block fence in the manual and fails on an option the block would ignore.
@@ -92,7 +92,7 @@ Every feature page ends with two or three concrete, copyable configurations.
   somewhere right.
 - Screenshots are generated, never captured by hand, and only where the outcome is seen.
   `npm run docs:screenshots` regenerates all of them; `npx wdio run ./wdio.conf.mts --spec
-./e2e/screenshots/<page>.shot.ts` (after `npm run build`) regenerates one page's. Each
+./e2e-tests/screenshots/<page>.shot.ts` (after `npm run build`) regenerates one page's. Each
   subject is captured in both Obsidian themes and embedded as a pair, named
   `<page>-<subject>-light.png` / `-dark.png`, where `<page>` is the page's file name
   without `.md`:

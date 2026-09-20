@@ -389,7 +389,7 @@ export default [
     // e2e specs and the WebdriverIO config are not part of the plugin bundle:
     // Mocha drives them, `WebdriverIO` is an ambient type namespace, and `e2e`/
     // `wdio`/`conf` are intentional domain names, not abbreviations to expand.
-    files: ["e2e/**/*.ts", "wdio.conf.mts"],
+    files: ["e2e-tests/**/*.ts", "wdio.conf.mts"],
     plugins: { mocha },
     languageOptions: {
       globals: { ...globals.mocha, WebdriverIO: "readonly" },
@@ -410,7 +410,7 @@ export default [
     // The obsidianmd preset also sets this core rule to steer plugin code from `fetch` to
     // `requestUrl`. This spec calls the REST host from the Mocha process, where `requestUrl`
     // does not exist.
-    files: ["e2e/interop/local-rest-api.e2e.ts"],
+    files: ["e2e-tests/interop/local-rest-api.e2e.ts"],
     rules: {
       "no-restricted-globals": "off",
     },
@@ -419,15 +419,15 @@ export default [
     // Shared e2e helper modules (not spec files) export surface builders, fixtures,
     // and parameterized suite runners. Turn off the mocha rules that only make sense
     // for top-level spec entry points.
-    files: ["e2e/**/*.ts"],
-    ignores: ["e2e/**/*.e2e.ts", "e2e/**/*.shot.ts"],
+    files: ["e2e-tests/**/*.ts"],
+    ignores: ["e2e-tests/**/*.e2e.ts", "e2e-tests/**/*.shot.ts"],
     rules: {
       // Helper modules are not spec entry points; exports are their public API.
       "mocha/no-exports": "off",
     },
   },
   {
-    files: ["e2e/**/*.e2e.ts", "e2e/**/*.shot.ts"],
+    files: ["e2e-tests/**/*.e2e.ts", "e2e-tests/**/*.shot.ts"],
     rules: {
       // Suite-runner calls (e.g. assertDecorationMatrix()) inside describe are the
       // intended programmatic-suite pattern; no-setup-in-describe cannot distinguish
@@ -611,7 +611,7 @@ export default [
     },
   },
   {
-    files: ["wdio.conf.mts", "e2e/support/vault.ts"],
+    files: ["wdio.conf.mts", "e2e-tests/support/vault.ts"],
     rules: {
       // The e2e failure dump is a console artifact by design: the runner writes the plugin's
       // log trail to its own stdout, and the vault helpers mark the renderer console so a

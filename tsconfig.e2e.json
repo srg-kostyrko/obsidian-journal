@@ -5,7 +5,7 @@
   // composite project, so an imported file outside `include` raises TS6307 on every file here.
   "include": [
     "wdio.conf.mts",
-    "e2e/**/*.ts",
+    "e2e-tests/**/*.ts",
     "src/i18n/paraglide/**/*.js",
     "src/settings/version.ts",
     "src/ui/manual.ts"

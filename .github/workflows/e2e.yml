@@ -116,7 +116,7 @@ jobs:
         if: always()
         uses: mikepenz/action-junit-report@a9170d5795813c01ab4901ffb045b52bab4ab09d # v6
         with:
-          report_paths: e2e/.reports/e2e-junit-*.xml
+          report_paths: e2e-tests/.reports/e2e-junit-*.xml
           # The shard belongs in the name: two legs of the same OS and version publish
           # separate checks, and a shared name would leave one silently overwriting the other.
           check_name: e2e results (${{ matrix.os }}, ${{ matrix.obsidian }}, shard ${{ matrix.shard }})
@@ -131,9 +131,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: e2e-reports-${{ matrix.os }}-${{ strategy.job-index }}
-          path: e2e/.reports/
+          path: e2e-tests/.reports/
           if-no-files-found: ignore
-          # e2e/.reports is a dot-directory, and upload-artifact skips hidden paths by
+          # e2e-tests/.reports is a dot-directory, and upload-artifact skips hidden paths by
           # default — so every run so far uploaded nothing and CI-only failures had no
           # screenshot and no junit XML to diagnose from.
           include-hidden-files: true

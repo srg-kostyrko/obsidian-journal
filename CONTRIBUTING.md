@@ -115,7 +115,7 @@ npm run test:e2e:journeys
 
 `npm run test:e2e:pr` runs exactly those five, which is what a pull request
 runs in CI. Reach for it rather than `npm run test:e2e`: that one runs the bare
-`./e2e/**/*.e2e.ts` glob, which is the nightly lane — it also picks up
+`./e2e-tests/**/*.e2e.ts` glob, which is the nightly lane — it also picks up
 `quarantine`, the non-blocking flaky lane that never gates a merge.
 
 ## Making a change
