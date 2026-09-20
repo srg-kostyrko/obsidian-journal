@@ -49,8 +49,8 @@ How each type reads as text:
 - **Text** — as typed.
 - **Long text** — as typed, over as many lines as the answer has. See [Multi-line answers in
   templates](#multi-line-answers-in-templates).
-- **Note link** — the link, brackets included: `[[Roadmap 2027]]`. Write `![[{{project}}]]` to embed
-  the note instead — the answer is a link either way.
+- **Note link** — the link, brackets included: `[[Roadmap 2027]]`. Write `!{{project}}` to embed the
+  note instead, since the answer already carries its brackets.
 
 A question left blank writes nothing into the body.
 
@@ -129,8 +129,9 @@ can only link notes that already exist.
 :::
 
 ::: warning Update every device first
-Versions before this one discard every question of a journal or notelet type that has a note link
-question. Update Journals on each device that syncs this vault before adding one.
+An earlier Journals cannot read the settings this version saves: it shows a settings error and does
+not start at all until it is updated. Update Journals on each device that syncs this vault before
+adding one.
 :::
 
 ::: v-pre

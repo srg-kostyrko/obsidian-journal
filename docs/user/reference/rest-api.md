@@ -160,8 +160,8 @@ curl -k -X POST -H "Authorization: Bearer <your-api-key>" \
 `201` with `{ "created": true, "path": "mood/2027-07-16 great.md", ... }` — the answer renders
 into the note's name, the same as it would into its content or a property. A later call for the
 same day answers `200` with `"created": false` and the existing note. Two such calls arriving at
-once for the same day never create two notes, even when their answers differ — one wins the
-creation and the other reuses its result.
+once for the same day never create two notes, even when their answers differ — the second waits for
+the first and then answers `200` with `"created": false` and the note the first created.
 
 ### Read a note through the redirect
 
