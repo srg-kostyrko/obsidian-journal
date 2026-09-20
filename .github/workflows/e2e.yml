@@ -39,9 +39,11 @@ jobs:
         # the suite is dominated by Obsidian process lifecycle rather than by assertions (test
         # bodies are 38% of the Linux run and 25% of the Windows one — 71 sessions plus ~100
         # reloadObsidian boots), so it splits across runners almost linearly. `--shard c/t` slices
-        # the spec list *after* suite filtering, contiguously and by file count, not by duration;
-        # measured against the run of 2026-09-08 the two halves come out 387s/440s on Windows, the
-        # leg that sets the gate. Nightly stays on one shard: it already fans out over the version
+        # the spec list *after* suite filtering, contiguously and by file count, not by duration,
+        # so `journeys` — last in the suite order and the expensive suite — lands whole in shard 2.
+        # Windows absorbs that (387s/440s); macOS does not (267s/566s on 2026-09-20) and is the leg
+        # that sets the gate. The fix for the skew is workers, not more shards: see E2E_MAX_INSTANCES
+        # below. Nightly stays on one shard: it already fans out over the version
         # axis, its wall clock is nobody's feedback loop, and 3 versions x 3 OS x 2 shards would
         # queue against the concurrent-job limit.
         shard: ${{ (github.event_name == 'schedule' || inputs.full_matrix) && fromJSON('["1/1"]') || fromJSON('["1/2", "2/2"]') }}
