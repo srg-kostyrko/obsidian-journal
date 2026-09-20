@@ -65,17 +65,31 @@ grep '"version"' manifest.json                     # already bumped?
 gh pr list --head "release/$VER" --state all --json number,state
 gh release view "$VER" --json isDraft,publishedAt 2>/dev/null
 npm view obsidian-journals-api version
+# Manual deployed since the release was published? Step 8 dispatches it by hand, so a
+# release that died in the window between publishing and dispatching leaves the root on
+# the previous version, and nothing downstream would notice.
+PUB=$(gh release view "$VER" --json publishedAt --jq '.publishedAt // empty' 2>/dev/null)
+gh run list --workflow=pages.yml --event workflow_dispatch --limit 10 \
+  --json createdAt,conclusion --jq "[.[] | select(.createdAt >= \"${PUB:-9999}\" and .conclusion == \"success\")] | length"
 ```
 
-| Observed                             | Resume at  |
-| ------------------------------------ | ---------- |
-| Nothing exists                       | §1 step 1  |
-| Manifest bumped, no branch on remote | §1 step 5  |
-| Branch pushed, PR open               | §1 step 5a |
-| PR merged, tag not on remote         | §1 step 7  |
-| Tag pushed, release still a draft    | §1 step 8  |
-| Release published, npm behind        | §2         |
-| Everything shipped                   | §3         |
+| Observed                             | Resume at              |
+| ------------------------------------ | ---------------------- |
+| Nothing exists                       | §1 step 1              |
+| Manifest bumped, no branch on remote | §1 step 5              |
+| Branch pushed, PR open               | §1 step 5a             |
+| PR merged, tag not on remote         | §1 step 7              |
+| Tag pushed, release still a draft    | §1 step 8              |
+| Published, no pages run since        | §1 step 8's dispatch   |
+| Release published, npm behind        | §2, then step 8's tail |
+| Everything shipped                   | §3                     |
+
+**The manual deploy is the one step a resume can silently skip.** Every other artefact
+announces its own absence — an unpushed tag, a draft release, a stale npm version — but
+a root manual left on the previous release looks exactly like one that deployed. That
+is the cost of dispatching by hand rather than on the `release` event, so the count
+above is part of the resume detection, not an afterthought: **zero means step 8's
+dispatch still has to run**, whatever else is already done.
 
 Resuming at step 5a or step 6 starts with `git switch "release/$VER"` (and `git pull --ff-only` if the
 branch is pushed) — preflight left the checkout on `main`, which has neither the promoted
@@ -333,6 +347,31 @@ gh release edit "$VER" --notes-file <extracted-section>
 gh release edit "$VER" --draft=false
 ```
 
+Then deploy the manual. `pages.yml` has **no `release` trigger** — a `release` event's
+run ref is the tag, and the `github-pages` environment allows only `main`, so such a
+run is rejected before it executes a step and leaves a failed run with no step log.
+Dispatching runs on `main`, satisfies the policy, and still resolves the root from the
+release just published, so the root builds from the tag as it must:
+
+The newest run is **not** necessarily this dispatch — a docs push to `main` triggers
+this same workflow and can land between the two commands — so match on the event and on
+a timestamp taken before dispatching rather than taking the first row:
+
+```bash
+SINCE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+gh workflow run pages.yml --ref main
+while :; do
+  RUN=$(gh run list --workflow=pages.yml --event workflow_dispatch --limit 5 \
+    --json databaseId,createdAt --jq "[.[] | select(.createdAt >= \"$SINCE\")] | .[0].databaseId // empty")
+  [ -n "$RUN" ] && break
+  sleep 5
+done
+gh run watch "$RUN" --exit-status
+```
+
+Publish first: the job reads the latest **published** release, so a dispatch made while
+the release is still a draft rebuilds the root from the _previous_ version.
+
 ### Step 9 — Verify it reached users
 
 ```bash
@@ -344,10 +383,29 @@ gh release view "$VER" --json isDraft,assets --jq '{draft:.isDraft, assets:[.ass
 The assets must be exactly `main.js`, `manifest.json` and `styles.css`, and the
 manifest served from the release must carry `$VER`.
 
+Check the manual's root too, since step 8's deploy is dispatched by hand and is the one
+thing here that can simply be forgotten. Where the release changed a page — most do —
+grep the live root for a sentence only this version carries, since the root is built
+from the tag's tree and that is what proves it rebuilt. A release that changed no page
+has no such phrase, and deploys byte-identical output, so there step 8's green
+dispatched run is the whole of the evidence:
+
+```bash
+if git diff --quiet "$PREV".."$VER" -- docs/user; then
+  echo "manual unchanged this release — step 8's green run is the check"
+else
+  curl -sS https://srg-kostyrko.github.io/obsidian-journal/<page> | grep -c '<a phrase $VER changed>'
+fi
+```
+
 ## §2 API package — conditional
 
 Runs after §1 step 7's tag build is green. It may run before or after step 8
 publishes the draft; §3 runs last, once the release is public.
+
+Resuming straight into this section does **not** mean step 8 finished: its last act is
+dispatching the manual deploy, which leaves no trace on the release itself. Check the
+pages count from §0 before treating step 8 as done.
 
 **`packages/api` does not ship on every plugin release.** Detect first:
 

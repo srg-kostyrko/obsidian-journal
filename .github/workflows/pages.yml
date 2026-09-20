@@ -14,10 +14,16 @@ on:
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/pages.yml"
-  # Not the tag push: `release.yml` creates a *draft*, so the tag exists for as long as it takes to
-  # write the notes before anyone can install the version the root would start describing.
-  release:
-    types: [published]
+  # No `release: [published]` trigger, and not the tag push either. A `release` event's run has
+  # `github.ref` pointing at the tag, and the `github-pages` environment's deployment branch policy
+  # allows only `main`, so such a run is rejected before it executes a step — it leaves a failed run
+  # with no step log while the pushes below stay green, which reads as a broken release rather than
+  # a settings question. It failed exactly that way at 3.5.0. Publishing the release is therefore
+  # the release runbook's cue to dispatch this workflow by hand; `gh workflow run pages.yml --ref
+  # main` runs on `main`, satisfies the policy, and still resolves the root from the published
+  # release below. The tag push would be wrong anyway: `release.yml` creates a *draft*, so the tag
+  # exists for as long as it takes to write the notes before anyone can install the version the
+  # root would start describing.
   workflow_dispatch:
     inputs:
       stable_ref:
@@ -48,8 +54,8 @@ jobs:
           # `lastUpdated` reads each page's date from `git log`; a depth-1 clone stamps every page
           # with the merge commit's date.
           fetch-depth: 0
-          # A `release` event's default ref is the tag, not the default branch, so the upcoming
-          # manual has to name its ref or a release would publish the tag to `/next/` as well.
+          # Named rather than left to the event's default: `/next/` is `main` by definition, and a
+          # dispatch from any other ref would otherwise publish that ref here instead.
           ref: main
           path: next
 
