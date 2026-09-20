@@ -1630,7 +1630,7 @@
   "journal_clone_modal_title": "克隆{name}",
   "journal_clone_notelet_types_description": "为每种类型添加一个命令。关闭此项以在不复制这些类型的情况下克隆。",
   "journal_clone_notelet_types_label": "复制子笔记类型",
-  "journal_edit_allow_before_description": "允许在锚定日期之前进行索引。可能会产生负数。",
+  "journal_edit_allow_before_description": "允许在包含锚定日期的时段之前进行索引。可能会产生负数。",
   "journal_edit_allow_before_label": "允许早于锚定日期",
   "journal_edit_anchor_description": "编号从此日期开始计算。此日期的笔记获得起始编号，之后的笔记依次递增。",
   "journal_edit_anchor_label": "锚定日期",
@@ -1684,7 +1684,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "笔记名称模板包含路径分隔符。是否将路径前缀移至“文件夹”字段？",
   "journal_edit_name_template_description": "用于生成新笔记名称的模板。",
   "journal_edit_name_template_empty_warning": "此名称模板解析出的笔记名称为空，因此无法创建笔记。请向其中添加变量或一些文本。",
-  "journal_edit_name_template_collision_warning": "{first} 与 {second} 的条目都解析为 {path}。它们将共用一条笔记。",
+  "journal_edit_name_template_collision_warning": "{first} 与 {second} 的条目都解析为 {path}。只有其中一个能拥有笔记，打开另一个会被拒绝。",
   "journal_edit_colliding_warning": "此日记解析出的笔记路径与 {names} 相同，因此它们的笔记会互相覆盖。请更改文件夹或名称模板，使其拥有不同的路径。",
   "journal_edit_name_template_invertibility_warning": [
     {

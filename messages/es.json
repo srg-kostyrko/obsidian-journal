@@ -1781,7 +1781,7 @@
   "journal_clone_modal_title": "Clonar {name}",
   "journal_clone_notelet_types_description": "Añade un comando para cada tipo. Desactiva esta opción para clonar sin ellos.",
   "journal_clone_notelet_types_label": "Copiar tipos de nota breve",
-  "journal_edit_allow_before_description": "Permite la indexación antes de la fecha de anclaje. Puede generar números negativos.",
+  "journal_edit_allow_before_description": "Permite la indexación antes del periodo que contiene la fecha de anclaje. Puede generar números negativos.",
   "journal_edit_allow_before_label": "Permitir antes del anclaje",
   "journal_edit_anchor_description": "La numeración empieza en esta fecha. La nota de esta fecha recibe el número inicial y las notas posteriores cuentan a partir de ella.",
   "journal_edit_anchor_label": "Fecha de anclaje",
@@ -1835,7 +1835,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "La plantilla de nombre de nota contiene un separador de ruta. ¿Mover el prefijo de ruta al campo Carpeta?",
   "journal_edit_name_template_description": "Plantilla utilizada para generar nuevos nombres de notas.",
   "journal_edit_name_template_empty_warning": "Esta plantilla de nombre da como resultado un nombre de nota vacío, por lo que no se puede crear ninguna nota. Agrega una variable o algo de texto.",
-  "journal_edit_name_template_collision_warning": "Las entradas de {first} y {second} se resuelven ambas en {path}. Compartirán una sola nota.",
+  "journal_edit_name_template_collision_warning": "Las entradas de {first} y {second} se resuelven ambas en {path}. Solo una de ellas puede tener nota; abrir la otra se rechaza.",
   "journal_edit_colliding_warning": "Este diario se resuelve en la misma ruta de nota que {names}, por lo que sus notas se sobrescribirán entre sí. Cambia la carpeta o la plantilla de nombre para darle una ruta distinta.",
   "journal_edit_name_template_invertibility_warning": [
     {

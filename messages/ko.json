@@ -1778,7 +1778,7 @@
   "journal_clone_modal_title": "{name} 복제",
   "journal_clone_notelet_types_description": "유형마다 명령을 추가합니다. 끄면 유형 없이 복제합니다.",
   "journal_clone_notelet_types_label": "서브노트 유형 복사",
-  "journal_edit_allow_before_description": "기준일 이전에도 번호를 매길 수 있게 합니다. 음수가 나올 수 있습니다.",
+  "journal_edit_allow_before_description": "기준일이 속한 기간 이전에도 번호를 매길 수 있게 합니다. 음수가 나올 수 있습니다.",
   "journal_edit_allow_before_label": "기준일 이전 허용",
   "journal_edit_anchor_description": "이 날짜부터 번호가 시작됩니다. 이 날짜의 노트가 시작 번호를 받고, 이후 노트는 거기서부터 하나씩 올라갑니다.",
   "journal_edit_anchor_label": "기준일",
@@ -1832,7 +1832,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "노트 이름 템플릿에 경로 구분 기호가 들어 있습니다. 경로 접두사를 폴더 필드로 옮길까요?",
   "journal_edit_name_template_description": "새 노트 이름을 만들 때 사용하는 템플릿입니다.",
   "journal_edit_name_template_empty_warning": "이 이름 템플릿은 빈 노트 이름으로 확정되어 노트를 만들 수 없습니다. 변수나 텍스트를 추가하세요.",
-  "journal_edit_name_template_collision_warning": "{first} 항목과 {second} 항목이 모두 {path}로 확정됩니다. 두 항목이 노트 하나를 공유하게 됩니다.",
+  "journal_edit_name_template_collision_warning": "{first} 항목과 {second} 항목이 모두 {path}로 확정됩니다. 둘 중 하나만 노트를 가질 수 있으며, 다른 하나를 열면 거부됩니다.",
   "journal_edit_colliding_warning": "이 저널은 {names} 저널과 같은 노트 경로로 확정되어 노트가 서로 덮어써집니다. 폴더나 이름 템플릿을 바꿔 경로를 다르게 만드세요.",
   "journal_edit_name_template_invertibility_warning": [
     {

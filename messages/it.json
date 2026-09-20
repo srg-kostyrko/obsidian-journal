@@ -1792,7 +1792,7 @@
   "journal_clone_modal_title": "Clona {name}",
   "journal_clone_notelet_types_description": "Aggiunge un comando per ogni tipo. Disattiva per clonare senza di essi.",
   "journal_clone_notelet_types_label": "Copia i tipi di nota breve",
-  "journal_edit_allow_before_description": "Consenti l'indicizzazione prima della data di ancoraggio. Potrebbe produrre numeri negativi.",
+  "journal_edit_allow_before_description": "Consenti l'indicizzazione prima del periodo che contiene la data di ancoraggio. Potrebbe produrre numeri negativi.",
   "journal_edit_allow_before_label": "Consenti prima dell'ancoraggio",
   "journal_edit_anchor_description": "La numerazione parte da questa data. La nota di questa data riceve il numero iniziale e le note successive proseguono il conteggio.",
   "journal_edit_anchor_label": "Data di ancoraggio",
@@ -1846,7 +1846,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "Il modello del nome della nota contiene un separatore di percorso. Spostare il prefisso del percorso nel campo Cartella?",
   "journal_edit_name_template_description": "Modello utilizzato per generare nuovi nomi di note.",
   "journal_edit_name_template_empty_warning": "Questo modello di nome produce un nome di nota vuoto, quindi non è possibile creare alcuna nota. Aggiungi una variabile o del testo.",
-  "journal_edit_name_template_collision_warning": "Le voci per {first} e {second} producono entrambe {path}. Condivideranno un'unica nota.",
+  "journal_edit_name_template_collision_warning": "Le voci per {first} e {second} producono entrambe {path}. Solo una di esse può avere una nota; l'apertura dell'altra viene rifiutata.",
   "journal_edit_colliding_warning": "Questo diario punta allo stesso percorso di nota di {names}, quindi le loro note si sovrascriveranno a vicenda. Modifica la cartella o il modello del nome per assegnargli un percorso distinto.",
   "journal_edit_name_template_invertibility_warning": [
     {

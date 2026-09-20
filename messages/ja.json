@@ -1636,7 +1636,7 @@
   "journal_clone_modal_title": "{name}を複製",
   "journal_clone_notelet_types_description": "種類ごとにコマンドを追加します。オフにすると、それらなしで複製します。",
   "journal_clone_notelet_types_label": "サブノートの種類をコピー",
-  "journal_edit_allow_before_description": "アンカー日より前の日付にも番号を付けます。負の数になる場合があります。",
+  "journal_edit_allow_before_description": "アンカー日を含む期間より前にも番号を付けます。負の数になる場合があります。",
   "journal_edit_allow_before_label": "アンカー日より前を許可",
   "journal_edit_anchor_description": "この日付から番号付けが始まります。この日付のノートに開始番号が付き、以降のノートは順に加算されます。",
   "journal_edit_anchor_label": "アンカー日",
@@ -1690,7 +1690,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "ノート名テンプレートにパス区切り文字が含まれています。パスの接頭辞をフォルダの項目に移動しますか？",
   "journal_edit_name_template_description": "新しいノート名を生成するために使用するテンプレート。",
   "journal_edit_name_template_empty_warning": "この名前テンプレートはノート名が空になるため、ノートを作成できません。変数かテキストを追加してください。",
-  "journal_edit_name_template_collision_warning": "{first} と {second} はどちらも {path} に解決されます。1つのノートを共有することになります。",
+  "journal_edit_name_template_collision_warning": "{first} と {second} はどちらも {path} に解決されます。ノートを持てるのは一方だけで、もう一方を開こうとすると拒否されます。",
   "journal_edit_colliding_warning": "このジャーナルは{names}と同じノートパスに解決されるため、ノートが互いに上書きされます。フォルダまたは名前テンプレートを変更して、異なるパスを指定してください。",
   "journal_edit_name_template_invertibility_warning": [
     {
