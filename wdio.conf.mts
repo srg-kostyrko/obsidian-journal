@@ -79,18 +79,18 @@ function pluginLine(record: PluginLogRecord): string {
 const versionSpec = env.OBSIDIAN_VERSIONS ?? "latest/latest";
 const versions = await parseObsidianVersions(versionSpec);
 
-// Workers per run, each one a full Obsidian boot. The ceiling is the narrowest runner in the CI
-// matrix rather than the service, which sandboxes every session and documents running several at
-// once. Env-driven so a workflow_dispatch can sweep the value without editing this file: CPU
-// contention inflates boot time, and this suite's known races live in boot windows (the
-// onLayoutReady drain, CLAUDE.md), so the right number is whatever survives repeat runs — not
-// whatever the runner's core count suggests.
+// Workers per run, each one a full Obsidian boot. Two, settled by measurement rather than by core
+// count: across 13 runs the gate leg's median fell from 596s to 475s, and 16 runs at this value
+// found ten tests whose waits only held because the runner was fast. Three is untested here and
+// the ceiling is the narrowest runner in the matrix (macOS, 3 vCPU), not the service, which
+// sandboxes every session. Env-driven so a workflow_dispatch can sweep it without editing this
+// file. Raising it needs the same evidence: repeat runs, and every failure triaged as a bug.
 // Empty is treated as unset, which `??` alone would not do: a workflow `env:` whose expression
 // yields "" still sets the variable, and so does a bare `E2E_MAX_INSTANCES=` in a shell. Anything
 // else — including "0" — reaches the guard, so a typo fails the run instead of silently choosing
 // a worker count nobody asked for.
 const rawMaxInstances = env.E2E_MAX_INSTANCES?.trim() ?? "";
-const maxInstances = rawMaxInstances === "" ? 1 : Number(rawMaxInstances);
+const maxInstances = rawMaxInstances === "" ? 2 : Number(rawMaxInstances);
 if (!Number.isSafeInteger(maxInstances) || maxInstances < 1) {
   throw new TypeError(`E2E_MAX_INSTANCES must be a positive integer; got ${JSON.stringify(env.E2E_MAX_INSTANCES)}`);
 }

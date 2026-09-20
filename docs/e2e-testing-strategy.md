@@ -116,15 +116,23 @@ behind. The version unpin of 2026-09-08 moved every key from `1.13.7/*` to
   bug (test or plugin) to triage, or a candidate for the nightly-only `quarantine`
   lane — never a retry. (Earlier iterations used `specFileRetries: 1`; it masked
   more than it surfaced and is gone.)
-- **Parallelism: `maxInstances` reads `E2E_MAX_INSTANCES`, defaulting to 1.**
+- **Parallelism: `maxInstances` reads `E2E_MAX_INSTANCES`, defaulting to 2.**
   Each instance is a full Obsidian boot under xvfb; "one shared Obsidian process"
   is therefore **per worker**. The service sandboxes every session and supports
   several at once, so the ceiling is the runner rather than the harness — the
   macOS leg that sets the gate is the narrowest in the matrix. Sweep the value
   with `workflow_dispatch` (`max_instances`, `full_matrix` off to mirror the PR
-  gate) rather than editing the config. Raising the default needs **repeat** green
-  runs, not one: contention inflates boot time, and the races this suite has had
-  live in boot windows, so a single pass is not evidence.
+  gate) rather than editing the config.
+
+  Two was settled over 16 runs, not one: the gate leg's median fell from 596s to
+  475s across 13 samples, and the runs surfaced **ten** tests that asserted on
+  state the step before them had not established. Every one passed serially only
+  because the runner was fast enough, so the contention is doing gate work rather
+  than being tolerated — a wait that is too tight now fails on the pull request
+  that writes it. Expect that, and triage such a failure as the bug it is; do not
+  lower the worker count to make it go away. Raising the value further needs the
+  same evidence, and three has never been measured green here.
+
 - **TypeScript, async-only** (v9 removed sync), explicit `@wdio/globals` imports
   (`browser`, `$`, `expect`) over injected globals — needs `@wdio/globals/types` +
   service types in an e2e `tsconfig`.
@@ -194,8 +202,8 @@ docs:screenshots`), which is not part of this repository.
 - **Vault instance** — the running copy a test mutates: a **fresh temp copy of the
   named template per spec file**. Copying is cheap (filesystem, milliseconds);
   the expensive thing is the Obsidian boot.
-- **One shared Obsidian process per worker** (`maxInstances` defaults to 1, so one
-  process overall). Two run modes map onto this:
+- **One shared Obsidian process per worker** (`maxInstances` defaults to 2). Two
+  run modes map onto this:
   - **`obsidianPage.resetVault(path)`** — updates vault files in place **without
     restarting**. The **default** between B/A tests; cheap.
   - **`browser.reloadObsidian({vault})`** — reboots with a fresh vault copy.

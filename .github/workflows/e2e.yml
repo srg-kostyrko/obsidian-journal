@@ -14,9 +14,9 @@ on:
         type: boolean
         default: true
       max_instances:
-        description: "Obsidian instances per leg. 1 is what every other trigger runs; sweep with full_matrix off to mirror the PR gate"
+        description: "Obsidian instances per leg. 2 is what every other trigger runs; sweep with full_matrix off to mirror the PR gate"
         type: string
-        default: "1"
+        default: "2"
 
 concurrency:
   group: e2e-${{ github.ref }}-${{ github.event_name }}
@@ -66,11 +66,12 @@ jobs:
       # comment above warns about, used deliberately here: falling through to the default is
       # exactly what a non-dispatch run wants.
       #
-      # Left at 1 until a sweep settles it. Each instance is a full Obsidian boot and the macOS
-      # runner that sets the gate is the narrowest in the matrix, so the ceiling is contention,
-      # not cores — and contention widens the boot windows this suite's races live in. Raise the
-      # default only on repeat dispatches that stay green, never on one run.
-      E2E_MAX_INSTANCES: ${{ inputs.max_instances || '1' }}
+      # Two, and the sweep that settled it is the reason the number is trustworthy: 13 runs put
+      # the gate leg's median at 475s against 596s serial, and 16 runs surfaced ten tests that
+      # asserted on state the step before them had not established. Those were bugs either way —
+      # they passed at one worker only because the runner was fast enough — so the contention is
+      # doing gate work, not being tolerated. Raising it further needs the same evidence.
+      E2E_MAX_INSTANCES: ${{ inputs.max_instances || '2' }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
