@@ -48,10 +48,20 @@ describe("decoration mark limit", () => {
     await openSeededCalendarView();
 
     const cell = calendar.cell(dayAnchor(DAY));
-    await cell.$('.place-right_top [data-testid="mark-overflow"]').moveTo();
+    const badge = cell.$('.place-right_top [data-testid="mark-overflow"]');
+    await badge.waitForDisplayed({ timeoutMsg: "the overflow badge did not render" });
 
     const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
-    await popover.waitForExist({ timeoutMsg: "the overflow popover did not open on hover" });
+    // moveTo() resolves the badge's centre at call time, so a hover sent while the grid is still
+    // laying its marks out lands beside the badge and is simply lost — there is no second pointer
+    // event to recover it. Re-hover until the popover opens rather than hovering once and waiting.
+    await browser.waitUntil(
+      async () => {
+        await badge.moveTo();
+        return popover.isExisting();
+      },
+      { timeoutMsg: "the overflow popover did not open on hover" },
+    );
     await expect(popover.$$(".shape-decoration")).toBeElementsArrayOfSize(3);
 
     // The popover must render marks larger, at a readable size — assert the ratio, never an

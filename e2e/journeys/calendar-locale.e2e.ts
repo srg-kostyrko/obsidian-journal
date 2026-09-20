@@ -28,7 +28,10 @@ describe("calendar locale", () => {
     await openSeededCalendarView();
     const firstWeekday = $(`${LIVE_LEAF} .notes-month-view__weekday`);
     await firstWeekday.waitForExist({ timeoutMsg: "the weekday header did not render" });
-    expect(await firstWeekday.getText()).toBe("Mon");
+    // The element exists before moment's localeData has supplied its label, so a read-once
+    // `expect(await getText())` asserts on a plain string and never retries — it saw "" under
+    // load. The expect-webdriverio matcher polls to waitforTimeout instead.
+    await expect(firstWeekday).toHaveText("Mon");
   });
 
   // The week configuration lives in moment's locale registry, which Vue cannot observe: before

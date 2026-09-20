@@ -184,8 +184,15 @@ export async function setModalRowText(rowName: string, value: string): Promise<v
 // it: Obsidian prefixes the bundled Lucide set ("lucide-book-open"), unlike the bare names our
 // own icon map authors.
 export async function pickModalIcon(icon: string): Promise<void> {
+  const suggestion = $(`.journal-suggestion-icon=${icon}`);
   await activeModal().$(".ui-icon-suggest input").setValue(icon);
-  await $(`.journal-suggestion-icon=${icon}`).click();
+  await suggestion.click();
+  // The popup overlays the dialog's CTA, so a submit sent before it has gone lands on the overlay
+  // and the modal never closes. Waiting here keeps the caller's submit a real click.
+  await suggestion.waitForExist({
+    reverse: true,
+    timeoutMsg: `the "${icon}" icon suggestion popup did not close after the pick`,
+  });
 }
 
 // Choose a frontmatter property in the open modal's UiPropertySuggest, whose popup Obsidian also
