@@ -204,11 +204,21 @@ docs:screenshots`), which is not part of this repository.
   the expensive thing is the Obsidian boot.
 - **One shared Obsidian process per worker** (`maxInstances` defaults to 2). Two
   run modes map onto this:
-  - **`obsidianPage.resetVault(path)`** — updates vault files in place **without
-    restarting**. The **default** between B/A tests; cheap.
-  - **`browser.reloadObsidian({vault})`** — reboots with a fresh vault copy.
-    **Reserved** for cold-start cases only: plugin activation (skeleton) and
-    migration (C). The many B flows use `resetVault` and never reboot.
+  - **`obsidianPage.resetVault(path)`** — replaces the vault's files in place
+    **without restarting**. Prefer it between describes that only seed or edit
+    notes. Two conditions bound it, and both are narrower than "the same fixture
+    is already loaded": it does not touch anything under `.obsidian`, so a
+    describe that authors configuration still needs a boot; and it does not
+    remount an open view, so a describe whose assertions depend on a freshly
+    mounted surface needs one too. `code-blocks` was converted on the first
+    reading alone, went red on four decoration assertions, and was reverted.
+  - **`browser.reloadObsidian({vault})`** — reboots with a fresh vault copy, and
+    is the only way to change the enabled plugin set. Every spec needs at least
+    one, to reach its own fixture from the capability's `e2e-empty`: **80 of the
+    109 calls are that first switch** and are not removable. A reboot costs about
+    **2.0s** on top of the **3.8s** each spec file already pays for its session
+    (least squares over the 81 specs of both macOS legs), so a second one into a
+    fixture that is already loaded is worth converting and a first one is not.
 - **Never reuse the manual `test-vault/`.** It carries a committed, drifting plugin
   copy and unrelated plugins; it stays exactly as-is for hot-reload dev. e2e
   fixtures are dedicated, minimal, and carry no committed `main.js`.
