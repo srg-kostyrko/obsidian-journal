@@ -179,8 +179,10 @@ journal already has, notelets included. Shelves and commands follow the new name
 **Clone** makes a copy under a **New journal name**: settings and commands are copied, but notes are
 not. **Copy notelet types** adds a command for each type; turn it off to clone without them. The
 copy joins the same [shelf](/shelves). It starts with the source's folder and name template, so the
-two resolve to the same note paths until you change one — **Colliding journal settings** on the main
-settings page says so until you do.
+two usually resolve to the same note paths until you change one — **Colliding journal settings** on
+the main settings page says so until you do. The exception is a name or folder using
+`{{journal_name}}`, which is part of the path and differs between the two: a custom interval
+journal's default name does this, so a clone of one writes its own notes from the start.
 
 **Delete** says how many notes are connected and asks **What to do with connected notes**:
 

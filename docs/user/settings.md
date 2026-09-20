@@ -87,8 +87,8 @@ Reached with **Configure** on a view's row, under **Views** on the main settings
 
 Reached with **Open** under **Maintenance**, at the bottom of the main settings page.
 
-| Section                       | Settings                                                                                       | Explained in                                                               |
-| ----------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Settings snapshots**        | **Restore** on each snapshot                                                                   | [Troubleshooting](/troubleshooting#settings-snapshots)                     |
-| **Import from other plugins** | **Import…**                                                                                    | [From Periodic Notes](/guides/from-periodic-notes#importing-your-settings) |
-| **Vault check**               | **Fix** _count_ per group, **Keep this one**, **Remove journal keys**, **Fix everything safe** | [Troubleshooting](/troubleshooting#vault-check)                            |
+| Section                       | Settings                                                                                                                 | Explained in                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| **Settings snapshots**        | **Restore** on each snapshot                                                                                             | [Troubleshooting](/troubleshooting#settings-snapshots)                     |
+| **Import from other plugins** | **Import…**                                                                                                              | [From Periodic Notes](/guides/from-periodic-notes#importing-your-settings) |
+| **Vault check**               | **Fix** _count_ per group, **Connect to** _journal_, **Keep this one**, **Remove journal keys**, **Fix everything safe** | [Troubleshooting](/troubleshooting#vault-check)                            |
