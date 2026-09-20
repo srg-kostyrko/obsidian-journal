@@ -23,7 +23,8 @@ journal, with its own date format, numbering digits and questions filled in.
 | `{{journal_link(name)}}`                           |        ✓ ²         |        ✓ ²         |         ✓          |         ✓          |
 | `{{notelet_index}}`                                | notelet types only | notelet types only | notelet types only |                    |
 
-¹ Not a yes/no answer — see [Questions](/questions#answers-in-the-note-name-or-folder).
+¹ Not a yes/no, long text or note link answer — see
+[Questions](/questions#answers-in-the-note-name-or-folder).
 ² Allowed, but a name or folder that uses them cannot be read back, so notes you create yourself will
 not [auto-attach](/notes#auto-attach). The settings page warns.
 
@@ -93,8 +94,7 @@ it is formatted:
   `{{time}}` and `{{current_time}}`. `<startOf=decade>` applies to dates only.
 
 `{{date<startOf=decade>:YYYY}}s` names a decade, such as `1950s` — see
-[Filing notes by decade](/journals#filing-notes-by-decade) for a folder built on it, and what that does
-to auto-attach.
+[Filing notes by decade](/journals#filing-notes-by-decade) for a folder built on it.
 
 A `{{…}}` the plugin cannot read — a misspelled variable, an unclosed brace — is left in the text as
 written.
