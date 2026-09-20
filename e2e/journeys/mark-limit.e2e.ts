@@ -101,7 +101,7 @@ describe("decoration mark limit", () => {
 
     const cell = calendar.cell(dayAnchor(DAY));
     const badge = cell.$('.place-right_top [data-testid="mark-overflow"]');
-    await badge.waitForExist();
+    await badge.waitForDisplayed({ timeoutMsg: "the overflow badge did not render" });
 
     const location = await badge.getLocation();
     const size = await badge.getSize();
@@ -112,14 +112,16 @@ describe("decoration mark limit", () => {
     // behind, which is not a descendant of the badge and fires its mouseleave.
     const justBelowBadge = Math.round(location.y + size.height) + 1;
 
-    await browser
-      .action("pointer")
-      .move({ duration: 0, x: badgeCenterX, y: badgeCenterY })
-      .pause(50)
-      .move({ duration: 0, x: badgeCenterX, y: justBelowBadge })
-      .perform();
-
     const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
+
+    // The move onto the badge and the move into the popover are separate actions, because the
+    // popover has to be open before the pointer can stay inside it. A fixed pause between them
+    // was standing in for that: when 50ms was not enough the second move landed on the calendar
+    // cell behind, fired mouseleave, and the assertion read the absence it had itself caused.
+    await browser.action("pointer").move({ duration: 0, x: badgeCenterX, y: badgeCenterY }).perform();
+    await popover.waitForExist({ timeoutMsg: "the popover did not open before the pointer moved into it" });
+
+    await browser.action("pointer").move({ duration: 0, x: badgeCenterX, y: justBelowBadge }).perform();
     await expect(popover).toExist();
   });
 
