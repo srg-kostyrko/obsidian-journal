@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [3.5.1] - 2026-09-20
+
+### Changed
+
+- No change to the plugin itself. This release ships the same build as 3.5.0 so that the community directory re-runs its automated review against the current source, where the end-to-end test harness no longer sits among the files that review reads.
+
 ## [3.5.0] - 2026-09-20
 
 ### Features
