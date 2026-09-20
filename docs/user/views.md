@@ -48,14 +48,20 @@ with **Rename view**; below it:
 - **Blocks** — the view's blocks, top to bottom. **Add block** adds one; each block can be configured,
   moved and removed.
 
+Each view's row under **Views** also carries **Clone** _view_ and **Delete** _view_. **Clone** _view_
+makes a copy named after it with `(copy)` appended, with the same icon, settings and blocks; rename it
+from its own page. **Delete** _view_ asks first, then removes the view and its block configuration —
+your notes are not affected. A tab still showing a deleted view says so and can be closed.
+
 Once a view is open, dragging it elsewhere in the workspace sticks: Obsidian restores it where you left
 it, whatever **Open in** says.
 
 ## The view's date
 
 Every view has a **selected date**. Calendars center on it and lists read from it. It starts on today,
-moves when you open a journal note (with **Follow active note** on), and moves when you step with a
-toolbar button.
+unless the view remembers its last date (**Remember last viewed date**) or follows a journal note that
+is already open when it opens (**Follow active note**), in which case it starts there. It then moves
+when you open a journal note, with **Follow active note** on, and when you step with a toolbar button.
 
 In a calendar grid, clicking a cell opens that period's note, creating it if needed. To change the
 selected date without opening anything, **Shift**+click a day. The keyboard works too: arrow keys move
