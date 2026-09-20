@@ -35,6 +35,12 @@ export class ImportFromPluginsFlow implements Flow<
       const selection = yield* this.#modals
         .open(importPreviewModal, { plan })
         .mapErr(() => new UserAborted("import-preview-modal"));
+      // Re-checked against data.json, not just the latch: the preview stays open for as long as
+      // the user reads it, and an import applied into a locked session would create journals,
+      // shelves and notes whose settings half the save then refuses.
+      if (await this.#settings.recheckStoredVersion()) {
+        yield* AsyncResult.err(new SettingsLocked());
+      }
       const outcome = await this.#imports.apply(plan, selection);
       // Planned after apply() returns: the week start it applied re-anchors weekly notes on the
       // next tick, and connections must be read under the new grid.

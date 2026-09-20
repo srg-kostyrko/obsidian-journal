@@ -73,6 +73,31 @@ describe("ImportFromPluginsFlow", () => {
     });
   });
 
+  // The preview sits open for as long as the user reads it, which makes this a wide window rather
+  // than a race: the settings half of the import would be refused by the save, while the journals,
+  // shelves and notes it had already created stayed behind.
+  it("creates nothing when the settings stop being writable while the preview is open", async () => {
+    const harness = await withPeriodicNotesDay();
+    const running = harness.resolve(ImportFromPluginsFlow).execute();
+    const { plan } = harness.modals.lastOpen<{ plan: ImportPlan }>().props;
+    await harness.data.save({ version: CURRENT_VERSION + 1 });
+    await harness.settings.reload();
+
+    harness.modals.lastOpen().submit({
+      rows: plan.rows.map((row) => ({ key: row.key, name: row.name, include: true, connect: true })),
+      shelves: [],
+      applyWeekStart: false,
+      setStartup: false,
+    } satisfies ImportSelection);
+    const result = await running;
+
+    expectErr(result);
+    expect({ kind: result.error.kind, journals: [...harness.resolve(JournalsRepository).find().list()] }).toEqual({
+      kind: "settings-locked",
+      journals: [],
+    });
+  });
+
   it("creates nothing when the preview is cancelled", async () => {
     const harness = await withPeriodicNotesDay();
     const running = harness.resolve(ImportFromPluginsFlow).execute();

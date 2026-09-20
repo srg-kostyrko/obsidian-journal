@@ -230,26 +230,32 @@ export class SettingsService {
   // A read that fails says nothing about the version, and refusing every save on it would be a
   // worse failure than the overwrite it guards against — so only a version it could actually read
   // latches the refusal.
-  async #refuseSaveWhenTooNew(): Promise<boolean> {
-    if (this.#tooNew.value === undefined) {
-      const stored = await this.#pluginData.load();
-      if (stored.kind === "ok") {
-        const version = versionOf(stored.value);
-        if (version > CURRENT_VERSION) this.#tooNew.value = new SettingsTooNewError(version, CURRENT_VERSION);
-      }
+  async #latchIfStoredIsNewer(): Promise<SettingsTooNewError | undefined> {
+    if (this.#tooNew.value !== undefined) return this.#tooNew.value;
+    const stored = await this.#pluginData.load();
+    if (stored.kind === "ok") {
+      const version = versionOf(stored.value);
+      if (version > CURRENT_VERSION) this.#tooNew.value = new SettingsTooNewError(version, CURRENT_VERSION);
     }
-    if (this.#tooNew.value === undefined) return false;
-    this.#notices.show(m.settings_too_new_notice());
-    return true;
+    return this.#tooNew.value;
   }
 
   async #flush(): Promise<void> {
-    if (await this.#refuseSaveWhenTooNew()) return;
+    if ((await this.#latchIfStoredIsNewer()) !== undefined) {
+      this.#notices.show(m.settings_too_new_notice());
+      return;
+    }
     const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION })) as Record<string, unknown>;
     const result = await this.#pluginData.save(out);
     if (result.kind === "err") {
       this.#logger.error("settings save failed", { error: new SettingsSaveError(result.error) });
+      return;
     }
+    // Our own write is the newest thing we know about data.json, so it becomes the baseline a
+    // later refresh compares against. Leaving the bytes this session booted from in place would
+    // make the pre-upgrade file syncing back from an older device read as "unchanged", and skip
+    // the snapshot in the one sequence that needs it.
+    this.#lastLoadedRaw = JSON.stringify(out);
   }
 
   // Suspends the save watcher across the refresh so applying externally-sourced data does
@@ -264,6 +270,14 @@ export class SettingsService {
     this.#refresh(migrated);
     this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
     this.#events.emit("reloaded");
+  }
+
+  /**
+   * Re-reads data.json and latches the lock when it is newer; true once settings may not be
+   * written. For a caller about to do expensive work whose settings half would be refused.
+   */
+  async recheckStoredVersion(): Promise<boolean> {
+    return (await this.#latchIfStoredIsNewer()) !== undefined;
   }
 
   /** Snapshots the stored settings before an import writes to them; false when none was written. */
@@ -318,10 +332,11 @@ export class SettingsService {
   ): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsTooNewError | SettingsSaveError> {
     return attempt.in(this, async function* () {
       if (!this.#initialized) return;
-      // A restore is a second door onto the same data.json, so the session lock bars it too —
-      // writing an older snapshot over settings a newer build saved is the very overwrite the
-      // lock exists to stop, just with the user's finger on it.
-      const tooNew = this.#tooNew.value;
+      // A restore is a second door onto the same data.json, so it gets the same guard the save
+      // does — the latch alone would trust reload() to have run, and reload only runs when the
+      // host reports the external change. Ahead of the pre-restore snapshot: a restore that will
+      // not happen should not leave a backup behind for it.
+      const tooNew = await this.#latchIfStoredIsNewer();
       if (tooNew !== undefined) yield* new Err<never, SettingsTooNewError>(tooNew);
       // Migrations mutate their input in place, so validating against `raw` itself would
       // corrupt it before it reaches save() below — validate a disposable clone instead.

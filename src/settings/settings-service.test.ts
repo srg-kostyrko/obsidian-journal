@@ -1407,6 +1407,34 @@ describe("SettingsService", () => {
       expect(saveSpy).toHaveBeenCalledTimes(1);
     });
 
+    // Restore trusting only the latch would reopen the hole the save guard exists to close: the
+    // latch is set by reload(), and reload only runs when the host reports the external change.
+    it("refuses a restore against newer settings no reload ever reported", async () => {
+      const harness = await withNewerDataOnDisk();
+
+      const replaced = await harness.settings.replaceStoredData({ version: CURRENT_VERSION, calendar: { dow: 9 } });
+
+      expectErr(replaced);
+      expect(replaced.error).toBeInstanceOf(SettingsTooNewError);
+      const stored = await harness.data.load();
+      expectOk(stored);
+      expect(stored.value).toEqual({
+        version: CURRENT_VERSION + 1,
+        calendar: { dow: 1, global: true },
+        future: "kept",
+      });
+    });
+
+    it("writes no pre-restore snapshot for a restore it refuses", async () => {
+      const harness = await withNewerDataOnDisk();
+
+      await harness.settings.replaceStoredData({ version: CURRENT_VERSION, calendar: { dow: 9 } });
+
+      const listed = await harness.resolve(SnapshotService).list();
+      expectOk(listed);
+      expect(listed.value).toEqual([]);
+    });
+
     it("refuses to snapshot for an import while locked", async () => {
       const harness = await withNewerDataOnDisk();
       await harness.settings.reload();
@@ -1526,6 +1554,30 @@ describe("SettingsService", () => {
       const listed = await harness.resolve(SnapshotService).list();
       expectOk(listed);
       expect(listed.value.filter((info) => info.reason === "pre-downgrade")).toHaveLength(3);
+      vi.useRealTimers();
+    });
+
+    // "Changed since the last load" has to mean changed since the last time we knew what was on
+    // disk, and our own save is one of those times. Comparing against the bytes booted from
+    // instead makes the one sequence that matters — upgrade, save, then the old device syncs the
+    // pre-upgrade file back — read as unchanged, so the recovery snapshot is skipped in exactly
+    // the case it was added for.
+    it("snapshots when the older data arriving is the file this device booted from", async () => {
+      vi.useFakeTimers();
+      const raw = { version: CURRENT_VERSION - 1, calendar: { dow: 5, global: false } };
+      const harness = await testContainer({
+        modules: [testSettingsModule({ migrations: [bump] })],
+        pluginData: new FakePluginData(raw),
+      });
+      harness.settings.getSlice(calendarSlice).state.dow = 7;
+      await vi.advanceTimersByTimeAsync(300);
+
+      await harness.data.save(raw);
+      await harness.settings.reload();
+
+      const listed = await harness.resolve(SnapshotService).list();
+      expectOk(listed);
+      expect(listed.value.filter((info) => info.reason === "pre-downgrade")).toHaveLength(1);
       vi.useRealTimers();
     });
 
