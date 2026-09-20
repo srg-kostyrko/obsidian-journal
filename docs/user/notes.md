@@ -56,11 +56,11 @@ midnight. Off by default, set per journal.
   seconds and moves on to the next journal. The note is still written if the template finishes
   later.
 
-**Automatic note creation**, on the main settings page, chooses which devices create notes on their
-own: **Desktop and mobile**, **Desktop only** or **Mobile only**. It covers every journal's
-**Auto-create today's note** and the startup note. Notes you open yourself are always created, on
-any device. Use it when sync is slow enough that your phone and your computer each create today's
-note before the other's copy arrives.
+**Automatic note creation**, in the **Startup** block on the main settings page, chooses which devices
+create notes on their own: **Desktop and mobile**, **Desktop only** or **Mobile only**. It covers
+every journal's **Auto-create today's note** and the startup note. Notes you open yourself are always
+created, on any device. Use it when sync is slow enough that your phone and your computer each create
+today's note before the other's copy arrives.
 
 ### Opening a note when Obsidian starts {#opening-a-note-when-obsidian-starts}
 
@@ -73,6 +73,9 @@ note before the other's copy arrives.
   use](/commands#a-command-s-settings). With it on, each launch moves the journal's pinned tab to
   today's note instead of pinning a second one. With **Different journal on some days**, each journal
   keeps its own pinned tab.
+- **Automatic note creation** — **Desktop and mobile**, **Desktop only** or **Mobile only**. It sits in
+  this block but covers every journal's **Auto-create today's note** as well as the startup note — see
+  [Auto-create today's note](#auto-create-today-s-note).
 - **Different journal on some days** — choose which journal opens on the days you pick; any day you
   don't pick opens the journal above. **Add days** adds a group: its **Days of the week** and the
   **Journal to open**. A day can belong to one group only. A group can open nothing, so a work journal
@@ -110,8 +113,9 @@ renamed after Obsidian has finished loading, so a folder of notes you had before
 plugin stays as it is. Use [Bulk add](#bulk-add) or [Connect note to a journal](#connect-note-to-a-journal)
 for those.
 
-**When a name cannot be read backwards**, notes you make yourself will not auto-attach. The journal's
-settings page shows a warning under **Note name template** that names the reason.
+**When a path cannot be read backwards**, notes you make yourself will not auto-attach. The journal's
+settings page shows a warning that names the reason, under whichever of **Folder** or **Note name
+template** is at fault.
 
 A link the plugin wrote for a journal that puts a question's answer into the note name is the one
 case where auto-attach asks: clicking the link asks the questions, then names the note from your
