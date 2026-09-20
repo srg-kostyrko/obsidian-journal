@@ -14,6 +14,7 @@ export {
   SettingsError,
   SettingsLoadError,
   SettingsSaveError,
+  SettingsTooNewError,
   SliceKeyConflictError,
   UnregisteredSliceError,
   UnregisteredSubpageError,

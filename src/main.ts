@@ -27,7 +27,7 @@ import { loggingModule } from "@/logging";
 import { maintenanceModule } from "@/maintenance";
 import { notesCalendarModule } from "@/notes-calendar";
 import { calendarAppearanceModule } from "@/notes-calendar/appearance/module";
-import { settingsModule, SettingsService } from "@/settings";
+import { settingsModule, SettingsService, SettingsTooNewError } from "@/settings";
 import { DataMigrationService, legacyMigrationsModule } from "@/settings/legacy";
 import { shelvesModule } from "@/shelves";
 import { templatesModule } from "@/templates";
@@ -70,7 +70,11 @@ export default class JournalPlugin extends Plugin {
 
     const init = await container.resolve(SettingsService).initialize();
     if (init.kind === "err") {
-      new Notice(m.settings_load_failed({ error: init.error.message }));
+      new Notice(
+        init.error instanceof SettingsTooNewError
+          ? m.settings_too_new_boot()
+          : m.settings_load_failed({ error: init.error.message }),
+      );
       await container.dispose();
       return;
     }
@@ -112,7 +116,14 @@ export default class JournalPlugin extends Plugin {
     void container
       .resolve(SettingsService)
       .reload()
-      .tapErr((error) => new Notice(m.settings_reload_failed({ error: error.message })));
+      .tapErr(
+        (error) =>
+          new Notice(
+            error instanceof SettingsTooNewError
+              ? m.settings_too_new_notice()
+              : m.settings_reload_failed({ error: error.message }),
+          ),
+      );
   }
 
   onunload(): void {

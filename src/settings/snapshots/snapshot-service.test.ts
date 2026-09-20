@@ -88,17 +88,41 @@ describe("SnapshotService", () => {
     expect([...data.files.keys()]).toEqual(["backup-restore-v5-2026-08-17T11-22-33.json"]);
   });
 
+  it("writes a pre-downgrade snapshot under its own name shape", async () => {
+    const { service, data } = await build();
+
+    expectOk(await service.writePreDowngrade(6, '{"version":6}', "2026-09-18T08:09:10.000Z"));
+
+    expect([...data.files.keys()]).toEqual(["backup-downgrade-v6-2026-09-18T08-09-10.json"]);
+  });
+
   it("reports which event each snapshot was taken for", async () => {
     const { service, data } = await build();
     data.files.set("backup-v3-2026-08-16T10-20-30.json", "{}");
     data.files.set("backup-restore-v5-2026-08-17T11-22-33.json", "{}");
+    data.files.set("backup-downgrade-v6-2026-09-18T08-09-10.json", "{}");
 
     const result = await service.list();
 
     expectOk(result);
     expect(result.value.map((s) => [s.name, s.reason, s.fromVersion])).toEqual([
+      ["backup-downgrade-v6-2026-09-18T08-09-10.json", "pre-downgrade", 6],
       ["backup-restore-v5-2026-08-17T11-22-33.json", "pre-restore", 5],
       ["backup-v3-2026-08-16T10-20-30.json", "migration", 3],
+    ]);
+  });
+
+  it("prunes pre-downgrade snapshots beyond the keep count, newest first", async () => {
+    const { service, data } = await build();
+    data.files.set("backup-downgrade-v6-2026-09-01T00-00-00.json", "{}");
+    data.files.set("backup-downgrade-v6-2026-09-02T00-00-00.json", "{}");
+    data.files.set("backup-downgrade-v6-2026-09-03T00-00-00.json", "{}");
+
+    expectOk(await service.prune("pre-downgrade", 2));
+
+    expect([...data.files.keys()].toSorted()).toEqual([
+      "backup-downgrade-v6-2026-09-02T00-00-00.json",
+      "backup-downgrade-v6-2026-09-03T00-00-00.json",
     ]);
   });
 

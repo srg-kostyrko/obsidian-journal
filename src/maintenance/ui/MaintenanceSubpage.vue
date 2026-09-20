@@ -8,7 +8,7 @@ import ImportFromPluginsSection from "@/import/ui/ImportFromPluginsSection.vue";
 import { useService } from "@/infrastructure/di";
 import { NoticeService } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
-import { SettingsService } from "@/settings";
+import { SettingsService, SettingsTooNewError } from "@/settings";
 import type { SubpageNav } from "@/settings";
 import { SnapshotService, type SnapshotInfo } from "@/settings/snapshots/snapshot-service";
 import { icons } from "@/ui/icons";
@@ -110,6 +110,7 @@ function snapshotLabel(info: SnapshotInfo): string {
     .with("migration", () => m.maintenance_snapshot_row({ version: info.fromVersion }))
     .with("pre-restore", () => m.maintenance_snapshot_row_restore())
     .with("pre-import", () => m.maintenance_snapshot_row_import())
+    .with("pre-downgrade", () => m.maintenance_snapshot_row_downgrade())
     .exhaustive();
 }
 
@@ -287,6 +288,16 @@ async function attachTo(finding: Finding, candidate: AttachCandidate): Promise<v
   ]);
 }
 
+async function restoreOutcome(contents: Record<string, unknown>, info: SnapshotInfo): Promise<string> {
+  const locked = settings.lockedByNewerVersion.value;
+  const replaced = await settings.replaceStoredData(contents);
+  if (replaced.isOk()) return m.maintenance_snapshot_restored({ takenAt: info.takenAt });
+  if (replaced.error instanceof SettingsTooNewError) {
+    return locked ? m.maintenance_snapshot_restore_locked() : m.maintenance_snapshot_too_new();
+  }
+  return m.maintenance_snapshot_failed();
+}
+
 async function restore(info: SnapshotInfo): Promise<void> {
   restoring.value = true;
   try {
@@ -295,10 +306,9 @@ async function restore(info: SnapshotInfo): Promise<void> {
       notices.show(m.maintenance_snapshot_failed());
       return;
     }
-    const replaced = await settings.replaceStoredData(contents.value);
-    notices.show(
-      replaced.isErr() ? m.maintenance_snapshot_failed() : m.maintenance_snapshot_restored({ takenAt: info.takenAt }),
-    );
+    // "It may be damaged" is wrong for the two version failures, and both have a different thing
+    // for the user to do: one waits for a restart, the other cannot be restored at all.
+    notices.show(await restoreOutcome(contents.value, info));
     report.value = undefined;
     await refresh();
     await runScan();

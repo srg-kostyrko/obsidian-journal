@@ -4,7 +4,7 @@ import { AsyncResult, attempt } from "@/infrastructure/result";
 
 import { SnapshotUnreadableError } from "../errors";
 
-export type SnapshotReason = "migration" | "pre-restore" | "pre-import";
+export type SnapshotReason = "migration" | "pre-restore" | "pre-import" | "pre-downgrade";
 
 export interface SnapshotInfo {
   readonly name: string;
@@ -14,11 +14,12 @@ export interface SnapshotInfo {
 }
 
 // Colons are legal in an ISO timestamp and illegal in a Windows filename, hence the dashes.
-const NAME_PATTERN = /^backup-(restore-|import-)?v(\d+)-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})\.json$/;
+const NAME_PATTERN = /^backup-(restore-|import-|downgrade-)?v(\d+)-(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})\.json$/;
 
 const REASON_BY_PREFIX: Readonly<Record<string, SnapshotReason>> = {
   "restore-": "pre-restore",
   "import-": "pre-import",
+  "downgrade-": "pre-downgrade",
 };
 
 function parseName(name: string): SnapshotInfo | undefined {
@@ -59,6 +60,11 @@ export class SnapshotService {
 
   writePreImport(fromVersion: number, contents: string, takenAt: string): AsyncResult<void, PluginDataIOError> {
     return this.#data.writeFile(`backup-import-v${fromVersion}-${stampOf(takenAt)}.json`, contents);
+  }
+
+  /** Holds this device's own settings, captured as an older version's write replaced them on disk. */
+  writePreDowngrade(fromVersion: number, contents: string, takenAt: string): AsyncResult<void, PluginDataIOError> {
+    return this.#data.writeFile(`backup-downgrade-v${fromVersion}-${stampOf(takenAt)}.json`, contents);
   }
 
   prune(reason: SnapshotReason, keep: number): AsyncResult<void, PluginDataIOError> {

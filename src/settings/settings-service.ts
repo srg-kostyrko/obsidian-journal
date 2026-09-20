@@ -1,8 +1,9 @@
 import * as v from "valibot";
-import { reactive, watch, type WatchStopHandle } from "vue";
+import { computed, reactive, readonly, ref, watch, type WatchStopHandle } from "vue";
 
+import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import { PluginData } from "@/infrastructure/host";
+import { NoticeService, PluginData } from "@/infrastructure/host";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import type { Logger } from "@/infrastructure/logger";
 import { attempt, Err, type AsyncResult } from "@/infrastructure/result";
@@ -11,6 +12,7 @@ import {
   type MigrationFailedError,
   SettingsLoadError,
   SettingsSaveError,
+  SettingsTooNewError,
   SliceKeyConflictError,
   UnregisteredSliceError,
 } from "./errors";
@@ -34,9 +36,16 @@ type AnySchema = BaseSchema<unknown, unknown, BaseIssue<unknown>>;
 const DEBOUNCE_MS = 300;
 const PRE_RESTORE_KEEP = 3;
 const PRE_IMPORT_KEEP = 3;
+const PRE_DOWNGRADE_KEEP = 3;
+
+// Which event is reading data.json. Behind-version data means different things across the three:
+// an ordinary upgrade at boot, the payload the user chose on a restore, and — only on a refresh —
+// an older build on another device having overwritten settings this one still holds in memory.
+type LoadPhase = "boot" | "refresh" | "restore";
 
 export class SettingsService {
   readonly #pluginData = inject(PluginData);
+  readonly #notices = inject(NoticeService);
   readonly #snapshots = inject(SnapshotService);
   readonly #slices: readonly AnySliceDefinition[] = inject(SliceDefinitionToken);
   readonly #collections: readonly AnyCollectionDefinition[] = inject(CollectionDefinitionToken);
@@ -52,6 +61,20 @@ export class SettingsService {
   #saveTimer: number | undefined;
   #initialized = false;
 
+  // Session-scoped, like ReloadHintService's hint: settings newer than this build stay newer
+  // until Obsidian restarts with a build that understands them, and a restart clears it by
+  // construction. Holding the error rather than a flag keeps the versions available to callers
+  // that have to report the refusal.
+  readonly #tooNew = ref<SettingsTooNewError | undefined>(undefined);
+
+  // What data.json held at the last load, to tell a file an older build overwrote from the same
+  // file we already migrated forward in memory. initialize() never writes the migrated result
+  // back, so behind-version data on a refresh is the *expected* state after an upgrade — only a
+  // change to those bytes makes it a downgrade.
+  #lastLoadedRaw: string | undefined;
+
+  readonly lockedByNewerVersion = readonly(computed(() => this.#tooNew.value !== undefined));
+
   #findKeyConflict(): SliceKeyConflictError | undefined {
     const seen = new Set<string>();
     for (const s of this.#slices) {
@@ -65,7 +88,9 @@ export class SettingsService {
     return undefined;
   }
 
-  #loadAndMigrate(): AsyncResult<Record<string, unknown>, SettingsLoadError | MigrationFailedError> {
+  #loadAndMigrate(
+    phase: LoadPhase,
+  ): AsyncResult<Record<string, unknown>, SettingsLoadError | MigrationFailedError | SettingsTooNewError> {
     return attempt.in(this, async function* () {
       const raw = yield* this.#pluginData.load().mapErr((cause) => new SettingsLoadError(cause));
       const isStoredObject = raw !== null && typeof raw === "object" && !Array.isArray(raw);
@@ -74,8 +99,13 @@ export class SettingsService {
       const root: Record<string, unknown> = isStoredObject
         ? (raw as Record<string, unknown>)
         : { version: CURRENT_VERSION };
-      if (isStoredObject) await this.#snapshotIfBehind(root);
-      return yield* runMigrations(root, this.#migrations, CURRENT_VERSION);
+      const serialized = JSON.stringify(root);
+      const changedOnDisk = serialized !== this.#lastLoadedRaw;
+      this.#lastLoadedRaw = serialized;
+      if (isStoredObject) await this.#snapshotIfBehind(root, phase, changedOnDisk);
+      return yield* runMigrations(root, this.#migrations, CURRENT_VERSION).tapErr((error) => {
+        if (error instanceof SettingsTooNewError) this.#tooNew.value = error;
+      });
     });
   }
 
@@ -86,9 +116,10 @@ export class SettingsService {
   // snapshotted is what keeps that to one file. A snapshot that cannot be written, or a list
   // that cannot be read, must not stop the plugin loading — migrating unprotected beats
   // refusing to start.
-  async #snapshotIfBehind(root: Record<string, unknown>): Promise<void> {
+  async #snapshotIfBehind(root: Record<string, unknown>, phase: LoadPhase, changedOnDisk: boolean): Promise<void> {
     const storedVersion = typeof root.version === "number" ? root.version : 0;
     if (storedVersion >= CURRENT_VERSION) return;
+    if (phase === "refresh" && changedOnDisk) return this.#snapshotBeforeDowngrade();
     const existing = await this.#snapshots.list();
     const alreadyTaken = existing.match({
       ok: (snapshots) => snapshots.some((snapshot) => snapshot.fromVersion === storedVersion),
@@ -99,6 +130,25 @@ export class SettingsService {
     written.tapErr((error) => {
       this.#logger.warn("could not snapshot settings before migrating", { storedVersion, error });
     });
+  }
+
+  // An older build on another device has saved its shape over ours. Unlike every other snapshot
+  // the payload worth keeping is not the file — that one is the overwrite, and it migrates forward
+  // on its own — but the settings this device still holds in memory, which are about to be
+  // replaced by it and exist nowhere else. The notice is withheld when nothing was written: it
+  // promises a backup the user could restore.
+  async #snapshotBeforeDowngrade(): Promise<void> {
+    const contents = JSON.stringify({ ...this.#root, version: CURRENT_VERSION });
+    const written = await this.#snapshots.writePreDowngrade(CURRENT_VERSION, contents, new Date().toISOString());
+    if (written.kind === "err") {
+      this.#logger.warn("could not snapshot the settings an older version replaced", { error: written.error });
+      return;
+    }
+    const pruned = await this.#snapshots.prune("pre-downgrade", PRE_DOWNGRADE_KEEP);
+    pruned.tapErr((error) => {
+      this.#logger.warn("could not prune pre-downgrade snapshots", { error });
+    });
+    this.#notices.show(m.settings_replaced_by_older());
   }
 
   // Restore and import are the two events that rewrite a whole configuration at the user's click,
@@ -174,12 +224,38 @@ export class SettingsService {
     }, DEBOUNCE_MS);
   }
 
+  // The last gate before the overwrite #466 describes, and the only one that holds when the host
+  // never reports the external change: data.json is re-read here rather than trusted from the last
+  // load, because a sync client can replace it without Obsidian calling onExternalSettingsChange.
+  // A read that fails says nothing about the version, and refusing every save on it would be a
+  // worse failure than the overwrite it guards against — so only a version it could actually read
+  // latches the refusal.
+  async #latchIfStoredIsNewer(): Promise<SettingsTooNewError | undefined> {
+    if (this.#tooNew.value !== undefined) return this.#tooNew.value;
+    const stored = await this.#pluginData.load();
+    if (stored.kind === "ok") {
+      const version = versionOf(stored.value);
+      if (version > CURRENT_VERSION) this.#tooNew.value = new SettingsTooNewError(version, CURRENT_VERSION);
+    }
+    return this.#tooNew.value;
+  }
+
   async #flush(): Promise<void> {
+    if ((await this.#latchIfStoredIsNewer()) !== undefined) {
+      this.#notices.show(m.settings_too_new_notice());
+      return;
+    }
     const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION })) as Record<string, unknown>;
     const result = await this.#pluginData.save(out);
     if (result.kind === "err") {
       this.#logger.error("settings save failed", { error: new SettingsSaveError(result.error) });
+      return;
     }
+    // Our own write is the newest thing we know about data.json, so it becomes the baseline a
+    // later refresh compares against. Leaving the bytes this session booted from in place would
+    // make the pre-upgrade file syncing back from an older device read as "unchanged", and skip
+    // the snapshot in the one sequence that needs it.
+    this.#lastLoadedRaw = JSON.stringify(out);
   }
 
   // Suspends the save watcher across the refresh so applying externally-sourced data does
@@ -196,16 +272,25 @@ export class SettingsService {
     this.#events.emit("reloaded");
   }
 
+  /** Re-reads data.json; true once settings may no longer be written. */
+  async recheckStoredVersion(): Promise<boolean> {
+    return (await this.#latchIfStoredIsNewer()) !== undefined;
+  }
+
   /** Snapshots the stored settings before an import writes to them; false when none was written. */
   snapshotBeforeImport(): Promise<boolean> {
+    if (this.#tooNew.value !== undefined) return Promise.resolve(false);
     return this.#snapshotCurrent("pre-import");
   }
 
-  initialize(): AsyncResult<void, SettingsLoadError | MigrationFailedError | SliceKeyConflictError> {
+  initialize(): AsyncResult<
+    void,
+    SettingsLoadError | MigrationFailedError | SettingsTooNewError | SliceKeyConflictError
+  > {
     return attempt.in(this, async function* () {
       const conflict = this.#findKeyConflict();
       if (conflict) yield* new Err<never, SliceKeyConflictError>(conflict);
-      const migrated = yield* this.#loadAndMigrate();
+      const migrated = yield* this.#loadAndMigrate("boot");
       this.#hydrate(migrated);
       this.#stopWatch = watch(this.#root, () => this.#scheduleSave(), { deep: true });
       this.#initialized = true;
@@ -214,10 +299,10 @@ export class SettingsService {
 
   // Obsidian Sync rewrites data.json on disk without touching our in-memory state; this
   // re-reads it and refreshes #root so synced changes are picked up without a plugin reload.
-  reload(): AsyncResult<void, SettingsLoadError | MigrationFailedError> {
+  reload(): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsTooNewError> {
     return attempt.in(this, async function* () {
       if (!this.#initialized) return;
-      const migrated = yield* this.#loadAndMigrate();
+      const migrated = yield* this.#loadAndMigrate("refresh");
       if (this.#saveTimer !== undefined) {
         window.clearTimeout(this.#saveTimer);
         this.#saveTimer = undefined;
@@ -241,15 +326,24 @@ export class SettingsService {
   // page to recover from.
   replaceStoredData(
     raw: Record<string, unknown>,
-  ): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsSaveError> {
+  ): AsyncResult<void, SettingsLoadError | MigrationFailedError | SettingsTooNewError | SettingsSaveError> {
     return attempt.in(this, async function* () {
       if (!this.#initialized) return;
+      // A restore is a second door onto the same data.json, so it gets the same guard the save
+      // does — the latch alone would trust reload() to have run, and reload only runs when the
+      // host reports the external change. Ahead of the pre-restore snapshot: a restore that will
+      // not happen should not leave a backup behind for it.
+      const tooNew = await this.#latchIfStoredIsNewer();
+      if (tooNew !== undefined) yield* new Err<never, SettingsTooNewError>(tooNew);
       // Migrations mutate their input in place, so validating against `raw` itself would
       // corrupt it before it reaches save() below — validate a disposable clone instead.
+      // A payload this rejects as too new is a rejected input, not a report about disk, so it
+      // must not reach the latch: runMigrations is called here directly rather than through
+      // #loadAndMigrate for exactly that reason.
       yield* runMigrations(structuredClone(raw), this.#migrations, CURRENT_VERSION);
       await this.#snapshotCurrent("pre-restore");
       yield* this.#pluginData.save(raw).mapErr((cause) => new SettingsSaveError(cause));
-      const migrated = yield* this.#loadAndMigrate();
+      const migrated = yield* this.#loadAndMigrate("restore");
       this.#applyMigrated(migrated);
     });
   }
@@ -287,6 +381,12 @@ export class SettingsService {
     this.#stopWatch = undefined;
     this.#initialized = false;
   }
+}
+
+function versionOf(raw: unknown): number {
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) return 0;
+  const version = (raw as Record<string, unknown>).version;
+  return typeof version === "number" ? version : 0;
 }
 
 function describeShape(raw: unknown): string {

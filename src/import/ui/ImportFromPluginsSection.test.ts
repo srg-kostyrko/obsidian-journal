@@ -9,6 +9,7 @@ import { AsyncResult } from "@/infrastructure/result";
 import { journalsCoreModule } from "@/journals/module";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { startupModule } from "@/journals/startup/module";
+import { CURRENT_VERSION } from "@/settings";
 import { shelvesModule } from "@/shelves";
 import { testContainer } from "@/testing";
 
@@ -63,6 +64,20 @@ describe("ImportFromPluginsSection", () => {
     harness.render(ImportFromPluginsSection);
 
     expect(await screen.findByText(m.import_section_nothing())).toBeTruthy();
+  });
+
+  // An import writes settings through the save this session refuses, so offering the button would
+  // promise work that cannot be kept — the reason takes precedence over what the plugins hold.
+  it("refuses the import, with the reason, when the stored settings were saved by a newer version", async () => {
+    const harness = await testContainer({ modules: MODULES });
+    harness.host.putCorePlugin("daily-notes", { options: {} });
+    await harness.data.save({ version: CURRENT_VERSION + 1 });
+    await harness.settings.reload();
+
+    harness.render(ImportFromPluginsSection);
+
+    expect(await screen.findByText(m.import_section_locked())).toBeTruthy();
+    expect(screen.getByRole("button", { name: m.import_action() }).hasAttribute("disabled")).toBe(true);
   });
 
   it("disables the button when the enabled plugins have nothing to import", async () => {

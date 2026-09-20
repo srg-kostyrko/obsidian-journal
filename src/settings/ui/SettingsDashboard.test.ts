@@ -8,6 +8,7 @@ import { testContainer } from "@/testing";
 
 import { ReloadHintService } from "../reload-hint";
 import { DashboardBlockToken, SubpageToken } from "../tokens";
+import { CURRENT_VERSION } from "../version";
 
 import { defineDashboardBlock, defineSubpage } from "./schema";
 import { SettingsUiService } from "./settings-ui-service";
@@ -115,6 +116,25 @@ describe("SettingsDashboard", () => {
       reloadHint.request();
       await nextTick();
       expect(screen.getByText(m.settings_reload_required_banner())).toBeTruthy();
+    });
+  });
+
+  // The lock is set whenever the newer data.json lands, which can be long before the user next
+  // opens settings — so the refusal has to be visible here, ahead of any edit, and not only as
+  // the notice raised once an edit has already been made and lost.
+  describe("newer-settings banner", () => {
+    it("stays hidden while this build understands the stored settings", async () => {
+      const { harness } = await buildHarness();
+      harness.render(SettingsDashboard);
+      expect(screen.queryByText(m.settings_too_new_banner())).toBeNull();
+    });
+
+    it("warns once settings saved by a newer version have been seen", async () => {
+      const { harness } = await buildHarness();
+      await harness.data.save({ version: CURRENT_VERSION + 1 });
+      await harness.settings.reload();
+      harness.render(SettingsDashboard);
+      expect(screen.getByText(m.settings_too_new_banner())).toBeTruthy();
     });
   });
 

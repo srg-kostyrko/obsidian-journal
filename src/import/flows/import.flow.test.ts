@@ -10,6 +10,7 @@ import { JournalsRepository } from "@/journals/repository";
 import { journalsSettingsModule } from "@/journals/settings/module";
 import { startupModule } from "@/journals/startup/module";
 import { fixedJournal } from "@/journals/testing";
+import { CURRENT_VERSION } from "@/settings/version";
 import { shelvesModule } from "@/shelves";
 import { testContainer, type TestHarness } from "@/testing";
 
@@ -52,6 +53,48 @@ describe("ImportFromPluginsFlow", () => {
     expect({ kind: result.error.kind, opened: harness.modals.opens.length }).toEqual({
       kind: "nothing-to-import",
       opened: 0,
+    });
+  });
+
+  // An import writes settings through the same debounced save the session lock refuses, so left
+  // unguarded it would create journals and re-anchor notes and then lose the settings half of its
+  // own work. The refusal belongs before the preview dialog, not after it.
+  it("refuses to open when settings saved by a newer version have been seen", async () => {
+    const harness = await withPeriodicNotesDay();
+    await harness.data.save({ version: CURRENT_VERSION + 1 });
+    await harness.settings.reload();
+
+    const result = await harness.resolve(ImportFromPluginsFlow).execute();
+
+    expectErr(result);
+    expect({ kind: result.error.kind, opened: harness.modals.opens.length }).toEqual({
+      kind: "settings-locked",
+      opened: 0,
+    });
+  });
+
+  // The preview sits open for as long as the user reads it, which makes this a wide window rather
+  // than a race: the settings half of the import would be refused by the save, while the journals,
+  // shelves and notes it had already created stayed behind.
+  it("creates nothing when the settings stop being writable while the preview is open", async () => {
+    const harness = await withPeriodicNotesDay();
+    const running = harness.resolve(ImportFromPluginsFlow).execute();
+    const { plan } = harness.modals.lastOpen<{ plan: ImportPlan }>().props;
+    await harness.data.save({ version: CURRENT_VERSION + 1 });
+    await harness.settings.reload();
+
+    harness.modals.lastOpen().submit({
+      rows: plan.rows.map((row) => ({ key: row.key, name: row.name, include: true, connect: true })),
+      shelves: [],
+      applyWeekStart: false,
+      setStartup: false,
+    } satisfies ImportSelection);
+    const result = await running;
+
+    expectErr(result);
+    expect({ kind: result.error.kind, journals: [...harness.resolve(JournalsRepository).find().list()] }).toEqual({
+      kind: "settings-locked",
+      journals: [],
     });
   });
 

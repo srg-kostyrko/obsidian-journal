@@ -2,20 +2,31 @@ import { inject } from "@/infrastructure/di";
 import { UserAborted, type Flow } from "@/infrastructure/flows";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
+import { SettingsService } from "@/settings";
 
 import { ImportConnectService } from "../connect-service";
-import { NothingToImport } from "../errors";
+import { NothingToImport, SettingsLocked } from "../errors";
 import { ImportService, type ImportOutcome } from "../import-service";
 import { hasAnythingToImport, ImportPlanner } from "../planner";
 import { importConnectModal, importPreviewModal } from "../ui/modals";
 
-export class ImportFromPluginsFlow implements Flow<void, ImportOutcome, NothingToImport | UserAborted> {
+export class ImportFromPluginsFlow implements Flow<
+  void,
+  ImportOutcome,
+  NothingToImport | SettingsLocked | UserAborted
+> {
   readonly #planner = inject(ImportPlanner);
   readonly #imports = inject(ImportService);
   readonly #connect = inject(ImportConnectService);
   readonly #modals = inject(ModalService);
+  readonly #settings = inject(SettingsService);
 
-  execute(): AsyncResult<ImportOutcome, NothingToImport | UserAborted> {
+  execute(): AsyncResult<ImportOutcome, NothingToImport | SettingsLocked | UserAborted> {
+    // Ahead of the preview: an import that ran to completion here would create journals and
+    // re-anchor notes, then lose every settings write it made to the locked save.
+    if (this.#settings.lockedByNewerVersion.value) {
+      return AsyncResult.err(new SettingsLocked());
+    }
     const plan = this.#planner.plan();
     if (!hasAnythingToImport(plan)) {
       return AsyncResult.err(new NothingToImport());
@@ -24,6 +35,12 @@ export class ImportFromPluginsFlow implements Flow<void, ImportOutcome, NothingT
       const selection = yield* this.#modals
         .open(importPreviewModal, { plan })
         .mapErr(() => new UserAborted("import-preview-modal"));
+      // Re-checked against data.json, not just the latch: the preview stays open for as long as
+      // the user reads it, and an import applied into a locked session would create journals,
+      // shelves and notes whose settings half the save then refuses.
+      if (await this.#settings.recheckStoredVersion()) {
+        yield* AsyncResult.err(new SettingsLocked());
+      }
       const outcome = await this.#imports.apply(plan, selection);
       // Planned after apply() returns: the week start it applied re-anchors weekly notes on the
       // next tick, and connections must be read under the new grid.

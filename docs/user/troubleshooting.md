@@ -128,6 +128,25 @@ See [Decorations](/decorations).
 Another plugin may be interfering — this has happened. See
 [When another plugin gets in the way](/compatibility#when-another-plugin-gets-in-the-way).
 
+## Settings changes are not saved {#settings-changes-are-not-saved}
+
+If the settings page shows "These settings were saved by a newer version of Journals on another
+device", a device running a newer Journals has saved settings this copy cannot read. It keeps
+working with the settings it already had, but it stops saving: anything you change here is
+discarded, and restoring a snapshot and importing from other plugins are both unavailable until
+this is resolved. Without that, this copy would write its older settings back over the newer ones
+and lose whatever only the newer version can express.
+
+Restart Obsidian — this device has most likely already received the newer Journals and only needs
+to load it. If the banner comes back after the restart, update Journals here.
+
+## An older version replaced your settings {#an-older-version-replaced-your-settings}
+
+The opposite case: a device still running an older Journals saved its settings over yours, and a
+notice says so. A copy of your settings from just before that is kept under
+[Settings snapshots](#settings-snapshots) as "Taken when an older version replaced these settings" —
+**Restore** puts them back. Update Journals on the other device first, or it will happen again.
+
 ## Templater breaks notes or removes properties
 
 See [Templater](/compatibility#templater) for the setup that keeps the two from processing the same note.
@@ -162,8 +181,11 @@ restore a snapshot first. The page checks again after every repair.
 
 A copy of your settings is saved before the plugin migrates them to a new version ("Taken before
 upgrading from settings version 4"), before a snapshot is restored ("Taken before restoring a
-snapshot"), and before an import from other plugins ("Taken before importing settings from other
-plugins"). **Restore** puts one back.
+snapshot"), before an import from other plugins ("Taken before importing settings from other
+plugins"), and when a device running an older Journals has overwritten them ("Taken when an older
+version replaced these settings" — see
+[An older version replaced your settings](#an-older-version-replaced-your-settings)). **Restore**
+puts one back.
 
 ## Reporting a bug {#reporting-a-bug}
 
