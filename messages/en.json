@@ -1798,7 +1798,7 @@
   "journal_clone_modal_title": "Clone {name}",
   "journal_clone_notelet_types_description": "Adds a command for each type. Turn off to clone without them.",
   "journal_clone_notelet_types_label": "Copy notelet types",
-  "journal_edit_allow_before_description": "Allow indexing before the anchor date. May produce negative numbers.",
+  "journal_edit_allow_before_description": "Allow indexing before the period holding the anchor date. May produce negative numbers.",
   "journal_edit_allow_before_label": "Allow before anchor",
   "journal_edit_anchor_description": "Numbering starts from this date. The note for this date gets the start number, and later notes count up from it.",
   "journal_edit_anchor_label": "Anchor date",
@@ -1852,7 +1852,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "Note name template contains a path separator. Move the path prefix into the Folder field?",
   "journal_edit_name_template_description": "Template used to generate new note names.",
   "journal_edit_name_template_empty_warning": "This name template resolves to an empty note name, so no note can be created. Add a variable or some text to it.",
-  "journal_edit_name_template_collision_warning": "Entries for {first} and {second} both resolve to {path}. They will share one note.",
+  "journal_edit_name_template_collision_warning": "Entries for {first} and {second} both resolve to {path}. Only one of them can have a note; opening the other is refused.",
   "journal_edit_colliding_warning": "This journal resolves to the same note path as {names}, so their notes will overwrite each other. Change the folder or name template to give it a distinct path.",
   "journal_edit_name_template_invertibility_warning": [
     {

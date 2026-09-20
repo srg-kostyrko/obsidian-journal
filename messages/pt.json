@@ -1789,7 +1789,7 @@
   "journal_clone_modal_title": "Clonar {name}",
   "journal_clone_notelet_types_description": "Adiciona um comando para cada tipo. Desative para clonar sem eles.",
   "journal_clone_notelet_types_label": "Copiar tipos de nota breve",
-  "journal_edit_allow_before_description": "Permitir indexação antes da data de ancoragem. Pode gerar números negativos.",
+  "journal_edit_allow_before_description": "Permitir indexação antes do período que contém a data de ancoragem. Pode gerar números negativos.",
   "journal_edit_allow_before_label": "Permitir antes da data de ancoragem",
   "journal_edit_anchor_description": "A numeração começa nesta data. A nota desta data recebe o número inicial, e as notas seguintes contam a partir dela.",
   "journal_edit_anchor_label": "Data de ancoragem",
@@ -1843,7 +1843,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "O modelo de nome da nota contém um separador de caminho. Deseja mover o prefixo do caminho para o campo Pasta?",
   "journal_edit_name_template_description": "Modelo usado para gerar novos nomes de notas.",
   "journal_edit_name_template_empty_warning": "Este modelo de nome resulta em um nome de nota vazio, portanto nenhuma nota pode ser criada. Adicione uma variável ou algum texto.",
-  "journal_edit_name_template_collision_warning": "As entradas de {first} e {second} resultam ambas em {path}. Elas compartilharão uma única nota.",
+  "journal_edit_name_template_collision_warning": "As entradas de {first} e {second} resultam ambas em {path}. Apenas uma delas pode ter nota; abrir a outra é recusado.",
   "journal_edit_colliding_warning": "Este diário resolve para o mesmo caminho de nota que {names}, portanto suas notas se sobrescreverão. Altere a pasta ou o modelo de nome para dar a ele um caminho distinto.",
   "journal_edit_name_template_invertibility_warning": [
     {

@@ -1840,7 +1840,7 @@
   "journal_clone_modal_title": "Клонировать {name}",
   "journal_clone_notelet_types_description": "Добавляет команду для каждого типа. Отключите, чтобы клонировать без них.",
   "journal_clone_notelet_types_label": "Копировать типы подзаметок",
-  "journal_edit_allow_before_description": "Разрешить индексацию до даты привязки. Может давать отрицательные номера.",
+  "journal_edit_allow_before_description": "Разрешить индексацию до периода, содержащего дату привязки. Может давать отрицательные номера.",
   "journal_edit_allow_before_label": "Разрешить до даты привязки",
   "journal_edit_anchor_description": "Нумерация начинается с этой даты. Заметка за эту дату получает начальный номер, а следующие нумеруются дальше.",
   "journal_edit_anchor_label": "Дата привязки",
@@ -1894,7 +1894,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "Шаблон названия заметки содержит разделитель пути. Переместить префикс пути в поле «Папка»?",
   "journal_edit_name_template_description": "Шаблон, по которому создаются названия новых заметок.",
   "journal_edit_name_template_empty_warning": "Этот шаблон названия даёт пустое название заметки, поэтому заметку нельзя создать. Добавьте переменную или текст.",
-  "journal_edit_name_template_collision_warning": "Периоды {first} и {second} дают один и тот же путь {path}. У них будет одна общая заметка.",
+  "journal_edit_name_template_collision_warning": "Периоды {first} и {second} дают один и тот же путь {path}. Заметка может быть только у одного из них; открытие второго отклоняется.",
   "journal_edit_colliding_warning": "Этот журнал даёт тот же путь к заметкам, что и {names}, поэтому их заметки будут перезаписывать друг друга. Измените папку или шаблон названия, чтобы у него был отдельный путь.",
   "journal_edit_name_template_invertibility_warning": [
     {

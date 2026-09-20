@@ -1794,7 +1794,7 @@
   "journal_clone_modal_title": "{name} klonen",
   "journal_clone_notelet_types_description": "Fügt für jeden Typ einen Befehl hinzu. Deaktivieren, um ohne sie zu klonen.",
   "journal_clone_notelet_types_label": "Kurznotiz-Typen kopieren",
-  "journal_edit_allow_before_description": "Indizierung vor dem Ankerdatum zulassen. Kann zu negativen Zahlen führen.",
+  "journal_edit_allow_before_description": "Indizierung vor dem Zeitraum mit dem Ankerdatum zulassen. Kann zu negativen Zahlen führen.",
   "journal_edit_allow_before_label": "Vor dem Ankerdatum zulassen",
   "journal_edit_anchor_description": "Die Nummerierung beginnt an diesem Datum. Die Notiz für dieses Datum erhält die Startnummer, spätere Notizen zählen von dort aufwärts.",
   "journal_edit_anchor_label": "Ankerdatum",
@@ -1848,7 +1848,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "Die Vorlage für den Notiznamen enthält ein Pfadtrennzeichen. Soll das Pfadpräfix in das Feld „Ordner“ verschoben werden?",
   "journal_edit_name_template_description": "Vorlage zur Generierung neuer Notiznamen.",
   "journal_edit_name_template_empty_warning": "Diese Namensvorlage führt zu einem leeren Notiznamen, daher kann keine Notiz erstellt werden. Füge eine Variable oder etwas Text hinzu.",
-  "journal_edit_name_template_collision_warning": "Die Einträge für {first} und {second} ergeben beide {path}. Beide teilen sich dieselbe Notiz.",
+  "journal_edit_name_template_collision_warning": "Die Einträge für {first} und {second} ergeben beide {path}. Nur einer davon kann eine Notiz haben; das Öffnen des anderen wird abgelehnt.",
   "journal_edit_colliding_warning": "Dieses Journal ergibt denselben Notizpfad wie {names}, sodass sich die Notizen gegenseitig überschreiben. Ändere den Ordner oder die Namensvorlage, um einen eindeutigen Pfad zu erhalten.",
   "journal_edit_name_template_invertibility_warning": [
     {

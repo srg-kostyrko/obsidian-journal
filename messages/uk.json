@@ -1685,7 +1685,7 @@
   "journal_clone_modal_title": "Клонувати {name}",
   "journal_clone_notelet_types_description": "Додає команду для кожного типу. Вимкніть, щоб клонувати без них.",
   "journal_clone_notelet_types_label": "Копіювати типи піднотаток",
-  "journal_edit_allow_before_description": "Дозволити індексацію до дати прив’язки. Може видавати від’ємні числа.",
+  "journal_edit_allow_before_description": "Дозволити індексацію до періоду, що містить дату прив’язки. Може видавати від’ємні числа.",
   "journal_edit_allow_before_label": "Дозволити перед прив’язкою",
   "journal_edit_anchor_description": "Нумерація починається з цієї дати. Нотатка за цю дату отримує початковий номер, а наступні нотатки нумеруються далі.",
   "journal_edit_anchor_label": "Дата прив’язки",
@@ -1739,7 +1739,7 @@
   "journal_edit_move_to_folder_recommendation_name_template": "Шаблон назви нотатки містить роздільник шляхів. Перемістити префікс шляху в поле «Папка»?",
   "journal_edit_name_template_description": "Шаблон, який використовується для створення нових назв нотаток.",
   "journal_edit_name_template_empty_warning": "Цей шаблон назви дає порожню назву нотатки, тому нотатку неможливо створити. Додайте змінну або текст.",
-  "journal_edit_name_template_collision_warning": "Записи для {first} і {second} дають один і той самий шлях {path}. Вони матимуть спільну нотатку.",
+  "journal_edit_name_template_collision_warning": "Записи для {first} і {second} дають один і той самий шлях {path}. Нотатку може мати лише один із них; відкриття другого відхиляється.",
   "journal_edit_colliding_warning": "Цей журнал дає такий самий шлях до нотаток, як {names}, тому їхні нотатки перезаписуватимуть одна одну. Змініть папку або шаблон назви, щоб надати йому окремий шлях.",
   "journal_edit_name_template_invertibility_warning": [
     {
