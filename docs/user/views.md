@@ -60,8 +60,9 @@ it, whatever **Open in** says.
 
 Every view has a **selected date**. Calendars center on it and lists read from it. It starts on today,
 unless the view remembers its last date (**Remember last viewed date**) or follows a journal note that
-is already open when it opens (**Follow active note**), in which case it starts there. It then moves
-when you open a journal note, with **Follow active note** on, and when you step with a toolbar button.
+is already open when it opens (**Follow active note**), in which case it starts there. When both
+apply, the remembered date wins. It then moves when you open a journal note, with **Follow active
+note** on, and when you step with a toolbar button.
 
 In a calendar grid, clicking a cell opens that period's note, creating it if needed. To change the
 selected date without opening anything, **Shift**+click a day. The keyboard works too: arrow keys move
