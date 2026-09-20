@@ -1,4 +1,5 @@
 import { browser, expect } from "@wdio/globals";
+import { obsidianPage } from "wdio-obsidian-service";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import {
@@ -100,7 +101,7 @@ for (const eol of ["\n", "\r\n"] as const) {
 
 describe("the long text box", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-long-text", plugins: ["journals"] });
+    await obsidianPage.resetVault("./e2e/fixtures/e2e-long-text");
     await writeTemplate("Templates/reflect.md", "{{challenge}}\n");
   });
 

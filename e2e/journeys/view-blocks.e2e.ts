@@ -1,4 +1,5 @@
 import { $, $$, browser, expect } from "@wdio/globals";
+import { obsidianPage } from "wdio-obsidian-service";
 
 import { activeNotePath, openNote, seedNote, todayAnchor, waitForJournalFrontmatter } from "../support/vault.js";
 
@@ -87,7 +88,7 @@ describe("blocks view", () => {
 
   describe("markdown-template block", () => {
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+      await obsidianPage.resetVault("./e2e/fixtures/e2e-views");
       await seedNote("templates/view-template.md", "# View block template heading\n\nActive date: {{date}}\n");
     });
 
@@ -158,7 +159,7 @@ describe("blocks view", () => {
   // surface #219 reported — rendered the raw token.
   describe("custom-intervals note names", () => {
     before(async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+      await obsidianPage.resetVault("./e2e/fixtures/e2e-views");
     });
 
     it("names an interval with no note by what that note would be called", async () => {
@@ -196,7 +197,7 @@ describe("blocks view", () => {
 
   describe("week-calendar follow", () => {
     it("recenters to the week of a journal note opened outside the current week", async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+      await obsidianPage.resetVault("./e2e/fixtures/e2e-views");
       await openBlocksView();
 
       // A day well outside the current (today's) week; the week block renders only the
@@ -217,7 +218,7 @@ describe("blocks view", () => {
 
   describe("markdown-template weekly follow", () => {
     it("resolves {{date}} to the week's representative day when a weekly note is active", async () => {
-      await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-views", plugins: ["journals"] });
+      await obsidianPage.resetVault("./e2e/fixtures/e2e-views");
       await seedNote("templates/view-template.md", "# View block template heading\n\nActive date: {{date}}\n");
       await openBlocksView();
 

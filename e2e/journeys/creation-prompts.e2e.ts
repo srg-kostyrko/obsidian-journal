@@ -1,4 +1,5 @@
 import { $, browser, expect } from "@wdio/globals";
+import { obsidianPage } from "wdio-obsidian-service";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { confirmUpdateLinksDialog } from "../support/rename-links-dialog.js";
@@ -79,7 +80,7 @@ describe("creating a note on a prompting journal", () => {
 
 describe("clicking an unresolved journal link to a prompted journal", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
+    await obsidianPage.resetVault("./e2e/fixtures/e2e-prompts");
   });
 
   it("prompts, renames the placeholder-named file and attaches it", async () => {
@@ -120,7 +121,7 @@ describe("clicking an unresolved journal link to a prompted journal", () => {
 
 describe("cancelling the creation prompt for an unresolved journal link", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
+    await obsidianPage.resetVault("./e2e/fixtures/e2e-prompts");
   });
 
   it("takes back the empty file Obsidian created for the link", async () => {
@@ -148,7 +149,7 @@ describe("cancelling the creation prompt for an unresolved journal link", () => 
 
 describe("confirming a note whose name carries no prompt answer", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
+    await obsidianPage.resetVault("./e2e/fixtures/e2e-prompts");
   });
 
   it("shows the note name statically when confirmCreation is on and no prompt reaches it", async () => {
@@ -173,7 +174,7 @@ describe("confirming a note whose name carries no prompt answer", () => {
 // reach the dialog's path preview.
 describe("creating a note on a custom-interval journal", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
+    await obsidianPage.resetVault("./e2e/fixtures/e2e-prompts");
   });
 
   it("titles the dialog by the journal and names the interval by its extent", async () => {
@@ -212,7 +213,7 @@ function modificationsByRow(): Promise<string> {
 
 describe("the variable reference of a prompting journal", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: "./e2e/fixtures/e2e-prompts", plugins: ["journals"] });
+    await obsidianPage.resetVault("./e2e/fixtures/e2e-prompts");
     await openSettings();
   });
 
