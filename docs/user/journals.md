@@ -181,8 +181,8 @@ not. **Copy notelet types** adds a command for each type; turn it off to clone w
 copy joins the same [shelf](/shelves). It starts with the source's folder and name template, so the
 two usually resolve to the same note paths until you change one — **Colliding journal settings** on
 the main settings page says so until you do. The exception is a name or folder using
-`{{journal_name}}`, which is part of the path and differs between the two: a custom interval
-journal's default name does this, so a clone of one writes its own notes from the start.
+`{{journal_name}}`, which is part of the path: give the copy a name that renders differently and the
+two write their own notes from the start. A custom interval journal's default name does this.
 
 **Delete** says how many notes are connected and asks **What to do with connected notes**:
 

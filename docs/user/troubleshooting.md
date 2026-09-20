@@ -49,7 +49,7 @@ It compares the paths the journals actually produce, so it also catches journals
 different — a day journal and a week journal both named `{{date:YYYY-MM-DD}}` and
 `{{start_date:YYYY-MM-DD}}` share every Monday's note. Change the folder or name template of one. A
 freshly cloned journal collides until you do, unless its name or folder uses `{{journal_name}}` —
-that is part of the path and differs between the two, so they never share one.
+that is part of the path, so a copy whose name renders differently writes its own notes.
 
 Notes that arrived while the journals collided are connected to neither. Run the
 [vault check](#vault-check) before changing the settings — it lists those notes only while more than
