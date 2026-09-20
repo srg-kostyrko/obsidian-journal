@@ -1389,6 +1389,24 @@ describe("SettingsService", () => {
       });
     });
 
+    // A read that fails says nothing about the version on disk. Refusing every save on it would
+    // break saving outright on a transient error, which is worse than the overwrite guarded here.
+    it("still saves when data.json cannot be read to check its version", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule()],
+        data: { calendar: { dow: 1, global: true } },
+      });
+      vi.spyOn(harness.data, "load").mockReturnValueOnce(
+        AsyncResult.err(new PluginDataIOError("load", new Error("busy"))),
+      );
+      const saveSpy = vi.spyOn(harness.data, "save");
+
+      harness.settings.getSlice(calendarSlice).state.dow = 4;
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
     it("refuses to snapshot for an import while locked", async () => {
       const harness = await withNewerDataOnDisk();
       await harness.settings.reload();
@@ -1476,6 +1494,20 @@ describe("SettingsService", () => {
       await harness.settings.reload();
 
       expect(harness.notices.messages).toEqual([m.settings_replaced_by_older()]);
+    });
+
+    // The notice promises a backup the user can restore, so it must not appear when none was
+    // written — and a snapshot that cannot be written must not stop the settings refreshing.
+    it("says nothing and still applies the older data when the snapshot cannot be written", async () => {
+      const harness = await olderDataArrives();
+      vi.spyOn(harness.resolve(SnapshotService), "writePreDowngrade").mockReturnValueOnce(
+        AsyncResult.err(new PluginDataIOError("write-file", new Error("disk full"))),
+      );
+
+      expectOk(await harness.settings.reload());
+
+      expect(harness.notices.messages).toEqual([]);
+      expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(0);
     });
 
     it("keeps only the three most recent pre-downgrade snapshots", async () => {

@@ -197,6 +197,46 @@ describe("MaintenanceSubpage", () => {
     expect(harness.notices.messages).toContain(m.maintenance_snapshot_failed());
   });
 
+  // "It may be damaged" is the wrong thing to say about either version failure, and each has a
+  // different answer for the user: one waits for a restart, the other cannot be restored here.
+  it("says a snapshot written by a newer version cannot be restored, rather than calling it damaged", async () => {
+    const harness = await setup({
+      files: { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION + 1 }) },
+    });
+    mount(harness);
+    await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
+
+    await userEvent.click(
+      within(row("2026-08-16T10:20:30Z")).getByRole("button", { name: m.maintenance_snapshot_restore() }),
+    );
+
+    expect(harness.notices.messages).toContain(m.maintenance_snapshot_too_new());
+    expect(harness.notices.messages).not.toContain(m.maintenance_snapshot_failed());
+  });
+
+  it("asks for a restart when a restore is refused because the stored settings are newer", async () => {
+    const harness = await setup({
+      files: { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
+    });
+    await harness.data.save({ version: CURRENT_VERSION + 1 });
+    await harness.settings.reload();
+    mount(harness);
+    await screen.findByText(m.maintenance_snapshot_row({ version: 3 }));
+
+    await userEvent.click(
+      within(row("2026-08-16T10:20:30Z")).getByRole("button", { name: m.maintenance_snapshot_restore() }),
+    );
+
+    expect(harness.notices.messages).toContain(m.maintenance_snapshot_restore_locked());
+  });
+
+  it("labels a snapshot taken when an older version replaced the settings", async () => {
+    const harness = await setup({ files: { "backup-downgrade-v6-2026-09-18T08-09-10.json": "{}" } });
+    mount(harness);
+
+    expect(await screen.findByText(m.maintenance_snapshot_row_downgrade())).toBeTruthy();
+  });
+
   it("disables the Restore button while a restore is in flight", async () => {
     const harness = await setup({
       files: { "backup-v3-2026-08-16T10-20-30.json": JSON.stringify({ version: CURRENT_VERSION, journals: {} }) },
