@@ -2,6 +2,7 @@ import { $, browser, expect } from "@wdio/globals";
 
 import { forceNativeMenus, nativeMenuLabels, pickNativeItem, restoreMenus } from "../support/native-menu.js";
 import { closeAllLeaves, noteExists, waitForActiveNote, waitForJournalFrontmatter } from "../support/vault.js";
+import { waitForState } from "../support/wait.js";
 
 import { dayAnchor } from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
@@ -24,6 +25,10 @@ import { calendar, openCalendarView } from "./view.js";
 // the main process sends them.
 const NATIVE_ANCHOR = dayAnchor(12);
 const DOM_ANCHOR = dayAnchor(13);
+
+// The menu element exists before its items carry text, so callers read this until it settles.
+const readTitles = (): Promise<string[]> =>
+  browser.execute(() => [...document.querySelectorAll(".menu-item-title")].map((el) => el.textContent ?? ""));
 
 describe("multi-journal pick", () => {
   before(async () => {
@@ -71,10 +76,14 @@ describe("multi-journal pick", () => {
     await calendar.cell(DOM_ANCHOR).click();
 
     await $(".menu").waitForExist({ timeoutMsg: "the journal pick menu did not render in the document" });
-    const titles = await browser.execute(() =>
-      [...document.querySelectorAll(".menu-item-title")].map((el) => el.textContent ?? ""),
+    // The menu element exists before its items carry text, so read the titles until they have
+    // settled rather than comparing whatever the first look happens to catch.
+    await waitForState(
+      readTitles,
+      (found) => found.length === 2 && found.every((title) => title !== ""),
+      "the journal pick menu did not render both item titles",
     );
-    expect(titles).toEqual(["work", "personal"]);
+    expect(await readTitles()).toEqual(["work", "personal"]);
 
     await $(".menu-item-title=personal").click();
 

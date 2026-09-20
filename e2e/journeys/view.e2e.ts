@@ -676,6 +676,11 @@ describe("calendar view", () => {
       // --journal-cell-active-bg is bound per calendar surface, so it exists on the button
       // itself, not on the document body. The probe resolves it from inside the button (custom
       // properties inherit) so the assertion stays theme-independent.
+      // The probe answers "no-button" when the toolbar has not painted, which is a render race
+      // reported as a styling failure. Wait for the button itself first.
+      await $(".journal-view-toolbar [data-period='month']").waitForDisplayed({
+        timeoutMsg: "the month period button did not render",
+      });
       const verdict = await browser.execute(() => {
         const button = document.querySelector(".journal-view-toolbar [data-period='month']");
         if (!button) return "no-button";
@@ -691,6 +696,11 @@ describe("calendar view", () => {
 
     it("shows a pointer cursor on actionable calendar cells", async () => {
       await openCalendarView();
+      // Same shape as the button probe above: "none" is what an unrendered grid returns, not a
+      // cursor the stylesheet set.
+      await $(".notes-calendar-cell:not([data-inactive])").waitForDisplayed({
+        timeoutMsg: "no actionable calendar cell rendered",
+      });
       const cursor = await browser.execute(() => {
         const cell = document.querySelector(".notes-calendar-cell:not([data-inactive])");
         return cell ? getComputedStyle(cell).cursor : "none";

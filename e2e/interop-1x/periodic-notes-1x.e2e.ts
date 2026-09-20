@@ -10,6 +10,7 @@ import {
   waitForDialogClosed,
 } from "../support/settings.js";
 import { waitForDistinctActiveNote, waitForJournalFrontmatter } from "../support/vault.js";
+import { waitForState } from "../support/wait.js";
 
 // Runs only under the Periodic Notes 1.x capability (see wdio.conf.mts).
 async function importFromMaintenance(): Promise<void> {
@@ -20,6 +21,20 @@ async function importFromMaintenance(): Promise<void> {
   await clickDialogButton(m.import_connect_run());
 }
 
+const readSets = (): Promise<string[] | null> =>
+  browser.executeObsidian(({ app }) => {
+    const plugin = (app as unknown as { plugins: { getPlugin(id: string): unknown } }).plugins.getPlugin(
+      "periodic-notes",
+    ) as { settings?: { subscribe?: (run: (value: unknown) => void) => () => void } } | null;
+    const subscribe = plugin?.settings?.subscribe;
+    if (typeof subscribe !== "function") return null;
+    let value: unknown;
+    subscribe((next) => {
+      value = next;
+    })();
+    return ((value as { calendarSets?: { id: string }[] }).calendarSets ?? []).map((set) => set.id);
+  });
+
 describe("periodic notes 1.x", () => {
   describe("the capability", () => {
     before(async () => {
@@ -27,20 +42,11 @@ describe("periodic notes 1.x", () => {
     });
 
     it("loads Periodic Notes 1.x with its calendar sets behind a store", async () => {
-      const sets = await browser.executeObsidian(({ app }) => {
-        const plugin = (app as unknown as { plugins: { getPlugin(id: string): unknown } }).plugins.getPlugin(
-          "periodic-notes",
-        ) as { settings?: { subscribe?: (run: (value: unknown) => void) => () => void } } | null;
-        const subscribe = plugin?.settings?.subscribe;
-        if (typeof subscribe !== "function") return null;
-        let value: unknown;
-        subscribe((next) => {
-          value = next;
-        })();
-        return ((value as { calendarSets?: { id: string }[] }).calendarSets ?? []).map((set) => set.id);
-      });
+      // The probe returns null until the host has published its settings store, which is a
+      // plugin-load race rather than a missing calendar set — poll it out before comparing.
 
-      expect(sets).toEqual(["Default", "Work"]);
+      await waitForState(readSets, (found) => found.length > 0, "Periodic Notes 1.x never published its calendar sets");
+      expect(await readSets()).toEqual(["Default", "Work"]);
     });
   });
 

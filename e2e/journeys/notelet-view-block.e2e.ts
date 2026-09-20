@@ -70,10 +70,19 @@ describe("notelets view block", () => {
       (rows) => rows.length === 2,
       "the day window did not list both notelets",
     );
-    const headings = await block(0)
-      .$$(TYPE_HEADING)
-      .map((heading) => heading.getText());
-    expect(headings).toEqual(["Meeting", "Retro"]);
+    // Rows and type headings are different elements: waiting on the rows above says nothing about
+    // whether the headings have their text yet, and getText() on a heading that exists but has not
+    // painted returns "". Settle the headings on their own before comparing them.
+    const readHeadings = (): Promise<string[]> =>
+      block(0)
+        .$$(TYPE_HEADING)
+        .map((heading) => heading.getText());
+    await waitForState(
+      readHeadings,
+      (found) => found.length === 2 && found.every((text) => text !== ""),
+      "the day window did not render both type headings",
+    );
+    expect(await readHeadings()).toEqual(["Meeting", "Retro"]);
     await expect(block(0).$(`button[aria-label="${m.journal_notelet_list_create()}"]`)).toExist();
   });
 
