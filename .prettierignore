@@ -18,4 +18,4 @@ packages/api/index.d.ts
 test-vault/
 perf-vault/
 .obsidian-cache/
-e2e/.reports/
+e2e-tests/.reports/

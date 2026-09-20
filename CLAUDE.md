@@ -235,7 +235,7 @@ on it.
   `current_functions_object` field at 2.22.1 — which is why the hook reads
   neither. Only the real plugin exercises the re-entry: against the Obsidian
   fake there is no Templater, so this is an e2e-or-nothing behavior, in
-  `e2e/interop/templater.e2e.ts`.
+  `e2e-tests/interop/templater.e2e.ts`.
 
 ### Settings and schema
 
@@ -346,6 +346,17 @@ on it.
 
 ### e2e traps and harness limits
 
+- The suite's directory name is load-bearing: the community plugin scanner runs
+  `eslint-plugin-obsidianmd` under **its own** config, with a fixed ignore list
+  that no file in this repo can change — `eslint.config.mjs` ignores do not
+  reach it. `e2e-tests/**` is on that list and `e2e/` is not, so the suite lives
+  under `e2e-tests/` to keep harness code out of the submission review. Same
+  reason `scripts/` and `docs/` are already invisible to it; `packages/` is not.
+  The list is published in
+  [`docs/configuration.md`](https://github.com/obsidianmd/eslint-plugin/blob/master/docs/configuration.md)
+  under "Community plugin scanner configuration", which also records that only
+  six rules stay at `error` there — `obsidianmd/no-forbidden-elements` among
+  them, which is what flagged the screenshot helper's `<style>` injection.
 - `browser.executeObsidian` returns `undefined` as **null** — the WebDriver wire
   serializes it. A poll predicate guarding only on `undefined` therefore receives
   `null` and throws out of `waitUntil` instead of retrying, turning "not parsed
@@ -373,7 +384,7 @@ on it.
 - A test that opens `mode=window` must call `closePopoutWindows()`, or the
   popout steals the next test's modals.
 - Mocha runs a suite's **own** tests before its nested suites, and the shared
-  matrix helpers (`assertDecorationMatrix(surface)` in `e2e/journeys/decorations.ts`)
+  matrix helpers (`assertDecorationMatrix(surface)` in `e2e-tests/journeys/decorations.ts`)
   are `describe` factories that read like plain statements at the call site. A bare
   `it()` written next to one therefore runs **first**, before every test the helper
   registered — so anything it renders replaces what the suite's `before` staged. This
@@ -398,7 +409,7 @@ on it.
   number of assertions retype the literal. Import for new assertions; treat the
   retyped literals as known debt, not as the pattern.
 - e2e helpers also drive settings through visible tooltips and button labels, so
-  renaming a message can break e2e with no unit-test failure. Grep `e2e/` for
+  renaming a message can break e2e with no unit-test failure. Grep `e2e-tests/` for
   the old literal when changing one.
 - `browser.setWindowSize` is unsupported and `app.emulateMobile(true)` reloads
   the app and detaches `executeObsidian`. Exercise responsive reflow by forcing
@@ -406,7 +417,7 @@ on it.
   itself _can_ be resized, through the Electron bridge the capture already uses
   — `electron.remote.getCurrentWindow().setSize(w, h)`, which `innerWidth` then
   matches exactly — but that moves every pane at once, so it frames a screenshot
-  (`sizeWindow` in `e2e/screenshots/readme.shot.ts`) rather than testing one
+  (`sizeWindow` in `e2e-tests/screenshots/readme.shot.ts`) rather than testing one
   block's reflow.
 - Per [`docs/e2e-testing-strategy.md`](docs/e2e-testing-strategy.md)'s
   `reloadObsidian` behavior, notes written with `seedNote` do not survive a
@@ -420,8 +431,8 @@ on it.
   overwrites the last and the run's report ends up holding only whichever
   finished last. That is why CI's results check read "1 tests run" beside a
   failed job. `report_paths` in the workflow globs the set. A failing test also
-  leaves a PNG in `e2e/.reports/screenshots/`, named for the test title.
-- `e2e/.reports` is a dot-directory, so anything reading it from CI needs to opt
+  leaves a PNG in `e2e-tests/.reports/screenshots/`, named for the test title.
+- `e2e-tests/.reports` is a dot-directory, so anything reading it from CI needs to opt
   into hidden paths — `actions/upload-artifact` skips them by default and says so
   only as "No files were found with the provided path", which reads like the
   suite wrote nothing.
@@ -470,7 +481,7 @@ on it.
     (`main.ts` handing `getLanguage()` through) and whether a translated string
     fits a control sized for English.
   - **Large-vault paint cost.** No perf spec and no budget, at any layer.
-  - **Migration from a real vault.** `e2e/fixtures/e2e-legacy-v1` runs the whole
+  - **Migration from a real vault.** `e2e-tests/fixtures/e2e-legacy-v1` runs the whole
     v1→v5 chain, but nothing enters that chain part-way from a vault someone
     actually used.
   - **Anything whose pass condition is "a human looked at it"** — theme

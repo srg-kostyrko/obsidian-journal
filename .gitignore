@@ -38,7 +38,7 @@ test-vault/**/*.md
 # No trailing slash: in a git worktree the cache is usually a symlink to the main
 # checkout's copy, and a directory-only pattern leaves that symlink untracked.
 .obsidian-cache
-e2e/.reports/
+e2e-tests/.reports/
 
 # Exclude sourcemaps
 *.map
@@ -46,7 +46,7 @@ e2e/.reports/
 # obsidian
 data.json
 # e2e fixtures commit a curated plugin config as their starting state.
-!e2e/fixtures/**/data.json
+!e2e-tests/fixtures/**/data.json
 
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
