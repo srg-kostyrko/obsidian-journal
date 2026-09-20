@@ -398,6 +398,16 @@ breaking change under us — it can go red with zero code change. It is also the
 clock that exercises the **OS matrix** (Windows / macOS / Linux) and the
 older-version combos, neither of which the per-PR fast path covers.
 
+It runs at the same worker count as everything else, so it reproduces the per-PR
+conditions — but that value depends on a red nightly still meaning something
+specific, and two causes now produce one color. **Before concluding that Obsidian
+changed, re-dispatch the failing combo at one worker**
+(`gh workflow run e2e.yml --ref main -f full_matrix=true -f max_instances=1`): red
+again is drift, green is contention. That is one run, and it costs nothing on the
+nights the suite is green. A contention failure is still a bug to fix in the test —
+see the parallelism bullet — it is simply not the bug nightly exists to find, and
+reading it as Obsidian drift sends the search in the wrong direction.
+
 ### Version matrix
 
 Each entry is an `(appVersion, installerVersion)` pair (see Install and version
