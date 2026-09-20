@@ -272,10 +272,7 @@ export class SettingsService {
     this.#events.emit("reloaded");
   }
 
-  /**
-   * Re-reads data.json and latches the lock when it is newer; true once settings may not be
-   * written. For a caller about to do expensive work whose settings half would be refused.
-   */
+  /** Re-reads data.json; true once settings may no longer be written. */
   async recheckStoredVersion(): Promise<boolean> {
     return (await this.#latchIfStoredIsNewer()) !== undefined;
   }
