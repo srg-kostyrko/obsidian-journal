@@ -79,6 +79,22 @@ function pluginLine(record: PluginLogRecord): string {
 const versionSpec = env.OBSIDIAN_VERSIONS ?? "latest/latest";
 const versions = await parseObsidianVersions(versionSpec);
 
+// Workers per run, each one a full Obsidian boot. The ceiling is the narrowest runner in the CI
+// matrix rather than the service, which sandboxes every session and documents running several at
+// once. Env-driven so a workflow_dispatch can sweep the value without editing this file: CPU
+// contention inflates boot time, and this suite's known races live in boot windows (the
+// onLayoutReady drain, CLAUDE.md), so the right number is whatever survives repeat runs — not
+// whatever the runner's core count suggests.
+// Empty is treated as unset, which `??` alone would not do: a workflow `env:` whose expression
+// yields "" still sets the variable, and so does a bare `E2E_MAX_INSTANCES=` in a shell. Anything
+// else — including "0" — reaches the guard, so a typo fails the run instead of silently choosing
+// a worker count nobody asked for.
+const rawMaxInstances = env.E2E_MAX_INSTANCES?.trim() ?? "";
+const maxInstances = rawMaxInstances === "" ? 1 : Number(rawMaxInstances);
+if (!Number.isSafeInteger(maxInstances) || maxInstances < 1) {
+  throw new TypeError(`E2E_MAX_INSTANCES must be a positive integer; got ${JSON.stringify(env.E2E_MAX_INSTANCES)}`);
+}
+
 export const config: WebdriverIO.Config = {
   runner: "local",
   framework: "mocha",
@@ -100,8 +116,7 @@ export const config: WebdriverIO.Config = {
     screenshots: ["./e2e/screenshots/**/*.shot.ts"],
   },
 
-  // One full Obsidian boot per worker; start single-process for determinism.
-  maxInstances: 1,
+  maxInstances,
 
   capabilities: versions.flatMap(([appVersion, installerVersion]) => [
     {
