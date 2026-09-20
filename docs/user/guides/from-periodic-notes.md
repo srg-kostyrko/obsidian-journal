@@ -30,7 +30,9 @@ and weekly note, and core Daily notes.
   offer only once you have changed its settings.
 - **Preview** — each period you use becomes a journal named after it, with its folder, date format
   and template, and each row carries **Create this journal** and **Connect existing notes**; nothing
-  is connected to a journal you are not creating. A journal that already writes the same notes shows
+  is connected to a journal you are not creating. A row that creates a journal carries the name as a
+  field — type over it to call the journal something else, and a name you already use gets a number
+  added rather than joining the journal you have. A journal that already writes the same notes shows
   as already set up, whatever its name, and offers only **Connect existing notes**. A Daily notes or
   Calendar setup that Periodic Notes already covers starts switched off. With more than one calendar
   set, each becomes a **Shelf** above the journals that land on it, named after the set — rename it

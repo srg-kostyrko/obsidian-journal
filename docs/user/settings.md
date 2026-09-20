@@ -4,10 +4,17 @@ A map of every setting, in the order the settings pages show them, each linked t
 explained. Open the plugin's settings from **Settings → Community plugins → Journals**; every other
 page below is reached from there.
 
+You do not have to come here to find a section, though: every section in the tables below carries a
+**?** beside its heading, and clicking it opens that section's part of this manual — in your browser,
+or in a tab if you have the **Web Viewer** core plugin turned on. The tables are the same map read
+whole, useful for finding a setting whose section you do not know, or for reading a page's sections
+in order.
+
 ## Main settings page
 
 | Section                                                          | Settings                                                                                                  | Explained in                                                               |
 | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Import from other plugins**                                    | **Import…**, **Don't show again** — shown while a plugin can set up a journal you do not have             | [From Periodic Notes](/guides/from-periodic-notes#importing-your-settings) |
 | **Colliding journal settings**                                   | shown only when two journals resolve to the same paths                                                    | [Troubleshooting](/troubleshooting#two-journals-fight-over-the-same-notes) |
 | **Journal shelves**                                              | **Add shelf**; per shelf **Configure**, **Delete**                                                        | [Shelves](/shelves#creating-shelves)                                       |
 | **Journals** (**Journals not on a shelf** once you have shelves) | **Create new journal**; per journal **Bulk add notes to** _journal_, **Configure**, **Clone**, **Delete** | [Journals](/journals#creating-a-journal), [Bulk add](/notes#bulk-add)      |

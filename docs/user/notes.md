@@ -117,6 +117,21 @@ for those.
 settings page shows a warning that names the reason, under whichever of **Folder** or **Note name
 template** is at fault.
 
+Two ways of writing a date pass that check and still fail to match, so neither gets a warning:
+
+- **A name is read back under the language Obsidian is running now.** Translated month and weekday
+  names are the obvious half: a note named with `MMMM` under a German interface is `Oktober`, and is
+  read against `October` once the interface is English. The localized formats `L`, `LL`, `l` and `ll`
+  reorder the parts as well — `LL` is `MMMM D, YYYY` in English and `D. MMMM YYYY` in German. So a
+  vault whose notes were named under another interface language, because you switched it or because a
+  device syncing into the vault is set to a different one, stops matching its own notes. Notes already
+  connected keep their properties and stay connected; it is the rest that stop attaching, and
+  [Connect note to a journal](#connect-note-to-a-journal) still takes them.
+- **`{{date:X}}` and `{{date:x}}` name an instant, not a day.** They render seconds and milliseconds
+  since the epoch, counted from midnight where the name was written, so a machine in another time zone
+  reads the same stamp back as the day before or after — and attaches the note to that period rather
+  than refusing it. Name notes with date parts instead if your vault syncs across time zones.
+
 A link the plugin wrote for a journal that puts a question's answer into the note name is the one
 case where auto-attach asks: clicking the link asks the questions, then names the note from your
 answers. Cancelling deletes the still-empty note Obsidian made for the link, the way Obsidian
