@@ -333,6 +333,20 @@ gh release edit "$VER" --notes-file <extracted-section>
 gh release edit "$VER" --draft=false
 ```
 
+Then deploy the manual. `pages.yml` has **no `release` trigger** — a `release` event's
+run ref is the tag, and the `github-pages` environment allows only `main`, so such a
+run is rejected before it executes a step and leaves a failed run with no step log.
+Dispatching runs on `main`, satisfies the policy, and still resolves the root from the
+release just published, so the root builds from the tag as it must:
+
+```bash
+gh workflow run pages.yml --ref main
+gh run watch "$(gh run list --workflow=pages.yml --limit 1 --json databaseId --jq '.[0].databaseId')" --exit-status
+```
+
+Publish first: the job reads the latest **published** release, so a dispatch made while
+the release is still a draft rebuilds the root from the _previous_ version.
+
 ### Step 9 — Verify it reached users
 
 ```bash
@@ -343,6 +357,15 @@ gh release view "$VER" --json isDraft,assets --jq '{draft:.isDraft, assets:[.ass
 
 The assets must be exactly `main.js`, `manifest.json` and `styles.css`, and the
 manifest served from the release must carry `$VER`.
+
+Check the manual's root too, since step 8's deploy is dispatched by hand and is the
+one thing here that can simply be forgotten. Grep the live page for a sentence the
+release changed — the root is built from the tag's tree, so prose only this version
+carries is what proves it rebuilt:
+
+```bash
+curl -sS https://srg-kostyrko.github.io/obsidian-journal/<page> | grep -c '<a phrase $VER changed>'
+```
 
 ## §2 API package — conditional
 
