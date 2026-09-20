@@ -104,3 +104,10 @@ export class McpStreamEmptyError extends Error {
     this.name = "McpStreamEmptyError";
   }
 }
+
+export class UnsettledReadError extends Error {
+  constructor(what: string) {
+    super(`${what} never rendered`);
+    this.name = "UnsettledReadError";
+  }
+}
