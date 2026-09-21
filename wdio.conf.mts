@@ -3,13 +3,8 @@ import path from "node:path";
 import { env } from "node:process";
 
 import { browser } from "@wdio/globals";
-import ObsidianLauncher from "obsidian-launcher";
 import { parseObsidianVersions } from "wdio-obsidian-service";
 
-// The one cache directory: `config.cacheDir` below, and the registry prefetch in onPrepare. The
-// service takes `config.cacheDir` ahead of any default of its own, so deriving the prefetch's
-// path separately would let the two drift apart and leave the prefetch warming a file nothing
-// reads.
 const CACHE_DIR = path.resolve(".obsidian-cache");
 
 const SCREENSHOT_DIR = "./e2e-tests/.reports/screenshots";
@@ -199,21 +194,6 @@ export const config: WebdriverIO.Config = {
   mochaOpts: {
     ui: "bdd",
     timeout: 60_000,
-  },
-
-  // The service downloads every declared plugin with one `Promise.all`, and each community-store
-  // (`id:`) entry independently fetches the shared community-plugins registry. `cachedFetch` only
-  // populates its in-memory cache once a download has finished, so with more than one such entry
-  // they all miss, all fetch, and all rename their temp copy onto the same cache file. POSIX
-  // rename-over-existing is atomic and the losers are harmless; on Windows a rename onto a path
-  // another handle holds open is EPERM, and it surfaces as a fatal SevereServiceError out of the
-  // service's own onPrepare -- a red shard with no junit and no screenshots. Fetching once here
-  // leaves the file fresh inside the launcher's 30-minute cache window, so the fan-out reads it
-  // instead of racing to write it. wdio awaits this hook before any service's onPrepare, and the
-  // handoff is the cache file on disk under the shared CACHE_DIR: the service builds a private
-  // launcher we cannot reach, so sharing its in-memory cache is not an option.
-  onPrepare: async function () {
-    await new ObsidianLauncher({ cacheDir: CACHE_DIR }).getCommunityPlugins();
   },
 
   // Obsidian renders menus two ways, and only one of them is a DOM node: `nativeMenus`
