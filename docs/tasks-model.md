@@ -126,6 +126,18 @@ Three rules make that claim falsifiable rather than aspirational:
    same idiom as `CodeBlockDefinitionToken` and `JournalEditSectionToken`.
    Adding a provider touches its own module and nothing else.
 
+**`checkbox` is enabled by default; `note-property` is not.** The sentence above
+— the user enables a provider — is true of the second and false of the first.
+`has-open-task` works today with no configuration at all, so a checkbox provider
+that shipped off would silently stop every decoration anyone already has from
+matching the moment they upgrade. It ships on, with an empty identification rule,
+which reproduces today's behavior exactly. `note-property` cannot ship on: it
+has no meaning until someone names a date property, and enabling it blind either
+matches nothing or sweeps in every note carrying a stray `due:`.
+
+The same reasoning bounds the status map's default. It may move any symbol except
+`' '` → `todo` and `x` → `done`, which is what every existing vault relies on.
+
 **Every provider carries an identification rule**, not just `note-property`. The
 checkbox provider's is optional and defaults to "every list item with a task
 marker", but it exists — which is where a vault-wide filter like the Tasks
