@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# §5 of SKILL.md — the fixer's worktree, cut only when `--in-place` was not passed. See setup.sh's
+# The fixer's worktree, cut only when `--in-place` was not passed. See setup.sh's
 # header for why this is a script and not a fence.
 #
 #   worktree.sh <OUT>

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# §2 of SKILL.md — every input the stage-1 auditors read. See setup.sh's header for why this is a
+# Every input the stage-1 auditors read. See setup.sh's header for why this is a
 # script and not a fence.
 #
 #   inputs.sh <OUT>

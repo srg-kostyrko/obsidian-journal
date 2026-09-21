@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# §0 of SKILL.md. These blocks live in scripts beside the skill rather than in a fence inside it
-# because SKILL.md is loaded with every `$`-then-digit token already replaced by the skill's own
-# invocation arguments — a positional parameter, an awk field or a sed capture cannot be written
-# there at all. Here they can, so the code is written the way it would be written anywhere.
+# Setup, guard and run environment for the docs audit. This and its sibling scripts live beside the
+# skill rather than in a fence inside it, because SKILL.md is loaded with every `$`-then-digit token
+# already replaced by the skill's own invocation arguments — a positional parameter, an awk field or
+# a sed capture cannot be written there at all. Here they can, so the code is written the way it
+# would be written anywhere.
 #
 #   setup.sh --scratch <dir> [--version <x.y.z>] [--label <text>] [--base <ref>] [--in-place]
 #
@@ -37,7 +38,7 @@ if [ -z "$BASE" ]; then
   if [ -n "$IN_PLACE" ]; then BASE="$HERE"; else BASE="origin/main"; fi
 fi
 # --label names the run when no version argument can be given. /release step 4 runs before the bump,
-# so there is no tag for §1 to describe from, but its commits and its report should still say which
+# so there is no tag to describe a range from, but its commits and its report should still say which
 # release they belong to rather than `unreleased-<today>`.
 LABEL="${LABEL:-${VER:-unreleased-$(date +%F)}}"
 BRANCH="docs/audit-$LABEL"
@@ -45,11 +46,11 @@ START=$(git rev-parse HEAD)
 OUT="$SCRATCH/docs-audit-$LABEL"
 mkdir -p "$OUT"
 
-# The reviewer reads the fixer's work as a diff and §6 commits it per file with `git add -A
+# The reviewer reads the fixer's work as a diff, and it is then committed per file with `git add -A
 # docs/user`, so anything already uncommitted under the paths the audit writes would be swept into
 # those commits as if the fixer had written it. `git status --porcelain`, not `git diff --quiet`:
 # the latter does not see an untracked file, which is exactly what `add -A` would pick up. Scoped to
-# the three paths the audit can commit to — CHANGELOG.md among them, since §4 may correct a bullet
+# the three paths the audit can commit to — CHANGELOG.md among them, since triage may correct a bullet
 # the code contradicts — so that an unrelated dirty file, and test-vault/.obsidian/community-
 # plugins.json dirties itself whenever the plugin has been run locally, does not block an audit that
 # cannot touch it.
