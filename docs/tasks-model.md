@@ -86,7 +86,7 @@ structurally rather than by policy.
 
 ## Providers
 
-Closed set, **open-shaped**: the registry is internal, but its boundary is drawn
+Two providers. Closed set, **open-shaped**: the registry is internal, but its boundary is drawn
 as though it were public, so exposing it through `docs/plugin-api.md` later is a
 documentation change rather than a rewrite. Nothing third-party registers a
 provider today.
@@ -103,7 +103,6 @@ the checkbox reader.
 | --------------- | ---------------------------------------------------------------------- | ----------------- | ---------------------------- |
 | `checkbox`      | a list item with a task marker                                         | containment, date | yes                          |
 | `note-property` | a note matching an identification rule, dated by a configured property | date              | no — its date is frontmatter |
-| `remote`        | an event or VTODO from an external calendar                            | date              | no — no path                 |
 
 `note-property` is what makes the plugin work for TaskNotes (1.4M installs),
 where a task is a note tagged `#task` or identified by a property, carrying
