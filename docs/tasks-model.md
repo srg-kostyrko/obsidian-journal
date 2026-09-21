@@ -425,12 +425,14 @@ its `descendants()` recursion walked with no cycle guard, and their fix was to
 remove the capability. Measure that step against realistic **link density**, not
 note count.
 
-## Open questions
+## Still to establish
 
-- Recurring lines are refused for retargeting until the interaction with Tasks'
-  recurrence generation is verified. Rolling one forward is already checked —
-  Tasks creates the next instance in the same file, so it starts generating in
-  the new note.
-- Whether the left-behind marker's default belongs to the journal rather than
-  being global. A daily note is a record of what was written that day for some
-  users and a capture surface for others, and the two want different defaults.
+Neither is a decision — both are measurements this model is waiting on.
+
+- **The default status table.** Derived, not guessed: the union of symbols across
+  the status collections Tasks ships, each assigned its majority type, with the
+  symbols where collections disagree recorded rather than silently resolved.
+- **The phase-4 index's memory and cold-boot cost**, measured against realistic
+  **link density** rather than note count. Time Ruler hung indefinitely on a
+  2,000-note vault, and an anonymised copy of that same vault did not reproduce
+  it.
