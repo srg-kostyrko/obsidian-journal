@@ -613,6 +613,29 @@ it, and there is no second notice and no exclusion count:
 - _"rolled 6 tasks forward from 2026-09-20"_
 - _"no unfinished tasks in 2026-09-20"_
 - _"no `## Tasks` heading in 2026-09-20"_ — a configuration error, not an outcome
+- _"rolled 4 tasks; 2 note tasks were not moved"_ — see below
+
+### A bulk rollover moves line items only
+
+A note-property item cannot be rolled forward by copying, because there is
+nothing to copy: moving it to another period means **changing its date
+property**. That is the same command with none of its safety — no copy left
+behind, no marker, no recovery by duplicate, and irreversible where the checkbox
+path deliberately is not.
+
+So a bulk rollover skips note items, **and says so**. Silently skipping them
+makes the report lie: a TaskNotes user would run it, nothing would happen, and
+the notice would read "no unfinished tasks" — which is exactly the misconfigured
+case the report above exists to distinguish.
+
+Retargeting note items in bulk, if it is ever wanted, is a **separate command**
+with its own confirmation, not a flag on this one.
+
+The general rule behind it: **a command whose safety argument depends on a
+capability refuses items lacking that capability rather than degrading to a
+different operation.** Copy-by-default is what makes bulk rollover acceptable
+with no undo; applying the same command to items that cannot be copied quietly
+removes the justification.
 
 ### Which settings live where
 
