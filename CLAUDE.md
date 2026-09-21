@@ -448,6 +448,14 @@ on it.
   into hidden paths — `actions/upload-artifact` skips them by default and says so
   only as "No files were found with the provided path", which reads like the
   suite wrote nothing.
+- `No main.js found for <repo> version <v>` (or `No manifest.json found …`) out
+  of the service's `onPrepare` is **not** a missing asset. `downloadGitHubPlugin`
+  fetches each release asset with a bare `fetch` in a `try`/`catch` and reports
+  any failure — a 504, a reset, a timeout — as "not found". GitHub serving 504s
+  for a release asset took out three legs of one full-matrix run and a cold local
+  run on the same afternoon, both green on a re-run. Check the asset with `curl`
+  before believing the message; the whole leg dies in `onPrepare`, so there is no
+  junit and no screenshot to read.
 - A live `npm run dev` rebuilds the same bundle the suite loads, so reverting a
   fix to prove a spec goes red races the watcher and can pass with the bug
   supposedly reinstated. Pause the watcher around any revert-and-verify window.
