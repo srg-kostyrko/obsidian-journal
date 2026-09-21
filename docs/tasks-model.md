@@ -258,6 +258,26 @@ sort and group clauses — anything that composes. What it permits is more named
 axes, and it has to, because a surface that cannot express what a neighbouring
 surface can will disagree with it about the same day.
 
+**`status` — which item states.** It takes any type name, or a list of them, plus
+two aliases so the common fence need not enumerate:
+
+- `open` — `todo`, `in-progress`, `on-hold`
+- `done` — `done`, `cancelled`
+- `all` — everything left after exclusions
+
+`rolled` is in **neither** alias. Not open, which is the whole point of it, and
+not done. It is reachable only by naming it, which is what makes "show me what I
+rolled forward" expressible without putting rolled work back into every open
+listing.
+
+The raw types are exposed alongside the aliases so nobody is stuck with this
+document's ruling on where `on-hold` belongs.
+
+**`non-task` is not a value you filter by.** It is an exclusion, applied before
+filtering: a `non-task` item never appears in a listing, never lights a
+decoration and is never picked up by a move, whatever `status` says. Naming it in
+a fence means nothing.
+
 **`selection` — which lines inside the notes.** Its inputs are headings and tags,
 both of which `metadataCache` already resolves without interpreting a single task
 line. Both include and exclude forms have demand upstream: roll only what sits
