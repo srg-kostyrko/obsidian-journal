@@ -6,8 +6,14 @@ description: Use when cutting a Journals release — bumping the plugin to a new
 # Releasing Journals
 
 Maintainer runbook, executed rather than read. It covers the whole arc: gates,
-changelog audit, bump, tag, manual audit, draft, publish, npm package, then the
+changelog audit, manual audit, bump, tag, draft, publish, npm package, then the
 issue-tracker and community work that follows a release.
+
+**Every prose correction the release needs is made before the tag is cut.** A
+manual claim, a changelog bullet or a shipped string the code contradicts, and a
+feature that shipped with nothing explaining it, are all settled at step 4 —
+none of them is filed for later. A tag is the only route to the published
+manual's root, so "later" means the release after this one.
 
 **Invoking this skill is the authorization for every outward step below** —
 pushing a branch, merging the release PR, pushing the tag, publishing the
@@ -65,7 +71,8 @@ grep '"version"' manifest.json                     # already bumped?
 gh pr list --head "release/$VER" --state all --json number,state
 gh release view "$VER" --json isDraft,publishedAt 2>/dev/null
 npm view obsidian-journals-api version
-# Manual deployed since the release was published? Step 8 dispatches it by hand, so a
+git show-ref --verify --quiet "refs/heads/release/$VER" && echo "local branch exists"
+# Manual deployed since the release was published? Step 9 dispatches it by hand, so a
 # release that died in the window between publishing and dispatching leaves the root on
 # the previous version, and nothing downstream would notice.
 PUB=$(gh release view "$VER" --json publishedAt --jq '.publishedAt // empty' 2>/dev/null)
@@ -73,33 +80,37 @@ gh run list --workflow=pages.yml --event workflow_dispatch --limit 10 \
   --json createdAt,conclusion --jq "[.[] | select(.createdAt >= \"${PUB:-9999}\" and .conclusion == \"success\")] | length"
 ```
 
-| Observed                             | Resume at              |
-| ------------------------------------ | ---------------------- |
-| Nothing exists                       | §1 step 1              |
-| Manifest bumped, no branch on remote | §1 step 5              |
-| Branch pushed, PR open               | §1 step 5a             |
-| PR merged, tag not on remote         | §1 step 7              |
-| Tag pushed, release still a draft    | §1 step 8              |
-| Published, no pages run since        | §1 step 8's dispatch   |
-| Release published, npm behind        | §2, then step 8's tail |
-| Everything shipped                   | §3                     |
+| Observed                                 | Resume at              |
+| ---------------------------------------- | ---------------------- |
+| Nothing exists                           | §1 step 1              |
+| Local branch exists, manifest not bumped | §1 step 4              |
+| Manifest bumped, no branch on remote     | §1 step 6              |
+| Branch pushed, PR open                   | §1 step 7              |
+| PR merged, tag not on remote             | §1 step 8              |
+| Tag pushed, release still a draft        | §1 step 9              |
+| Published, no pages run since            | §1 step 9's dispatch   |
+| Release published, npm behind            | §2, then step 9's tail |
+| Everything shipped                       | §3                     |
 
 **The manual deploy is the one step a resume can silently skip.** Every other artefact
 announces its own absence — an unpushed tag, a draft release, a stale npm version — but
 a root manual left on the previous release looks exactly like one that deployed. That
 is the cost of dispatching by hand rather than on the `release` event, so the count
-above is part of the resume detection, not an afterthought: **zero means step 8's
+above is part of the resume detection, not an afterthought: **zero means step 9's
 dispatch still has to run**, whatever else is already done.
 
-Resuming at step 5a or step 6 starts with `git switch "release/$VER"` (and `git pull --ff-only` if the
-branch is pushed) — preflight left the checkout on `main`, which has neither the promoted
-`## [$VER]` heading nor any fix-forward; resuming past step 6 needs no switch, since the release
-branch has already merged into `main`. Step 5a re-runs safely: `gh pr list --head "docs/audit-$VER"
---state all` showing an open or merged PR (the remote branch is auto-deleted on merge, so this is the
-check, not "a `docs/audit-$VER` branch exists") and the `Manual: document what $VER shipped` issue are
-both reused. Resuming anywhere past step 6, run `/docs-audit $VER` before §3 when neither exists — a
-regression it finds there is reported, since the merge has already happened. A run that found nothing
-leaves no trace, so it runs again; that costs time, not correctness.
+Resuming anywhere from step 4 to step 7 starts with `git switch "release/$VER"` (and
+`git pull --ff-only` if the branch is pushed) — preflight left the checkout on `main`, which has
+neither the changelog commit, the promoted `## [$VER]` heading nor any fix-forward. Resuming past
+step 7 needs no switch, since the release branch has already merged into `main`.
+
+**Step 4 has no artefact to detect, so a resume that cannot rule it out runs it again.** An audit
+that found nothing leaves no trace — no commit, no branch, no issue — and one that found something
+leaves ordinary `docs(manual):` commits on the branch that a fix-forward looks exactly like. Re-running
+costs time, not correctness. What is _not_ safe is skipping it: a resume that enters at step 5 with the
+audit never run cuts a tag over prose nobody checked. Where the tag is already pushed, step 4 can no
+longer reach the root — run `/docs-audit $VER` anyway before §3 and report what it finds, since the
+next release carries the fix.
 
 ### Choosing the version
 
@@ -128,6 +139,7 @@ check that blocks the merge button:
 npm ci
 npm run compile:i18n && npm run check:i18n && npm run check:types
 npm run coverage && npm run check:lint && npm run build:api && npm run check:api
+npm run check:changelog
 ```
 
 `compile:i18n` before `check:types`, always — `src/i18n/paraglide` is generated
@@ -161,6 +173,12 @@ Walk every `feat`/`fix` commit and every closed milestone issue, and check
 whether `[Unreleased]` already covers it. Gaps happen — a PR that forgot its
 entry, or a surface that grew after the entry was written.
 
+**Count issues with `gh issue list --milestone`, above, and never with the
+milestone API.** `gh api repos/.../milestones`' `closed_issues` counts pull
+requests alongside issues: it reported 31 for 3.5.0, where the real figure was
+22 issues and 9 PRs. A preflight report that opens with that number opens with a
+wrong one.
+
 **A commit that touched `CHANGELOG.md` is not evidence that it added an entry.**
 Check the diff, not the file list:
 
@@ -176,19 +194,34 @@ its whole diff there was the deletion of one blank line.
 sentence case, no scopes, no commit hashes, the issue's own vocabulary.
 
 Leave the `## [Unreleased]` heading itself alone — `version-bump.mjs` promotes
-it in step 4. Run `npx prettier --write CHANGELOG.md`; prettier owns the file's
+it in step 5. Run `npx prettier --write CHANGELOG.md`; prettier owns the file's
 shape. **Do not commit yet** — step 3 may add a `packages/api` bump that belongs
-in the same commit, and the bump commit in step 4 has to carry only the
+in the same commit, and the bump commit in step 5 has to carry only the
 promotion.
 
 If the audit finds nothing missing, say so and move on — an empty audit is a
 result, not a reason to write something.
 
-### Step 3 — API package bump, only if the surface moved
+**Whether an existing bullet is still _true_ is step 4's job, not this one.**
+Every false claim 3.5.0 shipped was accurate when written and was invalidated by
+a later commit in the same cycle, which is a re-derivation from code rather than
+a walk of what is missing. Do not attempt it here; step 4's entry auditor holds
+the bullet and the code side by side and settles it properly.
 
-Run §2's detection and version rule now — the bump, not the publish, which waits
-for a green tag build. If it does not fire, leave `packages/api/package.json`
-alone entirely.
+### Step 3 — Branch, then the API package bump
+
+Branch **first**. Nothing from here to step 6 needs to be on `main`, and leaving
+it there is how 3.5.0's abandoned first attempt left local `main` two commits
+ahead of `origin/main` and broke a later `git pull --ff-only` in a way that read
+as a failed merge.
+
+```bash
+git switch -c "release/$VER"
+```
+
+Then run §2's detection and version rule — the bump, not the publish, which
+waits for a green tag build. If it does not fire, leave
+`packages/api/package.json` alone entirely.
 
 If it does fire, **name the new package version in the changelog bullet that
 describes the surface**, here and not later. §2 runs after the release notes are
@@ -198,12 +231,54 @@ already decided at this point; spend it now.
 
 **Then commit steps 2 and 3 together**, as one `docs(changelog): …` commit
 carrying both the appended changelog bullets and the `packages/api` bump. Step 2
-deliberately does not commit on its own: `npm version` in step 4 must find a
+deliberately does not commit on its own: `npm version` in step 5 must find a
 clean tree and produce a commit of exactly six files, so an uncommitted package
 bump left over from here either dirties that commit or blocks it. If neither
 step produced a change, there is no commit and step 4 follows directly.
 
-### Step 4 — Bump and tag
+### Step 4 — Audit the manual, before the version is spent
+
+```bash
+/docs-audit --in-place
+```
+
+The audit reads the branch as it stands and commits its corrections **onto it**,
+with no worktree, no fix branch and no pull request. That placement is the whole
+point: every correction is an ancestor of the tag step 5 is about to cut, for
+free.
+
+**It ran after the tag until 3.5.0, and that cost four fix-forward commits, four
+re-tags and four full e2e matrix re-runs on one release branch.** None of them
+needed the tag to exist — the audit reads `src/`, `docs/user/` and `messages/`,
+all final at the end of step 3. Worse, the fix could never reach the root manual
+from there: `pages.yml` builds the root from the **tag's tree**, and the audit
+branched its fix from `origin/main`, so the correction landed on `/next/` only
+however early it merged. Running before the tag retires both problems at once.
+
+The audit stops the release in three ways, and **all three are worked now, on
+this branch, before step 5**:
+
+- **A wrong manual claim** is corrected by the audit itself. Nothing to do.
+- **A wrong changelog bullet or shipped string** comes back as a maintainer
+  question. A bullet the code contradicts is a defect, not a voice to preserve —
+  correct the minimum, keeping the author's wording everywhere it is still true.
+  A wrong `messages/*.json` string is an ordinary code fix; edit the file
+  **line-wise**, never through a parse.
+- **An uncovered feature** — something the release ships with no manual section
+  explaining it — comes back the same way: write it now with `/docs-authoring`
+  and commit it here, or record the maintainer's reason for ruling it out.
+
+**Nothing is deferred past the tag.** A gap filed as an issue after the release
+cannot reach the root manual at all, because the root is the tag's tree and the
+tag has shipped; it waits for the next minor. 3.5.0's #483 is the worked example
+— three features shipped, documented a day later, and live on `/next/` while the
+root described 3.5.0 without them. The release waiting on prose is cheaper than
+that, and it is the only thing that is.
+
+A **regression** the maintainer chooses to fix forward is red — see "When
+something goes red". The fix goes on this branch and step 4 runs again after it.
+
+### Step 5 — Bump and tag
 
 ```bash
 npm version "$VER" -m "chore: v%s"
@@ -236,23 +311,25 @@ Do not count added lines instead. Appending an entry always rewrites the
 preceding line to add its comma, so any "exactly one addition" check fails on
 every release and teaches you to ignore your own verification.
 
-Any disagreement means back out before anything is pushed:
+Any disagreement means back out before anything is pushed. Back out the bump
+**commit**, not the branch: by now it also carries step 3's changelog commit and
+step 4's corrections, and `--hard origin/main` would discard both.
 
 ```bash
-git tag -d "$VER" && git reset --hard origin/main
+git tag -d "$VER" && git reset --hard HEAD~1
 ```
 
-### Step 5 — Branch, PR, and the gate
+### Step 6 — Push, PR, and the gate
 
 The `main` ruleset requires a pull request plus the `build` and `e2e-gate`
 checks, and grants **no bypass — not even to the owner**. The release commits
 cannot reach `main` directly.
 
 ```bash
-git switch -c "release/$VER"
 git push -u origin "release/$VER"
 git ls-remote --tags origin "$VER" | wc -l     # must print 0
 gh pr create --title "chore: release $VER" --body "…"
+gh pr checks <n> --watch --interval 30
 ```
 
 The PR body says what is in the release, why it is minor or patch, whether
@@ -260,25 +337,10 @@ The PR body says what is in the release, why it is minor or patch, whether
 must be merged with a merge commit. No `Co-Authored-By` trailer. No claude.ai
 session links.
 
-### Step 5a — Audit the manual
+Because step 4 already ran, the manual corrections are in this PR and in this
+gate run — one e2e matrix, not two.
 
-Start `gh pr checks <n> --watch --interval 30` in the background, then run `/docs-audit $VER`. The
-audit reads the release branch as it stands and, if it needs to open a fix branch, starts it from
-`origin/main`.
-
-**Step 6 waits for both** a green gate and a finished audit.
-
-- A **regression** the maintainer chose to fix forward is red — see "When something goes red". The
-  fix goes on the release branch, and step 5a runs again after it. That re-run is safe: the fix PR,
-  if one was opened on the first pass, already exists, so `/docs-audit`'s own guard skips stages 2–3
-  and the re-run is stage 1 only.
-- The uncovered issue does not block the release. **The docs fix PR does** — it has to merge before
-  step 7 pushes the tag, and step 7 carries the check and the reason. That costs almost nothing on
-  the critical path: step 6 already waits for the audit to finish, so the PR is already open by
-  then. Merging it before the release PR is fine too; `main` does not require branches to be up to
-  date, so neither order restarts the release gate.
-
-### Step 6 — Merge with a merge commit
+### Step 7 — Merge with a merge commit
 
 **Read the PR's comments before merging, not just the check list.** A bot review
 posts findings while every check stays green. Feedback arrives in three places
@@ -306,27 +368,10 @@ GitHub deletes the remote branch on merge, so only the local one is left —
 `git branch -d "release/$VER"`. A `git push origin --delete` after that errors
 with "remote ref does not exist"; that is the expected outcome, not a problem.
 
-### Step 7 — Push the tag, after the branch has landed
+### Step 8 — Push the tag, after the branch has landed
 
 `versions.json` is read from the default branch and the tag starts the build, so
 the branch must reach GitHub first.
-
-**The docs fix PR, if step 5a opened one, has to be merged before this push** —
-the published manual's root is built from the latest published release, so a
-correction merged after the tag reaches `/next/` only and readers on the version
-just shipped keep the wrong prose until the release after it. This is the check
-a resumed release skips, since the resume table enters here directly:
-
-```bash
-gh pr list --head "docs/audit-$VER" --state all --json number,state
-```
-
-An open PR merges first — step 5a's audit has already finished by step 6, so it is
-open and waiting rather than something this step starts. Where one genuinely
-cannot make the tag, the root keeps the stale prose until the next release; the
-manual escape is `gh workflow run pages.yml -f stable_ref=<ref>`, and the ref has
-to be cut from the tag with the fix applied, **not** `main`, which carries
-unreleased work the root must not show.
 
 ```bash
 git push origin "$VER"
@@ -337,15 +382,26 @@ gh run watch <id> --exit-status
 `release.yml` re-runs the checks, builds, attests provenance, and opens a
 **draft** release carrying `main.js`, `manifest.json` and `styles.css`.
 
-### Step 8 — Notes, then publish
+Nothing about the manual is checked here. It was settled at step 4, and the tag
+this push creates already carries it — which is exactly what `pages.yml` will
+build the root from at step 9.
 
-The draft's body is empty. Fill it from the changelog section, **stripping the
-`## [x.y.z]` heading** — the release is already titled with its version.
+### Step 9 — Notes, then publish
+
+The draft's body is empty. Fill it from the changelog section:
 
 ```bash
-gh release edit "$VER" --notes-file <extracted-section>
+node scripts/release-notes.mjs "$VER" > notes.md
+gh release edit "$VER" --notes-file notes.md && rm notes.md
 gh release edit "$VER" --draft=false
 ```
+
+The script strips the `## [x.y.z]` heading — the release is already titled with
+its version — and trims the blanks and the generator comment at either end. Do
+not hand-roll this with `awk`: that is what 3.5.0 did, and it published notes
+that needed a stray blank line stripped after the fact. `check:changelog` now
+gates the shape the script reads, so a loose list fails the `build` check rather
+than reaching the notes.
 
 Then deploy the manual. `pages.yml` has **no `release` trigger** — a `release` event's
 run ref is the tag, and the `github-pages` environment allows only `main`, so such a
@@ -372,7 +428,7 @@ gh run watch "$RUN" --exit-status
 Publish first: the job reads the latest **published** release, so a dispatch made while
 the release is still a draft rebuilds the root from the _previous_ version.
 
-### Step 9 — Verify it reached users
+### Step 10 — Verify it reached users
 
 ```bash
 curl -sSL https://github.com/srg-kostyrko/obsidian-journal/releases/download/"$VER"/manifest.json
@@ -383,16 +439,16 @@ gh release view "$VER" --json isDraft,assets --jq '{draft:.isDraft, assets:[.ass
 The assets must be exactly `main.js`, `manifest.json` and `styles.css`, and the
 manifest served from the release must carry `$VER`.
 
-Check the manual's root too, since step 8's deploy is dispatched by hand and is the one
+Check the manual's root too, since step 9's deploy is dispatched by hand and is the one
 thing here that can simply be forgotten. Where the release changed a page — most do —
 grep the live root for a sentence only this version carries, since the root is built
 from the tag's tree and that is what proves it rebuilt. A release that changed no page
-has no such phrase, and deploys byte-identical output, so there step 8's green
+has no such phrase, and deploys byte-identical output, so there step 9's green
 dispatched run is the whole of the evidence:
 
 ```bash
 if git diff --quiet "$PREV".."$VER" -- docs/user; then
-  echo "manual unchanged this release — step 8's green run is the check"
+  echo "manual unchanged this release — step 9's green run is the check"
 else
   curl -sS https://srg-kostyrko.github.io/obsidian-journal/<page> | grep -c '<a phrase $VER changed>'
 fi
@@ -400,12 +456,12 @@ fi
 
 ## §2 API package — conditional
 
-Runs after §1 step 7's tag build is green. It may run before or after step 8
+Runs after §1 step 8's tag build is green. It may run before or after step 9
 publishes the draft; §3 runs last, once the release is public.
 
-Resuming straight into this section does **not** mean step 8 finished: its last act is
+Resuming straight into this section does **not** mean step 9 finished: its last act is
 dispatching the manual deploy, which leaves no trace on the release itself. Check the
-pages count from §0 before treating step 8 as done.
+pages count from §0 before treating step 9 as done.
 
 **`packages/api` does not ship on every plugin release.** Detect first:
 
@@ -495,13 +551,25 @@ shipped". That is the whole of what posts unattended.
 
 ### Handed to the maintainer
 
-3. **Cross-links into issues the release did not close.** An open request the new
-   feature covers indirectly, or a bug a new setting merely sidesteps, deserves a
-   comment — but that comment asserts a relationship in the maintainer's voice,
-   on a thread it may be about to disappoint. Draft them: one line per target
-   naming the issue and the claim the comment would make, **including the ones
-   you considered and rejected**, since a link not drawn is a judgment the
-   maintainer never sees. Post only the ones they approve.
+3. **Cross-links into issues the release did not close.** The bar is that the
+   release **fully solves** the issue — that it could be closed on the strength
+   of this release alone. Partial overlap is not a cross-link: not a feature that
+   "covers it indirectly", not a setting that "sidesteps" the bug, not a route
+   that makes it "possible another way". **An empty set is a valid result**, and
+   the common one.
+
+   That bar is deliberately higher than it reads. At 3.5.0 the looser wording
+   produced three drafts that all claimed coverage that did not exist — headless
+   note creation (the REST API needs a running GUI Obsidian and a second plugin),
+   URI capture (the request _is_ the URI), and recording a prompt answer from
+   outside a note (the draft's own text said "unchanged by 3.5.0"). These are the
+   maintainer's own scoping notes, so a false "covered" corrupts the next planning
+   pass — a cost paid later, by someone reading the thread as settled.
+
+   For the ones that clear it: draft one line per target naming the issue and the
+   claim the comment would make, **including the near misses you rejected and
+   why**, since a link not drawn is a judgment the maintainer never sees. Post
+   only the ones they approve.
 
 4. **The next milestone carries a theme.** It is a product decision — do not pick
    one. Read the open backlog and propose **two or three candidate themes**, each
@@ -547,16 +615,20 @@ untested machinery.
 
 - Never squash or rebase the release PR.
 - Never push the tag before the branch has landed on `main`.
-- Never rewrite an existing `[Unreleased]` bullet. Append only.
+- Never rewrite an existing `[Unreleased]` bullet in step 2. Append only. The one
+  exception is step 4's: a bullet the code contradicts is a defect, corrected with
+  the maintainer's word and only where it is false.
 - Never run `npm version` twice for one release — resume through §0 instead.
 - Never commit with `--no-verify` or `core.hooksPath=/dev/null`.
 - Never add a `Co-Authored-By` trailer, or a claude.ai session link, to a commit,
   PR body, or issue comment.
 - Never change `minAppVersion` as part of a release.
 - Never comment on an issue the release did not close without the maintainer's
-  approval of that comment.
+  approval of that comment, and never draft one for an issue this release does not
+  fully solve.
 - Never post the Discord message.
-- Never merge the docs audit's fix PR as part of the release.
+- Never defer a manual gap, a wrong bullet or a wrong string past the tag. The
+  published root is the tag's tree; there is no later.
 
 ## When something goes red
 
@@ -564,16 +636,22 @@ Stop. Report the failing output verbatim. Change nothing further — no retry, n
 fix-and-continue; a fix is its own task with its own approval. Re-invoking the
 skill resumes from §0, which works out what already happened.
 
-A regression from step 5a that the maintainer chose to fix forward counts as red.
+A regression from step 4 that the maintainer chose to fix forward counts as red.
 
-Recovering a bad bump before anything is pushed:
+Recovering a bad bump before anything is pushed — back out the bump commit only,
+not the branch, which by step 5 also carries the changelog commit and step 4's
+corrections:
 
 ```bash
-git tag -d "$VER" && git reset --hard origin/main
+git tag -d "$VER" && git reset --hard HEAD~1
 ```
 
+Abandoning the release outright is `git switch main && git branch -D "release/$VER"`
+after deleting the tag. Because step 3 branched before anything was committed,
+`main` is untouched and there is nothing to reset there.
+
 After the branch is pushed, fix forward on the branch and
-`git push --force-with-lease`. The tag stays local until step 7, so it can be
+`git push --force-with-lease`. The tag stays local until step 8, so it can be
 deleted and recreated freely up to that point.
 
 ## Background
@@ -633,5 +711,5 @@ default, which stays at read.
 does run on the tag push, but as a separate workflow that cannot stop the draft.
 So nothing checked on the tag blocks a release; what actually gates one is the
 release **PR**, where `build` and `e2e-gate` both have to be green before the
-merge button unlocks. That is why step 6's merge must not be forced past a red
+merge button unlocks. That is why step 7's merge must not be forced past a red
 gate, and why step 1 mirrors `checks.yml` rather than `release.yml`.
