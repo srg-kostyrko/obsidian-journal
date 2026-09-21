@@ -226,6 +226,25 @@ folder elsewhere fixed it. We resolve a note's period from its frontmatter claim
 and sort resolved anchors, so a folder reorganisation cannot make an old note
 sort as yesterday. The reach was not what failed there.
 
+### Which settings live where
+
+**Global, on the provider** — the marker string, the `symbol → type` map, the
+identification rule. These are parsing concerns, and the rollup case forces them:
+one note is read in several journals' contexts, so a marker that differed per
+journal would normalize the same line to `rolled` in one reading and `todo` in
+another. A status cannot depend on who asked.
+
+**Per-journal, on the move** — `selection`, the target heading, copy-vs-move, and
+whether to stamp. The first two name headings in that journal's own template, so
+a global value is wrong the moment two journals have different templates. The
+other two ride along free once a per-journal surface exists, with a global
+default.
+
+_"Move task to a period's note"_ takes a line from any note, including one no
+journal owns, so there is no source journal to read from: **the target journal's
+config applies**, because placement is about the target's template. `selection`
+does not apply at all — the user picked the line.
+
 ### Where a moved item lands
 
 Placement reuses `selection`. The two are the same list of headings read twice,
