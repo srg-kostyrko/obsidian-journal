@@ -367,6 +367,21 @@ source note by construction. A user-chosen grouping therefore has to say how it
 composes with the one already there, and nobody has asked yet. When someone does,
 the question is how the two interact, not whether it is allowed.
 
+**A condition that cannot apply to an item passes it through.** Not false —
+inapplicable, and the item survives. `status` applies to everything and `tag` to
+both kinds, but `heading` applies only to an item with a position inside a note,
+so without this rule a fence saying `selection: "## Tasks"` returns **zero**
+note-property items and says nothing about why. The user asked about their daily
+notes' internal structure; they did not ask to drop a provider. The rule is
+stated generally so the next condition type inherits it, and the escape for
+someone who genuinely wants line items only is the `provider` scope key, which is
+the right place to say which kind of thing you are looking at.
+
+The cost is that `mode: and` with a heading condition does not narrow note items,
+so "under `## Tasks` and open" returns open note-tasks whatever their headings.
+That reads loose; the alternative silently removes an entire provider's items,
+which is an evening of debugging before someone files "the listing is broken".
+
 **`selection` — which lines inside the notes.** Its inputs are headings and tags,
 both of which `metadataCache` already resolves without interpreting a single task
 line. Both include and exclude forms have demand upstream: roll only what sits
