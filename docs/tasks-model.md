@@ -434,6 +434,24 @@ The target note need not exist. `ensureNote` writes the rendered template body
 and only then the frontmatter claim, so a visible note already has its template
 headings — there is nothing to poll for, which is what every incumbent had to do.
 
+**Notelets are both a source and a target, but not for every command.** A move
+reads from them when `source` includes them — an action item captured in a
+meeting is exactly the kind of thing that should follow you forward, and the
+default `source: note` keeps it opt-in.
+
+Writing to one splits by command. A **bulk rollover** targets the period note
+only: with zero or three Meeting notelets that day there is no non-arbitrary
+choice, and nothing to make one from. The **single-task commands** already put a
+picker in front of the user, so that picker offers the period note and the
+period's **existing** notelets alongside it. Creating a notelet is
+`CreateNoteletFlow`'s work — it picks a type and asks its questions — and a move
+does not trigger it.
+
+Placement inside a notelet degrades one step: match the source heading if the
+notelet has it, otherwise append at the end. The configured target heading is a
+journal-level setting describing the journal's template, and it says nothing
+about a notelet type's.
+
 ### Recurring lines
 
 Retargeting the date on a line carrying `🔁` is **confirmed, not silently
