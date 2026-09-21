@@ -377,6 +377,40 @@ unscoped rollover over a template that seeds recurring checkboxes duplicates
 those checkboxes every day, which is the single most common support thread on
 every incumbent.
 
+## Ticking an item
+
+A listing renders items and lets them be ticked. That is a write into a task
+line, and it clears the rule: the status character is always present, so it is a
+token we found, and the user named the value by clicking. The symbol written is
+whatever the status map assigns to `done`.
+
+**A recurring line is the exception, and it is silent if missed.** The Tasks
+plugin generates the next instance when the checkbox is toggled through _its own_
+handler. A programmatic file write does not go through it, so ticking
+`- [ ] Water plants 🔁 every week` in our listing would mark it done and never
+create next week's — the series just stops, with nothing failing loudly.
+
+Their `apiV1` is `createTaskLineModal()`, `editTaskLineModal(line)` and
+`executeToggleTaskDoneCommand(line, path)`. There is no read API, which is why
+this model reads markdown itself — but the one thing they do publish is exactly
+this toggle.
+
+So:
+
+- **no `🔁` on the line** — write the status character ourselves. No dependency,
+  works for everyone.
+- **`🔁` present** — delegate to `executeToggleTaskDoneCommand` when Tasks is
+  loaded. When it is not, do not toggle silently: the recurrence syntax is theirs
+  and inert without them, so refuse or say that the series will not advance.
+
+Nothing requires Tasks and everything works without it, which is what "no
+dependency on any task plugin" has to mean in practice. The capability check and
+fall back is the discipline `TemplaterService` already applies to
+`parse_commands`.
+
+Rendering is verbatim. A line is shown as written, dialect signifiers included;
+nothing is prettified away, for the same reason nothing is re-serialized.
+
 ## Decorations ask the same question
 
 `has-open-task` and `all-tasks-completed` are hardcoded points in a space that is
