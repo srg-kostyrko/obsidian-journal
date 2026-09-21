@@ -246,7 +246,7 @@ ITS, LYT Mode, Minimal, Things — carry **57 distinct symbols between them and
 disagree about exactly one** (`d`, todo in four and in-progress in one). Of those
 57, **43 map to `TODO`**, which is already the unknown default, so listing them
 changes no behavior at all. What is left is `x`/`X`/`/`/`-`, which core already
-covers, and ITS's speech-bubble digits `0`–`9` as `NON_TASK` — one collection out
+covers, and AnuPpuccin's speech-bubble digits `0`–`9` as `NON_TASK` — one collection out
 of eight, not a majority. Deriving a middle ground across all of them yields a
 single entry core does not already have.
 
