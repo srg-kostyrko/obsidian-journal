@@ -40,9 +40,17 @@ START=$(git rev-parse HEAD)
 OUT="$SCRATCH/docs-audit-$LABEL"
 mkdir -p "$OUT"
 
-# The reviewer reads the fixer's work as a diff and §6 commits it per file, so anything already
-# uncommitted would be swept into those commits.
-git diff --quiet || { echo "working tree is dirty — commit or discard first" >&2; exit 1; }
+# The reviewer reads the fixer's work as a diff and §6 commits it per file with `git add -A
+# docs/user`, so anything already uncommitted under the paths the audit writes would be swept into
+# those commits as if the fixer had written it. `git status --porcelain`, not `git diff --quiet`:
+# the latter does not see an untracked file, which is exactly what `add -A` would pick up. Scoped to
+# those paths so that an unrelated dirty file — test-vault/.obsidian/community-plugins.json dirties
+# itself whenever the plugin has been run locally — does not block an audit that cannot touch it.
+if [ -n "$(git status --porcelain -- docs/user messages)" ]; then
+  echo "docs/user or messages has uncommitted changes — commit or discard first" >&2
+  git status --short -- docs/user messages >&2
+  exit 1
+fi
 
 PR_COUNT=0
 if [ -n "$IN_PLACE" ]; then

@@ -54,8 +54,9 @@ scripts are under no such constraint, and they are not retyped by an agent on ev
 
 **`--in-place` needs no guard and gets none.** The whole point of it is that the checkout, the claims
 being judged and the tree the fix lands in are one and the same, so there is nothing for a guard to
-compare. What it does require is a clean tree — so that §6 can read the fixer's work as `git diff`
-and commit it per file — and a branch that is not `main`.
+compare. What it does require is that `docs/user` and `messages` carry nothing uncommitted — §6
+commits the fixer's work with `git add -A docs/user`, which would otherwise sweep in whatever was
+already there, untracked files included — and a branch that is not `main`.
 
 **Without `--in-place`, a printed `PR_COUNT` above zero** means an open or merged PR for `$BRANCH`
 exists and stages 2–3 already ran: skip them, skip the guard entirely, and link the PR in the report
