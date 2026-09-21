@@ -60,10 +60,11 @@ being judged and the tree the fix lands in are one and the same, so there is not
 compare. What it does still require is a branch that is not `main`, since `main` takes no direct
 commit.
 
-**Every run, in-place or not, requires `docs/user` and `messages` to carry nothing uncommitted.** §6
-commits the fixer's work with `git add -A docs/user`, which would otherwise sweep in whatever was
-already there — untracked files included, which is why the check is `git status --porcelain` and not
-`git diff --quiet`. It is scoped to those two paths so an unrelated dirty file cannot block an audit
+**Every run, in-place or not, requires `docs/user`, `messages` and `CHANGELOG.md` to carry nothing
+uncommitted.** §6 commits the fixer's work with `git add -A docs/user`, which would otherwise sweep
+in whatever was already there — untracked files included, which is why the check is
+`git status --porcelain` and not `git diff --quiet`. `CHANGELOG.md` is in that set because §4 may
+correct a bullet, and it is those three paths only, so an unrelated dirty file cannot block an audit
 that could not touch it.
 
 **Without `--in-place`, a printed `PR_COUNT` above zero** means an open or merged PR for `$BRANCH`
@@ -96,11 +97,11 @@ if [ -n "$VER" ]; then
 else
   PREV=$(git describe --tags --abbrev=0 HEAD); UPPER=HEAD; SECTION=Unreleased
 fi
-cat >> "$OUT/env.sh" <<EOF
-export PREV='$PREV'
-export UPPER='$UPPER'
-export SECTION='$SECTION'
-EOF
+{
+  printf 'export PREV=%q\n' "$PREV"
+  printf 'export UPPER=%q\n' "$UPPER"
+  printf 'export SECTION=%q\n' "$SECTION"
+} >> "$OUT/env.sh"
 ```
 
 The `^` is load-bearing whenever a version argument is given: the `$VER` tag sits at or under `HEAD`
@@ -274,8 +275,10 @@ done
 
 A string the maintainer chose to correct is committed here too, separately —
 `git commit -m "fix(i18n): correct <key> for $LABEL" -- messages/en.json` — and a corrected changelog
-bullet as `docs(changelog): correct <what> for $LABEL`. Neither is a manual page, so neither belongs
-in the loop above, and both are ordinary source fixes that the release's own gate will run over.
+bullet as `git commit -m "docs(changelog): correct <what> for $LABEL" -- CHANGELOG.md`. **Both carry
+their pathspec**, as the loop above does: a bare `git commit -m` would take everything staged.
+Neither is a manual page, so neither belongs in that loop, and both are ordinary source fixes that
+the release's own gate will run over.
 
 ## §7 Outputs
 

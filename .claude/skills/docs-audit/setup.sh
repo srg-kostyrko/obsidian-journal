@@ -49,11 +49,16 @@ mkdir -p "$OUT"
 # docs/user`, so anything already uncommitted under the paths the audit writes would be swept into
 # those commits as if the fixer had written it. `git status --porcelain`, not `git diff --quiet`:
 # the latter does not see an untracked file, which is exactly what `add -A` would pick up. Scoped to
-# those paths so that an unrelated dirty file — test-vault/.obsidian/community-plugins.json dirties
-# itself whenever the plugin has been run locally — does not block an audit that cannot touch it.
-if [ -n "$(git status --porcelain -- docs/user messages)" ]; then
-  echo "docs/user or messages has uncommitted changes — commit or discard first" >&2
-  git status --short -- docs/user messages >&2
+# the three paths the audit can commit to — CHANGELOG.md among them, since §4 may correct a bullet
+# the code contradicts — so that an unrelated dirty file, and test-vault/.obsidian/community-
+# plugins.json dirties itself whenever the plugin has been run locally, does not block an audit that
+# cannot touch it.
+WRITES="docs/user messages CHANGELOG.md"
+# shellcheck disable=SC2086
+if [ -n "$(git status --porcelain -- $WRITES)" ]; then
+  echo "the audit writes to $WRITES, and one of them has uncommitted changes — commit or discard first" >&2
+  # shellcheck disable=SC2086
+  git status --short -- $WRITES >&2
   exit 1
 fi
 
@@ -75,18 +80,21 @@ else
   fi
 fi
 
-cat > "$OUT/env.sh" <<EOF
-export VER='$VER'
-export IN_PLACE='$IN_PLACE'
-export BASE='$BASE'
-export BASE_BRANCH='${BASE#origin/}'
-export ROOT='$ROOT'
-export LABEL='$LABEL'
-export BRANCH='$BRANCH'
-export START='$START'
-export PR_COUNT='$PR_COUNT'
-export OUT='$OUT'
-EOF
+# printf %q, not '$VAR' between apostrophes: --label is free-form and a repository or scratch path
+# may hold an apostrophe, either of which would end the assignment early and leave the rest of the
+# value to be read as shell syntax by every later block that sources this file.
+{
+  printf 'export VER=%q\n' "$VER"
+  printf 'export IN_PLACE=%q\n' "$IN_PLACE"
+  printf 'export BASE=%q\n' "$BASE"
+  printf 'export BASE_BRANCH=%q\n' "${BASE#origin/}"
+  printf 'export ROOT=%q\n' "$ROOT"
+  printf 'export LABEL=%q\n' "$LABEL"
+  printf 'export BRANCH=%q\n' "$BRANCH"
+  printf 'export START=%q\n' "$START"
+  printf 'export PR_COUNT=%q\n' "$PR_COUNT"
+  printf 'export OUT=%q\n' "$OUT"
+} > "$OUT/env.sh"
 
 echo "ROOT=$ROOT"
 echo "OUT=$OUT"
