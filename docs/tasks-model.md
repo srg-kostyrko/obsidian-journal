@@ -203,8 +203,8 @@ every incumbent.
 ## Status normalization
 
 Each provider maps its native status into a shared type set — `todo`, `done`,
-`in-progress`, `cancelled`, `on-hold`, `non-task` — and **an unrecognised status
-normalizes to `todo`.**
+`in-progress`, `cancelled`, `on-hold`, `non-task`, `rolled` — and **an
+unrecognised status normalizes to `todo`.**
 
 That default is the decisive one, and it matches the Tasks plugin (4.2M
 installs). What ships today is the opposite. `NoteMetadataService` maps
@@ -254,18 +254,35 @@ behavior change landing on vaults people already run.
 **Changing this changes existing vaults**: a decoration reading "all tasks
 completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
 
-**Open.** Whether a rolled-forward line gets its own type. `>`
-(forwarded/rescheduled) is already common across the theme collections above, so
-the type would have an established symbol rather than needing one invented. Normalizing the
-left-behind marker to something other than `todo` is what stops a rolled line
-reading as open work — in the listing, in the decorations, and in the move's own
-eligibility check, which is otherwise a separate rule that has to be kept in
-agreement with the marker. If it becomes a type, the marker is **one setting
-owned by the provider**: the move writes it, the provider reads it, and two
-settings could drift so that every previously rolled line silently turns open
-again. The cost is that Tasks has no such type and resolves an unknown status to
-`TODO`, so a rolled line reads as not-open here and open to their queries until
-the user registers the same status on both sides.
+### `rolled`, and why the marker is both a tag and a type
+
+A line the move left behind carries a marker, and the marker does **two jobs that
+are not alternatives**.
+
+The complaint it exists to answer is that a copied task is counted twice by every
+task query in the vault, forever. That complaint lives in the user's _own_
+queries, so the marker has to be excludable there: an appended tag is, natively,
+in Dataview, Tasks and core search alike, with nothing registered anywhere. A
+type cannot do that job — Tasks resolves an unknown symbol to `TODO`, so a line
+we consider rolled still counts as open to them.
+
+But a tag alone leaves our own surfaces wrong: the line is still a plain `- [ ]`,
+so the listing shows it as open, the calendar lights the day, and the move's
+eligibility check needs a second rule of its own to avoid picking it up again on
+a re-run.
+
+So both. **The provider reads the marker and normalizes it to `rolled` rather
+than `todo`.** The tag serves the user's queries, the type serves ours, and the
+marker is **one setting owned by the provider** — the move writes it, the
+provider reads it. Two settings would drift, and the day they did, every
+previously rolled line would silently turn open again.
+
+`>` maps to `rolled` by default too, for vaults already using that convention,
+and it is already common across the theme collections above — so the type
+arrives with an established symbol rather than needing one invented.
+
+The cost: this is the one type the Tasks plugin does not have. A user reconciling
+both has to register the status on their side as well.
 
 ## Build order
 
