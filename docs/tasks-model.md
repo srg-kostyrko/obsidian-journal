@@ -377,6 +377,37 @@ unscoped rollover over a template that seeds recurring checkboxes duplicates
 those checkboxes every day, which is the single most common support thread on
 every incumbent.
 
+## Decorations ask the same question
+
+`has-open-task` and `all-tasks-completed` are hardcoded points in a space that is
+no longer small — seven statuses, two providers, a `date` role, `source`. A
+listing can ask whether there are in-progress items in the notelets; those two
+conditions cannot. Two surfaces that cannot express the same question will
+disagree about the same day, which is what this whole model is built to avoid.
+
+So both are replaced by one condition carrying a scope and a filter:
+
+```
+{ type: "tasks", quantifier: "any" | "all" | "none", scope: {…}, filter: {…} }
+```
+
+- `has-open-task` becomes `any` over `status: open`
+- `all-tasks-completed` becomes `all` over `status: done`
+- `none` becomes expressible for the first time — "this day has no open work" as
+  a condition rather than a decoration someone has to invert
+
+Two details are load-bearing:
+
+- **`all` means non-empty and every.** `allTasksCompleted` returns `false` for a
+  note with no tasks today (`engine-checks.ts:201`). Vacuous truth would light
+  every empty day in the calendar.
+- **The scope inside the condition still refuses `depth`.** The rollup ban on
+  decorations is unchanged — the engine evaluates per cell across a whole grid.
+
+This is a schema change to configs people already run, so it carries a
+**deterministic rewrite** of the two old condition types into the new one, not a
+release note.
+
 ## Moving items
 
 A move copies by default: the source line stays, so the previous note remains a
