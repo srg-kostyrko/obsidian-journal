@@ -411,6 +411,27 @@ fall back is the discipline `TemplaterService` already applies to
 Rendering is verbatim. A line is shown as written, dialect signifiers included;
 nothing is prettified away, for the same reason nothing is re-serialized.
 
+**But items are not uniform in what they render**, because a note-property item
+has no line at all. So the item **declares its display form**:
+
+```
+display:
+  | { kind: "line", markdown }
+  | { kind: "note", path, title }
+```
+
+The listing branches on `kind` — data the item carries — never on which provider
+produced it. That is the first real test of the rule that consumers read declared
+capabilities rather than provider identity, and it is where the obvious
+implementation would have broken it: `if (item.provider === "checkbox")` in the
+very first consumer.
+
+A `note` item renders as a link, so clicking opens the task note, and its
+`title` comes from the provider's configured title property where one is mapped —
+TaskNotes' `FieldMapping` has `title` as a settable key — falling back to the
+basename. Ticking it writes its status **property**; there is no status character
+to overwrite.
+
 ## Decorations ask the same question
 
 `has-open-task` and `all-tasks-completed` are hardcoded points in a space that is
