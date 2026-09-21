@@ -14,6 +14,11 @@ the thing no task plugin has and this plugin already owns.
 **The plugin does not become a task manager.** It answers the period question and
 renders the result.
 
+**Nothing here keeps plugin-private state.** The marker, the copied line and the
+statuses all live in the notes, so a second device reading the same vault reaches
+the same conclusions from the same bytes. The only store this model adds is the
+phase-4 index, which is a cache derived from notes and rebuilt from them on boot.
+
 ## Vocabulary
 
 **Item.** Not _task_. The noun is deliberately wider, because a task is a
@@ -200,6 +205,32 @@ unscoped rollover over a template that seeds recurring checkboxes duplicates
 those checkboxes every day, which is the single most common support thread on
 every incumbent.
 
+## Moving items
+
+A move copies by default: the source line stays, so the previous note remains a
+record of what was actually written that day, and nothing needs a bespoke undo
+spanning two files.
+
+**Reach is unbounded, and reported.** `JournalIndex.findPrevious` binary-searches
+the anchors of notes that _exist_, so it already spans gaps — after a two-week
+break it finds the note from two weeks ago, which is exactly when a rollover
+matters most. Bounding it by a distance strands that work to prevent a surprise a
+notice prevents just as well: _"rolled 6 tasks forward from 2026-08-30, 12 days
+ago"_. A number is arbitrary and will be wrong for somebody; a report is not.
+
+The one upstream case cited against unbounded reach does not transfer. Obligator
+#45 — a 2024 note used as the basis for a 2025 daily note — was caused by
+**path-based sorting**: the reporter had changed their date format a year earlier
+and moved the old notes into a subfolder, which broke the sort, and moving that
+folder elsewhere fixed it. We resolve a note's period from its frontmatter claim
+and sort resolved anchors, so a folder reorganisation cannot make an old note
+sort as yesterday. The reach was not what failed there.
+
+Copy-by-default also makes a deep reach recoverable — nothing was destroyed, a
+stale list is merely sitting in today's note — while under-reaching loses real
+work. If rollover ever runs automatically on note creation the notice fires
+unread, which is an argument for keeping it manual, not for adding a bound.
+
 ## Status normalization
 
 Each provider maps its native status into a shared type set — `todo`, `done`,
@@ -290,7 +321,11 @@ Cut by **provider**, not by relation. The expensive thing is not the date
 relation — it is the checkbox provider's implementation of it.
 
 1. `checkbox` provider, **containment** only; the listing and its surfaces;
-   `source` on decoration conditions; the path-set API.
+   `source` on decoration conditions. The path-set half of the API already
+   shipped in 3.4.0 — `existingNotes(selector)` returns every note the matched
+   journals have written and `notesInRange` narrows it to a window, both
+   resolving custom intervals and non-obvious week boundaries. What is left is
+   `previousNote` / `nextNote` and `depth` handling.
 2. `note-property` provider with its date→paths index — small, `metadataCache`
    only, no text cache, no `cachedRead`, and it covers TaskNotes plus every
    hand-rolled `due:` / `scheduled:` convention.
@@ -315,9 +350,6 @@ note count.
 - Whether the left-behind marker's default belongs to the journal rather than
   being global. A daily note is a record of what was written that day for some
   users and a capture surface for others, and the two want different defaults.
-- How far back a rollover may reach. `JournalIndex.findPrevious` spans gaps by
-  construction, so "the previous note" is not "yesterday" — unbounded, previous
-  period only, or bounded and reported.
 - Whether a moved item lands under the heading it came from when the target has a
   matching one, falling back to a configured target heading. That folds
   `selection` and target placement into one rule, and it is the shape five voices
