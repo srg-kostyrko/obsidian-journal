@@ -103,6 +103,31 @@ date→paths index. Generalizing day-notes into a shared capability was consider
 and declined — it costs a migration on a shipped settings slice and buys one
 index.
 
+## One extractor
+
+**The provider is the only thing that turns a note into items.** Every surface —
+the listing, the decoration conditions, the move — asks the provider. Nothing
+re-derives items from `metadataCache` on its own.
+
+Whether the provider answers from `metadataCache` on demand or from a persistent
+index sits **behind that seam**. That is what keeps the index a performance
+decision rather than a fork in the model: the provider ships computing on demand,
+later gains an index as a cache, and no consumer changes.
+
+So `NoteMetadata.tasks` **goes**. It is read in exactly four lines, both of them
+in `hasOpenTask` / `allTasksCompleted` (`src/decorations/engine-checks.ts:195`),
+and keeping it would leave a second extractor answering the same question a
+different way — the failure this model exists to prevent, reintroduced inside it.
+The engine keeps `metadataFor` for title, tag, property and size; the task
+conditions take items from the provider instead.
+
+This is also what makes the `rolled` marker work everywhere. The tag sits in the
+line body, and `NoteMetadata.tags` is `getAllTags(cache)` — flattened, positions
+discarded — so nothing downstream of it can tell which line a tag is on. The
+provider matches `cache.tags` positions against each `listItem.position` (both
+extend `CacheItem`, so both carry one), with no text read. A decoration that went
+on reading `metadata.tasks` would show a rolled line as open work.
+
 ## The write rule
 
 > **We add only tokens the user named; we overwrite only tokens we found.**
