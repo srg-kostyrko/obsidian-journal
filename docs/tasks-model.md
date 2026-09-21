@@ -226,6 +226,34 @@ folder elsewhere fixed it. We resolve a note's period from its frontmatter claim
 and sort resolved anchors, so a folder reorganisation cannot make an old note
 sort as yesterday. The reach was not what failed there.
 
+### Recurring lines
+
+Retargeting the date on a line carrying `🔁` is **confirmed, not silently
+allowed**. Tasks computes the next instance from the due date unless the rule
+says `when done`, so overwriting that date moves the whole series, not the one
+occurrence the user dragged.
+
+The occurrence-only outcome they almost certainly want — this week on Thursday,
+the series still Tuesdays — needs a second line authored with the recurrence
+stripped, which is emitting task syntax rather than overwriting a token we found.
+The write rule forbids it, so the choice is between shifting the series and
+refusing; there is no third behavior to offer.
+
+The confirmation states the consequence rather than asking for assurance —
+_"Water plants repeats weekly. Moving it to Sep 24 will also move every future
+repeat to Thursdays."_ — and its **don't ask again** checkbox is the setting,
+created at the one moment the user understands what it means.
+
+This is affordable because the case is rare: Tasks generates the next instance in
+the _same file_, so a recurring task parked in a period note accumulates there,
+and people keep recurrence in a static note instead. It is also a deliberate
+exception to the project's rule that a notice is added only when the outcome is
+otherwise invisible — it qualifies, because a shifted series stays invisible
+until the next instance generates days later.
+
+**Moving the line between notes is never confirmed.** That is containment: bytes
+identical, recurrence and due date untouched.
+
 Copy-by-default also makes a deep reach recoverable — nothing was destroyed, a
 stale list is merely sitting in today's note — while under-reaching loses real
 work. If rollover ever runs automatically on note creation the notice fires
