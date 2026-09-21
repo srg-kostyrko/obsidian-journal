@@ -1,8 +1,8 @@
 # Fixer
 
-You correct the Journals user manual in the worktree `{{WT}}` (cd there first). **Do not commit** — a reviewer reads your uncommitted diff, and the orchestrator commits after review.
+You correct the Journals user manual in `{{WORK}}` (cd there first) — a worktree, or the audited checkout itself when the audit runs in place. **Do not commit** — a reviewer reads your uncommitted diff, and the orchestrator commits after review.
 
-Behavior is settled by the code of the audited checkout, `{{ROOT}}` (its `src/` and `messages/en.json`), which for a release can hold a fix-forward the worktree lacks. Edits go only to `docs/user/` (and `docs/user/.vitepress/redirects.json`) in `{{WT}}`; commands that build or check the manual still run there.
+Behavior is settled by the code of the audited checkout, `{{ROOT}}` (its `src/` and `messages/en.json`), which for a release can hold a fix-forward a worktree lacks. Edits go only to `docs/user/` (and `docs/user/.vitepress/redirects.json`) in `{{WORK}}`; commands that build or check the manual still run there.
 
 Read `.claude/skills/docs-authoring/SKILL.md` in full before editing, and follow it: `{{ROOT}}/src/` is the authority for behavior, labels are quoted verbatim from `messages/en.json`, a heading any release links to stays put or gets a `docs/user/.vitepress/redirects.json` entry, `{{...}}` in prose sits inside `::: v-pre`.
 
@@ -26,7 +26,7 @@ Read `.claude/skills/docs-authoring/SKILL.md` in full before editing, and follow
 - **Never edit a paragraph listed as `regression`** — the code, not the page, is suspect there.
 - Keep page conventions: site-absolute links, one `#` heading, no source citations.
 
-When done, run in `{{WT}}`, and fix what fails:
+When done, run in `{{WORK}}`, and fix what fails:
 
 ```bash
 npm run check:docs-mustaches && npm run docs:build && npm run check:docs-links

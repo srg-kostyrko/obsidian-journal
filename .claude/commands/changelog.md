@@ -49,12 +49,44 @@ One bullet, appended to the end of `### Features` or `### Bug Fixes` under
 - A change with nothing user-facing — refactor, test, chore, build, ci, most
   docs — gets **no** entry. Say so and stop.
 
-Then `npx prettier --write CHANGELOG.md`; prettier owns the file's shape.
+Then `npx prettier --write CHANGELOG.md`; prettier owns the file's shape. Keep
+the list tight — a blank line between two bullets renders the whole section
+loose, and `check:changelog` fails the build on one.
+
+### Check the manual says it too
+
+The bullet you just wrote is a user-facing claim about behavior, which is what
+the manual at `docs/user/` is also made of. This is the moment to notice a gap,
+while the change is in front of you.
+
+Search `docs/user/` for prose covering the capability — by the bold terms in your
+bullet, and by the concept, not only the wording:
+
+```bash
+grep -rn -F --exclude-dir=.vitepress '**<a bold term from the bullet>**' docs/user
+```
+
+Three outcomes:
+
+- **A section explains it and is still accurate** — nothing to do.
+- **A section explains it and this change made it wrong** — the correction belongs
+  in this PR, beside the code that broke it. Every false claim 3.5.0 shipped was
+  accurate when written and invalidated by a later commit in the same cycle.
+- **Nothing explains it** — say so, and point at `/docs-authoring`. A row in
+  `settings.md` or a passing mention is not an explanation.
+
+Report the outcome either way; do not write manual prose from here. A gap left
+open does not stop the PR, but it stops the **release** — `/release` step 4
+blocks the tag on it, because the published manual's root is built from the tag's
+tree and prose merged after it waits for the next version.
+
+A change with no entry has nothing to check here either.
 
 ### Report
 
-Show `git diff CHANGELOG.md`. Do **not** commit, bump the version, or tag —
-`/release` is what does those, and it supersedes this stop.
+Show `git diff CHANGELOG.md`, and the manual outcome above. Do **not** commit,
+bump the version, or tag — `/release` is what does those, and it supersedes this
+stop.
 
 ## Mode: audit (`/changelog audit`)
 
@@ -77,3 +109,8 @@ a reverted change). Name the commit hashes and issue numbers.
 Append bullets for the genuine gaps, following the entry-mode rules above.
 Change nothing else. An audit that finds nothing is a result — report it and
 stop rather than writing something to have written something.
+
+**This mode asks only what is missing, never whether an existing bullet is still
+true.** That re-derivation belongs to `/docs-audit`, which holds each bullet
+against the code; `/release` runs it at step 4, before the tag is cut. Do not
+attempt it here.

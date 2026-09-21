@@ -6,70 +6,80 @@ description: Use when cutting a Journals release and the user manual must be che
 # Auditing the manual against a release
 
 The manual at `docs/user/` states behavior, and the pull request that changes a behavior rarely
-changes the page. This skill finds what a release made false and fixes it in a docs PR, records what
-shipped with no explanation, and surfaces a paragraph whose behavior the code has lost. `/release`
-runs it as §1 step 5a, before the release merges.
+changes the page. This skill finds what a release made false and fixes it, finds what shipped with
+no explanation at all, and surfaces a paragraph whose behavior the code has lost. `/release` runs it
+as §1 step 4, **before the version is bumped and the tag cut** — so every correction it makes is an
+ancestor of the tag, which is the only tree the published manual's root is ever built from.
 
-**Invoking this skill without `--dry-run` authorizes its outward steps** — pushing the fix branch,
-opening the PR, opening or editing the issue. It never merges anything.
+**Invoking this skill without `--dry-run` authorizes its outward steps** — committing the fixes, and
+under `--in-place`'s absence pushing the fix branch and opening the PR. It never merges anything, and
+it never files an issue: a gap it finds inside a release is written before the tag, not deferred to
+after it.
 
 ## Invocation
 
-| Form                    | Audits                                                             |
-| ----------------------- | ------------------------------------------------------------------ |
-| `/docs-audit <version>` | `## [<version>]` over `PREV..<version>`; the tag may be local-only |
-| `/docs-audit`           | `## [Unreleased]` over `LAST..HEAD`, mid-cycle                     |
+| Form                    | Audits                                                       |
+| ----------------------- | ------------------------------------------------------------ |
+| `/docs-audit <version>` | `## [<version>]` over `PREV..<version>`, for an existing tag |
+| `/docs-audit`           | `## [Unreleased]` over `LAST..HEAD`                          |
 
-- `--dry-run` — run every stage and commit the fixes on the local branch, then stop before any push,
-  PR or issue write; print the PR and issue bodies instead. Never asks the maintainer anything.
-- `--base <ref>` — the commit claims are judged against and the fix branch starts from. Default
-  `origin/main`.
-
-A mid-cycle run never opens or edits the issue: the release's own run will find the same items.
+- `--in-place` — commit the fixes onto the **current branch**, with no worktree, no fix branch and
+  no pull request. What `/release` step 4 passes: the branch it is standing on is the branch the tag
+  will be cut from, so the fix reaches the tag by sitting still. Without it the fixes go on their own
+  branch and open a PR, which is what a standalone run on protected `main` needs.
+- `--label <text>` — what the commits and the report call this run. Defaults to the version argument,
+  or `unreleased-<today>` without one. `/release` step 4 passes the version it is about to cut, since
+  no tag exists for it to pass as `<version>` yet.
+- `--dry-run` — run every stage and leave the fixes uncommitted, then stop before any commit, push or
+  PR; print the PR body instead. Never asks the maintainer anything.
+- `--base <ref>` — the commit claims are judged against. Without `--in-place` the fix branch also
+  starts from it. Default `origin/main`, or the current branch under `--in-place`.
 
 Create a todo per section and work them in order.
 
 ## §0 Setup, guard, resume
 
 ```bash
-VER=<the version argument, or empty>
-BASE=<the --base argument, or origin/main>
-ROOT=$(git rev-parse --show-toplevel)     # every command below runs from here
-git fetch origin --tags
-LABEL=${VER:-unreleased-$(date +%F)}
-BRANCH="docs/audit-$LABEL"
-OUT=<this session's scratchpad directory>/docs-audit-$LABEL && mkdir -p "$OUT"
-gh pr list --head "$BRANCH" --state all --json number,url,state
-PR_COUNT=$(gh pr list --head "$BRANCH" --state all --json state --jq '[.[] | select(.state == "OPEN" or .state == "MERGED")] | length')
-if [ "$PR_COUNT" -gt 0 ]; then
-  echo "an open or merged PR for $BRANCH already exists — guard skipped, stage 1 judges the checkout as it stands"
-elif [ -n "$VER" ]; then
-  git diff --quiet "$BASE" -- docs/user messages || { echo "checkout differs from $BASE — check it out first"; exit 1; }
-else
-  git diff --quiet "$BASE" -- src docs/user messages || { echo "checkout differs from $BASE — check it out first"; exit 1; }
-fi
-cat > "$OUT/env.sh" <<EOF
-export VER='$VER'
-export BASE='$BASE'
-export ROOT='$ROOT'
-export LABEL='$LABEL'
-export BRANCH='$BRANCH'
-export OUT='$OUT'
-EOF
-echo "ROOT=$ROOT"
-echo "OUT=$OUT"
+bash .claude/skills/docs-audit/setup.sh \
+  --scratch <this session's scratchpad directory> \
+  [--version <x.y.z>] [--base <ref>] [--in-place]
 ```
 
-**An existing open or merged PR for `$BRANCH`** means stages 2–3 already ran: skip them, skip the
-guard entirely, and link the PR in the report — stage 1 judges claims against the checkout as it
-stands. **Stage 1 always runs** — inside a release it decides whether the merge may happen.
+It resolves `$BASE` (the `--base` argument; else the current branch under `--in-place`; else
+`origin/main`), computes `$LABEL`, `$BRANCH`, `$START` and `$OUT`, applies the guard, and writes
+`$OUT/env.sh`. It prints `ROOT`, `OUT` and `PR_COUNT`.
 
-The guard, when it applies, is what lets every agent read the working tree as the claims it judges.
-It always requires `docs/user` and `messages` to match `$BASE`; it requires `src` to match `$BASE`
-too, but only when `$VER` is empty — a release checkout is the code that ships, fix-forwards
-included, while the fix branch still starts from `$BASE`, so mid-cycle `src` must agree with `$BASE`
-and a release run must not demand that. The release branch passes it: its bump commit touches only
-version files and the changelog heading.
+**The multi-line blocks of this skill live in scripts beside it — `setup.sh`, `inputs.sh`,
+`worktree.sh` — and not in fences here.** `SKILL.md` is loaded with every `$`-then-digit token
+already replaced by this skill's own invocation arguments, inside a bash fence included, so a
+positional parameter, an awk field or a sed capture cannot be written on this page at all. The
+scripts are under no such constraint, and they are not retyped by an agent on every run.
+
+**`--in-place` needs no guard and gets none.** The whole point of it is that the checkout, the claims
+being judged and the tree the fix lands in are one and the same, so there is nothing for a guard to
+compare. What it does still require is a branch that is not `main`, since `main` takes no direct
+commit.
+
+**Every run, in-place or not, requires `docs/user`, `messages` and `CHANGELOG.md` to carry nothing
+uncommitted.** §6 commits the fixer's work with `git add -A docs/user`, which would otherwise sweep
+in whatever was already there — untracked files included, which is why the check is
+`git status --porcelain` and not `git diff --quiet`. `CHANGELOG.md` is in that set because §4 may
+correct a bullet, and it is those three paths only, so an unrelated dirty file cannot block an audit
+that could not touch it.
+
+**Without `--in-place`, a printed `PR_COUNT` above zero** means an open or merged PR for `$BRANCH`
+exists and stages 2–3 already ran: skip them, skip the guard entirely, and link the PR in the report
+— stage 1 judges claims against the checkout as it stands. **Stage 1 always runs** — inside a release
+it decides whether the tag may be cut.
+
+The `$BASE` guard — the standalone shape's, not the in-place one's — is what lets every agent read
+the working tree as the claims it judges while the fix lands on a branch cut from somewhere else. It
+requires `docs/user` and `messages` to match `$BASE` always, and `src` to match it too unless a
+version argument says this is a checkout of an already-tagged release, whose `src` legitimately holds
+fix-forwards `$BASE` lacks.
+
+`$START` is the commit the audit began at. Under `--in-place` the reviewer compares against it rather
+than against `$BASE`, which is the branch itself and moves the moment §6 commits.
 
 **Each shell tool call starts a fresh shell** — `$ROOT`, `$OUT` and everything computed after them
 are gone in the next one. From here on, **start every later block with `cd <ROOT> && . <OUT>/env.sh`**,
@@ -87,107 +97,72 @@ if [ -n "$VER" ]; then
 else
   PREV=$(git describe --tags --abbrev=0 HEAD); UPPER=HEAD; SECTION=Unreleased
 fi
-cat >> "$OUT/env.sh" <<EOF
-export PREV='$PREV'
-export UPPER='$UPPER'
-export SECTION='$SECTION'
-EOF
+{
+  printf 'export PREV=%q\n' "$PREV"
+  printf 'export UPPER=%q\n' "$UPPER"
+  printf 'export SECTION=%q\n' "$SECTION"
+} >> "$OUT/env.sh"
 ```
 
-The `^` is load-bearing: during release step 5a the local `$VER` tag already sits at `HEAD`, and a
-bare `describe` would resolve to it.
+The `^` is load-bearing whenever a version argument is given: the `$VER` tag sits at or under `HEAD`
+by then, and a bare `describe` would resolve to it and compare the release against itself. `/release`
+step 4 passes no version — it runs before the bump, so the section is still `## [Unreleased]` and the
+range is `LAST..HEAD`. A version argument reaches this skill from a standalone run, or from a release
+resumed after its tag was already pushed.
 
 ## §2 Inputs
 
-`SKILL.md` is loaded with every `$`-then-digit token already replaced by this skill's own invocation
-arguments — even inside a bash fence, even as an awk field reference. So nothing below spells a
-field, a positional parameter or a capture as a dollar sign immediately followed by a digit; sed uses
-`\1`-style backreferences instead, and classification runs in Node, where none of that applies.
-
 ```bash
-cd <ROOT> && . <OUT>/env.sh
-
-in=0; kind=""
-while IFS= read -r line; do
-  case "$line" in
-    "## [$SECTION]"*) in=1 ;;
-    "## ["*) in=0 ;;
-    "### "*) [ "$in" = 1 ] && kind=${line#\#\#\# } ;;
-    "- "*) [ "$in" = 1 ] && printf '%s\t%s\n' "$kind" "${line#- }" ;;
-  esac
-done < CHANGELOG.md > "$OUT/bullets.tsv"
-
-git log "$PREV..$UPPER" --no-merges --format='%h %s' > "$OUT/commits.txt"
-
-git diff "$PREV" "$UPPER" -- messages/en.json | grep -E '^[+-]  "[^"]+": "' \
-  | sed -nE 's/^([+-])  "([^"]+)": "(.*)",?$/\1\t\2\t\3/p' \
-  | node -e '
-      const lines = require("node:fs").readFileSync(0, "utf8").split("\n").filter(Boolean);
-      const oldMap = new Map(), newMap = new Map();
-      for (const line of lines) {
-        const [sign, key, value] = line.split("\t");
-        (sign === "-" ? oldMap : newMap).set(key, value);
-      }
-      const rows = [];
-      for (const [key, value] of newMap) if (!oldMap.has(key)) rows.push(["added", key, value].join("\t"));
-      for (const [key, value] of oldMap) {
-        if (!newMap.has(key)) rows.push(["removed", key, value].join("\t"));
-        else if (newMap.get(key) !== value) rows.push(["changed", key, value, newMap.get(key)].join("\t"));
-      }
-      rows.sort();
-      process.stdout.write(rows.map((r) => r + "\n").join(""));
-    ' > "$OUT/strings.tsv"
-
-git diff "$PREV" "$UPPER" -- docs/user > "$OUT/docs.diff"
-grep -rn ':help="manual\.' src > "$OUT/call-sites.txt"
+cd <ROOT> && bash .claude/skills/docs-audit/inputs.sh <OUT>
 ```
+
+| File               | Holds                                                            |
+| ------------------ | ---------------------------------------------------------------- |
+| `bullets.tsv`      | the audited changelog section, one `kind<TAB>bullet` per line    |
+| `commits.txt`      | `PREV..UPPER`, one `hash subject` per line                       |
+| `strings.tsv`      | `added`/`removed`/`changed` rows from `messages/en.json`, sorted |
+| `stale-quotes.tsv` | manual lines quoting UI text the range reworded or removed       |
+| `docs.diff`        | the range's diff over `docs/user`                                |
+| `call-sites.txt`   | every `:help="manual.` in `src`, for the link auditor            |
 
 Only single-line string values are read; a key whose value is a variant object is out of scope.
-`strings.tsv` is sorted — awk's array order is unspecified and gave no other stage a reason to care
-about row order.
 
-**Stale quotes** are the one finding with no judgment in it. For every `changed` and `removed` row
-— every row's first column is its kind, so filtering out `added` keeps exactly those — search the
-manual for the old text in bold, and in plain form too when it is 20 characters or longer:
-
-```bash
-cd <ROOT> && . <OUT>/env.sh
-
-grep -v '^added' "$OUT/strings.tsv" | while IFS=$'\t' read -r _ key old new; do
-  {
-    grep -rnF --exclude-dir=.vitepress -- "**$old**" docs/user
-    [ ${#old} -ge 20 ] && grep -rnF --exclude-dir=.vitepress -- "$old" docs/user | grep -vF -- "**$old**"
-  } | while IFS= read -r hit; do printf '%s\t%s\t%s\t%s\n' "$key" "$old" "$new" "$hit"; done
-done > "$OUT/stale-quotes.tsv"
-```
-
-`printf`, not `sed`: UI text may hold `|`, `&` or `/`, which a `sed` replacement would misread.
-
-Drop a `changed` row's hit whose line also contains the new text — a `removed` row has no new text
-to compare against, so keep every one of its hits. Every remaining hit goes to the fixer.
+**Stale quotes are the one finding with no judgment in them** — the manual quotes a label the release
+has since relabelled, so the quote is wrong on its face. Drop a `changed` row's hit whose line also
+contains the new text; a `removed` row has no new text to compare against, so keep every one of its
+hits. Every remaining hit goes to the fixer.
 
 ## §3 Stage 1 — auditors
 
 Dispatch every auditor in **one message**, each a fresh `general-purpose` agent whose prompt is the
 brief beside this file with its `{{...}}` slots filled:
 
-| Brief                | One per                    | Skip when            |
-| -------------------- | -------------------------- | -------------------- |
-| `entry-auditor.md`   | line of `bullets.tsv`      | —                    |
-| `strings-auditor.md` | run, over the `added` rows | no `added` row       |
-| `link-auditor.md`    | run                        | `docs.diff` is empty |
+| Brief                | One per                                  | Skip when                   |
+| -------------------- | ---------------------------------------- | --------------------------- |
+| `entry-auditor.md`   | line of `bullets.tsv`                    | —                           |
+| `strings-auditor.md` | run, over the `added` and `changed` rows | neither row kind is present |
+| `link-auditor.md`    | run                                      | `docs.diff` is empty        |
 
-Slots: `{{ROOT}}`; `{{KIND}}` and `{{BULLET}}` from the line (small, stay inline); `{{ADDED}}` the
-`added` rows as `key<TAB>text` (small, stays inline); `{{COMMITS}}` the **path** of `$OUT/commits.txt`;
-`{{DOCS_DIFF}}` the path of `$OUT/docs.diff`; `{{CALL_SITES}}` the path of `$OUT/call-sites.txt`;
-`{{PREV}}` and `{{UPPER}}` the range endpoints, for the link auditor's per-page diff command. A real
+Slots: `{{ROOT}}`; `{{KIND}}` and `{{BULLET}}` from the line (small, stay inline); `{{STRINGS}}` the
+`added` and `changed` rows verbatim from `strings.tsv` (small, stays inline), which is three columns for an `added` row and four for a `changed` one; `{{COMMITS}}` the
+**path** of `$OUT/commits.txt`; `{{DOCS_DIFF}}` the path of `$OUT/docs.diff`; `{{CALL_SITES}}` the
+path of `$OUT/call-sites.txt`; `{{PREV}}` and `{{UPPER}}` the range endpoints, for the link auditor's
+per-page diff command; `{{PRIOR}}` the agent's own verdict from a previous run, or `none`. A real
 `docs.diff` runs to thousands of lines — slots whose value is a file carry the path, not the pasted
 contents.
 
+**Write every returned fence to `$OUT/verdicts-<n>.json`**, `<n>` counting from 1 per stage-1 pass,
+then fill `{{PRIOR}}` on the next pass from the newest file that holds a verdict for the same bullet
+or key. A re-run — after a fix-forward, or after the maintainer answers a regression — is where this
+pays: at 3.5.0 a scoped second pass of 6 agents found **three claims the full 39-agent first pass had
+missed**, because an auditor handed a prior verdict to defend digs a layer deeper than one forming a
+first opinion. One wide pass is not equivalent to two.
+
 **The dispatch wrapper**, appended to every dispatched agent's prompt (auditors here; fixer and
 reviewer in §5 and §6): do not invoke any skill; do not spawn subagents; the shell may not keep its
-working directory between tool calls, so start every command with `cd {{ROOT}} &&` — or `cd {{WT}} &&`
-for the fixer and reviewer, which run in the worktree instead.
+working directory between tool calls, so start every command with `cd {{WORK}} &&`. `{{WORK}}` is
+`$ROOT` for the auditors and, for the fixer and reviewer, `$WT` when a worktree was cut and `$ROOT`
+under `--in-place`.
 
 Each returns one `json` fence. An agent that returns anything else is re-dispatched once with the
 same prompt; a second failure goes in the report as "not audited".
@@ -204,8 +179,35 @@ same prompt; a second failure goes in the report as "not audited".
   - with `--dry-run`, it stays `regression`;
   - otherwise ask the maintainer, one question per regression: **fix forward** (it stays
     `regression` and its paragraph is never edited) or **intended** (it becomes `docs-wrong`).
+- **`entryVerdict` other than `holds`** — the changelog bullet itself states behavior the code does
+  not have. Read the cited code yourself before believing it. Then:
+  - with `--dry-run`, report it and change nothing;
+  - otherwise ask the maintainer, one question per bullet, quoting the bullet and the code:
+    **correct it** or **leave it**. "Never rewrite an existing bullet" protects the author's voice,
+    not a false claim, so a correction changes only the clause the code contradicts and keeps their
+    wording everywhere else. 3.5.0 shipped three such bullets, every one accurate when written and
+    invalidated by a later commit in the same cycle.
+- **A string whose claim the code contradicts** — the strings auditor's `truth` other than `holds`.
+  This is a code defect, not a docs one: ask the maintainer the same way, and on **correct it** edit
+  `messages/en.json` **line-wise**, never by parsing and re-serializing the file. 3.5.0 nearly shipped
+  two, and neither the changelog step nor any docs check would have caught them.
 - **`uncovered`** — an entry auditor's `uncovered: true` on a Bug Fixes entry is dropped, and so is one on a feature only plugin developers meet (the plugin API, which `docs/plugin-api.md` owns). A strings
-  item with `explainedAt: null` is uncovered. Merge duplicates naming the same behavior.
+  item with `explainedAt: null` is uncovered. Merge duplicates naming the same behavior. Then, unless
+  `--dry-run`, ask the maintainer one question per item: **write it now** or **ruled out**, with a
+  reason.
+  - **write it now** — the item is prose that does not exist yet, so it is `/docs-authoring`'s job,
+    not the fixer's, and it happens **after §6 has committed**, never alongside it. The reviewer
+    judges the fixer's edits against `{{BEFORE}}` and restores anything still disputed to that text,
+    which for newly authored prose would mean deleting it. Under `--in-place` the new section is
+    written and committed on this branch before the skill returns, and the release waits for it.
+  - **ruled out** — the reason goes in the report and nothing is written.
+
+  **Nothing is deferred.** No issue is filed for an uncovered item, in a release run or outside one.
+  A gap recorded for later cannot reach the published root at all: the root is built from the tag's
+  tree, so prose merged after the tag lands on `/next/` and waits for the next minor. #483 is the
+  worked example — three features 3.5.0 shipped, documented the following day, and absent from the
+  root manual that describes 3.5.0.
+
 - **Duplicates** — a `does-not-explain` target whose cause is already a stale quote, a
   `docs-wrong`/`unsupported` claim or an `uncovered` item is merged into that finding and not sent to
   the fixer separately; only its remaining causes go to the fixer. Anything `uncovered` never goes to
@@ -220,51 +222,50 @@ same prompt; a second failure goes in the report as "not audited".
 
 Skip when the fixer input is empty or the PR already exists.
 
-```bash
-cd <ROOT> && . <OUT>/env.sh
-set -e
+**Under `--in-place` there is no worktree and no fix branch.** The tree the auditors judged is the
+tree the fix belongs in, so the fixer edits `$ROOT` directly and `{{WORK}}` is filled with it. That is not a
+shortcut: the worktree exists because, in the branch-and-PR shape, the audited checkout and the
+commit the fix must be based on are two different trees and only one can be checked out.
+`--in-place` collapses them into one, which also spares the worktree's `npm ci` — the live checkout
+already has `node_modules`. Skip straight to the dispatch.
 
-WT="$(dirname "$ROOT")/$(basename "$ROOT")-docs-audit-$LABEL"
-if git show-ref --verify --quiet "refs/heads/$BRANCH" || [ -e "$WT" ]; then
-  echo "leftover branch $BRANCH or worktree $WT from a previous run — remove it by hand, the skill never deletes it"
-  exit 1
-fi
-git worktree add --no-track -b "$BRANCH" "$WT" "$BASE"
-(cd "$WT" && npm ci)
-cat >> "$OUT/env.sh" <<EOF
-export WT='$WT'
-EOF
+Otherwise cut the worktree:
+
+```bash
+cd <ROOT> && bash .claude/skills/docs-audit/worktree.sh <OUT>
 ```
 
-A dry run leaves `$WT` and the local branch behind, and a real run leaves the local branch after the
-worktree is removed; without the check above, the next `git worktree add -b` would fail and, without
-`set -e`, the block would carry on into the stale worktree. When either check trips, the orchestrator
-stops here and tells the maintainer: a leftover branch or worktree holds a previous run's commits,
-and the skill never deletes them.
+It refuses to run when a branch or worktree from a previous run is still there, because either holds
+that run's commits; it never deletes them, so clearing them is the maintainer's call. On success it
+appends `WT` to `env.sh` and prints it.
 
-Dispatch a fresh `general-purpose` agent with `fixer.md`, plus the dispatch wrapper (§3, `{{WT}}`
-form): `{{ROOT}}` as the audited checkout's root, `{{WT}}`, `{{FINDINGS}}` as a list with page, line,
-quote, verdict, evidence and — for stale quotes — old and new text; a stale quote from a `removed` row
-carries no new text, so carry the release's `added` rows from `strings.tsv` alongside it, so the fixer
-can find the replacement label. `{{REVIEW_NOTES}}` as "none" in round 1.
+Dispatch a fresh `general-purpose` agent with `fixer.md`, plus the dispatch wrapper (§3):
+`{{ROOT}}` as the audited checkout's root, `{{WORK}}` as the tree to edit, `{{FINDINGS}}` as a list
+with page, line, quote, verdict, evidence and — for stale quotes — old and new text; a stale quote
+from a `removed` row carries no new text, so carry the release's `added` rows from `strings.tsv`
+alongside it, so the fixer can find the replacement label. `{{REVIEW_NOTES}}` as "none" in round 1.
 
 ## §6 Stage 3 — claim review
 
 Dispatch a fresh `general-purpose` agent — never the fixer — with `reviewer.md`, plus the dispatch
-wrapper (§3, `{{WT}}` form): `{{ROOT}}` as the audited checkout's root, `{{WT}}`, `{{BASE}}`,
-`{{FINDINGS}}` — the same list the fixer received.
+wrapper (§3): `{{ROOT}}` as the audited checkout's root, `{{WORK}}` as the tree the fixer edited,
+`{{BEFORE}}` — `$BASE` when a worktree was cut, `$START` under `--in-place`, because there `$BASE` is
+the branch itself and moves the moment anything is committed — and `{{FINDINGS}}`, the same list the
+fixer received.
 
 - Every claim `confirmed` → commit.
 - Any `wrong` or `unsupported` → round 2: dispatch a **new** fixer with the same findings and the
   reviewer's non-confirmed claims as `{{REVIEW_NOTES}}`, then a **new** reviewer.
-- Still disputed after round 2 → restore those paragraphs to `$BASE`'s text in `$WT`, and list them
+- Still disputed after round 2 → restore those paragraphs to `{{BEFORE}}`'s text, and list them
   under **Dropped**.
 
 Then commit one commit per changed file. `git diff --name-only` misses files the fixer created, so
-stage everything under `docs/user` first and commit per staged file:
+stage everything under `docs/user` first and commit per staged file. `${WT:-$ROOT}` is the worktree
+when one was cut and the checkout itself under `--in-place`, where `env.sh` never sets `WT`; with
+`--dry-run`, skip this block and leave the edits uncommitted for inspection with `git diff`:
 
 ```bash
-cd <ROOT> && . <OUT>/env.sh && cd "$WT"
+cd <ROOT> && . <OUT>/env.sh && cd "${WT:-$ROOT}"
 
 git add -A docs/user
 for f in $(git diff --cached --name-only); do
@@ -272,9 +273,19 @@ for f in $(git diff --cached --name-only); do
 done
 ```
 
+A string the maintainer chose to correct is committed here too, separately —
+`git commit -m "fix(i18n): correct <key> for $LABEL" -- messages/en.json` — and a corrected changelog
+bullet as `git commit -m "docs(changelog): correct <what> for $LABEL" -- CHANGELOG.md`. **Both carry
+their pathspec**, as the loop above does: a bare `git commit -m` would take everything staged.
+Neither is a manual page, so neither belongs in that loop, and both are ordinary source fixes that
+the release's own gate will run over.
+
 ## §7 Outputs
 
-### Fix PR
+### Fix PR — only without `--in-place`
+
+Under `--in-place` there is no PR: the fixes are already commits on the branch the caller is
+standing on, and §6 named them. Skip to the report.
 
 Body, in user terms — **no verdict list**, no changelog entry, no `Co-Authored-By`, no session link.
 One bullet per page; a page with several causes names each, in whichever of these three forms its
@@ -305,56 +316,50 @@ Write the body to `$OUT/pr-body.md`. With `--dry-run`, skip the block below: pri
 cd <ROOT> && . <OUT>/env.sh && cd "$WT"
 
 git push -u origin "$BRANCH"
-gh pr create --base main --head "$BRANCH" --title "docs(manual): correct what $LABEL made stale" --body-file "$OUT/pr-body.md"
+gh pr create --base "$BASE_BRANCH" --head "$BRANCH" --title "docs(manual): correct what $LABEL made stale" --body-file "$OUT/pr-body.md"
 git -C "$ROOT" worktree remove "$WT"
 ```
 
-### Uncovered issue
+`$BASE_BRANCH` is `$BASE` with any `origin/` stripped — the branch the fix was cut from, which is
+what it must merge back into. Hardcoding `main` here was a live bug: it targeted a branch the fix was
+not based on whenever `--base` said otherwise.
 
-Only when `$VER` is set, something is uncovered, and not `--dry-run`. Write the body to
-`$OUT/issue-body.md` first, then look up whether the issue already exists:
+### No issue, ever
 
-```markdown
-The <VER> release shipped these without a manual section that explains them.
-
-- [ ] **<label or feature>** — belongs on `<suggested page>` (<setting | command | block | feature>)
-```
-
-```bash
-cd <ROOT> && . <OUT>/env.sh
-
-TITLE="Manual: document what $VER shipped"
-gh issue list --state all --search "in:title \"$TITLE\"" --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number"
-```
-
-If the lookup printed nothing, run: `gh issue create --title "$TITLE" --label documentation
---body-file "$OUT/issue-body.md"`; otherwise run `gh issue edit <n> --body-file
-"$OUT/issue-body.md"` with the number it printed.
-
-When editing, start from the issue's current body: keep every existing line, checked state
-included, and append only items whose bold term is not already there.
+There is no "Manual: document what `$VER` shipped" issue, and filing one is not an option this skill
+offers. Every gap it finds is either written before the tag or ruled out on the record (§4); a gap
+carried past the tag cannot reach the published root at all, because the root is built from the tag's
+tree. #483 is what that looked like: filed by the 3.5.0 audit as "not blocking any release", written
+the next day, and live on `/next/` while the root went on describing 3.5.0 without three features
+3.5.0 had shipped.
 
 ### Report
 
 `$OUT/docs-audit-$LABEL.md`, private, handed to the maintainer:
 
 1. **Regressions** — quote, page and line, code at `file:line`, the intent evidence, and the
-   maintainer's choice. Inside a release, any left as fix-forward stop it before step 6.
-2. **Not fixed — PR already open** — only when §0 found an existing open or merged PR and skipped
+   maintainer's choice. Inside a release, any left as fix-forward stop it before the tag is cut.
+2. **Wrong bullets and wrong strings** — the claim, the code that contradicts it, and the
+   maintainer's choice. A corrected one names its commit.
+3. **Uncovered** — each item, and for each the maintainer's choice: the commit that now documents it,
+   or the reason it was ruled out. No item is left without one of the two.
+4. **Not fixed — PR already open** — only when §0 found an existing open or merged PR and skipped
    stages 2–3: every finding that would have gone to the fixer, page, line, quote, verdict and
    evidence, for the maintainer to add to that PR themselves.
-3. **Uncovered** — each item, and the issue link.
-4. **Dropped** — paragraphs still disputed after two review rounds.
-5. **Drift** — commits `main` holds past `$VER`, if any.
-6. **Not audited** — agents that failed twice.
-7. **Counts** — claims per verdict. Detail only for non-`holds`.
-8. The PR link, or "nothing to fix".
+5. **Dropped** — paragraphs still disputed after two review rounds.
+6. **Drift** — commits `main` holds past `$VER`, if any.
+7. **Not audited** — agents that failed twice.
+8. **Counts** — claims per verdict. Detail only for non-`holds`.
+9. The commits made, under `--in-place`; otherwise the PR link, or "nothing to fix".
 
 ## Never
 
 - Never merge the fix PR, or push to `main`.
 - Never edit a paragraph whose finding is `regression`.
-- Never publish verdicts — in a page, the PR body, a PR comment or the issue.
+- Never publish verdicts — in a page, the PR body or a PR comment.
+- Never file an issue for a gap. Write it, or record why it was ruled out.
+- Never rewrite a changelog bullet or a shipped string except the clause the code contradicts, and
+  never without the maintainer's word.
 - Never audit a paragraph no input selected. The range is the scope.
 - Never commit with `--no-verify`, or add a `Co-Authored-By` trailer or session link.
 - Never let the fixer review its own edits.

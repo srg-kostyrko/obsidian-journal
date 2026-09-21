@@ -32,8 +32,11 @@ The review's value is the fixes it causes. Do not publish its verdicts — not i
 the PR description or a PR comment. A verdict list describes one version of a page, goes
 stale on the next edit, and nothing re-checks it.
 
-Drift after a page ships is the `docs-audit` skill's job: the release runs it before every merge,
-and its fixer edits pages under this skill's rules.
+Drift after a page ships is the `docs-audit` skill's job: the release runs it before it cuts the tag,
+and its fixer edits pages under this skill's rules. That boundary is the tag, not the merge — the
+published manual's root is built from the tag's tree, so a section written after one waits for the
+next release. When that audit finds a feature with no prose at all, writing it is this skill's job
+and the release waits for it.
 
 Some claims cannot be settled from this repo. Give the reviewer these sources, or it marks
 such claims unsupported:
