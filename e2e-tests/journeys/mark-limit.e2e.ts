@@ -103,23 +103,38 @@ describe("decoration mark limit", () => {
     const badge = cell.$('.place-right_top [data-testid="mark-overflow"]');
     await badge.waitForDisplayed({ timeoutMsg: "the overflow badge did not render" });
 
+    const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
+
+    // The test above leaves the pointer parked on this same badge with its popover still open, and
+    // the popover opens on `mouseenter`, which never fires again for a pointer that has not left.
+    // So this test inherited its starting state instead of creating it, and had no way back: on
+    // the one nightly leg where the carried-over popover was gone, a move onto a badge the pointer
+    // was already inside opened nothing and the wait ran to its timeout. Park the pointer off the
+    // grid first so the hover below is a real crossing.
+    await browser.action("pointer").move({ duration: 0, x: 0, y: 0 }).perform();
+    await browser.waitUntil(async () => !(await popover.isExisting()), {
+      timeoutMsg: "the popover the previous test left open never closed",
+    });
+
+    // moveTo() resolves the badge's centre at call time, so a hover sent while the grid is still
+    // laying its marks out lands beside the badge and is simply lost. Re-hover until the popover
+    // opens, the way the test above does.
+    await browser.waitUntil(
+      async () => {
+        await badge.moveTo();
+        return popover.isExisting();
+      },
+      { timeoutMsg: "the popover did not open before the pointer moved into it" },
+    );
+
+    // Read the badge's box after the hover, so it is the settled one the pointer is sitting in.
+    // One pixel past its border box: with the popover flush against the badge that point lands
+    // inside the popover; with any gap it lands in the calendar cell behind, which is not a
+    // descendant of the badge and fires its mouseleave.
     const location = await badge.getLocation();
     const size = await badge.getSize();
     const badgeCenterX = Math.round(location.x + size.width / 2);
-    const badgeCenterY = Math.round(location.y + size.height / 2);
-    // One pixel past the badge's own border box. With the popover flush against the badge
-    // (Fix 1) this point lands inside the popover; with any gap it lands in the calendar cell
-    // behind, which is not a descendant of the badge and fires its mouseleave.
     const justBelowBadge = Math.round(location.y + size.height) + 1;
-
-    const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
-
-    // The move onto the badge and the move into the popover are separate actions, because the
-    // popover has to be open before the pointer can stay inside it. A fixed pause between them
-    // was standing in for that: when 50ms was not enough the second move landed on the calendar
-    // cell behind, fired mouseleave, and the assertion read the absence it had itself caused.
-    await browser.action("pointer").move({ duration: 0, x: badgeCenterX, y: badgeCenterY }).perform();
-    await popover.waitForExist({ timeoutMsg: "the popover did not open before the pointer moved into it" });
 
     await browser.action("pointer").move({ duration: 0, x: badgeCenterX, y: justBelowBadge }).perform();
     await expect(popover).toExist();
