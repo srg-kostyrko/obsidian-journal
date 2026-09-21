@@ -247,7 +247,19 @@ splice turns out to cost more than it buys.
 > **Filtering is structured data the user never writes as an expression. It
 > reuses the decoration condition shape.**
 
-`{ mode: "and" | "or", conditions: TaskCondition[] }` — the same shape
+A query has **three parts**, and only the middle one is a condition list:
+
+- **scope** — `provider`, `source`, `depth`, `date`. Flat, named, enumerated.
+  These decide _what gets gathered_, not which items survive, so they are never
+  conditions: `mode: "or"` over a `source` is meaningless, and an array would
+  make `source` and `date` expressible together, which "Scope is what containment
+  means" rules out. Flat keeps that combination unwritable rather than merely
+  discouraged.
+- **filter** — `{ mode: "and" | "or", conditions: TaskCondition[] }`, holding
+  `status`, `heading` and `tag`. This is the part that mirrors decorations.
+- **sort** — flat.
+
+The filter is the same shape
 `decorationSchema` already has (`src/decorations/config.ts:256`), and the same
 one `bulk-add` already reuses through `filterConditionSchema`. Each condition is
 a tagged-union object, the list is **flat** with one combinator, and negation is
@@ -265,10 +277,11 @@ There is no string for anyone to put `and not` into, so the slide from one
 negation to a predicate language has nowhere to start.
 
 **The flat keys stay, as sugar.** A fence is hand-typed YAML and nobody wants a
-conditions array to say `status: open`, so each named key desugars **one to one**
-into a single condition — it _is_ a condition, not a shorthand that gets parsed —
-with `conditions:` available when someone needs more. Two spellings, one model,
-no parser anywhere.
+conditions array to say `status: open`, so each filter key desugars **one to
+one** into a single condition — it _is_ a condition, not a shorthand that gets
+parsed — with `conditions:` available when someone needs more. A scope key sets a
+scope field and has no condition form at all. Two spellings, one model, no parser
+anywhere.
 
 The line this holds is about **who owns the grammar**, not how many options
 exist. Named keys and typed condition objects are a schema: they validate, they
@@ -277,8 +290,8 @@ composes is a language, needing a parser, a precedence table and documentation.
 Dataview and the Tasks plugin each own one; this plugin does not become the
 third.
 
-The condition types, and their sugar keys, are `provider`, `source`, `depth`,
-`date`, `status`, `selection` and `sort`. Anything
+The keys are `provider`, `source`, `depth` and `date` in scope, `status` and
+`selection` in the filter, plus `sort`. Anything
 outside them is answered by handing the resolved path set to Dataview, which is
 the supported form of the "use Dataview for that" answer — a DQL query cannot
 resolve which notes are September's journal notes without the user hand-encoding
