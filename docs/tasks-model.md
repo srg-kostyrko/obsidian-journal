@@ -163,18 +163,42 @@ splice turns out to cost more than it buys.
 
 ## Filtering
 
-**Native filtering is status only** — `open` / `done` / `all` over the normalized
-vocabulary. Anything richer is answered by exposing the resolved note paths so
-Dataview can query them correctly, never by growing fence options into a query
-language.
+> **Filtering is a fixed set of named axes with enumerated values. Never
+> operators, never expressions.**
 
-**Document structure is not task syntax.** Headings, tags and properties are
-already in `metadataCache` and reachable without interpreting a single task line,
-so scoping a move by heading does not breach the rule above. The distinction is
-what is being read, not how expressive the result is.
+The axes are `provider`, `source`, `depth`, `status` and `selection`. Anything
+outside them is answered by handing the resolved path set to Dataview, which is
+the supported form of the "use Dataview for that" answer — a DQL query cannot
+resolve which notes are September's journal notes without the user hand-encoding
+their folder and date-format conventions, and handing over paths the plugin
+resolved makes any DataviewJS query over them correct by construction.
 
-The Dataview escape hatch is also unavailable to a **move**: a listing can hand a
-richer query to Dataview, but a move has to decide for itself which lines to cut.
+What this refuses: priority comparisons, recurrence, text search, `AND` / `OR`,
+sort and group clauses — anything that composes. What it permits is more named
+axes, and it has to, because a surface that cannot express what a neighbouring
+surface can will disagree with it about the same day.
+
+**`selection` — which lines inside the notes.** Its inputs are headings and tags,
+both of which `metadataCache` already resolves without interpreting a single task
+line. Both include and exclude forms have demand upstream: roll only what sits
+under one heading, and roll everything _except_ what sits below a given header —
+the second from a reporter keeping habits and trackers in the daily note.
+
+The axis is shared by listings and moves, not reserved to moves. A user who
+scopes a rollover to `## Tasks` expects the month listing to agree; two surfaces
+in the same plugin answering "what is open on this day" differently is the same
+failure that adding `source` to the decoration conditions exists to prevent.
+
+It also earns its place on a rollup listing independently. A daily template
+carrying `## Tasks`, `## Habits` and `## Log`, rolled up across a month, produces
+a listing in which habit and log checkboxes outnumber the tasks.
+
+**A move cannot delegate.** A listing that wants something outside the axes can
+hand its path set to Dataview; a move has to decide for itself which lines to
+cut. So `selection` is not optional for moves the way it is for listings — an
+unscoped rollover over a template that seeds recurring checkboxes duplicates
+those checkboxes every day, which is the single most common support thread on
+every incumbent.
 
 ## Status normalization
 
@@ -242,3 +266,8 @@ note count.
 - How far back a rollover may reach. `JournalIndex.findPrevious` spans gaps by
   construction, so "the previous note" is not "yesterday" — unbounded, previous
   period only, or bounded and reported.
+- Whether a moved item lands under the heading it came from when the target has a
+  matching one, falling back to a configured target heading. That folds
+  `selection` and target placement into one rule, and it is the shape five voices
+  upstream sketched. Also unanswered: what happens to an item that `selection`
+  excluded but that is otherwise unfinished — silently left, or reported.
