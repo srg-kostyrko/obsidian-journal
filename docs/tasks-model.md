@@ -226,6 +226,22 @@ folder elsewhere fixed it. We resolve a note's period from its frontmatter claim
 and sort resolved anchors, so a folder reorganisation cannot make an old note
 sort as yesterday. The reach was not what failed there.
 
+### What the move reports
+
+An item `selection` excluded is **left silently**. It is sitting in the source
+note under the heading the user configured it to stay in, so nothing is hidden,
+and a notice belongs where the outcome is otherwise invisible.
+
+The failure worth catching is not that some items were excluded — it is that
+`selection` matched **no heading at all**, which means the heading was renamed in
+the template or misspelled in settings, and which is otherwise indistinguishable
+from having nothing to roll. Both produce zero. So the roll's own report carries
+it, and there is no second notice and no exclusion count:
+
+- _"rolled 6 tasks forward from 2026-09-20"_
+- _"no unfinished tasks in 2026-09-20"_
+- _"no `## Tasks` heading in 2026-09-20"_ — a configuration error, not an outcome
+
 ### Which settings live where
 
 **Global, on the provider** — the marker string, the `symbol → type` map, the
@@ -418,5 +434,3 @@ note count.
 - Whether the left-behind marker's default belongs to the journal rather than
   being global. A daily note is a record of what was written that day for some
   users and a capture surface for others, and the two want different defaults.
-- What happens to an item that `selection` excluded but that is otherwise
-  unfinished — silently left, or reported.
