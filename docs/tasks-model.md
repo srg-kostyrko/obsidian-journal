@@ -104,10 +104,26 @@ always known".
 
 ## Providers
 
-Two providers. Closed set, **open-shaped**: the registry is internal, but its boundary is drawn
-as though it were public, so exposing it through `docs/plugin-api.md` later is a
-documentation change rather than a rewrite. Nothing third-party registers a
-provider today.
+Two providers. Closed set, **open-shaped**: the registry is internal, but its
+boundary is drawn as though it were public, so exposing it through
+`docs/plugin-api.md` later is a documentation change rather than a rewrite.
+Nothing third-party registers a provider today.
+
+Three rules make that claim falsifiable rather than aspirational:
+
+1. **A provider's inputs are only what an external plugin could obtain** — a
+   path, a period, its own settings. No reaching into DI for internal services.
+2. **A provider yields plain data and declares its capabilities. Consumers branch
+   on the declaration, never on the provider's identity.** No
+   `provider.id === "checkbox"` anywhere: the move refuses an item because the
+   item says it is not movable, not because the move knows which providers are.
+   This is the load-bearing rule — without it, opening the seam means auditing
+   every consumer for identity checks, which is the rewrite the phrase promises
+   to avoid. It is also what makes "open" survivable, since a third-party
+   provider's items would flow into listings, decorations and moves alike.
+3. **Registration is a DI multi-token** — `createMultiToken<TaskProvider>`, the
+   same idiom as `CodeBlockDefinitionToken` and `JournalEditSectionToken`.
+   Adding a provider touches its own module and nothing else.
 
 **Every provider carries an identification rule**, not just `note-property`. The
 checkbox provider's is optional and defaults to "every list item with a task
