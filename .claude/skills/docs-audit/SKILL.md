@@ -95,8 +95,11 @@ export SECTION='$SECTION'
 EOF
 ```
 
-The `^` is load-bearing: during release step 5a the local `$VER` tag already sits at `HEAD`, and a
-bare `describe` would resolve to it.
+The `^` is load-bearing whenever a version argument is given: the `$VER` tag sits at or under `HEAD`
+by then, and a bare `describe` would resolve to it and compare the release against itself. `/release`
+step 4 passes no version — it runs before the bump, so the section is still `## [Unreleased]` and the
+range is `LAST..HEAD`. A version argument reaches this skill from a standalone run, or from a release
+resumed after its tag was already pushed.
 
 ## §2 Inputs
 
