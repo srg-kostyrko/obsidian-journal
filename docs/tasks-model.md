@@ -225,25 +225,42 @@ statuses, so reaching the map would mean walking
 undocumented internals, which silently changes our behavior when they ship a
 release. The model's "no dependency on any task plugin" is exactly this case.
 
-**The shipped default is a middle ground across the popular themes**, not the
-Tasks minimum. A themed vault registers a dozen custom symbols, and a default
-covering only `' '`, `x`, `/`, `-`, `h` and `Q` would type all of them unknown.
-The table is **derived, not guessed**: take the union of symbols across the
-status collections Tasks ships (ITS, Minimal, AnuPpuccin, Aura, Ebullientworks,
-LYT Mode, Things, SlRvb), assign each the majority type, and record the symbols
-where collections disagree rather than silently picking one.
+**The shipped default is Tasks' own core mapping**, and nothing more:
 
-`X` carries `done` alongside `x`. Many themes render capital X as complete, and
-today every non-space marker counts as done — so omitting it turns those days
-from done to open, which is the one regression this change would otherwise cause.
+```
+' '      → todo
+'x' 'X'  → done
+'/'      → in-progress
+'-'      → cancelled
+anything else → todo
+```
 
-**A symbol whose meaning is decorative rather than a state of work maps to
-`non-task`, not `todo`.** A `[!]` important callout or a `["]` quote typed as
-`todo` lights its day as having open work **forever**: nothing completes it, so
-the dot never clears. That is worse than the bug being fixed, because it is
-unclearable rather than merely wrong. The rule also makes the default err toward
-silence on symbols we are unsure about, which is the right direction for a
-behavior change landing on vaults people already run.
+Those five cases are `Status.getTypeForUnknownSymbol`
+(`obsidian-tasks/src/Statuses/Status.ts`) verbatim, so `X` needs no separate
+justification — it is done to them already, and today every non-space marker
+counts as done here, so omitting it would turn those days from done to open.
+
+A larger default was specified earlier and the derivation **refuted it**. The
+eight status collections Tasks ships — AnuPpuccin, Aura, Border, Ebullientworks,
+ITS, LYT Mode, Minimal, Things — carry **57 distinct symbols between them and
+disagree about exactly one** (`d`, todo in four and in-progress in one). Of those
+57, **43 map to `TODO`**, which is already the unknown default, so listing them
+changes no behavior at all. What is left is `x`/`X`/`/`/`-`, which core already
+covers, and ITS's speech-bubble digits `0`–`9` as `NON_TASK` — one collection out
+of eight, not a majority. Deriving a middle ground across all of them yields a
+single entry core does not already have.
+
+**A "decorative symbols map to `non-task`" rule was also specified, and it is
+wrong.** Each theme status carries a `nextSymbol`, the marker clicking it cycles
+to, and **all 43 of those `TODO` symbols cycle to `x`** — `!` Important, `?`
+Question, `*` Star, `"` quote, `i` Information, `b` Bookmark, every one. Their own
+model says these are tasks you complete, not annotations. The rule's premise —
+that a `[!]` line lights its day forever because nothing completes it — is false:
+it ticks like any other box. The only statuses that do not cycle to done are the
+speech bubbles, which cycle to themselves, and the terminal `x`/`X`/`-`.
+
+A user whose vault uses a themed symbol set registers it in the map, as they
+already do in Tasks.
 
 **Changing this changes existing vaults**: a decoration reading "all tasks
 completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
@@ -271,9 +288,11 @@ marker is **one setting owned by the provider** — the move writes it, the
 provider reads it. Two settings would drift, and the day they did, every
 previously rolled line would silently turn open again.
 
-`>` maps to `rolled` by default too, for vaults already using that convention,
-and it is already common across the theme collections above — so the type
-arrives with an established symbol rather than needing one invented.
+**`>` does not map to `rolled` by default.** It is "Rescheduled" and typed
+`TODO` in all eight collections, and cycles to `x` like any other — so defaulting
+it to `rolled` would diverge from every theme and from core at once. Only the
+configured marker produces `rolled`; a user who wants `>` to mean it says so in
+the map.
 
 The cost: this is the one type the Tasks plugin does not have. A user reconciling
 both has to register the status on their side as well.
@@ -923,9 +942,6 @@ note count.
 
 None is a decision — each is work this model is waiting on.
 
-- **The default status table.** Derived, not guessed: the union of symbols across
-  the status collections Tasks ships, each assigned its majority type, with the
-  symbols where collections disagree recorded rather than silently resolved.
 - **The note-property status defaults.** The values TaskNotes ships for its
   status field, mapped to the shared types, matched case-insensitively.
 - **The phase-4 index's memory and cold-boot cost**, measured against realistic
