@@ -58,6 +58,13 @@ given a daily template with `## Tasks` and a weekly one with `## Week focus`,
 either value silences one of them entirely. A `selection` given on the fence
 overrides, for the single-journal case where one value is correct.
 
+Per-journal resolution needs a journal, and the date relation reaches items no
+journal owns — a checkbox in a project note, dated next Friday. For those the
+fence's explicit `selection` applies if one was given, and **nothing is filtered
+if none was**, because there is no template whose headings could be meant. A
+`note-property` item has no headings at all, so the condition drops out for it
+entirely, per the rule below.
+
 Listings take both axes. **Decoration conditions take `source` only.** Rollup
 stays listing-only: the decoration engine evaluates per cell across a whole grid,
 and a rolled-up year cell would walk hundreds of notes per render.
@@ -196,9 +203,15 @@ checkbox provider's version, not the model's.
   property is: `FieldMapping` makes `status` a settable key there.
 - **Unknown → `todo` in both.** An unrecognised state is not a finished one.
 
-Ticking is symmetric with it: the checkbox provider writes the symbol its map
-assigns to `done`, the note-property provider writes that map's `done` value into
-the configured property. A third provider brings its own shape and nothing else
+**Recognition is many-to-one; writing is one-to-one.** Several symbols map to
+`done` — `x` and `X` in the default map alone — so a map read backwards does not
+name what ticking should write. Each type therefore carries one **canonical**
+value, configurable, and every other entry mapping to that type is
+recognise-only.
+
+Ticking is then symmetric: the checkbox provider writes the canonical symbol for
+`done`, the note-property provider writes the canonical value for `done` into the
+configured property. A third provider brings its own shape and nothing else
 changes.
 
 That map is a strict subset of the Tasks plugin's `StatusConfiguration`, which is
@@ -407,6 +420,14 @@ parsed — with `conditions:` available when someone needs more. A scope key set
 scope field and has no condition form at all. Two spellings, one model, no parser
 anywhere.
 
+For that to hold, **`selection` is one condition type, not two.** It carries
+headings and tags together —
+`{ type: "selection", condition: "under" | "not-under", headings: [], tags: [] }`
+— rather than expanding into a heading condition plus a tag condition. A key that
+expanded into several would break the one-to-one claim and leave the outer
+`mode` deciding how its parts combine, which is a nesting the flat list does not
+have.
+
 The line this holds is about **who owns the grammar**, not how many options
 exist. Named keys and typed condition objects are a schema: they validate, they
 autocomplete, they have no error messages of their own. A string the user
@@ -479,15 +500,24 @@ source note by construction. A user-chosen grouping therefore has to say how it
 composes with the one already there, and nobody has asked yet. When someone does,
 the question is how the two interact, not whether it is allowed.
 
-**A condition that cannot apply to an item passes it through.** Not false —
-inapplicable, and the item survives. `status` applies to everything and `tag` to
-both kinds, but `heading` applies only to an item with a position inside a note,
-so without this rule a fence saying `selection: "## Tasks"` returns **zero**
-note-property items and says nothing about why. The user asked about their daily
-notes' internal structure; they did not ask to drop a provider. The rule is
-stated generally so the next condition type inherits it, and the escape for
-someone who genuinely wants line items only is the `provider` scope key, which is
-the right place to say which kind of thing you are looking at.
+**A condition that cannot apply to an item is _dropped_ for that item**, before
+the filter is evaluated. Not false, and **not true** — removed from the set, so
+it neither excludes the item nor votes for it. An item every condition drops out
+of matches, the way an empty condition set does.
+
+Evaluating it as **false** returns **zero** note-property items for a fence
+saying `selection: "## Tasks"`, saying nothing about why — the user asked about
+their daily notes' internal structure and did not ask to drop a provider.
+Evaluating it as **true** is worse, and only under `or`: `heading under ## Tasks`
+_or_ `status done` would return every open note task, because the inapplicable
+heading condition alone would carry them. Dropping is the only reading that
+behaves under both combinators.
+
+`status` applies to everything. `selection` applies only to an item with a
+position inside a note. The rule is stated generally so the next condition type
+inherits it, and the escape for someone who wants line items only is the
+`provider` scope key, which is the right place to say which kind of thing you are
+looking at.
 
 The cost is that `mode: and` with a heading condition does not narrow note items,
 so "under `## Tasks` and open" returns open note-tasks whatever their headings.
@@ -659,15 +689,19 @@ contradicts eligibility. Dropping every `[x]` line is the naive rule and this is
 where it breaks — Rollover Daily Todos #174 is that bug reported against the
 incumbent.
 
-1. **Children travel with their parent.** A subtree is indivisible when it moves.
+1. **An eligible root's subtree is indivisible.** Everything under it travels
+   with it, whatever the children's own statuses.
 2. **Eligibility picks _roots_, not items.** An item is a root when it is
    eligible and no ancestor of it is also being moved.
-3. **An ineligible ancestor of an eligible item is carried as context** — copied
+3. **An ineligible ancestor of an eligible root is carried as context** — copied
    into the target so the child keeps its meaning, **not stamped** in the source
-   because it did not move, and **not counted** in the report.
+   because it did not move, and **not counted** in the report. A context ancestor
+   carries **only the branches leading to roots**, not its whole subtree: it is
+   there to give the roots their meaning, not to be moved itself.
 
-So the target gets `Shopping` with `milk` under it and nothing else. `bread`
-stays behind; it is done and nothing needs it. `Shopping` appears in both notes,
+So the target gets `Shopping` with `milk` under it and nothing else. `bread` is a
+sibling of the root under a context ancestor, not part of a root's subtree, so it
+stays behind — which is rule 3, not an exception to rule 1. `Shopping` appears in both notes,
 unstamped in the source, because it is context in one and a record in the other.
 
 **`movable` is therefore a property of a subtree, not of an item.**
@@ -779,15 +813,24 @@ headings matter and needs to configure nothing further. In order:
 2. Otherwise, the configured target heading.
 3. The target has no such heading — appended at the end.
 
-Insert by `metadataCache` heading position, never a string replace. Review
-rewrites `previousNoteText.replace(reviewHeading, …)` against the first match,
-which is why its settings carry the warning _"BE CAREFUL: it must be unique in
-each daily note"_. Real positions make a duplicated heading resolve to the first
-occurrence, which is a defensible answer rather than a corrupting one.
+**Locate the heading in the content being written, not in `metadataCache`.** The
+move is already a read-modify-write on the target, so it holds that note's text;
+scanning it for a whole-line heading match is deterministic and depends on
+nothing else. Reading cache positions would be a lag bug: `ensureNote` guarantees
+the body is on disk before the frontmatter claim appears, but it guarantees
+nothing about when `metadataCache` has **parsed** it, so a move into a
+just-created note could see no headings at all and silently append to the end.
 
-The target note need not exist. `ensureNote` writes the rendered template body
-and only then the frontmatter claim, so a visible note already has its template
-headings — there is nothing to poll for, which is what every incumbent had to do.
+That is not a licence for a string replace. Review rewrites
+`previousNoteText.replace(reviewHeading, …)` against the first match anywhere in
+the note, which is why its settings carry the warning _"BE CAREFUL: it must be
+unique in each daily note"_ — a heading's text appearing inside a task line is
+enough to corrupt it. Matching whole lines resolves a duplicated heading to its
+first occurrence, which is a defensible answer rather than a corrupting one.
+
+The target note need not exist; `ensureNote` writes the rendered template body
+before the frontmatter claim, so a note that is visible already has its template
+headings in its **content** — which is exactly what the scan reads.
 
 **Notelets are both a source and a target, but not for every command.** A move
 reads from them when `source` includes them — an action item captured in a
