@@ -65,3 +65,6 @@ jobs:
       # check:types proves this repo compiles; this proves the package we publish is
       # usable from TypeScript, which is a different thing.
       - run: npm run check:api
+      # A blank line between two bullets renders a release section's whole list loose, and
+      # step 9 of the release runbook publishes that section verbatim as the release notes.
+      - run: npm run check:changelog
