@@ -35,6 +35,7 @@ provider carries the definition.
 - **containment** — the item lives in a note belonging to that period. Needs no
   parsing and works for every setup.
 - **date** — the item carries a date falling in that period, wherever it lives.
+  _Which_ date is the `date` role below; a task line can carry five.
 
 **Scope.** One shape shared by every surface that asks "which items belong to
 this period":
@@ -246,7 +247,7 @@ splice turns out to cost more than it buys.
 > **Filtering is a fixed set of named axes with enumerated values. Never
 > operators, never expressions.**
 
-The axes are `provider`, `source`, `depth`, `status` and `selection`. Anything
+The axes are `provider`, `source`, `depth`, `date`, `status` and `selection`. Anything
 outside them is answered by handing the resolved path set to Dataview, which is
 the supported form of the "use Dataview for that" answer — a DQL query cannot
 resolve which notes are September's journal notes without the user hand-encoding
@@ -257,6 +258,27 @@ What this refuses: priority comparisons, recurrence, text search, `AND` / `OR`,
 sort and group clauses — anything that composes. What it permits is more named
 axes, and it has to, because a surface that cannot express what a neighbouring
 surface can will disagree with it about the same day.
+
+**`date` — which date the relation reads.** A task line can carry five:
+
+```
+- [ ] Ship the release ➕ 2026-09-01 🛫 2026-09-18 ⏳ 2026-09-20 📅 2026-09-25 ✅ 2026-09-24
+```
+
+So the relation names a **role** — `due`, `scheduled`, `start`, `done`,
+`created` — defaulting to `due`. Each provider resolves a role its own way: the
+checkbox provider to a signifier, an emoji or a Dataview inline field; the
+note-property provider to a configured property name, which is what TaskNotes'
+own `FieldMapping` already is.
+
+The same role names the **retarget** target, so dragging and filtering speak one
+vocabulary. Without the axis the two providers do not mean the same thing by
+"date" at all — note-property is implicitly role-based through its configured
+property, while the checkbox provider would have no role whatsoever.
+
+A single globally configured role would be simpler, and it would make "what is
+due this week" and "what did I plan to start this week" mutually exclusive in one
+vault.
 
 **`status` — which item states.** It takes any type name, or a list of them, plus
 two aliases so the common fence need not enumerate:
