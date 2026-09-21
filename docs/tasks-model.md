@@ -166,6 +166,117 @@ date→paths index. Generalizing day-notes into a shared capability was consider
 and declined — it costs a migration on a shipped settings slice and buys one
 index.
 
+## Status normalization
+
+Each provider maps its native status into a shared type set — `todo`, `done`,
+`in-progress`, `cancelled`, `on-hold`, `non-task`, `rolled` — and **an
+unrecognised status normalizes to `todo`.**
+
+That default is the decisive one, and it matches the Tasks plugin (4.2M
+installs). What ships today is the opposite. `NoteMetadataService` maps
+`{ completed: item.task !== " " }`, so any marker other than a space counts as
+completed and a note whose tasks are all `- [/]` reports `has-open-task` false
+and `all-tasks-completed` **true** — a day holding only in-progress work
+decorated as finished. Adopting `todo` as the unknown default is therefore a
+behavior change, not a clarification.
+
+### The map
+
+**The mapping is per provider, and its shape is the provider's own.** The model
+says each provider normalizes its native status; what follows specifies the
+checkbox provider's version, not the model's.
+
+- **`checkbox`** — a `symbol → type` map, configurable, rather than a flat list
+  of done markers, so a vault where `[/]` means in-progress agrees with both
+  plugins at once.
+- **`note-property`** — a configured status _property name_ plus a
+  `value → type` map. Its statuses are hand-typed strings rather than single
+  characters, so matching is case-insensitive, and the defaults mirror what
+  TaskNotes ships. The property name is configurable for the same reason the date
+  property is: `FieldMapping` makes `status` a settable key there.
+- **Unknown → `todo` in both.** An unrecognised state is not a finished one.
+
+Ticking is symmetric with it: the checkbox provider writes the symbol its map
+assigns to `done`, the note-property provider writes that map's `done` value into
+the configured property. A third provider brings its own shape and nothing else
+changes.
+
+That map is a strict subset of the Tasks plugin's `StatusConfiguration`, which is
+`symbol → { name, nextSymbol, type }`. `nextSymbol` is what clicking a checkbox
+cycles to; the plugin never toggles a task, so it carries symbol and type and
+nothing else.
+
+**We do not read their settings.** Their `apiV1` is three methods and exposes no
+statuses, so reaching the map would mean walking
+`app.plugins.plugins["obsidian-tasks-plugin"]` — an optional dependency on
+undocumented internals, which silently changes our behavior when they ship a
+release. The model's "no dependency on any task plugin" is exactly this case.
+
+**The shipped default is a middle ground across the popular themes**, not the
+Tasks minimum. A themed vault registers a dozen custom symbols, and a default
+covering only `' '`, `x`, `/`, `-`, `h` and `Q` would type all of them unknown.
+The table is **derived, not guessed**: take the union of symbols across the
+status collections Tasks ships (ITS, Minimal, AnuPpuccin, Aura, Ebullientworks,
+LYT Mode, Things, SlRvb), assign each the majority type, and record the symbols
+where collections disagree rather than silently picking one.
+
+`X` carries `done` alongside `x`. Many themes render capital X as complete, and
+today every non-space marker counts as done — so omitting it turns those days
+from done to open, which is the one regression this change would otherwise cause.
+
+**A symbol whose meaning is decorative rather than a state of work maps to
+`non-task`, not `todo`.** A `[!]` important callout or a `["]` quote typed as
+`todo` lights its day as having open work **forever**: nothing completes it, so
+the dot never clears. That is worse than the bug being fixed, because it is
+unclearable rather than merely wrong. The rule also makes the default err toward
+silence on symbols we are unsure about, which is the right direction for a
+behavior change landing on vaults people already run.
+
+**Changing this changes existing vaults**: a decoration reading "all tasks
+completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
+
+### `rolled`, and why the marker is both a tag and a type
+
+A line the move left behind carries a marker, and the marker does **two jobs that
+are not alternatives**.
+
+The complaint it exists to answer is that a copied task is counted twice by every
+task query in the vault, forever. That complaint lives in the user's _own_
+queries, so the marker has to be excludable there: an appended tag is, natively,
+in Dataview, Tasks and core search alike, with nothing registered anywhere. A
+type cannot do that job — Tasks resolves an unknown symbol to `TODO`, so a line
+we consider rolled still counts as open to them.
+
+But a tag alone leaves our own surfaces wrong: the line is still a plain `- [ ]`,
+so the listing shows it as open, the calendar lights the day, and the move's
+eligibility check needs a second rule of its own to avoid picking it up again on
+a re-run.
+
+So both. **The provider reads the marker and normalizes it to `rolled` rather
+than `todo`.** The tag serves the user's queries, the type serves ours, and the
+marker is **one setting owned by the provider** — the move writes it, the
+provider reads it. Two settings would drift, and the day they did, every
+previously rolled line would silently turn open again.
+
+`>` maps to `rolled` by default too, for vaults already using that convention,
+and it is already common across the theme collections above — so the type
+arrives with an established symbol rather than needing one invented.
+
+The cost: this is the one type the Tasks plugin does not have. A user reconciling
+both has to register the status on their side as well.
+
+**Changing the marker orphans every line already stamped.** They stop normalizing
+to `rolled`, so they read as `todo` again — reappearing in open listings,
+relighting the calendar, and becoming eligible for the next rollover. That is
+accepted, with the consequence stated at the point of change, the same way the
+recurring confirmation works. It needs no accumulating list of historical
+markers, and it is reversible: change the setting back and the lines read as
+rolled again, because nothing was ever written to a note.
+
+What must **not** happen is an offer to rewrite. Re-stamping every previously
+rolled line across a vault to repair a settings change would be the most
+destructive operation in the plugin.
+
 ## One extractor
 
 **The provider is the only thing that turns a note into items.** Every surface —
@@ -177,8 +288,9 @@ index sits **behind that seam**. That is what keeps the index a performance
 decision rather than a fork in the model: the provider ships computing on demand,
 later gains an index as a cache, and no consumer changes.
 
-So `NoteMetadata.tasks` **goes**. It is read in exactly four lines, both of them
-in `hasOpenTask` / `allTasksCompleted` (`src/decorations/engine-checks.ts:195`),
+So `NoteMetadata.tasks` **goes**. It is read in exactly four lines, all of them
+inside `hasOpenTask` and `allTasksCompleted`
+(`src/decorations/engine-checks.ts:195`),
 and keeping it would leave a second extractor answering the same question a
 different way — the failure this model exists to prevent, reintroduced inside it.
 The engine keeps `metadataFor` for title, tag, property and size; the task
@@ -728,117 +840,6 @@ stale list is merely sitting in today's note — while under-reaching loses real
 work. If rollover ever runs automatically on note creation the notice fires
 unread, which is an argument for keeping it manual, not for adding a bound.
 
-## Status normalization
-
-Each provider maps its native status into a shared type set — `todo`, `done`,
-`in-progress`, `cancelled`, `on-hold`, `non-task`, `rolled` — and **an
-unrecognised status normalizes to `todo`.**
-
-That default is the decisive one, and it matches the Tasks plugin (4.2M
-installs). What ships today is the opposite. `NoteMetadataService` maps
-`{ completed: item.task !== " " }`, so any marker other than a space counts as
-completed and a note whose tasks are all `- [/]` reports `has-open-task` false
-and `all-tasks-completed` **true** — a day holding only in-progress work
-decorated as finished. Adopting `todo` as the unknown default is therefore a
-behavior change, not a clarification.
-
-### The map
-
-**The mapping is per provider, and its shape is the provider's own.** The model
-says each provider normalizes its native status; what follows specifies the
-checkbox provider's version, not the model's.
-
-- **`checkbox`** — a `symbol → type` map, configurable, rather than a flat list
-  of done markers, so a vault where `[/]` means in-progress agrees with both
-  plugins at once.
-- **`note-property`** — a configured status _property name_ plus a
-  `value → type` map. Its statuses are hand-typed strings rather than single
-  characters, so matching is case-insensitive, and the defaults mirror what
-  TaskNotes ships. The property name is configurable for the same reason the date
-  property is: `FieldMapping` makes `status` a settable key there.
-- **Unknown → `todo` in both.** An unrecognised state is not a finished one.
-
-Ticking is symmetric with it: the checkbox provider writes the symbol its map
-assigns to `done`, the note-property provider writes that map's `done` value into
-the configured property. A third provider brings its own shape and nothing else
-changes.
-
-That map is a strict subset of the Tasks plugin's `StatusConfiguration`, which is
-`symbol → { name, nextSymbol, type }`. `nextSymbol` is what clicking a checkbox
-cycles to; the plugin never toggles a task, so it carries symbol and type and
-nothing else.
-
-**We do not read their settings.** Their `apiV1` is three methods and exposes no
-statuses, so reaching the map would mean walking
-`app.plugins.plugins["obsidian-tasks-plugin"]` — an optional dependency on
-undocumented internals, which silently changes our behavior when they ship a
-release. The model's "no dependency on any task plugin" is exactly this case.
-
-**The shipped default is a middle ground across the popular themes**, not the
-Tasks minimum. A themed vault registers a dozen custom symbols, and a default
-covering only `' '`, `x`, `/`, `-`, `h` and `Q` would type all of them unknown.
-The table is **derived, not guessed**: take the union of symbols across the
-status collections Tasks ships (ITS, Minimal, AnuPpuccin, Aura, Ebullientworks,
-LYT Mode, Things, SlRvb), assign each the majority type, and record the symbols
-where collections disagree rather than silently picking one.
-
-`X` carries `done` alongside `x`. Many themes render capital X as complete, and
-today every non-space marker counts as done — so omitting it turns those days
-from done to open, which is the one regression this change would otherwise cause.
-
-**A symbol whose meaning is decorative rather than a state of work maps to
-`non-task`, not `todo`.** A `[!]` important callout or a `["]` quote typed as
-`todo` lights its day as having open work **forever**: nothing completes it, so
-the dot never clears. That is worse than the bug being fixed, because it is
-unclearable rather than merely wrong. The rule also makes the default err toward
-silence on symbols we are unsure about, which is the right direction for a
-behavior change landing on vaults people already run.
-
-**Changing this changes existing vaults**: a decoration reading "all tasks
-completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
-
-### `rolled`, and why the marker is both a tag and a type
-
-A line the move left behind carries a marker, and the marker does **two jobs that
-are not alternatives**.
-
-The complaint it exists to answer is that a copied task is counted twice by every
-task query in the vault, forever. That complaint lives in the user's _own_
-queries, so the marker has to be excludable there: an appended tag is, natively,
-in Dataview, Tasks and core search alike, with nothing registered anywhere. A
-type cannot do that job — Tasks resolves an unknown symbol to `TODO`, so a line
-we consider rolled still counts as open to them.
-
-But a tag alone leaves our own surfaces wrong: the line is still a plain `- [ ]`,
-so the listing shows it as open, the calendar lights the day, and the move's
-eligibility check needs a second rule of its own to avoid picking it up again on
-a re-run.
-
-So both. **The provider reads the marker and normalizes it to `rolled` rather
-than `todo`.** The tag serves the user's queries, the type serves ours, and the
-marker is **one setting owned by the provider** — the move writes it, the
-provider reads it. Two settings would drift, and the day they did, every
-previously rolled line would silently turn open again.
-
-`>` maps to `rolled` by default too, for vaults already using that convention,
-and it is already common across the theme collections above — so the type
-arrives with an established symbol rather than needing one invented.
-
-The cost: this is the one type the Tasks plugin does not have. A user reconciling
-both has to register the status on their side as well.
-
-**Changing the marker orphans every line already stamped.** They stop normalizing
-to `rolled`, so they read as `todo` again — reappearing in open listings,
-relighting the calendar, and becoming eligible for the next rollover. That is
-accepted, with the consequence stated at the point of change, the same way the
-recurring confirmation works. It needs no accumulating list of historical
-markers, and it is reversible: change the setting back and the lines read as
-rolled again, because nothing was ever written to a note.
-
-What must **not** happen is an offer to rewrite. Re-stamping every previously
-rolled line across a vault to repair a settings change would be the most
-destructive operation in the plugin.
-
 ## Build order
 
 Cut by **provider**, not by relation. The expensive thing is not the date
@@ -877,11 +878,13 @@ note count.
 
 ## Still to establish
 
-Neither is a decision — both are measurements this model is waiting on.
+None is a decision — each is work this model is waiting on.
 
 - **The default status table.** Derived, not guessed: the union of symbols across
   the status collections Tasks ships, each assigned its majority type, with the
   symbols where collections disagree recorded rather than silently resolved.
+- **The note-property status defaults.** The values TaskNotes ships for its
+  status field, mapped to the shared types, matched case-insensitively.
 - **The phase-4 index's memory and cold-boot cost**, measured against realistic
   **link density** rather than note count. Time Ruler hung indefinitely on a
   2,000-note vault, and an anonymised copy of that same vault did not reproduce
