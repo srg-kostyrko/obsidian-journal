@@ -52,8 +52,8 @@ version bump reformatting a file nobody is editing would otherwise slip past.
 
 `checks.yml` runs `compile:i18n` → `check:i18n` → `check:types` →
 `check:format` → `check:docs-mustaches` → `docs:build` → `check:docs-links` →
-`coverage` → `check:lint` → `build:api` → `check:api` on every pull request and
-on every push to `main`. It reports as the `build` check, which
+`coverage` → `check:lint` → `build:api` → `check:api` → `check:changelog` on
+every pull request and on every push to `main`. It reports as the `build` check, which
 — together with `e2e-gate`, the fixed name standing in for the whole e2e matrix
 — blocks the merge button until both are green. A check that is still running
 blocks it too. Run it before opening a pull request:
@@ -78,6 +78,7 @@ npm run coverage     # vitest, the unit and component suites plus the scripts/ t
 npm run check:lint   # eslint over the whole project
 npm run build:api    # regenerates packages/api/index.d.ts — commit the result
 npm run check:api    # proves the published package compiles for a consumer
+npm run check:changelog # a blank line between two bullets, which renders a release section loose
 ```
 
 The manual is published in two channels. Merging a change to `docs/user/`
@@ -99,6 +100,15 @@ CI then runs `git diff --exit-code` on it, so **a change to the public API
 surface fails until the regenerated file is committed alongside it**. That is
 deliberate: it puts the published surface in the same diff as the change that
 moved it, where a reviewer sees it.
+
+**The manual works the same way, by convention rather than by gate: a change that
+alters behavior `docs/user/` describes updates that page in the same pull
+request.** No check enforces it — whether a page needs to change is a judgment a
+grep cannot make — but the cost of leaving it lands on the release rather than on
+you. Prose merged after a version is tagged reaches `/next/` only, because the
+site's root is built from the tag's tree, so a gap found at release time holds the
+release up until it is written. `/changelog` prompts for this when it writes your
+entry; `/docs-authoring` is how a new section gets written.
 
 The e2e layer drives a real Obsidian binary through WebdriverIO. It's slow, so
 run it locally when your change touches runtime behavior — note creation,

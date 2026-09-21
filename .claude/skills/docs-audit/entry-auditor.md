@@ -14,8 +14,23 @@ Section: {{KIND}}
 
 The commit list is in the file `{{COMMITS}}`, one `hash subject` per line.
 
+## Your verdict from a previous pass
+
+{{PRIOR}}
+
+When that is anything but `none`, it is your own earlier answer and your job is to **justify or
+overturn it**, claim by claim, not to form a fresh opinion. Re-read the code behind every claim you
+called `holds`. A pass asked to defend a verdict reaches a layer a first pass does not: at 3.5.0 a
+second, scoped pass found three false claims the wide first pass had called `holds`.
+
 ## What to do
 
+0. **Settle the entry itself before you look at any page.** The bullet is a claim about the code too,
+   and it can be as wrong as a manual paragraph — every false one 3.5.0 shipped was accurate when
+   written and invalidated by a later commit in the same range. Trace what it says to the code and
+   set `entryVerdict`: `holds`, or `docs-wrong` when the code does something else, or `unsupported`
+   when you could not trace it. Say what is false in `entryNote`, and cite the code in
+   `entryEvidence`. Do not propose replacement wording; that is the maintainer's.
 1. **Find every manual paragraph that states behavior this entry describes or changed.** Start from the entry's bold terms — `grep -rn -F --exclude-dir=.vitepress '**<term>**' docs/user` — then read the sections around each hit and follow links between pages. The same behavior is often stated on a concept page, in `settings.md` and in a guide under `guides/`; check each.
 2. **Split those paragraphs into behavioral claims** — sentences a user could act on and be wrong. Skip navigation prose and examples' framing.
 3. **Settle each claim in the code**, then give one verdict:
@@ -35,6 +50,9 @@ Only this, in one `json` fence:
 ```json
 {
   "entry": "<first 80 characters of the entry>",
+  "entryVerdict": "holds",
+  "entryEvidence": [],
+  "entryNote": "",
   "uncovered": false,
   "suggestedPage": null,
   "claims": [
