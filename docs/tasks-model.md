@@ -46,6 +46,16 @@ Listings take both axes. **Decoration conditions take `source` only.** Rollup
 stays listing-only: the decoration engine evaluates per cell across a whole grid,
 and a rolled-up year cell would walk hundreds of notes per render.
 
+`depth` pairs with **containment only**. It decides which notes to read, and the
+date relation does not reach a period through notes — it asks whether an item's
+date falls inside the period, which already spans all of it. Rolling up a date
+query is a no-op at best and a double-count at worst.
+
+An item matching a period by **both** relations is yielded **once**, deduplicated
+by provider identity — path and position for a checkbox, path for a note —
+carrying which relations matched, so a surface can tell them apart without
+listing the item twice.
+
 **Capability.** An item is movable and stampable only if its provider yields both
 a path and a position. Day Planner reached the same split independently — its
 `RemoteTimeBlock` has neither field, under the comment that vault-sourced blocks'
@@ -58,6 +68,14 @@ Closed set, **open-shaped**: the registry is internal, but its boundary is drawn
 as though it were public, so exposing it through `docs/plugin-api.md` later is a
 documentation change rather than a rewrite. Nothing third-party registers a
 provider today.
+
+**Every provider carries an identification rule**, not just `note-property`. The
+checkbox provider's is optional and defaults to "every list item with a task
+marker", but it exists — which is where a vault-wide filter like the Tasks
+plugin's `globalFilter` belongs. Without one, a shopping list or a meeting
+checklist lights a day that the user's own task queries deliberately ignore.
+Deciding which lines count is the provider's job, not a special case bolted to
+the checkbox reader.
 
 | Provider        | Item is                                                                | Relations         | Movable                      |
 | --------------- | ---------------------------------------------------------------------- | ----------------- | ---------------------------- |
@@ -178,6 +196,17 @@ plugins at once.
 
 **Changing this changes existing vaults**: a decoration reading "all tasks
 completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
+
+**Open.** Whether a rolled-forward line gets its own type. Normalizing the
+left-behind marker to something other than `todo` is what stops a rolled line
+reading as open work — in the listing, in the decorations, and in the move's own
+eligibility check, which is otherwise a separate rule that has to be kept in
+agreement with the marker. If it becomes a type, the marker is **one setting
+owned by the provider**: the move writes it, the provider reads it, and two
+settings could drift so that every previously rolled line silently turns open
+again. The cost is that Tasks has no such type and resolves an unknown status to
+`TODO`, so a rolled line reads as not-open here and open to their queries until
+the user registers the same status on both sides.
 
 ## Build order
 
