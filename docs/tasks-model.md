@@ -340,6 +340,29 @@ unstamped in the source, because it is context in one and a record in the other.
 
 **`movable` is therefore a property of a subtree, not of an item.**
 
+### Block references
+
+`ListItemCache` carries `id`, so a line's `^blockid` is always visible to us, and
+it needs handling in both directions:
+
+```
+- [ ] Draft the proposal ^abc1234
+```
+
+**The copy loses the id.** A block id is a **note-scoped anchor**, not part of the
+task, so carrying it does not preserve a property of the item — it forges a
+second claim to one anchor, and Obsidian resolves an ambiguous one arbitrarily.
+That makes copy mode the worse of the two by default: links silently start
+pointing somewhere the user never chose. Dropping it leaves every existing link
+resolving to the source line, which in copy mode is still there.
+
+**Move mode warns when a line carries one**, because removing it breaks every
+`[[note#^abc1234]]` that pointed at it. The warning cannot say how many:
+`resolvedLinks` is `Record<path, Record<path, number>>` with no anchor
+information, `getBacklinksForFile` is not in the public typings, and reading
+`LinkCache.link` for every note is the whole-vault walk this plugin criticises
+other plugins for. So it says what is true and no more.
+
 **Reach is unbounded, and reported.** `JournalIndex.findPrevious` binary-searches
 the anchors of notes that _exist_, so it already spans gaps — after a two-week
 break it finds the note from two weeks ago, which is exactly when a rollover
