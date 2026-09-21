@@ -244,20 +244,52 @@ splice turns out to cost more than it buys.
 
 ## Filtering
 
-> **Filtering is a fixed set of named axes with enumerated values. Never
-> operators, never expressions.**
+> **Filtering is structured data the user never writes as an expression. It
+> reuses the decoration condition shape.**
 
-The axes are `provider`, `source`, `depth`, `date`, `status` and `selection`. Anything
+`{ mode: "and" | "or", conditions: TaskCondition[] }` — the same shape
+`decorationSchema` already has (`src/decorations/config.ts:256`), and the same
+one `bulk-add` already reuses through `filterConditionSchema`. Each condition is
+a tagged-union object, the list is **flat** with one combinator, and negation is
+an enumerated field inside a typed condition rather than a mechanism of its own,
+exactly as `stringPropertyCondition` handles it today.
+
+That is what settles include-versus-exclude, which is otherwise the first crack
+in any "no query language" rule. It was never a second axis:
+
+```
+{ type: "heading", condition: "under" | "not-under", heading: "## Habits" }
+```
+
+There is no string for anyone to put `and not` into, so the slide from one
+negation to a predicate language has nowhere to start.
+
+**The flat keys stay, as sugar.** A fence is hand-typed YAML and nobody wants a
+conditions array to say `status: open`, so each named key desugars **one to one**
+into a single condition — it _is_ a condition, not a shorthand that gets parsed —
+with `conditions:` available when someone needs more. Two spellings, one model,
+no parser anywhere.
+
+The line this holds is about **who owns the grammar**, not how many options
+exist. Named keys and typed condition objects are a schema: they validate, they
+autocomplete, they have no error messages of their own. A string the user
+composes is a language, needing a parser, a precedence table and documentation.
+Dataview and the Tasks plugin each own one; this plugin does not become the
+third.
+
+The condition types, and their sugar keys, are `provider`, `source`, `depth`,
+`date`, `status` and `selection`. Anything
 outside them is answered by handing the resolved path set to Dataview, which is
 the supported form of the "use Dataview for that" answer — a DQL query cannot
 resolve which notes are September's journal notes without the user hand-encoding
 their folder and date-format conventions, and handing over paths the plugin
 resolved makes any DataviewJS query over them correct by construction.
 
-What this refuses: priority comparisons, recurrence, text search, `AND` / `OR`,
-sort and group clauses — anything that composes. What it permits is more named
-axes, and it has to, because a surface that cannot express what a neighbouring
-surface can will disagree with it about the same day.
+What this refuses is a **written expression**, not expressiveness: a priority
+comparison or a text search typed as a string, a predicate with its own
+precedence, anything needing a parser. More condition types are permitted and
+have to be, because a surface that cannot express what a neighbouring surface can
+will disagree with it about the same day.
 
 **`date` — which date the relation reads.** A task line can carry five:
 
