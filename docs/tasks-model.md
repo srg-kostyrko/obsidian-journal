@@ -706,9 +706,24 @@ behavior change, not a clarification.
 
 ### The map
 
-Which markers mean what is **configurable**, as a `symbol → type` map rather than
-a flat list of done markers, so a vault where `[/]` means in-progress agrees with
-both plugins at once.
+**The mapping is per provider, and its shape is the provider's own.** The model
+says each provider normalizes its native status; what follows specifies the
+checkbox provider's version, not the model's.
+
+- **`checkbox`** — a `symbol → type` map, configurable, rather than a flat list
+  of done markers, so a vault where `[/]` means in-progress agrees with both
+  plugins at once.
+- **`note-property`** — a configured status _property name_ plus a
+  `value → type` map. Its statuses are hand-typed strings rather than single
+  characters, so matching is case-insensitive, and the defaults mirror what
+  TaskNotes ships. The property name is configurable for the same reason the date
+  property is: `FieldMapping` makes `status` a settable key there.
+- **Unknown → `todo` in both.** An unrecognised state is not a finished one.
+
+Ticking is symmetric with it: the checkbox provider writes the symbol its map
+assigns to `done`, the note-property provider writes that map's `done` value into
+the configured property. A third provider brings its own shape and nothing else
+changes.
 
 That map is a strict subset of the Tasks plugin's `StatusConfiguration`, which is
 `symbol → { name, nextSymbol, type }`. `nextSymbol` is what clicking a checkbox
