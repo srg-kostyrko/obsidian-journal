@@ -226,6 +226,27 @@ folder elsewhere fixed it. We resolve a note's period from its frontmatter claim
 and sort resolved anchors, so a folder reorganisation cannot make an old note
 sort as yesterday. The reach was not what failed there.
 
+### Where a moved item lands
+
+Placement reuses `selection`. The two are the same list of headings read twice,
+so a user who scopes a roll to `## Work` and `## Personal` has already said which
+headings matter and needs to configure nothing further. In order:
+
+1. The item came from a heading in the selection and the target has a heading
+   with the same text — it lands under that one.
+2. Otherwise, the configured target heading.
+3. The target has no such heading — appended at the end.
+
+Insert by `metadataCache` heading position, never a string replace. Review
+rewrites `previousNoteText.replace(reviewHeading, …)` against the first match,
+which is why its settings carry the warning _"BE CAREFUL: it must be unique in
+each daily note"_. Real positions make a duplicated heading resolve to the first
+occurrence, which is a defensible answer rather than a corrupting one.
+
+The target note need not exist. `ensureNote` writes the rendered template body
+and only then the frontmatter claim, so a visible note already has its template
+headings — there is nothing to poll for, which is what every incumbent had to do.
+
 ### Recurring lines
 
 Retargeting the date on a line carrying `🔁` is **confirmed, not silently
@@ -378,8 +399,5 @@ note count.
 - Whether the left-behind marker's default belongs to the journal rather than
   being global. A daily note is a record of what was written that day for some
   users and a capture surface for others, and the two want different defaults.
-- Whether a moved item lands under the heading it came from when the target has a
-  matching one, falling back to a configured target heading. That folds
-  `selection` and target placement into one rule, and it is the shape five voices
-  upstream sketched. Also unanswered: what happens to an item that `selection`
-  excluded but that is otherwise unfinished — silently left, or reported.
+- What happens to an item that `selection` excluded but that is otherwise
+  unfinished — silently left, or reported.
