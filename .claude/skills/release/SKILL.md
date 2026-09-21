@@ -391,8 +391,9 @@ build the root from at step 9.
 The draft's body is empty. Fill it from the changelog section:
 
 ```bash
-node scripts/release-notes.mjs "$VER" > notes.md
-gh release edit "$VER" --notes-file notes.md && rm notes.md
+NOTES=<this session's scratchpad directory>/notes-$VER.md
+node scripts/release-notes.mjs "$VER" > "$NOTES"
+gh release edit "$VER" --notes-file "$NOTES"
 gh release edit "$VER" --draft=false
 ```
 
