@@ -774,6 +774,18 @@ arrives with an established symbol rather than needing one invented.
 The cost: this is the one type the Tasks plugin does not have. A user reconciling
 both has to register the status on their side as well.
 
+**Changing the marker orphans every line already stamped.** They stop normalizing
+to `rolled`, so they read as `todo` again — reappearing in open listings,
+relighting the calendar, and becoming eligible for the next rollover. That is
+accepted, with the consequence stated at the point of change, the same way the
+recurring confirmation works. It needs no accumulating list of historical
+markers, and it is reversible: change the setting back and the lines read as
+rolled again, because nothing was ever written to a note.
+
+What must **not** happen is an offer to rewrite. Re-stamping every previously
+rolled line across a vault to repair a settings change would be the most
+destructive operation in the plugin.
+
 ## Build order
 
 Cut by **provider**, not by relation. The expensive thing is not the date
