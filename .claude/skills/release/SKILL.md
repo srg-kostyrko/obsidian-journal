@@ -72,6 +72,9 @@ gh pr list --head "release/$VER" --state all --json number,state
 gh release view "$VER" --json isDraft,publishedAt 2>/dev/null
 npm view obsidian-journals-api version
 git show-ref --verify --quiet "refs/heads/release/$VER" && echo "local branch exists"
+# Did steps 2-3 finish? Step 3 cuts the branch before their commit, so the branch existing on its
+# own proves nothing — a run that died inside step 3 must go back to step 2, not forward to step 4.
+git log --oneline "main..release/$VER" 2>/dev/null
 # Manual deployed since the release was published? Step 9 dispatches it by hand, so a
 # release that died in the window between publishing and dispatching leaves the root on
 # the previous version, and nothing downstream would notice.
@@ -83,7 +86,8 @@ gh run list --workflow=pages.yml --event workflow_dispatch --limit 10 \
 | Observed                                 | Resume at              |
 | ---------------------------------------- | ---------------------- |
 | Nothing exists                           | §1 step 1              |
-| Local branch exists, manifest not bumped | §1 step 4              |
+| Branch exists, no commit on it yet       | §1 step 2              |
+| Branch carries the changelog commit only | §1 step 4              |
 | Manifest bumped, no branch on remote     | §1 step 6              |
 | Branch pushed, PR open                   | §1 step 7              |
 | PR merged, tag not on remote             | §1 step 8              |
@@ -109,8 +113,12 @@ that found nothing leaves no trace — no commit, no branch, no issue — and on
 leaves ordinary `docs(manual):` commits on the branch that a fix-forward looks exactly like. Re-running
 costs time, not correctness. What is _not_ safe is skipping it: a resume that enters at step 5 with the
 audit never run cuts a tag over prose nobody checked. Where the tag is already pushed, step 4 can no
-longer reach the root — run `/docs-audit $VER` anyway before §3 and report what it finds, since the
-next release carries the fix.
+longer reach the root — run `/docs-audit $VER` anyway before §3 and report what it finds. A fix from
+there rides the **next** release: the root is built from the tag's tree, and the one override,
+`gh workflow run pages.yml -f stable_ref=<a ref cut from the tag with the fix applied>`, is not
+durable — `stable_ref` is read on a dispatch only, so the next push touching `docs/user/**`
+re-resolves the root from the published release and silently drops it again. Offer it, say that about
+it, and let the maintainer choose.
 
 ### Choosing the version
 
@@ -238,11 +246,8 @@ step produced a change, there is no commit and step 4 follows directly.
 
 ### Step 4 — Audit the manual, before the version is spent
 
-```bash
-/docs-audit --in-place
-```
-
-The audit reads the branch as it stands and commits its corrections **onto it**,
+Run `/docs-audit --in-place --label "$VER"`. It reads the branch as it stands and commits its
+corrections **onto it**,
 with no worktree, no fix branch and no pull request. That placement is the whole
 point: every correction is an ancestor of the tag step 5 is about to cut, for
 free.
@@ -447,7 +452,13 @@ from the tag's tree and that is what proves it rebuilt. A release that changed n
 has no such phrase, and deploys byte-identical output, so there step 9's green
 dispatched run is the whole of the evidence:
 
+`PREV` is computed here and not inherited: §2 sets one too, but §2 is conditional, runs in another
+shell and may not have run at all. Left unset the range collapses to `HEAD..$VER`, which is empty
+once the branch has merged — so this would report "unchanged" on every release and never grep the
+live root at all.
+
 ```bash
+PREV=$(git describe --tags --abbrev=0 "$VER^")
 if git diff --quiet "$PREV".."$VER" -- docs/user; then
   echo "manual unchanged this release — step 9's green run is the check"
 else

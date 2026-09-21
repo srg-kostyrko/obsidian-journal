@@ -4,12 +4,13 @@
 # invocation arguments — a positional parameter, an awk field or a sed capture cannot be written
 # there at all. Here they can, so the code is written the way it would be written anywhere.
 #
-#   setup.sh --scratch <dir> [--version <x.y.z>] [--base <ref>] [--in-place]
+#   setup.sh --scratch <dir> [--version <x.y.z>] [--label <text>] [--base <ref>] [--in-place]
 #
 # Prints ROOT, OUT and PR_COUNT, and writes $OUT/env.sh for every later block to source.
 set -euo pipefail
 
 VER=""
+LABEL=""
 BASE=""
 IN_PLACE=""
 SCRATCH=""
@@ -17,6 +18,7 @@ SCRATCH=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) VER="$2"; shift 2 ;;
+    --label) LABEL="$2"; shift 2 ;;
     --base) BASE="$2"; shift 2 ;;
     --scratch) SCRATCH="$2"; shift 2 ;;
     --in-place) IN_PLACE=1; shift ;;
@@ -34,7 +36,10 @@ HERE=$(git rev-parse --abbrev-ref HEAD)
 if [ -z "$BASE" ]; then
   if [ -n "$IN_PLACE" ]; then BASE="$HERE"; else BASE="origin/main"; fi
 fi
-LABEL="${VER:-unreleased-$(date +%F)}"
+# --label names the run when no version argument can be given. /release step 4 runs before the bump,
+# so there is no tag for §1 to describe from, but its commits and its report should still say which
+# release they belong to rather than `unreleased-<today>`.
+LABEL="${LABEL:-${VER:-unreleased-$(date +%F)}}"
 BRANCH="docs/audit-$LABEL"
 START=$(git rev-parse HEAD)
 OUT="$SCRATCH/docs-audit-$LABEL"

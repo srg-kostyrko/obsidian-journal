@@ -18,7 +18,7 @@ restate it.
 | [`docs/2026-07-13-ux-text-audit.md`](docs/2026-07-13-ux-text-audit.md)     | user-facing copy style — sentence case, error grammar, en-US                                                    |
 | [`docs/plugin-harvest-list.md`](docs/plugin-harvest-list.md)               | the standing queue of plugins to mine for ideas, and what has already been ruled out                            |
 | [`.claude/skills/release/SKILL.md`](.claude/skills/release/SKILL.md)       | how a version reaches the community store, and the post-release sweep that follows                              |
-| [`.claude/skills/docs-audit/SKILL.md`](.claude/skills/docs-audit/SKILL.md) | the release-time manual audit — what it checks, and the PR and issue it opens unattended                        |
+| [`.claude/skills/docs-audit/SKILL.md`](.claude/skills/docs-audit/SKILL.md) | the manual audit — what it checks, and why nothing it finds is ever deferred past a tag                         |
 | [`docs/plugin-api.md`](docs/plugin-api.md)                                 | the plugin-facing API — its surface, stability policy, and the npm package                                      |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                       | setup, quality gates, commit and PR conventions                                                                 |
 | [`docs/user/`](docs/user/)                                                 | the user manual — every setting, block and migration path; published at srg-kostyrko.github.io/obsidian-journal |

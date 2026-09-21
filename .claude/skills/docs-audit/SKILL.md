@@ -18,15 +18,18 @@ after it.
 
 ## Invocation
 
-| Form                    | Audits                                                             |
-| ----------------------- | ------------------------------------------------------------------ |
-| `/docs-audit <version>` | `## [<version>]` over `PREV..<version>`; the tag may be local-only |
-| `/docs-audit`           | `## [Unreleased]` over `LAST..HEAD`                                |
+| Form                    | Audits                                                       |
+| ----------------------- | ------------------------------------------------------------ |
+| `/docs-audit <version>` | `## [<version>]` over `PREV..<version>`, for an existing tag |
+| `/docs-audit`           | `## [Unreleased]` over `LAST..HEAD`                          |
 
 - `--in-place` — commit the fixes onto the **current branch**, with no worktree, no fix branch and
   no pull request. What `/release` step 4 passes: the branch it is standing on is the branch the tag
   will be cut from, so the fix reaches the tag by sitting still. Without it the fixes go on their own
   branch and open a PR, which is what a standalone run on protected `main` needs.
+- `--label <text>` — what the commits and the report call this run. Defaults to the version argument,
+  or `unreleased-<today>` without one. `/release` step 4 passes the version it is about to cut, since
+  no tag exists for it to pass as `<version>` yet.
 - `--dry-run` — run every stage and leave the fixes uncommitted, then stop before any commit, push or
   PR; print the PR body instead. Never asks the maintainer anything.
 - `--base <ref>` — the commit claims are judged against. Without `--in-place` the fix branch also
@@ -54,20 +57,25 @@ scripts are under no such constraint, and they are not retyped by an agent on ev
 
 **`--in-place` needs no guard and gets none.** The whole point of it is that the checkout, the claims
 being judged and the tree the fix lands in are one and the same, so there is nothing for a guard to
-compare. What it does require is that `docs/user` and `messages` carry nothing uncommitted — §6
+compare. What it does still require is a branch that is not `main`, since `main` takes no direct
+commit.
+
+**Every run, in-place or not, requires `docs/user` and `messages` to carry nothing uncommitted.** §6
 commits the fixer's work with `git add -A docs/user`, which would otherwise sweep in whatever was
-already there, untracked files included — and a branch that is not `main`.
+already there — untracked files included, which is why the check is `git status --porcelain` and not
+`git diff --quiet`. It is scoped to those two paths so an unrelated dirty file cannot block an audit
+that could not touch it.
 
 **Without `--in-place`, a printed `PR_COUNT` above zero** means an open or merged PR for `$BRANCH`
 exists and stages 2–3 already ran: skip them, skip the guard entirely, and link the PR in the report
 — stage 1 judges claims against the checkout as it stands. **Stage 1 always runs** — inside a release
 it decides whether the tag may be cut.
 
-The guard, when it applies, is what lets every agent read the working tree as the claims it judges.
-It always requires `docs/user` and `messages` to match `$BASE`; it requires `src` to match `$BASE`
-too, but only when `$VER` is empty — a release checkout is the code that ships, fix-forwards
-included, while the fix branch still starts from `$BASE`, so mid-cycle `src` must agree with `$BASE`
-and a release run must not demand that.
+The `$BASE` guard — the standalone shape's, not the in-place one's — is what lets every agent read
+the working tree as the claims it judges while the fix lands on a branch cut from somewhere else. It
+requires `docs/user` and `messages` to match `$BASE` always, and `src` to match it too unless a
+version argument says this is a checkout of an already-tagged release, whose `src` legitimately holds
+fix-forwards `$BASE` lacks.
 
 `$START` is the commit the audit began at. Under `--in-place` the reviewer compares against it rather
 than against `$BASE`, which is the branch itself and moves the moment §6 commits.
@@ -135,7 +143,7 @@ brief beside this file with its `{{...}}` slots filled:
 | `link-auditor.md`    | run                                      | `docs.diff` is empty        |
 
 Slots: `{{ROOT}}`; `{{KIND}}` and `{{BULLET}}` from the line (small, stay inline); `{{STRINGS}}` the
-`added` and `changed` rows as `kind<TAB>key<TAB>text` (small, stays inline); `{{COMMITS}}` the
+`added` and `changed` rows verbatim from `strings.tsv` (small, stays inline), which is three columns for an `added` row and four for a `changed` one; `{{COMMITS}}` the
 **path** of `$OUT/commits.txt`; `{{DOCS_DIFF}}` the path of `$OUT/docs.diff`; `{{CALL_SITES}}` the
 path of `$OUT/call-sites.txt`; `{{PREV}}` and `{{UPPER}}` the range endpoints, for the link auditor's
 per-page diff command; `{{PRIOR}}` the agent's own verdict from a previous run, or `none`. A real
@@ -187,8 +195,10 @@ same prompt; a second failure goes in the report as "not audited".
   `--dry-run`, ask the maintainer one question per item: **write it now** or **ruled out**, with a
   reason.
   - **write it now** — the item is prose that does not exist yet, so it is `/docs-authoring`'s job,
-    not the fixer's. Under `--in-place` it is written and committed on this branch before the skill
-    returns, and the release waits for it.
+    not the fixer's, and it happens **after §6 has committed**, never alongside it. The reviewer
+    judges the fixer's edits against `{{BEFORE}}` and restores anything still disputed to that text,
+    which for newly authored prose would mean deleting it. Under `--in-place` the new section is
+    written and committed on this branch before the skill returns, and the release waits for it.
   - **ruled out** — the reason goes in the report and nothing is written.
 
   **Nothing is deferred.** No issue is filed for an uncovered item, in a release run or outside one.
@@ -212,7 +222,7 @@ same prompt; a second failure goes in the report as "not audited".
 Skip when the fixer input is empty or the PR already exists.
 
 **Under `--in-place` there is no worktree and no fix branch.** The tree the auditors judged is the
-tree the fix belongs in, so the fixer edits `$ROOT` directly and `$WORK` is `$ROOT`. That is not a
+tree the fix belongs in, so the fixer edits `$ROOT` directly and `{{WORK}}` is filled with it. That is not a
 shortcut: the worktree exists because, in the branch-and-PR shape, the audited checkout and the
 commit the fix must be based on are two different trees and only one can be checked out.
 `--in-place` collapses them into one, which also spares the worktree's `npm ci` — the live checkout
@@ -249,12 +259,12 @@ fixer received.
   under **Dropped**.
 
 Then commit one commit per changed file. `git diff --name-only` misses files the fixer created, so
-stage everything under `docs/user` first and commit per staged file. `$WORK` is the worktree, or
-`$ROOT` under `--in-place`; with `--dry-run`, skip this block and leave the edits uncommitted for
-inspection with `git diff`:
+stage everything under `docs/user` first and commit per staged file. `${WT:-$ROOT}` is the worktree
+when one was cut and the checkout itself under `--in-place`, where `env.sh` never sets `WT`; with
+`--dry-run`, skip this block and leave the edits uncommitted for inspection with `git diff`:
 
 ```bash
-cd <ROOT> && . <OUT>/env.sh && cd "$WORK"
+cd <ROOT> && . <OUT>/env.sh && cd "${WT:-$ROOT}"
 
 git add -A docs/user
 for f in $(git diff --cached --name-only); do

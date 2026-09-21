@@ -6,7 +6,9 @@ Work in `{{ROOT}}` (cd there first).
 
 ## Strings the release added or reworded
 
-Tab-separated `kind`, `key`, `English text` — `kind` is `added` or `changed`:
+Tab-separated. An `added` row is `added`, `key`, `English text`; a `changed` row is `changed`, `key`,
+**old** text, **new** text — judge the new one, which is what ships, and treat the old one only as
+context for what moved:
 
 {{STRINGS}}
 
