@@ -44,8 +44,18 @@ this period":
 ```
 
 `source` selects the period note, its notelets, or both. `depth` selects the
-period's own notes (`literal`) or gathers from every journal in shelf scope whose
-periods fall inside the target period (`rollup`), so a month can show its days.
+period's own notes (`literal`) or **those plus** every journal in shelf scope
+whose periods fall inside the target period (`rollup`), so a month can show its
+days. Rollup **widens** `literal` rather than replacing it: a month listing that
+dropped the month note's own items while showing all thirty days' would surprise
+anyone who writes tasks in their monthly note.
+
+`selection` resolves **per journal, as the walk reaches each note** — day notes
+by the day journal's headings, week notes by the week journal's. A single value
+cannot serve a rollup, because the journals it spans have different templates:
+given a daily template with `## Tasks` and a weekly one with `## Week focus`,
+either value silences one of them entirely. A `selection` given on the fence
+overrides, for the single-journal case where one value is correct.
 
 Listings take both axes. **Decoration conditions take `source` only.** Rollup
 stays listing-only: the decoration engine evaluates per cell across a whole grid,
