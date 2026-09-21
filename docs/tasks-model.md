@@ -78,11 +78,29 @@ by provider identity — path and position for a checkbox, path for a note —
 carrying which relations matched, so a surface can tell them apart without
 listing the item twice.
 
-**Capability.** An item is movable and stampable only if its provider yields both
-a path and a position. Day Planner reached the same split independently — its
-`RemoteTimeBlock` has neither field, under the comment that vault-sourced blocks'
-"position in the file is always known". An item with no position is render-only,
-structurally rather than by policy.
+**Capability.** Three, and they do not travel together. What separates them is
+what an item _is_ — a span inside a note, or a whole note:
+
+- **movable** — its bytes relocate into another note. Only a span can: cut those
+  bytes, paste them elsewhere, and it is the same task in a new home.
+- **stampable** — our marker is written onto it. Same requirement, same reason.
+- **retargetable** — the date it answers by is changed. Needs a _writable date_:
+  an anchored token already present in the line, or a frontmatter property.
+
+So the checkbox item is movable and stampable always, retargetable only when its
+line already carries a date signifier. The note-property item is the inverse —
+never movable, always retargetable. Nothing can be cut out of it: excising
+`scheduled: 2026-09-21` from one note's frontmatter and pasting it into another
+destroys one task and corrupts the other note. Changing that value is the whole
+of moving it to another period.
+
+The test is deliberately not "does the provider yield a position". Obsidian does
+expose `frontmatterPosition` (since 1.4.0), and `FrontMatterCache` is a plain
+record with no per-property spans — but even a span on the `scheduled:` line
+would not make the item movable. Day Planner's split lands in the same place from
+the other side: its `RemoteTimeBlock` carries neither `path` nor `position`,
+beside the vault-sourced branch's comment that "its position in the file is
+always known".
 
 ## Providers
 
@@ -99,10 +117,10 @@ checklist lights a day that the user's own task queries deliberately ignore.
 Deciding which lines count is the provider's job, not a special case bolted to
 the checkbox reader.
 
-| Provider        | Item is                                                                | Relations         | Movable                      |
-| --------------- | ---------------------------------------------------------------------- | ----------------- | ---------------------------- |
-| `checkbox`      | a list item with a task marker                                         | containment, date | yes                          |
-| `note-property` | a note matching an identification rule, dated by a configured property | date              | no — its date is frontmatter |
+| Provider        | Item is                                                                | Relations         | Movable                              |
+| --------------- | ---------------------------------------------------------------------- | ----------------- | ------------------------------------ |
+| `checkbox`      | a list item with a task marker                                         | containment, date | yes                                  |
+| `note-property` | a note matching an identification rule, dated by a configured property | date              | no — it is a note, not a span in one |
 
 `note-property` is what makes the plugin work for TaskNotes (1.4M installs),
 where a task is a note tagged `#task` or identified by a property, carrying
