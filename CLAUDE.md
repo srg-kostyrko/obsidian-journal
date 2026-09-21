@@ -178,7 +178,11 @@ on it.
   from each window's DOM `focus` listener, so e2e drives it by dispatching
   `new FocusEvent("focus")` on the window (`focusMainWindow`): `win.focus()`
   alone asks the OS window manager, which may refuse, and a leaf merely becoming
-  active moves nothing. The one deliberate exception is a
+  active moves nothing. That dispatch has to be **re-driven inside the wait**,
+  not sent once — the listener assigns synchronously, so a passive poll only
+  reads back its own write, and macOS delivers the popout's real `focus` long
+  after the window opened, which flips `activeWindow` back for good. The one
+  deliberate exception is a
   **pinned** open (`#findPinnedLeaf`): it searches every window and focuses the
   journal's pinned tab wherever it is, because that tab is where the user chose
   to keep the journal and a window-scoped search would pin a second one. Its
@@ -381,6 +385,14 @@ on it.
 - Obsidian's editor zoom scales authored pixels (3px renders as 2.66667px).
   Assert widths through the rounding reader and colors via `getCSSProperty`
   parsed hex, from a custom hex fixture rather than a theme variable.
+- The WebDriver pointer is session state — it stays where the previous test left
+  it, and `mouseenter` never re-fires for a pointer that has not left. So a hover
+  test following another hover test inherits both the parked pointer _and_ the
+  popover still open under it: its own hover is a no-op and its wait passes on
+  the leftover. Park the pointer off the target and wait the leftover out before
+  hovering (`mark-limit.e2e.ts`). Such a test reads green for as long as the
+  leftover keeps arriving and fails the first night it does not, with nothing
+  left to re-drive the hover.
 - A test that opens `mode=window` must call `closePopoutWindows()`, or the
   popout steals the next test's modals.
 - Mocha runs a suite's **own** tests before its nested suites, and the shared

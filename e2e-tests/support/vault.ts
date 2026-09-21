@@ -276,19 +276,33 @@ export async function pinNote(path: string): Promise<void> {
 // real window focus, not on a leaf becoming active. Obsidian moves it from each window's DOM
 // `focus` listener, and `win.focus()` alone only asks the OS window manager, which may refuse
 // (focus-stealing prevention) — so the event is dispatched too, reaching that same listener.
+// The wait re-dispatches rather than only polling, because that listener runs synchronously: one
+// dispatch and a passive wait reads back its own write and then has nothing left to answer the
+// popout's *real* focus event, which macOS delivers long after the window opened. That arrival
+// flips `activeWindow` back to the popout, and the poll spins to its timeout with no one driving
+// it. The first dispatch stays outside the loop so the leaf activation runs even when the window
+// never lost focus.
 export async function focusMainWindow(): Promise<void> {
-  await browser.executeObsidian(({ app }) => {
-    const win = app.workspace.containerEl.win;
-    win.focus();
-    win.dispatchEvent(new FocusEvent("focus"));
-    const inMain = app.workspace.getLeavesOfType("markdown").find((leaf) => leaf.getRoot() === app.workspace.rootSplit);
-    if (inMain) app.workspace.setActiveLeaf(inMain, { focus: true });
-  });
+  const focusMain = async (): Promise<void> => {
+    await browser.executeObsidian(({ app }) => {
+      const win = app.workspace.containerEl.win;
+      win.focus();
+      win.dispatchEvent(new FocusEvent("focus"));
+      const inMain = app.workspace
+        .getLeavesOfType("markdown")
+        .find((leaf) => leaf.getRoot() === app.workspace.rootSplit);
+      if (inMain) app.workspace.setActiveLeaf(inMain, { focus: true });
+    });
+  };
+  await focusMain();
   await browser.waitUntil(
-    async () =>
-      browser.executeObsidian(
+    async () => {
+      const focused = await browser.executeObsidian(
         ({ app }) => app.workspace.containerEl.win.activeWindow === app.workspace.containerEl.win,
-      ),
+      );
+      if (!focused) await focusMain();
+      return focused;
+    },
     { timeoutMsg: "main window never regained focus after the popout opened" },
   );
 }
