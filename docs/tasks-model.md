@@ -791,12 +791,22 @@ destructive operation in the plugin.
 Cut by **provider**, not by relation. The expensive thing is not the date
 relation — it is the checkbox provider's implementation of it.
 
-1. `checkbox` provider, **containment** only; the listing and its surfaces;
-   `source` on decoration conditions. The path-set half of the API already
-   shipped in 3.4.0 — `existingNotes(selector)` returns every note the matched
-   journals have written and `notesInRange` narrows it to a window, both
-   resolving custom intervals and non-obvious week boundaries. What is left is
-   `previousNote` / `nextNote` and `depth` handling.
+1. `checkbox` provider, **containment** only; the listing and its surfaces,
+   **including ticking**; the single parameterized `tasks` decoration condition
+   and the rewrite of the two it replaces; `tasksFor`. The path-set half of the
+   API already shipped in 3.4.0 — `existingNotes(selector)` returns every note
+   the matched journals have written and `notesInRange` narrows it to a window,
+   both resolving custom intervals and non-obvious week boundaries. What is left
+   there is `previousNote` / `nextNote` and `depth` handling.
+
+   **This phase is not read-only**, as #345 currently frames it. Ticking needs
+   one character overwritten plus the delegation for recurring lines, and shares
+   nothing with the move — no target resolution, no placement, no subtree, no
+   marker. Holding it back would not avoid the write machinery, only leave a task
+   list nobody can act on. Two things therefore arrive here rather than with the
+   move: whatever enforces "overwrite only tokens we found", and the Tasks
+   capability check.
+
 2. `note-property` provider with its date→paths index — small, `metadataCache`
    only, no text cache, no `cachedRead`, and it covers TaskNotes plus every
    hand-rolled `due:` / `scheduled:` convention.
