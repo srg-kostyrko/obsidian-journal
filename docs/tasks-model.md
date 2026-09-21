@@ -310,6 +310,36 @@ In move mode, where the source line is removed, **a failure between the two
 writes leaves a duplicate, never a gap.** The target is written first for that
 reason.
 
+### Items nest, so movement is per subtree
+
+Eligibility defaults to `status: open` and is set through the same axis as a
+listing's. But an item can nest, and then what moves is not the item:
+
+```
+- [x] Shopping
+    - [ ] milk
+    - [x] bread
+```
+
+`milk` is eligible and `Shopping` is not. Moving `milk` alone lands a bare
+`- [ ] milk` in the target, stripped of what it was for; moving `Shopping` too
+contradicts eligibility. Dropping every `[x]` line is the naive rule and this is
+where it breaks — Rollover Daily Todos #174 is that bug reported against the
+incumbent.
+
+1. **Children travel with their parent.** A subtree is indivisible when it moves.
+2. **Eligibility picks _roots_, not items.** An item is a root when it is
+   eligible and no ancestor of it is also being moved.
+3. **An ineligible ancestor of an eligible item is carried as context** — copied
+   into the target so the child keeps its meaning, **not stamped** in the source
+   because it did not move, and **not counted** in the report.
+
+So the target gets `Shopping` with `milk` under it and nothing else. `bread`
+stays behind; it is done and nothing needs it. `Shopping` appears in both notes,
+unstamped in the source, because it is context in one and a record in the other.
+
+**`movable` is therefore a property of a subtree, not of an item.**
+
 **Reach is unbounded, and reported.** `JournalIndex.findPrevious` binary-searches
 the anchors of notes that _exist_, so it already spans gaps — after a two-week
 break it finds the note from two weeks ago, which is exactly when a rollover
