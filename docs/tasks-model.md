@@ -214,14 +214,49 @@ and `all-tasks-completed` **true** — a day holding only in-progress work
 decorated as finished. Adopting `todo` as the unknown default is therefore a
 behavior change, not a clarification.
 
-Which markers mean what is configurable, as a marker→type map rather than a flat
-list of done markers, so a vault where `[/]` means in-progress agrees with both
-plugins at once.
+### The map
+
+Which markers mean what is **configurable**, as a `symbol → type` map rather than
+a flat list of done markers, so a vault where `[/]` means in-progress agrees with
+both plugins at once.
+
+That map is a strict subset of the Tasks plugin's `StatusConfiguration`, which is
+`symbol → { name, nextSymbol, type }`. `nextSymbol` is what clicking a checkbox
+cycles to; the plugin never toggles a task, so it carries symbol and type and
+nothing else.
+
+**We do not read their settings.** Their `apiV1` is three methods and exposes no
+statuses, so reaching the map would mean walking
+`app.plugins.plugins["obsidian-tasks-plugin"]` — an optional dependency on
+undocumented internals, which silently changes our behavior when they ship a
+release. The model's "no dependency on any task plugin" is exactly this case.
+
+**The shipped default is a middle ground across the popular themes**, not the
+Tasks minimum. A themed vault registers a dozen custom symbols, and a default
+covering only `' '`, `x`, `/`, `-`, `h` and `Q` would type all of them unknown.
+The table is **derived, not guessed**: take the union of symbols across the
+status collections Tasks ships (ITS, Minimal, AnuPpuccin, Aura, Ebullientworks,
+LYT Mode, Things, SlRvb), assign each the majority type, and record the symbols
+where collections disagree rather than silently picking one.
+
+`X` carries `done` alongside `x`. Many themes render capital X as complete, and
+today every non-space marker counts as done — so omitting it turns those days
+from done to open, which is the one regression this change would otherwise cause.
+
+**A symbol whose meaning is decorative rather than a state of work maps to
+`non-task`, not `todo`.** A `[!]` important callout or a `["]` quote typed as
+`todo` lights its day as having open work **forever**: nothing completes it, so
+the dot never clears. That is worse than the bug being fixed, because it is
+unclearable rather than merely wrong. The rule also makes the default err toward
+silence on symbols we are unsure about, which is the right direction for a
+behavior change landing on vaults people already run.
 
 **Changing this changes existing vaults**: a decoration reading "all tasks
 completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
 
-**Open.** Whether a rolled-forward line gets its own type. Normalizing the
+**Open.** Whether a rolled-forward line gets its own type. `>`
+(forwarded/rescheduled) is already common across the theme collections above, so
+the type would have an established symbol rather than needing one invented. Normalizing the
 left-behind marker to something other than `todo` is what stops a rolled line
 reading as open work — in the listing, in the decorations, and in the move's own
 eligibility check, which is otherwise a separate rule that has to be kept in
