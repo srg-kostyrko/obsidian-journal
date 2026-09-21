@@ -463,6 +463,36 @@ This is a schema change to configs people already run, so it carries a
 **deterministic rewrite** of the two old condition types into the new one, not a
 release note.
 
+## What the API exposes
+
+The path set answers _"which notes are September's"_, which is genuinely
+unresolvable in DQL. It does **not** answer _"which items, with what status"_: a
+consumer handed thirty paths still parses the task lines itself and still has to
+decide what `[/]` means, and it cannot reach the same answer we do, because the
+status map is user configuration living in our settings. Their query and our
+calendar then disagree about the same day — the failure this model exists to
+prevent, leaking into user-written queries.
+
+So the API gains one call, alongside the `noteletsFor` precedent
+(`docs/plugin-api.md:53`):
+
+```ts
+tasksFor(selector, date, options?): Promise<readonly TaskItem[]>;
+```
+
+It returns resolved items — path, `display`, normalized `status`, dates, and
+which relation matched. Its options are the **flat sugar keys only**: `source`,
+`depth`, `date`, `status`. No `conditions` array, no `mode`, nothing about
+providers.
+
+That is deliberate. A consumer gets agreement with our calendar for free, and the
+public surface commits to none of the parts still moving — which is what "closed
+now, open-shaped" has to mean in practice, and this is the first place it would
+have been quietly violated by exposing the whole query model.
+
+It is still a commitment: `docs/plugin-api.md` carries a stability policy, and
+this call falls under it.
+
 ## Moving items
 
 A move copies by default: the source line stays, so the previous note remains a
