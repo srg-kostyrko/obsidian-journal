@@ -61,10 +61,17 @@ Listings take both axes. **Decoration conditions take `source` only.** Rollup
 stays listing-only: the decoration engine evaluates per cell across a whole grid,
 and a rolled-up year cell would walk hundreds of notes per render.
 
-`depth` pairs with **containment only**. It decides which notes to read, and the
-date relation does not reach a period through notes — it asks whether an item's
-date falls inside the period, which already spans all of it. Rolling up a date
-query is a no-op at best and a double-count at worst.
+**`Scope` is what containment means.** Both its axes decide which notes to read,
+and the date relation does not reach a period through notes at all — it asks
+whether an item's date falls inside the period. Rolling up a date query is a
+no-op at best and a double-count at worst, and `source` has nothing to bite on: a
+note-property item scheduled for the 21st lives in its own note, neither the
+21st's period note nor its notelets, so `note` cannot include it and `notelets`
+cannot exclude it. Filtering date-related items by where they live would
+contradict the relation's own definition.
+
+So a listing asking for date-related items takes neither axis. Its options are
+`provider`, `status` and `selection` alone.
 
 An item matching a period by **both** relations is yielded **once**, deduplicated
 by provider identity — path and position for a checkbox, path for a note —
@@ -245,6 +252,10 @@ every incumbent.
 A move copies by default: the source line stays, so the previous note remains a
 record of what was actually written that day, and nothing needs a bespoke undo
 spanning two files.
+
+In move mode, where the source line is removed, **a failure between the two
+writes leaves a duplicate, never a gap.** The target is written first for that
+reason.
 
 **Reach is unbounded, and reported.** `JournalIndex.findPrevious` binary-searches
 the anchors of notes that _exist_, so it already spans gaps — after a two-week
