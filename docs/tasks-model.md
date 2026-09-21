@@ -278,7 +278,7 @@ Dataview and the Tasks plugin each own one; this plugin does not become the
 third.
 
 The condition types, and their sugar keys, are `provider`, `source`, `depth`,
-`date`, `status` and `selection`. Anything
+`date`, `status`, `selection` and `sort`. Anything
 outside them is answered by handing the resolved path set to Dataview, which is
 the supported form of the "use Dataview for that" answer — a DQL query cannot
 resolve which notes are September's journal notes without the user hand-encoding
@@ -331,6 +331,16 @@ document's ruling on where `on-hold` belongs.
 filtering: a `non-task` item never appears in a listing, never lights a
 decoration and is never picked up by a move, whatever `status` says. Naming it in
 a fence means nothing.
+
+**`sort` — one key, enumerated:** a date role, `status`, or `document` for the
+order the lines are written in, which is the default. It needs no parser and
+refusing it would push people to Dataview for something trivial.
+
+**`group` is deferred**, not refused. The listing already groups — #345 specifies
+the grouped-entries shape the notelets listing uses, and a rollup groups by
+source note by construction. A user-chosen grouping therefore has to say how it
+composes with the one already there, and nobody has asked yet. When someone does,
+the question is how the two interact, not whether it is allowed.
 
 **`selection` — which lines inside the notes.** Its inputs are headings and tags,
 both of which `metadataCache` already resolves without interpreting a single task
