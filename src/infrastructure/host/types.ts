@@ -61,3 +61,27 @@ export interface MenuItemSpec {
   readonly icon: string;
   readonly onClick: () => void;
 }
+
+export interface StructureListItem {
+  readonly marker: string;
+  readonly line: number;
+  readonly endLine: number;
+}
+
+export interface StructureTag {
+  readonly tag: string;
+  readonly line: number;
+}
+
+export interface StructureHeading {
+  readonly heading: string;
+  readonly level: number;
+  readonly line: number;
+}
+
+export interface NoteStructure {
+  readonly listItems: readonly StructureListItem[];
+  readonly tags: readonly StructureTag[];
+  readonly headings: readonly StructureHeading[];
+  readonly frontmatterTags: readonly string[];
+}

@@ -20,6 +20,7 @@ import type { Disposer } from "./input-suggests/types";
 import type { MarkdownRenderService } from "./internal/markdown-render-service";
 import type { NoteMetadataService } from "./internal/note-metadata-service";
 import type { NoteSizeEvents, NoteSizeService } from "./internal/note-size-service";
+import type { NoteStructureService } from "./internal/note-structure-service";
 import type { NotesService } from "./internal/notes-service";
 import type { NoticeService } from "./internal/notice-service";
 import type { PluginData } from "./internal/plugin-data";
@@ -31,6 +32,7 @@ import type {
   NoteMetadata,
   NotesEvents,
   NoteSize,
+  NoteStructure,
   OpenMode,
   PinTarget,
   VaultPath,
@@ -465,6 +467,19 @@ export class FakeNoteMetadataService implements Pick<NoteMetadataService, "get" 
 
   emitResolved(): void {
     for (const callback of this.#resolvedCallbacks) callback();
+  }
+}
+
+export class FakeNoteStructureService implements Pick<NoteStructureService, "get"> {
+  readonly #entries = new Map<VaultPath, NoteStructure>();
+
+  setStructure(path: VaultPath, structure: NoteStructure): void {
+    this.#entries.set(path, structure);
+  }
+
+  get(path: VaultPath): Option<NoteStructure> {
+    const hit = this.#entries.get(path);
+    return hit ? new Some(hit) : new None<NoteStructure>();
   }
 }
 
