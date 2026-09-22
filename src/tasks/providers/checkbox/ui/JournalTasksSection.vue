@@ -39,7 +39,14 @@ function persist(): void {
   const checkbox: CheckboxJournalRule | undefined =
     compose.value === "inherit"
       ? undefined
-      : { compose: compose.value, mode: editable.value.mode, conditions: editable.value.conditions };
+      : {
+          compose: compose.value,
+          mode: editable.value.mode,
+          // Copied on the way out, not passed by reference: update() merges shallowly, so handing
+          // over this array would make the store hold the very array the editor keeps mutating —
+          // and every later keystroke would land in settings without going through persist().
+          conditions: editable.value.conditions.map((condition) => ({ ...condition })),
+        };
   journalsRepo.update(journalName, { tasks: { ...config.value.tasks, checkbox } });
 }
 

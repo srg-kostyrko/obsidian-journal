@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
+import { nextTick } from "vue";
 
 import { JournalsEventsToken, JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -66,6 +67,23 @@ describe("JournalTasksSection", () => {
     await userEvent.click(screen.getByTestId("rule-add-condition"));
 
     expect(updates.some(([name, changes]) => name === "Daily" && "tasks" in changes)).toBe(true);
+  });
+
+  // update() merges shallowly, so an array handed to it by reference becomes the stored value
+  // itself — every later editor mutation would then land in settings without passing through
+  // persist(), and a sync refresh that replaces the stored array would leave the editor holding an
+  // orphan. Reaching through the store and pushing is how that aliasing shows: a copy makes the
+  // push invisible to the editor, a live binding renders it.
+  it("hands the store its own array, not the editor's", async () => {
+    const { screen, repository } = await mount({ checkbox: { compose: "narrow", mode: "and", conditions: [] } });
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+
+    const stored = repository.get("Daily");
+    const conditions = stored.isSome() ? stored.value.tasks.checkbox?.conditions : undefined;
+    conditions?.push({ type: "tag", condition: "has", tags: ["outside"] });
+    await nextTick();
+
+    expect(screen.queryByDisplayValue("outside")).toBeNull();
   });
 
   it("leaves other journals untouched", async () => {
