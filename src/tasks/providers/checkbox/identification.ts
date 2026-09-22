@@ -6,7 +6,7 @@ import type { CheckboxCondition, CheckboxJournalRule, CheckboxRule } from "./rul
 
 export interface IdentificationContext {
   readonly structure: NoteStructure;
-  readonly global: CheckboxRule;
+  readonly vault: CheckboxRule;
   readonly journal: CheckboxJournalRule | null;
 }
 
@@ -60,8 +60,8 @@ function evaluate(
 }
 
 export function identifies(item: StructureListItem, context: IdentificationContext): boolean {
-  const { structure, global, journal } = context;
-  if (!journal || journal.compose === "inherit") return evaluate(global, item, structure);
+  const { structure, vault, journal } = context;
+  if (!journal || journal.compose === "inherit") return evaluate(vault, item, structure);
   if (journal.compose === "replace") return evaluate(journal, item, structure);
-  return evaluate(global, item, structure) && evaluate(journal, item, structure);
+  return evaluate(vault, item, structure) && evaluate(journal, item, structure);
 }

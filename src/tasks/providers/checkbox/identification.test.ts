@@ -27,48 +27,46 @@ const underTasks = {
 };
 
 describe("identifies", () => {
-  it("treats an empty global rule as no constraint", () => {
-    expect(identifies(item, { structure, global: empty, journal: null })).toBe(true);
+  it("treats an empty vault rule as no constraint", () => {
+    expect(identifies(item, { structure, vault: empty, journal: null })).toBe(true);
   });
   it("matches an inline tag on the item's own line", () => {
-    expect(identifies(item, { structure, global: tagged, journal: null })).toBe(true);
-    expect(identifies(item, { structure, global: otherTag, journal: null })).toBe(false);
+    expect(identifies(item, { structure, vault: tagged, journal: null })).toBe(true);
+    expect(identifies(item, { structure, vault: otherTag, journal: null })).toBe(false);
   });
   it("matches a frontmatter tag for every item in the note", () => {
     const noteTagged = { ...structure, tags: [], frontmatterTags: ["#task"] };
-    expect(identifies(item, { structure: noteTagged, global: tagged, journal: null })).toBe(true);
+    expect(identifies(item, { structure: noteTagged, vault: tagged, journal: null })).toBe(true);
   });
   it("does not let a nested child inherit its parent's tag", () => {
     const child: StructureListItem = { marker: " ", line: 6, endLine: 6 };
     const withChild = { ...structure, listItems: [item, child] };
-    expect(identifies(child, { structure: withChild, global: tagged, journal: null })).toBe(false);
+    expect(identifies(child, { structure: withChild, vault: tagged, journal: null })).toBe(false);
   });
-  it("narrows the global rule with the journal's", () => {
-    expect(identifies(item, { structure, global: tagged, journal: underTasks })).toBe(true);
+  it("narrows the vault rule with the journal's", () => {
+    expect(identifies(item, { structure, vault: tagged, journal: underTasks })).toBe(true);
     const elsewhere: StructureListItem = { marker: " ", line: 2, endLine: 2 };
     const before = { ...structure, listItems: [elsewhere], tags: [{ tag: "#task", line: 2 }] };
-    expect(identifies(elsewhere, { structure: before, global: tagged, journal: underTasks })).toBe(false);
+    expect(identifies(elsewhere, { structure: before, vault: tagged, journal: underTasks })).toBe(false);
   });
-  it("ignores the global rule when the journal replaces it", () => {
-    expect(identifies(item, { structure, global: otherTag, journal: { ...underTasks, compose: "replace" } })).toBe(
-      true,
-    );
+  it("ignores the vault rule when the journal replaces it", () => {
+    expect(identifies(item, { structure, vault: otherTag, journal: { ...underTasks, compose: "replace" } })).toBe(true);
   });
-  it("uses the global rule alone when the journal inherits", () => {
-    expect(identifies(item, { structure, global: otherTag, journal: { ...underTasks, compose: "inherit" } })).toBe(
+  it("uses the vault rule alone when the journal inherits", () => {
+    expect(identifies(item, { structure, vault: otherTag, journal: { ...underTasks, compose: "inherit" } })).toBe(
       false,
     );
   });
   it("combines conditions with or when asked", () => {
     const either = { mode: "or" as const, conditions: [...otherTag.conditions, ...tagged.conditions] };
-    expect(identifies(item, { structure, global: either, journal: null })).toBe(true);
+    expect(identifies(item, { structure, vault: either, journal: null })).toBe(true);
   });
   it("supports negated conditions", () => {
     const lacks = {
       mode: "and" as const,
       conditions: [{ type: "tag" as const, condition: "lacks" as const, tags: ["#habit"] }],
     };
-    expect(identifies(item, { structure, global: lacks, journal: null })).toBe(true);
+    expect(identifies(item, { structure, vault: lacks, journal: null })).toBe(true);
   });
   it("walks the heading chain upward by strictly smaller level, skipping a same-level sibling", () => {
     const nested: NoteStructure = {
@@ -93,8 +91,8 @@ describe("identifies", () => {
       mode: "and" as const,
       conditions: [{ type: "heading" as const, condition: "under" as const, headings: ["Today"] }],
     };
-    expect(identifies(item, { structure: nested, global: underLater, journal: null })).toBe(true);
-    expect(identifies(item, { structure: nested, global: underTasksOnly, journal: null })).toBe(true);
-    expect(identifies(item, { structure: nested, global: underToday, journal: null })).toBe(false);
+    expect(identifies(item, { structure: nested, vault: underLater, journal: null })).toBe(true);
+    expect(identifies(item, { structure: nested, vault: underTasksOnly, journal: null })).toBe(true);
+    expect(identifies(item, { structure: nested, vault: underToday, journal: null })).toBe(false);
   });
 });
