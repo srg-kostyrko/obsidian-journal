@@ -2357,5 +2357,12 @@
   "tasks_status_non_task": "Not a task",
   "tasks_status_rolled": "Rolled over",
   "tasks_settings_add_symbol": "Add symbol",
-  "tasks_settings_new_symbol_label": "New symbol"
+  "tasks_settings_new_symbol_label": "New symbol",
+
+  "tasks_journal_section_title": "Task identification",
+  "tasks_journal_compose": "Combine with the vault-wide rule",
+  "tasks_journal_compose_desc": "Inherit uses the vault-wide rule alone. Narrow requires a line to satisfy both rules. Replace uses this journal's rule alone.",
+  "tasks_journal_compose_inherit": "Inherit",
+  "tasks_journal_compose_narrow": "Narrow",
+  "tasks_journal_compose_replace": "Replace"
 }
