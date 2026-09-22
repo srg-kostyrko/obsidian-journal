@@ -4,6 +4,7 @@ import { ref, watch } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { JournalsRepository } from "@/journals";
+import { manual } from "@/ui/manual";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
@@ -51,7 +52,7 @@ watch(editable, persist, { deep: true });
 </script>
 
 <template>
-  <UiSettingRow heading :name="m.tasks_journal_section_title()" />
+  <UiSettingRow heading :name="m.tasks_journal_section_title()" :help="manual.tasks.journalRule" />
   <UiSettingRow :name="m.tasks_journal_compose()" stacked>
     <template #description>{{ m.tasks_journal_compose_desc() }}</template>
     <div class="tasks-journal-compose" data-testid="compose" :data-value="compose">

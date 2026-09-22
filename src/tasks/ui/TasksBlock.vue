@@ -4,6 +4,7 @@ import { ref, type Component } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { icons } from "@/ui/icons";
+import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 
@@ -21,7 +22,7 @@ const expanded = ref(false);
 </script>
 
 <template>
-  <UiCollapsibleBlock v-model:expanded="expanded">
+  <UiCollapsibleBlock v-model:expanded="expanded" :help="manual.tasks.page">
     <template #trigger>
       <UiIconedRow :icon="icons.section.tasks">{{ m.tasks_settings_title() }}</UiIconedRow>
     </template>

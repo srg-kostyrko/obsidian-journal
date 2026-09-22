@@ -264,7 +264,10 @@ A user whose vault uses a themed symbol set registers it in the map, as they
 already do in Tasks.
 
 **Changing this changes existing vaults**: a decoration reading "all tasks
-completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
+completed" stops matching notes that use `[/]`, or any marker the default map
+does not name — `[>]` among them. `[-]` is unaffected: it still maps to
+`cancelled`, which is still in the done alias, the same as before this map
+existed.
 
 ### `rolled`, and why the marker is both a tag and a type
 
