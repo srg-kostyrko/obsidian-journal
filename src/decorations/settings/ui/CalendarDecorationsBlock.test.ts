@@ -6,7 +6,7 @@ import { decorationsSlice } from "@/decorations/settings/slice";
 import { initLocale, m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
-import { tasksCoreModule } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { decorationsModule } from "../../module";

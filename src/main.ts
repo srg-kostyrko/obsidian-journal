@@ -30,7 +30,8 @@ import { calendarAppearanceModule } from "@/notes-calendar/appearance/module";
 import { settingsModule, SettingsService, SettingsTooNewError } from "@/settings";
 import { DataMigrationService, legacyMigrationsModule } from "@/settings/legacy";
 import { shelvesModule } from "@/shelves";
-import { TaskProviderRegistry, tasksModule } from "@/tasks";
+import { TaskProviderRegistry } from "@/tasks";
+import { tasksModule } from "@/tasks/module";
 import { templatesModule } from "@/templates";
 import { viewsModule, ViewHostService } from "@/views";
 

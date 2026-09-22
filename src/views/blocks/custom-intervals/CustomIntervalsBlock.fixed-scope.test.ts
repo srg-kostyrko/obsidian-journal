@@ -13,7 +13,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { customJournal } from "@/journals/testing";
 import { notesCalendarModule } from "@/notes-calendar/module";
 import { shelvesCoreModule } from "@/shelves/module";
-import { tasksCoreModule } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 import { viewsCoreModule } from "@/views/module";
 

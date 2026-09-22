@@ -5,12 +5,7 @@ import type { NoteMetadata, NoteSize } from "@/infrastructure/host";
 import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import type { NoteletEntry } from "@/journals/types";
-// Reaches into the leaf modules rather than the "@/tasks" barrel: that barrel re-exports
-// ./module, which pulls in TaskHostService's "@/journals" import — and @/journals reaches
-// back here through bulk-add-service.ts, which also imports from this file. status.ts and
-// types.ts carry no such path back, so importing them directly keeps the graph acyclic.
-import { isDone, isExcluded, isOpen } from "@/tasks/status";
-import type { TaskItem } from "@/tasks/types";
+import { isDone, isExcluded, isOpen, type TaskItem } from "@/tasks";
 
 import { matchesDate } from "./date-condition";
 

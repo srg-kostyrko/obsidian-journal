@@ -15,7 +15,7 @@ import { fixedJournal } from "@/journals/testing";
 import { notesCalendarModule } from "@/notes-calendar/module";
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
-import { tasksCoreModule } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 
 import TimelineCodeBlock from "./TimelineCodeBlock.vue";

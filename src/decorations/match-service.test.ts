@@ -7,7 +7,7 @@ import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
-import { tasksCoreModule } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { DecorationsStore } from "./decorations-store";

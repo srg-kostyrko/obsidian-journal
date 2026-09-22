@@ -12,8 +12,9 @@ import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
-import { TaskIndex, tasksCoreModule } from "@/tasks";
+import { TaskIndex } from "@/tasks";
 import type { TaskItem, TaskStatus } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { cellKey, DecorationEngine } from "./engine";

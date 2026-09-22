@@ -13,7 +13,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { tasksCoreModule } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 
 import { decorationsModule } from "../../module";

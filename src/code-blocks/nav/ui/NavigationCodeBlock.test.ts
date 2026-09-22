@@ -32,7 +32,7 @@ import { buildNavSegment, customJournal, fixedJournal } from "@/journals/testing
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { tasksCoreModule } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import NavigationCodeBlock from "./NavigationCodeBlock.vue";
