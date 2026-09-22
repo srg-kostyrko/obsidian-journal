@@ -1,7 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
-import { JournalsRepository } from "@/journals";
+import { JournalsEventsToken, JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer } from "@/testing";
@@ -48,6 +48,24 @@ describe("JournalTasksSection", () => {
     const config = repository.get("Daily");
     const checkbox = config.isSome() ? config.value.tasks.checkbox : undefined;
     expect(checkbox?.conditions).toMatchObject([{ type: "tag", condition: "has", tags: [] }]);
+  });
+
+  // TaskHostService only refreshes a journal's task index when JournalsRepository.update() fires
+  // an "updated" event with "tasks" among the changed keys (src/tasks/task-host.ts). A RuleEditor
+  // mutation that only ever lands on the value `repository.get()` returns — e.g. a live binding
+  // straight into the stored object, mutated in place — would satisfy every value-only assertion
+  // above while never producing that event, leaving the index silently stale. The rule starts
+  // already narrow (rather than reaching narrow via the compose-narrow button, which calls
+  // persist() directly) so this isolates the RuleEditor-driven mutation path specifically.
+  it("fires the repository's updated event with tasks among the changed keys when RuleEditor mutates the rule", async () => {
+    const { harness, screen } = await mount({ checkbox: { compose: "narrow", mode: "and", conditions: [] } });
+    const events = harness.resolve(JournalsEventsToken);
+    const updates: [string, object][] = [];
+    events.on("updated", (journalName, changes) => updates.push([journalName, changes]));
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+
+    expect(updates.some(([name, changes]) => name === "Daily" && "tasks" in changes)).toBe(true);
   });
 
   it("leaves other journals untouched", async () => {
