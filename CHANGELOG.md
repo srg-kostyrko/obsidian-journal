@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- A checkbox task marker other than a space no longer reads as completed by default. Every task used to count as done as soon as it carried any marker at all — `task !== " "` — so a note whose only task was `- [/] ...` satisfied **Check if all tasks are completed** and never **Check if note has open tasks**. Checkbox tasks are now read through a status map: `x` and `X` still read as Done and `-` still reads as Cancelled, all three still completed, but `/` now reads as In progress and any marker the map does not name — a theme's `[>]`, for instance — reads as To-do; both are open, not completed. **Status symbols**, under **Checkbox tasks** on the main settings page, is where you map a marker yourself if your vault's convention should read differently. See [Tasks](https://srg-kostyrko.github.io/obsidian-journal/tasks) in the manual.
+
 ## [3.5.1] - 2026-09-20
 
 ### Changed
