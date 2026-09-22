@@ -2,7 +2,7 @@ import { createNanoEvents } from "nanoevents";
 
 import { inject } from "@/infrastructure/di";
 import type { TypedEmitter } from "@/infrastructure/events";
-import type { VaultPath } from "@/infrastructure/host";
+import { NotesService, type VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import { JournalsEventsToken, JournalsIndex, JournalsRepository } from "@/journals";
 
@@ -20,9 +20,18 @@ export class TaskHostService implements TaskHost {
   readonly #repository = inject(JournalsRepository);
   readonly #emitter: TypedEmitter<TaskHostEvents> = createNanoEvents();
 
-  constructor(journalsEvents = inject(JournalsEventsToken)) {
+  constructor(journalsEvents = inject(JournalsEventsToken), notes = inject(NotesService)) {
     this.#journals.events.on("entryChanged", ({ entry }) => {
       this.#emitter.emit("changed", { kind: "note", path: entry.path });
+    });
+    // Editing a note's body changes no frontmatter, so JournalsIndex.register finds the slot and
+    // the payload unchanged and returns without emitting entryChanged — the feed above never sees a
+    // ticked, added or deleted checkbox. `metadata-changed` rather than `modified` because
+    // extraction reads metadataCache, so it wants the parse and not the bytes that precede it.
+    // Gated on ownership: an edit anywhere else in the vault must not bump the index version.
+    notes.events.on("metadata-changed", (path) => {
+      if (this.#journals.entryByPath(path).isNone()) return;
+      this.#emitter.emit("changed", { kind: "note", path });
     });
     // A journal's own rename/delete stream carries no field-level detail, so the one signal that
     // actually bears on a provider's rule is `updated` with `tasks` among the changed keys —

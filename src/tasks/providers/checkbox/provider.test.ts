@@ -309,3 +309,34 @@ describe("CheckboxTaskProvider hydration wiring", () => {
     expect(hydrated.at(0)?.capabilities.retargetable).toBe(true);
   });
 });
+
+// The refill trigger no other test covers: ticking a checkbox changes neither the note's slot nor
+// the frontmatter payload JournalsIndex compares, so `register` returns without emitting
+// entryChanged. Driven through the real TaskHostService rather than the fake host above, because
+// what is under test is which host event reaches the provider at all.
+describe("CheckboxTaskProvider content refill", () => {
+  it("re-extracts a note whose parse changed, with no ownership or settings event", async () => {
+    const structures = new FakeNoteStructureService();
+    const path = "Daily/2026-09-22.md" as VaultPath;
+    const harness = await testContainer({
+      modules: [journalsCoreModule, tasksCoreModule],
+      data: { journals: { Daily: fixedJournal("Daily", { type: "day" }) } },
+      overrides: [overrideWith(NoteStructureService, structures as never)],
+    });
+    harness.host.putFile(path);
+    harness.resolve(JournalsIndex).register({ journalName: "Daily", anchor: anchor("2026-09-22"), path });
+    structures.setStructure(path, structure({ listItems: [] }));
+
+    const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
+    if (!provider) throw new Error("checkbox provider not registered");
+    provider.start();
+
+    const index = harness.resolve(TaskIndex);
+    expect(index.itemsIn(path)).toEqual([]);
+
+    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4 }] }));
+    harness.host.emitMetadata(path);
+
+    expect(index.itemsIn(path)).toHaveLength(1);
+  });
+});

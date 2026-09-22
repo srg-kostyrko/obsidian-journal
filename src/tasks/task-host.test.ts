@@ -126,6 +126,28 @@ describe("TaskHostService", () => {
     expect(seen).toHaveBeenCalledTimes(1);
   });
 
+  // A checkbox tick changes neither the slot nor the frontmatter payload JournalsIndex compares,
+  // so `register` early-returns and no entryChanged fires. Without a metadata subscription of its
+  // own the index keeps pre-edit items until some unrelated event happens to refill the path.
+  it("announces a note change when an owned note's parse changes", async () => {
+    const { host, harness } = await build();
+    harness.host.putFile(dayPath);
+    const seen = vi.fn();
+    host.onOwnedNotesChanged(seen);
+    harness.host.emitMetadata(dayPath);
+    expect(seen).toHaveBeenCalledWith({ kind: "note", path: dayPath });
+  });
+
+  it("stays quiet when a note no journal owns changes", async () => {
+    const { host, harness } = await build();
+    const unowned = "project/ideas.md" as VaultPath;
+    harness.host.putFile(unowned);
+    const seen = vi.fn();
+    host.onOwnedNotesChanged(seen);
+    harness.host.emitMetadata(unowned);
+    expect(seen).not.toHaveBeenCalled();
+  });
+
   it("does not announce a journal change for an update that leaves tasks untouched", async () => {
     const { host, repository } = await build();
     const seen = vi.fn();
