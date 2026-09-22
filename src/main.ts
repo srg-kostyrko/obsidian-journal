@@ -92,6 +92,10 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(VaultSubscriptionService).initialize();
     await container.resolve(DataMigrationService).initialize();
     await container.resolve(AutoAttachService).initialize();
+    // After VaultSubscriptionService above, and load-bearing: clearing a note's task items on the
+    // way out runs off that service's unregister, which fires entryChanged{removed} for the host
+    // to turn into a refresh that publishes []. Start the providers first and a note that leaves a
+    // journal before the subscription exists keeps its items, with nothing failing.
     container.resolve(TaskProviderRegistry).initialize();
     await container.resolve(AutoCreateService).initialize();
     await container.resolve(StartupOpenService).initialize();
