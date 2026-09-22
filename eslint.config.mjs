@@ -644,6 +644,14 @@ export default [
     },
   },
   {
+    files: ["src/tasks/providers/checkbox/identification.ts"],
+    rules: {
+      // `IdentificationContext.global` names the provider-wide rule layer, not the JS global
+      // object the rule means to catch.
+      "obsidianmd/no-global-this": "off",
+    },
+  },
+  {
     // Drops `noStrayDefineModal` — this is where modal definitions belong. The rest is
     // re-listed because rule options replace rather than merge.
     files: ["**/ui/modals.ts", "src/infrastructure/host/modals/**/*.ts"],
