@@ -426,4 +426,33 @@ describe("CheckboxTaskProvider content refill", () => {
 
     expect(index.itemsIn(path)).toHaveLength(1);
   });
+
+  // The other half of that subscription: it fires for every edit to every owned note, and every
+  // consumer reseeds off the index version. A note whose checkboxes did not move — or that holds
+  // none at all — must leave the version where it was, or an ordinary note edit re-runs
+  // evaluateRange over every period on every mounted surface.
+  it("leaves the index version alone when an edit changes none of the note's items", async () => {
+    const structures = new FakeNoteStructureService();
+    const path = "Daily/2026-09-22.md" as VaultPath;
+    const harness = await testContainer({
+      modules: [journalsCoreModule, tasksCoreModule],
+      data: { journals: { Daily: fixedJournal("Daily", { type: "day" }) } },
+      overrides: [overrideWith(NoteStructureService, structures as never)],
+    });
+    harness.host.putFile(path);
+    harness.resolve(JournalsIndex).register({ journalName: "Daily", anchor: anchor("2026-09-22"), path });
+    structures.setStructure(path, structure());
+
+    const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
+    if (!provider) throw new Error("checkbox provider not registered");
+    provider.start();
+
+    const index = harness.resolve(TaskIndex);
+    const before = index.version();
+
+    harness.host.emitMetadata(path);
+    harness.host.emitMetadata(path);
+
+    expect(index.version()).toBe(before);
+  });
 });

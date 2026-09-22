@@ -154,6 +154,76 @@ describe("TaskIndex", () => {
     expect(index.itemsIn(path)).toEqual([survivor]);
   });
 
+  // Every consumer of the index reseeds off the version: use-cell-decorations reads it inside a
+  // watchEffect, so one bump re-runs rebuildScopeMaps and evaluateRange over every period on every
+  // mounted calendar, timeline and nav surface. The provider republishes a path on every
+  // metadata-changed for a note it owns — including notes holding no checkboxes at all — so
+  // without this an ordinary note edit reseeds the whole UI.
+  it("does not bump the version or announce when a path's items come back unchanged", async () => {
+    const { index } = await build();
+    index.publish("checkbox", { path }, [item("a")]);
+    const before = index.version();
+    const seen = vi.fn();
+    index.events.on("changed", seen);
+
+    index.publish("checkbox", { path }, [item("a")]);
+
+    expect(index.version()).toBe(before);
+    expect(seen).not.toHaveBeenCalled();
+  });
+
+  // The comparison has to see past the item's identity: same provider, same key, same line —
+  // only the status moved. A guard keyed on the item set's shape alone would swallow a tick.
+  it("bumps when the same key comes back with a different status", async () => {
+    const { index } = await build();
+    index.publish("checkbox", { path }, [item("a")]);
+    const before = index.version();
+    const seen = vi.fn();
+    index.events.on("changed", seen);
+
+    index.publish("checkbox", { path }, [{ ...item("a"), status: "done" }]);
+
+    expect(index.version()).toBeGreaterThan(before);
+    expect(seen).toHaveBeenCalledTimes(1);
+  });
+
+  it("bumps when an unchanged key's line has moved", async () => {
+    const { index } = await build();
+    index.publish("checkbox", { path }, [lineItem("a", 1)]);
+    const before = index.version();
+
+    index.publish("checkbox", { path }, [
+      { ...lineItem("a", 1), display: { kind: "line", path, line: 9, endLine: 9, markdown: null } },
+    ]);
+
+    expect(index.version()).toBeGreaterThan(before);
+  });
+
+  it("does not bump when an 'all' publish restates the same store", async () => {
+    const { index } = await build();
+    index.publish("checkbox", "all", [item("a"), item("b")]);
+    const before = index.version();
+    const seen = vi.fn();
+    index.events.on("changed", seen);
+
+    index.publish("checkbox", "all", [item("a"), item("b")]);
+
+    expect(index.version()).toBe(before);
+    expect(seen).not.toHaveBeenCalled();
+  });
+
+  it("bumps when an 'all' publish drops a path the provider used to hold", async () => {
+    const { index } = await build();
+    const otherPath = "b.md" as VaultPath;
+    index.publish("checkbox", "all", [item("a"), { ...item("b"), path: otherPath }]);
+    const before = index.version();
+
+    index.publish("checkbox", "all", [item("a")]);
+
+    expect(index.version()).toBeGreaterThan(before);
+    expect(index.itemsIn(otherPath)).toEqual([]);
+  });
+
   it("keeps events read-only — a consumer cannot emit through the public handle", async () => {
     const { index } = await build();
     const seen = vi.fn();

@@ -182,7 +182,21 @@ describe("TaskHostService", () => {
 
   it("forwards publish to the index", async () => {
     const { host, index } = await build();
-    host.publish(CHECKBOX, { path: dayPath }, []);
+    // A real item, not an empty list: publishing nothing into a path that already holds nothing
+    // is a no-op by design, so it would prove nothing about the forwarding.
+    host.publish(CHECKBOX, { path: dayPath }, [
+      {
+        provider: CHECKBOX,
+        key: `${dayPath}:0`,
+        path: dayPath,
+        status: "todo",
+        relations: ["containment"],
+        capabilities: { movable: true, stampable: true, retargetable: false },
+        display: { kind: "line", path: dayPath, line: 0, endLine: 0, markdown: null },
+        dates: {},
+      },
+    ]);
+    expect(index.itemsIn(dayPath)).toHaveLength(1);
     expect(index.version()).toBeGreaterThan(0);
   });
 });

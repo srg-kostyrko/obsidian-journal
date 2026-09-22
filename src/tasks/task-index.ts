@@ -28,12 +28,19 @@ export class TaskIndex {
   readonly events: Subscribable<TaskIndexEvents> = this.#emitter;
 
   #set(path: VaultPath, providerId: string, items: readonly TaskItem[]): void {
-    const deduped = [...new Map(items.map((item) => [item.key, item])).values()];
     const byProvider = this.#byPath.get(path) ?? new Map<string, readonly TaskItem[]>();
-    if (deduped.length === 0) byProvider.delete(providerId);
-    else byProvider.set(providerId, deduped);
+    if (items.length === 0) byProvider.delete(providerId);
+    else byProvider.set(providerId, items);
     if (byProvider.size === 0) this.#byPath.delete(path);
     else this.#byPath.set(path, byProvider);
+  }
+
+  #itemsAt(path: VaultPath, providerId: string): readonly TaskItem[] {
+    return this.#byPath.get(path)?.get(providerId) ?? [];
+  }
+
+  #pathsOf(providerId: string): VaultPath[] {
+    return [...this.#byPath].filter(([, byProvider]) => byProvider.has(providerId)).map(([path]) => path);
   }
 
   async #readInto(path: VaultPath): Promise<void> {
@@ -61,15 +68,27 @@ export class TaskIndex {
     return [...byProvider.values()].flat();
   }
 
+  // A publish that restates what is already stored must not bump the version. Every consumer
+  // reseeds off it — use-cell-decorations reads it inside a watchEffect, so one bump re-runs
+  // rebuildScopeMaps and evaluateRange over every period on every mounted surface — while the
+  // checkbox provider republishes a path on every metadata-changed for a note it owns, including
+  // notes holding no checkboxes at all. The same guard absorbs the duplicate publish a newly
+  // registered note draws, where entryChanged and metadata-changed both arrive.
   publish(providerId: string, scope: "all" | { path: VaultPath }, items: readonly TaskItem[]): void {
     if (scope === "all") {
-      for (const [path, byProvider] of this.#byPath) {
-        byProvider.delete(providerId);
-        if (byProvider.size === 0) this.#byPath.delete(path);
-      }
-      for (const [path, group] of groupByPath(items)) this.#set(path, providerId, group);
+      const next = new Map<VaultPath, readonly TaskItem[]>();
+      for (const [path, group] of groupByPath(items)) next.set(path, dedupe(group));
+      const held = this.#pathsOf(providerId);
+      const unchanged =
+        held.length === next.size &&
+        held.every((path) => sameItems(this.#itemsAt(path, providerId), next.get(path) ?? []));
+      if (unchanged) return;
+      for (const path of held) this.#set(path, providerId, []);
+      for (const [path, group] of next) this.#set(path, providerId, group);
     } else {
-      this.#set(scope.path, providerId, items);
+      const deduped = dedupe(items);
+      if (sameItems(this.#itemsAt(scope.path, providerId), deduped)) return;
+      this.#set(scope.path, providerId, deduped);
     }
     this.#version++;
     this.#emitter.emit("changed");
@@ -94,6 +113,23 @@ export class TaskIndex {
       return { ...item, display: { ...item.display, markdown } };
     });
   }
+}
+
+function dedupe(items: readonly TaskItem[]): readonly TaskItem[] {
+  return [...new Map(items.map((item) => [item.key, item])).values()];
+}
+
+// A whole-array serialization rather than a field-by-field comparison, and deliberately so: this
+// one fails *safe*. A field a later provider adds, or a key order that differs, makes two equal
+// sets compare unequal — one redundant reseed, which is exactly the behavior this guard replaces.
+// A hand-listed field check fails the other way, silently swallowing a change in a field it does
+// not name; a status flipping on an unmoved line is the case that would cost a decoration. It is
+// cheap against what it saves: the comparison is over one path's items (or, for "all", one path at
+// a time), while the reseed it skips is evaluateRange over every period on every mounted surface.
+// Nothing on a published item is undefined, so JSON dropping undefined cannot collapse two
+// different sets onto one string.
+function sameItems(a: readonly TaskItem[], b: readonly TaskItem[]): boolean {
+  return a.length === b.length && JSON.stringify(a) === JSON.stringify(b);
 }
 
 function groupByPath(items: readonly TaskItem[]): Map<VaultPath, TaskItem[]> {
