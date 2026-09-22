@@ -16,8 +16,8 @@ function build(): { service: NoteStructureService; host: FakeHost } {
   return { service: c.resolve(NoteStructureService), host };
 }
 
-function pos(line: number) {
-  return { start: { line, col: 0, offset: 0 }, end: { line, col: 0, offset: 0 } };
+function pos(line: number, endLine = line) {
+  return { start: { line, col: 0, offset: 0 }, end: { line: endLine, col: 0, offset: 0 } };
 }
 
 describe("NoteStructureService", () => {
@@ -35,6 +35,9 @@ describe("NoteStructureService", () => {
       listItems: [
         { task: " ", position: pos(3), parent: 3 },
         { position: pos(4), parent: 4 },
+        // A wrapped/continued checkbox line: start and end land on different lines,
+        // which is what distinguishes this positioned read from the flattened one.
+        { task: "x", position: pos(5, 6), parent: 5 },
       ],
       tags: [{ tag: "#task", position: pos(3) }],
       frontmatter: { tags: ["daily"] },
@@ -43,7 +46,10 @@ describe("NoteStructureService", () => {
     const structure = service.get(path);
     expect(structure.isSome()).toBe(true);
     const value = structure.isSome() ? structure.value : null;
-    expect(value?.listItems).toEqual([{ marker: " ", line: 3, endLine: 3 }]);
+    expect(value?.listItems).toEqual([
+      { marker: " ", line: 3, endLine: 3 },
+      { marker: "x", line: 5, endLine: 6 },
+    ]);
     expect(value?.tags).toEqual([{ tag: "#task", line: 3 }]);
     expect(value?.headings).toEqual([{ heading: "Tasks", level: 2, line: 2 }]);
     expect(value?.frontmatterTags).toEqual(["#daily"]);
