@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { watch } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { NoteStructureService, type VaultPath } from "@/infrastructure/host";
@@ -10,6 +11,7 @@ import { datesIn } from "./dates";
 import { CHECKBOX_PROVIDER_ID, extractItems } from "./extract";
 import { checkboxJournalRuleSchema, type CheckboxJournalRule } from "./rule-schema";
 import { checkboxSlice } from "./slice";
+import CheckboxProviderSection from "./ui/CheckboxProviderSection.vue";
 
 // A rule the schema cannot parse must not take the note's items with it — falling back to the
 // global rule alone (the same treatment as no journal rule at all) is safer than dropping the note.
@@ -23,6 +25,7 @@ export class CheckboxTaskProvider implements TaskProvider {
   readonly #structure = inject(NoteStructureService);
   readonly #settings = inject(SettingsService).getSlice(checkboxSlice);
   readonly id = CHECKBOX_PROVIDER_ID;
+  readonly settingsSection = CheckboxProviderSection;
 
   #refreshPath(path: VaultPath): void {
     const note = this.#host.ownerOf(path, this.id);
@@ -53,12 +56,29 @@ export class CheckboxTaskProvider implements TaskProvider {
     });
   }
 
+  #refillAll(): void {
+    for (const note of this.#host.ownedNotes(this.id)) this.#publishFor(note);
+  }
+
   start(): () => void {
     for (const note of this.#host.ownedNotes(this.id)) this.#publishFor(note);
-    return this.#host.onOwnedNotesChanged((change) => {
+    // enabled/statusMap/canonical/rule all feed #itemsFor, so a settings-dashboard edit to any of
+    // them must take effect immediately rather than sit stale until an unrelated note or journal
+    // event happens to fire a refresh. Deep because the fields it must catch are nested one level
+    // into the slice, not on the slice object itself.
+    const stopSettingsWatch = watch(
+      () => this.#settings.state,
+      () => this.#refillAll(),
+      { deep: true },
+    );
+    const stopOwnedNotesWatch = this.#host.onOwnedNotesChanged((change) => {
       if (change.kind === "note") this.#refreshPath(change.path);
       else this.#refreshJournal(change.journalName);
     });
+    return () => {
+      stopSettingsWatch();
+      stopOwnedNotesWatch();
+    };
   }
 
   // TaskIndex.hydrate calls this once a line item's markdown exists — extraction alone cannot read

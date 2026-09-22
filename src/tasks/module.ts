@@ -7,6 +7,7 @@ import { checkboxSlice } from "./providers/checkbox/slice";
 import { TaskHostService } from "./task-host";
 import { TaskIndex } from "./task-index";
 import { TaskHostToken, TaskProviderToken } from "./types";
+import { tasksUiModule } from "./ui-module";
 
 export const tasksCoreModule: Module = {
   register(c) {
@@ -18,7 +19,9 @@ export const tasksCoreModule: Module = {
   },
 };
 
-// Task 14 adds tasksUiModule and folds it in here alongside tasksCoreModule; until then
-// tasksModule IS tasksCoreModule, so a consumer that only knows tasksModule already gets the
-// real wiring.
-export const tasksModule: Module = tasksCoreModule;
+export const tasksModule: Module = {
+  register(c) {
+    tasksCoreModule.register(c);
+    tasksUiModule.register(c);
+  },
+};

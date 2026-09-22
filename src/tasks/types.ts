@@ -3,6 +3,8 @@ import { createMultiToken, createToken } from "@/infrastructure/di";
 import type { VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 
+import type { Component } from "vue";
+
 export type TaskStatus = "todo" | "done" | "in-progress" | "cancelled" | "on-hold" | "non-task" | "rolled";
 export type TaskDateRole = "due" | "scheduled" | "start" | "done" | "created";
 export type TaskRelation = "containment" | "date";
@@ -36,6 +38,11 @@ export interface TaskItem {
 
 export interface TaskProvider {
   readonly id: string;
+  // Optional the same way hydrateItem is: the settings dashboard's Tasks block renders one
+  // section per registered provider by reading this field off TaskProviderToken, so it never
+  // has to name a provider itself. A provider with no settings surface (none yet) renders no
+  // section.
+  readonly settingsSection?: Component;
   start(): () => void;
   // Text is not in metadataCache, so date roles and retargetable can only be read once the line's
   // markdown exists — hydration calls this with it. The index has no dialect of its own: a

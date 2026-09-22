@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { nextTick } from "vue";
 
 import { anchor } from "@/calendar/testing";
 import { NoteStructureService, type NoteStructure, type VaultPath } from "@/infrastructure/host";
@@ -7,6 +8,7 @@ import { Option } from "@/infrastructure/result";
 import { JournalsIndex } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { SettingsService } from "@/settings";
 import { overrideWith, testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../module";
@@ -15,6 +17,7 @@ import { TaskHostToken, TaskProviderToken, type OwnedNote, type OwnedNoteChange,
 
 import { CHECKBOX_PROVIDER_ID } from "./extract";
 import { CheckboxTaskProvider } from "./provider";
+import { checkboxSlice } from "./slice";
 
 const dayPath = "Daily/2026-09-22.md" as VaultPath;
 const otherPath = "Daily/2026-09-23.md" as VaultPath;
@@ -73,7 +76,7 @@ async function build(sliceState: Record<string, unknown> = {}) {
   });
   const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
   if (!(provider instanceof CheckboxTaskProvider)) throw new Error("checkbox provider not registered");
-  return { host, structures, provider };
+  return { host, structures, provider, harness };
 }
 
 describe("CheckboxTaskProvider", () => {
@@ -194,6 +197,43 @@ describe("CheckboxTaskProvider", () => {
     host.published.clear();
 
     host.emit({ kind: "note", path: dayPath });
+
+    expect(host.published.size).toBe(0);
+  });
+
+  // The addition this task makes over the rest of the suite: settings toggled through the
+  // dashboard must reach the index immediately. Nothing here emits a note or journal event — the
+  // refill has to come from the provider's own settings watch, or this stays stale until some
+  // unrelated event happens to fire.
+  it("refills every owned note when its own settings change, without any note or journal event", async () => {
+    const { host, structures, provider, harness } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    structures.setStructure(dayPath, structure());
+    provider.start();
+    expect(host.published.get(dayPath)).toHaveLength(1);
+
+    const slice = harness.resolve(SettingsService).getSlice(checkboxSlice);
+    slice.state.enabled = false;
+    await nextTick();
+
+    expect(host.published.get(dayPath)).toEqual([]);
+
+    slice.state.enabled = true;
+    await nextTick();
+
+    expect(host.published.get(dayPath)).toHaveLength(1);
+  });
+
+  it("stops reacting to settings once its disposer runs", async () => {
+    const { host, structures, provider, harness } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    structures.setStructure(dayPath, structure());
+    provider.start()();
+    host.published.clear();
+
+    const slice = harness.resolve(SettingsService).getSlice(checkboxSlice);
+    slice.state.enabled = false;
+    await nextTick();
 
     expect(host.published.size).toBe(0);
   });

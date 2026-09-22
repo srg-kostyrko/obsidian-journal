@@ -81,6 +81,7 @@ export const icons = {
     maintenance: "wrench",
     prompts: "lucide-circle-help",
     notelets: "sticky-note",
+    tasks: "list-checks",
   },
 } as const;
 

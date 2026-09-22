@@ -2396,5 +2396,23 @@
   "maintenance_ambiguous_connect": "Підключити до журналу {journal}",
   "maintenance_ambiguous_occupied": "Цей період уже зайнято іншою нотаткою: {journals}.",
   "maintenance_repair_done": "{repaired} нотаток виправлено. {failed} не вдалося виправити.",
-  "maintenance_unreadable_row": "{path}: {message}"
+  "maintenance_unreadable_row": "{path}: {message}",
+
+  "tasks_settings_title": "Tasks",
+  "tasks_settings_provider_checkbox": "Checkbox tasks",
+  "tasks_settings_enabled": "Enable",
+  "tasks_settings_status_map": "Status symbols",
+  "tasks_settings_status_map_desc": "Which checkbox symbol means which status, and which symbol is written back.",
+  "tasks_settings_write_symbol": "Write symbol for {status}",
+  "tasks_settings_rule": "Identification rule",
+  "tasks_settings_rule_desc": "Which checkbox list items count as tasks.",
+  "tasks_settings_add_condition": "Add condition",
+  "tasks_settings_condition_tag": "Tag",
+  "tasks_settings_condition_heading": "Heading",
+  "tasks_settings_condition_has": "Has",
+  "tasks_settings_condition_lacks": "Lacks",
+  "tasks_settings_condition_under": "Under",
+  "tasks_settings_condition_not_under": "Not under",
+  "tasks_settings_mode_and": "Match all conditions",
+  "tasks_settings_mode_or": "Match any condition"
 }
