@@ -94,9 +94,13 @@ describe("TaskHostService", () => {
 
   it("reads the rule keyed by the given provider id, not a fixed key", async () => {
     const { host, repository } = await build();
-    // Bypassing the seeded fixture, whose schema only knows the "checkbox" field: update() writes
-    // straight into the live record with no re-validation, so a second provider's key survives
-    // to prove the host looks it up by the id it was given rather than a name it hardcodes.
+    // `otherProvider` is a runtime-only fiction: journalConfigSchema types `tasks` as an object
+    // with a `checkbox` field alone, and valibot drops unknown keys, so production cannot store a
+    // second provider's rule today — update() writes straight into the live record with no
+    // re-validation, which is the only reason the key survives here. What the assertion pins is
+    // that the host looks the rule up by the id it was handed rather than a name it hardcodes.
+    // Phase 2 has to widen that schema when `note-property` lands, or its rule is dropped on the
+    // next parse with nothing failing loudly.
     repository.update("Daily", { tasks: { checkbox: dailyRule, otherProvider: { marker: true } } } as never);
 
     const checkboxOwned = host.ownerOf(dayPath, CHECKBOX);
