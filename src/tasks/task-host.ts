@@ -56,8 +56,9 @@ export class TaskHostService implements TaskHost {
     );
   }
 
-  *ownedNotes(providerId: string): Iterable<OwnedNote> {
-    for (const journalName of this.#repository.find().ids()) {
+  *ownedNotes(providerId: string, forJournal?: string): Iterable<OwnedNote> {
+    const names = forJournal === undefined ? this.#repository.find().ids() : [forJournal];
+    for (const journalName of names) {
       const config = this.#repository.get(journalName);
       if (config.isNone()) continue;
       const rule = (config.value.tasks as Record<string, unknown>)[providerId];

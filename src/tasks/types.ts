@@ -64,7 +64,9 @@ export type OwnedNoteChange =
 
 export interface TaskHost {
   publish(providerId: string, scope: "all" | { path: VaultPath }, items: readonly TaskItem[]): void;
-  ownedNotes(providerId: string): Iterable<OwnedNote>;
+  // journalName narrows the walk to one journal's notes. A journal's rule changing refills only
+  // that journal, and without the narrowing that refill is a walk of the whole owned set.
+  ownedNotes(providerId: string, journalName?: string): Iterable<OwnedNote>;
   ownerOf(path: VaultPath, providerId: string): Option<OwnedNote>;
   onOwnedNotesChanged(callback: (change: OwnedNoteChange) => void): () => void;
 }

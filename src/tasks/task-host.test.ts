@@ -80,6 +80,18 @@ describe("TaskHostService", () => {
     expect(otherNote?.rule).toEqual(otherRule);
   });
 
+  it("narrows the walk to one journal when asked for one", async () => {
+    const { host } = await build();
+    const owned = [...host.ownedNotes(CHECKBOX, "Daily")];
+    expect(owned.map((note) => note.path).toSorted()).toEqual([dayPath, noteletPath].toSorted());
+    expect(owned.every((note) => note.rule === owned.at(0)?.rule)).toBe(true);
+  });
+
+  it("yields nothing for a journal name no config holds", async () => {
+    const { host } = await build();
+    expect([...host.ownedNotes(CHECKBOX, "Nonexistent")]).toEqual([]);
+  });
+
   it("reads the rule keyed by the given provider id, not a fixed key", async () => {
     const { host, repository } = await build();
     // Bypassing the seeded fixture, whose schema only knows the "checkbox" field: update() writes
