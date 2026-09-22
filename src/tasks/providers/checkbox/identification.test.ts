@@ -57,6 +57,21 @@ describe("identifies", () => {
       false,
     );
   });
+  it("narrow fails when the vault rule fails, even if the journal's would pass", () => {
+    // Distinguishes narrow (vault AND journal) from replace (journal alone): a vault miss
+    // must sink the result even though the journal condition alone is satisfied.
+    expect(identifies(item, { structure, vault: otherTag, journal: underTasks })).toBe(false);
+  });
+  it("inherit ignores the journal rule even when it would fail", () => {
+    // Distinguishes inherit (vault alone) from narrow (vault AND journal): a journal
+    // condition that would fail must not affect the result under inherit.
+    const failingJournal = {
+      compose: "inherit" as const,
+      mode: "and" as const,
+      conditions: [{ type: "heading" as const, condition: "under" as const, headings: ["Nonexistent"] }],
+    };
+    expect(identifies(item, { structure, vault: tagged, journal: failingJournal })).toBe(true);
+  });
   it("combines conditions with or when asked", () => {
     const either = { mode: "or" as const, conditions: [...otherTag.conditions, ...tagged.conditions] };
     expect(identifies(item, { structure, vault: either, journal: null })).toBe(true);
@@ -67,6 +82,28 @@ describe("identifies", () => {
       conditions: [{ type: "tag" as const, condition: "lacks" as const, tags: ["#habit"] }],
     };
     expect(identifies(item, { structure, vault: lacks, journal: null })).toBe(true);
+  });
+  it("supports negated heading conditions", () => {
+    const notUnderTasks = {
+      mode: "and" as const,
+      conditions: [{ type: "heading" as const, condition: "not-under" as const, headings: ["Tasks"] }],
+    };
+    const notUnderOther = {
+      mode: "and" as const,
+      conditions: [{ type: "heading" as const, condition: "not-under" as const, headings: ["Other"] }],
+    };
+    expect(identifies(item, { structure, vault: notUnderTasks, journal: null })).toBe(false);
+    expect(identifies(item, { structure, vault: notUnderOther, journal: null })).toBe(true);
+  });
+  it("requires every condition to pass in and mode", () => {
+    const mixed = {
+      mode: "and" as const,
+      conditions: [
+        { type: "tag" as const, condition: "has" as const, tags: ["#task"] },
+        { type: "tag" as const, condition: "has" as const, tags: ["#habit"] },
+      ],
+    };
+    expect(identifies(item, { structure, vault: mixed, journal: null })).toBe(false);
   });
   it("walks the heading chain upward by strictly smaller level, skipping a same-level sibling", () => {
     const nested: NoteStructure = {
