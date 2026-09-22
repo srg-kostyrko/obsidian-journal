@@ -109,6 +109,10 @@ export class DecorationEngine {
     path: () => Option<VaultPath>,
   ): boolean {
     const { mode, conditions } = decoration;
+    // An empty condition list matches nothing here — the inverse of the checkbox provider's
+    // identification rule, where empty means "no constraint". Both are deliberate: a decoration
+    // with no conditions would otherwise paint every cell, while an empty identification rule has
+    // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
     const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata, size, path);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
