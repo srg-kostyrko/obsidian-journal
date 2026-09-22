@@ -37,6 +37,10 @@ export interface TaskItem {
 export interface TaskProvider {
   readonly id: string;
   start(): () => void;
+  // Text is not in metadataCache, so date roles and retargetable can only be read once the line's
+  // markdown exists — hydration calls this with it. The index has no dialect of its own: a
+  // provider that declares no hydrateItem leaves dates and retargetable as extraction set them.
+  hydrateItem?(item: TaskItem, markdown: string): TaskItem;
 }
 
 export const TaskProviderToken = createMultiToken<TaskProvider>("tasks.provider");

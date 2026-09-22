@@ -4,15 +4,52 @@ import type { VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { tasksCoreModule } from "./module";
+import { datesIn } from "./providers/checkbox/dates";
 import { TaskIndex } from "./task-index";
+import { TaskProviderToken, type TaskItem, type TaskProvider } from "./types";
 
-import type { TaskItem } from "./types";
+// TaskProvider.start returns a disposer; these stand-in providers never actually start, so the
+// disposer is never called, but the interface still requires one.
+function noDisposer(): void {
+  /* never started */
+}
+
+// TaskIndex resolves providers from TaskProviderToken (a DI multi-token), so a test proving
+// dialect-aware hydration registers its own stand-in provider here rather than reaching for the
+// real CheckboxTaskProvider — that class comes with host/settings wiring a later task owns, and
+// none of it bears on whether TaskIndex.hydrate correctly delegates to whatever is registered.
+// Its hydrateItem reuses the real datesIn, so the fixtures below still exercise real dialect logic.
+const checkboxTestProvider: TaskProvider = {
+  id: "checkbox",
+  start: () => noDisposer,
+  hydrateItem(item, markdown) {
+    if (item.display.kind !== "line") return item;
+    const dates = datesIn(markdown);
+    return {
+      ...item,
+      dates,
+      capabilities: { ...item.capabilities, retargetable: Object.keys(dates).length > 0 },
+      display: { ...item.display, markdown },
+    };
+  },
+};
+
+const bareTestProvider: TaskProvider = {
+  id: "bare",
+  start: () => noDisposer,
+};
 
 // TaskIndex is resolved from a container rather than constructed directly: a later task gives it
 // an injected dependency, and a test written against a bare constructor would have to be rewritten
 // at that point.
 async function build(): Promise<{ harness: TestHarness; index: TaskIndex }> {
-  const harness = await testContainer({ modules: [tasksCoreModule] });
+  const harness = await testContainer({
+    modules: [tasksCoreModule],
+    overrides: [
+      (c) => c.register(TaskProviderToken).useValue(checkboxTestProvider),
+      (c) => c.register(TaskProviderToken).useValue(bareTestProvider),
+    ],
+  });
   return { harness, index: harness.resolve(TaskIndex) };
 }
 
@@ -26,6 +63,19 @@ function item(key: string, provider = "checkbox"): TaskItem {
     relations: ["containment"],
     capabilities: { movable: true, stampable: true, retargetable: false },
     display: { kind: "line", path, line: 1, endLine: 1, markdown: null },
+    dates: {},
+  };
+}
+
+function lineItem(key: string, line: number, provider = "checkbox", endLine = line): TaskItem {
+  return {
+    provider,
+    key,
+    path,
+    status: "todo",
+    relations: ["containment"],
+    capabilities: { movable: true, stampable: true, retargetable: false },
+    display: { kind: "line", path, line, endLine, markdown: null },
     dates: {},
   };
 }
@@ -114,5 +164,77 @@ describe("TaskIndex", () => {
     type HasEmit = typeof index.events.emit;
     const pinned: HasEmit = undefined;
     expect(pinned).toBeUndefined();
+  });
+});
+
+describe("TaskIndex.hydrate", () => {
+  it("fills markdown for a line item from the note's text", async () => {
+    const { harness, index } = await build();
+    harness.host.putFile(path, "intro\n- [ ] Water plants\n");
+    const hydrated = await index.hydrate([lineItem("a.md:1", 1)]);
+    expect(hydrated.at(0)?.display).toMatchObject({ markdown: "- [ ] Water plants" });
+  });
+
+  it("reads a note once while its mtime holds", async () => {
+    const { harness, index } = await build();
+    const file = harness.host.putFile(path, "- [ ] One\n");
+    const spy = vi.spyOn(harness.host.app.vault, "cachedRead");
+    await index.hydrate([lineItem("a.md:0", 0)]);
+    await index.hydrate([lineItem("a.md:0", 0)]);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(file).toBeDefined();
+  });
+
+  it("re-reads after the note's mtime moves", async () => {
+    const { harness, index } = await build();
+    const file = harness.host.putFile(path, "- [ ] One\n");
+    const spy = vi.spyOn(harness.host.app.vault, "cachedRead");
+    await index.hydrate([lineItem("a.md:0", 0)]);
+    file.stat.mtime += 1000;
+    await index.hydrate([lineItem("a.md:0", 0)]);
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("leaves markdown null when the note has gone", async () => {
+    const { index } = await build();
+    const hydrated = await index.hydrate([lineItem("gone.md:0", 0)]);
+    expect(hydrated.at(0)?.display).toMatchObject({ markdown: null });
+  });
+
+  it("marks a hydrated line retargetable only when it carries a date signifier", async () => {
+    const { harness, index } = await build();
+    harness.host.putFile(path, "- [ ] Dated 📅 2026-09-25\n- [ ] Plain\n");
+    const hydrated = await index.hydrate([lineItem("a.md:0", 0), lineItem("a.md:1", 1)]);
+    expect(hydrated.at(0)?.capabilities.retargetable).toBe(true);
+    expect(hydrated.at(0)?.dates.due).toBe("2026-09-25");
+    expect(hydrated.at(1)?.capabilities.retargetable).toBe(false);
+    expect(hydrated.at(1)?.dates).toEqual({});
+  });
+
+  it("joins every line in a multi-line span, not just the first", async () => {
+    const { harness, index } = await build();
+    harness.host.putFile(path, "before\n- [ ] Water plants\n  every morning\n  before work\nafter\n");
+    const hydrated = await index.hydrate([lineItem("a.md:1", 1, "checkbox", 3)]);
+    expect(hydrated.at(0)?.display).toMatchObject({
+      markdown: "- [ ] Water plants\n  every morning\n  before work",
+    });
+  });
+
+  it("leaves dates and retargetable untouched when no provider is registered for the item's id", async () => {
+    const { harness, index } = await build();
+    harness.host.putFile(path, "- [ ] Dated 📅 2026-09-25\n");
+    const hydrated = await index.hydrate([lineItem("a.md:0", 0, "unregistered")]);
+    expect(hydrated.at(0)?.display).toMatchObject({ markdown: "- [ ] Dated 📅 2026-09-25" });
+    expect(hydrated.at(0)?.dates).toEqual({});
+    expect(hydrated.at(0)?.capabilities.retargetable).toBe(false);
+  });
+
+  it("leaves dates and retargetable untouched when the matched provider declares no hydrateItem", async () => {
+    const { harness, index } = await build();
+    harness.host.putFile(path, "- [ ] Dated 📅 2026-09-25\n");
+    const hydrated = await index.hydrate([lineItem("a.md:0", 0, "bare")]);
+    expect(hydrated.at(0)?.display).toMatchObject({ markdown: "- [ ] Dated 📅 2026-09-25" });
+    expect(hydrated.at(0)?.dates).toEqual({});
+    expect(hydrated.at(0)?.capabilities.retargetable).toBe(false);
   });
 });
