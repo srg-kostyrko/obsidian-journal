@@ -2422,5 +2422,15 @@
   "tasks_settings_condition_under": "Under",
   "tasks_settings_condition_not_under": "Not under",
   "tasks_settings_mode_and": "Match all conditions",
-  "tasks_settings_mode_or": "Match any condition"
+  "tasks_settings_mode_or": "Match any condition",
+
+  "tasks_status_todo": "To-do",
+  "tasks_status_done": "Done",
+  "tasks_status_in_progress": "In progress",
+  "tasks_status_cancelled": "Cancelled",
+  "tasks_status_on_hold": "On hold",
+  "tasks_status_non_task": "Not a task",
+  "tasks_status_rolled": "Rolled over",
+  "tasks_settings_add_symbol": "Add symbol",
+  "tasks_settings_new_symbol_label": "New symbol"
 }

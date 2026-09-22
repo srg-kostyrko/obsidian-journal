@@ -34,7 +34,12 @@ function removeCondition(index: number): void {
   </UiSettingRow>
   <div v-for="(condition, index) in rule.conditions" :key="index" class="tasks-rule-condition-row">
     <RuleConditionRow v-model="rule.conditions[index]" />
-    <UiIconButton :icon="icons.action.delete" :tooltip="m.common_action_delete()" @click="removeCondition(index)" />
+    <UiIconButton
+      :icon="icons.action.delete"
+      :tooltip="m.common_action_delete()"
+      data-testid="rule-remove-condition"
+      @click="removeCondition(index)"
+    />
   </div>
   <UiSettingRow controls-only>
     <UiButton data-testid="rule-add-condition" @click="addCondition">{{ m.tasks_settings_add_condition() }}</UiButton>

@@ -1,17 +1,23 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { match } from "ts-pattern";
+import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { SettingsService } from "@/settings";
+import type { TaskStatus } from "@/tasks";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
+import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { CHECKBOX_STATUSES } from "../normalize";
 import { checkboxSlice } from "../slice";
 
 const slice = useService(SettingsService).getSlice(checkboxSlice);
+const newSymbol = ref("");
 
 const symbols = computed(() => Object.keys(slice.state.statusMap));
 
@@ -27,6 +33,52 @@ const candidatesByType = computed(() => {
   }
   return grouped;
 });
+
+const canAdd = computed(() => {
+  const trimmed = newSymbol.value.trim();
+  return trimmed.length > 0 && !Object.hasOwn(slice.state.statusMap, trimmed);
+});
+
+// Every status name a symbol can read as is a full phrase from the message catalogue, never the
+// bare TaskStatus identifier — an identifier spliced into a sentence survives translation
+// unchanged and cannot agree with the surrounding phrase in a gendered locale. Accepts a plain
+// string (not narrowed to TaskStatus) because a stored statusMap value is schema-checked only as
+// "some string", the same reason normalizeStatus falls back to todo for a name it doesn't
+// recognize rather than throwing.
+function statusLabel(status: string): string {
+  return match(status)
+    .with("todo", () => m.tasks_status_todo())
+    .with("done", () => m.tasks_status_done())
+    .with("in-progress", () => m.tasks_status_in_progress())
+    .with("cancelled", () => m.tasks_status_cancelled())
+    .with("on-hold", () => m.tasks_status_on_hold())
+    .with("non-task", () => m.tasks_status_non_task())
+    .with("rolled", () => m.tasks_status_rolled())
+    .otherwise(() => m.tasks_status_todo());
+}
+
+function addSymbol(): void {
+  const trimmed = newSymbol.value.trim();
+  if (trimmed.length === 0 || Object.hasOwn(slice.state.statusMap, trimmed)) return;
+  slice.state.statusMap[trimmed] = "todo" satisfies TaskStatus;
+  newSymbol.value = "";
+}
+
+// A removed symbol can be the very one canonical[type] writes back — left alone, writing that
+// status would emit a symbol nothing reads as that status any more. Reassign to another surviving
+// candidate for the type, or drop the write mapping entirely once none is left, rather than leave
+// canonical pointing at a symbol statusMap no longer knows.
+function removeSymbol(symbol: string): void {
+  const type = slice.state.statusMap[symbol];
+  delete slice.state.statusMap[symbol];
+  if (type === undefined || slice.state.canonical[type] !== symbol) return;
+  const remaining = Object.entries(slice.state.statusMap)
+    .filter(([, candidateType]) => candidateType === type)
+    .map(([candidateSymbol]) => candidateSymbol);
+  const [fallback] = remaining;
+  if (fallback === undefined) delete slice.state.canonical[type];
+  else slice.state.canonical[type] = fallback;
+}
 </script>
 
 <template>
@@ -35,14 +87,30 @@ const candidatesByType = computed(() => {
     <div v-for="symbol in symbols" :key="symbol" class="tasks-status-map-row" :data-testid="`status-map-row-${symbol}`">
       <span class="tasks-status-map-symbol">{{ symbol }}</span>
       <UiDropdown v-model="slice.state.statusMap[symbol]">
-        <option v-for="status in CHECKBOX_STATUSES" :key="status" :value="status">{{ status }}</option>
+        <option v-for="status in CHECKBOX_STATUSES" :key="status" :value="status">{{ statusLabel(status) }}</option>
       </UiDropdown>
+      <UiIconButton
+        :icon="icons.action.delete"
+        :tooltip="m.common_action_delete()"
+        :data-testid="`status-map-remove-${symbol}`"
+        @click="removeSymbol(symbol)"
+      />
+    </div>
+    <div class="tasks-status-map-row">
+      <UiTextInput
+        v-model="newSymbol"
+        :aria-label="m.tasks_settings_new_symbol_label()"
+        data-testid="status-map-new-symbol"
+      />
+      <UiButton :disabled="!canAdd" data-testid="status-map-add" @click="addSymbol">
+        {{ m.tasks_settings_add_symbol() }}
+      </UiButton>
     </div>
   </UiSettingRow>
   <UiSettingRow
     v-for="[type, candidates] in candidatesByType"
     :key="type"
-    :name="m.tasks_settings_write_symbol({ status: type })"
+    :name="m.tasks_settings_write_symbol({ status: statusLabel(type) })"
   >
     <UiButton
       v-for="symbol in candidates"

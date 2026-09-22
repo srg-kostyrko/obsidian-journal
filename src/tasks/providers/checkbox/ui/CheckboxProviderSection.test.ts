@@ -45,6 +45,56 @@ describe("CheckboxProviderSection", () => {
     expect(slice.state.canonical.done).toBe("X");
   });
 
+  it("adds a new symbol mapping to the slice", async () => {
+    const { slice } = await mount();
+    await userEvent.type(screen.getByTestId("status-map-new-symbol"), ">");
+    await userEvent.click(screen.getByTestId("status-map-add"));
+    expect(slice.state.statusMap[">"]).toBe("todo");
+  });
+
+  it("does not add a blank or already-mapped symbol", async () => {
+    const { slice } = await mount();
+    const before = { ...slice.state.statusMap };
+
+    await userEvent.click(screen.getByTestId("status-map-add"));
+    expect(slice.state.statusMap).toEqual(before);
+
+    await userEvent.type(screen.getByTestId("status-map-new-symbol"), "/");
+    await userEvent.click(screen.getByTestId("status-map-add"));
+    expect(slice.state.statusMap).toEqual(before);
+  });
+
+  it("removes a symbol mapping from the slice", async () => {
+    const { slice } = await mount();
+    expect(slice.state.statusMap).toHaveProperty("/");
+
+    await userEvent.click(screen.getByTestId("status-map-remove-/"));
+
+    expect(slice.state.statusMap).not.toHaveProperty("/");
+  });
+
+  it("reassigns the write symbol when its canonical symbol is removed", async () => {
+    const { slice } = await mount();
+    // "x" and "X" both read as done; canonical.done ships as "x".
+    expect(slice.state.canonical.done).toBe("x");
+
+    await userEvent.click(screen.getByTestId("status-map-remove-x"));
+
+    expect(slice.state.canonical.done).toBe("X");
+  });
+
+  it("renders status option labels from the message catalogue, not the raw identifier", async () => {
+    await mount();
+    expect(screen.getAllByText(m.tasks_status_in_progress()).length).toBeGreaterThan(0);
+    expect(screen.queryByText("in-progress")).toBeNull();
+  });
+
+  it("names the write-symbol row with the localized status, not the raw identifier", async () => {
+    await mount();
+    expect(screen.getByText(m.tasks_settings_write_symbol({ status: m.tasks_status_done() }))).toBeTruthy();
+    expect(screen.queryByText(m.tasks_settings_write_symbol({ status: "done" }))).toBeNull();
+  });
+
   it("adds a tag condition to the global rule", async () => {
     const { slice } = await mount();
     await userEvent.click(screen.getByTestId("rule-add-condition"));
@@ -57,7 +107,7 @@ describe("CheckboxProviderSection", () => {
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     expect(slice.state.rule.conditions).toHaveLength(2);
 
-    const [firstDelete] = screen.getAllByRole("button", { name: m.common_action_delete() });
+    const [firstDelete] = screen.getAllByTestId("rule-remove-condition");
     if (!firstDelete) throw new Error("no delete button rendered");
     await userEvent.click(firstDelete);
 
