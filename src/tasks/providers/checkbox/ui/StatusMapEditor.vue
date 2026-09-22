@@ -57,6 +57,26 @@ function statusLabel(status: string): string {
     .otherwise(() => m.tasks_status_todo());
 }
 
+// Read off the message rather than spelled out here, so renaming or dropping a variant in en.json
+// breaks the mapping below at compile time.
+type WriteSymbolStatus = Parameters<typeof m.tasks_settings_write_symbol>[0]["status"];
+
+// This row names the status inside a sentence, so the status travels as a *selector* and each
+// variant spells the whole phrase — a status noun spliced in as a parameter cannot decline in the
+// locales that govern case. The stored type names carry hyphens where the selector values carry
+// underscores, and the todo fallback is load-bearing either way: paraglide answers a value it has
+// no variant for with the bare message key, which would render on screen.
+function writeSymbolLabel(status: string): string {
+  const selector = match(status)
+    .returnType<WriteSymbolStatus>()
+    .with("todo", "done", "cancelled", "rolled", (known) => known)
+    .with("in-progress", () => "in_progress")
+    .with("on-hold", () => "on_hold")
+    .with("non-task", () => "non_task")
+    .otherwise(() => "todo");
+  return m.tasks_settings_write_symbol({ status: selector });
+}
+
 function addSymbol(): void {
   const trimmed = newSymbol.value.trim();
   if (trimmed.length === 0 || Object.hasOwn(slice.state.statusMap, trimmed)) return;
@@ -107,11 +127,7 @@ function removeSymbol(symbol: string): void {
       </UiButton>
     </div>
   </UiSettingRow>
-  <UiSettingRow
-    v-for="[type, candidates] in candidatesByType"
-    :key="type"
-    :name="m.tasks_settings_write_symbol({ status: statusLabel(type) })"
-  >
+  <UiSettingRow v-for="[type, candidates] in candidatesByType" :key="type" :name="writeSymbolLabel(type)">
     <UiButton
       v-for="symbol in candidates"
       :key="symbol"

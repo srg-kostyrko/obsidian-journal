@@ -2336,7 +2336,21 @@
   "tasks_settings_enabled": "Enable",
   "tasks_settings_status_map": "Status symbols",
   "tasks_settings_status_map_desc": "Which checkbox symbol means which status, and which symbol is written back.",
-  "tasks_settings_write_symbol": "Write symbol for {status}",
+  "tasks_settings_write_symbol": [
+    {
+      "declarations": ["input status"],
+      "selectors": ["status"],
+      "match": {
+        "status=todo": "Write symbol for to-do",
+        "status=done": "Write symbol for done",
+        "status=in_progress": "Write symbol for in progress",
+        "status=cancelled": "Write symbol for cancelled",
+        "status=on_hold": "Write symbol for on hold",
+        "status=non_task": "Write symbol for not a task",
+        "status=rolled": "Write symbol for rolled over"
+      }
+    }
+  ],
   "tasks_settings_rule": "Identification rule",
   "tasks_settings_rule_desc": "Which checkbox list items count as tasks.",
   "tasks_settings_add_condition": "Add condition",
@@ -2360,7 +2374,7 @@
   "tasks_settings_new_symbol_label": "New symbol",
 
   "tasks_journal_section_title": "Task identification",
-  "tasks_journal_compose": "Combine with the vault-wide rule",
+  "tasks_journal_compose": "Relation to the vault-wide rule",
   "tasks_journal_compose_desc": "Inherit uses the vault-wide rule alone. Narrow requires a line to satisfy both rules. Replace uses this journal's rule alone.",
   "tasks_journal_compose_inherit": "Inherit",
   "tasks_journal_compose_narrow": "Narrow",

@@ -65,7 +65,7 @@ Two condition types, each addable more than once:
 
 ### A journal's own rule
 
-A journal's settings page has its own **Task identification** section, with **Combine with the
+A journal's settings page has its own **Task identification** section, with **Relation to the
 vault-wide rule**:
 
 - **Inherit** (default) — the vault-wide rule alone; this journal adds nothing.

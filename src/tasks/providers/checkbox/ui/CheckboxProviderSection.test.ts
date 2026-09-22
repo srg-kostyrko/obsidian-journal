@@ -89,10 +89,14 @@ describe("CheckboxProviderSection", () => {
     expect(screen.queryByText("in-progress")).toBeNull();
   });
 
-  it("names the write-symbol row with the localized status, not the raw identifier", async () => {
+  it("names each write-symbol row with that status's own whole-phrase variant", async () => {
     await mount();
-    expect(screen.getByText(m.tasks_settings_write_symbol({ status: m.tasks_status_done() }))).toBeTruthy();
-    expect(screen.queryByText(m.tasks_settings_write_symbol({ status: "done" }))).toBeNull();
+    expect(screen.getByText(m.tasks_settings_write_symbol({ status: "done" }))).toBeTruthy();
+    // The stored type name is "in-progress" while the selector value is "in_progress": paraglide
+    // answers a value it has no variant for with the bare message key, so a row naming itself
+    // "tasks_settings_write_symbol" is what an unnormalized status looks like on screen.
+    expect(screen.getByText(m.tasks_settings_write_symbol({ status: "in_progress" }))).toBeTruthy();
+    expect(screen.queryByText("tasks_settings_write_symbol")).toBeNull();
   });
 
   it("adds a tag condition to the global rule", async () => {
