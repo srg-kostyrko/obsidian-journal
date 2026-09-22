@@ -1,6 +1,6 @@
 import { createNanoEvents } from "nanoevents";
 
-import { inject } from "@/infrastructure/di";
+import { inject, InjectorToken } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 
@@ -19,8 +19,12 @@ export class TaskIndex {
   // cached per path, keyed by mtime — a modified note invalidates precisely, a re-read is free.
   readonly #text = new Map<VaultPath, { readonly mtime: number; readonly lines: readonly string[] }>();
   // Dates and retargetable ride on the item, but reading them out of a line's text is a dialect
-  // only the owning provider knows — the index just delegates once the text exists.
-  readonly #providers = inject(TaskProviderToken);
+  // only the owning provider knows — the index just delegates once the text exists. Resolved
+  // through the injector rather than injected as a field: a provider (CheckboxTaskProvider) needs
+  // the host, which needs this index, so eagerly injecting TaskProviderToken here at construction
+  // closes a cycle. Deferring the lookup to hydrate() — already documented as "lazy on request" —
+  // resolves it after every constructor in the chain has already returned.
+  readonly #injector = inject(InjectorToken);
   readonly events: Subscribable<TaskIndexEvents> = this.#emitter;
 
   #set(path: VaultPath, providerId: string, items: readonly TaskItem[]): void {
@@ -81,7 +85,7 @@ export class TaskIndex {
       const cached = this.#text.get(item.path);
       const markdown = cached?.lines.slice(item.display.line, item.display.endLine + 1).join("\n") ?? null;
       if (markdown === null) return item;
-      const provider = this.#providers.find((candidate) => candidate.id === item.provider);
+      const provider = this.#injector.resolve(TaskProviderToken).find((candidate) => candidate.id === item.provider);
       if (provider?.hydrateItem) return provider.hydrateItem(item, markdown);
       return { ...item, display: { ...item.display, markdown } };
     });

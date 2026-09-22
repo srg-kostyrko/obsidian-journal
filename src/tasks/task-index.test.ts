@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from "vitest";
 import type { VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
-import { tasksCoreModule } from "./module";
 import { datesIn } from "./providers/checkbox/dates";
 import { TaskIndex } from "./task-index";
 import { TaskProviderToken, type TaskItem, type TaskProvider } from "./types";
@@ -39,13 +38,16 @@ const bareTestProvider: TaskProvider = {
   start: () => noDisposer,
 };
 
-// TaskIndex is resolved from a container rather than constructed directly: a later task gives it
-// an injected dependency, and a test written against a bare constructor would have to be rewritten
-// at that point.
+// TaskIndex is resolved from a container rather than constructed directly: it has an injected
+// dependency, and a test written against a bare constructor would have to be rewritten if that
+// changes. Registered directly rather than through tasksCoreModule: that module also carries the
+// real CheckboxTaskProvider under the same TaskProviderToken multi-token, and multi-registrations
+// are additive — loading it here would leave two providers answering to id "checkbox", with
+// #find() picking whichever registered first rather than the stand-in this file seeds.
 async function build(): Promise<{ harness: TestHarness; index: TaskIndex }> {
   const harness = await testContainer({
-    modules: [tasksCoreModule],
     overrides: [
+      (c) => c.register(TaskIndex).useClass(TaskIndex),
       (c) => c.register(TaskProviderToken).useValue(checkboxTestProvider),
       (c) => c.register(TaskProviderToken).useValue(bareTestProvider),
     ],

@@ -30,6 +30,7 @@ import { calendarAppearanceModule } from "@/notes-calendar/appearance/module";
 import { settingsModule, SettingsService, SettingsTooNewError } from "@/settings";
 import { DataMigrationService, legacyMigrationsModule } from "@/settings/legacy";
 import { shelvesModule } from "@/shelves";
+import { TaskProviderRegistry, tasksModule } from "@/tasks";
 import { templatesModule } from "@/templates";
 import { viewsModule, ViewHostService } from "@/views";
 
@@ -52,6 +53,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(templatesModule);
     container.addModule(calendarSettingsModule);
     container.addModule(journalsModule);
+    container.addModule(tasksModule);
     container.addModule(journalsSettingsModule);
     container.addModule(decorationsModule);
     container.addModule(decorationsSettingsModule);
@@ -89,6 +91,7 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(VaultSubscriptionService).initialize();
     await container.resolve(DataMigrationService).initialize();
     await container.resolve(AutoAttachService).initialize();
+    container.resolve(TaskProviderRegistry).initialize();
     await container.resolve(AutoCreateService).initialize();
     await container.resolve(StartupOpenService).initialize();
     container.resolve(ViewHostService).initialize();
