@@ -72,4 +72,13 @@ describe("TaskIndex", () => {
     index.publish("checkbox", "all", []);
     expect(index.itemsIn(path)).toEqual([]);
   });
+
+  it("leaves another provider's items untouched by an 'all' publish", async () => {
+    const { index } = await build();
+    const survivor = item("a.md", "other");
+    index.publish("checkbox", { path }, [item("a.md:1")]);
+    index.publish("other", { path }, [survivor]);
+    index.publish("checkbox", "all", []);
+    expect(index.itemsIn(path)).toEqual([survivor]);
+  });
 });
