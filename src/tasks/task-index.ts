@@ -1,5 +1,6 @@
-import { createNanoEvents, type Emitter } from "nanoevents";
+import { createNanoEvents } from "nanoevents";
 
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import type { VaultPath } from "@/infrastructure/host";
 
 import type { TaskItem } from "./types";
@@ -10,8 +11,9 @@ export interface TaskIndexEvents {
 
 export class TaskIndex {
   readonly #byPath = new Map<VaultPath, Map<string, readonly TaskItem[]>>();
-  readonly #emitter: Emitter<TaskIndexEvents> = createNanoEvents<TaskIndexEvents>();
+  readonly #emitter: TypedEmitter<TaskIndexEvents> = createNanoEvents();
   #version = 0;
+  readonly events: Subscribable<TaskIndexEvents> = this.#emitter;
 
   #set(path: VaultPath, providerId: string, items: readonly TaskItem[]): void {
     const deduped = [...new Map(items.map((item) => [item.key, item])).values()];
@@ -20,10 +22,6 @@ export class TaskIndex {
     else byProvider.set(providerId, deduped);
     if (byProvider.size === 0) this.#byPath.delete(path);
     else this.#byPath.set(path, byProvider);
-  }
-
-  get events(): Emitter<TaskIndexEvents> {
-    return this.#emitter;
   }
 
   version(): number {
