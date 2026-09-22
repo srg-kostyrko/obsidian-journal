@@ -18,4 +18,26 @@ describe("checkboxSliceSchema", () => {
     const parsed = v.parse(checkboxSliceSchema, { statusMap: { "?": "whatever" } });
     expect(parsed.statusMap["?"]).toBe("whatever");
   });
+  it("resets only statusMap when it is not an object", () => {
+    const parsed = v.parse(checkboxSliceSchema, {
+      enabled: false,
+      rule: { mode: "and", conditions: [] },
+      statusMap: "not-an-object",
+      canonical: { done: "x" },
+    });
+    expect(parsed.enabled).toBe(false);
+    expect(parsed.rule).toEqual({ mode: "and", conditions: [] });
+    expect(parsed.statusMap).toEqual({ " ": "todo", x: "done", X: "done", "/": "in-progress", "-": "cancelled" });
+  });
+  it("resets only canonical when it has non-string values", () => {
+    const parsed = v.parse(checkboxSliceSchema, {
+      enabled: false,
+      rule: { mode: "and", conditions: [] },
+      statusMap: { " ": "todo" },
+      canonical: { done: 5 },
+    });
+    expect(parsed.enabled).toBe(false);
+    expect(parsed.rule).toEqual({ mode: "and", conditions: [] });
+    expect(parsed.canonical).toEqual({ todo: " ", done: "x", "in-progress": "/", cancelled: "-" });
+  });
 });

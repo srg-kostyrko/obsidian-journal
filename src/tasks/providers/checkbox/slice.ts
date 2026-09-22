@@ -17,19 +17,17 @@ export const DEFAULT_CANONICAL: Record<string, string> = {
   done: "x",
   "in-progress": "/",
   cancelled: "-",
-  "on-hold": "todo",
-  rolled: " ",
-  "non-task": " ",
 };
 
-// statusMap and canonical are Record<string, string> rather than enums on purpose: a slice
-// has no per-field repair, so one unrecognised value would reset every setting here. Unknown
-// type names resolve to todo on read instead.
+// statusMap and canonical are Record<string, string> rather than enums on purpose, and each field
+// wraps its schema in v.fallback to isolate repair. A structurally malformed value — not an object,
+// or an object with non-string entries — resets only that field, not the whole slice.
+// Unknown type names in normalizeStatus resolve to todo on read instead of throwing.
 export const checkboxSliceSchema = v.object({
   enabled: v.optional(v.fallback(v.boolean(), true), true),
   rule: v.optional(v.fallback(checkboxRuleSchema, { mode: "and", conditions: [] }), { mode: "and", conditions: [] }),
-  statusMap: v.optional(v.record(v.string(), v.string()), DEFAULT_STATUS_MAP),
-  canonical: v.optional(v.record(v.string(), v.string()), DEFAULT_CANONICAL),
+  statusMap: v.optional(v.fallback(v.record(v.string(), v.string()), DEFAULT_STATUS_MAP), DEFAULT_STATUS_MAP),
+  canonical: v.optional(v.fallback(v.record(v.string(), v.string()), DEFAULT_CANONICAL), DEFAULT_CANONICAL),
 });
 
 export type CheckboxSliceState = v.InferOutput<typeof checkboxSliceSchema>;
