@@ -3,6 +3,7 @@ import * as v from "valibot";
 import type { AnchorString } from "@/calendar";
 import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
+import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
 
 import { DEFAULT_NOTELET_FIELD, noteletTypeCollection, noteletTypeSchema } from "./notelets/config";
 import { promptsSchema } from "./prompts/config";
@@ -152,6 +153,7 @@ export const journalConfigSchema = v.object({
   decorations: v.optional(v.array(decorationSchema), []),
   prompts: v.optional(promptsSchema, () => []),
   notelets: v.optional(v.record(v.string(), noteletTypeSchema), () => ({})),
+  tasks: v.optional(v.object({ checkbox: v.optional(checkboxJournalRuleSchema) }), () => ({})),
   navBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
     lines: [] as NavBlockSegment[][],
@@ -395,6 +397,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     templates: [],
     prompts: [],
     notelets: {},
+    tasks: {},
     confirmCreation: false,
     autoCreate: false,
     decorations: structuredClone(isCustom ? customDecorations : fixedDecorations),
