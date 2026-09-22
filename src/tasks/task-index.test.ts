@@ -201,6 +201,18 @@ describe("TaskIndex.hydrate", () => {
     expect(hydrated.at(0)?.display).toMatchObject({ markdown: null });
   });
 
+  it("leaves markdown null when a previously cached note is deleted before the next hydrate", async () => {
+    const { harness, index } = await build();
+    const file = harness.host.putFile(path, "- [ ] One\n");
+    const first = await index.hydrate([lineItem("a.md:0", 0)]);
+    expect(first.at(0)?.display).toMatchObject({ markdown: "- [ ] One" });
+
+    await harness.host.app.fileManager.trashFile(file);
+
+    const second = await index.hydrate([lineItem("a.md:0", 0)]);
+    expect(second.at(0)?.display).toMatchObject({ markdown: null });
+  });
+
   it("marks a hydrated line retargetable only when it carries a date signifier", async () => {
     const { harness, index } = await build();
     harness.host.putFile(path, "- [ ] Dated 📅 2026-09-25\n- [ ] Plain\n");

@@ -20,4 +20,7 @@ describe("datesIn", () => {
   it("returns nothing for a line carrying no signifier", () => {
     expect(datesIn("- [ ] Plain task #work")).toEqual({});
   });
+  it("rejects a malformed token with trailing digits rather than truncating it to a valid date", () => {
+    expect(datesIn("- [ ] A 📅 2026-09-251").due).toBeUndefined();
+  });
 });

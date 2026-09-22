@@ -34,7 +34,12 @@ export class TaskIndex {
 
   async #readInto(path: VaultPath): Promise<void> {
     const note = this.#notes.find(path);
-    if (note.isNone()) return;
+    if (note.isNone()) {
+      // A path cached from an earlier hydrate that has since been deleted must not keep
+      // serving that stale text — evict rather than leave the last-known lines in place.
+      this.#text.delete(path);
+      return;
+    }
     const mtime = note.value.mtime;
     if (this.#text.get(path)?.mtime === mtime) return;
     const read = await this.#notes.readCached(path);
