@@ -57,8 +57,8 @@ export type OwnedNoteChange =
 
 export interface TaskHost {
   publish(providerId: string, scope: "all" | { path: VaultPath }, items: readonly TaskItem[]): void;
-  ownedNotes(): Iterable<OwnedNote>;
-  ownerOf(path: VaultPath): Option<OwnedNote>;
+  ownedNotes(providerId: string): Iterable<OwnedNote>;
+  ownerOf(path: VaultPath, providerId: string): Option<OwnedNote>;
   onOwnedNotesChanged(callback: (change: OwnedNoteChange) => void): () => void;
 }
 

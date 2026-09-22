@@ -11,20 +11,37 @@ import { tasksCoreModule } from "./module";
 import { TaskIndex } from "./task-index";
 import { TaskHostToken } from "./types";
 
+const CHECKBOX = "checkbox";
+
 const dayPath = "Daily/2026-09-22.md" as VaultPath;
 const noteletPath = "Daily/2026-09-22 meeting.md" as VaultPath;
-const rule = {
+const otherPath = "Other/2026-09-22.md" as VaultPath;
+
+const dailyRule = {
   compose: "replace",
   mode: "and",
   conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
 };
+const otherRule = {
+  compose: "narrow",
+  mode: "or",
+  conditions: [{ type: "tag", condition: "has", tags: ["#task"] }],
+};
 
-const defaultTasks = { checkbox: rule };
+const defaultDailyTasks = { checkbox: dailyRule };
+const defaultOtherTasks = { checkbox: otherRule };
 
-async function build(tasks: unknown = defaultTasks) {
+// Two journals, each owning at least one note under its own distinct rule: a fixture with a
+// single journal cannot falsify "the wrong journal's rule leaked onto this note."
+async function build(dailyTasks: unknown = defaultDailyTasks, otherTasks: unknown = defaultOtherTasks) {
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
-    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks } as never) } },
+    data: {
+      journals: {
+        Daily: fixedJournal("Daily", { type: "day" }, { tasks: dailyTasks } as never),
+        Other: fixedJournal("Other", { type: "day" }, { tasks: otherTasks } as never),
+      },
+    },
   });
   const journals = harness.resolve(JournalsIndex);
   journals.register({ journalName: "Daily", anchor: anchor("2026-09-22"), path: dayPath });
@@ -36,6 +53,7 @@ async function build(tasks: unknown = defaultTasks) {
     typeName: "Meeting",
     typeId: null,
   });
+  journals.register({ journalName: "Other", anchor: anchor("2026-09-22"), path: otherPath });
   return {
     harness,
     journals,
@@ -46,35 +64,48 @@ async function build(tasks: unknown = defaultTasks) {
 }
 
 describe("TaskHostService", () => {
-  it("lists every indexed note, notelets included, with its journal and that journal's whole tasks config", async () => {
+  it("lists every indexed note across journals, notelets included, each with its own journal's rule", async () => {
     const { host } = await build();
-    const owned = [...host.ownedNotes()];
-    expect(owned.map((note) => note.path).toSorted()).toEqual([dayPath, noteletPath].toSorted());
-    expect(owned.every((note) => note.journalName === "Daily")).toBe(true);
-    // The host has no notion of "checkbox" — it hands over the journal's whole `tasks` config
-    // verbatim, and the owning provider is the one that knows which key is its own.
-    expect(owned.every((note) => note.rule && typeof note.rule === "object" && "checkbox" in note.rule)).toBe(true);
+    const owned = [...host.ownedNotes(CHECKBOX)];
+    expect(owned.map((note) => note.path).toSorted()).toEqual([dayPath, noteletPath, otherPath].toSorted());
+
     const dayNote = owned.find((note) => note.path === dayPath);
     const noteletNote = owned.find((note) => note.path === noteletPath);
-    expect(dayNote?.rule).toEqual({ checkbox: rule });
-    expect(noteletNote?.rule).toEqual({ checkbox: rule });
+    const otherNote = owned.find((note) => note.path === otherPath);
+    expect(dayNote?.journalName).toBe("Daily");
+    expect(noteletNote?.journalName).toBe("Daily");
+    expect(otherNote?.journalName).toBe("Other");
+    expect(dayNote?.rule).toEqual(dailyRule);
+    expect(noteletNote?.rule).toEqual(dailyRule);
+    expect(otherNote?.rule).toEqual(otherRule);
+  });
+
+  it("reads the rule keyed by the given provider id, not a fixed key", async () => {
+    const { host, repository } = await build();
+    // Bypassing the seeded fixture, whose schema only knows the "checkbox" field: update() writes
+    // straight into the live record with no re-validation, so a second provider's key survives
+    // to prove the host looks it up by the id it was given rather than a name it hardcodes.
+    repository.update("Daily", { tasks: { checkbox: dailyRule, otherProvider: { marker: true } } } as never);
+
+    const checkboxOwned = host.ownerOf(dayPath, CHECKBOX);
+    const otherOwned = host.ownerOf(dayPath, "otherProvider");
+    expect(checkboxOwned.isSome() && checkboxOwned.value.rule).toEqual(dailyRule);
+    expect(otherOwned.isSome() && otherOwned.value.rule).toEqual({ marker: true });
+
+    const fromOwnedNotes = [...host.ownedNotes("otherProvider")].find((note) => note.path === dayPath);
+    expect(fromOwnedNotes?.rule).toEqual({ marker: true });
   });
 
   it("passes a rule through untouched, even one it cannot interpret", async () => {
     const { host, repository } = await build();
-    // Going through JournalsRepository.update rather than the seeded fixture: the seed is parsed
-    // by journalConfigSchema, whose checkboxJournalRuleSchema fields all carry v.fallback
-    // defaults, so a genuinely nonsense value never survives that parse to prove anything about
-    // the host. update() writes straight into the live record with no re-validation, which is
-    // the only way to hand the host something it truly cannot interpret.
     repository.update("Daily", { tasks: { checkbox: { nonsense: true } } } as never);
-    const owned = host.ownerOf(dayPath);
-    expect(owned.isSome() && owned.value.rule).toEqual({ checkbox: { nonsense: true } });
+    const owned = host.ownerOf(dayPath, CHECKBOX);
+    expect(owned.isSome() && owned.value.rule).toEqual({ nonsense: true });
   });
 
   it("returns None for a path no journal owns", async () => {
     const { host } = await build();
-    expect(host.ownerOf("project/ideas.md" as VaultPath).isNone()).toBe(true);
+    expect(host.ownerOf("project/ideas.md" as VaultPath, CHECKBOX).isNone()).toBe(true);
   });
 
   it("announces a note change when an index entry moves", async () => {
@@ -85,12 +116,14 @@ describe("TaskHostService", () => {
     expect(seen).toHaveBeenCalledWith({ kind: "note", path: dayPath });
   });
 
-  it("announces a journal change when that journal's task rule is edited", async () => {
+  it("announces a journal change naming only the journal whose rule was edited", async () => {
     const { host, repository } = await build();
     const seen = vi.fn();
     host.onOwnedNotesChanged(seen);
     repository.update("Daily", { tasks: { checkbox: { compose: "inherit", mode: "and", conditions: [] } } });
     expect(seen).toHaveBeenCalledWith({ kind: "journal", journalName: "Daily" });
+    expect(seen).not.toHaveBeenCalledWith({ kind: "journal", journalName: "Other" });
+    expect(seen).toHaveBeenCalledTimes(1);
   });
 
   it("does not announce a journal change for an update that leaves tasks untouched", async () => {
@@ -111,7 +144,7 @@ describe("TaskHostService", () => {
 
   it("forwards publish to the index", async () => {
     const { host, index } = await build();
-    host.publish("checkbox", { path: dayPath }, []);
+    host.publish(CHECKBOX, { path: dayPath }, []);
     expect(index.version()).toBeGreaterThan(0);
   });
 });

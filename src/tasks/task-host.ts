@@ -37,21 +37,21 @@ export class TaskHostService implements TaskHost {
     this.#index.publish(providerId, scope, items);
   }
 
-  ownerOf(path: VaultPath): Option<OwnedNote> {
+  ownerOf(path: VaultPath, providerId: string): Option<OwnedNote> {
     return this.#journals.entryByPath(path).flatMap((entry) =>
       this.#repository.get(entry.journalName).map((config) => ({
         path: entry.path,
         journalName: entry.journalName,
-        rule: config.tasks,
+        rule: (config.tasks as Record<string, unknown>)[providerId],
       })),
     );
   }
 
-  *ownedNotes(): Iterable<OwnedNote> {
+  *ownedNotes(providerId: string): Iterable<OwnedNote> {
     for (const journalName of this.#repository.find().ids()) {
       const config = this.#repository.get(journalName);
       if (config.isNone()) continue;
-      const rule = config.value.tasks;
+      const rule = (config.value.tasks as Record<string, unknown>)[providerId];
       for (const [, path] of this.#journals.entriesFor(journalName)) {
         yield { path, journalName, rule };
       }
