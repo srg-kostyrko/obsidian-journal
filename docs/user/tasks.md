@@ -89,4 +89,42 @@ note holding:
 decorates that day: `/` reads as In progress, which is open, so the note has an open task even though
 its only checkbox is marked, not empty.
 
+### All tasks completed
+
+A monthly journal with a **Check if all tasks are completed** decoration and the default status map. A
+month's note holding:
+
+```markdown
+- [x] done
+```
+
+decorates that month: `x` reads as Done by default, and the note's only task is Done, so every one of
+its tasks is completed.
+
+### A narrowed vault-and-journal rule
+
+The vault-wide **Identification rule** is **Has** tag `#task`, so a plain checkbox only counts once it
+carries that tag. The daily journal's own **Task identification** is **Narrow**, with a rule of its
+own: **Under** heading `Work` — on top of the vault's tag requirement, a daily journal's task must also
+sit under a "Work" heading.
+
+A day's note:
+
+```markdown
+## Work
+
+- [ ] #task Plan the day
+- [ ] Sort the mail
+
+## Personal
+
+- [ ] #task Buy milk
+```
+
+Only "Plan the day" is read as a task: it carries `#task`, satisfying the vault rule, and sits under
+Work, satisfying the journal's narrowed rule. "Sort the mail" sits under Work but carries no tag, and
+"Buy milk" carries the tag but sits under Personal — narrow needs both rules to hold, so Journals reads
+both as ordinary checkbox lines, not tasks. That single recognized task is To-do, which is open, so the
+day satisfies **Check if note has open tasks** and not **Check if all tasks are completed**.
+
 :::
