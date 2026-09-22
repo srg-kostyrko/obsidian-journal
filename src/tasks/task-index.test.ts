@@ -215,6 +215,17 @@ describe("TaskIndex.hydrate", () => {
     expect(second.at(0)?.display).toMatchObject({ markdown: null });
   });
 
+  // A published item outlives the text it points at by one edit: the note shrinks, the item's line
+  // is now past end-of-file, and slicing there yields "" rather than undefined. Marking it hydrated
+  // with empty markdown is worse than leaving it null — nothing would ever re-read it.
+  it("leaves markdown null when the item's line no longer exists in the note", async () => {
+    const { harness, index } = await build();
+    harness.host.putFile(path, "- [ ] One\n");
+    const hydrated = await index.hydrate([lineItem("a.md:7", 7)]);
+    expect(hydrated.at(0)?.display).toMatchObject({ markdown: null });
+    expect(hydrated.at(0)?.capabilities.retargetable).toBe(false);
+  });
+
   it("marks a hydrated line retargetable only when it carries a date signifier", async () => {
     const { harness, index } = await build();
     harness.host.putFile(path, "- [ ] Dated 📅 2026-09-25\n- [ ] Plain\n");

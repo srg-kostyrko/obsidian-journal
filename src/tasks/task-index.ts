@@ -80,12 +80,16 @@ export class TaskIndex {
       items.filter((item) => item.display.kind === "line" && item.display.markdown === null).map((item) => item.path),
     );
     for (const path of paths) await this.#readInto(path);
+    const providers = new Map(this.#injector.resolve(TaskProviderToken).map((provider) => [provider.id, provider]));
     return items.map((item) => {
       if (item.display.kind !== "line" || item.display.markdown !== null) return item;
       const cached = this.#text.get(item.path);
-      const markdown = cached?.lines.slice(item.display.line, item.display.endLine + 1).join("\n") ?? null;
-      if (markdown === null) return item;
-      const provider = this.#injector.resolve(TaskProviderToken).find((candidate) => candidate.id === item.provider);
+      // An item whose line has since fallen past end-of-file slices to "", which is not null and
+      // would be stored as hydrated-but-blank. Leave the markdown null instead: the next publish
+      // carries its real position, and blank markdown is indistinguishable from a real empty line.
+      const markdown = cached?.lines.slice(item.display.line, item.display.endLine + 1).join("\n");
+      if (!markdown) return item;
+      const provider = providers.get(item.provider);
       if (provider?.hydrateItem) return provider.hydrateItem(item, markdown);
       return { ...item, display: { ...item.display, markdown } };
     });
