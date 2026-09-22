@@ -54,4 +54,23 @@ describe("NoteStructureService", () => {
     expect(value?.headings).toEqual([{ heading: "Tasks", level: 2, line: 2 }]);
     expect(value?.frontmatterTags).toEqual(["#daily"]);
   });
+
+  // getAllTags concatenates frontmatter and inline tags without deduping, so subtracting the inline
+  // ones by value takes the frontmatter occurrence with them — and a note-level tag stops counting
+  // for every item in the note the moment the same tag is also written on a line. Disjoint tags,
+  // which is what the fixture above uses, cannot see it.
+  it("keeps a frontmatter tag that also appears inline", () => {
+    const { service, host } = build();
+    const path = "day.md" as VaultPath;
+    host.putFile(path);
+    host.emitMetadata(path, {
+      listItems: [{ task: " ", position: pos(3), parent: 3 }],
+      tags: [{ tag: "#task", position: pos(3) }],
+      frontmatter: { tags: ["task", "daily"] },
+    });
+
+    const structure = service.get(path);
+    const value = structure.isSome() ? structure.value : null;
+    expect(value?.frontmatterTags).toEqual(["#task", "#daily"]);
+  });
 });

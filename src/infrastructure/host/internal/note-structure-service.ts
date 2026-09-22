@@ -1,4 +1,4 @@
-import { getAllTags, TFile } from "obsidian";
+import { parseFrontMatterTags, TFile } from "obsidian";
 
 import { inject } from "@/infrastructure/di";
 import { None, type Option, Some } from "@/infrastructure/result";
@@ -15,7 +15,6 @@ export class NoteStructureService {
     if (!(file instanceof TFile)) return new None<NoteStructure>();
     const cache = this.#app.metadataCache.getFileCache(file);
     if (!cache) return new None<NoteStructure>();
-    const inline = new Set((cache.tags ?? []).map((entry) => entry.tag));
     return new Some<NoteStructure>({
       listItems: (cache.listItems ?? [])
         .filter((item) => item.task !== undefined)
@@ -30,9 +29,11 @@ export class NoteStructureService {
         level: h.level,
         line: h.position.start.line,
       })),
-      // getAllTags merges inline and frontmatter tags and normalizes the leading "#";
-      // positions are lost there, so inline ones are subtracted back out by value.
-      frontmatterTags: (getAllTags(cache) ?? []).filter((tag) => !inline.has(tag)),
+      // Read straight off the frontmatter rather than subtracting the inline tags out of
+      // getAllTags: that concatenates the two lists without deduping, so a tag written both in
+      // frontmatter and on a line loses its frontmatter occurrence too — and a note-level tag has
+      // to keep counting for every item in the note.
+      frontmatterTags: parseFrontMatterTags(cache.frontmatter) ?? [],
     });
   }
 }

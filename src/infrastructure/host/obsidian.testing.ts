@@ -73,14 +73,20 @@ function frontmatterTagList(raw: unknown): unknown[] {
   return [];
 }
 
-export function getAllTags(cache: TagSourceCache): string[] | null {
-  const inline = cache.tags?.map((entry) => entry.tag) ?? [];
-  const raw: unknown = cache.frontmatter?.tags ?? cache.frontmatter?.tag;
-  const front = frontmatterTagList(raw)
+export function parseFrontMatterTags(frontmatter: Record<string, unknown> | null | undefined): string[] | null {
+  if (!frontmatter) return null;
+  const raw: unknown = frontmatter.tags ?? frontmatter.tag;
+  if (raw === undefined || raw === null) return null;
+  return frontmatterTagList(raw)
     .filter((value): value is string => typeof value === "string")
     .map((value) => value.trim())
     .filter(Boolean)
     .map((value) => (value.startsWith("#") ? value : `#${value}`));
+}
+
+export function getAllTags(cache: TagSourceCache): string[] | null {
+  const inline = cache.tags?.map((entry) => entry.tag) ?? [];
+  const front = parseFrontMatterTags(cache.frontmatter) ?? [];
   return [...new Set([...inline, ...front])];
 }
 
