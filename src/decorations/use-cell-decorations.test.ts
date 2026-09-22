@@ -13,6 +13,7 @@ import type { TypeId } from "@/journals/notelets/config";
 import { fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { tasksCoreModule } from "@/tasks";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { DecorationsStore } from "./decorations-store";
@@ -49,7 +50,7 @@ interface DecorationsHarness {
 async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promise<DecorationsHarness> {
   const size = new FakeNoteSizeService();
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: { work: buildShelf("work") }, decorations: { decorations: [] } },
     overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
   });

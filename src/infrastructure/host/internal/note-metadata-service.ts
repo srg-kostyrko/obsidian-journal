@@ -22,9 +22,6 @@ export class NoteMetadataService {
       // every tag to a leading "#".
       tags: getAllTags(cache) ?? [],
       properties: cache.frontmatter ?? {},
-      tasks:
-        cache.listItems?.filter((item) => item.task !== undefined).map((item) => ({ completed: item.task !== " " })) ??
-        [],
     });
   }
 

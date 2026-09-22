@@ -76,38 +76,5 @@ describe("NoteMetadataService", () => {
       const result = service.get("a.md" as VaultPath);
       expect(result.isSome() && result.value.properties).toEqual({ mood: 5, label: "ok" });
     });
-
-    it("derives completed=false for open tasks", () => {
-      const { service, host } = build();
-      seed(host, "a.md" as VaultPath, {
-        listItems: [{ task: " ", position: anyPos(), parent: 0 }],
-      });
-
-      const result = service.get("a.md" as VaultPath);
-      expect(result.isSome() && result.value.tasks).toEqual([{ completed: false }]);
-    });
-
-    it("derives completed=true for any non-blank task marker", () => {
-      const { service, host } = build();
-      seed(host, "a.md" as VaultPath, {
-        listItems: [
-          { task: "x", position: anyPos(), parent: 0 },
-          { task: "/", position: anyPos(), parent: 0 },
-        ],
-      });
-
-      const result = service.get("a.md" as VaultPath);
-      expect(result.isSome() && result.value.tasks).toEqual([{ completed: true }, { completed: true }]);
-    });
-
-    it("ignores list items without a task marker", () => {
-      const { service, host } = build();
-      seed(host, "a.md" as VaultPath, {
-        listItems: [{ position: anyPos(), parent: 0 }],
-      });
-
-      const result = service.get("a.md" as VaultPath);
-      expect(result.isSome() && result.value.tasks).toEqual([]);
-    });
   });
 });

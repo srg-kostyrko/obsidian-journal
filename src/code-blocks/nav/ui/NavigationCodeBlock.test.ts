@@ -32,6 +32,7 @@ import { buildNavSegment, customJournal, fixedJournal } from "@/journals/testing
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { tasksCoreModule } from "@/tasks";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import NavigationCodeBlock from "./NavigationCodeBlock.vue";
@@ -59,7 +60,7 @@ interface NavScenario {
 
 async function renderNav(path: string, scenario: NavScenario) {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: {
       journals: scenario.journals,
       shelves: scenario.shelves ?? {},

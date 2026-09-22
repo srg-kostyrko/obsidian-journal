@@ -75,7 +75,6 @@ export type {
   NoteMetadata,
   NoteSize,
   NoteStructure,
-  NoteTask,
   NotesEvents,
   OpenMode,
   PinTarget,

@@ -14,6 +14,7 @@ import { customJournal, fixedJournal } from "@/journals/testing";
 import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { tasksCoreModule } from "@/tasks";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { decorationsModule } from "../module";
@@ -44,7 +45,7 @@ interface MountOptions {
 
 async function mount(options: MountOptions = {}): Promise<{ harness: TestHarness }> {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: {
       journals: options.journals ?? {},
       shelves: options.shelves ?? {},

@@ -12,6 +12,8 @@ import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
+import { TaskIndex, tasksCoreModule } from "@/tasks";
+import type { TaskItem, TaskStatus } from "@/tasks";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { cellKey, DecorationEngine } from "./engine";
@@ -26,7 +28,7 @@ async function buildHarness(
 ): Promise<{ harness: TestHarness; size: FakeNoteSizeService }> {
   const size = new FakeNoteSizeService();
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: {}, decorations: { decorations: [] } },
     overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
   });
@@ -58,6 +60,45 @@ async function sprintDayCells(day: string): Promise<Map<string, unknown>> {
 }
 
 const NOTE_PATH = "journals/2026-05-25.md" as VaultPath;
+
+function taskItem(status: TaskStatus): TaskItem {
+  return {
+    provider: "test",
+    key: `test:${status}`,
+    path: NOTE_PATH,
+    status,
+    relations: ["containment"],
+    capabilities: { movable: true, stampable: true, retargetable: false },
+    display: { kind: "line", path: NOTE_PATH, line: 0, endLine: 0, markdown: null },
+    dates: {},
+  };
+}
+
+async function evaluateTaskCondition(
+  conditionType: "has-open-task" | "all-tasks-completed",
+  options: { registerNote: boolean; items?: readonly TaskStatus[] },
+): Promise<Map<string, unknown>> {
+  const decoration = buildDecoration({
+    mode: "and",
+    conditions: [buildCondition(conditionType)],
+    styles: [buildStyle("background")],
+  });
+  const { harness } = await buildHarness({
+    daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+  });
+  const period = DayPeriod.containing(date("2026-05-25"));
+  if (options.registerNote) {
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
+  }
+  if (options.items) {
+    harness.resolve(TaskIndex).publish("test", { path: NOTE_PATH }, options.items.map(taskItem));
+  }
+  return harness
+    .resolve(DecorationEngine)
+    .evaluateRange([period], [{ kind: "journal", journalName: "daily", index: 0, decoration }]);
+}
 
 async function evaluateDaily(
   decoration: JournalDecoration,
@@ -378,6 +419,44 @@ describe("DecorationEngine", () => {
         const other = await evaluateNotelet(["nt_zzz"], { registerNotelet: "nt_a" });
         expect(matching.size).toBe(1);
         expect(other.size).toBe(0);
+      });
+    });
+
+    describe("task conditions", () => {
+      it("does not match has-open-task when there is no note", async () => {
+        const result = await evaluateTaskCondition("has-open-task", { registerNote: false });
+        expect(result.size).toBe(0);
+      });
+
+      it("matches has-open-task when the index carries an open item for the note", async () => {
+        const result = await evaluateTaskCondition("has-open-task", { registerNote: true, items: ["todo"] });
+        expect(result.size).toBe(1);
+      });
+
+      it("does not match has-open-task when every item is done", async () => {
+        const result = await evaluateTaskCondition("has-open-task", { registerNote: true, items: ["done"] });
+        expect(result.size).toBe(0);
+      });
+
+      it("does not match all-tasks-completed when the note has no items in the index", async () => {
+        const result = await evaluateTaskCondition("all-tasks-completed", { registerNote: true, items: [] });
+        expect(result.size).toBe(0);
+      });
+
+      it("matches all-tasks-completed when every item is done", async () => {
+        const result = await evaluateTaskCondition("all-tasks-completed", {
+          registerNote: true,
+          items: ["done", "cancelled"],
+        });
+        expect(result.size).toBe(1);
+      });
+
+      it("does not match all-tasks-completed when an item is only in progress", async () => {
+        const result = await evaluateTaskCondition("all-tasks-completed", {
+          registerNote: true,
+          items: ["in-progress"],
+        });
+        expect(result.size).toBe(0);
       });
     });
 

@@ -14,3 +14,4 @@ export { TaskProviderToken, TaskHostToken } from "./types";
 export { isOpen, isDone, isExcluded } from "./status";
 export { tasksCoreModule, tasksModule } from "./module";
 export { TaskProviderRegistry } from "./provider-registry";
+export { TaskIndex } from "./task-index";

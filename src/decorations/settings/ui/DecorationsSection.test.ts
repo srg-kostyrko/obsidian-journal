@@ -13,6 +13,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { tasksCoreModule } from "@/tasks";
 import { testContainer } from "@/testing";
 
 import { decorationsModule } from "../../module";
@@ -48,7 +49,7 @@ async function mount(
   options: { hasNote?: boolean } = {},
 ) {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: {
       journals: {
         daily: fixedJournal(
@@ -99,7 +100,13 @@ describe("DecorationsSection", () => {
     // an additive one when the other buckets are empty. Populating both is what a substitution
     // (reading the wrong bucket) and a leak (reading every bucket) would actually diverge on.
     const harness = await testContainer({
-      modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+      modules: [
+        journalsCoreModule,
+        shelvesCoreModule,
+        decorationsModule,
+        decorationsSettingsCoreModule,
+        tasksCoreModule,
+      ],
       data: {
         journals: { daily: fixedJournal("daily", { type: "day" }, { decorations: [sampleDecoration] }) },
         shelves: { work: buildShelf("work", { decorations: [sampleCalendarDecoration] }) },
@@ -225,7 +232,13 @@ describe("DecorationsSection", () => {
       styles: [buildStyle("background")],
     });
     const harness = await testContainer({
-      modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+      modules: [
+        journalsCoreModule,
+        shelvesCoreModule,
+        decorationsModule,
+        decorationsSettingsCoreModule,
+        tasksCoreModule,
+      ],
       data: {
         journals: {
           daily: fixedJournal(

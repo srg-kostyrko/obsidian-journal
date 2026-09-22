@@ -29,7 +29,7 @@ async function migrate(
   await harness.resolve(DataMigrationService).initialize();
   harness.host.setLayoutReady();
   for (const [path, properties] of Object.entries(notes)) {
-    metadata.setMetadata(path as VaultPath, { title: path.replace(/\.md$/, ""), tags: [], properties, tasks: [] });
+    metadata.setMetadata(path as VaultPath, { title: path.replace(/\.md$/, ""), tags: [], properties });
   }
   metadata.emitResolved();
   await settle();
@@ -323,7 +323,6 @@ describe("DataMigrationService", () => {
       title: "note",
       tags: [],
       properties: { journal: "cal", "journal-start-date": "2022-01-01", "journal-section": "month" },
-      tasks: [],
     });
     metadata.emitResolved();
     await settle();
@@ -346,7 +345,6 @@ describe("DataMigrationService", () => {
       title: "note",
       tags: [],
       properties: { journal: "other" },
-      tasks: [],
     });
 
     await harness.resolve(DataMigrationService).initialize();

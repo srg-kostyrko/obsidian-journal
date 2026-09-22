@@ -16,6 +16,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { notesCalendarModule } from "@/notes-calendar/module";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks";
 import { testContainer, type TestHarness } from "@/testing";
 import { viewsCoreModule } from "@/views/module";
 
@@ -33,6 +34,7 @@ const MODULES = [
   decorationsModule,
   decorationsSettingsCoreModule,
   notesCalendarModule,
+  tasksCoreModule,
 ];
 
 async function mountItem(
