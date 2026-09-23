@@ -1,10 +1,9 @@
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import { m } from "@/i18n";
-import { ModalContextKey } from "@/infrastructure/host/modals/internal/modal-context";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
@@ -19,11 +18,7 @@ async function mount(tasks: unknown = {}) {
     modules: [journalsCoreModule, tasksCoreModule],
     data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks } as never) } },
   });
-  const submit = vi.fn();
-  harness.render(EditJournalTasksModal, {
-    props: { journalName: "Daily" },
-    global: { provide: { [ModalContextKey as symbol]: { submit, cancel: vi.fn() } } },
-  });
+  const { submit } = harness.renderModal(EditJournalTasksModal, { props: { journalName: "Daily" } });
   return { harness, repository: harness.resolve(JournalsRepository), submit };
 }
 
