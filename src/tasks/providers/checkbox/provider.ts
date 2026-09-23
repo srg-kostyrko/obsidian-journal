@@ -11,6 +11,7 @@ import { datesIn } from "./dates";
 import { CHECKBOX_PROVIDER_ID, extractItems } from "./extract";
 import { checkboxJournalRuleSchema, type CheckboxJournalRule } from "./rule-schema";
 import { checkboxSlice } from "./slice";
+import CheckboxJournalRow from "./ui/CheckboxJournalRow.vue";
 import CheckboxSettingsRow from "./ui/CheckboxSettingsRow.vue";
 
 // A rule the schema cannot parse must not take the note's items with it — falling back to the
@@ -37,6 +38,7 @@ export class CheckboxTaskProvider implements TaskProvider {
   #refillTimer: number | undefined;
   readonly id = CHECKBOX_PROVIDER_ID;
   readonly settingsRow = CheckboxSettingsRow;
+  readonly journalRow = CheckboxJournalRow;
 
   #refreshPath(path: VaultPath): void {
     const note = this.#host.ownerOf(path, this.id);

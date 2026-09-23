@@ -34,6 +34,25 @@ describe("EditJournalTasksModal", () => {
     expect(screen.getByTestId("compose-replace")).toBeTruthy();
   });
 
+  it("defaults to inherit for a journal that has never been configured", async () => {
+    await mount();
+    expect(screen.getByTestId("compose-inherit").classList.contains("mod-cta")).toBe(true);
+  });
+
+  it("seeds the compose mode and rule editor from an existing journal rule", async () => {
+    await mount({
+      checkbox: { compose: "replace", mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["work"] }] },
+    });
+    expect(screen.getByTestId("compose-replace").classList.contains("mod-cta")).toBe(true);
+    expect(screen.getByDisplayValue("work")).toBeTruthy();
+  });
+
+  it("renders the compose option labels from the message catalogue, not the raw identifier", async () => {
+    await mount();
+    expect(screen.queryByText("narrow")).toBeNull();
+    expect(screen.queryByText("replace")).toBeNull();
+  });
+
   it("hides the rule editor while the journal inherits", async () => {
     await mount();
     expect(screen.queryByTestId("rule-add-condition")).toBeNull();
@@ -97,5 +116,20 @@ describe("EditJournalTasksModal", () => {
     expect(tasks).toMatchObject({ noteProperty: "after" });
     expect(tasks?.checkbox).toMatchObject({ compose: "narrow" });
     expect(tasks?.checkbox?.conditions).toHaveLength(1);
+  });
+
+  // save() must hand the store a copy of the draft's conditions, not the array itself — otherwise
+  // the store would hold the very array the rule editor keeps mutating, and a later external write
+  // to that array would silently leak into the still-open modal's rendered inputs.
+  it("hands the store its own copy of the conditions, not the draft's array", async () => {
+    const { repository } = await mount({ checkbox: { compose: "narrow", mode: "and", conditions: [] } });
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    stored?.conditions.push({ type: "tag", condition: "has", tags: ["outside"] });
+
+    expect(screen.queryByDisplayValue("outside")).toBeNull();
   });
 });

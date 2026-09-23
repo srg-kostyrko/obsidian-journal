@@ -42,6 +42,9 @@ export interface TaskProvider {
   // TaskProviderToken, so it never names a provider itself. The row owns its own enable toggle
   // and whatever opens its settings. A provider with no settings surface renders no row.
   readonly settingsRow?: Component;
+  // The journal page's Tasks section renders one of these per provider, with journalName. A
+  // journal can narrow a provider's rule but cannot switch the provider off, so no toggle here.
+  readonly journalRow?: Component;
   start(): () => void;
   // Text is not in metadataCache, so date roles and retargetable can only be read once the line's
   // markdown exists — hydration calls this with it. The index has no dialect of its own: a

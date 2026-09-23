@@ -10,9 +10,9 @@ import RuleConditionRow from "./RuleConditionRow.vue";
 
 import type { CheckboxCondition } from "../rule-schema";
 
-// Typed as the mode/conditions pair rather than CheckboxRule so JournalTasksSection (a later
-// phase) can bind the same editor to a journal rule, which carries an extra `compose` field this
-// component never touches.
+// Typed as the mode/conditions pair rather than CheckboxRule so EditJournalTasksModal can bind
+// the same editor to a journal rule, which carries an extra `compose` field this component never
+// touches.
 const rule = defineModel<{ mode: "and" | "or"; conditions: CheckboxCondition[] }>({ required: true });
 
 function addCondition(): void {
