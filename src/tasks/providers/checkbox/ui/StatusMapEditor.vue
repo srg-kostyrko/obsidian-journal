@@ -34,9 +34,17 @@ const candidatesByType = computed(() => {
   return grouped;
 });
 
+// A marker is the one character between the brackets, so anything longer can never match a real
+// checkbox — and it would still show up as a candidate in the write-symbol rows below, where
+// picking it puts a string into `canonical` that a writer would emit back into the note. Counted
+// in code points: an emoji marker is one character to the user and two to `.length`.
+function isMarker(text: string): boolean {
+  return [...text].length === 1;
+}
+
 const canAdd = computed(() => {
   const trimmed = newSymbol.value.trim();
-  return trimmed.length > 0 && !Object.hasOwn(slice.state.statusMap, trimmed);
+  return isMarker(trimmed) && !Object.hasOwn(slice.state.statusMap, trimmed);
 });
 
 // Every status name a symbol can read as is a full phrase from the message catalogue, never the
@@ -79,7 +87,7 @@ function writeSymbolLabel(status: string): string {
 
 function addSymbol(): void {
   const trimmed = newSymbol.value.trim();
-  if (trimmed.length === 0 || Object.hasOwn(slice.state.statusMap, trimmed)) return;
+  if (!isMarker(trimmed) || Object.hasOwn(slice.state.statusMap, trimmed)) return;
   slice.state.statusMap[trimmed] = "todo" satisfies TaskStatus;
   newSymbol.value = "";
 }

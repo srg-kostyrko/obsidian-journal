@@ -37,7 +37,8 @@ release: every marker used to count as done except a plain space, so a note whos
 for any other unmapped marker, such as a theme's `[>]`.
 
 Type a marker and click **Add symbol** to map it; the new row starts at To-do, and its dropdown offers
-all seven statuses. The delete icon on a row removes that mapping — a marker no longer listed falls
+all seven statuses. A marker is the single character between the brackets, so **Add symbol** stays
+disabled until exactly one is typed — one emoji counts as one character. The delete icon on a row removes that mapping — a marker no longer listed falls
 back to To-do, same as one you never added.
 
 Below the map, **Write symbol for** _status_ appears once per status that has at least one marker
