@@ -279,10 +279,15 @@ describe("rule editor", () => {
     expect(slice.state.rule.mode).toBe("or");
   });
 
-  it("keeps the whole rule editor inside one setting row", async () => {
+  // `closest(".setting-item")` finds ANY ancestor, so it would still pass if a second setting
+  // row were reintroduced around the rule body — asserting the container holds exactly one is
+  // what actually pins "the whole rule editor is one setting row, not several".
+  it("renders the rule editor inside a single setting row, not one per part", async () => {
     await mount();
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     const row = screen.getByTestId("rule-condition-row");
-    expect(row.closest(".setting-item")).not.toBeNull();
+    const settingItem = row.closest(".setting-item");
+    expect(settingItem).not.toBeNull();
+    expect(settingItem?.querySelectorAll(".setting-item")).toHaveLength(0);
   });
 });
