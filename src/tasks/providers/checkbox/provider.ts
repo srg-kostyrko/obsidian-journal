@@ -11,7 +11,7 @@ import { datesIn } from "./dates";
 import { CHECKBOX_PROVIDER_ID, extractItems } from "./extract";
 import { checkboxJournalRuleSchema, type CheckboxJournalRule } from "./rule-schema";
 import { checkboxSlice } from "./slice";
-import CheckboxProviderSection from "./ui/CheckboxProviderSection.vue";
+import CheckboxSettingsRow from "./ui/CheckboxSettingsRow.vue";
 
 // A rule the schema cannot parse must not take the note's items with it — falling back to the
 // global rule alone (the same treatment as no journal rule at all) is safer than dropping the note.
@@ -36,7 +36,7 @@ export class CheckboxTaskProvider implements TaskProvider {
   // ambient timer overloads into every file, and this one has to stay the browser's.
   #refillTimer: number | undefined;
   readonly id = CHECKBOX_PROVIDER_ID;
-  readonly settingsSection = CheckboxProviderSection;
+  readonly settingsRow = CheckboxSettingsRow;
 
   #refreshPath(path: VaultPath): void {
     const note = this.#host.ownerOf(path, this.id);

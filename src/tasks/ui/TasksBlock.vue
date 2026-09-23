@@ -10,14 +10,14 @@ import UiIconedRow from "@/ui/UiIconedRow.vue";
 
 import { TaskProviderToken, type TaskProvider } from "../types";
 
-// note-property (a later phase) joins this block as a second section rather than a second
-// top-level block, so the sections rendered here come from whatever is registered under
+// note-property (a later phase) joins this block as a second row rather than a second
+// top-level block, so the rows rendered here come from whatever is registered under
 // TaskProviderToken — this component never names a provider by id.
-function hasSettingsSection(provider: TaskProvider): provider is TaskProvider & { settingsSection: Component } {
-  return provider.settingsSection !== undefined;
+function hasSettingsRow(provider: TaskProvider): provider is TaskProvider & { settingsRow: Component } {
+  return provider.settingsRow !== undefined;
 }
 
-const sections = useService(TaskProviderToken).filter(hasSettingsSection);
+const rows = useService(TaskProviderToken).filter(hasSettingsRow);
 const expanded = ref(false);
 </script>
 
@@ -26,6 +26,6 @@ const expanded = ref(false);
     <template #trigger>
       <UiIconedRow :icon="icons.section.tasks">{{ m.tasks_settings_title() }}</UiIconedRow>
     </template>
-    <component :is="provider.settingsSection" v-for="provider in sections" :key="provider.id" />
+    <component :is="provider.settingsRow" v-for="provider in rows" :key="provider.id" />
   </UiCollapsibleBlock>
 </template>

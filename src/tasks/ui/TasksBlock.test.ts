@@ -14,13 +14,13 @@ import { TaskProviderToken, type TaskProvider } from "../types";
 import TasksBlock from "./TasksBlock.vue";
 
 // TaskProvider.start returns a disposer; these stand-in providers are never started by
-// TasksBlock (it only reads settingsSection), so the disposer is never called.
+// TasksBlock (it only reads settingsRow), so the disposer is never called.
 function noDisposer(): void {
   /* never started */
 }
 
 const FakeSection = defineComponent({ render: () => h("div", "fake provider section") });
-const fakeProvider: TaskProvider = { id: "fake", settingsSection: FakeSection, start: () => noDisposer };
+const fakeProvider: TaskProvider = { id: "fake", settingsRow: FakeSection, start: () => noDisposer };
 const fakeProviderModule: Module = {
   register(c) {
     c.register(TaskProviderToken).useValue(fakeProvider);

@@ -38,11 +38,10 @@ export interface TaskItem {
 
 export interface TaskProvider {
   readonly id: string;
-  // Optional the same way hydrateItem is: the settings dashboard's Tasks block renders one
-  // section per registered provider by reading this field off TaskProviderToken, so it never
-  // has to name a provider itself. A provider with no settings surface (none yet) renders no
-  // section.
-  readonly settingsSection?: Component;
+  // The dashboard's Tasks block renders one row per provider by reading this off
+  // TaskProviderToken, so it never names a provider itself. The row owns its own enable toggle
+  // and whatever opens its settings. A provider with no settings surface renders no row.
+  readonly settingsRow?: Component;
   start(): () => void;
   // Text is not in metadataCache, so date roles and retargetable can only be read once the line's
   // markdown exists — hydration calls this with it. The index has no dialect of its own: a
