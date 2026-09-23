@@ -211,4 +211,11 @@ describe("CheckboxProviderSection", () => {
 
     expect(slice.state.rule.mode).toBe("or");
   });
+
+  it("keeps the whole rule editor inside one setting row", async () => {
+    await mount();
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const row = screen.getByTestId("rule-condition-row");
+    expect(row.closest(".setting-item")).not.toBeNull();
+  });
 });
