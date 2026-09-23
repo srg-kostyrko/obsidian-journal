@@ -2324,7 +2324,7 @@
   "tasks_settings_provider_checkbox": "Tareas de casilla",
   "tasks_settings_provider_checkbox_desc": "Lee elementos de lista con casilla de una nota.",
   "tasks_settings_configure": "Configurar",
-  "tasks_settings_enabled": "Habilitar",
+  "tasks_settings_edit_rule": "Editar",
   "tasks_settings_status_map": "Símbolos de estado",
   "tasks_settings_status_map_desc": "Qué símbolo de casilla significa qué estado. Cuando dos símbolos comparten un estado, el marcado es el que se escribe de vuelta en la nota cuando cambia el estado de una tarea.",
   "tasks_settings_written_back": "Se escribe de vuelta",
@@ -2377,7 +2377,6 @@
   "tasks_settings_add_symbol": "Agregar símbolo",
   "tasks_settings_new_symbol_label": "Nuevo símbolo",
 
-  "tasks_journal_section_title": "Identificación de tareas",
   "tasks_journal_compose": "Relación con la regla de toda la bóveda",
   "tasks_journal_compose_desc": "«Heredar» usa solo la regla de toda la bóveda. «Restringir» exige que una línea cumpla ambas reglas. «Reemplazar» usa solo la regla de este diario.",
   "tasks_journal_compose_inherit": "Heredar",

@@ -2335,7 +2335,7 @@
   "tasks_settings_provider_checkbox": "Attività con casella",
   "tasks_settings_provider_checkbox_desc": "Legge gli elementi di elenco con casella da una nota.",
   "tasks_settings_configure": "Configura",
-  "tasks_settings_enabled": "Abilita",
+  "tasks_settings_edit_rule": "Modifica",
   "tasks_settings_status_map": "Simboli di stato",
   "tasks_settings_status_map_desc": "Quale simbolo della casella indica quale stato. Quando due simboli condividono uno stato, quello contrassegnato viene riscritto nella nota quando lo stato di un’attività cambia.",
   "tasks_settings_written_back": "Riscritto",
@@ -2388,7 +2388,6 @@
   "tasks_settings_add_symbol": "Aggiungi simbolo",
   "tasks_settings_new_symbol_label": "Nuovo simbolo",
 
-  "tasks_journal_section_title": "Identificazione delle attività",
   "tasks_journal_compose": "Relazione con la regola di tutto il vault",
   "tasks_journal_compose_desc": "«Eredita» usa solo la regola di tutto il vault. «Restringi» richiede che una riga soddisfi entrambe le regole. «Sostituisci» usa solo la regola di questo diario.",
   "tasks_journal_compose_inherit": "Eredita",

@@ -2402,7 +2402,7 @@
   "tasks_settings_provider_checkbox": "Завдання-чекбокси",
   "tasks_settings_provider_checkbox_desc": "Читає пункти списку з чекбоксом із нотатки.",
   "tasks_settings_configure": "Налаштувати",
-  "tasks_settings_enabled": "Увімкнути",
+  "tasks_settings_edit_rule": "Редагувати",
   "tasks_settings_status_map": "Символи статусу",
   "tasks_settings_status_map_desc": "Який символ чекбокса означає який статус. Якщо два символи мають один статус, позначений із них записується назад у нотатку, коли статус завдання змінюється.",
   "tasks_settings_written_back": "Записується",
@@ -2455,7 +2455,6 @@
   "tasks_settings_add_symbol": "Додати символ",
   "tasks_settings_new_symbol_label": "Новий символ",
 
-  "tasks_journal_section_title": "Визначення завдань",
   "tasks_journal_compose": "Відношення до правила всього сховища",
   "tasks_journal_compose_desc": "«Успадкувати» використовує лише правило всього сховища. «Звузити» вимагає, щоб рядок задовольняв обидва правила. «Замінити» використовує лише правило цього журналу.",
   "tasks_journal_compose_inherit": "Успадкувати",

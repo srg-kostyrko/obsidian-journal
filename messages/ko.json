@@ -2321,7 +2321,7 @@
   "tasks_settings_provider_checkbox": "체크박스 작업",
   "tasks_settings_provider_checkbox_desc": "노트에서 체크박스 목록 항목을 읽습니다.",
   "tasks_settings_configure": "구성",
-  "tasks_settings_enabled": "사용",
+  "tasks_settings_edit_rule": "편집",
   "tasks_settings_status_map": "상태 기호",
   "tasks_settings_status_map_desc": "어떤 체크박스 기호가 어떤 상태를 뜻하는지. 두 기호가 같은 상태를 공유하면, 표시된 기호가 작업의 상태가 바뀔 때 노트에 다시 기록됩니다.",
   "tasks_settings_written_back": "다시 기록됨",
@@ -2353,8 +2353,8 @@
       "declarations": ["input condition", "input headings"],
       "selectors": ["condition"],
       "match": {
-        "condition=under": "제목 {headings} 아래에 있는",
-        "condition=not-under": "제목 {headings} 아래에 있지 않은"
+        "condition=under": "제목 {headings}의 하위에 있는",
+        "condition=not-under": "제목 {headings}의 하위에 있지 않은"
       }
     }
   ],
@@ -2374,7 +2374,6 @@
   "tasks_settings_add_symbol": "기호 추가",
   "tasks_settings_new_symbol_label": "새 기호",
 
-  "tasks_journal_section_title": "작업 식별",
   "tasks_journal_compose": "보관함 전체 규칙과의 관계",
   "tasks_journal_compose_desc": "「상속」은 보관함 전체 규칙만 사용합니다. 「좁히기」는 한 줄이 두 규칙을 모두 만족해야 합니다. 「대체」는 이 저널의 규칙만 사용합니다.",
   "tasks_journal_compose_inherit": "상속",

@@ -9,9 +9,11 @@ means, and which checkbox items count as tasks in the first place.
 
 ## Turning tasks on
 
-On the main settings page, **Tasks** → **Checkbox tasks** → **Enable** turns checkbox reading on. It is
-on by default. **Tasks** groups one section per way Journals has of finding tasks; checkbox items are
-the only one so far.
+On the main settings page, expand the **Tasks** section: it lists one row per way Journals has of
+finding tasks, checkbox items being the only one so far. **Checkbox tasks**' toggle turns checkbox
+reading on — it is on by default — and its gear icon opens checkbox tasks' own settings: the status map
+and the vault-wide identification rule, both covered below. The row's own description names the current
+identification rule in one sentence, so you can see it without opening anything.
 
 ## Status symbols
 
@@ -21,7 +23,8 @@ Every checkbox marker — the character between the brackets — reads as one of
 excluded from both counts entirely, and **Rolled over** counts toward neither — a note whose only task
 is rolled over satisfies neither [decoration condition](/decorations#tasks).
 
-**Status symbols**, under **Checkbox tasks**, maps markers to statuses:
+Click **Checkbox tasks**' gear icon to open its settings modal. **Status symbols**, at the top, maps
+markers to statuses:
 
 | Marker | Status      |
 | ------ | ----------- |
@@ -41,17 +44,19 @@ all seven statuses. A marker is the single character between the brackets, so **
 disabled until exactly one is typed — one emoji counts as one character. The delete icon on a row removes that mapping — a marker no longer listed falls
 back to To-do, same as one you never added.
 
-Below the map, **Write symbol for** _status_ appears once per status that has at least one marker
-mapped to it, and picks which of that status's markers is the canonical one when more than one maps to
-the same status — `x` and `X` both read as Done by default, and this is where you choose which of the
-two is the canonical Done marker.
+Where two or more markers share a status — `x` and `X` both read as Done by default — one of them is
+**Written back**: the marker's own icon in that row marks which one Journals writes into the note when
+a task's status changes to that value. Click another row's icon to make that one the written-back
+marker instead.
+
+**Save** at the bottom of the modal applies both the status map and the identification rule below it;
+**Cancel** discards edits to either.
 
 ## Which checkbox items count as tasks
 
-Not every checkbox line has to count. **Identification rule**, under **Checkbox tasks**, is a list of
-conditions a checkbox item must meet to be read as a task at all, combined by **Match all conditions**
-or **Match any condition**. With no conditions — the default — every checkbox item in every note
-counts.
+Not every checkbox line has to count. The same modal's **Identification rule** is a list of conditions
+a checkbox item must meet to be read as a task at all, combined by **Match all conditions** or **Match
+any condition**. With no conditions — the default — every checkbox item in every note counts.
 
 Two condition types, each addable more than once:
 
@@ -68,15 +73,17 @@ Two condition types, each addable more than once:
 
 ### A journal's own rule
 
-A journal's settings page has its own **Task identification** section, with **Relation to the
-vault-wide rule**:
+A journal's settings page has its own collapsible **Tasks** section, matching the one on the main
+settings page. Expand it and click **Checkbox tasks**' **Edit** button to open a modal scoped to this
+journal, with **Relation to the vault-wide rule**:
 
 - **Inherit** (default) — the vault-wide rule alone; this journal adds nothing.
 - **Narrow** — a checkbox item must satisfy both the vault-wide rule and this journal's own rule.
 - **Replace** — this journal's own rule alone; the vault-wide rule does not apply to it.
 
 Choosing **Narrow** or **Replace** reveals the same condition editor as the vault-wide rule, scoped to
-this journal.
+this journal. The row's own description names which relation is active and, once narrowed or replaced,
+summarizes the rule itself, so you can see it without opening the modal.
 
 ## Examples
 
@@ -107,9 +114,9 @@ its tasks is completed.
 ### A narrowed vault-and-journal rule
 
 The vault-wide **Identification rule** is **Has** tag `#task`, so a plain checkbox only counts once it
-carries that tag. The daily journal's own **Task identification** is **Narrow**, with a rule of its
-own: **Under** heading `Work` — on top of the vault's tag requirement, a daily journal's task must also
-sit under a "Work" heading.
+carries that tag. The daily journal's own **relation to the vault-wide rule** is **Narrow**, with a rule
+of its own: **Under** heading `Work` — on top of the vault's tag requirement, a daily journal's task
+must also sit under a "Work" heading.
 
 A day's note:
 

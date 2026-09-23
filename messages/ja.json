@@ -2324,7 +2324,7 @@
   "tasks_settings_provider_checkbox": "チェックボックスタスク",
   "tasks_settings_provider_checkbox_desc": "ノートからチェックボックス項目を読み取ります。",
   "tasks_settings_configure": "設定",
-  "tasks_settings_enabled": "有効にする",
+  "tasks_settings_edit_rule": "編集",
   "tasks_settings_status_map": "ステータス記号",
   "tasks_settings_status_map_desc": "どのチェックボックス記号がどのステータスを表すか。2つの記号が同じステータスを共有する場合、マークされた記号がタスクのステータス変更時にノートへ書き戻されます。",
   "tasks_settings_written_back": "書き戻し",
@@ -2377,7 +2377,6 @@
   "tasks_settings_add_symbol": "記号を追加",
   "tasks_settings_new_symbol_label": "新しい記号",
 
-  "tasks_journal_section_title": "タスクの識別",
   "tasks_journal_compose": "保管庫全体のルールとの関係",
   "tasks_journal_compose_desc": "「継承」は保管庫全体のルールのみを使用します。「絞り込み」は行が両方のルールを満たすことを求めます。「置換」はこのジャーナルのルールのみを使用します。",
   "tasks_journal_compose_inherit": "継承",

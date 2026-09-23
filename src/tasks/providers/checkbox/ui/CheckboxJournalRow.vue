@@ -29,6 +29,6 @@ function configure(): void {
     <template #description>
       <span data-testid="checkbox-journal-summary">{{ summary }}</span>
     </template>
-    <UiButton data-testid="checkbox-journal-edit" @click="configure">{{ m.tasks_settings_configure() }}</UiButton>
+    <UiButton data-testid="checkbox-journal-edit" @click="configure">{{ m.tasks_settings_edit_rule() }}</UiButton>
   </UiSettingRow>
 </template>

@@ -2336,7 +2336,7 @@
   "tasks_settings_provider_checkbox": "Checkbox tasks",
   "tasks_settings_provider_checkbox_desc": "Reads checkbox list items from a note.",
   "tasks_settings_configure": "Configure",
-  "tasks_settings_enabled": "Enable",
+  "tasks_settings_edit_rule": "Edit",
   "tasks_settings_status_map": "Status symbols",
   "tasks_settings_status_map_desc": "Which checkbox symbol means which status. Where two symbols share a status, the marked one is written back into the note when a task's status changes.",
   "tasks_settings_written_back": "Written back",
@@ -2389,7 +2389,6 @@
   "tasks_settings_add_symbol": "Add symbol",
   "tasks_settings_new_symbol_label": "New symbol",
 
-  "tasks_journal_section_title": "Task identification",
   "tasks_journal_compose": "Relation to the vault-wide rule",
   "tasks_journal_compose_desc": "Inherit uses the vault-wide rule alone. Narrow requires a line to satisfy both rules. Replace uses this journal's rule alone.",
   "tasks_journal_compose_inherit": "Inherit",

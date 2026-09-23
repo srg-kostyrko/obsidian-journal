@@ -2337,7 +2337,7 @@
   "tasks_settings_provider_checkbox": "Kontrollkästchen-Aufgaben",
   "tasks_settings_provider_checkbox_desc": "Liest Kontrollkästchen-Listeneinträge aus einer Notiz.",
   "tasks_settings_configure": "Konfigurieren",
-  "tasks_settings_enabled": "Aktivieren",
+  "tasks_settings_edit_rule": "Bearbeiten",
   "tasks_settings_status_map": "Statussymbole",
   "tasks_settings_status_map_desc": "Welches Kontrollkästchen-Symbol welchen Status bedeutet. Teilen sich zwei Symbole einen Status, wird das markierte Symbol in die Notiz zurückgeschrieben, sobald sich der Status einer Aufgabe ändert.",
   "tasks_settings_written_back": "Zurückgeschrieben",
@@ -2390,11 +2390,10 @@
   "tasks_settings_add_symbol": "Symbol hinzufügen",
   "tasks_settings_new_symbol_label": "Neues Symbol",
 
-  "tasks_journal_section_title": "Aufgabenerkennung",
   "tasks_journal_compose": "Verhältnis zur Vault-weiten Regel",
   "tasks_journal_compose_desc": "„Erben“ verwendet nur die Vault-weite Regel. „Einschränken“ verlangt, dass eine Zeile beide Regeln erfüllt. „Ersetzen“ verwendet nur die Regel dieses Journals.",
   "tasks_journal_compose_inherit": "Erben",
   "tasks_journal_compose_narrow": "Einschränken",
   "tasks_journal_compose_replace": "Ersetzen",
-  "tasks_journal_modal_title": "Aufgabenerkennung — {journal}"
+  "tasks_journal_modal_title": "Aufgabenerkennung – {journal}"
 }

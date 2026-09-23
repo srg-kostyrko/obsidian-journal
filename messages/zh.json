@@ -2318,7 +2318,7 @@
   "tasks_settings_provider_checkbox": "复选框任务",
   "tasks_settings_provider_checkbox_desc": "从笔记中读取复选框列表项。",
   "tasks_settings_configure": "配置",
-  "tasks_settings_enabled": "启用",
+  "tasks_settings_edit_rule": "编辑",
   "tasks_settings_status_map": "状态符号",
   "tasks_settings_status_map_desc": "哪个复选框符号表示哪种状态。当两个符号共用同一状态时，标记的那个符号会在任务状态变化时写回笔记。",
   "tasks_settings_written_back": "写回",
@@ -2371,7 +2371,6 @@
   "tasks_settings_add_symbol": "添加符号",
   "tasks_settings_new_symbol_label": "新符号",
 
-  "tasks_journal_section_title": "任务识别",
   "tasks_journal_compose": "与全库通用规则的关系",
   "tasks_journal_compose_desc": "“继承”仅使用全库通用规则。“收窄”要求一行同时满足两条规则。“替换”仅使用本日记的规则。",
   "tasks_journal_compose_inherit": "继承",

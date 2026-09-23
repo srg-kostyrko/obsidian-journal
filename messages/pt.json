@@ -2332,7 +2332,7 @@
   "tasks_settings_provider_checkbox": "Tarefas de caixa de seleção",
   "tasks_settings_provider_checkbox_desc": "Lê itens de lista com caixa de seleção de uma nota.",
   "tasks_settings_configure": "Configurar",
-  "tasks_settings_enabled": "Ativar",
+  "tasks_settings_edit_rule": "Editar",
   "tasks_settings_status_map": "Símbolos de estado",
   "tasks_settings_status_map_desc": "Qual símbolo de caixa de seleção significa qual estado. Quando dois símbolos compartilham um estado, o marcado é o que é gravado de volta na nota quando o estado de uma tarefa muda.",
   "tasks_settings_written_back": "Gravado de volta",
@@ -2385,7 +2385,6 @@
   "tasks_settings_add_symbol": "Adicionar símbolo",
   "tasks_settings_new_symbol_label": "Novo símbolo",
 
-  "tasks_journal_section_title": "Identificação de tarefas",
   "tasks_journal_compose": "Relação com a regra de todo o cofre",
   "tasks_journal_compose_desc": "«Herdar» usa apenas a regra de todo o cofre. «Restringir» exige que uma linha satisfaça as duas regras. «Substituir» usa apenas a regra deste diário.",
   "tasks_journal_compose_inherit": "Herdar",

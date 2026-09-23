@@ -62,6 +62,7 @@ everything below. Adding a locale or a new domain noun means extending it there.
 | **task**        | Aufgabe          | tarea         | tâche         | attività     | タスク           | 작업       | tarefa           | задача        | завдання       | 任务        |
 | **status**      | Status           | estado        | état          | stato        | ステータス       | 상태       | estado           | статус        | статус         | 状态        |
 | **checkbox**    | Kontrollkästchen | casilla       | case à cocher | casella      | チェックボックス | 체크박스   | caixa de seleção | чекбокс       | чекбокс        | 复选框      |
+| **tag**         | Tag              | etiqueta      | étiquette     | tag          | タグ             | 태그       | tag              | тег           | тег            | 标签        |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
@@ -318,14 +319,27 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   device-scoped settings name the devices alike; `none` is that locale's "Never" from
   `journal_edit_end_kind`, except ja, ko and zh, whose "never" there reads as "no end" and
   which say "don't show" instead. Not native-verified.
-- The 32 `tasks_*` keys were translated by an agent working from this file and from the
-  decoration conditions they sit beside — `type=has-open-task` and `type=all-tasks-completed`
-  already carried each locale's **task** noun, so the new keys reuse it rather than picking a
-  second one, and `decoration_modal_add_condition` is repeated verbatim. Not native-verified.
-  Worth a native eye: the quoting convention each locale uses around a status name inside
-  "Write symbol for …", which follows that language's own quote marks rather than en.json's;
-  and **ru**, which cannot say "символ записи" because `запис(ь|и|…)` is the protected **note**
-  term, so it says "Записываемый символ" where uk says "Символ запису".
+- The 43 `tasks_*` keys — the provider list and its status-map and rule-editor modals, the
+  journal's collapsible section and its own rule modal, and the condition/status vocabulary —
+  were translated by a different agent per task, each working from this file with no view of
+  the others, then swept for cross-task drift in the same pass that added the **tag** row above
+  (it was missing despite being a new canonical term). `type=has-open-task` and
+  `type=all-tasks-completed` already carried each locale's **task** noun and `type=tag`/
+  `decoration_condition_tag_value_label` already carried **tag**, so the new keys reuse both
+  rather than picking a second term, and `decoration_modal_add_condition` is repeated verbatim
+  for "Add condition". Not native-verified. Two drift fixes came out of the sweep: **fr** had
+  dropped the canonical **checkbox** noun (`case à cocher`) in six strings in favor of the
+  adjectival `à cocher`, now restored so the term is visible wherever the concept is named
+  rather than only implied; and **ko** used two different words for "under" (`하위` in the
+  condition's own dropdown label, `아래` in the sentence describing it) — now both say `하위`.
+  **ru** and **uk** need no further `запис-` workaround here: the per-status "Write symbol for
+  …" row this bullet used to describe is gone with the redesign, and the surviving written-back
+  label and tooltip are already verb forms (`Записывается`/`Записать`, `Записується`/
+  `Записати`), never the banned noun. Worth a native eye: whether the compose modal's quoted
+  option names (Inherit/Narrow/Replace) read naturally in each locale's own quoting convention —
+  ko's choice of the 「」 corner brackets there has no other precedent in the corpus to check it
+  against — and whether fr's `case à cocher` insertions read as naturally as the adjectival
+  phrasing they replaced.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.
