@@ -283,6 +283,26 @@ describe("CheckboxTaskProvider", () => {
     expect(host.published.get(otherPath)).toHaveLength(1);
   });
 
+  // Nothing but Vue's default pre-flush watcher coalescing pins "one refill per Save" — the
+  // debounce that used to guarantee it, and the test that pinned that debounce, were both
+  // deleted once Save replaced per-keystroke writes. A `flush: "sync"` watcher would fire once
+  // per field instead of once per tick, so this asserts the coalescing rather than assuming it.
+  it("refills once for several slice fields written in the same tick, as a Save does", async () => {
+    const { host, structures, provider, harness } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    structures.setStructure(dayPath, structure());
+    provider.start();
+    host.publishes.length = 0;
+
+    const slice = harness.resolve(SettingsService).getSlice(checkboxSlice);
+    slice.state.statusMap = { ...slice.state.statusMap, ">": "todo" };
+    slice.state.canonical = { ...slice.state.canonical, todo: ">" };
+    slice.state.rule = { mode: "or", conditions: [] };
+    await nextTick();
+
+    expect(host.publishes).toEqual(["all"]);
+  });
+
   it("stops reacting to settings once its disposer runs", async () => {
     const { host, structures, provider, harness } = await build();
     host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
