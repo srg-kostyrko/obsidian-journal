@@ -79,6 +79,37 @@ describe("EditJournalTasksModal", () => {
     expect(stored?.conditions).toHaveLength(1);
   });
 
+  // Save here re-reads the journal's current config before writing (see save()'s comment above),
+  // a different path from EditCheckboxProviderModal's straight slice write — so the same
+  // click-Save-with-no-intervening-blur edge case needs its own proof on this modal: clicking
+  // Save blurs the focused input first, and the value it just committed must survive that re-read.
+  it("persists a value typed just before Save, with no intervening blur", async () => {
+    const { repository } = await mount();
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    expect(stored?.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
+  });
+
+  // Same reproduction as EditCheckboxProviderModal's: a per-keystroke commit is indistinguishable
+  // from a completed edit, so a second comma-separated value was unreachable through this row
+  // regardless of which modal hosts it.
+  it("stores both values when a second one is typed after a comma, on Save", async () => {
+    const { repository } = await mount();
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "#work, #home");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    expect(stored?.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#work", "#home"] });
+  });
+
   // Inherit means "this journal has no rule of its own", which is an absent key, not a stored
   // rule whose compose happens to say inherit.
   it("clears the journal's rule when switched back to inherit", async () => {
@@ -171,7 +202,10 @@ describe("empty-condition validation", () => {
     expect(repository.get("Daily").getOrUndefined()?.tasks.checkbox).toBeUndefined();
   });
 
-  it("enables Save once the empty condition is given a value", async () => {
+  // The value only reaches the condition model at a commit boundary (blur or Enter), not on
+  // every keystroke — see RuleConditionRow.vue — so Save reflects the typed value once the row
+  // is left, not mid-type.
+  it("enables Save once the empty condition is given a value and the row is left", async () => {
     await mount();
 
     await userEvent.click(screen.getByTestId("compose-narrow"));
@@ -180,6 +214,7 @@ describe("empty-condition validation", () => {
     expect(saveButton.disabled).toBe(true);
 
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+    await userEvent.tab();
 
     expect(saveButton.disabled).toBe(false);
   });

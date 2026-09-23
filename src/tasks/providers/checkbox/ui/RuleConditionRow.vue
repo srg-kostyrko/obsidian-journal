@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -26,17 +26,36 @@ function setType(type: CheckboxCondition["type"]): void {
       : { type: "heading", condition: "under", headings: [] };
 }
 
-const valuesText = computed<string>({
-  get: () => (condition.value.type === "tag" ? condition.value.tags : condition.value.headings).join(", "),
-  // Coerced on the way in, so the store always holds metadataCache's spelling. The input then
-  // shows the coerced text back, which for the usual case — typing a name left to right — just
-  // means the "#" appears as you go; editing mid-string is the case it reads oddly in.
-  set: (text) => {
-    const list = conditionValues(text, condition.value.type);
-    if (condition.value.type === "tag") condition.value.tags = list;
-    else condition.value.headings = list;
+function displayText(value: CheckboxCondition): string {
+  return (value.type === "tag" ? value.tags : value.headings).join(", ");
+}
+
+// A plain ref, not a computed over `condition`: committing on every keystroke ran
+// conditionValues() — which drops empty entries — before the user had finished typing the next
+// value, so a "," just typed was indistinguishable from a stray one and got erased as it was
+// typed (a backspace that emptied one entry down to a bare "#" took the separator before it
+// with it, for the same reason). This ref holds exactly what the user has typed; commit() below
+// is the only place conditionValues() still runs, at a commit boundary rather than per keystroke.
+const valuesText = ref(displayText(condition.value));
+
+// Re-syncs from the model on any external write — switching the condition type above replaces
+// the whole object and must clear the input, and a sync merge landing while this row is mounted
+// is the same shape.
+watch(
+  () => condition.value,
+  (value) => {
+    valuesText.value = displayText(value);
   },
-});
+);
+
+function commit(): void {
+  const list = conditionValues(valuesText.value, condition.value.type);
+  if (condition.value.type === "tag") condition.value.tags = list;
+  else condition.value.headings = list;
+  // Shows the coerced form back once committed: a tag gains its "#", a heading loses its "#"
+  // markers.
+  valuesText.value = displayText(condition.value);
+}
 </script>
 
 <template>
@@ -55,6 +74,8 @@ const valuesText = computed<string>({
   <UiTextInput
     v-model="valuesText"
     :aria-label="condition.type === 'tag' ? m.tasks_settings_condition_tag() : m.tasks_settings_condition_heading()"
+    @change="commit"
+    @keydown.enter="commit"
     @blur="emit('blur')"
   />
 </template>

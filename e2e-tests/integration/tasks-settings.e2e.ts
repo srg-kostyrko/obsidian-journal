@@ -129,6 +129,59 @@ describe("checkbox provider modal validation", () => {
   });
 });
 
+// Persists a two-value condition and leaves it — nothing after this reads the global rule, same
+// as "checkbox provider modal save" above leaving its added status symbol.
+describe("checkbox provider modal condition values", () => {
+  afterEach(closeSettings);
+
+  // The unit suite covers RuleConditionRow's own commit boundary against a mocked settings
+  // container; this exercises the same field through a real Obsidian Modal end to end, entering
+  // and saving a condition with two comma-separated values and reading them back after a reopen.
+  it("enters and saves a condition with two comma-separated values", async () => {
+    await openSettings();
+    await expandSection(m.tasks_settings_title());
+    await clickIcon(m.tasks_settings_configure());
+    await waitForModalOpen();
+
+    await clickButton(m.tasks_settings_add_condition());
+    const input = $(`[aria-label="${m.tasks_settings_condition_tag()}"]`);
+    await input.setValue("#work, #home");
+    await browser.keys("Tab");
+
+    await submitModal();
+
+    await clickIcon(m.tasks_settings_configure());
+    await waitForModalOpen();
+    await expect($(`[aria-label="${m.tasks_settings_condition_tag()}"]`)).toHaveValue("#work, #home");
+
+    await clickButton(m.common_action_cancel());
+    await waitForDialogClosed();
+  });
+
+  // The layer that would have caught the original bug: a per-keystroke commit re-derives the
+  // whole value list from the field on every keystroke, including deletions, so backspacing a
+  // value down to a bare "#" reads as empty and drops the ", " before it too — one Backspace
+  // erasing characters it was never asked to touch.
+  it("keeps the rest of a value and its separator when backspacing removes only its last character", async () => {
+    await openSettings();
+    await expandSection(m.tasks_settings_title());
+    await clickIcon(m.tasks_settings_configure());
+    await waitForModalOpen();
+
+    await clickButton(m.tasks_settings_add_condition());
+    const input = $(`[aria-label="${m.tasks_settings_condition_tag()}"]`);
+    await input.setValue("#work, #home");
+    await input.click();
+    await browser.keys("End");
+    await browser.keys(["Backspace", "Backspace", "Backspace", "Backspace"]);
+
+    await expect(input).toHaveValue("#work, #");
+
+    await clickButton(m.common_action_cancel());
+    await waitForDialogClosed();
+  });
+});
+
 describe("journal tasks section", () => {
   afterEach(closeSettings);
 

@@ -247,6 +247,103 @@ describe("rule editor", () => {
     expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
   });
 
+  // userEvent.type is per-character. Typing left to right, appending one value after another,
+  // has always reached this assertion even before the fix below — Vue 3.4's computed
+  // short-circuit (a computed that recomputes to the same string as last time does not
+  // re-render) happens to protect exactly this sequence, since appending "," or a space to an
+  // already-valid list never changes conditionValues()'s joined output until the next real
+  // character lands. The backspace case right below it is not protected the same way.
+  it("stores both values when a second one is typed after a comma, on Save", async () => {
+    const { slice } = await mount();
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "#work, #home");
+    await save();
+
+    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#work", "#home"] });
+  });
+
+  // The actual reproduction: a per-keystroke commit re-derives the whole value list from the
+  // field on every keystroke, including deletions. Backspacing "#home" down to a bare "#" makes
+  // conditionValues() treat it as empty and drop it — taking the ", " before it along too, so
+  // one Backspace (removing "h") silently erases three characters it was never asked to touch.
+  // This one is not shielded by Vue's computed short-circuit: "#work, #h" differs from the
+  // previously rendered "#work, #ho", so the corrupted value does reach the field.
+  it("keeps the rest of a value and its separator when backspacing removes only its last character", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const input = screen.getByLabelText<HTMLInputElement>(m.tasks_settings_condition_tag());
+    await userEvent.type(input, "#work, #home");
+    // Four backspaces removes exactly "home", leaving the "#" its tag started with — a
+    // per-keystroke commit reads that bare "#" as empty and drops it, taking the ", " before it
+    // along too, so the field ends up five characters short of what was actually deleted.
+    await userEvent.type(input, "{Backspace}{Backspace}{Backspace}{Backspace}");
+
+    expect(input.value).toBe("#work, #");
+  });
+
+  // Same shape as the tag case above, for a heading condition — the row is shared, and a
+  // heading's coercion (stripping markdown "#" markers rather than adding one) must not change
+  // whether a second comma-separated value survives.
+  it("stores both values for a heading condition, on Save", async () => {
+    const { slice } = await mount();
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const typeSelect = screen.getByDisplayValue(m.tasks_settings_condition_tag());
+    await userEvent.selectOptions(typeSelect, m.tasks_settings_condition_heading());
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_heading()), "Work, Home");
+    await save();
+
+    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "heading", headings: ["Work", "Home"] });
+  });
+
+  // The markdown "#" markers a heading is typed with have to come off before the value reaches
+  // the store, same as a tag gains its "#" — coercion still runs, just at the commit boundary
+  // rather than per keystroke.
+  it("strips a heading's markdown # markers on Save", async () => {
+    const { slice } = await mount();
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const typeSelect = screen.getByDisplayValue(m.tasks_settings_condition_tag());
+    await userEvent.selectOptions(typeSelect, m.tasks_settings_condition_heading());
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_heading()), "## Work");
+    await save();
+
+    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "heading", headings: ["Work"] });
+  });
+
+  // Switching the condition type replaces the whole condition object (tags and headings cannot
+  // coexist), so the field showing the old type's values must clear rather than keep displaying
+  // text that no longer corresponds to anything in the model.
+  it("clears the displayed text when the condition type is switched", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+    await userEvent.tab();
+    expect(screen.getByDisplayValue("#task")).toBeTruthy();
+
+    const typeSelect = screen.getByDisplayValue(m.tasks_settings_condition_tag());
+    await userEvent.selectOptions(typeSelect, m.tasks_settings_condition_heading());
+
+    expect(screen.queryByDisplayValue("#task")).toBeNull();
+    expect(screen.getByLabelText<HTMLInputElement>(m.tasks_settings_condition_heading()).value).toBe("");
+  });
+
+  // Clicking Save blurs the focused input first (a native button click moves focus before the
+  // click handler runs), so a value typed just before Save, with no explicit Tab or click
+  // elsewhere in between, must not be lost to the deferred commit.
+  it("persists a value typed just before Save, with no intervening blur", async () => {
+    const { slice } = await mount();
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
+  });
+
   it("removes a condition from the global rule, on Save", async () => {
     const { slice } = await mount();
 
@@ -319,13 +416,17 @@ describe("empty-condition validation", () => {
     expect(slice.state.rule.conditions).toHaveLength(before);
   });
 
-  it("enables Save once the empty condition is given a value", async () => {
+  // The value only reaches the condition model at a commit boundary (blur or Enter), not on
+  // every keystroke — see RuleConditionRow.vue — so Save reflects the typed value once the row
+  // is left, not mid-type.
+  it("enables Save once the empty condition is given a value and the row is left", async () => {
     await mount();
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
     expect(saveButton.disabled).toBe(true);
 
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+    await userEvent.tab();
 
     expect(saveButton.disabled).toBe(false);
   });
