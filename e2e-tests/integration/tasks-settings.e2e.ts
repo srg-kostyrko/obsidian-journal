@@ -42,10 +42,10 @@ describe("dashboard task provider list", () => {
   });
 });
 
+// Shares the boot the first describe established: this scenario mutates the status map then
+// Cancels, so it is self-reverting (a broken Cancel fails its own reopen assertion below) and
+// cannot contaminate what runs after it.
 describe("checkbox provider modal", () => {
-  before(async () => {
-    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
-  });
   afterEach(closeSettings);
 
   it("opens from the gear with five status rows, and Cancel discards an edit", async () => {
@@ -74,10 +74,9 @@ describe("checkbox provider modal", () => {
   });
 });
 
+// Persists a symbol into data.json and leaves it there — nothing after this reads the status
+// map, so the leftover state is harmless.
 describe("checkbox provider modal save", () => {
-  before(async () => {
-    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
-  });
   afterEach(closeSettings);
 
   it("persists an added symbol across Save and reopen", async () => {
@@ -102,9 +101,6 @@ describe("checkbox provider modal save", () => {
 });
 
 describe("journal tasks section", () => {
-  before(async () => {
-    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
-  });
   afterEach(closeSettings);
 
   it("is collapsed at first and expands to one provider row", async () => {
