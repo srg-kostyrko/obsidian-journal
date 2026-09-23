@@ -56,10 +56,12 @@ Two condition types, each addable more than once:
 
 - **Tag** — **Has** or **Lacks** a comma-separated list of tags. Checked against tags on the item's own
   line and the note's frontmatter tags, wherever the item sits; a body tag elsewhere in the note does
-  not count.
+  not count. Write each tag with or without its leading `#`; the field adds one either way, so the
+  row settles on `#task` whichever you typed.
 - **Heading** — **Under** or **Not under** a comma-separated list of headings. Checked against every
   heading enclosing the item, from its immediate section up through the note's outline — not only the
-  nearest one.
+  nearest one. Write the heading's text, not its `#` markers — those are dropped if you include
+  them, so `## Work` and `Work` both mean the same heading.
 
 **Add condition** adds a row; the delete icon next to a row removes it.
 

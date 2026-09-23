@@ -59,6 +59,25 @@ describe("CheckboxProviderSection", () => {
     expect(slice.state.statusMap[">"]).toBe("todo");
   });
 
+  // A marker is the single character between the brackets, so a longer string can never match a
+  // real checkbox — but it still becomes a canonical candidate, and canonical is what a writer
+  // emits back into the note.
+  it("does not add a symbol longer than one character", async () => {
+    const { slice } = await mount();
+    await userEvent.type(screen.getByTestId("status-map-new-symbol"), "abc");
+    await userEvent.click(screen.getByTestId("status-map-add"));
+    expect(slice.state.statusMap).not.toHaveProperty("abc");
+  });
+
+  // Code points, not UTF-16 units: an emoji marker is one character to the user and two to
+  // `.length`, so a naive length check would reject exactly the markers themes reach for.
+  it("adds a single astral-plane symbol", async () => {
+    const { slice } = await mount();
+    await userEvent.type(screen.getByTestId("status-map-new-symbol"), "\u{1F525}");
+    await userEvent.click(screen.getByTestId("status-map-add"));
+    expect(slice.state.statusMap["\u{1F525}"]).toBe("todo");
+  });
+
   it("does not add a blank or already-mapped symbol", async () => {
     const { slice } = await mount();
     const before = { ...slice.state.statusMap };
@@ -128,6 +147,17 @@ describe("CheckboxProviderSection", () => {
     const { slice } = await mount();
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", condition: "has", tags: [] });
+  });
+
+  // The store has to hold the spelling metadataCache uses, whatever the user typed — identifies()
+  // compares by exact equality, so a bare "task" would silently match nothing.
+  it("stores a tag condition's value with the leading # metadataCache uses", async () => {
+    const { slice } = await mount();
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+
+    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
   });
 
   it("removes a condition from the global rule", async () => {

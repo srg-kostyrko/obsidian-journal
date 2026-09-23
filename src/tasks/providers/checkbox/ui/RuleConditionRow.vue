@@ -5,6 +5,8 @@ import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
+import { conditionValues } from "../condition-text";
+
 import type { CheckboxCondition } from "../rule-schema";
 
 const condition = defineModel<CheckboxCondition>({ required: true });
@@ -21,11 +23,11 @@ function setType(type: CheckboxCondition["type"]): void {
 
 const valuesText = computed<string>({
   get: () => (condition.value.type === "tag" ? condition.value.tags : condition.value.headings).join(", "),
+  // Coerced on the way in, so the store always holds metadataCache's spelling. The input then
+  // shows the coerced text back, which for the usual case — typing a name left to right — just
+  // means the "#" appears as you go; editing mid-string is the case it reads oddly in.
   set: (text) => {
-    const list = text
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter((entry) => entry.length > 0);
+    const list = conditionValues(text, condition.value.type);
     if (condition.value.type === "tag") condition.value.tags = list;
     else condition.value.headings = list;
   },
