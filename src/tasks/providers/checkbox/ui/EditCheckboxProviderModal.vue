@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cloneFnJSON } from "@vueuse/core";
 import { reactive } from "vue";
 
 import { m } from "@/i18n";
@@ -20,14 +21,15 @@ const slice = useService(SettingsService).getSlice(checkboxSlice);
 // point of the modal is that nothing reaches settings until Save. cloneFnJSON rather than toRaw —
 // toRaw is shallow and the slice embeds reactive proxies at depth.
 const draft = reactive({
-  statusMap: JSON.parse(JSON.stringify(slice.state.statusMap)) as Record<string, string>,
-  canonical: JSON.parse(JSON.stringify(slice.state.canonical)) as Record<string, string>,
-  rule: JSON.parse(JSON.stringify(slice.state.rule)) as typeof slice.state.rule,
+  statusMap: cloneFnJSON(slice.state.statusMap),
+  canonical: cloneFnJSON(slice.state.canonical),
+  rule: cloneFnJSON(slice.state.rule),
 });
 
 function save(): void {
-  // Re-read rather than trust what was captured on open: a sync merge can reach the store while
-  // the modal sits there, so only the fields this modal owns are written back.
+  // Writes back only the fields this modal owns, so a concurrent change to a field it does
+  // not own (enabled) survives; a concurrent edit to statusMap/canonical/rule while the
+  // modal is open is legitimately overwritten by this Save.
   slice.state.statusMap = draft.statusMap;
   slice.state.canonical = draft.canonical;
   slice.state.rule = draft.rule;

@@ -25,14 +25,22 @@ describe("EditCheckboxProviderModal", () => {
     expect(screen.getByTestId("rule-add-condition")).toBeTruthy();
   });
 
-  // The whole point of the modal: edits are staged, not written per keystroke.
+  // The whole point of the modal: edits are staged, not written per keystroke. Removing "/"
+  // also clears canonical["in-progress"] (StatusMapEditor's repairCanonical), and adding a
+  // rule condition mutates rule.conditions, so these two interactions exercise pre-Save
+  // isolation on all three staged fields — a live reference on any one of them turns this red.
   it("leaves the slice untouched until Save", async () => {
     const { slice } = await mount();
-    const before = structuredClone({ ...slice.state.statusMap });
+    const beforeStatusMap = structuredClone({ ...slice.state.statusMap });
+    const beforeCanonical = structuredClone({ ...slice.state.canonical });
+    const beforeConditionCount = slice.state.rule.conditions.length;
 
     await userEvent.click(screen.getByTestId("status-map-remove-/"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
 
-    expect(slice.state.statusMap).toEqual(before);
+    expect(slice.state.statusMap).toEqual(beforeStatusMap);
+    expect(slice.state.canonical).toEqual(beforeCanonical);
+    expect(slice.state.rule.conditions).toHaveLength(beforeConditionCount);
   });
 
   it("writes the staged status map on Save", async () => {
