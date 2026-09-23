@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { screen } from "@testing-library/vue";
 import { describe, expect, it, vi } from "vitest";
+import { nextTick } from "vue";
 
 import { m } from "@/i18n";
 import { ModalContextKey } from "@/infrastructure/host/modals/internal/modal-context";
@@ -131,5 +132,26 @@ describe("EditJournalTasksModal", () => {
     stored?.conditions.push({ type: "tag", condition: "has", tags: ["outside"] });
 
     expect(screen.queryByDisplayValue("outside")).toBeNull();
+  });
+
+  // The draft's top-level conditions array being fresh is not enough — each condition's own
+  // `tags`/`headings` array must be isolated too, or a write that reaches the store's array in
+  // place (not through RuleConditionRow's replace-the-array setter) shows up in the still-open
+  // modal before Save ever runs. JournalsRepository.get() returns the live reactive entity, so
+  // pushing onto its array directly is exactly that kind of write.
+  it("isolates a condition's nested tags array from the store's live array", async () => {
+    const { repository } = await mount({
+      checkbox: { compose: "narrow", mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] },
+    });
+
+    const condition = repository.get("Daily").getOrUndefined()?.tasks.checkbox?.conditions[0];
+    if (condition?.type !== "tag") throw new Error("no seeded tag condition");
+    expect(screen.getByDisplayValue("#work")).toBeTruthy();
+
+    condition.tags.push("#leaked");
+    await nextTick();
+
+    expect(screen.queryByDisplayValue("#work, #leaked")).toBeNull();
+    expect(screen.getByDisplayValue("#work")).toBeTruthy();
   });
 });

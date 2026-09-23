@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cloneFnJSON } from "@vueuse/core";
 import { ref } from "vue";
 
 import { m } from "@/i18n";
@@ -20,9 +21,13 @@ const journals = useService(JournalsRepository);
 const stored = journals.get(journalName).getOrUndefined()?.tasks.checkbox;
 
 const compose = ref<CheckboxJournalRule["compose"]>(stored?.compose ?? "inherit");
+// A deep copy, not a live binding — same reason as EditCheckboxProviderModal's: RuleEditor
+// mutates its model in place, and a shallow `{ ...condition }` per condition still shares each
+// condition's `tags`/`headings` array with the store. cloneFnJSON rather than toRaw, which is
+// shallow and would not touch those nested arrays either.
 const draft = ref<{ mode: "and" | "or"; conditions: CheckboxCondition[] }>({
   mode: stored?.mode ?? "and",
-  conditions: stored?.conditions.map((condition) => ({ ...condition })) ?? [],
+  conditions: stored ? cloneFnJSON(stored.conditions) : [],
 });
 
 function save(): void {
