@@ -2335,22 +2335,10 @@
   "tasks_settings_provider_checkbox": "Attività con casella",
   "tasks_settings_enabled": "Abilita",
   "tasks_settings_status_map": "Simboli di stato",
-  "tasks_settings_status_map_desc": "Quale simbolo della casella indica quale stato e quale simbolo viene riscritto.",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "Simbolo di scrittura per «da fare»",
-        "status=done": "Simbolo di scrittura per «completato»",
-        "status=in_progress": "Simbolo di scrittura per «in corso»",
-        "status=cancelled": "Simbolo di scrittura per «annullato»",
-        "status=on_hold": "Simbolo di scrittura per «in sospeso»",
-        "status=non_task": "Simbolo di scrittura per «non è un’attività»",
-        "status=rolled": "Simbolo di scrittura per «rinviato»"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "Quale simbolo della casella indica quale stato. Quando due simboli condividono uno stato, quello contrassegnato viene riscritto nella nota quando lo stato di un’attività cambia.",
+  "tasks_settings_written_back": "Riscritto",
+  "tasks_settings_written_back_tooltip": "Scrivi questo simbolo per questo stato",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regola di identificazione",
   "tasks_settings_rule_desc": "Quali elementi di elenco con casella contano come attività.",
   "tasks_settings_add_condition": "Aggiungi condizione",

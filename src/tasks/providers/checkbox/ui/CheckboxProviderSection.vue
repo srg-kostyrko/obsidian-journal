@@ -18,6 +18,6 @@ const slice = useService(SettingsService).getSlice(checkboxSlice);
   <UiSettingRow :name="m.tasks_settings_enabled()">
     <UiToggle v-model="slice.state.enabled" data-testid="checkbox-enabled" />
   </UiSettingRow>
-  <StatusMapEditor />
+  <StatusMapEditor v-model:status-map="slice.state.statusMap" v-model:canonical="slice.state.canonical" />
   <RuleEditor v-model="slice.state.rule" />
 </template>

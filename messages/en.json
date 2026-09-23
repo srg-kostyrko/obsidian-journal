@@ -2336,22 +2336,10 @@
   "tasks_settings_provider_checkbox": "Checkbox tasks",
   "tasks_settings_enabled": "Enable",
   "tasks_settings_status_map": "Status symbols",
-  "tasks_settings_status_map_desc": "Which checkbox symbol means which status, and which symbol is written back.",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "Write symbol for to-do",
-        "status=done": "Write symbol for done",
-        "status=in_progress": "Write symbol for in progress",
-        "status=cancelled": "Write symbol for cancelled",
-        "status=on_hold": "Write symbol for on hold",
-        "status=non_task": "Write symbol for not a task",
-        "status=rolled": "Write symbol for rolled over"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "Which checkbox symbol means which status. Where two symbols share a status, the marked one is written back into the note when a task's status changes.",
+  "tasks_settings_written_back": "Written back",
+  "tasks_settings_written_back_tooltip": "Write this symbol for this status",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Identification rule",
   "tasks_settings_rule_desc": "Which checkbox list items count as tasks.",
   "tasks_settings_add_condition": "Add condition",

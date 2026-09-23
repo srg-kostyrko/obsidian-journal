@@ -3,8 +3,6 @@ import { match } from "ts-pattern";
 import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
-import { useService } from "@/infrastructure/di";
-import { SettingsService } from "@/settings";
 import type { TaskStatus } from "@/tasks";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
@@ -14,37 +12,24 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { CHECKBOX_STATUSES } from "../normalize";
-import { checkboxSlice } from "../slice";
 
-const slice = useService(SettingsService).getSlice(checkboxSlice);
+const statusMap = defineModel<Record<string, string>>("statusMap", { required: true });
+const canonical = defineModel<Record<string, string>>("canonical", { required: true });
 const newSymbol = ref("");
 
-const symbols = computed(() => Object.keys(slice.state.statusMap));
-
-// Grouped so the write-symbol picker offers only symbols that actually read as that status —
-// e.g. "x" and "X" both read as done by default, so canonical.done picks between those two,
-// never between every configured symbol.
-const candidatesByType = computed(() => {
-  const grouped = new Map<string, string[]>();
-  for (const [symbol, type] of Object.entries(slice.state.statusMap)) {
-    const bucket = grouped.get(type) ?? [];
-    bucket.push(symbol);
-    grouped.set(type, bucket);
-  }
-  return grouped;
-});
+const symbols = computed(() => Object.keys(statusMap.value));
 
 // A marker is the one character between the brackets, so anything longer can never match a real
-// checkbox — and it would still show up as a candidate in the write-symbol rows below, where
-// picking it puts a string into `canonical` that a writer would emit back into the note. Counted
-// in code points: an emoji marker is one character to the user and two to `.length`.
+// checkbox — and it would still show up as a candidate for `canonical`, where picking it puts a
+// string into `canonical` that a writer would emit back into the note. Counted in code points: an
+// emoji marker is one character to the user and two to `.length`.
 function isMarker(text: string): boolean {
   return [...text].length === 1;
 }
 
 const canAdd = computed(() => {
   const trimmed = newSymbol.value.trim();
-  return isMarker(trimmed) && !Object.hasOwn(slice.state.statusMap, trimmed);
+  return isMarker(trimmed) && !Object.hasOwn(statusMap.value, trimmed);
 });
 
 // Every status name a symbol can read as is a full phrase from the message catalogue, never the
@@ -65,30 +50,10 @@ function statusLabel(status: string): string {
     .otherwise(() => m.tasks_status_todo());
 }
 
-// Read off the message rather than spelled out here, so renaming or dropping a variant in en.json
-// breaks the mapping below at compile time.
-type WriteSymbolStatus = Parameters<typeof m.tasks_settings_write_symbol>[0]["status"];
-
-// This row names the status inside a sentence, so the status travels as a *selector* and each
-// variant spells the whole phrase — a status noun spliced in as a parameter cannot decline in the
-// locales that govern case. The stored type names carry hyphens where the selector values carry
-// underscores, and the todo fallback is load-bearing either way: paraglide answers a value it has
-// no variant for with the bare message key, which would render on screen.
-function writeSymbolLabel(status: string): string {
-  const selector = match(status)
-    .returnType<WriteSymbolStatus>()
-    .with("todo", "done", "cancelled", "rolled", (known) => known)
-    .with("in-progress", () => "in_progress")
-    .with("on-hold", () => "on_hold")
-    .with("non-task", () => "non_task")
-    .otherwise(() => "todo");
-  return m.tasks_settings_write_symbol({ status: selector });
-}
-
 function addSymbol(): void {
   const trimmed = newSymbol.value.trim();
-  if (!isMarker(trimmed) || Object.hasOwn(slice.state.statusMap, trimmed)) return;
-  slice.state.statusMap[trimmed] = "todo" satisfies TaskStatus;
+  if (!isMarker(trimmed) || Object.hasOwn(statusMap.value, trimmed)) return;
+  statusMap.value[trimmed] = "todo" satisfies TaskStatus;
   newSymbol.value = "";
 }
 
@@ -98,77 +63,119 @@ function addSymbol(): void {
 // Reassign to another surviving candidate for the type, or drop the write mapping entirely once
 // none is left, rather than leave canonical pointing at a symbol that no longer reads as it.
 function repairCanonical(type: string | undefined, symbol: string): void {
-  if (type === undefined || slice.state.canonical[type] !== symbol) return;
-  const remaining = Object.entries(slice.state.statusMap)
+  if (type === undefined || canonical.value[type] !== symbol) return;
+  const remaining = Object.entries(statusMap.value)
     .filter(([, candidateType]) => candidateType === type)
     .map(([candidateSymbol]) => candidateSymbol);
   const [fallback] = remaining;
-  if (fallback === undefined) delete slice.state.canonical[type];
-  else slice.state.canonical[type] = fallback;
+  if (fallback === undefined) delete canonical.value[type];
+  else canonical.value[type] = fallback;
 }
 
 function removeSymbol(symbol: string): void {
-  const type = slice.state.statusMap[symbol];
-  delete slice.state.statusMap[symbol];
+  const type = statusMap.value[symbol];
+  delete statusMap.value[symbol];
   repairCanonical(type, symbol);
 }
 
 function remapSymbol(symbol: string, status: string): void {
-  const previous = slice.state.statusMap[symbol];
+  const previous = statusMap.value[symbol];
   if (previous === status) return;
-  slice.state.statusMap[symbol] = status;
+  statusMap.value[symbol] = status;
   repairCanonical(previous, symbol);
+}
+
+function isCurrent(symbol: string): boolean {
+  const type = statusMap.value[symbol];
+  return type !== undefined && canonical.value[type] === symbol;
+}
+
+function makeCurrent(symbol: string): void {
+  const type = statusMap.value[symbol];
+  if (type === undefined) return;
+  canonical.value[type] = symbol;
+}
+
+function symbolLabel(symbol: string): string {
+  return symbol === " " ? m.tasks_settings_space_symbol() : symbol;
 }
 </script>
 
 <template>
   <UiSettingRow :name="m.tasks_settings_status_map()" stacked>
     <template #description>{{ m.tasks_settings_status_map_desc() }}</template>
-    <div v-for="symbol in symbols" :key="symbol" class="tasks-status-map-row" :data-testid="`status-map-row-${symbol}`">
-      <span class="tasks-status-map-symbol">{{ symbol }}</span>
-      <UiDropdown :model-value="slice.state.statusMap[symbol]" @update:model-value="remapSymbol(symbol, $event)">
-        <option v-for="status in CHECKBOX_STATUSES" :key="status" :value="status">{{ statusLabel(status) }}</option>
-      </UiDropdown>
-      <UiIconButton
-        :icon="icons.action.delete"
-        :tooltip="m.common_action_delete()"
-        :data-testid="`status-map-remove-${symbol}`"
-        @click="removeSymbol(symbol)"
-      />
+    <div class="tasks-status-map-rows" data-testid="status-map-rows">
+      <div class="tasks-status-map-head">
+        <span></span>
+        <span></span>
+        <span>{{ m.tasks_settings_written_back() }}</span>
+        <span></span>
+      </div>
+      <div
+        v-for="symbol in symbols"
+        :key="symbol"
+        class="tasks-status-map-row"
+        :data-testid="`status-map-row-${symbol}`"
+      >
+        <span class="tasks-status-map-symbol">{{ symbolLabel(symbol) }}</span>
+        <UiDropdown :model-value="statusMap[symbol]" @update:model-value="remapSymbol(symbol, $event)">
+          <option v-for="status in CHECKBOX_STATUSES" :key="status" :value="status">{{ statusLabel(status) }}</option>
+        </UiDropdown>
+        <UiIconButton
+          :icon="icons.action.writtenBack"
+          :tooltip="m.tasks_settings_written_back_tooltip()"
+          :data-testid="`written-back-${symbol}`"
+          :data-current="isCurrent(symbol) || null"
+          :class="{ 'tasks-written-back-current': isCurrent(symbol) }"
+          @click="makeCurrent(symbol)"
+        />
+        <UiIconButton
+          :icon="icons.action.delete"
+          :tooltip="m.common_action_delete()"
+          :data-testid="`status-map-remove-${symbol}`"
+          @click="removeSymbol(symbol)"
+        />
+      </div>
+      <div class="tasks-status-map-row">
+        <span></span>
+        <UiTextInput
+          v-model="newSymbol"
+          :aria-label="m.tasks_settings_new_symbol_label()"
+          data-testid="status-map-new-symbol"
+        />
+        <UiButton :disabled="!canAdd" data-testid="status-map-add" @click="addSymbol">
+          {{ m.tasks_settings_add_symbol() }}
+        </UiButton>
+      </div>
     </div>
-    <div class="tasks-status-map-row">
-      <UiTextInput
-        v-model="newSymbol"
-        :aria-label="m.tasks_settings_new_symbol_label()"
-        data-testid="status-map-new-symbol"
-      />
-      <UiButton :disabled="!canAdd" data-testid="status-map-add" @click="addSymbol">
-        {{ m.tasks_settings_add_symbol() }}
-      </UiButton>
-    </div>
-  </UiSettingRow>
-  <UiSettingRow v-for="[type, candidates] in candidatesByType" :key="type" :name="writeSymbolLabel(type)">
-    <UiButton
-      v-for="symbol in candidates"
-      :key="symbol"
-      :cta="slice.state.canonical[type] === symbol"
-      :data-testid="`canonical-${type}-${symbol}`"
-      @click="slice.state.canonical[type] = symbol"
-    >
-      {{ symbol }}
-    </UiButton>
   </UiSettingRow>
 </template>
 
 <style scoped>
-.tasks-status-map-row {
+/* UiSettingRow's stacked control is one no-wrap line by contract — a control needing several
+   lines lays them out itself, which is what this wrapper does. */
+.tasks-status-map-rows {
   display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+}
+.tasks-status-map-row,
+.tasks-status-map-head {
+  display: grid;
+  grid-template-columns: var(--size-4-8) 10em auto auto;
   align-items: center;
   gap: var(--size-2-2);
 }
+.tasks-status-map-head {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
 .tasks-status-map-symbol {
   font-family: var(--font-monospace);
-  min-width: var(--size-4-4);
   text-align: center;
+}
+.tasks-written-back-current {
+  color: var(--color-accent);
 }
 </style>

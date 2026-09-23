@@ -2332,22 +2332,10 @@
   "tasks_settings_provider_checkbox": "Tarefas de caixa de seleção",
   "tasks_settings_enabled": "Ativar",
   "tasks_settings_status_map": "Símbolos de estado",
-  "tasks_settings_status_map_desc": "Qual símbolo de caixa de seleção significa qual estado e qual símbolo é gravado de volta.",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "Símbolo de gravação para «a fazer»",
-        "status=done": "Símbolo de gravação para «concluído»",
-        "status=in_progress": "Símbolo de gravação para «em andamento»",
-        "status=cancelled": "Símbolo de gravação para «cancelado»",
-        "status=on_hold": "Símbolo de gravação para «em espera»",
-        "status=non_task": "Símbolo de gravação para «não é uma tarefa»",
-        "status=rolled": "Símbolo de gravação para «transferido»"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "Qual símbolo de caixa de seleção significa qual estado. Quando dois símbolos compartilham um estado, o marcado é o que é gravado de volta na nota quando o estado de uma tarefa muda.",
+  "tasks_settings_written_back": "Gravado de volta",
+  "tasks_settings_written_back_tooltip": "Gravar este símbolo para este estado",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regra de identificação",
   "tasks_settings_rule_desc": "Quais itens de lista com caixa de seleção contam como tarefas.",
   "tasks_settings_add_condition": "Adicionar condição",

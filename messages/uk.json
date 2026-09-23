@@ -2402,22 +2402,10 @@
   "tasks_settings_provider_checkbox": "Завдання-чекбокси",
   "tasks_settings_enabled": "Увімкнути",
   "tasks_settings_status_map": "Символи статусу",
-  "tasks_settings_status_map_desc": "Який символ чекбокса означає який статус і який символ записується назад.",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "Символ запису для «До виконання»",
-        "status=done": "Символ запису для «Виконано»",
-        "status=in_progress": "Символ запису для «У роботі»",
-        "status=cancelled": "Символ запису для «Скасовано»",
-        "status=on_hold": "Символ запису для «Відкладено»",
-        "status=non_task": "Символ запису для «Не завдання»",
-        "status=rolled": "Символ запису для «Перенесено»"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "Який символ чекбокса означає який статус. Якщо два символи мають один статус, позначений із них записується назад у нотатку, коли статус завдання змінюється.",
+  "tasks_settings_written_back": "Записується",
+  "tasks_settings_written_back_tooltip": "Записати цей символ для цього статусу",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Правило визначення",
   "tasks_settings_rule_desc": "Які пункти списку з чекбоксом вважаються завданнями.",
   "tasks_settings_add_condition": "Додати умову",

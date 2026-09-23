@@ -2337,22 +2337,10 @@
   "tasks_settings_provider_checkbox": "Kontrollkästchen-Aufgaben",
   "tasks_settings_enabled": "Aktivieren",
   "tasks_settings_status_map": "Statussymbole",
-  "tasks_settings_status_map_desc": "Welches Kontrollkästchen-Symbol welchen Status bedeutet und welches Symbol zurückgeschrieben wird.",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "Schreibsymbol für „Zu erledigen“",
-        "status=done": "Schreibsymbol für „Erledigt“",
-        "status=in_progress": "Schreibsymbol für „In Arbeit“",
-        "status=cancelled": "Schreibsymbol für „Abgebrochen“",
-        "status=on_hold": "Schreibsymbol für „Zurückgestellt“",
-        "status=non_task": "Schreibsymbol für „Keine Aufgabe“",
-        "status=rolled": "Schreibsymbol für „Übertragen“"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "Welches Kontrollkästchen-Symbol welchen Status bedeutet. Teilen sich zwei Symbole einen Status, wird das markierte Symbol in die Notiz zurückgeschrieben, sobald sich der Status einer Aufgabe ändert.",
+  "tasks_settings_written_back": "Zurückgeschrieben",
+  "tasks_settings_written_back_tooltip": "Dieses Symbol für diesen Status schreiben",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Erkennungsregel",
   "tasks_settings_rule_desc": "Welche Kontrollkästchen-Listeneinträge als Aufgaben zählen.",
   "tasks_settings_add_condition": "Bedingung hinzufügen",

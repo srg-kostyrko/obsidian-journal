@@ -46,10 +46,39 @@ describe("CheckboxProviderSection", () => {
     expect(slice.state.statusMap["/"]).toBe("todo");
   });
 
-  it("writes the canonical symbol for a type back to the slice", async () => {
+  // Structure, not computed style: @testing-library/vue does not inject an SFC's scoped
+  // <style>, so asserting flex-direction here would pass or fail for the wrong reason.
+  it("wraps every status row in one container rather than dropping them into the row slot", async () => {
+    await mount();
+    const rows = screen.getByTestId("status-map-rows");
+    expect(rows.querySelectorAll("[data-testid^='status-map-row-']")).toHaveLength(5);
+  });
+
+  it("shows a visible stand-in for the space marker", async () => {
+    await mount();
+    // trim: false — the default normalizer trims the query's own trailing space off the
+    // haystack before comparing, so a testid ending in the space marker itself never matches.
+    expect(screen.getByTestId("status-map-row- ", { trim: false }).textContent).toContain(
+      m.tasks_settings_space_symbol(),
+    );
+  });
+
+  it("writes the canonical symbol for a status back to the slice from its row", async () => {
     const { slice } = await mount();
-    await userEvent.click(screen.getByTestId("canonical-done-X"));
+    expect(slice.state.canonical.done).toBe("x");
+
+    await userEvent.click(screen.getByTestId("written-back-X"));
+
     expect(slice.state.canonical.done).toBe("X");
+  });
+
+  it("marks every status's current symbol, not only the ones with a choice", async () => {
+    await mount();
+    for (const symbol of [" ", "x", "/", "-"]) {
+      // trim: false — see the space-marker test above for why the space symbol's testid needs it.
+      expect(screen.getByTestId(`written-back-${symbol}`, { trim: false }).dataset.current).toBe("true");
+    }
+    expect(screen.getByTestId("written-back-X").dataset.current).toBeUndefined();
   });
 
   it("adds a new symbol mapping to the slice", async () => {
@@ -131,16 +160,6 @@ describe("CheckboxProviderSection", () => {
     await mount();
     expect(screen.getAllByText(m.tasks_status_in_progress()).length).toBeGreaterThan(0);
     expect(screen.queryByText("in-progress")).toBeNull();
-  });
-
-  it("names each write-symbol row with that status's own whole-phrase variant", async () => {
-    await mount();
-    expect(screen.getByText(m.tasks_settings_write_symbol({ status: "done" }))).toBeTruthy();
-    // The stored type name is "in-progress" while the selector value is "in_progress": paraglide
-    // answers a value it has no variant for with the bare message key, so a row naming itself
-    // "tasks_settings_write_symbol" is what an unnormalized status looks like on screen.
-    expect(screen.getByText(m.tasks_settings_write_symbol({ status: "in_progress" }))).toBeTruthy();
-    expect(screen.queryByText("tasks_settings_write_symbol")).toBeNull();
   });
 
   it("adds a tag condition to the global rule", async () => {

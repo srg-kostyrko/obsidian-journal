@@ -2321,22 +2321,10 @@
   "tasks_settings_provider_checkbox": "체크박스 작업",
   "tasks_settings_enabled": "사용",
   "tasks_settings_status_map": "상태 기호",
-  "tasks_settings_status_map_desc": "어떤 체크박스 기호가 어떤 상태를 뜻하는지, 그리고 어떤 기호를 다시 기록할지.",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "「할 일」에 기록할 기호",
-        "status=done": "「완료」에 기록할 기호",
-        "status=in_progress": "「진행 중」에 기록할 기호",
-        "status=cancelled": "「취소」에 기록할 기호",
-        "status=on_hold": "「보류」에 기록할 기호",
-        "status=non_task": "「작업 아님」에 기록할 기호",
-        "status=rolled": "「이월」에 기록할 기호"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "어떤 체크박스 기호가 어떤 상태를 뜻하는지. 두 기호가 같은 상태를 공유하면, 표시된 기호가 작업의 상태가 바뀔 때 노트에 다시 기록됩니다.",
+  "tasks_settings_written_back": "다시 기록됨",
+  "tasks_settings_written_back_tooltip": "이 상태에 이 기호를 기록",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "식별 규칙",
   "tasks_settings_rule_desc": "어떤 체크박스 목록 항목을 작업으로 볼지.",
   "tasks_settings_add_condition": "조건 추가",

@@ -2335,22 +2335,10 @@
   "tasks_settings_provider_checkbox": "Tâches à cocher",
   "tasks_settings_enabled": "Activer",
   "tasks_settings_status_map": "Symboles d’état",
-  "tasks_settings_status_map_desc": "Quel symbole de case correspond à quel état, et quel symbole est réécrit.",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "Symbole d’écriture pour « à faire »",
-        "status=done": "Symbole d’écriture pour « terminé »",
-        "status=in_progress": "Symbole d’écriture pour « en cours »",
-        "status=cancelled": "Symbole d’écriture pour « annulé »",
-        "status=on_hold": "Symbole d’écriture pour « en attente »",
-        "status=non_task": "Symbole d’écriture pour « non-tâche »",
-        "status=rolled": "Symbole d’écriture pour « reporté »"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "Quel symbole de case correspond à quel état. Lorsque deux symboles partagent le même état, celui qui est marqué est réécrit dans la note quand l’état d’une tâche change.",
+  "tasks_settings_written_back": "Réécrit",
+  "tasks_settings_written_back_tooltip": "Réécrire ce symbole pour cet état",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Règle d’identification",
   "tasks_settings_rule_desc": "Quels éléments de liste à cocher comptent comme des tâches.",
   "tasks_settings_add_condition": "Ajouter une condition",

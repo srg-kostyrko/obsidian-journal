@@ -2324,22 +2324,10 @@
   "tasks_settings_provider_checkbox": "チェックボックスタスク",
   "tasks_settings_enabled": "有効にする",
   "tasks_settings_status_map": "ステータス記号",
-  "tasks_settings_status_map_desc": "どのチェックボックス記号がどのステータスを表し、どの記号が書き戻されるか。",
-  "tasks_settings_write_symbol": [
-    {
-      "declarations": ["input status"],
-      "selectors": ["status"],
-      "match": {
-        "status=todo": "「未着手」の書き込み記号",
-        "status=done": "「完了」の書き込み記号",
-        "status=in_progress": "「進行中」の書き込み記号",
-        "status=cancelled": "「中止」の書き込み記号",
-        "status=on_hold": "「保留」の書き込み記号",
-        "status=non_task": "「タスクではない」の書き込み記号",
-        "status=rolled": "「繰り越し」の書き込み記号"
-      }
-    }
-  ],
+  "tasks_settings_status_map_desc": "どのチェックボックス記号がどのステータスを表すか。2つの記号が同じステータスを共有する場合、マークされた記号がタスクのステータス変更時にノートへ書き戻されます。",
+  "tasks_settings_written_back": "書き戻し",
+  "tasks_settings_written_back_tooltip": "このステータスにこの記号を書き込む",
+  "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "識別ルール",
   "tasks_settings_rule_desc": "どのチェックボックス項目をタスクとして扱うか。",
   "tasks_settings_add_condition": "条件を追加",
