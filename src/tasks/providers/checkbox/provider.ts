@@ -21,21 +21,10 @@ function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
   return parsed.success ? parsed.output : null;
 }
 
-// Both the vault-wide rule editor and a journal's own bind their text inputs straight to the
-// stored value with no `.lazy`, so typing one tag name writes the slice — or the journal config —
-// once per character. A refill walks owned notes, re-reads each structure and re-extracts, so
-// without this the cost of a keystroke is the whole owned set.
-export const REFILL_DEBOUNCE_MS = 200;
-
 export class CheckboxTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
   readonly #structure = inject(NoteStructureService);
   readonly #settings = inject(SettingsService).getSlice(checkboxSlice);
-  readonly #pendingJournals = new Set<string>();
-  #pendingAll = false;
-  // `number` rather than a ReturnType of setTimeout: Express's type dependencies pull Node's
-  // ambient timer overloads into every file, and this one has to stay the browser's.
-  #refillTimer: number | undefined;
   readonly id = CHECKBOX_PROVIDER_ID;
   readonly settingsRow = CheckboxSettingsRow;
   readonly journalRow = CheckboxJournalRow;
@@ -48,23 +37,6 @@ export class CheckboxTaskProvider implements TaskProvider {
 
   #refreshJournal(journalName: string): void {
     for (const note of this.#host.ownedNotes(this.id, journalName)) this.#publishFor(note);
-  }
-
-  // Coalesces every refill wider than one note. A pending full refill subsumes any journal queued
-  // beside it, so the flush never does both.
-  #scheduleRefill(scope: "all" | { journalName: string }): void {
-    if (scope === "all") this.#pendingAll = true;
-    else this.#pendingJournals.add(scope.journalName);
-    if (this.#refillTimer !== undefined) window.clearTimeout(this.#refillTimer);
-    this.#refillTimer = window.setTimeout(() => {
-      this.#refillTimer = undefined;
-      const journals = [...this.#pendingJournals];
-      const all = this.#pendingAll;
-      this.#pendingAll = false;
-      this.#pendingJournals.clear();
-      if (all) this.#refillAll();
-      else for (const journalName of journals) this.#refreshJournal(journalName);
-    }, REFILL_DEBOUNCE_MS);
   }
 
   #publishFor(note: OwnedNote): void {
@@ -101,20 +73,18 @@ export class CheckboxTaskProvider implements TaskProvider {
     // must catch are nested one level into the slice, not on the slice object itself.
     const stopSettingsWatch = watch(
       () => this.#settings.state,
-      () => this.#scheduleRefill("all"),
+      () => this.#refillAll(),
       { deep: true },
     );
     const stopOwnedNotesWatch = this.#host.onOwnedNotesChanged((change) => {
       // A single note refills at once — it is one structure read, and a decoration repaints off it.
       if (change.kind === "note") this.#refreshPath(change.path);
-      else if (change.kind === "all") this.#scheduleRefill("all");
-      else this.#scheduleRefill({ journalName: change.journalName });
+      else if (change.kind === "all") this.#refillAll();
+      else this.#refreshJournal(change.journalName);
     });
     return () => {
       stopSettingsWatch();
       stopOwnedNotesWatch();
-      if (this.#refillTimer !== undefined) window.clearTimeout(this.#refillTimer);
-      this.#refillTimer = undefined;
     };
   }
 
