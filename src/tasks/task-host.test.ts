@@ -142,6 +142,17 @@ describe("TaskHostService", () => {
     expect(seen).toHaveBeenCalledTimes(1);
   });
 
+  // A deleted journal's notes leave the index through clearJournal, which deliberately emits no
+  // per-entry entryChanged (pinned in journals-index.test.ts) — so the note feed above never sees
+  // them go. Only a full refill republishes the owned set and takes their items out with them.
+  it("announces a full refill when a journal is deleted", async () => {
+    const { host, repository } = await build();
+    const seen = vi.fn();
+    host.onOwnedNotesChanged(seen);
+    repository.delete("Daily");
+    expect(seen).toHaveBeenCalledWith({ kind: "all" });
+  });
+
   // A checkbox tick changes neither the slot nor the frontmatter payload JournalsIndex compares,
   // so `register` early-returns and no entryChanged fires. Without a metadata subscription of its
   // own the index keeps pre-edit items until some unrelated event happens to refill the path.

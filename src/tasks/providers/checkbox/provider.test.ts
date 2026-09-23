@@ -179,6 +179,27 @@ describe("CheckboxTaskProvider", () => {
     expect(host.published.has(projectPath)).toBe(false);
   });
 
+  // A journal deletion shrinks the owned set with no per-note event of its own. A journal-scoped
+  // refill cannot clear it — it walks the notes that journal still owns, which is none — so the
+  // items only go when a full refill replaces the provider's whole store.
+  it("drops a vanished journal's items on a full refill", async () => {
+    useFakeTimers();
+    const { host, structures, provider } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    host.owned.set(projectPath, { path: projectPath, journalName: "Other", rule: undefined });
+    structures.setStructure(dayPath, structure());
+    structures.setStructure(projectPath, structure());
+    provider.start();
+    expect(host.published.get(dayPath)).toHaveLength(1);
+
+    host.owned.delete(dayPath);
+    host.emit({ kind: "all" });
+    vi.advanceTimersByTime(DEBOUNCE);
+
+    expect(host.published.has(dayPath)).toBe(false);
+    expect(host.published.get(projectPath)).toHaveLength(1);
+  });
+
   // Both rule editors write their text input per character, so a typed tag name arrives as one
   // journal event per keystroke. Each one un-narrowed costs a walk of that journal's notes, so what
   // matters is that they coalesce into a single refill rather than N.

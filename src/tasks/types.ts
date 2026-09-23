@@ -60,7 +60,11 @@ export interface OwnedNote {
 }
 
 export type OwnedNoteChange =
-  { readonly kind: "note"; readonly path: VaultPath } | { readonly kind: "journal"; readonly journalName: string };
+  | { readonly kind: "note"; readonly path: VaultPath }
+  | { readonly kind: "journal"; readonly journalName: string }
+  // Every owned note at once. The narrower kinds name what changed; this one cannot, because the
+  // notes it concerns are already gone from the index by the time it is emitted.
+  | { readonly kind: "all" };
 
 export interface TaskHost {
   publish(providerId: string, scope: "all" | { path: VaultPath }, items: readonly TaskItem[]): void;

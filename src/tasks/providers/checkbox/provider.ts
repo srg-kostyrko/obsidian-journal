@@ -105,6 +105,7 @@ export class CheckboxTaskProvider implements TaskProvider {
     const stopOwnedNotesWatch = this.#host.onOwnedNotesChanged((change) => {
       // A single note refills at once — it is one structure read, and a decoration repaints off it.
       if (change.kind === "note") this.#refreshPath(change.path);
+      else if (change.kind === "all") this.#scheduleRefill("all");
       else this.#scheduleRefill({ journalName: change.journalName });
     });
     return () => {

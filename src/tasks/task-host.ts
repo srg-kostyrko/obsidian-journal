@@ -40,6 +40,15 @@ export class TaskHostService implements TaskHost {
       if (!("tasks" in changes)) return;
       this.#emitter.emit("changed", { kind: "journal", journalName });
     });
+    // A deleted journal's notes leave JournalsIndex through clearJournal, which deliberately emits
+    // no per-entry entryChanged (pinned in journals-index.test.ts), so the note feed above never
+    // sees them go. Naming the journal here would not help either: VaultSubscriptionService
+    // subscribes to this same event first and has already cleared the entries, so a journal-scoped
+    // walk finds nothing to republish. Only a full refill — which republishes the owned set and
+    // replaces the provider's whole store — takes the vanished notes' items with them.
+    journalsEvents.on("deleted", () => {
+      this.#emitter.emit("changed", { kind: "all" });
+    });
   }
 
   publish(providerId: string, scope: "all" | { path: VaultPath }, items: readonly TaskItem[]): void {
