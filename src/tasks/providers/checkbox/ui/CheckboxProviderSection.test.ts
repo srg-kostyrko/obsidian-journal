@@ -18,6 +18,13 @@ async function mount() {
   return { harness, slice };
 }
 
+async function remap(symbol: string, status: string): Promise<void> {
+  const row = screen.getByTestId(`status-map-row-${symbol}`);
+  const select = row.querySelector("select");
+  if (!select) throw new Error(`status map row ${symbol} has no select`);
+  await userEvent.selectOptions(select, status);
+}
+
 describe("CheckboxProviderSection", () => {
   it("shows the provider name from the message catalogue", async () => {
     await mount();
@@ -81,6 +88,24 @@ describe("CheckboxProviderSection", () => {
     await userEvent.click(screen.getByTestId("status-map-remove-x"));
 
     expect(slice.state.canonical.done).toBe("X");
+  });
+
+  it("reassigns the write symbol when its canonical symbol is remapped to another status", async () => {
+    const { slice } = await mount();
+    expect(slice.state.canonical.done).toBe("x");
+
+    await remap("x", "todo");
+
+    expect(slice.state.canonical.done).toBe("X");
+  });
+
+  it("drops the write symbol when remapping leaves its status with no symbol", async () => {
+    const { slice } = await mount();
+    expect(slice.state.canonical["in-progress"]).toBe("/");
+
+    await remap("/", "todo");
+
+    expect(slice.state.canonical).not.toHaveProperty("in-progress");
   });
 
   it("renders status option labels from the message catalogue, not the raw identifier", async () => {

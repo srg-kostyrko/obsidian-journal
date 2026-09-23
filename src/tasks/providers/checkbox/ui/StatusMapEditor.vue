@@ -84,13 +84,12 @@ function addSymbol(): void {
   newSymbol.value = "";
 }
 
-// A removed symbol can be the very one canonical[type] writes back — left alone, writing that
-// status would emit a symbol nothing reads as that status any more. Reassign to another surviving
-// candidate for the type, or drop the write mapping entirely once none is left, rather than leave
-// canonical pointing at a symbol statusMap no longer knows.
-function removeSymbol(symbol: string): void {
-  const type = slice.state.statusMap[symbol];
-  delete slice.state.statusMap[symbol];
+// A symbol can stop answering for a status two ways — removed outright, or remapped to some other
+// status — and canonical[type] may be pointing at exactly that symbol. Left alone, writing that
+// status emits a marker normalizeStatus reads back as something else, so the round trip breaks.
+// Reassign to another surviving candidate for the type, or drop the write mapping entirely once
+// none is left, rather than leave canonical pointing at a symbol that no longer reads as it.
+function repairCanonical(type: string | undefined, symbol: string): void {
   if (type === undefined || slice.state.canonical[type] !== symbol) return;
   const remaining = Object.entries(slice.state.statusMap)
     .filter(([, candidateType]) => candidateType === type)
@@ -99,6 +98,19 @@ function removeSymbol(symbol: string): void {
   if (fallback === undefined) delete slice.state.canonical[type];
   else slice.state.canonical[type] = fallback;
 }
+
+function removeSymbol(symbol: string): void {
+  const type = slice.state.statusMap[symbol];
+  delete slice.state.statusMap[symbol];
+  repairCanonical(type, symbol);
+}
+
+function remapSymbol(symbol: string, status: string): void {
+  const previous = slice.state.statusMap[symbol];
+  if (previous === status) return;
+  slice.state.statusMap[symbol] = status;
+  repairCanonical(previous, symbol);
+}
 </script>
 
 <template>
@@ -106,7 +118,7 @@ function removeSymbol(symbol: string): void {
     <template #description>{{ m.tasks_settings_status_map_desc() }}</template>
     <div v-for="symbol in symbols" :key="symbol" class="tasks-status-map-row" :data-testid="`status-map-row-${symbol}`">
       <span class="tasks-status-map-symbol">{{ symbol }}</span>
-      <UiDropdown v-model="slice.state.statusMap[symbol]">
+      <UiDropdown :model-value="slice.state.statusMap[symbol]" @update:model-value="remapSymbol(symbol, $event)">
         <option v-for="status in CHECKBOX_STATUSES" :key="status" :value="status">{{ statusLabel(status) }}</option>
       </UiDropdown>
       <UiIconButton
