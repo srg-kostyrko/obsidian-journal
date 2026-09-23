@@ -28,10 +28,16 @@ function statusMapRows(): ReturnType<typeof $$> {
   return $$('[data-testid^="status-map-row-"]');
 }
 
+// File-level, not nested in the first describe below: every describe in this file shares this one
+// reboot, and a `before` scoped to "dashboard task provider list" would silently stop covering the
+// rest if a describe were ever added or reordered above it. Sharing is safe here because every
+// scenario after the first either reverts itself (Cancel) or persists a change nothing downstream
+// reads (the added "!" symbol) — see each describe's own comment for which.
+before(async () => {
+  await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+});
+
 describe("dashboard task provider list", () => {
-  before(async () => {
-    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
-  });
   afterEach(closeSettings);
 
   it("shows exactly one provider row, for the checkbox provider", async () => {
