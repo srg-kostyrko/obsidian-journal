@@ -1,7 +1,10 @@
+import userEvent from "@testing-library/user-event";
+import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { NoteStructureService, type NoteStructure, type VaultPath } from "@/infrastructure/host";
 import { FakeNoteStructureService } from "@/infrastructure/host/testing";
 import { Option } from "@/infrastructure/result";
@@ -18,6 +21,7 @@ import { TaskHostToken, TaskProviderToken, type OwnedNote, type OwnedNoteChange,
 import { CHECKBOX_PROVIDER_ID } from "./extract";
 import { CheckboxTaskProvider } from "./provider";
 import { checkboxSlice } from "./slice";
+import EditJournalTasksModal from "./ui/EditJournalTasksModal.vue";
 
 const dayPath = "Daily/2026-09-22.md" as VaultPath;
 const otherPath = "Daily/2026-09-23.md" as VaultPath;
@@ -447,5 +451,43 @@ describe("CheckboxTaskProvider content refill", () => {
     harness.host.emitMetadata(path);
 
     expect(index.version()).toBe(before);
+  });
+});
+
+// An earlier task dropped the test pinning that JournalsRepository's `updated` event carries
+// `tasks` among its changed keys — exactly what TaskHostService gates a journal refill on
+// (`if (!("tasks" in changes)) return;`). Driven end to end through the real modal rather than
+// a fake host, so a future change to how the modal writes back (mutating `config.tasks.checkbox`
+// in place instead of assigning a fresh `tasks` object, say) would leave the index stale with the
+// rest of the suite green — there is no other test anywhere that a journal-scoped Save reaches
+// the provider at all.
+describe("EditJournalTasksModal Save reaching the checkbox provider", () => {
+  it("refills the note once Save narrows the journal's rule out from under it", async () => {
+    const structures = new FakeNoteStructureService();
+    const path = "Daily/2026-09-22.md" as VaultPath;
+    const harness = await testContainer({
+      modules: [journalsCoreModule, tasksCoreModule],
+      data: { journals: { Daily: fixedJournal("Daily", { type: "day" }) } },
+      overrides: [overrideWith(NoteStructureService, structures as never)],
+    });
+    harness.host.putFile(path);
+    harness.resolve(JournalsIndex).register({ journalName: "Daily", anchor: anchor("2026-09-22"), path });
+    // No tags on the note, so a "has #solo" condition matches nothing once it takes effect.
+    structures.setStructure(path, structure());
+
+    const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
+    if (!provider) throw new Error("checkbox provider not registered");
+    provider.start();
+
+    const index = harness.resolve(TaskIndex);
+    expect(index.itemsIn(path)).toHaveLength(1);
+
+    harness.renderModal(EditJournalTasksModal, { props: { journalName: "Daily" } });
+    await userEvent.click(screen.getByTestId("compose-replace"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "solo");
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    expect(index.itemsIn(path)).toHaveLength(0);
   });
 });
