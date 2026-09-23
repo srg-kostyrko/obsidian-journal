@@ -2429,6 +2429,31 @@
   "tasks_settings_condition_not_under": "Не під",
   "tasks_settings_mode_and": "Відповідність усім умовам",
   "tasks_settings_mode_or": "Відповідність будь-якій умові",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "з тегом {tags}",
+        "condition=lacks": "без тега {tags}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "під заголовком {headings}",
+        "condition=not-under": "не під заголовком {headings}"
+      }
+    }
+  ],
+  "tasks_rule_summary_any": "Немає умов — кожен пункт списку з чекбоксом у нотатках журналу вважається завданням.",
+  "tasks_rule_summary_conditions": "Враховує пункт списку з чекбоксом, який {conditions}.",
+  "tasks_journal_summary_inherit": "Успадковує правило всього сховища.",
+  "tasks_journal_summary_narrow": "Звужує правило всього сховища: {rule}",
+  "tasks_journal_summary_replace": "Замінює правило всього сховища: {rule}",
 
   "tasks_status_todo": "До виконання",
   "tasks_status_done": "Виконано",

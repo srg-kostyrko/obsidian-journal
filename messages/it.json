@@ -2362,6 +2362,31 @@
   "tasks_settings_condition_not_under": "Non sotto",
   "tasks_settings_mode_and": "Soddisfa tutte le condizioni",
   "tasks_settings_mode_or": "Soddisfa almeno una condizione",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "contrassegnato con il tag {tags}",
+        "condition=lacks": "non contrassegnato con il tag {tags}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "sotto l'intestazione {headings}",
+        "condition=not-under": "non sotto l'intestazione {headings}"
+      }
+    }
+  ],
+  "tasks_rule_summary_any": "Nessuna condizione — ogni elemento di elenco con casella nelle note di un diario è un'attività.",
+  "tasks_rule_summary_conditions": "Conta un elemento di elenco con casella che è {conditions}.",
+  "tasks_journal_summary_inherit": "Eredita la regola di tutto il vault.",
+  "tasks_journal_summary_narrow": "Restringe la regola di tutto il vault con: {rule}",
+  "tasks_journal_summary_replace": "Sostituisce la regola di tutto il vault con: {rule}",
 
   "tasks_status_todo": "Da fare",
   "tasks_status_done": "Completato",

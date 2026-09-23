@@ -2362,6 +2362,31 @@
   "tasks_settings_condition_not_under": "Pas sous",
   "tasks_settings_mode_and": "Remplir toutes les conditions",
   "tasks_settings_mode_or": "Remplir au moins une condition",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "étiqueté avec {tags}",
+        "condition=lacks": "non étiqueté avec {tags}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "sous l’en-tête {headings}",
+        "condition=not-under": "pas sous l’en-tête {headings}"
+      }
+    }
+  ],
+  "tasks_rule_summary_any": "Aucune condition — tout élément de liste à cocher dans les notes d’un journal est une tâche.",
+  "tasks_rule_summary_conditions": "Compte un élément de liste à cocher qui est {conditions}.",
+  "tasks_journal_summary_inherit": "Hérite de la règle de tout le coffre-fort.",
+  "tasks_journal_summary_narrow": "Restreint la règle de tout le coffre-fort avec : {rule}",
+  "tasks_journal_summary_replace": "Remplace la règle de tout le coffre-fort avec : {rule}",
 
   "tasks_status_todo": "À faire",
   "tasks_status_done": "Terminé",

@@ -2364,6 +2364,31 @@
   "tasks_settings_condition_not_under": "Nicht unter",
   "tasks_settings_mode_and": "Alle Bedingungen erfüllen",
   "tasks_settings_mode_or": "Eine beliebige Bedingung erfüllen",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "mit dem Tag {tags} versehen",
+        "condition=lacks": "nicht mit dem Tag {tags} versehen"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "unter der Überschrift {headings}",
+        "condition=not-under": "nicht unter der Überschrift {headings}"
+      }
+    }
+  ],
+  "tasks_rule_summary_any": "Keine Bedingungen – jeder Kontrollkästchen-Listeneintrag in den Notizen eines Journals ist eine Aufgabe.",
+  "tasks_rule_summary_conditions": "Zählt einen Kontrollkästchen-Listeneintrag, der {conditions} ist.",
+  "tasks_journal_summary_inherit": "Erbt die Vault-weite Regel.",
+  "tasks_journal_summary_narrow": "Schränkt die Vault-weite Regel ein: {rule}",
+  "tasks_journal_summary_replace": "Ersetzt die Vault-weite Regel durch: {rule}",
 
   "tasks_status_todo": "Zu erledigen",
   "tasks_status_done": "Erledigt",

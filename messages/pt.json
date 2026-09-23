@@ -2359,6 +2359,31 @@
   "tasks_settings_condition_not_under": "Não sob",
   "tasks_settings_mode_and": "Atender a todas as condições",
   "tasks_settings_mode_or": "Atender a qualquer condição",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "marcado com a tag {tags}",
+        "condition=lacks": "não marcado com a tag {tags}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "sob o cabeçalho {headings}",
+        "condition=not-under": "não sob o cabeçalho {headings}"
+      }
+    }
+  ],
+  "tasks_rule_summary_any": "Sem condições — todo item de lista com caixa de seleção nas notas de um diário é uma tarefa.",
+  "tasks_rule_summary_conditions": "Conta um item de lista com caixa de seleção que está {conditions}.",
+  "tasks_journal_summary_inherit": "Herda a regra de todo o cofre.",
+  "tasks_journal_summary_narrow": "Restringe a regra de todo o cofre com: {rule}",
+  "tasks_journal_summary_replace": "Substitui a regra de todo o cofre com: {rule}",
 
   "tasks_status_todo": "A fazer",
   "tasks_status_done": "Concluído",

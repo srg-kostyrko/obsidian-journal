@@ -2351,6 +2351,31 @@
   "tasks_settings_condition_not_under": "配下ではない",
   "tasks_settings_mode_and": "すべての条件に一致",
   "tasks_settings_mode_or": "いずれかの条件に一致",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "{tags} のタグが付いている",
+        "condition=lacks": "{tags} のタグが付いていない"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "見出し{headings}の配下にある",
+        "condition=not-under": "見出し{headings}の配下にない"
+      }
+    }
+  ],
+  "tasks_rule_summary_any": "条件なし — ジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
+  "tasks_rule_summary_conditions": "{conditions}チェックボックス項目を数えます。",
+  "tasks_journal_summary_inherit": "保管庫全体のルールを継承します。",
+  "tasks_journal_summary_narrow": "保管庫全体のルールを次の内容で絞り込みます: {rule}",
+  "tasks_journal_summary_replace": "保管庫全体のルールを次の内容で置き換えます: {rule}",
 
   "tasks_status_todo": "未着手",
   "tasks_status_done": "完了",

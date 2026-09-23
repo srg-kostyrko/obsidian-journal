@@ -2437,6 +2437,31 @@
   "tasks_settings_condition_not_under": "Не под",
   "tasks_settings_mode_and": "Соответствие всем условиям",
   "tasks_settings_mode_or": "Соответствие любому условию",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "с тегом {tags}",
+        "condition=lacks": "без тега {tags}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "под заголовком {headings}",
+        "condition=not-under": "не под заголовком {headings}"
+      }
+    }
+  ],
+  "tasks_rule_summary_any": "Нет условий — каждый пункт списка с чекбоксом в заметках журнала считается задачей.",
+  "tasks_rule_summary_conditions": "Считает пункт списка с чекбоксом, который {conditions}.",
+  "tasks_journal_summary_inherit": "Наследует правило всего хранилища.",
+  "tasks_journal_summary_narrow": "Сужает правило всего хранилища: {rule}",
+  "tasks_journal_summary_replace": "Заменяет правило всего хранилища: {rule}",
 
   "tasks_status_todo": "К выполнению",
   "tasks_status_done": "Выполнено",
