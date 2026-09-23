@@ -44,10 +44,11 @@ all seven statuses. A marker is the single character between the brackets, so **
 disabled until exactly one is typed — one emoji counts as one character. The delete icon on a row removes that mapping — a marker no longer listed falls
 back to To-do, same as one you never added.
 
-Where two or more markers share a status — `x` and `X` both read as Done by default — one of them is
-**Written back**: the marker's own icon in that row marks which one Journals writes into the note when
-a task's status changes to that value. Click another row's icon to make that one the written-back
-marker instead.
+Every row carries a **Written back** icon: it marks the marker Journals writes into the note when a
+task's status changes to that value. A status with only one marker still shows it filled in, since that
+marker is the one that gets written; where two or more markers share a status — `x` and `X` both read as
+Done by default — only one of them is filled in at a time, and clicking a grey icon makes that row's
+marker the written-back one instead.
 
 **Save** at the bottom of the modal applies both the status map and the identification rule below it;
 **Cancel** discards edits to either.
