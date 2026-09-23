@@ -2330,5 +2330,74 @@
   "maintenance_ambiguous_connect": "Connect to {journal}",
   "maintenance_ambiguous_occupied": "Another note already holds this period in {journals}.",
   "maintenance_repair_done": "Repaired {repaired} notes. {failed} could not be repaired.",
-  "maintenance_unreadable_row": "{path}: {message}"
+  "maintenance_unreadable_row": "{path}: {message}",
+
+  "tasks_settings_title": "Tasks",
+  "tasks_settings_provider_checkbox": "Checkbox tasks",
+  "tasks_settings_provider_checkbox_desc": "Reads checkbox list items from a note.",
+  "tasks_settings_configure": "Configure",
+  "tasks_settings_edit_rule": "Edit",
+  "tasks_settings_status_map": "Status symbols",
+  "tasks_settings_status_map_desc": "Which checkbox symbol means which status. Where two symbols share a status, the marked one is written back into the note when a task's status changes.",
+  "tasks_settings_written_back": "Written back",
+  "tasks_settings_written_back_tooltip": "Write this symbol for this status",
+  "tasks_settings_space_symbol": "␣",
+  "tasks_settings_rule": "Identification rule",
+  "tasks_settings_rule_desc": "Which checkbox list items count as tasks.",
+  "tasks_settings_add_condition": "Add condition",
+  "tasks_settings_condition_tag": "Tag",
+  "tasks_settings_condition_heading": "Heading",
+  "tasks_settings_condition_has": "Has",
+  "tasks_settings_condition_lacks": "Lacks",
+  "tasks_settings_condition_under": "Under",
+  "tasks_settings_condition_not_under": "Not under",
+  "tasks_settings_mode_and": "Match all conditions",
+  "tasks_settings_mode_or": "Match any condition",
+  "tasks_condition_values_required": "Enter at least one value.",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "tagged {tags}",
+        "condition=lacks": "not tagged {tags}"
+      }
+    }
+  ],
+  "tasks_condition_tag_describe_empty": "missing a tag",
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "under heading {headings}",
+        "condition=not-under": "not under heading {headings}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe_empty": "missing a heading",
+  "tasks_rule_summary_any": "No conditions — every checkbox item in a journal's notes is a task.",
+  "tasks_rule_summary_conditions": "Counts a checkbox item that is {conditions}.",
+  "tasks_journal_summary_inherit": "Inherits the vault-wide rule.",
+  "tasks_journal_summary_narrow": "Narrows the vault-wide rule with: {rule}",
+  "tasks_journal_summary_replace": "Replaces the vault-wide rule with: {rule}",
+  "tasks_journal_summary_narrow_empty": "Narrows the vault-wide rule with no conditions — the vault-wide rule applies unchanged.",
+  "tasks_journal_summary_replace_empty": "Replaces the vault-wide rule with no conditions — every checkbox item in this journal's notes is a task.",
+
+  "tasks_status_todo": "To-do",
+  "tasks_status_done": "Done",
+  "tasks_status_in_progress": "In progress",
+  "tasks_status_cancelled": "Cancelled",
+  "tasks_status_on_hold": "On hold",
+  "tasks_status_non_task": "Not a task",
+  "tasks_status_rolled": "Rolled over",
+  "tasks_settings_add_symbol": "Add symbol",
+  "tasks_settings_new_symbol_label": "New symbol",
+
+  "tasks_journal_compose": "Relation to the vault-wide rule",
+  "tasks_journal_compose_desc": "Inherit uses the vault-wide rule alone. Narrow requires a line to satisfy both rules. Replace uses this journal's rule alone.",
+  "tasks_journal_compose_inherit": "Inherit",
+  "tasks_journal_compose_narrow": "Narrow",
+  "tasks_journal_compose_replace": "Replace",
+  "tasks_journal_modal_title": "Task identification — {journal}"
 }

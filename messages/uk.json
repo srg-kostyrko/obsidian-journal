@@ -2396,5 +2396,74 @@
   "maintenance_ambiguous_connect": "Підключити до журналу {journal}",
   "maintenance_ambiguous_occupied": "Цей період уже зайнято іншою нотаткою: {journals}.",
   "maintenance_repair_done": "{repaired} нотаток виправлено. {failed} не вдалося виправити.",
-  "maintenance_unreadable_row": "{path}: {message}"
+  "maintenance_unreadable_row": "{path}: {message}",
+
+  "tasks_settings_title": "Завдання",
+  "tasks_settings_provider_checkbox": "Завдання-чекбокси",
+  "tasks_settings_provider_checkbox_desc": "Читає пункти списку з чекбоксом із нотатки.",
+  "tasks_settings_configure": "Налаштувати",
+  "tasks_settings_edit_rule": "Редагувати",
+  "tasks_settings_status_map": "Символи статусу",
+  "tasks_settings_status_map_desc": "Який символ чекбокса означає який статус. Якщо два символи мають один статус, позначений із них записується назад у нотатку, коли статус завдання змінюється.",
+  "tasks_settings_written_back": "Записується",
+  "tasks_settings_written_back_tooltip": "Записати цей символ для цього статусу",
+  "tasks_settings_space_symbol": "␣",
+  "tasks_settings_rule": "Правило визначення",
+  "tasks_settings_rule_desc": "Які пункти списку з чекбоксом вважаються завданнями.",
+  "tasks_settings_add_condition": "Додати умову",
+  "tasks_settings_condition_tag": "Тег",
+  "tasks_settings_condition_heading": "Заголовок",
+  "tasks_settings_condition_has": "Містить",
+  "tasks_settings_condition_lacks": "Не містить",
+  "tasks_settings_condition_under": "Під",
+  "tasks_settings_condition_not_under": "Не під",
+  "tasks_settings_mode_and": "Відповідність усім умовам",
+  "tasks_settings_mode_or": "Відповідність будь-якій умові",
+  "tasks_condition_values_required": "Введіть хоча б одне значення.",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "з тегом {tags}",
+        "condition=lacks": "без тега {tags}"
+      }
+    }
+  ],
+  "tasks_condition_tag_describe_empty": "без вказаного тега",
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "під заголовком {headings}",
+        "condition=not-under": "не під заголовком {headings}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe_empty": "без вказаного заголовка",
+  "tasks_rule_summary_any": "Немає умов — кожен пункт списку з чекбоксом у нотатках журналу вважається завданням.",
+  "tasks_rule_summary_conditions": "Враховує пункт списку з чекбоксом, який {conditions}.",
+  "tasks_journal_summary_inherit": "Успадковує правило всього сховища.",
+  "tasks_journal_summary_narrow": "Звужує правило всього сховища: {rule}",
+  "tasks_journal_summary_replace": "Замінює правило всього сховища: {rule}",
+  "tasks_journal_summary_narrow_empty": "Звужує правило всього сховища без умов — правило всього сховища застосовується без змін.",
+  "tasks_journal_summary_replace_empty": "Замінює правило всього сховища без умов — кожен пункт списку з чекбоксом у нотатках цього журналу вважається завданням.",
+
+  "tasks_status_todo": "До виконання",
+  "tasks_status_done": "Виконано",
+  "tasks_status_in_progress": "У роботі",
+  "tasks_status_cancelled": "Скасовано",
+  "tasks_status_on_hold": "Відкладено",
+  "tasks_status_non_task": "Не завдання",
+  "tasks_status_rolled": "Перенесено",
+  "tasks_settings_add_symbol": "Додати символ",
+  "tasks_settings_new_symbol_label": "Новий символ",
+
+  "tasks_journal_compose": "Відношення до правила всього сховища",
+  "tasks_journal_compose_desc": "«Успадкувати» використовує лише правило всього сховища. «Звузити» вимагає, щоб рядок задовольняв обидва правила. «Замінити» використовує лише правило цього журналу.",
+  "tasks_journal_compose_inherit": "Успадкувати",
+  "tasks_journal_compose_narrow": "Звузити",
+  "tasks_journal_compose_replace": "Замінити",
+  "tasks_journal_modal_title": "Визначення завдань — {journal}"
 }

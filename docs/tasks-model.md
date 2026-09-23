@@ -17,7 +17,8 @@ renders the result.
 **Nothing here keeps plugin-private state.** The marker, the copied line and the
 statuses all live in the notes, so a second device reading the same vault reaches
 the same conclusions from the same bytes. The only store this model adds is the
-phase-4 index, which is a cache derived from notes and rebuilt from them on boot.
+task index, which arrives in phase 1 as a cache derived from notes and rebuilt
+from them on boot.
 
 ## Vocabulary
 
@@ -263,7 +264,10 @@ A user whose vault uses a themed symbol set registers it in the map, as they
 already do in Tasks.
 
 **Changing this changes existing vaults**: a decoration reading "all tasks
-completed" stops matching notes that use `[/]`, `[-]` or `[>]`.
+completed" stops matching notes that use `[/]`, or any marker the default map
+does not name — `[>]` among them. `[-]` is unaffected: it still maps to
+`cancelled`, which is still in the done alias, the same as before this map
+existed.
 
 ### `rolled`, and why the marker is both a tag and a type
 
@@ -315,10 +319,16 @@ destructive operation in the plugin.
 the listing, the decoration conditions, the move — asks the provider. Nothing
 re-derives items from `metadataCache` on its own.
 
-Whether the provider answers from `metadataCache` on demand or from a persistent
-index sits **behind that seam**. That is what keeps the index a performance
-decision rather than a fork in the model: the provider ships computing on demand,
-later gains an index as a cache, and no consumer changes.
+How the provider fills the index sits **behind that seam**. A central index sits in
+front of the providers from phase 1: providers push item sets into it and every
+consumer reads it synchronously, so no two surfaces can disagree. Phase 1 bounds
+the fill set to notes the plugin owns — period notes and their notelets. Phase 4
+widens that fill set to the vault; it does not change the seam.
+
+The index stores two tiers. Structure — status, position, tags, capabilities —
+fills synchronously from `metadataCache`, so a decoration is correct on first
+paint. Line text hydrates lazily, keyed by `(path, mtime)`, which is why
+`display.markdown` is `null` until something asks for it.
 
 So `NoteMetadata.tasks` **goes**. It is read in exactly four lines, all of them
 inside `hasOpenTask` and `allTasksCompleted`
@@ -565,6 +575,12 @@ unscoped rollover over a template that seeds recurring checkboxes duplicates
 those checkboxes every day, which is the single most common support thread on
 every incumbent.
 
+**Identification does not use `selection`.** A provider's identification rule carries
+finer-grained `tag` and `heading` conditions, because it has no fence sugar to keep
+one-to-one. Its empty condition list also means _everything_, where an empty decoration
+condition list means _nothing_. Reconciling the two vocabularies belongs to #345, where
+the fence keys live.
+
 ## Ticking an item
 
 A listing renders items and lets them be ticked. That is a write into a task
@@ -804,11 +820,17 @@ removes the justification.
 
 ### Which settings live where
 
-**Global, on the provider** — the marker string, the `symbol → type` map, the
-identification rule. These are parsing concerns, and the rollup case forces them:
-one note is read in several journals' contexts, so a marker that differed per
-journal would normalize the same line to `rolled` in one reading and `todo` in
-another. A status cannot depend on who asked.
+**Global, on the provider** — the marker string and the `symbol → type` map. These are
+parsing concerns with no owner to consult: a checkbox in a project note no journal owns
+must normalize exactly as one in a day note, and a status cannot have two values.
+
+**Identification is two layers.** A global rule on the provider applies everywhere,
+including notes no journal owns. A journal may add its own rule, composed `inherit`
+(the default), `narrow` (global and journal) or `replace` (journal alone). This is
+deterministic despite the rollup: a note has exactly one owning journal, so the rule
+applied is the _owner's_, whoever is reading — a month rollup walking a day note reads
+it as a day-journal note. An earlier version of this section ruled identification
+global-only by conflating owner with asker.
 
 **Per-journal, on the move** — `selection`, the target heading, copy-vs-move, and
 whether to stamp. The first two name headings in that journal's own template, so
@@ -922,6 +944,10 @@ relation — it is the checkbox provider's implementation of it.
    list nobody can act on. Two things therefore arrive here rather than with the
    move: whatever enforces "overwrite only tokens we found", and the Tasks
    capability check.
+
+   Dates are extracted for owned notes as soon as their text is hydrated, and stored on
+   the item — but no date lookup is exposed until step 4. Answering "what is due Friday"
+   from journal notes alone would be a half-vault answer wearing a whole-vault face.
 
 2. `note-property` provider with its date→paths index — small, `metadataCache`
    only, no text cache, no `cachedRead`, and it covers TaskNotes plus every

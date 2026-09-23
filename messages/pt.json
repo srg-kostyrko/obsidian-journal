@@ -2326,5 +2326,74 @@
   "maintenance_ambiguous_connect": "Conectar a {journal}",
   "maintenance_ambiguous_occupied": "Outra nota já ocupa este período em {journals}.",
   "maintenance_repair_done": "{repaired} notas reparadas. {failed} não puderam ser reparadas.",
-  "maintenance_unreadable_row": "{path}: {message}"
+  "maintenance_unreadable_row": "{path}: {message}",
+
+  "tasks_settings_title": "Tarefas",
+  "tasks_settings_provider_checkbox": "Tarefas de caixa de seleção",
+  "tasks_settings_provider_checkbox_desc": "Lê itens de lista com caixa de seleção de uma nota.",
+  "tasks_settings_configure": "Configurar",
+  "tasks_settings_edit_rule": "Editar",
+  "tasks_settings_status_map": "Símbolos de estado",
+  "tasks_settings_status_map_desc": "Qual símbolo de caixa de seleção significa qual estado. Quando dois símbolos compartilham um estado, o marcado é o que é gravado de volta na nota quando o estado de uma tarefa muda.",
+  "tasks_settings_written_back": "Gravado de volta",
+  "tasks_settings_written_back_tooltip": "Gravar este símbolo para este estado",
+  "tasks_settings_space_symbol": "␣",
+  "tasks_settings_rule": "Regra de identificação",
+  "tasks_settings_rule_desc": "Quais itens de lista com caixa de seleção contam como tarefas.",
+  "tasks_settings_add_condition": "Adicionar condição",
+  "tasks_settings_condition_tag": "Tag",
+  "tasks_settings_condition_heading": "Cabeçalho",
+  "tasks_settings_condition_has": "Tem",
+  "tasks_settings_condition_lacks": "Não tem",
+  "tasks_settings_condition_under": "Sob",
+  "tasks_settings_condition_not_under": "Não sob",
+  "tasks_settings_mode_and": "Atender a todas as condições",
+  "tasks_settings_mode_or": "Atender a qualquer condição",
+  "tasks_condition_values_required": "Insira pelo menos um valor.",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "marcado com a tag {tags}",
+        "condition=lacks": "não marcado com a tag {tags}"
+      }
+    }
+  ],
+  "tasks_condition_tag_describe_empty": "sem tag",
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "sob o cabeçalho {headings}",
+        "condition=not-under": "não sob o cabeçalho {headings}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe_empty": "sem cabeçalho",
+  "tasks_rule_summary_any": "Sem condições — todo item de lista com caixa de seleção nas notas de um diário é uma tarefa.",
+  "tasks_rule_summary_conditions": "Conta um item de lista com caixa de seleção que está {conditions}.",
+  "tasks_journal_summary_inherit": "Herda a regra de todo o cofre.",
+  "tasks_journal_summary_narrow": "Restringe a regra de todo o cofre com: {rule}",
+  "tasks_journal_summary_replace": "Substitui a regra de todo o cofre com: {rule}",
+  "tasks_journal_summary_narrow_empty": "Restringe a regra de todo o cofre sem condições — a regra de todo o cofre se aplica sem alterações.",
+  "tasks_journal_summary_replace_empty": "Substitui a regra de todo o cofre sem condições — todo item de lista com caixa de seleção nas notas deste diário é uma tarefa.",
+
+  "tasks_status_todo": "A fazer",
+  "tasks_status_done": "Concluído",
+  "tasks_status_in_progress": "Em andamento",
+  "tasks_status_cancelled": "Cancelado",
+  "tasks_status_on_hold": "Em espera",
+  "tasks_status_non_task": "Não é uma tarefa",
+  "tasks_status_rolled": "Transferido",
+  "tasks_settings_add_symbol": "Adicionar símbolo",
+  "tasks_settings_new_symbol_label": "Novo símbolo",
+
+  "tasks_journal_compose": "Relação com a regra de todo o cofre",
+  "tasks_journal_compose_desc": "«Herdar» usa apenas a regra de todo o cofre. «Restringir» exige que uma linha satisfaça as duas regras. «Substituir» usa apenas a regra deste diário.",
+  "tasks_journal_compose_inherit": "Herdar",
+  "tasks_journal_compose_narrow": "Restringir",
+  "tasks_journal_compose_replace": "Substituir",
+  "tasks_journal_modal_title": "Identificação de tarefas — {journal}"
 }

@@ -16,6 +16,7 @@ export { MarkdownRenderService } from "./internal/markdown-render-service";
 export { MetadataTypeService } from "./internal/metadata-type-service";
 export { NoteMetadataService } from "./internal/note-metadata-service";
 export { NoteSizeService, type NoteSizeEvents } from "./internal/note-size-service";
+export { NoteStructureService } from "./internal/note-structure-service";
 export { NoticeService } from "./internal/notice-service";
 export { PlatformService, type DeviceKind } from "./internal/platform-service";
 export { NotesService } from "./internal/notes-service";
@@ -73,10 +74,13 @@ export type {
   Note,
   NoteMetadata,
   NoteSize,
-  NoteTask,
+  NoteStructure,
   NotesEvents,
   OpenMode,
   PinTarget,
+  StructureHeading,
+  StructureListItem,
+  StructureTag,
   VaultPath,
   VaultProperty,
   WorkspaceEvents,

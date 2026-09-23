@@ -32,6 +32,7 @@ export default defineConfig({
           { text: "Shelves", link: "/shelves" },
           { text: "Questions", link: "/questions" },
           { text: "Notelets", link: "/notelets" },
+          { text: "Tasks", link: "/tasks" },
           { text: "Decorations", link: "/decorations" },
           { text: "Commands", link: "/commands" },
         ],

@@ -9,6 +9,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { notesCalendarModule } from "@/notes-calendar/module";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 
 import TimelineCalendar from "./TimelineCalendar.vue";
@@ -19,6 +20,7 @@ const MODULES = [
   decorationsModule,
   decorationsSettingsCoreModule,
   notesCalendarModule,
+  tasksCoreModule,
 ];
 
 beforeAll(() => initLocale("en"));

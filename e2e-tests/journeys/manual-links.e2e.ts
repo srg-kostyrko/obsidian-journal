@@ -26,6 +26,7 @@ const DASHBOARD: ManualPath[] = [
   manual.view.notesByDate,
   manual.period.weeks,
   manual.decorations.owners,
+  manual.tasks.page,
   manual.view.calendars,
   manual.troubleshooting.reportingBug,
   manual.troubleshooting.maintenance,
@@ -65,6 +66,7 @@ describe("manual links in settings", () => {
         manual.navigation.page,
         manual.navigation.intervalLines,
         manual.decorations.owners,
+        manual.tasks.journalRule,
       ]);
     });
 

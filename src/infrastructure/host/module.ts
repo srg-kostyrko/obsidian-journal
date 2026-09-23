@@ -7,6 +7,7 @@ import { MarkdownRenderService } from "./internal/markdown-render-service";
 import { MetadataTypeService } from "./internal/metadata-type-service";
 import { NoteMetadataService } from "./internal/note-metadata-service";
 import { NoteSizeService } from "./internal/note-size-service";
+import { NoteStructureService } from "./internal/note-structure-service";
 import { NotesService } from "./internal/notes-service";
 import { NoticeService } from "./internal/notice-service";
 import { PlatformService } from "./internal/platform-service";
@@ -29,6 +30,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(InternalObsidianAppToken).useValue(plugin.app);
       c.register(NotesService).useClass(NotesService).eager();
       c.register(NoteMetadataService).useClass(NoteMetadataService);
+      c.register(NoteStructureService).useClass(NoteStructureService);
       c.register(NoteSizeService).useClass(NoteSizeService);
       c.register(MetadataTypeService).useClass(MetadataTypeService);
       c.register(MarkdownRenderService).useClass(MarkdownRenderService);

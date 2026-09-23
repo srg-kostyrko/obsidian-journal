@@ -95,8 +95,16 @@ Example: [Word-count bands](#word-count-bands).
 
 ### Tasks
 
-**Check if note has open tasks** matches a note with at least one unticked task. **Check if all tasks
-are completed** matches a note whose tasks are all ticked, and not a note with no tasks.
+**Check if note has open tasks** matches a note with at least one open task — To-do, In progress or On
+hold. **Check if all tasks are completed** matches a note with at least one task, and every one of them
+Done or Cancelled — not a note with no tasks. Rolled over tasks count toward neither condition, so a
+note holding only rolled-over tasks satisfies neither. Not a task items are excluded entirely and never
+supply the "at least one task" either condition needs.
+
+Which checkbox items count as tasks at all, and which status each checkbox marker reads as, are set on
+the [Tasks](/tasks) settings block. By default a plain `[ ]` is To-do, `[x]`/`[X]` is Done, `[/]` is In
+progress and `[-]` is Cancelled; any other marker — a theme's `[>]`, say — reads as To-do, which is
+open, unless you add it to the status map yourself.
 
 ### Has notelet
 

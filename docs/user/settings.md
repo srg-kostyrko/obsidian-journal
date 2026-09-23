@@ -31,6 +31,7 @@ in order.
 |                                                                  | **Default timeline navigation**                                                                           | [Code blocks](/reference/code-blocks)                                      |
 | **Calendar decorations**                                         | **Marks shown per position**                                                                              | [Decorations](/decorations#marks-shown-per-position)                       |
 |                                                                  | vault-wide decorations                                                                                    | [Decorations](/decorations#where-decorations-live)                         |
+| **Tasks**                                                        | **Checkbox tasks** — **Enable**, **Status symbols**, **Identification rule**                              | [Tasks](/tasks)                                                            |
 | **Calendar highlighting**                                        | **Today**, **Active**, **Selected date — ring** colors                                                    | [Views](/views#month-calendar-and-week-calendar)                           |
 | **Logging**                                                      | **Log level**, **Export logs**                                                                            | [Troubleshooting](/troubleshooting#reporting-a-bug)                        |
 | **Maintenance**                                                  | **Open**                                                                                                  | [Maintenance page](#maintenance-page)                                      |
@@ -55,6 +56,7 @@ Reached with **Configure** on a journal's row — on the main settings page, or 
 | **Navigation block**        | lines and segments, **Previous and next arrows**, **Show previous and next periods**, **Decorate whole block**                                                                  | [Navigation blocks](/navigation-blocks)                         |
 | **Calendar interval lines** | custom intervals only                                                                                                                                                           | [Navigation blocks](/navigation-blocks#calendar-interval-lines) |
 | **Journal decorations**     | this journal's decorations                                                                                                                                                      | [Decorations](/decorations)                                     |
+| **Task identification**     | **Relation to the vault-wide rule** — **Inherit**, **Narrow**, **Replace**                                                                                                      | [Tasks](/tasks#a-journal-s-own-rule)                            |
 
 ## A notelet type's page
 

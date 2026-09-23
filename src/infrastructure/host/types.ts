@@ -33,10 +33,6 @@ export interface WorkspaceEvents {
   "active-note-changed": (path: Option<VaultPath>) => void;
 }
 
-export interface NoteTask {
-  readonly completed: boolean;
-}
-
 export interface VaultProperty {
   readonly name: string;
   readonly type: string;
@@ -46,7 +42,6 @@ export interface NoteMetadata {
   readonly title: string;
   readonly tags: readonly string[];
   readonly properties: Readonly<Record<string, unknown>>;
-  readonly tasks: readonly NoteTask[];
 }
 
 export interface NoteSize {
@@ -60,4 +55,28 @@ export interface MenuItemSpec {
   readonly title: string;
   readonly icon: string;
   readonly onClick: () => void;
+}
+
+export interface StructureListItem {
+  readonly marker: string;
+  readonly line: number;
+  readonly endLine: number;
+}
+
+export interface StructureTag {
+  readonly tag: string;
+  readonly line: number;
+}
+
+export interface StructureHeading {
+  readonly heading: string;
+  readonly level: number;
+  readonly line: number;
+}
+
+export interface NoteStructure {
+  readonly listItems: readonly StructureListItem[];
+  readonly tags: readonly StructureTag[];
+  readonly headings: readonly StructureHeading[];
+  readonly frontmatterTags: readonly string[];
 }

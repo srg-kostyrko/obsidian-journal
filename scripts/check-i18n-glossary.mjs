@@ -15,6 +15,7 @@ import { readdirSync, readFileSync } from "node:fs";
 // instead. use: the canonical rendering. allowIn / only: restrict by message key.
 const GLOSSARY = {
   de: [
+    { term: "task", banned: /Aufgabenstellung|(?<!\p{L})Tasks?(?!\p{L})/iu, use: "Aufgabe" },
     // `Tagebuch` alone never matched the umlauted plural `Tagebüchern`, which shipped
     // live in two strings and passed CI for months.
     { term: "journal", banned: /Zeitschrift|Tageb(u|ü)ch|Fachblatt/i, use: "Journal" },
@@ -36,6 +37,7 @@ const GLOSSARY = {
     { term: "button", banned: /\bTaste[n]?\b/i, use: "Schaltfläche" },
   ],
   es: [
+    { term: "task", banned: /(?<!\p{L})(labores?|quehacer(es)?)(?!\p{L})/iu, use: "tarea" },
     { term: "journal", banned: /revista|periódico|cuaderno/i, use: "diario" },
     { term: "note", banned: /pagaré|billete|apunte|asiento contable/i, use: "nota" },
     { term: "bold", banned: /atrevid|audaz|valiente/i, use: "negrita" },
@@ -59,6 +61,7 @@ const GLOSSARY = {
     { term: "log", banned: /\bdiarios?\b/i, use: "registro", only: /^logging_/ },
   ],
   fr: [
+    { term: "task", banned: /(?<!\p{L})devoirs?(?!\p{L})/iu, use: "tâche" },
     { term: "journal", banned: /revue|magazine|journal de bord/i, use: "journal" },
     { term: "note", banned: /billet|coupure|écriture comptable/i, use: "note" },
     { term: "bold", banned: /audacieu|hardi|intrépide/i, use: "gras" },
@@ -79,6 +82,7 @@ const GLOSSARY = {
     { term: "log", banned: /journalis/i, use: "log", only: /^logging_/ },
   ],
   it: [
+    { term: "task", banned: /(?<!\p{L})compit[oi](?!\p{L})/iu, use: "attività" },
     { term: "journal", banned: /rivista|giornal[ei]\b/i, use: "diario" },
     { term: "note", banned: /banconota|cambiale|scrittura contabile/i, use: "nota" },
     { term: "bold", banned: /audac|coraggios|ardit/i, use: "grassetto" },
@@ -100,6 +104,7 @@ const GLOSSARY = {
     { term: "pin", banned: /fiss/i, use: "appunta", only: /(^|_)pin(ned)?(_|$)/ },
   ],
   ja: [
+    { term: "task", banned: /課題/u, use: "タスク" },
     { term: "journal", banned: /雑誌|仕訳帳|定期刊行物|本誌|日記/, use: "ジャーナル" },
     { term: "note", banned: /音符|紙幣|手形|伝票|メモ|注記|音名|債券/, use: "ノート" },
     { term: "bold", banned: /大胆|勇敢/, use: "太字" },
@@ -118,6 +123,7 @@ const GLOSSARY = {
   // Hangul has no ASCII word edges, so plain substrings are correct here: the
   // nominal suffixes leave the stem intact (저널을 / 저널이 both contain 저널).
   ko: [
+    { term: "task", banned: /태스크|과제/u, use: "작업" },
     { term: "journal", banned: /잡지|정기간행물|신문|일기장|일지/, use: "저널" },
     { term: "note", banned: /음표|어음|지폐|전표|메모|보고서|채권|약정서/, use: "노트" },
     { term: "bold", banned: /용감|대담/, use: "굵게" },
@@ -138,6 +144,7 @@ const GLOSSARY = {
     { term: "frontmatter", banned: /머리말|프론트매터/, use: "프런트매터" },
   ],
   pt: [
+    { term: "task", banned: /(?<!\p{L})afazer(es)?(?!\p{L})/iu, use: "tarefa" },
     { term: "journal", banned: /revista|jornal|periódic/i, use: "diário" },
     { term: "note", banned: /promissória|cédula|anotaç/i, use: "nota" },
     { term: "bold", banned: /audacios|audaz|ousad/i, use: "negrito" },
@@ -162,6 +169,7 @@ const GLOSSARY = {
   // word edge — `/\bнота\b/` tests nothing and reports every text as clean. The entries
   // that need a word edge below use Unicode letter lookaround, which does.
   ru: [
+    { term: "task", banned: /(?<!\p{L})(задани[еяйюм]\p{L}*|таск\p{L}*)(?!\p{L})/iu, use: "задача" },
     { term: "journal", banned: /дневник|бухгалтерск/i, use: "журнал" },
     {
       term: "note",
@@ -194,6 +202,7 @@ const GLOSSARY = {
     { term: "item", banned: /(?<!\p{L})предмет\p{L}*/iu, use: "элемент" },
   ],
   uk: [
+    { term: "task", banned: /(?<!\p{L})(задач\p{L}*|таск\p{L}*)(?!\p{L})/iu, use: "завдання" },
     { term: "journal", banned: /щоденник|бухгалтерськ/i, use: "журнал" },
     {
       term: "note",
@@ -217,6 +226,7 @@ const GLOSSARY = {
     { term: "startup", banned: /стартап/i, use: "запуск" },
   ],
   zh: [
+    { term: "task", banned: /任務|工作项/u, use: "任务" },
     // 日志 is the right word for the logging feature, and only there.
     { term: "journal", banned: /期刊|杂志|日志|日记账/, use: "日记", allowIn: /^logging_/ },
     { term: "note", banned: /音符|票据|钞票|凭证|分录|便条|备注|便笺|纸条|附注|注释/, use: "笔记" },

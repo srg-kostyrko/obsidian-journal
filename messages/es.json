@@ -2318,5 +2318,74 @@
   "maintenance_ambiguous_connect": "Conectar a {journal}",
   "maintenance_ambiguous_occupied": "Otra nota ya ocupa este período en {journals}.",
   "maintenance_repair_done": "{repaired} notas reparadas. {failed} no se pudieron reparar.",
-  "maintenance_unreadable_row": "{path}: {message}"
+  "maintenance_unreadable_row": "{path}: {message}",
+
+  "tasks_settings_title": "Tareas",
+  "tasks_settings_provider_checkbox": "Tareas de casilla",
+  "tasks_settings_provider_checkbox_desc": "Lee elementos de lista con casilla de una nota.",
+  "tasks_settings_configure": "Configurar",
+  "tasks_settings_edit_rule": "Editar",
+  "tasks_settings_status_map": "Símbolos de estado",
+  "tasks_settings_status_map_desc": "Qué símbolo de casilla significa qué estado. Cuando dos símbolos comparten un estado, el marcado es el que se escribe de vuelta en la nota cuando cambia el estado de una tarea.",
+  "tasks_settings_written_back": "Se escribe de vuelta",
+  "tasks_settings_written_back_tooltip": "Escribir este símbolo para este estado",
+  "tasks_settings_space_symbol": "␣",
+  "tasks_settings_rule": "Regla de identificación",
+  "tasks_settings_rule_desc": "Qué elementos de lista con casilla cuentan como tareas.",
+  "tasks_settings_add_condition": "Agregar condición",
+  "tasks_settings_condition_tag": "Etiqueta",
+  "tasks_settings_condition_heading": "Encabezado",
+  "tasks_settings_condition_has": "Tiene",
+  "tasks_settings_condition_lacks": "No tiene",
+  "tasks_settings_condition_under": "Bajo",
+  "tasks_settings_condition_not_under": "No bajo",
+  "tasks_settings_mode_and": "Cumplir todas las condiciones",
+  "tasks_settings_mode_or": "Cumplir cualquier condición",
+  "tasks_condition_values_required": "Introduce al menos un valor.",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "etiquetado con {tags}",
+        "condition=lacks": "no etiquetado con {tags}"
+      }
+    }
+  ],
+  "tasks_condition_tag_describe_empty": "sin etiqueta",
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "bajo el encabezado {headings}",
+        "condition=not-under": "no bajo el encabezado {headings}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe_empty": "sin encabezado",
+  "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla en las notas de un diario es una tarea.",
+  "tasks_rule_summary_conditions": "Cuenta un elemento de lista con casilla que está {conditions}.",
+  "tasks_journal_summary_inherit": "Hereda la regla de toda la bóveda.",
+  "tasks_journal_summary_narrow": "Restringe la regla de toda la bóveda con: {rule}",
+  "tasks_journal_summary_replace": "Reemplaza la regla de toda la bóveda con: {rule}",
+  "tasks_journal_summary_narrow_empty": "Restringe la regla de toda la bóveda sin condiciones — la regla de toda la bóveda se aplica sin cambios.",
+  "tasks_journal_summary_replace_empty": "Reemplaza la regla de toda la bóveda sin condiciones — todo elemento de lista con casilla en las notas de este diario es una tarea.",
+
+  "tasks_status_todo": "Pendiente",
+  "tasks_status_done": "Hecho",
+  "tasks_status_in_progress": "En curso",
+  "tasks_status_cancelled": "Cancelado",
+  "tasks_status_on_hold": "En espera",
+  "tasks_status_non_task": "No es una tarea",
+  "tasks_status_rolled": "Trasladado",
+  "tasks_settings_add_symbol": "Agregar símbolo",
+  "tasks_settings_new_symbol_label": "Nuevo símbolo",
+
+  "tasks_journal_compose": "Relación con la regla de toda la bóveda",
+  "tasks_journal_compose_desc": "«Heredar» usa solo la regla de toda la bóveda. «Restringir» exige que una línea cumpla ambas reglas. «Reemplazar» usa solo la regla de este diario.",
+  "tasks_journal_compose_inherit": "Heredar",
+  "tasks_journal_compose_narrow": "Restringir",
+  "tasks_journal_compose_replace": "Reemplazar",
+  "tasks_journal_modal_title": "Identificación de tareas — {journal}"
 }

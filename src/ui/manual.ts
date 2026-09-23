@@ -48,6 +48,10 @@ export const manual = {
   decorations: {
     owners: "/decorations#where-decorations-live",
   },
+  tasks: {
+    page: "/tasks",
+    journalRule: "/tasks#a-journal-s-own-rule",
+  },
   troubleshooting: {
     collidingJournals: "/troubleshooting#two-journals-fight-over-the-same-notes",
     reportingBug: "/troubleshooting#reporting-a-bug",

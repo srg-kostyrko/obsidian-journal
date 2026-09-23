@@ -27,7 +27,7 @@ function note(path = "Notes/example.md", ctime = timestamp(2026, 5, 20)): Note {
 }
 
 function metadata(properties: Record<string, unknown>): NoteMetadata {
-  return { title: "example", tags: [], properties, tasks: [] };
+  return { title: "example", tags: [], properties };
 }
 
 describe("resolveCreationDate", () => {

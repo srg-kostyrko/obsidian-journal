@@ -2329,5 +2329,74 @@
   "maintenance_ambiguous_connect": "Connecter à {journal}",
   "maintenance_ambiguous_occupied": "Une autre note occupe déjà cette période dans {journals}.",
   "maintenance_repair_done": "{repaired} notes réparées. {failed} n'ont pas pu être réparées.",
-  "maintenance_unreadable_row": "{path} : {message}"
+  "maintenance_unreadable_row": "{path} : {message}",
+
+  "tasks_settings_title": "Tâches",
+  "tasks_settings_provider_checkbox": "Tâches de case à cocher",
+  "tasks_settings_provider_checkbox_desc": "Lit les éléments de liste avec case à cocher d'une note.",
+  "tasks_settings_configure": "Configurer",
+  "tasks_settings_edit_rule": "Modifier",
+  "tasks_settings_status_map": "Symboles d’état",
+  "tasks_settings_status_map_desc": "Quel symbole de case à cocher correspond à quel état. Lorsque deux symboles partagent le même état, celui qui est marqué est réécrit dans la note quand l’état d’une tâche change.",
+  "tasks_settings_written_back": "Réécrit",
+  "tasks_settings_written_back_tooltip": "Réécrire ce symbole pour cet état",
+  "tasks_settings_space_symbol": "␣",
+  "tasks_settings_rule": "Règle d’identification",
+  "tasks_settings_rule_desc": "Quels éléments de liste avec case à cocher comptent comme des tâches.",
+  "tasks_settings_add_condition": "Ajouter une condition",
+  "tasks_settings_condition_tag": "Étiquette",
+  "tasks_settings_condition_heading": "En-tête",
+  "tasks_settings_condition_has": "Contient",
+  "tasks_settings_condition_lacks": "Ne contient pas",
+  "tasks_settings_condition_under": "Sous",
+  "tasks_settings_condition_not_under": "Pas sous",
+  "tasks_settings_mode_and": "Remplir toutes les conditions",
+  "tasks_settings_mode_or": "Remplir au moins une condition",
+  "tasks_condition_values_required": "Saisissez au moins une valeur.",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "étiqueté avec {tags}",
+        "condition=lacks": "non étiqueté avec {tags}"
+      }
+    }
+  ],
+  "tasks_condition_tag_describe_empty": "sans étiquette",
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "sous l’en-tête {headings}",
+        "condition=not-under": "pas sous l’en-tête {headings}"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe_empty": "sans en-tête",
+  "tasks_rule_summary_any": "Aucune condition — tout élément de liste avec case à cocher dans les notes d’un journal est une tâche.",
+  "tasks_rule_summary_conditions": "Compte un élément de liste avec case à cocher qui est {conditions}.",
+  "tasks_journal_summary_inherit": "Hérite de la règle de tout le coffre-fort.",
+  "tasks_journal_summary_narrow": "Restreint la règle de tout le coffre-fort avec : {rule}",
+  "tasks_journal_summary_replace": "Remplace la règle de tout le coffre-fort avec : {rule}",
+  "tasks_journal_summary_narrow_empty": "Restreint la règle de tout le coffre-fort sans aucune condition — la règle de tout le coffre-fort s’applique sans changement.",
+  "tasks_journal_summary_replace_empty": "Remplace la règle de tout le coffre-fort sans aucune condition — tout élément de liste avec case à cocher dans les notes de ce journal est une tâche.",
+
+  "tasks_status_todo": "À faire",
+  "tasks_status_done": "Terminé",
+  "tasks_status_in_progress": "En cours",
+  "tasks_status_cancelled": "Annulé",
+  "tasks_status_on_hold": "En attente",
+  "tasks_status_non_task": "Non-tâche",
+  "tasks_status_rolled": "Reporté",
+  "tasks_settings_add_symbol": "Ajouter un symbole",
+  "tasks_settings_new_symbol_label": "Nouveau symbole",
+
+  "tasks_journal_compose": "Relation avec la règle de tout le coffre-fort",
+  "tasks_journal_compose_desc": "« Hériter » n’utilise que la règle de tout le coffre-fort. « Restreindre » exige qu’une ligne satisfasse les deux règles. « Remplacer » n’utilise que la règle de ce journal.",
+  "tasks_journal_compose_inherit": "Hériter",
+  "tasks_journal_compose_narrow": "Restreindre",
+  "tasks_journal_compose_replace": "Remplacer",
+  "tasks_journal_modal_title": "Identification des tâches — {journal}"
 }

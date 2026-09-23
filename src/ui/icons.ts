@@ -1,6 +1,8 @@
 export const icons = {
   action: {
     edit: "pencil",
+    // Not `edit`: this marks which symbol the plugin emits for a status, not an edit action.
+    writtenBack: "corner-down-left",
     configure: "settings",
     delete: "trash-2",
     add: "plus",
@@ -81,6 +83,7 @@ export const icons = {
     maintenance: "wrench",
     prompts: "lucide-circle-help",
     notelets: "sticky-note",
+    tasks: "list-checks",
   },
 } as const;
 

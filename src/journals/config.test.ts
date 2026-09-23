@@ -63,6 +63,29 @@ describe("journalConfigSchema", () => {
     expect(parsed.success && parsed.output.prompts).toEqual([]);
   });
 
+  it("defaults tasks to an empty object for configs written before it existed", () => {
+    const stored = { ...journalDefaultsFor({ type: "day" }, "daily") } as Record<string, unknown>;
+    delete stored.tasks;
+    const parsed = v.safeParse(journalConfigSchema, stored);
+    expect(parsed.success && parsed.output.tasks).toEqual({});
+  });
+
+  it("keeps a per-journal checkbox rule", () => {
+    const cfg = {
+      ...journalDefaultsFor({ type: "day" }, "daily"),
+      tasks: {
+        checkbox: {
+          compose: "replace",
+          mode: "and",
+          conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
+        },
+      },
+    };
+    const parsed = v.parse(journalConfigSchema, cfg);
+    expect(parsed.tasks.checkbox?.compose).toBe("replace");
+    expect(parsed.tasks.checkbox?.conditions).toEqual([{ type: "heading", condition: "under", headings: ["Tasks"] }]);
+  });
+
   it("accepts an unset end date, so a half-configured timeline survives a reload", () => {
     const cfg = {
       ...journalDefaultsFor({ type: "day" }, "daily"),

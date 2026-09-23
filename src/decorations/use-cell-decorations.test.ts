@@ -13,6 +13,9 @@ import type { TypeId } from "@/journals/notelets/config";
 import { fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { TaskIndex } from "@/tasks";
+import type { TaskItem, TaskStatus } from "@/tasks";
+import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { DecorationsStore } from "./decorations-store";
@@ -49,7 +52,7 @@ interface DecorationsHarness {
 async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promise<DecorationsHarness> {
   const size = new FakeNoteSizeService();
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+    modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: { work: buildShelf("work") }, decorations: { decorations: [] } },
     overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
   });
@@ -173,6 +176,19 @@ async function withHasNote(): Promise<{ harness: TestHarness; period: DayPeriod;
   // has-note reads NoteMetadataService.get, which needs the file present in the vault.
   harness.host.putFile(path);
   return { harness, period, path };
+}
+
+function taskItem(path: VaultPath, status: TaskStatus): TaskItem {
+  return {
+    provider: "test",
+    key: `test:${path}:${status}`,
+    path,
+    status,
+    relations: ["containment"],
+    capabilities: { movable: true, stampable: true, retargetable: false },
+    display: { kind: "line", path, line: 0, endLine: 0, markdown: null },
+    dates: {},
+  };
 }
 
 describe("useCellDecorations", () => {
@@ -387,6 +403,35 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(slot.value).toHaveLength(0);
+    });
+
+    it("repaints a has-open-task cell when a provider publishes after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("has-open-task")],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "Daily/2026-05-25.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
+
+      // Mount BEFORE the provider publishes: TaskIndex starts empty, exactly the ordering
+      // that would pass with the reactivity bridge deleted if publish happened first.
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      harness.resolve(TaskIndex).publish("test", { path }, [taskItem(path, "todo")]);
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
     });
 
     it("decorates a week cell whose anchor collides with a day cell when its entry is added", async () => {

@@ -3,10 +3,11 @@ import { match } from "ts-pattern";
 import type { AnchorString, Period, PeriodKind } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService } from "@/infrastructure/host";
-import type { NoteMetadata, NoteSize } from "@/infrastructure/host";
+import type { NoteMetadata, NoteSize, VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
+import { TaskIndex } from "@/tasks";
 
 import {
   allTasksCompleted,
@@ -97,6 +98,7 @@ export class DecorationEngine {
   readonly #size = inject(NoteSizeService);
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
+  readonly #tasks = inject(TaskIndex);
 
   #matches(
     decoration: JournalDecoration,
@@ -104,10 +106,15 @@ export class DecorationEngine {
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
     size: () => Option<NoteSize>,
+    path: () => Option<VaultPath>,
   ): boolean {
     const { mode, conditions } = decoration;
+    // An empty condition list matches nothing here — the inverse of the checkbox provider's
+    // identification rule, where empty means "no constraint". Both are deliberate: a decoration
+    // with no conditions would otherwise paint every cell, while an empty identification rule has
+    // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
-    const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata, size);
+    const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata, size, path);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -128,6 +135,7 @@ export class DecorationEngine {
     journal: JournalConfig,
     metadata: () => Option<NoteMetadata>,
     size: () => Option<NoteSize>,
+    path: () => Option<VaultPath>,
   ): boolean {
     const meta = (): NoteMetadata | null => {
       const opt = metadata();
@@ -141,8 +149,12 @@ export class DecorationEngine {
       .with({ type: "weekday" }, (c) => checkWeekday(c, period))
       .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
       .with({ type: "has-note" }, () => metadata().isSome())
-      .with({ type: "has-open-task" }, () => metadata().match({ none: () => false, some: hasOpenTask }))
-      .with({ type: "all-tasks-completed" }, () => metadata().match({ none: () => false, some: allTasksCompleted }))
+      .with({ type: "has-open-task" }, () =>
+        path().match({ none: () => false, some: (p) => hasOpenTask(this.#tasks.itemsIn(p)) }),
+      )
+      .with({ type: "all-tasks-completed" }, () =>
+        path().match({ none: () => false, some: (p) => allTasksCompleted(this.#tasks.itemsIn(p)) }),
+      )
       .with({ type: "note-size" }, (c) => size().match({ none: () => false, some: (s) => checkNoteSize(c, s) }))
       .with({ type: "has-notelet" }, (c) =>
         checkHasNotelet(c, this.#index.noteletsAt(journal.name, period.anchor.toAnchor())),
@@ -192,6 +204,16 @@ export class DecorationEngine {
       if (hit !== undefined) return hit;
       const value = this.#index.entryByAnchor(journalName, anchorString).flatMap((entry) => this.#size.get(entry.path));
       sizeCache.set(key, value);
+      return value;
+    };
+
+    const pathCache = new Map<string, Option<VaultPath>>();
+    const pathFor = (journalName: string, anchorString: AnchorString): Option<VaultPath> => {
+      const key = `${journalName}::${anchorString}`;
+      const hit = pathCache.get(key);
+      if (hit !== undefined) return hit;
+      const value = this.#index.entryByAnchor(journalName, anchorString).map((entry) => entry.path);
+      pathCache.set(key, value);
       return value;
     };
 
@@ -249,6 +271,7 @@ export class DecorationEngine {
           config,
           () => metadataFor(binding.journalName, anchorString),
           () => sizeFor(binding.journalName, anchorString),
+          () => pathFor(binding.journalName, anchorString),
         );
         if (!matched) continue;
         push(period, binding);

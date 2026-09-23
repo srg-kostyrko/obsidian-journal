@@ -6,6 +6,7 @@ import { decorationsSlice } from "@/decorations/settings/slice";
 import { initLocale, m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { decorationsModule } from "../../module";
@@ -25,7 +26,13 @@ describe("CalendarDecorationsBlock", () => {
 
   beforeEach(async () => {
     harness = await testContainer({
-      modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule],
+      modules: [
+        journalsCoreModule,
+        shelvesCoreModule,
+        decorationsModule,
+        decorationsSettingsCoreModule,
+        tasksCoreModule,
+      ],
       data: { journals: {}, shelves: {}, decorations: { decorations: [], maxMarksPerSlot: 3 } },
     });
   });

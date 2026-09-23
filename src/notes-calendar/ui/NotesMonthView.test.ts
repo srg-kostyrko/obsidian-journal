@@ -14,6 +14,7 @@ import { JournalsIndex, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { notesCalendarModule } from "../module";
@@ -26,6 +27,7 @@ const MODULES = [
   decorationsModule,
   decorationsSettingsCoreModule,
   notesCalendarModule,
+  tasksCoreModule,
 ];
 
 function bootHarness(journals: Record<string, JournalConfig>): Promise<TestHarness> {

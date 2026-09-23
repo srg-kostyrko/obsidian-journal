@@ -4,6 +4,7 @@ import type { Period } from "@/calendar";
 import { useService } from "@/infrastructure/di";
 import { NoteMetadataService, NoteSizeService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository } from "@/journals";
+import { useTasksVersion } from "@/tasks/use-tasks-version";
 
 import { DecorationsStore } from "./decorations-store";
 import {
@@ -50,6 +51,7 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   // Presence-gated: a surface that never opts in must not force DecorationsStore (and its
   // settings/shelves dependencies) to exist in its DI container.
   const store = options.calendarDecorations ? useService(DecorationsStore) : undefined;
+  const tasksVersion = useTasksVersion();
 
   const cells = new Map<string, CellStyleRef>();
   let periodsByKey = new Map<string, Period[]>();
@@ -87,6 +89,10 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   }
 
   function reseed(): void {
+    // TaskIndex is not Vue-reactive (see useTasksVersion), so has-open-task/all-tasks-completed
+    // conditions evaluated below would otherwise never re-run once a provider publishes after
+    // this watchEffect's first pass. Reading the version here registers it as a dependency.
+    void tasksVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);
     periodsByKey = new Map<string, Period[]>();

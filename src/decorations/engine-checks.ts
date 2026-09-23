@@ -5,6 +5,7 @@ import type { NoteMetadata, NoteSize } from "@/infrastructure/host";
 import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import type { NoteletEntry } from "@/journals/types";
+import { isDone, isExcluded, isOpen, type TaskItem } from "@/tasks";
 
 import { matchesDate } from "./date-condition";
 
@@ -192,12 +193,12 @@ export function checkHasNotelet(
   return notelets.some((n) => n.typeId !== null && condition.typeIds.includes(n.typeId));
 }
 
-export function hasOpenTask(metadata: NoteMetadata): boolean {
-  if (metadata.tasks.length === 0) return false;
-  return metadata.tasks.some((task) => !task.completed);
+export function hasOpenTask(items: readonly TaskItem[]): boolean {
+  return items.filter((item) => !isExcluded(item.status)).some((item) => isOpen(item.status));
 }
 
-export function allTasksCompleted(metadata: NoteMetadata): boolean {
-  if (metadata.tasks.length === 0) return false;
-  return metadata.tasks.every((task) => task.completed);
+// Non-empty and every: a note with no tasks is not a completed day.
+export function allTasksCompleted(items: readonly TaskItem[]): boolean {
+  const considered = items.filter((item) => !isExcluded(item.status));
+  return considered.length > 0 && considered.every((item) => isDone(item.status));
 }

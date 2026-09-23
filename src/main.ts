@@ -30,6 +30,8 @@ import { calendarAppearanceModule } from "@/notes-calendar/appearance/module";
 import { settingsModule, SettingsService, SettingsTooNewError } from "@/settings";
 import { DataMigrationService, legacyMigrationsModule } from "@/settings/legacy";
 import { shelvesModule } from "@/shelves";
+import { TaskProviderRegistry } from "@/tasks";
+import { tasksModule } from "@/tasks/module";
 import { templatesModule } from "@/templates";
 import { viewsModule, ViewHostService } from "@/views";
 
@@ -52,6 +54,7 @@ export default class JournalPlugin extends Plugin {
     container.addModule(templatesModule);
     container.addModule(calendarSettingsModule);
     container.addModule(journalsModule);
+    container.addModule(tasksModule);
     container.addModule(journalsSettingsModule);
     container.addModule(decorationsModule);
     container.addModule(decorationsSettingsModule);
@@ -89,6 +92,11 @@ export default class JournalPlugin extends Plugin {
     await container.resolve(VaultSubscriptionService).initialize();
     await container.resolve(DataMigrationService).initialize();
     await container.resolve(AutoAttachService).initialize();
+    // After VaultSubscriptionService above, and load-bearing: clearing a note's task items on the
+    // way out runs off that service's unregister, which fires entryChanged{removed} for the host
+    // to turn into a refresh that publishes []. Start the providers first and a note that leaves a
+    // journal before the subscription exists keeps its items, with nothing failing.
+    container.resolve(TaskProviderRegistry).initialize();
     await container.resolve(AutoCreateService).initialize();
     await container.resolve(StartupOpenService).initialize();
     container.resolve(ViewHostService).initialize();

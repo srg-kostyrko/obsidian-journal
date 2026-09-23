@@ -2315,5 +2315,74 @@
   "maintenance_ambiguous_connect": "{journal}에 연결",
   "maintenance_ambiguous_occupied": "{journals}에서는 다른 노트가 이미 이 기간을 사용하고 있습니다.",
   "maintenance_repair_done": "{repaired}개의 노트를 복구했습니다. {failed}개는 복구할 수 없었습니다.",
-  "maintenance_unreadable_row": "{path}: {message}"
+  "maintenance_unreadable_row": "{path}: {message}",
+
+  "tasks_settings_title": "작업",
+  "tasks_settings_provider_checkbox": "체크박스 작업",
+  "tasks_settings_provider_checkbox_desc": "노트에서 체크박스 목록 항목을 읽습니다.",
+  "tasks_settings_configure": "구성",
+  "tasks_settings_edit_rule": "편집",
+  "tasks_settings_status_map": "상태 기호",
+  "tasks_settings_status_map_desc": "어떤 체크박스 기호가 어떤 상태를 뜻하는지. 두 기호가 같은 상태를 공유하면, 표시된 기호가 작업의 상태가 바뀔 때 노트에 다시 기록됩니다.",
+  "tasks_settings_written_back": "다시 기록됨",
+  "tasks_settings_written_back_tooltip": "이 상태에 이 기호를 기록",
+  "tasks_settings_space_symbol": "␣",
+  "tasks_settings_rule": "식별 규칙",
+  "tasks_settings_rule_desc": "어떤 체크박스 목록 항목을 작업으로 볼지.",
+  "tasks_settings_add_condition": "조건 추가",
+  "tasks_settings_condition_tag": "태그",
+  "tasks_settings_condition_heading": "제목",
+  "tasks_settings_condition_has": "포함",
+  "tasks_settings_condition_lacks": "미포함",
+  "tasks_settings_condition_under": "하위",
+  "tasks_settings_condition_not_under": "하위 아님",
+  "tasks_settings_mode_and": "모든 조건 일치",
+  "tasks_settings_mode_or": "조건 중 하나 일치",
+  "tasks_condition_values_required": "값을 하나 이상 입력하세요.",
+  "tasks_condition_tag_describe": [
+    {
+      "declarations": ["input condition", "input tags"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=has": "{tags} 태그가 지정된",
+        "condition=lacks": "{tags} 태그가 지정되지 않은"
+      }
+    }
+  ],
+  "tasks_condition_tag_describe_empty": "태그가 지정되지 않은",
+  "tasks_condition_heading_describe": [
+    {
+      "declarations": ["input condition", "input headings"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=under": "제목 {headings}의 하위에 있는",
+        "condition=not-under": "제목 {headings}의 하위에 있지 않은"
+      }
+    }
+  ],
+  "tasks_condition_heading_describe_empty": "제목이 지정되지 않은",
+  "tasks_rule_summary_any": "조건 없음 — 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
+  "tasks_rule_summary_conditions": "{conditions} 체크박스 목록 항목을 집계합니다.",
+  "tasks_journal_summary_inherit": "보관함 전체 규칙을 상속합니다.",
+  "tasks_journal_summary_narrow": "보관함 전체 규칙을 다음으로 좁힙니다: {rule}",
+  "tasks_journal_summary_replace": "보관함 전체 규칙을 다음으로 대체합니다: {rule}",
+  "tasks_journal_summary_narrow_empty": "조건 없이 보관함 전체 규칙을 좁힙니다 — 보관함 전체 규칙이 그대로 적용됩니다.",
+  "tasks_journal_summary_replace_empty": "조건 없이 보관함 전체 규칙을 대체합니다 — 이 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
+
+  "tasks_status_todo": "할 일",
+  "tasks_status_done": "완료",
+  "tasks_status_in_progress": "진행 중",
+  "tasks_status_cancelled": "취소",
+  "tasks_status_on_hold": "보류",
+  "tasks_status_non_task": "작업 아님",
+  "tasks_status_rolled": "이월",
+  "tasks_settings_add_symbol": "기호 추가",
+  "tasks_settings_new_symbol_label": "새 기호",
+
+  "tasks_journal_compose": "보관함 전체 규칙과의 관계",
+  "tasks_journal_compose_desc": "「상속」은 보관함 전체 규칙만 사용합니다. 「좁히기」는 한 줄이 두 규칙을 모두 만족해야 합니다. 「대체」는 이 저널의 규칙만 사용합니다.",
+  "tasks_journal_compose_inherit": "상속",
+  "tasks_journal_compose_narrow": "좁히기",
+  "tasks_journal_compose_replace": "대체",
+  "tasks_journal_modal_title": "작업 식별 — {journal}"
 }
