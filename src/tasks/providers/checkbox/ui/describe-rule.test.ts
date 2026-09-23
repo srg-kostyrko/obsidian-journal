@@ -82,4 +82,24 @@ describe("describeJournalRule", () => {
     expect(text).toContain("Replaces");
     expect(text).toContain("#task");
   });
+
+  // identifies() ANDs an empty journal rule onto the vault one, and an empty rule always
+  // evaluates true, so narrow-with-no-conditions changes nothing — the vault-wide rule applies
+  // unchanged. Wrapping describeCheckboxRule's "every checkbox item…" wording here would state
+  // the opposite of what identification.ts actually does.
+  it("says the vault-wide rule applies unchanged when narrowing with no conditions", () => {
+    const text = describeJournalRule({ compose: "narrow", mode: "and", conditions: [] });
+    expect(text).not.toContain("every checkbox item");
+    expect(text).toBe("Narrows the vault-wide rule with no conditions — the vault-wide rule applies unchanged.");
+  });
+
+  // Under replace the vault rule never runs, so an empty journal rule (which evaluate() treats
+  // as "no constraint") means every checkbox item in this journal's notes is a task — unlike the
+  // narrow case just above, where the same empty rule changes nothing.
+  it("says every checkbox item is a task when replacing with no conditions", () => {
+    const text = describeJournalRule({ compose: "replace", mode: "and", conditions: [] });
+    expect(text).toBe(
+      "Replaces the vault-wide rule with no conditions — every checkbox item in this journal's notes is a task.",
+    );
+  });
 });

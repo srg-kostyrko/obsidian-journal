@@ -2366,6 +2366,8 @@
   "tasks_journal_summary_inherit": "保管庫全体のルールを継承します。",
   "tasks_journal_summary_narrow": "保管庫全体のルールを次の内容で絞り込みます: {rule}",
   "tasks_journal_summary_replace": "保管庫全体のルールを次の内容で置き換えます: {rule}",
+  "tasks_journal_summary_narrow_empty": "条件なしで保管庫全体のルールを絞り込みます — 保管庫全体のルールがそのまま適用されます。",
+  "tasks_journal_summary_replace_empty": "条件なしで保管庫全体のルールを置き換えます — このジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
 
   "tasks_status_todo": "未着手",
   "tasks_status_done": "完了",

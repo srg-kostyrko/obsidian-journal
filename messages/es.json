@@ -2366,6 +2366,8 @@
   "tasks_journal_summary_inherit": "Hereda la regla de toda la bóveda.",
   "tasks_journal_summary_narrow": "Restringe la regla de toda la bóveda con: {rule}",
   "tasks_journal_summary_replace": "Reemplaza la regla de toda la bóveda con: {rule}",
+  "tasks_journal_summary_narrow_empty": "Restringe la regla de toda la bóveda sin condiciones — la regla de toda la bóveda se aplica sin cambios.",
+  "tasks_journal_summary_replace_empty": "Reemplaza la regla de toda la bóveda sin condiciones — todo elemento de lista con casilla en las notas de este diario es una tarea.",
 
   "tasks_status_todo": "Pendiente",
   "tasks_status_done": "Hecho",

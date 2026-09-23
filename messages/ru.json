@@ -2452,6 +2452,8 @@
   "tasks_journal_summary_inherit": "Наследует правило всего хранилища.",
   "tasks_journal_summary_narrow": "Сужает правило всего хранилища: {rule}",
   "tasks_journal_summary_replace": "Заменяет правило всего хранилища: {rule}",
+  "tasks_journal_summary_narrow_empty": "Сужает правило всего хранилища без условий — правило всего хранилища применяется без изменений.",
+  "tasks_journal_summary_replace_empty": "Заменяет правило всего хранилища без условий — каждый пункт списка с чекбоксом в заметках этого журнала считается задачей.",
 
   "tasks_status_todo": "К выполнению",
   "tasks_status_done": "Выполнено",

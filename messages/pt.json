@@ -2374,6 +2374,8 @@
   "tasks_journal_summary_inherit": "Herda a regra de todo o cofre.",
   "tasks_journal_summary_narrow": "Restringe a regra de todo o cofre com: {rule}",
   "tasks_journal_summary_replace": "Substitui a regra de todo o cofre com: {rule}",
+  "tasks_journal_summary_narrow_empty": "Restringe a regra de todo o cofre sem condições — a regra de todo o cofre se aplica sem alterações.",
+  "tasks_journal_summary_replace_empty": "Substitui a regra de todo o cofre sem condições — todo item de lista com caixa de seleção nas notas deste diário é uma tarefa.",
 
   "tasks_status_todo": "A fazer",
   "tasks_status_done": "Concluído",

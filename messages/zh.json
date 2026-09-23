@@ -2360,6 +2360,8 @@
   "tasks_journal_summary_inherit": "继承全库通用规则。",
   "tasks_journal_summary_narrow": "以下列内容收窄全库通用规则：{rule}",
   "tasks_journal_summary_replace": "以下列内容替换全库通用规则：{rule}",
+  "tasks_journal_summary_narrow_empty": "不设条件收窄全库通用规则——全库通用规则保持不变。",
+  "tasks_journal_summary_replace_empty": "不设条件替换全库通用规则——本日记笔记中的每个复选框列表项都是任务。",
 
   "tasks_status_todo": "待办",
   "tasks_status_done": "已完成",

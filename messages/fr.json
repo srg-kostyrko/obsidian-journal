@@ -2377,6 +2377,8 @@
   "tasks_journal_summary_inherit": "Hérite de la règle de tout le coffre-fort.",
   "tasks_journal_summary_narrow": "Restreint la règle de tout le coffre-fort avec : {rule}",
   "tasks_journal_summary_replace": "Remplace la règle de tout le coffre-fort avec : {rule}",
+  "tasks_journal_summary_narrow_empty": "Restreint la règle de tout le coffre-fort sans aucune condition — la règle de tout le coffre-fort s’applique sans changement.",
+  "tasks_journal_summary_replace_empty": "Remplace la règle de tout le coffre-fort sans aucune condition — tout élément de liste avec case à cocher dans les notes de ce journal est une tâche.",
 
   "tasks_status_todo": "À faire",
   "tasks_status_done": "Terminé",

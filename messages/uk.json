@@ -2444,6 +2444,8 @@
   "tasks_journal_summary_inherit": "Успадковує правило всього сховища.",
   "tasks_journal_summary_narrow": "Звужує правило всього сховища: {rule}",
   "tasks_journal_summary_replace": "Замінює правило всього сховища: {rule}",
+  "tasks_journal_summary_narrow_empty": "Звужує правило всього сховища без умов — правило всього сховища застосовується без змін.",
+  "tasks_journal_summary_replace_empty": "Замінює правило всього сховища без умов — кожен пункт списку з чекбоксом у нотатках цього журналу вважається завданням.",
 
   "tasks_status_todo": "До виконання",
   "tasks_status_done": "Виконано",

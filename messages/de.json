@@ -2379,6 +2379,8 @@
   "tasks_journal_summary_inherit": "Erbt die Vault-weite Regel.",
   "tasks_journal_summary_narrow": "Schränkt die Vault-weite Regel ein: {rule}",
   "tasks_journal_summary_replace": "Ersetzt die Vault-weite Regel durch: {rule}",
+  "tasks_journal_summary_narrow_empty": "Schränkt die Vault-weite Regel mit keinen Bedingungen ein – die Vault-weite Regel gilt unverändert.",
+  "tasks_journal_summary_replace_empty": "Ersetzt die Vault-weite Regel durch keine Bedingungen – jeder Kontrollkästchen-Listeneintrag in den Notizen dieses Journals ist eine Aufgabe.",
 
   "tasks_status_todo": "Zu erledigen",
   "tasks_status_done": "Erledigt",

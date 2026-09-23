@@ -24,8 +24,18 @@ export function describeCheckboxRule(rule: CheckboxRule | CheckboxJournalRule): 
   return m.tasks_rule_summary_conditions({ conditions: joined });
 }
 
+// Empty conditions is a no-op only under narrow — identifies() ANDs the journal rule onto the
+// vault one, and an empty rule always evaluates true — so narrow-with-none reads as the vault
+// rule applying unchanged. Under replace the vault rule never runs at all, so empty there means
+// every checkbox item in this journal's notes is a task, the same fact describeCheckboxRule's
+// own empty case states for the vault-wide rule. Wrapping describeCheckboxRule for either compose
+// mode's empty case would carry its wording ("No conditions — every checkbox item…") across a
+// mode where it is not true (narrow), so both get their own sentence instead.
 export function describeJournalRule(rule: CheckboxJournalRule | undefined): string {
   if (!rule || rule.compose === "inherit") return m.tasks_journal_summary_inherit();
+  if (rule.conditions.length === 0) {
+    return rule.compose === "narrow" ? m.tasks_journal_summary_narrow_empty() : m.tasks_journal_summary_replace_empty();
+  }
   const described = describeCheckboxRule(rule);
   return rule.compose === "narrow"
     ? m.tasks_journal_summary_narrow({ rule: described })

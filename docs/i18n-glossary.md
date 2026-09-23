@@ -340,6 +340,14 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   ko's choice of the 「」 corner brackets there has no other precedent in the corpus to check it
   against — and whether fr's `case à cocher` insertions read as naturally as the adjectival
   phrasing they replaced.
+- Two more `tasks_journal_summary_*_empty` keys were added by the whole-branch review's fix
+  wave, for the narrow/replace-with-no-conditions case `describeJournalRule` previously
+  mis-described as carrying the rule's conditions through unchanged. Translated by an agent
+  working from this file, reusing each locale's own `tasks_journal_summary_narrow`/`_replace`
+  phrasing for "the vault-wide rule" and `tasks_rule_summary_any`'s phrasing for "every checkbox
+  item … is a task", re-scoped from "a journal's notes" to "this journal's notes". Not
+  native-verified. ru/uk again need no `запис-` workaround: both reuse the already-established
+  **заметк-**/**нотат-** note noun.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

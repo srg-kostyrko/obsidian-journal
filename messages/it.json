@@ -2377,6 +2377,8 @@
   "tasks_journal_summary_inherit": "Eredita la regola di tutto il vault.",
   "tasks_journal_summary_narrow": "Restringe la regola di tutto il vault con: {rule}",
   "tasks_journal_summary_replace": "Sostituisce la regola di tutto il vault con: {rule}",
+  "tasks_journal_summary_narrow_empty": "Restringe la regola di tutto il vault senza condizioni — la regola di tutto il vault si applica invariata.",
+  "tasks_journal_summary_replace_empty": "Sostituisce la regola di tutto il vault senza condizioni — ogni elemento di elenco con casella nelle note di questo diario è un'attività.",
 
   "tasks_status_todo": "Da fare",
   "tasks_status_done": "Completato",

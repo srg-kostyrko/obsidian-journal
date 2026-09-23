@@ -2363,6 +2363,8 @@
   "tasks_journal_summary_inherit": "보관함 전체 규칙을 상속합니다.",
   "tasks_journal_summary_narrow": "보관함 전체 규칙을 다음으로 좁힙니다: {rule}",
   "tasks_journal_summary_replace": "보관함 전체 규칙을 다음으로 대체합니다: {rule}",
+  "tasks_journal_summary_narrow_empty": "조건 없이 보관함 전체 규칙을 좁힙니다 — 보관함 전체 규칙이 그대로 적용됩니다.",
+  "tasks_journal_summary_replace_empty": "조건 없이 보관함 전체 규칙을 대체합니다 — 이 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
 
   "tasks_status_todo": "할 일",
   "tasks_status_done": "완료",
