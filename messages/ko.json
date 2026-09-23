@@ -2319,6 +2319,8 @@
 
   "tasks_settings_title": "작업",
   "tasks_settings_provider_checkbox": "체크박스 작업",
+  "tasks_settings_provider_checkbox_desc": "노트에서 체크박스 목록 항목을 읽습니다.",
+  "tasks_settings_configure": "구성",
   "tasks_settings_enabled": "사용",
   "tasks_settings_status_map": "상태 기호",
   "tasks_settings_status_map_desc": "어떤 체크박스 기호가 어떤 상태를 뜻하는지. 두 기호가 같은 상태를 공유하면, 표시된 기호가 작업의 상태가 바뀔 때 노트에 다시 기록됩니다.",

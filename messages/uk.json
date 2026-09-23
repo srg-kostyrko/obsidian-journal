@@ -2400,6 +2400,8 @@
 
   "tasks_settings_title": "Завдання",
   "tasks_settings_provider_checkbox": "Завдання-чекбокси",
+  "tasks_settings_provider_checkbox_desc": "Читає пункти списку з чекбоксом із нотатки.",
+  "tasks_settings_configure": "Налаштувати",
   "tasks_settings_enabled": "Увімкнути",
   "tasks_settings_status_map": "Символи статусу",
   "tasks_settings_status_map_desc": "Який символ чекбокса означає який статус. Якщо два символи мають один статус, позначений із них записується назад у нотатку, коли статус завдання змінюється.",

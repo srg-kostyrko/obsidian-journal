@@ -2408,6 +2408,8 @@
 
   "tasks_settings_title": "Задачи",
   "tasks_settings_provider_checkbox": "Задачи-чекбоксы",
+  "tasks_settings_provider_checkbox_desc": "Читает пункты списка с чекбоксом из заметки.",
+  "tasks_settings_configure": "Настроить",
   "tasks_settings_enabled": "Включить",
   "tasks_settings_status_map": "Символы статуса",
   "tasks_settings_status_map_desc": "Какой символ чекбокса означает какой статус. Если два символа относятся к одному статусу, отмеченный из них записывается обратно в заметку при изменении статуса задачи.",

@@ -2333,6 +2333,8 @@
 
   "tasks_settings_title": "Tâches",
   "tasks_settings_provider_checkbox": "Tâches à cocher",
+  "tasks_settings_provider_checkbox_desc": "Lit les éléments de liste à cocher d'une note.",
+  "tasks_settings_configure": "Configurer",
   "tasks_settings_enabled": "Activer",
   "tasks_settings_status_map": "Symboles d’état",
   "tasks_settings_status_map_desc": "Quel symbole de case correspond à quel état. Lorsque deux symboles partagent le même état, celui qui est marqué est réécrit dans la note quand l’état d’une tâche change.",

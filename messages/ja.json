@@ -2322,6 +2322,8 @@
 
   "tasks_settings_title": "タスク",
   "tasks_settings_provider_checkbox": "チェックボックスタスク",
+  "tasks_settings_provider_checkbox_desc": "ノートからチェックボックス項目を読み取ります。",
+  "tasks_settings_configure": "設定",
   "tasks_settings_enabled": "有効にする",
   "tasks_settings_status_map": "ステータス記号",
   "tasks_settings_status_map_desc": "どのチェックボックス記号がどのステータスを表すか。2つの記号が同じステータスを共有する場合、マークされた記号がタスクのステータス変更時にノートへ書き戻されます。",

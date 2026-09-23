@@ -2335,6 +2335,8 @@
 
   "tasks_settings_title": "Aufgaben",
   "tasks_settings_provider_checkbox": "Kontrollkästchen-Aufgaben",
+  "tasks_settings_provider_checkbox_desc": "Liest Kontrollkästchen-Listeneinträge aus einer Notiz.",
+  "tasks_settings_configure": "Konfigurieren",
   "tasks_settings_enabled": "Aktivieren",
   "tasks_settings_status_map": "Statussymbole",
   "tasks_settings_status_map_desc": "Welches Kontrollkästchen-Symbol welchen Status bedeutet. Teilen sich zwei Symbole einen Status, wird das markierte Symbol in die Notiz zurückgeschrieben, sobald sich der Status einer Aufgabe ändert.",

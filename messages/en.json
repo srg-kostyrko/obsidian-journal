@@ -2334,6 +2334,8 @@
 
   "tasks_settings_title": "Tasks",
   "tasks_settings_provider_checkbox": "Checkbox tasks",
+  "tasks_settings_provider_checkbox_desc": "Reads checkbox list items from a note.",
+  "tasks_settings_configure": "Configure",
   "tasks_settings_enabled": "Enable",
   "tasks_settings_status_map": "Status symbols",
   "tasks_settings_status_map_desc": "Which checkbox symbol means which status. Where two symbols share a status, the marked one is written back into the note when a task's status changes.",

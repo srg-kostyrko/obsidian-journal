@@ -2316,6 +2316,8 @@
 
   "tasks_settings_title": "任务",
   "tasks_settings_provider_checkbox": "复选框任务",
+  "tasks_settings_provider_checkbox_desc": "从笔记中读取复选框列表项。",
+  "tasks_settings_configure": "配置",
   "tasks_settings_enabled": "启用",
   "tasks_settings_status_map": "状态符号",
   "tasks_settings_status_map_desc": "哪个复选框符号表示哪种状态。当两个符号共用同一状态时，标记的那个符号会在任务状态变化时写回笔记。",
