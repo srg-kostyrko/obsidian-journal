@@ -2460,5 +2460,6 @@
   "tasks_journal_compose_desc": "«Успадкувати» використовує лише правило всього сховища. «Звузити» вимагає, щоб рядок задовольняв обидва правила. «Замінити» використовує лише правило цього журналу.",
   "tasks_journal_compose_inherit": "Успадкувати",
   "tasks_journal_compose_narrow": "Звузити",
-  "tasks_journal_compose_replace": "Замінити"
+  "tasks_journal_compose_replace": "Замінити",
+  "tasks_journal_modal_title": "Визначення завдань — {journal}"
 }

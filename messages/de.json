@@ -2395,5 +2395,6 @@
   "tasks_journal_compose_desc": "„Erben“ verwendet nur die Vault-weite Regel. „Einschränken“ verlangt, dass eine Zeile beide Regeln erfüllt. „Ersetzen“ verwendet nur die Regel dieses Journals.",
   "tasks_journal_compose_inherit": "Erben",
   "tasks_journal_compose_narrow": "Einschränken",
-  "tasks_journal_compose_replace": "Ersetzen"
+  "tasks_journal_compose_replace": "Ersetzen",
+  "tasks_journal_modal_title": "Aufgabenerkennung — {journal}"
 }

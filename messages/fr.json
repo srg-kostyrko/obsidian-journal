@@ -2393,5 +2393,6 @@
   "tasks_journal_compose_desc": "« Hériter » n’utilise que la règle de tout le coffre-fort. « Restreindre » exige qu’une ligne satisfasse les deux règles. « Remplacer » n’utilise que la règle de ce journal.",
   "tasks_journal_compose_inherit": "Hériter",
   "tasks_journal_compose_narrow": "Restreindre",
-  "tasks_journal_compose_replace": "Remplacer"
+  "tasks_journal_compose_replace": "Remplacer",
+  "tasks_journal_modal_title": "Identification des tâches — {journal}"
 }

@@ -2376,5 +2376,6 @@
   "tasks_journal_compose_desc": "“继承”仅使用全库通用规则。“收窄”要求一行同时满足两条规则。“替换”仅使用本日记的规则。",
   "tasks_journal_compose_inherit": "继承",
   "tasks_journal_compose_narrow": "收窄",
-  "tasks_journal_compose_replace": "替换"
+  "tasks_journal_compose_replace": "替换",
+  "tasks_journal_modal_title": "任务识别 — {journal}"
 }

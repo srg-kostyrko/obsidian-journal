@@ -2382,5 +2382,6 @@
   "tasks_journal_compose_desc": "「継承」は保管庫全体のルールのみを使用します。「絞り込み」は行が両方のルールを満たすことを求めます。「置換」はこのジャーナルのルールのみを使用します。",
   "tasks_journal_compose_inherit": "継承",
   "tasks_journal_compose_narrow": "絞り込み",
-  "tasks_journal_compose_replace": "置換"
+  "tasks_journal_compose_replace": "置換",
+  "tasks_journal_modal_title": "タスクの識別 — {journal}"
 }

@@ -2379,5 +2379,6 @@
   "tasks_journal_compose_desc": "「상속」은 보관함 전체 규칙만 사용합니다. 「좁히기」는 한 줄이 두 규칙을 모두 만족해야 합니다. 「대체」는 이 저널의 규칙만 사용합니다.",
   "tasks_journal_compose_inherit": "상속",
   "tasks_journal_compose_narrow": "좁히기",
-  "tasks_journal_compose_replace": "대체"
+  "tasks_journal_compose_replace": "대체",
+  "tasks_journal_modal_title": "작업 식별 — {journal}"
 }

@@ -2382,5 +2382,6 @@
   "tasks_journal_compose_desc": "«Heredar» usa solo la regla de toda la bóveda. «Restringir» exige que una línea cumpla ambas reglas. «Reemplazar» usa solo la regla de este diario.",
   "tasks_journal_compose_inherit": "Heredar",
   "tasks_journal_compose_narrow": "Restringir",
-  "tasks_journal_compose_replace": "Reemplazar"
+  "tasks_journal_compose_replace": "Reemplazar",
+  "tasks_journal_modal_title": "Identificación de tareas — {journal}"
 }

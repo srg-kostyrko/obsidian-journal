@@ -2394,5 +2394,6 @@
   "tasks_journal_compose_desc": "Inherit uses the vault-wide rule alone. Narrow requires a line to satisfy both rules. Replace uses this journal's rule alone.",
   "tasks_journal_compose_inherit": "Inherit",
   "tasks_journal_compose_narrow": "Narrow",
-  "tasks_journal_compose_replace": "Replace"
+  "tasks_journal_compose_replace": "Replace",
+  "tasks_journal_modal_title": "Task identification — {journal}"
 }

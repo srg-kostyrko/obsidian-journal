@@ -2390,5 +2390,6 @@
   "tasks_journal_compose_desc": "«Herdar» usa apenas a regra de todo o cofre. «Restringir» exige que uma linha satisfaça as duas regras. «Substituir» usa apenas a regra deste diário.",
   "tasks_journal_compose_inherit": "Herdar",
   "tasks_journal_compose_narrow": "Restringir",
-  "tasks_journal_compose_replace": "Substituir"
+  "tasks_journal_compose_replace": "Substituir",
+  "tasks_journal_modal_title": "Identificação de tarefas — {journal}"
 }

@@ -2468,5 +2468,6 @@
   "tasks_journal_compose_desc": "«Наследовать» использует только правило всего хранилища. «Сузить» требует, чтобы строка удовлетворяла обоим правилам. «Заменить» использует только правило этого журнала.",
   "tasks_journal_compose_inherit": "Наследовать",
   "tasks_journal_compose_narrow": "Сузить",
-  "tasks_journal_compose_replace": "Заменить"
+  "tasks_journal_compose_replace": "Заменить",
+  "tasks_journal_modal_title": "Определение задач — {journal}"
 }

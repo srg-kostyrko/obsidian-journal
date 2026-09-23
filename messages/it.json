@@ -2393,5 +2393,6 @@
   "tasks_journal_compose_desc": "«Eredita» usa solo la regola di tutto il vault. «Restringi» richiede che una riga soddisfi entrambe le regole. «Sostituisci» usa solo la regola di questo diario.",
   "tasks_journal_compose_inherit": "Eredita",
   "tasks_journal_compose_narrow": "Restringi",
-  "tasks_journal_compose_replace": "Sostituisci"
+  "tasks_journal_compose_replace": "Sostituisci",
+  "tasks_journal_modal_title": "Identificazione delle attività — {journal}"
 }
