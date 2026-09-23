@@ -73,4 +73,29 @@ describe("EditJournalTasksModal", () => {
 
     expect(repository.get("Daily").getOrUndefined()?.tasks.checkbox).toBeUndefined();
   });
+
+  // The journal's tasks schema declares only `checkbox`, so a second provider's own entry can't
+  // be modeled through the fixture — v.object strips any other key on that read path. It is
+  // reachable the way a real one would ever get there: written live through
+  // JournalsRepository.update(), which merges without re-validating. That is also what makes it
+  // a genuine concurrent edit — save() must re-read the config or this write, landing while the
+  // modal is still open, is silently lost.
+  it("keeps a concurrent edit to a sibling provider's rule when saving", async () => {
+    const { repository } = await mount();
+
+    repository.update("Daily", { tasks: { noteProperty: "before" } as never });
+    expect(repository.get("Daily").getOrUndefined()?.tasks).toMatchObject({ noteProperty: "before" });
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+
+    repository.update("Daily", { tasks: { noteProperty: "after" } as never });
+
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const tasks = repository.get("Daily").getOrUndefined()?.tasks;
+    expect(tasks).toMatchObject({ noteProperty: "after" });
+    expect(tasks?.checkbox).toMatchObject({ compose: "narrow" });
+    expect(tasks?.checkbox?.conditions).toHaveLength(1);
+  });
 });
