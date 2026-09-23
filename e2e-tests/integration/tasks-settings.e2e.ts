@@ -106,6 +106,29 @@ describe("checkbox provider modal save", () => {
   });
 });
 
+// Self-reverting: Cancel discards the added condition, so nothing here carries forward into
+// data.json for a later describe to trip over.
+describe("checkbox provider modal validation", () => {
+  afterEach(closeSettings);
+
+  // identifies() treats an empty tags/headings list as "no constraint", so an unfinished
+  // condition silently widens the rule to match every checkbox item — the real bug this
+  // guard exists for. Exercised against a real Obsidian Modal, not the mock-based unit suite.
+  it("disables Save while a rule condition has no values", async () => {
+    await openSettings();
+    await expandSection(m.tasks_settings_title());
+    await clickIcon(m.tasks_settings_configure());
+    await waitForModalOpen();
+
+    await clickButton(m.tasks_settings_add_condition());
+
+    await expect($(`button=${m.common_action_submit()}`)).toBeDisabled();
+
+    await clickButton(m.common_action_cancel());
+    await waitForDialogClosed();
+  });
+});
+
 describe("journal tasks section", () => {
   afterEach(closeSettings);
 

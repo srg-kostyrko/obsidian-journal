@@ -2338,6 +2338,7 @@
   "tasks_settings_condition_not_under": "하위 아님",
   "tasks_settings_mode_and": "모든 조건 일치",
   "tasks_settings_mode_or": "조건 중 하나 일치",
+  "tasks_condition_values_required": "값을 하나 이상 입력하세요.",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2348,6 +2349,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "태그가 지정되지 않은",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2358,6 +2360,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "제목이 지정되지 않은",
   "tasks_rule_summary_any": "조건 없음 — 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
   "tasks_rule_summary_conditions": "{conditions} 체크박스 목록 항목을 집계합니다.",
   "tasks_journal_summary_inherit": "보관함 전체 규칙을 상속합니다.",

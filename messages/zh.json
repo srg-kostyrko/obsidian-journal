@@ -2335,6 +2335,7 @@
   "tasks_settings_condition_not_under": "不位于",
   "tasks_settings_mode_and": "匹配所有条件",
   "tasks_settings_mode_or": "匹配任一条件",
+  "tasks_condition_values_required": "请至少输入一个值。",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2345,6 +2346,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "未指定标签",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2355,6 +2357,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "未指定标题",
   "tasks_rule_summary_any": "无条件——日记笔记中的每个复选框列表项都是任务。",
   "tasks_rule_summary_conditions": "统计{conditions}的复选框列表项。",
   "tasks_journal_summary_inherit": "继承全库通用规则。",

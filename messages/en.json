@@ -2353,6 +2353,7 @@
   "tasks_settings_condition_not_under": "Not under",
   "tasks_settings_mode_and": "Match all conditions",
   "tasks_settings_mode_or": "Match any condition",
+  "tasks_condition_values_required": "Enter at least one value.",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2363,6 +2364,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "missing a tag",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2373,6 +2375,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "missing a heading",
   "tasks_rule_summary_any": "No conditions — every checkbox item in a journal's notes is a task.",
   "tasks_rule_summary_conditions": "Counts a checkbox item that is {conditions}.",
   "tasks_journal_summary_inherit": "Inherits the vault-wide rule.",

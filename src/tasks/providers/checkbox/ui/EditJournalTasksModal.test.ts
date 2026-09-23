@@ -71,6 +71,7 @@ describe("EditJournalTasksModal", () => {
 
     await userEvent.click(screen.getByTestId("compose-narrow"));
     await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
     const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
@@ -103,6 +104,7 @@ describe("EditJournalTasksModal", () => {
 
     await userEvent.click(screen.getByTestId("compose-narrow"));
     await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
 
     repository.update("Daily", { tasks: { noteProperty: "after" } as never });
 
@@ -121,6 +123,7 @@ describe("EditJournalTasksModal", () => {
     const { repository } = await mount({ checkbox: { compose: "narrow", mode: "and", conditions: [] } });
 
     await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
     const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
@@ -148,5 +151,66 @@ describe("EditJournalTasksModal", () => {
 
     expect(screen.queryByDisplayValue("#work, #leaked")).toBeNull();
     expect(screen.getByDisplayValue("#work")).toBeTruthy();
+  });
+});
+
+// Same guard as EditCheckboxProviderModal's, applied to the journal-scoped rule editor — an
+// empty condition here is just as capable of silently widening a narrow/replace rule to match
+// every checkbox item.
+describe("empty-condition validation", () => {
+  it("disables Save while a narrowed condition has no values, and Save never reaches the journal", async () => {
+    const { repository } = await mount();
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
+    expect(saveButton.disabled).toBe(true);
+
+    await userEvent.click(saveButton);
+
+    expect(repository.get("Daily").getOrUndefined()?.tasks.checkbox).toBeUndefined();
+  });
+
+  it("enables Save once the empty condition is given a value", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
+    expect(saveButton.disabled).toBe(true);
+
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+
+    expect(saveButton.disabled).toBe(false);
+  });
+
+  it("keeps the missing-value error quiet until the row's input is left, then shows it", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+
+    expect(screen.queryByText(m.tasks_condition_values_required())).toBeNull();
+
+    await userEvent.click(screen.getByLabelText(m.tasks_settings_condition_tag()));
+    await userEvent.tab();
+
+    expect(screen.getByText(m.tasks_condition_values_required())).toBeTruthy();
+  });
+
+  // Switching back to inherit while a narrow/replace draft holds an unfinished condition must
+  // not strand the modal — there is no rule editor to fix once inherit is chosen, so Save has
+  // nothing left to validate.
+  it("re-enables Save when switching back to inherit with an unfinished condition still in the draft", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
+    expect(saveButton.disabled).toBe(true);
+
+    await userEvent.click(screen.getByTestId("compose-inherit"));
+
+    expect(saveButton.disabled).toBe(false);
   });
 });

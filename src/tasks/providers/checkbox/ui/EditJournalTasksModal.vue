@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneFnJSON } from "@vueuse/core";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -8,6 +8,8 @@ import { useModal } from "@/infrastructure/host/modals";
 import { JournalsRepository } from "@/journals/repository";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+
+import { checkboxRuleConditionErrors } from "../rule-form-schema";
 
 import RuleEditor from "./RuleEditor.vue";
 
@@ -30,7 +32,17 @@ const draft = ref<{ mode: "and" | "or"; conditions: CheckboxCondition[] }>({
   conditions: stored ? cloneFnJSON(stored.conditions) : [],
 });
 
+// Inherit renders no RuleEditor at all, so there is nothing to validate — an empty condition
+// left over from a previous narrow/replace draft cannot block a switch back to inherit.
+const ruleErrors = computed(() =>
+  compose.value === "inherit" ? new Map<number, string>() : checkboxRuleConditionErrors(draft.value),
+);
+const ruleValid = computed(() => ruleErrors.value.size === 0);
+
 function save(): void {
+  // Belt-and-braces alongside the disabled Save button: a disabled native <button> never
+  // dispatches click, but nothing stops a future caller from invoking save() directly.
+  if (!ruleValid.value) return;
   // Re-read across the modal's lifetime: the store can change while it is open, so the other
   // task settings this journal holds must come from the current config, not the opening one.
   const config = journals.get(journalName);
@@ -66,10 +78,10 @@ function save(): void {
       </UiButton>
     </div>
   </UiSettingRow>
-  <RuleEditor v-if="compose !== 'inherit'" v-model="draft" />
+  <RuleEditor v-if="compose !== 'inherit'" v-model="draft" :errors="ruleErrors" />
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-    <UiButton cta @click="save">{{ m.common_action_submit() }}</UiButton>
+    <UiButton cta :disabled="!ruleValid" @click="save">{{ m.common_action_submit() }}</UiButton>
   </UiSettingRow>
 </template>
 

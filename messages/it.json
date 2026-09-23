@@ -2352,6 +2352,7 @@
   "tasks_settings_condition_not_under": "Non sotto",
   "tasks_settings_mode_and": "Soddisfa tutte le condizioni",
   "tasks_settings_mode_or": "Soddisfa almeno una condizione",
+  "tasks_condition_values_required": "Inserisci almeno un valore.",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2362,6 +2363,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "senza tag",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2372,6 +2374,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "senza intestazione",
   "tasks_rule_summary_any": "Nessuna condizione — ogni elemento di elenco con casella nelle note di un diario è un'attività.",
   "tasks_rule_summary_conditions": "Conta un elemento di elenco con casella che è {conditions}.",
   "tasks_journal_summary_inherit": "Eredita la regola di tutto il vault.",

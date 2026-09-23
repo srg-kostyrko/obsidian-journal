@@ -2419,6 +2419,7 @@
   "tasks_settings_condition_not_under": "Не під",
   "tasks_settings_mode_and": "Відповідність усім умовам",
   "tasks_settings_mode_or": "Відповідність будь-якій умові",
+  "tasks_condition_values_required": "Введіть хоча б одне значення.",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2429,6 +2430,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "без вказаного тега",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2439,6 +2441,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "без вказаного заголовка",
   "tasks_rule_summary_any": "Немає умов — кожен пункт списку з чекбоксом у нотатках журналу вважається завданням.",
   "tasks_rule_summary_conditions": "Враховує пункт списку з чекбоксом, який {conditions}.",
   "tasks_journal_summary_inherit": "Успадковує правило всього сховища.",

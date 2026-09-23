@@ -2341,6 +2341,7 @@
   "tasks_settings_condition_not_under": "配下ではない",
   "tasks_settings_mode_and": "すべての条件に一致",
   "tasks_settings_mode_or": "いずれかの条件に一致",
+  "tasks_condition_values_required": "少なくとも1つの値を入力してください。",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2351,6 +2352,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "タグが指定されていない",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2361,6 +2363,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "見出しが指定されていない",
   "tasks_rule_summary_any": "条件なし — ジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
   "tasks_rule_summary_conditions": "{conditions}チェックボックス項目を数えます。",
   "tasks_journal_summary_inherit": "保管庫全体のルールを継承します。",

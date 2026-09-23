@@ -50,6 +50,22 @@ describe("describeCheckboxRule", () => {
     expect(text).toContain("#a");
     expect(text).toContain("#b");
   });
+
+  // The settings modals now block Save on an empty condition, but a rule stored before that
+  // guard existed can still carry one — describeCheckboxRule must not render "tagged ." for it.
+  it("degrades a tag condition with no tags to its own wording, not an empty tag list", () => {
+    const text = describeCheckboxRule({ mode: "and", conditions: [{ type: "tag", condition: "has", tags: [] }] });
+    expect(text).toBe("Counts a checkbox item that is missing a tag.");
+    expect(text).not.toContain("tagged .");
+  });
+
+  it("degrades a heading condition with no headings to its own wording, not an empty heading list", () => {
+    const text = describeCheckboxRule({
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: [] }],
+    });
+    expect(text).toBe("Counts a checkbox item that is missing a heading.");
+  });
 });
 
 describe("describeJournalRule", () => {

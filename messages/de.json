@@ -2354,6 +2354,7 @@
   "tasks_settings_condition_not_under": "Nicht unter",
   "tasks_settings_mode_and": "Alle Bedingungen erfüllen",
   "tasks_settings_mode_or": "Eine beliebige Bedingung erfüllen",
+  "tasks_condition_values_required": "Gib mindestens einen Wert ein.",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2364,6 +2365,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "ohne Tag",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2374,6 +2376,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "ohne Überschrift",
   "tasks_rule_summary_any": "Keine Bedingungen – jeder Kontrollkästchen-Listeneintrag in den Notizen eines Journals ist eine Aufgabe.",
   "tasks_rule_summary_conditions": "Zählt einen Kontrollkästchen-Listeneintrag, der {conditions} ist.",
   "tasks_journal_summary_inherit": "Erbt die Vault-weite Regel.",

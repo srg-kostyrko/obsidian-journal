@@ -4,13 +4,20 @@ import { formatConjunction, formatDisjunction, m } from "@/i18n";
 
 import type { CheckboxCondition, CheckboxJournalRule, CheckboxRule } from "../rule-schema";
 
+// The settings modals block Save on a condition with no values (see rule-form-schema.ts), but a
+// rule stored before that guard existed can still carry one, so this has to degrade sanely rather
+// than render describe_tag_describe's "tagged {tags}" with an empty {tags} — "tagged ." — forever.
 function describeCondition(condition: CheckboxCondition): string {
   return match(condition)
     .with({ type: "tag" }, (c) =>
-      m.tasks_condition_tag_describe({ condition: c.condition, tags: formatConjunction(c.tags) }),
+      c.tags.length === 0
+        ? m.tasks_condition_tag_describe_empty()
+        : m.tasks_condition_tag_describe({ condition: c.condition, tags: formatConjunction(c.tags) }),
     )
     .with({ type: "heading" }, (c) =>
-      m.tasks_condition_heading_describe({ condition: c.condition, headings: formatConjunction(c.headings) }),
+      c.headings.length === 0
+        ? m.tasks_condition_heading_describe_empty()
+        : m.tasks_condition_heading_describe({ condition: c.condition, headings: formatConjunction(c.headings) }),
     )
     .exhaustive();
 }

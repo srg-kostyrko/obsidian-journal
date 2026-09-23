@@ -11,6 +11,11 @@ import type { CheckboxCondition } from "../rule-schema";
 
 const condition = defineModel<CheckboxCondition>({ required: true });
 
+// Multi-root components get no automatic attribute fallthrough, so a parent-side `@blur` on
+// <RuleConditionRow> reaches nothing without this — RuleEditor uses it to decide when this row
+// has been interacted with, so its "enter a value" error can stay quiet until then.
+const emit = defineEmits<{ blur: [] }>();
+
 // Switching the type has to replace the whole object, not just the `type` field: `tags` and
 // `headings` do not coexist on the discriminated union, so leaving the old type's field behind
 // would produce a value the schema itself could not have parsed.
@@ -50,5 +55,6 @@ const valuesText = computed<string>({
   <UiTextInput
     v-model="valuesText"
     :aria-label="condition.type === 'tag' ? m.tasks_settings_condition_tag() : m.tasks_settings_condition_heading()"
+    @blur="emit('blur')"
   />
 </template>

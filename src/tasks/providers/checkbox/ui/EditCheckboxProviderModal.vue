@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneFnJSON } from "@vueuse/core";
-import { reactive } from "vue";
+import { computed, reactive } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -9,6 +9,7 @@ import { SettingsService } from "@/settings";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { checkboxRuleConditionErrors } from "../rule-form-schema";
 import { checkboxSlice } from "../slice";
 
 import RuleEditor from "./RuleEditor.vue";
@@ -26,7 +27,16 @@ const draft = reactive({
   rule: cloneFnJSON(slice.state.rule),
 });
 
+// Recomputed on every keystroke against the draft, never against the slice — nothing here
+// reaches persistence, so a condition with no values can never fail its schema on reload; see
+// rule-form-schema.ts for why storage stays permissive while the form is strict.
+const ruleErrors = computed(() => checkboxRuleConditionErrors(draft.rule));
+const ruleValid = computed(() => ruleErrors.value.size === 0);
+
 function save(): void {
+  // Belt-and-braces alongside the disabled Save button: a disabled native <button> never
+  // dispatches click, but nothing stops a future caller from invoking save() directly.
+  if (!ruleValid.value) return;
   // Writes back only the fields this modal owns, so a concurrent change to a field it does
   // not own (enabled) survives; a concurrent edit to statusMap/canonical/rule while the
   // modal is open is legitimately overwritten by this Save.
@@ -39,9 +49,9 @@ function save(): void {
 
 <template>
   <StatusMapEditor v-model:status-map="draft.statusMap" v-model:canonical="draft.canonical" />
-  <RuleEditor v-model="draft.rule" />
+  <RuleEditor v-model="draft.rule" :errors="ruleErrors" />
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-    <UiButton cta @click="save">{{ m.common_action_submit() }}</UiButton>
+    <UiButton cta :disabled="!ruleValid" @click="save">{{ m.common_action_submit() }}</UiButton>
   </UiSettingRow>
 </template>

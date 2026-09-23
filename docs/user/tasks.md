@@ -70,7 +70,9 @@ Two condition types, each addable more than once:
   nearest one. Write the heading's text, not its `#` markers — those are dropped if you include
   them, so `## Work` and `Work` both mean the same heading.
 
-**Add condition** adds a row; the delete icon next to a row removes it.
+**Add condition** adds a row; the delete icon next to a row removes it. A new row starts with no
+value, and **Save** stays disabled until every row has at least one — leave one empty and, once
+you have clicked into its field and left it, the row explains why.
 
 ### A journal's own rule
 

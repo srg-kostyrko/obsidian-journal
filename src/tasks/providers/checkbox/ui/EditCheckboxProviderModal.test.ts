@@ -78,6 +78,7 @@ describe("EditCheckboxProviderModal", () => {
     const { slice } = await mount();
 
     await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
     expect(slice.state.rule.conditions).toHaveLength(1);
@@ -227,9 +228,11 @@ describe("rule editor", () => {
     const { slice } = await mount();
 
     await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await save();
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", condition: "has", tags: [] });
+    expect(slice.state.rule.conditions).toHaveLength(1);
+    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", condition: "has" });
   });
 
   // The store has to hold the spelling metadataCache uses, whatever the user typed — identifies()
@@ -252,6 +255,7 @@ describe("rule editor", () => {
     const [firstDelete] = screen.getAllByTestId("rule-remove-condition");
     if (!firstDelete) throw new Error("no delete button rendered");
     await userEvent.click(firstDelete);
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await save();
 
     expect(slice.state.rule.conditions).toHaveLength(1);
@@ -263,9 +267,14 @@ describe("rule editor", () => {
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     const typeSelect = screen.getByDisplayValue(m.tasks_settings_condition_tag());
     await userEvent.selectOptions(typeSelect, m.tasks_settings_condition_heading());
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_heading()), "Work");
     await save();
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "heading", condition: "under", headings: [] });
+    expect(slice.state.rule.conditions.at(0)).toMatchObject({
+      type: "heading",
+      condition: "under",
+      headings: ["Work"],
+    });
     expect(slice.state.rule.conditions.at(0)).not.toHaveProperty("tags");
   });
 
@@ -289,5 +298,50 @@ describe("rule editor", () => {
     const settingItem = row.closest(".setting-item");
     expect(settingItem).not.toBeNull();
     expect(settingItem?.querySelectorAll(".setting-item")).toHaveLength(0);
+  });
+});
+
+// identification.ts treats an empty tags/headings list as "no constraint", so a condition left
+// with no value does not narrow the rule at all — under "or" mode it silently makes every
+// checkbox item in the vault a task. checkboxRuleFormSchema (rule-form-schema.ts) exists to
+// catch exactly this before it reaches the slice.
+describe("empty-condition validation", () => {
+  it("disables Save while a condition has no values, and Save never reaches the slice", async () => {
+    const { slice } = await mount();
+    const before = slice.state.rule.conditions.length;
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
+    expect(saveButton.disabled).toBe(true);
+
+    await userEvent.click(saveButton);
+
+    expect(slice.state.rule.conditions).toHaveLength(before);
+  });
+
+  it("enables Save once the empty condition is given a value", async () => {
+    await mount();
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
+    expect(saveButton.disabled).toBe(true);
+
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+
+    expect(saveButton.disabled).toBe(false);
+  });
+
+  // Clicking "Add condition" creates an empty row by design — the normal first moment of
+  // editing a fresh condition — so the error must not appear until the user has actually left
+  // that row's input, or every "Add condition" click would read as an immediate mistake.
+  it("keeps the missing-value error quiet until the row's input is left, then shows it", async () => {
+    await mount();
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+
+    expect(screen.queryByText(m.tasks_condition_values_required())).toBeNull();
+
+    await userEvent.click(screen.getByLabelText(m.tasks_settings_condition_tag()));
+    await userEvent.tab();
+
+    expect(screen.getByText(m.tasks_condition_values_required())).toBeTruthy();
   });
 });

@@ -2352,6 +2352,7 @@
   "tasks_settings_condition_not_under": "Pas sous",
   "tasks_settings_mode_and": "Remplir toutes les conditions",
   "tasks_settings_mode_or": "Remplir au moins une condition",
+  "tasks_condition_values_required": "Saisissez au moins une valeur.",
   "tasks_condition_tag_describe": [
     {
       "declarations": ["input condition", "input tags"],
@@ -2362,6 +2363,7 @@
       }
     }
   ],
+  "tasks_condition_tag_describe_empty": "sans étiquette",
   "tasks_condition_heading_describe": [
     {
       "declarations": ["input condition", "input headings"],
@@ -2372,6 +2374,7 @@
       }
     }
   ],
+  "tasks_condition_heading_describe_empty": "sans en-tête",
   "tasks_rule_summary_any": "Aucune condition — tout élément de liste avec case à cocher dans les notes d’un journal est une tâche.",
   "tasks_rule_summary_conditions": "Compte un élément de liste avec case à cocher qui est {conditions}.",
   "tasks_journal_summary_inherit": "Hérite de la règle de tout le coffre-fort.",

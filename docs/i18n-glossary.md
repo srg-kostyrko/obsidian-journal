@@ -348,6 +348,18 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   item … is a task", re-scoped from "a journal's notes" to "this journal's notes". Not
   native-verified. ru/uk again need no `запис-` workaround: both reuse the already-established
   **заметк-**/**нотат-** note noun.
+- Three more `tasks_*` keys were added by the empty-condition validation fix:
+  `tasks_condition_values_required` (the form error next to an unfinished condition row) and
+  `tasks_condition_tag_describe_empty` / `tasks_condition_heading_describe_empty` (how a legacy
+  stored condition with no values reads in a rule summary, replacing what used to render as
+  "tagged ."). Translated by an agent working from this file, reusing each locale's own **tag**
+  and **heading** wording already established in `tasks_condition_tag_describe` /
+  `tasks_condition_heading_describe`, and each locale's existing imperative register for a
+  required-field error (matching `journal_add_modal_anchor_required_error`'s phrasing). Not
+  native-verified. ja and ko phrase the two `_empty` fragments as "no tag/heading specified"
+  rather than reusing the `lacks`/`not-under` wording verbatim, to keep them unambiguous from a
+  condition that legitimately lacks a tag on an item; ru/uk do the same with "без вказаного
+  тега"/"без указанного тега" rather than the bare "без тега" the `lacks` branch already uses.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.
