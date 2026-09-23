@@ -36,29 +36,32 @@ everything below. Adding a locale or a new domain noun means extending it there.
 
 ## Canonical terms
 
-| en              | de          | es            | fr          | it           | ja               | ko         | pt           | ru            | uk             | zh          |
-| --------------- | ----------- | ------------- | ----------- | ------------ | ---------------- | ---------- | ------------ | ------------- | -------------- | ----------- |
-| **journal**     | Journal     | diario        | journal     | diario       | ジャーナル       | 저널       | diário       | журнал        | журнал         | 日记        |
-| **note**        | Notiz       | nota          | note        | nota         | ノート           | 노트       | nota         | заметка       | нотатка        | 笔记        |
-| **shelf**       | Regal       | estante       | étagère     | scaffale     | 棚               | 선반       | prateleira   | полка         | полиця         | 书架        |
-| **view**        | Ansicht     | vista         | vue         | vista        | ビュー           | 뷰         | visualização | представление | представлення  | 视图        |
-| **decoration**  | Dekoration  | decoración    | décoration  | decorazione  | 装飾             | 장식       | decoração    | оформление    | оформлення     | 装饰        |
-| **vault**       | Vault       | bóveda        | coffre-fort | vault        | 保管庫           | 보관함     | cofre        | хранилище     | сховище        | 库          |
-| **frontmatter** | Frontmatter | Frontmatter   | Frontmatter | Frontmatter  | フロントマター   | 프런트매터 | Frontmatter  | Frontmatter   | Фронтматер     | Frontmatter |
-| **property**    | Eigenschaft | propiedad     | propriété   | proprietà    | プロパティ       | 속성       | propriedade  | свойство      | властивість    | 属性        |
-| **condition**   | Bedingung   | condición     | condition   | condizione   | 条件             | 조건       | condição     | условие       | умова          | 条件        |
-| **log** (noun)  | Protokoll   | registro      | log         | log          | ログ             | 로그       | log          | лог           | лог            | 日志        |
-| **bold**        | Fett        | negrita       | gras        | grassetto    | 太字             | 굵게       | negrito      | жирный        | жирний         | 粗体        |
-| **line**        | Zeile       | línea         | ligne       | riga         | 行               | 행         | linha        | строка        | рядок          | 行          |
-| **segment**     | Segment     | segmento      | segment     | segmento     | セグメント       | 세그먼트   | segmento     | сегмент       | сегмент        | 段          |
-| **snapshot**    | Snapshot    | instantánea   | instantané  | istantanea   | スナップショット | 스냅샷     | instantâneo  | снимок        | знімок         | 快照        |
-| **maintenance** | Wartung     | mantenimiento | maintenance | manutenzione | メンテナンス     | 유지관리   | manutenção   | обслуживание  | обслуговування | 维护        |
-| **word**        | Wort        | palabra       | mot         | parola       | 単語             | 단어       | palavra      | слово         | слово          | 单词        |
-| **character**   | Zeichen     | carácter      | caractère   | carattere    | 文字             | 문자       | caractere    | символ        | символ         | 字符        |
-| **prompt**      | Frage       | pregunta      | question    | domanda      | 質問             | 질문       | pergunta     | вопрос        | запитання      | 问题        |
-| **answer**      | Antwort     | respuesta     | réponse     | risposta     | 回答             | 답변       | resposta     | ответ         | відповідь      | 回答        |
-| **notelet**     | Kurznotiz   | nota breve    | note brève  | nota breve   | サブノート       | 서브노트   | nota breve   | подзаметка    | піднотатка     | 子笔记      |
-| **pin** (a tab) | anheften    | fijar         | épingler    | appuntare    | ピン留め         | 고정       | fixar        | закрепить     | закріпити      | 锁定        |
+| en              | de               | es            | fr            | it           | ja               | ko         | pt               | ru            | uk             | zh          |
+| --------------- | ---------------- | ------------- | ------------- | ------------ | ---------------- | ---------- | ---------------- | ------------- | -------------- | ----------- |
+| **journal**     | Journal          | diario        | journal       | diario       | ジャーナル       | 저널       | diário           | журнал        | журнал         | 日记        |
+| **note**        | Notiz            | nota          | note          | nota         | ノート           | 노트       | nota             | заметка       | нотатка        | 笔记        |
+| **shelf**       | Regal            | estante       | étagère       | scaffale     | 棚               | 선반       | prateleira       | полка         | полиця         | 书架        |
+| **view**        | Ansicht          | vista         | vue           | vista        | ビュー           | 뷰         | visualização     | представление | представлення  | 视图        |
+| **decoration**  | Dekoration       | decoración    | décoration    | decorazione  | 装飾             | 장식       | decoração        | оформление    | оформлення     | 装饰        |
+| **vault**       | Vault            | bóveda        | coffre-fort   | vault        | 保管庫           | 보관함     | cofre            | хранилище     | сховище        | 库          |
+| **frontmatter** | Frontmatter      | Frontmatter   | Frontmatter   | Frontmatter  | フロントマター   | 프런트매터 | Frontmatter      | Frontmatter   | Фронтматер     | Frontmatter |
+| **property**    | Eigenschaft      | propiedad     | propriété     | proprietà    | プロパティ       | 속성       | propriedade      | свойство      | властивість    | 属性        |
+| **condition**   | Bedingung        | condición     | condition     | condizione   | 条件             | 조건       | condição         | условие       | умова          | 条件        |
+| **log** (noun)  | Protokoll        | registro      | log           | log          | ログ             | 로그       | log              | лог           | лог            | 日志        |
+| **bold**        | Fett             | negrita       | gras          | grassetto    | 太字             | 굵게       | negrito          | жирный        | жирний         | 粗体        |
+| **line**        | Zeile            | línea         | ligne         | riga         | 行               | 행         | linha            | строка        | рядок          | 行          |
+| **segment**     | Segment          | segmento      | segment       | segmento     | セグメント       | 세그먼트   | segmento         | сегмент       | сегмент        | 段          |
+| **snapshot**    | Snapshot         | instantánea   | instantané    | istantanea   | スナップショット | 스냅샷     | instantâneo      | снимок        | знімок         | 快照        |
+| **maintenance** | Wartung          | mantenimiento | maintenance   | manutenzione | メンテナンス     | 유지관리   | manutenção       | обслуживание  | обслуговування | 维护        |
+| **word**        | Wort             | palabra       | mot           | parola       | 単語             | 단어       | palavra          | слово         | слово          | 单词        |
+| **character**   | Zeichen          | carácter      | caractère     | carattere    | 文字             | 문자       | caractere        | символ        | символ         | 字符        |
+| **prompt**      | Frage            | pregunta      | question      | domanda      | 質問             | 질문       | pergunta         | вопрос        | запитання      | 问题        |
+| **answer**      | Antwort          | respuesta     | réponse       | risposta     | 回答             | 답변       | resposta         | ответ         | відповідь      | 回答        |
+| **notelet**     | Kurznotiz        | nota breve    | note brève    | nota breve   | サブノート       | 서브노트   | nota breve       | подзаметка    | піднотатка     | 子笔记      |
+| **pin** (a tab) | anheften         | fijar         | épingler      | appuntare    | ピン留め         | 고정       | fixar            | закрепить     | закріпити      | 锁定        |
+| **task**        | Aufgabe          | tarea         | tâche         | attività     | タスク           | 작업       | tarefa           | задача        | завдання       | 任务        |
+| **status**      | Status           | estado        | état          | stato        | ステータス       | 상태       | estado           | статус        | статус         | 状态        |
+| **checkbox**    | Kontrollkästchen | casilla       | case à cocher | casella      | チェックボックス | 체크박스   | caixa de seleção | чекбокс       | чекбокс        | 复选框      |
 
 Grammatical gender, where it decides agreement: `Journal` n. / `Notiz` f. / `Regal` n.
 (de) · `diario` m. / `nota` f. / `estante` m. (es) · `journal` m. / `note` f. /
@@ -315,6 +318,14 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   device-scoped settings name the devices alike; `none` is that locale's "Never" from
   `journal_edit_end_kind`, except ja, ko and zh, whose "never" there reads as "no end" and
   which say "don't show" instead. Not native-verified.
+- The 32 `tasks_*` keys were translated by an agent working from this file and from the
+  decoration conditions they sit beside — `type=has-open-task` and `type=all-tasks-completed`
+  already carried each locale's **task** noun, so the new keys reuse it rather than picking a
+  second one, and `decoration_modal_add_condition` is repeated verbatim. Not native-verified.
+  Worth a native eye: the quoting convention each locale uses around a status name inside
+  "Write symbol for …", which follows that language's own quote marks rather than en.json's;
+  and **ru**, which cannot say "символ записи" because `запис(ь|и|…)` is the protected **note**
+  term, so it says "Записываемый символ" where uk says "Символ запису".
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.
