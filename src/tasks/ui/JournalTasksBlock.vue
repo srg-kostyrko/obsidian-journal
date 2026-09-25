@@ -25,7 +25,9 @@ const journals = useService(JournalsRepository);
 // The section's own compose value, legible while the block is shut — the way TemplatesSection
 // carries a count. Reads the checkbox provider's rule directly rather than through a generic
 // provider hook: it is the only provider with journal-scoped compose today.
-const compose = computed(() => journals.get(journalName).getOrUndefined()?.tasks.checkbox?.compose ?? "inherit");
+const compose = computed(
+  () => journals.get(journalName).getOrUndefined()?.tasks.providers.checkbox?.compose ?? "inherit",
+);
 const composeLabel = computed(() =>
   match(compose.value)
     .with("narrow", () => m.tasks_journal_compose_narrow())

@@ -457,7 +457,7 @@ describe("CheckboxTaskProvider content refill", () => {
 // An earlier task dropped the test pinning that JournalsRepository's `updated` event carries
 // `tasks` among its changed keys — exactly what TaskHostService gates a journal refill on
 // (`if (!("tasks" in changes)) return;`). Driven end to end through the real modal rather than
-// a fake host, so a future change to how the modal writes back (mutating `config.tasks.checkbox`
+// a fake host, so a future change to how the modal writes back (mutating `config.tasks.providers.checkbox`
 // in place instead of assigning a fresh `tasks` object, say) would leave the index stale with the
 // rest of the suite green — there is no other test anywhere that a journal-scoped Save reaches
 // the provider at all.

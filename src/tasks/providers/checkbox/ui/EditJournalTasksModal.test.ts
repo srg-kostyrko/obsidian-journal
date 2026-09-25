@@ -13,10 +13,10 @@ import { tasksCoreModule } from "../../../module";
 
 import EditJournalTasksModal from "./EditJournalTasksModal.vue";
 
-async function mount(tasks: unknown = {}) {
+async function mount(providers: unknown = {}) {
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
-    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks } as never) } },
+    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: { providers } } as never) } },
   });
   const { submit } = harness.renderModal(EditJournalTasksModal, { props: { journalName: "Daily" } });
   return { harness, repository: harness.resolve(JournalsRepository), submit };
@@ -63,7 +63,7 @@ describe("EditJournalTasksModal", () => {
   it("writes nothing to the journal until Save", async () => {
     const { repository } = await mount();
     await userEvent.click(screen.getByTestId("compose-narrow"));
-    expect(repository.get("Daily").getOrUndefined()?.tasks.checkbox).toBeUndefined();
+    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
   });
 
   it("writes the journal's rule on Save", async () => {
@@ -74,7 +74,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
     expect(stored).toMatchObject({ compose: "narrow" });
     expect(stored?.conditions).toHaveLength(1);
   });
@@ -91,7 +91,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
     expect(stored?.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
   });
 
@@ -106,7 +106,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "#work, #home");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
     expect(stored?.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#work", "#home"] });
   });
 
@@ -127,7 +127,7 @@ describe("EditJournalTasksModal", () => {
 
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
     expect(stored?.conditions).toHaveLength(2);
     expect(stored?.conditions).toContainEqual({ type: "status", condition: "is", statuses: ["done"] });
   });
@@ -140,33 +140,33 @@ describe("EditJournalTasksModal", () => {
     await userEvent.click(screen.getByTestId("compose-inherit"));
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    expect(repository.get("Daily").getOrUndefined()?.tasks.checkbox).toBeUndefined();
+    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
   });
 
-  // The journal's tasks schema declares only `checkbox`, so a second provider's own entry can't
-  // be modeled through the fixture — v.object strips any other key on that read path. It is
-  // reachable the way a real one would ever get there: written live through
+  // The journal's tasks.providers schema declares only `checkbox`, so a second provider's own
+  // entry can't be modeled through the fixture — v.object strips any other key on that read
+  // path. It is reachable the way a real one would ever get there: written live through
   // JournalsRepository.update(), which merges without re-validating. That is also what makes it
   // a genuine concurrent edit — save() must re-read the config or this write, landing while the
   // modal is still open, is silently lost.
   it("keeps a concurrent edit to a sibling provider's rule when saving", async () => {
     const { repository } = await mount();
 
-    repository.update("Daily", { tasks: { noteProperty: "before" } as never });
-    expect(repository.get("Daily").getOrUndefined()?.tasks).toMatchObject({ noteProperty: "before" });
+    repository.update("Daily", { tasks: { providers: { noteProperty: "before" } } as never });
+    expect(repository.get("Daily").getOrUndefined()?.tasks.providers).toMatchObject({ noteProperty: "before" });
 
     await userEvent.click(screen.getByTestId("compose-narrow"));
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
 
-    repository.update("Daily", { tasks: { noteProperty: "after" } as never });
+    repository.update("Daily", { tasks: { providers: { noteProperty: "after" } } as never });
 
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const tasks = repository.get("Daily").getOrUndefined()?.tasks;
-    expect(tasks).toMatchObject({ noteProperty: "after" });
-    expect(tasks?.checkbox).toMatchObject({ compose: "narrow" });
-    expect(tasks?.checkbox?.conditions).toHaveLength(1);
+    const providers = repository.get("Daily").getOrUndefined()?.tasks.providers;
+    expect(providers).toMatchObject({ noteProperty: "after" });
+    expect(providers?.checkbox).toMatchObject({ compose: "narrow" });
+    expect(providers?.checkbox?.conditions).toHaveLength(1);
   });
 
   // save() must hand the store a copy of the draft's conditions, not the array itself — otherwise
@@ -179,7 +179,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
     stored?.conditions.push({ type: "tag", condition: "has", tags: ["outside"] });
 
     expect(screen.queryByDisplayValue("outside")).toBeNull();
@@ -195,7 +195,7 @@ describe("EditJournalTasksModal", () => {
       checkbox: { compose: "narrow", mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] },
     });
 
-    const condition = repository.get("Daily").getOrUndefined()?.tasks.checkbox?.conditions[0];
+    const condition = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox?.conditions[0];
     if (condition?.type !== "tag") throw new Error("no seeded tag condition");
     expect(screen.getByDisplayValue("#work")).toBeTruthy();
 
@@ -221,7 +221,7 @@ describe("empty-condition validation", () => {
 
     await userEvent.click(saveButton);
 
-    expect(repository.get("Daily").getOrUndefined()?.tasks.checkbox).toBeUndefined();
+    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
   });
 
   // The value only reaches the condition model at a commit boundary (blur or Enter), not on

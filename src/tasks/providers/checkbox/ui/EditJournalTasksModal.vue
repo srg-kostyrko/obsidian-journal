@@ -21,7 +21,7 @@ const { journalName } = defineProps<{ journalName: string }>();
 const api = useModal();
 const journals = useService(JournalsRepository);
 
-const stored = journals.get(journalName).getOrUndefined()?.tasks.checkbox;
+const stored = journals.get(journalName).getOrUndefined()?.tasks.providers.checkbox;
 
 const compose = ref<CheckboxJournalRule["compose"]>(stored?.compose ?? "inherit");
 // A deep copy, not a live binding — same reason as EditCheckboxProviderModal's: RuleEditor
@@ -68,7 +68,9 @@ function save(): void {
           mode: draft.value.mode,
           conditions: [...draft.value.conditions.map((condition) => ({ ...condition })), ...preservedConditions],
         };
-  journals.update(journalName, { tasks: { ...config.value.tasks, checkbox } });
+  journals.update(journalName, {
+    tasks: { ...config.value.tasks, providers: { ...config.value.tasks.providers, checkbox } },
+  });
   api.submit();
 }
 </script>

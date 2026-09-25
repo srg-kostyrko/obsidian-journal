@@ -3,6 +3,7 @@ import * as v from "valibot";
 import type { AnchorString } from "@/calendar";
 import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
+import { taskRuleSchema } from "@/tasks/conditions";
 import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
 
 import { DEFAULT_NOTELET_FIELD, noteletTypeCollection, noteletTypeSchema } from "./notelets/config";
@@ -153,7 +154,24 @@ export const journalConfigSchema = v.object({
   decorations: v.optional(v.array(decorationSchema), []),
   prompts: v.optional(promptsSchema, () => []),
   notelets: v.optional(v.record(v.string(), noteletTypeSchema), () => ({})),
-  tasks: v.optional(v.object({ checkbox: v.optional(checkboxJournalRuleSchema) }), () => ({})),
+  // `providers` and `filter` are each independently defaulted so a *missing* key never drags the
+  // other one down — but repairCollectionEntry (settings-service.ts) only substitutes defaults
+  // for the fields it can name from issue.path[0].key, i.e. "tasks" itself; `tasks` is not
+  // registered in journalConfigCollection's `nested` map, so a *present-but-invalid* filter (or
+  // provider rule) still resets this whole field, providers included. Confirmed empirically
+  // (2026-09-25): a valid providers.checkbox rule was wiped by an invalid filter.conditions
+  // entry. Fixing that needs settings-service's nested-collection repair to reach one level past
+  // a record-of-entities into a plain sub-object — out of scope here; flagging for whoever picks
+  // up the repair granularity of this field.
+  tasks: v.optional(
+    v.object({
+      // Keyed by provider id — note-property joins here in #503. Kept in its own object so the
+      // listing filter below is not a sibling of the provider namespace.
+      providers: v.optional(v.object({ checkbox: v.optional(checkboxJournalRuleSchema) }), () => ({})),
+      filter: v.optional(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
+    }),
+    () => ({ providers: {}, filter: v.parse(taskRuleSchema, {}) }),
+  ),
   navBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
     lines: [] as NavBlockSegment[][],
@@ -397,7 +415,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     templates: [],
     prompts: [],
     notelets: {},
-    tasks: {},
+    tasks: { providers: {}, filter: v.parse(taskRuleSchema, {}) },
     confirmCreation: false,
     autoCreate: false,
     decorations: structuredClone(isCustom ? customDecorations : fixedDecorations),
