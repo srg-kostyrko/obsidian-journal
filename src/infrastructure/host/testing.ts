@@ -90,8 +90,19 @@ export class FakeNotesService implements Pick<
   readonly #files = new Map<VaultPath, FakeEntry>();
   readonly #folders = new Set<VaultPath>(["" as VaultPath]);
   readonly #emitter: TypedEmitter<NotesEvents> = createNanoEvents();
+  // Real Obsidian moves a file's mtime forward on every vault write. This fake's writes are
+  // synchronous, so a Date.now() stand-in would collide within the same millisecond — a cache
+  // keyed on mtime (TaskIndex.hydrate) would then read the collision as "nothing changed" and
+  // serve stale text. A counter that only ever grows past both its own last value and the
+  // entry's current mtime can't collide and can't go backwards, seeded mtime included.
+  #clock = 0;
 
   readonly events: Subscribable<NotesEvents> = this.#emitter;
+
+  #nextMtime(current: number): number {
+    this.#clock = Math.max(this.#clock, current) + 1;
+    return this.#clock;
+  }
 
   #registerParentFolders(path: VaultPath): void {
     const segments = path.split("/");
@@ -196,7 +207,7 @@ export class FakeNotesService implements Pick<
   write(path: VaultPath, content: string): AsyncResult<void, NoteNotFoundError | NoteWriteError> {
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
-    this.#files.set(path, { ...entry, content });
+    this.#files.set(path, { ...entry, content, mtime: this.#nextMtime(entry.mtime) });
     this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
@@ -212,7 +223,7 @@ export class FakeNotesService implements Pick<
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
     const content = transform(entry.content);
-    this.#files.set(path, { ...entry, content });
+    this.#files.set(path, { ...entry, content, mtime: this.#nextMtime(entry.mtime) });
     this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(content);
@@ -221,7 +232,7 @@ export class FakeNotesService implements Pick<
   append(path: VaultPath, content: string): AsyncResult<void, NoteNotFoundError | NoteWriteError> {
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
-    this.#files.set(path, { ...entry, content: entry.content + content });
+    this.#files.set(path, { ...entry, content: entry.content + content, mtime: this.#nextMtime(entry.mtime) });
     this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
