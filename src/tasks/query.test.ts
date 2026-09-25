@@ -21,4 +21,17 @@ describe("taskQuerySchema", () => {
   it("falls back to document order on a sort key it does not know", () => {
     expect(v.parse(taskQuerySchema, { sort: "priority" }).sort).toBe("document");
   });
+
+  it("freezes the shared default so a consumer's mutation fails loudly instead of corrupting later queries", () => {
+    expect(() => {
+      DEFAULT_TASK_QUERY.filter.conditions.push({ type: "status", condition: "is", statuses: ["done"] });
+    }).toThrow(TypeError);
+  });
+
+  it("still hands out a mutable fresh object from a plain parse", () => {
+    const parsed = v.parse(taskQuerySchema, {});
+    expect(() => {
+      parsed.filter.conditions.push({ type: "status", condition: "is", statuses: ["done"] });
+    }).not.toThrow();
+  });
 });

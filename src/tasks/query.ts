@@ -31,4 +31,20 @@ export const taskQuerySchema = v.object({
 
 export type TaskQuery = v.InferOutput<typeof taskQuerySchema>;
 
-export const DEFAULT_TASK_QUERY: TaskQuery = v.parse(taskQuerySchema, {});
+// DEFAULT_TASK_QUERY is exported as one shared instance that consumers spread (`{
+// ...DEFAULT_TASK_QUERY, ...query }`); a shallow spread keeps the nested `scope`/`filter`/
+// `conditions` objects shared, so a mutation of one consumer's "default" corrupts every other
+// consumer that runs after it. Freezing every level turns that into a loud TypeError at the
+// mutation site instead of a silent cross-consumer bug. `v.parse` output is unaffected — only
+// this constant is frozen.
+function deepFreeze<T>(value: T): T {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    for (const nested of Object.values(value)) {
+      deepFreeze(nested);
+    }
+    Object.freeze(value);
+  }
+  return value;
+}
+
+export const DEFAULT_TASK_QUERY: TaskQuery = deepFreeze(v.parse(taskQuerySchema, {}));
