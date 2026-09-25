@@ -79,6 +79,7 @@ export class FakeNotesService implements Pick<
   | "read"
   | "readCached"
   | "write"
+  | "process"
   | "append"
   | "rename"
   | "delete"
@@ -199,6 +200,22 @@ export class FakeNotesService implements Pick<
     this.#emitter.emit("modified", path);
     this.#emitter.emit("metadata-changed", path);
     return AsyncResult.ok(undefined);
+  }
+
+  // Mirrors `write`'s events: the fake has no lock to model, so the "atomic" part of
+  // vault.process is only that the real implementation forwards the transform, current
+  // content included, in a single call rather than reading and writing separately.
+  process(
+    path: VaultPath,
+    transform: (content: string) => string,
+  ): AsyncResult<string, NoteNotFoundError | NoteWriteError> {
+    const entry = this.#files.get(path);
+    if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
+    const content = transform(entry.content);
+    this.#files.set(path, { ...entry, content });
+    this.#emitter.emit("modified", path);
+    this.#emitter.emit("metadata-changed", path);
+    return AsyncResult.ok(content);
   }
 
   append(path: VaultPath, content: string): AsyncResult<void, NoteNotFoundError | NoteWriteError> {
