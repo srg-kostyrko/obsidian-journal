@@ -52,8 +52,8 @@ days. Rollup **widens** `literal` rather than replacing it: a month listing that
 dropped the month note's own items while showing all thirty days' would surprise
 anyone who writes tasks in their monthly note.
 
-`selection` resolves **per journal, as the walk reaches each note** — day notes
-by the day journal's headings, week notes by the week journal's. A single value
+`selection` (defined in Filtering, below) resolves **per journal, as the walk reaches each note** —
+day notes by the day journal's headings, week notes by the week journal's. A single value
 cannot serve a rollup, because the journals it spans have different templates:
 given a daily template with `## Tasks` and a weekly one with `## Week focus`,
 either value silences one of them entirely. A `selection` given on the fence
@@ -455,7 +455,7 @@ the same shape. There is no separate `selection` type.
 
 An earlier draft merged headings and tags into one `selection` condition so that a single fence key
 could desugar one to one. That constraint was self-inflicted: it followed from choosing one key
-first. Two keys — `heading:` and `tag:` — each desugar into one condition of a type that already
+first. Two keys — `heading:` and `tag:` — each desugars into one condition of a type that already
 exists, and `identifies`' own `headingsOf` and `tagsOf` answer both without a second implementation.
 
 Where this document says "selection", read "the filter's heading and tag conditions". The per-journal
@@ -579,10 +579,10 @@ unscoped rollover over a template that seeds recurring checkboxes duplicates
 those checkboxes every day, which is the single most common support thread on
 every incumbent.
 
-**What still differs between identification and the filter.** Both now use the same `tag`
-and `heading` condition types. Identification has no fence sugar to keep one-to-one,
-because it is configured in settings, not hand-typed YAML. Its empty condition list also
-means _everything_, where an empty decoration condition list means _nothing_.
+**What still differs.** Identification carries the same `tag` and `heading` condition types the
+filter does, but with no fence sugar to keep one-to-one — it is configured in settings, not
+hand-typed YAML — and a different empty-list meaning: identification's empty condition list means
+_everything_, where an empty decoration condition list means _nothing_.
 
 ## Ticking an item
 
@@ -977,6 +977,15 @@ None is a decision — each is work this model is waiting on.
 
 - **The note-property status defaults.** The values TaskNotes ships for its
   status field, mapped to the shared types, matched case-insensitively.
+- **Whether `tag` drops for an item with no position, the way `heading` does.** Filtering says
+  `status` applies to everything while the heading/tag axis applies only to an item with a
+  position inside a note — but `tagsOf()` also folds in `structure.frontmatterTags`, and a
+  note-kind item carries those without carrying any position. Whether its `tag` condition should
+  drop, the way `heading` does, or match against the note's own frontmatter tags is unsettled.
+  For this ticket it drops, matching `heading`: only the checkbox provider ships here, nothing
+  yields a note-kind item until the note-property provider arrives, and a rule with no item to
+  observe it against is unobservable and untestable today. That is a deferral, not an answer —
+  revisit it when the note-property provider lands.
 - **The phase-4 index's memory and cold-boot cost**, measured against realistic
   **link density** rather than note count. Time Ruler hung indefinitely on a
   2,000-note vault, and an anonymised copy of that same vault did not reproduce
