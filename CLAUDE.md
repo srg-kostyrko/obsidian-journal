@@ -396,6 +396,22 @@ on it.
   left to re-drive the hover.
 - A test that opens `mode=window` must call `closePopoutWindows()`, or the
   popout steals the next test's modals.
+- The suite runs two workers, so a **sibling worker's Obsidian boot can take OS
+  focus** from the window under test at any moment — and Chrome fires `change`
+  and then `blur` on whatever field that window left focused, with the field
+  still `document.activeElement`, because the field did not lose focus, the
+  window did. Anything committing on those rewrites text a test is part-way
+  through typing: `RuleConditionRow` coerced a half-typed `"#work, #"` back to
+  `"#work"` on one nightly leg, and it reads as a product failure, not as a
+  flake. Tell the two apart by `activeElement`, never by `document.hasFocus()` —
+  focus moving inside a window that has none still has to commit. The steal
+  cannot be staged from inside a session: a popout is the only focus thief
+  reachable, and the window manager is free to refuse it (measured, under two
+  workers), so a spec asserting on it fails for the environment. Test it at unit
+  level. Note also that `focusMainWindow` has to settle Obsidian's `activeLeaf`
+  and not just `activeWindow`: `getLeaf("active")` returns `activeLeaf`
+  whichever window it sits in, so a note with no leaf to reuse opens in the
+  popout while `activeWindow` reads main.
 - Mocha runs a suite's **own** tests before its nested suites, and the shared
   matrix helpers (`assertDecorationMatrix(surface)` in `e2e-tests/journeys/decorations.ts`)
   are `describe` factories that read like plain statements at the call site. A bare

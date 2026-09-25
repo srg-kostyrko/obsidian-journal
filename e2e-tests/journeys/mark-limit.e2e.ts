@@ -3,7 +3,7 @@ import { browser, expect } from "@wdio/globals";
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { UnsettledReadError } from "../support/errors.js";
 
-import { dayAnchor, elementWidthPx } from "./decorations.js";
+import { dayAnchor } from "./decorations.js";
 import { calendar, openSeededCalendarView } from "./view.js";
 
 const DAY = 14;
@@ -73,27 +73,47 @@ describe("decoration mark limit", () => {
     const badge = cell.$('.place-right_top [data-testid="mark-overflow"]');
     await badge.waitForDisplayed({ timeoutMsg: "the overflow badge did not render" });
 
-    const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
     // moveTo() resolves the badge's centre at call time, so a hover sent while the grid is still
     // laying its marks out lands beside the badge and is simply lost — there is no second pointer
     // event to recover it. Re-hover until the popover opens rather than hovering once and waiting.
-    await browser.waitUntil(
-      async () => {
-        await badge.moveTo();
-        return popover.isExisting();
-      },
-      { timeoutMsg: "the overflow popover did not open on hover" },
-    );
-    await expect(popover.$$(".shape-decoration")).toBeElementsArrayOfSize(3);
+    // The reading comes back from that same poll, in one in-page call, because a decoration
+    // re-render replaces the nodes both the popover and the cell's marks are made of: resolving an
+    // element on one round trip and reading its box on the next hit that gap as a stale-element
+    // failure on a nightly leg. Re-hovering is what the retry needs — a replaced badge sits under
+    // a pointer that has not moved, so no mouseenter reopens the popover on its own.
+    const marks = await settled(async () => {
+      await badge.moveTo();
+      return browser.execute((anchor: string) => {
+        const selector = `.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"] .place-right_top`;
+        const slot = document.querySelector(selector);
+        const popover = slot?.querySelector('[data-testid="mark-overflow-popover"]');
+        const popoverMark = popover?.querySelector(".shape-decoration");
+        // Scoped to a direct child of .place-right_top: the popover's own marks also live under
+        // that place span (nested inside .mark-overflow), so a descendant selector would match the
+        // popover copy first and compare it against itself.
+        const cellMark = slot?.querySelector(":scope > .shape-decoration");
+        if (popover == null || popoverMark == null || cellMark == null) return null;
+        const cellHeight = cellMark.getBoundingClientRect().height;
+        // A mark still waiting on layout measures zero, and the ratio below is satisfied by two
+        // zeroes — so an unmeasured mark is "not painted yet", the same as a missing one.
+        if (cellHeight === 0) return null;
+        return {
+          hidden: popover.querySelectorAll(".shape-decoration").length,
+          popoverHeight: popoverMark.getBoundingClientRect().height,
+          cellHeight,
+        };
+      }, dayAnchor(DAY));
+    }, "the overflow popover's marks");
 
+    expect(marks.hidden).toBe(3);
     // The popover must render marks larger, at a readable size — assert the ratio, never an
-    // absolute pixel width, since Obsidian's editor zoom scales authored pixels (elementWidthPx's
-    // own comment covers why). The cell reading is scoped to a direct child of .place-right_top:
-    // the popover's own marks also live under that place span (nested inside .mark-overflow), so
-    // a descendant selector would match the popover copy first and compare it against itself.
-    const popoverMarkWidth = await elementWidthPx(popover.$(".shape-decoration"));
-    const cellMarkWidth = await elementWidthPx(cell.$(".place-right_top > .shape-decoration"));
-    expect(popoverMarkWidth).toBeGreaterThanOrEqual(cellMarkWidth * 2);
+    // absolute pixel height, since Obsidian's editor zoom scales authored pixels. Height, not
+    // width: .place is a flex row inside a minmax(0, 1fr) grid column, so in a cell this narrow
+    // (31px across in the seeded sidebar view, where the badge alone is wider than its third) the
+    // cell's marks shrink to zero width while keeping their height. Comparing widths compared
+    // nothing — any popover width cleared `0 * 2`. The popover's font-size is what enlarges them
+    // and the marks are sized in `em`, so height is the dimension that carries the behavior.
+    expect(marks.popoverHeight).toBeGreaterThanOrEqual(marks.cellHeight * 2);
   });
 
   it("keeps the popover open as the pointer moves from the badge into it", async () => {

@@ -162,6 +162,14 @@ describe("checkbox provider modal condition values", () => {
   // whole value list from the field on every keystroke, including deletions, so backspacing a
   // value down to a bare "#" reads as empty and drops the ", " before it too — one Backspace
   // erasing characters it was never asked to touch.
+  //
+  // This is also the test a nightly leg failed, reading back "#work": a sibling worker's Obsidian
+  // window booted mid-type and took OS focus, and Chrome fires change and blur on the field its
+  // window left focused. RuleConditionRow now commits only when the field itself lost focus, and
+  // that distinction is covered in EditCheckboxProviderModal.test.ts — not here. An e2e cannot
+  // stage it honestly: a popout is the only focus thief reachable from inside a session, and the
+  // window manager is free to refuse it, which turns "the environment did not co-operate" into a
+  // red test (measured, under two workers).
   it("keeps the rest of a value and its separator when backspacing removes only its last character", async () => {
     await openSettings();
     await expandSection(m.tasks_settings_title());

@@ -56,6 +56,21 @@ function commit(): void {
   // markers.
   valuesText.value = displayText(condition.value);
 }
+
+// The boundary is the field losing focus, not the window: a window losing OS focus blurs its
+// focused element too (Chrome fires change and then blur on it), and committing there re-coerces
+// text the user is part-way through typing while they are looking at something else — "#work, #"
+// comes back as "#work", caret still in the field. The field keeps DOM focus across a window
+// blur and loses it on a real one, so activeElement is what tells the two apart. Read off the
+// field's own document rather than the global one, since a popout window has its own. The row's
+// own blur goes with it: a window blur is not the user leaving the row either, so it must not
+// mark the row touched and surface its "enter a value" error over text still being typed.
+function onBlur(event: FocusEvent): void {
+  const field = event.target as Element | null;
+  if (field !== null && field.ownerDocument.activeElement === field) return;
+  commit();
+  emit("blur");
+}
 </script>
 
 <template>
@@ -74,8 +89,7 @@ function commit(): void {
   <UiTextInput
     v-model="valuesText"
     :aria-label="condition.type === 'tag' ? m.tasks_settings_condition_tag() : m.tasks_settings_condition_heading()"
-    @change="commit"
     @keydown.enter="commit"
-    @blur="emit('blur')"
+    @blur="onBlur"
   />
 </template>

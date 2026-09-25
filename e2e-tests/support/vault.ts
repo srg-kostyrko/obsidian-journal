@@ -295,15 +295,36 @@ export async function focusMainWindow(): Promise<void> {
     });
   };
   await focusMain();
+  // Two signals, and both have to hold. `activeWindow` is only what the plugin's own reuse reads;
+  // an open with no leaf to reuse lands in `getLeaf("active")`, which hands back Obsidian's
+  // `activeLeaf` whatever window that sits in — `getUnpinnedLeaf` in app.js returns `activeLeaf`
+  // outright whenever it can navigate, at 1.8.7 and 1.13.7 alike. So a wait on `activeWindow`
+  // alone returns happy with the popout's leaf still the one the next open will use, and the note
+  // opens in the popout — measured, with `activeWindow` reading main before and after. The
+  // deprecated `activeLeaf` is read here deliberately: it is the field that lookup reads.
+  //
+  // One good read is not enough either. `win.focus()` only asks the window manager, which may
+  // refuse — the main window's document reads `hasFocus() === false` throughout — so the popout
+  // still holds real focus and its own focus event is yet to come, moving both back. Require the
+  // pair across consecutive polls, re-driving whenever it breaks: that late event arrives once,
+  // and nothing re-fires it after our next dispatch.
+  let heldInARow = 0;
   await browser.waitUntil(
     async () => {
-      const focused = await browser.executeObsidian(
-        ({ app }) => app.workspace.containerEl.win.activeWindow === app.workspace.containerEl.win,
-      );
-      if (!focused) await focusMain();
-      return focused;
+      const focused = await browser.executeObsidian(({ app }) => {
+        const win = app.workspace.containerEl.win;
+        const active = (app.workspace as unknown as { activeLeaf?: { getContainer(): { win: Window } } }).activeLeaf;
+        return win.activeWindow === win && active?.getContainer().win === win;
+      });
+      if (!focused) {
+        heldInARow = 0;
+        await focusMain();
+        return false;
+      }
+      heldInARow += 1;
+      return heldInARow >= 3;
     },
-    { timeoutMsg: "main window never regained focus after the popout opened" },
+    { timeoutMsg: "main window never held focus and the active leaf after the popout opened" },
   );
 }
 
