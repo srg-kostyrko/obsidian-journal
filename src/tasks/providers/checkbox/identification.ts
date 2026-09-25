@@ -2,31 +2,14 @@ import { match } from "ts-pattern";
 
 import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
 
+import { headingsOf, tagsOf } from "../../note-structure";
+
 import type { CheckboxCondition, CheckboxJournalRule, CheckboxRule } from "./rule-schema";
 
 export interface IdentificationContext {
   readonly structure: NoteStructure;
   readonly vault: CheckboxRule;
   readonly journal: CheckboxJournalRule | null;
-}
-
-function tagsOf(item: StructureListItem, structure: NoteStructure): readonly string[] {
-  const inline = structure.tags
-    .filter((tag) => tag.line >= item.line && tag.line <= item.endLine)
-    .map((tag) => tag.tag);
-  return [...inline, ...structure.frontmatterTags];
-}
-
-function headingsOf(item: StructureListItem, structure: NoteStructure): readonly string[] {
-  const chain: string[] = [];
-  let level = Infinity;
-  for (const heading of structure.headings.toReversed()) {
-    if (heading.line >= item.line) continue;
-    if (heading.level >= level) continue;
-    chain.push(heading.heading);
-    level = heading.level;
-  }
-  return chain;
 }
 
 function check(condition: CheckboxCondition, item: StructureListItem, structure: NoteStructure): boolean {
@@ -40,7 +23,7 @@ function check(condition: CheckboxCondition, item: StructureListItem, structure:
       })
       .with({ type: "heading" }, (c) => {
         if (c.headings.length === 0) return true;
-        const chain = headingsOf(item, structure);
+        const chain = headingsOf(item.line, structure);
         const hit = c.headings.some((heading) => chain.includes(heading));
         return c.condition === "under" ? hit : !hit;
       })
