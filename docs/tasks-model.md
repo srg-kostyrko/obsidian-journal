@@ -449,13 +449,17 @@ parsed — with `conditions:` available when someone needs more. A scope key set
 scope field and has no condition form at all. Two spellings, one model, no parser
 anywhere.
 
-For that to hold, **`selection` is one condition type, not two.** It carries
-headings and tags together —
-`{ type: "selection", condition: "under" | "not-under", headings: [], tags: [] }`
-— rather than expanding into a heading condition plus a tag condition. A key that
-expanded into several would break the one-to-one claim and leave the outer
-`mode` deciding how its parts combine, which is a nesting the flat list does not
-have.
+**The filter reuses identification's condition types.** `tag` and `heading`, exactly as
+`src/tasks/conditions.ts` defines them for a provider's identification rule, plus a `status` arm in
+the same shape. There is no separate `selection` type.
+
+An earlier draft merged headings and tags into one `selection` condition so that a single fence key
+could desugar one to one. That constraint was self-inflicted: it followed from choosing one key
+first. Two keys — `heading:` and `tag:` — each desugar into one condition of a type that already
+exists, and `identifies`' own `headingsOf` and `tagsOf` answer both without a second implementation.
+
+Where this document says "selection", read "the filter's heading and tag conditions". The per-journal
+default those sentences describe is real and is stored on the journal, under `tasks.filter`.
 
 The line this holds is about **who owns the grammar**, not how many options
 exist. Named keys and typed condition objects are a schema: they validate, they
@@ -464,8 +468,8 @@ composes is a language, needing a parser, a precedence table and documentation.
 Dataview and the Tasks plugin each own one; this plugin does not become the
 third.
 
-The keys are `provider`, `source`, `depth` and `date` in scope, `status` and
-`selection` in the filter, plus `sort`. Anything
+The keys are `provider`, `source`, `depth` and `date` in scope, `status`,
+`heading` and `tag` in the filter, plus `sort`. Anything
 outside them is answered by handing the resolved path set to Dataview, which is
 the supported form of the "use Dataview for that" answer — a DQL query cannot
 resolve which notes are September's journal notes without the user hand-encoding
@@ -535,7 +539,7 @@ it neither excludes the item nor votes for it. An item every condition drops out
 of matches, the way an empty condition set does.
 
 Evaluating it as **false** returns **zero** note-property items for a fence
-saying `selection: "## Tasks"`, saying nothing about why — the user asked about
+saying `heading: "## Tasks"`, saying nothing about why — the user asked about
 their daily notes' internal structure and did not ask to drop a provider.
 Evaluating it as **true** is worse, and only under `or`: `heading under ## Tasks`
 _or_ `status done` would return every open note task, because the inapplicable
@@ -575,11 +579,10 @@ unscoped rollover over a template that seeds recurring checkboxes duplicates
 those checkboxes every day, which is the single most common support thread on
 every incumbent.
 
-**Identification does not use `selection`.** A provider's identification rule carries
-finer-grained `tag` and `heading` conditions, because it has no fence sugar to keep
-one-to-one. Its empty condition list also means _everything_, where an empty decoration
-condition list means _nothing_. Reconciling the two vocabularies belongs to #345, where
-the fence keys live.
+**What still differs between identification and the filter.** Both now use the same `tag`
+and `heading` condition types. Identification has no fence sugar to keep one-to-one,
+because it is configured in settings, not hand-typed YAML. Its empty condition list also
+means _everything_, where an empty decoration condition list means _nothing_.
 
 ## Ticking an item
 
@@ -876,7 +879,11 @@ headings in its **content** — which is exactly what the scan reads.
 **Notelets are both a source and a target, but not for every command.** A move
 reads from them when `source` includes them — an action item captured in a
 meeting is exactly the kind of thing that should follow you forward, and the
-default `source: note` keeps it opt-in.
+default `source: note` keeps it opt-in. **That default is a move's, not a listing's.** A listing
+reads and a move writes, so the listing may default wider: reading too much is noise, writing too
+much is data loss. A listing defaults to `source: both`, `depth: literal`, `status: open`. The
+alternative — every default as stated for moves — makes a bare fence in a day note a mirror of the
+note it sits in.
 
 Writing to one splits by command. A **bulk rollover** targets the period note
 only: with zero or three Meeting notelets that day there is no non-arbitrary
