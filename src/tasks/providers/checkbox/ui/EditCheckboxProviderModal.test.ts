@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { screen } from "@testing-library/vue";
+import { fireEvent, screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
@@ -281,6 +281,33 @@ describe("rule editor", () => {
     await userEvent.type(input, "{Backspace}{Backspace}{Backspace}{Backspace}");
 
     expect(input.value).toBe("#work, #");
+  });
+
+  // A window losing OS focus blurs the focused field too — Chrome fires change and then blur on
+  // it, with the field still document.activeElement, because the field did not lose focus, the
+  // window did. A commit bound to those re-coerces text the user is part-way through typing while
+  // they are looking at another window: "#work, #" comes back as "#work". The e2e leg that caught
+  // this had a sibling worker's Obsidian taking focus mid-type. Dispatching the pair without
+  // moving focus is exactly that shape.
+  it("leaves a mid-edit value alone when the window loses focus rather than the field", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const input = screen.getByLabelText<HTMLInputElement>(m.tasks_settings_condition_tag());
+    await userEvent.type(input, "#work, #home");
+    await userEvent.type(input, "{Backspace}{Backspace}{Backspace}{Backspace}");
+
+    await fireEvent.change(input);
+    await fireEvent.blur(input);
+
+    expect(input.value).toBe("#work, #");
+
+    // And the commit that was skipped is not lost with it: leaving the field for real still
+    // coerces, which a guard hung on the change event alone would not — the browser fires change
+    // once per edit, so the one swallowed above would have been the only one coming.
+    await userEvent.tab();
+
+    expect(input.value).toBe("#work");
   });
 
   // Same shape as the tag case above, for a heading condition — the row is shared, and a
