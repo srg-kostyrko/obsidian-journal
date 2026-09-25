@@ -55,6 +55,14 @@ export class NoCanonicalSymbolError extends Error {
 export type TickError =
   TaskLineMovedError | NotATaskLineError | NoCanonicalSymbolError | NoteNotFoundError | NoteWriteError;
 
+// `NaN` is the one that bites: it fails every `<` comparison, `Array.at(NaN)` reads index 0 so a
+// bounds check passes, and `slice(0, NaN)`/`slice(NaN + 1)` then reassemble the note with a copy of
+// itself appended. A fraction does not duplicate — `at` and `slice` truncate alike — but it would
+// silently tick the floored line, which this path refuses to guess at.
+function isAddressableLine(line: number): boolean {
+  return Number.isSafeInteger(line) && line >= 0;
+}
+
 export function tickTargetStatus(status: TaskStatus): TaskStatus {
   return isDone(status) ? "todo" : "done";
 }
@@ -77,9 +85,7 @@ export function canonicalSymbol(canonical: Record<string, string>, status: TaskS
 export function tickLine(content: string, item: TaskItem, symbol: string): TickOutcome {
   const display = item.display;
   if (display.kind !== "line") return { reason: "not-a-task" };
-  // `Array.at` addresses from the end for a negative index, so a provider handing one back would
-  // tick the wrong line and, through the reassembly below, append a second copy of the whole note.
-  if (display.line < 0) return { reason: "moved" };
+  if (!isAddressableLine(display.line)) return { reason: "moved" };
   const lines = content.split("\n");
   const current = lines.at(display.line);
   // The item's markdown was hydrated from a read that may now be stale, and an item that was
@@ -110,6 +116,9 @@ export class TickService {
   toggle(item: TaskItem): AsyncResult<void, TickError> {
     const display = item.display;
     if (display.kind !== "line") return AsyncResult.err(new NotATaskLineError(item.path));
+    // Decidable from the item alone, so it is settled before the note is opened, the same as the
+    // symbol below.
+    if (!isAddressableLine(display.line)) return AsyncResult.err(new TaskLineMovedError(item.path, display.line));
     const target = tickTargetStatus(item.status);
     const symbol = canonicalSymbol(this.#settings.state.canonical, target);
     if (symbol === null) return AsyncResult.err(new NoCanonicalSymbolError(target));

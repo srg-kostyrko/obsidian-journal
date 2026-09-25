@@ -58,6 +58,17 @@ describe("tickLine", () => {
     expect(tickLine("a\nb\n- [ ] Ship it", item(-1, "- [ ] Ship it"), "x")).toEqual({ reason: "moved" });
   });
 
+  it("aborts on a line that is not a whole number rather than appending a copy of the note", () => {
+    expect(tickLine("- [ ] Ship it\nb\nc\n", item(NaN, "- [ ] Ship it"), "x")).toEqual({ reason: "moved" });
+    expect(tickLine("- [ ] Ship it\n", item(Infinity, "- [ ] Ship it"), "x")).toEqual({
+      reason: "moved",
+    });
+  });
+
+  it("aborts on a fractional line rather than ticking the line it floors to", () => {
+    expect(tickLine("x\n- [ ] Ship it\n", item(1.7, "- [ ] Ship it"), "x")).toEqual({ reason: "moved" });
+  });
+
   it("aborts when the item was never hydrated, even where the line it points at is blank", () => {
     expect(tickLine("\n\n", item(0, null), "x")).toEqual({ reason: "moved" });
   });
@@ -337,6 +348,22 @@ describe("TickService", () => {
 
     expectErr(result);
     expect(result.error.kind).toBe("no-canonical-symbol");
+    expect(process).not.toHaveBeenCalled();
+    expect(await contentOf(notes)).toBe(content);
+  });
+
+  it.each([
+    ["not a whole number", NaN],
+    ["fractional", 1.7],
+  ])("never opens the note when the item's line is %s", async (_label, line) => {
+    const content = "x\n- [ ] Ship it\nb\n";
+    const { notes, service } = await build({ content });
+    const process = vi.spyOn(notes, "process");
+
+    const result = await service.toggle(item(line, "- [ ] Ship it"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("task-line-moved");
     expect(process).not.toHaveBeenCalled();
     expect(await contentOf(notes)).toBe(content);
   });
