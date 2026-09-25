@@ -8,6 +8,7 @@ import { CheckboxTaskProvider } from "./providers/checkbox/provider";
 import { checkboxSlice } from "./providers/checkbox/slice";
 import { TaskHostService } from "./task-host";
 import { TaskIndex } from "./task-index";
+import { TickService } from "./tick";
 import { TaskHostToken, TaskProviderToken } from "./types";
 import { tasksUiModule } from "./ui-module";
 
@@ -20,6 +21,7 @@ export const tasksCoreModule: Module = {
     c.register(SliceDefinitionToken).useValue(checkboxSlice);
     c.register(EditCheckboxProviderFlow).useClass(EditCheckboxProviderFlow);
     c.register(EditJournalTasksFlow).useClass(EditJournalTasksFlow);
+    c.register(TickService).useClass(TickService);
   },
 };
 
