@@ -67,17 +67,18 @@ interface Entry {
   readonly context: boolean;
 }
 
-// rolled sits between the open statuses and the done ones: it is neither, and a listing that
-// re-sorts by status is asking "what still needs me", which a rolled item no longer does.
-const STATUS_ORDER: readonly TaskStatus[] = [
-  "todo",
-  "in-progress",
-  "on-hold",
-  "rolled",
-  "done",
-  "cancelled",
-  "non-task",
-];
+// Every status a listing can show, in the order a status sort shows them. rolled sits between the
+// open statuses and the done ones: it is neither, and a listing re-sorted by status is asking
+// "what still needs me", which a rolled item no longer does. non-task is absent on purpose —
+// gather drops it before any sort can see it.
+const STATUS_ORDER: readonly TaskStatus[] = ["todo", "in-progress", "on-hold", "rolled", "done", "cancelled"];
+
+// A status this list does not name sorts after every one it does. Left to indexOf's -1 it would
+// sort ahead of todo instead, which is a silent answer to a question nobody asked.
+function statusRank(status: TaskStatus): number {
+  const rank = STATUS_ORDER.indexOf(status);
+  return rank === -1 ? STATUS_ORDER.length : rank;
+}
 
 function lineOf(item: TaskItem): number {
   return item.display.kind === "line" ? item.display.line : -1;
@@ -221,7 +222,8 @@ function keptInNote(items: readonly TaskItem[], matched: ReadonlySet<string>): r
   }
   // Document order, restored: items arrive in whatever order their providers published them, while
   // a parent has to precede its child for depth to read as nesting and for the tree pass below to
-  // find it. A note-kind item has no line and keeps its published position among its equals.
+  // find it. A note-kind item has no line to sort by, so it takes -1 and leads its note's rows;
+  // two of them hold their relative order, the sort being stable.
   return [...kept.values()].toSorted((a, b) => lineOf(a.item) - lineOf(b.item));
 }
 
@@ -229,7 +231,7 @@ function comparatorFor(sort: TaskSort): (a: Entry, b: Entry) => number {
   if (sort === "document") return (a, b) => a.id - b.id;
   if (sort === "status") {
     return (a, b) => {
-      const rank = STATUS_ORDER.indexOf(a.item.status) - STATUS_ORDER.indexOf(b.item.status);
+      const rank = statusRank(a.item.status) - statusRank(b.item.status);
       return rank === 0 ? a.id - b.id : rank;
     };
   }

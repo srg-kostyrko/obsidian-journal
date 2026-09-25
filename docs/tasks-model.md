@@ -537,11 +537,26 @@ done ones because it is neither, and a listing sorted by status is asking what
 still needs the user. For a date role, an item carrying no date of that role
 sorts last, so naming a role never buries the items that answer it.
 
-**`group` is deferred**, not refused. The listing already groups — #345 specifies
-the grouped-entries shape the notelets listing uses, and a rollup groups by
-source note by construction. A user-chosen grouping therefore has to say how it
-composes with the one already there, and nobody has asked yet. When someone does,
-the question is how the two interact, not whether it is allowed.
+**The listing is flat, and a sort reaches across the whole of it.** One row per
+item, each carrying the note it came from; there is no period → source → item
+tree of the kind the notelets listing builds. A rollup therefore does **not**
+group by source note — under `document` the rows happen to come out note by note,
+because document order is the order the notes were walked in, but under `status`
+or a date role the rows of every source note interleave freely. That is the
+point: "everything still open this month, by due date" is exactly the question a
+rollup exists to answer, and it cannot be asked of a listing that sorts only
+within each note.
+
+This binds anything that renders these rows. A renderer must **not** derive
+groups by scanning consecutive runs of `row.source` — under any non-default sort
+that yields fragmented groups, the same note opening several times down the page.
+The source belongs on the row, beside the item, the way `TaskList` renders it.
+
+**`group` is deferred**, not refused — and on the honest ground that **nothing
+groups today**. A user-chosen grouping has to say how it composes with the sort,
+which currently owns the whole ordering, and nobody has asked yet. When someone
+does, the question is how grouping and a global sort interact, not whether
+grouping is allowed.
 
 **A condition that cannot apply to an item is _dropped_ for that item**, before
 the filter is evaluated. Not false, and **not true** — removed from the set, so

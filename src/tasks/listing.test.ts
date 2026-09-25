@@ -166,7 +166,11 @@ describe("buildTaskListing", () => {
   // target instead of widening it.
   it("widens rather than replaces on rollup — the month note's own items stay alongside its days'", async () => {
     const dependencies = buildDependencies({
-      items: { [MONTH]: [line(MONTH, 1)], [DAY]: [line(DAY, 3)], [OTHER_DAY]: [line(OTHER_DAY, 3)] },
+      items: {
+        [MONTH]: [line(MONTH, 1), line(MONTH, 6, { status: "done" })],
+        [DAY]: [line(DAY, 3)],
+        [OTHER_DAY]: [line(OTHER_DAY, 3), line(OTHER_DAY, 8, { status: "done" })],
+      },
       notes: {
         Monthly: { "2026-09-01": MONTH },
         Daily: { "2026-09-22": DAY, "2026-09-23": OTHER_DAY },
