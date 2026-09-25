@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { FakeNotesService } from "@/infrastructure/host/testing";
@@ -52,6 +52,10 @@ describe("tickLine", () => {
 
   it("aborts when the line drifted past the end of the note", () => {
     expect(tickLine("# Day\n", item(9, "- [ ] Ship it"), "x")).toEqual({ reason: "moved" });
+  });
+
+  it("aborts on a negative line rather than addressing the note from the end", () => {
+    expect(tickLine("a\nb\n- [ ] Ship it", item(-1, "- [ ] Ship it"), "x")).toEqual({ reason: "moved" });
   });
 
   it("aborts when the item was never hydrated, even where the line it points at is blank", () => {
@@ -131,8 +135,21 @@ describe("tickLine", () => {
     expect(tickLine("> [ ] Ship it\n", item(0, "> [ ] Ship it"), "x")).toEqual({ reason: "not-a-task" });
   });
 
+  it("refuses an indented checkbox with no list bullet", () => {
+    expect(tickLine("  [ ] Ship it\n", item(0, "  [ ] Ship it"), "x")).toEqual({ reason: "not-a-task" });
+    expect(tickLine("\t[ ] Ship it\n", item(0, "\t[ ] Ship it"), "x")).toEqual({ reason: "not-a-task" });
+  });
+
   it("replaces a marker that is a single emoji", () => {
     expect(tickLine("- [✅] Ship it\n", item(0, "- [✅] Ship it"), " ")).toEqual({ content: "- [ ] Ship it\n" });
+  });
+
+  it("replaces a marker that is an astral emoji, which spans two UTF-16 units", () => {
+    expect(tickLine("- [🔁] Ship it\n", item(0, "- [🔁] Ship it"), "x")).toEqual({ content: "- [x] Ship it\n" });
+  });
+
+  it("writes an astral symbol into the marker", () => {
+    expect(tickLine("- [ ] Ship it\n", item(0, "- [ ] Ship it"), "🔁")).toEqual({ content: "- [🔁] Ship it\n" });
   });
 
   it("writes the symbol it is given rather than a hardcoded one", () => {
@@ -183,14 +200,15 @@ describe("tickLine", () => {
     expectSingleCharacterEdit(content, result.content, content.indexOf("[/]") + 1, "x");
   });
 
-  it("writes a multi-code-unit symbol without disturbing the surrogate pairs around it", () => {
+  it("writes an astral symbol without disturbing the surrogate pairs around it", () => {
     const line = "  - [ ] Ship 𝛁 it 🔁 ✅ 2026-09-25";
     const content = `${line}\n`;
-    const result = tickLine(content, item(0, line), "✅");
+    const result = tickLine(content, item(0, line), "🏁");
 
     expect("content" in result).toBe(true);
     if (!("content" in result)) return;
-    expectSingleCharacterEdit(content, result.content, content.indexOf("[ ]") + 1, "✅");
+    expect("🏁".length).toBe(2);
+    expectSingleCharacterEdit(content, result.content, content.indexOf("[ ]") + 1, "🏁");
   });
 
   it("refuses an item that has no line at all", () => {
@@ -222,6 +240,15 @@ describe("canonicalSymbol", () => {
   it("refuses a value that is not a single marker", () => {
     expect(canonicalSymbol({ done: "" }, "done")).toBeNull();
     expect(canonicalSymbol({ done: "xy" }, "done")).toBeNull();
+  });
+
+  it("refuses a line terminator, which is one code point but would cut the line in two", () => {
+    expect(canonicalSymbol({ done: "\n" }, "done")).toBeNull();
+    expect(canonicalSymbol({ done: "\r" }, "done")).toBeNull();
+  });
+
+  it("accepts an astral marker, which the status-map editor also counts as one", () => {
+    expect(canonicalSymbol({ done: "🔁" }, "done")).toBe("🔁");
   });
 });
 
@@ -295,6 +322,22 @@ describe("TickService", () => {
 
     expectErr(result);
     expect(result.error.kind).toBe("no-canonical-symbol");
+    expect(await contentOf(notes)).toBe(content);
+  });
+
+  it.each([
+    ["a newline", "\n"],
+    ["a carriage return", "\r"],
+  ])("never opens the note when the map assigns %s to the status it would write", async (_label, symbol) => {
+    const content = "- [ ] Ship it\n";
+    const { notes, service } = await build({ content, canonical: { todo: " ", done: symbol } });
+    const process = vi.spyOn(notes, "process");
+
+    const result = await service.toggle(item(0, "- [ ] Ship it"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("no-canonical-symbol");
+    expect(process).not.toHaveBeenCalled();
     expect(await contentOf(notes)).toBe(content);
   });
 

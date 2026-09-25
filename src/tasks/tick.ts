@@ -64,14 +64,22 @@ export function tickTargetStatus(status: TaskStatus): TaskStatus {
 // when the last symbol answering for that status is removed. Falling back to the shipped default
 // would write a marker this vault's own map reads as something else, so refuse instead — and
 // refuse a value that is not one marker, which would break the checkbox shape rather than fill it.
+// A line terminator is one code point and would cut the user's line in two, taking every item
+// below it with it; StatusMapEditor trims and cannot author one, but the slice schema is a
+// `v.record(v.string(), v.string())` behind a fallback, so a synced or hand-edited data.json
+// reaches here with no repair.
 export function canonicalSymbol(canonical: Record<string, string>, status: TaskStatus): string | null {
   const symbol: string | undefined = canonical[status];
-  return symbol !== undefined && [...symbol].length === 1 ? symbol : null;
+  if (symbol === undefined || [...symbol].length !== 1 || /[\r\n]/u.test(symbol)) return null;
+  return symbol;
 }
 
 export function tickLine(content: string, item: TaskItem, symbol: string): TickOutcome {
   const display = item.display;
   if (display.kind !== "line") return { reason: "not-a-task" };
+  // `Array.at` addresses from the end for a negative index, so a provider handing one back would
+  // tick the wrong line and, through the reassembly below, append a second copy of the whole note.
+  if (display.line < 0) return { reason: "moved" };
   const lines = content.split("\n");
   const current = lines.at(display.line);
   // The item's markdown was hydrated from a read that may now be stale, and an item that was
