@@ -10,12 +10,13 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import RuleConditionRow from "./RuleConditionRow.vue";
 
-import type { CheckboxCondition } from "../rule-schema";
+import type { CheckboxEditableCondition } from "../rule-schema";
 
 // Typed as the mode/conditions pair rather than CheckboxRule so EditJournalTasksModal can bind
 // the same editor to a journal rule, which carries an extra `compose` field this component never
-// touches.
-const rule = defineModel<{ mode: "and" | "or"; conditions: CheckboxCondition[] }>({ required: true });
+// touches. Conditions are the narrower editable type, not the full CheckboxCondition union — this
+// editor never offers a status condition (see rule-schema.ts).
+const rule = defineModel<{ mode: "and" | "or"; conditions: CheckboxEditableCondition[] }>({ required: true });
 
 // The caller (each modal) computes validity from the whole draft via checkboxRuleConditionErrors
 // and owns disabling Save — this component only renders the message next to the row it belongs to.
@@ -27,7 +28,7 @@ const props = withDefaults(defineProps<{ errors?: ReadonlyMap<number, string> }>
 // silently reassign an index-keyed touched flag to the wrong row. "Add condition" creates an
 // empty row by design, so its error stays quiet until the user has actually left its input once —
 // showing it immediately would flag the normal first moment of editing as a mistake.
-const touched = reactive(new Set<CheckboxCondition>());
+const touched = reactive(new Set<CheckboxEditableCondition>());
 
 function addCondition(): void {
   rule.value.conditions.push({ type: "tag", condition: "has", tags: [] });
@@ -38,7 +39,7 @@ function removeCondition(index: number): void {
   if (condition) touched.delete(condition);
 }
 
-function errorsFor(condition: CheckboxCondition, index: number): string[] {
+function errorsFor(condition: CheckboxEditableCondition, index: number): string[] {
   if (!touched.has(condition)) return [];
   const message = props.errors?.get(index);
   return message ? [message] : [];

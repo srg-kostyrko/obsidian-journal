@@ -132,4 +132,18 @@ describe("identifies", () => {
     expect(identifies(item, { structure: nested, vault: underTasksOnly, journal: null })).toBe(true);
     expect(identifies(item, { structure: nested, vault: underToday, journal: null })).toBe(false);
   });
+  // Status belongs to filtering, not identification — a status condition must never sink an
+  // otherwise-matching rule, nor let an otherwise-empty rule start matching nothing.
+  it("treats a status condition as a no-op, alone or alongside a real condition", () => {
+    const statusOnly = {
+      mode: "and" as const,
+      conditions: [{ type: "status" as const, condition: "is" as const, statuses: ["done"] }],
+    };
+    expect(identifies(item, { structure, vault: statusOnly, journal: null })).toBe(true);
+    const statusAndTag = {
+      mode: "and" as const,
+      conditions: [...statusOnly.conditions, ...otherTag.conditions],
+    };
+    expect(identifies(item, { structure, vault: statusAndTag, journal: null })).toBe(false);
+  });
 });

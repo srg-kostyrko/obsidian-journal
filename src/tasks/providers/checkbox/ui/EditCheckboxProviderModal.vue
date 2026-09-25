@@ -10,6 +10,7 @@ import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { checkboxRuleConditionErrors } from "../rule-form-schema";
+import { isEditableCondition } from "../rule-schema";
 import { checkboxSlice } from "../slice";
 
 import RuleEditor from "./RuleEditor.vue";
@@ -21,10 +22,17 @@ const slice = useService(SettingsService).getSlice(checkboxSlice);
 // A deep copy, not a live binding: the editors below mutate their model in place, and the whole
 // point of the modal is that nothing reaches settings until Save. cloneFnJSON rather than toRaw —
 // toRaw is shallow and the slice embeds reactive proxies at depth.
+//
+// The rule's conditions are filtered to the editable arms — a status condition never affects
+// identification (see identification.ts) and RuleEditor cannot author one, so a stray one from a
+// hand-edited or future-schema value is dropped from the draft rather than crashing the editor.
 const draft = reactive({
   statusMap: cloneFnJSON(slice.state.statusMap),
   canonical: cloneFnJSON(slice.state.canonical),
-  rule: cloneFnJSON(slice.state.rule),
+  rule: {
+    mode: slice.state.rule.mode,
+    conditions: cloneFnJSON(slice.state.rule.conditions).filter(isEditableCondition),
+  },
 });
 
 // Recomputed on every keystroke against the draft, never against the slice — nothing here

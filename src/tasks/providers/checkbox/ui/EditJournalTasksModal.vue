@@ -10,10 +10,11 @@ import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { checkboxRuleConditionErrors } from "../rule-form-schema";
+import { isEditableCondition } from "../rule-schema";
 
 import RuleEditor from "./RuleEditor.vue";
 
-import type { CheckboxCondition, CheckboxJournalRule } from "../rule-schema";
+import type { CheckboxEditableCondition, CheckboxJournalRule } from "../rule-schema";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
@@ -27,9 +28,12 @@ const compose = ref<CheckboxJournalRule["compose"]>(stored?.compose ?? "inherit"
 // mutates its model in place, and a shallow `{ ...condition }` per condition still shares each
 // condition's `tags`/`headings` array with the store. cloneFnJSON rather than toRaw, which is
 // shallow and would not touch those nested arrays either.
-const draft = ref<{ mode: "and" | "or"; conditions: CheckboxCondition[] }>({
+//
+// Filtered to the editable arms for the same reason as EditCheckboxProviderModal's draft: a
+// status condition is a no-op for identification and RuleEditor cannot author one.
+const draft = ref<{ mode: "and" | "or"; conditions: CheckboxEditableCondition[] }>({
   mode: stored?.mode ?? "and",
-  conditions: stored ? cloneFnJSON(stored.conditions) : [],
+  conditions: stored ? cloneFnJSON(stored.conditions).filter(isEditableCondition) : [],
 });
 
 // Inherit renders no RuleEditor at all, so there is nothing to validate — an empty condition

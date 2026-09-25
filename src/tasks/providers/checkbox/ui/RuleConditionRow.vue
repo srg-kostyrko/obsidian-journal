@@ -7,9 +7,9 @@ import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { conditionValues } from "../condition-text";
 
-import type { CheckboxCondition } from "../rule-schema";
+import type { CheckboxEditableCondition } from "../rule-schema";
 
-const condition = defineModel<CheckboxCondition>({ required: true });
+const condition = defineModel<CheckboxEditableCondition>({ required: true });
 
 // Multi-root components get no automatic attribute fallthrough, so a parent-side `@blur` on
 // <RuleConditionRow> reaches nothing without this — RuleEditor uses it to decide when this row
@@ -19,14 +19,14 @@ const emit = defineEmits<{ blur: [] }>();
 // Switching the type has to replace the whole object, not just the `type` field: `tags` and
 // `headings` do not coexist on the discriminated union, so leaving the old type's field behind
 // would produce a value the schema itself could not have parsed.
-function setType(type: CheckboxCondition["type"]): void {
+function setType(type: CheckboxEditableCondition["type"]): void {
   condition.value =
     type === "tag"
       ? { type: "tag", condition: "has", tags: [] }
       : { type: "heading", condition: "under", headings: [] };
 }
 
-function displayText(value: CheckboxCondition): string {
+function displayText(value: CheckboxEditableCondition): string {
   return (value.type === "tag" ? value.tags : value.headings).join(", ");
 }
 
@@ -74,7 +74,7 @@ function onBlur(event: FocusEvent): void {
 </script>
 
 <template>
-  <UiDropdown :model-value="condition.type" @update:model-value="setType($event as CheckboxCondition['type'])">
+  <UiDropdown :model-value="condition.type" @update:model-value="setType($event as CheckboxEditableCondition['type'])">
     <option value="tag">{{ m.tasks_settings_condition_tag() }}</option>
     <option value="heading">{{ m.tasks_settings_condition_heading() }}</option>
   </UiDropdown>
