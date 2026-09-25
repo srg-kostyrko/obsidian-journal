@@ -550,7 +550,8 @@ within each note.
 This binds anything that renders these rows. A renderer must **not** derive
 groups by scanning consecutive runs of `row.source` — under any non-default sort
 that yields fragmented groups, the same note opening several times down the page.
-The source belongs on the row, beside the item, the way `TaskList` renders it.
+The source belongs on the row, beside the item, rather than folded into a
+heading above a run of rows.
 
 **`group` is deferred**, not refused — and on the honest ground that **nothing
 groups today**. A user-chosen grouping has to say how it composes with the sort,
