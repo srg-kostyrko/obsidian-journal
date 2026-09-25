@@ -990,3 +990,10 @@ None is a decision — each is work this model is waiting on.
   **link density** rather than note count. Time Ruler hung indefinitely on a
   2,000-note vault, and an anonymised copy of that same vault did not reproduce
   it.
+- **Nesting is unrecoverable from `parent` alone for a note whose list starts at line 0.**
+  Obsidian encodes a root item's parent as `-(list's first line)` and a child's parent as its
+  parent's `position.start.line`; for a list starting at line 0 both encodings produce the same
+  `0`, so a root item and a genuine child of the line-0 item are indistinguishable in that field.
+  `NoteStructureService` resolves the ambiguity toward "no parent" — nesting goes missing rather
+  than wrong — because the alternative, disambiguating by `position.start.col`, would widen
+  `StructureListItem` for every consumer. Open question, not a settled answer.

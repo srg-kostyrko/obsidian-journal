@@ -78,6 +78,27 @@ describe("NoteStructureService", () => {
     ]);
   });
 
+  it("normalizes the root marker at line 0 without letting a list item become its own parent", () => {
+    const { service, host } = build();
+    const path = "day.md" as VaultPath;
+    host.putFile(path);
+    host.emitMetadata(path, {
+      listItems: [
+        { task: " ", position: pos(0), parent: -0 },
+        { task: " ", position: pos(4), parent: -4 },
+        { task: " ", position: pos(5), parent: 4 },
+      ],
+    });
+
+    const structure = service.get(path);
+    const value = structure.isSome() ? structure.value : null;
+    expect(value?.listItems).toEqual([
+      { marker: " ", line: 0, endLine: 0, parent: null },
+      { marker: " ", line: 4, endLine: 4, parent: null },
+      { marker: " ", line: 5, endLine: 5, parent: 4 },
+    ]);
+  });
+
   it("keeps a frontmatter tag that also appears inline", () => {
     const { service, host } = build();
     const path = "day.md" as VaultPath;
