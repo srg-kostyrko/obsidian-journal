@@ -95,8 +95,40 @@ describe("tickLine", () => {
     expect(tickLine("- [] Ship it\n", item(0, "- [] Ship it"), "x")).toEqual({ reason: "not-a-task" });
   });
 
-  it("refuses a task inside a blockquote or callout rather than rewriting it", () => {
-    expect(tickLine("> - [ ] Ship it\n", item(0, "> - [ ] Ship it"), "x")).toEqual({ reason: "not-a-task" });
+  it("ticks a task inside a blockquote", () => {
+    expect(tickLine("> - [ ] Ship it\n", item(0, "> - [ ] Ship it"), "x")).toEqual({ content: "> - [x] Ship it\n" });
+  });
+
+  it("ticks a task inside a nested blockquote", () => {
+    const line = "> > - [ ] Ship it";
+    expect(tickLine(`${line}\n`, item(0, line), "x")).toEqual({ content: "> > - [x] Ship it\n" });
+  });
+
+  it("ticks a task inside a callout, keeping the quote marker and the marker it had", () => {
+    const content = "> [!todo] Chores\n> 2) [/] Water the plants\n";
+    const result = tickLine(content, item(1, "> 2) [/] Water the plants"), "x");
+    expect(result).toEqual({ content: "> [!todo] Chores\n> 2) [x] Water the plants\n" });
+  });
+
+  it("ticks a quoted task written with no space after the quote marker", () => {
+    expect(tickLine(">- [ ] Ship it\n", item(0, ">- [ ] Ship it"), "x")).toEqual({ content: ">- [x] Ship it\n" });
+  });
+
+  it("refuses quoted prose", () => {
+    expect(tickLine("> Some prose\n", item(0, "> Some prose"), "x")).toEqual({ reason: "not-a-task" });
+  });
+
+  it("refuses a quoted callout header", () => {
+    expect(tickLine("> [!todo] Chores\n", item(0, "> [!todo] Chores"), "x")).toEqual({ reason: "not-a-task" });
+  });
+
+  it("refuses a quoted list item that carries no checkbox", () => {
+    expect(tickLine("> - Ship it\n", item(0, "> - Ship it"), "x")).toEqual({ reason: "not-a-task" });
+  });
+
+  it("refuses a checkbox with no list bullet, quoted or not", () => {
+    expect(tickLine("[ ] Ship it\n", item(0, "[ ] Ship it"), "x")).toEqual({ reason: "not-a-task" });
+    expect(tickLine("> [ ] Ship it\n", item(0, "> [ ] Ship it"), "x")).toEqual({ reason: "not-a-task" });
   });
 
   it("replaces a marker that is a single emoji", () => {
@@ -134,6 +166,16 @@ describe("tickLine", () => {
   it("changes one byte of a tab-indented nested task carrying signifiers, a tag and a block id", () => {
     const line = "\t\t3) [/] Water the plants  🔁 every week 📅 2026-09-25 [priority:: high] #home ^abc123  ";
     const content = `# Day\n\n- [ ] Parent\n${line}\n\nfooter\n`;
+    const result = tickLine(content, item(3, line), "x");
+
+    expect("content" in result).toBe(true);
+    if (!("content" in result)) return;
+    expectSingleCharacterEdit(content, result.content, content.indexOf("[/]") + 1, "x");
+  });
+
+  it("changes one byte of that same task quoted inside a nested callout", () => {
+    const line = "  > > \t3) [/] Water the plants  🔁 every week 📅 2026-09-25 [priority:: high] #home ^abc123  ";
+    const content = `# Day\n\n> [!todo] Chores\n${line}\n\nfooter\n`;
     const result = tickLine(content, item(3, line), "x");
 
     expect("content" in result).toBe(true);

@@ -8,13 +8,15 @@ import { isDone } from "./status";
 
 import type { TaskItem, TaskStatus } from "./types";
 
-// Anchored at the line start and deliberately narrow: the one matcher failure behind Time Ruler's
-// data loss was a pattern loose enough to eat a leading number. A task inside a blockquote or a
-// callout (`> - [ ] …`) therefore does not match and is refused rather than rewritten — those
-// lines are extracted as items, so ticking one needs this matcher widened on purpose first.
-// The `u` flag is load-bearing: the status-map editor accepts any single code point as a marker,
-// and without it `(.)` splits an emoji marker across the brackets and the match fails.
-const MARKER = /^(\s*(?:[-*+]|\d+[.)])\s+\[)(.)(\])/u;
+// Anchored at the line start and everything before the marker is captured, never re-authored: the
+// one matcher failure behind Time Ruler's data loss was a pattern loose enough to eat a leading
+// number. The blockquote arm covers tasks inside a quote or a callout (`> [!todo]`), nested ones
+// included — metadataCache lists those like any other list item, so they render as rows and a
+// click on one has to land. The quote markers are bytes we found and did not name, so they ride
+// through in the prefix untouched. The `u` flag is load-bearing: the status-map editor accepts any single
+// code point as a marker, and without it `(.)` splits an emoji marker across the brackets and the
+// match fails.
+const MARKER = /^(\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[)(.)(\])/u;
 
 export type TickRefusal = "moved" | "not-a-task";
 
