@@ -22,16 +22,22 @@ const slice = useService(SettingsService).getSlice(checkboxSlice);
 // A deep copy, not a live binding: the editors below mutate their model in place, and the whole
 // point of the modal is that nothing reaches settings until Save. cloneFnJSON rather than toRaw —
 // toRaw is shallow and the slice embeds reactive proxies at depth.
-//
-// The rule's conditions are filtered to the editable arms — a status condition never affects
-// identification (see identification.ts) and RuleEditor cannot author one, so a stray one from a
-// hand-edited or future-schema value is dropped from the draft rather than crashing the editor.
+const storedConditions = cloneFnJSON(slice.state.rule.conditions);
+
+// Conditions this editor cannot render — currently only `status` — captured once at open time and
+// never touched by the draft below. RuleEditor's model is filtered to the editable arms only, so
+// building the draft straight from the filtered list would silently drop these on the next Save;
+// they are spliced back in save() instead, so a stray one (which can only reach storage through a
+// hand-edited data.json or a future write, since this UI cannot author one — see rule-schema.ts)
+// survives the round trip.
+const preservedConditions = storedConditions.filter((condition) => !isEditableCondition(condition));
+
 const draft = reactive({
   statusMap: cloneFnJSON(slice.state.statusMap),
   canonical: cloneFnJSON(slice.state.canonical),
   rule: {
     mode: slice.state.rule.mode,
-    conditions: cloneFnJSON(slice.state.rule.conditions).filter(isEditableCondition),
+    conditions: storedConditions.filter(isEditableCondition),
   },
 });
 
@@ -50,7 +56,12 @@ function save(): void {
   // modal is open is legitimately overwritten by this Save.
   slice.state.statusMap = draft.statusMap;
   slice.state.canonical = draft.canonical;
-  slice.state.rule = draft.rule;
+  // Edited conditions first, then whatever this editor could not render, in its original
+  // relative order — a stable, predictable place for conditions the user never saw or touched.
+  slice.state.rule = {
+    mode: draft.rule.mode,
+    conditions: [...draft.rule.conditions, ...preservedConditions],
+  };
   api.submit();
 }
 </script>

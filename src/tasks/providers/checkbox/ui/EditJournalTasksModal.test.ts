@@ -110,6 +110,28 @@ describe("EditJournalTasksModal", () => {
     expect(stored?.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#work", "#home"] });
   });
 
+  // Same reasoning as EditCheckboxProviderModal's matching test: the editor's narrower
+  // CheckboxEditableCondition surface must not be the thing that deletes a stored status
+  // condition the first time this modal saves, even with nothing edited.
+  it("preserves a stored status condition across a no-op Save", async () => {
+    const { repository } = await mount({
+      checkbox: {
+        compose: "narrow",
+        mode: "and",
+        conditions: [
+          { type: "status", condition: "is", statuses: ["done"] },
+          { type: "tag", condition: "has", tags: ["#task"] },
+        ],
+      },
+    });
+
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.checkbox;
+    expect(stored?.conditions).toHaveLength(2);
+    expect(stored?.conditions).toContainEqual({ type: "status", condition: "is", statuses: ["done"] });
+  });
+
   // Inherit means "this journal has no rule of its own", which is an absent key, not a stored
   // rule whose compose happens to say inherit.
   it("clears the journal's rule when switched back to inherit", async () => {

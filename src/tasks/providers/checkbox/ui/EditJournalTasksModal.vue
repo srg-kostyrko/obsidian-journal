@@ -28,12 +28,16 @@ const compose = ref<CheckboxJournalRule["compose"]>(stored?.compose ?? "inherit"
 // mutates its model in place, and a shallow `{ ...condition }` per condition still shares each
 // condition's `tags`/`headings` array with the store. cloneFnJSON rather than toRaw, which is
 // shallow and would not touch those nested arrays either.
-//
-// Filtered to the editable arms for the same reason as EditCheckboxProviderModal's draft: a
-// status condition is a no-op for identification and RuleEditor cannot author one.
+const storedConditions = stored ? cloneFnJSON(stored.conditions) : [];
+
+// Same round-trip guarantee as EditCheckboxProviderModal's draft: conditions this editor cannot
+// render (currently only `status`) are captured once here and spliced back in save(), after the
+// edited conditions, so they survive a Save instead of being silently discarded.
+const preservedConditions = storedConditions.filter((condition) => !isEditableCondition(condition));
+
 const draft = ref<{ mode: "and" | "or"; conditions: CheckboxEditableCondition[] }>({
   mode: stored?.mode ?? "and",
-  conditions: stored ? cloneFnJSON(stored.conditions).filter(isEditableCondition) : [],
+  conditions: storedConditions.filter(isEditableCondition),
 });
 
 // Inherit renders no RuleEditor at all, so there is nothing to validate — an empty condition
@@ -54,13 +58,15 @@ function save(): void {
     api.cancel();
     return;
   }
+  // Edited conditions first, then whatever this editor could not render, in its original
+  // relative order — the same stable placement as EditCheckboxProviderModal's save().
   const checkbox: CheckboxJournalRule | undefined =
     compose.value === "inherit"
       ? undefined
       : {
           compose: compose.value,
           mode: draft.value.mode,
-          conditions: draft.value.conditions.map((condition) => ({ ...condition })),
+          conditions: [...draft.value.conditions.map((condition) => ({ ...condition })), ...preservedConditions],
         };
   journals.update(journalName, { tasks: { ...config.value.tasks, checkbox } });
   api.submit();
