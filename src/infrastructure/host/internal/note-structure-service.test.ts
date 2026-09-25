@@ -47,8 +47,8 @@ describe("NoteStructureService", () => {
     expect(structure.isSome()).toBe(true);
     const value = structure.isSome() ? structure.value : null;
     expect(value?.listItems).toEqual([
-      { marker: " ", line: 3, endLine: 3 },
-      { marker: "x", line: 5, endLine: 6 },
+      { marker: " ", line: 3, endLine: 3, parent: 3 },
+      { marker: "x", line: 5, endLine: 6, parent: 5 },
     ]);
     expect(value?.tags).toEqual([{ tag: "#task", line: 3 }]);
     expect(value?.headings).toEqual([{ heading: "Tasks", level: 2, line: 2 }]);
@@ -59,6 +59,25 @@ describe("NoteStructureService", () => {
   // ones by value takes the frontmatter occurrence with them — and a note-level tag stops counting
   // for every item in the note the moment the same tag is also written on a line. Disjoint tags,
   // which is what the fixture above uses, cannot see it.
+  it("keeps a nested item's parent line and reads Obsidian's negative root marker as no parent", () => {
+    const { service, host } = build();
+    const path = "day.md" as VaultPath;
+    host.putFile(path);
+    host.emitMetadata(path, {
+      listItems: [
+        { task: " ", position: pos(3), parent: -3 },
+        { task: " ", position: pos(4), parent: 3 },
+      ],
+    });
+
+    const structure = service.get(path);
+    const value = structure.isSome() ? structure.value : null;
+    expect(value?.listItems).toEqual([
+      { marker: " ", line: 3, endLine: 3, parent: null },
+      { marker: " ", line: 4, endLine: 4, parent: 3 },
+    ]);
+  });
+
   it("keeps a frontmatter tag that also appears inline", () => {
     const { service, host } = build();
     const path = "day.md" as VaultPath;

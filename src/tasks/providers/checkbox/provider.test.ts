@@ -29,7 +29,7 @@ const projectPath = "project/ideas.md" as VaultPath;
 
 function structure(overrides: Partial<NoteStructure> = {}): NoteStructure {
   return {
-    listItems: [{ marker: " ", line: 4, endLine: 4 }],
+    listItems: [{ marker: " ", line: 4, endLine: 4, parent: null }],
     tags: [],
     headings: [],
     frontmatterTags: [],
@@ -333,7 +333,7 @@ describe("CheckboxTaskProvider.hydrateItem", () => {
       status: "todo",
       relations: ["containment"],
       capabilities: { movable: true, stampable: true, retargetable: false },
-      display: { kind: "line", path, line: 0, endLine: 0, markdown: null },
+      display: { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null },
       dates: {},
     };
   }
@@ -376,7 +376,7 @@ describe("CheckboxTaskProvider hydration wiring", () => {
     });
     const journals = harness.resolve(JournalsIndex);
     journals.register({ journalName: "Daily", anchor: anchor("2026-09-22"), path });
-    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4 }] }));
+    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4, parent: null }] }));
     harness.host.putFile(path, "one\ntwo\nthree\nfour\n- [ ] Water plants 📅 2026-09-25\n");
 
     const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
@@ -418,7 +418,7 @@ describe("CheckboxTaskProvider content refill", () => {
     const index = harness.resolve(TaskIndex);
     expect(index.itemsIn(path)).toEqual([]);
 
-    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4 }] }));
+    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4, parent: null }] }));
     harness.host.emitMetadata(path);
 
     expect(index.itemsIn(path)).toHaveLength(1);

@@ -21,6 +21,7 @@ export type TaskDisplay =
       readonly path: VaultPath;
       readonly line: number;
       readonly endLine: number;
+      readonly parentLine: number | null;
       readonly markdown: string | null;
     }
   | { readonly kind: "note"; readonly path: VaultPath; readonly title: string };

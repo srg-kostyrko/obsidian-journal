@@ -22,6 +22,7 @@ export class NoteStructureService {
           marker: item.task ?? " ",
           line: item.position.start.line,
           endLine: item.position.end.line,
+          parent: item.parent < 0 ? null : item.parent,
         })),
       tags: (cache.tags ?? []).map((entry) => ({ tag: entry.tag, line: entry.position.start.line })),
       headings: (cache.headings ?? []).map((h) => ({

@@ -203,7 +203,7 @@ describe("TaskHostService", () => {
         status: "todo",
         relations: ["containment"],
         capabilities: { movable: true, stampable: true, retargetable: false },
-        display: { kind: "line", path: dayPath, line: 0, endLine: 0, markdown: null },
+        display: { kind: "line", path: dayPath, line: 0, endLine: 0, parentLine: null, markdown: null },
         dates: {},
       },
     ]);
