@@ -2398,5 +2398,6 @@
   "tasks_journal_compose_inherit": "Eredita",
   "tasks_journal_compose_narrow": "Restringi",
   "tasks_journal_compose_replace": "Sostituisci",
-  "tasks_journal_modal_title": "Identificazione delle attività — {journal}"
+  "tasks_journal_modal_title": "Identificazione delle attività — {journal}",
+  "tasks_tick_recurring_needs_tasks_plugin": "Questa attività ricorrente richiede il plugin Tasks per passare alla prossima occorrenza."
 }

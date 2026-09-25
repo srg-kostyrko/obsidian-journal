@@ -2384,5 +2384,6 @@
   "tasks_journal_compose_inherit": "상속",
   "tasks_journal_compose_narrow": "좁히기",
   "tasks_journal_compose_replace": "대체",
-  "tasks_journal_modal_title": "작업 식별 — {journal}"
+  "tasks_journal_modal_title": "작업 식별 — {journal}",
+  "tasks_tick_recurring_needs_tasks_plugin": "이 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다."
 }

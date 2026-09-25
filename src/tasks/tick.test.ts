@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { m } from "@/i18n";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 import { FakeNotesService } from "@/infrastructure/host/testing";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
@@ -8,9 +9,11 @@ import { overrideWith, testContainer } from "@/testing";
 
 import { tasksCoreModule } from "./module";
 import { buildTaskItem } from "./testing";
-import { canonicalSymbol, tickLine, tickTargetStatus, TickService } from "./tick";
+import { canonicalSymbol, tickLine, tickRecurringLine, tickTargetStatus, TickService } from "./tick";
 
 import type { TaskItem, TaskStatus } from "./types";
+
+const TASKS_PLUGIN_ID = "obsidian-tasks-plugin";
 
 const PATH = "Daily/2026-09-22.md" as VaultPath;
 
@@ -228,6 +231,59 @@ describe("tickLine", () => {
   });
 });
 
+describe("tickRecurringLine", () => {
+  it("delegates to the toggle and splices in its replacement, which may span more than one line", () => {
+    const content = "# Day\n\n- [ ] Water plants 🔁 every week\n\nfooter\n";
+    const toggle = vi.fn(() => "- [x] Water plants 🔁 every week ✅ 2026-09-25\n- [ ] Water plants 🔁 every week");
+
+    const result = tickRecurringLine(content, item(2, "- [ ] Water plants 🔁 every week"), toggle);
+
+    expect(toggle).toHaveBeenCalledTimes(1);
+    expect(toggle).toHaveBeenCalledWith("- [ ] Water plants 🔁 every week", PATH);
+    expect(result).toEqual({
+      content: "# Day\n\n- [x] Water plants 🔁 every week ✅ 2026-09-25\n- [ ] Water plants 🔁 every week\n\nfooter\n",
+    });
+  });
+
+  it("aborts when the line no longer matches the item we hydrated, and never calls the toggle", () => {
+    const content = "# Day\n\n- [ ] Something else\n";
+    const toggle = vi.fn();
+
+    expect(tickRecurringLine(content, item(2, "- [ ] Water plants 🔁 every week"), toggle)).toEqual({
+      reason: "moved",
+    });
+    expect(toggle).not.toHaveBeenCalled();
+  });
+
+  it("aborts on a negative line rather than addressing the note from the end", () => {
+    const toggle = vi.fn();
+    expect(tickRecurringLine("a\nb\n- [ ] Water plants 🔁", item(-1, "- [ ] Water plants 🔁"), toggle)).toEqual({
+      reason: "moved",
+    });
+    expect(toggle).not.toHaveBeenCalled();
+  });
+
+  it("aborts when the item was never hydrated, and never calls the toggle", () => {
+    const toggle = vi.fn();
+    expect(tickRecurringLine("\n\n", item(0, null), toggle)).toEqual({ reason: "moved" });
+    expect(toggle).not.toHaveBeenCalled();
+  });
+
+  it("refuses a line that is not a task at all, and never calls the toggle", () => {
+    const line = "- Water plants 🔁 every week";
+    const toggle = vi.fn();
+    expect(tickRecurringLine(`${line}\n`, item(0, line), toggle)).toEqual({ reason: "not-a-task" });
+    expect(toggle).not.toHaveBeenCalled();
+  });
+
+  it("refuses an item that has no line at all, and never calls the toggle", () => {
+    const note = buildTaskItem({ path: PATH, display: { kind: "note", path: PATH, title: "Water plants" } });
+    const toggle = vi.fn();
+    expect(tickRecurringLine("- [ ] Water plants 🔁 every week\n", note, toggle)).toEqual({ reason: "not-a-task" });
+    expect(toggle).not.toHaveBeenCalled();
+  });
+});
+
 describe("tickTargetStatus", () => {
   it("sends an open item to done and a finished one back to todo", () => {
     expect(tickTargetStatus("todo")).toBe("done");
@@ -398,4 +454,81 @@ describe("TickService", () => {
     expectErr(result);
     expect(result.error.kind).toBe("note-not-found");
   });
+
+  it("delegates a recurring line to the Tasks plugin's own toggle", async () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const { harness, notes, service } = await build({ content });
+    const toggle = vi.fn(() => "- [x] Water plants 🔁 every week ✅ 2026-09-25\n- [ ] Water plants 🔁 every week");
+    harness.host.putPlugin(TASKS_PLUGIN_ID, { apiV1: { executeToggleTaskDoneCommand: toggle } });
+
+    const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+    expectOk(result);
+    expect(toggle).toHaveBeenCalledTimes(1);
+    expect(toggle).toHaveBeenCalledWith("- [ ] Water plants 🔁 every week", PATH);
+    expect(await contentOf(notes)).toBe(
+      "- [x] Water plants 🔁 every week ✅ 2026-09-25\n- [ ] Water plants 🔁 every week\n",
+    );
+  });
+
+  it("never consults the status map for a recurring line — Tasks decides its own symbol", async () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    // No canonical map seeded at all: a non-recurring toggle would refuse with no-canonical-symbol.
+    const { harness, notes, service } = await build({ content, canonical: {} });
+    const toggle = vi.fn(() => "- [x] Water plants 🔁 every week");
+    harness.host.putPlugin(TASKS_PLUGIN_ID, { apiV1: { executeToggleTaskDoneCommand: toggle } });
+
+    const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+    expectOk(result);
+    expect(await contentOf(notes)).toBe("- [x] Water plants 🔁 every week\n");
+  });
+
+  it("leaves the note untouched when a recurring line moved", async () => {
+    const content = "- [ ] Something else\n";
+    const { harness, notes, service } = await build({ content });
+    const toggle = vi.fn();
+    harness.host.putPlugin(TASKS_PLUGIN_ID, { apiV1: { executeToggleTaskDoneCommand: toggle } });
+
+    const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("task-line-moved");
+    expect(toggle).not.toHaveBeenCalled();
+    expect(await contentOf(notes)).toBe(content);
+  });
+
+  it("treats an unhydrated item as non-recurring, since the signifier cannot be read without markdown", async () => {
+    const { harness, service } = await build({ content: "\n", canonical: { todo: " ", done: "x" } });
+    harness.host.putPlugin(TASKS_PLUGIN_ID, { apiV1: { executeToggleTaskDoneCommand: vi.fn() } });
+
+    const result = await service.toggle(item(0, null));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("task-line-moved");
+  });
+
+  it.each([
+    ["is not loaded", undefined],
+    ["exposes no apiV1", {}],
+    ["exposes an apiV1 that is not an object", { apiV1: "nope" }],
+    ["exposes an apiV1 with no toggle method", { apiV1: {} }],
+    ["exposes a toggle that is not a function", { apiV1: { executeToggleTaskDoneCommand: "nope" } }],
+  ])(
+    "refuses a recurring line and writes nothing when the Tasks plugin %s, and shows a notice",
+    async (_label, plugin) => {
+      const content = "- [ ] Water plants 🔁 every week\n";
+      const { harness, notes, service } = await build({ content });
+      if (plugin !== undefined) harness.host.putPlugin(TASKS_PLUGIN_ID, plugin);
+      const process = vi.spyOn(notes, "process");
+
+      const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+      expectErr(result);
+      expect(result.error.kind).toBe("recurring-unsupported");
+      expect(process).not.toHaveBeenCalled();
+      expect(await contentOf(notes)).toBe(content);
+      expect(harness.notices.messages).toEqual([m.tasks_tick_recurring_needs_tasks_plugin()]);
+    },
+  );
 });

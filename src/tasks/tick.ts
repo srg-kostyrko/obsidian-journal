@@ -1,12 +1,22 @@
+import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import { NotesService, type NoteNotFoundError, type NoteWriteError, type VaultPath } from "@/infrastructure/host";
+import {
+  NoticeService,
+  NotesService,
+  PluginSettingsReader,
+  type NoteNotFoundError,
+  type NoteWriteError,
+  type VaultPath,
+} from "@/infrastructure/host";
 import { AsyncResult, Err, Ok, type Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { checkboxSlice } from "./providers/checkbox/slice";
 import { isDone } from "./status";
 
-import type { TaskItem, TaskStatus } from "./types";
+import type { TaskDisplay, TaskItem, TaskStatus } from "./types";
+
+type LineDisplay = Extract<TaskDisplay, { kind: "line" }>;
 
 // Anchored at the line start and everything before the marker is captured, never re-authored: the
 // one matcher failure behind Time Ruler's data loss was a pattern loose enough to eat a leading
@@ -17,6 +27,11 @@ import type { TaskItem, TaskStatus } from "./types";
 // code point as a marker, and without it `(.)` splits an emoji marker across the brackets and the
 // match fails.
 const MARKER = /^(\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[)(.)(\])/u;
+
+// The Tasks plugin owns this dialect signifier: a line carrying it needs Tasks's own toggle to
+// spawn the next instance, which our status-character write cannot do (see RecurringToggle below).
+const RECURRENCE_SIGNIFIER = "🔁";
+const TASKS_PLUGIN_ID = "obsidian-tasks-plugin";
 
 export type TickRefusal = "moved" | "not-a-task";
 
@@ -52,8 +67,22 @@ export class NoCanonicalSymbolError extends Error {
   }
 }
 
+export class RecurringUnsupportedError extends Error {
+  readonly kind = "recurring-unsupported" as const;
+
+  constructor(readonly path: VaultPath) {
+    super(`${path} carries a recurring task and the Tasks plugin is not available to advance it`);
+    this.name = "RecurringUnsupportedError";
+  }
+}
+
 export type TickError =
-  TaskLineMovedError | NotATaskLineError | NoCanonicalSymbolError | NoteNotFoundError | NoteWriteError;
+  | TaskLineMovedError
+  | NotATaskLineError
+  | NoCanonicalSymbolError
+  | RecurringUnsupportedError
+  | NoteNotFoundError
+  | NoteWriteError;
 
 // `NaN` is the one that bites: it fails every `<` comparison, `Array.at(NaN)` reads index 0 so a
 // bounds check passes, and `slice(0, NaN)`/`slice(NaN + 1)` then reassemble the note with a copy of
@@ -104,12 +133,81 @@ export function tickLine(content: string, item: TaskItem, symbol: string): TickO
   return { content: [...lines.slice(0, display.line), replaced, ...lines.slice(display.line + 1)].join("\n") };
 }
 
+// Signature of the Tasks plugin's own apiV1.executeToggleTaskDoneCommand: it returns the
+// replacement text for the line (one or more lines, newline-joined, since a recurring task's
+// toggle appends the next instance) rather than writing anything itself.
+export type RecurringToggle = (line: string, path: string) => string;
+
+// Mirrors tickLine's moved/not-a-task guards — the line must still be the one this item was
+// hydrated from, and it must still look like a task — but the replacement comes from Tasks
+// itself rather than from a single-character substitution, since Tasks decides both the written
+// symbol and whether a next-instance line is appended. The MARKER check also keeps a non-task
+// line from ever reaching Tasks's own fallback parsing, which is permissive enough to turn
+// arbitrary prose into a checkbox line.
+export function tickRecurringLine(content: string, item: TaskItem, toggle: RecurringToggle): TickOutcome {
+  const display = item.display;
+  if (display.kind !== "line") return { reason: "not-a-task" };
+  if (!isAddressableLine(display.line)) return { reason: "moved" };
+  const lines = content.split("\n");
+  const current = lines.at(display.line);
+  const hydrated = display.markdown?.split("\n", 1).at(0);
+  if (current === undefined || hydrated === undefined || current !== hydrated) return { reason: "moved" };
+  if (MARKER.exec(current) === null) return { reason: "not-a-task" };
+  const replacement = toggle(current, item.path).split("\n");
+  return { content: [...lines.slice(0, display.line), ...replacement, ...lines.slice(display.line + 1)].join("\n") };
+}
+
 /**
  * Writes a task item's status character into its note.
  */
 export class TickService {
   readonly #notes = inject(NotesService);
   readonly #settings = inject(SettingsService).getSlice(checkboxSlice);
+  readonly #plugins = inject(PluginSettingsReader);
+  readonly #notices = inject(NoticeService);
+
+  // No plugin, or a plugin exposing no toggle, both refuse rather than write: a programmatic
+  // write here would tick the line ourselves and never create the next instance, ending the
+  // series with nothing failing loudly. Same capability-check-and-fall-back discipline
+  // TemplaterService applies to Templater's own `parse_commands`.
+  #toggleRecurring(item: TaskItem, display: LineDisplay): AsyncResult<void, TickError> {
+    const toggle = this.#tasksToggle();
+    if (toggle === null) {
+      // The otherwise-invisible outcome this fires for: the series just stops advancing, and
+      // nothing else in this path would ever tell the user why.
+      this.#notices.show(m.tasks_tick_recurring_needs_tasks_plugin());
+      return AsyncResult.err(new RecurringUnsupportedError(item.path));
+    }
+    const refusals: TickRefusal[] = [];
+    return this.#notes
+      .process(item.path, (content) => {
+        const outcome = tickRecurringLine(content, item, toggle);
+        if ("reason" in outcome) {
+          refusals.push(outcome.reason);
+          return content;
+        }
+        return outcome.content;
+      })
+      .flatMap((): Result<void, TickError> => this.#resolveRefusal(refusals, item.path, display.line));
+  }
+
+  #resolveRefusal(refusals: readonly TickRefusal[], path: VaultPath, line: number): Result<void, TickError> {
+    const refusal = refusals.at(0);
+    if (refusal === undefined) return new Ok(undefined);
+    return new Err(refusal === "moved" ? new TaskLineMovedError(path, line) : new NotATaskLineError(path));
+  }
+
+  // Known divergence, not fixed here: Tasks writes its own hardcoded done symbol ("x") on a
+  // recurring line's completed instance, regardless of this vault's status map — the map governs
+  // only the non-recurring path above, since Tasks owns the write for this one.
+  #tasksToggle(): RecurringToggle | null {
+    const plugin = this.#plugins.communityPlugin(TASKS_PLUGIN_ID);
+    if (plugin.isNone()) return null;
+    const apiV1 = (plugin.value as { apiV1?: unknown }).apiV1;
+    if (!apiV1 || typeof apiV1 !== "object") return null;
+    const toggle = (apiV1 as Record<string, unknown>).executeToggleTaskDoneCommand;
+    return typeof toggle === "function" ? (toggle as RecurringToggle) : null;
+  }
 
   // A line carrying 🔁 needs the Tasks plugin's own toggle command to advance the series; this
   // writes the status character itself, which marks such a line done and creates no next instance.
@@ -119,6 +217,15 @@ export class TickService {
     // Decidable from the item alone, so it is settled before the note is opened, the same as the
     // symbol below.
     if (!isAddressableLine(display.line)) return AsyncResult.err(new TaskLineMovedError(item.path, display.line));
+
+    // Also decidable up front, off the hydrated markdown rather than the note's live content —
+    // the note is not open yet, and the recurrence signifier is what the Tasks plugin itself
+    // reads, so it belongs to the dialect on the line, not to anything we compute.
+    const firstLine = display.markdown?.split("\n", 1).at(0);
+    if (firstLine?.includes(RECURRENCE_SIGNIFIER)) {
+      return this.#toggleRecurring(item, display);
+    }
+
     const target = tickTargetStatus(item.status);
     const symbol = canonicalSymbol(this.#settings.state.canonical, target);
     if (symbol === null) return AsyncResult.err(new NoCanonicalSymbolError(target));
@@ -134,12 +241,6 @@ export class TickService {
         }
         return outcome.content;
       })
-      .flatMap((): Result<void, TickError> => {
-        const refusal = refusals.at(0);
-        if (refusal === undefined) return new Ok(undefined);
-        return new Err(
-          refusal === "moved" ? new TaskLineMovedError(item.path, display.line) : new NotATaskLineError(item.path),
-        );
-      });
+      .flatMap((): Result<void, TickError> => this.#resolveRefusal(refusals, item.path, display.line));
   }
 }

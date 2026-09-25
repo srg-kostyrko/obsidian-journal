@@ -2398,5 +2398,6 @@
   "tasks_journal_compose_inherit": "Hériter",
   "tasks_journal_compose_narrow": "Restreindre",
   "tasks_journal_compose_replace": "Remplacer",
-  "tasks_journal_modal_title": "Identification des tâches — {journal}"
+  "tasks_journal_modal_title": "Identification des tâches — {journal}",
+  "tasks_tick_recurring_needs_tasks_plugin": "Cette tâche récurrente nécessite le plugin Tasks pour passer à sa prochaine occurrence."
 }

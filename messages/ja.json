@@ -2387,5 +2387,6 @@
   "tasks_journal_compose_inherit": "継承",
   "tasks_journal_compose_narrow": "絞り込み",
   "tasks_journal_compose_replace": "置換",
-  "tasks_journal_modal_title": "タスクの識別 — {journal}"
+  "tasks_journal_modal_title": "タスクの識別 — {journal}",
+  "tasks_tick_recurring_needs_tasks_plugin": "この繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。"
 }

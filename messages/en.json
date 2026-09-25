@@ -2399,5 +2399,6 @@
   "tasks_journal_compose_inherit": "Inherit",
   "tasks_journal_compose_narrow": "Narrow",
   "tasks_journal_compose_replace": "Replace",
-  "tasks_journal_modal_title": "Task identification — {journal}"
+  "tasks_journal_modal_title": "Task identification — {journal}",
+  "tasks_tick_recurring_needs_tasks_plugin": "This recurring task needs the Tasks plugin to advance to its next instance."
 }
