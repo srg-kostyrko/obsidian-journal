@@ -2400,5 +2400,5 @@
   "tasks_journal_compose_narrow": "Narrow",
   "tasks_journal_compose_replace": "Replace",
   "tasks_journal_modal_title": "Task identification — {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "This recurring task needs the Tasks plugin to advance to its next instance."
+  "tasks_tick_recurring_needs_tasks_plugin": "This task was not ticked. Recurring tasks need the Tasks plugin to advance to their next instance."
 }

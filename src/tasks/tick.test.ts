@@ -9,7 +9,14 @@ import { overrideWith, testContainer } from "@/testing";
 
 import { tasksCoreModule } from "./module";
 import { buildTaskItem } from "./testing";
-import { canonicalSymbol, tickLine, tickRecurringLine, tickTargetStatus, TickService } from "./tick";
+import {
+  canonicalSymbol,
+  tickLine,
+  tickRecurringLine,
+  tickTargetStatus,
+  TickService,
+  type RecurringToggle,
+} from "./tick";
 
 import type { TaskItem, TaskStatus } from "./types";
 
@@ -282,6 +289,47 @@ describe("tickRecurringLine", () => {
     expect(tickRecurringLine("- [ ] Water plants 🔁 every week\n", note, toggle)).toEqual({ reason: "not-a-task" });
     expect(toggle).not.toHaveBeenCalled();
   });
+
+  it("refuses an empty replacement rather than splicing in a blank line, which would erase the task", () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const toggle = vi.fn(() => "");
+
+    const result = tickRecurringLine(content, item(0, "- [ ] Water plants 🔁 every week"), toggle);
+
+    expect(result).toEqual({ reason: "not-a-task" });
+  });
+
+  it("refuses a replacement whose first line no longer looks like a task", () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const toggle = vi.fn(() => "Water plants, apparently");
+
+    const result = tickRecurringLine(content, item(0, "- [ ] Water plants 🔁 every week"), toggle);
+
+    expect(result).toEqual({ reason: "not-a-task" });
+  });
+
+  it("treats a toggle that throws as a delegate failure, carrying the cause", () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const cause = new Error("Tasks blew up");
+    const toggle = vi.fn(() => {
+      throw cause;
+    });
+
+    const result = tickRecurringLine(content, item(0, "- [ ] Water plants 🔁 every week"), toggle);
+
+    expect(result).toEqual({ reason: "delegate-failed", cause });
+  });
+
+  it("treats a non-string return as a delegate failure rather than trusting the published signature", () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    // The published apiV1 signature says string; nothing enforces that at runtime for a call
+    // into a third party's code, so the fake models a plugin that doesn't honour its own type.
+    const toggle = vi.fn(() => undefined) as unknown as RecurringToggle;
+
+    const result = tickRecurringLine(content, item(0, "- [ ] Water plants 🔁 every week"), toggle);
+
+    expect(result).toEqual({ reason: "delegate-failed", cause: undefined });
+  });
 });
 
 describe("tickTargetStatus", () => {
@@ -469,6 +517,7 @@ describe("TickService", () => {
     expect(await contentOf(notes)).toBe(
       "- [x] Water plants 🔁 every week ✅ 2026-09-25\n- [ ] Water plants 🔁 every week\n",
     );
+    expect(harness.notices.messages).toEqual([]);
   });
 
   it("never consults the status map for a recurring line — Tasks decides its own symbol", async () => {
@@ -496,6 +545,71 @@ describe("TickService", () => {
     expect(result.error.kind).toBe("task-line-moved");
     expect(toggle).not.toHaveBeenCalled();
     expect(await contentOf(notes)).toBe(content);
+    expect(harness.notices.messages).toEqual([]);
+  });
+
+  it("refuses an empty toggle result rather than writing a blank line, and writes nothing", async () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const { harness, notes, service } = await build({ content });
+    harness.host.putPlugin(TASKS_PLUGIN_ID, { apiV1: { executeToggleTaskDoneCommand: vi.fn(() => "") } });
+
+    const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("not-a-task-line");
+    expect(await contentOf(notes)).toBe(content);
+    expect(harness.notices.messages).toEqual([]);
+  });
+
+  it("refuses a toggle result that no longer looks like a task line, and writes nothing", async () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const { harness, notes, service } = await build({ content });
+    harness.host.putPlugin(TASKS_PLUGIN_ID, {
+      apiV1: { executeToggleTaskDoneCommand: vi.fn(() => "Water plants, apparently") },
+    });
+
+    const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("not-a-task-line");
+    expect(await contentOf(notes)).toBe(content);
+  });
+
+  it("degrades to a note-write error when the toggle throws, and writes nothing", async () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const { harness, notes, service } = await build({ content });
+    const cause = new Error("Tasks blew up");
+    harness.host.putPlugin(TASKS_PLUGIN_ID, {
+      apiV1: {
+        executeToggleTaskDoneCommand: vi.fn(() => {
+          throw cause;
+        }),
+      },
+    });
+
+    const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("note-write-failed");
+    expect(await contentOf(notes)).toBe(content);
+    expect(harness.notices.messages).toEqual([]);
+  });
+
+  it("degrades to a note-write error when the toggle returns something other than a string, and writes nothing", async () => {
+    const content = "- [ ] Water plants 🔁 every week\n";
+    const { harness, notes, service } = await build({ content });
+    // The published apiV1 signature says string; nothing enforces that at runtime for a call into
+    // a third party's code, so this models a plugin that doesn't honour its own type.
+    harness.host.putPlugin(TASKS_PLUGIN_ID, {
+      apiV1: { executeToggleTaskDoneCommand: vi.fn(() => undefined) },
+    });
+
+    const result = await service.toggle(item(0, "- [ ] Water plants 🔁 every week"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("note-write-failed");
+    expect(await contentOf(notes)).toBe(content);
+    expect(harness.notices.messages).toEqual([]);
   });
 
   it("treats an unhydrated item as non-recurring, since the signifier cannot be read without markdown", async () => {

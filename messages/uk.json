@@ -2466,5 +2466,5 @@
   "tasks_journal_compose_narrow": "Звузити",
   "tasks_journal_compose_replace": "Замінити",
   "tasks_journal_modal_title": "Визначення завдань — {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "Щоб це повторюване завдання перейшло до наступного екземпляра, потрібен плагін Tasks."
+  "tasks_tick_recurring_needs_tasks_plugin": "Це завдання не було позначено. Щоб повторювані завдання переходили до наступного екземпляра, потрібен плагін Tasks."
 }

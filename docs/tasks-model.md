@@ -641,6 +641,26 @@ dependency on any task plugin" has to mean in practice. The capability check and
 fall back is the discipline `TemplaterService` already applies to
 `parse_commands`.
 
+**This is the one exception to the write rule's clause 1.** Clause 1 bans
+re-emitting a line from a parsed model because _our_ model has no field for
+everything a dialect can carry, so rebuilding from it drops or reorders bytes
+the user wrote. That harm is about the model doing the rebuilding, not about
+where the resulting bytes come from — and `executeToggleTaskDoneCommand`
+doesn't hand us a model to rebuild from at all. It hands back the line (or
+lines) Tasks's own parser already produced, dialect-complete, which is exactly
+the recurrence signifier's own owner writing its own syntax. We may splice that
+text in **unmodified**, and unmodified is the whole permission: nothing here
+authors, reorders or drops a single byte of what Tasks returns.
+
+That permission is conditional on checking what comes back before it is
+spliced in, because the call is a third party's and nothing enforces its return
+at runtime. A throw, a value that isn't a string, or a string that no longer
+matches a task line — most concretely `""`, which would silently erase the
+line — all refuse rather than write. An empty or malformed return crossing this
+boundary is exactly the harm clause 1 exists to prevent, just arriving from
+Tasks's side of it instead of ours, so it gets held to the same bar the input
+line already had to clear.
+
 Rendering is verbatim. A line is shown as written, dialect signifiers included;
 nothing is prettified away, for the same reason nothing is re-serialized.
 

@@ -2382,5 +2382,5 @@
   "tasks_journal_compose_narrow": "收窄",
   "tasks_journal_compose_replace": "替换",
   "tasks_journal_modal_title": "任务识别 — {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "这个重复任务需要 Tasks 插件才能推进到下一次实例。"
+  "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。"
 }

@@ -2401,5 +2401,5 @@
   "tasks_journal_compose_narrow": "Einschränken",
   "tasks_journal_compose_replace": "Ersetzen",
   "tasks_journal_modal_title": "Aufgabenerkennung – {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "Diese wiederkehrende Aufgabe benötigt das Tasks-Plugin, um zur nächsten Instanz überzugehen."
+  "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen."
 }

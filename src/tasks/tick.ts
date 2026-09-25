@@ -1,11 +1,12 @@
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
+import type { BenignFlowError } from "@/infrastructure/flows";
 import {
+  NoteWriteError,
   NoticeService,
   NotesService,
   PluginSettingsReader,
   type NoteNotFoundError,
-  type NoteWriteError,
   type VaultPath,
 } from "@/infrastructure/host";
 import { AsyncResult, Err, Ok, type Result } from "@/infrastructure/result";
@@ -67,8 +68,12 @@ export class NoCanonicalSymbolError extends Error {
   }
 }
 
-export class RecurringUnsupportedError extends Error {
+// Benign: `NoApplicableJournals` is the documented precedent for this shape (CLAUDE.md) — the
+// service already shows its own notice at the point the outcome is otherwise invisible, so a flow
+// wrapping `toggle()` must stay silent on it rather than layering `flow_failure_notice` on top.
+export class RecurringUnsupportedError extends Error implements BenignFlowError {
   readonly kind = "recurring-unsupported" as const;
+  readonly benign = true as const;
 
   constructor(readonly path: VaultPath) {
     super(`${path} carries a recurring task and the Tasks plugin is not available to advance it`);
@@ -138,13 +143,35 @@ export function tickLine(content: string, item: TaskItem, symbol: string): TickO
 // toggle appends the next instance) rather than writing anything itself.
 export type RecurringToggle = (line: string, path: string) => string;
 
-// Mirrors tickLine's moved/not-a-task guards — the line must still be the one this item was
-// hydrated from, and it must still look like a task — but the replacement comes from Tasks
-// itself rather than from a single-character substitution, since Tasks decides both the written
-// symbol and whether a next-instance line is appended. The MARKER check also keeps a non-task
-// line from ever reaching Tasks's own fallback parsing, which is permissive enough to turn
-// arbitrary prose into a checkbox line.
-export function tickRecurringLine(content: string, item: TaskItem, toggle: RecurringToggle): TickOutcome {
+// Three explicit variants rather than nesting TickRefusal's two literals inside one — that would
+// leave `reason` typed as a two-literal union at the outer level, and checking both literals off
+// still doesn't let the compiler discriminate down to the third variant and its `cause` field.
+export type TickRecurringRefusal =
+  | { readonly reason: "moved" }
+  | { readonly reason: "not-a-task" }
+  // Their call is a third party's, not ours: it can throw, and nothing in the published apiV1
+  // signature is enforced at runtime, so a return that is not a string reaches us as readily as
+  // one that is. Both are the plugin failing to hold up its end, not a shape this vault authored.
+  | { readonly reason: "delegate-failed"; readonly cause: unknown };
+
+export type TickRecurringOutcome = TickRecurringRefusal | { readonly content: string };
+
+// Mirrors tickLine's moved/not-a-task guards on the INPUT line — it must still be the one this
+// item was hydrated from, and it must still look like a task — but the replacement comes from
+// Tasks itself rather than from a single-character substitution, since Tasks decides both the
+// written symbol and whether a next-instance line is appended. The MARKER check on the input also
+// keeps a non-task line from ever reaching Tasks's own fallback parsing, which is permissive
+// enough to turn arbitrary prose into a checkbox line.
+//
+// The OUTPUT gets the same scrutiny before it is spliced in, never the unconditional trust a
+// third party's return value would otherwise get: a throw or a non-string return is a delegate
+// failure (the write rule's clause 1 exists to stop exactly this — a rebuild that drops or
+// mangles what was there — and an empty or malformed return is that same harm arriving from
+// Tasks's side of the boundary instead of ours), and a call that returns cleanly but produces
+// something that no longer matches MARKER (including "", which erases the line) is refused the
+// same way a not-a-task input line is. See docs/tasks-model.md's "Ticking an item" section for the
+// write-rule carve-out this delegation relies on.
+export function tickRecurringLine(content: string, item: TaskItem, toggle: RecurringToggle): TickRecurringOutcome {
   const display = item.display;
   if (display.kind !== "line") return { reason: "not-a-task" };
   if (!isAddressableLine(display.line)) return { reason: "moved" };
@@ -153,7 +180,20 @@ export function tickRecurringLine(content: string, item: TaskItem, toggle: Recur
   const hydrated = display.markdown?.split("\n", 1).at(0);
   if (current === undefined || hydrated === undefined || current !== hydrated) return { reason: "moved" };
   if (MARKER.exec(current) === null) return { reason: "not-a-task" };
-  const replacement = toggle(current, item.path).split("\n");
+
+  let raw: unknown;
+  try {
+    raw = toggle(current, item.path);
+  } catch (error) {
+    return { reason: "delegate-failed", cause: error };
+  }
+  if (typeof raw !== "string") return { reason: "delegate-failed", cause: raw };
+  // MARKER has no `m` flag, so `^` anchors to the start of `raw` as a whole — this reads the same
+  // first line`.exec` would after a `split`, with no `.at(0) ?? ""` fallback that `split` (which
+  // never returns an empty array, even for `""`) can never actually take.
+  if (MARKER.exec(raw) === null) return { reason: "not-a-task" };
+
+  const replacement = raw.split("\n");
   return { content: [...lines.slice(0, display.line), ...replacement, ...lines.slice(display.line + 1)].join("\n") };
 }
 
@@ -178,23 +218,38 @@ export class TickService {
       this.#notices.show(m.tasks_tick_recurring_needs_tasks_plugin());
       return AsyncResult.err(new RecurringUnsupportedError(item.path));
     }
-    const refusals: TickRefusal[] = [];
+    const refusals: TickRecurringRefusal[] = [];
     return this.#notes
       .process(item.path, (content) => {
         const outcome = tickRecurringLine(content, item, toggle);
         if ("reason" in outcome) {
-          refusals.push(outcome.reason);
+          refusals.push(outcome);
           return content;
         }
         return outcome.content;
       })
-      .flatMap((): Result<void, TickError> => this.#resolveRefusal(refusals, item.path, display.line));
+      .flatMap((): Result<void, TickError> => this.#resolveRecurringRefusal(refusals, item.path, display.line));
   }
 
   #resolveRefusal(refusals: readonly TickRefusal[], path: VaultPath, line: number): Result<void, TickError> {
     const refusal = refusals.at(0);
     if (refusal === undefined) return new Ok(undefined);
     return new Err(refusal === "moved" ? new TaskLineMovedError(path, line) : new NotATaskLineError(path));
+  }
+
+  // Kept separate from #resolveRefusal above rather than widening it: the non-recurring path can
+  // never produce "delegate-failed", and folding this case into the shared helper would let a
+  // caller that only ever calls tickLine hold a refusal type it can't actually receive.
+  #resolveRecurringRefusal(
+    refusals: readonly TickRecurringRefusal[],
+    path: VaultPath,
+    line: number,
+  ): Result<void, TickError> {
+    const refusal = refusals.at(0);
+    if (refusal === undefined) return new Ok(undefined);
+    if (refusal.reason === "moved") return new Err(new TaskLineMovedError(path, line));
+    if (refusal.reason === "not-a-task") return new Err(new NotATaskLineError(path));
+    return new Err(new NoteWriteError(path, refusal.cause));
   }
 
   // Known divergence, not fixed here: Tasks writes its own hardcoded done symbol ("x") on a
