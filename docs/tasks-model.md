@@ -527,6 +527,16 @@ a fence means nothing.
 order the lines are written in, which is the default. It needs no parser and
 refusing it would push people to Dataview for something trivial.
 
+**A sort reorders siblings, never the nesting.** It is applied level by level —
+across the roots, then within each parent's children — so a subtree stays
+contiguous and below its parent whatever the key. A flat re-sort would separate a
+context row from the child it was pulled in to anchor, which is the only reason
+that row exists. For `status` the order is `todo`, `in-progress`, `on-hold`,
+`rolled`, `done`, `cancelled`: `rolled` sits between the open statuses and the
+done ones because it is neither, and a listing sorted by status is asking what
+still needs the user. For a date role, an item carrying no date of that role
+sorts last, so naming a role never buries the items that answer it.
+
 **`group` is deferred**, not refused. The listing already groups — #345 specifies
 the grouped-entries shape the notelets listing uses, and a rollup groups by
 source note by construction. A user-chosen grouping therefore has to say how it
