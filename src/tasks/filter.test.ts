@@ -69,9 +69,27 @@ describe("matchesFilter", () => {
     ).toBe(false);
   });
 
-  it("matches everything when every condition dropped out", () => {
-    const noteItem = buildTaskItem({ display: { kind: "note", path, title: "Ship it" } });
-    expect(matchesFilter(noteItem, structure, under("## Tasks"))).toBe(true);
+  it("treats an unresolved metadataCache (structure undefined) as no constraint, not a mismatch", () => {
+    const item = buildTaskItem({
+      display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
+    });
+    expect(matchesFilter(item, undefined, under("## Tasks"))).toBe(true);
+  });
+
+  it("does not let a heading condition dropped for a cold cache carry an `or` match", () => {
+    const item = buildTaskItem({
+      display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
+      status: "done",
+    });
+    expect(
+      matchesFilter(item, undefined, {
+        mode: "or",
+        conditions: [
+          { type: "heading", condition: "under", headings: ["## Tasks"] },
+          { type: "status", condition: "is", statuses: ["todo"] },
+        ],
+      }),
+    ).toBe(false);
   });
 });
 

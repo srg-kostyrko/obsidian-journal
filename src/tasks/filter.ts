@@ -29,6 +29,9 @@ function evaluate(condition: TaskCondition, item: TaskItem, structure: NoteStruc
     })
     .with({ type: "heading" }, (c) => {
       if (c.headings.length === 0) return true;
+      // structure is undefined on a cold metadataCache read, before it resolves for this note —
+      // drop rather than exclude, so a fence briefly over-matches and self-heals once metadata
+      // resolves, instead of a provider's items vanishing until then.
       if (item.display.kind !== "line" || structure === undefined) return;
       const chain = headingsOf(item.display.line, structure);
       const hit = c.headings.some((heading) => chain.includes(heading));
@@ -39,6 +42,7 @@ function evaluate(condition: TaskCondition, item: TaskItem, structure: NoteStruc
       // Dropped rather than resolved against the note's own frontmatter tags for a note-shaped
       // item: only the checkbox provider ships here, so nothing yields a note-kind item yet and
       // the choice is unobservable — see "Still to establish" in docs/tasks-model.md.
+      // Same cold-cache read as the heading branch above: drop rather than exclude.
       const listItem = lineItemOf(item, structure);
       if (listItem === undefined || structure === undefined) return;
       const hit = c.tags.some((tag) => tagsOf(listItem, structure).includes(tag));
