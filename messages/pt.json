@@ -2396,5 +2396,7 @@
   "tasks_journal_compose_narrow": "Restringir",
   "tasks_journal_compose_replace": "Substituir",
   "tasks_journal_modal_title": "Identificação de tarefas — {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância."
+  "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância.",
+  "tasks_tick_error": "Não foi possível marcar a tarefa.",
+  "tasks_listing_empty": "Nenhuma tarefa corresponde a esta consulta."
 }

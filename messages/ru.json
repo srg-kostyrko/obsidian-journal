@@ -2474,5 +2474,7 @@
   "tasks_journal_compose_narrow": "Сузить",
   "tasks_journal_compose_replace": "Заменить",
   "tasks_journal_modal_title": "Определение задач — {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "Эта задача не была отмечена. Чтобы повторяющиеся задачи переходили к следующему экземпляру, нужен плагин Tasks."
+  "tasks_tick_recurring_needs_tasks_plugin": "Эта задача не была отмечена. Чтобы повторяющиеся задачи переходили к следующему экземпляру, нужен плагин Tasks.",
+  "tasks_tick_error": "Не удалось отметить задачу.",
+  "tasks_listing_empty": "Нет задач, соответствующих этому запросу."
 }

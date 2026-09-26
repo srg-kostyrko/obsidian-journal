@@ -2399,5 +2399,7 @@
   "tasks_journal_compose_narrow": "Restringi",
   "tasks_journal_compose_replace": "Sostituisci",
   "tasks_journal_modal_title": "Identificazione delle attività — {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza."
+  "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",
+  "tasks_tick_error": "Non è stato possibile contrassegnare l'attività.",
+  "tasks_listing_empty": "Nessuna attività corrisponde a questa query."
 }

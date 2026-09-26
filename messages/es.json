@@ -2388,5 +2388,7 @@
   "tasks_journal_compose_narrow": "Restringir",
   "tasks_journal_compose_replace": "Reemplazar",
   "tasks_journal_modal_title": "Identificación de tareas — {journal}",
-  "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia."
+  "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",
+  "tasks_tick_error": "No se pudo marcar la tarea.",
+  "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }
