@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "Einige Optionen in diesem {key}-Block sind ungültig.",
   "code_blocks_nav_not_connected": "Die Notiz ist mit keinem Journal verknüpft",
   "code_blocks_notelets_not_connected": "Die Notiz ist mit keinem Journal verknüpft",
+  "code_blocks_tasks_not_connected": "Die Notiz ist mit keinem Journal verknüpft",
   "code_blocks_home_empty": "Keine Journale zum Anzeigen. Prüfe die Optionen show und shelf des Blocks.",
   "common_no_journals_yet": "Noch keine Journale. Erstelle eines in den Plugin-Einstellungen.",
   "code_blocks_nav_next": "Nächste",

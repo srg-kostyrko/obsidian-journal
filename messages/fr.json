@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "Certaines options de ce bloc {key} ne sont pas valides.",
   "code_blocks_nav_not_connected": "Note non connectée à un journal",
   "code_blocks_notelets_not_connected": "Note non connectée à un journal",
+  "code_blocks_tasks_not_connected": "Note non connectée à un journal",
   "code_blocks_home_empty": "Aucun journal à afficher. Vérifiez les options show et shelf du bloc.",
   "common_no_journals_yet": "Aucun journal pour l’instant. Créez-en un dans les paramètres du plugin.",
   "code_blocks_nav_next": "Suivant",

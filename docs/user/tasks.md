@@ -88,6 +88,20 @@ Choosing **Narrow** or **Replace** reveals the same condition editor as the vaul
 this journal. The row's own description names which relation is active and, once narrowed or replaced,
 summarizes the rule itself, so you can see it without opening the modal.
 
+## Listing tasks in a note
+
+A `journal-tasks` code block lists the open tasks of the period the note it sits in belongs to. In a
+note connected to no journal it lists nothing and says so.
+
+````markdown
+```journal-tasks
+sort: status
+```
+````
+
+`sort` orders the list; `status`, unset here, defaults to open tasks only. See
+[Code blocks](/reference/code-blocks).
+
 ## Examples
 
 ### An in-progress day

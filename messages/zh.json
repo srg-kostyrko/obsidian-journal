@@ -115,6 +115,7 @@
   "code_blocks_schema_error": "此 {key} 块中的某些选项无效。",
   "code_blocks_nav_not_connected": "笔记未连接到日记",
   "code_blocks_notelets_not_connected": "笔记未连接到日记",
+  "code_blocks_tasks_not_connected": "笔记未连接到日记",
   "code_blocks_home_empty": "暂无日记可供显示。请检查该块的 show 和 shelf 选项。",
   "common_no_journals_yet": "还没有日记。请在插件设置中创建一个。",
   "code_blocks_nav_next": "下一个",

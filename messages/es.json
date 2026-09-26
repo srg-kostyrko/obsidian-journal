@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "Algunas opciones de este bloque {key} no son válidas.",
   "code_blocks_nav_not_connected": "La nota no está conectada a un diario",
   "code_blocks_notelets_not_connected": "La nota no está conectada a un diario",
+  "code_blocks_tasks_not_connected": "La nota no está conectada a un diario",
   "code_blocks_home_empty": "No hay diarios para mostrar. Comprueba las opciones show y shelf del bloque.",
   "common_no_journals_yet": "Aún no hay diarios. Crea uno en los ajustes del complemento.",
   "code_blocks_nav_next": "Siguiente",

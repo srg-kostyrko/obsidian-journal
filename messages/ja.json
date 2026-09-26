@@ -115,6 +115,7 @@
   "code_blocks_schema_error": "この {key} ブロックの一部のオプションが無効です。",
   "code_blocks_nav_not_connected": "ノートがジャーナルに接続されていません",
   "code_blocks_notelets_not_connected": "ノートがジャーナルに接続されていません",
+  "code_blocks_tasks_not_connected": "ノートがジャーナルに接続されていません",
   "code_blocks_home_empty": "表示できるジャーナルがありません。ブロックの show と shelf オプションを確認してください。",
   "common_no_journals_yet": "ジャーナルがまだありません。プラグイン設定で作成してください。",
   "code_blocks_nav_next": "次へ",

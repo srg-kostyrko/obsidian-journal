@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "이 {key} 블록의 일부 옵션이 올바르지 않습니다.",
   "code_blocks_nav_not_connected": "노트가 저널에 연결되어 있지 않습니다",
   "code_blocks_notelets_not_connected": "노트가 저널에 연결되어 있지 않습니다",
+  "code_blocks_tasks_not_connected": "노트가 저널에 연결되어 있지 않습니다",
   "code_blocks_home_empty": "표시할 저널이 없습니다. 블록의 show 및 shelf 옵션을 확인하세요.",
   "common_no_journals_yet": "아직 저널이 없습니다. 플러그인 설정에서 만드세요.",
   "code_blocks_nav_next": "다음",

@@ -128,6 +128,7 @@
   "code_blocks_schema_error": "Некоторые параметры в этом блоке {key} недопустимы.",
   "code_blocks_nav_not_connected": "Заметка не связана с журналом",
   "code_blocks_notelets_not_connected": "Заметка не связана с журналом",
+  "code_blocks_tasks_not_connected": "Заметка не связана с журналом",
   "code_blocks_home_empty": "Журналы для отображения отсутствуют. Проверьте параметры show и shelf этого блока.",
   "common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
   "code_blocks_nav_next": "Следующий",

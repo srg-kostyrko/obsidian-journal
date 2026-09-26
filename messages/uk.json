@@ -115,6 +115,7 @@
   "code_blocks_schema_error": "Деякі опції в цьому блоці {key} недійсні.",
   "code_blocks_nav_not_connected": "Нотатка не пов’язана з журналом",
   "code_blocks_notelets_not_connected": "Нотатка не пов’язана з журналом",
+  "code_blocks_tasks_not_connected": "Нотатка не пов’язана з журналом",
   "code_blocks_home_empty": "Немає журналів для показу. Перевірте параметри show і shelf цього блоку.",
   "common_no_journals_yet": "Журналів ще немає. Створіть журнал у налаштуваннях плагіна.",
   "code_blocks_nav_next": "Далі",

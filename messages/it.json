@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "Alcune opzioni di questo blocco {key} non sono valide.",
   "code_blocks_nav_not_connected": "La nota non è collegata a un diario",
   "code_blocks_notelets_not_connected": "La nota non è collegata a un diario",
+  "code_blocks_tasks_not_connected": "La nota non è collegata a un diario",
   "code_blocks_home_empty": "Nessun diario da mostrare. Controlla le opzioni show e shelf del blocco.",
   "common_no_journals_yet": "Nessun diario finora. Creane uno nelle impostazioni del plugin.",
   "code_blocks_nav_next": "Successivo",
