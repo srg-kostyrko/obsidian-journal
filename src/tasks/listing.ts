@@ -12,7 +12,7 @@ import type { TaskItem, TaskStatus } from "./types";
 
 export interface TaskListingDependencies {
   readonly journals: Pick<JournalsRepository, "get">;
-  readonly index: Pick<JournalsIndex, "get" | "getRange" | "noteletsAt" | "noteletsFor">;
+  readonly index: Pick<JournalsIndex, "get" | "getRange" | "noteletsAt" | "noteletAnchorsInRange">;
   readonly cycle: Pick<CycleService, "startOf" | "endOf" | "anchorOf" | "overlapsFrom">;
   readonly structure: Pick<NoteStructureService, "get">;
   readonly tasks: Pick<TaskIndex, "itemsIn" | "hydrate">;
@@ -127,15 +127,14 @@ function periodsWithin(
   // widened bounds, and still overlapping `from` once the filter below runs.
   //
   // Gated on source: sourceNotes below discards every path: null period when source is "note", so
-  // under that scope this scan's result is thrown away unread — and unlike getRange's binary
-  // search, NoteletIndex.paths() (behind noteletsFor) returns every notelet the journal has,
-  // unbounded, so skipping the call is the saving, not just skipping its output. A version of
-  // NoteletIndex sorted by anchor, mirroring JournalIndex, would let this run unconditionally at
-  // getRange's own cost; that is a deferred follow-up, not done here.
+  // under that scope this range query's result is thrown away unread. noteletAnchorsInRange is a
+  // binary search over NoteletIndex's own sorted anchors (mirroring JournalIndex.getRange), not a
+  // scan of every notelet the journal has, so this is skipped for the saving it is under that
+  // scope rather than to avoid an unbounded walk.
   if (source !== "note") {
-    for (const entry of dependencies.index.noteletsFor(journalName)) {
-      if (entry.anchor < opening.value || entry.anchor > to || pathByAnchor.has(entry.anchor)) continue;
-      pathByAnchor.set(entry.anchor, null);
+    for (const anchor of dependencies.index.noteletAnchorsInRange(journalName, opening.value, to)) {
+      if (pathByAnchor.has(anchor)) continue;
+      pathByAnchor.set(anchor, null);
     }
   }
   return (

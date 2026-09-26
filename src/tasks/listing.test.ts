@@ -97,10 +97,10 @@ function buildDependencies(options: {
         return found;
       },
       noteletsAt: (name, anchor) => (notelets[name]?.[anchor] ?? []).map((path) => noteletEntry(name, anchor, path)),
-      noteletsFor: (name) =>
-        Object.entries(notelets[name] ?? {}).flatMap(([anchor, paths]) =>
-          paths.map((path) => noteletEntry(name, anchor as AnchorString, path)),
-        ),
+      noteletAnchorsInRange: (name, start, end) =>
+        Object.keys(notelets[name] ?? {})
+          .filter((anchor) => anchor >= start && anchor <= end)
+          .toSorted() as AnchorString[],
     },
     cycle: {
       startOf: (name, anchor) =>

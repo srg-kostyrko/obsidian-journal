@@ -146,6 +146,10 @@ export class JournalsIndex {
     return this.#resolveNotelets(this.#notelets.get(journalName)?.paths());
   }
 
+  noteletAnchorsInRange(journalName: string, start: AnchorString, end: AnchorString): readonly AnchorString[] {
+    return this.#notelets.get(journalName)?.anchorsInRange(start, end) ?? [];
+  }
+
   register(entry: IndexedNote): "registered" | "collision" {
     const existing = this.#byPath.get(entry.path);
     if (existing !== undefined && sameSlot(existing, entry)) {
