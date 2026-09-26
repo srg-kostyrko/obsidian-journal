@@ -24,14 +24,19 @@ const rule = defineModel<{ mode: "and" | "or"; conditions: TaskCondition[] }>({ 
 // `label`/`description` are required, not defaulted to the identification-rule wording: the
 // listing filter's editor names a different thing, and a silent default would make one caller's
 // copy an accident of another's rather than every caller's own choice.
+// `showMode` is opt-out, not opt-in: the identification rules this editor was written for do apply
+// their own combinator. Only a rule whose mode nothing downstream reads turns it off — a journal's
+// listing filter, whose conditions are merged into the surface's query under the surface's mode
+// (composeFilters, src/tasks/filter.ts).
 const props = withDefaults(
   defineProps<{
     types: readonly TaskCondition["type"][];
     label: string;
     description: string;
     errors?: ReadonlyMap<number, string>;
+    showMode?: boolean;
   }>(),
-  { errors: undefined },
+  { errors: undefined, showMode: true },
 );
 
 // Keyed by condition object identity, not index: removeCondition splices the array, which would
@@ -65,7 +70,7 @@ function errorsFor(condition: TaskCondition, index: number): string[] {
   <UiSettingRow :name="label" stacked>
     <template #description>{{ description }}</template>
     <div class="tasks-rule-body">
-      <UiDropdown v-model="rule.mode">
+      <UiDropdown v-if="showMode" v-model="rule.mode">
         <option value="and">{{ m.tasks_settings_mode_and() }}</option>
         <option value="or">{{ m.tasks_settings_mode_or() }}</option>
       </UiDropdown>

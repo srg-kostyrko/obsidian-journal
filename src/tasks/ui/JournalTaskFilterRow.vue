@@ -27,7 +27,9 @@ const summary = computed(() => {
 
 function edit(): void {
   const current = filter.value ?? { mode: "and" as const, conditions: [] };
-  void modals.open(editTaskFilterModal, { filter: current }).tap((next) => {
+  // No mode control: a journal contributes conditions, and composeFilters answers with the
+  // surface's own mode (see src/tasks/filter.ts).
+  void modals.open(editTaskFilterModal, { filter: current, showMode: false }).tap((next) => {
     // Re-read across the modal's lifetime: the store can change while it is open (a sync merge,
     // or any other write reaching JournalsRepository), so the providers this write must not
     // disturb come from the current config, not the one open when the modal was opened.

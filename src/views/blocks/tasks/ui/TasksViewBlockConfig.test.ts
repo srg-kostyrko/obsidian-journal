@@ -86,6 +86,19 @@ describe("TasksViewBlockConfig", () => {
       expect(screen.getByText(m.view_block_tasks_filter_label())).toBeTruthy();
     });
 
+    // Unlike a journal's row, this filter IS the query composeFilters answers with, so its mode
+    // genuinely applies and the shared editor keeps the control.
+    it("opens the editor with the mode control, this filter being the query itself", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { Daily: daily, Weekly: weekly } },
+      });
+      harness.render(TasksViewBlockConfig, { props: { config: tasksViewBlock.defaultConfig, onChange: vi.fn() } });
+
+      await userEvent.click(screen.getByRole("button", { name: m.tasks_journal_filter_edit() }));
+      expect(harness.modals.lastOpen<{ showMode: boolean }>().props.showMode).toBe(true);
+    });
+
     // The whole point of wiring the shared editor here: a naive "no editor yet" state would leave
     // this passing with the filter never actually written back, so this drives the modal's own
     // submit and reads the emitted config, not just that the modal opened.

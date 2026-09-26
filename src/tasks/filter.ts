@@ -4,6 +4,7 @@ import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
 
 import { STATUS_ALIASES, type TaskCondition, type TaskRule } from "./conditions";
 import { headingsOf, tagsOf } from "./note-structure";
+import { DEFAULT_STATUS_CONDITION } from "./query";
 
 import type { TaskItem } from "./types";
 
@@ -62,7 +63,7 @@ export function matchesFilter(item: TaskItem, structure: NoteStructure | undefin
 // A query condition replaces the journal's of the same type. ANDing them instead would let a
 // fence only ever narrow what the journal allows, leaving anything the journal excludes
 // unreachable from any fence.
-export function composeFilters(journalFilter: TaskRule | null, queryFilter: TaskRule): TaskRule {
+function merge(journalFilter: TaskRule | null, queryFilter: TaskRule): TaskRule {
   if (journalFilter === null || journalFilter.conditions.length === 0) return queryFilter;
   const overridden = new Set(queryFilter.conditions.map((condition) => condition.type));
   return {
@@ -72,4 +73,23 @@ export function composeFilters(journalFilter: TaskRule | null, queryFilter: Task
       ...queryFilter.conditions,
     ],
   };
+}
+
+// The composed filter is what a listing actually runs, and it takes the query's mode: one flat
+// condition list has one combinator and nesting is ruled out by design, so a journal contributes
+// conditions only — which is why the journal's own filter editor offers no mode control while the
+// view block's, whose filter IS the query, keeps it.
+//
+// The listing's own status default is added here rather than by either surface, for two reasons.
+// It has to apply last: emitted into a query it is a query condition, and replace-by-type then
+// overrides the journal's stored status condition on every surface, so a journal saying "show all
+// statuses" or "only in progress" could never reach a bare fence. And it has to apply to both the
+// fence and the view block, neither of which should have to remember to ask — every listing reaches
+// here through buildTaskListing. A filter naming no status therefore behaves exactly as one whose
+// status condition is Open, including under `or`, where an explicit Open condition widens the union
+// the same way.
+export function composeFilters(journalFilter: TaskRule | null, queryFilter: TaskRule): TaskRule {
+  const merged = merge(journalFilter, queryFilter);
+  if (merged.conditions.some((condition) => condition.type === "status")) return merged;
+  return { mode: merged.mode, conditions: [...merged.conditions, { ...DEFAULT_STATUS_CONDITION }] };
 }

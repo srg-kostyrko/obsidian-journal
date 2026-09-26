@@ -57,7 +57,11 @@ function updateSort(value: string | undefined): void {
 const filterSummary = computed(() => describeTaskRule(props.config.filter));
 
 function editFilter(): void {
-  void modals.open(editTaskFilterModal, { filter: props.config.filter }).tap((filter) => update({ filter }));
+  // With the mode control, unlike a journal's row: this filter is the query composeFilters answers
+  // with, so its Match all / Match any setting is the one that applies.
+  void modals
+    .open(editTaskFilterModal, { filter: props.config.filter, showMode: true })
+    .tap((filter) => update({ filter }));
 }
 </script>
 

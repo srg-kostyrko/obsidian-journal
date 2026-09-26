@@ -2,7 +2,7 @@
 // journals — any further import here closes a cycle. valibot and ./conditions only.
 import * as v from "valibot";
 
-import { taskRuleSchema } from "./conditions";
+import { taskRuleSchema, type TaskCondition } from "./conditions";
 
 export const taskSorts = ["document", "status", "due", "scheduled", "start", "done", "created"] as const;
 export type TaskSort = (typeof taskSorts)[number];
@@ -15,16 +15,20 @@ const scopeSchema = v.object({
   depth: v.optional(v.fallback(v.picklist(["literal", "rollup"]), "literal"), "literal"),
 });
 
+// The status a listing shows when nothing — the journal's filter, the surface's, or a fence key —
+// names one. Applied by composeFilters (./filter.ts) after the two sides have been merged, never
+// emitted into a surface's own query: a query condition replaces the journal's of the same type, so
+// a default emitted up front would override a journal's stored status condition on every surface,
+// however bare, and "show all statuses" on a journal could never reach a fence.
+export const DEFAULT_STATUS_CONDITION: TaskCondition = { type: "status", condition: "is", statuses: ["open"] };
+
 // A listing reads where a move writes, so it defaults wider than the model's move default
 // (source: "note"): a bare fence in a day note must not just mirror the note it sits in, and an
 // item already ticked should drop out of view by default.
 export const taskQuerySchema = v.object({
   scope: v.optional(scopeSchema, () => v.parse(scopeSchema, {})),
   filter: v.optional(taskRuleSchema, () =>
-    v.parse(taskRuleSchema, {
-      mode: "and",
-      conditions: [{ type: "status", condition: "is", statuses: ["open"] }],
-    }),
+    v.parse(taskRuleSchema, { mode: "and", conditions: [DEFAULT_STATUS_CONDITION] }),
   ),
   sort: v.optional(v.fallback(v.picklist(taskSorts), "document"), "document"),
 });

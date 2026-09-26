@@ -146,6 +146,9 @@ function request(overrides: Partial<TaskListingPeriodRequest> = {}): TaskListing
 
 const withQuery = (query: Partial<TaskQuery>): TaskQuery => ({ ...DEFAULT_TASK_QUERY, ...query });
 
+// What a bare fence, and a view block whose filter the user emptied, both hand the listing.
+const NO_CONDITIONS: TaskRule = { mode: "and", conditions: [] };
+
 describe("buildTaskListing", () => {
   it("returns the period note's open items in document order and leaves the done one out", async () => {
     const dependencies = buildDependencies({
@@ -443,6 +446,30 @@ describe("buildTaskListing", () => {
     });
     const rows = await buildTaskListing(dependencies, request());
     expect(rows.map((row) => [row.key, row.depth])).toEqual([[`${DAY}:4`, 0]]);
+  });
+
+  // A bare fence and a view block whose filter names no status both arrive here with an empty
+  // condition list; the listing's own `status: open` default is applied at composition, so it
+  // reaches both without either surface having to emit it.
+  it("defaults a surface that names no status to open items", async () => {
+    const dependencies = buildDependencies({
+      items: { [DAY]: [line(DAY, 3, { status: "todo" }), line(DAY, 4, { status: "done" })] },
+      notes: { Daily: { "2026-09-22": DAY } },
+    });
+    const rows = await buildTaskListing(dependencies, request({ query: withQuery({ filter: NO_CONDITIONS }) }));
+    expect(rows.map((row) => row.key)).toEqual([`${DAY}:3`]);
+  });
+
+  it("lets the journal's own status condition stand where the surface names none", async () => {
+    const dependencies = buildDependencies({
+      items: { [DAY]: [line(DAY, 3, { status: "todo" }), line(DAY, 4, { status: "done" })] },
+      notes: { Daily: { "2026-09-22": DAY } },
+      journalFilters: {
+        Daily: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] },
+      },
+    });
+    const rows = await buildTaskListing(dependencies, request({ query: withQuery({ filter: NO_CONDITIONS }) }));
+    expect(rows.map((row) => row.key)).toEqual([`${DAY}:4`]);
   });
 
   // Heading fixtures carry no "#" — see filter.test.ts's own note on HeadingCache.heading.

@@ -5,13 +5,6 @@ import { DEFAULT_TASK_QUERY, taskSorts, type TaskQuery } from "@/tasks/query";
 
 import { asFenceStringList, asRecord } from "../fence-record";
 
-// Whatever condition the query's own default names for a bare filter — read off the frozen
-// default rather than duplicating "open" as a magic literal, so the two stay in lockstep if the
-// query's own default ever moves.
-const defaultStatusCondition = DEFAULT_TASK_QUERY.filter.conditions.at(0);
-const DEFAULT_STATUSES: readonly string[] =
-  defaultStatusCondition?.type === "status" ? defaultStatusCondition.statuses : ["open"];
-
 // Same double-wrap query.ts's own scope/sort fields use: `optional` covers a missing key,
 // `fallback` covers a present one that fails the enum check (wrong type, or a value the block
 // does not know) — both land on the same default rather than throwing into an error panel.
@@ -81,9 +74,12 @@ function normalizeTag(tag: string): string {
 // consumer sharing the same flat vocabulary — the tasks view block, following this fence — calls
 // the same function instead of re-deriving its own desugaring.
 export function toTaskQuery(raw: TasksFenceConfig): TaskQuery {
-  const conditions: TaskCondition[] = [
-    { type: "status", condition: "is", statuses: raw.status ?? [...DEFAULT_STATUSES] },
-  ];
+  const conditions: TaskCondition[] = [];
+  // Only when the fence wrote `status:`. The bare-fence `status: open` default is applied after
+  // composition instead (DEFAULT_STATUS_CONDITION, composeFilters) — emitted here it would be a
+  // query condition, and replace-by-type would then override the owning journal's own status
+  // condition on every fence, however bare.
+  if (raw.status !== undefined) conditions.push({ type: "status", condition: "is", statuses: raw.status });
   if (raw.heading !== undefined) {
     conditions.push({ type: "heading", condition: "under", headings: raw.heading.map(normalizeHeading) });
   }

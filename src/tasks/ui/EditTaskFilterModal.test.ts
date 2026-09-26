@@ -11,9 +11,9 @@ import type { TaskRule } from "../conditions";
 
 const EMPTY_FILTER: TaskRule = { mode: "and", conditions: [] };
 
-async function mount(filter: TaskRule = EMPTY_FILTER) {
+async function mount(filter: TaskRule = EMPTY_FILTER, showMode = true) {
   const harness = await testContainer();
-  const { submit, cancel } = harness.renderModal(EditTaskFilterModal, { props: { filter } });
+  const { submit, cancel } = harness.renderModal(EditTaskFilterModal, { props: { filter, showMode } });
   return { harness, submit, cancel };
 }
 
@@ -72,6 +72,20 @@ describe("EditTaskFilterModal", () => {
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
     expect(saveButton.disabled).toBe(true);
+  });
+
+  // composeFilters answers with the query's mode, never the journal's — one flat condition list has
+  // one combinator, so a journal that offered its own would promise something no composition can
+  // honour. A journal contributes conditions; the surface whose filter IS the query keeps the control.
+  it("omits the mode control for a filter that contributes conditions only", async () => {
+    await mount(EMPTY_FILTER, false);
+    expect(screen.queryByDisplayValue(m.tasks_settings_mode_and())).toBeNull();
+    expect(screen.queryByDisplayValue(m.tasks_settings_mode_or())).toBeNull();
+  });
+
+  it("offers the mode control for a filter that is the query itself", async () => {
+    await mount(EMPTY_FILTER, true);
+    expect(screen.getByDisplayValue(m.tasks_settings_mode_and())).toBeTruthy();
   });
 
   it("seeds the editor from the passed-in filter", async () => {

@@ -5,7 +5,7 @@ import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 import { composeFilters, matchesFilter } from "./filter";
 import { buildTaskItem } from "./testing";
 
-import type { TaskRule } from "./conditions";
+import type { TaskCondition, TaskRule } from "./conditions";
 
 const path = "Daily/2026-09-22.md" as VaultPath;
 
@@ -108,11 +108,57 @@ describe("composeFilters", () => {
 
   it("lets a query condition replace the journal's of the same type, not merely narrow it", () => {
     const composed = composeFilters(under("Tasks"), under("Log"));
-    expect(composed.conditions).toEqual([{ type: "heading", condition: "under", headings: ["Log"] }]);
+    expect(composed.conditions.filter((condition) => condition.type === "heading")).toEqual([
+      { type: "heading", condition: "under", headings: ["Log"] },
+    ]);
   });
 
-  it("returns the query's filter unchanged for a note no journal owns", () => {
-    const query = under("Log");
-    expect(composeFilters(null, query)).toEqual(query);
+  it("carries the query's own conditions through for a note no journal owns", () => {
+    const composed = composeFilters(null, under("Log"));
+    expect(composed.conditions).toContainEqual({ type: "heading", condition: "under", headings: ["Log"] });
+  });
+
+  // A journal contributes conditions, never a combinator: one flat list has one mode, and nesting
+  // is ruled out by design, so there is no composition that could honour two. The surface's filter
+  // is the one that IS the query, which is why the journal's own editor offers no mode control
+  // (EditTaskFilterModal's `showMode`) while the view block's keeps it.
+  it("takes the query's mode, never the journal's", () => {
+    const journal: TaskRule = {
+      mode: "or",
+      conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
+    };
+    const tag: TaskCondition = { type: "tag", condition: "has", tags: ["#work"] };
+    expect(composeFilters(journal, { mode: "and", conditions: [tag] }).mode).toBe("and");
+    expect(composeFilters(journal, { mode: "or", conditions: [tag] }).mode).toBe("or");
+  });
+
+  // The listing's status default applies here, after composition, rather than being emitted into a
+  // surface's own query up front: emitted up front it is a query condition, and replace-by-type
+  // then overrides the journal's status condition on every surface — so a journal saying "show all
+  // statuses" could never reach a bare fence. A filter naming no status behaves exactly as one whose
+  // status condition is Open, whichever side named the rest.
+  it("defaults to open when neither the journal nor the query names a status", () => {
+    expect(composeFilters(null, { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["open"] },
+    ]);
+    expect(composeFilters(under("Tasks"), { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "heading", condition: "under", headings: ["Tasks"] },
+      { type: "status", condition: "is", statuses: ["open"] },
+    ]);
+  });
+
+  it("leaves the journal's status condition alone when the query names none", () => {
+    const journal: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["all"] }] };
+    expect(composeFilters(journal, { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["all"] },
+    ]);
+  });
+
+  it("does not add the default over a status the query named itself", () => {
+    const journal: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["all"] }] };
+    const query: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] };
+    expect(composeFilters(journal, query).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["done"] },
+    ]);
   });
 });

@@ -72,8 +72,11 @@ describe("tasksBlockSchema", () => {
 });
 
 describe("toTaskQuery", () => {
-  it("defaults a bare fence to both sources, this period, open items", () => {
-    expect(toTaskQuery(v.parse(tasksBlockSchema, {}))).toEqual(DEFAULT_TASK_QUERY);
+  it("defaults a bare fence to both sources and this period, and names no status of its own", () => {
+    const query = toTaskQuery(v.parse(tasksBlockSchema, {}));
+    expect(query.scope).toEqual(DEFAULT_TASK_QUERY.scope);
+    expect(query.sort).toBe(DEFAULT_TASK_QUERY.sort);
+    expect(query.filter).toEqual({ mode: "and", conditions: [] });
   });
 
   it("sets scope.provider/source/depth from the flat fields", () => {
@@ -132,18 +135,18 @@ describe("toTaskQuery", () => {
   it("normalizes every entry of a heading or tag list, not just a lone value", () => {
     const parsed = v.parse(tasksBlockSchema, { heading: ["## Tasks", "# Personal"], tag: ["work", "#home"] });
     expect(toTaskQuery(parsed).filter.conditions).toEqual([
-      { type: "status", condition: "is", statuses: ["open"] },
       { type: "heading", condition: "under", headings: ["Tasks", "Personal"] },
       { type: "tag", condition: "has", tags: ["#work", "#home"] },
     ]);
   });
 
-  it("keeps the default open-status condition when no sugar key narrows it", () => {
+  // The bare-fence `status: open` default lives in composeFilters (src/tasks/filter.ts), applied
+  // after a journal's own filter has been composed in — not emitted here. Emitted here it is a
+  // query condition, and replace-by-type then overrides the journal's own status condition on
+  // every fence, however bare, so a journal saying "show all statuses" could never reach one.
+  it("emits no status condition when the fence wrote no status key, so a journal's own can reach it", () => {
     const parsed = v.parse(tasksBlockSchema, { tag: "#work" });
-    expect(toTaskQuery(parsed).filter.conditions).toEqual([
-      { type: "status", condition: "is", statuses: ["open"] },
-      { type: "tag", condition: "has", tags: ["#work"] },
-    ]);
+    expect(toTaskQuery(parsed).filter.conditions).toEqual([{ type: "tag", condition: "has", tags: ["#work"] }]);
   });
 
   it("desugars a status list", () => {

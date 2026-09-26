@@ -81,6 +81,64 @@ describe("TasksCodeBlock", () => {
     await vi.waitFor(() => expect(screen.getByText("- [ ] Ship it")).toBeTruthy());
   });
 
+  // The bare-fence status default is applied after the journal's own filter has been composed in,
+  // so a journal saying "show what is done" reaches a fence that named no status of its own. Emitted
+  // into the fence's query instead, replace-by-type would override the journal on every bare fence.
+  it("honours the journal's own status condition on a fence that named no status", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule],
+      data: {
+        journals: {
+          Daily: {
+            ...daily,
+            tasks: {
+              providers: {},
+              filter: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] },
+            },
+          },
+        },
+        shelves: {},
+      },
+      overrides: [
+        overrideWith(MarkdownRenderService, new FakeMarkdownRenderService() as unknown as MarkdownRenderService),
+      ],
+    });
+    harness.render(TasksCodeBlock, { props: { path: HOST, config: DEFAULT_CONFIG } });
+    seedHost(harness);
+    harness.resolve(TaskIndex).publish("checkbox", { path: HOST }, [
+      buildTaskItem({
+        path: HOST,
+        key: `${HOST}:3`,
+        status: "done",
+        display: { kind: "line", path: HOST, line: 3, endLine: 3, parentLine: null, markdown: "- [x] Shipped" },
+      }),
+    ]);
+
+    await vi.waitFor(() => expect(screen.getByText("- [x] Shipped")).toBeTruthy());
+  });
+
+  it("still defaults a bare fence to open items where the journal names no status", async () => {
+    const harness = await mount();
+    seedHost(harness);
+    harness.resolve(TaskIndex).publish("checkbox", { path: HOST }, [
+      buildTaskItem({
+        path: HOST,
+        key: `${HOST}:3`,
+        status: "done",
+        display: { kind: "line", path: HOST, line: 3, endLine: 3, parentLine: null, markdown: "- [x] Shipped" },
+      }),
+      buildTaskItem({
+        path: HOST,
+        key: `${HOST}:4`,
+        status: "todo",
+        display: { kind: "line", path: HOST, line: 4, endLine: 4, parentLine: null, markdown: "- [ ] Ship it" },
+      }),
+    ]);
+
+    await vi.waitFor(() => expect(screen.getByText("- [ ] Ship it")).toBeTruthy());
+    expect(screen.queryByText("- [x] Shipped")).toBeNull();
+  });
+
   // The fence has no key to name another journal, so `depth: rollup` has to reach a shelf-mate's
   // period notes on its own — proving the shelf-scope wiring the component computes itself,
   // not just that `buildTaskListing` can roll up when handed the right journal names.

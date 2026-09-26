@@ -55,6 +55,14 @@ describe("JournalTaskFilterRow", () => {
     expect(harness.modals.lastOpen()).toBeTruthy();
   });
 
+  // A journal contributes conditions only — composeFilters answers with the surface's mode, so a
+  // Match all / Match any control here would promise a combinator no composition ever reads.
+  it("opens the editor with no mode control", async () => {
+    const harness = await mount();
+    await userEvent.click(screen.getByRole("button", { name: m.tasks_journal_filter_edit() }));
+    expect(harness.modals.lastOpen<{ showMode: boolean }>().props.showMode).toBe(false);
+  });
+
   // The restructure in Task 5 put `providers` and `filter` in one object, and a naive write that
   // replaces `tasks` wholesale would silently drop the journal's checkbox identification rule —
   // this is the test that would still pass even if the edited filter were never written back, so

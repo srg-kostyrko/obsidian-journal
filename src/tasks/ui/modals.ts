@@ -7,6 +7,7 @@ import type { TaskRule } from "../conditions";
 
 export interface EditTaskFilterModalProps {
   filter: TaskRule;
+  showMode: boolean;
 }
 
 export const editTaskFilterModal = defineModal<TaskRule>()({

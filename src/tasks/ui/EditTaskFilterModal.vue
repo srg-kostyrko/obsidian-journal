@@ -19,7 +19,11 @@ import type { TaskCondition, TaskRule } from "../conditions";
 // TasksViewBlockConfig.vue).
 const FILTER_CONDITION_TYPES: readonly TaskCondition["type"][] = ["tag", "heading", "status"];
 
-const { filter } = defineProps<{ filter: TaskRule }>();
+// `showMode` is the caller's own answer to "does this filter's combinator get read?", stated at
+// both call sites rather than defaulted: a journal's filter contributes conditions into the
+// surface's query and its mode is never read (composeFilters, ../filter.ts), while a view block's
+// filter IS the query, so its mode applies.
+const { filter, showMode } = defineProps<{ filter: TaskRule; showMode: boolean }>();
 const api = useModal<TaskRule>();
 
 // A deep copy, not a live binding: RuleEditor mutates its model in place, and nothing may reach
@@ -50,6 +54,7 @@ function save(): void {
     :label="m.tasks_filter_conditions_label()"
     :description="m.tasks_filter_conditions_desc()"
     :errors="errors"
+    :show-mode="showMode"
   />
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
