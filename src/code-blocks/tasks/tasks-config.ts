@@ -54,6 +54,24 @@ export const tasksBlockSchema = v.pipe(v.unknown(), v.transform(asRecord), v.obj
 
 export type TasksFenceConfig = v.InferOutput<typeof tasksBlockSchema>;
 
+// headingsOf() (src/tasks/note-structure.ts) compares against Obsidian's own HeadingCache.heading,
+// which never carries the markdown "#" — so `## Tasks`, the spelling a user's own note shows and the
+// one they will reach for first, must mean the same heading as `Tasks`, or it parses cleanly and
+// matches nothing, with no error to say why. Stripped only when a run of "#" is followed by
+// whitespace: that shape is unambiguously the ATX marker, so a heading whose own text starts with
+// "#" and no following space — not markdown syntax — survives untouched.
+function normalizeHeading(heading: string): string {
+  return heading.replace(/^#+\s+/, "");
+}
+
+// The mirror case: metadataCache tags always carry the leading "#", so a tag named without one must
+// still match. Left alone once it already starts with "#" — nothing here collapses a repeated one,
+// unlike the settings editor's own coercion (conditionValues, condition-text.ts), which also has to
+// undo a user's comma-separated typing; a fence value has no such shape to undo.
+function normalizeTag(tag: string): string {
+  return tag.startsWith("#") ? tag : `#${tag}`;
+}
+
 // Desugar order is fixed: scope keys (provider/source/depth) first — they set a scope field each,
 // never a condition — then `status`, then the selection-shaped keys `heading` and `tag`, in that
 // order. Each flat key desugars into exactly one condition or sets one scope field; that
@@ -66,8 +84,10 @@ export function toTaskQuery(raw: TasksFenceConfig): TaskQuery {
   const conditions: TaskCondition[] = [
     { type: "status", condition: "is", statuses: raw.status ?? [...DEFAULT_STATUSES] },
   ];
-  if (raw.heading !== undefined) conditions.push({ type: "heading", condition: "under", headings: raw.heading });
-  if (raw.tag !== undefined) conditions.push({ type: "tag", condition: "has", tags: raw.tag });
+  if (raw.heading !== undefined) {
+    conditions.push({ type: "heading", condition: "under", headings: raw.heading.map(normalizeHeading) });
+  }
+  if (raw.tag !== undefined) conditions.push({ type: "tag", condition: "has", tags: raw.tag.map(normalizeTag) });
   conditions.push(...raw.conditions);
 
   return {

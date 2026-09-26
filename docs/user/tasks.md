@@ -117,8 +117,8 @@ they live, a period's own note, its notelets, or both, never by a date the task 
 | `source`     | `both`     | `note`, `notelets` or `both`.                                                                                                                                                                                                                        |
 | `depth`      | `literal`  | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own. |
 | `status`     | `open`     | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one.                                                                                                      |
-| `heading`    | none       | one or more headings; only tasks sitting under one of them are shown. Name the heading's own text, not its `#` markers.                                                                                                                              |
-| `tag`        | none       | one or more tags; only tasks carrying one of them are shown. Write the tag with its leading `#` — unlike the settings editor's tag field, this key does not add it for you.                                                                          |
+| `heading`    | none       | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                          |
+| `tag`        | none       | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                   |
 | `sort`       | `document` | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                               |
 | `conditions` | none       | more conditions, of any of the three types above, for anything the flat keys cannot say — see below.                                                                                                                                                 |
 
@@ -211,9 +211,9 @@ condition** — scoped to this journal. Leave it empty, the default, and a listi
 no filter of its own.
 
 A journal's own filter and a fence's combine, but not by narrowing: **a fence condition of a given type
-replaces the journal's of the same type**, rather than adding to it. A journal filtered to heading
-`Tasks` and a fence asking for `heading: Log` shows `Log`, not the intersection of the two — ANDing
-them instead would make anything the journal's own filter excludes unreachable from any fence.
+replaces the journal's of the same type**, rather than adding to it. A journal scoped to `## Tasks` and
+a fence asking for `## Log` shows `## Log`, not the intersection of the two — ANDing them instead would
+make anything the journal's own filter excludes unreachable from any fence.
 
 The editor's own **Status** control offers only three groupings — **Open**, **Done**, **All** — the same
 three names the `status:` fence key accepts as aliases. A fence, or the `conditions:` escape hatch, can

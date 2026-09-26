@@ -85,7 +85,7 @@ describe("toTaskQuery", () => {
     const parsed = v.parse(tasksBlockSchema, { heading: "## Tasks", status: "done" });
     expect(toTaskQuery(parsed).filter.conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
-      { type: "heading", condition: "under", headings: ["## Tasks"] },
+      { type: "heading", condition: "under", headings: ["Tasks"] },
     ]);
   });
 
@@ -93,8 +93,48 @@ describe("toTaskQuery", () => {
     const parsed = v.parse(tasksBlockSchema, { tag: "#work", heading: "## Tasks", status: "done" });
     expect(toTaskQuery(parsed).filter.conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
-      { type: "heading", condition: "under", headings: ["## Tasks"] },
+      { type: "heading", condition: "under", headings: ["Tasks"] },
       { type: "tag", condition: "has", tags: ["#work"] },
+    ]);
+  });
+
+  // headingsOf() (src/tasks/note-structure.ts) compares against Obsidian's own HeadingCache.heading,
+  // which never carries the markdown "#" — so `## Tasks`, the spelling a user's own note shows, must
+  // mean the same heading as `Tasks`, or it parses cleanly and matches nothing, silently.
+  it("normalizes a heading written with its ATX # prefix to the same condition as the bare text", () => {
+    const withHash = toTaskQuery(v.parse(tasksBlockSchema, { heading: "## Tasks" }));
+    const bare = toTaskQuery(v.parse(tasksBlockSchema, { heading: "Tasks" }));
+    expect(withHash.filter.conditions).toEqual(bare.filter.conditions);
+    expect(withHash.filter.conditions).toContainEqual({ type: "heading", condition: "under", headings: ["Tasks"] });
+  });
+
+  // metadataCache tags always carry the leading "#" — the fence must accept the spelling without
+  // one too, or a tag named without its "#" (the spelling conditionValues() already accepts on the
+  // settings side) matches nothing here.
+  it("normalizes a tag written without its # to the same condition as one with it", () => {
+    const bare = toTaskQuery(v.parse(tasksBlockSchema, { tag: "work" }));
+    const withHash = toTaskQuery(v.parse(tasksBlockSchema, { tag: "#work" }));
+    expect(bare.filter.conditions).toEqual(withHash.filter.conditions);
+    expect(bare.filter.conditions).toContainEqual({ type: "tag", condition: "has", tags: ["#work"] });
+  });
+
+  // The ATX prefix is a run of "#" followed by whitespace; a heading whose own text happens to start
+  // with "#" and no following space is not markdown syntax and must survive untouched.
+  it("does not strip a heading whose text genuinely starts with #, with no space after it", () => {
+    const parsed = v.parse(tasksBlockSchema, { heading: "#1 priority" });
+    expect(toTaskQuery(parsed).filter.conditions).toContainEqual({
+      type: "heading",
+      condition: "under",
+      headings: ["#1 priority"],
+    });
+  });
+
+  it("normalizes every entry of a heading or tag list, not just a lone value", () => {
+    const parsed = v.parse(tasksBlockSchema, { heading: ["## Tasks", "# Personal"], tag: ["work", "#home"] });
+    expect(toTaskQuery(parsed).filter.conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["open"] },
+      { type: "heading", condition: "under", headings: ["Tasks", "Personal"] },
+      { type: "tag", condition: "has", tags: ["#work", "#home"] },
     ]);
   });
 
