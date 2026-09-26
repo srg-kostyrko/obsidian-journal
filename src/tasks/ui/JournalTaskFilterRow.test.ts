@@ -63,11 +63,10 @@ describe("JournalTaskFilterRow", () => {
     expect(harness.modals.lastOpen<{ showMode: boolean }>().props.showMode).toBe(false);
   });
 
-  // The restructure in Task 5 put `providers` and `filter` in one object, and a naive write that
-  // replaces `tasks` wholesale would silently drop the journal's checkbox identification rule —
-  // this is the test that would still pass even if the edited filter were never written back, so
-  // it must actually drive a Save and read the result back from the repository, not just assert
-  // that the modal opened.
+  // `providers` and `filter` share one `tasks` object, so a naive write that replaces `tasks`
+  // wholesale silently drops the journal's checkbox identification rule — and this is the test that
+  // would still pass even if the edited filter were never written back, so it must actually drive a
+  // Save and read the result back from the repository, not just assert that the modal opened.
   it("writes the edited filter back to the journal, leaving its provider rules untouched", async () => {
     const harness = await testContainer({
       modules: [journalsCoreModule, tasksCoreModule],

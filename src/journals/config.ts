@@ -168,7 +168,11 @@ export const journalConfigSchema = v.object({
   // and nothing is logged — the loss is silent, on purpose, in exchange for not losing the
   // sibling. Whoever adds a third sub-field to `tasks` needs the same per-field v.fallback; the
   // underlying gap — repairCollectionEntry cannot reach inside a plain (non-`nested`) sub-object —
-  // is still there for it.
+  // is still there for it. The same gap sits one level deeper, inside `providers`: only that object
+  // carries a v.fallback, not each provider key, so once a second provider lands (note-property,
+  // #503) a bad `noteProperty` rule still resets the whole `providers` object and takes the
+  // checkbox rule with it. That key needs its own v.fallback when it is added — one per provider,
+  // not one around the namespace.
   tasks: v.optional(
     v.object({
       // Keyed by provider id — note-property joins here in #503. Kept in its own object so the

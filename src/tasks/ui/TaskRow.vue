@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -26,6 +26,19 @@ const markdown = computed(() => {
   const display = props.row.item.display;
   return display.kind === "line" ? (display.markdown ?? "") : display.title;
 });
+
+// Obsidian renders the row's checkbox itself, inside the markdown, so there is no prop to disable
+// it through: a context row's control has to be disabled on the rendered element, or it keeps
+// accepting focus and a click for an action that deliberately does nothing. Re-applied after every
+// repaint — hydration replaces a row's markdown, and with it the input.
+const line = ref<HTMLElement | null>(null);
+function disableContextCheckboxes(): void {
+  if (!props.row.context) return;
+  const checkboxes = line.value?.querySelectorAll<HTMLInputElement>("input[type=checkbox]") ?? [];
+  for (const checkbox of checkboxes) checkbox.disabled = true;
+}
+onMounted(disableContextCheckboxes);
+watch(markdown, disableContextCheckboxes, { flush: "post" });
 
 function onLineClick(event: MouseEvent): void {
   const checkbox = checkboxTarget(event);
@@ -57,7 +70,7 @@ function openSource(event: MouseEvent): void {
     :data-context="row.context"
     :style="{ '--task-listing-depth': row.depth }"
   >
-    <div class="task-listing-row__line" @click="onLineClick">
+    <div ref="line" class="task-listing-row__line" @click="onLineClick">
       <UiMarkdown :markdown="markdown" :source-path="row.item.path" />
     </div>
     <a href="#" class="task-listing-row__source" @click.prevent="openSource" @auxclick.middle.prevent="openSource">{{

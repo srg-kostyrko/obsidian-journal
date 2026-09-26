@@ -16,20 +16,30 @@ import TaskList from "./TaskList.vue";
 import type { TaskListingRow } from "../listing";
 import type { TaskItem } from "../types";
 
+// `line` defaults to a fresh number per row: buildTaskItem keys an item `${path}:${line}`, so two
+// rows built at the same line would render under one `:key` and Vue would reuse a single component
+// for both.
+let nextLine = 0;
+
 function row(
   overrides: {
     markdown?: string;
     depth?: number;
     context?: boolean;
     sourceLabel?: string;
+    line?: number;
   } = {},
 ): TaskListingRow {
+  const lineNumber = overrides.line ?? nextLine++;
+  const path = "Daily/2026-09-22.md" as VaultPath;
   const item: TaskItem = buildTaskItem({
+    path,
+    key: `${path}:${lineNumber}`,
     display: {
       kind: "line",
-      path: "Daily/2026-09-22.md" as VaultPath,
-      line: 0,
-      endLine: 0,
+      path,
+      line: lineNumber,
+      endLine: lineNumber,
       parentLine: null,
       markdown: overrides.markdown ?? "- [ ] Task",
     },
@@ -47,6 +57,19 @@ function stubMarkdown(): MarkdownRenderService {
   return new FakeMarkdownRenderService() as unknown as MarkdownRenderService;
 }
 
+// Obsidian's own renderer emits the checkbox as part of the line; the unit-tier fake emits text
+// only, so a test about the rendered control's own state needs a renderer that produces one.
+function checkboxMarkdown(): MarkdownRenderService {
+  return {
+    render(element: HTMLElement, markdown: string): () => void {
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      element.replaceChildren(input, document.createTextNode(markdown));
+      return () => element.replaceChildren();
+    },
+  } as unknown as MarkdownRenderService;
+}
+
 async function mountWithTick(toggle: (item: TaskItem) => AsyncResult<void, TickError>): Promise<TestHarness> {
   return testContainer({
     modules: [tasksCoreModule],
@@ -58,12 +81,18 @@ async function mountWithTick(toggle: (item: TaskItem) => AsyncResult<void, TickE
 }
 
 // Real Obsidian renders an enabled checkbox for a task line with no handler of its own attached
-// outside a real MarkdownView (measured against 1.13.7 — see the tasks-listing spec's Task 0),
-// which is what licenses catching its click here. The unit-test-tier FakeMarkdownRenderService is
-// `element.textContent = markdown` and produces no such input, so these tests attach a plain
-// `<input type="checkbox">` by hand and click it — exercising the click-delegation and context
-// guard for real, but not whether MarkdownRenderService's actual output matches what we insert by
-// hand. That last gap is Task 16's e2e spec.
+// outside a real MarkdownView (measured against 1.13.7), which is what licenses catching its click
+// here. The unit-test-tier FakeMarkdownRenderService is `element.textContent = markdown` and
+// produces no such input, so these tests attach a plain `<input type="checkbox">` by hand and click
+// it — exercising the click-delegation and context guard for real, but not whether
+// MarkdownRenderService's actual output matches what we insert by hand. That last gap is covered by
+// the tasks e2e journey.
+// `disabled` is a reflected boolean attribute, so this reads back what the component set on the
+// rendered input without an instanceof narrowing per row.
+function disabledFlags(): boolean[] {
+  return screen.getAllByRole("checkbox").map((box) => box.hasAttribute("disabled"));
+}
+
 function clickableCheckbox(markdown: string): HTMLInputElement {
   const line = screen.getByText(markdown);
   const checkbox = document.createElement("input");
@@ -96,6 +125,26 @@ describe("TaskList", () => {
   it("marks a context row so it renders dimmed and cannot be ticked", () => {
     harness.render(TaskList, { props: { rows: [row({ context: true })] } });
     expect(screen.getByRole("listitem").dataset.context).toBe("true");
+  });
+
+  // The click handler already refuses a context row, but an enabled, focusable control that does
+  // nothing when pressed is an affordance the behavior does not back.
+  it("disables a context row's own checkbox, so the control matches what clicking it does", async () => {
+    harness = await testContainer({
+      modules: [tasksCoreModule],
+      overrides: [overrideWith(MarkdownRenderService, checkboxMarkdown())],
+    });
+    const plain = row({ context: false, line: 4 });
+    const { rerender } = harness.render(TaskList, {
+      props: { rows: [row({ context: true, line: 3 }), plain] },
+    });
+
+    expect(disabledFlags()).toEqual([true, false]);
+
+    // Hydration replaces a row's markdown under the same key, and Obsidian's renderer replaces the
+    // input along with it — so the row that was already disabled has to come back disabled.
+    await rerender({ rows: [row({ context: true, line: 3, markdown: "- [x] Shopping" }), plain] });
+    expect(disabledFlags()).toEqual([true, false]);
   });
 
   it("links each row to the note it came from", () => {
