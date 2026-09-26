@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { initLocale, m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import type { TaskRule } from "@/tasks/conditions";
 import { DEFAULT_TASK_QUERY } from "@/tasks/query";
 import { testContainer } from "@/testing";
 
@@ -77,5 +78,32 @@ describe("TasksViewBlockConfig", () => {
     const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
     harness.render(TasksViewBlockConfig, { props: { config: tasksViewBlock.defaultConfig, onChange: vi.fn() } });
     expect(screen.queryByText(m.view_block_tasks_journals_label())).toBeNull();
+  });
+
+  describe("filter row", () => {
+    it("shows a filter row describing the stored filter", async () => {
+      await mountConfig();
+      expect(screen.getByText(m.view_block_tasks_filter_label())).toBeTruthy();
+    });
+
+    // The whole point of wiring the shared editor here: a naive "no editor yet" state would leave
+    // this passing with the filter never actually written back, so this drives the modal's own
+    // submit and reads the emitted config, not just that the modal opened.
+    it("emits the complete config with the edited filter on Save", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { Daily: daily, Weekly: weekly } },
+      });
+      const onChange = vi.fn();
+      harness.render(TasksViewBlockConfig, { props: { config: tasksViewBlock.defaultConfig, onChange } });
+
+      await userEvent.click(screen.getByRole("button", { name: m.tasks_journal_filter_edit() }));
+      const edited: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+      harness.modals.lastOpen<{ filter: TaskRule }, TaskRule>().submit(edited);
+
+      await vi.waitFor(() =>
+        expect(onChange).toHaveBeenCalledWith({ ...tasksViewBlock.defaultConfig, filter: edited }),
+      );
+    });
   });
 });

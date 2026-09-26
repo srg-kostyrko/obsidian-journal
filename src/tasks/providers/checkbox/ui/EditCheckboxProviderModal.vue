@@ -6,6 +6,8 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { SettingsService } from "@/settings";
+import type { TaskCondition } from "@/tasks/conditions";
+import RuleEditor from "@/tasks/ui/RuleEditor.vue";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
@@ -13,8 +15,11 @@ import { checkboxRuleConditionErrors } from "../rule-form-schema";
 import { isEditableCondition } from "../rule-schema";
 import { checkboxSlice } from "../slice";
 
-import RuleEditor from "./RuleEditor.vue";
 import StatusMapEditor from "./StatusMapEditor.vue";
+
+// Identification never reads a status condition (rule-schema.ts), so this editor's type dropdown
+// never offers one — the only gate that keeps a status condition from ever being written here.
+const CHECKBOX_CONDITION_TYPES: readonly TaskCondition["type"][] = ["tag", "heading"];
 
 const api = useModal();
 const slice = useService(SettingsService).getSlice(checkboxSlice);
@@ -32,7 +37,14 @@ const storedConditions = cloneFnJSON(slice.state.rule.conditions);
 // survives the round trip.
 const preservedConditions = storedConditions.filter((condition) => !isEditableCondition(condition));
 
-const draft = reactive({
+// `rule.conditions` is typed as the full TaskCondition union, matching RuleEditor's model —
+// CHECKBOX_CONDITION_TYPES above is what actually keeps a status condition out, not this type,
+// which only has to be wide enough for RuleEditor to bind to.
+const draft = reactive<{
+  statusMap: Record<string, string>;
+  canonical: Record<string, string>;
+  rule: { mode: "and" | "or"; conditions: TaskCondition[] };
+}>({
   statusMap: cloneFnJSON(slice.state.statusMap),
   canonical: cloneFnJSON(slice.state.canonical),
   rule: {
@@ -68,7 +80,13 @@ function save(): void {
 
 <template>
   <StatusMapEditor v-model:status-map="draft.statusMap" v-model:canonical="draft.canonical" />
-  <RuleEditor v-model="draft.rule" :errors="ruleErrors" />
+  <RuleEditor
+    v-model="draft.rule"
+    :types="CHECKBOX_CONDITION_TYPES"
+    :label="m.tasks_settings_rule()"
+    :description="m.tasks_settings_rule_desc()"
+    :errors="ruleErrors"
+  />
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
     <UiButton cta :disabled="!ruleValid" @click="save">{{ m.common_action_submit() }}</UiButton>

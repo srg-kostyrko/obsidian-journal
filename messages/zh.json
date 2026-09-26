@@ -1305,6 +1305,7 @@
   "view_block_tasks_sort_start": "开始日期",
   "view_block_tasks_sort_done": "完成日期",
   "view_block_tasks_sort_created": "创建日期",
+  "view_block_tasks_filter_label": "筛选",
   "view_toolbar_shelf_selector_label": "书架选择器",
   "view_toolbar_shelf_selector_description": "切换限定此视图日记范围的书架。",
   "view_toolbar_shelf_selector_tooltip": "切换书架",
@@ -2350,6 +2351,9 @@
   "tasks_settings_condition_lacks": "不包含",
   "tasks_settings_condition_under": "位于",
   "tasks_settings_condition_not_under": "不位于",
+  "tasks_settings_condition_status": "状态",
+  "tasks_settings_condition_is": "为",
+  "tasks_settings_condition_is_not": "不为",
   "tasks_settings_mode_and": "匹配所有条件",
   "tasks_settings_mode_or": "匹配任一条件",
   "tasks_condition_values_required": "请至少输入一个值。",
@@ -2375,6 +2379,22 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "未指定标题",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "状态为 {statuses}",
+        "condition=is-not": "状态不为 {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "未指定状态",
+  "tasks_status_group_open": "未完成",
+  "tasks_status_group_done": "已完成",
+  "tasks_status_group_all": "全部",
+  "tasks_filter_summary_any": "无条件——范围内的每个任务都会显示。",
+  "tasks_filter_summary_conditions": "显示{conditions}的任务。",
   "tasks_rule_summary_any": "无条件——日记笔记中的每个复选框列表项都是任务。",
   "tasks_rule_summary_conditions": "统计{conditions}的复选框列表项。",
   "tasks_journal_summary_inherit": "继承全库通用规则。",
@@ -2399,6 +2419,11 @@
   "tasks_journal_compose_narrow": "收窄",
   "tasks_journal_compose_replace": "替换",
   "tasks_journal_modal_title": "任务识别 — {journal}",
+  "tasks_journal_filter_title": "列表筛选条件",
+  "tasks_journal_filter_none": "此日记没有自己的列表筛选条件。",
+  "tasks_journal_filter_edit": "编辑",
+  "tasks_filter_conditions_label": "条件",
+  "tasks_filter_conditions_desc": "列表显示哪些任务。",
   "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。",
   "tasks_tick_error": "无法勾选该任务。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"

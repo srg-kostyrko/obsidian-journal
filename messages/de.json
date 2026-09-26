@@ -1450,6 +1450,7 @@
   "view_block_tasks_sort_start": "Startdatum",
   "view_block_tasks_sort_done": "Erledigungsdatum",
   "view_block_tasks_sort_created": "Erstellungsdatum",
+  "view_block_tasks_filter_label": "Filter",
   "view_toolbar_shelf_selector_label": "Regalauswahl",
   "view_toolbar_shelf_selector_description": "Wechselt, welches Regal die Journale der Ansicht eingrenzt.",
   "view_toolbar_shelf_selector_tooltip": "Regal wechseln",
@@ -2369,6 +2370,9 @@
   "tasks_settings_condition_lacks": "Enthält nicht",
   "tasks_settings_condition_under": "Unter",
   "tasks_settings_condition_not_under": "Nicht unter",
+  "tasks_settings_condition_status": "Status",
+  "tasks_settings_condition_is": "Ist",
+  "tasks_settings_condition_is_not": "Ist nicht",
   "tasks_settings_mode_and": "Alle Bedingungen erfüllen",
   "tasks_settings_mode_or": "Eine beliebige Bedingung erfüllen",
   "tasks_condition_values_required": "Gib mindestens einen Wert ein.",
@@ -2394,6 +2398,22 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "ohne Überschrift",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses}",
+        "condition=is-not": "nicht {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "ohne Status",
+  "tasks_status_group_open": "Offen",
+  "tasks_status_group_done": "Erledigt",
+  "tasks_status_group_all": "Alle",
+  "tasks_filter_summary_any": "Keine Bedingungen – jede Aufgabe im Geltungsbereich wird angezeigt.",
+  "tasks_filter_summary_conditions": "Zeigt eine Aufgabe an, die {conditions} ist.",
   "tasks_rule_summary_any": "Keine Bedingungen – jeder Kontrollkästchen-Listeneintrag in den Notizen eines Journals ist eine Aufgabe.",
   "tasks_rule_summary_conditions": "Zählt einen Kontrollkästchen-Listeneintrag, der {conditions} ist.",
   "tasks_journal_summary_inherit": "Erbt die Vault-weite Regel.",
@@ -2418,6 +2438,11 @@
   "tasks_journal_compose_narrow": "Einschränken",
   "tasks_journal_compose_replace": "Ersetzen",
   "tasks_journal_modal_title": "Aufgabenerkennung – {journal}",
+  "tasks_journal_filter_title": "Anzeigefilter",
+  "tasks_journal_filter_none": "Dieses Journal hat keinen eigenen Anzeigefilter.",
+  "tasks_journal_filter_edit": "Bearbeiten",
+  "tasks_filter_conditions_label": "Bedingungen",
+  "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",
   "tasks_tick_error": "Die Aufgabe konnte nicht abgehakt werden.",
   "tasks_listing_empty": "Keine Aufgaben entsprechen dieser Abfrage."

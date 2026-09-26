@@ -3,8 +3,12 @@ import { computed } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
+import { useModalService } from "@/infrastructure/host/modals";
 import { JournalsViewModel } from "@/journals";
 import { taskSorts, type TaskQuery } from "@/tasks/query";
+import { describeTaskRule } from "@/tasks/ui/describe-task-rule";
+import { editTaskFilterModal } from "@/tasks/ui/modals";
+import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiToggleGroup from "@/ui/UiToggleGroup.vue";
@@ -15,10 +19,7 @@ import type { TasksViewBlockConfig, TasksViewBlockConfigChange } from "../tasks-
 
 const props = defineProps<{ config: TasksViewBlockConfig; onChange: TasksViewBlockConfigChange }>();
 
-// config.filter is stored and round-tripped but has no row here: its editor is `RuleEditor`,
-// relocating to a shared home for the per-journal filter row in a follow-up task, which will add
-// this block's filter row when it moves rather than have a second editor built and then replaced.
-
+const modals = useModalService();
 const journals = useService(JournalsViewModel);
 
 const update = (patch: Partial<TasksViewBlockConfig>): void => props.onChange({ ...props.config, ...patch });
@@ -51,6 +52,12 @@ function updateSource(value: string | undefined): void {
 function updateSort(value: string | undefined): void {
   if (value === undefined) return;
   update({ sort: value as TaskQuery["sort"] });
+}
+
+const filterSummary = computed(() => describeTaskRule(props.config.filter));
+
+function editFilter(): void {
+  void modals.open(editTaskFilterModal, { filter: props.config.filter }).tap((filter) => update({ filter }));
 }
 </script>
 
@@ -88,5 +95,11 @@ function updateSort(value: string | undefined): void {
         {{ sortLabels[sort]() }}
       </option>
     </UiDropdown>
+  </UiSettingRow>
+  <UiSettingRow :name="m.view_block_tasks_filter_label()">
+    <template #description>
+      <span data-testid="task-filter-summary">{{ filterSummary }}</span>
+    </template>
+    <UiButton data-testid="task-filter-edit" @click="editFilter">{{ m.tasks_journal_filter_edit() }}</UiButton>
   </UiSettingRow>
 </template>

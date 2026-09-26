@@ -1450,6 +1450,7 @@
   "view_block_tasks_sort_start": "Data di inizio",
   "view_block_tasks_sort_done": "Data di completamento",
   "view_block_tasks_sort_created": "Data di creazione",
+  "view_block_tasks_filter_label": "Filtro",
   "view_toolbar_shelf_selector_label": "Selettore di scaffali",
   "view_toolbar_shelf_selector_description": "Cambia lo scaffale che delimita i diari della vista.",
   "view_toolbar_shelf_selector_tooltip": "Cambia scaffale",
@@ -2367,6 +2368,9 @@
   "tasks_settings_condition_lacks": "Non contiene",
   "tasks_settings_condition_under": "Sotto",
   "tasks_settings_condition_not_under": "Non sotto",
+  "tasks_settings_condition_status": "Stato",
+  "tasks_settings_condition_is": "È",
+  "tasks_settings_condition_is_not": "Non è",
   "tasks_settings_mode_and": "Soddisfa tutte le condizioni",
   "tasks_settings_mode_or": "Soddisfa almeno una condizione",
   "tasks_condition_values_required": "Inserisci almeno un valore.",
@@ -2392,6 +2396,22 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "senza intestazione",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses}",
+        "condition=is-not": "non {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "senza stato",
+  "tasks_status_group_open": "Aperte",
+  "tasks_status_group_done": "Completate",
+  "tasks_status_group_all": "Tutte",
+  "tasks_filter_summary_any": "Nessuna condizione — viene mostrata ogni attività nell'ambito.",
+  "tasks_filter_summary_conditions": "Mostra un'attività che è {conditions}.",
   "tasks_rule_summary_any": "Nessuna condizione — ogni elemento di elenco con casella nelle note di un diario è un'attività.",
   "tasks_rule_summary_conditions": "Conta un elemento di elenco con casella che è {conditions}.",
   "tasks_journal_summary_inherit": "Eredita la regola di tutto il vault.",
@@ -2416,6 +2436,11 @@
   "tasks_journal_compose_narrow": "Restringi",
   "tasks_journal_compose_replace": "Sostituisci",
   "tasks_journal_modal_title": "Identificazione delle attività — {journal}",
+  "tasks_journal_filter_title": "Filtro dell'elenco",
+  "tasks_journal_filter_none": "Questo diario non ha un filtro dell'elenco proprio.",
+  "tasks_journal_filter_edit": "Modifica",
+  "tasks_filter_conditions_label": "Condizioni",
+  "tasks_filter_conditions_desc": "Quali di queste attività mostra un elenco.",
   "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",
   "tasks_tick_error": "Non è stato possibile contrassegnare l'attività.",
   "tasks_listing_empty": "Nessuna attività corrisponde a questa query."

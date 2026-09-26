@@ -1341,6 +1341,7 @@
   "view_block_tasks_sort_start": "Дата початку",
   "view_block_tasks_sort_done": "Дата завершення",
   "view_block_tasks_sort_created": "Дата створення",
+  "view_block_tasks_filter_label": "Фільтр",
   "view_toolbar_shelf_selector_label": "Вибір полиці",
   "view_toolbar_shelf_selector_description": "Визначає, яка полиця обмежує журнали представлення.",
   "view_toolbar_shelf_selector_tooltip": "Змінити полицю",
@@ -2434,6 +2435,9 @@
   "tasks_settings_condition_lacks": "Не містить",
   "tasks_settings_condition_under": "Під",
   "tasks_settings_condition_not_under": "Не під",
+  "tasks_settings_condition_status": "Статус",
+  "tasks_settings_condition_is": "Дорівнює",
+  "tasks_settings_condition_is_not": "Не дорівнює",
   "tasks_settings_mode_and": "Відповідність усім умовам",
   "tasks_settings_mode_or": "Відповідність будь-якій умові",
   "tasks_condition_values_required": "Введіть хоча б одне значення.",
@@ -2459,6 +2463,22 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "без вказаного заголовка",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "має статус {statuses}",
+        "condition=is-not": "не має статусу {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "без вказаного статусу",
+  "tasks_status_group_open": "Відкриті",
+  "tasks_status_group_done": "Виконані",
+  "tasks_status_group_all": "Усі",
+  "tasks_filter_summary_any": "Немає умов — показується кожне завдання в межах області.",
+  "tasks_filter_summary_conditions": "Показує завдання, яке {conditions}.",
   "tasks_rule_summary_any": "Немає умов — кожен пункт списку з чекбоксом у нотатках журналу вважається завданням.",
   "tasks_rule_summary_conditions": "Враховує пункт списку з чекбоксом, який {conditions}.",
   "tasks_journal_summary_inherit": "Успадковує правило всього сховища.",
@@ -2483,6 +2503,11 @@
   "tasks_journal_compose_narrow": "Звузити",
   "tasks_journal_compose_replace": "Замінити",
   "tasks_journal_modal_title": "Визначення завдань — {journal}",
+  "tasks_journal_filter_title": "Фільтр списку",
+  "tasks_journal_filter_none": "У цього журналу немає власного фільтра списку.",
+  "tasks_journal_filter_edit": "Редагувати",
+  "tasks_filter_conditions_label": "Умови",
+  "tasks_filter_conditions_desc": "Які із цих завдань показує список.",
   "tasks_tick_recurring_needs_tasks_plugin": "Це завдання не було позначено. Щоб повторювані завдання переходили до наступного екземпляра, потрібен плагін Tasks.",
   "tasks_tick_error": "Не вдалося позначити завдання.",
   "tasks_listing_empty": "Немає завдань, що відповідають цьому запиту."

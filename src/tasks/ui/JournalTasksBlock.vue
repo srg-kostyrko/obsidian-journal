@@ -12,6 +12,8 @@ import UiIconedRow from "@/ui/UiIconedRow.vue";
 
 import { TaskProviderToken, type TaskProvider } from "../types";
 
+import JournalTaskFilterRow from "./JournalTaskFilterRow.vue";
+
 const { journalName } = defineProps<{ journalName: string }>();
 
 function hasJournalRow(provider: TaskProvider): provider is TaskProvider & { journalRow: Component } {
@@ -46,5 +48,8 @@ const composeLabel = computed(() =>
       </UiIconedRow>
     </template>
     <component :is="provider.journalRow" v-for="provider in rows" :key="provider.id" :journal-name="journalName" />
+    <!-- Not provider-specific — the listing filter decides which tasks a listing shows, not what
+         counts as a task, so it renders as its own row rather than inside a provider's. -->
+    <JournalTaskFilterRow :journal-name="journalName" />
   </UiCollapsibleBlock>
 </template>

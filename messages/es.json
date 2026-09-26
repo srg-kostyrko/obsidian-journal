@@ -1450,6 +1450,7 @@
   "view_block_tasks_sort_start": "Fecha de inicio",
   "view_block_tasks_sort_done": "Fecha de finalización",
   "view_block_tasks_sort_created": "Fecha de creación",
+  "view_block_tasks_filter_label": "Filtro",
   "view_toolbar_shelf_selector_label": "Selector de estantes",
   "view_toolbar_shelf_selector_description": "Cambia qué estante delimita los diarios de la vista.",
   "view_toolbar_shelf_selector_tooltip": "Cambiar de estante",
@@ -2356,6 +2357,9 @@
   "tasks_settings_condition_lacks": "No tiene",
   "tasks_settings_condition_under": "Bajo",
   "tasks_settings_condition_not_under": "No bajo",
+  "tasks_settings_condition_status": "Estado",
+  "tasks_settings_condition_is": "Es",
+  "tasks_settings_condition_is_not": "No es",
   "tasks_settings_mode_and": "Cumplir todas las condiciones",
   "tasks_settings_mode_or": "Cumplir cualquier condición",
   "tasks_condition_values_required": "Introduce al menos un valor.",
@@ -2381,6 +2385,22 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "sin encabezado",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses}",
+        "condition=is-not": "no {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "sin estado",
+  "tasks_status_group_open": "Abiertas",
+  "tasks_status_group_done": "Hechas",
+  "tasks_status_group_all": "Todas",
+  "tasks_filter_summary_any": "Sin condiciones — se muestra toda tarea en el ámbito.",
+  "tasks_filter_summary_conditions": "Muestra una tarea que está {conditions}.",
   "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla en las notas de un diario es una tarea.",
   "tasks_rule_summary_conditions": "Cuenta un elemento de lista con casilla que está {conditions}.",
   "tasks_journal_summary_inherit": "Hereda la regla de toda la bóveda.",
@@ -2405,6 +2425,11 @@
   "tasks_journal_compose_narrow": "Restringir",
   "tasks_journal_compose_replace": "Reemplazar",
   "tasks_journal_modal_title": "Identificación de tareas — {journal}",
+  "tasks_journal_filter_title": "Filtro de listado",
+  "tasks_journal_filter_none": "Este diario no tiene un filtro de listado propio.",
+  "tasks_journal_filter_edit": "Editar",
+  "tasks_filter_conditions_label": "Condiciones",
+  "tasks_filter_conditions_desc": "Qué tareas muestra un listado.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",
   "tasks_tick_error": "No se pudo marcar la tarea.",
   "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."

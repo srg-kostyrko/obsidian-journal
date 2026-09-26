@@ -1450,6 +1450,7 @@
   "view_block_tasks_sort_start": "시작일",
   "view_block_tasks_sort_done": "완료일",
   "view_block_tasks_sort_created": "생성 날짜",
+  "view_block_tasks_filter_label": "필터",
   "view_toolbar_shelf_selector_label": "선반 선택기",
   "view_toolbar_shelf_selector_description": "뷰에 표시할 저널의 범위를 정하는 선반을 전환합니다.",
   "view_toolbar_shelf_selector_tooltip": "선반 전환",
@@ -2353,6 +2354,9 @@
   "tasks_settings_condition_lacks": "미포함",
   "tasks_settings_condition_under": "하위",
   "tasks_settings_condition_not_under": "하위 아님",
+  "tasks_settings_condition_status": "상태",
+  "tasks_settings_condition_is": "해당",
+  "tasks_settings_condition_is_not": "미해당",
   "tasks_settings_mode_and": "모든 조건 일치",
   "tasks_settings_mode_or": "조건 중 하나 일치",
   "tasks_condition_values_required": "값을 하나 이상 입력하세요.",
@@ -2378,6 +2382,22 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "제목이 지정되지 않은",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses} 상태인",
+        "condition=is-not": "{statuses} 상태가 아닌"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "상태가 지정되지 않은",
+  "tasks_status_group_open": "미완료",
+  "tasks_status_group_done": "완료",
+  "tasks_status_group_all": "전체",
+  "tasks_filter_summary_any": "조건 없음 — 범위 내 모든 작업이 표시됩니다.",
+  "tasks_filter_summary_conditions": "{conditions} 작업을 표시합니다.",
   "tasks_rule_summary_any": "조건 없음 — 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
   "tasks_rule_summary_conditions": "{conditions} 체크박스 목록 항목을 집계합니다.",
   "tasks_journal_summary_inherit": "보관함 전체 규칙을 상속합니다.",
@@ -2402,6 +2422,11 @@
   "tasks_journal_compose_narrow": "좁히기",
   "tasks_journal_compose_replace": "대체",
   "tasks_journal_modal_title": "작업 식별 — {journal}",
+  "tasks_journal_filter_title": "목록 필터",
+  "tasks_journal_filter_none": "이 저널에는 자체 목록 필터가 없습니다.",
+  "tasks_journal_filter_edit": "편집",
+  "tasks_filter_conditions_label": "조건",
+  "tasks_filter_conditions_desc": "목록에 표시할 작업 조건.",
   "tasks_tick_recurring_needs_tasks_plugin": "이 작업은 완료 처리되지 않았습니다. 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다.",
   "tasks_tick_error": "작업을 완료 처리할 수 없습니다.",
   "tasks_listing_empty": "이 쿼리와 일치하는 작업이 없습니다."
