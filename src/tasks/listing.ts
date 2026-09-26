@@ -85,15 +85,22 @@ interface Entry {
 
 // Every status a listing can show, in the order a status sort shows them. rolled sits between the
 // open statuses and the done ones: it is neither, and a listing re-sorted by status is asking
-// "what still needs me", which a rolled item no longer does. non-task is absent on purpose —
-// gather drops it before any sort can see it.
-const STATUS_ORDER: readonly TaskStatus[] = ["todo", "in-progress", "on-hold", "rolled", "done", "cancelled"];
+// "what still needs me", which a rolled item no longer does. Keyed as a Record rather than a plain
+// array so adding a TaskStatus member is a compile error here until it gets a rank, instead of a
+// runtime fallback nothing exercises. non-task's rank is unreachable — gather drops it before any
+// sort can see it — but it still needs an entry to satisfy the Record; the value is arbitrary.
+const STATUS_ORDER: Record<TaskStatus, number> = {
+  todo: 0,
+  "in-progress": 1,
+  "on-hold": 2,
+  rolled: 3,
+  done: 4,
+  cancelled: 5,
+  "non-task": 6,
+};
 
-// A status this list does not name sorts after every one it does. Left to indexOf's -1 it would
-// sort ahead of todo instead, which is a silent answer to a question nobody asked.
 function statusRank(status: TaskStatus): number {
-  const rank = STATUS_ORDER.indexOf(status);
-  return rank === -1 ? STATUS_ORDER.length : rank;
+  return STATUS_ORDER[status];
 }
 
 function lineOf(item: TaskItem): number {
