@@ -4,11 +4,14 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_TASK_QUERY, taskQuerySchema } from "./query";
 
 describe("taskQuerySchema", () => {
-  it("defaults a bare query to both sources, this period, open items, document order", () => {
+  // No status condition, deliberately: every surface that stores a query stores this default, and a
+  // status stored here would replace the owning journal's own (composeFilters). The open-only
+  // reading a bare query still gets comes from there instead.
+  it("defaults a bare query to both sources, this period, no conditions, document order", () => {
     expect(v.parse(taskQuerySchema, {})).toEqual(DEFAULT_TASK_QUERY);
     expect(DEFAULT_TASK_QUERY).toEqual({
       scope: { provider: [], source: "both", depth: "literal" },
-      filter: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["open"] }] },
+      filter: { mode: "and", conditions: [] },
       sort: "document",
     });
   });

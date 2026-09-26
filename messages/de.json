@@ -1451,6 +1451,7 @@
   "view_block_tasks_sort_done": "Erledigungsdatum",
   "view_block_tasks_sort_created": "Erstellungsdatum",
   "view_block_tasks_filter_label": "Filter",
+  "view_block_tasks_filter_status_default": "Keine eigene Status-Bedingung, daher entscheidet der Anzeigefilter eines Journals, wo dieser einen Status nennt.",
   "view_toolbar_shelf_selector_label": "Regalauswahl",
   "view_toolbar_shelf_selector_description": "Wechselt, welches Regal die Journale der Ansicht eingrenzt.",
   "view_toolbar_shelf_selector_tooltip": "Regal wechseln",

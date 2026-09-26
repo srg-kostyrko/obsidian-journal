@@ -140,7 +140,8 @@ Lists tasks from a window around the view's date, across the journals in the vie
 - **Source** — **Note only**, **Notelets only** or **Note and notelets**.
 - **Sort by** — document order, status, or one of the five date roles a task line can carry.
 - **Filter** — which of those tasks to show, as a list of tag, heading and status conditions matched
-  under **Match all conditions** or **Match any condition**.
+  under **Match all conditions** or **Match any condition**. Empty on a new block, which shows what is
+  still open unless a journal's own listing filter says otherwise.
 
 ### Markdown template
 

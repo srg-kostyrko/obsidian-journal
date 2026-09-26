@@ -19,17 +19,18 @@ const scopeSchema = v.object({
 // names one. Applied by composeFilters (./filter.ts) after the two sides have been merged, never
 // emitted into a surface's own query: a query condition replaces the journal's of the same type, so
 // a default emitted up front would override a journal's stored status condition on every surface,
-// however bare, and "show all statuses" on a journal could never reach a fence.
+// however bare, and "show all statuses" on a journal could never reach a fence. Not this schema's
+// `filter` default either — the tasks view block spreads DEFAULT_TASK_QUERY into the config a fresh
+// block stores, so a status here is a status persisted by every block nobody has configured.
 export const DEFAULT_STATUS_CONDITION: TaskCondition = { type: "status", condition: "is", statuses: ["open"] };
 
 // A listing reads where a move writes, so it defaults wider than the model's move default
-// (source: "note"): a bare fence in a day note must not just mirror the note it sits in, and an
-// item already ticked should drop out of view by default.
+// (source: "note"): a bare fence in a day note must not just mirror the note it sits in. An item
+// already ticked still drops out of view by default, but that comes from composeFilters, not from
+// `filter` below — see DEFAULT_STATUS_CONDITION.
 export const taskQuerySchema = v.object({
   scope: v.optional(scopeSchema, () => v.parse(scopeSchema, {})),
-  filter: v.optional(taskRuleSchema, () =>
-    v.parse(taskRuleSchema, { mode: "and", conditions: [DEFAULT_STATUS_CONDITION] }),
-  ),
+  filter: v.optional(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
   sort: v.optional(v.fallback(v.picklist(taskSorts), "document"), "document"),
 });
 

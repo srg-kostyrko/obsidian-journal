@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
   `tag`; every journal also gets its own **Listing filter**, under its settings page's **Tasks**
   section, which a fence or the view block's own filter overrides one condition type at a time rather
   than narrowing — except for the open-tasks default itself, which gives way instead, so a journal
-  whose own filter names a status reaches a fence that named none. Each row renders its line exactly
+  whose own filter names a status reaches a fence, or a view block, that named none. Each row renders its line exactly
   as written, so a theme's own styling for a marker
   such as `[/]` looks the same in the listing as it does in the note, and a checkbox nested under
   another stays nested; if a filter excludes the parent, it still shows above its matching child,

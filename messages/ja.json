@@ -1306,6 +1306,7 @@
   "view_block_tasks_sort_done": "完了日",
   "view_block_tasks_sort_created": "作成日",
   "view_block_tasks_filter_label": "フィルター",
+  "view_block_tasks_filter_status_default": "独自のステータス条件はありません。ステータスを指定しているジャーナルでは、その一覧フィルターが決定します。",
   "view_toolbar_shelf_selector_label": "棚セレクター",
   "view_toolbar_shelf_selector_description": "ビューが対象とするジャーナルを、どの棚に絞り込むかを切り替えます。",
   "view_toolbar_shelf_selector_tooltip": "棚を切り替え",

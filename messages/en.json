@@ -1461,6 +1461,7 @@
   "view_block_tasks_sort_done": "Done date",
   "view_block_tasks_sort_created": "Created date",
   "view_block_tasks_filter_label": "Filter",
+  "view_block_tasks_filter_status_default": "No Status condition of its own, so a journal's own listing filter decides where it names one.",
 
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",

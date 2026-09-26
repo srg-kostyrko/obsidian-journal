@@ -86,6 +86,22 @@ describe("TasksViewBlockConfig", () => {
       expect(screen.getByText(m.view_block_tasks_filter_label())).toBeTruthy();
     });
 
+    // A block that stores no status is where the listing's own open-only default applies, and
+    // where a journal's own Status condition reaches the block instead. Neither is visible from
+    // this editor, so the row has to say both rather than read as "no filter at all".
+    it("names the open-only default and says a journal's own status replaces it", async () => {
+      await mountConfig();
+      expect(screen.getByTestId("task-filter-summary").textContent).toContain(m.tasks_status_group_open());
+      expect(screen.getByText(m.view_block_tasks_filter_status_default())).toBeTruthy();
+    });
+
+    it("describes the block's own status and drops the default note once one is chosen", async () => {
+      const filter: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] };
+      await mountConfig({ ...tasksViewBlock.defaultConfig, filter });
+      expect(screen.getByTestId("task-filter-summary").textContent).toContain(m.tasks_status_group_done());
+      expect(screen.queryByText(m.view_block_tasks_filter_status_default())).toBeNull();
+    });
+
     // Unlike a journal's row, this filter IS the query composeFilters answers with, so its mode
     // genuinely applies and the shared editor keeps the control.
     it("opens the editor with the mode control, this filter being the query itself", async () => {

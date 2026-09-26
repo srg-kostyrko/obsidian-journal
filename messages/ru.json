@@ -1489,6 +1489,7 @@
   "view_block_tasks_sort_done": "Дата завершения",
   "view_block_tasks_sort_created": "Дата создания",
   "view_block_tasks_filter_label": "Фильтр",
+  "view_block_tasks_filter_status_default": "Нет собственного условия статуса, поэтому решает фильтр списка журнала, если он указывает статус.",
   "view_toolbar_shelf_selector_label": "Выбор полки",
   "view_toolbar_shelf_selector_description": "Определяет, какая полка ограничивает журналы представления.",
   "view_toolbar_shelf_selector_tooltip": "Сменить полку",

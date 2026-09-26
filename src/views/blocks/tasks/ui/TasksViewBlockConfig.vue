@@ -5,6 +5,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
 import { JournalsViewModel } from "@/journals";
+import { composeFilters } from "@/tasks/filter";
 import { taskSorts, type TaskQuery } from "@/tasks/query";
 import { describeTaskRule } from "@/tasks/ui/describe-task-rule";
 import { editTaskFilterModal } from "@/tasks/ui/modals";
@@ -54,7 +55,13 @@ function updateSort(value: string | undefined): void {
   update({ sort: value as TaskQuery["sort"] });
 }
 
-const filterSummary = computed(() => describeTaskRule(props.config.filter));
+// Described as the composed filter, not as the stored one: a block that names no status is where
+// the listing's own open-only default lands (composeFilters), so summarizing what is stored would
+// say "no conditions" over a listing that shows open items only. Composing against a null journal
+// filter is what this editor can honestly answer — a block spans several journals, each free to
+// carry its own Status condition — so the note below names who else can fill that slot.
+const filterSummary = computed(() => describeTaskRule(composeFilters(null, props.config.filter)));
+const namesStatus = computed(() => props.config.filter.conditions.some((condition) => condition.type === "status"));
 
 function editFilter(): void {
   // With the mode control, unlike a journal's row: this filter is the query composeFilters answers
@@ -103,7 +110,18 @@ function editFilter(): void {
   <UiSettingRow :name="m.view_block_tasks_filter_label()">
     <template #description>
       <span data-testid="task-filter-summary">{{ filterSummary }}</span>
+      <span v-if="!namesStatus" class="tasks-view-block-filter-note" data-testid="task-filter-status-default">
+        {{ m.view_block_tasks_filter_status_default() }}
+      </span>
     </template>
     <UiButton data-testid="task-filter-edit" @click="editFilter">{{ m.tasks_journal_filter_edit() }}</UiButton>
   </UiSettingRow>
 </template>
+
+<style scoped>
+/* Its own line: the summary above states what this block filters by, and this states who else gets
+   to decide the part the block left unstated — two claims, not one sentence. */
+.tasks-view-block-filter-note {
+  display: block;
+}
+</style>

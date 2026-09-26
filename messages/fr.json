@@ -1451,6 +1451,7 @@
   "view_block_tasks_sort_done": "Date de fin",
   "view_block_tasks_sort_created": "Date de création",
   "view_block_tasks_filter_label": "Filtre",
+  "view_block_tasks_filter_status_default": "Aucune condition d’État propre, donc le filtre de la liste d’un journal décide lorsqu’il en nomme un.",
   "view_toolbar_shelf_selector_label": "Sélecteur d’étagères",
   "view_toolbar_shelf_selector_description": "Change l’étagère qui délimite les journaux de la vue.",
   "view_toolbar_shelf_selector_tooltip": "Changer d’étagère",

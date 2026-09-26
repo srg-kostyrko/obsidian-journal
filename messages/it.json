@@ -1451,6 +1451,7 @@
   "view_block_tasks_sort_done": "Data di completamento",
   "view_block_tasks_sort_created": "Data di creazione",
   "view_block_tasks_filter_label": "Filtro",
+  "view_block_tasks_filter_status_default": "Nessuna condizione di Stato propria, quindi decide il filtro dell'elenco di un diario dove ne nomina uno.",
   "view_toolbar_shelf_selector_label": "Selettore di scaffali",
   "view_toolbar_shelf_selector_description": "Cambia lo scaffale che delimita i diari della vista.",
   "view_toolbar_shelf_selector_tooltip": "Cambia scaffale",

@@ -1306,6 +1306,7 @@
   "view_block_tasks_sort_done": "完成日期",
   "view_block_tasks_sort_created": "创建日期",
   "view_block_tasks_filter_label": "筛选",
+  "view_block_tasks_filter_status_default": "没有自己的状态条件，因此指定了状态的日记将由其列表筛选条件决定。",
   "view_toolbar_shelf_selector_label": "书架选择器",
   "view_toolbar_shelf_selector_description": "切换限定此视图日记范围的书架。",
   "view_toolbar_shelf_selector_tooltip": "切换书架",

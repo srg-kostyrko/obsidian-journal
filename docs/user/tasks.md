@@ -222,9 +222,10 @@ intersection of the two — ANDing them instead would make anything the journal'
 unreachable from any fence.
 
 The `status: open` default is the one thing that applies last rather than first. A journal's own
-**Status** condition therefore does reach a fence that named no `status:` of its own — set a journal to
-**All** and a bare fence in its notes lists everything, done items included. The default only fills in
-where neither side named a status at all.
+**Status** condition therefore does reach a surface that named no status of its own — set a journal to
+**All** and a bare fence in its notes lists everything, done items included, as does a
+[tasks view block](#the-tasks-view-block) whose **Filter** holds no **Status** condition. The default
+only fills in where neither side named a status at all.
 
 The editor's own **Status** control offers only three groupings — **Open**, **Done**, **All** — the same
 three names the `status:` fence key accepts as aliases. A fence, or the `conditions:` escape hatch, can
@@ -248,7 +249,10 @@ the view rather than to the note it sits in:
   [shelf scope](/shelves#scoping-a-view); turn specific ones on to narrow it further.
 - **Source** and **Sort by** — the same `source` and `sort` this page covers above.
 - **Filter** — the same condition editor [a journal's own listing filter](#a-journal-s-own-listing-filter)
-  uses, scoped to this block instead of to a journal.
+  uses, scoped to this block instead of to a journal. A new block holds no conditions at all, so it
+  shows what is still open the same way a bare fence does, and each journal's own **Status** condition
+  applies where it has one. The row says so under its summary. Add a **Status** condition here to
+  decide for every journal the block lists.
 
 The block has no **Depth** control. Unlike the fence, which is literal about one host note unless you
 ask it to roll up, the block already walks every journal its window and its shelf scope name — there is

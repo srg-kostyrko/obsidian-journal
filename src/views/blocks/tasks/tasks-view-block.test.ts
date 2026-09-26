@@ -4,7 +4,10 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { initLocale } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
+import type { TaskRule } from "@/tasks/conditions";
+import { composeFilters, matchesFilter } from "@/tasks/filter";
 import { tasksCoreModule } from "@/tasks/module";
+import { buildTaskItem } from "@/tasks/testing";
 import { testContainer } from "@/testing";
 import { icons } from "@/ui/icons";
 
@@ -29,10 +32,37 @@ describe("tasksViewBlock", () => {
     expect(tasksViewBlock.icon).toBe(icons.entity.task);
   });
 
-  it("defaults to the selected day, both sources, open items", () => {
+  it("defaults to the selected day and both sources, naming no status of its own", () => {
     expect(v.parse(tasksViewBlock.schema, {})).toEqual(tasksViewBlock.defaultConfig);
     expect(tasksViewBlock.defaultConfig.window).toBe("day");
     expect(tasksViewBlock.defaultConfig.scope).toEqual({ provider: [], source: "both", depth: "literal" });
+    expect(tasksViewBlock.defaultConfig.filter.conditions).toEqual([]);
+  });
+
+  // A stored status condition is a query condition, and a query condition replaces the journal's of
+  // the same type (composeFilters) — so storing one in defaultConfig would make every block nobody
+  // has configured override the journal. That is the same defect the fence had before it stopped
+  // emitting `status` unless the user wrote one.
+  describe("status against a journal's own listing filter", () => {
+    const showEveryStatus: TaskRule = {
+      mode: "and",
+      conditions: [{ type: "status", condition: "is", statuses: ["all"] }],
+    };
+    const done = buildTaskItem({ status: "done" });
+
+    it("lets a journal set to show every status reach a block nobody has configured", () => {
+      const composed = composeFilters(showEveryStatus, tasksViewBlock.defaultConfig.filter);
+      expect(matchesFilter(done, undefined, composed)).toBe(true);
+    });
+
+    it("still lets a status chosen in the block override the journal's", () => {
+      const openOnly: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["open"] }] };
+      expect(matchesFilter(done, undefined, composeFilters(showEveryStatus, openOnly))).toBe(false);
+    });
+
+    it("falls back to open items where neither the block nor the journal names a status", () => {
+      expect(matchesFilter(done, undefined, composeFilters(null, tasksViewBlock.defaultConfig.filter))).toBe(false);
+    });
   });
 
   it("keeps a stored window, journal filter and query", () => {
