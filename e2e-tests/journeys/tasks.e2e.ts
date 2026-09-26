@@ -117,7 +117,10 @@ describe("journal-tasks fence", () => {
     );
 
     // Asserted by reading the note back, never by the listing's own state — the listing can show
-    // a ticked row from its in-memory item while the write silently failed.
+    // a ticked row from its in-memory item while the write silently failed. The literals below are
+    // LF-normalized and stay that way: `.gitattributes` pins the fixture's own bytes to LF, so a
+    // Windows runner cannot hand this a line with a "\r" in its tail. Ticking a CRLF note is
+    // covered where the terminator can actually be varied, in tick.test.ts.
     const after = await readNote(DAY_NOTE);
     const edit = assertSingleCharacterEdit(before, after);
     expect(edit.before).toBe("- [ ] Ship it 📅 2026-09-25");

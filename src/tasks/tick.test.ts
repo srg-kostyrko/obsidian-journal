@@ -201,6 +201,22 @@ describe("tickLine", () => {
     expect(tickLine("- [ ] Ship it", item(0, "- [ ] Ship it"), "x")).toEqual({ content: "- [x] Ship it" });
   });
 
+  // A note a Windows editor wrote, or one Git checked out with CRLF. Both the hydration read
+  // (task-index.ts) and this write split on "\n" alone, so the "\r" is part of each line's tail
+  // and has to survive as bytes like any other trailing character. Only a unit test can vary the
+  // terminator: the e2e fixtures are pinned to LF (.gitattributes) precisely so their bytes are
+  // the same on every runner.
+  it("leaves the carriage returns of a CRLF note in place, on the ticked line and around it", () => {
+    const line = "- [ ] Ship it 📅 2026-09-25\r";
+    const content = `---\r\njournal: daily\r\n---\r\n\r\n${line}\n- [/] Write the spec\r\n`;
+    const result = tickLine(content, item(4, line), "x");
+
+    expect("content" in result).toBe(true);
+    if (!("content" in result)) return;
+    expectSingleCharacterEdit(content, result.content, content.indexOf("[ ]") + 1, "x");
+    expect(result.content).toContain("- [x] Ship it 📅 2026-09-25\r\n- [/] Write the spec\r\n");
+  });
+
   it("changes one byte of a tab-indented nested task carrying signifiers, a tag and a block id", () => {
     const line = "\t\t3) [/] Water the plants  🔁 every week 📅 2026-09-25 [priority:: high] #home ^abc123  ";
     const content = `# Day\n\n- [ ] Parent\n${line}\n\nfooter\n`;
