@@ -130,6 +130,13 @@ Lists the notelets of the note you are reading, or of a window around the view's
 
 See [Notelets](/notelets).
 
+### Tasks
+
+Lists tasks from a window around the view's date, across the journals in the view's shelf. See
+[Tasks](/tasks#the-tasks-view-block).
+
+- **Window** — as above; **Selected day** by default.
+
 ### Markdown template
 
 Renders a template note as markdown, with journal variables processed. Pick a **Template file**. In it,
