@@ -12,7 +12,7 @@ import type { TaskItem, TaskStatus } from "./types";
 
 export interface TaskListingDependencies {
   readonly journals: Pick<JournalsRepository, "get">;
-  readonly index: Pick<JournalsIndex, "get" | "getRange" | "noteletsAt">;
+  readonly index: Pick<JournalsIndex, "get" | "getRange" | "noteletsAt" | "noteletsFor">;
   readonly cycle: Pick<CycleService, "startOf" | "endOf" | "anchorOf" | "overlapsFrom">;
   readonly structure: Pick<NoteStructureService, "get">;
   readonly tasks: Pick<TaskIndex, "itemsIn" | "hydrate">;
@@ -116,9 +116,26 @@ function periodsWithin(
   // and then costs one index lookup per anchor to reach the notes that exist.
   const opening = dependencies.cycle.anchorOf(journalName, CalendarDate.fromAnchor(from));
   if (opening.isNone()) return [];
-  return [...dependencies.index.getRange(journalName, opening.value, to)]
-    .filter(([anchor]) => dependencies.cycle.overlapsFrom(journalName, anchor, from))
-    .map(([anchor, path]) => ({ journalName, anchor, path }));
+  const pathByAnchor = new Map<AnchorString, VaultPath | null>(
+    dependencies.index.getRange(journalName, opening.value, to),
+  );
+  // getRange answers for periods whose note exists, so a day holding nothing but a notelet would
+  // never be visited at all. A notelet is indexed against the (journal, anchor) slot rather than
+  // against the period note — the same rule targetPeriods' literal branch states below — so its
+  // anchor joins the walk with a null path, on exactly the same terms as the rest: inside the
+  // widened bounds, and still overlapping `from` once the filter below runs.
+  for (const entry of dependencies.index.noteletsFor(journalName)) {
+    if (entry.anchor < opening.value || entry.anchor > to || pathByAnchor.has(entry.anchor)) continue;
+    pathByAnchor.set(entry.anchor, null);
+  }
+  return (
+    [...pathByAnchor]
+      // getRange is sorted and these additions are not, and the order periods are walked in is the
+      // order `sort: document` renders them in.
+      .toSorted(([left], [right]) => (left < right ? -1 : 1))
+      .filter(([anchor]) => dependencies.cycle.overlapsFrom(journalName, anchor, from))
+      .map(([anchor, path]) => ({ journalName, anchor, path }))
+  );
 }
 
 function dedupeBySlot(periods: readonly TargetPeriod[]): readonly TargetPeriod[] {

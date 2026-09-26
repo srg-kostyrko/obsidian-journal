@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CalendarDate, type AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
+import type { NoteletEntry } from "@/journals";
 import { fixedJournal } from "@/journals/testing";
 
 import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
@@ -20,6 +21,8 @@ const NOTELET = "Daily/2026-09-22 Standup.md" as VaultPath;
 const WEEK = "Weekly/2026-W36.md" as VaultPath;
 const SPRINT = "Sprints/2026-08-25.md" as VaultPath;
 const LATER_SPRINT = "Sprints/2026-09-05.md" as VaultPath;
+const CLOSED_SPRINT_NOTELET = "Sprints/2026-08-29 Retro.md" as VaultPath;
+const LATER_SPRINT_NOTELET = "Sprints/2026-09-05 Retro.md" as VaultPath;
 
 const EMPTY_STRUCTURE: NoteStructure = { listItems: [], tags: [], headings: [], frontmatterTags: [] };
 
@@ -46,6 +49,10 @@ function child(path: VaultPath, lineNumber: number, parentLine: number, override
 type AnchorMap = Partial<Record<string, Record<string, VaultPath>>>;
 type EndMap = Partial<Record<string, Record<string, string>>>;
 type NoteletMap = Partial<Record<string, Record<string, readonly VaultPath[]>>>;
+
+function noteletEntry(journalName: string, anchor: AnchorString, path: VaultPath): NoteletEntry {
+  return { kind: "notelet", journalName, anchor, path, typeName: "Meeting", typeId: null };
+}
 
 function buildDependencies(options: {
   items?: Partial<Record<VaultPath, readonly TaskItem[]>>;
@@ -89,15 +96,11 @@ function buildDependencies(options: {
         }
         return found;
       },
-      noteletsAt: (name, anchor) =>
-        (notelets[name]?.[anchor] ?? []).map((path) => ({
-          kind: "notelet" as const,
-          journalName: name,
-          anchor,
-          path,
-          typeName: "Meeting",
-          typeId: null,
-        })),
+      noteletsAt: (name, anchor) => (notelets[name]?.[anchor] ?? []).map((path) => noteletEntry(name, anchor, path)),
+      noteletsFor: (name) =>
+        Object.entries(notelets[name] ?? {}).flatMap(([anchor, paths]) =>
+          paths.map((path) => noteletEntry(name, anchor as AnchorString, path)),
+        ),
     },
     cycle: {
       startOf: (name, anchor) =>
@@ -298,6 +301,51 @@ describe("buildTaskListing", () => {
     });
     const rows = await buildTaskListing(dependencies, request());
     expect(rows.map((row) => row.key)).toEqual([`${NOTELET}:4`]);
+  });
+
+  it("rolls up a period whose only notes are notelets, its own period note never having been created", async () => {
+    const dependencies = buildDependencies({
+      items: { [MONTH]: [], [NOTELET]: [line(NOTELET, 2)] },
+      notes: { Monthly: { "2026-09-01": MONTH } },
+      ends: { Monthly: { "2026-09-01": "2026-09-30" } },
+      notelets: { Daily: { "2026-09-22": [NOTELET] } },
+    });
+    const rows = await buildTaskListing(
+      dependencies,
+      request({
+        hostJournal: "Monthly",
+        anchor: "2026-09-01" as AnchorString,
+        journalNames: ["Daily"],
+        query: withQuery({ scope: { provider: [], source: "both", depth: "rollup" } }),
+      }),
+    );
+    expect(rows.map((row) => row.key)).toEqual([`${NOTELET}:2`]);
+  });
+
+  it("keeps a notelet out of a rollup when its own period had already closed before the target", async () => {
+    const dependencies = buildDependencies({
+      items: {
+        [MONTH]: [],
+        [CLOSED_SPRINT_NOTELET]: [line(CLOSED_SPRINT_NOTELET, 2)],
+        [LATER_SPRINT_NOTELET]: [line(LATER_SPRINT_NOTELET, 2)],
+      },
+      notes: { Monthly: { "2026-09-01": MONTH }, Sprints: { "2026-08-25": SPRINT } },
+      ends: {
+        Monthly: { "2026-09-01": "2026-09-30" },
+        Sprints: { "2026-08-25": "2026-08-28", "2026-08-29": "2026-08-31" },
+      },
+      notelets: { Sprints: { "2026-08-29": [CLOSED_SPRINT_NOTELET], "2026-09-05": [LATER_SPRINT_NOTELET] } },
+    });
+    const rows = await buildTaskListing(
+      dependencies,
+      request({
+        hostJournal: "Monthly",
+        anchor: "2026-09-01" as AnchorString,
+        journalNames: ["Sprints"],
+        query: withQuery({ scope: { provider: [], source: "both", depth: "rollup" } }),
+      }),
+    );
+    expect(rows.map((row) => row.key)).toEqual([`${LATER_SPRINT_NOTELET}:2`]);
   });
 
   it("renders a filtered-out parent as a context row above its matching child", async () => {
@@ -659,6 +707,21 @@ describe("buildTaskListing — window request", () => {
       query: DEFAULT_TASK_QUERY,
     });
     expect(rows.map((row) => row.source.path)).toEqual([DAY]);
+  });
+
+  it("reaches a notelet inside the window whose own period note does not exist", async () => {
+    const dependencies = buildDependencies({
+      items: { [NOTELET]: [line(NOTELET, 2)] },
+      notes: {},
+      notelets: { Daily: { "2026-09-22": [NOTELET] } },
+    });
+    const rows = await buildTaskListing(dependencies, {
+      kind: "window",
+      journalNames: ["Daily"],
+      window: { start: "2026-09-01" as AnchorString, end: "2026-09-30" as AnchorString },
+      query: DEFAULT_TASK_QUERY,
+    });
+    expect(rows.map((row) => row.key)).toEqual([`${NOTELET}:2`]);
   });
 
   it("dedupes a journal named more than once within the window", async () => {
