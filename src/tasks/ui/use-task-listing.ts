@@ -35,12 +35,25 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
   const indexVersion = useIndexVersion();
   const tasksVersion = useTasksVersion();
 
+  // JournalsRepository needs no such ref: its storage is a SettingsService slice, and those are Vue
+  // `reactive`, so reading a journal's config inside a watch source tracks it. What it does need is
+  // a source that reads it at all — a journal's listing filter is half of what composeFilters
+  // answers with, and editing it bumps neither version above. Serialized rather than handed over by
+  // reference because repository.update replaces the whole entity: any write to one of these
+  // journals re-runs this getter, and only a changed filter then differs from the last value.
+  const scopedFilters = (): string => {
+    const current = request();
+    if (current === null) return "";
+    const names = current.kind === "period" ? [current.hostJournal, ...current.journalNames] : current.journalNames;
+    return JSON.stringify(names.map((name) => dependencies.journals.get(name).getOrUndefined()?.tasks.filter));
+  };
+
   const rows = shallowRef<readonly TaskListingRow[]>([]);
   const pending = ref(false);
   let token = 0;
 
   watch(
-    [request, indexVersion, tasksVersion],
+    [request, indexVersion, tasksVersion, scopedFilters],
     async ([current]) => {
       const mine = ++token;
       if (current === null) {

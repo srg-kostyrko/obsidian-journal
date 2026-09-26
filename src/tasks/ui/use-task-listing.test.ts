@@ -3,7 +3,8 @@ import { defineComponent, h, nextTick, ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
-import { JournalsIndex } from "@/journals";
+import { expectOk } from "@/infrastructure/result/testing";
+import { JournalsIndex, JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { testContainer, type TestHarness } from "@/testing";
@@ -92,6 +93,43 @@ describe("useTaskListing", () => {
     harness.resolve(TaskIndex).publish("test", { path }, [taskItem(path, "t1", "- [ ] Ship it")]);
 
     await vi.waitFor(() => expect(rows.value).toHaveLength(1));
+  });
+
+  // A journal's listing filter is settings, not index state, so neither version ref sees it change.
+  // The request object is deliberately the same reference on every read: a getter handing back a
+  // fresh object would make the watcher fire on reference churn alone and pass with no trigger at
+  // all.
+  it("rebuilds when the owning journal's listing filter changes", async () => {
+    const harness = await buildHarness();
+    const path = "Daily/2026-09-22.md" as VaultPath;
+    harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: "2026-09-22" as AnchorString, path });
+    harness
+      .resolve(TaskIndex)
+      .publish("test", { path }, [
+        taskItem(path, "open", "- [ ] Ship it"),
+        taskItem(path, "finished", "- [x] Buy milk", "done"),
+      ]);
+
+    // Names no status, so the journal's own condition is what decides which rows survive.
+    const bare: TaskListingRequest = {
+      ...requestFor("2026-09-22" as AnchorString),
+      query: { ...DEFAULT_TASK_QUERY, filter: { mode: "and", conditions: [] } },
+    };
+    const { rows } = mountListing(harness, () => bare);
+    await vi.waitFor(() => expect(rows.value.map((row) => row.item.key)).toEqual(["open"]));
+
+    const journals = harness.resolve(JournalsRepository);
+    const stored = journals.require("daily");
+    expectOk(stored);
+    const written = journals.update("daily", {
+      tasks: {
+        ...stored.value.tasks,
+        filter: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["all"] }] },
+      },
+    });
+    expectOk(written);
+
+    await vi.waitFor(() => expect(rows.value.map((row) => row.item.key)).toEqual(["open", "finished"]));
   });
 
   it(
