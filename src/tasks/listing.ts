@@ -105,6 +105,7 @@ function periodsWithin(
   journalName: string,
   from: AnchorString,
   to: AnchorString,
+  source: TaskQuery["scope"]["source"],
 ): readonly TargetPeriod[] {
   // getRange compares anchor strings, so asking it for [from, to] drops any period that opened
   // before the window and is still running inside it — a week straddling a month boundary as much
@@ -124,9 +125,18 @@ function periodsWithin(
   // against the period note — the same rule targetPeriods' literal branch states below — so its
   // anchor joins the walk with a null path, on exactly the same terms as the rest: inside the
   // widened bounds, and still overlapping `from` once the filter below runs.
-  for (const entry of dependencies.index.noteletsFor(journalName)) {
-    if (entry.anchor < opening.value || entry.anchor > to || pathByAnchor.has(entry.anchor)) continue;
-    pathByAnchor.set(entry.anchor, null);
+  //
+  // Gated on source: sourceNotes below discards every path: null period when source is "note", so
+  // under that scope this scan's result is thrown away unread — and unlike getRange's binary
+  // search, NoteletIndex.paths() (behind noteletsFor) returns every notelet the journal has,
+  // unbounded, so skipping the call is the saving, not just skipping its output. A version of
+  // NoteletIndex sorted by anchor, mirroring JournalIndex, would let this run unconditionally at
+  // getRange's own cost; that is a deferred follow-up, not done here.
+  if (source !== "note") {
+    for (const entry of dependencies.index.noteletsFor(journalName)) {
+      if (entry.anchor < opening.value || entry.anchor > to || pathByAnchor.has(entry.anchor)) continue;
+      pathByAnchor.set(entry.anchor, null);
+    }
   }
   return (
     [...pathByAnchor]
@@ -153,7 +163,7 @@ function targetPeriods(dependencies: TaskListingDependencies, request: TaskListi
   if (request.kind === "window") {
     return dedupeBySlot(
       request.journalNames.flatMap((name) =>
-        periodsWithin(dependencies, name, request.window.start, request.window.end),
+        periodsWithin(dependencies, name, request.window.start, request.window.end, request.query.scope.source),
       ),
     );
   }
@@ -174,7 +184,10 @@ function targetPeriods(dependencies: TaskListingDependencies, request: TaskListi
   // Rollup widens the literal target rather than replacing it: dropping the host note's own items
   // while showing all of its days' would lose whatever the user writes in the period note itself.
   // The host journal is normally in scope too, so its period arrives twice — deduped by slot.
-  return dedupeBySlot([host, ...request.journalNames.flatMap((name) => periodsWithin(dependencies, name, from, to))]);
+  return dedupeBySlot([
+    host,
+    ...request.journalNames.flatMap((name) => periodsWithin(dependencies, name, from, to, request.query.scope.source)),
+  ]);
 }
 
 function sourceNotes(

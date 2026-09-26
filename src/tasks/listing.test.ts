@@ -322,6 +322,25 @@ describe("buildTaskListing", () => {
     expect(rows.map((row) => row.key)).toEqual([`${NOTELET}:2`]);
   });
 
+  it("leaves a notelet-only period out of a rollup entirely under source: note", async () => {
+    const dependencies = buildDependencies({
+      items: { [MONTH]: [line(MONTH, 1)], [NOTELET]: [line(NOTELET, 2)] },
+      notes: { Monthly: { "2026-09-01": MONTH } },
+      ends: { Monthly: { "2026-09-01": "2026-09-30" } },
+      notelets: { Daily: { "2026-09-22": [NOTELET] } },
+    });
+    const rows = await buildTaskListing(
+      dependencies,
+      request({
+        hostJournal: "Monthly",
+        anchor: "2026-09-01" as AnchorString,
+        journalNames: ["Daily"],
+        query: withQuery({ scope: { provider: [], source: "note", depth: "rollup" } }),
+      }),
+    );
+    expect(rows.map((row) => row.key)).toEqual([`${MONTH}:1`]);
+  });
+
   it("keeps a notelet out of a rollup when its own period had already closed before the target", async () => {
     const dependencies = buildDependencies({
       items: {
@@ -722,6 +741,30 @@ describe("buildTaskListing — window request", () => {
       query: DEFAULT_TASK_QUERY,
     });
     expect(rows.map((row) => row.key)).toEqual([`${NOTELET}:2`]);
+  });
+
+  // getRange and noteletsFor each hand periodsWithin their entries in whatever order the fixture
+  // authored them, not anchor order — the merge relies on its own `.toSorted` to fix that up. Notes
+  // authored out of order, with a notelet anchor landing between them, is what makes a reversed or
+  // dropped comparator visible; every other fixture in this file happens to author notes already
+  // sorted, so it would pass unnoticed there.
+  it("sorts the merged periods by anchor even when the index and the notelet scan hand them out of order", async () => {
+    const dependencies = buildDependencies({
+      items: {
+        [SPRINT]: [line(SPRINT, 3)],
+        [CLOSED_SPRINT_NOTELET]: [line(CLOSED_SPRINT_NOTELET, 2)],
+        [LATER_SPRINT]: [line(LATER_SPRINT, 3)],
+      },
+      notes: { Sprints: { "2026-09-05": LATER_SPRINT, "2026-08-25": SPRINT } },
+      notelets: { Sprints: { "2026-08-29": [CLOSED_SPRINT_NOTELET] } },
+    });
+    const rows = await buildTaskListing(dependencies, {
+      kind: "window",
+      journalNames: ["Sprints"],
+      window: { start: "2026-08-01" as AnchorString, end: "2026-09-30" as AnchorString },
+      query: DEFAULT_TASK_QUERY,
+    });
+    expect(rows.map((row) => row.source.path)).toEqual([SPRINT, CLOSED_SPRINT_NOTELET, LATER_SPRINT]);
   });
 
   it("dedupes a journal named more than once within the window", async () => {
