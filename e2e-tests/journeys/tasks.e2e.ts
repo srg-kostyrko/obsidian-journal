@@ -82,8 +82,9 @@ describe("journal-tasks fence", () => {
     const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
     expect(texts[0]).toContain("Ship it");
     expect(texts[1]).toContain("Write the spec");
-    // The done item ("Buy milk") is excluded by the fence's default status filter (open only),
-    // not merely absent from the two rows this asserts on by position.
+    // The done item ("Buy milk") is excluded by the listing's default status filter (open only,
+    // applied because neither this fence nor the journal names a status), not merely absent from the
+    // two rows this asserts on by position.
     expect(texts.some((text) => text.includes("Buy milk"))).toBe(false);
   });
 
