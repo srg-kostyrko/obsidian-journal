@@ -82,6 +82,9 @@ describe("NoteletIndex", () => {
 
     expect([...index.atAnchor(a("2026-01-01"))]).toEqual([]);
     expect([...index.atAnchor(a("2026-01-02"))]).toEqual([p("a.md")]);
+    // The old anchor's bucket emptied out, so it must also have left the sorted array that
+    // anchorsInRange walks — atAnchor alone can't tell #byAnchor and #sortedAnchors apart.
+    expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-02"))).toEqual([a("2026-01-02")]);
   });
 
   it("removes from the type bucket the path was actually added under, even if the entry's typeName has since changed", () => {

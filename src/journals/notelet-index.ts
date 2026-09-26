@@ -71,8 +71,8 @@ export class NoteletIndex {
   // bucket empties back out, whichever of add/remove/transferPath drove it.
   #pushAnchor(anchor: AnchorString, path: VaultPath): void {
     const isNewAnchor = !this.#byAnchor.has(anchor);
-    this.#push(this.#byAnchor, anchor, path);
     if (isNewAnchor) this.#insertSorted(anchor);
+    this.#push(this.#byAnchor, anchor, path);
   }
 
   #dropAnchor(anchor: AnchorString, path: VaultPath): void {
