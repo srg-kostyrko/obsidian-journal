@@ -4,6 +4,34 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Features
+
+- Journal notes and calendar views can now list your tasks. A `journal-tasks` code block, placed in a
+  journal note, lists that period's checkbox tasks — the note's own, its notelets', or both, depending
+  on `source` — rolling up into every day's tasks on a month note, and so on, when you ask it to with
+  `depth: rollup`. A new **Tasks** view block does the same inside a view, for a window around the
+  view's selected date across the journals in its shelf, instead of one note's own period. Both default
+  to what is still open — to-do, in progress or on hold — and filter further by `status`, `heading` or
+  `tag`; every journal also gets its own **Listing filter**, under its settings page's **Tasks**
+  section, which a fence or the view block's own filter overrides one condition type at a time rather
+  than narrowing — except for the open-tasks default itself, which gives way instead, so a journal whose
+  own filter names a status reaches a fence, or a view block, that named none. Each row renders its line
+  exactly as written, so a theme's own styling for a marker
+  such as `[/]` looks the same in the listing as it does in the note, and a checkbox nested under
+  another stays nested; if a filter excludes the parent, it still shows above its matching child,
+  dimmed and unclickable, so the child does not lose the line that gives it meaning. Sort by `document`
+  order (the default, which reads note by note), by `status`, or by a due, scheduled, start, done or
+  created date, which instead reorders the whole listing regardless of which note a task came from.
+  Clicking a row's checkbox ticks it, writing your status map's marker for Done at that one position and
+  changing nothing else on the line. A **recurring** line — one carrying `🔁` anywhere on it — is the one
+  case that refuses: the [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) plugin owns
+  recurrence, and only its own toggle creates the next instance, so such a line is ticked through Tasks
+  when it is installed and left alone, with a notice, when it is not. Two things worth knowing if you
+  use Tasks alongside your own status map: its toggle always writes its own `x` on the recurring line it
+  completes, whatever your map says elsewhere, and a line only has to mention `🔁` — not carry a real
+  recurrence rule — to count as recurring. See
+  [Tasks](https://srg-kostyrko.github.io/obsidian-journal/tasks#listing-tasks-in-a-note) in the manual.
+
 ### Changed
 
 - A checkbox task marker other than a space no longer reads as completed by default. Every task used to count as done as soon as it carried any marker at all — `task !== " "` — so a note whose only task was `- [/] ...` satisfied **Check if all tasks are completed** and never **Check if note has open tasks**. Checkbox tasks are now read through a status map: `x` and `X` still read as Done and `-` still reads as Cancelled, all three still completed, but `/` now reads as In progress and any marker the map does not name — a theme's `[>]`, for instance — reads as To-do; both are open, not completed. The main settings page now has a **Tasks** section listing one row per way Journals can find tasks — checkbox items being the only one so far — each with its own on/off toggle; **Checkbox tasks**' gear icon opens **Status symbols**, where you map a marker yourself if your vault's convention should read differently, alongside the identification rule for which checkbox items count as tasks at all. A journal gets its own **Tasks** section too, where **Checkbox tasks**' **Edit** button narrows or replaces the vault-wide rule for that journal alone. See [Tasks](https://srg-kostyrko.github.io/obsidian-journal/tasks) in the manual.

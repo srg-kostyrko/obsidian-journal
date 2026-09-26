@@ -125,6 +125,7 @@
   "code_blocks_schema_error": "Some options in this {key} block are not valid.",
   "code_blocks_nav_not_connected": "Note is not connected to a journal",
   "code_blocks_notelets_not_connected": "Note is not connected to a journal",
+  "code_blocks_tasks_not_connected": "Note is not connected to a journal",
   "code_blocks_home_empty": "No journals to show. Check the block's show and shelf options.",
   "common_no_journals_yet": "No journals yet. Create one in the plugin settings.",
   "code_blocks_nav_next": "Next",
@@ -1443,6 +1444,25 @@
     }
   ],
 
+  "view_block_tasks_label": "Tasks",
+  "view_block_tasks_description": "Lists tasks from the selected window and journals.",
+  "view_block_tasks_journals_label": "Journals",
+  "view_block_tasks_journals_description": "Leave all off to include every journal in the view's shelf.",
+  "view_block_tasks_source_label": "Source",
+  "view_block_tasks_source_note": "Note only",
+  "view_block_tasks_source_notelets": "Notelets only",
+  "view_block_tasks_source_both": "Note and notelets",
+  "view_block_tasks_sort_label": "Sort by",
+  "view_block_tasks_sort_document": "Document order",
+  "view_block_tasks_sort_status": "Status",
+  "view_block_tasks_sort_due": "Due date",
+  "view_block_tasks_sort_scheduled": "Scheduled date",
+  "view_block_tasks_sort_start": "Start date",
+  "view_block_tasks_sort_done": "Done date",
+  "view_block_tasks_sort_created": "Created date",
+  "view_block_tasks_filter_label": "Filter",
+  "view_block_tasks_filter_status_default": "No Status condition of its own, so a journal's own listing filter decides where it names one.",
+
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
   "view_toolbar_shelf_selector_tooltip": "Switch shelf",
@@ -2351,6 +2371,9 @@
   "tasks_settings_condition_lacks": "Lacks",
   "tasks_settings_condition_under": "Under",
   "tasks_settings_condition_not_under": "Not under",
+  "tasks_settings_condition_status": "Status",
+  "tasks_settings_condition_is": "Is",
+  "tasks_settings_condition_is_not": "Is not",
   "tasks_settings_mode_and": "Match all conditions",
   "tasks_settings_mode_or": "Match any condition",
   "tasks_condition_values_required": "Enter at least one value.",
@@ -2376,6 +2399,21 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "missing a heading",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses}",
+        "condition=is-not": "not {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "missing a status",
+  "tasks_status_group_open": "Open",
+  "tasks_status_group_done": "Done",
+  "tasks_status_group_all": "All",
+  "tasks_filter_summary_conditions": "Shows a task that is {conditions}.",
   "tasks_rule_summary_any": "No conditions — every checkbox item in a journal's notes is a task.",
   "tasks_rule_summary_conditions": "Counts a checkbox item that is {conditions}.",
   "tasks_journal_summary_inherit": "Inherits the vault-wide rule.",
@@ -2399,5 +2437,13 @@
   "tasks_journal_compose_inherit": "Inherit",
   "tasks_journal_compose_narrow": "Narrow",
   "tasks_journal_compose_replace": "Replace",
-  "tasks_journal_modal_title": "Task identification — {journal}"
+  "tasks_journal_modal_title": "Task identification — {journal}",
+  "tasks_journal_filter_title": "Listing filter",
+  "tasks_journal_filter_none": "This journal has no listing filter of its own.",
+  "tasks_journal_filter_edit": "Edit",
+  "tasks_filter_conditions_label": "Conditions",
+  "tasks_filter_conditions_desc": "Which of those tasks a listing shows.",
+  "tasks_tick_recurring_needs_tasks_plugin": "This task was not ticked. Recurring tasks need the Tasks plugin to advance to their next instance.",
+  "tasks_tick_error": "Could not tick the task.",
+  "tasks_listing_empty": "No tasks match this query."
 }

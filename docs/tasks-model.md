@@ -52,8 +52,8 @@ days. Rollup **widens** `literal` rather than replacing it: a month listing that
 dropped the month note's own items while showing all thirty days' would surprise
 anyone who writes tasks in their monthly note.
 
-`selection` resolves **per journal, as the walk reaches each note** — day notes
-by the day journal's headings, week notes by the week journal's. A single value
+`selection` (defined in Filtering, below) resolves **per journal, as the walk reaches each note** —
+day notes by the day journal's headings, week notes by the week journal's. A single value
 cannot serve a rollup, because the journals it spans have different templates:
 given a daily template with `## Tasks` and a weekly one with `## Week focus`,
 either value silences one of them entirely. A `selection` given on the fence
@@ -449,13 +449,17 @@ parsed — with `conditions:` available when someone needs more. A scope key set
 scope field and has no condition form at all. Two spellings, one model, no parser
 anywhere.
 
-For that to hold, **`selection` is one condition type, not two.** It carries
-headings and tags together —
-`{ type: "selection", condition: "under" | "not-under", headings: [], tags: [] }`
-— rather than expanding into a heading condition plus a tag condition. A key that
-expanded into several would break the one-to-one claim and leave the outer
-`mode` deciding how its parts combine, which is a nesting the flat list does not
-have.
+**The filter reuses identification's condition types.** `tag` and `heading`, exactly as
+`src/tasks/conditions.ts` defines them for a provider's identification rule, plus a `status` arm in
+the same shape. There is no separate `selection` type.
+
+An earlier draft merged headings and tags into one `selection` condition so that a single fence key
+could desugar one to one. That constraint was self-inflicted: it followed from choosing one key
+first. Two keys — `heading:` and `tag:` — each desugars into one condition of a type that already
+exists, and `identifies`' own `headingsOf` and `tagsOf` answer both without a second implementation.
+
+Where this document says "selection", read "the filter's heading and tag conditions". The per-journal
+default those sentences describe is real and is stored on the journal, under `tasks.filter`.
 
 The line this holds is about **who owns the grammar**, not how many options
 exist. Named keys and typed condition objects are a schema: they validate, they
@@ -464,8 +468,8 @@ composes is a language, needing a parser, a precedence table and documentation.
 Dataview and the Tasks plugin each own one; this plugin does not become the
 third.
 
-The keys are `provider`, `source`, `depth` and `date` in scope, `status` and
-`selection` in the filter, plus `sort`. Anything
+The keys are `provider`, `source`, `depth` and `date` in scope, `status`,
+`heading` and `tag` in the filter, plus `sort`. Anything
 outside them is answered by handing the resolved path set to Dataview, which is
 the supported form of the "use Dataview for that" answer — a DQL query cannot
 resolve which notes are September's journal notes without the user hand-encoding
@@ -523,11 +527,37 @@ a fence means nothing.
 order the lines are written in, which is the default. It needs no parser and
 refusing it would push people to Dataview for something trivial.
 
-**`group` is deferred**, not refused. The listing already groups — #345 specifies
-the grouped-entries shape the notelets listing uses, and a rollup groups by
-source note by construction. A user-chosen grouping therefore has to say how it
-composes with the one already there, and nobody has asked yet. When someone does,
-the question is how the two interact, not whether it is allowed.
+**A sort reorders siblings, never the nesting.** It is applied level by level —
+across the roots, then within each parent's children — so a subtree stays
+contiguous and below its parent whatever the key. A flat re-sort would separate a
+context row from the child it was pulled in to anchor, which is the only reason
+that row exists. For `status` the order is `todo`, `in-progress`, `on-hold`,
+`rolled`, `done`, `cancelled`: `rolled` sits between the open statuses and the
+done ones because it is neither, and a listing sorted by status is asking what
+still needs the user. For a date role, an item carrying no date of that role
+sorts last, so naming a role never buries the items that answer it.
+
+**The listing is flat, and a sort reaches across the whole of it.** One row per
+item, each carrying the note it came from; there is no period → source → item
+tree of the kind the notelets listing builds. A rollup therefore does **not**
+group by source note — under `document` the rows happen to come out note by note,
+because document order is the order the notes were walked in, but under `status`
+or a date role the rows of every source note interleave freely. That is the
+point: "everything still open this month, by due date" is exactly the question a
+rollup exists to answer, and it cannot be asked of a listing that sorts only
+within each note.
+
+This binds anything that renders these rows. A renderer must **not** derive
+groups by scanning consecutive runs of `row.source` — under any non-default sort
+that yields fragmented groups, the same note opening several times down the page.
+The source belongs on the row, beside the item, rather than folded into a
+heading above a run of rows.
+
+**`group` is deferred**, not refused — and on the honest ground that **nothing
+groups today**. A user-chosen grouping has to say how it composes with the sort,
+which currently owns the whole ordering, and nobody has asked yet. When someone
+does, the question is how grouping and a global sort interact, not whether
+grouping is allowed.
 
 **A condition that cannot apply to an item is _dropped_ for that item**, before
 the filter is evaluated. Not false, and **not true** — removed from the set, so
@@ -535,7 +565,7 @@ it neither excludes the item nor votes for it. An item every condition drops out
 of matches, the way an empty condition set does.
 
 Evaluating it as **false** returns **zero** note-property items for a fence
-saying `selection: "## Tasks"`, saying nothing about why — the user asked about
+saying `heading: "## Tasks"`, saying nothing about why — the user asked about
 their daily notes' internal structure and did not ask to drop a provider.
 Evaluating it as **true** is worse, and only under `or`: `heading under ## Tasks`
 _or_ `status done` would return every open note task, because the inapplicable
@@ -575,11 +605,10 @@ unscoped rollover over a template that seeds recurring checkboxes duplicates
 those checkboxes every day, which is the single most common support thread on
 every incumbent.
 
-**Identification does not use `selection`.** A provider's identification rule carries
-finer-grained `tag` and `heading` conditions, because it has no fence sugar to keep
-one-to-one. Its empty condition list also means _everything_, where an empty decoration
-condition list means _nothing_. Reconciling the two vocabularies belongs to #345, where
-the fence keys live.
+**What still differs.** Identification carries the same `tag` and `heading` condition types the
+filter does, but with no fence sugar to keep one-to-one — it is configured in settings, not
+hand-typed YAML — and a different empty-list meaning: identification's empty condition list means
+_everything_, where an empty decoration condition list means _nothing_.
 
 ## Ticking an item
 
@@ -611,6 +640,26 @@ Nothing requires Tasks and everything works without it, which is what "no
 dependency on any task plugin" has to mean in practice. The capability check and
 fall back is the discipline `TemplaterService` already applies to
 `parse_commands`.
+
+**This is the one exception to the write rule's clause 1.** Clause 1 bans
+re-emitting a line from a parsed model because _our_ model has no field for
+everything a dialect can carry, so rebuilding from it drops or reorders bytes
+the user wrote. That harm is about the model doing the rebuilding, not about
+where the resulting bytes come from — and `executeToggleTaskDoneCommand`
+doesn't hand us a model to rebuild from at all. It hands back the line (or
+lines) Tasks's own parser already produced, dialect-complete, which is exactly
+the recurrence signifier's own owner writing its own syntax. We may splice that
+text in **unmodified**, and unmodified is the whole permission: nothing here
+authors, reorders or drops a single byte of what Tasks returns.
+
+That permission is conditional on checking what comes back before it is
+spliced in, because the call is a third party's and nothing enforces its return
+at runtime. A throw, a value that isn't a string, or a string that no longer
+matches a task line — most concretely `""`, which would silently erase the
+line — all refuse rather than write. An empty or malformed return crossing this
+boundary is exactly the harm clause 1 exists to prevent, just arriving from
+Tasks's side of it instead of ours, so it gets held to the same bar the input
+line already had to clear.
 
 Rendering is verbatim. A line is shown as written, dialect signifiers included;
 nothing is prettified away, for the same reason nothing is re-serialized.
@@ -876,7 +925,11 @@ headings in its **content** — which is exactly what the scan reads.
 **Notelets are both a source and a target, but not for every command.** A move
 reads from them when `source` includes them — an action item captured in a
 meeting is exactly the kind of thing that should follow you forward, and the
-default `source: note` keeps it opt-in.
+default `source: note` keeps it opt-in. **That default is a move's, not a listing's.** A listing
+reads and a move writes, so the listing may default wider: reading too much is noise, writing too
+much is data loss. A listing defaults to `source: both`, `depth: literal`, `status: open`. The
+alternative — every default as stated for moves — makes a bare fence in a day note a mirror of the
+note it sits in.
 
 Writing to one splits by command. A **bulk rollover** targets the period note
 only: with zero or three Meeting notelets that day there is no non-arbitrary
@@ -970,7 +1023,23 @@ None is a decision — each is work this model is waiting on.
 
 - **The note-property status defaults.** The values TaskNotes ships for its
   status field, mapped to the shared types, matched case-insensitively.
+- **Whether `tag` drops for an item with no position, the way `heading` does.** Filtering says
+  `status` applies to everything while the heading/tag axis applies only to an item with a
+  position inside a note — but `tagsOf()` also folds in `structure.frontmatterTags`, and a
+  note-kind item carries those without carrying any position. Whether its `tag` condition should
+  drop, the way `heading` does, or match against the note's own frontmatter tags is unsettled.
+  For this ticket it drops, matching `heading`: only the checkbox provider ships here, nothing
+  yields a note-kind item until the note-property provider arrives, and a rule with no item to
+  observe it against is unobservable and untestable today. That is a deferral, not an answer —
+  revisit it when the note-property provider lands.
 - **The phase-4 index's memory and cold-boot cost**, measured against realistic
   **link density** rather than note count. Time Ruler hung indefinitely on a
   2,000-note vault, and an anonymised copy of that same vault did not reproduce
   it.
+- **Nesting is unrecoverable from `parent` alone for a note whose list starts at line 0.**
+  Obsidian encodes a root item's parent as `-(list's first line)` and a child's parent as its
+  parent's `position.start.line`; for a list starting at line 0 both encodings produce the same
+  `0`, so a root item and a genuine child of the line-0 item are indistinguishable in that field.
+  `NoteStructureService` resolves the ambiguity toward "no parent" — nesting goes missing rather
+  than wrong — because the alternative, disambiguating by `position.start.col`, would widen
+  `StructureListItem` for every consumer. Open question, not a settled answer.

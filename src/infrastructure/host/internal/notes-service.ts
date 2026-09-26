@@ -173,6 +173,20 @@ export class NotesService {
     );
   }
 
+  // vault.process is Obsidian's read-modify-write under its own lock. vault.modify would read,
+  // transform and write as three steps, losing whatever the user typed in between.
+  process(
+    path: VaultPath,
+    transform: (content: string) => string,
+  ): AsyncResult<string, NoteNotFoundError | NoteWriteError> {
+    const file = this.#requireFile(path);
+    if (!file.isOk()) return AsyncResult.err(file.error);
+    return AsyncResult.fromPromise(
+      this.#app.vault.process(file.value, transform),
+      (cause) => new NoteWriteError(path, cause),
+    );
+  }
+
   append(path: VaultPath, content: string): AsyncResult<void, NoteNotFoundError | NoteWriteError> {
     const file = this.#requireFile(path);
     if (!file.isOk()) return AsyncResult.err(file.error);

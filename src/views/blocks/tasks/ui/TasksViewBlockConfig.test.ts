@@ -1,0 +1,138 @@
+import userEvent from "@testing-library/user-event";
+import { screen, within } from "@testing-library/vue";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+
+import { initLocale, m } from "@/i18n";
+import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
+import type { TaskRule } from "@/tasks/conditions";
+import { DEFAULT_TASK_QUERY } from "@/tasks/query";
+import { testContainer } from "@/testing";
+
+import { tasksViewBlock } from "../tasks-view-block";
+
+import TasksViewBlockConfig from "./TasksViewBlockConfig.vue";
+
+import type { TasksViewBlockConfig as Config } from "../tasks-view-block";
+
+const daily = fixedJournal("Daily", { type: "day" });
+const weekly = fixedJournal("Weekly", { type: "week" });
+
+async function mountConfig(config: Config = tasksViewBlock.defaultConfig, onChange = vi.fn()) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { Daily: daily, Weekly: weekly } },
+  });
+  harness.render(TasksViewBlockConfig, { props: { config, onChange } });
+  return onChange;
+}
+
+function controlFor(name: string): HTMLElement {
+  const row = screen.getByText(name).closest(".setting-item");
+  if (!row) throw new Error(`No row named ${name}`);
+  return row as HTMLElement;
+}
+
+describe("TasksViewBlockConfig", () => {
+  beforeAll(() => initLocale("en"));
+
+  it("exposes window, journals, source and sort controls", async () => {
+    await mountConfig();
+    expect(screen.getByText(m.view_block_config_window_label())).toBeTruthy();
+    expect(screen.getByText(m.view_block_tasks_journals_label())).toBeTruthy();
+    expect(screen.getByText(m.view_block_tasks_source_label())).toBeTruthy();
+    expect(screen.getByText(m.view_block_tasks_sort_label())).toBeTruthy();
+  });
+
+  it("emits the complete config when the window changes", async () => {
+    const onChange = await mountConfig();
+    const dropdown = within(controlFor(m.view_block_config_window_label())).getByRole("combobox");
+    await userEvent.selectOptions(dropdown, "month");
+    expect(onChange).toHaveBeenCalledWith({ ...tasksViewBlock.defaultConfig, window: "month" });
+  });
+
+  it("emits the complete config when the source changes", async () => {
+    const onChange = await mountConfig();
+    const dropdown = within(controlFor(m.view_block_tasks_source_label())).getByRole("combobox");
+    await userEvent.selectOptions(dropdown, "note");
+    expect(onChange).toHaveBeenCalledWith({
+      ...tasksViewBlock.defaultConfig,
+      scope: { ...DEFAULT_TASK_QUERY.scope, source: "note" },
+    });
+  });
+
+  it("emits the complete config when the sort changes", async () => {
+    const onChange = await mountConfig();
+    const dropdown = within(controlFor(m.view_block_tasks_sort_label())).getByRole("combobox");
+    await userEvent.selectOptions(dropdown, "due");
+    expect(onChange).toHaveBeenCalledWith({ ...tasksViewBlock.defaultConfig, sort: "due" });
+  });
+
+  it("narrows to the journals toggled on", async () => {
+    const onChange = await mountConfig();
+    await userEvent.click(screen.getByText("Daily"));
+    expect(onChange).toHaveBeenCalledWith({ ...tasksViewBlock.defaultConfig, journals: ["Daily"] });
+  });
+
+  it("offers no journals row when no journal exists", async () => {
+    const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: {} } });
+    harness.render(TasksViewBlockConfig, { props: { config: tasksViewBlock.defaultConfig, onChange: vi.fn() } });
+    expect(screen.queryByText(m.view_block_tasks_journals_label())).toBeNull();
+  });
+
+  describe("filter row", () => {
+    it("shows a filter row describing the stored filter", async () => {
+      await mountConfig();
+      expect(screen.getByText(m.view_block_tasks_filter_label())).toBeTruthy();
+    });
+
+    // A block that stores no status is where the listing's own open-only default applies, and
+    // where a journal's own Status condition reaches the block instead. Neither is visible from
+    // this editor, so the row has to say both rather than read as "no filter at all".
+    it("names the open-only default and says a journal's own status replaces it", async () => {
+      await mountConfig();
+      expect(screen.getByTestId("task-filter-summary").textContent).toContain(m.tasks_status_group_open());
+      expect(screen.getByText(m.view_block_tasks_filter_status_default())).toBeTruthy();
+    });
+
+    it("describes the block's own status and drops the default note once one is chosen", async () => {
+      const filter: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] };
+      await mountConfig({ ...tasksViewBlock.defaultConfig, filter });
+      expect(screen.getByTestId("task-filter-summary").textContent).toContain(m.tasks_status_group_done());
+      expect(screen.queryByText(m.view_block_tasks_filter_status_default())).toBeNull();
+    });
+
+    // Unlike a journal's row, this filter IS the query composeFilters answers with, so its mode
+    // genuinely applies and the shared editor keeps the control.
+    it("opens the editor with the mode control, this filter being the query itself", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { Daily: daily, Weekly: weekly } },
+      });
+      harness.render(TasksViewBlockConfig, { props: { config: tasksViewBlock.defaultConfig, onChange: vi.fn() } });
+
+      await userEvent.click(screen.getByRole("button", { name: m.tasks_journal_filter_edit() }));
+      expect(harness.modals.lastOpen<{ showMode: boolean }>().props.showMode).toBe(true);
+    });
+
+    // The whole point of wiring the shared editor here: a naive "no editor yet" state would leave
+    // this passing with the filter never actually written back, so this drives the modal's own
+    // submit and reads the emitted config, not just that the modal opened.
+    it("emits the complete config with the edited filter on Save", async () => {
+      const harness = await testContainer({
+        modules: [journalsCoreModule],
+        data: { journals: { Daily: daily, Weekly: weekly } },
+      });
+      const onChange = vi.fn();
+      harness.render(TasksViewBlockConfig, { props: { config: tasksViewBlock.defaultConfig, onChange } });
+
+      await userEvent.click(screen.getByRole("button", { name: m.tasks_journal_filter_edit() }));
+      const edited: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+      harness.modals.lastOpen<{ filter: TaskRule }, TaskRule>().submit(edited);
+
+      await vi.waitFor(() =>
+        expect(onChange).toHaveBeenCalledWith({ ...tasksViewBlock.defaultConfig, filter: edited }),
+      );
+    });
+  });
+});

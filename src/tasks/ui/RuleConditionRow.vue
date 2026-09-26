@@ -4,29 +4,38 @@ import { ref, watch } from "vue";
 import { m } from "@/i18n";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
+import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
-import { conditionValues } from "../condition-text";
+import { conditionValues } from "./condition-text";
+import { defaultTaskCondition } from "./rule-condition-defaults";
+import { STATUS_FILTER_OPTIONS, statusFilterLabel } from "./status-filter-options";
 
-import type { CheckboxCondition } from "../rule-schema";
+import type { TaskCondition } from "../conditions";
 
-const condition = defineModel<CheckboxCondition>({ required: true });
+const condition = defineModel<TaskCondition>({ required: true });
+
+// Which arms this row's type dropdown offers — the checkbox identification editor passes
+// `["tag", "heading"]` (identification never reads a status condition, see rule-schema.ts), the
+// listing filter's editor passes all three. Restricting the dropdown is the first of two gates
+// against the checkbox editor ever writing a status condition; the second is the checkbox
+// provider's own form schema (rule-form-schema.ts), which rejects one independently of this list.
+const { types } = defineProps<{ types: readonly TaskCondition["type"][] }>();
 
 // Multi-root components get no automatic attribute fallthrough, so a parent-side `@blur` on
 // <RuleConditionRow> reaches nothing without this — RuleEditor uses it to decide when this row
 // has been interacted with, so its "enter a value" error can stay quiet until then.
 const emit = defineEmits<{ blur: [] }>();
 
-// Switching the type has to replace the whole object, not just the `type` field: `tags` and
-// `headings` do not coexist on the discriminated union, so leaving the old type's field behind
-// would produce a value the schema itself could not have parsed.
-function setType(type: CheckboxCondition["type"]): void {
-  condition.value =
-    type === "tag"
-      ? { type: "tag", condition: "has", tags: [] }
-      : { type: "heading", condition: "under", headings: [] };
+// Switching the type has to replace the whole object, not just the `type` field: `tags`,
+// `headings` and `statuses` do not coexist on the discriminated union, so leaving the old type's
+// field behind would produce a value the schema itself could not have parsed.
+function setType(type: TaskCondition["type"]): void {
+  condition.value = defaultTaskCondition(type);
 }
 
-function displayText(value: CheckboxCondition): string {
+// "" for status: its value editor is the toggle group below, never this row's text input.
+function displayText(value: TaskCondition): string {
+  if (value.type === "status") return "";
   return (value.type === "tag" ? value.tags : value.headings).join(", ");
 }
 
@@ -49,6 +58,7 @@ watch(
 );
 
 function commit(): void {
+  if (condition.value.type === "status") return;
   const list = conditionValues(valuesText.value, condition.value.type);
   if (condition.value.type === "tag") condition.value.tags = list;
   else condition.value.headings = list;
@@ -71,25 +81,46 @@ function onBlur(event: FocusEvent): void {
   commit();
   emit("blur");
 }
+
+// A status condition has no text field to blur, so its own value editor marks the row touched
+// directly, the moment the user has picked anything at all — same "leave the error quiet until
+// interacted with" contract as the text rows above.
+function setStatuses(value: string[]): void {
+  if (condition.value.type !== "status") return;
+  condition.value.statuses = value;
+  emit("blur");
+}
+
+const statusOptions: { value: string; label: string }[] = STATUS_FILTER_OPTIONS.map((status) => ({
+  value: status,
+  label: statusFilterLabel(status),
+}));
 </script>
 
 <template>
-  <UiDropdown :model-value="condition.type" @update:model-value="setType($event as CheckboxCondition['type'])">
-    <option value="tag">{{ m.tasks_settings_condition_tag() }}</option>
-    <option value="heading">{{ m.tasks_settings_condition_heading() }}</option>
+  <UiDropdown :model-value="condition.type" @update:model-value="setType($event as TaskCondition['type'])">
+    <option v-if="types.includes('tag')" value="tag">{{ m.tasks_settings_condition_tag() }}</option>
+    <option v-if="types.includes('heading')" value="heading">{{ m.tasks_settings_condition_heading() }}</option>
+    <option v-if="types.includes('status')" value="status">{{ m.tasks_settings_condition_status() }}</option>
   </UiDropdown>
   <UiDropdown v-if="condition.type === 'tag'" v-model="condition.condition">
     <option value="has">{{ m.tasks_settings_condition_has() }}</option>
     <option value="lacks">{{ m.tasks_settings_condition_lacks() }}</option>
   </UiDropdown>
-  <UiDropdown v-else v-model="condition.condition">
+  <UiDropdown v-else-if="condition.type === 'heading'" v-model="condition.condition">
     <option value="under">{{ m.tasks_settings_condition_under() }}</option>
     <option value="not-under">{{ m.tasks_settings_condition_not_under() }}</option>
   </UiDropdown>
+  <UiDropdown v-else v-model="condition.condition">
+    <option value="is">{{ m.tasks_settings_condition_is() }}</option>
+    <option value="is-not">{{ m.tasks_settings_condition_is_not() }}</option>
+  </UiDropdown>
   <UiTextInput
+    v-if="condition.type !== 'status'"
     v-model="valuesText"
     :aria-label="condition.type === 'tag' ? m.tasks_settings_condition_tag() : m.tasks_settings_condition_heading()"
     @keydown.enter="commit"
     @blur="onBlur"
   />
+  <UiToggleGroup v-else :model-value="condition.statuses" :options="statusOptions" @update:model-value="setStatuses" />
 </template>

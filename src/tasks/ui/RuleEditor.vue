@@ -8,29 +8,50 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
+import { defaultTaskCondition } from "./rule-condition-defaults";
 import RuleConditionRow from "./RuleConditionRow.vue";
 
-import type { CheckboxCondition } from "../rule-schema";
+import type { TaskCondition } from "../conditions";
 
-// Typed as the mode/conditions pair rather than CheckboxRule so EditJournalTasksModal can bind
-// the same editor to a journal rule, which carries an extra `compose` field this component never
-// touches.
-const rule = defineModel<{ mode: "and" | "or"; conditions: CheckboxCondition[] }>({ required: true });
+// Typed as the mode/conditions pair rather than a named rule type so every caller (the checkbox
+// identification editors and the listing filter's) can bind the same editor to its own rule shape
+// — EditJournalTasksModal's carries an extra `compose` field this component never touches.
+// Conditions are the full TaskCondition union: which arms this instance actually offers is a
+// runtime question, answered by `types` below, not a question the model's own type can answer —
+// see RuleConditionRow.vue for why the checkbox editors still never produce a status condition.
+const rule = defineModel<{ mode: "and" | "or"; conditions: TaskCondition[] }>({ required: true });
 
-// The caller (each modal) computes validity from the whole draft via checkboxRuleConditionErrors
-// and owns disabling Save — this component only renders the message next to the row it belongs to.
-// Not destructured: combining destructure with withDefaults() disables Vue's reactive-destructure
-// transform, so `errors` would freeze at its initial value instead of tracking the prop.
-const props = withDefaults(defineProps<{ errors?: ReadonlyMap<number, string> }>(), { errors: undefined });
+// `label`/`description` are required, not defaulted to the identification-rule wording: the
+// listing filter's editor names a different thing, and a silent default would make one caller's
+// copy an accident of another's rather than every caller's own choice.
+// `showMode` is opt-out, not opt-in: the identification rules this editor was written for do apply
+// their own combinator. Only a rule whose mode nothing downstream reads turns it off — a journal's
+// listing filter, whose conditions are merged into the surface's query under the surface's mode
+// (composeFilters, src/tasks/filter.ts).
+const props = withDefaults(
+  defineProps<{
+    types: readonly TaskCondition["type"][];
+    label: string;
+    description: string;
+    errors?: ReadonlyMap<number, string>;
+    showMode?: boolean;
+  }>(),
+  { errors: undefined, showMode: true },
+);
 
 // Keyed by condition object identity, not index: removeCondition splices the array, which would
 // silently reassign an index-keyed touched flag to the wrong row. "Add condition" creates an
 // empty row by design, so its error stays quiet until the user has actually left its input once —
 // showing it immediately would flag the normal first moment of editing as a mistake.
-const touched = reactive(new Set<CheckboxCondition>());
+const touched = reactive(new Set<TaskCondition>());
 
 function addCondition(): void {
-  rule.value.conditions.push({ type: "tag", condition: "has", tags: [] });
+  // `.at(0)` rather than a non-null assertion: every caller passes a non-empty `types`, but
+  // nothing enforces that at the type level, so an empty list degrades to a no-op button instead
+  // of throwing.
+  const type = props.types.at(0);
+  if (type === undefined) return;
+  rule.value.conditions.push(defaultTaskCondition(type));
 }
 
 function removeCondition(index: number): void {
@@ -38,7 +59,7 @@ function removeCondition(index: number): void {
   if (condition) touched.delete(condition);
 }
 
-function errorsFor(condition: CheckboxCondition, index: number): string[] {
+function errorsFor(condition: TaskCondition, index: number): string[] {
   if (!touched.has(condition)) return [];
   const message = props.errors?.get(index);
   return message ? [message] : [];
@@ -46,16 +67,16 @@ function errorsFor(condition: CheckboxCondition, index: number): string[] {
 </script>
 
 <template>
-  <UiSettingRow :name="m.tasks_settings_rule()" stacked>
-    <template #description>{{ m.tasks_settings_rule_desc() }}</template>
+  <UiSettingRow :name="label" stacked>
+    <template #description>{{ description }}</template>
     <div class="tasks-rule-body">
-      <UiDropdown v-model="rule.mode">
+      <UiDropdown v-if="showMode" v-model="rule.mode">
         <option value="and">{{ m.tasks_settings_mode_and() }}</option>
         <option value="or">{{ m.tasks_settings_mode_or() }}</option>
       </UiDropdown>
       <div v-for="(condition, index) in rule.conditions" :key="index" class="tasks-rule-condition">
         <div class="tasks-rule-condition-row" data-testid="rule-condition-row">
-          <RuleConditionRow v-model="rule.conditions[index]" @blur="touched.add(condition)" />
+          <RuleConditionRow v-model="rule.conditions[index]" :types="types" @blur="touched.add(condition)" />
           <UiIconButton
             :icon="icons.action.delete"
             :tooltip="m.common_action_delete()"

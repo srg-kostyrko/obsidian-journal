@@ -16,7 +16,7 @@ import JournalTasksBlock from "./JournalTasksBlock.vue";
 async function mount() {
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
-    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: {} }) } },
+    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: { providers: {} } } as never) } },
   });
   harness.render(JournalTasksBlock, { props: { journalName: "Daily" } });
   return harness;
@@ -44,7 +44,7 @@ describe("JournalTasksBlock", () => {
     it("shows Inherit for a journal with no checkbox rule of its own", async () => {
       const harness = await testContainer({
         modules: [journalsCoreModule, tasksCoreModule],
-        data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: {} }) } },
+        data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: { providers: {} } } as never) } },
       });
       harness.render(JournalTasksBlock, { props: { journalName: "Daily" } });
 
@@ -57,7 +57,7 @@ describe("JournalTasksBlock", () => {
         data: {
           journals: {
             Daily: fixedJournal("Daily", { type: "day" }, {
-              tasks: { checkbox: { compose: "narrow", mode: "and", conditions: [] } },
+              tasks: { providers: { checkbox: { compose: "narrow", mode: "and", conditions: [] } } },
             } as never),
           },
         },
@@ -65,9 +65,9 @@ describe("JournalTasksBlock", () => {
       harness.render(JournalTasksBlock, { props: { journalName: "Daily" } });
       expect(screen.getByText(m.tasks_journal_compose_narrow())).toBeTruthy();
 
-      harness
-        .resolve(JournalsRepository)
-        .update("Daily", { tasks: { checkbox: { compose: "replace", mode: "and", conditions: [] } } } as never);
+      harness.resolve(JournalsRepository).update("Daily", {
+        tasks: { providers: { checkbox: { compose: "replace", mode: "and", conditions: [] } } },
+      } as never);
       await nextTick();
 
       expect(screen.getByText(m.tasks_journal_compose_replace())).toBeTruthy();

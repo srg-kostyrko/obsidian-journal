@@ -60,7 +60,7 @@ export class TaskHostService implements TaskHost {
       this.#repository.get(entry.journalName).map((config) => ({
         path: entry.path,
         journalName: entry.journalName,
-        rule: (config.tasks as Record<string, unknown>)[providerId],
+        rule: (config.tasks.providers as Record<string, unknown>)[providerId],
       })),
     );
   }
@@ -70,7 +70,7 @@ export class TaskHostService implements TaskHost {
     for (const journalName of names) {
       const config = this.#repository.get(journalName);
       if (config.isNone()) continue;
-      const rule = (config.value.tasks as Record<string, unknown>)[providerId];
+      const rule = (config.value.tasks.providers as Record<string, unknown>)[providerId];
       for (const [, path] of this.#journals.entriesFor(journalName)) {
         yield { path, journalName, rule };
       }

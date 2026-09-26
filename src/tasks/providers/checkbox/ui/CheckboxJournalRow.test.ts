@@ -15,10 +15,10 @@ import { EditJournalTasksFlow } from "../flows/edit-journal-tasks.flow";
 
 import CheckboxJournalRow from "./CheckboxJournalRow.vue";
 
-async function mount(tasks: unknown = {}) {
+async function mount(providers: unknown = {}) {
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
-    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks } as never) } },
+    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: { providers } } as never) } },
   });
   const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
@@ -51,7 +51,13 @@ describe("CheckboxJournalRow", () => {
     const { repository } = await mount();
     repository.update("Daily", {
       tasks: {
-        checkbox: { compose: "narrow", mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#task"] }] },
+        providers: {
+          checkbox: {
+            compose: "narrow",
+            mode: "and",
+            conditions: [{ type: "tag", condition: "has", tags: ["#task"] }],
+          },
+        },
       },
     } as never);
     await nextTick();

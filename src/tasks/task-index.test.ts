@@ -64,7 +64,7 @@ function item(key: string, provider = "checkbox"): TaskItem {
     status: "todo",
     relations: ["containment"],
     capabilities: { movable: true, stampable: true, retargetable: false },
-    display: { kind: "line", path, line: 1, endLine: 1, markdown: null },
+    display: { kind: "line", path, line: 1, endLine: 1, parentLine: null, markdown: null },
     dates: {},
   };
 }
@@ -77,7 +77,7 @@ function lineItem(key: string, line: number, provider = "checkbox", endLine = li
     status: "todo",
     relations: ["containment"],
     capabilities: { movable: true, stampable: true, retargetable: false },
-    display: { kind: "line", path, line, endLine, markdown: null },
+    display: { kind: "line", path, line, endLine, parentLine: null, markdown: null },
     dates: {},
   };
 }
@@ -193,7 +193,7 @@ describe("TaskIndex", () => {
     const before = index.version();
 
     index.publish("checkbox", { path }, [
-      { ...lineItem("a", 1), display: { kind: "line", path, line: 9, endLine: 9, markdown: null } },
+      { ...lineItem("a", 1), display: { kind: "line", path, line: 9, endLine: 9, parentLine: null, markdown: null } },
     ]);
 
     expect(index.version()).toBeGreaterThan(before);

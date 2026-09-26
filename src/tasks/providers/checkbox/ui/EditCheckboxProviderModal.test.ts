@@ -224,6 +224,42 @@ describe("status map editor", () => {
 // the vault-wide section that this modal replaced. The interactions are unchanged; only the
 // write ends with a Save click, since the editor here binds to the modal's draft.
 describe("rule editor", () => {
+  // Pins the restriction that makes the rest of this describe block safe: RuleEditor is a shared
+  // component (also bound to the listing filter, with all three condition types), and this is
+  // the only thing that stops the checkbox identification editor from ever offering "status" —
+  // there is no type-level guarantee once the model is the full TaskCondition union.
+  it("never offers a status condition in the type dropdown", async () => {
+    await mount();
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    const typeSelect = screen.getByDisplayValue(m.tasks_settings_condition_tag());
+    const optionLabels = [...typeSelect.querySelectorAll("option")].map((option) => option.textContent);
+    expect(optionLabels).toEqual([m.tasks_settings_condition_tag(), m.tasks_settings_condition_heading()]);
+    expect(optionLabels).not.toContain(m.tasks_settings_condition_status());
+  });
+
+  // The narrower CheckboxEditableCondition surface (rule-schema.ts) means RuleEditor never
+  // renders a status condition, but a no-op Save must not be the thing that deletes it from
+  // storage — the schema stays as wide as TaskCondition because it is shared with the listing
+  // filter, and a stored status condition can only reach here through a hand-edited or
+  // future-schema value.
+  it("preserves a stored status condition across a no-op Save", async () => {
+    const harness = await testContainer({ modules: [tasksCoreModule] });
+    const slice = harness.resolve(SettingsService).getSlice(checkboxSlice);
+    slice.state.rule = {
+      mode: "and",
+      conditions: [
+        { type: "status", condition: "is", statuses: ["done"] },
+        { type: "tag", condition: "has", tags: ["#task"] },
+      ],
+    };
+    harness.renderModal(EditCheckboxProviderModal);
+
+    await save();
+
+    expect(slice.state.rule.conditions).toHaveLength(2);
+    expect(slice.state.rule.conditions).toContainEqual({ type: "status", condition: "is", statuses: ["done"] });
+  });
+
   it("adds a tag condition to the global rule, on Save", async () => {
     const { slice } = await mount();
 

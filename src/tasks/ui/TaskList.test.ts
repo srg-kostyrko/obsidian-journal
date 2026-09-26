@@ -1,0 +1,214 @@
+import { screen } from "@testing-library/vue";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { m } from "@/i18n";
+import { MarkdownRenderService, type VaultPath } from "@/infrastructure/host";
+import { FakeMarkdownRenderService } from "@/infrastructure/host/testing";
+import { AsyncResult } from "@/infrastructure/result";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
+
+import { tasksCoreModule } from "../module";
+import { buildTaskItem } from "../testing";
+import { NotATaskLineError, RecurringUnsupportedError, TickService, type TickError } from "../tick";
+
+import TaskList from "./TaskList.vue";
+
+import type { TaskListingRow } from "../listing";
+import type { TaskItem } from "../types";
+
+// `line` defaults to a fresh number per row: buildTaskItem keys an item `${path}:${line}`, so two
+// rows built at the same line would render under one `:key` and Vue would reuse a single component
+// for both.
+let nextLine = 0;
+
+function row(
+  overrides: {
+    markdown?: string;
+    depth?: number;
+    context?: boolean;
+    sourceLabel?: string;
+    line?: number;
+  } = {},
+): TaskListingRow {
+  const lineNumber = overrides.line ?? nextLine++;
+  const path = "Daily/2026-09-22.md" as VaultPath;
+  const item: TaskItem = buildTaskItem({
+    path,
+    key: `${path}:${lineNumber}`,
+    display: {
+      kind: "line",
+      path,
+      line: lineNumber,
+      endLine: lineNumber,
+      parentLine: null,
+      markdown: overrides.markdown ?? "- [ ] Task",
+    },
+  });
+  return {
+    key: item.key,
+    item,
+    source: { kind: "note", path: item.path, label: overrides.sourceLabel ?? "2026-09-22" },
+    depth: overrides.depth ?? 0,
+    context: overrides.context ?? false,
+  };
+}
+
+function stubMarkdown(): MarkdownRenderService {
+  return new FakeMarkdownRenderService() as unknown as MarkdownRenderService;
+}
+
+// Obsidian's own renderer emits the checkbox as part of the line; the unit-tier fake emits text
+// only, so a test about the rendered control's own state needs a renderer that produces one.
+function checkboxMarkdown(): MarkdownRenderService {
+  return {
+    render(element: HTMLElement, markdown: string): () => void {
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      element.replaceChildren(input, document.createTextNode(markdown));
+      return () => element.replaceChildren();
+    },
+  } as unknown as MarkdownRenderService;
+}
+
+async function mountWithTick(toggle: (item: TaskItem) => AsyncResult<void, TickError>): Promise<TestHarness> {
+  return testContainer({
+    modules: [tasksCoreModule],
+    overrides: [
+      overrideWith(MarkdownRenderService, stubMarkdown()),
+      overrideWith(TickService, { toggle } as unknown as TickService),
+    ],
+  });
+}
+
+// Real Obsidian renders an enabled checkbox for a task line with no handler of its own attached
+// outside a real MarkdownView (measured against 1.13.7), which is what licenses catching its click
+// here. The unit-test-tier FakeMarkdownRenderService is `element.textContent = markdown` and
+// produces no such input, so these tests attach a plain `<input type="checkbox">` by hand and click
+// it — exercising the click-delegation and context guard for real, but not whether
+// MarkdownRenderService's actual output matches what we insert by hand. That last gap is covered by
+// the tasks e2e journey.
+// `disabled` is a reflected boolean attribute, so this reads back what the component set on the
+// rendered input without an instanceof narrowing per row.
+function disabledFlags(): boolean[] {
+  return screen.getAllByRole("checkbox").map((box) => box.hasAttribute("disabled"));
+}
+
+function clickableCheckbox(markdown: string): HTMLInputElement {
+  const line = screen.getByText(markdown);
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  line.append(checkbox);
+  return checkbox;
+}
+
+describe("TaskList", () => {
+  let harness: TestHarness;
+
+  beforeEach(async () => {
+    harness = await testContainer({
+      modules: [tasksCoreModule],
+      overrides: [overrideWith(MarkdownRenderService, stubMarkdown())],
+    });
+  });
+
+  it("renders each row's whole line, marker included, so a theme can style the status", () => {
+    harness.render(TaskList, { props: { rows: [row({ markdown: "- [/] Ship it 📅 2026-09-25" })] } });
+    expect(screen.getByText("- [/] Ship it 📅 2026-09-25")).toBeTruthy();
+  });
+
+  it("indents a nested row by its depth", () => {
+    harness.render(TaskList, { props: { rows: [row({ depth: 0 }), row({ depth: 1, markdown: "- [ ] Child" })] } });
+    const child = screen.getByText("- [ ] Child").closest("[data-depth]");
+    expect(child instanceof HTMLElement && child.dataset.depth).toBe("1");
+  });
+
+  it("marks a context row so it renders dimmed and cannot be ticked", () => {
+    harness.render(TaskList, { props: { rows: [row({ context: true })] } });
+    expect(screen.getByRole("listitem").dataset.context).toBe("true");
+  });
+
+  // The click handler already refuses a context row, but an enabled, focusable control that does
+  // nothing when pressed is an affordance the behavior does not back.
+  it("disables a context row's own checkbox, so the control matches what clicking it does", async () => {
+    harness = await testContainer({
+      modules: [tasksCoreModule],
+      overrides: [overrideWith(MarkdownRenderService, checkboxMarkdown())],
+    });
+    const plain = row({ context: false, line: 4 });
+    const { rerender } = harness.render(TaskList, {
+      props: { rows: [row({ context: true, line: 3 }), plain] },
+    });
+
+    expect(disabledFlags()).toEqual([true, false]);
+
+    // Hydration replaces a row's markdown under the same key, and Obsidian's renderer replaces the
+    // input along with it — so the row that was already disabled has to come back disabled.
+    await rerender({ rows: [row({ context: true, line: 3, markdown: "- [x] Shopping" }), plain] });
+    expect(disabledFlags()).toEqual([true, false]);
+  });
+
+  it("links each row to the note it came from", () => {
+    harness.render(TaskList, { props: { rows: [row({ sourceLabel: "2026-09-22" })] } });
+    expect(screen.getByRole("link", { name: "2026-09-22" })).toBeTruthy();
+  });
+
+  it("shows the empty message when the query matched nothing", () => {
+    harness.render(TaskList, { props: { rows: [] } });
+    expect(screen.getByText(m.tasks_listing_empty())).toBeTruthy();
+  });
+
+  describe("ticking", () => {
+    it("reaches TickService with the row's own item when its checkbox is clicked", async () => {
+      const toggle = vi.fn(() => AsyncResult.ok<void>(undefined));
+      const target = row({ markdown: "- [ ] Ship it" });
+      harness = await mountWithTick(toggle);
+      harness.render(TaskList, { props: { rows: [target] } });
+
+      const checkbox = clickableCheckbox("- [ ] Ship it");
+      checkbox.click();
+
+      await vi.waitFor(() => expect(toggle).toHaveBeenCalledTimes(1));
+      expect(toggle).toHaveBeenCalledWith(target.item);
+    });
+
+    it("refuses to tick a context row even though its checkbox is clicked", async () => {
+      const toggle = vi.fn(() => AsyncResult.ok<void>(undefined));
+      const target = row({ markdown: "- [ ] Ship it", context: true });
+      harness = await mountWithTick(toggle);
+      harness.render(TaskList, { props: { rows: [target] } });
+
+      const checkbox = clickableCheckbox("- [ ] Ship it");
+      checkbox.click();
+
+      // There is no async completion to await for a call that never happens, so this asserts the
+      // synchronous state right after the click rather than racing a `waitFor` that would always
+      // time out toward the same answer.
+      expect(toggle).not.toHaveBeenCalled();
+    });
+
+    it("shows a generic notice when ticking fails for a reason the service has not already announced", async () => {
+      const path = "Daily/2026-09-22.md" as VaultPath;
+      const toggle = vi.fn(() => AsyncResult.err<TickError>(new NotATaskLineError(path)));
+      const target = row({ markdown: "- [ ] Ship it" });
+      harness = await mountWithTick(toggle);
+      harness.render(TaskList, { props: { rows: [target] } });
+
+      clickableCheckbox("- [ ] Ship it").click();
+
+      await vi.waitFor(() => expect(harness.notices.messages).toContain(m.tasks_tick_error()));
+    });
+
+    it("stays silent when ticking refuses for a benign reason TickService already announced itself", async () => {
+      const path = "Daily/2026-09-22.md" as VaultPath;
+      const toggle = vi.fn(() => AsyncResult.err<TickError>(new RecurringUnsupportedError(path)));
+      const target = row({ markdown: "- [ ] Ship it" });
+      harness = await mountWithTick(toggle);
+      harness.render(TaskList, { props: { rows: [target] } });
+
+      clickableCheckbox("- [ ] Ship it").click();
+
+      await vi.waitFor(() => expect(toggle).toHaveBeenCalledTimes(1));
+      expect(harness.notices.messages).toEqual([]);
+    });
+  });
+});

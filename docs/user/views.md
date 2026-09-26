@@ -130,6 +130,19 @@ Lists the notelets of the note you are reading, or of a window around the view's
 
 See [Notelets](/notelets).
 
+### Tasks
+
+Lists tasks from a window around the view's date, across the journals in the view's shelf. See
+[Tasks](/tasks#the-tasks-view-block).
+
+- **Window** — as above; **Selected day** by default.
+- **Journals** — leave all off to include every journal in the view's shelf.
+- **Source** — **Note only**, **Notelets only** or **Note and notelets**.
+- **Sort by** — document order, status, or one of the five date roles a task line can carry.
+- **Filter** — which of those tasks to show, as a list of tag, heading and status conditions matched
+  under **Match all conditions** or **Match any condition**. Empty on a new block, which shows what is
+  still open unless a journal's own listing filter says otherwise.
+
 ### Markdown template
 
 Renders a template note as markdown, with journal variables processed. Pick a **Template file**. In it,

@@ -29,7 +29,7 @@ const projectPath = "project/ideas.md" as VaultPath;
 
 function structure(overrides: Partial<NoteStructure> = {}): NoteStructure {
   return {
-    listItems: [{ marker: " ", line: 4, endLine: 4 }],
+    listItems: [{ marker: " ", line: 4, endLine: 4, parent: null }],
     tags: [],
     headings: [],
     frontmatterTags: [],
@@ -333,7 +333,7 @@ describe("CheckboxTaskProvider.hydrateItem", () => {
       status: "todo",
       relations: ["containment"],
       capabilities: { movable: true, stampable: true, retargetable: false },
-      display: { kind: "line", path, line: 0, endLine: 0, markdown: null },
+      display: { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null },
       dates: {},
     };
   }
@@ -376,7 +376,7 @@ describe("CheckboxTaskProvider hydration wiring", () => {
     });
     const journals = harness.resolve(JournalsIndex);
     journals.register({ journalName: "Daily", anchor: anchor("2026-09-22"), path });
-    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4 }] }));
+    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4, parent: null }] }));
     harness.host.putFile(path, "one\ntwo\nthree\nfour\n- [ ] Water plants 📅 2026-09-25\n");
 
     const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
@@ -418,7 +418,7 @@ describe("CheckboxTaskProvider content refill", () => {
     const index = harness.resolve(TaskIndex);
     expect(index.itemsIn(path)).toEqual([]);
 
-    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4 }] }));
+    structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4, parent: null }] }));
     harness.host.emitMetadata(path);
 
     expect(index.itemsIn(path)).toHaveLength(1);
@@ -457,7 +457,7 @@ describe("CheckboxTaskProvider content refill", () => {
 // An earlier task dropped the test pinning that JournalsRepository's `updated` event carries
 // `tasks` among its changed keys — exactly what TaskHostService gates a journal refill on
 // (`if (!("tasks" in changes)) return;`). Driven end to end through the real modal rather than
-// a fake host, so a future change to how the modal writes back (mutating `config.tasks.checkbox`
+// a fake host, so a future change to how the modal writes back (mutating `config.tasks.providers.checkbox`
 // in place instead of assigning a fresh `tasks` object, say) would leave the index stale with the
 // rest of the suite green — there is no other test anywhere that a journal-scoped Save reaches
 // the provider at all.

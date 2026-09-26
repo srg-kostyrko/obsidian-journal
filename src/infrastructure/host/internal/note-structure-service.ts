@@ -22,6 +22,10 @@ export class NoteStructureService {
           marker: item.task ?? " ",
           line: item.position.start.line,
           endLine: item.position.end.line,
+          // A list starting at line 0 roots at `-0`, which is `0` in JS — the same value a real
+          // child of that line-0 item carries, so the two are indistinguishable here. We resolve
+          // toward "no parent" rather than invent nesting from an ambiguous value.
+          parent: item.parent <= 0 ? null : item.parent,
         })),
       tags: (cache.tags ?? []).map((entry) => ({ tag: entry.tag, line: entry.position.start.line })),
       headings: (cache.headings ?? []).map((h) => ({

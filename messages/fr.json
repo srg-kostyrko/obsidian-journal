@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "Certaines options de ce bloc {key} ne sont pas valides.",
   "code_blocks_nav_not_connected": "Note non connectée à un journal",
   "code_blocks_notelets_not_connected": "Note non connectée à un journal",
+  "code_blocks_tasks_not_connected": "Note non connectée à un journal",
   "code_blocks_home_empty": "Aucun journal à afficher. Vérifiez les options show et shelf du bloc.",
   "common_no_journals_yet": "Aucun journal pour l’instant. Créez-en un dans les paramètres du plugin.",
   "code_blocks_nav_next": "Suivant",
@@ -1433,6 +1434,24 @@
       }
     }
   ],
+  "view_block_tasks_label": "Tâches",
+  "view_block_tasks_description": "Répertorie les tâches de la fenêtre et des journaux sélectionnés.",
+  "view_block_tasks_journals_label": "Journaux",
+  "view_block_tasks_journals_description": "Laissez tout désactivé pour inclure tous les journaux de l’étagère de la vue.",
+  "view_block_tasks_source_label": "Source",
+  "view_block_tasks_source_note": "Note uniquement",
+  "view_block_tasks_source_notelets": "Notes brèves uniquement",
+  "view_block_tasks_source_both": "Note et notes brèves",
+  "view_block_tasks_sort_label": "Trier par",
+  "view_block_tasks_sort_document": "Ordre du document",
+  "view_block_tasks_sort_status": "État",
+  "view_block_tasks_sort_due": "Date d'échéance",
+  "view_block_tasks_sort_scheduled": "Date planifiée",
+  "view_block_tasks_sort_start": "Date de début",
+  "view_block_tasks_sort_done": "Date de fin",
+  "view_block_tasks_sort_created": "Date de création",
+  "view_block_tasks_filter_label": "Filtre",
+  "view_block_tasks_filter_status_default": "Aucune condition d’État propre, donc le filtre de la liste d’un journal décide lorsqu’il en nomme un.",
   "view_toolbar_shelf_selector_label": "Sélecteur d’étagères",
   "view_toolbar_shelf_selector_description": "Change l’étagère qui délimite les journaux de la vue.",
   "view_toolbar_shelf_selector_tooltip": "Changer d’étagère",
@@ -2350,6 +2369,9 @@
   "tasks_settings_condition_lacks": "Ne contient pas",
   "tasks_settings_condition_under": "Sous",
   "tasks_settings_condition_not_under": "Pas sous",
+  "tasks_settings_condition_status": "État",
+  "tasks_settings_condition_is": "Est",
+  "tasks_settings_condition_is_not": "N’est pas",
   "tasks_settings_mode_and": "Remplir toutes les conditions",
   "tasks_settings_mode_or": "Remplir au moins une condition",
   "tasks_condition_values_required": "Saisissez au moins une valeur.",
@@ -2375,6 +2397,21 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "sans en-tête",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses}",
+        "condition=is-not": "non {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "sans état",
+  "tasks_status_group_open": "Ouvertes",
+  "tasks_status_group_done": "Terminées",
+  "tasks_status_group_all": "Toutes",
+  "tasks_filter_summary_conditions": "Affiche une tâche qui est {conditions}.",
   "tasks_rule_summary_any": "Aucune condition — tout élément de liste avec case à cocher dans les notes d’un journal est une tâche.",
   "tasks_rule_summary_conditions": "Compte un élément de liste avec case à cocher qui est {conditions}.",
   "tasks_journal_summary_inherit": "Hérite de la règle de tout le coffre-fort.",
@@ -2398,5 +2435,13 @@
   "tasks_journal_compose_inherit": "Hériter",
   "tasks_journal_compose_narrow": "Restreindre",
   "tasks_journal_compose_replace": "Remplacer",
-  "tasks_journal_modal_title": "Identification des tâches — {journal}"
+  "tasks_journal_modal_title": "Identification des tâches — {journal}",
+  "tasks_journal_filter_title": "Filtre de la liste",
+  "tasks_journal_filter_none": "Ce journal n’a pas de filtre de liste propre.",
+  "tasks_journal_filter_edit": "Modifier",
+  "tasks_filter_conditions_label": "Conditions",
+  "tasks_filter_conditions_desc": "Quelles tâches une liste affiche.",
+  "tasks_tick_recurring_needs_tasks_plugin": "Cette tâche n'a pas été cochée. Les tâches récurrentes nécessitent le plugin Tasks pour passer à leur prochaine occurrence.",
+  "tasks_tick_error": "Impossible de cocher la tâche.",
+  "tasks_listing_empty": "Aucune tâche ne correspond à cette requête."
 }

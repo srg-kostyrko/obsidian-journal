@@ -115,6 +115,7 @@
   "code_blocks_schema_error": "この {key} ブロックの一部のオプションが無効です。",
   "code_blocks_nav_not_connected": "ノートがジャーナルに接続されていません",
   "code_blocks_notelets_not_connected": "ノートがジャーナルに接続されていません",
+  "code_blocks_tasks_not_connected": "ノートがジャーナルに接続されていません",
   "code_blocks_home_empty": "表示できるジャーナルがありません。ブロックの show と shelf オプションを確認してください。",
   "common_no_journals_yet": "ジャーナルがまだありません。プラグイン設定で作成してください。",
   "code_blocks_nav_next": "次へ",
@@ -1288,6 +1289,24 @@
       }
     }
   ],
+  "view_block_tasks_label": "タスク",
+  "view_block_tasks_description": "選択したウィンドウとジャーナルのタスクを一覧表示します。",
+  "view_block_tasks_journals_label": "ジャーナル",
+  "view_block_tasks_journals_description": "すべてオフのままにすると、ビューの棚にあるすべてのジャーナルが対象になります。",
+  "view_block_tasks_source_label": "ソース",
+  "view_block_tasks_source_note": "ノートのみ",
+  "view_block_tasks_source_notelets": "サブノートのみ",
+  "view_block_tasks_source_both": "ノートとサブノート",
+  "view_block_tasks_sort_label": "並べ替え基準",
+  "view_block_tasks_sort_document": "ドキュメント順",
+  "view_block_tasks_sort_status": "ステータス",
+  "view_block_tasks_sort_due": "期限日",
+  "view_block_tasks_sort_scheduled": "予定日",
+  "view_block_tasks_sort_start": "開始日",
+  "view_block_tasks_sort_done": "完了日",
+  "view_block_tasks_sort_created": "作成日",
+  "view_block_tasks_filter_label": "フィルター",
+  "view_block_tasks_filter_status_default": "独自のステータス条件はありません。ステータスを指定しているジャーナルでは、その一覧フィルターが決定します。",
   "view_toolbar_shelf_selector_label": "棚セレクター",
   "view_toolbar_shelf_selector_description": "ビューが対象とするジャーナルを、どの棚に絞り込むかを切り替えます。",
   "view_toolbar_shelf_selector_tooltip": "棚を切り替え",
@@ -2339,6 +2358,9 @@
   "tasks_settings_condition_lacks": "含まない",
   "tasks_settings_condition_under": "配下",
   "tasks_settings_condition_not_under": "配下ではない",
+  "tasks_settings_condition_status": "ステータス",
+  "tasks_settings_condition_is": "である",
+  "tasks_settings_condition_is_not": "でない",
   "tasks_settings_mode_and": "すべての条件に一致",
   "tasks_settings_mode_or": "いずれかの条件に一致",
   "tasks_condition_values_required": "少なくとも1つの値を入力してください。",
@@ -2364,6 +2386,21 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "見出しが指定されていない",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses}の",
+        "condition=is-not": "{statuses}でない"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "ステータスが指定されていない",
+  "tasks_status_group_open": "未完了",
+  "tasks_status_group_done": "完了",
+  "tasks_status_group_all": "すべて",
+  "tasks_filter_summary_conditions": "{conditions}タスクを表示します。",
   "tasks_rule_summary_any": "条件なし — ジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
   "tasks_rule_summary_conditions": "{conditions}チェックボックス項目を数えます。",
   "tasks_journal_summary_inherit": "保管庫全体のルールを継承します。",
@@ -2387,5 +2424,13 @@
   "tasks_journal_compose_inherit": "継承",
   "tasks_journal_compose_narrow": "絞り込み",
   "tasks_journal_compose_replace": "置換",
-  "tasks_journal_modal_title": "タスクの識別 — {journal}"
+  "tasks_journal_modal_title": "タスクの識別 — {journal}",
+  "tasks_journal_filter_title": "一覧フィルター",
+  "tasks_journal_filter_none": "このジャーナルには独自の一覧フィルターがありません。",
+  "tasks_journal_filter_edit": "編集",
+  "tasks_filter_conditions_label": "条件",
+  "tasks_filter_conditions_desc": "一覧に表示するタスクの条件。",
+  "tasks_tick_recurring_needs_tasks_plugin": "このタスクはチェックされませんでした。繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。",
+  "tasks_tick_error": "タスクをチェックできませんでした。",
+  "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

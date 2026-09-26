@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "이 {key} 블록의 일부 옵션이 올바르지 않습니다.",
   "code_blocks_nav_not_connected": "노트가 저널에 연결되어 있지 않습니다",
   "code_blocks_notelets_not_connected": "노트가 저널에 연결되어 있지 않습니다",
+  "code_blocks_tasks_not_connected": "노트가 저널에 연결되어 있지 않습니다",
   "code_blocks_home_empty": "표시할 저널이 없습니다. 블록의 show 및 shelf 옵션을 확인하세요.",
   "common_no_journals_yet": "아직 저널이 없습니다. 플러그인 설정에서 만드세요.",
   "code_blocks_nav_next": "다음",
@@ -1433,6 +1434,24 @@
       }
     }
   ],
+  "view_block_tasks_label": "작업",
+  "view_block_tasks_description": "선택한 표시 범위와 저널의 작업을 나열합니다.",
+  "view_block_tasks_journals_label": "저널",
+  "view_block_tasks_journals_description": "모두 꺼두면 뷰의 선반에 있는 모든 저널이 포함됩니다.",
+  "view_block_tasks_source_label": "소스",
+  "view_block_tasks_source_note": "노트만",
+  "view_block_tasks_source_notelets": "서브노트만",
+  "view_block_tasks_source_both": "노트와 서브노트",
+  "view_block_tasks_sort_label": "정렬 기준",
+  "view_block_tasks_sort_document": "문서 순서",
+  "view_block_tasks_sort_status": "상태",
+  "view_block_tasks_sort_due": "마감일",
+  "view_block_tasks_sort_scheduled": "예정일",
+  "view_block_tasks_sort_start": "시작일",
+  "view_block_tasks_sort_done": "완료일",
+  "view_block_tasks_sort_created": "생성 날짜",
+  "view_block_tasks_filter_label": "필터",
+  "view_block_tasks_filter_status_default": "자체 상태 조건이 없으므로 상태를 지정한 저널에서는 그 저널의 목록 필터가 결정합니다.",
   "view_toolbar_shelf_selector_label": "선반 선택기",
   "view_toolbar_shelf_selector_description": "뷰에 표시할 저널의 범위를 정하는 선반을 전환합니다.",
   "view_toolbar_shelf_selector_tooltip": "선반 전환",
@@ -2336,6 +2355,9 @@
   "tasks_settings_condition_lacks": "미포함",
   "tasks_settings_condition_under": "하위",
   "tasks_settings_condition_not_under": "하위 아님",
+  "tasks_settings_condition_status": "상태",
+  "tasks_settings_condition_is": "해당",
+  "tasks_settings_condition_is_not": "미해당",
   "tasks_settings_mode_and": "모든 조건 일치",
   "tasks_settings_mode_or": "조건 중 하나 일치",
   "tasks_condition_values_required": "값을 하나 이상 입력하세요.",
@@ -2361,6 +2383,21 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "제목이 지정되지 않은",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses} 상태인",
+        "condition=is-not": "{statuses} 상태가 아닌"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "상태가 지정되지 않은",
+  "tasks_status_group_open": "미완료",
+  "tasks_status_group_done": "완료",
+  "tasks_status_group_all": "전체",
+  "tasks_filter_summary_conditions": "{conditions} 작업을 표시합니다.",
   "tasks_rule_summary_any": "조건 없음 — 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
   "tasks_rule_summary_conditions": "{conditions} 체크박스 목록 항목을 집계합니다.",
   "tasks_journal_summary_inherit": "보관함 전체 규칙을 상속합니다.",
@@ -2384,5 +2421,13 @@
   "tasks_journal_compose_inherit": "상속",
   "tasks_journal_compose_narrow": "좁히기",
   "tasks_journal_compose_replace": "대체",
-  "tasks_journal_modal_title": "작업 식별 — {journal}"
+  "tasks_journal_modal_title": "작업 식별 — {journal}",
+  "tasks_journal_filter_title": "목록 필터",
+  "tasks_journal_filter_none": "이 저널에는 자체 목록 필터가 없습니다.",
+  "tasks_journal_filter_edit": "편집",
+  "tasks_filter_conditions_label": "조건",
+  "tasks_filter_conditions_desc": "목록에 표시할 작업 조건.",
+  "tasks_tick_recurring_needs_tasks_plugin": "이 작업은 완료 처리되지 않았습니다. 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다.",
+  "tasks_tick_error": "작업을 완료 처리할 수 없습니다.",
+  "tasks_listing_empty": "이 쿼리와 일치하는 작업이 없습니다."
 }

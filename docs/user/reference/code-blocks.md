@@ -1,6 +1,6 @@
 # Code blocks
 
-Journals draws four kinds of code block. Type one into any note — or into a journal's template, so every
+Journals draws five kinds of code block. Type one into any note — or into a journal's template, so every
 note gets it — and it renders in reading view and live preview.
 
 ::: v-pre
@@ -20,7 +20,8 @@ looks right but ignores your option usually has a misspelled value. `true` and `
 that way; `yes`, `no`, `on` and `off` are read as text.
 
 Every block's container carries a class themes and CSS snippets can target: `journal-nav-code-block`,
-`journal-timeline-code-block`, `journal-home-code-block`, `journal-notelets-code-block`.
+`journal-timeline-code-block`, `journal-home-code-block`, `journal-notelets-code-block`,
+`journal-tasks-code-block`.
 
 ## Navigation block — `journal-nav`
 
@@ -168,6 +169,43 @@ notelet**. It works in a period note and in a notelet alike. In a note connected
 types:
   - Meeting
   - Retro
+```
+````
+
+## Tasks — `journal-tasks`
+
+````markdown
+```journal-tasks
+
+```
+````
+
+Lists the [tasks](/tasks#listing-tasks-in-a-note) of the period the note belongs to, with a checkbox on
+each row that ticks the task in its own note. It needs a note connected to a journal; in one connected
+to none it lists nothing and says so.
+
+| Option       | Values                                                               | Default    |
+| ------------ | -------------------------------------------------------------------- | ---------- |
+| `provider`   | a list of provider ids, or one id                                    | every one  |
+| `source`     | `note`, `notelets`, `both`                                           | `both`     |
+| `depth`      | `literal`, `rollup`                                                  | `literal`  |
+| `status`     | `open`, `done`, `all`, or one status name such as `on-hold`          | `open`     |
+| `heading`    | a list of headings, or one heading                                   | none       |
+| `tag`        | a list of tags, or one tag                                           | none       |
+| `sort`       | `document`, `status`, `due`, `scheduled`, `start`, `done`, `created` | `document` |
+| `conditions` | a list of full-form conditions, for what the keys above cannot say   | none       |
+
+`depth: rollup` widens the listing to every other journal in the host's shelf whose periods fall inside
+this one, so a monthly note can list its days' tasks alongside its own. `status`, `heading` and `tag` are
+each shorthand for one condition; the owning journal's own **Listing filter** contributes more. See
+[Tasks](/tasks#a-journal-s-own-listing-filter) for how the two combine.
+
+Everything still open under one heading, most recently due first:
+
+````markdown
+```journal-tasks
+heading: Tasks
+sort: due
 ```
 ````
 

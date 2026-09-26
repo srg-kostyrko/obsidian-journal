@@ -56,7 +56,8 @@ Reached with **Configure** on a journal's row — on the main settings page, or 
 | **Navigation block**        | lines and segments, **Previous and next arrows**, **Show previous and next periods**, **Decorate whole block**                                                                  | [Navigation blocks](/navigation-blocks)                         |
 | **Calendar interval lines** | custom intervals only                                                                                                                                                           | [Navigation blocks](/navigation-blocks#calendar-interval-lines) |
 | **Journal decorations**     | this journal's decorations                                                                                                                                                      | [Decorations](/decorations)                                     |
-| **Task identification**     | **Relation to the vault-wide rule** — **Inherit**, **Narrow**, **Replace**                                                                                                      | [Tasks](/tasks#a-journal-s-own-rule)                            |
+| **Tasks**                   | **Checkbox tasks** — **Relation to the vault-wide rule** — **Inherit**, **Narrow**, **Replace**                                                                                 | [Tasks](/tasks#a-journal-s-own-rule)                            |
+|                             | **Listing filter** — **Edit**                                                                                                                                                   | [Tasks](/tasks#a-journal-s-own-listing-filter)                  |
 
 ## A notelet type's page
 

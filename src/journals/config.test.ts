@@ -63,27 +63,81 @@ describe("journalConfigSchema", () => {
     expect(parsed.success && parsed.output.prompts).toEqual([]);
   });
 
-  it("defaults tasks to an empty object for configs written before it existed", () => {
+  it("defaults tasks to empty providers and an empty listing filter for configs written before it existed", () => {
     const stored = { ...journalDefaultsFor({ type: "day" }, "daily") } as Record<string, unknown>;
     delete stored.tasks;
     const parsed = v.safeParse(journalConfigSchema, stored);
-    expect(parsed.success && parsed.output.tasks).toEqual({});
+    expect(parsed.success && parsed.output.tasks).toEqual({ providers: {}, filter: { mode: "and", conditions: [] } });
   });
 
   it("keeps a per-journal checkbox rule", () => {
     const cfg = {
       ...journalDefaultsFor({ type: "day" }, "daily"),
       tasks: {
-        checkbox: {
-          compose: "replace",
-          mode: "and",
-          conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
+        providers: {
+          checkbox: {
+            compose: "replace",
+            mode: "and",
+            conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
+          },
         },
       },
     };
     const parsed = v.parse(journalConfigSchema, cfg);
-    expect(parsed.tasks.checkbox?.compose).toBe("replace");
-    expect(parsed.tasks.checkbox?.conditions).toEqual([{ type: "heading", condition: "under", headings: ["Tasks"] }]);
+    expect(parsed.tasks.providers.checkbox?.compose).toBe("replace");
+    expect(parsed.tasks.providers.checkbox?.conditions).toEqual([
+      { type: "heading", condition: "under", headings: ["Tasks"] },
+    ]);
+  });
+
+  it("splits a journal's tasks config into per-provider rules and a listing filter", () => {
+    // journalConfigSchema also requires timeline/dateFormat/frontmatter/numbering, which the
+    // brief's bare { name, write } literal omits — spread journalDefaultsFor to supply them, the
+    // same way every other test in this file builds a parseable config.
+    const parsed = v.parse(journalConfigSchema, journalDefaultsFor({ type: "day" }, "Daily"));
+    expect(parsed.tasks).toEqual({ providers: {}, filter: { mode: "and", conditions: [] } });
+  });
+
+  it("keeps a stored provider rule and listing filter side by side", () => {
+    const parsed = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: {
+        providers: { checkbox: { compose: "narrow", mode: "and", conditions: [] } },
+        filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }] },
+      },
+    });
+    expect(parsed.tasks.providers.checkbox?.compose).toBe("narrow");
+    expect(parsed.tasks.filter.conditions).toHaveLength(1);
+  });
+
+  // The live path this protects: a vault synced from a newer version added a condition type this
+  // version's v.variant does not know. Before providers/filter each carried their own v.fallback,
+  // that rejection failed the whole `tasks` object, and repairCollectionEntry only ever sees
+  // issue.path[0].key === "tasks" (tasks is not in journalConfigCollection's `nested` map) — so it
+  // reset providers right along with the filter that actually caused the failure.
+  it("keeps a valid provider rule when the listing filter holds a condition type this version does not know", () => {
+    const parsed = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: {
+        providers: { checkbox: { compose: "narrow", mode: "and", conditions: [] } },
+        filter: { mode: "and", conditions: [{ type: "not-a-real-type" }] },
+      },
+    });
+    expect(parsed.tasks.providers.checkbox?.compose).toBe("narrow");
+    expect(parsed.tasks.filter).toEqual({ mode: "and", conditions: [] });
+  });
+
+  // Mirror of the above: a bad provider rule must not take a valid listing filter down with it.
+  it("keeps a valid listing filter when a provider rule holds a condition type this version does not know", () => {
+    const parsed = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: {
+        providers: { checkbox: { compose: "narrow", mode: "and", conditions: [{ type: "not-a-real-type" }] } },
+        filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }] },
+      },
+    });
+    expect(parsed.tasks.providers).toEqual({});
+    expect(parsed.tasks.filter.conditions).toHaveLength(1);
   });
 
   it("accepts an unset end date, so a half-configured timeline survives a reload", () => {

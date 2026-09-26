@@ -128,6 +128,7 @@
   "code_blocks_schema_error": "Некоторые параметры в этом блоке {key} недопустимы.",
   "code_blocks_nav_not_connected": "Заметка не связана с журналом",
   "code_blocks_notelets_not_connected": "Заметка не связана с журналом",
+  "code_blocks_tasks_not_connected": "Заметка не связана с журналом",
   "code_blocks_home_empty": "Журналы для отображения отсутствуют. Проверьте параметры show и shelf этого блока.",
   "common_no_journals_yet": "Журналов пока нет. Создайте журнал в настройках плагина.",
   "code_blocks_nav_next": "Следующий",
@@ -1471,6 +1472,24 @@
       }
     }
   ],
+  "view_block_tasks_label": "Задачи",
+  "view_block_tasks_description": "Показывает задачи из выбранного окна и журналов.",
+  "view_block_tasks_journals_label": "Журналы",
+  "view_block_tasks_journals_description": "Оставьте все выключенными, чтобы включить все журналы на полке представления.",
+  "view_block_tasks_source_label": "Источник",
+  "view_block_tasks_source_note": "Только заметка",
+  "view_block_tasks_source_notelets": "Только подзаметки",
+  "view_block_tasks_source_both": "Заметка и подзаметки",
+  "view_block_tasks_sort_label": "Сортировать по",
+  "view_block_tasks_sort_document": "Порядок в документе",
+  "view_block_tasks_sort_status": "Статус",
+  "view_block_tasks_sort_due": "Срок выполнения",
+  "view_block_tasks_sort_scheduled": "Запланированная дата",
+  "view_block_tasks_sort_start": "Дата начала",
+  "view_block_tasks_sort_done": "Дата завершения",
+  "view_block_tasks_sort_created": "Дата создания",
+  "view_block_tasks_filter_label": "Фильтр",
+  "view_block_tasks_filter_status_default": "Нет собственного условия статуса, поэтому решает фильтр списка журнала, если он указывает статус.",
   "view_toolbar_shelf_selector_label": "Выбор полки",
   "view_toolbar_shelf_selector_description": "Определяет, какая полка ограничивает журналы представления.",
   "view_toolbar_shelf_selector_tooltip": "Сменить полку",
@@ -2425,6 +2444,9 @@
   "tasks_settings_condition_lacks": "Не содержит",
   "tasks_settings_condition_under": "Под",
   "tasks_settings_condition_not_under": "Не под",
+  "tasks_settings_condition_status": "Статус",
+  "tasks_settings_condition_is": "Равен",
+  "tasks_settings_condition_is_not": "Не равен",
   "tasks_settings_mode_and": "Соответствие всем условиям",
   "tasks_settings_mode_or": "Соответствие любому условию",
   "tasks_condition_values_required": "Введите хотя бы одно значение.",
@@ -2450,6 +2472,21 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "без указанного заголовка",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "имеет статус {statuses}",
+        "condition=is-not": "не имеет статус {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "без указанного статуса",
+  "tasks_status_group_open": "Открытые",
+  "tasks_status_group_done": "Выполненные",
+  "tasks_status_group_all": "Все",
+  "tasks_filter_summary_conditions": "Показывает задачу, которая {conditions}.",
   "tasks_rule_summary_any": "Нет условий — каждый пункт списка с чекбоксом в заметках журнала считается задачей.",
   "tasks_rule_summary_conditions": "Считает пункт списка с чекбоксом, который {conditions}.",
   "tasks_journal_summary_inherit": "Наследует правило всего хранилища.",
@@ -2473,5 +2510,13 @@
   "tasks_journal_compose_inherit": "Наследовать",
   "tasks_journal_compose_narrow": "Сузить",
   "tasks_journal_compose_replace": "Заменить",
-  "tasks_journal_modal_title": "Определение задач — {journal}"
+  "tasks_journal_modal_title": "Определение задач — {journal}",
+  "tasks_journal_filter_title": "Фильтр списка",
+  "tasks_journal_filter_none": "У этого журнала нет собственного фильтра списка.",
+  "tasks_journal_filter_edit": "Редактировать",
+  "tasks_filter_conditions_label": "Условия",
+  "tasks_filter_conditions_desc": "Какие из этих задач показывает список.",
+  "tasks_tick_recurring_needs_tasks_plugin": "Эта задача не была отмечена. Чтобы повторяющиеся задачи переходили к следующему экземпляру, нужен плагин Tasks.",
+  "tasks_tick_error": "Не удалось отметить задачу.",
+  "tasks_listing_empty": "Нет задач, соответствующих этому запросу."
 }
