@@ -148,7 +148,11 @@ function periodsWithin(
     [...pathByAnchor]
       // getRange is sorted and these additions are not, and the order periods are walked in is the
       // order `sort: document` renders them in.
-      .toSorted(([left], [right]) => (left < right ? -1 : 1))
+      .toSorted(([left], [right]) => {
+        if (left < right) return -1;
+        if (left > right) return 1;
+        return 0;
+      })
       .filter(([anchor]) => dependencies.cycle.overlapsFrom(journalName, anchor, from))
       .map(([anchor, path]) => ({ journalName, anchor, path }))
   );

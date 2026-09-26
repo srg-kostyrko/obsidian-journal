@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
@@ -148,6 +148,16 @@ function request(overrides: Partial<TaskListingPeriodRequest> = {}): TaskListing
 }
 
 const withQuery = (query: Partial<TaskQuery>): TaskQuery => ({ ...DEFAULT_TASK_QUERY, ...query });
+
+// Shared by the notelet-anchor-scan spy test: a Monthly rollup over Daily, varying only `source`.
+function monthlyRollupOverDaily(source: TaskQuery["scope"]["source"]): TaskListingPeriodRequest {
+  return request({
+    hostJournal: "Monthly",
+    anchor: "2026-09-01" as AnchorString,
+    journalNames: ["Daily"],
+    query: withQuery({ scope: { provider: [], source, depth: "rollup" } }),
+  });
+}
 
 // What a bare fence, and a view block whose filter the user emptied, both hand the listing.
 const NO_CONDITIONS: TaskRule = { mode: "and", conditions: [] };
@@ -339,6 +349,29 @@ describe("buildTaskListing", () => {
       }),
     );
     expect(rows.map((row) => row.key)).toEqual([`${MONTH}:1`]);
+  });
+
+  // Pins the saving periodsWithin's own comment claims: under source: "note" the notelet-anchor
+  // range query is skipped outright, not just discarded after running. Delete the `if (source !==
+  // "note")` guard and this fails on the first assertion while the listing's output-only tests above
+  // stay green — the gate has no other falsifier.
+  it("skips the notelet-anchor scan under source: note, and runs it under source: both", async () => {
+    const dependencies = buildDependencies({
+      items: { [MONTH]: [line(MONTH, 1)] },
+      notes: { Monthly: { "2026-09-01": MONTH } },
+      ends: { Monthly: { "2026-09-01": "2026-09-30" } },
+      notelets: { Daily: { "2026-09-22": [NOTELET] } },
+    });
+    const noteletAnchorsInRange = vi.fn(dependencies.index.noteletAnchorsInRange);
+    const spiedDependencies: TaskListingDependencies = {
+      ...dependencies,
+      index: { ...dependencies.index, noteletAnchorsInRange },
+    };
+    await buildTaskListing(spiedDependencies, monthlyRollupOverDaily("note"));
+    expect(noteletAnchorsInRange).not.toHaveBeenCalled();
+
+    await buildTaskListing(spiedDependencies, monthlyRollupOverDaily("both"));
+    expect(noteletAnchorsInRange).toHaveBeenCalled();
   });
 
   it("keeps a notelet out of a rollup when its own period had already closed before the target", async () => {
