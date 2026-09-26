@@ -445,6 +445,7 @@ describe("buildTaskListing", () => {
     expect(rows.map((row) => [row.key, row.depth])).toEqual([[`${DAY}:4`, 0]]);
   });
 
+  // Heading fixtures carry no "#" — see filter.test.ts's own note on HeadingCache.heading.
   it("applies the owning journal's filter, and lets the query's condition of the same type replace it", async () => {
     const structures: Partial<Record<VaultPath, NoteStructure>> = {
       [DAY]: {
@@ -454,8 +455,8 @@ describe("buildTaskListing", () => {
         ],
         tags: [],
         headings: [
-          { heading: "## Tasks", level: 2, line: 1 },
-          { heading: "## Log", level: 2, line: 5 },
+          { heading: "Tasks", level: 2, line: 1 },
+          { heading: "Log", level: 2, line: 5 },
         ],
         frontmatterTags: [],
       },
@@ -465,7 +466,7 @@ describe("buildTaskListing", () => {
       structures,
       notes: { Daily: { "2026-09-22": DAY } },
       journalFilters: {
-        Daily: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }] },
+        Daily: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }] },
       },
     });
 
@@ -476,7 +477,7 @@ describe("buildTaskListing", () => {
       dependencies,
       request({
         query: withQuery({
-          filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Log"] }] },
+          filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Log"] }] },
         }),
       }),
     );
@@ -491,8 +492,8 @@ describe("buildTaskListing", () => {
       ],
       tags: [],
       headings: [
-        { heading: "## Tasks", level: 2, line: 1 },
-        { heading: "## Log", level: 2, line: 5 },
+        { heading: "Tasks", level: 2, line: 1 },
+        { heading: "Log", level: 2, line: 5 },
       ],
       frontmatterTags: [],
     };
@@ -502,8 +503,8 @@ describe("buildTaskListing", () => {
       notes: { Monthly: { "2026-09-01": MONTH }, Daily: { "2026-09-22": DAY } },
       ends: { Monthly: { "2026-09-01": "2026-09-30" } },
       journalFilters: {
-        Monthly: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }] },
-        Daily: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Log"] }] },
+        Monthly: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }] },
+        Daily: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Log"] }] },
       },
     });
     const rows = await buildTaskListing(

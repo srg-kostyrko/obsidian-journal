@@ -9,6 +9,10 @@ import type { TaskRule } from "./conditions";
 
 const path = "Daily/2026-09-22.md" as VaultPath;
 
+// Headings carry no "#": Obsidian's own HeadingCache.heading is the heading's text with its ATX
+// marker already stripped, and both spellings a user can reach for are normalized to that before a
+// condition is ever stored or compared (normalizeHeading in tasks-config.ts, conditionValues in
+// condition-text.ts). A fixture spelling one "## Tasks" certifies a match no real vault produces.
 const structure: NoteStructure = {
   listItems: [
     { marker: " ", line: 3, endLine: 3, parent: null },
@@ -16,8 +20,8 @@ const structure: NoteStructure = {
   ],
   tags: [{ tag: "#work", line: 3 }],
   headings: [
-    { heading: "## Tasks", level: 2, line: 1 },
-    { heading: "## Log", level: 2, line: 5 },
+    { heading: "Tasks", level: 2, line: 1 },
+    { heading: "Log", level: 2, line: 5 },
   ],
   frontmatterTags: [],
 };
@@ -38,8 +42,8 @@ describe("matchesFilter", () => {
     const item = buildTaskItem({
       display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
     });
-    expect(matchesFilter(item, structure, under("## Tasks"))).toBe(true);
-    expect(matchesFilter(item, structure, under("## Log"))).toBe(false);
+    expect(matchesFilter(item, structure, under("Tasks"))).toBe(true);
+    expect(matchesFilter(item, structure, under("Log"))).toBe(false);
   });
 
   it("matches a tag within the item's line range", () => {
@@ -57,12 +61,12 @@ describe("matchesFilter", () => {
   it("drops a heading condition for a note item rather than failing or passing it", () => {
     const noteItem = buildTaskItem({ display: { kind: "note", path, title: "Ship it" } });
     // `and` must not exclude it, `or` must not carry it.
-    expect(matchesFilter(noteItem, structure, under("## Tasks"))).toBe(true);
+    expect(matchesFilter(noteItem, structure, under("Tasks"))).toBe(true);
     expect(
       matchesFilter(noteItem, structure, {
         mode: "or",
         conditions: [
-          { type: "heading", condition: "under", headings: ["## Tasks"] },
+          { type: "heading", condition: "under", headings: ["Tasks"] },
           { type: "status", condition: "is", statuses: ["done"] },
         ],
       }),
@@ -73,7 +77,7 @@ describe("matchesFilter", () => {
     const item = buildTaskItem({
       display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
     });
-    expect(matchesFilter(item, undefined, under("## Tasks"))).toBe(true);
+    expect(matchesFilter(item, undefined, under("Tasks"))).toBe(true);
   });
 
   it("does not let a heading condition dropped for a cold cache carry an `or` match", () => {
@@ -85,7 +89,7 @@ describe("matchesFilter", () => {
       matchesFilter(item, undefined, {
         mode: "or",
         conditions: [
-          { type: "heading", condition: "under", headings: ["## Tasks"] },
+          { type: "heading", condition: "under", headings: ["Tasks"] },
           { type: "status", condition: "is", statuses: ["todo"] },
         ],
       }),
@@ -95,7 +99,7 @@ describe("matchesFilter", () => {
 
 describe("composeFilters", () => {
   it("ands a journal's conditions into the query's", () => {
-    const composed = composeFilters(under("## Tasks"), {
+    const composed = composeFilters(under("Tasks"), {
       mode: "and",
       conditions: [{ type: "status", condition: "is", statuses: ["open"] }],
     });
@@ -103,12 +107,12 @@ describe("composeFilters", () => {
   });
 
   it("lets a query condition replace the journal's of the same type, not merely narrow it", () => {
-    const composed = composeFilters(under("## Tasks"), under("## Log"));
-    expect(composed.conditions).toEqual([{ type: "heading", condition: "under", headings: ["## Log"] }]);
+    const composed = composeFilters(under("Tasks"), under("Log"));
+    expect(composed.conditions).toEqual([{ type: "heading", condition: "under", headings: ["Log"] }]);
   });
 
   it("returns the query's filter unchanged for a note no journal owns", () => {
-    const query = under("## Log");
+    const query = under("Log");
     expect(composeFilters(null, query)).toEqual(query);
   });
 });
