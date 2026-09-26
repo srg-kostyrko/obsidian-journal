@@ -36,7 +36,13 @@ const request = computed<TaskListingRequest | null>(() => {
   const target = host.value;
   if (target === null) return null;
   const journalNames = taskRollupScope(target.journalName, [...journals.find().list()], [...shelves.find().list()]);
-  return { hostJournal: target.journalName, anchor: target.anchor, journalNames, query: toTaskQuery(config) };
+  return {
+    kind: "period",
+    hostJournal: target.journalName,
+    anchor: target.anchor,
+    journalNames,
+    query: toTaskQuery(config),
+  };
 });
 
 const listing = useTaskListing(() => request.value);

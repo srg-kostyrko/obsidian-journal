@@ -18,12 +18,28 @@ export interface TaskListingDependencies {
   readonly tasks: Pick<TaskIndex, "itemsIn" | "hydrate">;
 }
 
-export interface TaskListingRequest {
+export interface TaskListingPeriodRequest {
+  readonly kind: "period";
   readonly hostJournal: string;
   readonly anchor: AnchorString;
   readonly journalNames: readonly string[];
   readonly query: TaskQuery;
 }
+
+// A view block has no single note to be literal about: it picks a calendar window independently
+// of any journal's own cycle, and its journal list is already the block's full, explicit scope
+// (the view's shelf, narrowed by the block's own filter) — there is no wider scope for a rollup
+// to reach into the way the fence's host-plus-siblings model has. Mirrors the same two-variant
+// split `NoteletListingRequest` (`src/journals/notelets/listing.ts`) already uses for this exact
+// problem, tagged the same way.
+export interface TaskListingWindowRequest {
+  readonly kind: "window";
+  readonly journalNames: readonly string[];
+  readonly window: { readonly start: AnchorString; readonly end: AnchorString };
+  readonly query: TaskQuery;
+}
+
+export type TaskListingRequest = TaskListingPeriodRequest | TaskListingWindowRequest;
 
 export interface TaskListingSource {
   readonly kind: "note" | "notelet";
@@ -105,7 +121,25 @@ function periodsWithin(
     .map(([anchor, path]) => ({ journalName, anchor, path }));
 }
 
+function dedupeBySlot(periods: readonly TargetPeriod[]): readonly TargetPeriod[] {
+  const seen = new Map<string, Set<AnchorString>>();
+  return periods.filter((period) => {
+    const anchors = seen.get(period.journalName) ?? new Set<AnchorString>();
+    seen.set(period.journalName, anchors);
+    if (anchors.has(period.anchor)) return false;
+    anchors.add(period.anchor);
+    return true;
+  });
+}
+
 function targetPeriods(dependencies: TaskListingDependencies, request: TaskListingRequest): readonly TargetPeriod[] {
+  if (request.kind === "window") {
+    return dedupeBySlot(
+      request.journalNames.flatMap((name) =>
+        periodsWithin(dependencies, name, request.window.start, request.window.end),
+      ),
+    );
+  }
   const { hostJournal, anchor } = request;
   // Carried even when no note exists for it: a notelet is indexed against the (journal, anchor)
   // slot, not against the period note, so source: notelets must still reach one.
@@ -123,15 +157,7 @@ function targetPeriods(dependencies: TaskListingDependencies, request: TaskListi
   // Rollup widens the literal target rather than replacing it: dropping the host note's own items
   // while showing all of its days' would lose whatever the user writes in the period note itself.
   // The host journal is normally in scope too, so its period arrives twice — deduped by slot.
-  const periods = [host, ...request.journalNames.flatMap((name) => periodsWithin(dependencies, name, from, to))];
-  const seen = new Map<string, Set<AnchorString>>();
-  return periods.filter((period) => {
-    const anchors = seen.get(period.journalName) ?? new Set<AnchorString>();
-    seen.set(period.journalName, anchors);
-    if (anchors.has(period.anchor)) return false;
-    anchors.add(period.anchor);
-    return true;
-  });
+  return dedupeBySlot([host, ...request.journalNames.flatMap((name) => periodsWithin(dependencies, name, from, to))]);
 }
 
 function sourceNotes(

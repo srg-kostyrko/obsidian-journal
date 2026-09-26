@@ -1444,6 +1444,23 @@
     }
   ],
 
+  "view_block_tasks_label": "Tasks",
+  "view_block_tasks_description": "Lists tasks from the selected window and journals.",
+  "view_block_tasks_journals_label": "Journals",
+  "view_block_tasks_journals_description": "Leave all off to include every journal in the view's shelf.",
+  "view_block_tasks_source_label": "Source",
+  "view_block_tasks_source_note": "Note only",
+  "view_block_tasks_source_notelets": "Notelets only",
+  "view_block_tasks_source_both": "Note and notelets",
+  "view_block_tasks_sort_label": "Sort by",
+  "view_block_tasks_sort_document": "Document order",
+  "view_block_tasks_sort_status": "Status",
+  "view_block_tasks_sort_due": "Due date",
+  "view_block_tasks_sort_scheduled": "Scheduled date",
+  "view_block_tasks_sort_start": "Start date",
+  "view_block_tasks_sort_done": "Done date",
+  "view_block_tasks_sort_created": "Created date",
+
   "view_toolbar_shelf_selector_label": "Shelf selector",
   "view_toolbar_shelf_selector_description": "Switches which shelf scopes the view's journals.",
   "view_toolbar_shelf_selector_tooltip": "Switch shelf",

@@ -31,7 +31,7 @@ function taskItem(path: VaultPath, key: string, markdown: string, status: TaskSt
 }
 
 function requestFor(anchor: AnchorString): TaskListingRequest {
-  return { hostJournal: "daily", anchor, journalNames: ["daily"], query: DEFAULT_TASK_QUERY };
+  return { kind: "period", hostJournal: "daily", anchor, journalNames: ["daily"], query: DEFAULT_TASK_QUERY };
 }
 
 function renderNothing() {

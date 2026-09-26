@@ -5,7 +5,7 @@ import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 import { fixedJournal } from "@/journals/testing";
 
-import { buildTaskListing, type TaskListingDependencies, type TaskListingRequest } from "./listing";
+import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
 import { DEFAULT_TASK_QUERY } from "./query";
 import { buildTaskItem } from "./testing";
 
@@ -133,8 +133,9 @@ function buildDependencies(options: {
   };
 }
 
-function request(overrides: Partial<TaskListingRequest> = {}): TaskListingRequest {
+function request(overrides: Partial<TaskListingPeriodRequest> = {}): TaskListingPeriodRequest {
   return {
+    kind: "period",
     hostJournal: "Daily",
     anchor: "2026-09-22" as AnchorString,
     journalNames: ["Daily"],
@@ -592,5 +593,57 @@ describe("buildTaskListing", () => {
       [`${DAY}:3`, 0],
       [`${DAY}:4`, 1],
     ]);
+  });
+});
+
+// The view block has no single host note — its window is a calendar span picked independently of
+// any journal's own cycle, and the journal list handed in is already the block's whole explicit
+// scope. This request shape walks every named journal's own periods inside the window directly,
+// the same periodsWithin primitive rollup uses to widen past a host.
+describe("buildTaskListing — window request", () => {
+  it("gathers each named journal's own periods within the window, not just one host's", async () => {
+    const dependencies = buildDependencies({
+      items: { [MONTH]: [line(MONTH, 1)], [DAY]: [line(DAY, 3)], [OTHER_DAY]: [line(OTHER_DAY, 3)] },
+      notes: {
+        Monthly: { "2026-09-01": MONTH },
+        Daily: { "2026-09-22": DAY, "2026-09-23": OTHER_DAY },
+      },
+      ends: { Monthly: { "2026-09-01": "2026-09-30" } },
+    });
+    const rows = await buildTaskListing(dependencies, {
+      kind: "window",
+      journalNames: ["Monthly", "Daily"],
+      window: { start: "2026-09-01" as AnchorString, end: "2026-09-30" as AnchorString },
+      query: DEFAULT_TASK_QUERY,
+    });
+    expect(rows.map((row) => row.source.path)).toEqual([MONTH, DAY, OTHER_DAY]);
+  });
+
+  it("never widens beyond the journals it is given, having no host to widen from", async () => {
+    const dependencies = buildDependencies({
+      items: { [DAY]: [line(DAY, 3)] },
+      notes: { Daily: { "2026-09-22": DAY } },
+    });
+    const rows = await buildTaskListing(dependencies, {
+      kind: "window",
+      journalNames: ["Daily"],
+      window: { start: "2026-09-01" as AnchorString, end: "2026-09-30" as AnchorString },
+      query: DEFAULT_TASK_QUERY,
+    });
+    expect(rows.map((row) => row.source.path)).toEqual([DAY]);
+  });
+
+  it("dedupes a journal named more than once within the window", async () => {
+    const dependencies = buildDependencies({
+      items: { [DAY]: [line(DAY, 3)] },
+      notes: { Daily: { "2026-09-22": DAY } },
+    });
+    const rows = await buildTaskListing(dependencies, {
+      kind: "window",
+      journalNames: ["Daily", "Daily"],
+      window: { start: "2026-09-01" as AnchorString, end: "2026-09-30" as AnchorString },
+      query: DEFAULT_TASK_QUERY,
+    });
+    expect(rows.map((row) => row.key)).toEqual([`${DAY}:3`]);
   });
 });
