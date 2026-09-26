@@ -136,6 +136,11 @@ Lists tasks from a window around the view's date, across the journals in the vie
 [Tasks](/tasks#the-tasks-view-block).
 
 - **Window** — as above; **Selected day** by default.
+- **Journals** — leave all off to include every journal in the view's shelf.
+- **Source** — **Note only**, **Notelets only** or **Note and notelets**.
+- **Sort by** — document order, status, or one of the five date roles a task line can carry.
+- **Filter** — which of those tasks to show, as a list of tag, heading and status conditions matched
+  under **Match all conditions** or **Match any condition**.
 
 ### Markdown template
 

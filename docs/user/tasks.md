@@ -103,7 +103,8 @@ A bare fence, with no keys at all, defaults to `source: both`, `depth: literal`,
 `sort: document`. A listing only reads notes, where a move or a rollover would write into them, so it
 can afford to default wider than those do: a bare fence in a day note that showed everything the note
 held would just mirror the note it already sits in, telling you nothing you could not see by opening
-it.
+it. The `status: open` default gives way to the journal's own, where [it has
+one](#a-journal-s-own-listing-filter).
 
 There is no `date` key yet. A task line can carry up to five dates — due, scheduled, start, created,
 done — and filtering a listing by any of them is a later addition. Today a listing finds tasks by where
@@ -111,16 +112,16 @@ they live, a period's own note, its notelets, or both, never by a date the task 
 
 ### Fence keys
 
-| Key          | Default    | Names                                                                                                                                                                                                                                                |
-| ------------ | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `provider`   | every one  | which providers to read tasks from, by id. **Checkbox tasks** (`checkbox`) is the only one that ships, so there is nothing to narrow yet.                                                                                                            |
-| `source`     | `both`     | `note`, `notelets` or `both`.                                                                                                                                                                                                                        |
-| `depth`      | `literal`  | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own. |
-| `status`     | `open`     | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one.                                                                                                      |
-| `heading`    | none       | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                          |
-| `tag`        | none       | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                   |
-| `sort`       | `document` | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                               |
-| `conditions` | none       | more conditions, of any of the three types above, for anything the flat keys cannot say — see below.                                                                                                                                                 |
+| Key          | Default    | Names                                                                                                                                                                                                                                                                      |
+| ------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provider`   | every one  | which providers to read tasks from, by id. **Checkbox tasks** (`checkbox`) is the only one that ships, so there is nothing to narrow yet.                                                                                                                                  |
+| `source`     | `both`     | `note`, `notelets` or `both`.                                                                                                                                                                                                                                              |
+| `depth`      | `literal`  | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own.                       |
+| `status`     | `open`     | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one. The default gives way to [the journal's own **Status** condition](#a-journal-s-own-listing-filter) where it has one.       |
+| `heading`    | none       | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
+| `tag`        | none       | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                                         |
+| `sort`       | `document` | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
+| `conditions` | none       | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
 
 `status`, `heading` and `tag` are each sugar for one condition of that type. `conditions:` adds more —
 it never replaces what the flat keys already added, even one of the same type — which is how a fence
@@ -205,15 +206,25 @@ role last, rather than losing it from the listing.
 ### A journal's own listing filter
 
 A journal's settings page has its own **Listing filter** row, in the same **Tasks** section as
-**Checkbox tasks**' own settings. **Edit** opens the same condition editor `conditions:` writes by hand
-— restricted to `tag`, `heading` and `status`, combined with **Match all conditions** or **Match any
-condition** — scoped to this journal. Leave it empty, the default, and a listing reads this journal with
-no filter of its own.
+**Checkbox tasks**' own settings. **Edit** opens the same condition editor `conditions:` writes by hand,
+restricted to `tag`, `heading` and `status`, scoped to this journal. Leave it empty, the default, and a
+listing reads this journal with no filter of its own.
 
-A journal's own filter and a fence's combine, but not by narrowing: **a fence condition of a given type
-replaces the journal's of the same type**, rather than adding to it. A journal scoped to `## Tasks` and
-a fence asking for `## Log` shows `## Log`, not the intersection of the two — ANDing them instead would
-make anything the journal's own filter excludes unreachable from any fence.
+A journal contributes **conditions** only, not a way of combining them: its conditions join the
+surface's own — a fence's, or a tasks view block's — and the combined list is matched under **that
+surface's** **Match all conditions** or **Match any condition** setting. That is why this editor has no
+such control of its own, while the [tasks view block](#the-tasks-view-block)'s **Filter** does. A fence
+always matches all of its conditions.
+
+Where the two name the same kind of condition, **the surface's replaces the journal's** rather than
+adding to it. A journal scoped to heading `Tasks` and a fence asking for `Log` shows `Log`, not the
+intersection of the two — ANDing them instead would make anything the journal's own filter excludes
+unreachable from any fence.
+
+The `status: open` default is the one thing that applies last rather than first. A journal's own
+**Status** condition therefore does reach a fence that named no `status:` of its own — set a journal to
+**All** and a bare fence in its notes lists everything, done items included. The default only fills in
+where neither side named a status at all.
 
 The editor's own **Status** control offers only three groupings — **Open**, **Done**, **All** — the same
 three names the `status:` fence key accepts as aliases. A fence, or the `conditions:` escape hatch, can
