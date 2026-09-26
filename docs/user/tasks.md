@@ -99,8 +99,16 @@ sort: status
 ```
 ````
 
-`sort` orders the list; `status`, unset here, defaults to open tasks only. See
-[Code blocks](/reference/code-blocks).
+`sort` orders the list; `status`, unset here, defaults to open tasks only. Name it to list something
+else, such as a weekly review of what got done:
+
+````markdown
+```journal-tasks
+status: done
+```
+````
+
+See [Code blocks](/reference/code-blocks).
 
 ## Examples
 

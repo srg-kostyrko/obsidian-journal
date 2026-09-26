@@ -1,4 +1,5 @@
 import { screen } from "@testing-library/vue";
+import * as v from "valibot";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { nextTick } from "vue";
 
@@ -12,10 +13,11 @@ import { fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { tasksCoreModule } from "@/tasks/module";
-import { DEFAULT_TASK_QUERY } from "@/tasks/query";
 import { TaskIndex } from "@/tasks/task-index";
 import { buildTaskItem } from "@/tasks/testing";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
+
+import { tasksBlockSchema } from "../tasks-config";
 
 import TasksCodeBlock from "./TasksCodeBlock.vue";
 
@@ -23,6 +25,7 @@ const DAY = "2026-09-22" as AnchorString;
 const HOST = "Daily/2026-09-22.md" as VaultPath;
 
 const daily = fixedJournal("Daily", { type: "day" });
+const DEFAULT_CONFIG = v.parse(tasksBlockSchema, {});
 
 async function mount(path: VaultPath = HOST): Promise<TestHarness> {
   const harness = await testContainer({
@@ -32,7 +35,7 @@ async function mount(path: VaultPath = HOST): Promise<TestHarness> {
       overrideWith(MarkdownRenderService, new FakeMarkdownRenderService() as unknown as MarkdownRenderService),
     ],
   });
-  harness.render(TasksCodeBlock, { props: { path, config: DEFAULT_TASK_QUERY } });
+  harness.render(TasksCodeBlock, { props: { path, config: DEFAULT_CONFIG } });
   return harness;
 }
 
@@ -106,10 +109,7 @@ describe("TasksCodeBlock", () => {
     ]);
 
     harness.render(TasksCodeBlock, {
-      props: {
-        path: MONTH,
-        config: { ...DEFAULT_TASK_QUERY, scope: { ...DEFAULT_TASK_QUERY.scope, depth: "rollup" } },
-      },
+      props: { path: MONTH, config: v.parse(tasksBlockSchema, { depth: "rollup" }) },
     });
 
     await vi.waitFor(() => expect(screen.getByText("- [ ] Ship it")).toBeTruthy());

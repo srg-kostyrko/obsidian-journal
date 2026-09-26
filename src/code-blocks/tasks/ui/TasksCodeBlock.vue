@@ -7,12 +7,11 @@ import type { CodeBlockProps } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository, useIndexVersion } from "@/journals";
 import { ShelvesRepository } from "@/shelves";
 import type { TaskListingRequest } from "@/tasks/listing";
+import { taskRollupScope } from "@/tasks/rollup-scope";
 import TaskList from "@/tasks/ui/TaskList.vue";
 import { useTaskListing } from "@/tasks/ui/use-task-listing";
 
-import { resolveLinkCandidates } from "../../nav/link-targets";
-
-import type { TasksFenceConfig } from "../tasks-config";
+import { toTaskQuery, type TasksFenceConfig } from "../tasks-config";
 
 const { path, config } = defineProps<CodeBlockProps<TasksFenceConfig>>();
 
@@ -29,19 +28,15 @@ const host = computed(() => {
   return journal.isSome() ? { journalName: entry.value.journalName, anchor: entry.value.anchor } : null;
 });
 
-// Rollup widens across the host's shelf scope: the owning shelf's journals, or every journal
-// when the host sits on no shelf — the same fallback nav links resolve with
-// (`resolveLinkCandidates`). The fence has no key to name a different set on purpose; that
-// targeting question belongs to the dashboard's view block, not to a note-scoped fence.
+// Rollup widens across the host's own shelf scope — `taskRollupScope`, not nav's
+// `resolveLinkCandidates`; see that function's comment for why the two must stay independent.
+// The fence has no key to name a different set on purpose; that targeting question belongs to
+// the dashboard's view block, not to a note-scoped fence.
 const request = computed<TaskListingRequest | null>(() => {
   const target = host.value;
   if (target === null) return null;
-  const journalNames = resolveLinkCandidates(
-    target.journalName,
-    [...journals.find().list()],
-    [...shelves.find().list()],
-  ).map((journal) => journal.name);
-  return { hostJournal: target.journalName, anchor: target.anchor, journalNames, query: config };
+  const journalNames = taskRollupScope(target.journalName, [...journals.find().list()], [...shelves.find().list()]);
+  return { hostJournal: target.journalName, anchor: target.anchor, journalNames, query: toTaskQuery(config) };
 });
 
 const listing = useTaskListing(() => request.value);
