@@ -6,8 +6,7 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggleGroup from "@/ui/UiToggleGroup.vue";
 
-import { conditionValues } from "../providers/checkbox/condition-text";
-
+import { conditionValues } from "./condition-text";
 import { defaultTaskCondition } from "./rule-condition-defaults";
 import { STATUS_FILTER_OPTIONS, statusFilterLabel } from "./status-filter-options";
 

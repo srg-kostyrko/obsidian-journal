@@ -1,28 +1,9 @@
-import { match } from "ts-pattern";
-
 import { formatConjunction, formatDisjunction, m } from "@/i18n";
+import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
 
 import { isEditableCondition } from "../rule-schema";
 
-import type { CheckboxEditableCondition, CheckboxJournalRule, CheckboxRule } from "../rule-schema";
-
-// The settings modals block Save on a condition with no values (see rule-form-schema.ts), but a
-// rule stored before that guard existed can still carry one, so this has to degrade sanely rather
-// than render describe_tag_describe's "tagged {tags}" with an empty {tags} — "tagged ." — forever.
-function describeCondition(condition: CheckboxEditableCondition): string {
-  return match(condition)
-    .with({ type: "tag" }, (c) =>
-      c.tags.length === 0
-        ? m.tasks_condition_tag_describe_empty()
-        : m.tasks_condition_tag_describe({ condition: c.condition, tags: formatConjunction(c.tags) }),
-    )
-    .with({ type: "heading" }, (c) =>
-      c.headings.length === 0
-        ? m.tasks_condition_heading_describe_empty()
-        : m.tasks_condition_heading_describe({ condition: c.condition, headings: formatConjunction(c.headings) }),
-    )
-    .exhaustive();
-}
+import type { CheckboxJournalRule, CheckboxRule } from "../rule-schema";
 
 // An empty condition list means "no constraint" here — the inverse of a decoration's, where it
 // matches nothing — so the empty case gets its own sentence rather than an empty list.
@@ -34,7 +15,7 @@ function describeCondition(condition: CheckboxEditableCondition): string {
 export function describeCheckboxRule(rule: CheckboxRule | CheckboxJournalRule): string {
   const conditions = rule.conditions.filter(isEditableCondition);
   if (conditions.length === 0) return m.tasks_rule_summary_any();
-  const parts = conditions.map(describeCondition);
+  const parts = conditions.map(describeTagOrHeadingCondition);
   const joined = rule.mode === "or" ? formatDisjunction(parts) : formatConjunction(parts);
   return m.tasks_rule_summary_conditions({ conditions: joined });
 }

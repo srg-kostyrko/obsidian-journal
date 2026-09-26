@@ -2413,7 +2413,6 @@
   "tasks_status_group_open": "Open",
   "tasks_status_group_done": "Done",
   "tasks_status_group_all": "All",
-  "tasks_filter_summary_any": "No conditions — every task in scope is shown.",
   "tasks_filter_summary_conditions": "Shows a task that is {conditions}.",
   "tasks_rule_summary_any": "No conditions — every checkbox item in a journal's notes is a task.",
   "tasks_rule_summary_conditions": "Counts a checkbox item that is {conditions}.",

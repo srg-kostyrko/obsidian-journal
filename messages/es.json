@@ -2400,7 +2400,6 @@
   "tasks_status_group_open": "Abiertas",
   "tasks_status_group_done": "Hechas",
   "tasks_status_group_all": "Todas",
-  "tasks_filter_summary_any": "Sin condiciones — se muestra toda tarea en el ámbito.",
   "tasks_filter_summary_conditions": "Muestra una tarea que está {conditions}.",
   "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla en las notas de un diario es una tarea.",
   "tasks_rule_summary_conditions": "Cuenta un elemento de lista con casilla que está {conditions}.",

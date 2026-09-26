@@ -3,27 +3,26 @@
 // repaired or reset wholesale for a slice (see CLAUDE.md), and legacy data can already carry one.
 // This schema is stricter and is parsed only by the two settings modals, against the in-memory
 // draft, never against anything read from or written to the slice or the journal config.
+//
+// The tag/heading arm shapes come from @/tasks/ui/condition-form-schema, shared with the listing
+// filter's task-rule-form-schema.ts. What is NOT shared is the v.variant() call below: it lists
+// only `tag` and `heading`, on purpose. The checkbox editor must never be able to construct a
+// status condition in the first place (see rule-schema.ts's isEditableCondition), and this
+// variant is a second, independent gate for that — a status condition reaching this schema by any
+// path other than the UI (a future bug, a hand-built draft) fails validation here instead of
+// silently round-tripping. Assembling this variant from the shared three-arm schema instead would
+// make that guarantee "safe only by omission" — true only because nothing here currently produces
+// a status condition, not because anything would catch one that did — so the arm list stays
+// explicit and local to this file rather than imported.
 import * as v from "valibot";
 
-import { m } from "@/i18n";
+import { buildConditionFormSchemas, conditionFormErrors } from "@/tasks/ui/condition-form-schema";
 
 import type { CheckboxCondition } from "./rule-schema";
 
-// Built inside a function rather than at module scope: initLocale() runs in onload(), so an
-// `m.*()` call evaluated at import time would bake in the base locale's message forever.
 export function buildCheckboxRuleFormSchema() {
-  const checkboxConditionFormSchema = v.variant("type", [
-    v.object({
-      type: v.literal("tag"),
-      condition: v.picklist(["has", "lacks"]),
-      tags: v.pipe(v.array(v.string()), v.minLength(1, m.tasks_condition_values_required())),
-    }),
-    v.object({
-      type: v.literal("heading"),
-      condition: v.picklist(["under", "not-under"]),
-      headings: v.pipe(v.array(v.string()), v.minLength(1, m.tasks_condition_values_required())),
-    }),
-  ]);
+  const schemas = buildConditionFormSchemas();
+  const checkboxConditionFormSchema = v.variant("type", [schemas.tag, schemas.heading]);
 
   return v.object({
     mode: v.picklist(["and", "or"]),
@@ -33,19 +32,8 @@ export function buildCheckboxRuleFormSchema() {
 
 export type CheckboxRuleFormDraft = v.InferInput<ReturnType<typeof buildCheckboxRuleFormSchema>>;
 
-// Maps each invalid condition's index to its first error message. RuleEditor's model is keyed by
-// array position, not by an id, so index is the only handle a caller has to place the message next
-// to the right row.
 export function checkboxRuleConditionErrors(
   draft: CheckboxRuleFormDraft | { mode: "and" | "or"; conditions: CheckboxCondition[] },
 ): ReadonlyMap<number, string> {
-  const result = v.safeParse(buildCheckboxRuleFormSchema(), draft);
-  const errors = new Map<number, string>();
-  if (result.success) return errors;
-  for (const issue of result.issues) {
-    const [first, second] = issue.path ?? [];
-    if (first?.key !== "conditions" || typeof second?.key !== "number") continue;
-    if (!errors.has(second.key)) errors.set(second.key, issue.message);
-  }
-  return errors;
+  return conditionFormErrors(buildCheckboxRuleFormSchema(), draft);
 }

@@ -2486,7 +2486,6 @@
   "tasks_status_group_open": "Открытые",
   "tasks_status_group_done": "Выполненные",
   "tasks_status_group_all": "Все",
-  "tasks_filter_summary_any": "Нет условий — показывается каждая задача в области действия.",
   "tasks_filter_summary_conditions": "Показывает задачу, которая {conditions}.",
   "tasks_rule_summary_any": "Нет условий — каждый пункт списка с чекбоксом в заметках журнала считается задачей.",
   "tasks_rule_summary_conditions": "Считает пункт списка с чекбоксом, который {conditions}.",

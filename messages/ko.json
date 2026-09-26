@@ -2397,7 +2397,6 @@
   "tasks_status_group_open": "미완료",
   "tasks_status_group_done": "완료",
   "tasks_status_group_all": "전체",
-  "tasks_filter_summary_any": "조건 없음 — 범위 내 모든 작업이 표시됩니다.",
   "tasks_filter_summary_conditions": "{conditions} 작업을 표시합니다.",
   "tasks_rule_summary_any": "조건 없음 — 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
   "tasks_rule_summary_conditions": "{conditions} 체크박스 목록 항목을 집계합니다.",

@@ -2411,7 +2411,6 @@
   "tasks_status_group_open": "Aperte",
   "tasks_status_group_done": "Completate",
   "tasks_status_group_all": "Tutte",
-  "tasks_filter_summary_any": "Nessuna condizione — viene mostrata ogni attività nell'ambito.",
   "tasks_filter_summary_conditions": "Mostra un'attività che è {conditions}.",
   "tasks_rule_summary_any": "Nessuna condizione — ogni elemento di elenco con casella nelle note di un diario è un'attività.",
   "tasks_rule_summary_conditions": "Conta un elemento di elenco con casella che è {conditions}.",

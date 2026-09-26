@@ -2411,7 +2411,6 @@
   "tasks_status_group_open": "Ouvertes",
   "tasks_status_group_done": "Terminées",
   "tasks_status_group_all": "Toutes",
-  "tasks_filter_summary_any": "Aucune condition — chaque tâche dans le champ d’application est affichée.",
   "tasks_filter_summary_conditions": "Affiche une tâche qui est {conditions}.",
   "tasks_rule_summary_any": "Aucune condition — tout élément de liste avec case à cocher dans les notes d’un journal est une tâche.",
   "tasks_rule_summary_conditions": "Compte un élément de liste avec case à cocher qui est {conditions}.",

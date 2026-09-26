@@ -2400,7 +2400,6 @@
   "tasks_status_group_open": "未完了",
   "tasks_status_group_done": "完了",
   "tasks_status_group_all": "すべて",
-  "tasks_filter_summary_any": "条件なし — 対象範囲内のすべてのタスクが表示されます。",
   "tasks_filter_summary_conditions": "{conditions}タスクを表示します。",
   "tasks_rule_summary_any": "条件なし — ジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
   "tasks_rule_summary_conditions": "{conditions}チェックボックス項目を数えます。",

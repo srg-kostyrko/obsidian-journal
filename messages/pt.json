@@ -2408,7 +2408,6 @@
   "tasks_status_group_open": "Abertas",
   "tasks_status_group_done": "Concluídas",
   "tasks_status_group_all": "Todas",
-  "tasks_filter_summary_any": "Sem condições — toda tarefa no âmbito é exibida.",
   "tasks_filter_summary_conditions": "Exibe uma tarefa que está {conditions}.",
   "tasks_rule_summary_any": "Sem condições — todo item de lista com caixa de seleção nas notas de um diário é uma tarefa.",
   "tasks_rule_summary_conditions": "Conta um item de lista com caixa de seleção que está {conditions}.",
