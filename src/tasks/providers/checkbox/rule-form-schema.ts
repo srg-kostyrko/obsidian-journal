@@ -7,13 +7,14 @@
 // The tag/heading arm shapes come from @/tasks/ui/condition-form-schema, shared with the listing
 // filter's task-rule-form-schema.ts. What is NOT shared is the v.variant() call below: it lists
 // only `tag` and `heading`, on purpose. The checkbox editor must never be able to construct a
-// status condition in the first place (see rule-schema.ts's isEditableCondition), and this
-// variant is a second, independent gate for that — a status condition reaching this schema by any
-// path other than the UI (a future bug, a hand-built draft) fails validation here instead of
-// silently round-tripping. Assembling this variant from the shared three-arm schema instead would
-// make that guarantee "safe only by omission" — true only because nothing here currently produces
-// a status condition, not because anything would catch one that did — so the arm list stays
-// explicit and local to this file rather than imported.
+// status condition in the first place (see rule-schema.ts's isEditableCondition). RuleConditionRow's
+// type dropdown is the first gate against that, restricted to the same two arms; this variant is a
+// second, independent gate for that — a status condition reaching this schema by any path other
+// than the UI (a future bug, a hand-built draft) fails validation here instead of silently
+// round-tripping. Assembling this variant from the shared three-arm schema instead would make that
+// guarantee "safe only by omission" — true only because nothing here currently produces a status
+// condition, not because anything would catch one that did — so the arm list stays explicit and
+// local to this file rather than imported.
 import * as v from "valibot";
 
 import { buildConditionFormSchemas, conditionFormErrors } from "@/tasks/ui/condition-form-schema";

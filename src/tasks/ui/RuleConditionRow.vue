@@ -16,8 +16,9 @@ const condition = defineModel<TaskCondition>({ required: true });
 
 // Which arms this row's type dropdown offers — the checkbox identification editor passes
 // `["tag", "heading"]` (identification never reads a status condition, see rule-schema.ts), the
-// listing filter's editor passes all three. Restricting the dropdown is what keeps the checkbox
-// editor from ever writing a status condition — there is no other gate.
+// listing filter's editor passes all three. Restricting the dropdown is the first of two gates
+// against the checkbox editor ever writing a status condition; the second is the checkbox
+// provider's own form schema (rule-form-schema.ts), which rejects one independently of this list.
 const { types } = defineProps<{ types: readonly TaskCondition["type"][] }>();
 
 // Multi-root components get no automatic attribute fallthrough, so a parent-side `@blur` on
