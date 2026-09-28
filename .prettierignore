@@ -19,3 +19,10 @@ test-vault/
 perf-vault/
 .obsidian-cache/
 e2e-tests/.reports/
+
+# Fixture notes are test input, not prose: the tasks journey seeds a tab-indented subtask and a
+# task inside a callout precisely because markdown re-hosts those as a code block and a blockquote.
+# Prettier rewrites a tab to two spaces, which is no longer an indented code block — it silently
+# turns the falsifying fixture into one that passes either way. Same reasoning as .gitattributes
+# pinning these to LF: here the fixture's bytes are what the test is made of.
+e2e-tests/fixtures/**/*.md

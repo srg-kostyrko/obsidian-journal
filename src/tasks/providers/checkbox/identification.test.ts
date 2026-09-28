@@ -4,7 +4,7 @@ import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
 
 import { identifies } from "./identification";
 
-const item: StructureListItem = { marker: " ", line: 5, endLine: 5 };
+const item: StructureListItem = { marker: " ", line: 5, endLine: 5, parent: null };
 const structure: NoteStructure = {
   listItems: [item],
   tags: [{ tag: "#task", line: 5 }],
@@ -39,13 +39,13 @@ describe("identifies", () => {
     expect(identifies(item, { structure: noteTagged, vault: tagged, journal: null })).toBe(true);
   });
   it("does not let a nested child inherit its parent's tag", () => {
-    const child: StructureListItem = { marker: " ", line: 6, endLine: 6 };
+    const child: StructureListItem = { marker: " ", line: 6, endLine: 6, parent: 5 };
     const withChild = { ...structure, listItems: [item, child] };
     expect(identifies(child, { structure: withChild, vault: tagged, journal: null })).toBe(false);
   });
   it("narrows the vault rule with the journal's", () => {
     expect(identifies(item, { structure, vault: tagged, journal: underTasks })).toBe(true);
-    const elsewhere: StructureListItem = { marker: " ", line: 2, endLine: 2 };
+    const elsewhere: StructureListItem = { marker: " ", line: 2, endLine: 2, parent: null };
     const before = { ...structure, listItems: [elsewhere], tags: [{ tag: "#task", line: 2 }] };
     expect(identifies(elsewhere, { structure: before, vault: tagged, journal: underTasks })).toBe(false);
   });
@@ -131,5 +131,19 @@ describe("identifies", () => {
     expect(identifies(item, { structure: nested, vault: underLater, journal: null })).toBe(true);
     expect(identifies(item, { structure: nested, vault: underTasksOnly, journal: null })).toBe(true);
     expect(identifies(item, { structure: nested, vault: underToday, journal: null })).toBe(false);
+  });
+  // Status belongs to filtering, not identification — a status condition must never sink an
+  // otherwise-matching rule, nor let an otherwise-empty rule start matching nothing.
+  it("treats a status condition as a no-op, alone or alongside a real condition", () => {
+    const statusOnly = {
+      mode: "and" as const,
+      conditions: [{ type: "status" as const, condition: "is" as const, statuses: ["done"] }],
+    };
+    expect(identifies(item, { structure, vault: statusOnly, journal: null })).toBe(true);
+    const statusAndTag = {
+      mode: "and" as const,
+      conditions: [...statusOnly.conditions, ...otherTag.conditions],
+    };
+    expect(identifies(item, { structure, vault: statusAndTag, journal: null })).toBe(false);
   });
 });

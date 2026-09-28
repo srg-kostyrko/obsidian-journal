@@ -5,6 +5,7 @@ import { homeCodeBlock } from "./home/home-block";
 import { navigationCodeBlock } from "./nav/nav-block";
 import { NavReferenceIntegrity } from "./nav/nav-reference-integrity";
 import { noteletsCodeBlock } from "./notelets/notelets-block";
+import { tasksCodeBlock } from "./tasks/tasks-block";
 import { timelineCodeBlock } from "./timeline/timeline-block";
 
 export const codeBlocksCoreModule: Module = {
@@ -19,6 +20,7 @@ export const codeBlockDefinitions: readonly CodeBlockDefinition[] = [
   homeCodeBlock,
   navigationCodeBlock,
   noteletsCodeBlock,
+  tasksCodeBlock,
   timelineCodeBlock,
 ];
 

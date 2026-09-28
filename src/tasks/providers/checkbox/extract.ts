@@ -30,7 +30,14 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
       // retargetable means "the line already carries a date signifier", which needs text —
       // hydration recomputes it.
       capabilities: { movable: true, stampable: true, retargetable: false },
-      display: { kind: "line", path, line: listItem.line, endLine: listItem.endLine, markdown: null },
+      display: {
+        kind: "line",
+        path,
+        line: listItem.line,
+        endLine: listItem.endLine,
+        parentLine: listItem.parent,
+        markdown: null,
+      },
       dates: {},
     });
   }

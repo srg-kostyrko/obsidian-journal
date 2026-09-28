@@ -82,6 +82,9 @@ describe("NoteletIndex", () => {
 
     expect([...index.atAnchor(a("2026-01-01"))]).toEqual([]);
     expect([...index.atAnchor(a("2026-01-02"))]).toEqual([p("a.md")]);
+    // The old anchor's bucket emptied out, so it must also have left the sorted array that
+    // anchorsInRange walks — atAnchor alone can't tell #byAnchor and #sortedAnchors apart.
+    expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-02"))).toEqual([a("2026-01-02")]);
   });
 
   it("removes from the type bucket the path was actually added under, even if the entry's typeName has since changed", () => {
@@ -110,6 +113,98 @@ describe("NoteletIndex", () => {
       index.remove(entry);
 
       expect(index.paths()).toEqual([]);
+    });
+  });
+
+  describe("anchorsInRange", () => {
+    it("includes an anchor sitting exactly on the start or end boundary", () => {
+      const index = new NoteletIndex();
+      index.add(notelet("2026-01-05", "a.md", "Standup"));
+      index.add(notelet("2026-01-10", "b.md", "Standup"));
+
+      expect(index.anchorsInRange(a("2026-01-05"), a("2026-01-10"))).toEqual([a("2026-01-05"), a("2026-01-10")]);
+    });
+
+    it("excludes an anchor before the start or after the end", () => {
+      const index = new NoteletIndex();
+      index.add(notelet("2026-01-01", "a.md", "Standup"));
+      index.add(notelet("2026-01-20", "b.md", "Standup"));
+      index.add(notelet("2026-01-10", "c.md", "Standup"));
+
+      expect(index.anchorsInRange(a("2026-01-05"), a("2026-01-15"))).toEqual([a("2026-01-10")]);
+    });
+
+    it("lists each shared anchor once even with several notelets on it", () => {
+      const index = new NoteletIndex();
+      index.add(notelet("2026-01-05", "a.md", "Standup"));
+      index.add(notelet("2026-01-05", "b.md", "Meeting"));
+
+      expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-31"))).toEqual([a("2026-01-05")]);
+    });
+
+    it("returns anchors in sorted order regardless of insertion order", () => {
+      const index = new NoteletIndex();
+      index.add(notelet("2026-01-20", "a.md", "Standup"));
+      index.add(notelet("2026-01-01", "b.md", "Standup"));
+      index.add(notelet("2026-01-10", "c.md", "Standup"));
+
+      expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-31"))).toEqual([
+        a("2026-01-01"),
+        a("2026-01-10"),
+        a("2026-01-20"),
+      ]);
+    });
+
+    it("returns empty when start is after end", () => {
+      const index = new NoteletIndex();
+      index.add(notelet("2026-01-05", "a.md", "Standup"));
+
+      expect(index.anchorsInRange(a("2026-01-10"), a("2026-01-01"))).toEqual([]);
+    });
+
+    it("returns empty on an empty index", () => {
+      expect(new NoteletIndex().anchorsInRange(a("2026-01-01"), a("2026-01-31"))).toEqual([]);
+    });
+
+    it("no longer lists an anchor once its last notelet is removed", () => {
+      const index = new NoteletIndex();
+      const entry = notelet("2026-01-05", "a.md", "Standup");
+      index.add(entry);
+
+      index.remove(entry);
+
+      expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-31"))).toEqual([]);
+    });
+
+    it("still lists an anchor after one of its several notelets is removed", () => {
+      const index = new NoteletIndex();
+      const first = notelet("2026-01-05", "a.md", "Standup");
+      index.add(first);
+      index.add(notelet("2026-01-05", "b.md", "Meeting"));
+
+      index.remove(first);
+
+      expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-31"))).toEqual([a("2026-01-05")]);
+    });
+
+    it("moves an anchor to its new slot after transferPath moves the notelet there", () => {
+      const index = new NoteletIndex();
+      const entry = notelet("2026-01-05", "a.md", "Standup");
+      index.add(entry);
+
+      index.transferPath(entry, p("moved.md"));
+      index.add(notelet("2026-01-20", "b.md", "Standup"));
+
+      expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-31"))).toEqual([a("2026-01-05"), a("2026-01-20")]);
+    });
+
+    it("returns empty after clear", () => {
+      const index = new NoteletIndex();
+      index.add(notelet("2026-01-05", "a.md", "Standup"));
+
+      index.clear();
+
+      expect(index.anchorsInRange(a("2026-01-01"), a("2026-01-31"))).toEqual([]);
     });
   });
 });

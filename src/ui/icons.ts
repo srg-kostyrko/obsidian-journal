@@ -43,6 +43,7 @@ export const icons = {
     customInterval: "list",
     navBlock: "signpost-big",
     notelet: "sticky-note",
+    task: "square-check-big",
   },
   block: {
     dayNotes: "files",

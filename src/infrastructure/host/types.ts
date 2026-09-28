@@ -61,6 +61,10 @@ export interface StructureListItem {
   readonly marker: string;
   readonly line: number;
   readonly endLine: number;
+  // Obsidian marks a root item by negating the line of its list's first line; null is that,
+  // normalized. A parent that is not itself a task is filtered out of listItems, so this can
+  // name a line no item here holds.
+  readonly parent: number | null;
 }
 
 export interface StructureTag {

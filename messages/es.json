@@ -126,6 +126,7 @@
   "code_blocks_schema_error": "Algunas opciones de este bloque {key} no son válidas.",
   "code_blocks_nav_not_connected": "La nota no está conectada a un diario",
   "code_blocks_notelets_not_connected": "La nota no está conectada a un diario",
+  "code_blocks_tasks_not_connected": "La nota no está conectada a un diario",
   "code_blocks_home_empty": "No hay diarios para mostrar. Comprueba las opciones show y shelf del bloque.",
   "common_no_journals_yet": "Aún no hay diarios. Crea uno en los ajustes del complemento.",
   "code_blocks_nav_next": "Siguiente",
@@ -1433,6 +1434,24 @@
       }
     }
   ],
+  "view_block_tasks_label": "Tareas",
+  "view_block_tasks_description": "Enumera las tareas de la ventana y los diarios seleccionados.",
+  "view_block_tasks_journals_label": "Diarios",
+  "view_block_tasks_journals_description": "Deja todos desactivados para incluir todos los diarios del estante de la vista.",
+  "view_block_tasks_source_label": "Origen",
+  "view_block_tasks_source_note": "Solo la nota",
+  "view_block_tasks_source_notelets": "Solo notas breves",
+  "view_block_tasks_source_both": "Nota y notas breves",
+  "view_block_tasks_sort_label": "Ordenar por",
+  "view_block_tasks_sort_document": "Orden del documento",
+  "view_block_tasks_sort_status": "Estado",
+  "view_block_tasks_sort_due": "Fecha de vencimiento",
+  "view_block_tasks_sort_scheduled": "Fecha programada",
+  "view_block_tasks_sort_start": "Fecha de inicio",
+  "view_block_tasks_sort_done": "Fecha de finalización",
+  "view_block_tasks_sort_created": "Fecha de creación",
+  "view_block_tasks_filter_label": "Filtro",
+  "view_block_tasks_filter_status_default": "Sin condición de Estado propia, por lo que decide el filtro de listado de un diario donde nombre uno.",
   "view_toolbar_shelf_selector_label": "Selector de estantes",
   "view_toolbar_shelf_selector_description": "Cambia qué estante delimita los diarios de la vista.",
   "view_toolbar_shelf_selector_tooltip": "Cambiar de estante",
@@ -2339,6 +2358,9 @@
   "tasks_settings_condition_lacks": "No tiene",
   "tasks_settings_condition_under": "Bajo",
   "tasks_settings_condition_not_under": "No bajo",
+  "tasks_settings_condition_status": "Estado",
+  "tasks_settings_condition_is": "Es",
+  "tasks_settings_condition_is_not": "No es",
   "tasks_settings_mode_and": "Cumplir todas las condiciones",
   "tasks_settings_mode_or": "Cumplir cualquier condición",
   "tasks_condition_values_required": "Introduce al menos un valor.",
@@ -2364,6 +2386,21 @@
     }
   ],
   "tasks_condition_heading_describe_empty": "sin encabezado",
+  "tasks_condition_status_describe": [
+    {
+      "declarations": ["input condition", "input statuses"],
+      "selectors": ["condition"],
+      "match": {
+        "condition=is": "{statuses}",
+        "condition=is-not": "no {statuses}"
+      }
+    }
+  ],
+  "tasks_condition_status_describe_empty": "sin estado",
+  "tasks_status_group_open": "Abiertas",
+  "tasks_status_group_done": "Hechas",
+  "tasks_status_group_all": "Todas",
+  "tasks_filter_summary_conditions": "Muestra una tarea que está {conditions}.",
   "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla en las notas de un diario es una tarea.",
   "tasks_rule_summary_conditions": "Cuenta un elemento de lista con casilla que está {conditions}.",
   "tasks_journal_summary_inherit": "Hereda la regla de toda la bóveda.",
@@ -2387,5 +2424,13 @@
   "tasks_journal_compose_inherit": "Heredar",
   "tasks_journal_compose_narrow": "Restringir",
   "tasks_journal_compose_replace": "Reemplazar",
-  "tasks_journal_modal_title": "Identificación de tareas — {journal}"
+  "tasks_journal_modal_title": "Identificación de tareas — {journal}",
+  "tasks_journal_filter_title": "Filtro de listado",
+  "tasks_journal_filter_none": "Este diario no tiene un filtro de listado propio.",
+  "tasks_journal_filter_edit": "Editar",
+  "tasks_filter_conditions_label": "Condiciones",
+  "tasks_filter_conditions_desc": "Qué tareas muestra un listado.",
+  "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",
+  "tasks_tick_error": "No se pudo marcar la tarea.",
+  "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }

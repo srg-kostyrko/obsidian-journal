@@ -66,6 +66,27 @@ describe("describeCheckboxRule", () => {
     });
     expect(text).toBe("Counts a checkbox item that is missing a heading.");
   });
+
+  // Checkbox identification treats a status condition as a no-op (see identification.ts), so a
+  // rule carrying one alongside a real condition describes only the real one.
+  it("drops a status condition from the summary, since it never constrains identification", () => {
+    const text = describeCheckboxRule({
+      mode: "and",
+      conditions: [
+        { type: "status", condition: "is", statuses: ["done"] },
+        { type: "tag", condition: "has", tags: ["#task"] },
+      ],
+    });
+    expect(text).toBe("Counts a checkbox item that is tagged #task.");
+  });
+
+  it("reads as no conditions when every condition is a status condition", () => {
+    const text = describeCheckboxRule({
+      mode: "and",
+      conditions: [{ type: "status", condition: "is", statuses: ["done"] }],
+    });
+    expect(text).toBe("No conditions — every checkbox item in a journal's notes is a task.");
+  });
 });
 
 describe("describeJournalRule", () => {

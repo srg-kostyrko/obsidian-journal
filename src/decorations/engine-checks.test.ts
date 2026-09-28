@@ -63,7 +63,7 @@ function taskItem(marker: string, status?: TaskStatus): TaskItem {
     status: status ?? DEFAULT_MARKER_STATUS[marker] ?? "todo",
     relations: ["containment"],
     capabilities: { movable: true, stampable: true, retargetable: false },
-    display: { kind: "line", path, line: 0, endLine: 0, markdown: null },
+    display: { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null },
     dates: {},
   };
 }

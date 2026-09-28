@@ -341,6 +341,13 @@ export function createFakeHost(): FakeHost {
       if (!existing) throw new Error(`missing: ${file.path}`);
       files.set(file.path, { ...existing, content: existing.content + content });
     },
+    async process(file: TFile, fn: (data: string) => string): Promise<string> {
+      const existing = files.get(file.path);
+      if (!existing) throw new Error(`missing: ${file.path}`);
+      const content = fn(existing.content);
+      files.set(file.path, { ...existing, content });
+      return content;
+    },
     async rename(file: TFile, newPath: string): Promise<void> {
       const existing = files.get(file.path);
       if (!existing) throw new Error(`missing: ${file.path}`);

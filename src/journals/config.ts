@@ -3,6 +3,7 @@ import * as v from "valibot";
 import type { AnchorString } from "@/calendar";
 import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
+import { taskRuleSchema } from "@/tasks/conditions";
 import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
 
 import { DEFAULT_NOTELET_FIELD, noteletTypeCollection, noteletTypeSchema } from "./notelets/config";
@@ -153,7 +154,40 @@ export const journalConfigSchema = v.object({
   decorations: v.optional(v.array(decorationSchema), []),
   prompts: v.optional(promptsSchema, () => []),
   notelets: v.optional(v.record(v.string(), noteletTypeSchema), () => ({})),
-  tasks: v.optional(v.object({ checkbox: v.optional(checkboxJournalRuleSchema) }), () => ({})),
+  // Splitting `tasks` into `providers` and `filter` gave a bad value in one sub-field a sibling to
+  // take down with it, so each is wrapped in its own v.fallback (the same idiom
+  // checkboxJournalRuleSchema already uses per comparator): a validation failure in one degrades
+  // to that sub-field's own default rather than failing the whole `tasks` object. This matters
+  // because repairCollectionEntry (settings-service.ts) only substitutes defaults for the fields
+  // it can name from issue.path[0].key, i.e. "tasks" itself — `tasks` is not registered in
+  // journalConfigCollection's `nested` map, so it cannot repair inside this object on its own.
+  // Confirmed empirically (2026-09-25) before the fallback existed: a valid providers.checkbox
+  // rule was wiped by an unrelated invalid filter.conditions entry (the live case: a vault synced
+  // from a newer version with a condition type this v.variant does not know). The trade: a
+  // v.fallback catch clears the failing dataset's issues, so repairCollectionEntry never sees one
+  // and nothing is logged — the loss is silent, on purpose, in exchange for not losing the
+  // sibling. Whoever adds a third sub-field to `tasks` needs the same per-field v.fallback; the
+  // underlying gap — repairCollectionEntry cannot reach inside a plain (non-`nested`) sub-object —
+  // is still there for it. The same gap sits one level deeper, inside `providers`: only that object
+  // carries a v.fallback, not each provider key, so once a second provider lands (note-property,
+  // #503) a bad `noteProperty` rule still resets the whole `providers` object and takes the
+  // checkbox rule with it. That key needs its own v.fallback when it is added — one per provider,
+  // not one around the namespace.
+  tasks: v.optional(
+    v.object({
+      // Keyed by provider id — note-property joins here in #503. Kept in its own object so the
+      // listing filter below is not a sibling of the provider namespace.
+      providers: v.optional(
+        v.fallback(v.object({ checkbox: v.optional(checkboxJournalRuleSchema) }), () => ({})),
+        () => ({}),
+      ),
+      filter: v.optional(
+        v.fallback(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
+        () => v.parse(taskRuleSchema, {}),
+      ),
+    }),
+    () => ({ providers: {}, filter: v.parse(taskRuleSchema, {}) }),
+  ),
   navBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
     lines: [] as NavBlockSegment[][],
@@ -397,7 +431,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     templates: [],
     prompts: [],
     notelets: {},
-    tasks: {},
+    tasks: { providers: {}, filter: v.parse(taskRuleSchema, {}) },
     confirmCreation: false,
     autoCreate: false,
     decorations: structuredClone(isCustom ? customDecorations : fixedDecorations),

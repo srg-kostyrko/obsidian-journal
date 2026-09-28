@@ -28,8 +28,8 @@ const otherRule = {
   conditions: [{ type: "tag", condition: "has", tags: ["#task"] }],
 };
 
-const defaultDailyTasks = { checkbox: dailyRule };
-const defaultOtherTasks = { checkbox: otherRule };
+const defaultDailyTasks = { providers: { checkbox: dailyRule } };
+const defaultOtherTasks = { providers: { checkbox: otherRule } };
 
 // Two journals, each owning at least one note under its own distinct rule: a fixture with a
 // single journal cannot falsify "the wrong journal's rule leaked onto this note."
@@ -94,14 +94,16 @@ describe("TaskHostService", () => {
 
   it("reads the rule keyed by the given provider id, not a fixed key", async () => {
     const { host, repository } = await build();
-    // `otherProvider` is a runtime-only fiction: journalConfigSchema types `tasks` as an object
-    // with a `checkbox` field alone, and valibot drops unknown keys, so production cannot store a
-    // second provider's rule today — update() writes straight into the live record with no
+    // `otherProvider` is a runtime-only fiction: journalConfigSchema types `tasks.providers` as an
+    // object with a `checkbox` field alone, and valibot drops unknown keys, so production cannot
+    // store a second provider's rule today — update() writes straight into the live record with no
     // re-validation, which is the only reason the key survives here. What the assertion pins is
     // that the host looks the rule up by the id it was handed rather than a name it hardcodes.
     // Phase 2 has to widen that schema when `note-property` lands, or its rule is dropped on the
     // next parse with nothing failing loudly.
-    repository.update("Daily", { tasks: { checkbox: dailyRule, otherProvider: { marker: true } } } as never);
+    repository.update("Daily", {
+      tasks: { providers: { checkbox: dailyRule, otherProvider: { marker: true } } },
+    } as never);
 
     const checkboxOwned = host.ownerOf(dayPath, CHECKBOX);
     const otherOwned = host.ownerOf(dayPath, "otherProvider");
@@ -114,7 +116,7 @@ describe("TaskHostService", () => {
 
   it("passes a rule through untouched, even one it cannot interpret", async () => {
     const { host, repository } = await build();
-    repository.update("Daily", { tasks: { checkbox: { nonsense: true } } } as never);
+    repository.update("Daily", { tasks: { providers: { checkbox: { nonsense: true } } } } as never);
     const owned = host.ownerOf(dayPath, CHECKBOX);
     expect(owned.isSome() && owned.value.rule).toEqual({ nonsense: true });
   });
@@ -136,7 +138,9 @@ describe("TaskHostService", () => {
     const { host, repository } = await build();
     const seen = vi.fn();
     host.onOwnedNotesChanged(seen);
-    repository.update("Daily", { tasks: { checkbox: { compose: "inherit", mode: "and", conditions: [] } } });
+    repository.update("Daily", {
+      tasks: { providers: { checkbox: { compose: "inherit", mode: "and", conditions: [] } } },
+    } as never);
     expect(seen).toHaveBeenCalledWith({ kind: "journal", journalName: "Daily" });
     expect(seen).not.toHaveBeenCalledWith({ kind: "journal", journalName: "Other" });
     expect(seen).toHaveBeenCalledTimes(1);
@@ -203,7 +207,7 @@ describe("TaskHostService", () => {
         status: "todo",
         relations: ["containment"],
         capabilities: { movable: true, stampable: true, retargetable: false },
-        display: { kind: "line", path: dayPath, line: 0, endLine: 0, markdown: null },
+        display: { kind: "line", path: dayPath, line: 0, endLine: 0, parentLine: null, markdown: null },
         dates: {},
       },
     ]);

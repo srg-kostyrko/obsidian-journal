@@ -45,6 +45,19 @@ describe("checkboxRuleConditionErrors", () => {
     expect(errors.get(1)).toBeTruthy();
   });
 
+  // Pins the second gate rule-form-schema.ts's own comment claims: the checkbox variant lists only
+  // tag/heading, so a status condition reaching this function by any path other than the UI (which
+  // never offers one) fails here too, not just at isEditableCondition. Widen the variant back to the
+  // shared three-arm schema and this goes green while every other test above stays green — that
+  // silent pass is exactly what the comment is warning a future edit not to reintroduce.
+  it("flags a status condition even though the UI never offers one", () => {
+    const errors = checkboxRuleConditionErrors({
+      mode: "and",
+      conditions: [{ type: "status", condition: "is", statuses: ["open"] }],
+    });
+    expect(errors.size).toBeGreaterThan(0);
+  });
+
   // Storage stays permissive: the slice/journal schema round-trips an empty condition rather
   // than discarding the whole rule or entity on load. This is what stops a future contributor
   // from "simplifying" by tightening checkboxRuleSchema/checkboxJournalRuleSchema to match the

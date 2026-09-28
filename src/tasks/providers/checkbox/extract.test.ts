@@ -8,9 +8,9 @@ import { DEFAULT_STATUS_MAP } from "./slice";
 const path = "journal/2026-09-22.md" as VaultPath;
 const structure: NoteStructure = {
   listItems: [
-    { marker: " ", line: 4, endLine: 6 },
-    { marker: "/", line: 5, endLine: 5 },
-    { marker: "x", line: 6, endLine: 6 },
+    { marker: " ", line: 4, endLine: 6, parent: null },
+    { marker: "/", line: 5, endLine: 5, parent: null },
+    { marker: "x", line: 6, endLine: 6, parent: null },
   ],
   tags: [],
   headings: [],
@@ -39,7 +39,14 @@ describe("extractItems", () => {
   it("carries a line display whose markdown is null until hydrated, with a distinct endLine", () => {
     const item = extractItems(base).at(0);
     expect(item?.key).toBe(`${path}:4`);
-    expect(item?.display).toEqual({ kind: "line", path, line: 4, endLine: 6, markdown: null });
+    expect(item?.display).toEqual({
+      kind: "line",
+      path,
+      line: 4,
+      endLine: 6,
+      parentLine: null,
+      markdown: null,
+    });
   });
   it("drops items the identification rule rejects", () => {
     const tagged = {
@@ -58,6 +65,24 @@ describe("extractItems", () => {
     const customMap = { ...DEFAULT_STATUS_MAP, " ": "done" };
     const items = extractItems({ ...base, statusMap: customMap });
     expect(items.at(0)?.status).toBe("done");
+  });
+  it("carries a nested item's parent line onto its display", () => {
+    const items = extractItems({
+      path: "Daily/2026-09-22.md" as VaultPath,
+      structure: {
+        listItems: [
+          { marker: " ", line: 3, endLine: 3, parent: null },
+          { marker: " ", line: 4, endLine: 4, parent: 3 },
+        ],
+        tags: [],
+        headings: [],
+        frontmatterTags: [],
+      },
+      vault: { mode: "and", conditions: [] },
+      journal: null,
+      statusMap: { " ": "todo" },
+    });
+    expect(items.map((item) => item.display.kind === "line" && item.display.parentLine)).toEqual([null, 3]);
   });
   it("passes the journal rule through to identifies, changing the outcome from the vault rule alone", () => {
     const rejectsEverything = {

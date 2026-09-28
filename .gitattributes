@@ -1,0 +1,7 @@
+# The e2e suite reads fixture notes back and asserts on their bytes — the tasks journey compares a
+# ticked line against a whole-line literal — so a Windows runner checking these out with CRLF turns
+# a passing tick into a "\r"-only diff. Pinned to LF here rather than normalized in the assertion:
+# the product splits on "\n" on both the read and the write side, so the "\r" round-trips correctly
+# and the fixture, not the expectation, is what has to be the same bytes everywhere. Scoped to the
+# fixtures whose contents tests read; nothing else in the repo is asserted on byte for byte.
+e2e-tests/fixtures/**/*.md text eol=lf

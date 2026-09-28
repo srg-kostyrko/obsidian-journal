@@ -805,4 +805,37 @@ describe("JournalsIndex", () => {
       expect(new JournalsIndex().noteletsFor("daily")).toEqual([]);
     });
   });
+
+  describe("noteletAnchorsInRange", () => {
+    it("includes an anchor sitting exactly on the start or end boundary", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-05", "a.md", "Standup"));
+      index.register(notelet("daily", "2026-01-10", "b.md", "Standup"));
+
+      expect(index.noteletAnchorsInRange("daily", a("2026-01-05"), a("2026-01-10"))).toEqual([
+        a("2026-01-05"),
+        a("2026-01-10"),
+      ]);
+    });
+
+    it("excludes a notelet whose period closed before the window", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-01", "a.md", "Standup"));
+      index.register(notelet("daily", "2026-01-10", "b.md", "Standup"));
+
+      expect(index.noteletAnchorsInRange("daily", a("2026-01-05"), a("2026-01-15"))).toEqual([a("2026-01-10")]);
+    });
+
+    it("does not mix another journal's anchors into the range", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-05", "a.md", "Standup"));
+      index.register(notelet("weekly", "2026-01-05", "b.md", "Standup"));
+
+      expect(index.noteletAnchorsInRange("daily", a("2026-01-01"), a("2026-01-31"))).toEqual([a("2026-01-05")]);
+    });
+
+    it("returns empty for a journal with no notelets at all", () => {
+      expect(new JournalsIndex().noteletAnchorsInRange("daily", a("2026-01-01"), a("2026-01-31"))).toEqual([]);
+    });
+  });
 });

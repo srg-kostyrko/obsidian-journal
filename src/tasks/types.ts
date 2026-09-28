@@ -21,6 +21,7 @@ export type TaskDisplay =
       readonly path: VaultPath;
       readonly line: number;
       readonly endLine: number;
+      readonly parentLine: number | null;
       readonly markdown: string | null;
     }
   | { readonly kind: "note"; readonly path: VaultPath; readonly title: string };
@@ -57,7 +58,7 @@ export const TaskProviderToken = createMultiToken<TaskProvider>("tasks.provider"
 export interface OwnedNote {
   readonly path: VaultPath;
   readonly journalName: string;
-  // journalConfig.tasks[providerId], transported verbatim — the host cannot interpret it.
+  // journalConfig.tasks.providers[providerId], transported verbatim — the host cannot interpret it.
   readonly rule: unknown;
 }
 

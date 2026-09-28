@@ -15,7 +15,13 @@ import { readdirSync, readFileSync } from "node:fs";
 // instead. use: the canonical rendering. allowIn / only: restrict by message key.
 const GLOSSARY = {
   de: [
-    { term: "task", banned: /Aufgabenstellung|(?<!\p{L})Tasks?(?!\p{L})/iu, use: "Aufgabe" },
+    // allowIn: this one key names the Tasks plugin itself, not the English word "task".
+    {
+      term: "task",
+      banned: /Aufgabenstellung|(?<!\p{L})Tasks?(?!\p{L})/iu,
+      use: "Aufgabe",
+      allowIn: /^tasks_tick_recurring_needs_tasks_plugin$/,
+    },
     // `Tagebuch` alone never matched the umlauted plural `Tagebüchern`, which shipped
     // live in two strings and passed CI for months.
     { term: "journal", banned: /Zeitschrift|Tageb(u|ü)ch|Fachblatt/i, use: "Journal" },

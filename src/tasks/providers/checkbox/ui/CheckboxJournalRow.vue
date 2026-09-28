@@ -17,7 +17,9 @@ const { journalName } = defineProps<{ journalName: string }>();
 const flows = useService(Flows);
 const journals = useService(JournalsRepository);
 
-const summary = computed(() => describeJournalRule(journals.get(journalName).getOrUndefined()?.tasks.checkbox));
+const summary = computed(() =>
+  describeJournalRule(journals.get(journalName).getOrUndefined()?.tasks.providers.checkbox),
+);
 
 function configure(): void {
   void flows.invoke(EditJournalTasksFlow, { journalName });

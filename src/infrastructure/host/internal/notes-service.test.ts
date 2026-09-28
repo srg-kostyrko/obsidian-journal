@@ -241,6 +241,47 @@ describe("NotesService", () => {
     });
   });
 
+  describe("process", () => {
+    it("applies a transform to the note's current content and answers with what it wrote", async () => {
+      const { service, host } = build();
+      host.putFile(path, "- [ ] one\n- [ ] two");
+      const result = await service.process(path, (content) => content.replace("[ ] one", "[x] one"));
+      expectOk(result);
+      expect(result.value).toBe("- [x] one\n- [ ] two");
+      expect(host.files.get(path)?.content).toBe("- [x] one\n- [ ] two");
+    });
+
+    it("transforms the vault's current content rather than a value read separately", async () => {
+      const { service, host } = build();
+      host.putFile(path, "current");
+      vi.spyOn(host.app.vault, "read").mockResolvedValue("stale");
+      const result = await service.process(path, (content) => `${content}!`);
+      expectOk(result);
+      expect(result.value).toBe("current!");
+    });
+
+    it("returns NoteNotFoundError without calling the transform for a path that is gone", async () => {
+      const { service } = build();
+      let called = false;
+      const result = await service.process(path, (content) => {
+        called = true;
+        return content;
+      });
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(NoteNotFoundError);
+      expect(called).toBe(false);
+    });
+
+    it("wraps an underlying process failure in NoteWriteError", async () => {
+      const { service, host } = build();
+      host.putFile(path);
+      vi.spyOn(host.app.vault, "process").mockRejectedValueOnce(new Error("io"));
+      const result = await service.process(path, (content) => content);
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(NoteWriteError);
+    });
+  });
+
   describe("append", () => {
     it("appends to the file's content", async () => {
       const { service, host } = build();
