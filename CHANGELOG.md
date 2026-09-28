@@ -16,7 +16,8 @@ All notable changes to this project will be documented in this file.
   section, which a fence or the view block's own filter overrides one condition type at a time rather
   than narrowing — except for the open-tasks default itself, which gives way instead, so a journal whose
   own filter names a status reaches a fence, or a view block, that named none. Each row renders its line
-  exactly as written, so a theme's own styling for a marker
+  as written — only the indentation or callout marker that placed it in the note is dropped, because
+  the listing lays those out itself — so a theme's own styling for a marker
   such as `[/]` looks the same in the listing as it does in the note, and a checkbox nested under
   another stays nested; if a filter excludes the parent, it still shows above its matching child,
   dimmed and unclickable, so the child does not lose the line that gives it meaning. Sort by `document`

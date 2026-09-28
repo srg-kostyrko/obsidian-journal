@@ -116,6 +116,17 @@ describe("TaskList", () => {
     expect(screen.getByText("- [/] Ship it 📅 2026-09-25")).toBeTruthy();
   });
 
+  // Hydration reads a task's lines verbatim out of the note, indentation included, so a nested
+  // line arrives carrying the tab it is written with. Handed to the renderer as-is it is an
+  // indented code block, which has no checkbox and no `data-task` for a theme to style.
+  it("strips a nested line's own indentation, so the renderer cannot read it as a code block", () => {
+    harness.render(TaskList, {
+      props: { rows: [row({ depth: 1, markdown: "\t- [ ] Write the changelog entry" })] },
+    });
+    const line = screen.getByRole("listitem").querySelector(".task-listing-row__line");
+    expect(line?.textContent).toBe("- [ ] Write the changelog entry");
+  });
+
   it("indents a nested row by its depth", () => {
     harness.render(TaskList, { props: { rows: [row({ depth: 0 }), row({ depth: 1, markdown: "- [ ] Child" })] } });
     const child = screen.getByText("- [ ] Child").closest("[data-depth]");

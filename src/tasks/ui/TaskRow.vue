@@ -10,6 +10,7 @@ import UiMarkdown from "@/ui/UiMarkdown.vue";
 import { TickService } from "../tick";
 
 import { checkboxTarget } from "./task-row-click";
+import { unwrapLine } from "./unwrap-line";
 
 import type { TaskListingRow } from "../listing";
 
@@ -24,7 +25,7 @@ const workspace = useService(WorkspaceService);
 // behavior against. Its title renders as plain text rather than inventing untested UI for it.
 const markdown = computed(() => {
   const display = props.row.item.display;
-  return display.kind === "line" ? (display.markdown ?? "") : display.title;
+  return display.kind === "line" ? unwrapLine(display.markdown ?? "") : display.title;
 });
 
 // Obsidian renders the row's checkbox itself, inside the markdown, so there is no prop to disable
@@ -80,17 +81,41 @@ function openSource(event: MouseEvent): void {
 </template>
 
 <style scoped>
+/* The block renders inside `.markdown-rendered`, where `ul > li` takes `margin-inline-start: 3ch`
+   (app.css, 1.8.7 through 1.13.x) — a gutter for the list marker. That rule reaches the listing's
+   own <ul>/<li> too, where the row draws no marker and nesting is carried by
+   `--task-listing-depth`, so it is a fixed inset on every row at every depth. Measured in real
+   Obsidian: 26.7px on the row, before the rendered line's own indentation. */
 .task-listing-row {
   display: flex;
-  flex-direction: column;
-  gap: var(--size-4-1);
+  align-items: baseline;
+  gap: var(--size-4-2);
+  margin-inline-start: 0;
   padding-inline-start: calc(var(--task-listing-depth, 0) * var(--size-4-3));
 }
 .task-listing-row[data-context="true"] {
   opacity: 0.6;
 }
+/* Each row is also its own one-item markdown document, so the same 3ch rule lands on the list
+   Obsidian wraps it in. Zero that too, and reserve the gutter here instead: the rendered checkbox
+   is pulled back by `--checkbox-size * -1.5`, so that much start padding lands it exactly on the
+   row's left edge (measured: a 24px pull against 24px of padding). */
+.task-listing-row__line {
+  flex: 1;
+  min-width: 0;
+  padding-inline-start: calc(var(--checkbox-size) * 1.5);
+}
+.task-listing-row__line :deep(ul),
+.task-listing-row__line :deep(ol) {
+  margin-block: 0;
+  padding-inline-start: 0;
+}
+.task-listing-row__line :deep(ul > li),
+.task-listing-row__line :deep(ol > li) {
+  margin-inline-start: 0;
+}
 .task-listing-row__source {
-  align-self: flex-start;
+  flex: none;
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
 }
