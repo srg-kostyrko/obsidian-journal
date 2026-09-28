@@ -74,9 +74,14 @@ function openSource(event: MouseEvent): void {
     <div ref="line" class="task-listing-row__line" @click="onLineClick">
       <UiMarkdown :markdown="markdown" :source-path="row.item.path" />
     </div>
-    <a href="#" class="task-listing-row__source" @click.prevent="openSource" @auxclick.middle.prevent="openSource">{{
-      row.source.label
-    }}</a>
+    <a
+      href="#"
+      class="task-listing-row__source"
+      :title="row.source.label"
+      @click.prevent="openSource"
+      @auxclick.middle.prevent="openSource"
+      v-text="row.source.label"
+    />
   </li>
 </template>
 
@@ -114,8 +119,17 @@ function openSource(event: MouseEvent): void {
 .task-listing-row__line :deep(ol > li) {
   margin-inline-start: 0;
 }
+/* The line's `flex: 1` is a zero basis, so the link's auto basis claims its full content width
+   before the line grows into what is left — measured in a 320px block, a long note name took 288px
+   of it and squeezed the task down to 24. The cap is what bounds that: the source is secondary, so
+   it never takes more than a third of the row and truncates instead. */
 .task-listing-row__source {
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 33%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--font-ui-smaller);
   color: var(--text-muted);
 }

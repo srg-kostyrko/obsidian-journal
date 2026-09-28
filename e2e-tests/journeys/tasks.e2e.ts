@@ -77,13 +77,15 @@ describe("journal-tasks fence", () => {
     // The listing builds asynchronously (TaskIndex.hydrate), so the row count settles after the
     // block first mounts rather than in the same tick as openInReadingMode's resolve.
     // toBeElementsArrayOfSize auto-retries, unlike a one-shot $$().length read.
-    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(4);
+    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
     const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
     expect(texts[0]).toContain("Ship it");
     expect(texts[1]).toContain("Write the spec");
     expect(texts[2]).toContain("Draft the outline");
-    expect(texts[3]).toContain("Raise the blocker");
+    expect(texts[3]).toContain("Groceries run");
+    expect(texts[4]).toContain("Oat milk");
+    expect(texts[5]).toContain("Raise the blocker");
     // The done item ("Buy milk") is excluded by the listing's default status filter (open only,
     // applied because neither this fence nor the journal names a status), not merely absent from the
     // two rows this asserts on by position.
@@ -97,7 +99,7 @@ describe("journal-tasks fence", () => {
   // assertion passes against a code block too: it has to be the rendered control.
   it("renders a nested row as a task line, not as the code block its own indentation would make", async () => {
     await openInReadingMode(DAY_NOTE);
-    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(4);
+    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
     const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
     const nested = texts.findIndex((text) => text.includes("Draft the outline"));
@@ -114,7 +116,7 @@ describe("journal-tasks fence", () => {
   // around a single listing row. `pre` and `blockquote` are the two shapes the row must never take.
   it("renders a row from a callout as a task line, not as the blockquote its marker would make", async () => {
     await openInReadingMode(DAY_NOTE);
-    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(4);
+    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
     const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
     const quoted = texts.findIndex((text) => text.includes("Raise the blocker"));
@@ -123,6 +125,25 @@ describe("journal-tasks fence", () => {
     const row = $$(TASK_ROWS)[quoted];
     await expect(row.$("input[type=checkbox]")).toBeExisting();
     await expect(row.$(".task-listing-row__line blockquote")).not.toBeExisting();
+  });
+
+  // MarkdownRenderService does not await MarkdownRenderer.render, so Obsidian populates the row
+  // after render() has returned — the checkbox a context row has to disable may not exist yet when
+  // onMounted runs. The unit tier cannot see this: its renderer fake inserts the input
+  // synchronously, so the disable always finds one. Only the real renderer settles it.
+  it("disables the checkbox on a context row whose parent the filter excluded", async () => {
+    await openInReadingMode(DAY_NOTE);
+    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
+
+    const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+    const parent = texts.findIndex((text) => text.includes("Groceries run"));
+    expect(parent).toBeGreaterThanOrEqual(0);
+
+    const row = $$(TASK_ROWS)[parent];
+    expect(await row.getAttribute("data-context")).toBe("true");
+    await expect(row.$("input[type=checkbox]")).toBeDisabled();
+    // Its matching child stays interactive — the parent is context, not a blanket freeze.
+    await expect($$(TASK_ROWS)[parent + 1].$("input[type=checkbox]")).toBeEnabled();
   });
 
   it("renders the not-connected message in a note no journal owns", async () => {
@@ -134,7 +155,7 @@ describe("journal-tasks fence", () => {
 
   it("ticking a row writes the status character into the source note, leaving the other line untouched", async () => {
     await openInReadingMode(DAY_NOTE);
-    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(4);
+    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
     const before = await readNote(DAY_NOTE);
 
@@ -183,7 +204,7 @@ describe("journal-tasks fence", () => {
     // After the previous test, "Ship it" and "Buy milk" are both done, leaving "Write the spec" and
     // its nested child open. The checkbox picked below is the first in document order, so it is
     // "Write the spec" — the others are asserted on by the re-hosting tests above.
-    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(3);
+    await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(5);
 
     const before = await readNote(DAY_NOTE);
     const checkbox = $(`${TASK_ROWS} input[type=checkbox]`);
