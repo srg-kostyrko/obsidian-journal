@@ -216,6 +216,7 @@
   ],
   "nav_block_segment_template_required": "Template is required.",
   "nav_block_segment_journal_required": "Select a journal.",
+  "nav_block_segment_font_size_required": "Enter a font size.",
   "nav_block_segment_resolved_preview": "Resolved: {text}",
 
   "command_add": "Add command",

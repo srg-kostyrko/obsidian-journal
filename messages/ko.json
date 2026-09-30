@@ -280,6 +280,7 @@
   ],
   "nav_block_segment_template_required": "템플릿을 입력하세요.",
   "nav_block_segment_journal_required": "저널을 선택하세요.",
+  "nav_block_segment_font_size_required": "글꼴 크기를 입력하세요.",
   "nav_block_segment_resolved_preview": "결과: {text}",
   "command_add": "명령어 추가",
   "command_context_open_note_clarifier": "(열려 있는 노트의 날짜 또는 오늘 날짜를 사용합니다)",

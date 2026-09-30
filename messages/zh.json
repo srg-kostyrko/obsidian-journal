@@ -269,6 +269,7 @@
   ],
   "nav_block_segment_template_required": "模板不能为空。",
   "nav_block_segment_journal_required": "请选择日记。",
+  "nav_block_segment_font_size_required": "请输入字体大小。",
   "nav_block_segment_resolved_preview": "解析结果：{text}",
   "command_add": "添加命令",
   "command_context_open_note_clarifier": "（使用已打开笔记的日期，或今天的日期）",

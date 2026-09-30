@@ -280,6 +280,7 @@
   ],
   "nav_block_segment_template_required": "Vorlage ist erforderlich.",
   "nav_block_segment_journal_required": "Wähle ein Journal aus.",
+  "nav_block_segment_font_size_required": "Gib eine Schriftgröße ein.",
   "nav_block_segment_resolved_preview": "Aufgelöst: {text}",
   "command_add": "Befehl hinzufügen",
   "command_context_open_note_clarifier": "(verwendet das Datum der geöffneten Notiz oder das heutige Datum)",

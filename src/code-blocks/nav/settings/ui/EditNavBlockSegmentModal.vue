@@ -56,8 +56,13 @@ const initial: NavBlockSegment = props.segment ?? {
   addDecorations: false,
 };
 
+// navBlockSegmentSchema reads a stored value it cannot parse as that field's default, so a
+// cleared font size would save as 1; the form requires a number instead.
 const schema = v.pipe(
-  navBlockSegmentSchema,
+  v.object({
+    ...navBlockSegmentSchema.entries,
+    fontSize: v.number(m.nav_block_segment_font_size_required()),
+  }),
   v.forward(
     v.partialCheck(
       [["template"]],
@@ -183,7 +188,10 @@ const onSubmit = handleSubmit((segment) => {
     </UiSettingRow>
 
     <UiSettingRow :name="m.nav_block_segment_field_font_size()">
-      <template #description>{{ m.nav_block_segment_field_font_size_hint() }}</template>
+      <template #description>
+        {{ m.nav_block_segment_field_font_size_hint() }}
+        <span v-for="error of errorBag.fontSize" :key="error" class="nav-form-error">{{ error }}</span>
+      </template>
       <UiNumberInput v-model="fontSize" :min="0.5" :step="0.1" />
     </UiSettingRow>
 

@@ -89,6 +89,16 @@ describe("EditNavBlockSegmentModal", () => {
     expect(screen.getByRole("button", { name: m.nav_block_segment_field_italic(), pressed: true })).toBeTruthy();
   });
 
+  it("does not submit when the font size is cleared", async () => {
+    const { submit } = await mountModal({ segment: buildNavSegment({ template: "x", fontSize: 2 }) });
+    await userEvent.clear(screen.getByRole("spinbutton"));
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+    await waitFor(() => {
+      expect(screen.getByText(m.nav_block_segment_font_size_required())).toBeTruthy();
+    });
+    expect(submit).not.toHaveBeenCalled();
+  });
+
   it("does not submit when link=journal but journal is empty", async () => {
     const { submit } = await mountModal({});
     await userEvent.type(screen.getByLabelText(m.nav_block_segment_field_template()), "x");
