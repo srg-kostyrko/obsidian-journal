@@ -3,7 +3,13 @@ import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 
-import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
+import {
+  journalConfigCollection,
+  journalConfigSchema,
+  journalDefaultsFor,
+  navBlockSchema,
+  navBlockSegmentSchema,
+} from "./config";
 import { buildNavSegment } from "./testing";
 
 import type { JournalWrite } from "./config";
@@ -422,27 +428,67 @@ describe("navBlockSchema", () => {
     expect(parsed.output.lines).toEqual(lines);
   });
 
-  it("rejects unknown link kinds", () => {
+  it("reads a link kind this version does not know as no link, keeping the rest of the segment", () => {
+    const kept = buildNavSegment({ template: "{{date:D}}", fontSize: 3, bold: true, addDecorations: true });
     const value = {
       type: "create" as const,
       decorateWholeBlock: false,
-      lines: [
-        [
-          {
-            template: "",
-            fontSize: 1,
-            bold: false,
-            italic: false,
-            color: { type: "transparent" as const },
-            background: { type: "transparent" as const },
-            link: "nonsense" as unknown as "self",
-            journal: "",
-            addDecorations: false,
-          },
-        ],
-      ],
+      lines: [[{ ...kept, link: "from-a-newer-version" }], [buildNavSegment({ template: "sibling" })]],
     };
-    expect(v.safeParse(navBlockSchema, value).success).toBe(false);
+    const parsed = v.safeParse(navBlockSchema, value);
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.lines[0]?.[0]).toEqual({ ...kept, link: "none" });
+    expect(parsed.output.lines[1]?.[0]?.template).toBe("sibling");
+  });
+
+  // Pins that every field carries its own fallback: repairCollectionEntry only sees path key
+  // "navBlock", so an unguarded field — including one added later — would reset the whole block.
+  it.each(Object.keys(navBlockSegmentSchema.entries))("keeps the block when a segment's %s is invalid", (field) => {
+    const kept = buildNavSegment({ template: "kept", link: "self" });
+    const segment = { ...kept, [field]: Symbol("invalid") };
+    const parsed = v.safeParse(navBlockSchema, { type: "existing", decorateWholeBlock: true, lines: [[segment]] });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect({ ...parsed.output.lines[0]?.[0], [field]: undefined }).toEqual({ ...kept, [field]: undefined });
+    expect(parsed.output.type).toBe("existing");
+    expect(parsed.output.decorateWholeBlock).toBe(true);
+  });
+
+  it.each(Object.keys(navBlockSegmentSchema.entries))("reads a segment missing %s as that field's default", (field) => {
+    const segment = Object.fromEntries(
+      Object.entries(buildNavSegment({ template: "kept" })).filter(([key]) => key !== field),
+    );
+    const parsed = v.safeParse(navBlockSchema, { type: "create", decorateWholeBlock: false, lines: [[segment]] });
+    expect(parsed.success).toBe(true);
+  });
+
+  it.each(Object.keys(navBlockSchema.entries).filter((field) => field !== "lines"))(
+    "keeps the lines when the block's %s is invalid",
+    (field) => {
+      const lines = [[buildNavSegment({ template: "kept" })]];
+      const value = { type: "create", decorateWholeBlock: false, showAdjacent: "desktop", lines, [field]: Symbol("x") };
+      const parsed = v.safeParse(navBlockSchema, value);
+      expect(parsed.success).toBe(true);
+      if (!parsed.success) return;
+      expect(parsed.output.lines).toEqual(lines);
+    },
+  );
+});
+
+describe("journalConfigSchema — a navigation block field this version cannot read", () => {
+  it("keeps the journal's own navigation and interval lines", () => {
+    const defaults = journalDefaultsFor({ type: "week" }, "Weekly");
+    const custom = buildNavSegment({ template: "{{date:[W]ww}}", link: "self", fontSize: 2 });
+    const parsed = v.safeParse(journalConfigSchema, {
+      ...defaults,
+      navBlock: { ...defaults.navBlock, lines: [[{ ...custom, link: "from-a-newer-version" }]] },
+      intervalBlock: { ...defaults.intervalBlock, lines: [[{ ...custom, color: { type: "gradient" } }]] },
+    });
+    expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.navBlock.lines).toEqual([[{ ...custom, link: "none" }]]);
+    expect(parsed.output.intervalBlock.lines).toEqual([[{ ...custom, color: { type: "theme", name: "text-normal" } }]]);
   });
 });
 

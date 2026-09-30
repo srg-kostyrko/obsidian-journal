@@ -105,30 +105,41 @@ const navBlockSegmentLinkSchema = v.union([
   v.picklist(["day", "week", "month", "quarter", "year"]),
 ]);
 
+// A navigation block is not in journalConfigCollection's `nested` map, so repairCollectionEntry
+// sees every failure inside it as path key "navBlock" and substitutes the whole block from the
+// defaults, taking the journal's own lines with it. Each leaf field therefore degrades to its own
+// default instead of failing its parent — optional too, so a field a stored block predates reads
+// as that default rather than as a missing key. The repair is silent: v.fallback clears the
+// issue, so nothing reaches the settings log. Every field added to either schema below needs the
+// same wrapper; config.test.ts fails for one that does not.
+function lenient<TSchema extends v.GenericSchema>(schema: TSchema, fallback: () => v.InferOutput<TSchema>) {
+  return v.optional(v.fallback(schema, fallback), fallback);
+}
+
 export const navBlockSegmentSchema = v.object({
-  template: v.string(),
-  fontSize: v.number(),
-  bold: v.boolean(),
-  italic: v.boolean(),
-  color: colorSchema,
-  background: colorSchema,
-  link: navBlockSegmentLinkSchema,
-  journal: v.string(),
-  // Clearable, so no minLength: a clearable field that fails the parse resets the whole
-  // journal to defaults on reload. Optional so a hand-edited data.json still loads.
-  linkDate: v.optional(v.string(), ""),
-  addDecorations: v.boolean(),
+  template: lenient(v.string(), () => ""),
+  fontSize: lenient(v.number(), () => 1),
+  bold: lenient(v.boolean(), () => false),
+  italic: lenient(v.boolean(), () => false),
+  color: lenient(colorSchema, () => ({ type: "theme" as const, name: "text-normal" })),
+  background: lenient(colorSchema, () => ({ type: "transparent" as const })),
+  // A link kind a newer version added reads as no link, keeping the rest of the segment.
+  link: lenient(navBlockSegmentLinkSchema, () => "none" as const),
+  journal: lenient(v.string(), () => ""),
+  // Clearable, so no minLength: a clearable field that fails the parse would reject the block.
+  linkDate: lenient(v.string(), () => ""),
+  addDecorations: lenient(v.boolean(), () => false),
 });
 
 export const navBlockSchema = v.object({
-  type: v.picklist(["create", "existing"]),
+  type: lenient(v.picklist(["create", "existing"]), () => "create" as const),
+  // Left strict: a `lines` that is not a list of lists holds nothing of the user's to keep, and
+  // the journal's default layout is a better stand-in than an empty block.
   lines: v.array(v.array(navBlockSegmentSchema)),
-  decorateWholeBlock: v.boolean(),
-  // Which devices draw the adjacent periods. Falls back rather than failing: a failure here
-  // carries the path key "navBlock", which repairCollectionEntry substitutes wholesale from the
-  // defaults, taking the journal's own lines with it. Read only by the navigation block — the
-  // interval block has no adjacent periods, the way it has no use for `type` either.
-  showAdjacent: v.optional(v.fallback(v.picklist(["all", "desktop", "mobile", "none"]), "all"), "all"),
+  decorateWholeBlock: lenient(v.boolean(), () => false),
+  // Which devices draw the adjacent periods. Read only by the navigation block — the interval
+  // block has no adjacent periods, the way it has no use for `type` either.
+  showAdjacent: lenient(v.picklist(["all", "desktop", "mobile", "none"]), () => "all" as const),
 });
 
 export type NavBlockSegmentLink = v.InferOutput<typeof navBlockSegmentLinkSchema>;
