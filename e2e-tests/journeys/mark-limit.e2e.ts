@@ -139,10 +139,14 @@ describe("decoration mark limit", () => {
     // moveTo() resolves the badge's centre at call time, so a hover sent while the grid is still
     // laying its marks out lands beside the badge and is simply lost. Re-hover until the popover
     // opens, the way the test above does.
+    // The popover element is rendered before its placement offset is computed, and it stays
+    // `visibility: hidden` until then. Moving the pointer while it is hidden lands on the cell
+    // behind, fires the badge's mouseleave, and unmounts the popover before the pointer can walk
+    // into it. Wait for visible placement, not just DOM existence.
     await browser.waitUntil(
       async () => {
         await badge.moveTo();
-        return popover.isExisting();
+        return popover.isDisplayed();
       },
       { timeoutMsg: "the popover did not open before the pointer moved into it" },
     );

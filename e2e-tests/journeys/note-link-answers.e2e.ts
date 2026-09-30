@@ -40,10 +40,17 @@ async function frontmatterLinksOf(path: string): Promise<string[]> {
 // kind of document-root popup.
 async function pickNoteSuggestion(query: string, name: string): Promise<void> {
   const input = $(".modal-container .setting-item-control input[type='text']");
+  await input.click();
   await input.setValue(query);
   const row = $(`.journal-suggestion-note*=${name}`);
   await row.waitForExist({ timeoutMsg: `"${name}" was never suggested` });
   await row.click();
+  // Under worker focus contention the popup can close without the click registering on the row.
+  // The prompt is optional, so submitting an empty field closes the dialog and writes no property,
+  // which the frontmatter wait then times out on. Wait for the value the row should have set.
+  await browser.waitUntil(async () => (await input.getValue()) === name, {
+    timeoutMsg: `the note field never took the selected value "${name}"`,
+  });
 }
 
 describe("a note link question", () => {
