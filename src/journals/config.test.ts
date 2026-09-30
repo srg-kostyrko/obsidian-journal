@@ -12,7 +12,7 @@ import {
 } from "./config";
 import { buildNavSegment } from "./testing";
 
-import type { JournalWrite } from "./config";
+import type { JournalWrite, NavBlockSegment } from "./config";
 
 describe("journalDefaultsFor", () => {
   it("defaults nameTemplate to {{date}}", () => {
@@ -442,36 +442,80 @@ describe("navBlockSchema", () => {
     expect(parsed.output.lines[1]?.[0]?.template).toBe("sibling");
   });
 
+  // Every field differs from its fallback, so each assertion below sees which one was applied.
+  const custom: NavBlockSegment = {
+    template: "kept",
+    fontSize: 2,
+    bold: true,
+    italic: true,
+    color: { type: "custom", color: "#ff0000" },
+    background: { type: "theme", name: "text-muted" },
+    link: "self",
+    journal: "weekly",
+    linkDate: "+1d",
+    addDecorations: true,
+  };
+  const segmentFallbacks: NavBlockSegment = {
+    template: "",
+    fontSize: 1,
+    bold: false,
+    italic: false,
+    color: { type: "theme", name: "text-normal" },
+    background: { type: "transparent" },
+    link: "none",
+    journal: "",
+    linkDate: "",
+    addDecorations: false,
+  };
+  const blockFallbacks = { type: "create", decorateWholeBlock: false, showAdjacent: "all" };
+
+  it("lists a fallback for every field", () => {
+    expect(Object.keys(segmentFallbacks).toSorted()).toEqual(Object.keys(navBlockSegmentSchema.entries).toSorted());
+    expect(Object.keys(blockFallbacks).toSorted()).toEqual(
+      Object.keys(navBlockSchema.entries)
+        .filter((field) => field !== "lines")
+        .toSorted(),
+    );
+  });
+
   // Pins that every field carries its own fallback: repairCollectionEntry only sees path key
   // "navBlock", so an unguarded field — including one added later — would reset the whole block.
-  it.each(Object.keys(navBlockSegmentSchema.entries))("keeps the block when a segment's %s is invalid", (field) => {
-    const kept = buildNavSegment({ template: "kept", link: "self" });
-    const segment = { ...kept, [field]: Symbol("invalid") };
-    const parsed = v.safeParse(navBlockSchema, { type: "existing", decorateWholeBlock: true, lines: [[segment]] });
-    expect(parsed.success).toBe(true);
-    if (!parsed.success) return;
-    expect({ ...parsed.output.lines[0]?.[0], [field]: undefined }).toEqual({ ...kept, [field]: undefined });
-    expect(parsed.output.type).toBe("existing");
-    expect(parsed.output.decorateWholeBlock).toBe(true);
-  });
+  it.each(Object.entries(segmentFallbacks))(
+    "keeps the block when a segment's %s is invalid, reading it as its fallback",
+    (field, fallback) => {
+      const segment = { ...custom, [field]: Symbol("invalid") };
+      const parsed = v.safeParse(navBlockSchema, { type: "existing", decorateWholeBlock: true, lines: [[segment]] });
+      expect(parsed.success).toBe(true);
+      if (!parsed.success) return;
+      expect(parsed.output.lines[0]?.[0]).toEqual({ ...custom, [field]: fallback });
+      expect(parsed.output.type).toBe("existing");
+      expect(parsed.output.decorateWholeBlock).toBe(true);
+    },
+  );
 
-  it.each(Object.keys(navBlockSegmentSchema.entries))("reads a segment missing %s as that field's default", (field) => {
-    const segment = Object.fromEntries(
-      Object.entries(buildNavSegment({ template: "kept" })).filter(([key]) => key !== field),
-    );
+  it.each(Object.entries(segmentFallbacks))("reads a segment missing %s as its fallback", (field, fallback) => {
+    const segment = Object.fromEntries(Object.entries(custom).filter(([key]) => key !== field));
     const parsed = v.safeParse(navBlockSchema, { type: "create", decorateWholeBlock: false, lines: [[segment]] });
     expect(parsed.success).toBe(true);
+    if (!parsed.success) return;
+    expect(parsed.output.lines[0]?.[0]).toEqual({ ...custom, [field]: fallback });
   });
 
-  it.each(Object.keys(navBlockSchema.entries).filter((field) => field !== "lines"))(
-    "keeps the lines when the block's %s is invalid",
-    (field) => {
-      const lines = [[buildNavSegment({ template: "kept" })]];
-      const value = { type: "create", decorateWholeBlock: false, showAdjacent: "desktop", lines, [field]: Symbol("x") };
+  it.each(Object.entries(blockFallbacks))(
+    "keeps the lines when the block's %s is invalid, reading it as its fallback",
+    (field, fallback) => {
+      const lines = [[custom]];
+      const value = {
+        type: "existing",
+        decorateWholeBlock: true,
+        showAdjacent: "desktop",
+        lines,
+        [field]: Symbol("x"),
+      };
       const parsed = v.safeParse(navBlockSchema, value);
       expect(parsed.success).toBe(true);
       if (!parsed.success) return;
-      expect(parsed.output.lines).toEqual(lines);
+      expect(parsed.output).toEqual({ ...value, [field]: fallback });
     },
   );
 });
