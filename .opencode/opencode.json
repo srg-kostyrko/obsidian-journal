@@ -1,0 +1,79 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": ["CLAUDE.md"],
+  "skills": {
+    "paths": [".claude/skills"]
+  },
+  "agent": {
+    "general-purpose": {
+      "mode": "subagent",
+      "description": "General-purpose helper used by migrated Claude skills (especially docs-audit).",
+      "prompt": "You are a general-purpose helper. Execute the task you are given thoroughly, using the available tools. Prefer reading code and docs over guessing. Report findings concisely."
+    }
+  },
+  "permission": {
+    "read": "allow",
+    "glob": "allow",
+    "grep": "allow",
+    "list": "allow",
+    "edit": "ask",
+    "bash": {
+      "git status*": "allow",
+      "git log*": "allow",
+      "git diff*": "allow",
+      "git grep*": "allow",
+      "git rev-parse*": "allow",
+      "git merge-base*": "allow",
+      "git ls-tree*": "allow",
+      "git fetch*": "allow",
+      "git show*": "allow",
+      "git branch*": "ask",
+      "git switch*": "ask",
+      "git checkout*": "ask",
+      "git add*": "ask",
+      "git commit*": "ask",
+      "git push*": "ask",
+      "git tag*": "ask",
+      "git reset*": "ask",
+      "npm run *": "allow",
+      "npm test*": "allow",
+      "npm ci": "allow",
+      "npm view *": "allow",
+      "npx *": "allow",
+      "gh api *": "allow",
+      "gh issue list*": "allow",
+      "gh issue view*": "allow",
+      "gh pr list*": "allow",
+      "gh pr view*": "allow",
+      "gh release view*": "allow",
+      "gh run list*": "allow",
+      "gh run watch*": "allow",
+      "gh workflow run*": "ask",
+      "gh pr create*": "ask",
+      "gh pr merge*": "ask",
+      "gh release edit*": "ask",
+      "gh release create*": "ask",
+      "curl *": "allow",
+      "grep *": "allow",
+      "find *": "allow",
+      "wc *": "allow",
+      "awk *": "allow",
+      "sed *": "allow",
+      "bash .claude/skills/*": "allow",
+      "bash .opencode/*": "allow",
+      "*": "ask"
+    },
+    "task": "allow",
+    "skill": "allow",
+    "webfetch": "allow",
+    "websearch": "allow",
+    "external_directory": {
+      "/tmp/opencode/**": "allow",
+      "*": "ask"
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "tail_turns": 20
+  }
+}
