@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { decorationConditionSchema } from "./config";
+import { decorationConditionSchema, decorationSchema } from "./config";
 
 // Interval offsets are 1-based in both directions (1 = first day, -1 = last day), so a
 // stored 0 could never match anything. It is coerced rather than rejected, since existing
@@ -77,5 +77,45 @@ describe("has-notelet condition schema", () => {
 
   it("rejects a non-array typeIds", () => {
     expect(() => v.parse(decorationConditionSchema, { type: "has-notelet", typeIds: "nt_a" })).toThrow();
+  });
+});
+
+describe("tasks condition schema", () => {
+  const defaults = {
+    type: "tasks",
+    quantifier: "any",
+    status: "listing",
+    source: "both",
+    filter: { mode: "and", conditions: [] },
+  };
+
+  it("reads a bare tasks condition as the default question", () => {
+    expect(v.parse(decorationConditionSchema, { type: "tasks" })).toEqual(defaults);
+  });
+
+  it("falls back to the listing status for an unknown one", () => {
+    expect(v.parse(decorationConditionSchema, { type: "tasks", status: "weird" })).toEqual(defaults);
+  });
+
+  it("keeps the decoration's other conditions when a tasks status is unknown", () => {
+    const parsed = v.parse(decorationSchema, {
+      mode: "and",
+      styles: [],
+      conditions: [{ type: "has-note" }, { type: "tasks", status: "weird" }],
+    });
+    expect(parsed.conditions).toEqual([{ type: "has-note" }, defaults]);
+  });
+
+  it("strips a status row from the stored filter", () => {
+    const parsed = v.parse(decorationConditionSchema, {
+      type: "tasks",
+      filter: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["open"] }] },
+    });
+    expect(parsed).toEqual(defaults);
+  });
+
+  it("no longer parses the retired task conditions", () => {
+    expect(v.safeParse(decorationConditionSchema, { type: "has-open-task" }).success).toBe(false);
+    expect(v.safeParse(decorationConditionSchema, { type: "all-tasks-completed" }).success).toBe(false);
   });
 });

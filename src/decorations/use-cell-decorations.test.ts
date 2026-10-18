@@ -405,10 +405,10 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(0);
     });
 
-    it("repaints a has-open-task cell when a provider publishes after mount", async () => {
+    it("repaints a tasks cell when a provider publishes after mount", async () => {
       const decoration = buildDecoration({
         mode: "and",
-        conditions: [buildCondition("has-open-task")],
+        conditions: [buildCondition("tasks", { status: "open" })],
         styles: [buildStyle("background")],
       });
       const { harness } = await buildHarness([decoration]);

@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { taskQuestionSchema } from "@/tasks/question";
 
 import { dateConditionSchema } from "./date-condition";
 
@@ -206,8 +207,7 @@ const noteSizeCondition = v.object({
 });
 
 const hasNoteCondition = v.object({ type: v.literal("has-note") });
-const hasOpenTaskCondition = v.object({ type: v.literal("has-open-task") });
-const allTasksCompletedCondition = v.object({ type: v.literal("all-tasks-completed") });
+const tasksCondition = v.object({ type: v.literal("tasks"), ...taskQuestionSchema.entries });
 
 const hasNoteletCondition = v.object({
   type: v.literal("has-notelet"),
@@ -224,8 +224,7 @@ export const decorationConditionSchema = v.union([
   weekdayCondition,
   offsetCondition,
   hasNoteCondition,
-  hasOpenTaskCondition,
-  allTasksCompletedCondition,
+  tasksCondition,
   noteSizeCondition,
   hasNoteletCondition,
 ]);
@@ -251,6 +250,7 @@ export type JournalDecorationDateCondition = v.InferOutput<typeof dateConditionS
 export type JournalDecorationWeekdayCondition = v.InferOutput<typeof weekdayCondition>;
 export type JournalDecorationOffsetCondition = v.InferOutput<typeof offsetCondition>;
 export type JournalDecorationNoteSizeCondition = v.InferOutput<typeof noteSizeCondition>;
+export type JournalDecorationTasksCondition = v.InferOutput<typeof tasksCondition>;
 export type JournalDecorationHasNoteletCondition = v.InferOutput<typeof hasNoteletCondition>;
 
 export const decorationSchema = v.object({

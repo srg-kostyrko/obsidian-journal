@@ -2,15 +2,15 @@ import { match } from "ts-pattern";
 
 import type { AnchorString, Period, PeriodKind } from "@/calendar";
 import { inject } from "@/infrastructure/di";
-import { NoteMetadataService, NoteSizeService } from "@/infrastructure/host";
+import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
 import type { NoteMetadata, NoteSize, VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
-import { TaskIndex } from "@/tasks";
+import { answerTaskQuestion, TaskIndex } from "@/tasks";
+import type { TaskQuestionDependencies } from "@/tasks";
 
 import {
-  allTasksCompleted,
   checkDate,
   checkHasNotelet,
   checkNoteSize,
@@ -19,7 +19,6 @@ import {
   checkTag,
   checkTitle,
   checkWeekday,
-  hasOpenTask,
 } from "./engine-checks";
 
 import type {
@@ -99,6 +98,13 @@ export class DecorationEngine {
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
   readonly #tasks = inject(TaskIndex);
+  readonly #structure = inject(NoteStructureService);
+  readonly #taskDependencies: TaskQuestionDependencies = {
+    journals: this.#journals,
+    index: this.#index,
+    structure: this.#structure,
+    tasks: this.#tasks,
+  };
 
   #matches(
     decoration: JournalDecoration,
@@ -149,11 +155,12 @@ export class DecorationEngine {
       .with({ type: "weekday" }, (c) => checkWeekday(c, period))
       .with({ type: "offset" }, (c) => checkOffset(c, period, journal, this.#cycle))
       .with({ type: "has-note" }, () => metadata().isSome())
-      .with({ type: "has-open-task" }, () =>
-        path().match({ none: () => false, some: (p) => hasOpenTask(this.#tasks.itemsIn(p)) }),
-      )
-      .with({ type: "all-tasks-completed" }, () =>
-        path().match({ none: () => false, some: (p) => allTasksCompleted(this.#tasks.itemsIn(p)) }),
+      .with({ type: "tasks" }, (c) =>
+        answerTaskQuestion(
+          this.#taskDependencies,
+          { journalName: journal.name, anchor: period.anchor.toAnchor(), path: path().getOrUndefined() ?? null },
+          c,
+        ),
       )
       .with({ type: "note-size" }, (c) => size().match({ none: () => false, some: (s) => checkNoteSize(c, s) }))
       .with({ type: "has-notelet" }, (c) =>

@@ -1,4 +1,8 @@
+import * as v from "valibot";
 import { describe, expect, it } from "vitest";
+
+import { journalConfigSchema } from "@/journals/config";
+import { fixedJournal } from "@/journals/testing";
 
 import { runMigrations } from "../migrations";
 import { CURRENT_VERSION } from "../version";
@@ -91,5 +95,24 @@ describe("v6ToV7Migration", () => {
     const value = result.isOk() ? (result.value as { version: number }) : undefined;
     expect(value?.version).toBe(7);
     expect(conditionsOf(value as unknown as Record<string, unknown>)).toEqual([anyOpen]);
+  });
+
+  it("produces conditions the journal config schema parses as tasks conditions", () => {
+    const raw = {
+      version: 6,
+      journals: {
+        daily: {
+          ...fixedJournal("daily", { type: "day" }),
+          decorations: [
+            { mode: "and", styles: [], conditions: [{ type: "has-open-task" }] },
+            { mode: "and", styles: [], conditions: [{ type: "all-tasks-completed" }] },
+          ],
+        },
+      },
+    };
+    const migrated = runMigrations(raw, legacyMigrations, CURRENT_VERSION);
+    const journals = migrated.isOk() ? (migrated.value as { journals: { daily: unknown } }).journals : undefined;
+    const parsed = v.parse(journalConfigSchema, journals?.daily);
+    expect(parsed.decorations.map((d) => d.conditions)).toEqual([[anyOpen], [allDone]]);
   });
 });

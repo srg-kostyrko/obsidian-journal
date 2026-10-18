@@ -63,4 +63,14 @@ describe("defaultCondition", () => {
   it("defaults has-notelet to matching any type", () => {
     expect(defaultCondition("has-notelet")).toEqual({ type: "has-notelet", typeIds: [] });
   });
+
+  it("builds a tasks condition asking whether any item exists in the listing's terms", () => {
+    expect(defaultCondition("tasks")).toEqual({
+      type: "tasks",
+      quantifier: "any",
+      status: "listing",
+      source: "both",
+      filter: { mode: "and", conditions: [] },
+    });
+  });
 });

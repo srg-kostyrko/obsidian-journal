@@ -103,3 +103,15 @@ describe("needsNotes", () => {
     ).toBe(false);
   });
 });
+
+describe("needsNotes for tasks conditions", () => {
+  it("needs notes when the question reads only the period note", () => {
+    const decoration = buildDecoration({ mode: "and", conditions: [buildCondition("tasks", { source: "note" })] });
+    expect(needsNotes(decoration)).toBe(true);
+  });
+
+  it.each(["both", "notelets"] as const)("does not need notes when the source is %s", (source) => {
+    const decoration = buildDecoration({ mode: "and", conditions: [buildCondition("tasks", { source })] });
+    expect(needsNotes(decoration)).toBe(false);
+  });
+});
