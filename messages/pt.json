@@ -949,6 +949,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "Restringir mais",
   "decoration_condition_tasks_narrow_description": "Conta apenas as tarefas que correspondem a estas, além do filtro de tarefas do diário.",
+  "decoration_condition_tasks_narrow_add": "Adicionar condição restritiva",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

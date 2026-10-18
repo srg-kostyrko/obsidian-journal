@@ -949,6 +949,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "Weiter eingrenzen",
   "decoration_condition_tasks_narrow_description": "Zählt nur Aufgaben, die diesen entsprechen, zusätzlich zum Aufgabenfilter des Journals.",
+  "decoration_condition_tasks_narrow_add": "Einschränkende Bedingung hinzufügen",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

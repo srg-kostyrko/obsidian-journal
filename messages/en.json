@@ -885,6 +885,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "Narrow further",
   "decoration_condition_tasks_narrow_description": "Only count tasks matching these, on top of the journal's task filter.",
+  "decoration_condition_tasks_narrow_add": "Add narrowing condition",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

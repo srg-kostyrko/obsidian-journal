@@ -949,6 +949,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "더 좁히기",
   "decoration_condition_tasks_narrow_description": "저널의 작업 필터에 더해, 이 조건에 맞는 작업만 셉니다.",
+  "decoration_condition_tasks_narrow_add": "좁히기 조건 추가",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

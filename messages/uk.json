@@ -808,6 +808,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "Звузити додатково",
   "decoration_condition_tasks_narrow_description": "Враховуються лише завдання, що відповідають цим умовам, окрім фільтра завдань журналу.",
+  "decoration_condition_tasks_narrow_add": "Додати уточнювальну умову",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

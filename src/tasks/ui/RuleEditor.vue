@@ -35,8 +35,9 @@ const props = withDefaults(
     description: string;
     errors?: ReadonlyMap<number, string>;
     showMode?: boolean;
+    addLabel?: string;
   }>(),
-  { errors: undefined, showMode: true },
+  { errors: undefined, showMode: true, addLabel: undefined },
 );
 
 // Keyed by condition object identity, not index: removeCondition splices the array, which would
@@ -88,7 +89,7 @@ function errorsFor(condition: TaskCondition, index: number): string[] {
       </div>
       <div class="tasks-rule-actions">
         <UiButton data-testid="rule-add-condition" @click="addCondition">
-          {{ m.tasks_settings_add_condition() }}
+          {{ addLabel ?? m.tasks_settings_add_condition() }}
         </UiButton>
       </div>
     </div>

@@ -804,6 +804,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "さらに絞り込む",
   "decoration_condition_tasks_narrow_description": "ジャーナルのタスクフィルターに加えて、これらに一致するタスクだけを数えます。",
+  "decoration_condition_tasks_narrow_add": "絞り込み条件を追加",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

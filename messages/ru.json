@@ -955,6 +955,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "Сузить дополнительно",
   "decoration_condition_tasks_narrow_description": "Учитываются только задачи, подходящие под эти условия, помимо фильтра задач журнала.",
+  "decoration_condition_tasks_narrow_add": "Добавить уточняющее условие",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

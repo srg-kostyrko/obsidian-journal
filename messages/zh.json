@@ -804,6 +804,7 @@
   ],
   "decoration_condition_tasks_narrow_label": "进一步收窄",
   "decoration_condition_tasks_narrow_description": "在日记的任务筛选条件之外，仅统计符合这些条件的任务。",
+  "decoration_condition_tasks_narrow_add": "添加限定条件",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],

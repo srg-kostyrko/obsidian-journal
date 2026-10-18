@@ -51,6 +51,7 @@ const errors = computed(() => taskRuleConditionErrors(filter.value));
       :types="['heading', 'tag']"
       :label="m.decoration_condition_tasks_narrow_label()"
       :description="m.decoration_condition_tasks_narrow_description()"
+      :add-label="m.decoration_condition_tasks_narrow_add()"
       :errors="errors"
       show-mode
     />
