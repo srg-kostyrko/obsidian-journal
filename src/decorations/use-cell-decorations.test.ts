@@ -4,9 +4,9 @@ import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "
 import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date } from "@/calendar/testing";
-import { NoteMetadataService, NoteSizeService, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteSizeService } from "@/infrastructure/host/testing";
-import { JournalsIndex } from "@/journals";
+import { NoteMetadataService, NoteSizeService, NoteStructureService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
+import { JournalsIndex, JournalsRepository } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
@@ -41,6 +41,7 @@ function key(period: Period): string {
 interface DecorationsHarness {
   harness: TestHarness;
   size: FakeNoteSizeService;
+  structures: FakeNoteStructureService;
   store: DecorationsStore;
 }
 
@@ -51,12 +52,16 @@ interface DecorationsHarness {
 // shelf-scoped test would otherwise assert an empty cell for the wrong reason.
 async function buildHarnessFrom(journals: Record<string, JournalConfig>): Promise<DecorationsHarness> {
   const size = new FakeNoteSizeService();
+  const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: { work: buildShelf("work") }, decorations: { decorations: [] } },
-    overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
+    overrides: [
+      overrideWith(NoteSizeService, size as unknown as NoteSizeService),
+      overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
+    ],
   });
-  return { harness, size, store: harness.resolve(DecorationsStore) };
+  return { harness, size, structures, store: harness.resolve(DecorationsStore) };
 }
 
 function buildHarness(decorations: JournalConfig["decorations"] = []): Promise<DecorationsHarness> {
@@ -432,6 +437,94 @@ describe("useCellDecorations", () => {
       await nextTick();
 
       expect(slot.value).toHaveLength(1);
+    });
+
+    it("repaints a listing cell when the journal's task filter changes after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("tasks", { status: "listing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness, structures } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "Daily/2026-05-25.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: period.anchor.toAnchor(), path });
+      structures.setStructure(path, {
+        listItems: [{ marker: " ", line: 2, endLine: 2, parent: null }],
+        tags: [],
+        headings: [{ heading: "Work", level: 1, line: 0 }],
+        frontmatterTags: [],
+      });
+      harness.resolve(TaskIndex).publish("test", { path }, [
+        {
+          ...taskItem(path, "todo"),
+          display: { kind: "line", path, line: 2, endLine: 2, parentLine: null, markdown: null },
+        },
+      ]);
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(1);
+
+      const journals = harness.resolve(JournalsRepository);
+      const journal = journals.get("daily");
+      if (journal.isNone()) throw new Error("journal missing");
+      const base = journal.value.tasks;
+      journals.update("daily", {
+        tasks: {
+          ...base,
+          filter: { mode: "and", conditions: [{ type: "heading", condition: "not-under", headings: ["Work"] }] },
+        },
+      });
+      await nextTick();
+      expect(slot.value).toHaveLength(0);
+
+      journals.update("daily", { tasks: { ...base, filter: { mode: "and", conditions: [] } } });
+      await nextTick();
+      expect(slot.value).toHaveLength(1);
+    });
+
+    it("repaints a none cell when a notelet appears and disappears on a day with no note", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("tasks", { quantifier: "none", status: "open", source: "both" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "journals/2026-05-25.standup.md" as VaultPath;
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      const index = harness.resolve(JournalsIndex);
+      index.register({
+        kind: "notelet",
+        journalName: "daily",
+        anchor: period.anchor.toAnchor(),
+        path,
+        typeName: "Standup",
+        typeId: "nt_a" as TypeId,
+      });
+      await nextTick();
+      expect(slot.value).toHaveLength(1);
+
+      index.unregister(path);
+      await nextTick();
+      expect(slot.value).toHaveLength(0);
     });
 
     it("decorates a week cell whose anchor collides with a day cell when its entry is added", async () => {
