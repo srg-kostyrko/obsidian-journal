@@ -74,6 +74,40 @@ describe("EditDecorationModal", () => {
       expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
     });
 
+    it("disables Save while a tasks condition holds an unfinished narrowing row", async () => {
+      // An empty heading row would still replace the journal's own heading conditions, so saving
+      // it would widen the condition past the journal's filter rather than leave it unconstrained.
+      await mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: {
+          mode: "and",
+          conditions: [
+            buildCondition("tasks", {
+              filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: [] }] },
+            }),
+          ],
+          styles: [{ type: "background", color: transparent }],
+        },
+      });
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
+    });
+
+    it("allows Save once the tasks condition's narrowing rows are filled in", async () => {
+      await mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: {
+          mode: "and",
+          conditions: [
+            buildCondition("tasks", {
+              filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Work"] }] },
+            }),
+          ],
+          styles: [{ type: "background", color: transparent }],
+        },
+      });
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(false);
+    });
+
     it("submits when both arrays are populated", async () => {
       const { submit } = await mountModal({ conditionTypes: conditionTypeOptions.day, decoration: minimalDecoration });
       await userEvent.click(screen.getByText(m.common_action_submit()));
