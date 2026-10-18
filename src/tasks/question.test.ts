@@ -21,6 +21,10 @@ describe("taskQuestionSchema", () => {
     expect(v.parse(taskQuestionSchema, { quantifier: "most" }).quantifier).toBe("any");
   });
 
+  it("falls back to both for an unknown source", () => {
+    expect(v.parse(taskQuestionSchema, { source: "elsewhere" }).source).toBe("both");
+  });
+
   it("keeps a known quantifier, status and source", () => {
     expect(v.parse(taskQuestionSchema, { quantifier: "none", status: "done", source: "notelets" })).toMatchObject({
       quantifier: "none",

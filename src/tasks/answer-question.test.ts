@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
@@ -7,6 +7,8 @@ import type { NoteletEntry } from "@/journals";
 import { fixedJournal } from "@/journals/testing";
 
 import { answerTaskQuestion, type TaskQuestionDependencies } from "./answer-question";
+import { buildTaskListing, type TaskListingDependencies } from "./listing";
+import { DEFAULT_TASK_QUERY } from "./query";
 import { buildTaskItem } from "./testing";
 
 import type { TaskCondition, TaskRule } from "./conditions";
@@ -227,6 +229,109 @@ describe("answerTaskQuestion", () => {
 
     it("lets an explicit status replace the journal's", () => {
       expect(ask(only("todo", [status("is", ["done"])]), { status: "open" })).toBe(true);
+    });
+  });
+
+  describe("structure reads", () => {
+    it("never reads the note's structure for a question with no heading or tag condition", () => {
+      const get = vi.fn((_path: VaultPath) => Option.none<NoteStructure>());
+      const dependencies = { ...only("todo"), structure: { get } };
+      expect(ask(dependencies, { status: "open" })).toBe(true);
+      expect(get).not.toHaveBeenCalled();
+    });
+
+    it("reads it when the journal filter holds a heading condition", () => {
+      const get = vi.fn((_path: VaultPath) => Option.none<NoteStructure>());
+      const dependencies = { ...only("todo", [heading("## Tasks")]), structure: { get } };
+      ask(dependencies, { status: "open" });
+      expect(get).toHaveBeenCalledWith(DAY);
+    });
+  });
+
+  describe("agreement with the default listing", () => {
+    const tasksStructure = structureWith([
+      { line: 0, heading: "## Tasks" },
+      { line: 10, heading: "## Habits" },
+    ]);
+
+    async function listed(dependencies: TaskQuestionDependencies, notePath: VaultPath | null): Promise<boolean> {
+      const listing: TaskListingDependencies = {
+        ...dependencies,
+        index: {
+          ...dependencies.index,
+          get: () => Option.fromNullable(notePath),
+          getRange: () => new Map<AnchorString, VaultPath>(),
+          noteletAnchorsInRange: () => [],
+        },
+        cycle: {
+          startOf: () => Option.none(),
+          endOf: () => Option.none(),
+          anchorOf: () => Option.none(),
+          overlapsFrom: () => true,
+        },
+        tasks: { ...dependencies.tasks, hydrate: (items) => Promise.resolve(items) },
+      };
+      const rows = await buildTaskListing(listing, {
+        kind: "period",
+        hostJournal: "Daily",
+        anchor: ANCHOR,
+        journalNames: ["Daily"],
+        query: DEFAULT_TASK_QUERY,
+      });
+      return rows.some((row) => !row.context);
+    }
+
+    const fixtures: [string, TaskQuestionDependencies, VaultPath | null][] = [
+      ["an open item", build({ items: { [DAY]: [task(DAY, 1, "todo")] } }), DAY],
+      ["only a done item", build({ items: { [DAY]: [task(DAY, 1, "done")] } }), DAY],
+      [
+        "an open item outside the journal's heading filter",
+        build({
+          journalFilter: [heading("## Tasks")],
+          structures: { [DAY]: tasksStructure },
+          items: { [DAY]: [task(DAY, 12, "todo")] },
+        }),
+        DAY,
+      ],
+      [
+        "an open item under the journal's heading filter",
+        build({
+          journalFilter: [heading("## Tasks")],
+          structures: { [DAY]: tasksStructure },
+          items: { [DAY]: [task(DAY, 2, "todo")] },
+        }),
+        DAY,
+      ],
+      [
+        "an open item only in a notelet",
+        build({ notelets: [NOTELET], items: { [DAY]: [task(DAY, 1, "done")], [NOTELET]: [task(NOTELET, 1, "todo")] } }),
+        DAY,
+      ],
+      [
+        "an open item only in a notelet and no note",
+        build({ notelets: [NOTELET], items: { [NOTELET]: [task(NOTELET, 1, "todo")] } }),
+        null,
+      ],
+      [
+        "an open item in a sibling note the day does not own",
+        build({
+          items: { ["Daily/2026-09-23.md" as VaultPath]: [task("Daily/2026-09-23.md" as VaultPath, 1, "todo")] },
+        }),
+        DAY,
+      ],
+      ["an empty note", build({ items: { [DAY]: [] } }), DAY],
+      ["no note at all", build({}), null],
+    ];
+
+    it.each(fixtures)("lights exactly when the listing is non-empty: %s", async (_name, dependencies, notePath) => {
+      const answer = ask(dependencies, { quantifier: "any", status: "listing", source: "both" }, notePath);
+      expect(answer).toBe(await listed(dependencies, notePath));
+    });
+
+    it("covers both outcomes", async () => {
+      const answers = await Promise.all(fixtures.map(([, dependencies, notePath]) => listed(dependencies, notePath)));
+      expect(answers).toContain(true);
+      expect(answers).toContain(false);
     });
   });
 });
