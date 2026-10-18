@@ -104,8 +104,9 @@ const written = await journals.existingNotes("Work Daily", { from: "2026-01-01",
 const current = await journals.journalOf(this.app.workspace.getActiveFile());
 if (current) console.log(current.journal, current.date);
 
-// React to changes.
-const off = journals.on("noteAdded", ({ journal, date, path }) => {
+// React to a note Journals just created on this device — see Events before writing in a handler.
+const off = journals.on("noteAdded", ({ journal, date, path, reason }) => {
+  if (reason !== "created") return;
   /* … */
 });
 
@@ -411,14 +412,74 @@ this.register(
 ```
 
 `on` returns its unsubscribe function, so it hands straight to `this.register`.
+Every event is listed under [Events](#events).
+
+## Events
 
 Available events: `journalCreated`, `journalRenamed`, `journalDeleted`,
 `noteAdded`, `noteRemoved`, `noteletAdded`, `noteletRemoved`. Note and notelet
 events carry `path` rather than a `TFile`, because on removal the file is
-already gone. `noteAdded` and `noteletAdded` for a note Journals creates fire as
-soon as it is written, possibly before Obsidian's metadata cache has parsed it —
-if the handler needs the note's content, read the file itself (`vault.read`)
-rather than `metadataCache.getFileCache`.
+already gone.
+
+**`noteAdded` means "entered the index", not "was created".** It fires for every
+note Journals starts tracking and every time a tracked note's entry is replaced,
+so a handler that treats it as creation will act on notes that have existed for
+years. Each add and remove event says why it fired:
+
+| `reason`    | on            | fires when                                                                                                                                                         |
+| ----------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `indexed`   | added         | a vault walk found the note: at startup, once per existing note, and after a journal is created or settings arrive by sync, for the notes those make newly visible |
+| `created`   | added         | Journals created the file on this device — `ensureNote`, `createNotelet`, a click in the calendar                                                                  |
+| `appeared`  | added         | the note entered the index from a live vault event — see below                                                                                                     |
+| `changed`   | added/removed | a tracked frontmatter field changed; a re-dated note fires `noteRemoved` then `noteAdded`, both `changed`                                                          |
+| `moved`     | added/removed | the note was renamed or moved: `noteRemoved` for the old path, then `noteAdded` for the new one                                                                    |
+| `deleted`   | removed       | the file was deleted                                                                                                                                               |
+| `unindexed` | removed       | the file is still there but no longer a journal note — its claim was removed or no longer parses                                                                   |
+
+`appeared` covers everything Journals did not create itself, because from inside
+Obsidian these look the same: a note made by hand or by another plugin, a note
+that arrived by sync from another device, and an existing file that just gained a
+journal claim — including one `ensureNote` claimed rather than created
+(`created: false` in its result). A note Journals creates is `created` on the
+device that created it and `appeared` on every other device it syncs to.
+
+Both reason types are open: new reasons are an additive change, so handle the
+default case rather than switching exhaustively.
+
+`noteAdded` also carries `canonical`. It is `false` for a note that shares its
+date with another note already owning that date — a sync-conflict copy, usually.
+Navigation, `notesFor` and the calendar resolve the date to the other note. A
+notelet never competes for a date, so `noteletAdded` always reports `true`.
+
+### Writing into a note from a handler
+
+- **Never write on `indexed`.** It arrives once per existing note at startup, and
+  whether a handler sees that burst depends on when it subscribed — so code that
+  writes on it writes into historical notes, and only sometimes. Filter on the
+  reason; there is no need to race readiness.
+- **Make the handler idempotent.** Read the note first and do nothing if your own
+  output is already there. `appeared` fires on every device a note syncs to, so
+  two devices running your plugin both see it — and only content your handler can
+  recognize in the note itself survives that.
+- **Writing only on `created` is single-writer**: it fires on exactly one device,
+  the one where Journals created the note. The cost is that it never fires for a
+  note created outside Journals — by hand, by a template plugin, or by Obsidian's
+  own Daily notes — so say so in your own documentation if you rely on it. Stay
+  idempotent anyway: two devices creating the same date's note at once both see
+  `created`, and the sync conflict that follows leaves one of them
+  `canonical: false`.
+- **The claim is written last.** When Journals creates a note it creates the file
+  empty, writes the rendered template body, and only then writes the frontmatter
+  claim — so a note that reports `created` already has its whole body, and there
+  is nothing to poll for. That holds for notes Journals creates; a note that
+  `appeared` was written by something else, on its own schedule.
+- **Read the content from the file.** `noteAdded` for a note Journals creates
+  fires as soon as it is written, possibly before Obsidian's metadata cache has
+  parsed it — read the file itself (`vault.read`) rather than
+  `metadataCache.getFileCache`.
+- **Take the date from the event, or from `journalOf`.** The frontmatter field a
+  journal stores its date in is configurable per journal, so a hardcoded
+  `journal-date` finds nothing in a vault where someone renamed it.
 
 ## `path` is for display, not for writing
 

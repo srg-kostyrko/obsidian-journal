@@ -1,3 +1,4 @@
+import { TFile } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
 
 import type { AnchorString } from "@/calendar";
@@ -21,7 +22,7 @@ import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { testContainer } from "@/testing";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsApiService } from "./journals-api";
 import { apiModule } from "./module";
@@ -1469,7 +1470,7 @@ describe("JournalsApiService events", () => {
 
   it("reports an added note by date", async () => {
     const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
-    const seen: { journal: string; date: string; path: string }[] = [];
+    const seen: { journal: string; date: string; path: string; reason: string; canonical: boolean }[] = [];
     api.on("noteAdded", (event) => {
       seen.push(event);
     });
@@ -1480,7 +1481,9 @@ describe("JournalsApiService events", () => {
       path: "Journal/2026-08-18.md" as VaultPath,
     });
 
-    expect(seen).toEqual([{ journal: "daily", date: "2026-08-18", path: "Journal/2026-08-18.md" }]);
+    expect(seen).toEqual([
+      { journal: "daily", date: "2026-08-18", path: "Journal/2026-08-18.md", reason: "appeared", canonical: true },
+    ]);
   });
 
   it("reports a removed note", async () => {
@@ -1527,7 +1530,8 @@ describe("JournalsApiService events", () => {
         },
       ),
     });
-    const seen: { journal: string; date: string; type: string; path: string }[] = [];
+    const seen: { journal: string; date: string; type: string; path: string; reason: string; canonical: boolean }[] =
+      [];
     api.on("noteletAdded", (event) => {
       seen.push(event);
     });
@@ -1542,7 +1546,16 @@ describe("JournalsApiService events", () => {
       counter: 1,
     });
 
-    expect(seen).toEqual([{ journal: "weekly", date: "2026-08-17", type: "Meeting", path: "Journal/Meeting 1.md" }]);
+    expect(seen).toEqual([
+      {
+        journal: "weekly",
+        date: "2026-08-17",
+        type: "Meeting",
+        path: "Journal/Meeting 1.md",
+        reason: "appeared",
+        canonical: true,
+      },
+    ]);
   });
 
   it("reports a removed notelet", async () => {
@@ -1647,6 +1660,164 @@ describe("JournalsApiService events", () => {
     expect(notesRemoved).toEqual(["Journal/2026-08-17.md"]);
     expect(noteletsAdded).toEqual(["Journal/Meeting 1.md"]);
     expect(noteletsRemoved).toEqual(["Journal/Meeting 1.md"]);
+  });
+});
+
+function claim(date: string) {
+  return { journal: "daily", "journal-date": date };
+}
+
+async function bootApi(seed?: (host: TestHarness["host"]) => void) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    data: {
+      journals: {
+        daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_meeting: meeting }, prompts: [mood] }),
+      },
+      shelves: {},
+    },
+  });
+  const api = harness.resolve(JournalsApiService);
+  const added: { path: string; reason: string; canonical: boolean }[] = [];
+  const removed: { path: string; reason: string }[] = [];
+  const noteletsAdded: { path: string; reason: string; canonical: boolean }[] = [];
+  api.on("noteAdded", ({ path, reason, canonical }) => {
+    added.push({ path, reason, canonical });
+  });
+  api.on("noteRemoved", ({ path, reason }) => {
+    removed.push({ path, reason });
+  });
+  api.on("noteletAdded", ({ path, reason, canonical }) => {
+    noteletsAdded.push({ path, reason, canonical });
+  });
+  seed?.(harness.host);
+  await harness.resolve(VaultSubscriptionService).initialize();
+  return { harness, api, added, removed, noteletsAdded };
+}
+
+describe("JournalsApiService event reasons", () => {
+  it("marks every note the startup walk finds as indexed", async () => {
+    const { added } = await bootApi((host) => {
+      host.putFile("D/2026-08-17.md", "", claim("2026-08-17"));
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+
+    expect(added).toEqual([
+      { path: "D/2026-08-17.md", reason: "indexed", canonical: true },
+      { path: "D/2026-08-18.md", reason: "indexed", canonical: true },
+    ]);
+  });
+
+  it("marks a note that shows up after startup as appeared", async () => {
+    const { harness, added } = await bootApi();
+
+    harness.host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    harness.host.emitMetadata("D/2026-08-18.md");
+
+    expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "appeared", canonical: true }]);
+  });
+
+  it("marks a note Journals creates as created", async () => {
+    const { api, added } = await bootApi();
+
+    const { note } = await api.ensureNote("daily", "2026-08-18", { prompt: false, confirm: false });
+
+    expect(added).toEqual([{ path: note.path, reason: "created", canonical: true }]);
+  });
+
+  it("marks an existing file Journals claims as appeared, not created", async () => {
+    const { harness, api, added } = await bootApi();
+    const [planned] = await api.notesFor("daily", "2026-08-18");
+    if (planned?.path == null) throw new Error("no planned path");
+    harness.host.putFile(planned.path, "my own words");
+
+    const { created } = await api.ensureNote("daily", "2026-08-18", { prompt: false, confirm: false });
+
+    expect(created).toBe(false);
+    expect(added).toEqual([{ path: planned.path, reason: "appeared", canonical: true }]);
+  });
+
+  it("marks a re-dated note's remove and add as changed", async () => {
+    const { harness, added, removed } = await bootApi((host) => {
+      host.putFile("D/note.md", "", claim("2026-08-17"));
+    });
+    added.length = 0;
+
+    harness.host.putFile("D/note.md", "", claim("2026-08-18"));
+    harness.host.emitMetadata("D/note.md");
+
+    expect(removed).toEqual([{ path: "D/note.md", reason: "changed" }]);
+    expect(added).toEqual([{ path: "D/note.md", reason: "changed", canonical: true }]);
+  });
+
+  it("marks an edit to a tracked field as changed, with nothing removed", async () => {
+    const { harness, added, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", { ...claim("2026-08-18"), mood: "calm" });
+    });
+    added.length = 0;
+
+    harness.host.putFile("D/2026-08-18.md", "", { ...claim("2026-08-18"), mood: "tired" });
+    harness.host.emitMetadata("D/2026-08-18.md");
+
+    expect(removed).toEqual([]);
+    expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "changed", canonical: true }]);
+  });
+
+  it("marks a rename's remove and add as moved", async () => {
+    const { harness, added, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+    added.length = 0;
+    const file = harness.host.app.vault.getAbstractFileByPath("D/2026-08-18.md");
+    if (!(file instanceof TFile)) throw new Error("no file");
+
+    await harness.host.app.vault.rename(file, "D/renamed.md");
+
+    expect(removed).toEqual([{ path: "D/2026-08-18.md", reason: "moved" }]);
+    expect(added).toEqual([{ path: "D/renamed.md", reason: "moved", canonical: true }]);
+  });
+
+  it("marks a deleted note's removal as deleted", async () => {
+    const { harness, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+    const file = harness.host.app.vault.getAbstractFileByPath("D/2026-08-18.md");
+    if (!(file instanceof TFile)) throw new Error("no file");
+
+    await harness.host.app.fileManager.trashFile(file);
+
+    expect(removed).toEqual([{ path: "D/2026-08-18.md", reason: "deleted" }]);
+  });
+
+  it("marks a note that loses its claim as unindexed", async () => {
+    const { harness, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+
+    harness.host.putFile("D/2026-08-18.md", "", {});
+    harness.host.emitMetadata("D/2026-08-18.md");
+
+    expect(removed).toEqual([{ path: "D/2026-08-18.md", reason: "unindexed" }]);
+  });
+
+  it("marks a second note for an occupied date as not canonical", async () => {
+    const { harness, added } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+    added.length = 0;
+
+    harness.host.putFile("D/2026-08-18 (conflict).md", "", claim("2026-08-18"));
+    harness.host.emitMetadata("D/2026-08-18 (conflict).md");
+
+    expect(added).toEqual([{ path: "D/2026-08-18 (conflict).md", reason: "appeared", canonical: false }]);
+  });
+
+  it("marks a notelet Journals creates as created", async () => {
+    const { api, noteletsAdded } = await bootApi();
+
+    const notelet = await api.createNotelet("daily", "2026-08-18", "Meeting", { prompt: false, confirm: false });
+
+    expect(noteletsAdded).toEqual([{ path: notelet.path, reason: "created", canonical: true }]);
   });
 });
 

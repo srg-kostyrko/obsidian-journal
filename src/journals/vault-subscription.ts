@@ -13,7 +13,7 @@ import { JournalsIndex } from "./journals-index";
 import { JournalsRepository } from "./repository";
 import { JournalsEventsToken } from "./tokens";
 
-import type { IndexedNote } from "./types";
+import type { EntryOrigin, IndexedNote } from "./types";
 
 export class VaultSubscriptionService {
   readonly #notes = inject(NotesService);
@@ -31,7 +31,7 @@ export class VaultSubscriptionService {
 
   #rebuild(): void {
     for (const path of this.#notes.allMarkdownNotes()) {
-      this.#scan(path, { reconcileCustom: false });
+      this.#scan(path, { reconcileCustom: false, origin: "walk" });
     }
     this.#reconcileCustomJournals();
   }
@@ -61,7 +61,7 @@ export class VaultSubscriptionService {
     return this.#notes.allMarkdownNotes().every((path) => this.#metadata.get(path).isSome());
   }
 
-  #scan(path: VaultPath, options: { reconcileCustom: boolean }): void {
+  #scan(path: VaultPath, options: { reconcileCustom: boolean; origin: EntryOrigin }): void {
     const fm = this.#readFrontmatter(path);
     if (!fm) {
       this.#index.unregister(path);
@@ -73,7 +73,7 @@ export class VaultSubscriptionService {
       this.#logger.debug("frontmatter not parseable", { path });
       return;
     }
-    const outcome = this.#index.register(entry.value);
+    const outcome = this.#index.register(entry.value, options.origin);
     if (outcome === "collision") {
       this.#logger.warn("note shares an anchor with another note; not the canonical entry", { path });
     }
@@ -123,9 +123,9 @@ export class VaultSubscriptionService {
 
   initialize(): AsyncResult<void, never> {
     this.#unsubscribes.push(
-      this.#notes.events.on("metadata-changed", (path) => this.#scan(path, { reconcileCustom: true })),
+      this.#notes.events.on("metadata-changed", (path) => this.#scan(path, { reconcileCustom: true, origin: "live" })),
       this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
-      this.#notes.events.on("deleted", (path) => this.#index.unregister(path)),
+      this.#notes.events.on("deleted", (path) => this.#index.unregister(path, "deleted")),
       // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete
       // mode), so no vault event clears their index entries — drop them by journal name here.
       this.#journalEvents.on("deleted", (journalName) => this.#index.clearJournal(journalName)),

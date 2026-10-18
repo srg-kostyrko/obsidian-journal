@@ -59,7 +59,21 @@ describe("JournalsIndex", () => {
       const captured = capture(index);
       const dailyEntry = entry("daily", "2022-01-01", "Daily/2022-01-01.md");
       index.register(dailyEntry);
-      expect(captured.entryChanged).toEqual([{ entry: dailyEntry, kind: "added" }]);
+      expect(captured.entryChanged).toEqual([
+        { entry: dailyEntry, kind: "added", reason: "appeared", canonical: true },
+      ]);
+    });
+
+    it("reports a collision loser as not canonical, and keeps a renamed loser that way", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      const captured = capture(index);
+      index.register(entry("daily", "2022-01-01", "conflict.md"));
+      index.transferPath(p("conflict.md"), p("conflict-renamed.md"));
+      expect(captured.entryChanged.filter((event) => event.kind === "added")).toMatchObject([
+        { canonical: false, reason: "appeared" },
+        { canonical: false, reason: "moved" },
+      ]);
     });
 
     it("identical re-registration emits nothing", () => {
@@ -101,7 +115,7 @@ describe("JournalsIndex", () => {
       const result = index.entryByPath(p(path));
       assert(result.isSome());
       expect(result.value.answers).toEqual({ mood: "sad" });
-      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added" }]);
+      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added", reason: "changed", canonical: true }]);
     });
 
     it("a payload-only change announces the new entry without removing the old", () => {
@@ -111,7 +125,7 @@ describe("JournalsIndex", () => {
       const captured = capture(index);
       const updated: JournalEntry = { ...entry("custom", "2022-01-01", path), endDate: a("2022-01-21") };
       index.register(updated);
-      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added" }]);
+      expect(captured.entryChanged).toEqual([{ entry: updated, kind: "added", reason: "changed", canonical: true }]);
     });
 
     it("a payload-only change marks the journal dirty", async () => {
@@ -142,8 +156,8 @@ describe("JournalsIndex", () => {
       const captured = capture(index);
       index.register(newEntry);
       expect(captured.entryChanged).toEqual([
-        { entry: oldEntry, kind: "removed" },
-        { entry: newEntry, kind: "added" },
+        { entry: oldEntry, kind: "removed", reason: "changed" },
+        { entry: newEntry, kind: "added", reason: "changed", canonical: true },
       ]);
     });
 
@@ -164,8 +178,8 @@ describe("JournalsIndex", () => {
       const captured = capture(index);
       index.register(newEntry);
       expect(captured.entryChanged).toEqual([
-        { entry: oldEntry, kind: "removed" },
-        { entry: newEntry, kind: "added" },
+        { entry: oldEntry, kind: "removed", reason: "changed" },
+        { entry: newEntry, kind: "added", reason: "changed", canonical: true },
       ]);
     });
 
@@ -239,7 +253,7 @@ describe("JournalsIndex", () => {
       index.register(dailyEntry);
       const events = capture(index);
       index.unregister(p("Daily/2022-01-01.md"));
-      expect(events.entryChanged).toEqual([{ entry: dailyEntry, kind: "removed" }]);
+      expect(events.entryChanged).toEqual([{ entry: dailyEntry, kind: "removed", reason: "unindexed" }]);
     });
 
     it("is a no-op when path is unknown", () => {
@@ -294,8 +308,8 @@ describe("JournalsIndex", () => {
       index.transferPath(p("old.md"), p("new.md"));
       const newEntry = entry("daily", "2022-01-01", "new.md");
       expect(events.entryChanged).toEqual([
-        { entry: oldEntry, kind: "removed" },
-        { entry: newEntry, kind: "added" },
+        { entry: oldEntry, kind: "removed", reason: "moved" },
+        { entry: newEntry, kind: "added", reason: "moved", canonical: true },
       ]);
     });
 

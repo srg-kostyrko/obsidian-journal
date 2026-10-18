@@ -172,14 +172,35 @@ export interface JournalsApiError extends Error {
   readonly issues?: readonly AnswerIssue[];
 }
 
+/** Why an entry entered the index. Open on purpose: new reasons are additive, so handle the default case. */
+export type AddedReason = "indexed" | "created" | "appeared" | "changed" | "moved" | (string & {});
+
+/** Why an entry left the index. Open on purpose, like `AddedReason`. */
+export type RemovedReason = "deleted" | "moved" | "changed" | "unindexed" | (string & {});
+
 export interface JournalsApiEvents {
   journalCreated: (event: { journal: string }) => void;
   journalRenamed: (event: { from: string; to: string }) => void;
   journalDeleted: (event: { journal: string }) => void;
-  noteAdded: (event: { journal: string; date: string; path: string }) => void;
-  noteRemoved: (event: { journal: string; date: string; path: string }) => void;
-  noteletAdded: (event: { journal: string; date: string; type: string; path: string }) => void;
-  noteletRemoved: (event: { journal: string; date: string; type: string; path: string }) => void;
+  noteAdded: (event: {
+    journal: string;
+    date: string;
+    path: string;
+    reason: AddedReason;
+    /** False for a note sharing its date with the note that owns it, such as a sync-conflict copy. */
+    canonical: boolean;
+  }) => void;
+  noteRemoved: (event: { journal: string; date: string; path: string; reason: RemovedReason }) => void;
+  noteletAdded: (event: {
+    journal: string;
+    date: string;
+    type: string;
+    path: string;
+    reason: AddedReason;
+    /** Always true: notelets do not compete for a date. */
+    canonical: boolean;
+  }) => void;
+  noteletRemoved: (event: { journal: string; date: string; type: string; path: string; reason: RemovedReason }) => void;
 }
 
 export interface JournalsApi {

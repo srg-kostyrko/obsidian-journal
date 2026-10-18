@@ -25,7 +25,7 @@ import { GatherPromptAnswersFlow } from "../prompts/flows/gather-prompt-answers.
 import { promptsInPath } from "../prompts/prompts-in-path";
 import { unattendedOutcome } from "../prompts/unattended-rule";
 import { JournalsRepository } from "../repository";
-import { isNotelet, type JournalMetadata } from "../types";
+import { isNotelet, type EntryOrigin, type JournalMetadata } from "../types";
 
 import {
   AnchorOccupiedError,
@@ -92,7 +92,11 @@ export class NoteCreationService {
   // The index hears about a note only when Obsidian's metadata cache re-parses it, a moment after
   // this write; a second call arriving in between would find no note and create another. The entry
   // is registered from the exact frontmatter written, so the later metadata event matches it.
-  #writeClaim(path: VaultPath, mutator: (fm: Record<string, unknown>) => void): AsyncResult<void, NoteCreationError> {
+  #writeClaim(
+    path: VaultPath,
+    mutator: (fm: Record<string, unknown>) => void,
+    origin: EntryOrigin = "live",
+  ): AsyncResult<void, NoteCreationError> {
     let written: Record<string, unknown> | undefined;
     return this.#notes
       .updateFrontmatter(path, (fm) => {
@@ -100,13 +104,13 @@ export class NoteCreationService {
         written = { ...fm };
       })
       .map(() => {
-        if (written !== undefined) this.#registerWritten(path, written);
+        if (written !== undefined) this.#registerWritten(path, written, origin);
       });
   }
 
-  #registerWritten(path: VaultPath, frontmatter: Record<string, unknown>): void {
+  #registerWritten(path: VaultPath, frontmatter: Record<string, unknown>, origin: EntryOrigin = "live"): void {
     const entry = this.#frontmatter.parseEntry(path, frontmatter);
-    if (entry.isSome()) this.#index.register(entry.value);
+    if (entry.isSome()) this.#index.register(entry.value, origin);
   }
 
   // Whether a file already at the journal's derived path is THIS journal's own note rather
@@ -299,7 +303,7 @@ export class NoteCreationService {
       if (content !== "") {
         yield* this.#notes.write(path, content).tapErr(() => this.#guard.release(path));
       }
-      yield* this.#writeClaim(path, mutator).tapErr(() => this.#guard.release(path));
+      yield* this.#writeClaim(path, mutator, "created").tapErr(() => this.#guard.release(path));
       return { path, created: true as const };
     });
   }

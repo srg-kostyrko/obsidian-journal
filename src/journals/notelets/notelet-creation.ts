@@ -91,7 +91,7 @@ export class NoteletCreationService {
       .map(() => {
         if (written === undefined) return;
         const entry = this.#frontmatter.parseEntry(path, written);
-        if (entry.isSome()) this.#index.register(entry.value);
+        if (entry.isSome()) this.#index.register(entry.value, "created");
       });
   }
 

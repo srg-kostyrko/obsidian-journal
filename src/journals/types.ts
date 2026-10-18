@@ -50,8 +50,18 @@ export function periodEntryOf(entry: IndexedNote): Option<JournalEntry> {
   return isNotelet(entry) ? Option.none() : Option.some(entry);
 }
 
+/** Where a registration comes from; the index turns it into the added event's reason. */
+export type EntryOrigin = "walk" | "live" | "created" | "preview";
+
+export type EntryAddedReason = "indexed" | "created" | "appeared" | "changed" | "moved" | "preview";
+export type EntryRemovedReason = "deleted" | "moved" | "changed" | "unindexed" | "preview";
+
+export type EntryChangedEvent =
+  | { entry: IndexedNote; kind: "added"; reason: EntryAddedReason; canonical: boolean }
+  | { entry: IndexedNote; kind: "removed"; reason: EntryRemovedReason };
+
 export interface JournalsIndexEvents {
-  entryChanged: (event: { entry: IndexedNote; kind: "added" | "removed" }) => void;
+  entryChanged: (event: EntryChangedEvent) => void;
   journalDirty: (event: { journalName: string }) => void;
 }
 
