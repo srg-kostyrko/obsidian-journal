@@ -180,7 +180,7 @@ export function expectBackgroundCleared(cell: CellLocator, hex: string): Promise
   );
 }
 
-// The title / tag / property / open-task / all-tasks-completed conditions all render a
+// The title / tag / property / tasks conditions all render a
 // top-left corner, so it is the single handle the live-edit tests watch: present once an
 // edit makes the condition match, gone once the match is removed. waitForExist polls both
 // directions off the event-driven re-eval (no remount), which is the seam under test.
@@ -250,13 +250,13 @@ export function assertDecorationMatrix(surface: CalendarSurface): void {
 
     it("decorates the week cell when its note has an open task", async () => {
       await surface.periodCell("week-number-cell").$(".decoration-corner.top-left").waitForExist({
-        timeoutMsg: "has-open-task decoration did not render on the week cell",
+        timeoutMsg: "tasks decoration (open) did not render on the week cell",
       });
     });
 
     it("decorates the month header when its note's tasks are all completed", async () => {
       await surface.periodCell("header-month").$(".decoration-corner.top-left").waitForExist({
-        timeoutMsg: "all-tasks-completed decoration did not render on the month header",
+        timeoutMsg: "tasks decoration (all done) did not render on the month header",
       });
     });
 
