@@ -611,11 +611,12 @@ export default [
     },
   },
   {
-    files: ["wdio.conf.mts", "e2e-tests/support/vault.ts"],
+    files: ["wdio.conf.mts", "e2e-tests/support/vault.ts", "e2e-tests/journeys/mark-limit.e2e.ts"],
     rules: {
       // The e2e failure dump is a console artifact by design: the runner writes the plugin's
       // log trail to its own stdout, and the vault helpers mark the renderer console so a
-      // harness action and the plugin's reaction to it read as one ordered story.
+      // harness action and the plugin's reaction to it read as one ordered story. mark-limit
+      // records its pointer trail there for a nightly-only failure.
       "no-console": "off",
     },
   },
