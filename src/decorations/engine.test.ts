@@ -14,7 +14,7 @@ import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { TaskIndex } from "@/tasks";
 import type { TaskItem, TaskQuestion, TaskStatus } from "@/tasks";
-import type { TaskRule } from "@/tasks/conditions";
+import type { TaskCondition, TaskRule } from "@/tasks/conditions";
 import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
@@ -100,6 +100,7 @@ async function evaluateTaskCondition(
     noteletItems?: readonly TaskStatus[];
     journalFilter?: TaskRule;
     structure?: NoteStructure;
+    observe?: (structures: FakeNoteStructureService) => void;
   },
 ): Promise<Map<string, unknown>> {
   const decoration = buildDecoration({
@@ -123,6 +124,7 @@ async function evaluateTaskCondition(
     index.register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
   }
   if (options.structure) structures.setStructure(NOTE_PATH, options.structure);
+  options.observe?.(structures);
   if (options.items) {
     harness.resolve(TaskIndex).publish(
       "test",
@@ -580,6 +582,48 @@ describe("DecorationEngine", () => {
           );
           expect(result.size).toBe(1);
         });
+      });
+
+      it("never reads the note's structure for a question with no heading or tag condition", async () => {
+        const reads: string[] = [];
+        await evaluateTaskCondition(
+          { status: "open" },
+          {
+            registerNote: true,
+            items: ["todo"],
+            observe: (structures) => {
+              const original = structures.get.bind(structures);
+              vi.spyOn(structures, "get").mockImplementation((path) => {
+                reads.push(path);
+                return original(path);
+              });
+            },
+          },
+        );
+        expect(reads).toEqual([]);
+      });
+
+      it("reads the note's structure once for two conditions on the same cell", async () => {
+        const reads: string[] = [];
+        const heading: TaskCondition = { type: "heading", condition: "under", headings: ["Home"] };
+        await evaluateTaskCondition(
+          [
+            { status: "open", filter: { mode: "and", conditions: [heading] } },
+            { quantifier: "none", status: "done", filter: { mode: "and", conditions: [heading] } },
+          ],
+          {
+            registerNote: true,
+            items: ["todo"],
+            observe: (structures) => {
+              const original = structures.get.bind(structures);
+              vi.spyOn(structures, "get").mockImplementation((path) => {
+                reads.push(path);
+                return original(path);
+              });
+            },
+          },
+        );
+        expect(reads).toEqual([NOTE_PATH]);
       });
 
       it("evaluates two tasks conditions independently", async () => {

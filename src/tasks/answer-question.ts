@@ -38,7 +38,8 @@ export function answerTaskQuestion(
     const { path } = source.source;
     // Cold metadataCache leaves structure undefined; matchesFilter then drops the heading and tag
     // conditions for the item rather than failing it, so the answer over-matches until it resolves.
-    const structure = dependencies.structure.get(path).getOrUndefined();
+    // Only heading and tag conditions read it, so a status-only question never asks for it.
+    const structure = who.conditions.length === 0 ? undefined : dependencies.structure.get(path).getOrUndefined();
     return dependencies.tasks
       .itemsIn(path)
       .filter((item) => !isExcluded(item.status) && matchesFilter(item, structure, who))

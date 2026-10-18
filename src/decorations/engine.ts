@@ -99,12 +99,26 @@ export class DecorationEngine {
   readonly #timeline = inject(TimelineService);
   readonly #tasks = inject(TaskIndex);
   readonly #structure = inject(NoteStructureService);
-  readonly #taskDependencies: TaskQuestionDependencies = {
-    journals: this.#journals,
-    index: this.#index,
-    structure: this.#structure,
-    tasks: this.#tasks,
-  };
+
+  // One structure read per path per evaluation: a note's structure answers every cell and every
+  // tasks condition that touches it, and the metadataCache walk behind it is not free.
+  #taskDependenciesFor(): TaskQuestionDependencies {
+    const cache = new Map<VaultPath, ReturnType<NoteStructureService["get"]>>();
+    return {
+      journals: this.#journals,
+      index: this.#index,
+      structure: {
+        get: (path) => {
+          const hit = cache.get(path);
+          if (hit !== undefined) return hit;
+          const value = this.#structure.get(path);
+          cache.set(path, value);
+          return value;
+        },
+      },
+      tasks: this.#tasks,
+    };
+  }
 
   #matches(
     decoration: JournalDecoration,
@@ -113,6 +127,7 @@ export class DecorationEngine {
     metadata: () => Option<NoteMetadata>,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
+    taskDependencies: TaskQuestionDependencies,
   ): boolean {
     const { mode, conditions } = decoration;
     // An empty condition list matches nothing here — the inverse of the checkbox provider's
@@ -120,7 +135,8 @@ export class DecorationEngine {
     // with no conditions would otherwise paint every cell, while an empty identification rule has
     // to keep every marked line an item. Don't "correct" either one to match the other.
     if (conditions.length === 0) return false;
-    const test = (c: JournalDecorationCondition): boolean => this.#check(c, period, journal, metadata, size, path);
+    const test = (c: JournalDecorationCondition): boolean =>
+      this.#check(c, period, journal, metadata, size, path, taskDependencies);
     return mode === "or" ? conditions.some(test) : conditions.every(test);
   }
 
@@ -142,6 +158,7 @@ export class DecorationEngine {
     metadata: () => Option<NoteMetadata>,
     size: () => Option<NoteSize>,
     path: () => Option<VaultPath>,
+    taskDependencies: TaskQuestionDependencies,
   ): boolean {
     const meta = (): NoteMetadata | null => {
       const opt = metadata();
@@ -157,7 +174,7 @@ export class DecorationEngine {
       .with({ type: "has-note" }, () => metadata().isSome())
       .with({ type: "tasks" }, (c) =>
         answerTaskQuestion(
-          this.#taskDependencies,
+          taskDependencies,
           { journalName: journal.name, anchor: period.anchor.toAnchor(), path: path().getOrUndefined() ?? null },
           c,
         ),
@@ -213,6 +230,8 @@ export class DecorationEngine {
       sizeCache.set(key, value);
       return value;
     };
+
+    const taskDependencies = this.#taskDependenciesFor();
 
     const pathCache = new Map<string, Option<VaultPath>>();
     const pathFor = (journalName: string, anchorString: AnchorString): Option<VaultPath> => {
@@ -279,6 +298,7 @@ export class DecorationEngine {
           () => metadataFor(binding.journalName, anchorString),
           () => sizeFor(binding.journalName, anchorString),
           () => pathFor(binding.journalName, anchorString),
+          taskDependencies,
         );
         if (!matched) continue;
         push(period, binding);
