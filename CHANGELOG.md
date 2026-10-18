@@ -42,6 +42,10 @@ All notable changes to this project will be documented in this file.
   [Decorations](https://srg-kostyrko.github.io/obsidian-journal/decorations#tasks) in the manual.
 - Plugin API note and notelet events now say why they fired. `noteAdded` has always meant "entered the index", not "was created" — it fires once for every existing note at startup, again when a note is renamed or a tracked property changes, and for sync-conflict copies — so a plugin that wrote into notes from it could write into years of history. Each add and remove event now carries a `reason`: `indexed` for notes a vault walk finds, `created` for a note Journals itself just created on this device, `appeared` for one that arrived any other way, including by sync, and `changed`, `moved`, `deleted` or `unindexed` for the rest. `noteAdded` also carries `canonical`, false for a copy sharing its date with the note that owns it. Because `created` fires only on the device that created the note, a plugin that writes only on it writes once however many devices sync the vault. The plugin API documentation gains an Events section covering every reason and how to write safely from a handler. `apiVersion` stays 1.
 
+### Bug Fixes
+
+- Plugin API consumers no longer receive `noteAdded` and `noteRemoved` for a note that does not exist whenever a code block preview is shown in a journal's settings.
+
 ### Changed
 
 - **Check if note has open tasks** and **Check if all tasks are completed** are replaced by **Check

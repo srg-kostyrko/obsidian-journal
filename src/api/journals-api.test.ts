@@ -1,5 +1,6 @@
 import { TFile } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
+import { defineComponent } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { Flows } from "@/infrastructure/flows";
@@ -16,6 +17,7 @@ import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import type { Prompt, PromptAnswer } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
+import { useCodeBlockPreviewPath } from "@/journals/settings/ui/use-code-block-preview-path";
 import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import type { NoteletEntry } from "@/journals/types";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
@@ -1818,6 +1820,21 @@ describe("JournalsApiService event reasons", () => {
     const notelet = await api.createNotelet("daily", "2026-08-18", "Meeting", { prompt: false, confirm: false });
 
     expect(noteletsAdded).toEqual([{ path: notelet.path, reason: "created", canonical: true }]);
+  });
+
+  it("never reports the settings preview's synthetic entry", async () => {
+    const { harness, added, removed } = await bootApi();
+    const Host = defineComponent({
+      template: "<div />",
+      setup() {
+        useCodeBlockPreviewPath("daily");
+      },
+    });
+
+    harness.render(Host).unmount();
+
+    expect(added).toEqual([]);
+    expect(removed).toEqual([]);
   });
 });
 

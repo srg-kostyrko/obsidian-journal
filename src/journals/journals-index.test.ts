@@ -76,6 +76,18 @@ describe("JournalsIndex", () => {
       ]);
     });
 
+    it("tags a preview entry's add and remove as preview", () => {
+      const index = new JournalsIndex();
+      const captured = capture(index);
+      const preview = entry("daily", "2022-01-01", "@preview@1");
+      index.register(preview, "preview");
+      index.unregister(p("@preview@1"), "deleted");
+      expect(captured.entryChanged).toEqual([
+        { entry: preview, kind: "added", reason: "preview", canonical: true },
+        { entry: preview, kind: "removed", reason: "preview" },
+      ]);
+    });
+
     it("identical re-registration emits nothing", () => {
       const index = new JournalsIndex();
       const dailyEntry = entry("daily", "2022-01-01", "Daily/2022-01-01.md");

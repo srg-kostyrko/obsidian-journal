@@ -656,7 +656,7 @@ export class JournalsApiService implements JournalsApi {
       )
       .with("noteAdded", () =>
         this.#index.events.on("entryChanged", (event) => {
-          if (event.kind !== "added" || isNotelet(event.entry)) return;
+          if (event.kind !== "added" || event.reason === "preview" || isNotelet(event.entry)) return;
           (handler as JournalsApiEvents["noteAdded"])({
             journal: event.entry.journalName,
             date: event.entry.anchor,
@@ -668,7 +668,7 @@ export class JournalsApiService implements JournalsApi {
       )
       .with("noteRemoved", () =>
         this.#index.events.on("entryChanged", (event) => {
-          if (event.kind !== "removed" || isNotelet(event.entry)) return;
+          if (event.kind !== "removed" || event.reason === "preview" || isNotelet(event.entry)) return;
           (handler as JournalsApiEvents["noteRemoved"])({
             journal: event.entry.journalName,
             date: event.entry.anchor,
@@ -680,7 +680,7 @@ export class JournalsApiService implements JournalsApi {
       .with("noteletAdded", () =>
         this.#index.events.on("entryChanged", (event) => {
           const { entry } = event;
-          if (event.kind !== "added" || !isNotelet(entry)) return;
+          if (event.kind !== "added" || event.reason === "preview" || !isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteletAdded"])({
             journal: entry.journalName,
             date: entry.anchor,
@@ -694,7 +694,7 @@ export class JournalsApiService implements JournalsApi {
       .with("noteletRemoved", () =>
         this.#index.events.on("entryChanged", (event) => {
           const { entry } = event;
-          if (event.kind !== "removed" || !isNotelet(entry)) return;
+          if (event.kind !== "removed" || event.reason === "preview" || !isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteletRemoved"])({
             journal: entry.journalName,
             date: entry.anchor,
