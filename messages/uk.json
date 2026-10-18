@@ -820,7 +820,7 @@
         "quantifier=all,status=listing": "усі завдання відповідають фільтру списку цього журналу {source}",
         "quantifier=all,status=open": "усі завдання відкриті {source}",
         "quantifier=all,status=done": "усі завдання виконані {source}",
-        "quantifier=all,status=all": "усі завдання мають будь-який статус {source}",
+        "quantifier=all,status=all": "є хоча б одне завдання {source}",
         "quantifier=none,status=listing": "жодне завдання не відповідає фільтру списку цього журналу {source}",
         "quantifier=none,status=open": "жодне завдання не відкрите {source}",
         "quantifier=none,status=done": "жодне завдання не виконане {source}",

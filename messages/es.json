@@ -957,15 +957,15 @@
         "quantifier=any,status=listing": "alguna tarea coincide con el filtro de listado de este diario {source}",
         "quantifier=any,status=open": "alguna tarea está abierta {source}",
         "quantifier=any,status=done": "alguna tarea está hecha {source}",
-        "quantifier=any,status=all": "alguna tarea tiene cualquier estado {source}",
+        "quantifier=any,status=all": "existe una tarea {source}",
         "quantifier=all,status=listing": "todas las tareas coinciden con el filtro de listado de este diario {source}",
         "quantifier=all,status=open": "todas las tareas están abiertas {source}",
         "quantifier=all,status=done": "todas las tareas están hechas {source}",
-        "quantifier=all,status=all": "todas las tareas tienen cualquier estado {source}",
+        "quantifier=all,status=all": "existe una tarea {source}",
         "quantifier=none,status=listing": "ninguna tarea coincide con el filtro de listado de este diario {source}",
         "quantifier=none,status=open": "ninguna tarea está abierta {source}",
         "quantifier=none,status=done": "ninguna tarea está hecha {source}",
-        "quantifier=none,status=all": "ninguna tarea tiene cualquier estado {source}"
+        "quantifier=none,status=all": "no existe ninguna tarea {source}"
       }
     }
   ],

@@ -961,7 +961,7 @@
         "quantifier=all,status=listing": "{source}의 모든 작업이 이 저널의 목록 필터와 일치함",
         "quantifier=all,status=open": "{source}의 모든 작업이 미완료임",
         "quantifier=all,status=done": "{source}의 모든 작업이 완료됨",
-        "quantifier=all,status=all": "{source}의 모든 작업이 대상임",
+        "quantifier=all,status=all": "{source}에 작업이 있음",
         "quantifier=none,status=listing": "{source}에 이 저널의 목록 필터와 일치하는 작업이 없음",
         "quantifier=none,status=open": "{source}에 미완료 작업이 없음",
         "quantifier=none,status=done": "{source}에 완료된 작업이 없음",

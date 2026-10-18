@@ -816,7 +816,7 @@
         "quantifier=all,status=listing": "{source}のすべてのタスクがこのジャーナルの一覧フィルターに一致する",
         "quantifier=all,status=open": "{source}のすべてのタスクが未完了",
         "quantifier=all,status=done": "{source}のすべてのタスクが完了している",
-        "quantifier=all,status=all": "{source}のすべてのタスクが対象",
+        "quantifier=all,status=all": "{source}にタスクがある",
         "quantifier=none,status=listing": "{source}のどのタスクもこのジャーナルの一覧フィルターに一致しない",
         "quantifier=none,status=open": "{source}に未完了のタスクはない",
         "quantifier=none,status=done": "{source}に完了したタスクはない",

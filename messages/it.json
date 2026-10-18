@@ -957,15 +957,15 @@
         "quantifier=any,status=listing": "un'attività corrisponde al filtro dell'elenco di questo diario {source}",
         "quantifier=any,status=open": "un'attività è aperta {source}",
         "quantifier=any,status=done": "un'attività è completata {source}",
-        "quantifier=any,status=all": "un'attività ha uno stato qualsiasi {source}",
+        "quantifier=any,status=all": "esiste un'attività {source}",
         "quantifier=all,status=listing": "tutte le attività corrispondono al filtro dell'elenco di questo diario {source}",
         "quantifier=all,status=open": "tutte le attività sono aperte {source}",
         "quantifier=all,status=done": "tutte le attività sono completate {source}",
-        "quantifier=all,status=all": "tutte le attività hanno uno stato qualsiasi {source}",
+        "quantifier=all,status=all": "esiste un'attività {source}",
         "quantifier=none,status=listing": "nessuna attività corrisponde al filtro dell'elenco di questo diario {source}",
         "quantifier=none,status=open": "nessuna attività è aperta {source}",
         "quantifier=none,status=done": "nessuna attività è completata {source}",
-        "quantifier=none,status=all": "nessuna attività ha uno stato qualsiasi {source}"
+        "quantifier=none,status=all": "non esiste alcuna attività {source}"
       }
     }
   ],

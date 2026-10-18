@@ -816,7 +816,7 @@
         "quantifier=all,status=listing": "{source}的所有任务都符合此日记的列表筛选条件",
         "quantifier=all,status=open": "{source}的所有任务都未完成",
         "quantifier=all,status=done": "{source}的所有任务都已完成",
-        "quantifier=all,status=all": "{source}的所有任务均计入",
+        "quantifier=all,status=all": "{source}有任务",
         "quantifier=none,status=listing": "{source}没有任务符合此日记的列表筛选条件",
         "quantifier=none,status=open": "{source}没有未完成的任务",
         "quantifier=none,status=done": "{source}没有已完成的任务",

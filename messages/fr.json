@@ -957,15 +957,15 @@
         "quantifier=any,status=listing": "une tâche correspond au filtre de liste de ce journal {source}",
         "quantifier=any,status=open": "une tâche est ouverte {source}",
         "quantifier=any,status=done": "une tâche est terminée {source}",
-        "quantifier=any,status=all": "une tâche a un statut quelconque {source}",
+        "quantifier=any,status=all": "une tâche existe {source}",
         "quantifier=all,status=listing": "toutes les tâches correspondent au filtre de liste de ce journal {source}",
         "quantifier=all,status=open": "toutes les tâches sont ouvertes {source}",
         "quantifier=all,status=done": "toutes les tâches sont terminées {source}",
-        "quantifier=all,status=all": "toutes les tâches ont un statut quelconque {source}",
+        "quantifier=all,status=all": "une tâche existe {source}",
         "quantifier=none,status=listing": "aucune tâche ne correspond au filtre de liste de ce journal {source}",
         "quantifier=none,status=open": "aucune tâche n'est ouverte {source}",
         "quantifier=none,status=done": "aucune tâche n'est terminée {source}",
-        "quantifier=none,status=all": "aucune tâche n'a un statut quelconque {source}"
+        "quantifier=none,status=all": "aucune tâche n'existe {source}"
       }
     }
   ],

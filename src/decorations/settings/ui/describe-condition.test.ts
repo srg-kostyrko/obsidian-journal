@@ -163,6 +163,12 @@ describe("describeCondition", () => {
       ).toBe(m.decoration_condition_tasks_describe({ quantifier: "none", status: "done", source: source("note") }));
     });
 
+    it("describes no task of any status as no task existing", () => {
+      expect(
+        describeCondition(buildCondition("tasks", { quantifier: "none", status: "all", source: "both" }), calendar),
+      ).toBe(m.decoration_condition_tasks_describe({ quantifier: "none", status: "all", source: source("both") }));
+    });
+
     it("describes the listing status as following the journal's task listing", () => {
       const out = describeCondition(
         buildCondition("tasks", { quantifier: "all", status: "listing", source: "notelets" }),

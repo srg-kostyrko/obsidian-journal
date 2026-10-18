@@ -957,15 +957,15 @@
         "quantifier=any,status=listing": "eine Aufgabe passt zum Anzeigefilter dieses Journals {source}",
         "quantifier=any,status=open": "eine Aufgabe ist offen {source}",
         "quantifier=any,status=done": "eine Aufgabe ist erledigt {source}",
-        "quantifier=any,status=all": "eine Aufgabe hat einen beliebigen Status {source}",
+        "quantifier=any,status=all": "eine Aufgabe existiert {source}",
         "quantifier=all,status=listing": "alle Aufgaben passen zum Anzeigefilter dieses Journals {source}",
         "quantifier=all,status=open": "alle Aufgaben sind offen {source}",
         "quantifier=all,status=done": "alle Aufgaben sind erledigt {source}",
-        "quantifier=all,status=all": "alle Aufgaben haben einen beliebigen Status {source}",
+        "quantifier=all,status=all": "eine Aufgabe existiert {source}",
         "quantifier=none,status=listing": "keine Aufgabe passt zum Anzeigefilter dieses Journals {source}",
         "quantifier=none,status=open": "keine Aufgabe ist offen {source}",
         "quantifier=none,status=done": "keine Aufgabe ist erledigt {source}",
-        "quantifier=none,status=all": "keine Aufgabe hat einen beliebigen Status {source}"
+        "quantifier=none,status=all": "keine Aufgabe existiert {source}"
       }
     }
   ],

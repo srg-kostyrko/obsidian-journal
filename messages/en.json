@@ -893,15 +893,15 @@
         "quantifier=any,status=listing": "any task matches this journal's task listing {source}",
         "quantifier=any,status=open": "any task is open {source}",
         "quantifier=any,status=done": "any task is done {source}",
-        "quantifier=any,status=all": "any task has any status {source}",
+        "quantifier=any,status=all": "a task exists {source}",
         "quantifier=all,status=listing": "all tasks match this journal's task listing {source}",
         "quantifier=all,status=open": "all tasks are open {source}",
         "quantifier=all,status=done": "all tasks are done {source}",
-        "quantifier=all,status=all": "all tasks have any status {source}",
+        "quantifier=all,status=all": "a task exists {source}",
         "quantifier=none,status=listing": "no task matches this journal's task listing {source}",
         "quantifier=none,status=open": "no task is open {source}",
         "quantifier=none,status=done": "no task is done {source}",
-        "quantifier=none,status=all": "no task has any status {source}"
+        "quantifier=none,status=all": "no task exists {source}"
       }
     }
   ],

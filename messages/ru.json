@@ -967,7 +967,7 @@
         "quantifier=all,status=listing": "все задачи соответствуют фильтру списка этого журнала {source}",
         "quantifier=all,status=open": "все задачи открыты {source}",
         "quantifier=all,status=done": "все задачи выполнены {source}",
-        "quantifier=all,status=all": "все задачи имеют любой статус {source}",
+        "quantifier=all,status=all": "есть хотя бы одна задача {source}",
         "quantifier=none,status=listing": "ни одна задача не соответствует фильтру списка этого журнала {source}",
         "quantifier=none,status=open": "ни одна задача не открыта {source}",
         "quantifier=none,status=done": "ни одна задача не выполнена {source}",
