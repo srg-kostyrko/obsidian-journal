@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
   dates are never lit. **Narrow further** counts only tasks under a heading or carrying a tag. A
   decoration can hold more than one. See
   [Decorations](https://srg-kostyrko.github.io/obsidian-journal/decorations#tasks) in the manual.
+- The plugin API can now list a period's tasks. `tasksFor(selector, date, options)` answers exactly what a `journal-tasks` code block in that period's note would list — your status map, the journal's own listing filter and the same open-tasks default — so another plugin's answer and your calendar agree about the same day, where one parsing the checkboxes itself cannot know what `[/]` means in your vault. It takes the code block's `source`, `depth` and `status` keys, with `depth: rollup` reaching the journal's shelf just as the code block does, and returns each matching task once, with its note, its 0-based line, its text as written, its status, any dates it carries and the line of the task it is nested under. Leaving `status` out lets the journal's own status condition apply; passing it, even as `open`, replaces it. A task the journal's listing filter hides — one outside its `## Tasks` heading, say — is not returned. The Local REST API gains `GET /journals/<name>/tasks/<date>`, and MCP agents a `journal_tasks` tool. `apiVersion` stays 1.
 
 ### Changed
 

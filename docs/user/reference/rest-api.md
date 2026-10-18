@@ -24,6 +24,7 @@ by finding a note from a journal's name and a date instead.
 | GET    | `/journals/<name>/notes`           | `{ notes, notelets }` for the journal, filtered by `from`, `to` and `type`     |
 | POST   | `/journals/<name>/notes/<date>`    | creates (or finds) the period's note, answering its questions from the body    |
 | POST   | `/journals/<name>/notelets/<date>` | creates a notelet of a given type in the period                                |
+| GET    | `/journals/<name>/tasks/<date>`    | `{ tasks }` — the period's tasks, filtered by `source`, `depth` and `status`   |
 | GET    | `/journals/<name>/<date>/…`        | redirects to the host's own `/vault/` route for the note, 404 if there is none |
 | POST   | `/journals/<name>/<date>/…`        | creates the note first, then redirects                                         |
 | PATCH  | `/journals/<name>/<date>/…`        | creates the note first, then redirects                                         |
@@ -42,6 +43,16 @@ the other answers `400 invalid-request`. Without them, the route answers every n
 ever written, with an empty `notelets` list — it never lists notelets on its own, only alongside a
 range. With `from` and `to`, it answers the notes and notelets that exist in periods the window
 overlaps; a period with no note or notelet is left out, not listed empty.
+
+`GET /journals/<name>/tasks/<date>` answers what a [`journal-tasks` code block](/tasks#listing-tasks-in-a-note)
+in the note of the period holding `<date>` would list, so the journal's own listing filter applies
+and a task it hides is not returned. It takes the code block's own keys: `source` (`note`,
+`notelets` or `both`), `depth` (`literal` or `rollup`) and `status` (`open`, `done`, `all`, or one
+status such as `on-hold`). Leave `status` off and the journal's own status condition applies, or
+`open`; give it — even `status=open` — and it replaces the journal's. A `source` or `depth` it does
+not know answers `400 invalid-request` rather than falling back to the default. Each task carries
+its `path`, its 0-based `line`, its `text` as written, its `status`, any `dates` it carries, and
+`parentLine` — the line of the task it is nested under, if any.
 
 ## Following the redirect
 
@@ -247,7 +258,7 @@ curl -k -X POST -H "Authorization: Bearer <your-api-key>" \
 
 The host also runs a [Model Context Protocol](https://modelcontextprotocol.io/) server, at `/mcp/`
 on the same port, for MCP-compatible agents rather than scripts. It needs host version 5.1 or
-later. Journals adds four tools to that server automatically — there is nothing to configure.
+later. Journals adds five tools to that server automatically — there is nothing to configure.
 Connect a client the way the host's own README describes, under
 [MCP clients](https://github.com/coddingtonbear/obsidian-local-rest-api#mcp-clients): the endpoint,
 the API key header, and example configs for Claude Code, Claude Desktop, Cursor and other clients.
@@ -255,12 +266,13 @@ If another plugin already registered a tool under one of these names, Journals' 
 is skipped and a warning is logged — the REST routes above, and the host's own tools, keep working
 regardless.
 
-| Tool                     | Arguments                                             | Returns                                                               | Kind           |
-| ------------------------ | ----------------------------------------------------- | --------------------------------------------------------------------- | -------------- |
-| `journal_list`           | none                                                  | `{ journals }`, the same info as [`GET /journals/`](#routes)          | Read-only      |
-| `journal_notes`          | `journal`; `from`; `to` (optional); `type` (optional) | `{ notes, notelets }`, the same shape as `GET /journals/<name>/notes` | Read-only      |
-| `journal_note_ensure`    | `journal`; `date`; `answers` (optional)               | the note, plus whether it was just created                            | Creates a note |
-| `journal_notelet_create` | `journal`; `date`; `type`; `answers` (optional)       | the new notelet                                                       | Creates a note |
+| Tool                     | Arguments                                                     | Returns                                                               | Kind           |
+| ------------------------ | ------------------------------------------------------------- | --------------------------------------------------------------------- | -------------- |
+| `journal_list`           | none                                                          | `{ journals }`, the same info as [`GET /journals/`](#routes)          | Read-only      |
+| `journal_notes`          | `journal`; `from`; `to` (optional); `type` (optional)         | `{ notes, notelets }`, the same shape as `GET /journals/<name>/notes` | Read-only      |
+| `journal_tasks`          | `journal`; `date`; `source`, `depth`, `status` (all optional) | `{ tasks }`, the same shape as `GET /journals/<name>/tasks/<date>`    | Read-only      |
+| `journal_note_ensure`    | `journal`; `date`; `answers` (optional)                       | the note, plus whether it was just created                            | Creates a note |
+| `journal_notelet_create` | `journal`; `date`; `type`; `answers` (optional)               | the new notelet                                                       | Creates a note |
 
 `journal`, `date`, `from` and `to` take the same values as the routes above: a date is `today`,
 `YYYY-MM-DD`, or a shift such as `+1w`, and a single day also finds the week, month or other period

@@ -4,6 +4,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 
 import { JournalsApiService } from "../../journals-api";
@@ -13,7 +14,7 @@ import { JournalListTool } from "./journal-list";
 
 async function build() {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals: { work: fixedJournal("work", { type: "day" }) }, shelves: {} },
     initialize: [VaultSubscriptionService],
   });

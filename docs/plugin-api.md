@@ -60,6 +60,7 @@ interface JournalsApi {
     range: DateRange,
     options?: { readonly type?: string },
   ): Promise<readonly NoteletNote[]>;
+  tasksFor(selector: JournalSelector, date: DateInput, options?: TasksForOptions): Promise<readonly TaskItem[]>;
 
   ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult>;
   openNote(selector: JournalSelector, date: DateInput, options?: OpenNoteOptions): Promise<EnsureResult>;
@@ -291,6 +292,55 @@ period note and any number of notelets.
   [the period reads](#ranges): both ends inclusive, matched by overlap on the journal's own
   periods, each period once. It has no unbounded form — `noteletsFor` answers a single period,
   and a notelet only exists where one was created.
+
+## Tasks
+
+`tasksFor(selector, date, options?)` answers, for each matched journal, exactly what a
+`journal-tasks` code block in the note of the period holding `date` would list. It uses the
+user's own status map, the journal's own listing filter and the same open-tasks default, so your
+answer and the user's calendar never disagree about the same day — a consumer parsing the checkbox
+lines itself cannot reach that, because which marker means what is the user's configuration.
+
+```ts
+const today = await journals.tasksFor("Work Daily", "today");
+//  [{ journal, date, path, source, line, text, status, dates, relations, parentLine }, …]
+
+const month = await journals.tasksFor("Work Monthly", "today", { depth: "rollup", status: "all" });
+```
+
+| option   | values                                                 | default   |
+| -------- | ------------------------------------------------------ | --------- |
+| `source` | `note`, `notelets`, `both`                             | `both`    |
+| `depth`  | `literal`, `rollup`                                    | `literal` |
+| `status` | `open`, `done`, `all`, or one status such as `on-hold` | see below |
+
+- **Leaving `status` out and passing `status: "open"` are not the same call.** Left out, the
+  journal's own status condition applies, or `open` when it has none. Passed — even as `open` — it
+  replaces the journal's condition. So for a journal whose listing filter shows only done tasks,
+  `tasksFor(j, d)` returns its done tasks and `tasksFor(j, d, { status: "open" })` its open ones.
+  This is the `status` key of the code block, unchanged. `open` is to-do, in progress and on hold;
+  `done` is done and cancelled; `rolled` belongs to neither, so only `all` or `status: "rolled"`
+  returns it.
+- **The journal's listing filter can hide tasks you cannot reach.** If a journal lists only tasks
+  under `## Tasks`, `tasksFor` never returns a task written anywhere else in that note — only
+  `status` can be overridden, not the heading or tag conditions. That is the price of agreeing
+  with the calendar; read the note yourself if you need every checkbox.
+- **`rollup` reaches the journal's shelf**, the way the code block's does: the journals on the same
+  shelf, or every journal when it is on none. A month rolls up into the days of its shelf-mates,
+  never into another shelf's.
+- **Each task is returned once.** A selector matching several journals can reach the same note
+  twice — as one journal's period and inside another's rollup — and the task still appears once.
+  Results are grouped by journal in selector order, and in note order within each.
+- **`journal` and `date` are the note's, not the query's.** Under `rollup`, a task found in a day
+  note reports the day journal and that day.
+- **Only matching tasks are returned.** The code block also shows a non-matching parent, dimmed, to
+  anchor a child; `tasksFor` does not. `parentLine` is the line of the enclosing task in the same
+  note, whether or not that task matched, so the nesting can be rebuilt.
+- **`line` is 0-based**, and `text` is the task's lines as written, indentation included. Reading
+  `text` reads the note, so a rolled-up year reads every note in it — the code block pays the same.
+- **`relations` is always `["containment"]` for now**: tasks belong to a period by living in its
+  notes. Matching tasks by the dates they carry is planned, and will arrive as a new option.
+- **`status` and `relations` are open unions** — handle the default case.
 
 ## Answering questions
 

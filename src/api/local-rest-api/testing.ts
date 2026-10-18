@@ -6,6 +6,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsApiService } from "../journals-api";
@@ -158,7 +159,7 @@ export interface RestHarness {
 /** Boots the real API module with its bridge registered on a recording host. Seeds a `work` day journal by default. */
 export async function restHarness(journals?: Record<string, JournalConfig>): Promise<RestHarness> {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals: journals ?? { work: fixedJournal("work", { type: "day" }) }, shelves: {} },
     initialize: [VaultSubscriptionService],
   });

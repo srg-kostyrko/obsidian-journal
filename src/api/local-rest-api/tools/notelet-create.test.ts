@@ -7,6 +7,7 @@ import type { Prompt } from "@/journals/prompts/config";
 import { buildNoteletType, fixedJournal } from "@/journals/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 
 import { JournalsApiService } from "../../journals-api";
@@ -34,7 +35,7 @@ function journalWithMoodType(prompts: Prompt[] = []): Record<string, JournalConf
 
 async function build(journals: Record<string, JournalConfig> = journalWithMoodType()) {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals, shelves: {} },
     initialize: [VaultSubscriptionService],
   });

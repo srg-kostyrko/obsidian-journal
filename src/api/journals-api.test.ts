@@ -21,6 +21,10 @@ import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { tasksCoreModule } from "@/tasks/module";
+import { TaskIndex } from "@/tasks/task-index";
+import { buildTaskItem } from "@/tasks/testing";
+import type { TaskItem } from "@/tasks/types";
 import { testContainer } from "@/testing";
 
 import { JournalsApiService } from "./journals-api";
@@ -40,7 +44,7 @@ interface BuildOptions {
 
 async function buildApi(journals: Record<string, JournalConfig>, options: BuildOptions = {}) {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals, shelves: options.shelves ?? {} },
     initialize: options.ready === false ? [] : [VaultSubscriptionService],
   });
@@ -729,6 +733,234 @@ describe("JournalsApiService range reads", () => {
     await expect(api.existingNotes("daily", { from: "whenever", to: "2026-08-19" })).rejects.toMatchObject({
       code: "invalid-date",
     });
+  });
+});
+
+async function buildTasksApi(journals: Record<string, JournalConfig>, shelves: Record<string, ShelfConfig> = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+    data: { journals, shelves },
+    initialize: [VaultSubscriptionService],
+  });
+  return {
+    api: harness.resolve(JournalsApiService),
+    index: harness.resolve(JournalsIndex),
+    tasks: harness.resolve(TaskIndex),
+  };
+}
+
+function taskLine(
+  path: string,
+  line: number,
+  markdown: string,
+  overrides: Partial<Pick<TaskItem, "status" | "dates">> & { parentLine?: number } = {},
+): TaskItem {
+  const { parentLine = null, ...rest } = overrides;
+  return buildTaskItem({
+    path: path as VaultPath,
+    key: `${path}:${line}`,
+    display: { kind: "line", path: path as VaultPath, line, endLine: line, parentLine, markdown },
+    ...rest,
+  });
+}
+
+function registerNote(index: JournalsIndex, journalName: string, anchor: string, path: string): void {
+  index.register({ journalName, anchor: anchor as AnchorString, path: path as VaultPath });
+}
+
+describe("JournalsApiService tasksFor", () => {
+  const daily = fixedJournal("daily", { type: "day" });
+  const monthly = fixedJournal("monthly", { type: "month" });
+
+  it("returns the open tasks of the note for the period holding the date, in the public shape", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 3, "- [ ] Ship it 📅 2026-09-30", { dates: { due: "2026-09-30" as AnchorString } }),
+      taskLine("D/2026-09-22.md", 4, "- [x] Shipped", { status: "done" }),
+    ]);
+
+    const found = await api.tasksFor("daily", "2026-09-22");
+
+    expect(found).toEqual([
+      {
+        journal: "daily",
+        date: "2026-09-22",
+        path: "D/2026-09-22.md",
+        source: "note",
+        line: 3,
+        text: "- [ ] Ship it 📅 2026-09-30",
+        status: "todo",
+        dates: { due: "2026-09-30" },
+        relations: ["containment"],
+        parentLine: null,
+      },
+    ]);
+  });
+
+  it("answers status the way the code block's status key does", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [ ] a"),
+      taskLine("D/2026-09-22.md", 2, "- [/] b", { status: "in-progress" }),
+      taskLine("D/2026-09-22.md", 3, "- [x] c", { status: "done" }),
+      taskLine("D/2026-09-22.md", 4, "- [-] d", { status: "cancelled" }),
+    ]);
+    const lines = async (status?: string) => {
+      const found = await api.tasksFor("daily", "2026-09-22", status === undefined ? {} : { status });
+      return found.map((task) => task.line);
+    };
+
+    expect(await lines()).toEqual([1, 2]);
+    expect(await lines("done")).toEqual([3, 4]);
+    expect(await lines("all")).toEqual([1, 2, 3, 4]);
+    expect(await lines("in-progress")).toEqual([2]);
+  });
+
+  it("applies the journal's own listing filter, which an explicit status replaces", async () => {
+    const doneOnly = {
+      ...daily,
+      tasks: {
+        providers: {},
+        filter: {
+          mode: "and" as const,
+          conditions: [{ type: "status" as const, condition: "is" as const, statuses: ["done"] }],
+        },
+      },
+    };
+    const { api, index, tasks } = await buildTasksApi({ daily: doneOnly });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [ ] open"),
+      taskLine("D/2026-09-22.md", 2, "- [x] done", { status: "done" }),
+    ]);
+
+    const bare = await api.tasksFor("daily", "2026-09-22");
+    const explicit = await api.tasksFor("daily", "2026-09-22", { status: "open" });
+
+    expect(bare.map((task) => task.line)).toEqual([2]);
+    expect(explicit.map((task) => task.line)).toEqual([1]);
+  });
+
+  it("reads the notelets of the period too, unless source narrows it", async () => {
+    const { api, index, tasks } = await buildTasksApi({
+      daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_meeting: meeting } }),
+    });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: "2026-09-22" as AnchorString,
+      path: "D/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [ ] in note"),
+    ]);
+    tasks.publish("checkbox", { path: "D/Meeting 1.md" as VaultPath }, [
+      taskLine("D/Meeting 1.md", 1, "- [ ] in meeting"),
+    ]);
+    const sources = async (source?: "note" | "notelets" | "both") => {
+      const found = await api.tasksFor("daily", "2026-09-22", source === undefined ? {} : { source });
+      return found.map((task) => `${task.source}:${task.path}`);
+    };
+
+    expect(await sources()).toEqual(["note:D/2026-09-22.md", "notelet:D/Meeting 1.md"]);
+    expect(await sources("note")).toEqual(["note:D/2026-09-22.md"]);
+    expect(await sources("notelets")).toEqual(["notelet:D/Meeting 1.md"]);
+  });
+
+  it("rolls a month up into its days only when asked", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily, monthly });
+    registerNote(index, "monthly", "2026-09-01", "M/2026-09.md");
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    registerNote(index, "daily", "2026-10-01", "D/2026-10-01.md");
+    tasks.publish("checkbox", { path: "M/2026-09.md" as VaultPath }, [taskLine("M/2026-09.md", 1, "- [ ] month")]);
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [taskLine("D/2026-09-22.md", 1, "- [ ] day")]);
+    tasks.publish("checkbox", { path: "D/2026-10-01.md" as VaultPath }, [
+      taskLine("D/2026-10-01.md", 1, "- [ ] next month"),
+    ]);
+
+    const literal = await api.tasksFor("monthly", "2026-09-15");
+    const rollup = await api.tasksFor("monthly", "2026-09-15", { depth: "rollup" });
+
+    expect(literal.map((task) => task.path)).toEqual(["M/2026-09.md"]);
+    expect(rollup.map((task) => `${task.journal}:${task.date}`)).toEqual(["monthly:2026-09-01", "daily:2026-09-22"]);
+  });
+
+  it("rolls up through the host journal's shelf only", async () => {
+    const otherDaily = fixedJournal("otherDaily", { type: "day" });
+    const { api, index, tasks } = await buildTasksApi(
+      { daily, monthly, otherDaily },
+      {
+        Work: buildShelf("Work", { journals: ["daily", "monthly"] }),
+        Home: buildShelf("Home", { journals: ["otherDaily"] }),
+      },
+    );
+    registerNote(index, "monthly", "2026-09-01", "M/2026-09.md");
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    registerNote(index, "otherDaily", "2026-09-22", "O/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [taskLine("D/2026-09-22.md", 1, "- [ ] work")]);
+    tasks.publish("checkbox", { path: "O/2026-09-22.md" as VaultPath }, [taskLine("O/2026-09-22.md", 1, "- [ ] home")]);
+
+    const rollup = await api.tasksFor("monthly", "2026-09-15", { depth: "rollup" });
+
+    expect(rollup.map((task) => task.path)).toEqual(["D/2026-09-22.md"]);
+  });
+
+  it("lists an item reached through two matched journals once", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily, monthly });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [taskLine("D/2026-09-22.md", 1, "- [ ] day")]);
+
+    const found = await api.tasksFor({}, "2026-09-22", { depth: "rollup" });
+
+    expect(found.map((task) => `${task.journal}:${task.line}`)).toEqual(["daily:1"]);
+  });
+
+  it("returns only matching items, pointing a child at an enclosing task that did not match", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [x] parent", { status: "done" }),
+      taskLine("D/2026-09-22.md", 2, "\t- [ ] child", { parentLine: 1 }),
+      taskLine("D/2026-09-22.md", 4, "\t- [ ] under a plain bullet", { parentLine: 3 }),
+    ]);
+
+    const found = await api.tasksFor("daily", "2026-09-22");
+
+    expect(found.map((task) => [task.line, task.parentLine])).toEqual([
+      [2, 1],
+      [4, null],
+    ]);
+  });
+
+  it("waits for the index to be ready", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily }, shelves: {} },
+    });
+    const api = harness.resolve(JournalsApiService);
+    let settled = false;
+    const pending = api.tasksFor("daily", "2026-09-22").then((found) => {
+      settled = true;
+      return found;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    harness.resolve(JournalsIndex).markReady();
+
+    await expect(pending).resolves.toEqual([]);
+  });
+
+  it("rejects a date it cannot read with invalid-date", async () => {
+    const { api } = await buildTasksApi({ daily });
+
+    await expect(api.tasksFor("daily", "whenever")).rejects.toMatchObject({ code: "invalid-date" });
   });
 });
 

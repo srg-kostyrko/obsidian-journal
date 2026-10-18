@@ -6,6 +6,7 @@ import type { Prompt } from "@/journals/prompts/config";
 import { fixedJournal } from "@/journals/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 
 import { JournalsApiService } from "../../journals-api";
@@ -24,7 +25,7 @@ const defaultJournals: Record<string, JournalConfig> = { work: fixedJournal("wor
 
 async function build(journals: Record<string, JournalConfig> = defaultJournals) {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals, shelves: {} },
     initialize: [VaultSubscriptionService],
   });

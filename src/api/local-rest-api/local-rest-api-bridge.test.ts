@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { LogLevelGateToken } from "@/infrastructure/logger";
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { apiModule } from "../module";
@@ -45,7 +46,7 @@ function fakeLocalRestApi() {
 
 function buildHarness(): Promise<TestHarness> {
   return testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals: {}, shelves: {} },
   });
 }
@@ -157,7 +158,7 @@ describe("LocalRestApiBridge", () => {
 });
 
 describe("LocalRestApiBridge route registration", () => {
-  it("registers the notes and notelets routes before any :name/:date route", async () => {
+  it("registers the notes, notelets and tasks routes before any :name/:date route", async () => {
     const harness = await buildHarness();
     const host = recordingLocalRestApi();
     harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
@@ -170,6 +171,7 @@ describe("LocalRestApiBridge route registration", () => {
       "/journals/:name/notes",
       "/journals/:name/notes/:date",
       "/journals/:name/notelets/:date",
+      "/journals/:name/tasks/:date",
       "/journals/:name/:date",
       "/journals/:name/:date/*",
     ]);
@@ -200,6 +202,7 @@ describe("LocalRestApiBridge tool registration", () => {
     expect(api.addMcpTool.mock.calls.map(([name]) => name)).toEqual([
       "journal_list",
       "journal_notes",
+      "journal_tasks",
       "journal_note_ensure",
       "journal_notelet_create",
     ]);
@@ -260,6 +263,7 @@ describe("LocalRestApiBridge tool registration", () => {
     expect(api.addMcpTool.mock.calls.map(([name]) => name)).toEqual([
       "journal_list",
       "journal_notes",
+      "journal_tasks",
       "journal_note_ensure",
       "journal_notelet_create",
     ]);

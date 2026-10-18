@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import type { CalendarDate, AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
+import { NoteStructureService, NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { Option } from "@/infrastructure/result";
@@ -27,7 +27,15 @@ import { TimelineService } from "@/journals/timeline";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { isNotelet, periodEntryOf } from "@/journals/types";
 import type { NoteletEntry } from "@/journals/types";
+import { ShelvesRepository } from "@/shelves/repository";
 import { ShelvesService } from "@/shelves/service";
+import { buildTaskListing } from "@/tasks/listing";
+import type { TaskListingDependencies, TaskListingRow } from "@/tasks/listing";
+import { DEFAULT_TASK_QUERY } from "@/tasks/query";
+import type { TaskQuery } from "@/tasks/query";
+import { taskRollupScope } from "@/tasks/rollup-scope";
+import { isExcluded } from "@/tasks/status";
+import { TaskIndex } from "@/tasks/task-index";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
 import { ApiError } from "./errors";
@@ -47,6 +55,8 @@ import type {
   NoteletNote,
   OpenNoteletOptions,
   OpenNoteOptions,
+  TaskItem,
+  TasksForOptions,
 } from "./public-api";
 import type { TFile } from "obsidian";
 
@@ -58,10 +68,30 @@ function describeDateInput(input: DateInput): string {
   return "the given date-like value";
 }
 
+// The flat keys desugar exactly as the journal-tasks fence's do (toTaskQuery): a status is emitted
+// only when given, because a query condition replaces the journal's own condition of that type.
+function taskQueryFor(options: TasksForOptions | undefined): TaskQuery {
+  return {
+    scope: {
+      provider: [],
+      source: options?.source ?? DEFAULT_TASK_QUERY.scope.source,
+      depth: options?.depth ?? DEFAULT_TASK_QUERY.scope.depth,
+    },
+    filter: {
+      mode: "and",
+      conditions:
+        options?.status === undefined ? [] : [{ type: "status", condition: "is", statuses: [options.status] }],
+    },
+    sort: "document",
+  };
+}
+
 export class JournalsApiService implements JournalsApi {
   readonly #journals = inject(JournalsRepository);
   readonly #journalEvents = inject(JournalsEventsToken);
   readonly #shelves = inject(ShelvesService);
+  readonly #shelfConfigs = inject(ShelvesRepository);
+  readonly #tasks = inject(TaskIndex);
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
   readonly #index = inject(JournalsIndex);
@@ -74,6 +104,13 @@ export class JournalsApiService implements JournalsApi {
   readonly #workspace = inject(WorkspaceService);
   readonly #inFlight = new Map<string, { readonly request: string; readonly promise: Promise<EnsureResult> }[]>();
   readonly #noteletListingDependencies = { journals: this.#journals, index: this.#index, cycle: this.#cycle };
+  readonly #taskListingDependencies: TaskListingDependencies = {
+    journals: this.#journals,
+    index: this.#index,
+    cycle: this.#cycle,
+    structure: inject(NoteStructureService),
+    tasks: this.#tasks,
+  };
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
   #disposed = false;
@@ -428,6 +465,35 @@ export class JournalsApiService implements JournalsApi {
     return this.#toApiError(cause, journal);
   }
 
+  #taskItemFrom(row: TaskListingRow): TaskItem | null {
+    const owner = this.#index.entryByPath(row.source.path);
+    if (owner.isNone()) return null;
+    const { item } = row;
+    const display = item.display;
+    return {
+      journal: owner.value.journalName,
+      date: owner.value.anchor,
+      path: item.path,
+      source: row.source.kind,
+      line: display.kind === "line" ? display.line : null,
+      text: display.kind === "line" ? (display.markdown ?? "") : display.title,
+      status: item.status,
+      dates: { ...item.dates },
+      relations: [...item.relations],
+      parentLine: display.kind === "line" ? this.#enclosingTaskLine(item.path, display.parentLine, display.line) : null,
+    };
+  }
+
+  // The structure's parentLine names the enclosing list item whatever it is, and a list starting at
+  // line 0 hands a child its own line; only another task in the same note is a parent to report.
+  #enclosingTaskLine(path: VaultPath, parentLine: number | null, ownLine: number): number | null {
+    if (parentLine === null || parentLine === ownLine) return null;
+    const parent = this.#tasks
+      .itemsIn(path)
+      .find((candidate) => candidate.display.kind === "line" && candidate.display.line === parentLine);
+    return parent === undefined || isExcluded(parent.status) ? null : parentLine;
+  }
+
   async listJournals(selector?: JournalSelector): Promise<readonly JournalInfo[]> {
     return this.#select(selector).flatMap((name) => {
       const config = this.#journals.get(name);
@@ -479,6 +545,35 @@ export class JournalsApiService implements JournalsApi {
         return path === null || file === null ? [] : [{ ...note, path, file }];
       }),
     );
+  }
+
+  async tasksFor(selector: JournalSelector, date: DateInput, options?: TasksForOptions): Promise<readonly TaskItem[]> {
+    await this.#readyForNotes();
+    const calendarDate = this.#date(date);
+    const query = taskQueryFor(options);
+    const allJournals = [...this.#journals.find().list()];
+    const allShelves = [...this.#shelfConfigs.find().list()];
+    const seen = new Set<string>();
+    const found: TaskItem[] = [];
+    for (const name of this.#select(selector)) {
+      const anchor = this.#cycle.anchorOf(name, calendarDate);
+      if (anchor.isNone()) continue;
+      // The same request a journal-tasks fence in that period's note builds, so the two agree.
+      const rows = await buildTaskListing(this.#taskListingDependencies, {
+        kind: "period",
+        hostJournal: name,
+        anchor: anchor.value,
+        journalNames: taskRollupScope(name, allJournals, allShelves),
+        query,
+      });
+      for (const row of rows) {
+        if (row.context || seen.has(row.key)) continue;
+        seen.add(row.key);
+        const task = this.#taskItemFrom(row);
+        if (task !== null) found.push(task);
+      }
+    }
+    return found;
   }
 
   async ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult> {
