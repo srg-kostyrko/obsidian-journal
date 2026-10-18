@@ -22,6 +22,7 @@ import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
 import { tasksCoreModule } from "@/tasks/module";
+import { TaskProviderRegistry } from "@/tasks/provider-registry";
 import { TaskIndex } from "@/tasks/task-index";
 import { buildTaskItem } from "@/tasks/testing";
 import type { TaskItem } from "@/tasks/types";
@@ -740,7 +741,7 @@ async function buildTasksApi(journals: Record<string, JournalConfig>, shelves: R
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals, shelves },
-    initialize: [VaultSubscriptionService],
+    initialize: [VaultSubscriptionService, TaskProviderRegistry],
   });
   return {
     api: harness.resolve(JournalsApiService),
@@ -942,6 +943,7 @@ describe("JournalsApiService tasksFor", () => {
     const harness = await testContainer({
       modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
       data: { journals: { daily }, shelves: {} },
+      initialize: [TaskProviderRegistry],
     });
     const api = harness.resolve(JournalsApiService);
     let settled = false;
@@ -953,6 +955,28 @@ describe("JournalsApiService tasksFor", () => {
     expect(settled).toBe(false);
 
     harness.resolve(JournalsIndex).markReady();
+
+    await expect(pending).resolves.toEqual([]);
+  });
+
+  it("waits for the task providers to start, which on a reload comes after the index is ready", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily }, shelves: {} },
+    });
+    harness.resolve(JournalsIndex).markReady();
+    const api = harness.resolve(JournalsApiService);
+    let settled = false;
+    const pending = api.tasksFor("daily", "2026-09-22").then((found) => {
+      settled = true;
+      return found;
+    });
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+    expect(settled).toBe(false);
+
+    harness.resolve(TaskProviderRegistry).initialize();
 
     await expect(pending).resolves.toEqual([]);
   });

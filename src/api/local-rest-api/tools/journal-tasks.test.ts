@@ -8,6 +8,7 @@ import { fixedJournal } from "@/journals/testing";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import { shelvesCoreModule } from "@/shelves/module";
 import { tasksCoreModule } from "@/tasks/module";
+import { TaskProviderRegistry } from "@/tasks/provider-registry";
 import { TaskIndex } from "@/tasks/task-index";
 import { buildTaskItem } from "@/tasks/testing";
 import { testContainer } from "@/testing";
@@ -22,7 +23,7 @@ async function build() {
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals: { work: fixedJournal("work", { type: "day" }) }, shelves: {} },
-    initialize: [VaultSubscriptionService],
+    initialize: [VaultSubscriptionService, TaskProviderRegistry],
   });
   harness.resolve(JournalsIndex).register({ journalName: "work", anchor: "2026-09-22" as AnchorString, path: NOTE });
   harness.resolve(TaskIndex).publish("checkbox", { path: NOTE }, [

@@ -31,6 +31,7 @@ import { ShelvesRepository } from "@/shelves/repository";
 import { ShelvesService } from "@/shelves/service";
 import { buildTaskListing } from "@/tasks/listing";
 import type { TaskListingDependencies, TaskListingRow } from "@/tasks/listing";
+import { TaskProviderRegistry } from "@/tasks/provider-registry";
 import { DEFAULT_TASK_QUERY } from "@/tasks/query";
 import type { TaskQuery } from "@/tasks/query";
 import { taskRollupScope } from "@/tasks/rollup-scope";
@@ -92,6 +93,7 @@ export class JournalsApiService implements JournalsApi {
   readonly #shelves = inject(ShelvesService);
   readonly #shelfConfigs = inject(ShelvesRepository);
   readonly #tasks = inject(TaskIndex);
+  readonly #taskProviders = inject(TaskProviderRegistry);
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
   readonly #index = inject(JournalsIndex);
@@ -143,6 +145,12 @@ export class JournalsApiService implements JournalsApi {
     // whenReady never settles if readiness never arrives, so a consumer awaiting a call
     // when the user disables Journals would hang forever inside their own plugin.
     await Promise.race([this.#index.whenReady(), this.#unloaded]);
+    this.#assertLoaded();
+  }
+
+  async #readyForTasks(): Promise<void> {
+    await this.#readyForNotes();
+    await Promise.race([this.#taskProviders.whenStarted(), this.#unloaded]);
     this.#assertLoaded();
   }
 
@@ -465,7 +473,10 @@ export class JournalsApiService implements JournalsApi {
     return this.#toApiError(cause, journal);
   }
 
-  #taskItemFrom(row: TaskListingRow): TaskItem | null {
+  #taskItemFrom(
+    row: TaskListingRow,
+    taskLines: Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>,
+  ): TaskItem | null {
     const owner = this.#index.entryByPath(row.source.path);
     if (owner.isNone()) return null;
     const { item } = row;
@@ -480,18 +491,38 @@ export class JournalsApiService implements JournalsApi {
       status: item.status,
       dates: { ...item.dates },
       relations: [...item.relations],
-      parentLine: display.kind === "line" ? this.#enclosingTaskLine(item.path, display.parentLine, display.line) : null,
+      parentLine:
+        display.kind === "line"
+          ? this.#enclosingTaskLine(this.#taskLinesIn(item.path, taskLines), display.parentLine, display.line)
+          : null,
     };
   }
 
   // The structure's parentLine names the enclosing list item whatever it is, and a list starting at
   // line 0 hands a child its own line; only another task in the same note is a parent to report.
-  #enclosingTaskLine(path: VaultPath, parentLine: number | null, ownLine: number): number | null {
+  #enclosingTaskLine(
+    byLine: ReadonlyMap<number, TaskListingRow["item"]>,
+    parentLine: number | null,
+    ownLine: number,
+  ): number | null {
     if (parentLine === null || parentLine === ownLine) return null;
-    const parent = this.#tasks
-      .itemsIn(path)
-      .find((candidate) => candidate.display.kind === "line" && candidate.display.line === parentLine);
+    const parent = byLine.get(parentLine);
     return parent === undefined || isExcluded(parent.status) ? null : parentLine;
+  }
+
+  // Built once per note per call: a note's nested tasks would otherwise each rescan its whole list.
+  #taskLinesIn(
+    path: VaultPath,
+    cache: Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>,
+  ): ReadonlyMap<number, TaskListingRow["item"]> {
+    const cached = cache.get(path);
+    if (cached !== undefined) return cached;
+    const byLine = new Map<number, TaskListingRow["item"]>();
+    for (const item of this.#tasks.itemsIn(path)) {
+      if (item.display.kind === "line") byLine.set(item.display.line, item);
+    }
+    cache.set(path, byLine);
+    return byLine;
   }
 
   async listJournals(selector?: JournalSelector): Promise<readonly JournalInfo[]> {
@@ -548,13 +579,14 @@ export class JournalsApiService implements JournalsApi {
   }
 
   async tasksFor(selector: JournalSelector, date: DateInput, options?: TasksForOptions): Promise<readonly TaskItem[]> {
-    await this.#readyForNotes();
+    await this.#readyForTasks();
     const calendarDate = this.#date(date);
     const query = taskQueryFor(options);
     const allJournals = [...this.#journals.find().list()];
     const allShelves = [...this.#shelfConfigs.find().list()];
     const seen = new Set<string>();
     const found: TaskItem[] = [];
+    const taskLines = new Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>();
     for (const name of this.#select(selector)) {
       const anchor = this.#cycle.anchorOf(name, calendarDate);
       if (anchor.isNone()) continue;
@@ -569,7 +601,7 @@ export class JournalsApiService implements JournalsApi {
       for (const row of rows) {
         if (row.context || seen.has(row.key)) continue;
         seen.add(row.key);
-        const task = this.#taskItemFrom(row);
+        const task = this.#taskItemFrom(row, taskLines);
         if (task !== null) found.push(task);
       }
     }
