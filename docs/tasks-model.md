@@ -136,7 +136,7 @@ Three rules make that claim falsifiable rather than aspirational:
 
 **`checkbox` is enabled by default; `note-property` is not.** The sentence above
 — the user enables a provider — is true of the second and false of the first.
-`has-open-task` works today with no configuration at all, so a checkbox provider
+The old `has-open-task` condition worked with no configuration at all, so a checkbox provider
 that shipped off would silently stop every decoration anyone already has from
 matching the moment they upgrade. It ships on, with an empty identification rule,
 which reproduces today's behavior exactly. `note-property` cannot ship on: it
@@ -331,8 +331,8 @@ paint. Line text hydrates lazily, keyed by `(path, mtime)`, which is why
 `display.markdown` is `null` until something asks for it.
 
 So `NoteMetadata.tasks` **goes**. It is read in exactly four lines, all of them
-inside `hasOpenTask` and `allTasksCompleted`
-(`src/decorations/engine-checks.ts:195`),
+inside the two checks the `tasks` condition replaced, `hasOpenTask` and `allTasksCompleted`
+(since deleted from `src/decorations/engine-checks.ts`),
 and keeping it would leave a second extractor answering the same question a
 different way — the failure this model exists to prevent, reintroduced inside it.
 The engine keeps `metadataFor` for title, tag, property and size; the task
@@ -687,10 +687,10 @@ to overwrite.
 
 ## Decorations ask the same question
 
-`has-open-task` and `all-tasks-completed` are hardcoded points in a space that is
+`has-open-task` and `all-tasks-completed` were hardcoded points in a space that is
 no longer small — seven statuses, two providers, a `date` role, `source`. A
 listing can ask whether there are in-progress items in the notelets; those two
-conditions cannot. Two surfaces that cannot express the same question will
+conditions could not. Two surfaces that cannot express the same question will
 disagree about the same day, which is what this whole model is built to avoid.
 
 So both are replaced by one condition that asks the listing's question:
@@ -720,8 +720,9 @@ For a cell (journal J, period P) it runs in four steps, in `answerTaskQuestion`:
    explicit and replace J's status condition, as a fence's `status:` key does. An unrecognized stored
    value parses as `listing`.
 4. **Quantify.** `any` needs one counted item with the status. `all` needs **at least one counted
-   item and every one with the status** — `allTasksCompleted` returns `false` for a note with no tasks
-   (`engine-checks.ts:201`), and vacuous truth would light every empty day. `none` needs **a period
+   item and every one with the status** — the old `allTasksCompleted` returned `false` for a note with no tasks, and
+   `answerTaskQuestion` (`src/tasks/answer-question.ts`) keeps that, since vacuous truth would
+   light every empty day. `none` needs **a period
    note or a notelet to exist** and no counted item with the status, so a note with no tasks is
    `true` and a date with neither is `false`.
 

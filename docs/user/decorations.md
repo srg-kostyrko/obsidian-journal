@@ -53,7 +53,7 @@ Which conditions a journal decoration offers depends on the journal's period:
 
 A condition about a note — title, tags, a property, its size — needs the note to exist. On a date with
 no note it does not match. **Check tasks** is the exception: with **Look in** set to **Notelets only** or **Note and notelets**, a
-date with only a notelet can match. **None** matches a date that has a note or a notelet where no
+date with only a notelet can match. **None** matches a date that has a note or notelet it looks in, where no
 counted task has the chosen status.
 
 ### Title and tags
@@ -103,8 +103,8 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
 
 - **Which tasks** — **Any** matches when at least one task has the status. **All** matches when the
   period has at least one task and every one of them has the status; a period with no tasks never
-  matches. **None** matches when the period has a note or a notelet and no task has the status, so a
-  note with no tasks matches and a date with neither a note nor a notelet does not.
+  matches. **None** matches when the period has a note or notelet it looks in and no task has the status,
+  so a note with no tasks matches and a date with nothing to look in does not.
 - **Status** — **As in listing**, **Open**, **Done** or **All**. **Open** is To-do, In progress and On
   hold; **Done** is Done and Cancelled; **All** is any status. **As in listing** asks whatever
   the journal's own task listing asks: its **Status** condition if the [journal's listing
@@ -165,9 +165,9 @@ decorations mark the interval in interval lists.
 
 ### Repeating a condition
 
-Title, tag, property, date, offset, tasks and note-size conditions can be added more than once. Weekday, has
-note and has notelet can appear once each: a second copy could not say
-anything the first does not.
+Title, tag, property, date, offset, tasks and note-size conditions can be added more than once.
+Weekday, has note and has notelet can appear once each: a second copy could not say anything the
+first does not.
 
 ## Styles
 
