@@ -26,6 +26,54 @@ async function settled<T>(read: () => Promise<T | null>, what: string): Promise<
   return value;
 }
 
+// The popover-walk test fails on a nightly leg now and then with the popover simply gone, and does
+// not reproduce locally. Every way it can go is a different event: a point that misses the popover
+// hit-tests elsewhere, a real crossing out fires the badge's mouseleave toward that element, the OS
+// taking the pointer or focus away fires one with no related target or a blur, and a re-render
+// detaches the badge.
+// So the trail goes to the page console, which afterTest writes out only when the test fails.
+async function recordPopoverLoss(anchor: string, target: { x: number; y: number }): Promise<void> {
+  await browser.execute(
+    (cellAnchor: string, x: number, y: number) => {
+      const badge = document.querySelector(
+        `.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"] .place-right_top [data-testid="mark-overflow"]`,
+      );
+      const start = performance.now();
+      const log = (line: string): void => {
+        console.debug("[e2e]", "mark-limit", `+${Math.round(performance.now() - start)}ms ${line}`);
+      };
+
+      const popover = badge?.querySelector('[data-testid="mark-overflow-popover"]');
+      const hit = document.elementFromPoint(x, y);
+      log(
+        `before move: target=${x},${y} badge=${JSON.stringify(badge?.getBoundingClientRect())} ` +
+          `popover=${JSON.stringify(popover?.getBoundingClientRect())} hit=${hit?.tagName}.${hit?.className} ` +
+          `inPopover=${popover?.contains(hit) ?? false} focus=${document.hasFocus()}`,
+      );
+      if (badge === null) return;
+
+      badge.addEventListener("mouseleave", (event) => {
+        const mouse = event as MouseEvent;
+        const related = mouse.relatedTarget as Element | null;
+        log(
+          `badge mouseleave trusted=${mouse.isTrusted} at=${mouse.clientX},${mouse.clientY} ` +
+            `related=${related?.tagName}.${related?.className} focus=${document.hasFocus()}`,
+        );
+      });
+      window.addEventListener("blur", () => log("window blur"), { once: true });
+      const detach = new MutationObserver(() => {
+        if (badge.isConnected) return;
+        log("badge detached");
+        detach.disconnect();
+      });
+      detach.observe(document.body, { childList: true, subtree: true });
+    },
+    anchor,
+    target.x,
+    target.y,
+  );
+}
+
 // The fixture pins the limit to 3 and decorates every weekday twice over, so every visible day
 // cell overflows without seeding a note: five small shapes in right_top, and twelve more in
 // left_bottom, whose badge sits against the cell's left edge and opens a popover wide enough to
@@ -160,6 +208,7 @@ describe("decoration mark limit", () => {
     const badgeCenterX = Math.round(location.x + size.width / 2);
     const justBelowBadge = Math.round(location.y + size.height) + 1;
 
+    await recordPopoverLoss(dayAnchor(DAY), { x: badgeCenterX, y: justBelowBadge });
     await browser.action("pointer").move({ duration: 0, x: badgeCenterX, y: justBelowBadge }).perform();
     await expect(popover).toExist();
   });
