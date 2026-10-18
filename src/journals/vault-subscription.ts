@@ -123,7 +123,11 @@ export class VaultSubscriptionService {
 
   initialize(): AsyncResult<void, never> {
     this.#unsubscribes.push(
-      this.#notes.events.on("metadata-changed", (path) => this.#scan(path, { reconcileCustom: true, origin: "live" })),
+      // Read at event time: the walk waits for every note to resolve, and a note parsed in that
+      // window is one that existed at launch, so it must report as the walk would have.
+      this.#notes.events.on("metadata-changed", (path) =>
+        this.#scan(path, { reconcileCustom: true, origin: this.#index.isReady() ? "live" : "walk" }),
+      ),
       this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
       this.#notes.events.on("deleted", (path) => this.#index.unregister(path, "deleted")),
       // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete

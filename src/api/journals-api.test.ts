@@ -4,7 +4,7 @@ import { defineComponent } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { Flows } from "@/infrastructure/flows";
-import { NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { AsyncResult, Option } from "@/infrastructure/result";
@@ -1708,6 +1708,35 @@ describe("JournalsApiService event reasons", () => {
       { path: "D/2026-08-17.md", reason: "indexed", canonical: true },
       { path: "D/2026-08-18.md", reason: "indexed", canonical: true },
     ]);
+  });
+
+  it("marks an existing note whose metadata resolves during startup as indexed, not appeared", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) }, shelves: {} },
+    });
+    const imported = harness.host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    const cache = harness.host.app.metadataCache;
+    const read = cache.getFileCache.bind(cache);
+    const unparsed = vi
+      .spyOn(cache, "getFileCache")
+      .mockImplementation((file) => (file === imported ? null : read(file)));
+    const batches: (() => void)[] = [];
+    vi.spyOn(harness.resolve(NoteMetadataService), "onResolved").mockImplementation((callback) => {
+      batches.push(callback);
+      return () => void batches.splice(batches.indexOf(callback), 1);
+    });
+    const added: { path: string; reason: string }[] = [];
+    harness.resolve(JournalsApiService).on("noteAdded", ({ path, reason }) => {
+      added.push({ path, reason });
+    });
+    await harness.resolve(VaultSubscriptionService).initialize();
+
+    unparsed.mockImplementation(read);
+    harness.host.emitMetadata("D/2026-08-18.md");
+    for (const batch of batches.splice(0)) batch();
+
+    expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "indexed" }]);
   });
 
   it("marks a note that shows up after startup as appeared", async () => {
