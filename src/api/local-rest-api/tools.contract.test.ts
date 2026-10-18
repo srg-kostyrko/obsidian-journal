@@ -48,7 +48,7 @@ describe("MCP tools contract", () => {
 
     const { tools: listed } = await client.listTools();
 
-    expect(listed).toHaveLength(4);
+    expect(listed).toHaveLength(5);
     for (const tool of tools) {
       const advertised = listed.find((candidate) => candidate.name === tool.name);
       expect(advertised?.inputSchema.required ?? []).toEqual(requiredKeys(tool.input));
@@ -80,7 +80,7 @@ describe("MCP tools contract", () => {
 
     const { tools } = await client.listTools();
 
-    expect(tools).toHaveLength(4);
+    expect(tools).toHaveLength(5);
     for (const tool of tools) {
       expect(tool.annotations).toMatchObject({ destructiveHint: false, openWorldHint: false });
     }
@@ -94,6 +94,7 @@ describe("MCP tools contract", () => {
     expect(Object.fromEntries(tools.map((tool) => [tool.name, tool.annotations]))).toEqual({
       journal_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
       journal_notes: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      journal_note_adjacent: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
       journal_note_ensure: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
       journal_notelet_create: {
         readOnlyHint: false,

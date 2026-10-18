@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
   dates are never lit. **Narrow further** counts only tasks under a heading or carrying a tag. A
   decoration can hold more than one. See
   [Decorations](https://srg-kostyrko.github.io/obsidian-journal/decorations#tasks) in the manual.
+- The plugin API can now find the note before or after a date. `previousNote(selector, date)` and `nextNote(selector, date)` return the nearest note that exists on either side of the period holding the date, skipping periods with no note — so `previousNote("Work Daily", "today")` is the last day you wrote, not necessarily yesterday, which a rollover-style plugin previously had to answer by walking every markdown file in the vault. The period holding the date never counts as its own neighbor, each matched journal answers at most one note, and a journal with nothing on that side answers none. The Local REST API gains the same lookup as `GET /journals/<name>/notes/<date>/previous` and `…/next`, answering `{ "note": null }` rather than a 404 when there is nothing there, and MCP agents get a `journal_note_adjacent` tool. `apiVersion` stays 1; a test double written as `implements JournalsApi` will stop compiling until it gains the two methods.
 
 ### Changed
 
