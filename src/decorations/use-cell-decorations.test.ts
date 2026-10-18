@@ -4,7 +4,13 @@ import { defineComponent, h, inject as vInject, nextTick, ref, type Ref } from "
 import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { Period } from "@/calendar";
 import { date } from "@/calendar/testing";
-import { NoteMetadataService, NoteSizeService, NoteStructureService, type VaultPath } from "@/infrastructure/host";
+import {
+  NoteMetadataService,
+  NoteSizeService,
+  NoteStructureService,
+  type NoteStructure,
+  type VaultPath,
+} from "@/infrastructure/host";
 import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
@@ -166,6 +172,15 @@ function mountLimit(harness: TestHarness): Ref<number> {
   const limit = captured.value;
   if (!limit) throw new Error("mark limit was not provided");
   return limit;
+}
+
+function structureUnder(heading: string): NoteStructure {
+  return {
+    listItems: [{ marker: " ", line: 2, endLine: 2, parent: null }],
+    tags: [],
+    headings: [{ heading, level: 1, line: 0 }],
+    frontmatterTags: [],
+  };
 }
 
 async function withHasNote(): Promise<{ harness: TestHarness; period: DayPeriod; path: VaultPath }> {
@@ -525,6 +540,92 @@ describe("useCellDecorations", () => {
       index.unregister(path);
       await nextTick();
       expect(slot.value).toHaveLength(0);
+    });
+
+    describe("a notelet's structure changes without its task items changing", () => {
+      const noteletPath = "journals/2026-05-25.standup.md" as VaultPath;
+
+      async function setup(): Promise<{
+        harness: DecorationsHarness["harness"];
+        structures: FakeNoteStructureService;
+        period: DayPeriod;
+      }> {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("tasks", { status: "listing", source: "notelets" })],
+          styles: [buildStyle("background")],
+        });
+        const { harness, structures } = await buildHarness([decoration]);
+        const journals = harness.resolve(JournalsRepository);
+        const journal = journals.get("daily");
+        if (journal.isNone()) throw new Error("journal missing");
+        journals.update("daily", {
+          tasks: {
+            ...journal.value.tasks,
+            filter: { mode: "and", conditions: [{ type: "heading", condition: "not-under", headings: ["Work"] }] },
+          },
+        });
+        const period = DayPeriod.containing(date("2026-05-25"));
+        // metadata-changed only fires for a file the vault holds.
+        harness.host.putFile(noteletPath);
+        structures.setStructure(noteletPath, structureUnder("Work"));
+        harness.resolve(TaskIndex).publish("test", { path: noteletPath }, [
+          {
+            ...taskItem(noteletPath, "todo"),
+            display: { kind: "line", path: noteletPath, line: 2, endLine: 2, parentLine: null, markdown: null },
+          },
+        ]);
+        return { harness, structures, period };
+      }
+
+      function registerNotelet(harness: DecorationsHarness["harness"], period: DayPeriod): void {
+        harness.resolve(JournalsIndex).register({
+          kind: "notelet",
+          journalName: "daily",
+          anchor: period.anchor.toAnchor(),
+          path: noteletPath,
+          typeName: "Standup",
+          typeId: "nt_a" as TypeId,
+        });
+      }
+
+      it("repaints when the notelet existed before mount", async () => {
+        const { harness, structures, period } = await setup();
+        registerNotelet(harness, period);
+        const { captured } = mount(harness, () =>
+          useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+        );
+        await nextTick();
+        const slot = captured.value!.get(key(period))!;
+        expect(slot.value).toHaveLength(0);
+
+        structures.setStructure(noteletPath, structureUnder("Home"));
+        harness.host.emitMetadata(noteletPath);
+        await nextTick();
+        expect(slot.value).toHaveLength(1);
+      });
+
+      it("repaints when the notelet was added after mount and a reseed ran since", async () => {
+        const { harness, structures, period } = await setup();
+        const { captured } = mount(harness, () =>
+          useCellDecorations({ periods: () => [period], journalNames: () => ["daily"] }),
+        );
+        await nextTick();
+        registerNotelet(harness, period);
+        await nextTick();
+        const journals = harness.resolve(JournalsRepository);
+        const journal = journals.get("daily");
+        if (journal.isNone()) throw new Error("journal missing");
+        journals.update("daily", { tasks: { ...journal.value.tasks } });
+        await nextTick();
+        const slot = captured.value!.get(key(period))!;
+        expect(slot.value).toHaveLength(0);
+
+        structures.setStructure(noteletPath, structureUnder("Home"));
+        harness.host.emitMetadata(noteletPath);
+        await nextTick();
+        expect(slot.value).toHaveLength(1);
+      });
     });
 
     it("decorates a week cell whose anchor collides with a day cell when its entry is added", async () => {
