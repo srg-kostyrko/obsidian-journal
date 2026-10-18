@@ -52,8 +52,9 @@ Which conditions a journal decoration offers depends on the journal's period:
 | **Check interval offset**         |       |                                      |        ✓         |
 
 A condition about a note — title, tags, a property, its size — needs the note to exist. On a date with
-no note it does not match. **Check tasks** is the exception: with **Look in** set to notelets, a date
-with no period note can match, and **None** matches any date that has a note or a notelet.
+no note it does not match. **Check tasks** is the exception: with **Look in** set to **Notelets only** or **Note and notelets**, a
+date with only a notelet can match. **None** matches a date that has a note or a notelet where no
+counted task has the chosen status.
 
 ### Title and tags
 
