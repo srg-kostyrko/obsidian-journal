@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { date } from "@/calendar/testing";
-import { NoteMetadataService, NoteSizeService } from "@/infrastructure/host";
-import type { NoteSize, VaultPath } from "@/infrastructure/host";
-import { FakeNoteSizeService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
+import type { NoteSize, NoteStructure, VaultPath } from "@/infrastructure/host";
+import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
 import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
@@ -27,14 +27,18 @@ import type { JournalDecoration } from "./config";
 
 async function buildHarness(
   journals: Record<string, JournalConfig> = {},
-): Promise<{ harness: TestHarness; size: FakeNoteSizeService }> {
+): Promise<{ harness: TestHarness; size: FakeNoteSizeService; structures: FakeNoteStructureService }> {
   const size = new FakeNoteSizeService();
+  const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: {}, decorations: { decorations: [] } },
-    overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
+    overrides: [
+      overrideWith(NoteSizeService, size as unknown as NoteSizeService),
+      overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
+    ],
   });
-  return { harness, size };
+  return { harness, size, structures };
 }
 
 // A fortnightly journal bounded to a single month. Its intervals start 2026-01-05, 2026-01-19,
@@ -78,9 +82,9 @@ function taskItem(status: TaskStatus): TaskItem {
 
 const NOTELET_TASK_PATH = "journals/notelets/standup.md" as VaultPath;
 
-function taskItemAt(path: VaultPath, status: TaskStatus): TaskItem {
+function taskItemAt(path: VaultPath, status: TaskStatus, line = 0): TaskItem {
   const item = taskItem(status);
-  return { ...item, path, key: `${path}:${status}`, display: { ...item.display, path } };
+  return { ...item, path, key: `${path}:${status}`, display: { ...item.display, path, line, endLine: line } };
 }
 
 async function evaluateTaskCondition(
@@ -90,6 +94,7 @@ async function evaluateTaskCondition(
     items?: readonly TaskStatus[];
     noteletItems?: readonly TaskStatus[];
     journalFilter?: TaskRule;
+    structure?: NoteStructure;
   },
 ): Promise<Map<string, unknown>> {
   const decoration = buildDecoration({
@@ -97,7 +102,7 @@ async function evaluateTaskCondition(
     conditions: [questions].flat().map((q) => buildCondition("tasks", q)),
     styles: [buildStyle("background")],
   });
-  const { harness } = await buildHarness({
+  const { harness, structures } = await buildHarness({
     daily: fixedJournal(
       "daily",
       { type: "day" },
@@ -112,11 +117,12 @@ async function evaluateTaskCondition(
   if (options.registerNote) {
     index.register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
   }
+  if (options.structure) structures.setStructure(NOTE_PATH, options.structure);
   if (options.items) {
     harness.resolve(TaskIndex).publish(
       "test",
       { path: NOTE_PATH },
-      options.items.map((s) => taskItemAt(NOTE_PATH, s)),
+      options.items.map((s) => taskItemAt(NOTE_PATH, s, options.structure ? 2 : 0)),
     );
   }
   if (options.noteletItems) {
@@ -535,6 +541,40 @@ describe("DecorationEngine", () => {
           },
         );
         expect(result.size).toBe(0);
+      });
+
+      describe("heading filter on the journal", () => {
+        const underWork: NoteStructure = {
+          listItems: [{ marker: " ", line: 2, endLine: 2, parent: null }],
+          tags: [],
+          headings: [{ heading: "Work", level: 1, line: 0 }],
+          frontmatterTags: [],
+        };
+        const excludeWork: TaskRule = {
+          mode: "and",
+          conditions: [{ type: "heading", condition: "not-under", headings: ["Work"] }],
+        };
+
+        it("leaves the day undecorated when the only open item sits under an excluded heading", async () => {
+          const result = await evaluateTaskCondition(
+            { status: "open" },
+            { registerNote: true, items: ["todo"], structure: underWork, journalFilter: excludeWork },
+          );
+          expect(result.size).toBe(0);
+        });
+
+        it("decorates the day when the same item sits under an admitted heading", async () => {
+          const result = await evaluateTaskCondition(
+            { status: "open" },
+            {
+              registerNote: true,
+              items: ["todo"],
+              structure: { ...underWork, headings: [{ heading: "Home", level: 1, line: 0 }] },
+              journalFilter: excludeWork,
+            },
+          );
+          expect(result.size).toBe(1);
+        });
       });
 
       it("evaluates two tasks conditions independently", async () => {

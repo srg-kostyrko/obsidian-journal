@@ -89,9 +89,9 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
   }
 
   function reseed(): void {
-    // TaskIndex is not Vue-reactive (see useTasksVersion), so tasks
-    // conditions evaluated below would otherwise never re-run once a provider publishes after
-    // this watchEffect's first pass. Reading the version here registers it as a dependency.
+    // TaskIndex is not Vue-reactive (see useTasksVersion), so tasks conditions evaluated below
+    // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
+    // Reading the version here registers it as a dependency.
     void tasksVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);
