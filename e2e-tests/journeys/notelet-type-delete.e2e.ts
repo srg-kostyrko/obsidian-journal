@@ -11,7 +11,7 @@ import {
   openSettings,
   selectModalSelect,
 } from "../support/settings.js";
-import { frontmatterOf, noteExists, seedNote } from "../support/vault.js";
+import { frontmatterOf, noteExists, seedNote, waitForFrontmatter } from "../support/vault.js";
 
 // The three delete modes each drive NoteConnectionService over a real vault: clear rewrites
 // frontmatter, delete trashes files, keep touches nothing. Two things only a real vault can
@@ -31,12 +31,15 @@ async function seedBothNotelets(): Promise<void> {
   await seedNote(MEETING, noteletNote("Meeting", "journal-notelet-index: 1\n"));
   await seedNote(RETRO, noteletNote("Retro"));
   // The index has to have parsed both before the delete flow counts and purges them.
-  await browser.waitUntil(
-    async () => {
-      const frontmatter = await frontmatterOf(MEETING);
-      return frontmatter?.["journal-notelet"] === "Meeting";
-    },
-    { timeoutMsg: "seeded meeting notelet never reached metadataCache" },
+  await waitForFrontmatter(
+    MEETING,
+    (frontmatter) => frontmatter["journal-notelet"] === "Meeting",
+    "seeded meeting notelet never reached metadataCache",
+  );
+  await waitForFrontmatter(
+    RETRO,
+    (frontmatter) => frontmatter["journal-notelet"] === "Retro",
+    "seeded retro notelet never reached metadataCache",
   );
 }
 

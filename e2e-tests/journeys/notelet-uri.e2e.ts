@@ -3,7 +3,7 @@ import { browser, expect } from "@wdio/globals";
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { waitForNotice } from "../support/notices.js";
 import { openViaUri } from "../support/uri.js";
-import { frontmatterOf, noteExists, todayAnchor, waitForActiveNoteIn } from "../support/vault.js";
+import { frontmatterOf, noteExists, todayAnchor, waitForActiveNoteIn, waitForFrontmatter } from "../support/vault.js";
 
 // The notelet arm of the obsidian://journals handler. Its two refusals are notice-only — nothing
 // is written and no flow error surfaces — so a regression there is silent unless something drives
@@ -21,6 +21,12 @@ describe("notelet uri", () => {
     await openViaUri({ journal: "daily", notelet: "Meeting", date: "today" });
 
     const path = await waitForActiveNoteIn("day/meetings");
+    // The note becomes the active leaf before metadataCache has parsed it.
+    await waitForFrontmatter(
+      path,
+      (frontmatter) => frontmatter["journal-notelet"] === "Meeting",
+      "the notelet opened by the uri never reached metadataCache",
+    );
     const frontmatter = await frontmatterOf(path);
     expect(frontmatter?.journal).toBe("daily");
     expect(frontmatter?.["journal-notelet"]).toBe("Meeting");
