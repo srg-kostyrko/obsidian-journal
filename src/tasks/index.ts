@@ -20,3 +20,5 @@ export { TaskProviderToken, TaskHostToken } from "./types";
 export { isOpen, isDone, isExcluded } from "./status";
 export { TaskProviderRegistry } from "./provider-registry";
 export { TaskIndex } from "./task-index";
+export { taskQuestionSchema, taskQuestionStatuses, type TaskQuestion } from "./question";
+export { answerTaskQuestion, type TaskQuestionDependencies } from "./answer-question";
