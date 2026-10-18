@@ -78,6 +78,13 @@
       ],
     },
     {
+      // wdio-obsidian-service peers on webdriverio ^9 (3.3.0, its latest), so a
+      // wdio 10 bump cannot produce a lockfile and fails `npm ci` everywhere
+      // (#523). Lift this once a release of it accepts webdriverio 10.
+      matchPackageNames: ["webdriverio", "@wdio/**"],
+      allowedVersions: "<10",
+    },
+    {
       // .tool-versions says `nodejs latest`, which is not a version Renovate
       // can reason about. Off explicitly rather than by accident.
       matchManagers: ["asdf"],
