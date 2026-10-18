@@ -6,7 +6,7 @@ import { useService } from "@/infrastructure/di";
 import { describeCondition } from "./describe-condition";
 
 const { type } = defineProps<{
-  type: Extract<JournalDecorationCondition["type"], "has-note" | "has-open-task" | "all-tasks-completed">;
+  type: Extract<JournalDecorationCondition["type"], "has-note">;
 }>();
 
 const calendar = useService(Calendar);

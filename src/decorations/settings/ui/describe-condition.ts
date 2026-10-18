@@ -2,7 +2,8 @@ import { match } from "ts-pattern";
 
 import type { Calendar } from "@/calendar";
 import type { JournalDecorationCondition } from "@/decorations";
-import { m } from "@/i18n";
+import { formatConjunction, formatDisjunction, m } from "@/i18n";
+import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
 
 import { DATE_CONDITION_ANY, storedMonthToDisplay } from "../../date-condition";
 
@@ -64,8 +65,19 @@ export function describeCondition(
         value: c.value,
       }),
     )
-    .with({ type: "has-open-task" }, () => m.decoration_condition_has_open_task_describe())
-    .with({ type: "all-tasks-completed" }, () => m.decoration_condition_all_tasks_completed_describe())
+    .with({ type: "tasks" }, (c) => {
+      const base = m.decoration_condition_tasks_describe({
+        quantifier: c.quantifier,
+        status: c.status,
+        source: m.decoration_condition_tasks_source_phrase({ source: c.source }),
+      });
+      const parts = c.filter.conditions.flatMap((condition) =>
+        condition.type === "status" ? [] : [describeTagOrHeadingCondition(condition)],
+      );
+      if (parts.length === 0) return base;
+      const join = c.filter.mode === "or" ? formatDisjunction : formatConjunction;
+      return m.decoration_condition_tasks_describe_narrowed({ base, conditions: join(parts) });
+    })
     .with({ type: "has-notelet" }, (c) => {
       if (c.typeIds.length === 0) return m.decoration_condition_has_notelet_describe_any();
       const names = c.typeIds.map((id) => typeName?.(id) ?? m.decoration_condition_has_notelet_unknown_type());

@@ -136,7 +136,7 @@ Three rules make that claim falsifiable rather than aspirational:
 
 **`checkbox` is enabled by default; `note-property` is not.** The sentence above
 — the user enables a provider — is true of the second and false of the first.
-`has-open-task` works today with no configuration at all, so a checkbox provider
+The old `has-open-task` condition worked with no configuration at all, so a checkbox provider
 that shipped off would silently stop every decoration anyone already has from
 matching the moment they upgrade. It ships on, with an empty identification rule,
 which reproduces today's behavior exactly. `note-property` cannot ship on: it
@@ -331,8 +331,8 @@ paint. Line text hydrates lazily, keyed by `(path, mtime)`, which is why
 `display.markdown` is `null` until something asks for it.
 
 So `NoteMetadata.tasks` **goes**. It is read in exactly four lines, all of them
-inside `hasOpenTask` and `allTasksCompleted`
-(`src/decorations/engine-checks.ts:195`),
+inside the two checks the `tasks` condition replaced, `hasOpenTask` and `allTasksCompleted`
+(since deleted from `src/decorations/engine-checks.ts`),
 and keeping it would leave a second extractor answering the same question a
 different way — the failure this model exists to prevent, reintroduced inside it.
 The engine keeps `metadataFor` for title, tag, property and size; the task
@@ -687,34 +687,75 @@ to overwrite.
 
 ## Decorations ask the same question
 
-`has-open-task` and `all-tasks-completed` are hardcoded points in a space that is
+`has-open-task` and `all-tasks-completed` were hardcoded points in a space that is
 no longer small — seven statuses, two providers, a `date` role, `source`. A
 listing can ask whether there are in-progress items in the notelets; those two
-conditions cannot. Two surfaces that cannot express the same question will
+conditions could not. Two surfaces that cannot express the same question will
 disagree about the same day, which is what this whole model is built to avoid.
 
-So both are replaced by one condition carrying a scope and a filter:
+So both are replaced by one condition that asks the listing's question:
 
 ```
-{ type: "tasks", quantifier: "any" | "all" | "none", scope: {…}, filter: {…} }
+{ type: "tasks", quantifier: "any" | "all" | "none",
+  status: "listing" | "open" | "done" | "all",
+  source: "note" | "notelets" | "both",
+  filter: { mode, conditions: [heading | tag …] } }
 ```
 
-- `has-open-task` becomes `any` over `status: open`
-- `all-tasks-completed` becomes `all` over `status: done`
+For a cell (journal J, period P) it runs in four steps, in `answerTaskQuestion`:
+
+1. **Gather.** The source notes for P under `source` (default `both`) — the same `sourceNotes` walk
+   the listing uses. Every notelet at P is gathered whatever its items; J's filter applies to the
+   items inside it in step 2, so a notelet whose items are all filtered out still counts as existing
+   for `none`.
+2. **Count.** Each note's provider items minus `non-task`, kept when they pass the heading and tag
+   part of J's `tasks.filter` merged with the condition's `filter`. The merge is the listing's: a
+   condition type the decoration names **replaces** J's conditions of that type, J's other conditions
+   still apply, and the decoration's `mode` combines them. The inapplicable-condition drop rule is
+   unchanged, so an item with no `NoteStructure` yet over-matches rather than vanishing.
+3. **Ask.** Status is lifted out of the filter as the question. `listing` (**As in listing**, the
+   default for a new condition) asks J's stored status condition — `is` or `is-not`, canonical
+   names and groups alike, empty meaning every status — and falls back to `open`
+   (`DEFAULT_STATUS_CONDITION`), the chain `composeFilters` applies. `open`, `done` and `all` are
+   explicit and replace J's status condition, as a fence's `status:` key does. An unrecognized stored
+   value parses as `listing`.
+4. **Quantify.** `any` needs one counted item with the status. `all` needs **at least one counted
+   item and every one with the status** — the old `allTasksCompleted` returned `false` for a note with no tasks, and
+   `answerTaskQuestion` (`src/tasks/answer-question.ts`) keeps that, since vacuous truth would
+   light every empty day. `none` needs **a period
+   note or a notelet to exist** and no counted item with the status, so a note with no tasks is
+   `true` and a date with neither is `false`.
+
+- `has-open-task` becomes `any` · `open` · `both`
+- `all-tasks-completed` becomes `all` · `done` · `both`
 - `none` becomes expressible for the first time — "this day has no open work" as
   a condition rather than a decoration someone has to invert
 
-Two details are load-bearing:
+Details that are load-bearing:
 
-- **`all` means non-empty and every.** `allTasksCompleted` returns `false` for a
-  note with no tasks today (`engine-checks.ts:201`). Vacuous truth would light
-  every empty day in the calendar.
-- **The scope inside the condition still refuses `depth`.** The rollup ban on
-  decorations is unchanged — the engine evaluates per cell across a whole grid.
+- **Status is not a row in the condition's filter.** In the listing status is one more condition in
+  the and/or list; in a decoration it is the question, and heading and tag select who is asked.
+  Inside one or-list "all Done OR under `## Work`" has no meaning. A `status` row found in a stored
+  filter is stripped on read, never rejected, because a failed condition fails the journal's whole
+  `decorations` field and the repair would reset the list.
+- **The journal's filter is inherited and its meaning moves with it.** With **As in listing**, or with
+  inherited heading and tag conditions, editing J's task filter changes what the dot means, so the
+  decoration watcher reads that filter.
+- **Deliberate divergence under `or`.** J's stored filter has no mode of its own, so `merge` takes the
+  decoration's. Under `or` J's inherited conditions join the decoration's and can admit more than J
+  alone does — as a tasks view block with `mode: or` does today. The listing's or-list cannot be
+  quantified (status inside it would be a disjunct, not a question), so no mode makes the two agree
+  about status there; the editor keeps the and/or control and the divergence is accepted.
+- **The scope refuses `depth`.** The rollup ban on decorations is unchanged — the engine evaluates per
+  cell across a whole grid. `provider` and `date` are not offered either; the listing's view block
+  does not expose them.
+- **No text hydration.** The condition reads status and `NoteStructure` only.
 
-This is a schema change to configs people already run, so it carries a
-**deterministic rewrite** of the two old condition types into the new one, not a
-release note.
+This is a schema change to configs people already run, so it carries a **deterministic rewrite**
+(settings v6 to v7, `v6-to-v7.ts`) of the two old condition types into the new one, with the status
+written out so a migrated condition never starts following a journal filter that shows every status.
+It also changes what two surfaces answer on upgrade: dots now honour the journal's task filter, and
+now read notelets.
 
 ## What the API exposes
 

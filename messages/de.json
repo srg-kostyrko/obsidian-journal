@@ -818,7 +818,6 @@
   ],
   "decoration_breakdown_interval_heading": "Intervall – {journal} – {label}",
   "decoration_explain_menu_item": "Dekorationen erklären",
-  "decoration_condition_all_tasks_completed_describe": "alle Aufgaben sind erledigt",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -858,7 +857,6 @@
   "decoration_condition_has_notelet_empty": "Dieses Journal hat noch keine Kurznotiz-Typen.",
   "decoration_condition_has_notelet_label": "Kurznotiz-Typen",
   "decoration_condition_has_notelet_unknown_type": "unbekannter Typ",
-  "decoration_condition_has_open_task_describe": "die Notiz hat eine offene Aufgabe",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -923,6 +921,56 @@
   "decoration_condition_property_value_label": "Wert",
   "decoration_condition_tag_describe": "Tag {op} {value}",
   "decoration_condition_tag_value_label": "Tag-Wert",
+  "decoration_condition_tasks_quantifier_label": "Welche Aufgaben",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "Irgendeine",
+        "quantifier=all": "Alle",
+        "quantifier=none": "Keine"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "Status",
+  "decoration_condition_tasks_status_listing": "Wie in der Anzeige",
+  "decoration_condition_tasks_source_label": "Suchen in",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "in der Notiz",
+        "source=notelets": "in ihren Kurznotizen",
+        "source=both": "in der Notiz oder ihren Kurznotizen"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "Weiter eingrenzen",
+  "decoration_condition_tasks_narrow_description": "Zählt nur Aufgaben, die diesen entsprechen, zusätzlich zum Aufgabenfilter des Journals.",
+  "decoration_condition_tasks_narrow_add": "Einschränkende Bedingung hinzufügen",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "eine Aufgabe passt zum Anzeigefilter dieses Journals {source}",
+        "quantifier=any,status=open": "eine Aufgabe ist offen {source}",
+        "quantifier=any,status=done": "eine Aufgabe ist erledigt {source}",
+        "quantifier=any,status=all": "eine Aufgabe existiert {source}",
+        "quantifier=all,status=listing": "alle Aufgaben passen zum Anzeigefilter dieses Journals {source}",
+        "quantifier=all,status=open": "alle Aufgaben sind offen {source}",
+        "quantifier=all,status=done": "alle Aufgaben sind erledigt {source}",
+        "quantifier=all,status=all": "eine Aufgabe existiert {source}",
+        "quantifier=none,status=listing": "keine Aufgabe passt zum Anzeigefilter dieses Journals {source}",
+        "quantifier=none,status=open": "keine Aufgabe ist offen {source}",
+        "quantifier=none,status=done": "keine Aufgabe ist erledigt {source}",
+        "quantifier=none,status=all": "keine Aufgabe existiert {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}, {conditions}",
   "decoration_condition_title_describe": "Titel {op} {value}",
   "decoration_condition_title_value_label": "Titelwert",
   "decoration_condition_type_short": [
@@ -937,8 +985,7 @@
         "type=weekday": "Wochentag",
         "type=offset": "Offset",
         "type=has-note": "Notiz vorhanden",
-        "type=has-open-task": "Offene Aufgabe vorhanden",
-        "type=all-tasks-completed": "Alle Aufgaben erledigt",
+        "type=tasks": "Aufgaben",
         "type=note-size": "Notizgröße",
         "type=has-notelet": "Kurznotiz vorhanden"
       }
@@ -956,8 +1003,7 @@
         "type=weekday": "Wochentag prüfen",
         "type=offset": "Intervall-Offset prüfen",
         "type=has-note": "Prüfen, ob eine Notiz existiert",
-        "type=has-open-task": "Prüfen, ob die Notiz offene Aufgaben hat",
-        "type=all-tasks-completed": "Prüfen, ob alle Aufgaben erledigt sind",
+        "type=tasks": "Aufgaben prüfen",
         "type=note-size": "Notizgröße prüfen",
         "type=has-notelet": "Prüfen, ob eine Kurznotiz existiert"
       }

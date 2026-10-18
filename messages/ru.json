@@ -824,7 +824,6 @@
   ],
   "decoration_breakdown_interval_heading": "Интервал — {journal} — {label}",
   "decoration_explain_menu_item": "Объяснить оформление",
-  "decoration_condition_all_tasks_completed_describe": "все задачи выполнены",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -864,7 +863,6 @@
   "decoration_condition_has_notelet_empty": "В этом журнале ещё нет типов подзаметок.",
   "decoration_condition_has_notelet_label": "Типы подзаметок",
   "decoration_condition_has_notelet_unknown_type": "неизвестный тип",
-  "decoration_condition_has_open_task_describe": "в заметке есть незавершённая задача",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -929,6 +927,56 @@
   "decoration_condition_property_value_label": "Значение",
   "decoration_condition_tag_describe": "тег {op} {value}",
   "decoration_condition_tag_value_label": "Значение тега",
+  "decoration_condition_tasks_quantifier_label": "Какие задачи",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "Любая",
+        "quantifier=all": "Все",
+        "quantifier=none": "Ни одна"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "Статус",
+  "decoration_condition_tasks_status_listing": "Как в списке",
+  "decoration_condition_tasks_source_label": "Где искать",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "в заметке",
+        "source=notelets": "в её подзаметках",
+        "source=both": "в заметке или её подзаметках"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "Сузить дополнительно",
+  "decoration_condition_tasks_narrow_description": "Учитываются только задачи, подходящие под эти условия, помимо фильтра задач журнала.",
+  "decoration_condition_tasks_narrow_add": "Добавить уточняющее условие",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "какая-либо задача соответствует фильтру списка этого журнала {source}",
+        "quantifier=any,status=open": "какая-либо задача открыта {source}",
+        "quantifier=any,status=done": "какая-либо задача выполнена {source}",
+        "quantifier=any,status=all": "есть хотя бы одна задача {source}",
+        "quantifier=all,status=listing": "все задачи соответствуют фильтру списка этого журнала {source}",
+        "quantifier=all,status=open": "все задачи открыты {source}",
+        "quantifier=all,status=done": "все задачи выполнены {source}",
+        "quantifier=all,status=all": "есть хотя бы одна задача {source}",
+        "quantifier=none,status=listing": "ни одна задача не соответствует фильтру списка этого журнала {source}",
+        "quantifier=none,status=open": "ни одна задача не открыта {source}",
+        "quantifier=none,status=done": "ни одна задача не выполнена {source}",
+        "quantifier=none,status=all": "нет ни одной задачи {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}, {conditions}",
   "decoration_condition_title_describe": "заголовок {op} {value}",
   "decoration_condition_title_value_label": "Значение заголовка",
   "decoration_condition_type_short": [
@@ -943,8 +991,7 @@
         "type=weekday": "День недели",
         "type=offset": "Смещение",
         "type=has-note": "Есть заметка",
-        "type=has-open-task": "Есть незавершённая задача",
-        "type=all-tasks-completed": "Все задачи выполнены",
+        "type=tasks": "Задачи",
         "type=note-size": "Размер заметки",
         "type=has-notelet": "Есть подзаметка"
       }
@@ -962,8 +1009,7 @@
         "type=weekday": "Проверить день недели",
         "type=offset": "Проверить смещение в интервале",
         "type=has-note": "Проверить, существует ли заметка",
-        "type=has-open-task": "Проверить, есть ли в заметке незавершённые задачи",
-        "type=all-tasks-completed": "Проверить, все ли задачи выполнены",
+        "type=tasks": "Проверить задачи",
         "type=note-size": "Проверить размер заметки",
         "type=has-notelet": "Проверить, существует ли подзаметка"
       }

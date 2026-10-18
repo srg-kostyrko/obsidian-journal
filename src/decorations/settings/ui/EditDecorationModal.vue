@@ -11,6 +11,7 @@ import {
 } from "@/decorations";
 import { m } from "@/i18n";
 import { useModal } from "@/infrastructure/host/modals";
+import { taskRuleConditionErrors } from "@/tasks/ui/task-rule-form-schema";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiButtonDropdown from "@/ui/UiButtonDropdown.vue";
@@ -39,7 +40,15 @@ const { values, handleSubmit } = useForm<JournalDecoration>({
 const conditions = useFieldArray<JournalDecorationCondition>("conditions");
 const { value: mode } = useField<JournalDecoration["mode"]>("mode");
 
-const incomplete = computed(() => values.conditions.length === 0 || values.styles.length === 0);
+// Storage stays permissive, so an empty narrowing row would save — and still replace the
+// journal's own conditions of its type, widening the question instead of leaving it open.
+const unfinishedNarrowing = computed(() =>
+  values.conditions.some((c) => c.type === "tasks" && taskRuleConditionErrors(c.filter).size > 0),
+);
+
+const incomplete = computed(
+  () => values.conditions.length === 0 || values.styles.length === 0 || unfinishedNarrowing.value,
+);
 
 const addConditionOptions = computed<{ value: string; label: string }[]>(() => {
   const allowed = props.conditionTypes;

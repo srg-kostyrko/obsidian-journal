@@ -36,7 +36,7 @@ function check(condition: CheckboxCondition, item: StructureListItem, structure:
 
 // An empty condition list means "no constraint" — the inverse of DecorationEngine, where an
 // empty list matches nothing. The shipped default is empty, and it has to keep every existing
-// has-open-task decoration matching.
+// tasks decoration matching.
 function evaluate(
   rule: CheckboxRule | CheckboxJournalRule,
   item: StructureListItem,

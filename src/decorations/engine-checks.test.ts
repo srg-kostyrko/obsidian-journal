@@ -7,10 +7,8 @@ import type { CycleService } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import type { TypeId } from "@/journals/notelets/config";
 import type { NoteletEntry } from "@/journals/types";
-import type { TaskItem, TaskStatus } from "@/tasks";
 
 import {
-  allTasksCompleted,
   checkDate,
   checkHasNotelet,
   checkNoteSize,
@@ -19,7 +17,6 @@ import {
   checkTag,
   checkTitle,
   checkWeekday,
-  hasOpenTask,
 } from "./engine-checks";
 import { buildCondition } from "./testing";
 
@@ -40,31 +37,6 @@ function meta(partial: Partial<NoteMetadata>): NoteMetadata {
     tags: [],
     properties: {},
     ...partial,
-  };
-}
-
-// The marker is cosmetic — engine-checks reads only `status`, already normalized by whichever
-// provider produced it. Defaulting through the checkbox provider's own default map keeps the
-// marker meaningful without coupling this file to that provider's module.
-const DEFAULT_MARKER_STATUS: Record<string, TaskStatus> = {
-  " ": "todo",
-  x: "done",
-  X: "done",
-  "/": "in-progress",
-  "-": "cancelled",
-};
-
-function taskItem(marker: string, status?: TaskStatus): TaskItem {
-  const path = "note.md" as VaultPath;
-  return {
-    provider: "test",
-    key: `test:${marker}:${status ?? "default"}`,
-    path,
-    status: status ?? DEFAULT_MARKER_STATUS[marker] ?? "todo",
-    relations: ["containment"],
-    capabilities: { movable: true, stampable: true, retargetable: false },
-    display: { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null },
-    dates: {},
   };
 }
 
@@ -501,64 +473,6 @@ describe("engine-checks", () => {
         offsets: () => ({ isNone: () => true }),
       } as unknown as Pick<CycleService, "offsets">;
       expect(checkOffset(condition, period, journal, cycle)).toBe(false);
-    });
-  });
-
-  describe("hasOpenTask", () => {
-    it("is true when at least one task is open", () => {
-      expect(hasOpenTask([taskItem("x"), taskItem(" ")])).toBe(true);
-    });
-
-    it("is false when all tasks are completed", () => {
-      expect(hasOpenTask([taskItem("x")])).toBe(false);
-    });
-
-    it("is false on an empty item list", () => {
-      expect(hasOpenTask([])).toBe(false);
-    });
-
-    // "/" normalizes to in-progress, which is open — not "completed" the way a bare
-    // `task !== " "` reading used to answer. This is the one case that distinguishes the
-    // new index-backed semantics from the old crude extractor.
-    it("reports open work for a note whose tasks are all in progress", () => {
-      expect(hasOpenTask([taskItem("/")])).toBe(true);
-      expect(allTasksCompleted([taskItem("/")])).toBe(false);
-    });
-
-    it("excludes non-task items from both answers", () => {
-      expect(hasOpenTask([taskItem(" ", "non-task")])).toBe(false);
-      expect(allTasksCompleted([taskItem("x"), taskItem(" ", "non-task")])).toBe(true);
-    });
-
-    it("treats a rolled item as neither open nor completing the day", () => {
-      expect(hasOpenTask([taskItem(">", "rolled")])).toBe(false);
-      expect(allTasksCompleted([taskItem(">", "rolled")])).toBe(false);
-    });
-
-    it("counts on-hold as open", () => {
-      expect(hasOpenTask([taskItem("todo-marker", "on-hold")])).toBe(true);
-      expect(allTasksCompleted([taskItem("todo-marker", "on-hold")])).toBe(false);
-    });
-
-    it("counts cancelled as done", () => {
-      expect(hasOpenTask([taskItem("cancel-marker", "cancelled")])).toBe(false);
-      expect(allTasksCompleted([taskItem("cancel-marker", "cancelled")])).toBe(true);
-    });
-  });
-
-  describe("allTasksCompleted", () => {
-    it("is true when every task is completed", () => {
-      expect(allTasksCompleted([taskItem("x"), taskItem("x")])).toBe(true);
-    });
-
-    it("is false when any task is open", () => {
-      expect(allTasksCompleted([taskItem("x"), taskItem(" ")])).toBe(false);
-    });
-
-    // Non-empty and every: a note with no tasks is not a completed day, so an empty item
-    // list must not read as vacuously true.
-    it("still refuses to call an empty note completed", () => {
-      expect(allTasksCompleted([])).toBe(false);
     });
   });
 

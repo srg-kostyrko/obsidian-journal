@@ -33,12 +33,11 @@ const NOTE_BASED: ReadonlySet<JournalDecorationCondition["type"]> = new Set([
   "property",
   "has-note",
   "note-size",
-  "has-open-task",
-  "all-tasks-completed",
 ]);
 
 function isNoteBased(c: JournalDecorationCondition): boolean {
-  return NOTE_BASED.has(c.type);
+  // Notelets carry their own items, so only a question confined to the period note needs one.
+  return c.type === "tasks" ? c.source === "note" : NOTE_BASED.has(c.type);
 }
 
 // Under "and" every condition must hold, so one note-based condition makes the whole rule

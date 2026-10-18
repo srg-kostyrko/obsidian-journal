@@ -32,9 +32,23 @@ All notable changes to this project will be documented in this file.
   completes, whatever your map says elsewhere, and a line only has to mention `🔁` — not carry a real
   recurrence rule — to count as recurring. See
   [Tasks](https://srg-kostyrko.github.io/obsidian-journal/tasks#listing-tasks-in-a-note) in the manual.
+- A decoration can now ask about tasks the way a task listing does. The new **Check tasks**
+  condition reads as one sentence: **Any**, **All** or **None** of the tasks, with the status **As
+  in listing**, **Open**, **Done** or **All**, looking in the note, its notelets, or both. **As in
+  listing** follows whatever status the journal's own listing filter names, so a dot and that day's
+  listing agree. **All** needs at least one task, and **None** needs a note or a notelet, so empty
+  dates are never lit. **Narrow further** counts only tasks under a heading or carrying a tag. A
+  decoration can hold more than one. See
+  [Decorations](https://srg-kostyrko.github.io/obsidian-journal/decorations#tasks) in the manual.
 
 ### Changed
 
+- **Check if note has open tasks** and **Check if all tasks are completed** are replaced by **Check
+  tasks**, and your existing decorations are converted automatically on upgrade to **Any** ·
+  **Open** and **All** · **Done**, both looking in the note and its notelets. Two things follow on
+  days you already decorate. Task decorations now honour the journal's task filter, so on a journal
+  that has one, some dots go dark — the listing always did this. They also now read the period's
+  notelets, so some dots light that did not.
 - A checkbox task marker other than a space no longer reads as completed by default. Every task used to count as done as soon as it carried any marker at all — `task !== " "` — so a note whose only task was `- [/] ...` satisfied **Check if all tasks are completed** and never **Check if note has open tasks**. Checkbox tasks are now read through a status map: `x` and `X` still read as Done and `-` still reads as Cancelled, all three still completed, but `/` now reads as In progress and any marker the map does not name — a theme's `[>]`, for instance — reads as To-do; both are open, not completed. The main settings page now has a **Tasks** section listing one row per way Journals can find tasks — checkbox items being the only one so far — each with its own on/off toggle; **Checkbox tasks**' gear icon opens **Status symbols**, where you map a marker yourself if your vault's convention should read differently, alongside the identification rule for which checkbox items count as tasks at all. A journal gets its own **Tasks** section too, where **Checkbox tasks**' **Edit** button narrows or replaces the vault-wide rule for that journal alone. See [Tasks](https://srg-kostyrko.github.io/obsidian-journal/tasks) in the manual.
 
 ## [3.5.1] - 2026-09-20

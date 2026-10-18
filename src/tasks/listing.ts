@@ -61,7 +61,7 @@ interface TargetPeriod {
   readonly path: VaultPath | null;
 }
 
-interface SourceNote {
+export interface SourceNote {
   readonly journalName: string;
   readonly source: TaskListingSource;
 }
@@ -200,8 +200,8 @@ function targetPeriods(dependencies: TaskListingDependencies, request: TaskListi
   ]);
 }
 
-function sourceNotes(
-  dependencies: TaskListingDependencies,
+export function sourceNotes(
+  dependencies: { readonly index: Pick<TaskListingDependencies["index"], "noteletsAt"> },
   periods: readonly TargetPeriod[],
   source: TaskQuery["scope"]["source"],
 ): readonly SourceNote[] {

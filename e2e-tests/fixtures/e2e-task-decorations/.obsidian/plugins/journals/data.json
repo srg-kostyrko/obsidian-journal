@@ -11,10 +11,22 @@
         "dateField": "journal-date",
         "startDateField": "journal-start-date",
         "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
         "addStartDate": false,
         "addEndDate": false
       },
       "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] },
+      "notelets": {
+        "meeting": {
+          "id": "meeting",
+          "name": "Meeting",
+          "folder": "notelets",
+          "nameTemplate": "{{date}} Meeting {{notelet_index}}",
+          "templates": [],
+          "counter": { "enabled": true, "frontmatterKey": "journal-notelet-index" },
+          "prompts": []
+        }
+      },
       "decorations": [
         {
           "mode": "and",

@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import { Calendar } from "@/calendar";
-import { m } from "@/i18n";
+import { formatDisjunction, m } from "@/i18n";
+import { describeTagOrHeadingCondition, type TagOrHeadingCondition } from "@/tasks/ui/describe-condition";
+
+import { buildCondition } from "../../testing";
 
 import { describeCondition } from "./describe-condition";
 
 const calendar = new Calendar();
 
 const resolveTypeName = (id: string): string | undefined => ({ nt_a: "Meeting", nt_b: "1o1" })[id];
+
+const source = (s: "note" | "notelets" | "both") => m.decoration_condition_tasks_source_phrase({ source: s });
 
 describe("describeCondition", () => {
   describe("title", () => {
@@ -121,14 +126,6 @@ describe("describeCondition", () => {
     });
   });
 
-  describe("has-open-task", () => {
-    it("renders the localized has-open-task clause", () => {
-      expect(describeCondition({ type: "has-open-task" }, calendar)).toBe(
-        m.decoration_condition_has_open_task_describe(),
-      );
-    });
-  });
-
   describe("note-size", () => {
     it("renders the localized note-size clause in words", () => {
       expect(describeCondition({ type: "note-size", unit: "words", condition: "gt", value: 250 }, calendar)).toBe(
@@ -153,10 +150,60 @@ describe("describeCondition", () => {
     });
   });
 
-  describe("all-tasks-completed", () => {
-    it("renders the localized all-tasks-completed clause", () => {
-      expect(describeCondition({ type: "all-tasks-completed" }, calendar)).toBe(
-        m.decoration_condition_all_tasks_completed_describe(),
+  describe("tasks", () => {
+    it("describes any open task in the note and its notelets", () => {
+      expect(
+        describeCondition(buildCondition("tasks", { quantifier: "any", status: "open", source: "both" }), calendar),
+      ).toBe(m.decoration_condition_tasks_describe({ quantifier: "any", status: "open", source: source("both") }));
+    });
+
+    it("describes no done task in the note", () => {
+      expect(
+        describeCondition(buildCondition("tasks", { quantifier: "none", status: "done", source: "note" }), calendar),
+      ).toBe(m.decoration_condition_tasks_describe({ quantifier: "none", status: "done", source: source("note") }));
+    });
+
+    it("describes no task of any status as no task existing", () => {
+      expect(
+        describeCondition(buildCondition("tasks", { quantifier: "none", status: "all", source: "both" }), calendar),
+      ).toBe(m.decoration_condition_tasks_describe({ quantifier: "none", status: "all", source: source("both") }));
+    });
+
+    it("describes the listing status as following the journal's task listing", () => {
+      const out = describeCondition(
+        buildCondition("tasks", { quantifier: "all", status: "listing", source: "notelets" }),
+        calendar,
+      );
+      expect(out).toBe(
+        m.decoration_condition_tasks_describe({ quantifier: "all", status: "listing", source: source("notelets") }),
+      );
+    });
+
+    it("appends the narrowing conditions", () => {
+      const out = describeCondition(
+        buildCondition("tasks", {
+          status: "open",
+          filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Work"] }] },
+        }),
+        calendar,
+      );
+      expect(out).toBe(
+        m.decoration_condition_tasks_describe_narrowed({
+          base: m.decoration_condition_tasks_describe({ quantifier: "any", status: "open", source: source("both") }),
+          conditions: describeTagOrHeadingCondition({ type: "heading", condition: "under", headings: ["Work"] }),
+        }),
+      );
+    });
+
+    it("joins narrowing conditions with the disjunction under an or filter", () => {
+      const headings: TagOrHeadingCondition = { type: "heading", condition: "under", headings: ["Work"] };
+      const tag: TagOrHeadingCondition = { type: "tag", condition: "has", tags: ["#x"] };
+      const out = describeCondition(
+        buildCondition("tasks", { filter: { mode: "or", conditions: [headings, tag] } }),
+        calendar,
+      );
+      expect(out).toContain(
+        formatDisjunction([describeTagOrHeadingCondition(headings), describeTagOrHeadingCondition(tag)]),
       );
     });
   });

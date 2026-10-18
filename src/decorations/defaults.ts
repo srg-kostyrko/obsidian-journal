@@ -75,8 +75,13 @@ export function defaultCondition(type: JournalDecorationCondition["type"]): Jour
     .with("weekday", () => ({ type: "weekday", weekdays: [] }))
     .with("offset", () => ({ type: "offset", offset: 1 }))
     .with("has-note", () => ({ type: "has-note" }))
-    .with("has-open-task", () => ({ type: "has-open-task" }))
-    .with("all-tasks-completed", () => ({ type: "all-tasks-completed" }))
+    .with("tasks", () => ({
+      type: "tasks",
+      quantifier: "any",
+      status: "listing",
+      source: "both",
+      filter: { mode: "and", conditions: [] },
+    }))
     .with("note-size", () => ({ type: "note-size", unit: "words", condition: "gt", value: 0 }))
     .with("has-notelet", () => ({ type: "has-notelet" as const, typeIds: [] }))
     .exhaustive();

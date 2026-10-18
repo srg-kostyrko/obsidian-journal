@@ -39,7 +39,7 @@ export const NAV_NEXT_BLOCK = `${NAV_BLOCK} .nav-block-next`;
 export const timelineCalendar: CalendarSurface = calendarSurface(TIMELINE_BLOCK);
 
 // Fenced bodies. The timeline runs over all journals (unconnected host ⇒ null shelf) and
-// must show the week column for the has-open-task weekly decoration.
+// must show the week column for the open-tasks weekly decoration.
 export const NAV_FENCE = "```calendar-nav\n```";
 // The per-note override of the journal's "show previous and next periods" setting.
 export const NAV_SOLO_FENCE = "```calendar-nav\nadjacent: false\n```";

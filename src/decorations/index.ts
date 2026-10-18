@@ -30,6 +30,7 @@ export {
   type JournalDecorationStringPropertyCondition,
   type JournalDecorationStyle,
   type JournalDecorationTagCondition,
+  type JournalDecorationTasksCondition,
   type JournalDecorationTitleCondition,
   type JournalDecorationWeekdayCondition,
 } from "./config";

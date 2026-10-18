@@ -673,7 +673,6 @@
       }
     }
   ],
-  "decoration_condition_all_tasks_completed_describe": "すべてのタスクが完了している",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -713,7 +712,6 @@
   "decoration_condition_has_notelet_empty": "このジャーナルにはまだサブノートの種類がありません。",
   "decoration_condition_has_notelet_label": "サブノートの種類",
   "decoration_condition_has_notelet_unknown_type": "不明な種類",
-  "decoration_condition_has_open_task_describe": "ノートに未完了のタスクがある",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -778,6 +776,56 @@
   "decoration_condition_property_value_label": "値",
   "decoration_condition_tag_describe": "タグ {value} {op}",
   "decoration_condition_tag_value_label": "タグの値",
+  "decoration_condition_tasks_quantifier_label": "対象のタスク",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "いずれか",
+        "quantifier=all": "すべて",
+        "quantifier=none": "なし"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "ステータス",
+  "decoration_condition_tasks_status_listing": "一覧に従う",
+  "decoration_condition_tasks_source_label": "対象の場所",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "ノート内",
+        "source=notelets": "サブノート内",
+        "source=both": "ノートまたはそのサブノート内"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "さらに絞り込む",
+  "decoration_condition_tasks_narrow_description": "ジャーナルのタスクフィルターに加えて、これらに一致するタスクだけを数えます。",
+  "decoration_condition_tasks_narrow_add": "絞り込み条件を追加",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "{source}のいずれかのタスクがこのジャーナルの一覧フィルターに一致する",
+        "quantifier=any,status=open": "{source}に未完了のタスクがある",
+        "quantifier=any,status=done": "{source}に完了したタスクがある",
+        "quantifier=any,status=all": "{source}にタスクがある",
+        "quantifier=all,status=listing": "{source}のすべてのタスクがこのジャーナルの一覧フィルターに一致する",
+        "quantifier=all,status=open": "{source}のすべてのタスクが未完了",
+        "quantifier=all,status=done": "{source}のすべてのタスクが完了している",
+        "quantifier=all,status=all": "{source}にタスクがある",
+        "quantifier=none,status=listing": "{source}のどのタスクもこのジャーナルの一覧フィルターに一致しない",
+        "quantifier=none,status=open": "{source}に未完了のタスクはない",
+        "quantifier=none,status=done": "{source}に完了したタスクはない",
+        "quantifier=none,status=all": "{source}にタスクがない"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}、{conditions}",
   "decoration_condition_title_describe": "タイトル {value} {op}",
   "decoration_condition_title_value_label": "タイトルの値",
   "decoration_condition_type_short": [
@@ -792,8 +840,7 @@
         "type=weekday": "曜日",
         "type=offset": "オフセット",
         "type=has-note": "ノートあり",
-        "type=has-open-task": "未完了タスクあり",
-        "type=all-tasks-completed": "全タスク完了",
+        "type=tasks": "タスク",
         "type=note-size": "ノートのサイズ",
         "type=has-notelet": "サブノートあり"
       }
@@ -811,8 +858,7 @@
         "type=weekday": "曜日を確認",
         "type=offset": "間隔内のオフセットを確認",
         "type=has-note": "ノートの有無を確認",
-        "type=has-open-task": "未完了タスクの有無を確認",
-        "type=all-tasks-completed": "すべてのタスクが完了しているか確認",
+        "type=tasks": "タスクを確認",
         "type=note-size": "ノートのサイズを確認",
         "type=has-notelet": "サブノートの有無を確認"
       }

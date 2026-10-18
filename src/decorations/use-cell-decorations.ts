@@ -82,16 +82,20 @@ export function useCellDecorations(options: CellDecorationsOptions): ReadonlyMap
         const journalOpt = journals.get(name);
         if (journalOpt.isNone()) continue;
         if (!periodMatchesWrite(period.kind, journalOpt.value.write.type)) continue;
+        const key = cellKey(period.kind, anchor);
         const opt = index.entryByAnchor(name, anchor);
-        if (opt.isSome()) keysByPath.set(opt.value.path, cellKey(period.kind, anchor));
+        if (opt.isSome()) keysByPath.set(opt.value.path, key);
+        // A tasks condition reads notelet structure, and a heading or tag edit there can leave the
+        // published task items — and so tasksVersion — unchanged; only metadata-changed carries it.
+        for (const notelet of index.noteletsAt(name, anchor)) keysByPath.set(notelet.path, key);
       }
     }
   }
 
   function reseed(): void {
-    // TaskIndex is not Vue-reactive (see useTasksVersion), so has-open-task/all-tasks-completed
-    // conditions evaluated below would otherwise never re-run once a provider publishes after
-    // this watchEffect's first pass. Reading the version here registers it as a dependency.
+    // TaskIndex is not Vue-reactive (see useTasksVersion), so tasks conditions evaluated below
+    // would otherwise never re-run once a provider publishes after this watchEffect's first pass.
+    // Reading the version here registers it as a dependency.
     void tasksVersion.value;
     const periods = readPeriods();
     rebuildScopeMaps(periods);

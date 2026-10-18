@@ -677,7 +677,6 @@
       }
     }
   ],
-  "decoration_condition_all_tasks_completed_describe": "всі завдання виконано",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -717,7 +716,6 @@
   "decoration_condition_has_notelet_empty": "У цьому журналі ще немає типів піднотаток.",
   "decoration_condition_has_notelet_label": "Типи піднотаток",
   "decoration_condition_has_notelet_unknown_type": "невідомий тип",
-  "decoration_condition_has_open_task_describe": "нотатка має відкрите завдання",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -782,6 +780,56 @@
   "decoration_condition_property_value_label": "Значення",
   "decoration_condition_tag_describe": "тег {op} {value}",
   "decoration_condition_tag_value_label": "Значення тегу",
+  "decoration_condition_tasks_quantifier_label": "Які завдання",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "Будь-яке",
+        "quantifier=all": "Усі",
+        "quantifier=none": "Жодне"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "Статус",
+  "decoration_condition_tasks_status_listing": "Як у списку",
+  "decoration_condition_tasks_source_label": "Де шукати",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "у нотатці",
+        "source=notelets": "у її піднотатках",
+        "source=both": "у нотатці або її піднотатках"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "Звузити додатково",
+  "decoration_condition_tasks_narrow_description": "Враховуються лише завдання, що відповідають цим умовам, окрім фільтра завдань журналу.",
+  "decoration_condition_tasks_narrow_add": "Додати уточнювальну умову",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "будь-яке завдання відповідає фільтру списку цього журналу {source}",
+        "quantifier=any,status=open": "будь-яке завдання відкрите {source}",
+        "quantifier=any,status=done": "будь-яке завдання виконане {source}",
+        "quantifier=any,status=all": "є хоча б одне завдання {source}",
+        "quantifier=all,status=listing": "усі завдання відповідають фільтру списку цього журналу {source}",
+        "quantifier=all,status=open": "усі завдання відкриті {source}",
+        "quantifier=all,status=done": "усі завдання виконані {source}",
+        "quantifier=all,status=all": "є хоча б одне завдання {source}",
+        "quantifier=none,status=listing": "жодне завдання не відповідає фільтру списку цього журналу {source}",
+        "quantifier=none,status=open": "жодне завдання не відкрите {source}",
+        "quantifier=none,status=done": "жодне завдання не виконане {source}",
+        "quantifier=none,status=all": "немає жодного завдання {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}, {conditions}",
   "decoration_condition_title_describe": "заголовок {op} {value}",
   "decoration_condition_title_value_label": "Значення заголовка",
   "decoration_condition_type_short": [
@@ -796,8 +844,7 @@
         "type=weekday": "День тижня",
         "type=offset": "Зсув",
         "type=has-note": "Має нотатку",
-        "type=has-open-task": "Має відкрите завдання",
-        "type=all-tasks-completed": "Усі завдання виконано",
+        "type=tasks": "Завдання",
         "type=note-size": "Розмір нотатки",
         "type=has-notelet": "Має піднотатку"
       }
@@ -815,8 +862,7 @@
         "type=weekday": "Перевірити день тижня",
         "type=offset": "Перевірити зсув інтервалу",
         "type=has-note": "Перевірити, чи існує нотатка",
-        "type=has-open-task": "Перевірити, чи є в нотатці відкриті завдання",
-        "type=all-tasks-completed": "Перевірити, чи всі завдання виконано",
+        "type=tasks": "Перевірити завдання",
         "type=note-size": "Перевірити розмір нотатки",
         "type=has-notelet": "Перевірити, чи існує піднотатка"
       }

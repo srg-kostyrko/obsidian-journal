@@ -37,8 +37,7 @@ const ALL_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = [
   "property",
   "has-note",
   "note-size",
-  "has-open-task",
-  "all-tasks-completed",
+  "tasks",
   "date",
   "weekday",
   "offset",
@@ -73,6 +72,40 @@ describe("EditDecorationModal", () => {
         decoration: { mode: "and", conditions: [{ type: "has-note" }], styles: [] },
       });
       expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
+    });
+
+    it("disables Save while a tasks condition holds an unfinished narrowing row", async () => {
+      // An empty heading row would still replace the journal's own heading conditions, so saving
+      // it would widen the condition past the journal's filter rather than leave it unconstrained.
+      await mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: {
+          mode: "and",
+          conditions: [
+            buildCondition("tasks", {
+              filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: [] }] },
+            }),
+          ],
+          styles: [{ type: "background", color: transparent }],
+        },
+      });
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
+    });
+
+    it("allows Save once the tasks condition's narrowing rows are filled in", async () => {
+      await mountModal({
+        conditionTypes: conditionTypeOptions.day,
+        decoration: {
+          mode: "and",
+          conditions: [
+            buildCondition("tasks", {
+              filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["Work"] }] },
+            }),
+          ],
+          styles: [{ type: "background", color: transparent }],
+        },
+      });
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(false);
     });
 
     it("submits when both arrays are populated", async () => {
@@ -138,6 +171,12 @@ describe("EditDecorationModal", () => {
     it("does not offer has-note twice", async () => {
       const { options } = await mountWith({ conditions: [buildCondition("has-note")] });
       expect(options.map((o) => o.value)).not.toContain("has-note");
+    });
+
+    it("offers tasks again once one is already present", async () => {
+      const { options } = await mountWith({ conditions: [buildCondition("tasks")] });
+      expect(options.map((o) => o.value)).toContain("tasks");
+      expect(screen.getByText(m.decoration_condition_type_label({ type: "tasks" }))).toBeTruthy();
     });
 
     it("does not offer weekday twice", async () => {

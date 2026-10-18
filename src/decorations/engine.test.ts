@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { DayPeriod, WeekPeriod } from "@/calendar";
 import type { AnchorString } from "@/calendar";
 import { date } from "@/calendar/testing";
-import { NoteMetadataService, NoteSizeService } from "@/infrastructure/host";
-import type { NoteSize, VaultPath } from "@/infrastructure/host";
-import { FakeNoteSizeService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NoteSizeService, NoteStructureService } from "@/infrastructure/host";
+import type { NoteSize, NoteStructure, VaultPath } from "@/infrastructure/host";
+import { FakeNoteSizeService, FakeNoteStructureService } from "@/infrastructure/host/testing";
 import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
@@ -13,7 +13,8 @@ import type { TypeId } from "@/journals/notelets/config";
 import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { TaskIndex } from "@/tasks";
-import type { TaskItem, TaskStatus } from "@/tasks";
+import type { TaskItem, TaskQuestion, TaskStatus } from "@/tasks";
+import type { TaskCondition, TaskRule } from "@/tasks/conditions";
 import { tasksCoreModule } from "@/tasks/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
@@ -26,14 +27,18 @@ import type { JournalDecoration } from "./config";
 
 async function buildHarness(
   journals: Record<string, JournalConfig> = {},
-): Promise<{ harness: TestHarness; size: FakeNoteSizeService }> {
+): Promise<{ harness: TestHarness; size: FakeNoteSizeService; structures: FakeNoteStructureService }> {
   const size = new FakeNoteSizeService();
+  const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, decorationsModule, decorationsSettingsCoreModule, tasksCoreModule],
     data: { journals, shelves: {}, decorations: { decorations: [] } },
-    overrides: [overrideWith(NoteSizeService, size as unknown as NoteSizeService)],
+    overrides: [
+      overrideWith(NoteSizeService, size as unknown as NoteSizeService),
+      overrideWith(NoteStructureService, structures as unknown as NoteStructureService),
+    ],
   });
-  return { harness, size };
+  return { harness, size, structures };
 }
 
 // A fortnightly journal bounded to a single month. Its intervals start 2026-01-05, 2026-01-19,
@@ -75,26 +80,72 @@ function taskItem(status: TaskStatus): TaskItem {
   };
 }
 
+const NOTELET_TASK_PATH = "journals/notelets/standup.md" as VaultPath;
+
+function taskItemAt(path: VaultPath, status: TaskStatus, line = 0): TaskItem {
+  const item = taskItem(status);
+  return {
+    ...item,
+    path,
+    key: `${path}:${status}`,
+    display: { kind: "line", path, line, endLine: line, parentLine: null, markdown: null },
+  };
+}
+
 async function evaluateTaskCondition(
-  conditionType: "has-open-task" | "all-tasks-completed",
-  options: { registerNote: boolean; items?: readonly TaskStatus[] },
+  questions: Partial<TaskQuestion> | Partial<TaskQuestion>[],
+  options: {
+    registerNote: boolean;
+    items?: readonly TaskStatus[];
+    noteletItems?: readonly TaskStatus[];
+    journalFilter?: TaskRule;
+    structure?: NoteStructure;
+    observe?: (structures: FakeNoteStructureService) => void;
+  },
 ): Promise<Map<string, unknown>> {
   const decoration = buildDecoration({
     mode: "and",
-    conditions: [buildCondition(conditionType)],
+    conditions: [questions].flat().map((q) => buildCondition("tasks", q)),
     styles: [buildStyle("background")],
   });
-  const { harness } = await buildHarness({
-    daily: fixedJournal("daily", { type: "day" }, { decorations: [decoration] }),
+  const { harness, structures } = await buildHarness({
+    daily: fixedJournal(
+      "daily",
+      { type: "day" },
+      {
+        decorations: [decoration],
+        tasks: { providers: {}, filter: options.journalFilter ?? { mode: "and", conditions: [] } },
+      },
+    ),
   });
   const period = DayPeriod.containing(date("2026-05-25"));
+  const index = harness.resolve(JournalsIndex);
   if (options.registerNote) {
-    harness
-      .resolve(JournalsIndex)
-      .register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
+    index.register({ journalName: "daily", anchor: period.anchor.toAnchor(), path: NOTE_PATH });
   }
+  if (options.structure) structures.setStructure(NOTE_PATH, options.structure);
+  options.observe?.(structures);
   if (options.items) {
-    harness.resolve(TaskIndex).publish("test", { path: NOTE_PATH }, options.items.map(taskItem));
+    harness.resolve(TaskIndex).publish(
+      "test",
+      { path: NOTE_PATH },
+      options.items.map((s) => taskItemAt(NOTE_PATH, s, options.structure ? 2 : 0)),
+    );
+  }
+  if (options.noteletItems) {
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: period.anchor.toAnchor(),
+      path: NOTELET_TASK_PATH,
+      typeName: "Standup",
+      typeId: "nt_a" as TypeId,
+    });
+    harness.resolve(TaskIndex).publish(
+      "test",
+      { path: NOTELET_TASK_PATH },
+      options.noteletItems.map((s) => taskItemAt(NOTELET_TASK_PATH, s)),
+    );
   }
   return harness
     .resolve(DecorationEngine)
@@ -423,41 +474,175 @@ describe("DecorationEngine", () => {
       });
     });
 
-    describe("task conditions", () => {
-      it("does not match has-open-task when there is no note", async () => {
-        const result = await evaluateTaskCondition("has-open-task", { registerNote: false });
+    describe("tasks condition", () => {
+      it("does not match any open when there is no note", async () => {
+        const result = await evaluateTaskCondition({ status: "open" }, { registerNote: false });
         expect(result.size).toBe(0);
       });
 
-      it("matches has-open-task when the index carries an open item for the note", async () => {
-        const result = await evaluateTaskCondition("has-open-task", { registerNote: true, items: ["todo"] });
+      it("matches any open when the index carries an open item for the note", async () => {
+        const result = await evaluateTaskCondition({ status: "open" }, { registerNote: true, items: ["todo"] });
         expect(result.size).toBe(1);
       });
 
-      it("does not match has-open-task when every item is done", async () => {
-        const result = await evaluateTaskCondition("has-open-task", { registerNote: true, items: ["done"] });
+      it("does not match any open when every item is done", async () => {
+        const result = await evaluateTaskCondition({ status: "open" }, { registerNote: true, items: ["done"] });
         expect(result.size).toBe(0);
       });
 
-      it("does not match all-tasks-completed when the note has no items in the index", async () => {
-        const result = await evaluateTaskCondition("all-tasks-completed", { registerNote: true, items: [] });
+      it("does not match all done when the note has no items in the index", async () => {
+        const result = await evaluateTaskCondition(
+          { quantifier: "all", status: "done" },
+          { registerNote: true, items: [] },
+        );
         expect(result.size).toBe(0);
       });
 
-      it("matches all-tasks-completed when every item is done", async () => {
-        const result = await evaluateTaskCondition("all-tasks-completed", {
-          registerNote: true,
-          items: ["done", "cancelled"],
-        });
+      it("matches all done when every item is done", async () => {
+        const result = await evaluateTaskCondition(
+          { quantifier: "all", status: "done" },
+          { registerNote: true, items: ["done", "cancelled"] },
+        );
         expect(result.size).toBe(1);
       });
 
-      it("does not match all-tasks-completed when an item is only in progress", async () => {
-        const result = await evaluateTaskCondition("all-tasks-completed", {
-          registerNote: true,
-          items: ["in-progress"],
-        });
+      it("does not match all done when an item is only in progress", async () => {
+        const result = await evaluateTaskCondition(
+          { quantifier: "all", status: "done" },
+          { registerNote: true, items: ["in-progress"] },
+        );
         expect(result.size).toBe(0);
+      });
+
+      it("leaves a day with no note undecorated for none open", async () => {
+        const result = await evaluateTaskCondition({ quantifier: "none", status: "open" }, { registerNote: false });
+        expect(result.size).toBe(0);
+      });
+
+      it("decorates a day holding only a notelet with an open item when the source is both", async () => {
+        const result = await evaluateTaskCondition(
+          { status: "listing", source: "both" },
+          { registerNote: false, noteletItems: ["todo"] },
+        );
+        expect(result.size).toBe(1);
+      });
+
+      it("ignores a notelet's items when the source is the note alone", async () => {
+        const result = await evaluateTaskCondition(
+          { status: "listing", source: "note" },
+          { registerNote: true, items: [], noteletItems: ["todo"] },
+        );
+        expect(result.size).toBe(0);
+      });
+
+      it("applies the journal's task filter to the listing status", async () => {
+        const result = await evaluateTaskCondition(
+          { status: "listing" },
+          {
+            registerNote: true,
+            items: ["todo"],
+            journalFilter: {
+              mode: "and",
+              conditions: [{ type: "status", condition: "is", statuses: ["done"] }],
+            },
+          },
+        );
+        expect(result.size).toBe(0);
+      });
+
+      describe("heading filter on the journal", () => {
+        const underWork: NoteStructure = {
+          listItems: [{ marker: " ", line: 2, endLine: 2, parent: null }],
+          tags: [],
+          headings: [{ heading: "Work", level: 1, line: 0 }],
+          frontmatterTags: [],
+        };
+        const excludeWork: TaskRule = {
+          mode: "and",
+          conditions: [{ type: "heading", condition: "not-under", headings: ["Work"] }],
+        };
+
+        it("leaves the day undecorated when the only open item sits under an excluded heading", async () => {
+          const result = await evaluateTaskCondition(
+            { status: "open" },
+            { registerNote: true, items: ["todo"], structure: underWork, journalFilter: excludeWork },
+          );
+          expect(result.size).toBe(0);
+        });
+
+        it("decorates the day when the same item sits under an admitted heading", async () => {
+          const result = await evaluateTaskCondition(
+            { status: "open" },
+            {
+              registerNote: true,
+              items: ["todo"],
+              structure: { ...underWork, headings: [{ heading: "Home", level: 1, line: 0 }] },
+              journalFilter: excludeWork,
+            },
+          );
+          expect(result.size).toBe(1);
+        });
+      });
+
+      it("never reads the note's structure for a question with no heading or tag condition", async () => {
+        const reads: string[] = [];
+        await evaluateTaskCondition(
+          { status: "open" },
+          {
+            registerNote: true,
+            items: ["todo"],
+            observe: (structures) => {
+              const original = structures.get.bind(structures);
+              vi.spyOn(structures, "get").mockImplementation((path) => {
+                reads.push(path);
+                return original(path);
+              });
+            },
+          },
+        );
+        expect(reads).toEqual([]);
+      });
+
+      it("reads the note's structure once for two conditions on the same cell", async () => {
+        const reads: string[] = [];
+        const heading: TaskCondition = { type: "heading", condition: "under", headings: ["Home"] };
+        await evaluateTaskCondition(
+          [
+            { status: "open", filter: { mode: "and", conditions: [heading] } },
+            { quantifier: "none", status: "done", filter: { mode: "and", conditions: [heading] } },
+          ],
+          {
+            registerNote: true,
+            items: ["todo"],
+            observe: (structures) => {
+              const original = structures.get.bind(structures);
+              vi.spyOn(structures, "get").mockImplementation((path) => {
+                reads.push(path);
+                return original(path);
+              });
+            },
+          },
+        );
+        expect(reads).toEqual([NOTE_PATH]);
+      });
+
+      it("evaluates two tasks conditions independently", async () => {
+        const both = await evaluateTaskCondition(
+          [
+            { quantifier: "any", status: "open" },
+            { quantifier: "none", status: "done" },
+          ],
+          { registerNote: true, items: ["todo"] },
+        );
+        const second = await evaluateTaskCondition(
+          [
+            { quantifier: "any", status: "open" },
+            { quantifier: "none", status: "done" },
+          ],
+          { registerNote: true, items: ["todo", "done"] },
+        );
+        expect(both.size).toBe(1);
+        expect(second.size).toBe(0);
       });
     });
 

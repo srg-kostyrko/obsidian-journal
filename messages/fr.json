@@ -818,7 +818,6 @@
   ],
   "decoration_breakdown_interval_heading": "Intervalle — {journal} — {label}",
   "decoration_explain_menu_item": "Expliquer les décorations",
-  "decoration_condition_all_tasks_completed_describe": "toutes les tâches sont terminées",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -858,7 +857,6 @@
   "decoration_condition_has_notelet_empty": "Ce journal n'a pas encore de type de note brève.",
   "decoration_condition_has_notelet_label": "Types de note brève",
   "decoration_condition_has_notelet_unknown_type": "type inconnu",
-  "decoration_condition_has_open_task_describe": "la note contient une tâche ouverte",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -923,6 +921,56 @@
   "decoration_condition_property_value_label": "Valeur",
   "decoration_condition_tag_describe": "étiquette {op} {value}",
   "decoration_condition_tag_value_label": "Valeur de l’étiquette",
+  "decoration_condition_tasks_quantifier_label": "Quelles tâches",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "Une",
+        "quantifier=all": "Toutes",
+        "quantifier=none": "Aucune"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "Statut",
+  "decoration_condition_tasks_status_listing": "Comme dans la liste",
+  "decoration_condition_tasks_source_label": "Chercher dans",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "dans la note",
+        "source=notelets": "dans ses notes brèves",
+        "source=both": "dans la note ou ses notes brèves"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "Affiner davantage",
+  "decoration_condition_tasks_narrow_description": "Ne compte que les tâches correspondant à celles-ci, en plus du filtre de tâches du journal.",
+  "decoration_condition_tasks_narrow_add": "Ajouter une condition restrictive",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "une tâche correspond au filtre de liste de ce journal {source}",
+        "quantifier=any,status=open": "une tâche est ouverte {source}",
+        "quantifier=any,status=done": "une tâche est terminée {source}",
+        "quantifier=any,status=all": "une tâche existe {source}",
+        "quantifier=all,status=listing": "toutes les tâches correspondent au filtre de liste de ce journal {source}",
+        "quantifier=all,status=open": "toutes les tâches sont ouvertes {source}",
+        "quantifier=all,status=done": "toutes les tâches sont terminées {source}",
+        "quantifier=all,status=all": "une tâche existe {source}",
+        "quantifier=none,status=listing": "aucune tâche ne correspond au filtre de liste de ce journal {source}",
+        "quantifier=none,status=open": "aucune tâche n'est ouverte {source}",
+        "quantifier=none,status=done": "aucune tâche n'est terminée {source}",
+        "quantifier=none,status=all": "aucune tâche n'existe {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}, {conditions}",
   "decoration_condition_title_describe": "titre {op} {value}",
   "decoration_condition_title_value_label": "Valeur du titre",
   "decoration_condition_type_short": [
@@ -937,8 +985,7 @@
         "type=weekday": "Jour de la semaine",
         "type=offset": "Décalage",
         "type=has-note": "A une note",
-        "type=has-open-task": "A une tâche ouverte",
-        "type=all-tasks-completed": "Toutes les tâches terminées",
+        "type=tasks": "Tâches",
         "type=note-size": "Taille de la note",
         "type=has-notelet": "A une note brève"
       }
@@ -956,8 +1003,7 @@
         "type=weekday": "Vérifier le jour de la semaine",
         "type=offset": "Vérifier le décalage d’intervalle",
         "type=has-note": "Vérifier si la note existe",
-        "type=has-open-task": "Vérifier si la note a des tâches ouvertes",
-        "type=all-tasks-completed": "Vérifier si toutes les tâches sont terminées",
+        "type=tasks": "Vérifier les tâches",
         "type=note-size": "Vérifier la taille de la note",
         "type=has-notelet": "Vérifier si une note brève existe"
       }

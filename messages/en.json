@@ -754,7 +754,6 @@
   ],
   "decoration_breakdown_interval_heading": "Interval — {journal} — {label}",
   "decoration_explain_menu_item": "Explain decorations",
-  "decoration_condition_all_tasks_completed_describe": "all tasks are completed",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -794,7 +793,6 @@
   "decoration_condition_has_notelet_empty": "This journal has no notelet types yet.",
   "decoration_condition_has_notelet_label": "Notelet types",
   "decoration_condition_has_notelet_unknown_type": "unknown type",
-  "decoration_condition_has_open_task_describe": "the note has an open task",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -859,6 +857,56 @@
   "decoration_condition_property_value_label": "Value",
   "decoration_condition_tag_describe": "tag {op} {value}",
   "decoration_condition_tag_value_label": "Tag value",
+  "decoration_condition_tasks_quantifier_label": "Which tasks",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "Any",
+        "quantifier=all": "All",
+        "quantifier=none": "None"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "Status",
+  "decoration_condition_tasks_status_listing": "As in listing",
+  "decoration_condition_tasks_source_label": "Look in",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "in the note",
+        "source=notelets": "in its notelets",
+        "source=both": "in the note or its notelets"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "Narrow further",
+  "decoration_condition_tasks_narrow_description": "Only count tasks matching these, on top of the journal's task filter.",
+  "decoration_condition_tasks_narrow_add": "Add narrowing condition",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "any task matches this journal's task listing {source}",
+        "quantifier=any,status=open": "any task is open {source}",
+        "quantifier=any,status=done": "any task is done {source}",
+        "quantifier=any,status=all": "a task exists {source}",
+        "quantifier=all,status=listing": "all tasks match this journal's task listing {source}",
+        "quantifier=all,status=open": "all tasks are open {source}",
+        "quantifier=all,status=done": "all tasks are done {source}",
+        "quantifier=all,status=all": "a task exists {source}",
+        "quantifier=none,status=listing": "no task matches this journal's task listing {source}",
+        "quantifier=none,status=open": "no task is open {source}",
+        "quantifier=none,status=done": "no task is done {source}",
+        "quantifier=none,status=all": "no task exists {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}, {conditions}",
   "decoration_condition_title_describe": "title {op} {value}",
   "decoration_condition_title_value_label": "Title value",
   "decoration_condition_type_short": [
@@ -873,8 +921,7 @@
         "type=weekday": "Weekday",
         "type=offset": "Offset",
         "type=has-note": "Has note",
-        "type=has-open-task": "Has open task",
-        "type=all-tasks-completed": "All tasks completed",
+        "type=tasks": "Tasks",
         "type=note-size": "Note size",
         "type=has-notelet": "Has notelet"
       }
@@ -892,8 +939,7 @@
         "type=weekday": "Check weekday",
         "type=offset": "Check interval offset",
         "type=has-note": "Check if note exists",
-        "type=has-open-task": "Check if note has open tasks",
-        "type=all-tasks-completed": "Check if all tasks are completed",
+        "type=tasks": "Check tasks",
         "type=note-size": "Check note size",
         "type=has-notelet": "Check if a notelet exists"
       }

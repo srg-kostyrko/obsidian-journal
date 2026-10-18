@@ -9,6 +9,7 @@ import { v2ToV3Migration } from "./v2-to-v3";
 import { v3ToV4Migration } from "./v3-to-v4";
 import { v4ToV5Migration } from "./v4-to-v5";
 import { v5ToV6Migration } from "./v5-to-v6";
+import { v6ToV7Migration } from "./v6-to-v7";
 
 export const legacyMigrations: readonly Migration[] = [
   v1ToV2Migration,
@@ -16,6 +17,7 @@ export const legacyMigrations: readonly Migration[] = [
   v3ToV4Migration,
   v4ToV5Migration,
   v5ToV6Migration,
+  v6ToV7Migration,
 ];
 
 export const legacyMigrationsModule: Module = {
