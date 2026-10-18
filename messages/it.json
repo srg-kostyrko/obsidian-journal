@@ -818,7 +818,6 @@
   ],
   "decoration_breakdown_interval_heading": "Intervallo — {journal} — {label}",
   "decoration_explain_menu_item": "Spiega le decorazioni",
-  "decoration_condition_all_tasks_completed_describe": "tutte le attività sono completate",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -858,7 +857,6 @@
   "decoration_condition_has_notelet_empty": "Questo diario non ha ancora tipi di nota breve.",
   "decoration_condition_has_notelet_label": "Tipi di nota breve",
   "decoration_condition_has_notelet_unknown_type": "tipo sconosciuto",
-  "decoration_condition_has_open_task_describe": "la nota ha un'attività aperta",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -923,6 +921,55 @@
   "decoration_condition_property_value_label": "Valore",
   "decoration_condition_tag_describe": "tag {op} {value}",
   "decoration_condition_tag_value_label": "Valore del tag",
+  "decoration_condition_tasks_quantifier_label": "Quali attività",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "Almeno una",
+        "quantifier=all": "Tutte",
+        "quantifier=none": "Nessuna"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "Stato",
+  "decoration_condition_tasks_status_listing": "Come nell'elenco",
+  "decoration_condition_tasks_source_label": "Cerca in",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "nella nota",
+        "source=notelets": "nelle sue note brevi",
+        "source=both": "nella nota o nelle sue note brevi"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "Restringi ulteriormente",
+  "decoration_condition_tasks_narrow_description": "Conta solo le attività che corrispondono a queste, oltre al filtro delle attività del diario.",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "un'attività corrisponde al filtro dell'elenco di questo diario {source}",
+        "quantifier=any,status=open": "un'attività è aperta {source}",
+        "quantifier=any,status=done": "un'attività è completata {source}",
+        "quantifier=any,status=all": "un'attività ha uno stato qualsiasi {source}",
+        "quantifier=all,status=listing": "tutte le attività corrispondono al filtro dell'elenco di questo diario {source}",
+        "quantifier=all,status=open": "tutte le attività sono aperte {source}",
+        "quantifier=all,status=done": "tutte le attività sono completate {source}",
+        "quantifier=all,status=all": "tutte le attività hanno uno stato qualsiasi {source}",
+        "quantifier=none,status=listing": "nessuna attività corrisponde al filtro dell'elenco di questo diario {source}",
+        "quantifier=none,status=open": "nessuna attività è aperta {source}",
+        "quantifier=none,status=done": "nessuna attività è completata {source}",
+        "quantifier=none,status=all": "nessuna attività ha uno stato qualsiasi {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}, {conditions}",
   "decoration_condition_title_describe": "titolo {op} {value}",
   "decoration_condition_title_value_label": "Valore del titolo",
   "decoration_condition_type_short": [
@@ -937,8 +984,7 @@
         "type=weekday": "Giorno della settimana",
         "type=offset": "Offset",
         "type=has-note": "Ha una nota",
-        "type=has-open-task": "Ha un'attività aperta",
-        "type=all-tasks-completed": "Tutte le attività completate",
+        "type=tasks": "Attività",
         "type=note-size": "Dimensione nota",
         "type=has-notelet": "Ha una nota breve"
       }
@@ -956,8 +1002,7 @@
         "type=weekday": "Controlla il giorno della settimana",
         "type=offset": "Controlla l'offset nell'intervallo",
         "type=has-note": "Controlla se la nota esiste",
-        "type=has-open-task": "Controlla se la nota ha attività aperte",
-        "type=all-tasks-completed": "Controlla se tutte le attività sono completate",
+        "type=tasks": "Controlla le attività",
         "type=note-size": "Controlla la dimensione della nota",
         "type=has-notelet": "Controlla se esiste una nota breve"
       }

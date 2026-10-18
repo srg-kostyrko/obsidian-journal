@@ -37,8 +37,7 @@ const ALL_CONDITION_TYPES: readonly JournalDecorationCondition["type"][] = [
   "property",
   "has-note",
   "note-size",
-  "has-open-task",
-  "all-tasks-completed",
+  "tasks",
   "date",
   "weekday",
   "offset",
@@ -50,7 +49,11 @@ async function mountWith(options: { conditions: JournalDecorationCondition[] }) 
     conditionTypes: ALL_CONDITION_TYPES,
     decoration: { mode: "and", conditions: options.conditions, styles: [{ type: "background", color: transparent }] },
   });
-  await userEvent.click(screen.getByText(m.decoration_modal_add_condition()));
+  // A tasks condition's own narrowing editor carries an "Add condition" button with the same label.
+  const addButton = screen
+    .getAllByText(m.decoration_modal_add_condition())
+    .find((el) => el.closest("[data-testid=rule-add-condition]") === null);
+  await userEvent.click(addButton!);
   const rendered = ALL_CONDITION_TYPES.filter(
     (t) => screen.queryByText(m.decoration_condition_type_label({ type: t })) !== null,
   ).map((t) => ({ value: t, label: m.decoration_condition_type_label({ type: t }) }));
@@ -138,6 +141,12 @@ describe("EditDecorationModal", () => {
     it("does not offer has-note twice", async () => {
       const { options } = await mountWith({ conditions: [buildCondition("has-note")] });
       expect(options.map((o) => o.value)).not.toContain("has-note");
+    });
+
+    it("offers tasks again once one is already present", async () => {
+      const { options } = await mountWith({ conditions: [buildCondition("tasks")] });
+      expect(options.map((o) => o.value)).toContain("tasks");
+      expect(screen.getByText(m.decoration_condition_type_label({ type: "tasks" }))).toBeTruthy();
     });
 
     it("does not offer weekday twice", async () => {

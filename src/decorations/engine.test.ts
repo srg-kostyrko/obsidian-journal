@@ -84,7 +84,12 @@ const NOTELET_TASK_PATH = "journals/notelets/standup.md" as VaultPath;
 
 function taskItemAt(path: VaultPath, status: TaskStatus, line = 0): TaskItem {
   const item = taskItem(status);
-  return { ...item, path, key: `${path}:${status}`, display: { ...item.display, path, line, endLine: line } };
+  return {
+    ...item,
+    path,
+    key: `${path}:${status}`,
+    display: { kind: "line", path, line, endLine: line, parentLine: null, markdown: null },
+  };
 }
 
 async function evaluateTaskCondition(

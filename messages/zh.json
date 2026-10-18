@@ -673,7 +673,6 @@
       }
     }
   ],
-  "decoration_condition_all_tasks_completed_describe": "所有任务均已完成",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -713,7 +712,6 @@
   "decoration_condition_has_notelet_empty": "此日记还没有子笔记类型。",
   "decoration_condition_has_notelet_label": "子笔记类型",
   "decoration_condition_has_notelet_unknown_type": "未知类型",
-  "decoration_condition_has_open_task_describe": "笔记有未完成的任务",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -778,6 +776,55 @@
   "decoration_condition_property_value_label": "值",
   "decoration_condition_tag_describe": "标签 {op} {value}",
   "decoration_condition_tag_value_label": "标签值",
+  "decoration_condition_tasks_quantifier_label": "哪些任务",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "任一",
+        "quantifier=all": "全部",
+        "quantifier=none": "无"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "状态",
+  "decoration_condition_tasks_status_listing": "同列表",
+  "decoration_condition_tasks_source_label": "查找范围",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "笔记中",
+        "source=notelets": "其子笔记中",
+        "source=both": "笔记或其子笔记中"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "进一步收窄",
+  "decoration_condition_tasks_narrow_description": "在日记的任务筛选条件之外，仅统计符合这些条件的任务。",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "{source}有任务符合此日记的列表筛选条件",
+        "quantifier=any,status=open": "{source}有未完成的任务",
+        "quantifier=any,status=done": "{source}有已完成的任务",
+        "quantifier=any,status=all": "{source}有任务",
+        "quantifier=all,status=listing": "{source}的所有任务都符合此日记的列表筛选条件",
+        "quantifier=all,status=open": "{source}的所有任务都未完成",
+        "quantifier=all,status=done": "{source}的所有任务都已完成",
+        "quantifier=all,status=all": "{source}的所有任务均计入",
+        "quantifier=none,status=listing": "{source}没有任务符合此日记的列表筛选条件",
+        "quantifier=none,status=open": "{source}没有未完成的任务",
+        "quantifier=none,status=done": "{source}没有已完成的任务",
+        "quantifier=none,status=all": "{source}没有任务"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}，{conditions}",
   "decoration_condition_title_describe": "标题 {op} {value}",
   "decoration_condition_title_value_label": "标题值",
   "decoration_condition_type_short": [
@@ -792,8 +839,7 @@
         "type=weekday": "星期",
         "type=offset": "偏移",
         "type=has-note": "有笔记",
-        "type=has-open-task": "有未完成的任务",
-        "type=all-tasks-completed": "所有任务已完成",
+        "type=tasks": "任务",
         "type=note-size": "笔记大小",
         "type=has-notelet": "有子笔记"
       }
@@ -811,8 +857,7 @@
         "type=weekday": "检查星期",
         "type=offset": "检查间隔偏移",
         "type=has-note": "检查是否存在笔记",
-        "type=has-open-task": "检查笔记是否有未完成的任务",
-        "type=all-tasks-completed": "检查是否所有任务都已完成",
+        "type=tasks": "检查任务",
         "type=note-size": "检查笔记大小",
         "type=has-notelet": "检查是否存在子笔记"
       }

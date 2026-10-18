@@ -11,6 +11,8 @@ import { m } from "@/i18n";
 import { journalsCoreModule } from "@/journals/module";
 import { testContainer, type TestHarness } from "@/testing";
 
+import { buildCondition } from "../../testing";
+
 import ConditionItem from "./ConditionItem.vue";
 
 async function mount(initial: JournalDecorationCondition, harness?: TestHarness) {
@@ -69,14 +71,9 @@ describe("ConditionItem", () => {
     expect(screen.getByText(m.decoration_condition_has_note_describe())).toBeTruthy();
   });
 
-  it("renders ConditionTypeOnly for has-open-task", async () => {
-    await mount({ type: "has-open-task" });
-    expect(screen.getByText(m.decoration_condition_has_open_task_describe())).toBeTruthy();
-  });
-
-  it("renders ConditionTypeOnly for all-tasks-completed", async () => {
-    await mount({ type: "all-tasks-completed" });
-    expect(screen.getByText(m.decoration_condition_all_tasks_completed_describe())).toBeTruthy();
+  it("renders ConditionTasks for a tasks condition", async () => {
+    await mount(buildCondition("tasks"));
+    expect(screen.getByRole("radiogroup", { name: m.decoration_condition_tasks_status_label() })).toBeTruthy();
   });
 
   it("renders ConditionHasNotelet for a has-notelet condition", async () => {

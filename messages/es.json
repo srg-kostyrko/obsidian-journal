@@ -818,7 +818,6 @@
   ],
   "decoration_breakdown_interval_heading": "Intervalo — {journal} — {label}",
   "decoration_explain_menu_item": "Explicar las decoraciones",
-  "decoration_condition_all_tasks_completed_describe": "todas las tareas están completadas",
   "decoration_condition_date_describe": [
     {
       "declarations": ["input day", "input month", "input year"],
@@ -858,7 +857,6 @@
   "decoration_condition_has_notelet_empty": "Este diario aún no tiene tipos de nota breve.",
   "decoration_condition_has_notelet_label": "Tipos de nota breve",
   "decoration_condition_has_notelet_unknown_type": "tipo desconocido",
-  "decoration_condition_has_open_task_describe": "la nota tiene una tarea abierta",
   "decoration_condition_note_size_describe": [
     {
       "declarations": ["input unit", "input op", "input value"],
@@ -923,6 +921,55 @@
   "decoration_condition_property_value_label": "Valor",
   "decoration_condition_tag_describe": "etiqueta {op} {value}",
   "decoration_condition_tag_value_label": "Valor de la etiqueta",
+  "decoration_condition_tasks_quantifier_label": "Qué tareas",
+  "decoration_condition_tasks_quantifier_option": [
+    {
+      "declarations": ["input quantifier"],
+      "selectors": ["quantifier"],
+      "match": {
+        "quantifier=any": "Alguna",
+        "quantifier=all": "Todas",
+        "quantifier=none": "Ninguna"
+      }
+    }
+  ],
+  "decoration_condition_tasks_status_label": "Estado",
+  "decoration_condition_tasks_status_listing": "Como en el listado",
+  "decoration_condition_tasks_source_label": "Buscar en",
+  "decoration_condition_tasks_source_phrase": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "en la nota",
+        "source=notelets": "en sus notas breves",
+        "source=both": "en la nota o en sus notas breves"
+      }
+    }
+  ],
+  "decoration_condition_tasks_narrow_label": "Restringir más",
+  "decoration_condition_tasks_narrow_description": "Cuenta solo las tareas que coinciden con estas, además del filtro de tareas del diario.",
+  "decoration_condition_tasks_describe": [
+    {
+      "declarations": ["input quantifier", "input status", "input source"],
+      "selectors": ["quantifier", "status"],
+      "match": {
+        "quantifier=any,status=listing": "alguna tarea coincide con el filtro de listado de este diario {source}",
+        "quantifier=any,status=open": "alguna tarea está abierta {source}",
+        "quantifier=any,status=done": "alguna tarea está hecha {source}",
+        "quantifier=any,status=all": "alguna tarea tiene cualquier estado {source}",
+        "quantifier=all,status=listing": "todas las tareas coinciden con el filtro de listado de este diario {source}",
+        "quantifier=all,status=open": "todas las tareas están abiertas {source}",
+        "quantifier=all,status=done": "todas las tareas están hechas {source}",
+        "quantifier=all,status=all": "todas las tareas tienen cualquier estado {source}",
+        "quantifier=none,status=listing": "ninguna tarea coincide con el filtro de listado de este diario {source}",
+        "quantifier=none,status=open": "ninguna tarea está abierta {source}",
+        "quantifier=none,status=done": "ninguna tarea está hecha {source}",
+        "quantifier=none,status=all": "ninguna tarea tiene cualquier estado {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_narrowed": "{base}, {conditions}",
   "decoration_condition_title_describe": "título {op} {value}",
   "decoration_condition_title_value_label": "Valor del título",
   "decoration_condition_type_short": [
@@ -937,8 +984,7 @@
         "type=weekday": "Día de la semana",
         "type=offset": "Desplazamiento",
         "type=has-note": "Tiene nota",
-        "type=has-open-task": "Tiene tarea abierta",
-        "type=all-tasks-completed": "Todas las tareas completadas",
+        "type=tasks": "Tareas",
         "type=note-size": "Tamaño de nota",
         "type=has-notelet": "Tiene nota breve"
       }
@@ -956,8 +1002,7 @@
         "type=weekday": "Comprobar el día de la semana",
         "type=offset": "Comprobar el desplazamiento dentro del intervalo",
         "type=has-note": "Comprobar si existe la nota",
-        "type=has-open-task": "Comprobar si la nota tiene tareas abiertas",
-        "type=all-tasks-completed": "Comprobar si todas las tareas están completadas",
+        "type=tasks": "Comprobar tareas",
         "type=note-size": "Comprobar el tamaño de la nota",
         "type=has-notelet": "Comprobar si existe una nota breve"
       }

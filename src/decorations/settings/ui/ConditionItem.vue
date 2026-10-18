@@ -10,6 +10,7 @@ import ConditionNoteSize from "./ConditionNoteSize.vue";
 import ConditionOffset from "./ConditionOffset.vue";
 import ConditionProperty from "./ConditionProperty.vue";
 import ConditionTag from "./ConditionTag.vue";
+import ConditionTasks from "./ConditionTasks.vue";
 import ConditionTitle from "./ConditionTitle.vue";
 import ConditionTypeOnly from "./ConditionTypeOnly.vue";
 import ConditionWeekday from "./ConditionWeekday.vue";
@@ -26,18 +27,13 @@ const leaf = computed<Component>(() =>
     .with("offset", () => ConditionOffset)
     .with("note-size", () => ConditionNoteSize)
     .with("has-notelet", () => ConditionHasNotelet)
-    .with("has-note", "has-open-task", "all-tasks-completed", () => ConditionTypeOnly)
+    .with("has-note", () => ConditionTypeOnly)
+    .with("tasks", () => ConditionTasks)
     .exhaustive(),
 );
 
 const leafProps = computed<Record<string, unknown>>(() => {
-  if (
-    props.condition.type === "has-note" ||
-    props.condition.type === "has-open-task" ||
-    props.condition.type === "all-tasks-completed"
-  ) {
-    return { type: props.condition.type };
-  }
+  if (props.condition.type === "has-note") return { type: props.condition.type };
   if (props.condition.type === "has-notelet") return { name: props.name, journalName: props.journalName };
   return { name: props.name };
 });
