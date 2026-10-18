@@ -21,7 +21,7 @@ Every checkbox marker — the character between the brackets — reads as one of
 **In progress**, **On hold**, **Done**, **Cancelled**, **Not a task** or **Rolled over**. **To-do**,
 **In progress** and **On hold** are open; **Done** and **Cancelled** are done; **Not a task** is
 excluded from both counts entirely, and **Rolled over** counts toward neither — a note whose only task
-is rolled over satisfies neither [decoration condition](/decorations#tasks).
+is rolled over is neither open nor done to a [decoration condition](/decorations#tasks).
 
 Click **Checkbox tasks**' gear icon to open its settings modal. **Status symbols**, at the top, maps
 markers to statuses:
@@ -263,7 +263,7 @@ scope for a rollup to widen into.
 
 ### An in-progress day
 
-A daily journal with a **Check if note has open tasks** decoration and the default status map. A day's
+A daily journal with a **Check tasks** decoration set to **Any** · **Open** and the default status map. A day's
 note holding:
 
 ```markdown
@@ -275,7 +275,7 @@ its only checkbox is marked, not empty.
 
 ### All tasks completed
 
-A monthly journal with a **Check if all tasks are completed** decoration and the default status map. A
+A monthly journal with a **Check tasks** decoration set to **All** · **Done** and the default status map. A
 month's note holding:
 
 ```markdown
@@ -309,7 +309,7 @@ Only "Plan the day" is read as a task: it carries `#task`, satisfying the vault 
 Work, satisfying the journal's narrowed rule. "Sort the mail" sits under Work but carries no tag, and
 "Buy milk" carries the tag but sits under Personal — narrow needs both rules to hold, so Journals reads
 both as ordinary checkbox lines, not tasks. That single recognized task is To-do, which is open, so the
-day satisfies **Check if note has open tasks** and not **Check if all tasks are completed**.
+day satisfies **Any** · **Open** and not **All** · **Done**.
 
 ### A completed parent, an open child
 

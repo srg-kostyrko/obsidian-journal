@@ -40,16 +40,16 @@ other.
 
 Which conditions a journal decoration offers depends on the journal's period:
 
-| Condition                                                              | Daily | Weekly, monthly, quarterly, annually | Custom intervals |
-| ---------------------------------------------------------------------- | :---: | :----------------------------------: | :--------------: |
-| **Check title**, **Check tags**                                        |   ✓   |                  ✓                   |        ✓         |
-| **Check frontmatter property**                                         |   ✓   |                  ✓                   |        ✓         |
-| **Check if note exists**                                               |   ✓   |                  ✓                   |        ✓         |
-| **Check note size**                                                    |   ✓   |                  ✓                   |        ✓         |
-| **Check if note has open tasks**, **Check if all tasks are completed** |   ✓   |                  ✓                   |        ✓         |
-| **Check if a notelet exists**                                          |   ✓   |                  ✓                   |        ✓         |
-| **Check date**, **Check weekday**                                      |   ✓   |                                      |                  |
-| **Check interval offset**                                              |       |                                      |        ✓         |
+| Condition                         | Daily | Weekly, monthly, quarterly, annually | Custom intervals |
+| --------------------------------- | :---: | :----------------------------------: | :--------------: |
+| **Check title**, **Check tags**   |   ✓   |                  ✓                   |        ✓         |
+| **Check frontmatter property**    |   ✓   |                  ✓                   |        ✓         |
+| **Check if note exists**          |   ✓   |                  ✓                   |        ✓         |
+| **Check note size**               |   ✓   |                  ✓                   |        ✓         |
+| **Check tasks**                   |   ✓   |                  ✓                   |        ✓         |
+| **Check if a notelet exists**     |   ✓   |                  ✓                   |        ✓         |
+| **Check date**, **Check weekday** |   ✓   |                                      |                  |
+| **Check interval offset**         |       |                                      |        ✓         |
 
 A condition about a note — title, tags, a property, its size, its tasks — needs the note to exist. On
 a date with no note it does not match.
@@ -95,16 +95,53 @@ Example: [Word-count bands](#word-count-bands).
 
 ### Tasks
 
-**Check if note has open tasks** matches a note with at least one open task — To-do, In progress or On
-hold. **Check if all tasks are completed** matches a note with at least one task, and every one of them
-Done or Cancelled — not a note with no tasks. Rolled over tasks count toward neither condition, so a
-note holding only rolled-over tasks satisfies neither. Not a task items are excluded entirely and never
-supply the "at least one task" either condition needs.
+**Check tasks** asks a question about the tasks a period holds, and it asks the same question that
+period's [task listing](/tasks#listing-tasks-in-a-note) answers: a decoration that lights a day and a
+listing that shows nothing for it cannot disagree. It is one row that reads as a sentence:
+
+- **Which tasks** — **Any** matches when at least one task has the status. **All** matches when the
+  period has at least one task and every one of them has the status; a period with no tasks never
+  matches. **None** matches when the period has a note or a notelet and no task has the status, so a
+  note with no tasks matches and a date with neither a note nor a notelet does not.
+- **Status** — **As in listing**, **Open**, **Done** or **All**. **Open** is To-do, In progress and On
+  hold; **Done** is Done and Cancelled; **All** is any status. **As in listing** asks whatever
+  the journal's own task listing asks: its **Status** condition if the [journal's listing
+  filter](/tasks#a-journal-s-own-listing-filter) has one, Open if it does not. Edit that filter and
+  every dot that follows it changes meaning with it.
+- **Look in** — **Note only**, **Notelets only** or **Note and notelets**, which is the default. With
+  notelets only, a date can match without a period note.
+
+**Narrow further** counts only the tasks that match its **Heading** and **Tag** conditions, with an
+and/or control for combining them. The journal's own listing filter always applies as well: a
+**Heading** or **Tag** condition you add here replaces the journal's conditions of that type, the
+journal's other conditions still apply, and the control decides how they combine. The question is then
+asked of the tasks that remain. A journal whose filter keeps only tasks under `## Tasks` therefore
+ignores an unticked habit under `## Habits` when **All** · **Done** is asked. Under **Or**, the journal's
+conditions join yours rather than limiting them, which is how a **Tasks** view block with the **Or**
+mode behaves too.
+
+Not a task items are excluded entirely and never supply the "at least one task" that **All** needs.
+Rolled over tasks are neither open nor done: they never satisfy **Open** or **Done**, but they are
+still counted, so a period holding one alongside done tasks does not match **All** · **Done**.
 
 Which checkbox items count as tasks at all, and which status each checkbox marker reads as, are set on
 the [Tasks](/tasks) settings block. By default a plain `[ ]` is To-do, `[x]`/`[X]` is Done, `[/]` is In
 progress and `[-]` is Cancelled; any other marker — a theme's `[>]`, say — reads as To-do, which is
 open, unless you add it to the status map yourself.
+
+A decoration can carry more than one **Check tasks** condition, so "some task is open" and "no task is
+done" can sit side by side.
+
+#### Upgrading from earlier versions
+
+Versions before this one had two conditions, **Check if note has open tasks** and **Check if all tasks
+are completed**. On upgrade they become **Check tasks** rows with the status written out: **Any** ·
+**Open** and **All** · **Done**, both looking in **Note and notelets**. Your decorations are not
+otherwise touched, but two things change on days you already decorate:
+
+- Tasks are now read through the journal's listing filter, so on a journal that has one, some dots go
+  dark.
+- Notelets are read too, so some dots light that did not.
 
 ### Has notelet
 
@@ -126,8 +163,8 @@ decorations mark the interval in interval lists.
 
 ### Repeating a condition
 
-Title, tag, property, date, offset and note-size conditions can be added more than once. Weekday, has
-note, the two task conditions and has notelet can appear once each: a second copy could not say
+Title, tag, property, date, offset, tasks and note-size conditions can be added more than once. Weekday, has
+note and has notelet can appear once each: a second copy could not say
 anything the first does not.
 
 ## Styles

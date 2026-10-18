@@ -6,7 +6,7 @@ here, usually a more configurable one.
 | In Calendar                                                      | In Journals                                                                                                                                |
 | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | Dots sized by word count                                         | [Decorations](/decorations) with note-size conditions — see [Word-count dots](#word-count-dots) below                                      |
-| A hollow dot for incomplete tasks                                | A decoration with **Check if note has open tasks** or **Check if all tasks are completed**                                                 |
+| A hollow dot for incomplete tasks                                | A decoration with **Check tasks**                                                                                                          |
 | Colouring days by tag or content                                 | Decoration conditions on title, tag, frontmatter property, note size or weekday, painting colors, borders, shapes, corners and icons       |
 | One calendar per vault                                           | Any number of [journals](/journals), grouped on [shelves](/shelves), with views scoped to a shelf                                          |
 | A fixed month grid padded to six weeks                           | A month grid of exactly the weeks the month spans, plus week grids, notes-by-date lists and toolbars composed into a [view](/views)        |
