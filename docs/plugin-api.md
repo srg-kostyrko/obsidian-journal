@@ -48,6 +48,8 @@ interface JournalsApi {
   notesFor(selector: JournalSelector, date: DateInput): Promise<readonly JournalNote[]>;
   notesInRange(selector: JournalSelector, range: DateRange): Promise<readonly JournalNote[]>;
   existingNotes(selector: JournalSelector, range?: DateRange): Promise<readonly ExistingJournalNote[]>;
+  previousNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]>;
+  nextNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
   noteletOf(file: TFile): Promise<NoteletNote | null>;
   noteletsFor(
@@ -213,6 +215,8 @@ Which one to reach for:
 | a cell per period, empty ones included | `notesInRange`                      |
 | only the notes that exist              | `existingNotes(selector, range)`    |
 | every note a journal has written       | `existingNotes(selector)`, no range |
+| the last note before a date            | `previousNote(selector, date)`      |
+| the first note after a date            | `nextNote(selector, date)`          |
 
 `existingNotes` returns `ExistingJournalNote`, so `path` and `file` are always
 set — no null checks, and nothing to filter. It reads a sorted index, so it
@@ -229,6 +233,17 @@ them in.
 Results are grouped **by journal**, in the order the selector matches them, and
 ordered by date within each journal. A multi-journal read is not interleaved by
 date.
+
+`previousNote` and `nextNote` answer the nearest note that **exists** on either
+side of the period holding `date`, skipping periods with no note — so
+`previousNote("Work Daily", "today")` is the last day you wrote, not necessarily
+yesterday. The period holding `date` is never its own neighbor: on a weekly
+journal, a Thursday's `previousNote` is the week before that Thursday's week,
+whether or not that week has a note. Each matched journal contributes at most
+one note, and a journal with nothing on that side contributes none. For the
+period next door whether or not it was written, call `notesFor` on a date inside
+it. Both read the same sorted index as `existingNotes`, so a journal with years
+of gaps costs one lookup, not a walk.
 
 ## `date` vs `displayDate`
 
