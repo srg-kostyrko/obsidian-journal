@@ -705,7 +705,9 @@ So both are replaced by one condition that asks the listing's question:
 For a cell (journal J, period P) it runs in four steps, in `answerTaskQuestion`:
 
 1. **Gather.** The source notes for P under `source` (default `both`) — the same `sourceNotes` walk
-   the listing uses, notelets filtered by J's filter as the listing does.
+   the listing uses. Every notelet at P is gathered whatever its items; J's filter applies to the
+   items inside it in step 2, so a notelet whose items are all filtered out still counts as existing
+   for `none`.
 2. **Count.** Each note's provider items minus `non-task`, kept when they pass the heading and tag
    part of J's `tasks.filter` merged with the condition's `filter`. The merge is the listing's: a
    condition type the decoration names **replaces** J's conditions of that type, J's other conditions
