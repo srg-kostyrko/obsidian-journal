@@ -37,4 +37,37 @@ describe("TaskNotesSource", () => {
   it("fills TaskNotes' defaults when fieldMapping and the rest are missing", async () => {
     expect(await readWith(taskNotesPlugin({}))).toEqual({ kind: "read", settings: buildTaskNotesSettings() });
   });
+
+  it("is unrecognised when reading settings throws", async () => {
+    const plugin = {
+      get settings(): unknown {
+        throw new Error("boom");
+      },
+    };
+    expect(await readWith(plugin)).toEqual({ kind: "unrecognised" });
+  });
+
+  it("is unrecognised when a nested getter throws", async () => {
+    const settings = {
+      get customStatuses(): unknown {
+        throw new Error("boom");
+      },
+    };
+    expect(await readWith(taskNotesPlugin(settings))).toEqual({ kind: "unrecognised" });
+  });
+
+  it.each(["", "#"])("is unrecognised when the task tag %j would match nothing", async (taskTag) => {
+    expect(await readWith(taskNotesPlugin({ taskTag }))).toEqual({ kind: "unrecognised" });
+  });
+
+  it("is unrecognised when identifying by property with no property name", async () => {
+    const settings = { taskIdentificationMethod: "property", taskPropertyName: " ", taskPropertyValue: "task" };
+    expect(await readWith(taskNotesPlugin(settings))).toEqual({ kind: "unrecognised" });
+  });
+
+  it("ignores an empty tag while identifying by property", async () => {
+    const settings = { taskIdentificationMethod: "property", taskTag: "", taskPropertyName: "type" };
+    const read = await readWith(taskNotesPlugin(settings));
+    expect(read.kind).toBe("read");
+  });
 });

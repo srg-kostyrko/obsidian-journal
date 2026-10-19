@@ -48,15 +48,25 @@ export type TaskNotesSettings = v.InferOutput<typeof taskNotesSettingsSchema>;
 export type TaskNotesRead =
   { kind: "absent" } | { kind: "unrecognised" } | { kind: "read"; settings: TaskNotesSettings };
 
+// A copy that matches no note is worse than no card, so an empty identifier is unreadable.
+function identifiesSomething(settings: TaskNotesSettings): boolean {
+  if (settings.taskIdentificationMethod === "property") return settings.taskPropertyName.trim() !== "";
+  return settings.taskTag.replace(/^#/, "").trim() !== "";
+}
+
 export class TaskNotesSource {
   readonly #reader = inject(PluginSettingsReader);
 
   read(): TaskNotesRead {
     const plugin = this.#reader.communityPlugin("tasknotes");
     if (plugin.isNone()) return { kind: "absent" };
-    const settings = (plugin.value as { settings?: unknown }).settings;
-    const parsed = v.safeParse(taskNotesSettingsSchema, settings);
-    if (!parsed.success) return { kind: "unrecognised" };
-    return { kind: "read", settings: parsed.output };
+    // Foreign code: a getter or proxy trap on the live object may throw, and safeParse does not catch that.
+    try {
+      const parsed = v.safeParse(taskNotesSettingsSchema, (plugin.value as { settings?: unknown }).settings);
+      if (!parsed.success || !identifiesSomething(parsed.output)) return { kind: "unrecognised" };
+      return { kind: "read", settings: parsed.output };
+    } catch {
+      return { kind: "unrecognised" };
+    }
   }
 }

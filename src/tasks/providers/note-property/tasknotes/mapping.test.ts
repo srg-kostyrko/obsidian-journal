@@ -1,4 +1,7 @@
+import * as v from "valibot";
 import { describe, expect, it } from "vitest";
+
+import { notePropertySlice, notePropertySliceSchema } from "../slice";
 
 import { fromTaskNotes } from "./mapping";
 import { buildTaskNotesSettings } from "./testing";
@@ -96,5 +99,19 @@ describe("fromTaskNotes", () => {
       );
       expect(mapped.canonical).toEqual({ todo: "open", "in-progress": "in-progress" });
     });
+  });
+
+  it("maps a completed status named in-progress to done, never to canonical in-progress", () => {
+    const mapped = fromTaskNotes(
+      buildTaskNotesSettings({ customStatuses: [status("open", 0), status("In-Progress", 1, true)] }),
+    );
+    expect(mapped.statusMap).toEqual({ open: "todo", "in-progress": "done" });
+    expect(mapped.canonical).toEqual({ todo: "open", done: "In-Progress" });
+  });
+
+  it("produces a patch the slice schema accepts unchanged", () => {
+    const mapped = fromTaskNotes(buildTaskNotesSettings());
+    const parsed = v.parse(notePropertySliceSchema, { ...notePropertySlice.defaults, ...mapped });
+    expect(parsed).toMatchObject(mapped);
   });
 });
