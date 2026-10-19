@@ -44,7 +44,7 @@ function taskNote(
     capabilities: { movable: false, stampable: false, retargetable: true },
     display: { kind: "note", path, title: path },
     dates: (dates ?? { scheduled: ANCHOR }) as TaskItem["dates"],
-    facts: { frontmatterTags, properties: {} },
+    facts: { frontmatterTags },
   });
 }
 

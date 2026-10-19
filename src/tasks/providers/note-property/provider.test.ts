@@ -118,7 +118,7 @@ describe("NotePropertyTaskProvider", () => {
         capabilities: { movable: false, stampable: false, retargetable: true },
         display: { kind: "note", path, title: "a" },
         dates: { scheduled: anchor("2026-10-21") },
-        facts: { frontmatterTags: ["#task"], properties: { scheduled: "2026-10-21" } },
+        facts: { frontmatterTags: ["#task"] },
       },
     ]);
   });
@@ -137,6 +137,20 @@ describe("NotePropertyTaskProvider", () => {
 
     expect(index.version()).toBe(before + 1);
     expect(index.itemsIn(path).at(0)?.facts?.frontmatterTags).toEqual(["#task", "#work"]);
+  });
+
+  // TaskNotes rewrites dateModified on every edit; a property no surface reads must not re-render them all.
+  it("does not bump the index version for an edit to a property the item does not read", async () => {
+    const { notes, setNote, provider, index } = await build();
+    notes.seed(path);
+    setNote(path, { properties: { scheduled: "2026-10-21", dateModified: "2026-10-19T10:00:00" } });
+    provider.start();
+    const before = index.version();
+
+    setNote(path, { properties: { scheduled: "2026-10-21", dateModified: "2026-10-19T11:00:00" } });
+    notes.emitMetadataChanged(path);
+
+    expect(index.version()).toBe(before);
   });
 
   it("ignores notes without the task tag", async () => {
