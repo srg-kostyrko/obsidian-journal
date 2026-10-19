@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { NotesService, type VaultPath } from "@/infrastructure/host";
-import { FakeNotesService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { journalsCoreModule } from "@/journals/module";
 import { overrideWith, testContainer } from "@/testing";
@@ -379,13 +379,17 @@ describe("canonicalSymbol", () => {
 
 async function build(options: { content: string; canonical?: Record<string, string> }) {
   const notes = new FakeNotesService();
+  const metadata = new FakeNoteMetadataService();
   notes.seed(PATH, options.content);
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
     data: options.canonical === undefined ? {} : { tasksCheckbox: { canonical: options.canonical } },
-    overrides: [overrideWith(NotesService, notes as unknown as NotesService)],
+    overrides: [
+      overrideWith(NotesService, notes as unknown as NotesService),
+      overrideWith(NoteMetadataService, metadata as unknown as NoteMetadataService),
+    ],
   });
-  return { harness, notes, service: harness.resolve(TickService) };
+  return { harness, notes, metadata, service: harness.resolve(TickService) };
 }
 
 async function contentOf(notes: FakeNotesService): Promise<string> {
@@ -483,9 +487,10 @@ describe("TickService", () => {
   });
 
   it("hands a task note to its provider, which writes the status property rather than a line", async () => {
-    const { notes, service } = await build({ content: "- [ ] Ship it\n" });
+    const { notes, metadata, service } = await build({ content: "- [ ] Ship it\n" });
     const notePath = "Tasks/Ship it.md" as VaultPath;
     notes.seed(notePath, "Body\n", { status: "open" });
+    metadata.setMetadata(notePath, { title: "Ship it", tags: ["#task"], properties: { status: "open" } });
     const note = buildTaskItem({
       provider: "note-property",
       path: notePath,

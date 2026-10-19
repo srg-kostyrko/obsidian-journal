@@ -1,7 +1,13 @@
-import { CalendarDate, Clock } from "@/calendar";
+import { Clock } from "@/calendar";
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import { NoteMetadataService, NoteWriteError, NoticeService, NotesService } from "@/infrastructure/host";
+import {
+  NoteMetadataService,
+  NoteNotFoundError,
+  NoteWriteError,
+  NoticeService,
+  NotesService,
+} from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
@@ -34,8 +40,10 @@ export class NotePropertyTicker {
     const state = this.#settings.state;
     // A recurring series is advanced by the plugin that owns it, off the completion of its current
     // note; a bare status write would complete the note and silently end the series.
+    // With no metadata, recurrence cannot be ruled out, and a wrong guess ends a series silently.
     const meta = this.#metadata.get(item.path);
-    if (meta.isSome() && isRecurring(meta.value.properties, state.recurrenceProperties)) {
+    if (meta.isNone()) return AsyncResult.err(new NoteNotFoundError(item.path));
+    if (isRecurring(meta.value.properties, state.recurrenceProperties)) {
       this.#notices.show(m.tasks_tick_recurring_task_note());
       return AsyncResult.err(new RecurringUnsupportedError(item.path));
     }
@@ -46,14 +54,16 @@ export class NotePropertyTicker {
 
     const completedProperty = state.dates.done ?? "";
     const modifiedProperty = state.modifiedProperty;
+    // One reading of the clock, so a tick at midnight cannot stamp two different days.
+    const now = Clock.now();
     return this.#notes
       .updateFrontmatter(item.path, (frontmatter) => {
         frontmatter[state.statusProperty] = statusValue(canonical);
         if (completedProperty !== "") {
-          if (isDone(target)) frontmatter[completedProperty] = CalendarDate.today().toAnchor();
+          if (isDone(target)) frontmatter[completedProperty] = now.format("YYYY-MM-DD");
           else delete frontmatter[completedProperty];
         }
-        if (modifiedProperty !== "") frontmatter[modifiedProperty] = Clock.now().format("YYYY-MM-DDTHH:mm:ss");
+        if (modifiedProperty !== "") frontmatter[modifiedProperty] = now.format("YYYY-MM-DDTHH:mm:ssZ");
       })
       .mapErr((error): TickError =>
         error.kind === "frontmatter-failed" ? new NoteWriteError(item.path, error.cause) : error,

@@ -16,6 +16,16 @@ import type { TaskStatus } from "../../types";
 
 const PATH = "Tasks/Ship it.md" as VaultPath;
 
+// The faked instant below, with this machine's own UTC offset, the shape TaskNotes writes.
+function localOffset(at: Date): string {
+  const minutes = -at.getTimezoneOffset();
+  const sign = minutes < 0 ? "-" : "+";
+  const abs = Math.abs(minutes);
+  return `${sign}${String(Math.floor(abs / 60)).padStart(2, "0")}:${String(abs % 60).padStart(2, "0")}`;
+}
+const NOW = new Date(2026, 9, 19, 14, 5, 9);
+const MODIFIED = `2026-10-19T14:05:09${localOffset(NOW)}`;
+
 function noteItem(status: TaskStatus = "todo") {
   return buildTaskItem({
     provider: "note-property",
@@ -28,11 +38,17 @@ function noteItem(status: TaskStatus = "todo") {
   });
 }
 
-async function build(frontmatter: Record<string, unknown>, slice: Record<string, unknown> = {}) {
+async function build(
+  frontmatter: Record<string, unknown>,
+  slice: Record<string, unknown> = {},
+  options: { resolved?: boolean } = {},
+) {
   const notes = new FakeNotesService();
   const metadata = new FakeNoteMetadataService();
   notes.seed(PATH, "", frontmatter);
-  metadata.setMetadata(PATH, { title: "Ship it", tags: ["#task"], properties: frontmatter });
+  if (options.resolved ?? true) {
+    metadata.setMetadata(PATH, { title: "Ship it", tags: ["#task"], properties: frontmatter });
+  }
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
     data: { tasksNoteProperty: { enabled: true, ...slice } },
@@ -44,7 +60,7 @@ async function build(frontmatter: Record<string, unknown>, slice: Record<string,
 describe("NotePropertyTicker", () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(new Date(2026, 9, 19, 14, 5, 9));
+    vi.setSystemTime(NOW);
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -60,7 +76,7 @@ describe("NotePropertyTicker", () => {
       due: "2026-10-21",
       tags: ["task"],
       completedDate: "2026-10-19",
-      dateModified: "2026-10-19T14:05:09",
+      dateModified: MODIFIED,
     });
   });
 
@@ -72,7 +88,7 @@ describe("NotePropertyTicker", () => {
     expect(notes.frontmatterOf(PATH)).toEqual({
       status: "open",
       title: "Ship it",
-      dateModified: "2026-10-19T14:05:09",
+      dateModified: MODIFIED,
     });
   });
 
@@ -122,7 +138,7 @@ describe("NotePropertyTicker", () => {
     expect(notes.frontmatterOf(PATH)).toEqual({
       state: "finished",
       completed: "2026-10-19",
-      updated: "2026-10-19T14:05:09",
+      updated: MODIFIED,
     });
   });
 
@@ -152,6 +168,19 @@ describe("NotePropertyTicker", () => {
     expect(update).not.toHaveBeenCalled();
     expect(notes.frontmatterOf(PATH)).toEqual(frontmatter);
     expect(harness.notices.messages).toEqual([m.tasks_tick_recurring_task_note()]);
+  });
+
+  it("refuses to write while the note's metadata is unresolved, since recurrence cannot be ruled out", async () => {
+    const frontmatter = { status: "open", recurrence: "FREQ=DAILY" };
+    const { notes, ticker } = await build(frontmatter, {}, { resolved: false });
+    const update = vi.spyOn(notes, "updateFrontmatter");
+
+    const result = await ticker.toggle(noteItem("todo"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("note-not-found");
+    expect(update).not.toHaveBeenCalled();
+    expect(notes.frontmatterOf(PATH)).toEqual(frontmatter);
   });
 
   it("reports a note that is gone rather than throwing", async () => {
