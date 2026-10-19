@@ -160,6 +160,7 @@ export type JournalsApiErrorCode =
   | "creation-failed"
   | "prompts-required"
   | "invalid-answers"
+  | "invalid-option"
   | "open-failed"
   | "aborted"
   | "plugin-unloaded"

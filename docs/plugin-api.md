@@ -438,6 +438,7 @@ failure — no note for a period is `file: null`.
 | `aborted`                | the user dismissed the confirmation prompt or the journal picker                                        |
 | `prompts-required`       | the journal has creation prompts, `prompt: false` was passed, and no `answers` were                     |
 | `invalid-answers`        | the `answers` passed were rejected — see [Answering questions](#answering-questions) and `error.issues` |
+| `invalid-option`         | an option passed holds a value outside the ones it accepts, such as an unknown `tasksFor` `date`        |
 | `plugin-unloaded`        | Journals was unloaded while the call was in flight                                                      |
 
 ```ts

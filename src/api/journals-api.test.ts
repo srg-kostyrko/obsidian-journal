@@ -1094,6 +1094,14 @@ describe("JournalsApiService tasksFor", () => {
       expect(await api.tasksFor("daily", "2026-09-22", { date: "scheduled" })).toHaveLength(1);
     });
 
+    it("rejects a date option outside the date choices with invalid-option", async () => {
+      const { api } = await buildTasksApi({ daily });
+
+      await expect(api.tasksFor("daily", "2026-09-22", { date: "deadline" as unknown as "due" })).rejects.toMatchObject(
+        { code: "invalid-option" },
+      );
+    });
+
     it("returns it once for a selector matching two journals, under the first in selection order", async () => {
       const { api, tasks } = await buildTasksApi({ work: fixedJournal("work", { type: "day" }), daily });
       tasks.publish("note-property", { path: TASK_NOTE as VaultPath }, [
