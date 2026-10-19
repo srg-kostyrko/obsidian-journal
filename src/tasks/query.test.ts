@@ -13,6 +13,7 @@ describe("taskQuerySchema", () => {
       scope: { provider: [], source: "both", depth: "literal" },
       filter: { mode: "and", conditions: [] },
       sort: "document",
+      date: "scheduled-or-due",
     });
   });
 
@@ -23,6 +24,12 @@ describe("taskQuerySchema", () => {
 
   it("falls back to document order on a sort key it does not know", () => {
     expect(v.parse(taskQuerySchema, { sort: "priority" }).sort).toBe("document");
+  });
+
+  it("falls back to scheduled-or-due on a date choice it does not know", () => {
+    expect(v.parse(taskQuerySchema, { date: "start" }).date).toBe("start");
+    expect(v.parse(taskQuerySchema, { date: "whenever" }).date).toBe("scheduled-or-due");
+    expect(DEFAULT_TASK_QUERY.date).toBe("scheduled-or-due");
   });
 
   it("freezes the shared default so a consumer's mutation fails loudly instead of corrupting later queries", () => {

@@ -3,12 +3,11 @@
 import * as v from "valibot";
 
 import { taskRuleSchema, type TaskCondition } from "./conditions";
+import { taskDateChoiceSchema } from "./date-choice";
 
 export const taskSorts = ["document", "status", "due", "scheduled", "start", "done", "created"] as const;
 export type TaskSort = (typeof taskSorts)[number];
 
-// No `date` key: the date relation is a later ticket, and a key that parses but does nothing is
-// worse than one reported as unrecognized.
 const scopeSchema = v.object({
   provider: v.optional(v.array(v.string()), []),
   source: v.optional(v.fallback(v.picklist(["note", "notelets", "both"]), "both"), "both"),
@@ -32,6 +31,7 @@ export const taskQuerySchema = v.object({
   scope: v.optional(scopeSchema, () => v.parse(scopeSchema, {})),
   filter: v.optional(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
   sort: v.optional(v.fallback(v.picklist(taskSorts), "document"), "document"),
+  date: v.optional(v.fallback(taskDateChoiceSchema, "scheduled-or-due"), "scheduled-or-due"),
 });
 
 export type TaskQuery = v.InferOutput<typeof taskQuerySchema>;

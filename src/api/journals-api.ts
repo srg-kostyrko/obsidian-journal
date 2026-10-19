@@ -84,6 +84,7 @@ function taskQueryFor(options: TasksForOptions | undefined): TaskQuery {
         options?.status === undefined ? [] : [{ type: "status", condition: "is", statuses: [options.status] }],
     },
     sort: "document",
+    date: DEFAULT_TASK_QUERY.date,
   };
 }
 

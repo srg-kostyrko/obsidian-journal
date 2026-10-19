@@ -21,16 +21,29 @@ describe("tasksBlockSchema", () => {
       heading: undefined,
       tag: undefined,
       sort: "document",
+      date: "scheduled-or-due",
       conditions: [],
     });
   });
 
-  it("does not list `date` among its known keys, so a fence using it is told it is unrecognized", () => {
-    expect(tasksBlockKeys).not.toContain("date");
+  it("reports its own keys, in desugar order", () => {
+    expect(tasksBlockKeys).toEqual([
+      "provider",
+      "source",
+      "depth",
+      "status",
+      "heading",
+      "tag",
+      "sort",
+      "date",
+      "conditions",
+    ]);
   });
 
-  it("reports its own keys, in desugar order", () => {
-    expect(tasksBlockKeys).toEqual(["provider", "source", "depth", "status", "heading", "tag", "sort", "conditions"]);
+  it("falls back date to scheduled-or-due on an unknown value", () => {
+    expect(v.parse(tasksBlockSchema, { date: "due" }).date).toBe("due");
+    expect(v.parse(tasksBlockSchema, { date: "whenever" }).date).toBe("scheduled-or-due");
+    expect(toTaskQuery(v.parse(tasksBlockSchema, { date: "due" })).date).toBe("due");
   });
 
   it("reads a single value written as one thing as a one-item list", () => {

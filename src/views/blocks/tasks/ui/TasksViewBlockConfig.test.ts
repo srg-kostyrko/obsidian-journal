@@ -68,6 +68,13 @@ describe("TasksViewBlockConfig", () => {
     expect(onChange).toHaveBeenCalledWith({ ...tasksViewBlock.defaultConfig, sort: "due" });
   });
 
+  it("emits the complete config when the date choice changes", async () => {
+    const onChange = await mountConfig();
+    const dropdown = within(controlFor(m.view_block_tasks_date_label())).getByRole("combobox");
+    await userEvent.selectOptions(dropdown, "due");
+    expect(onChange).toHaveBeenCalledWith({ ...tasksViewBlock.defaultConfig, date: "due" });
+  });
+
   it("narrows to the journals toggled on", async () => {
     const onChange = await mountConfig();
     await userEvent.click(screen.getByText("Daily"));

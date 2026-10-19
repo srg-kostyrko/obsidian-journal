@@ -41,7 +41,7 @@ const request = computed<TaskListingRequest | null>(() => {
     // window request already walks every journal in scope directly (see targetPeriods' window
     // branch in listing.ts) — there is no narrower "just the host" state to be literal about, and
     // nothing wider beyond the configured scope for rollup to reach into.
-    query: { scope: props.config.scope, filter: props.config.filter, sort: props.config.sort },
+    query: { scope: props.config.scope, filter: props.config.filter, sort: props.config.sort, date: props.config.date },
   };
 });
 

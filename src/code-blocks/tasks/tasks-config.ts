@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { taskConditionSchema, type TaskCondition } from "@/tasks/conditions";
+import { taskDateChoiceSchema } from "@/tasks/date-choice";
 import { DEFAULT_TASK_QUERY, taskSorts, type TaskQuery } from "@/tasks/query";
 
 import { asFenceStringList, asRecord } from "../fence-record";
@@ -17,11 +18,10 @@ const depthEntry = v.optional(
   DEFAULT_TASK_QUERY.scope.depth,
 );
 const sortEntry = v.optional(v.fallback(v.picklist(taskSorts), DEFAULT_TASK_QUERY.sort), DEFAULT_TASK_QUERY.sort);
+const dateEntry = v.optional(v.fallback(taskDateChoiceSchema, DEFAULT_TASK_QUERY.date), DEFAULT_TASK_QUERY.date);
 
 // Raw and flat, one field per fence key, kept 1:1 with what the user writes — `tasksBlockKeys`
 // below is derived straight from this object, so a key added here is a key the fence recognizes.
-// No `date` key: the date relation is a later ticket, and a key that parses but does nothing is
-// worse than one reported as unrecognized (`CLAUDE.md`).
 const rawEntries = {
   provider: v.optional(v.pipe(v.unknown(), v.transform(asFenceStringList)), () => [] as string[]),
   source: sourceEntry,
@@ -30,6 +30,7 @@ const rawEntries = {
   heading: v.optional(v.pipe(v.unknown(), v.transform(asFenceStringList))),
   tag: v.optional(v.pipe(v.unknown(), v.transform(asFenceStringList))),
   sort: sortEntry,
+  date: dateEntry,
   conditions: v.optional(v.fallback(v.array(taskConditionSchema), [] as TaskCondition[]), []),
 };
 
@@ -90,5 +91,6 @@ export function toTaskQuery(raw: TasksFenceConfig): TaskQuery {
     scope: { provider: raw.provider, source: raw.source, depth: raw.depth },
     filter: { mode: "and", conditions },
     sort: raw.sort,
+    date: raw.date,
   };
 }
