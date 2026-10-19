@@ -1,10 +1,11 @@
 import { createNanoEvents } from "nanoevents";
 
+import type { AnchorString } from "@/calendar";
 import { inject, InjectorToken } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 
-import { TaskProviderToken, type TaskItem } from "./types";
+import { TaskProviderToken, type TaskDateRole, type TaskItem } from "./types";
 
 export interface TaskIndexEvents {
   changed: () => void;
@@ -14,6 +15,10 @@ export class TaskIndex {
   readonly #byPath = new Map<VaultPath, Map<string, readonly TaskItem[]>>();
   readonly #emitter: TypedEmitter<TaskIndexEvents> = createNanoEvents();
   #version = 0;
+  // Per-role dated entries sorted by [date, key], rebuilt on the first datedIn after a version
+  // bump: the decoration engine asks once per grid cell, so a scan of every item would be per cell.
+  readonly #byRole = new Map<TaskDateRole, readonly DatedEntry[]>();
+  #byRoleVersion = -1;
   readonly #notes = inject(NotesService);
   // Text is not in metadataCache, so a "line" item's markdown is hydrated lazily on request and
   // cached per path, keyed by mtime — a modified note invalidates precisely, a re-read is free.
@@ -58,6 +63,20 @@ export class TaskIndex {
     this.#text.set(path, { mtime, lines: read.value.split("\n") });
   }
 
+  #entriesFor(role: TaskDateRole): readonly DatedEntry[] {
+    const cached = this.#byRole.get(role);
+    if (cached) return cached;
+    const entries: DatedEntry[] = [];
+    const items = [...this.#byPath.values()].flatMap((byProvider) => [...byProvider.values()].flat());
+    for (const item of items) {
+      const date = item.dates[role];
+      if (date !== undefined && item.relations.includes("date")) entries.push({ date, item });
+    }
+    const sorted = entries.toSorted(compareEntries);
+    this.#byRole.set(role, sorted);
+    return sorted;
+  }
+
   version(): number {
     return this.#version;
   }
@@ -66,6 +85,23 @@ export class TaskIndex {
     const byProvider = this.#byPath.get(path);
     if (!byProvider) return [];
     return [...byProvider.values()].flat();
+  }
+
+  datedIn(roles: readonly TaskDateRole[], start: AnchorString, end: AnchorString): readonly TaskItem[] {
+    if (this.#byRoleVersion !== this.#version) {
+      this.#byRole.clear();
+      this.#byRoleVersion = this.#version;
+    }
+    const matched = new Map<string, DatedEntry>();
+    const distinctRoles = new Set(roles);
+    for (const role of distinctRoles) {
+      const inRange = entriesBetween(this.#entriesFor(role), start, end);
+      for (const entry of inRange) {
+        const known = matched.get(entry.item.key);
+        if (!known || compareEntries(entry, known) < 0) matched.set(entry.item.key, entry);
+      }
+    }
+    return [...matched.values()].toSorted(compareEntries).map((entry) => entry.item);
   }
 
   // A publish that restates what is already stored must not bump the version. Every consumer
@@ -113,6 +149,37 @@ export class TaskIndex {
       return { ...item, display: { ...item.display, markdown } };
     });
   }
+}
+
+interface DatedEntry {
+  readonly date: AnchorString;
+  readonly item: TaskItem;
+}
+
+function compareEntries(a: DatedEntry, b: DatedEntry): number {
+  if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+  if (a.item.key === b.item.key) return 0;
+  return a.item.key < b.item.key ? -1 : 1;
+}
+
+// Entries are sorted by date, so the inclusive range is one contiguous slice found by two bisections.
+function entriesBetween(entries: readonly DatedEntry[], start: AnchorString, end: AnchorString): DatedEntry[] {
+  return entries.slice(
+    firstIndexWhere(entries, (date) => date >= start),
+    firstIndexWhere(entries, (date) => date > end),
+  );
+}
+
+function firstIndexWhere(entries: readonly DatedEntry[], test: (date: AnchorString) => boolean): number {
+  let lo = 0;
+  let hi = entries.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    const date = entries[mid]?.date;
+    if (date !== undefined && test(date)) hi = mid;
+    else lo = mid + 1;
+  }
+  return lo;
 }
 
 function dedupe(items: readonly TaskItem[]): readonly TaskItem[] {
