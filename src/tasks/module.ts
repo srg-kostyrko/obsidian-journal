@@ -15,6 +15,7 @@ import { TaskIndex } from "./task-index";
 import { TickService } from "./tick";
 import { TaskHostToken, TaskProviderToken } from "./types";
 import { tasksUiModule } from "./ui-module";
+import { TaskVisibility } from "./visibility";
 
 export const tasksCoreModule: Module = {
   register(c) {
@@ -29,6 +30,7 @@ export const tasksCoreModule: Module = {
     c.register(EditJournalTasksFlow).useClass(EditJournalTasksFlow);
     c.register(EditNotePropertyProviderFlow).useClass(EditNotePropertyProviderFlow);
     c.register(NotePropertyTicker).useClass(NotePropertyTicker);
+    c.register(TaskVisibility).useClass(TaskVisibility);
     c.register(TickService).useClass(TickService);
   },
 };

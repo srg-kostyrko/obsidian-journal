@@ -10,7 +10,7 @@ import { TaskHostToken, type TaskItem, type TaskProvider } from "../../types";
 import { identifiesNote, readDates, readStatus, readTitle } from "./read";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
 import NotePropertySettingsRow from "./ui/NotePropertySettingsRow.vue";
-import { referencedProperties } from "./visibility";
+import { admits, referencedProperties } from "./visibility";
 
 export class NotePropertyTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
@@ -73,6 +73,10 @@ export class NotePropertyTaskProvider implements TaskProvider {
   #refillAll(): void {
     const items = this.#notes.allMarkdownNotes().flatMap((path) => this.#itemsFor(path));
     this.#host.publish(this.id, "all", items);
+  }
+
+  admits(item: TaskItem, journalName: string): boolean {
+    return admits(this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id], item);
   }
 
   start(): () => void {

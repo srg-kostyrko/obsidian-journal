@@ -21,3 +21,4 @@ export { TaskProviderRegistry } from "./provider-registry";
 export { TaskIndex } from "./task-index";
 export { taskQuestionSchema, taskQuestionStatuses, type TaskQuestion } from "./question";
 export { answerTaskQuestion, type TaskQuestionDependencies } from "./answer-question";
+export { TaskVisibility } from "./visibility";

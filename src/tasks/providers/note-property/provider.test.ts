@@ -398,5 +398,23 @@ describe("NotePropertyTaskProvider", () => {
 
       expect(repository.get("Office").getOrUndefined()?.tasks.providers["note-property"]).toEqual(byProject);
     });
+
+    it("answers admits from the journal's current rule, reading it live", async () => {
+      const { notes, setNote, provider, index, repository } = await build(true, true, { Work: withRule(byProject) });
+      notes.seed(path);
+      setNote(path, { properties: properties("[[Other]]", "2026-10-19T10:00:00") });
+      provider.start();
+      const item = index.itemsIn(path).at(0);
+      if (item === undefined) throw new TypeError("no item");
+
+      expect(provider.admits(item, "Work")).toBe(false);
+      expect(provider.admits(item, "Unknown")).toBe(true);
+
+      repository.update("Work", {
+        tasks: { filter: noFilter, providers: { "note-property": { ...byProject, show: "all" } } },
+      });
+
+      expect(provider.admits(item, "Work")).toBe(true);
+    });
   });
 });
