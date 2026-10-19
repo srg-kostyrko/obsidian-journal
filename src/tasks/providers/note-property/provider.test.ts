@@ -4,6 +4,7 @@ import { nextTick } from "vue";
 import { anchor } from "@/calendar/testing";
 import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
+import { JournalsIndex } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { SettingsService } from "@/settings";
 import { overrideWith, testContainer } from "@/testing";
@@ -24,7 +25,7 @@ const taskMeta = (properties: Record<string, unknown> | undefined = undefined) =
   properties: properties ?? { scheduled: "2026-10-21" },
 });
 
-async function build(enabled = true) {
+async function build(enabled = true, ready = true) {
   const notes = new FakeNotesService();
   const metadata = new FakeNoteMetadataService();
   const harness = await testContainer({
@@ -35,8 +36,10 @@ async function build(enabled = true) {
   const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === NOTE_PROPERTY_PROVIDER_ID);
   if (!(provider instanceof NotePropertyTaskProvider)) throw new TypeError("note-property provider not registered");
   const index = harness.resolve(TaskIndex);
+  const journals = harness.resolve(JournalsIndex);
+  if (ready) journals.markReady();
   const slice = harness.resolve(SettingsService).getSlice(notePropertySlice);
-  return { notes, metadata, provider, index, slice };
+  return { journals, notes, metadata, provider, index, slice };
 }
 
 describe("NotePropertyTaskProvider", () => {
@@ -46,6 +49,33 @@ describe("NotePropertyTaskProvider", () => {
     metadata.setMetadata(path, taskMeta());
 
     provider.start();
+
+    expect(index.itemsIn(path)).toEqual([]);
+  });
+
+  it("waits for the journals index before walking the vault", async () => {
+    const { journals, notes, metadata, provider, index } = await build(true, false);
+    notes.seed(path);
+    metadata.setMetadata(path, taskMeta());
+
+    provider.start();
+    expect(index.itemsIn(path)).toEqual([]);
+
+    journals.markReady();
+    await journals.whenReady();
+    await Promise.resolve();
+    expect(index.itemsIn(path)).toHaveLength(1);
+  });
+
+  it("does not walk the vault when disposed before the index is ready", async () => {
+    const { journals, notes, metadata, provider, index } = await build(true, false);
+    notes.seed(path);
+    metadata.setMetadata(path, taskMeta());
+
+    provider.start()();
+    journals.markReady();
+    await journals.whenReady();
+    await Promise.resolve();
 
     expect(index.itemsIn(path)).toEqual([]);
   });

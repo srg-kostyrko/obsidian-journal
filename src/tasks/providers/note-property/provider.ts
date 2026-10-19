@@ -2,6 +2,7 @@ import { watch } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals";
 import { SettingsService } from "@/settings";
 
 import { TaskHostToken, type TaskItem, type TaskProvider } from "../../types";
@@ -12,6 +13,7 @@ import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
 export class NotePropertyTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
   readonly #notes = inject(NotesService);
+  readonly #journals = inject(JournalsIndex);
   readonly #metadata = inject(NoteMetadataService);
   readonly #settings = inject(SettingsService).getSlice(notePropertySlice);
   readonly id = NOTE_PROPERTY_PROVIDER_ID;
@@ -47,9 +49,15 @@ export class NotePropertyTaskProvider implements TaskProvider {
   }
 
   start(): () => void {
-    // Safe as a whole-vault walk: the registry starts providers after the journals index is ready,
-    // which already waited for layout-ready and for every note to resolve in metadataCache.
-    this.#refillAll();
+    let disposed = false;
+    // The registry starts before layout-ready, when the file list is partial and notes restored from
+    // cached metadata emit no metadata-changed; index readiness is the signal that the walk is complete.
+    if (this.#journals.isReady()) this.#refillAll();
+    else {
+      void this.#journals.whenReady().then(() => {
+        if (!disposed) this.#refillAll();
+      });
+    }
     const stopSettingsWatch = watch(
       () => this.#settings.state,
       () => this.#refillAll(),
@@ -69,6 +77,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
       }),
     ];
     return () => {
+      disposed = true;
       stopSettingsWatch();
       for (const stop of stops) stop();
     };

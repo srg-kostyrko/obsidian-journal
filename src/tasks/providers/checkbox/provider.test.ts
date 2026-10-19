@@ -87,7 +87,7 @@ async function build(sliceState: Record<string, unknown> = {}) {
   const host = new FakeTaskHost();
   const structures = new FakeNoteStructureService();
   const harness = await testContainer({
-    modules: [tasksCoreModule],
+    modules: [journalsCoreModule, tasksCoreModule],
     data: { tasksCheckbox: sliceState },
     overrides: [overrideWith(TaskHostToken, host as never), overrideWith(NoteStructureService, structures as never)],
   });
