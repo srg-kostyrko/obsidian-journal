@@ -141,7 +141,7 @@ manages as [task notes](/tasks#task-notes): each one is listed by its date and c
 decorations, and ticking it here writes its status into the note's properties. A recurring task note
 refuses to tick here, since its series belongs to TaskNotes; see
 [Ticking a task note](/tasks#ticking-a-task-note). The two plugins do not share settings; while TaskNotes
-is on and **Task notes** has never been, Journals offers to
+is on and **Task notes** has never been on, Journals offers to
 [copy TaskNotes' settings once](/tasks#setting-up-from-tasknotes).
 
 ## Week configuration and other plugins
