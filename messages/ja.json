@@ -805,6 +805,7 @@
   "decoration_condition_tasks_narrow_label": "さらに絞り込む",
   "decoration_condition_tasks_narrow_description": "ジャーナルのタスクフィルターに加えて、これらに一致するタスクだけを数えます。",
   "decoration_condition_tasks_narrow_add": "絞り込み条件を追加",
+  "decoration_condition_tasks_date_label": "タスクの日付",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -822,6 +823,20 @@
         "quantifier=none,status=open": "{source}に未完了のタスクはない",
         "quantifier=none,status=done": "{source}に完了したタスクはない",
         "quantifier=none,status=all": "{source}にタスクがない"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}、タスクノートは予定日または期限日で判定",
+        "date=due": "{base}、タスクノートは期限日で判定",
+        "date=scheduled": "{base}、タスクノートは予定日で判定",
+        "date=start": "{base}、タスクノートは開始日で判定",
+        "date=done": "{base}、タスクノートは完了日で判定",
+        "date=created": "{base}、タスクノートは作成日で判定"
       }
     }
   ],

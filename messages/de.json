@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "Weiter eingrenzen",
   "decoration_condition_tasks_narrow_description": "Zählt nur Aufgaben, die diesen entsprechen, zusätzlich zum Aufgabenfilter des Journals.",
   "decoration_condition_tasks_narrow_add": "Einschränkende Bedingung hinzufügen",
+  "decoration_condition_tasks_date_label": "Aufgabendatum",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "keine Aufgabe ist offen {source}",
         "quantifier=none,status=done": "keine Aufgabe ist erledigt {source}",
         "quantifier=none,status=all": "keine Aufgabe existiert {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, Aufgabennotizen nach geplantem oder Fälligkeitsdatum",
+        "date=due": "{base}, Aufgabennotizen nach Fälligkeitsdatum",
+        "date=scheduled": "{base}, Aufgabennotizen nach geplantem Datum",
+        "date=start": "{base}, Aufgabennotizen nach Startdatum",
+        "date=done": "{base}, Aufgabennotizen nach Erledigungsdatum",
+        "date=created": "{base}, Aufgabennotizen nach Erstellungsdatum"
       }
     }
   ],

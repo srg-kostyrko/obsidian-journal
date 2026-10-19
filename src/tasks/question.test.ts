@@ -9,8 +9,17 @@ describe("taskQuestionSchema", () => {
       quantifier: "any",
       status: "listing",
       source: "both",
+      date: "scheduled-or-due",
       filter: { mode: "and", conditions: [] },
     });
+  });
+
+  it("falls back to scheduled-or-due for an unknown date choice", () => {
+    expect(v.parse(taskQuestionSchema, { date: "whenever" }).date).toBe("scheduled-or-due");
+  });
+
+  it("keeps a stored date choice", () => {
+    expect(v.parse(taskQuestionSchema, { date: "due" }).date).toBe("due");
   });
 
   it("falls back to listing for an unknown status", () => {

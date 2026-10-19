@@ -809,6 +809,7 @@
   "decoration_condition_tasks_narrow_label": "Звузити додатково",
   "decoration_condition_tasks_narrow_description": "Враховуються лише завдання, що відповідають цим умовам, окрім фільтра завдань журналу.",
   "decoration_condition_tasks_narrow_add": "Додати уточнювальну умову",
+  "decoration_condition_tasks_date_label": "Дата завдання",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -826,6 +827,20 @@
         "quantifier=none,status=open": "жодне завдання не відкрите {source}",
         "quantifier=none,status=done": "жодне завдання не виконане {source}",
         "quantifier=none,status=all": "немає жодного завдання {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, нотатки-завдання за запланованою датою або терміном",
+        "date=due": "{base}, нотатки-завдання за терміном виконання",
+        "date=scheduled": "{base}, нотатки-завдання за запланованою датою",
+        "date=start": "{base}, нотатки-завдання за датою початку",
+        "date=done": "{base}, нотатки-завдання за датою завершення",
+        "date=created": "{base}, нотатки-завдання за датою створення"
       }
     }
   ],

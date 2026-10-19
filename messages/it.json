@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "Restringi ulteriormente",
   "decoration_condition_tasks_narrow_description": "Conta solo le attività che corrispondono a queste, oltre al filtro delle attività del diario.",
   "decoration_condition_tasks_narrow_add": "Aggiungi condizione restrittiva",
+  "decoration_condition_tasks_date_label": "Data dell'attività",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "nessuna attività è aperta {source}",
         "quantifier=none,status=done": "nessuna attività è completata {source}",
         "quantifier=none,status=all": "non esiste alcuna attività {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, note attività per data pianificata o di scadenza",
+        "date=due": "{base}, note attività per data di scadenza",
+        "date=scheduled": "{base}, note attività per data pianificata",
+        "date=start": "{base}, note attività per data di inizio",
+        "date=done": "{base}, note attività per data di completamento",
+        "date=created": "{base}, note attività per data di creazione"
       }
     }
   ],

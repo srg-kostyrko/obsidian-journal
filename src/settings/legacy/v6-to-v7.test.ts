@@ -113,6 +113,11 @@ describe("v6ToV7Migration", () => {
     const migrated = runMigrations(raw, legacyMigrations, CURRENT_VERSION);
     const journals = migrated.isOk() ? (migrated.value as { journals: { daily: unknown } }).journals : undefined;
     const parsed = v.parse(journalConfigSchema, journals?.daily);
-    expect(parsed.decorations.map((d) => d.conditions)).toEqual([[anyOpen], [allDone]]);
+    // The migration writes the v7 shape, which predates the date choice; the schema fills it.
+    const dated = { date: "scheduled-or-due" };
+    expect(parsed.decorations.map((d) => d.conditions)).toEqual([
+      [{ ...anyOpen, ...dated }],
+      [{ ...allDone, ...dated }],
+    ]);
   });
 });

@@ -886,6 +886,7 @@
   "decoration_condition_tasks_narrow_label": "Narrow further",
   "decoration_condition_tasks_narrow_description": "Only count tasks matching these, on top of the journal's task filter.",
   "decoration_condition_tasks_narrow_add": "Add narrowing condition",
+  "decoration_condition_tasks_date_label": "Task date",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -903,6 +904,20 @@
         "quantifier=none,status=open": "no task is open {source}",
         "quantifier=none,status=done": "no task is done {source}",
         "quantifier=none,status=all": "no task exists {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, task notes placed by scheduled or due date",
+        "date=due": "{base}, task notes placed by due date",
+        "date=scheduled": "{base}, task notes placed by scheduled date",
+        "date=start": "{base}, task notes placed by start date",
+        "date=done": "{base}, task notes placed by done date",
+        "date=created": "{base}, task notes placed by created date"
       }
     }
   ],

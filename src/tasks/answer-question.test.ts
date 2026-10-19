@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { AnchorString } from "@/calendar";
+import { CalendarDate, type AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 import { Option } from "@/infrastructure/result";
 import type { NoteletEntry } from "@/journals";
@@ -13,11 +13,12 @@ import { buildTaskItem } from "./testing";
 
 import type { TaskCondition, TaskRule } from "./conditions";
 import type { TaskQuestion } from "./question";
-import type { TaskItem, TaskStatus } from "./types";
+import type { TaskDateRole, TaskItem, TaskStatus } from "./types";
 
 const DAY = "Daily/2026-09-22.md" as VaultPath;
 const NOTELET = "Daily/2026-09-22 Standup.md" as VaultPath;
 const ANCHOR = "2026-09-22" as AnchorString;
+const TASK_NOTE = "Tasks/Write report.md" as VaultPath;
 
 function task(path: VaultPath, lineNumber: number, status: TaskStatus): TaskItem {
   return buildTaskItem({
@@ -25,6 +26,19 @@ function task(path: VaultPath, lineNumber: number, status: TaskStatus): TaskItem
     key: `${path}:${lineNumber}`,
     status,
     display: { kind: "line", path, line: lineNumber, endLine: lineNumber, parentLine: null, markdown: null },
+  });
+}
+
+function taskNote(path: VaultPath, status: TaskStatus, dates?: Partial<Record<TaskDateRole, string>>): TaskItem {
+  return buildTaskItem({
+    provider: "note-property",
+    key: `note-property:${path}`,
+    path,
+    status,
+    relations: ["date"],
+    capabilities: { movable: false, stampable: false, retargetable: true },
+    display: { kind: "note", path, title: path },
+    dates: (dates ?? { scheduled: ANCHOR }) as TaskItem["dates"],
   });
 }
 
@@ -45,8 +59,10 @@ function build(options: {
   notelets?: readonly VaultPath[];
   journalFilter?: readonly TaskCondition[];
   structures?: Partial<Record<VaultPath, NoteStructure>>;
+  // What the index's range lookup holds: every item a provider published under the date relation.
+  dated?: readonly TaskItem[];
 }): TaskQuestionDependencies {
-  const { items = {}, notelets = [], journalFilter, structures = {} } = options;
+  const { items = {}, notelets = [], journalFilter, structures = {}, dated = [] } = options;
   return {
     journals: {
       get: (name) => {
@@ -67,7 +83,20 @@ function build(options: {
         })),
     },
     structure: { get: (path) => Option.fromNullable(structures[path]) },
-    tasks: { itemsIn: (path) => items[path] ?? [] },
+    cycle: {
+      startOf: (_name, anchor) => Option.some(CalendarDate.fromAnchor(anchor)),
+      endOf: (_name, anchor) => Option.some(CalendarDate.fromAnchor(anchor)),
+    },
+    tasks: {
+      itemsIn: (path) => items[path] ?? [],
+      datedIn: (roles, start, end) =>
+        dated.filter((item) =>
+          roles.some((role) => {
+            const date = item.dates[role];
+            return date !== undefined && date >= start && date <= end;
+          }),
+        ),
+    },
   };
 }
 
@@ -75,6 +104,7 @@ const BASE_QUESTION: TaskQuestion = {
   quantifier: "any",
   status: "listing",
   source: "both",
+  date: "scheduled-or-due",
   filter: { mode: "and", conditions: [] },
 };
 
@@ -103,6 +133,11 @@ const status = (condition: "is" | "is-not", statuses: string[]): TaskCondition =
 });
 const heading = (...headings: string[]): TaskCondition => ({ type: "heading", condition: "under", headings });
 const tag = (...tags: string[]): TaskCondition => ({ type: "tag", condition: "has", tags });
+
+const taggedOpen = (...tags: string[]): Partial<TaskQuestion> => ({
+  status: "open",
+  filter: { mode: "and", conditions: [tag(...tags)] },
+});
 
 describe("answerTaskQuestion", () => {
   describe("any", () => {
@@ -248,6 +283,96 @@ describe("answerTaskQuestion", () => {
     });
   });
 
+  describe("dated items", () => {
+    it("lights any open on a day with no note when an open task note is scheduled on it", () => {
+      const dependencies = build({ dated: [taskNote(TASK_NOTE, "todo")] });
+      expect(ask(dependencies, { quantifier: "any", status: "open" }, null)).toBe(true);
+    });
+
+    it("answers none open true on a day with no note and only a done task note dated on it", () => {
+      const dependencies = build({ dated: [taskNote(TASK_NOTE, "done")] });
+      expect(ask(dependencies, { quantifier: "none", status: "open" }, null)).toBe(true);
+    });
+
+    it("still answers none false for a day holding nothing at all", () => {
+      expect(
+        ask(
+          build({ dated: [taskNote(TASK_NOTE, "done", { scheduled: "2026-09-25" })] }),
+          {
+            quantifier: "none",
+            status: "open",
+          },
+          null,
+        ),
+      ).toBe(false);
+    });
+
+    it("counts dated items beside containment items under all", () => {
+      const question: Partial<TaskQuestion> = { quantifier: "all", status: "done" };
+      const doneLine = { [DAY]: [task(DAY, 1, "done")] };
+      expect(ask(build({ items: doneLine, dated: [taskNote(TASK_NOTE, "done")] }), question)).toBe(true);
+      expect(ask(build({ items: doneLine, dated: [taskNote(TASK_NOTE, "todo")] }), question)).toBe(false);
+      expect(ask(build({ dated: [taskNote(TASK_NOTE, "done")] }), question, null)).toBe(true);
+    });
+
+    it("does not let the journal's stored tag condition exclude a dated item", () => {
+      const dependencies = build({
+        journalFilter: [tag("#work")],
+        structures: { [TASK_NOTE]: { ...structureWith([]), frontmatterTags: ["#home"] } },
+        dated: [taskNote(TASK_NOTE, "todo")],
+      });
+      expect(ask(dependencies, { status: "open" }, null)).toBe(true);
+    });
+
+    it("lets the journal's stored status condition reach a dated item", () => {
+      const dependencies = build({ journalFilter: [status("is", ["done"])], dated: [taskNote(TASK_NOTE, "todo")] });
+      expect(ask(dependencies, {}, null)).toBe(false);
+    });
+
+    it("applies the decoration's own tag condition to the note's frontmatter tags", () => {
+      const dependencies = build({
+        structures: { [TASK_NOTE]: { ...structureWith([]), frontmatterTags: ["#home"] } },
+        dated: [taskNote(TASK_NOTE, "todo")],
+      });
+      expect(ask(dependencies, taggedOpen("#home"), null)).toBe(true);
+      expect(ask(dependencies, taggedOpen("#work"), null)).toBe(false);
+    });
+
+    it("counts a dated item as something on the day before narrowing, the way a notelet is", () => {
+      const dependencies = build({
+        structures: { [TASK_NOTE]: { ...structureWith([]), frontmatterTags: ["#home"] } },
+        dated: [taskNote(TASK_NOTE, "todo")],
+      });
+      const question: Partial<TaskQuestion> = {
+        quantifier: "none",
+        status: "open",
+        filter: { mode: "and", conditions: [tag("#work")] },
+      };
+      expect(ask(dependencies, question, null)).toBe(true);
+    });
+
+    it("places a task note by the date the question names", () => {
+      const dependencies = build({ dated: [taskNote(TASK_NOTE, "todo", { scheduled: ANCHOR })] });
+      expect(ask(dependencies, { status: "open", date: "due" }, null)).toBe(false);
+      expect(ask(dependencies, { status: "open", date: "scheduled" }, null)).toBe(true);
+      expect(ask(build({ dated: [taskNote(TASK_NOTE, "todo", { due: ANCHOR })] }), { status: "open" }, null)).toBe(
+        true,
+      );
+    });
+
+    it("asks whatever the source, which a dated item is not reached through", () => {
+      const dependencies = build({ dated: [taskNote(TASK_NOTE, "todo")] });
+      expect(ask(dependencies, { status: "open", source: "notelets" }, null)).toBe(true);
+    });
+
+    it("does not count a task note at the period note's own path by containment", () => {
+      const misdated = taskNote(DAY, "todo", { scheduled: "2026-09-25" });
+      const dependencies = build({ items: { [DAY]: [misdated] }, dated: [misdated] });
+      expect(ask(dependencies, { status: "open" })).toBe(false);
+      expect(ask(dependencies, { quantifier: "none", status: "open" })).toBe(true);
+    });
+  });
+
   describe("agreement with the default listing", () => {
     const tasksStructure = structureWith([
       { line: 0, heading: "## Tasks" },
@@ -264,12 +389,11 @@ describe("answerTaskQuestion", () => {
           noteletAnchorsInRange: () => [],
         },
         cycle: {
-          startOf: () => Option.none(),
-          endOf: () => Option.none(),
+          ...dependencies.cycle,
           anchorOf: () => Option.none(),
           overlapsFrom: () => true,
         },
-        tasks: { ...dependencies.tasks, datedIn: () => [], hydrate: (items) => Promise.resolve(items) },
+        tasks: { ...dependencies.tasks, hydrate: (items) => Promise.resolve(items) },
       };
       const rows = await buildTaskListing(listing, {
         kind: "period",
@@ -321,6 +445,13 @@ describe("answerTaskQuestion", () => {
       ],
       ["an empty note", build({ items: { [DAY]: [] } }), DAY],
       ["no note at all", build({}), null],
+      ["an open task note scheduled on a day with no note", build({ dated: [taskNote(TASK_NOTE, "todo")] }), null],
+      ["only a done task note scheduled on the day", build({ dated: [taskNote(TASK_NOTE, "done")] }), null],
+      [
+        "an open task note at the day's own path, scheduled on another day",
+        build({ items: { [DAY]: [taskNote(DAY, "todo", { scheduled: "2026-09-25" })] } }),
+        DAY,
+      ],
     ];
 
     it.each(fixtures)("lights exactly when the listing is non-empty: %s", async (_name, dependencies, notePath) => {

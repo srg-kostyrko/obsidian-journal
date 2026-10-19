@@ -956,6 +956,7 @@
   "decoration_condition_tasks_narrow_label": "Сузить дополнительно",
   "decoration_condition_tasks_narrow_description": "Учитываются только задачи, подходящие под эти условия, помимо фильтра задач журнала.",
   "decoration_condition_tasks_narrow_add": "Добавить уточняющее условие",
+  "decoration_condition_tasks_date_label": "Дата задачи",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -973,6 +974,20 @@
         "quantifier=none,status=open": "ни одна задача не открыта {source}",
         "quantifier=none,status=done": "ни одна задача не выполнена {source}",
         "quantifier=none,status=all": "нет ни одной задачи {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, заметки-задачи по запланированной дате или сроку",
+        "date=due": "{base}, заметки-задачи по сроку выполнения",
+        "date=scheduled": "{base}, заметки-задачи по запланированной дате",
+        "date=start": "{base}, заметки-задачи по дате начала",
+        "date=done": "{base}, заметки-задачи по дате завершения",
+        "date=created": "{base}, заметки-задачи по дате создания"
       }
     }
   ],

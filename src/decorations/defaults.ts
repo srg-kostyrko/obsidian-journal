@@ -80,6 +80,7 @@ export function defaultCondition(type: JournalDecorationCondition["type"]): Jour
       quantifier: "any",
       status: "listing",
       source: "both",
+      date: "scheduled-or-due",
       filter: { mode: "and", conditions: [] },
     }))
     .with("note-size", () => ({ type: "note-size", unit: "words", condition: "gt", value: 0 }))

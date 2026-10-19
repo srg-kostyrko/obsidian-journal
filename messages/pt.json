@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "Restringir mais",
   "decoration_condition_tasks_narrow_description": "Conta apenas as tarefas que correspondem a estas, além do filtro de tarefas do diário.",
   "decoration_condition_tasks_narrow_add": "Adicionar condição restritiva",
+  "decoration_condition_tasks_date_label": "Data da tarefa",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "nenhuma tarefa está em aberto {source}",
         "quantifier=none,status=done": "nenhuma tarefa está concluída {source}",
         "quantifier=none,status=all": "não existe nenhuma tarefa {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, notas de tarefa pela data agendada ou de vencimento",
+        "date=due": "{base}, notas de tarefa pela data de vencimento",
+        "date=scheduled": "{base}, notas de tarefa pela data agendada",
+        "date=start": "{base}, notas de tarefa pela data de início",
+        "date=done": "{base}, notas de tarefa pela data de conclusão",
+        "date=created": "{base}, notas de tarefa pela data de criação"
       }
     }
   ],

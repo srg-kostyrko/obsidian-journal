@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "Affiner davantage",
   "decoration_condition_tasks_narrow_description": "Ne compte que les tâches correspondant à celles-ci, en plus du filtre de tâches du journal.",
   "decoration_condition_tasks_narrow_add": "Ajouter une condition restrictive",
+  "decoration_condition_tasks_date_label": "Date de la tâche",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "aucune tâche n'est ouverte {source}",
         "quantifier=none,status=done": "aucune tâche n'est terminée {source}",
         "quantifier=none,status=all": "aucune tâche n'existe {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, notes de tâche selon la date planifiée ou d'échéance",
+        "date=due": "{base}, notes de tâche selon la date d'échéance",
+        "date=scheduled": "{base}, notes de tâche selon la date planifiée",
+        "date=start": "{base}, notes de tâche selon la date de début",
+        "date=done": "{base}, notes de tâche selon la date de fin",
+        "date=created": "{base}, notes de tâche selon la date de création"
       }
     }
   ],

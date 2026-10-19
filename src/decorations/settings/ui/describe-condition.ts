@@ -66,11 +66,15 @@ export function describeCondition(
       }),
     )
     .with({ type: "tasks" }, (c) => {
-      const base = m.decoration_condition_tasks_describe({
+      const question = m.decoration_condition_tasks_describe({
         quantifier: c.quantifier,
         status: c.status,
         source: m.decoration_condition_tasks_source_phrase({ source: c.source }),
       });
+      const base =
+        c.date === "scheduled-or-due"
+          ? question
+          : m.decoration_condition_tasks_describe_dated({ base: question, date: c.date });
       const parts = c.filter.conditions.flatMap((condition) =>
         condition.type === "status" ? [] : [describeTagOrHeadingCondition(condition)],
       );

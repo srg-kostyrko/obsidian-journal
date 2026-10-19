@@ -454,6 +454,40 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(1);
     });
 
+    it("repaints a day with no note when a task note dated on it is published after mount", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("tasks", { status: "open" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "Tasks/Write report.md" as VaultPath;
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(0);
+
+      harness.resolve(TaskIndex).publish("note-property", { path }, [
+        {
+          ...taskItem(path, "todo"),
+          provider: "note-property",
+          relations: ["date"],
+          display: { kind: "note", path, title: "Write report" },
+          dates: { scheduled: period.anchor.toAnchor() },
+        },
+      ]);
+      await nextTick();
+
+      expect(slot.value).toHaveLength(1);
+    });
+
     it("repaints a listing cell when the journal's task filter changes after mount", async () => {
       const decoration = buildDecoration({
         mode: "and",

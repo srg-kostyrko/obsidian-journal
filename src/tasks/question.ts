@@ -1,8 +1,9 @@
-// Leaf on purpose: journalConfigSchema reaches this through decorations/config.ts. valibot and
-// ./conditions only.
+// Leaf on purpose: journalConfigSchema reaches this through decorations/config.ts. valibot,
+// ./conditions and ./date-choice only.
 import * as v from "valibot";
 
 import { taskRuleSchema, type TaskRule } from "./conditions";
+import { taskDateChoiceSchema } from "./date-choice";
 
 export const taskQuestionStatuses = ["listing", "open", "done", "all"] as const;
 
@@ -19,6 +20,7 @@ export const taskQuestionSchema = v.object({
   quantifier: v.optional(v.fallback(v.picklist(["any", "all", "none"]), "any"), "any"),
   status: v.optional(v.fallback(v.picklist(taskQuestionStatuses), "listing"), "listing"),
   source: v.optional(v.fallback(v.picklist(["note", "notelets", "both"]), "both"), "both"),
+  date: v.optional(v.fallback(taskDateChoiceSchema, "scheduled-or-due"), "scheduled-or-due"),
   filter: v.optional(v.fallback(questionFilterSchema, EMPTY_RULE), EMPTY_RULE),
 });
 

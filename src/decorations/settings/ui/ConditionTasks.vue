@@ -4,6 +4,8 @@ import { computed } from "vue";
 
 import type { JournalDecorationTasksCondition } from "@/decorations";
 import { m } from "@/i18n";
+import { taskDateChoices } from "@/tasks/date-choice";
+import { taskDateChoiceLabel } from "@/tasks/ui/date-choice-label";
 import RuleEditor from "@/tasks/ui/RuleEditor.vue";
 import { statusFilterLabel } from "@/tasks/ui/status-filter-options";
 import { taskRuleConditionErrors } from "@/tasks/ui/task-rule-form-schema";
@@ -15,6 +17,7 @@ const { name } = defineProps<{ name: string }>();
 const { value: quantifier } = useField<JournalDecorationTasksCondition["quantifier"]>(`${name}.quantifier`);
 const { value: status } = useField<JournalDecorationTasksCondition["status"]>(`${name}.status`);
 const { value: source } = useField<JournalDecorationTasksCondition["source"]>(`${name}.source`);
+const { value: date } = useField<JournalDecorationTasksCondition["date"]>(`${name}.date`);
 const { value: filter } = useField<JournalDecorationTasksCondition["filter"]>(`${name}.filter`);
 
 const statusOptions = [
@@ -44,6 +47,11 @@ const errors = computed(() => taskRuleConditionErrors(filter.value));
         <option value="note">{{ m.view_block_tasks_source_note() }}</option>
         <option value="notelets">{{ m.view_block_tasks_source_notelets() }}</option>
         <option value="both">{{ m.view_block_tasks_source_both() }}</option>
+      </UiDropdown>
+      <UiDropdown v-model="date" :aria-label="m.decoration_condition_tasks_date_label()">
+        <option v-for="choice of taskDateChoices" :key="choice" :value="choice">
+          {{ taskDateChoiceLabel(choice) }}
+        </option>
       </UiDropdown>
     </div>
     <RuleEditor

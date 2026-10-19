@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "더 좁히기",
   "decoration_condition_tasks_narrow_description": "저널의 작업 필터에 더해, 이 조건에 맞는 작업만 셉니다.",
   "decoration_condition_tasks_narrow_add": "좁히기 조건 추가",
+  "decoration_condition_tasks_date_label": "작업 날짜",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "{source}에 미완료 작업이 없음",
         "quantifier=none,status=done": "{source}에 완료된 작업이 없음",
         "quantifier=none,status=all": "{source}에 작업이 없음"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, 작업 노트는 예정일 또는 마감일 기준",
+        "date=due": "{base}, 작업 노트는 마감일 기준",
+        "date=scheduled": "{base}, 작업 노트는 예정일 기준",
+        "date=start": "{base}, 작업 노트는 시작일 기준",
+        "date=done": "{base}, 작업 노트는 완료일 기준",
+        "date=created": "{base}, 작업 노트는 생성 날짜 기준"
       }
     }
   ],

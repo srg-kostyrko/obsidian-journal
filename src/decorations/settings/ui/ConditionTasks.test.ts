@@ -8,6 +8,8 @@ import { defineComponent, h } from "vue";
 
 import { decorationConditionSchema, type JournalDecorationTasksCondition } from "@/decorations";
 import { m } from "@/i18n";
+import { taskDateChoices } from "@/tasks/date-choice";
+import { taskDateChoiceLabel } from "@/tasks/ui/date-choice-label";
 
 import { buildCondition } from "../../testing";
 
@@ -91,6 +93,19 @@ describe("ConditionTasks", () => {
     ]);
     await userEvent.selectOptions(select, m.view_block_tasks_source_notelets());
     expect(host.values.c.source).toBe("notelets");
+  });
+
+  it("offers every date choice, defaults to scheduled or due, and writes the pick", async () => {
+    const host = mount();
+    const select = screen.getByRole("combobox", { name: m.decoration_condition_tasks_date_label() });
+    expect(
+      within(select)
+        .getAllByRole("option")
+        .map((o) => o.textContent.trim()),
+    ).toEqual(taskDateChoices.map((choice) => taskDateChoiceLabel(choice)));
+    expect((select as HTMLSelectElement).value).toBe("scheduled-or-due");
+    await userEvent.selectOptions(select, m.tasks_date_choice_due());
+    expect(host.values.c.date).toBe("due");
   });
 
   it("narrows only by heading and tag and shows the and/or control", async () => {
