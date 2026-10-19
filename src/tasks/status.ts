@@ -1,8 +1,8 @@
 import type { TaskStatus } from "./types";
 
 // The full set a provider value may be mapped to, including rolled — assigned to no default symbol, but
-// still a legitimate target for a user's own mapping (see normalize.test.ts). The status-map
-// settings editors reuses this list rather than keeping its own, so the two cannot drift apart.
+// still a legitimate target for a user's own mapping (see providers/checkbox/normalize.test.ts). The
+// status-map settings editors reuse this list rather than keeping their own, so they cannot drift apart.
 export const TASK_STATUSES: readonly TaskStatus[] = [
   "todo",
   "in-progress",

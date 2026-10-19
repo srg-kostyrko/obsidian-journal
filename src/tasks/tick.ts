@@ -149,7 +149,7 @@ export function tickRecurringLine(content: string, item: TaskItem, toggle: Recur
 }
 
 /**
- * Writes a task item's status character into its note.
+ * Ticks a task item: a line's status character, or a task note's status property.
  */
 export class TickService {
   readonly #notes = inject(NotesService);

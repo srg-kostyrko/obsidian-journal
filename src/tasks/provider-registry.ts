@@ -6,9 +6,10 @@ export class TaskProviderRegistry {
   readonly #providers = inject(TaskProviderToken);
   readonly #disposers: (() => void)[] = [];
   #resolveStarted: (() => void) | undefined;
-  // Each provider fills the task index synchronously from start(), so once this settles the index
-  // answers for every owned note. It starts after the journals index is ready (see main.ts), which
-  // on a plugin reload leaves a window where the journals index is ready and this index is empty.
+  // Settles once every provider has started, not once every provider has filled: providers start
+  // during onload, before layout-ready, and fill off the journals index — note-property walks the
+  // vault only after JournalsIndex.whenReady. A caller needing filled items awaits that first, as
+  // the API does; the fill registered its continuation at start(), so it runs ahead of the caller's.
   readonly #started = new Promise<void>((resolve) => {
     this.#resolveStarted = resolve;
   });

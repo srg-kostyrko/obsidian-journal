@@ -66,8 +66,8 @@ if none was**, because there is no template whose headings could be meant. A
 `note-property` item has no headings at all, so the condition drops out for it
 entirely, per the rule below.
 
-Listings take both axes. **Decoration conditions take `source` only.** Rollup
-stays listing-only: the decoration engine evaluates per cell across a whole grid,
+Listings take both axes. **Decoration conditions take `source` and `date`, never
+`depth`.** Rollup stays listing-only: the decoration engine evaluates per cell across a whole grid,
 and a rolled-up year cell would walk hundreds of notes per render.
 
 **`Scope` is what containment means.** Both its axes decide which notes to read,
@@ -646,8 +646,8 @@ would silently hide notes the user never meant it for. So a journal that shows
 open work hides done task notes too, and its stored `tag` and `heading`
 conditions are skipped for dated items. A `tag` condition a **surface** names
 itself — a fence `tag:` key, a view block's or decoration's own filter — does
-apply, matching frontmatter tags; `heading` still drops. The tag axis for task
-notes that a journal owns is its dated-task-notes setting (PR 2), not its stored
+apply, matching frontmatter tags; `heading` still drops. The tag axis for a
+journal's task notes is its dated-task-notes setting (PR 2), not its stored
 filter.
 
 In `composeFilters` terms this is a per-item decision on the journal side of the
@@ -791,6 +791,7 @@ So both are replaced by one condition that asks the listing's question:
 { type: "tasks", quantifier: "any" | "all" | "none",
   status: "listing" | "open" | "done" | "all",
   source: "note" | "notelets" | "both",
+  date: "scheduled-or-due" | "due" | "scheduled" | "start" | "done" | "created",
   filter: { mode, conditions: [heading | tag …] } }
 ```
 
@@ -1028,15 +1029,17 @@ removes the justification.
 parsing concerns with no owner to consult: a checkbox in a project note no journal owns
 must normalize exactly as one in a day note, and a status cannot have two values.
 
-**Identification is two layers.** A global rule on the provider applies everywhere,
-including notes no journal owns. A journal may add its own rule, composed `inherit`
+**Identification is two layers for `checkbox`.** A global rule on the provider applies
+everywhere, including notes no journal owns. A journal may add its own rule, composed `inherit`
 (the default), `narrow` (global and journal) or `replace` (journal alone). This is
 deterministic despite the rollup: a note has exactly one owning journal, so the rule
 applied is the _owner's_, whoever is reading — a month rollup walking a day note reads
 it as a day-journal note. An earlier version of this section ruled identification
 global-only by conflating owner with asker. The rule is owner-scoped; what a
 journal chooses to show of notes it does not own is the separate, asker-scoped
-setting described under Providers.
+setting described under Providers. The journal layer applies to the `checkbox`
+provider only: `note-property` identification is global, one rule on the provider
+for every note in the vault, matched against frontmatter tags or a property.
 
 **Per-journal, on the move** — `selection`, the target heading, copy-vs-move, and
 whether to stamp. The first two name headings in that journal's own template, so
