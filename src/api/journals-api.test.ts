@@ -1101,6 +1101,38 @@ describe("JournalsApiService tasksFor", () => {
     await expect(pending).resolves.toEqual([]);
   });
 
+  it("rejects with plugin-unloaded when Journals unloads while a note's task text is being read", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily }, shelves: {} },
+      initialize: [VaultSubscriptionService, TaskProviderRegistry],
+    });
+    harness.host.putFile("D/2026-09-22.md", "- [ ] unhydrated");
+    registerNote(harness.resolve(JournalsIndex), "daily", "2026-09-22", "D/2026-09-22.md");
+    const path = "D/2026-09-22.md" as VaultPath;
+    harness.resolve(TaskIndex).publish("checkbox", { path }, [
+      buildTaskItem({
+        path,
+        key: `${path}:0`,
+        display: { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null },
+      }),
+    ]);
+    const read = Promise.withResolvers<{ kind: "ok"; value: string }>();
+    vi.spyOn(harness.resolve(NotesService), "readCached").mockReturnValue(
+      read.promise as unknown as ReturnType<NotesService["readCached"]>,
+    );
+    const api = harness.resolve(JournalsApiService);
+    const pending = api.tasksFor("daily", "2026-09-22");
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+
+    await api[Symbol.asyncDispose]();
+    read.resolve({ kind: "ok", value: "- [ ] unhydrated" });
+
+    await expect(pending).rejects.toMatchObject({ code: "plugin-unloaded" });
+  });
+
   it("rejects a date it cannot read with invalid-date", async () => {
     const { api } = await buildTasksApi({ daily });
 

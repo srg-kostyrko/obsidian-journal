@@ -636,13 +636,17 @@ export class JournalsApiService implements JournalsApi {
       const anchor = this.#cycle.anchorOf(name, calendarDate);
       if (anchor.isNone()) continue;
       // The same request a journal-tasks fence in that period's note builds, so the two agree.
-      const rows = await buildTaskListing(this.#taskListingDependencies, {
-        kind: "period",
-        hostJournal: name,
-        anchor: anchor.value,
-        journalNames: taskRollupScope(name, allJournals, allShelves),
-        query,
-      });
+      // The listing reads note text, and resumes into the container after each read.
+      const rows = await Promise.race([
+        buildTaskListing(this.#taskListingDependencies, {
+          kind: "period",
+          hostJournal: name,
+          anchor: anchor.value,
+          journalNames: taskRollupScope(name, allJournals, allShelves),
+          query,
+        }),
+        this.#unloaded,
+      ]);
       for (const row of rows) {
         if (row.context || seen.has(row.key)) continue;
         seen.add(row.key);
