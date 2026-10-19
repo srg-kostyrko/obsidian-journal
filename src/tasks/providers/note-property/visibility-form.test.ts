@@ -67,6 +67,14 @@ describe("visibility form", () => {
     ]);
   });
 
+  it("refuses a property condition whose name is only whitespace", () => {
+    const draft = visibilityDraftFrom(undefined);
+    draft.show = "matching";
+    const condition = { ...emptyCondition("property"), name: "  ", values: ["Website"] };
+    draft.conditions.push(condition);
+    expect(visibilityFormErrors(draft).get(condition.id)).toEqual([m.tasks_note_property_property_required()]);
+  });
+
   it("validates conditions only under Matching, and drops unfinished ones elsewhere", () => {
     const draft = visibilityDraftFrom(undefined);
     draft.show = "none";

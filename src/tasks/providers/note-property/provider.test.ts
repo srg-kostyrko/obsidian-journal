@@ -390,6 +390,40 @@ describe("NotePropertyTaskProvider", () => {
       expect(index.version()).toBe(before);
     });
 
+    describe("when the named-property set shrinks", () => {
+      for (const [label, shrink] of [
+        [
+          "a rule stops naming the property",
+          (repository: JournalsRepository) =>
+            repository.update("Work", {
+              tasks: { filter: noFilter, providers: { "note-property": { ...byProject, show: "all" } } },
+            }),
+        ],
+        ["the journal naming the property is deleted", (repository: JournalsRepository) => repository.delete("Work")],
+      ] as const) {
+        it(`refills once and then ignores the property when ${label}`, async () => {
+          const { notes, setNote, provider, index, repository } = await build(true, true, {
+            Work: withRule(byProject),
+          });
+          notes.seed(path);
+          setNote(path, { properties: properties("[[Website]]", "2026-10-19T10:00:00") });
+          provider.start();
+          expect(index.itemsIn(path).at(0)?.facts?.properties).toEqual({ projects: ["[[Website]]"] });
+          const before = index.version();
+
+          shrink(repository);
+          await nextTick();
+
+          expect(index.version()).toBe(before + 1);
+          expect(index.itemsIn(path).at(0)?.facts?.properties ?? {}).not.toHaveProperty("projects");
+
+          setNote(path, { properties: properties("[[Shop]]", "2026-10-19T11:00:00") });
+          notes.emitMetadataChanged(path);
+          expect(index.version()).toBe(before + 1);
+        });
+      }
+    });
+
     it("keeps a journal's rule on the journal across a rename", async () => {
       const { provider, repository } = await build(true, true, { Work: withRule(byProject) });
       provider.start();
