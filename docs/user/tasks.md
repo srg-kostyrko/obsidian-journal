@@ -221,13 +221,13 @@ conditions** or **Match any condition**. Each row is one of:
 - **Folder** — one or more folders, each in its own field; a note matches if it sits inside any of
   them, subfolders included. Case matters, as it does for paths in the vault.
 - **Property** — a property name and one or more values; a note matches if that property holds any of
-  them, as its value or as one item of a list. Case does not matter, and a link counts as the note it
-  points to: a note with `projects: ["[[Website]]"]` matches the value `Website`, and one linking
-  `[[Projects/Website]]` matches `Website` or `Projects/Website`. A value written as a link,
-  `[[Projects/Website]]`, matches that path only.
+  them, as its value or as one item of a list. The property name must match exactly; the values
+  ignore case, and a link counts as the note it points to: a note with `projects: ["[[Website]]"]`
+  matches the value `Website`, and one linking `[[Projects/Website]]` matches `Website` or
+  `Projects/Website`. A value written as a link, `[[Projects/Website]]`, matches that path only.
 
-**Save** stays disabled while a row has no value. **Matching** with no rows shows every task note,
-as **All** does.
+**Save** stays disabled while a row has no value, or a **Property** row no name. **Matching** with no
+rows shows every task note, as **All** does.
 
 The setting only ever narrows. A note that [Task notes' settings](#task-notes-settings) do not
 identify as a task note never reaches any journal, whatever its conditions say.
