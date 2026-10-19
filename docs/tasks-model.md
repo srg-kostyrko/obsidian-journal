@@ -165,7 +165,7 @@ shows: the journal _asking_ decides, and two journals legitimately give
 different answers about the same note. Without that, a Work and a Personal daily
 journal would both list every task due that day.
 
-Each journal's **Dated task notes** setting is that choice: **All** (the
+Each journal's **Task notes** setting is that choice: **All** (the
 default, and what a journal with no stored rule does) admits every identified
 task note; **Matching…** narrows them by tag, folder, or property equals value,
 combined with and/or; **None** admits none. A tag condition matches the note's
