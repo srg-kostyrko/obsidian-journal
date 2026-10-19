@@ -22,14 +22,17 @@ export class TasksListingRoute implements RestRoute {
       const source = readQueryString(request.query.source);
       const depth = readQueryString(request.query.depth);
       const status = readQueryString(request.query.status);
-      const dateRole = readQueryString(request.query.date);
+      const dateRole = readQueryString(request.query.taskDate);
       if (
         source === INVALID_QUERY_VALUE ||
         depth === INVALID_QUERY_VALUE ||
         status === INVALID_QUERY_VALUE ||
         dateRole === INVALID_QUERY_VALUE
       ) {
-        throw new RestError("invalid-request", "source, depth, status and date must each be a single string value.");
+        throw new RestError(
+          "invalid-request",
+          "source, depth, status and taskDate must each be a single string value.",
+        );
       }
       // Refused rather than defaulted: the API itself takes a typed value, and a misspelled scope
       // answering with the default would read as a correct, differently-scoped listing.
@@ -40,7 +43,7 @@ export class TasksListingRoute implements RestRoute {
         throw new RestError("invalid-request", 'depth must be "literal" or "rollup".');
       }
       if (dateRole !== undefined && !DATES.has(dateRole)) {
-        throw new RestError("invalid-request", `date must be one of ${taskDateChoices.join(", ")}.`);
+        throw new RestError("invalid-request", `taskDate must be one of ${taskDateChoices.join(", ")}.`);
       }
       await requireJournal(this.#api, name);
 

@@ -98,14 +98,14 @@ describe("GET /journals/:name/tasks/:date", () => {
     const { api, send } = await seeded();
     const tasksFor = vi.spyOn(api, "tasksFor");
 
-    await send("get", path, fakeRequest({ params: { name: "work", date: "2026-09-22" }, query: { date: "due" } }));
+    await send("get", path, fakeRequest({ params: { name: "work", date: "2026-09-22" }, query: { taskDate: "due" } }));
     expect(tasksFor).toHaveBeenCalledWith("work", "2026-09-22", { date: "due" });
 
     tasksFor.mockClear();
     const response = await send(
       "get",
       path,
-      fakeRequest({ params: { name: "work", date: "2026-09-22" }, query: { date: "bogus" } }),
+      fakeRequest({ params: { name: "work", date: "2026-09-22" }, query: { taskDate: "bogus" } }),
     );
     expect(response.statusCode).toBe(400);
     expect(response.body).toMatchObject({ code: "invalid-request" });
