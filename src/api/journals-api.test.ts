@@ -1739,6 +1739,40 @@ describe("JournalsApiService event reasons", () => {
     expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "indexed" }]);
   });
 
+  it("marks a note created after layout-ready as appeared while another note is still unresolved", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) }, shelves: {} },
+    });
+    const pending = harness.host.putFile("D/2026-08-17.md", "", claim("2026-08-17"));
+    const cache = harness.host.app.metadataCache;
+    const read = cache.getFileCache.bind(cache);
+    const unparsed = vi
+      .spyOn(cache, "getFileCache")
+      .mockImplementation((file) => (file === pending ? null : read(file)));
+    const batches: (() => void)[] = [];
+    vi.spyOn(harness.resolve(NoteMetadataService), "onResolved").mockImplementation((callback) => {
+      batches.push(callback);
+      return () => void batches.splice(batches.indexOf(callback), 1);
+    });
+    const added: { path: string; reason: string }[] = [];
+    harness.resolve(JournalsApiService).on("noteAdded", ({ path, reason }) => {
+      added.push({ path, reason });
+    });
+    await harness.resolve(VaultSubscriptionService).initialize();
+
+    const arrived = harness.host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    harness.host.emitVault("create", arrived);
+    harness.host.emitMetadata("D/2026-08-18.md");
+    unparsed.mockImplementation(read);
+    for (const batch of batches.splice(0)) batch();
+
+    expect(added).toEqual([
+      { path: "D/2026-08-18.md", reason: "appeared" },
+      { path: "D/2026-08-17.md", reason: "indexed" },
+    ]);
+  });
+
   it("marks a note that shows up after startup as appeared", async () => {
     const { harness, added } = await bootApi();
 

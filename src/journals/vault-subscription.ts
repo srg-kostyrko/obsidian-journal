@@ -28,12 +28,24 @@ export class VaultSubscriptionService {
   readonly #cycle = inject(CycleService);
   readonly #journals = inject(JournalsRepository);
   readonly #unsubscribes: (() => void)[] = [];
+  // Notes created after layout-ready but before the startup walk completes. Index readiness waits
+  // for every note to resolve, so it cannot tell such a note from one that existed at launch.
+  readonly #arrivedDuringStartup = new Set<VaultPath>();
+
+  #originOf(path: VaultPath): EntryOrigin {
+    return this.#index.isReady() || this.#arrivedDuringStartup.has(path) ? "live" : "walk";
+  }
 
   #rebuild(): void {
     for (const path of this.#notes.allMarkdownNotes()) {
-      this.#scan(path, { reconcileCustom: false, origin: "walk" });
+      this.#scan(path, { reconcileCustom: false, origin: this.#originOf(path) });
     }
     this.#reconcileCustomJournals();
+  }
+
+  #markReady(): void {
+    this.#index.markReady();
+    this.#arrivedDuringStartup.clear();
   }
 
   // The boot walk needs the file list complete (onLayoutReady — before it
@@ -45,14 +57,14 @@ export class VaultSubscriptionService {
   #rebuildWhenResolved(): void {
     if (this.#allNotesResolved()) {
       this.#rebuild();
-      this.#index.markReady();
+      this.#markReady();
       return;
     }
     const dispose = this.#metadata.onResolved(() => {
       if (!this.#allNotesResolved()) return;
       dispose();
       this.#rebuild();
-      this.#index.markReady();
+      this.#markReady();
     });
     this.#unsubscribes.push(dispose);
   }
@@ -123,13 +135,22 @@ export class VaultSubscriptionService {
 
   initialize(): AsyncResult<void, never> {
     this.#unsubscribes.push(
-      // Read at event time: the walk waits for every note to resolve, and a note parsed in that
-      // window is one that existed at launch, so it must report as the walk would have.
+      // The boot create-replay reads layoutReady false at event time, so only a genuinely new note
+      // is recorded; a note parsed before the walk completes otherwise existed at launch.
+      this.#notes.events.on("created", ({ path }) => {
+        if (this.#workspace.layoutReady && !this.#index.isReady()) this.#arrivedDuringStartup.add(path);
+      }),
       this.#notes.events.on("metadata-changed", (path) =>
-        this.#scan(path, { reconcileCustom: true, origin: this.#index.isReady() ? "live" : "walk" }),
+        this.#scan(path, { reconcileCustom: true, origin: this.#originOf(path) }),
       ),
-      this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
-      this.#notes.events.on("deleted", (path) => this.#index.unregister(path, "deleted")),
+      this.#notes.events.on("renamed", ({ from, to }) => {
+        if (this.#arrivedDuringStartup.delete(from)) this.#arrivedDuringStartup.add(to);
+        this.#index.transferPath(from, to);
+      }),
+      this.#notes.events.on("deleted", (path) => {
+        this.#arrivedDuringStartup.delete(path);
+        this.#index.unregister(path, "deleted");
+      }),
       // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete
       // mode), so no vault event clears their index entries — drop them by journal name here.
       this.#journalEvents.on("deleted", (journalName) => this.#index.clearJournal(journalName)),
