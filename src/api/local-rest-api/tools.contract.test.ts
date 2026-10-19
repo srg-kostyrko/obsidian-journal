@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer } from "@/testing";
 
 import { apiModule } from "../module";
@@ -19,7 +20,7 @@ import type * as v from "valibot";
 // Pins the same SDK 1.30 / host call shape zod3-shape.test.ts pins — see its comment for why.
 async function connectedTools(): Promise<{ client: ClientType; tools: readonly McpTool[] }> {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals: {}, shelves: {} },
   });
   const tools = harness.resolve(McpToolToken);
@@ -48,7 +49,7 @@ describe("MCP tools contract", () => {
 
     const { tools: listed } = await client.listTools();
 
-    expect(listed).toHaveLength(4);
+    expect(listed).toHaveLength(6);
     for (const tool of tools) {
       const advertised = listed.find((candidate) => candidate.name === tool.name);
       expect(advertised?.inputSchema.required ?? []).toEqual(requiredKeys(tool.input));
@@ -80,7 +81,7 @@ describe("MCP tools contract", () => {
 
     const { tools } = await client.listTools();
 
-    expect(tools).toHaveLength(4);
+    expect(tools).toHaveLength(6);
     for (const tool of tools) {
       expect(tool.annotations).toMatchObject({ destructiveHint: false, openWorldHint: false });
     }
@@ -94,6 +95,8 @@ describe("MCP tools contract", () => {
     expect(Object.fromEntries(tools.map((tool) => [tool.name, tool.annotations]))).toEqual({
       journal_list: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
       journal_notes: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      journal_note_adjacent: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      journal_tasks: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
       journal_note_ensure: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
       journal_notelet_create: {
         readOnlyHint: false,
