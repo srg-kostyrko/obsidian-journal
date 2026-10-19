@@ -305,6 +305,14 @@ describe("TaskList", () => {
       expect(link?.dataset.href).toBe("Tasks/Ship it");
     });
 
+    it("names the task note once, with no source link repeating its title", async () => {
+      ({ harness } = await mountNotes());
+      harness.render(TaskList, { props: { rows: [noteRow()] } });
+
+      expect(screen.queryAllByRole("link")).toEqual([]);
+      expect(screen.getAllByText("Ship it")).toHaveLength(1);
+    });
+
     it("renders a done task note as a ticked checkbox", async () => {
       ({ harness } = await mountNotes());
       harness.render(TaskList, { props: { rows: [noteRow({ status: "done" })] } });

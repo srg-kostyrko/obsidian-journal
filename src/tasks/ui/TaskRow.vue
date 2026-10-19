@@ -103,7 +103,9 @@ function openSource(event: MouseEvent): void {
     <div ref="line" class="task-listing-row__line" @click="onLineClick" @auxclick="onLineAuxClick">
       <UiMarkdown :markdown="markdown" :source-path="row.item.path" />
     </div>
+    <!-- A task note is its own source, and its line already links it by the same title. -->
     <a
+      v-if="row.source.kind !== 'task-note'"
       href="#"
       class="task-listing-row__source"
       :title="row.source.label"
