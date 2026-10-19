@@ -4,14 +4,13 @@ import { computed, ref } from "vue";
 
 import { m } from "@/i18n";
 import type { TaskStatus } from "@/tasks";
+import { TASK_STATUSES } from "@/tasks/status";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
-
-import { CHECKBOX_STATUSES } from "../normalize";
 
 const statusMap = defineModel<Record<string, string>>("statusMap", { required: true });
 const canonical = defineModel<Record<string, string>>("canonical", { required: true });
@@ -119,7 +118,7 @@ function symbolLabel(symbol: string): string {
       >
         <span class="tasks-status-map-symbol">{{ symbolLabel(symbol) }}</span>
         <UiDropdown :model-value="statusMap[symbol]" @update:model-value="remapSymbol(symbol, $event)">
-          <option v-for="status in CHECKBOX_STATUSES" :key="status" :value="status">{{ statusLabel(status) }}</option>
+          <option v-for="status in TASK_STATUSES" :key="status" :value="status">{{ statusLabel(status) }}</option>
         </UiDropdown>
         <UiIconButton
           :icon="icons.action.writtenBack"
