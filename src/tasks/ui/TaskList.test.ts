@@ -7,10 +7,10 @@ import { FakeMarkdownRenderService, FakeWorkspaceService } from "@/infrastructur
 import { AsyncResult } from "@/infrastructure/result";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
+import { NotATaskLineError, RecurringUnsupportedError, type TickError } from "../errors";
 import { tasksCoreModule } from "../module";
 import { buildTaskItem } from "../testing";
 import { TickService } from "../tick";
-import { NotATaskLineError, RecurringUnsupportedError, type TickError } from "../tick-errors";
 
 import TaskList from "./TaskList.vue";
 

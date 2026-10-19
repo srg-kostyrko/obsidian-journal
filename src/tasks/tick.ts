@@ -10,16 +10,16 @@ import {
 import { AsyncResult, Err, Ok, type Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
-import { checkboxSlice } from "./providers/checkbox/slice";
-import { NotePropertyTicker } from "./providers/note-property/tick";
-import { tickTargetStatus } from "./status";
 import {
   NoCanonicalSymbolError,
   NotATaskLineError,
   RecurringUnsupportedError,
   TaskLineMovedError,
   type TickError,
-} from "./tick-errors";
+} from "./errors";
+import { checkboxSlice } from "./providers/checkbox/slice";
+import { NotePropertyTicker } from "./providers/note-property/tick";
+import { tickTargetStatus } from "./status";
 
 import type { TaskDisplay, TaskItem, TaskStatus } from "./types";
 

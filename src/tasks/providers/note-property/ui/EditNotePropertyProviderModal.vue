@@ -26,10 +26,10 @@ const slice = useService(SettingsService).getSlice(notePropertySlice);
 // draftFrom copies every field, so nothing below reaches settings until Save.
 const draft = reactive(draftFrom(slice.state));
 
-const identifyOptions = computed(() => [
+const identifyOptions = [
   { value: "tag" as const, label: m.tasks_settings_condition_tag() },
   { value: "property" as const, label: m.tasks_note_property_identify_property() },
-]);
+];
 
 const errorBag = computed(() => notePropertyFormErrors(draft));
 const valid = computed(() => Object.keys(errorBag.value).length === 0);

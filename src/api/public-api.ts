@@ -197,13 +197,9 @@ export interface TasksForOptions {
 }
 
 export interface TaskItem {
-  /**
-   * For a containment task, the journal whose note holds it — under `rollup`, not necessarily the one
-   * asked about. For a `date` task note, the journal asked about; when a selector matches several
-   * journals that admit it, the first in the selector's resolution order, and it is listed once.
-   */
+  /** The journal whose note holds the task, or for a `date` task note the journal asked about. */
   readonly journal: string;
-  /** For a containment task, that note's period. For a `date` task note, the period asked about. */
+  /** The period of the note that holds the task, or for a `date` task note the period asked about. */
   readonly date: string;
   readonly path: string;
   readonly source: "note" | "notelet";
