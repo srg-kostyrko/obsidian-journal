@@ -158,7 +158,7 @@ describe("LocalRestApiBridge", () => {
 });
 
 describe("LocalRestApiBridge route registration", () => {
-  it("registers the notes, notelets and tasks routes before any :name/:date route", async () => {
+  it("registers the notes, adjacent-note, notelets and tasks routes before any :name/:date route", async () => {
     const harness = await buildHarness();
     const host = recordingLocalRestApi();
     harness.host.putPlugin(LOCAL_REST_API_PLUGIN_ID, { getPublicApi: () => host.api });
@@ -170,6 +170,7 @@ describe("LocalRestApiBridge route registration", () => {
       "/journals/:name/",
       "/journals/:name/notes",
       "/journals/:name/notes/:date",
+      "/journals/:name/notes/:date/:direction",
       "/journals/:name/notelets/:date",
       "/journals/:name/tasks/:date",
       "/journals/:name/:date",
@@ -202,6 +203,7 @@ describe("LocalRestApiBridge tool registration", () => {
     expect(api.addMcpTool.mock.calls.map(([name]) => name)).toEqual([
       "journal_list",
       "journal_notes",
+      "journal_note_adjacent",
       "journal_tasks",
       "journal_note_ensure",
       "journal_notelet_create",
@@ -263,6 +265,7 @@ describe("LocalRestApiBridge tool registration", () => {
     expect(api.addMcpTool.mock.calls.map(([name]) => name)).toEqual([
       "journal_list",
       "journal_notes",
+      "journal_note_adjacent",
       "journal_tasks",
       "journal_note_ensure",
       "journal_notelet_create",

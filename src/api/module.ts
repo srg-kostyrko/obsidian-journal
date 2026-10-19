@@ -4,6 +4,7 @@ import { NoteFileService } from "@/infrastructure/host/internal/note-file-servic
 import { JournalsApiService } from "./journals-api";
 import { LocalRestApiBridge } from "./local-rest-api/local-rest-api-bridge";
 import { RestRouteToken } from "./local-rest-api/route";
+import { AdjacentNoteRoute } from "./local-rest-api/routes/adjacent-note";
 import { CreateNoteRoute } from "./local-rest-api/routes/create-note";
 import { CreateNoteletRoute } from "./local-rest-api/routes/create-notelet";
 import { JournalInfoRoute } from "./local-rest-api/routes/journal-info";
@@ -15,6 +16,7 @@ import { McpToolToken } from "./local-rest-api/tool";
 import { JournalListTool } from "./local-rest-api/tools/journal-list";
 import { JournalNotesTool } from "./local-rest-api/tools/journal-notes";
 import { JournalTasksTool } from "./local-rest-api/tools/journal-tasks";
+import { NoteAdjacentTool } from "./local-rest-api/tools/note-adjacent";
 import { NoteEnsureTool } from "./local-rest-api/tools/note-ensure";
 import { NoteletCreateTool } from "./local-rest-api/tools/notelet-create";
 
@@ -27,6 +29,7 @@ export const apiModule: Module = {
     c.register(JournalInfoRoute).useClass(JournalInfoRoute);
     c.register(NotesListingRoute).useClass(NotesListingRoute);
     c.register(CreateNoteRoute).useClass(CreateNoteRoute);
+    c.register(AdjacentNoteRoute).useClass(AdjacentNoteRoute);
     c.register(CreateNoteletRoute).useClass(CreateNoteletRoute);
     c.register(TasksListingRoute).useClass(TasksListingRoute);
     c.register(NoteRedirectRoute).useClass(NoteRedirectRoute);
@@ -38,6 +41,7 @@ export const apiModule: Module = {
     c.register(RestRouteToken).useFactory(() => inject(JournalInfoRoute));
     c.register(RestRouteToken).useFactory(() => inject(NotesListingRoute));
     c.register(RestRouteToken).useFactory(() => inject(CreateNoteRoute));
+    c.register(RestRouteToken).useFactory(() => inject(AdjacentNoteRoute));
     c.register(RestRouteToken).useFactory(() => inject(CreateNoteletRoute));
     c.register(RestRouteToken).useFactory(() => inject(TasksListingRoute));
     c.register(RestRouteToken).useFactory(() => inject(NoteRedirectRoute));
@@ -45,11 +49,13 @@ export const apiModule: Module = {
 
     c.register(JournalListTool).useClass(JournalListTool);
     c.register(JournalNotesTool).useClass(JournalNotesTool);
+    c.register(NoteAdjacentTool).useClass(NoteAdjacentTool);
     c.register(JournalTasksTool).useClass(JournalTasksTool);
     c.register(NoteEnsureTool).useClass(NoteEnsureTool);
     c.register(NoteletCreateTool).useClass(NoteletCreateTool);
     c.register(McpToolToken).useFactory(() => inject(JournalListTool));
     c.register(McpToolToken).useFactory(() => inject(JournalNotesTool));
+    c.register(McpToolToken).useFactory(() => inject(NoteAdjacentTool));
     c.register(McpToolToken).useFactory(() => inject(JournalTasksTool));
     c.register(McpToolToken).useFactory(() => inject(NoteEnsureTool));
     c.register(McpToolToken).useFactory(() => inject(NoteletCreateTool));

@@ -271,6 +271,47 @@ export class JournalsApiService implements JournalsApi {
     };
   }
 
+  #existingNoteAt(name: string, anchor: AnchorString): ExistingJournalNote | null {
+    const note = this.#noteAtAnchor(name, anchor);
+    if (note === null) return null;
+    const { path, file } = note;
+    // An indexed entry whose file has since gone is not a note the caller can act on, and
+    // promising ExistingJournalNote means promising both halves are there.
+    return path === null || file === null ? null : { ...note, path, file };
+  }
+
+  async #adjacentNotes(
+    selector: JournalSelector,
+    date: DateInput,
+    direction: "previous" | "next",
+  ): Promise<readonly ExistingJournalNote[]> {
+    await this.#readyForNotes();
+    const calendarDate = this.#date(date);
+    return this.#select(selector).flatMap((name) => {
+      const note = this.#adjacentNote(name, calendarDate, direction);
+      return note === null ? [] : [note];
+    });
+  }
+
+  // Stepping from the period's anchor rather than the date is what keeps the period holding the
+  // date out of "previous"; the walk continues past a stale entry so it cannot hide an older note.
+  #adjacentNote(name: string, date: CalendarDate, direction: "previous" | "next"): ExistingJournalNote | null {
+    const start = this.#cycle.anchorOf(name, date);
+    if (start.isNone()) return null;
+    let from = start.value;
+    for (;;) {
+      const path = direction === "previous" ? this.#index.findPrevious(name, from) : this.#index.findNext(name, from);
+      const anchor = path
+        .flatMap((found) => this.#index.entryByPath(found))
+        .flatMap(periodEntryOf)
+        .map((entry) => entry.anchor);
+      if (anchor.isNone()) return null;
+      const note = this.#existingNoteAt(name, anchor.value);
+      if (note !== null) return note;
+      from = anchor.value;
+    }
+  }
+
   // Eligibility is "a note exists OR the date is in timeline", not the resolver's
   // timeline-only rule. Refusing a note the API just reported as existing would make
   // `ensure` a lie; the calendar's stricter gate is a UI affordance, not a data rule.
@@ -568,14 +609,18 @@ export class JournalsApiService implements JournalsApi {
     if (window === null) return [];
     return this.#select(selector).flatMap((name) =>
       this.#existingAnchors(name, window).flatMap((anchor) => {
-        const note = this.#noteAtAnchor(name, anchor);
-        if (note === null) return [];
-        const { path, file } = note;
-        // An indexed entry whose file has since gone is not a note the caller can act on, and
-        // promising ExistingJournalNote means promising both halves are there.
-        return path === null || file === null ? [] : [{ ...note, path, file }];
+        const note = this.#existingNoteAt(name, anchor);
+        return note === null ? [] : [note];
       }),
     );
+  }
+
+  async previousNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]> {
+    return this.#adjacentNotes(selector, date, "previous");
+  }
+
+  async nextNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]> {
+    return this.#adjacentNotes(selector, date, "next");
   }
 
   async tasksFor(selector: JournalSelector, date: DateInput, options?: TasksForOptions): Promise<readonly TaskItem[]> {

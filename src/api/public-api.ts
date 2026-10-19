@@ -232,6 +232,10 @@ export interface JournalsApi {
   notesInRange(selector: JournalSelector, range: DateRange): Promise<readonly JournalNote[]>;
   /** Only the notes on disk. Omit the range for every note the matched journals have written. */
   existingNotes(selector: JournalSelector, range?: DateRange): Promise<readonly ExistingJournalNote[]>;
+  /** The nearest existing note before the period holding the date, gaps skipped. At most one per journal. */
+  previousNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]>;
+  /** The nearest existing note after the period holding the date, gaps skipped. At most one per journal. */
+  nextNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
   noteletOf(file: TFile): Promise<NoteletNote | null>;
   noteletsFor(

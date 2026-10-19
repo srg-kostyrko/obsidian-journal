@@ -737,6 +737,126 @@ describe("JournalsApiService range reads", () => {
   });
 });
 
+function seed(
+  harness: Awaited<ReturnType<typeof buildApi>>["harness"],
+  index: JournalsIndex,
+  notes: readonly (readonly [journalName: string, anchor: string, endDate?: string])[],
+) {
+  for (const [journalName, anchor, endDate] of notes) {
+    harness.host.putFile(`${journalName}/${anchor}.md`, "existing");
+    index.register({
+      journalName,
+      anchor: anchor as AnchorString,
+      path: `${journalName}/${anchor}.md` as VaultPath,
+      ...(endDate !== undefined && { endDate: endDate as AnchorString }),
+    });
+  }
+}
+
+describe("JournalsApiService adjacent reads", () => {
+  it("finds the nearest earlier note before the period holding the date, across a gap", async () => {
+    const { api, index, harness } = await buildApi({ monthly: fixedJournal("monthly", { type: "month" }) });
+    seed(harness, index, [
+      ["monthly", "2026-06-01"],
+      ["monthly", "2026-08-01"],
+      ["monthly", "2026-10-01"],
+    ]);
+
+    const notes = await api.previousNote("monthly", "2026-10-18");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-08-01"]);
+    expect(notes[0]?.path).toBe("monthly/2026-08-01.md");
+  });
+
+  it("finds the nearest later note after the period holding the date, across a gap", async () => {
+    const { api, index, harness } = await buildApi({ monthly: fixedJournal("monthly", { type: "month" }) });
+    seed(harness, index, [
+      ["monthly", "2026-06-01"],
+      ["monthly", "2026-08-01"],
+      ["monthly", "2026-10-01"],
+    ]);
+
+    const notes = await api.nextNote("monthly", "2026-08-15");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-10-01"]);
+  });
+
+  it("steps back from a custom interval's start, not from the date", async () => {
+    const { api, index, harness } = await buildApi({
+      sprints: customJournal("sprints", "month", 1, "2026-03-01"),
+    });
+    seed(harness, index, [
+      ["sprints", "2026-02-01", "2026-02-10"],
+      ["sprints", "2026-02-11"],
+    ]);
+
+    const notes = await api.previousNote("sprints", "2026-02-15");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-02-01"]);
+  });
+
+  it("answers once per matched journal", async () => {
+    const { api, index, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }),
+      monthly: fixedJournal("monthly", { type: "month" }),
+    });
+    seed(harness, index, [
+      ["daily", "2026-10-09"],
+      ["daily", "2026-10-10"],
+      ["monthly", "2026-08-01"],
+      ["monthly", "2026-09-01"],
+    ]);
+
+    const notes = await api.previousNote({}, "2026-10-18");
+
+    expect(notes.map((note) => `${note.journal}:${note.date}`)).toEqual(["daily:2026-10-10", "monthly:2026-09-01"]);
+  });
+
+  it("leaves out a journal with no note on that side", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    seed(harness, index, [["daily", "2026-10-10"]]);
+
+    await expect(api.previousNote("daily", "2026-10-10")).resolves.toEqual([]);
+    await expect(api.nextNote("daily", "2026-10-10")).resolves.toEqual([]);
+  });
+
+  it("steps past an indexed note whose file is no longer in the vault", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    seed(harness, index, [["daily", "2026-10-01"]]);
+    index.register({
+      journalName: "daily",
+      anchor: "2026-10-10" as AnchorString,
+      path: "daily/vanished.md" as VaultPath,
+    });
+
+    const notes = await api.previousNote("daily", "2026-10-18");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-10-01"]);
+  });
+
+  it("waits for the index to be ready", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) }, { ready: false });
+    let settled = false;
+    const pending = api.previousNote("daily", "2026-10-18").then((notes) => {
+      settled = true;
+      return notes;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    seed(harness, index, [["daily", "2026-10-10"]]);
+    index.markReady();
+
+    await expect(pending).resolves.toHaveLength(1);
+  });
+
+  it("rejects a date it cannot read with invalid-date", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await expect(api.nextNote("daily", "whenever")).rejects.toMatchObject({ code: "invalid-date" });
+  });
+});
+
 async function buildTasksApi(journals: Record<string, JournalConfig>, shelves: Record<string, ShelfConfig> = {}) {
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
