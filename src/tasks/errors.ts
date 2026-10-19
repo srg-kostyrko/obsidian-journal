@@ -53,3 +53,6 @@ export type TickError =
   | RecurringUnsupportedError
   | NoteNotFoundError
   | NoteWriteError;
+
+// Thrown out of the note-property frontmatter mutator to abort the write; never leaves that provider.
+export class RecurringAtWrite extends Error {}
