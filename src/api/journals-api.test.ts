@@ -1045,6 +1045,67 @@ describe("JournalsApiService tasksFor", () => {
     expect(found.map((task) => `${task.journal}:${task.line}`)).toEqual(["daily:1"]);
   });
 
+  describe("dated task notes", () => {
+    const TASK_NOTE = "Tasks/ship.md";
+
+    function taskNote(dates: TaskItem["dates"]): TaskItem {
+      return buildTaskItem({
+        provider: "note-property",
+        key: `note-property:${TASK_NOTE}`,
+        path: TASK_NOTE as VaultPath,
+        relations: ["date"],
+        capabilities: { movable: false, stampable: false, retargetable: true },
+        display: { kind: "note", path: TASK_NOTE as VaultPath, title: "Ship it" },
+        dates,
+      });
+    }
+
+    it("returns a task note scheduled on the day, attributed to the journal and period asked about", async () => {
+      const { api, tasks } = await buildTasksApi({ daily });
+      tasks.publish("note-property", { path: TASK_NOTE as VaultPath }, [
+        taskNote({ scheduled: "2026-09-22" as AnchorString }),
+      ]);
+
+      const found = await api.tasksFor("daily", "2026-09-22");
+
+      expect(found).toEqual([
+        {
+          journal: "daily",
+          date: "2026-09-22",
+          path: TASK_NOTE,
+          source: "note",
+          line: null,
+          text: "Ship it",
+          status: "todo",
+          dates: { scheduled: "2026-09-22" },
+          relations: ["date"],
+          parentLine: null,
+        },
+      ]);
+    });
+
+    it("filters it out when the date option names a date it does not carry", async () => {
+      const { api, tasks } = await buildTasksApi({ daily });
+      tasks.publish("note-property", { path: TASK_NOTE as VaultPath }, [
+        taskNote({ scheduled: "2026-09-22" as AnchorString }),
+      ]);
+
+      expect(await api.tasksFor("daily", "2026-09-22", { date: "due" })).toEqual([]);
+      expect(await api.tasksFor("daily", "2026-09-22", { date: "scheduled" })).toHaveLength(1);
+    });
+
+    it("returns it once for a selector matching two journals, under the first in selection order", async () => {
+      const { api, tasks } = await buildTasksApi({ work: fixedJournal("work", { type: "day" }), daily });
+      tasks.publish("note-property", { path: TASK_NOTE as VaultPath }, [
+        taskNote({ due: "2026-09-22" as AnchorString }),
+      ]);
+
+      const found = await api.tasksFor({}, "2026-09-22");
+
+      expect(found.map((task) => task.journal)).toEqual(["work"]);
+    });
+  });
+
   it("returns only matching items, pointing a child at an enclosing task that did not match", async () => {
     const { api, index, tasks } = await buildTasksApi({ daily });
     registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");

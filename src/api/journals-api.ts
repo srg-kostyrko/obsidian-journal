@@ -84,7 +84,7 @@ function taskQueryFor(options: TasksForOptions | undefined): TaskQuery {
         options?.status === undefined ? [] : [{ type: "status", condition: "is", statuses: [options.status] }],
     },
     sort: "document",
-    date: DEFAULT_TASK_QUERY.date,
+    date: options?.date ?? DEFAULT_TASK_QUERY.date,
   };
 }
 
@@ -518,10 +518,25 @@ export class JournalsApiService implements JournalsApi {
   #taskItemFrom(
     row: TaskListingRow,
     taskLines: Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>,
+    asked: { readonly journal: string; readonly date: string },
   ): TaskItem | null {
     // A dated row's journal and date are the ones asked about, not its path's owner — a task note
     // at a period note's path would otherwise be reported as that note's own task.
-    if (row.source.kind === "task-note") return null;
+    if (row.source.kind === "task-note") {
+      const { item } = row;
+      return {
+        journal: asked.journal,
+        date: asked.date,
+        path: item.path,
+        source: "note",
+        line: null,
+        text: item.display.kind === "note" ? item.display.title : "",
+        status: item.status,
+        dates: { ...item.dates },
+        relations: [...item.relations],
+        parentLine: null,
+      };
+    }
     const owner = this.#index.entryByPath(row.source.path);
     if (owner.isNone()) return null;
     const { item } = row;
@@ -654,7 +669,7 @@ export class JournalsApiService implements JournalsApi {
       for (const row of rows) {
         if (row.context || seen.has(row.key)) continue;
         seen.add(row.key);
-        const task = this.#taskItemFrom(row, taskLines);
+        const task = this.#taskItemFrom(row, taskLines, { journal: name, date: anchor.value });
         if (task !== null) found.push(task);
       }
     }

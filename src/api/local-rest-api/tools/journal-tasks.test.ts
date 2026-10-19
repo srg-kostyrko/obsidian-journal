@@ -1,3 +1,4 @@
+import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import type { AnchorString } from "@/calendar";
@@ -59,6 +60,13 @@ describe("JournalTasksTool", () => {
     };
 
     expect(result.tasks.map((task) => task.line)).toEqual([2]);
+  });
+
+  it("rejects a task date it does not know", async () => {
+    const { tool } = await build();
+
+    expect(() => v.parse(v.object(tool.input), { journal: "work", date: "2026-09-22", taskDate: "bogus" })).toThrow();
+    expect(() => v.parse(v.object(tool.input), { journal: "work", date: "2026-09-22", taskDate: "due" })).not.toThrow();
   });
 
   it("rejects an unknown journal with journal-not-found", async () => {

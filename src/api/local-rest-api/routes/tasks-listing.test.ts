@@ -94,6 +94,24 @@ describe("GET /journals/:name/tasks/:date", () => {
     expect(tasksFor).not.toHaveBeenCalled();
   });
 
+  it("passes a date relation through and refuses one it does not know", async () => {
+    const { api, send } = await seeded();
+    const tasksFor = vi.spyOn(api, "tasksFor");
+
+    await send("get", path, fakeRequest({ params: { name: "work", date: "2026-09-22" }, query: { date: "due" } }));
+    expect(tasksFor).toHaveBeenCalledWith("work", "2026-09-22", { date: "due" });
+
+    tasksFor.mockClear();
+    const response = await send(
+      "get",
+      path,
+      fakeRequest({ params: { name: "work", date: "2026-09-22" }, query: { date: "bogus" } }),
+    );
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toMatchObject({ code: "invalid-request" });
+    expect(tasksFor).not.toHaveBeenCalled();
+  });
+
   it("gives 400 invalid-request when a query value arrives as an array", async () => {
     const { send } = await seeded();
 

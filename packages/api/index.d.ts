@@ -194,12 +194,18 @@ export interface TasksForOptions {
   readonly depth?: "literal" | "rollup";
   /** Omitted, the journal's own status condition applies, or `open`. Given, it replaces the journal's. */
   readonly status?: TaskStatusFilter;
+  /** Which date puts a task note in the listing for the period. Default `scheduled-or-due`. */
+  readonly date?: "scheduled-or-due" | "due" | "scheduled" | "start" | "done" | "created";
 }
 
 export interface TaskItem {
-  /** The journal whose note holds the task — under `rollup`, not necessarily the one asked about. */
+  /**
+   * For a containment task, the journal whose note holds it — under `rollup`, not necessarily the one
+   * asked about. For a `date` task note, the journal asked about; when a selector matches several
+   * journals that admit it, the first in the selector's resolution order, and it is listed once.
+   */
   readonly journal: string;
-  /** That note's period. */
+  /** For a containment task, that note's period. For a `date` task note, the period asked about. */
   readonly date: string;
   readonly path: string;
   readonly source: "note" | "notelet";
