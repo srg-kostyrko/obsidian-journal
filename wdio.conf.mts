@@ -135,12 +135,15 @@ export const config: WebdriverIO.Config = {
         // in the community browser's version picker, never when loading a plugin (app.js, 1.8.7
         // and 1.13.7): installed this way it loads and passes its spec on the 1.8.7 floor too
         // (measured), and its spec fails outright if getPlugin() ever comes back null.
+        // TaskNotes 4.13.9 likewise declares 1.12.2 and loads on 1.8.7 (measured); its spec asserts
+        // getPlugin() first for the same reason.
         plugins: [
           "./build",
           { id: "templater-obsidian", version: "2.18.0", enabled: false },
           { id: "periodic-notes", version: "0.0.17", enabled: false },
           { id: "calendar", version: "1.5.10", enabled: false },
           { id: "obsidian-local-rest-api", version: "5.1.0", enabled: false },
+          { id: "tasknotes", version: "4.13.9", enabled: false },
         ],
         vault: "./e2e-tests/fixtures/e2e-empty",
       },

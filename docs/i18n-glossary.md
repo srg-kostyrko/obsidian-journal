@@ -287,7 +287,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **1177/1177**. Every locale has had a line-by-line pass
+All eleven locales are complete at **1181/1181**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 
@@ -374,6 +374,13 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   locale's existing **task note**, **tag**, folder and **property** wording from the
   `tasks_settings_provider_note_property*` and `tasks_note_property_*` keys, so the row and the
   provider it narrows name task notes alike. Not native-verified.
+- The four `tasks_tasknotes_notice_*` keys — the settings-page card that copies TaskNotes'
+  settings into **Task notes** — were translated by an agent working from this file.
+  `_dismiss` repeats each locale's `import_notice_dismiss` verbatim, so the two notice cards
+  on one settings page offer the same way out, and the heading and message reuse each
+  locale's existing **task note** wording; the plugin name TaskNotes stays untranslated.
+  Not native-verified. Worth a native eye: whether `_set_up`'s trailing ellipsis reads as
+  "opens something" in each locale, as it does in en.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

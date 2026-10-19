@@ -31,6 +31,15 @@ describe("identifiesNote", () => {
     expect(identifiesNote(meta(["#task", "#archived"]), path, state())).toBe(false);
     expect(identifiesNote(meta(["#task", "#archived"]), path, state({ archiveTag: "" }))).toBe(true);
   });
+  it("matches a nested tag under the task tag, never a longer tag that only starts the same", () => {
+    expect(identifiesNote(meta(["#task/work"]), path, state())).toBe(true);
+    expect(identifiesNote(meta(["#Task/Work"]), path, state())).toBe(true);
+    expect(identifiesNote(meta(["#taskforce"]), path, state())).toBe(false);
+  });
+  it("rejects a note carrying a tag nested under the archive tag", () => {
+    expect(identifiesNote(meta(["#task", "#archived/2025"]), path, state())).toBe(false);
+    expect(identifiesNote(meta(["#task", "#archived-later"]), path, state())).toBe(true);
+  });
   it("matches a property rule with an empty value on presence alone", () => {
     const s = state({ identify: { by: "property", name: "due", value: "" } });
     expect(identifiesNote(meta([], { due: "x" }), path, s)).toBe(true);

@@ -51,6 +51,7 @@ export const manual = {
   tasks: {
     page: "/tasks",
     journalRule: "/tasks#a-journal-s-own-rule",
+    taskNotesSetUp: "/tasks#setting-up-from-tasknotes",
   },
   troubleshooting: {
     collidingJournals: "/troubleshooting#two-journals-fight-over-the-same-notes",
