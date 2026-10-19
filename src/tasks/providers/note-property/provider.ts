@@ -9,6 +9,7 @@ import { TaskHostToken, type TaskItem, type TaskProvider } from "../../types";
 
 import { identifiesNote, readDates, readStatus, readTitle } from "./read";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
+import NotePropertySettingsRow from "./ui/NotePropertySettingsRow.vue";
 
 export class NotePropertyTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
@@ -17,6 +18,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
   readonly #metadata = inject(NoteMetadataService);
   readonly #settings = inject(SettingsService).getSlice(notePropertySlice);
   readonly id = NOTE_PROPERTY_PROVIDER_ID;
+  readonly settingsRow = NotePropertySettingsRow;
 
   #itemsFor(path: VaultPath): readonly TaskItem[] {
     const state = this.#settings.state;
