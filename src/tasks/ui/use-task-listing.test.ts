@@ -192,6 +192,72 @@ describe("useTaskListing", () => {
     },
   );
 
+  // Visibility is settings, so neither version ref sees an All -> None edit: it names no property,
+  // and the provider's snapshot of named properties therefore stays as it was.
+  it.each<{ surface: string; request: TaskListingRequest }>([
+    { surface: "period listing", request: requestFor("2026-09-22" as AnchorString) },
+    {
+      surface: "window listing",
+      request: {
+        kind: "window",
+        journalNames: ["daily"],
+        window: { start: "2026-09-21" as AnchorString, end: "2026-09-23" as AnchorString },
+        query: DEFAULT_TASK_QUERY,
+      },
+    },
+  ])(
+    "$surface drops a task note once the journal's visibility becomes None, with no version bump",
+    async ({ request }) => {
+      const notes = new FakeNotesService();
+      const metadata = new FakeNoteMetadataService();
+      const structures = new FakeNoteStructureService();
+      const harness = await testContainer({
+        modules: [journalsCoreModule, tasksCoreModule],
+        data: {
+          journals: { daily: fixedJournal("daily", { type: "day" }) },
+          tasksNoteProperty: { enabled: true },
+        },
+        overrides: [
+          overrideWith(NotesService, notes as never),
+          overrideWith(NoteMetadataService, metadata as never),
+          overrideWith(NoteStructureService, structures as never),
+        ],
+      });
+      harness.resolve(JournalsIndex).markReady();
+      const path = "Tasks/Ship it.md" as VaultPath;
+      notes.seed(path);
+      metadata.setMetadata(path, { title: "Ship it", tags: ["#task"], properties: { scheduled: "2026-09-22" } });
+      structures.setStructure(path, { listItems: [], tags: [], headings: [], frontmatterTags: ["#task"] });
+      const provider = harness
+        .resolve(TaskProviderToken)
+        .find((candidate) => candidate.id === NOTE_PROPERTY_PROVIDER_ID);
+      if (!(provider instanceof NotePropertyTaskProvider)) throw new TypeError("note-property provider not registered");
+      provider.start();
+
+      const { rows } = mountListing(harness, () => request);
+      await vi.waitFor(() => expect(rows.value.map((row) => row.source.path)).toEqual([path]));
+      const tasks = harness.resolve(TaskIndex);
+      const versionBefore = tasks.version();
+
+      const journals = harness.resolve(JournalsRepository);
+      const stored = journals.require("daily");
+      expectOk(stored);
+      const written = journals.update("daily", {
+        tasks: {
+          ...stored.value.tasks,
+          providers: {
+            ...stored.value.tasks.providers,
+            [NOTE_PROPERTY_PROVIDER_ID]: { show: "none", mode: "and", conditions: [] },
+          },
+        },
+      });
+      expectOk(written);
+
+      await vi.waitFor(() => expect(rows.value).toEqual([]));
+      expect(tasks.version()).toBe(versionBefore);
+    },
+  );
+
   // A tag filter reads a task note's tags at query time; only a version bump rebuilds the listing,
   // so the tag edit itself has to change what the provider publishes.
   it("lists a task note under a tag filter once its frontmatter gains the tag, with no other trigger", async () => {

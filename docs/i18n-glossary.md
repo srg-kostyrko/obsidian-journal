@@ -287,7 +287,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **1162/1162**. Every locale has had a line-by-line pass
+All eleven locales are complete at **1177/1177**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 
@@ -367,6 +367,13 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   from this file. The date choices reuse each locale's existing `view_block_tasks_sort_*`
   wording for the date roles, so a date reads the same whether it sorts a listing or places a
   task note in one. Not native-verified.
+- The 15 `tasks_note_visibility_*` keys — a journal's **Task notes** row summary (`summary_all`,
+  `summary_matching`, `summary_none` and the three `condition_*` fragments it joins) and its modal
+  (`show`, `show_desc`, `show_all`, `show_matching`, `show_none`, `conditions`, `conditions_desc`,
+  `mode`, `modal_title`) — were translated by an agent working from this file, reusing each
+  locale's existing **task note**, **tag**, folder and **property** wording from the
+  `tasks_settings_provider_note_property*` and `tasks_note_property_*` keys, so the row and the
+  provider it narrows name task notes alike. Not native-verified.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

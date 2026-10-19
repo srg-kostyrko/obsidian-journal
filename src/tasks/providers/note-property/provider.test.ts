@@ -4,8 +4,9 @@ import { nextTick } from "vue";
 import { anchor } from "@/calendar/testing";
 import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
-import { JournalsIndex } from "@/journals";
+import { JournalsIndex, JournalsRepository, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
+import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
 import { overrideWith, testContainer } from "@/testing";
 
@@ -16,6 +17,8 @@ import { TaskProviderToken } from "../../types";
 import { NotePropertyTaskProvider } from "./provider";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
 
+import type { NoteVisibility } from "./visibility";
+
 const path = "Tasks/a.md" as VaultPath;
 const moved = "Tasks/b.md" as VaultPath;
 
@@ -25,13 +28,13 @@ interface NoteShape {
   readonly bodyTags?: string[];
 }
 
-async function build(enabled = true, ready = true) {
+async function build(enabled = true, ready = true, journalConfigs: Record<string, JournalConfig> = {}) {
   const notes = new FakeNotesService();
   const metadata = new FakeNoteMetadataService();
   const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
-    data: { tasksNoteProperty: { enabled } },
+    data: { tasksNoteProperty: { enabled }, journals: journalConfigs },
     overrides: [
       overrideWith(NotesService, notes as never),
       overrideWith(NoteMetadataService, metadata as never),
@@ -44,6 +47,7 @@ async function build(enabled = true, ready = true) {
   const journals = harness.resolve(JournalsIndex);
   if (ready) journals.markReady();
   const slice = harness.resolve(SettingsService).getSlice(notePropertySlice);
+  const repository = harness.resolve(JournalsRepository);
   // Mirrors what Obsidian reports: getAllTags merges body and frontmatter tags, the structure keeps them apart.
   const setNote = (target: VaultPath, shape: NoteShape = {}) => {
     const frontmatterTags = shape.frontmatterTags ?? ["#task"];
@@ -60,7 +64,11 @@ async function build(enabled = true, ready = true) {
       frontmatterTags,
     });
   };
-  return { journals, notes, setNote, provider, index, slice };
+  return { journals, notes, setNote, provider, index, slice, repository };
+}
+
+function properties(projects: string, dateModified: string) {
+  return { scheduled: "2026-10-21", projects: [projects], dateModified };
 }
 
 describe("NotePropertyTaskProvider", () => {
@@ -310,5 +318,137 @@ describe("NotePropertyTaskProvider", () => {
     notes.emitMetadataChanged(path);
 
     expect(index.itemsIn(path)).toHaveLength(1);
+  });
+
+  describe("properties a journal's visibility names", () => {
+    const noFilter = { mode: "and" as const, conditions: [] };
+    const byProject: NoteVisibility = {
+      show: "matching",
+      mode: "and",
+      conditions: [{ type: "property", name: "projects", values: ["Website"] }],
+    };
+    const withRule = (rule: NoteVisibility) =>
+      fixedJournal("Work", { type: "day" }, { tasks: { providers: { "note-property": rule }, filter: noFilter } });
+
+    it("snapshots a property a journal's rule names, and only that one", async () => {
+      const { notes, setNote, provider, index } = await build(true, true, { Work: withRule(byProject) });
+      notes.seed(path);
+      setNote(path, { properties: properties("[[Website]]", "2026-10-19T10:00:00") });
+
+      provider.start();
+
+      expect(index.itemsIn(path).at(0)?.facts?.properties).toEqual({ projects: ["[[Website]]"] });
+    });
+
+    it("bumps the index version for an edit to a named property and not for any other", async () => {
+      const { notes, setNote, provider, index } = await build(true, true, { Work: withRule(byProject) });
+      notes.seed(path);
+      setNote(path, { properties: properties("[[Website]]", "2026-10-19T10:00:00") });
+      provider.start();
+      const before = index.version();
+
+      setNote(path, { properties: properties("[[Website]]", "2026-10-19T11:00:00") });
+      notes.emitMetadataChanged(path);
+      expect(index.version()).toBe(before);
+
+      setNote(path, { properties: properties("[[Shop]]", "2026-10-19T11:00:00") });
+      notes.emitMetadataChanged(path);
+      expect(index.version()).toBe(before + 1);
+    });
+
+    it("refills once when a journal's rule starts naming a new property", async () => {
+      const { notes, setNote, provider, index, repository } = await build(true, true, {
+        Work: fixedJournal("Work", { type: "day" }),
+      });
+      const other = "Tasks/c.md" as VaultPath;
+      for (const target of [path, other]) {
+        notes.seed(target);
+        setNote(target, { properties: properties("[[Website]]", "2026-10-19T10:00:00") });
+      }
+      provider.start();
+      const before = index.version();
+
+      repository.update("Work", { tasks: { filter: noFilter, providers: { "note-property": byProject } } });
+      await nextTick();
+
+      expect(index.version()).toBe(before + 1);
+      expect(index.itemsIn(other).at(0)?.facts?.properties).toEqual({ projects: ["[[Website]]"] });
+    });
+
+    it("does not refill for a rule change that names no new property", async () => {
+      const { notes, setNote, provider, index, repository } = await build(true, true, { Work: withRule(byProject) });
+      notes.seed(path);
+      setNote(path, { properties: properties("[[Website]]", "2026-10-19T10:00:00") });
+      provider.start();
+      const before = index.version();
+
+      repository.update("Work", {
+        tasks: { filter: noFilter, providers: { "note-property": { ...byProject, mode: "or" } } },
+      });
+      await nextTick();
+
+      expect(index.version()).toBe(before);
+    });
+
+    describe("when the named-property set shrinks", () => {
+      for (const [label, shrink] of [
+        [
+          "a rule stops naming the property",
+          (repository: JournalsRepository) =>
+            repository.update("Work", {
+              tasks: { filter: noFilter, providers: { "note-property": { ...byProject, show: "all" } } },
+            }),
+        ],
+        ["the journal naming the property is deleted", (repository: JournalsRepository) => repository.delete("Work")],
+      ] as const) {
+        it(`refills once and then ignores the property when ${label}`, async () => {
+          const { notes, setNote, provider, index, repository } = await build(true, true, {
+            Work: withRule(byProject),
+          });
+          notes.seed(path);
+          setNote(path, { properties: properties("[[Website]]", "2026-10-19T10:00:00") });
+          provider.start();
+          expect(index.itemsIn(path).at(0)?.facts?.properties).toEqual({ projects: ["[[Website]]"] });
+          const before = index.version();
+
+          shrink(repository);
+          await nextTick();
+
+          expect(index.version()).toBe(before + 1);
+          expect(index.itemsIn(path).at(0)?.facts?.properties ?? {}).not.toHaveProperty("projects");
+
+          setNote(path, { properties: properties("[[Shop]]", "2026-10-19T11:00:00") });
+          notes.emitMetadataChanged(path);
+          expect(index.version()).toBe(before + 1);
+        });
+      }
+    });
+
+    it("keeps a journal's rule on the journal across a rename", async () => {
+      const { provider, repository } = await build(true, true, { Work: withRule(byProject) });
+      provider.start();
+
+      repository.rename("Work", "Office");
+
+      expect(repository.get("Office").getOrUndefined()?.tasks.providers["note-property"]).toEqual(byProject);
+    });
+
+    it("answers admits from the journal's current rule, reading it live", async () => {
+      const { notes, setNote, provider, index, repository } = await build(true, true, { Work: withRule(byProject) });
+      notes.seed(path);
+      setNote(path, { properties: properties("[[Other]]", "2026-10-19T10:00:00") });
+      provider.start();
+      const item = index.itemsIn(path).at(0);
+      if (item === undefined) throw new TypeError("no item");
+
+      expect(provider.admits(item, "Work")).toBe(false);
+      expect(provider.admits(item, "Unknown")).toBe(true);
+
+      repository.update("Work", {
+        tasks: { filter: noFilter, providers: { "note-property": { ...byProject, show: "all" } } },
+      });
+
+      expect(provider.admits(item, "Work")).toBe(true);
+    });
   });
 });

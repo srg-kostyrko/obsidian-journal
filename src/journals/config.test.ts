@@ -140,6 +140,51 @@ describe("journalConfigSchema", () => {
     expect(parsed.tasks.filter.conditions).toHaveLength(1);
   });
 
+  it("keeps a per-journal note-property visibility rule", () => {
+    const rule = { show: "matching", mode: "or", conditions: [{ type: "folder", folders: ["Work"] }] };
+    const parsed = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: { providers: { "note-property": rule } },
+    });
+    expect(parsed.tasks.providers["note-property"]).toEqual(rule);
+  });
+
+  // Each provider key carries its own fallback: one around the namespace would reset the sibling
+  // provider's rule along with the one that failed.
+  it("keeps a valid checkbox rule when the note-property rule is unreadable", () => {
+    const checkbox = { compose: "narrow", mode: "and", conditions: [] };
+    const degraded = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: {
+        providers: { checkbox, "note-property": { show: "weird", conditions: [{ type: "not-a-real-type" }] } },
+      },
+    });
+    expect(degraded.tasks.providers.checkbox).toEqual(checkbox);
+    expect(degraded.tasks.providers["note-property"]).toEqual({ show: "all", mode: "and", conditions: [] });
+
+    const garbage = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: { providers: { checkbox, "note-property": 42 } },
+    });
+    expect(garbage.tasks.providers.checkbox).toEqual(checkbox);
+    expect(garbage.tasks.providers["note-property"]).toBeUndefined();
+  });
+
+  it("keeps a valid note-property rule when the checkbox rule holds a condition type this version does not know", () => {
+    const rule = { show: "none", mode: "and", conditions: [] };
+    const parsed = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: {
+        providers: {
+          checkbox: { compose: "narrow", mode: "and", conditions: [{ type: "not-a-real-type" }] },
+          "note-property": rule,
+        },
+      },
+    });
+    expect(parsed.tasks.providers.checkbox).toBeUndefined();
+    expect(parsed.tasks.providers["note-property"]).toEqual(rule);
+  });
+
   it("accepts an unset end date, so a half-configured timeline survives a reload", () => {
     const cfg = {
       ...journalDefaultsFor({ type: "day" }, "daily"),

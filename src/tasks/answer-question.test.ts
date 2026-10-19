@@ -8,6 +8,7 @@ import { fixedJournal } from "@/journals/testing";
 
 import { answerTaskQuestion, type TaskQuestionDependencies } from "./answer-question";
 import { buildTaskListing, type TaskListingDependencies } from "./listing";
+import { admits as admitsNote, type NoteVisibility } from "./providers/note-property/visibility";
 import { DEFAULT_TASK_QUERY } from "./query";
 import { buildTaskItem } from "./testing";
 
@@ -67,8 +68,10 @@ function build(options: {
   structures?: Partial<Record<VaultPath, NoteStructure>>;
   // What the index's range lookup holds: every item a provider published under the date relation.
   dated?: readonly TaskItem[];
+  // Each journal's stored task-note rule, answered by the provider's own verdict.
+  visibilityRules?: Partial<Record<string, NoteVisibility>>;
 }): TaskQuestionDependencies {
-  const { items = {}, notelets = [], journalFilter, structures = {}, dated = [] } = options;
+  const { items = {}, notelets = [], journalFilter, structures = {}, dated = [], visibilityRules = {} } = options;
   return {
     journals: {
       get: (name) => {
@@ -89,6 +92,10 @@ function build(options: {
         })),
     },
     structure: { get: (path) => Option.fromNullable(structures[path]) },
+    visibility: {
+      admits: (item, journalNames) =>
+        journalNames.length === 0 || journalNames.some((name) => admitsNote(visibilityRules[name], item)),
+    },
     cycle: {
       startOf: (_name, anchor) => Option.some(CalendarDate.fromAnchor(anchor)),
       endOf: (_name, anchor) => Option.some(CalendarDate.fromAnchor(anchor)),
@@ -376,6 +383,33 @@ describe("answerTaskQuestion", () => {
     });
   });
 
+  describe("task-note visibility", () => {
+    const rules: Partial<Record<string, NoteVisibility>> = {
+      Work: { show: "matching", mode: "and", conditions: [{ type: "tag", tags: ["#work"] }] },
+      Personal: { show: "none", mode: "and", conditions: [] },
+    };
+    const askOf = (dependencies: TaskQuestionDependencies, journalName: string, question: Partial<TaskQuestion>) =>
+      answerTaskQuestion(dependencies, { journalName, anchor: ANCHOR, path: null }, { ...BASE_QUESTION, ...question });
+
+    it("lights a journal's dot only for the task notes that journal admits", () => {
+      const dependencies = build({
+        visibilityRules: rules,
+        dated: [taskNote(TASK_NOTE, "todo", undefined, ["#task", "#work"])],
+      });
+      expect(askOf(dependencies, "Work", { status: "open" })).toBe(true);
+      expect(askOf(dependencies, "Personal", { status: "open" })).toBe(false);
+    });
+
+    it("does not let a task note the journal hides count as something on the day", () => {
+      const dependencies = build({
+        visibilityRules: rules,
+        dated: [taskNote(TASK_NOTE, "done", undefined, ["#task", "#home"])],
+      });
+      expect(askOf(dependencies, "Work", { quantifier: "none", status: "open" })).toBe(false);
+      expect(askOf(dependencies, "Daily", { quantifier: "none", status: "open" })).toBe(true);
+    });
+  });
+
   describe("agreement with the default listing", () => {
     const tasksStructure = structureWith([
       { line: 0, heading: "## Tasks" },
@@ -450,6 +484,14 @@ describe("answerTaskQuestion", () => {
       ["no note at all", build({}), null],
       ["an open task note scheduled on a day with no note", build({ dated: [taskNote(TASK_NOTE, "todo")] }), null],
       ["only a done task note scheduled on the day", build({ dated: [taskNote(TASK_NOTE, "done")] }), null],
+      [
+        "an open task note scheduled on the day that the journal hides",
+        build({
+          visibilityRules: { Daily: { show: "none", mode: "and", conditions: [] } },
+          dated: [taskNote(TASK_NOTE, "todo")],
+        }),
+        null,
+      ],
       [
         "an open task note at the day's own path, scheduled on another day",
         build({ items: { [DAY]: [taskNote(DAY, "todo", { scheduled: "2026-09-25" })] } }),

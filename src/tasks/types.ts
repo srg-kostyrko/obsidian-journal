@@ -43,6 +43,9 @@ export interface TaskItem {
 
 export interface TaskFacts {
   readonly frontmatterTags: readonly string[];
+  // Only the properties some journal's visibility rule names: a snapshot of the whole frontmatter
+  // would make every unrelated edit (TaskNotes rewrites dateModified on each one) a changed item.
+  readonly properties?: Readonly<Record<string, unknown>>;
 }
 
 export interface TaskProvider {
@@ -52,13 +55,17 @@ export interface TaskProvider {
   // and whatever opens its settings. A provider with no settings surface renders no row.
   readonly settingsRow?: Component;
   // The journal page's Tasks section renders one of these per provider, with journalName. A
-  // journal can narrow a provider's rule but cannot switch the provider off, so no toggle here.
+  // journal narrows what a provider shows it (note-property can show None), but the provider itself
+  // stays on or off globally, so no enable toggle here.
   readonly journalRow?: Component;
   start(): () => void;
   // Text is not in metadataCache, so date roles and retargetable can only be read once the line's
   // markdown exists — hydration calls this with it. The index has no dialect of its own: a
   // provider that declares no hydrateItem leaves dates and retargetable as extraction set them.
   hydrateItem?(item: TaskItem, markdown: string): TaskItem;
+  // Whether `journalName` shows this item. Called from reactive effects, so an implementation reads
+  // the journal's config synchronously for the effect to track it. Absent means every journal shows all.
+  admits?(item: TaskItem, journalName: string): boolean;
 }
 
 export const TaskProviderToken = createMultiToken<TaskProvider>("tasks.provider");

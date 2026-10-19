@@ -91,6 +91,9 @@ Choosing **Narrow** or **Replace** reveals the same condition editor as the vaul
 this journal. The row's own description names which relation is active and, once narrowed or replaced,
 summarizes the rule itself, so you can see it without opening the modal.
 
+The same section carries a **Task notes** row, which decides which [task notes](#task-notes) this
+journal shows; [Which task notes a journal shows](#which-task-notes-a-journal-shows) covers it.
+
 ## Task notes
 
 Some vaults keep one task per note rather than one per line. The
@@ -113,7 +116,8 @@ in no period note, so it is placed **by its date** instead: the note above appea
 whether or not a note for that day exists. See [Which date places a task
 note](#which-date-places-a-task-note).
 
-Every journal sees every task note for now; a journal cannot yet narrow which ones reach it.
+Every journal shows every task note until you narrow it; see [Which task notes a journal
+shows](#which-task-notes-a-journal-shows).
 
 ### Task notes' settings
 
@@ -188,13 +192,57 @@ line — sort it, but never place it in a period other than the one whose note h
   done.
 - A [journal's own listing filter](#a-journal-s-own-listing-filter) reaches task notes through its
   **Status** condition only. Its tag and heading conditions were written for the journal's own checkbox
-  lines, so they do not hide task notes from it. In a [tasks view block](#the-tasks-view-block), a
+  lines, so they do not hide task notes from it; to narrow a journal's task notes by tag, use
+  [its Task notes setting](#which-task-notes-a-journal-shows). In a [tasks view block](#the-tasks-view-block), a
   journal's listing filter does not reach task notes at all; the block's own **Filter** decides, open
   only when it names no status.
 - `provider: checkbox` lists checkbox tasks alone, and `provider: note-property` task notes alone.
 
 A task note that is also a journal's period note — one carrying both `#task` and `journal:` properties —
 is listed once, by its date, never a second time as a task held by that period note.
+
+### Which task notes a journal shows
+
+A task note belongs to no journal, so on its own every journal with a period on its date would show
+it: a Work and a Personal daily journal would both list every task due that day. Each journal
+therefore chooses for itself. On the journal's settings page, expand **Tasks**: the **Task notes** row
+says in one sentence what this journal shows, and its **Edit** button opens a modal with **Show**:
+
+- **All** (default) — every task note.
+- **Matching** — only task notes that meet the conditions below it.
+- **None** — no task notes. The journal's checkbox tasks are unaffected.
+
+Under **Matching**, **Add condition** adds a row, and the dropdown above the rows picks **Match all
+conditions** or **Match any condition**. Each row is one of:
+
+- **Tag** — one or more tags, separated by commas; a note matches if it carries any of them in its
+  properties. A tag also matches the tags nested under it, as Obsidian's tag search does: `#work`
+  matches `#work/planning`, never `#workshop`. Case does not matter.
+- **Folder** — one or more folders, each in its own field; a note matches if it sits inside any of
+  them, subfolders included. Case matters, as it does for paths in the vault.
+- **Property** — a property name and one or more values; a note matches if that property holds any of
+  them, as its value or as one item of a list. The property name must match exactly; the values
+  ignore case, and a link counts as the note it points to: a note with `projects: ["[[Website]]"]`
+  matches the value `Website`, and one linking `[[Projects/Website]]` matches `Website` or
+  `Projects/Website`. A value written as a link, `[[Projects/Website]]`, matches that path only.
+
+**Save** stays disabled while a row has no value, or a **Property** row no name. **Matching** with no
+rows shows every task note, as **All** does.
+
+The setting only ever narrows. A note that [Task notes' settings](#task-notes-settings) do not
+identify as a task note never reaches any journal, whatever its conditions say.
+
+Where it applies:
+
+- A `journal-tasks` code block shows the task notes of the journal whose note it sits in. With
+  `depth: rollup` too, that journal decides alone; the journals it rolls up do not add task notes.
+- A [tasks view block](#the-tasks-view-block) shows a task note when any journal it lists shows it,
+  and shows it once.
+- A [Check tasks](/decorations#tasks) decoration counts the task notes its cell's journal shows.
+  **None** counts only those as something to look in, so a day with no note, whose only task note
+  this journal does not show, stays undecorated.
+- The plugin API's `tasksFor` asks each journal it matches, and returns a task note once, under the
+  first of them that shows it.
 
 ### Ticking a task note
 
@@ -386,6 +434,7 @@ the view rather than to the note it sits in:
   [shelf scope](/shelves#scoping-a-view); turn specific ones on to narrow it further.
 - **Source** and **Sort by** — the same `source` and `sort` this page covers above.
 - **Task date** — the same as the fence's `date`: which of a task note's dates places it in the window.
+  A task note is listed when any of the block's journals [shows it](#which-task-notes-a-journal-shows).
 - **Filter** — the same condition editor [a journal's own listing filter](#a-journal-s-own-listing-filter)
   uses, scoped to this block instead of to a journal. A new block holds no conditions at all, so it
   shows what is still open the same way a bare fence does, and each journal's own **Status** condition
@@ -500,6 +549,45 @@ The second is saved as `Tasks/Water the plants.md`. A bare `journal-tasks` fence
 file name, due that day. Ticking "Draft the report" writes `status: done`, today's date into
 `completedDate` and the time into `dateModified`, and the row leaves the listing, which shows open
 tasks only. Ticking "Water the plants" changes nothing and shows a notice instead: it is recurring.
+
+### Two journals, one day
+
+**Task notes** turned on at its defaults, and two daily journals, `daily` and `personal`, each with a
+note for 4 June 2019 holding a bare `journal-tasks` fence. Three task notes are scheduled or due that
+day:
+
+```markdown
+---
+tags: [task, work/planning]
+status: open
+scheduled: 2019-06-04
+title: Prepare the quarterly review
+---
+```
+
+```markdown
+---
+tags: [task, workshop]
+status: open
+scheduled: 2019-06-04
+title: Book the pottery workshop
+---
+```
+
+```markdown
+---
+tags: [task]
+status: open
+due: 2019-06-04
+title: Fix the garden gate
+---
+```
+
+At first both notes list all three. Set `daily`'s **Task notes** to **Matching** with a **Tag**
+condition of `#work`, and its row reads "Shows task notes matching tag #work." Its note now lists
+"Prepare the quarterly review" alone — `#work/planning` is nested under `#work`, `#workshop` is not —
+while `personal`'s still lists all three. Set `personal`'s to **None**, and its listing is empty,
+while `daily`'s keeps its one.
 
 ### A dot on a day with no note
 

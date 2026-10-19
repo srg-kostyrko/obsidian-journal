@@ -1112,6 +1112,35 @@ describe("JournalsApiService tasksFor", () => {
 
       expect(found.map((task) => task.journal)).toEqual(["work"]);
     });
+
+    it("attributes it to the selected journal that admits it, not the first in selection order", async () => {
+      const noFilter = { mode: "and" as const, conditions: [] };
+      const personal = fixedJournal(
+        "personal",
+        { type: "day" },
+        { tasks: { filter: noFilter, providers: { "note-property": { show: "none", mode: "and", conditions: [] } } } },
+      );
+      const work = fixedJournal(
+        "work",
+        { type: "day" },
+        {
+          tasks: {
+            filter: noFilter,
+            providers: {
+              "note-property": { show: "matching", mode: "and", conditions: [{ type: "tag", tags: ["#work"] }] },
+            },
+          },
+        },
+      );
+      const { api, tasks } = await buildTasksApi({ personal, work });
+      tasks.publish("note-property", { path: TASK_NOTE as VaultPath }, [
+        { ...taskNote({ due: "2026-09-22" as AnchorString }), facts: { frontmatterTags: ["#task", "#work"] } },
+      ]);
+
+      const found = await api.tasksFor({}, "2026-09-22");
+
+      expect(found.map((task) => task.journal)).toEqual(["work"]);
+    });
   });
 
   it("returns only matching items, pointing a child at an enclosing task that did not match", async () => {

@@ -10,6 +10,7 @@ import type { TaskRule } from "./conditions";
 import type { TaskQuery, TaskSort } from "./query";
 import type { TaskIndex } from "./task-index";
 import type { TaskItem, TaskStatus } from "./types";
+import type { TaskVisibility } from "./visibility";
 
 export interface TaskListingDependencies {
   readonly journals: Pick<JournalsRepository, "get">;
@@ -17,6 +18,7 @@ export interface TaskListingDependencies {
   readonly cycle: Pick<CycleService, "startOf" | "endOf" | "anchorOf" | "overlapsFrom">;
   readonly structure: Pick<NoteStructureService, "get">;
   readonly tasks: Pick<TaskIndex, "itemsIn" | "hydrate" | "datedIn">;
+  readonly visibility: Pick<TaskVisibility, "admits">;
 }
 
 export interface TaskListingPeriodRequest {
@@ -282,12 +284,15 @@ function datedItems(
       ? (dependencies.journals.get(request.hostJournal).getOrUndefined()?.tasks.filter ?? null)
       : null;
   const filter = composeDatedFilter(journalFilter, query.filter);
+  // A period asks its own journal, not the ones it rolls up: the dated pass is the host's alone.
+  const askers = request.kind === "period" ? [request.hostJournal] : request.journalNames;
   return dependencies.tasks
     .datedIn(rolesOf(query.date), range.start, range.end)
     .filter(
       (item) =>
         !emitted.has(item.key) &&
         inScope(item, query.scope.provider) &&
+        dependencies.visibility.admits(item, askers) &&
         matchesFilter(item, dependencies.structure.get(item.path).getOrUndefined(), filter),
     );
 }

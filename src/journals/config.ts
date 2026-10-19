@@ -5,6 +5,7 @@ import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorat
 import { defineCollection } from "@/settings";
 import { taskRuleSchema } from "@/tasks/conditions";
 import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
+import { noteVisibilitySchema } from "@/tasks/providers/note-property/visibility";
 
 import { DEFAULT_NOTELET_FIELD, noteletTypeCollection, noteletTypeSchema } from "./notelets/config";
 import { promptsSchema } from "./prompts/config";
@@ -168,17 +169,22 @@ export const journalConfigSchema = v.object({
   // and nothing is logged — the loss is silent, on purpose, in exchange for not losing the
   // sibling. Whoever adds a third sub-field to `tasks` needs the same per-field v.fallback; the
   // underlying gap — repairCollectionEntry cannot reach inside a plain (non-`nested`) sub-object —
-  // is still there for it. The same gap sits one level deeper, inside `providers`: only that object
-  // carries a v.fallback, not each provider key, so once a second provider lands (note-property,
-  // #503) a bad `noteProperty` rule still resets the whole `providers` object and takes the
-  // checkbox rule with it. That key needs its own v.fallback when it is added — one per provider,
-  // not one around the namespace.
+  // is still there for it. The same holds one level deeper, inside `providers`: each provider key
+  // carries its own v.fallback, so a bad rule for one provider resets that rule alone and never a
+  // sibling provider's. A provider added here needs the same, one per key, not one around the
+  // namespace.
   tasks: v.optional(
     v.object({
-      // Keyed by provider id — note-property joins here in #503. Kept in its own object so the
-      // listing filter below is not a sibling of the provider namespace.
+      // Keyed by provider id, the key TaskHost reads a journal's rule under. Kept in its own object
+      // so the listing filter below is not a sibling of the provider namespace.
       providers: v.optional(
-        v.fallback(v.object({ checkbox: v.optional(checkboxJournalRuleSchema) }), () => ({})),
+        v.fallback(
+          v.object({
+            checkbox: v.optional(v.fallback(v.optional(checkboxJournalRuleSchema), undefined)),
+            "note-property": v.optional(v.fallback(v.optional(noteVisibilitySchema), undefined)),
+          }),
+          () => ({}),
+        ),
         () => ({}),
       ),
       filter: v.optional(
