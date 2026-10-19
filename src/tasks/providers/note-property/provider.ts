@@ -9,6 +9,7 @@ import { TaskHostToken, type TaskItem, type TaskProvider } from "../../types";
 
 import { identifiesNote, readDates, readStatus, readTitle } from "./read";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
+import NotePropertyJournalRow from "./ui/NotePropertyJournalRow.vue";
 import NotePropertySettingsRow from "./ui/NotePropertySettingsRow.vue";
 import { admits, referencedProperties } from "./visibility";
 
@@ -23,6 +24,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
   #referenced: readonly string[] = [];
   readonly id = NOTE_PROPERTY_PROVIDER_ID;
   readonly settingsRow = NotePropertySettingsRow;
+  readonly journalRow = NotePropertyJournalRow;
 
   #referencedNow(): readonly string[] {
     const rules = this.#repository.find().map((journal) => journal.tasks.providers[NOTE_PROPERTY_PROVIDER_ID]);
