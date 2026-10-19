@@ -16,8 +16,8 @@ export interface StatusValueRow {
 }
 
 // A mark on a row follows the row (a value is edited in place, so a mark keyed by its text would fall
-// off on the first keystroke). A stored value with no row of its type is kept verbatim: it may still
-// round-trip — an unknown value reads as todo — and opening then saving must not rewrite config.
+// off on the first keystroke). A stored value with no row of its type is kept verbatim while it still
+// round-trips — an unknown value reads as todo — so opening then saving must not rewrite config.
 export type CanonicalMark = { row: number } | { value: string };
 
 export interface NotePropertyDraft {
@@ -99,7 +99,9 @@ export function stateFrom(draft: NotePropertyDraft): Omit<NotePropertySliceState
   const canonical: Record<string, string> = {};
   for (const [type, mark] of Object.entries(draft.canonical)) {
     if ("value" in mark) {
-      canonical[type] = mark.value;
+      // A row added since may read this value as another status, and writing it back would then
+      // record that status instead; an unmapped value reads as todo.
+      if ((statusMap[statusKey(mark.value)] ?? "todo") === type) canonical[type] = mark.value;
       continue;
     }
     const row = draft.statusRows.find((candidate) => candidate.id === mark.row);

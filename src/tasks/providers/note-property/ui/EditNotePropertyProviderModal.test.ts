@@ -215,6 +215,23 @@ describe("EditNotePropertyProviderModal", () => {
     expect(slice.state.canonical.todo).toBe("none");
   });
 
+  // A row added back with the stored value under another status makes the map read that value as
+  // the other status, so writing it back would no longer mean to-do.
+  it("drops a stored to-do written-back value once a row reads that value as another status", async () => {
+    const { slice } = await mount();
+    await userEvent.click(screen.getByTestId(`note-property-status-remove-${statusRowIndex("open")}`));
+    await userEvent.click(screen.getByTestId(`note-property-status-remove-${statusRowIndex("none")}`));
+    await userEvent.click(screen.getByTestId("note-property-add-status-value"));
+    const added = screen.getAllByLabelText(m.tasks_note_property_status_value_label()).length - 1;
+    await userEvent.type(input(`note-property-status-value-${added}`), "none");
+    const select = screen.getByTestId(`note-property-status-row-${added}`).querySelector("select");
+    if (!select) throw new Error("status row has no select");
+    await userEvent.selectOptions(select, "done");
+    await userEvent.click(saveButton());
+    expect(slice.state.statusMap).toHaveProperty("none", "done");
+    expect(slice.state.canonical).not.toHaveProperty("todo");
+  });
+
   it("drops a written-back value whose last row is remapped to another status", async () => {
     const { slice } = await mount();
     const row = screen.getByTestId(`note-property-status-row-${statusRowIndex("in-progress")}`);
