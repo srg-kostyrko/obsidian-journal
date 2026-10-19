@@ -39,7 +39,16 @@ const PROVIDER_TOGGLE = '[data-testid="note-property-enabled"]';
 
 const TASKS_BLOCK = `${VISIBLE_LEAF} .markdown-reading-view .block-language-journal-tasks`;
 const TASK_ROWS = `${TASKS_BLOCK} .task-listing-row`;
-const EMPTY = `${TASKS_BLOCK} .task-listing__empty`;
+// The listing renders its empty state until its first async build lands, so an empty listing proves
+// nothing. Notes whose listing must lose its task notes carry this open checkbox task too: a listing
+// showing it has been built, and one showing it alone has no task note left.
+const CHECKBOX_TASK = "Feed the cat";
+const FENCE_WITH_CHECKBOX = `- [ ] ${CHECKBOX_TASK}\n\n\`\`\`journal-tasks\n\`\`\``;
+
+async function expectOnlyCheckboxTask(): Promise<void> {
+  await rowTitled(CHECKBOX_TASK);
+  await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(1);
+}
 
 function taskNote(fields: readonly string[]): string {
   return `---\ntags: [task]\n${fields.join("\n")}\n---\n`;
@@ -61,8 +70,8 @@ async function rowTitled(title: string) {
 
 async function expectShippedListing(): Promise<void> {
   await openInReadingMode(SHIPPED_DAY_NOTE);
-  for (const title of SHIPPED_TITLES) await rowTitled(title);
-  await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(SHIPPED_TITLES.length);
+  for (const title of [...SHIPPED_TITLES, CHECKBOX_TASK]) await rowTitled(title);
+  await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(SHIPPED_TITLES.length + 1);
   expect(await $(TASKS_BLOCK).getText()).not.toContain(BODY_TAGGED_TITLE);
 }
 
@@ -127,18 +136,19 @@ describe("task notes in a journal-tasks fence", () => {
     await rowTitled("Water the plants");
   });
 
-  it("says the listing is empty once no task note on the day is open", async () => {
+  it("lists no task note once none on the day is open", async () => {
     await seedNote(RECURRING_NOTE, taskNote(["status: done", `due: ${LIST_DAY}`]));
+    await seedNote(DAY_NOTE, hostNote("daily", LIST_DAY, FENCE_WITH_CHECKBOX));
     await openInReadingMode(DAY_NOTE);
 
-    await expect($(EMPTY)).toHaveText(m.tasks_listing_empty());
+    await expectOnlyCheckboxTask();
   });
 });
 
 describe("task notes the vault already holds at boot", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
-    await seedNote(SHIPPED_DAY_NOTE, hostNote("daily", SHIPPED_DAY, "```journal-tasks\n```"));
+    await seedNote(SHIPPED_DAY_NOTE, hostNote("daily", SHIPPED_DAY, FENCE_WITH_CHECKBOX));
   });
 
   // A tag in the frontmatter's list or string form identifies a task note; a #task in the body does
@@ -150,7 +160,7 @@ describe("task notes the vault already holds at boot", () => {
   it("lists them again after the provider is turned off and back on in settings", async () => {
     await clickProviderToggle("false");
     await openInReadingMode(SHIPPED_DAY_NOTE);
-    await expect($(EMPTY)).toHaveText(m.tasks_listing_empty());
+    await expectOnlyCheckboxTask();
 
     await clickProviderToggle("true");
     await expectShippedListing();
@@ -195,10 +205,6 @@ const DIALOG = ".modal-container:not(:has(.mod-settings))";
 
 async function expectListing(path: string, titles: readonly string[]): Promise<void> {
   await openInReadingMode(path);
-  if (titles.length === 0) {
-    await expect($(EMPTY)).toHaveText(m.tasks_listing_empty());
-    return;
-  }
   for (const title of titles) await rowTitled(title);
   await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(titles.length);
 }
@@ -229,14 +235,14 @@ describe("task notes a journal shows", () => {
     );
     await seedNote("Tasks/Garden gate.md", taskNote(["status: open", `due: ${SHARED_DAY}`, `title: ${HOME_TITLE}`]));
     await seedNote(DAILY_NOTE, hostNote("daily", SHARED_DAY, "```journal-tasks\n```"));
-    await seedNote(PERSONAL_NOTE, hostNote("personal", SHARED_DAY, "```journal-tasks\n```"));
+    await seedNote(PERSONAL_NOTE, hostNote("personal", SHARED_DAY, FENCE_WITH_CHECKBOX));
   });
 
   afterEach(closeSettings);
 
   it("lists every task note in both journals while neither narrows them", async () => {
     await expectListing(DAILY_NOTE, [WORK_TITLE, WORKSHOP_TITLE, HOME_TITLE]);
-    await expectListing(PERSONAL_NOTE, [WORK_TITLE, WORKSHOP_TITLE, HOME_TITLE]);
+    await expectListing(PERSONAL_NOTE, [WORK_TITLE, WORKSHOP_TITLE, HOME_TITLE, CHECKBOX_TASK]);
   });
 
   // `#work` admits the nested `#work/planning` and not `#workshop`, which shares only a prefix.
@@ -256,9 +262,10 @@ describe("task notes a journal shows", () => {
     await closeSettings();
 
     await expectListing(DAILY_NOTE, [WORK_TITLE]);
-    await expectListing(PERSONAL_NOTE, [WORK_TITLE, WORKSHOP_TITLE, HOME_TITLE]);
+    await expectListing(PERSONAL_NOTE, [WORK_TITLE, WORKSHOP_TITLE, HOME_TITLE, CHECKBOX_TASK]);
   });
 
+  // The checkbox task stays: None is about task notes, and the journal's checkbox tasks are its own.
   it("shows no task notes in a journal set to None, while the other keeps its own choice", async () => {
     await openJournalTaskNotes("personal");
     await chooseShow(m.tasks_note_visibility_show_none());
@@ -268,7 +275,8 @@ describe("task notes a journal shows", () => {
     await goBack();
     await closeSettings();
 
-    await expectListing(PERSONAL_NOTE, []);
+    await openInReadingMode(PERSONAL_NOTE);
+    await expectOnlyCheckboxTask();
     await expectListing(DAILY_NOTE, [WORK_TITLE]);
   });
 });
