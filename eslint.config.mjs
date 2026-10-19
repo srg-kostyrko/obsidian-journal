@@ -160,8 +160,6 @@ export default [
       // The VitePress `.mts` files under docs/user/.vitepress are in no tsconfig, so linting them
       // would pull a fresh path into the project service for no benefit.
       "docs/**",
-      // A fixture vault's plugin is a stand-in for another plugin's shipped bundle, not our source.
-      "e2e-tests/fixtures/**/.obsidian/plugins/**",
     ],
   },
   eslint.configs.recommended,

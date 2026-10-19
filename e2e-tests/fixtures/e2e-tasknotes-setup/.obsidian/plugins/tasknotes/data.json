@@ -1,0 +1,9 @@
+{
+  "taskTag": "chore",
+  "excludedFolders": "Archive/",
+  "lastSeenVersion": "4.13.9",
+  "starterNoteCreated": true,
+  "showReleaseNotesOnUpdate": false,
+  "checkForUpdatesOnStartup": false,
+  "autoCreateDefaultBasesFiles": false
+}
