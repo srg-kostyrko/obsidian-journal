@@ -36,9 +36,12 @@ export class VaultSubscriptionService {
     return this.#index.isReady() || this.#arrivedDuringStartup.has(path) ? "live" : "walk";
   }
 
+  // A walk after startup (a journal created, settings synced in) finds notes that already existed,
+  // so only a note that arrived during startup escapes "walk" here.
   #rebuild(): void {
     for (const path of this.#notes.allMarkdownNotes()) {
-      this.#scan(path, { reconcileCustom: false, origin: this.#originOf(path) });
+      const origin = this.#arrivedDuringStartup.has(path) ? "live" : "walk";
+      this.#scan(path, { reconcileCustom: false, origin });
     }
     this.#reconcileCustomJournals();
   }

@@ -1782,6 +1782,16 @@ describe("JournalsApiService event reasons", () => {
     expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "appeared", canonical: true }]);
   });
 
+  it("marks an existing note a journal created after startup picks up as indexed", async () => {
+    const { harness, added } = await bootApi((host) => {
+      host.putFile("M/2026-08.md", "", { journal: "monthly", "journal-date": "2026-08-01" });
+    });
+
+    harness.resolve(JournalsRepository).create("monthly", { type: "month" });
+
+    expect(added).toEqual([{ path: "M/2026-08.md", reason: "indexed", canonical: true }]);
+  });
+
   it("marks a note Journals creates as created", async () => {
     const { api, added } = await bootApi();
 
