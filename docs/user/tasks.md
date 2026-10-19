@@ -181,7 +181,8 @@ What is copied:
 - its statuses into **Status values**: a status TaskNotes counts as completed reads as Done, one named
   `in-progress` as In progress, and every other as To-do. TaskNotes' default status is written back for
   To-do, provided it reads as To-do; otherwise its first To-do status is, in TaskNotes' own
-  order. Its first completed status is written back for Done.
+  order. Its first completed status is written back for Done, and its `in-progress` status for In
+  progress, if it has one.
 
 The copy is made once. Later changes in TaskNotes' settings do not reach Journals; change them here
 as well, in the same modal. Once **Task notes** has been on, by this card or by hand, the card does

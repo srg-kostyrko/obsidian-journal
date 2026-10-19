@@ -44,7 +44,7 @@ function dismiss(): void {
 
 <template>
   <div v-if="visible" class="tasknotes-notice">
-    <UiSettingRow heading :name="m.tasks_tasknotes_notice_heading()" :help="manual.tasks.taskNotes" />
+    <UiSettingRow heading :name="m.tasks_tasknotes_notice_heading()" :help="manual.tasks.taskNotesSetUp" />
     <UiSettingRow>
       <template #description>{{ m.tasks_tasknotes_notice_message() }}</template>
     </UiSettingRow>
