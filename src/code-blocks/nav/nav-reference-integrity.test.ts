@@ -47,11 +47,11 @@ async function setupInterval(intervalBlocks: Record<string, JournalConfig["inter
   return { repo: harness.resolve(JournalsRepository), events: harness.resolve(JournalsEventsToken) };
 }
 
-const segmentOf = (repo: JournalsRepository, name: string): NavBlockSegment =>
-  repo.get(name).getOrUndefined()!.navBlock.lines.at(0)!.at(0)!;
+const segmentOf = (repository: JournalsRepository, name: string): NavBlockSegment =>
+  repository.get(name).getOrUndefined()!.navBlock.lines.at(0)!.at(0)!;
 
-const intervalSegmentOf = (repo: JournalsRepository, name: string): NavBlockSegment =>
-  repo.get(name).getOrUndefined()!.intervalBlock.lines.at(0)!.at(0)!;
+const intervalSegmentOf = (repository: JournalsRepository, name: string): NavBlockSegment =>
+  repository.get(name).getOrUndefined()!.intervalBlock.lines.at(0)!.at(0)!;
 
 describe("NavReferenceIntegrity", () => {
   it("rewrites a segment's journal reference when that journal is renamed", async () => {

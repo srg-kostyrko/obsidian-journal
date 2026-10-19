@@ -333,11 +333,11 @@ describe("VaultSubscriptionService", () => {
       harness.host.putFile("D/A.md", "", { journal: "daily", "journal-date": "2024-01-01" });
       await harness.resolve(VaultSubscriptionService).initialize();
       const index = harness.resolve(JournalsIndex);
-      const repo = harness.resolve(JournalsRepository);
+      const repository = harness.resolve(JournalsRepository);
 
       // keep mode leaves the note and its frontmatter untouched, so only the journal events move.
-      repo.delete("daily");
-      repo.create("daily", { type: "day" });
+      repository.delete("daily");
+      repository.create("daily", { type: "day" });
 
       expect(index.entryByPath("D/A.md" as VaultPath).isSome()).toBe(true);
     });

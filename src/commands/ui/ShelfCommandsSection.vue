@@ -22,10 +22,10 @@ import type { CommandConfig } from "../config";
 const { shelfName } = defineProps<{ shelfName: string }>();
 
 const flows = useService(Flows);
-const commandsRepo = useService(CommandsRepository);
+const commandsRepository = useService(CommandsRepository);
 
 const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][]>(() =>
-  [...commandsRepo.find().entries()]
+  [...commandsRepository.find().entries()]
     .filter(([, command]) => command.target.kind === "shelf" && command.target.shelfName === shelfName)
     .map(([id, command]): [string, CommandConfig, JournalWrite["type"]] => [
       id,

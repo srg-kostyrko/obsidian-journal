@@ -260,12 +260,12 @@ describe("DeleteNoteletTypeFlow", () => {
   });
 
   it("purges the type's notes before removing it from config", async () => {
-    const repo = harness.resolve(JournalsRepository);
+    const repository = harness.resolve(JournalsRepository);
     const connection = harness.resolve(NoteConnectionService);
     const original = connection.disconnectNoteletsOfType.bind(connection);
     let typePresentDuringPurge: boolean | undefined;
     vi.spyOn(connection, "disconnectNoteletsOfType").mockImplementation((journalName: string, typeName: string) => {
-      typePresentDuringPurge = repo.get(journalName).getOrUndefined()?.notelets.nt_1 !== undefined;
+      typePresentDuringPurge = repository.get(journalName).getOrUndefined()?.notelets.nt_1 !== undefined;
       return original(journalName, typeName);
     });
 
@@ -367,9 +367,9 @@ describe("DeleteNoteletTypeFlow", () => {
   });
 
   it("leaves another journal's has-notelet condition on the same id alone", async () => {
-    const repo = harness.resolve(JournalsRepository);
-    repo.create("other", { type: "day" });
-    repo.update("other", {
+    const repository = harness.resolve(JournalsRepository);
+    repository.create("other", { type: "day" });
+    repository.update("other", {
       decorations: [
         buildDecoration({
           conditions: [buildCondition("has-notelet", { typeIds: ["nt_1"] })],
@@ -382,7 +382,7 @@ describe("DeleteNoteletTypeFlow", () => {
     openModal().submit({ mode: "keep" });
     await promise;
 
-    expect(repo.get("other").getOrUndefined()?.decorations).toMatchObject([
+    expect(repository.get("other").getOrUndefined()?.decorations).toMatchObject([
       { conditions: [{ type: "has-notelet", typeIds: ["nt_1"] }] },
     ]);
   });

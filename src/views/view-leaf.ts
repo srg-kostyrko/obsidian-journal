@@ -117,12 +117,12 @@ export class JournalViewLeaf extends ItemView {
 function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, injector: Injector) {
   return defineComponent({
     setup() {
-      const repo = injector.resolve(ViewsRepository);
+      const repository = injector.resolve(ViewsRepository);
       const service = injector.resolve(ViewsService);
       const shelves = injector.resolve(ShelvesRepository);
       const logger = injector.resolve(LoggerFactoryToken).named("view-leaf");
 
-      const view = computed(() => repo.get(viewId).match({ some: (current) => current, none: () => null }));
+      const view = computed(() => repository.get(viewId).match({ some: (current) => current, none: () => null }));
       const today = useToday();
 
       // Set only by the view-level follow writer and by the calendars' selection gesture, and

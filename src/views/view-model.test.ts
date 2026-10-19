@@ -39,9 +39,9 @@ describe("ViewsViewModel", () => {
     it("reflects mutations after create", async () => {
       const harness = await buildHarness();
       const vm = harness.resolve(ViewsViewModel);
-      const repo = harness.resolve(ViewsRepository);
+      const repository = harness.resolve(ViewsRepository);
 
-      repo.create(buildView(ID_A, { name: "Alpha" }));
+      repository.create(buildView(ID_A, { name: "Alpha" }));
 
       expect(vm.views.value.map((v) => v.name)).toEqual(["Alpha"]);
     });

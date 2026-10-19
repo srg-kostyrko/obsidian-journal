@@ -17,9 +17,9 @@ import type { BlockInstanceId, View, ViewId } from "../config";
 const VIEW_A = "11111111-1111-4111-8111-111111111111" as ViewId;
 const BLOCK_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa" as BlockInstanceId;
 
-function readItems(repo: ViewsRepository): { id: string; key: string; config: unknown }[] {
+function readItems(repository: ViewsRepository): { id: string; key: string; config: unknown }[] {
   const rawConfig =
-    repo
+    repository
       .get(VIEW_A)
       .getOr(undefined as never)
       ?.blocks.find((b) => b.id === BLOCK_A)?.config ?? {};

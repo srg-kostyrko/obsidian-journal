@@ -74,10 +74,10 @@ describe("ViewsDashboardBlock", () => {
     const id = "11111111-1111-1111-1111-111111111111";
     const { harness } = await setup({ [id]: buildView(id, { name: "Weekly" }) });
     mount(harness);
-    const repo = harness.resolve(ViewsRepository);
+    const repository = harness.resolve(ViewsRepository);
     await userEvent.click(screen.getByText(m.view_dashboard_section_title()));
     await userEvent.click(screen.getByLabelText(m.view_dashboard_clone({ name: "Weekly" })));
-    expect([...repo.find().list()].map((v) => v.name)).toContain("Weekly (copy)");
+    expect([...repository.find().list()].map((v) => v.name)).toContain("Weekly (copy)");
   });
 
   it("invokes DeleteViewFlow when delete is clicked", async () => {

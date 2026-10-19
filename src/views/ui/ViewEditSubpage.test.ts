@@ -57,8 +57,8 @@ describe("ViewEditSubpage", () => {
   it("calls nav.back when the view disappears", async () => {
     const { harness } = await setup();
     const { nav } = mount(harness);
-    const repo = harness.resolve(ViewsRepository);
-    repo.delete(viewId);
+    const repository = harness.resolve(ViewsRepository);
+    repository.delete(viewId);
     await nextTick();
     expect(nav.back).toHaveBeenCalled();
   });
@@ -73,37 +73,37 @@ describe("ViewEditSubpage", () => {
   it("toggles showInRibbon", async () => {
     const { harness } = await setup();
     mount(harness);
-    const repo = harness.resolve(ViewsRepository);
+    const repository = harness.resolve(ViewsRepository);
     const toggle = within(row(m.common_show_in_ribbon())).getByRole("checkbox");
     await userEvent.click(toggle);
-    expect(repo.get(viewId).getOr(undefined as never)?.showInRibbon).toBe(true);
+    expect(repository.get(viewId).getOr(undefined as never)?.showInRibbon).toBe(true);
   });
 
   it("updates the default shelf when changed", async () => {
     const { harness } = await setup();
     mount(harness);
-    const repo = harness.resolve(ViewsRepository);
+    const repository = harness.resolve(ViewsRepository);
     const dropdown = within(row(m.view_edit_default_shelf_label())).getByRole("combobox");
     await userEvent.selectOptions(dropdown, "Personal");
-    expect(repo.get(viewId).getOr(undefined as never)?.defaultShelf).toBe("Personal");
+    expect(repository.get(viewId).getOr(undefined as never)?.defaultShelf).toBe("Personal");
   });
 
   it("updates the leaf placement when the Open-in dropdown changes", async () => {
     const { harness } = await setup();
     mount(harness);
-    const repo = harness.resolve(ViewsRepository);
+    const repository = harness.resolve(ViewsRepository);
     const dropdown = within(row(m.view_edit_leaf_label())).getByRole("combobox");
     await userEvent.selectOptions(dropdown, "left");
-    expect(repo.get(viewId).getOr(undefined as never)?.leaf).toBe("left");
+    expect(repository.get(viewId).getOr(undefined as never)?.leaf).toBe("left");
   });
 
   it("persists openOnStartup when the toggle is switched on", async () => {
     const { harness } = await setup();
     mount(harness);
-    const repo = harness.resolve(ViewsRepository);
+    const repository = harness.resolve(ViewsRepository);
     const toggle = within(row(m.view_edit_open_on_startup_label())).getByRole("checkbox");
     await userEvent.click(toggle);
-    expect(repo.get(viewId).getOr(undefined as never)?.openOnStartup).toBe(true);
+    expect(repository.get(viewId).getOr(undefined as never)?.openOnStartup).toBe(true);
   });
 
   it("opens the view immediately when the toggle is switched on", async () => {

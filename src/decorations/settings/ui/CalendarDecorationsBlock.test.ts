@@ -50,9 +50,9 @@ describe("CalendarDecorationsBlock", () => {
     await expand();
 
     const row = screen.getByText(m.decoration_mark_limit_label()).closest(".setting-item");
-    if (!(row instanceof HTMLElement)) throw new Error("mark limit row not found");
+    if (!(row instanceof HTMLElement)) throw new TypeError("mark limit row not found");
     const dropdown = row.querySelector("select");
-    if (!(dropdown instanceof HTMLSelectElement)) throw new Error("mark limit dropdown not found");
+    if (!(dropdown instanceof HTMLSelectElement)) throw new TypeError("mark limit dropdown not found");
     await userEvent.selectOptions(dropdown, "5");
 
     expect(harness.settings.getSlice(decorationsSlice).state.maxMarksPerSlot).toBe(5);
@@ -63,9 +63,9 @@ describe("CalendarDecorationsBlock", () => {
     await expand();
 
     const row = screen.getByText(m.decoration_mark_limit_label()).closest(".setting-item");
-    if (!(row instanceof HTMLElement)) throw new Error("mark limit row not found");
+    if (!(row instanceof HTMLElement)) throw new TypeError("mark limit row not found");
     const dropdown = row.querySelector("select");
-    if (!(dropdown instanceof HTMLSelectElement)) throw new Error("mark limit dropdown not found");
+    if (!(dropdown instanceof HTMLSelectElement)) throw new TypeError("mark limit dropdown not found");
     await userEvent.selectOptions(dropdown, "0");
 
     expect(harness.settings.getSlice(decorationsSlice).state.maxMarksPerSlot).toBe(0);

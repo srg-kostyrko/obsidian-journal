@@ -20,10 +20,10 @@ import CommandList from "./CommandList.vue";
 import type { CommandConfig } from "../config";
 
 const flows = useService(Flows);
-const commandsRepo = useService(CommandsRepository);
+const commandsRepository = useService(CommandsRepository);
 
 const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][]>(() =>
-  [...commandsRepo.find().entries()]
+  [...commandsRepository.find().entries()]
     .filter(([, command]) => command.target.kind === "all")
     .map(([id, command]): [string, CommandConfig, JournalWrite["type"]] => [
       id,

@@ -40,8 +40,8 @@ const segA = buildNavSegment({ template: "A" });
 const segB = buildNavSegment({ template: "B" });
 const submittedSegment = buildNavSegment({ template: "SUBMITTED" });
 
-function linesOf(repo: JournalsRepository): NavBlockSegment[][] {
-  return repo.get("daily").getOrUndefined()?.navBlock.lines ?? [];
+function linesOf(repository: JournalsRepository): NavBlockSegment[][] {
+  return repository.get("daily").getOrUndefined()?.navBlock.lines ?? [];
 }
 
 function submit(modals: FakeModalService, segment: NavBlockSegment): void {

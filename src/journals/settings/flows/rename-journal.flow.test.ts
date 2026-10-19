@@ -29,9 +29,9 @@ describe("RenameJournalFlow", () => {
     const promise = harness.resolve(Flows).invoke(RenameJournalFlow, { journalName: "daily" });
     harness.modals.lastOpen<{ currentName: string }, { newName: string }>().submit({ newName: "morning" });
     await promise;
-    const repo = harness.resolve(JournalsRepository);
-    expect(repo.get("daily").isNone()).toBe(true);
-    expect(repo.get("morning").getOrUndefined()?.name).toBe("morning");
+    const repository = harness.resolve(JournalsRepository);
+    expect(repository.get("daily").isNone()).toBe(true);
+    expect(repository.get("morning").getOrUndefined()?.name).toBe("morning");
   });
 
   it("returns the new name on submit", async () => {

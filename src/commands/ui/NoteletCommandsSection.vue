@@ -23,7 +23,7 @@ import type { CommandConfig } from "../config";
 const { journalName, typeId } = defineProps<{ journalName: string; typeId: string }>();
 
 const flows = useService(Flows);
-const commandsRepo = useService(CommandsRepository);
+const commandsRepository = useService(CommandsRepository);
 const journalsVM = useService(JournalsViewModel);
 
 const writeType = computed<JournalWrite["type"]>(
@@ -31,7 +31,7 @@ const writeType = computed<JournalWrite["type"]>(
 );
 
 const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][]>(() =>
-  [...commandsRepo.find().entries()]
+  [...commandsRepository.find().entries()]
     .filter(
       ([, command]) =>
         command.target.kind === "notelet" &&
