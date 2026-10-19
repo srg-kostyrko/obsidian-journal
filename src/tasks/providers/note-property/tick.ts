@@ -11,8 +11,8 @@ import {
 import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
+import { NoCanonicalSymbolError, RecurringAtWrite, RecurringUnsupportedError, type TickError } from "../../errors";
 import { isDone, tickTargetStatus } from "../../status";
-import { NoCanonicalSymbolError, RecurringUnsupportedError, type TickError } from "../../tick-errors";
 
 import { isRecurring } from "./read";
 import { notePropertySlice } from "./slice";
@@ -26,9 +26,6 @@ function statusValue(canonical: string): string | boolean {
   if (canonical === "false") return false;
   return canonical;
 }
-
-// Thrown out of the frontmatter mutator to abort the write; never leaves this module.
-class RecurringAtWrite extends Error {}
 
 /**
  * Ticks a task note by writing its status property, never its body.
