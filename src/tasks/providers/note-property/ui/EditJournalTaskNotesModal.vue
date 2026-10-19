@@ -70,7 +70,7 @@ function save(): void {
   <UiSettingRow v-if="draft.show === 'matching'" :name="m.tasks_note_visibility_conditions()" stacked>
     <template #description>{{ m.tasks_note_visibility_conditions_desc() }}</template>
     <div class="tasks-note-visibility-body">
-      <UiDropdown v-model="draft.mode" data-testid="note-visibility-mode">
+      <UiDropdown v-model="draft.mode" :aria-label="m.tasks_note_visibility_mode()" data-testid="note-visibility-mode">
         <option value="and">{{ m.tasks_settings_mode_and() }}</option>
         <option value="or">{{ m.tasks_settings_mode_or() }}</option>
       </UiDropdown>

@@ -92,6 +92,38 @@ describe("EditJournalTaskNotesModal", () => {
     });
   });
 
+  it("leaves the journal's listing filter unchanged on Save", async () => {
+    const { repository } = await mount();
+    const config = repository.get("Daily").getOrUndefined();
+    if (config === undefined) throw new Error("no journal");
+    repository.update("Daily", {
+      tasks: { ...config.tasks, filter: { mode: "or", conditions: [{ type: "tag", condition: "has", tags: ["#x"] }] } },
+    });
+    const filterBefore = JSON.stringify(repository.get("Daily").getOrUndefined()?.tasks.filter);
+
+    await userEvent.click(screen.getByLabelText(m.tasks_note_visibility_show_none()));
+    await userEvent.click(saveButton());
+
+    expect(JSON.stringify(repository.get("Daily").getOrUndefined()?.tasks.filter)).toBe(filterBefore);
+  });
+
+  it("keeps the conditions in storage when Matching switches to All", async () => {
+    const { providers } = await mount({ show: "matching", mode: "or", conditions: [{ type: "tag", tags: ["#work"] }] });
+    await userEvent.click(screen.getByLabelText(m.tasks_note_visibility_show_all()));
+    await userEvent.click(saveButton());
+    expect(providers()?.["note-property"]).toEqual({
+      show: "all",
+      mode: "or",
+      conditions: [{ type: "tag", tags: ["#work"] }],
+    });
+  });
+
+  it("labels the and/or choice", async () => {
+    await mount();
+    await chooseMatching();
+    expect(screen.getByLabelText(m.tasks_note_visibility_mode())).toBe(screen.getByTestId("note-visibility-mode"));
+  });
+
   it("writes None", async () => {
     const { providers } = await mount();
     await userEvent.click(screen.getByLabelText(m.tasks_note_visibility_show_none()));
