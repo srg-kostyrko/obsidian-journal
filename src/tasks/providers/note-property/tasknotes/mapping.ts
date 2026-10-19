@@ -1,11 +1,9 @@
+import { bareTag } from "./bare-tag";
+
 import type { NotePropertySliceState } from "../slice";
 import type { TaskNotesSettings } from "./source";
 
 type Canonical = "todo" | "in-progress" | "done";
-
-function bareTag(tag: string): string {
-  return tag.trim().replace(/^#/, "").trim();
-}
 
 function typeOf(status: { value: string; isCompleted: boolean }): Canonical {
   if (status.isCompleted) return "done";

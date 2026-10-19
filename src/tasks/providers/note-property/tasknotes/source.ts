@@ -3,6 +3,8 @@ import * as v from "valibot";
 import { inject } from "@/infrastructure/di";
 import { PluginSettingsReader } from "@/infrastructure/host";
 
+import { bareTag } from "./bare-tag";
+
 const text = (fallback: string) => v.optional(v.string(), fallback);
 
 const customStatusSchema = v.object({
@@ -55,7 +57,7 @@ function identifiesSomething(settings: TaskNotesSettings): boolean {
   if (settings.taskIdentificationMethod === "property") {
     return settings.taskPropertyName.trim() !== "" && settings.taskPropertyValue.trim() !== "";
   }
-  return settings.taskTag.replace(/^#/, "").trim() !== "";
+  return bareTag(settings.taskTag) !== "";
 }
 
 export class TaskNotesSource {

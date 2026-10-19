@@ -56,7 +56,7 @@ describe("TaskNotesSource", () => {
     expect(await readWith(taskNotesPlugin(settings))).toEqual({ kind: "unrecognised" });
   });
 
-  it.each(["", "#"])("is unrecognised when the task tag %j would match nothing", async (taskTag) => {
+  it.each(["", "#", " #", "# ", "  "])("is unrecognised when the task tag %j would match nothing", async (taskTag) => {
     expect(await readWith(taskNotesPlugin({ taskTag }))).toEqual({ kind: "unrecognised" });
   });
 
