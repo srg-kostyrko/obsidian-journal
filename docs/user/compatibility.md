@@ -134,6 +134,13 @@ decorations and navigation blocks keep showing the original, while Notebook Navi
 Delete the new note, then move the journal's note to that path if you want both plugins to agree; a
 note keeps its connection wherever it goes.
 
+## TaskNotes
+
+Journals reads the notes [TaskNotes](https://github.com/callumalpass/tasknotes) manages as
+[task notes](/tasks#task-notes): each one is listed by its date and counts toward decorations, and
+ticking it here writes its status into the note's properties. The two plugins do not share settings;
+while TaskNotes is on, Journals offers to [copy its settings once](/tasks#setting-up-from-tasknotes).
+
 ## Week configuration and other plugins
 
 **Week configuration**, set to anything but **Follow system locale**, offers **Apply week configuration

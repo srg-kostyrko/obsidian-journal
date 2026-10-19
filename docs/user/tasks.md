@@ -123,7 +123,8 @@ shows](#which-task-notes-a-journal-shows).
 
 The gear icon on the **Task notes** row opens its settings modal. Nothing in it applies until **Save**.
 The defaults are TaskNotes' own property names, so turning the row on over a vault TaskNotes manages
-finds its tasks without opening the modal at all.
+finds its tasks without opening the modal at all. If you changed TaskNotes' settings, let Journals
+[copy them](#setting-up-from-tasknotes) instead.
 
 - **Identify task notes by** — **Tag**, `#task` by default, or **Property**: a property name, and a
   **Property value** it must hold. Leave the value empty to count every note that has the property at
@@ -160,6 +161,33 @@ finds its tasks without opening the modal at all.
   empty to skip it.
 - **Recurrence properties** — `recurrence, recurrence_parent` by default. A note with any of them set is
   recurring; see [Ticking a task note](#ticking-a-task-note).
+
+### Setting up from TaskNotes
+
+While the TaskNotes plugin is on and **Task notes** has never been turned on, the main settings page
+carries a **Set up task notes from TaskNotes** card near its top. **Set up…** copies TaskNotes' settings into
+[Task notes' settings](#task-notes-settings), turns **Task notes** on, and opens its settings modal so
+you can check the result. The copy is saved before the modal opens: **Cancel** closes it and keeps
+what was copied. **Don't show again** hides the card for good.
+
+What is copied:
+
+- how TaskNotes identifies a task — by tag, or by a property and its value — into **Identify task
+  notes by**;
+- its excluded folders and its archive tag;
+- the property it uses for each of the status, title, modified date, due date, scheduled date,
+  completed date, created date, recurrence and recurrence parent. The start date has no TaskNotes
+  counterpart and is left empty;
+- its statuses into **Status values**: a status TaskNotes counts as completed reads as Done, one named
+  `in-progress` as In progress, and every other as To-do. TaskNotes' default status is written back for
+  To-do, provided it reads as To-do; otherwise its first To-do status is, in TaskNotes' own
+  order. Its first completed status is written back for Done.
+
+The copy is made once. Later changes in TaskNotes' settings do not reach Journals; change them here
+as well, in the same modal. Once **Task notes** has been on, by this card or by hand, the card does
+not come back — not even after you turn **Task notes** off again. Nor does it appear when TaskNotes'
+settings cannot be read, such as when its task tag or property name is empty; set **Task notes** up by
+hand then.
 
 ### Which date places a task note
 

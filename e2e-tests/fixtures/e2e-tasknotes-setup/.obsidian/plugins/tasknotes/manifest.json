@@ -1,0 +1,9 @@
+{
+  "id": "tasknotes",
+  "name": "TaskNotes (e2e stub)",
+  "version": "4.13.9",
+  "minAppVersion": "1.8.7",
+  "description": "Exposes a fixed TaskNotes settings object and does nothing else.",
+  "author": "Journals e2e",
+  "isDesktopOnly": false
+}
