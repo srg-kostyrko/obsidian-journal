@@ -2513,6 +2513,7 @@
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Which of those tasks a listing shows.",
   "tasks_tick_recurring_needs_tasks_plugin": "This task was not ticked. Recurring tasks need the Tasks plugin to advance to their next instance.",
+  "tasks_tick_recurring_task_note": "This task was not ticked. A recurring task note has to be completed in the plugin that manages its series.",
   "tasks_tick_error": "Could not tick the task.",
   "tasks_listing_empty": "No tasks match this query."
 }

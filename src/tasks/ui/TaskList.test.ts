@@ -2,19 +2,20 @@ import { screen } from "@testing-library/vue";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { m } from "@/i18n";
-import { MarkdownRenderService, type VaultPath } from "@/infrastructure/host";
-import { FakeMarkdownRenderService } from "@/infrastructure/host/testing";
+import { MarkdownRenderService, WorkspaceService, type VaultPath } from "@/infrastructure/host";
+import { FakeMarkdownRenderService, FakeWorkspaceService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { tasksCoreModule } from "../module";
 import { buildTaskItem } from "../testing";
-import { NotATaskLineError, RecurringUnsupportedError, TickService, type TickError } from "../tick";
+import { TickService } from "../tick";
+import { NotATaskLineError, RecurringUnsupportedError, type TickError } from "../tick-errors";
 
 import TaskList from "./TaskList.vue";
 
 import type { TaskListingRow } from "../listing";
-import type { TaskItem } from "../types";
+import type { TaskItem, TaskStatus } from "../types";
 
 // `line` defaults to a fresh number per row: buildTaskItem keys an item `${path}:${line}`, so two
 // rows built at the same line would render under one `:key` and Vue would reuse a single component
@@ -51,6 +52,76 @@ function row(
     depth: overrides.depth ?? 0,
     context: overrides.context ?? false,
   };
+}
+
+const TASK_NOTE = "Tasks/Ship it.md" as VaultPath;
+
+function noteRow(overrides: { status?: TaskStatus; title?: string } = {}): TaskListingRow {
+  const item: TaskItem = buildTaskItem({
+    provider: "note-property",
+    key: `note-property:${TASK_NOTE}`,
+    path: TASK_NOTE,
+    status: overrides.status ?? "todo",
+    relations: ["date"],
+    capabilities: { movable: false, stampable: false, retargetable: true },
+    display: { kind: "note", path: TASK_NOTE, title: overrides.title ?? "Ship it" },
+  });
+  return {
+    key: item.key,
+    item,
+    source: { kind: "task-note", path: TASK_NOTE, label: "Ship it" },
+    depth: 0,
+    context: false,
+  };
+}
+
+// Stands in for Obsidian's renderer on the one line shape a task-note row hands it — a checkbox
+// followed by an aliased internal link — so the row's own handling of the drawn controls can be driven.
+// The parse is Obsidian's (app.js 1.8.7): the link ends at the first `]]`, a link holding `[[` is
+// not a link, and the alias is everything after the first `|`. Anything else renders as text, so
+// a title that breaks the link leaves no anchor behind.
+function linkLineMarkdown(): MarkdownRenderService {
+  return {
+    render(element: HTMLElement, markdown: string): () => void {
+      const [whole, marker, inner] = /^- \[(.)\] \[\[(.+?)\]\]/u.exec(markdown) ?? [];
+      if (whole !== markdown || marker === undefined || inner === undefined || inner.includes("[[")) {
+        element.textContent = markdown;
+        return () => element.replaceChildren();
+      }
+      const pipe = inner.indexOf("|");
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = marker !== " ";
+      const link = document.createElement("a");
+      link.className = "internal-link";
+      link.dataset.href = inner.slice(0, pipe).trim();
+      link.textContent = inner.slice(pipe + 1).trim();
+      element.replaceChildren(input, link);
+      return () => element.replaceChildren();
+    },
+  } as unknown as MarkdownRenderService;
+}
+
+async function mountNotes(toggle = vi.fn(() => AsyncResult.ok<void>(undefined))) {
+  const workspace = new FakeWorkspaceService();
+  const harness = await testContainer({
+    modules: [tasksCoreModule],
+    overrides: [
+      overrideWith(MarkdownRenderService, linkLineMarkdown()),
+      overrideWith(TickService, { toggle } as unknown as TickService),
+      overrideWith(WorkspaceService, workspace as unknown as WorkspaceService),
+    ],
+  });
+  return { harness, toggle, workspace };
+}
+
+// An anchor without an href has no link role, so it is found by its class, as Obsidian draws it.
+function internalLink(): HTMLElement | null {
+  return document.querySelector<HTMLElement>("a.internal-link");
+}
+
+function renderedCheckbox(): HTMLInputElement {
+  return screen.getByRole<HTMLInputElement>("checkbox");
 }
 
 function stubMarkdown(): MarkdownRenderService {
@@ -220,6 +291,63 @@ describe("TaskList", () => {
 
       await vi.waitFor(() => expect(toggle).toHaveBeenCalledTimes(1));
       expect(harness.notices.messages).toEqual([]);
+    });
+  });
+
+  describe("task notes", () => {
+    it("renders an open task note as an open checkbox and a link titled by the note", async () => {
+      ({ harness } = await mountNotes());
+      harness.render(TaskList, { props: { rows: [noteRow({ status: "todo" })] } });
+
+      expect(renderedCheckbox().checked).toBe(false);
+      const link = internalLink();
+      expect(link?.textContent).toBe("Ship it");
+      expect(link?.dataset.href).toBe("Tasks/Ship it");
+    });
+
+    it("renders a done task note as a ticked checkbox", async () => {
+      ({ harness } = await mountNotes());
+      harness.render(TaskList, { props: { rows: [noteRow({ status: "done" })] } });
+
+      expect(renderedCheckbox().checked).toBe(true);
+    });
+
+    it.each([
+      ["a closing bracket pair", "Fix [[x]] parsing"],
+      ["a trailing bracket", "Tag [a]"],
+      ["a pipe", "This | that"],
+    ])("keeps a title carrying %s whole inside its link", async (_label, title) => {
+      ({ harness } = await mountNotes());
+      harness.render(TaskList, { props: { rows: [noteRow({ title })] } });
+
+      const link = internalLink();
+      expect(link?.dataset.href).toBe("Tasks/Ship it");
+      expect(link?.textContent?.replaceAll("\u{200B}", "")).toBe(title);
+    });
+
+    it("reaches TickService with the task note's item when its checkbox is clicked", async () => {
+      const mounted = await mountNotes();
+      ({ harness } = mounted);
+      const { toggle } = mounted;
+      const target = noteRow();
+      harness.render(TaskList, { props: { rows: [target] } });
+
+      renderedCheckbox().click();
+
+      await vi.waitFor(() => expect(toggle).toHaveBeenCalledTimes(1));
+      expect(toggle).toHaveBeenCalledWith(target.item);
+    });
+
+    it("opens the task note when its link is clicked", async () => {
+      const mounted = await mountNotes();
+      ({ harness } = mounted);
+      const { toggle, workspace } = mounted;
+      harness.render(TaskList, { props: { rows: [noteRow()] } });
+
+      screen.getByText("Ship it", { selector: "a.internal-link" }).click();
+
+      await vi.waitFor(() => expect(workspace.isOpen(TASK_NOTE)).toBe(true));
+      expect(toggle).not.toHaveBeenCalled();
     });
   });
 });

@@ -2500,6 +2500,7 @@
   "tasks_filter_conditions_label": "Condiciones",
   "tasks_filter_conditions_desc": "Qué tareas muestra un listado.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",
+  "tasks_tick_recurring_task_note": "Esta tarea no se marcó. Una nota de tarea recurrente debe completarse en el complemento que gestiona su serie.",
   "tasks_tick_error": "No se pudo marcar la tarea.",
   "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }

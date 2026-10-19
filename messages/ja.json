@@ -2500,6 +2500,7 @@
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "一覧に表示するタスクの条件。",
   "tasks_tick_recurring_needs_tasks_plugin": "このタスクはチェックされませんでした。繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。",
+  "tasks_tick_recurring_task_note": "このタスクはチェックされませんでした。繰り返しのタスクノートは、そのシリーズを管理するプラグインで完了してください。",
   "tasks_tick_error": "タスクをチェックできませんでした。",
   "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

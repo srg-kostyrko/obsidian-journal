@@ -2494,6 +2494,7 @@
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "列表显示哪些任务。",
   "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。",
+  "tasks_tick_recurring_task_note": "此任务未勾选。重复的任务笔记需要在管理其系列的插件中完成。",
   "tasks_tick_error": "无法勾选该任务。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

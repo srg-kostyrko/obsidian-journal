@@ -35,3 +35,7 @@ export function isDone(status: TaskStatus): boolean {
 export function isExcluded(status: TaskStatus): boolean {
   return status === "non-task";
 }
+
+export function tickTargetStatus(status: TaskStatus): TaskStatus {
+  return isDone(status) ? "todo" : "done";
+}

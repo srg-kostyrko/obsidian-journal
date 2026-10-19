@@ -2513,6 +2513,7 @@
   "tasks_filter_conditions_label": "Bedingungen",
   "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",
+  "tasks_tick_recurring_task_note": "Diese Aufgabe wurde nicht abgehakt. Eine wiederkehrende Aufgabennotiz muss in dem Plugin abgeschlossen werden, das ihre Serie verwaltet.",
   "tasks_tick_error": "Die Aufgabe konnte nicht abgehakt werden.",
   "tasks_listing_empty": "Keine Aufgaben entsprechen dieser Abfrage."
 }

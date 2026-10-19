@@ -8,15 +8,9 @@ import { journalsCoreModule } from "@/journals/module";
 import { overrideWith, testContainer } from "@/testing";
 
 import { tasksCoreModule } from "./module";
+import { tickTargetStatus } from "./status";
 import { buildTaskItem } from "./testing";
-import {
-  canonicalSymbol,
-  tickLine,
-  tickRecurringLine,
-  tickTargetStatus,
-  TickService,
-  type RecurringToggle,
-} from "./tick";
+import { canonicalSymbol, tickLine, tickRecurringLine, TickService, type RecurringToggle } from "./tick";
 
 import type { TaskItem, TaskStatus } from "./types";
 
@@ -488,14 +482,20 @@ describe("TickService", () => {
     expect(await contentOf(notes)).toBe(content);
   });
 
-  it("refuses an item that has no line", async () => {
-    const { service } = await build({ content: "- [ ] Ship it\n" });
-    const note = buildTaskItem({ path: PATH, display: { kind: "note", path: PATH, title: "Ship it" } });
+  it("hands a task note to its provider, which writes the status property rather than a line", async () => {
+    const { notes, service } = await build({ content: "- [ ] Ship it\n" });
+    const notePath = "Tasks/Ship it.md" as VaultPath;
+    notes.seed(notePath, "Body\n", { status: "open" });
+    const note = buildTaskItem({
+      provider: "note-property",
+      path: notePath,
+      display: { kind: "note", path: notePath, title: "Ship it" },
+    });
 
-    const result = await service.toggle(note);
+    expectOk(await service.toggle(note));
 
-    expectErr(result);
-    expect(result.error.kind).toBe("not-a-task-line");
+    expect(notes.frontmatterOf(notePath)?.status).toBe("done");
+    expect(await contentOf(notes)).toBe("- [ ] Ship it\n");
   });
 
   it("reports a note that is gone rather than throwing", async () => {

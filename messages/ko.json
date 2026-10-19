@@ -2497,6 +2497,7 @@
   "tasks_filter_conditions_label": "조건",
   "tasks_filter_conditions_desc": "목록에 표시할 작업 조건.",
   "tasks_tick_recurring_needs_tasks_plugin": "이 작업은 완료 처리되지 않았습니다. 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다.",
+  "tasks_tick_recurring_task_note": "이 작업은 완료 처리되지 않았습니다. 반복 작업 노트는 해당 시리즈를 관리하는 플러그인에서 완료해야 합니다.",
   "tasks_tick_error": "작업을 완료 처리할 수 없습니다.",
   "tasks_listing_empty": "이 쿼리와 일치하는 작업이 없습니다."
 }

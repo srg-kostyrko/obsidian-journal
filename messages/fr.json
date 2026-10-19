@@ -2511,6 +2511,7 @@
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Quelles tâches une liste affiche.",
   "tasks_tick_recurring_needs_tasks_plugin": "Cette tâche n'a pas été cochée. Les tâches récurrentes nécessitent le plugin Tasks pour passer à leur prochaine occurrence.",
+  "tasks_tick_recurring_task_note": "Cette tâche n'a pas été cochée. Une note de tâche récurrente doit être terminée dans le plugin qui gère sa série.",
   "tasks_tick_error": "Impossible de cocher la tâche.",
   "tasks_listing_empty": "Aucune tâche ne correspond à cette requête."
 }

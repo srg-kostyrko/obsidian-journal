@@ -2508,6 +2508,7 @@
   "tasks_filter_conditions_label": "Condições",
   "tasks_filter_conditions_desc": "Quais destas tarefas uma listagem exibe.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância.",
+  "tasks_tick_recurring_task_note": "Esta tarefa não foi marcada. Uma nota de tarefa recorrente precisa ser concluída no plugin que gerencia sua série.",
   "tasks_tick_error": "Não foi possível marcar a tarefa.",
   "tasks_listing_empty": "Nenhuma tarefa corresponde a esta consulta."
 }

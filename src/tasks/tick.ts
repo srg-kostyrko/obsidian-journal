@@ -1,19 +1,25 @@
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
-import type { BenignFlowError } from "@/infrastructure/flows";
 import {
   NoteWriteError,
   NoticeService,
   NotesService,
   PluginSettingsReader,
-  type NoteNotFoundError,
   type VaultPath,
 } from "@/infrastructure/host";
 import { AsyncResult, Err, Ok, type Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { checkboxSlice } from "./providers/checkbox/slice";
-import { isDone } from "./status";
+import { NotePropertyTicker } from "./providers/note-property/tick";
+import { tickTargetStatus } from "./status";
+import {
+  NoCanonicalSymbolError,
+  NotATaskLineError,
+  RecurringUnsupportedError,
+  TaskLineMovedError,
+  type TickError,
+} from "./tick-errors";
 
 import type { TaskDisplay, TaskItem, TaskStatus } from "./types";
 
@@ -38,67 +44,12 @@ export type TickRefusal = "moved" | "not-a-task";
 
 export type TickOutcome = { readonly content: string } | { readonly reason: TickRefusal };
 
-export class TaskLineMovedError extends Error {
-  readonly kind = "task-line-moved" as const;
-
-  constructor(
-    readonly path: VaultPath,
-    readonly line: number,
-  ) {
-    super(`Line ${line} of ${path} no longer holds the task it was read from`);
-    this.name = "TaskLineMovedError";
-  }
-}
-
-export class NotATaskLineError extends Error {
-  readonly kind = "not-a-task-line" as const;
-
-  constructor(readonly path: VaultPath) {
-    super(`Item in ${path} has no task line to tick`);
-    this.name = "NotATaskLineError";
-  }
-}
-
-export class NoCanonicalSymbolError extends Error {
-  readonly kind = "no-canonical-symbol" as const;
-
-  constructor(readonly status: TaskStatus) {
-    super(`No marker is configured for ${status}`);
-    this.name = "NoCanonicalSymbolError";
-  }
-}
-
-// Benign: `NoApplicableJournals` is the documented precedent for this shape (CLAUDE.md) — the
-// service already shows its own notice at the point the outcome is otherwise invisible, so a flow
-// wrapping `toggle()` must stay silent on it rather than layering `flow_failure_notice` on top.
-export class RecurringUnsupportedError extends Error implements BenignFlowError {
-  readonly kind = "recurring-unsupported" as const;
-  readonly benign = true as const;
-
-  constructor(readonly path: VaultPath) {
-    super(`${path} carries a recurring task and the Tasks plugin is not available to advance it`);
-    this.name = "RecurringUnsupportedError";
-  }
-}
-
-export type TickError =
-  | TaskLineMovedError
-  | NotATaskLineError
-  | NoCanonicalSymbolError
-  | RecurringUnsupportedError
-  | NoteNotFoundError
-  | NoteWriteError;
-
 // `NaN` is the one that bites: it fails every `<` comparison, `Array.at(NaN)` reads index 0 so a
 // bounds check passes, and `slice(0, NaN)`/`slice(NaN + 1)` then reassemble the note with a copy of
 // itself appended. A fraction does not duplicate — `at` and `slice` truncate alike — but it would
 // silently tick the floored line, which this path refuses to guess at.
 function isAddressableLine(line: number): boolean {
   return Number.isSafeInteger(line) && line >= 0;
-}
-
-export function tickTargetStatus(status: TaskStatus): TaskStatus {
-  return isDone(status) ? "todo" : "done";
 }
 
 // Recognition is many-to-one and writing is one-to-one, so the symbol comes from `canonical` and
@@ -205,6 +156,7 @@ export class TickService {
   readonly #settings = inject(SettingsService).getSlice(checkboxSlice);
   readonly #plugins = inject(PluginSettingsReader);
   readonly #notices = inject(NoticeService);
+  readonly #noteTicker = inject(NotePropertyTicker);
 
   // No plugin, or a plugin exposing no toggle, both refuse rather than write: a programmatic
   // write here would tick the line ourselves and never create the next instance, ending the
@@ -268,6 +220,7 @@ export class TickService {
   // writes the status character itself, which marks such a line done and creates no next instance.
   toggle(item: TaskItem): AsyncResult<void, TickError> {
     const display = item.display;
+    if (display.kind === "note") return this.#noteTicker.toggle(item);
     if (display.kind !== "line") return AsyncResult.err(new NotATaskLineError(item.path));
     // Decidable from the item alone, so it is settled before the note is opened, the same as the
     // symbol below.

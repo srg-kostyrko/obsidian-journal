@@ -2511,6 +2511,7 @@
   "tasks_filter_conditions_label": "Condizioni",
   "tasks_filter_conditions_desc": "Quali di queste attività mostra un elenco.",
   "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",
+  "tasks_tick_recurring_task_note": "Questa attività non è stata contrassegnata. Una nota attività ricorrente va completata nel plugin che ne gestisce la serie.",
   "tasks_tick_error": "Non è stato possibile contrassegnare l'attività.",
   "tasks_listing_empty": "Nessuna attività corrisponde a questa query."
 }
