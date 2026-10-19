@@ -3,22 +3,11 @@ import type { VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskStatus } from "@/tasks";
 import { isTaskStatus } from "@/tasks/status";
 
+import { lowerScalars, scalarText } from "./scalars";
+
 import type { NotePropertySliceState } from "./slice";
 
 const ISO_DATE_PREFIX = /^\d{4}-\d{2}-\d{2}(?:$|[ T])/u;
-
-function scalarText(value: unknown): string | undefined {
-  return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
-    ? String(value)
-    : undefined;
-}
-
-// YAML hands `isTask: true` and `type: 1` over as a boolean and a number, while the rule value is
-// typed as text — matching only strings would make those notes unreachable by any rule.
-function lowerScalars(value: unknown): string[] {
-  const items: unknown[] = Array.isArray(value) ? value : [value];
-  return items.flatMap((item) => scalarText(item)?.toLowerCase() ?? []);
-}
 
 export interface IdentifiableNote {
   // Frontmatter tags only: a body tag marks a passage of the note, not the note itself.

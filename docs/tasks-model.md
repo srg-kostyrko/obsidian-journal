@@ -165,10 +165,13 @@ shows: the journal _asking_ decides, and two journals legitimately give
 different answers about the same note. Without that, a Work and a Personal daily
 journal would both list every task due that day.
 
-That setting arrives with PR 2 of #503. Until it lands every journal behaves as
-**All**: every identified task note is admitted. The principle is stated here so
-the first release does not ship a design that forecloses it, not because it is
-observable yet.
+Each journal's **Dated task notes** setting is that choice: **All** (the
+default, and what a journal with no stored rule does) admits every identified
+task note; **Matching…** narrows them by tag, folder, or property equals value,
+combined with and/or; **None** admits none. It is stored on the journal's config
+entry under `tasks.providers["note-property"]`, so a rename carries it along. It
+can only narrow the global identification, never widen it: a journal never sees
+a note identification rejected.
 
 When several journals ask at once — a tasks view block over a list of journals,
 `tasksFor` with a selector matching several — a dated item is admitted if **any**
@@ -647,7 +650,7 @@ open work hides done task notes too, and its stored `tag` and `heading`
 conditions are skipped for dated items. A `tag` condition a **surface** names
 itself — a fence `tag:` key, a view block's or decoration's own filter — does
 apply, matching frontmatter tags; `heading` still drops. The tag axis for a
-journal's task notes is its dated-task-notes setting (PR 2), not its stored
+journal's task notes is its dated-task-notes setting, not its stored
 filter.
 
 In `composeFilters` terms this is a per-item decision on the journal side of the
@@ -823,7 +826,7 @@ For a cell (journal J, period P) it runs in four steps, in `answerTaskQuestion`:
    removes it does not turn the day back into an empty one.
 
    The dated items come from the same date relation the listing uses, on top of step 1's
-   containment gather: J's visibility admits them (PR 1 behaves as **All**), the stored filter
+   containment gather: J's visibility admits them, the stored filter
    reaches them by `status` only, and the lookup for a cell is a date-range read against the
    `note-property` index, never a walk of notes. A dot can therefore light a day that has **no
    note**. That is intended: the task is dated there.

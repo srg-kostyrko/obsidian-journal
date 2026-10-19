@@ -2,7 +2,7 @@ import { watch } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
-import { JournalsIndex } from "@/journals";
+import { JournalsIndex, JournalsRepository } from "@/journals";
 import { SettingsService } from "@/settings";
 
 import { TaskHostToken, type TaskItem, type TaskProvider } from "../../types";
@@ -10,16 +10,33 @@ import { TaskHostToken, type TaskItem, type TaskProvider } from "../../types";
 import { identifiesNote, readDates, readStatus, readTitle } from "./read";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
 import NotePropertySettingsRow from "./ui/NotePropertySettingsRow.vue";
+import { referencedProperties } from "./visibility";
 
 export class NotePropertyTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
   readonly #notes = inject(NotesService);
   readonly #journals = inject(JournalsIndex);
+  readonly #repository = inject(JournalsRepository);
   readonly #metadata = inject(NoteMetadataService);
   readonly #structure = inject(NoteStructureService);
   readonly #settings = inject(SettingsService).getSlice(notePropertySlice);
+  #referenced: readonly string[] = [];
   readonly id = NOTE_PROPERTY_PROVIDER_ID;
   readonly settingsRow = NotePropertySettingsRow;
+
+  #referencedNow(): readonly string[] {
+    const rules = this.#repository.find().map((journal) => journal.tasks.providers[NOTE_PROPERTY_PROVIDER_ID]);
+    return [...referencedProperties(rules)].toSorted();
+  }
+
+  #snapshot(properties: Record<string, unknown>): Record<string, unknown> {
+    const picked: Record<string, unknown> = {};
+    for (const name of this.#referenced) {
+      const value = properties[name];
+      if (Object.hasOwn(properties, name) && value !== undefined) picked[name] = structuredClone(value);
+    }
+    return picked;
+  }
 
   #itemsFor(path: VaultPath): readonly TaskItem[] {
     const state = this.#settings.state;
@@ -40,7 +57,10 @@ export class NotePropertyTaskProvider implements TaskProvider {
         capabilities: { movable: false, stampable: false, retargetable: true },
         display: { kind: "note", path, title: readTitle(properties, path, state.titleProperty) },
         dates: readDates(properties, state.dates),
-        facts: { frontmatterTags: [...frontmatterTags] },
+        facts:
+          this.#referenced.length === 0
+            ? { frontmatterTags: [...frontmatterTags] }
+            : { frontmatterTags: [...frontmatterTags], properties: this.#snapshot(properties) },
       },
     ];
   }
@@ -57,6 +77,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
 
   start(): () => void {
     let disposed = false;
+    this.#referenced = this.#referencedNow();
     // The registry starts before layout-ready, when the file list is partial and notes restored from
     // cached metadata emit no metadata-changed; index readiness is the signal that the walk is complete.
     if (this.#journals.isReady()) this.#refillAll();
@@ -79,6 +100,15 @@ export class NotePropertyTaskProvider implements TaskProvider {
       () => this.#refillAll(),
       { deep: true },
     );
+    // Items snapshot only the properties some journal's rule names, so a rule naming a new one
+    // leaves every item without it until the refill.
+    const stopRulesWatch = watch(
+      () => this.#referencedNow().join("\n"),
+      () => {
+        this.#referenced = this.#referencedNow();
+        this.#refillAll();
+      },
+    );
     // `created` is ignored: metadata does not exist yet, and metadata-changed follows with content.
     const stops = [
       this.#notes.events.on("metadata-changed", (path) => {
@@ -96,6 +126,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
       disposed = true;
       stopSetUpWatch();
       stopSettingsWatch();
+      stopRulesWatch();
       for (const stop of stops) stop();
     };
   }
