@@ -831,44 +831,52 @@ export class JournalsApiService implements JournalsApi {
         }),
       )
       .with("noteAdded", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "added" || isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          if (event.kind !== "added" || event.reason === "preview" || isNotelet(event.entry)) return;
           (handler as JournalsApiEvents["noteAdded"])({
-            journal: entry.journalName,
-            date: entry.anchor,
-            path: entry.path,
+            journal: event.entry.journalName,
+            date: event.entry.anchor,
+            path: event.entry.path,
+            reason: event.reason,
+            canonical: event.canonical,
           });
         }),
       )
       .with("noteRemoved", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "removed" || isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          if (event.kind !== "removed" || event.reason === "preview" || isNotelet(event.entry)) return;
           (handler as JournalsApiEvents["noteRemoved"])({
-            journal: entry.journalName,
-            date: entry.anchor,
-            path: entry.path,
+            journal: event.entry.journalName,
+            date: event.entry.anchor,
+            path: event.entry.path,
+            reason: event.reason,
           });
         }),
       )
       .with("noteletAdded", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "added" || !isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          const { entry } = event;
+          if (event.kind !== "added" || event.reason === "preview" || !isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteletAdded"])({
             journal: entry.journalName,
             date: entry.anchor,
             type: entry.typeName,
             path: entry.path,
+            reason: event.reason,
+            canonical: event.canonical,
           });
         }),
       )
       .with("noteletRemoved", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "removed" || !isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          const { entry } = event;
+          if (event.kind !== "removed" || event.reason === "preview" || !isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteletRemoved"])({
             journal: entry.journalName,
             date: entry.anchor,
             type: entry.typeName,
             path: entry.path,
+            reason: event.reason,
           });
         }),
       )

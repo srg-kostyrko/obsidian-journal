@@ -13,7 +13,7 @@ import { JournalsIndex } from "./journals-index";
 import { JournalsRepository } from "./repository";
 import { JournalsEventsToken } from "./tokens";
 
-import type { IndexedNote } from "./types";
+import type { EntryOrigin, IndexedNote } from "./types";
 
 export class VaultSubscriptionService {
   readonly #notes = inject(NotesService);
@@ -28,12 +28,27 @@ export class VaultSubscriptionService {
   readonly #cycle = inject(CycleService);
   readonly #journals = inject(JournalsRepository);
   readonly #unsubscribes: (() => void)[] = [];
+  // Notes created after layout-ready but before the startup walk completes. Index readiness waits
+  // for every note to resolve, so it cannot tell such a note from one that existed at launch.
+  readonly #arrivedDuringStartup = new Set<VaultPath>();
 
+  #originOf(path: VaultPath): EntryOrigin {
+    return this.#index.isReady() || this.#arrivedDuringStartup.has(path) ? "live" : "walk";
+  }
+
+  // A walk after startup (a journal created, settings synced in) finds notes that already existed,
+  // so only a note that arrived during startup escapes "walk" here.
   #rebuild(): void {
     for (const path of this.#notes.allMarkdownNotes()) {
-      this.#scan(path, { reconcileCustom: false });
+      const origin = this.#arrivedDuringStartup.has(path) ? "live" : "walk";
+      this.#scan(path, { reconcileCustom: false, origin });
     }
     this.#reconcileCustomJournals();
+  }
+
+  #markReady(): void {
+    this.#index.markReady();
+    this.#arrivedDuringStartup.clear();
   }
 
   // The boot walk needs the file list complete (onLayoutReady — before it
@@ -45,14 +60,14 @@ export class VaultSubscriptionService {
   #rebuildWhenResolved(): void {
     if (this.#allNotesResolved()) {
       this.#rebuild();
-      this.#index.markReady();
+      this.#markReady();
       return;
     }
     const dispose = this.#metadata.onResolved(() => {
       if (!this.#allNotesResolved()) return;
       dispose();
       this.#rebuild();
-      this.#index.markReady();
+      this.#markReady();
     });
     this.#unsubscribes.push(dispose);
   }
@@ -61,7 +76,7 @@ export class VaultSubscriptionService {
     return this.#notes.allMarkdownNotes().every((path) => this.#metadata.get(path).isSome());
   }
 
-  #scan(path: VaultPath, options: { reconcileCustom: boolean }): void {
+  #scan(path: VaultPath, options: { reconcileCustom: boolean; origin: EntryOrigin }): void {
     const fm = this.#readFrontmatter(path);
     if (!fm) {
       this.#index.unregister(path);
@@ -73,7 +88,7 @@ export class VaultSubscriptionService {
       this.#logger.debug("frontmatter not parseable", { path });
       return;
     }
-    const outcome = this.#index.register(entry.value);
+    const outcome = this.#index.register(entry.value, options.origin);
     if (outcome === "collision") {
       this.#logger.warn("note shares an anchor with another note; not the canonical entry", { path });
     }
@@ -123,9 +138,22 @@ export class VaultSubscriptionService {
 
   initialize(): AsyncResult<void, never> {
     this.#unsubscribes.push(
-      this.#notes.events.on("metadata-changed", (path) => this.#scan(path, { reconcileCustom: true })),
-      this.#notes.events.on("renamed", ({ from, to }) => this.#index.transferPath(from, to)),
-      this.#notes.events.on("deleted", (path) => this.#index.unregister(path)),
+      // The boot create-replay reads layoutReady false at event time, so only a genuinely new note
+      // is recorded; a note parsed before the walk completes otherwise existed at launch.
+      this.#notes.events.on("created", ({ path }) => {
+        if (this.#workspace.layoutReady && !this.#index.isReady()) this.#arrivedDuringStartup.add(path);
+      }),
+      this.#notes.events.on("metadata-changed", (path) =>
+        this.#scan(path, { reconcileCustom: true, origin: this.#originOf(path) }),
+      ),
+      this.#notes.events.on("renamed", ({ from, to }) => {
+        if (this.#arrivedDuringStartup.delete(from)) this.#arrivedDuringStartup.add(to);
+        this.#index.transferPath(from, to);
+      }),
+      this.#notes.events.on("deleted", (path) => {
+        this.#arrivedDuringStartup.delete(path);
+        this.#index.unregister(path, "deleted");
+      }),
       // A deleted journal's notes may survive with their frontmatter intact (the "keep" delete
       // mode), so no vault event clears their index entries — drop them by journal name here.
       this.#journalEvents.on("deleted", (journalName) => this.#index.clearJournal(journalName)),

@@ -9,7 +9,22 @@ import { JournalIndex } from "./journal-index";
 import { NoteletIndex } from "./notelet-index";
 import { isNotelet, periodEntryOf } from "./types";
 
-import type { IndexedNote, JournalEntry, JournalsIndexEvents, NoteletEntry } from "./types";
+import type {
+  EntryAddedReason,
+  EntryOrigin,
+  EntryRemovedReason,
+  IndexedNote,
+  JournalEntry,
+  JournalsIndexEvents,
+  NoteletEntry,
+} from "./types";
+
+const REASON_BY_ORIGIN: Readonly<Record<EntryOrigin, EntryAddedReason>> = {
+  walk: "indexed",
+  live: "appeared",
+  created: "created",
+  preview: "preview",
+};
 
 function sameAnswers(a: IndexedNote, b: IndexedNote): boolean {
   const aAnswers = a.answers ?? {};
@@ -47,6 +62,7 @@ export class JournalsIndex {
   readonly #journals = new Map<string, JournalIndex>();
   readonly #notelets = new Map<string, NoteletIndex>();
   readonly #byPath = new Map<VaultPath, IndexedNote>();
+  readonly #previews = new Set<VaultPath>();
   readonly #emitter: TypedEmitter<JournalsIndexEvents> = createNanoEvents();
   readonly #dirty = new Set<string>();
   #flushScheduled = false;
@@ -108,6 +124,21 @@ export class JournalsIndex {
     if (slot !== undefined && slot.isSome() && slot.value === owner) journalIndex?.delete(existing.anchor);
   }
 
+  // A notelet has no slot to lose; a period note is canonical while it owns its (journal, anchor) slot.
+  #isCanonical(entry: IndexedNote): boolean {
+    if (isNotelet(entry)) return true;
+    const slot = this.#journals.get(entry.journalName)?.get(entry.anchor);
+    return slot !== undefined && slot.isSome() && slot.value === entry.path;
+  }
+
+  #emitAdded(entry: IndexedNote, reason: EntryAddedReason): void {
+    this.#emitter.emit("entryChanged", { entry, kind: "added", reason, canonical: this.#isCanonical(entry) });
+  }
+
+  #emitRemoved(entry: IndexedNote, reason: EntryRemovedReason): void {
+    this.#emitter.emit("entryChanged", { entry, kind: "removed", reason });
+  }
+
   whenReady(): Promise<void> {
     return this.#ready;
   }
@@ -150,26 +181,29 @@ export class JournalsIndex {
     return this.#notelets.get(journalName)?.anchorsInRange(start, end) ?? [];
   }
 
-  register(entry: IndexedNote): "registered" | "collision" {
+  register(entry: IndexedNote, origin: EntryOrigin = "live"): "registered" | "collision" {
+    if (origin === "preview") this.#previews.add(entry.path);
     const existing = this.#byPath.get(entry.path);
     if (existing !== undefined && sameSlot(existing, entry)) {
       // The note has not moved, so the slot and the collision verdict below are settled — but
       // the payload can still have changed and must not be skipped along with them.
       if (samePayload(existing, entry)) return "registered";
       this.#byPath.set(entry.path, entry);
-      this.#emitter.emit("entryChanged", { entry, kind: "added" });
+      this.#emitAdded(entry, origin === "preview" ? "preview" : "changed");
       this.#markDirty(entry.journalName);
       return "registered";
     }
+    // An entry already at this path in another slot is the same note re-dated, whatever the origin.
+    const reason = existing === undefined ? REASON_BY_ORIGIN[origin] : "changed";
     if (existing !== undefined) {
       this.#releaseSlot(existing, entry.path);
-      this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
+      this.#emitRemoved(existing, "changed");
       this.#markDirty(existing.journalName);
     }
     if (isNotelet(entry)) {
       this.#noteletIndexFor(entry.journalName).add(entry);
       this.#byPath.set(entry.path, entry);
-      this.#emitter.emit("entryChanged", { entry, kind: "added" });
+      this.#emitAdded(entry, reason);
       this.#markDirty(entry.journalName);
       return "registered";
     }
@@ -187,17 +221,18 @@ export class JournalsIndex {
     const collision = occupant.isSome() && occupant.value !== entry.path;
     if (!collision) journalIndex.set(entry.anchor, entry.path);
     this.#byPath.set(entry.path, entry);
-    this.#emitter.emit("entryChanged", { entry, kind: "added" });
+    this.#emitAdded(entry, reason);
     this.#markDirty(entry.journalName);
     return collision ? "collision" : "registered";
   }
 
-  unregister(path: VaultPath): void {
+  unregister(path: VaultPath, reason: "deleted" | "unindexed" = "unindexed"): void {
     const existing = this.#byPath.get(path);
     if (!existing) return;
+    const preview = this.#previews.delete(path);
     this.#releaseSlot(existing, path);
     this.#byPath.delete(path);
-    this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
+    this.#emitRemoved(existing, preview ? "preview" : reason);
     this.#markDirty(existing.journalName);
   }
 
@@ -217,8 +252,8 @@ export class JournalsIndex {
     }
     this.#byPath.delete(from);
     this.#byPath.set(to, next);
-    this.#emitter.emit("entryChanged", { entry: existing, kind: "removed" });
-    this.#emitter.emit("entryChanged", { entry: next, kind: "added" });
+    this.#emitRemoved(existing, "moved");
+    this.#emitAdded(next, "moved");
     this.#markDirty(existing.journalName);
   }
 
@@ -239,6 +274,7 @@ export class JournalsIndex {
   clear(): void {
     const names = new Set([...this.#journals.keys(), ...this.#notelets.keys()]);
     this.#byPath.clear();
+    this.#previews.clear();
     for (const journalIndex of this.#journals.values()) journalIndex.clear();
     this.#journals.clear();
     for (const noteletIndex of this.#notelets.values()) noteletIndex.clear();

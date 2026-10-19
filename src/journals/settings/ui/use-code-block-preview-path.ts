@@ -20,7 +20,7 @@ export function useCodeBlockPreviewPath(journalName: string): VaultPath {
   // Registered synchronously (not in onMounted): the blocks read the index from a
   // computed, and the index Map is not reactive, so the entry must already exist
   // before the child block components run their own setup.
-  index.register({ journalName, anchor, path });
+  index.register({ journalName, anchor, path }, "preview");
 
   onUnmounted(() => {
     index.unregister(path);
