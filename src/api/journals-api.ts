@@ -70,10 +70,10 @@ function describeDateInput(input: DateInput): string {
   return "the given date-like value";
 }
 
-// The flat keys desugar exactly as the journal-tasks fence's do (toTaskQuery): a status is emitted
-// only when given, because a query condition replaces the journal's own condition of that type.
 const TASK_DATE_CHOICES = new Set<string>(taskDateChoices);
 
+// The flat keys desugar exactly as the journal-tasks fence's do (toTaskQuery): a status is emitted
+// only when given, because a query condition replaces the journal's own condition of that type.
 function taskQueryFor(options: TasksForOptions | undefined): TaskQuery {
   // A JavaScript caller is not held to the type, and an unknown date would match no task note at all.
   if (options?.date !== undefined && !TASK_DATE_CHOICES.has(options.date)) {
