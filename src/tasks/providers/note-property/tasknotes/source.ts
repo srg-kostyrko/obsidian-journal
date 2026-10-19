@@ -37,7 +37,8 @@ export const taskNotesSettingsSchema = v.object({
   taskTag: text("task"),
   taskPropertyName: text(""),
   taskPropertyValue: text(""),
-  excludedFolders: text(""),
+  // TaskNotes' own reader takes a comma-separated string or a list.
+  excludedFolders: v.optional(v.union([v.string(), v.array(v.string())]), ""),
   defaultTaskStatus: text("open"),
   fieldMapping: v.optional(fieldMappingSchema, {}),
   customStatuses: v.optional(v.array(customStatusSchema), DEFAULT_CUSTOM_STATUSES),
@@ -48,9 +49,12 @@ export type TaskNotesSettings = v.InferOutput<typeof taskNotesSettingsSchema>;
 export type TaskNotesRead =
   { kind: "absent" } | { kind: "unrecognised" } | { kind: "read"; settings: TaskNotesSettings };
 
-// A copy that matches no note is worse than no card, so an empty identifier is unreadable.
+// A copy that matches no note is worse than no card, so an empty identifier is unreadable. TaskNotes
+// itself identifies nothing by a property rule missing either its name or its value.
 function identifiesSomething(settings: TaskNotesSettings): boolean {
-  if (settings.taskIdentificationMethod === "property") return settings.taskPropertyName.trim() !== "";
+  if (settings.taskIdentificationMethod === "property") {
+    return settings.taskPropertyName.trim() !== "" && settings.taskPropertyValue.trim() !== "";
+  }
   return settings.taskTag.replace(/^#/, "").trim() !== "";
 }
 

@@ -3,8 +3,8 @@ import type { TaskNotesSettings } from "./source";
 
 type Canonical = "todo" | "in-progress" | "done";
 
-function stripHash(tag: string): string {
-  return tag.replace(/^#/, "");
+function bareTag(tag: string): string {
+  return tag.trim().replace(/^#/, "").trim();
 }
 
 function typeOf(status: { value: string; isCompleted: boolean }): Canonical {
@@ -12,21 +12,33 @@ function typeOf(status: { value: string; isCompleted: boolean }): Canonical {
   return status.value.toLowerCase() === "in-progress" ? "in-progress" : "todo";
 }
 
-function folders(raw: string): string[] {
-  return raw
-    .split(",")
-    .map((folder) => folder.trim().replaceAll(/^\/+|\/+$/g, ""))
+function folders(raw: string | readonly string[]): string[] {
+  const entries = typeof raw === "string" ? raw.split(",") : raw;
+  return entries
+    .map((folder) =>
+      folder
+        .trim()
+        .replaceAll("\\", "/")
+        .replaceAll(/^\/+|\/+$/g, ""),
+    )
     .filter((folder) => folder !== "");
 }
 
+function trimmedFields(fields: TaskNotesSettings["fieldMapping"]): TaskNotesSettings["fieldMapping"] {
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, name]) => [key, name.trim()]),
+  ) as TaskNotesSettings["fieldMapping"];
+}
+
 export function fromTaskNotes(settings: TaskNotesSettings): Partial<NotePropertySliceState> {
-  const { fieldMapping: fields } = settings;
-  const statuses = settings.customStatuses.toSorted((a, b) => a.order - b.order);
+  const fields = trimmedFields(settings.fieldMapping);
+  const trimmed = settings.customStatuses.map((status) => ({ ...status, value: status.value.trim() }));
+  const statuses = trimmed.toSorted((a, b) => a.order - b.order);
 
   const statusMap: Record<string, string> = {};
-  for (const status of settings.customStatuses) statusMap[status.value.toLowerCase()] = typeOf(status);
+  for (const status of trimmed) statusMap[status.value.toLowerCase()] = typeOf(status);
 
-  const defaultStatus = statuses.find((status) => status.value === settings.defaultTaskStatus);
+  const defaultStatus = statuses.find((status) => status.value === settings.defaultTaskStatus.trim());
   const todo =
     defaultStatus !== undefined && typeOf(defaultStatus) === "todo"
       ? defaultStatus
@@ -43,10 +55,10 @@ export function fromTaskNotes(settings: TaskNotesSettings): Partial<NoteProperty
     enabled: true,
     identify:
       settings.taskIdentificationMethod === "property"
-        ? { by: "property", name: settings.taskPropertyName, value: settings.taskPropertyValue }
-        : { by: "tag", tag: `#${stripHash(settings.taskTag)}` },
+        ? { by: "property", name: settings.taskPropertyName.trim(), value: settings.taskPropertyValue.trim() }
+        : { by: "tag", tag: `#${bareTag(settings.taskTag)}` },
     excludedFolders: folders(settings.excludedFolders),
-    archiveTag: fields.archiveTag === "" ? "" : `#${stripHash(fields.archiveTag)}`,
+    archiveTag: bareTag(fields.archiveTag) === "" ? "" : `#${bareTag(fields.archiveTag)}`,
     dates: {
       due: fields.due,
       scheduled: fields.scheduled,

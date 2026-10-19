@@ -65,8 +65,33 @@ describe("TaskNotesSource", () => {
     expect(await readWith(taskNotesPlugin(settings))).toEqual({ kind: "unrecognised" });
   });
 
+  it.each(["", "  "])(
+    "is unrecognised when identifying by property with the value %j, which TaskNotes matches nothing by",
+    async (taskPropertyValue) => {
+      const settings = { taskIdentificationMethod: "property", taskPropertyName: "type", taskPropertyValue };
+      expect(await readWith(taskNotesPlugin(settings))).toEqual({ kind: "unrecognised" });
+    },
+  );
+
+  it("reads excluded folders written as a list, the way TaskNotes accepts them", async () => {
+    const read = await readWith(taskNotesPlugin({ excludedFolders: ["Archive", "Templates"] }));
+    expect(read).toEqual({
+      kind: "read",
+      settings: buildTaskNotesSettings({ excludedFolders: ["Archive", "Templates"] }),
+    });
+  });
+
+  it("is unrecognised when an excluded folder in the list is not text", async () => {
+    expect(await readWith(taskNotesPlugin({ excludedFolders: ["Archive", 3] }))).toEqual({ kind: "unrecognised" });
+  });
+
   it("ignores an empty tag while identifying by property", async () => {
-    const settings = { taskIdentificationMethod: "property", taskTag: "", taskPropertyName: "type" };
+    const settings = {
+      taskIdentificationMethod: "property",
+      taskTag: "",
+      taskPropertyName: "type",
+      taskPropertyValue: "task",
+    };
     const read = await readWith(taskNotesPlugin(settings));
     expect(read.kind).toBe("read");
   });

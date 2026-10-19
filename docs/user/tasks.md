@@ -189,8 +189,8 @@ What is copied:
 The copy is made once. Later changes in TaskNotes' settings do not reach Journals; change them here
 as well, in the same modal. Once **Task notes** has been on, by this card or by hand, the card does
 not come back — not even after you turn **Task notes** off again. Nor does it appear when TaskNotes'
-settings cannot be read, such as when its task tag or property name is empty; set **Task notes** up by
-hand then.
+settings cannot be read, or would identify no note — when its task tag is empty, or, identifying by
+property, its property name or value is; set **Task notes** up by hand then.
 
 ### Which date places a task note
 

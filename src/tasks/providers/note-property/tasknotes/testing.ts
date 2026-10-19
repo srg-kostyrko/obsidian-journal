@@ -1,6 +1,6 @@
 import type { TaskNotesSettings } from "./source";
 
-/** A plugin object carrying TaskNotes 4.13.9's settings fields we read, at its defaults. */
+/** TaskNotes 4.13.9's settings, the fields we read at its defaults, with `overrides` applied. */
 export function buildTaskNotesSettings(overrides: Partial<TaskNotesSettings> = {}): TaskNotesSettings {
   return {
     taskIdentificationMethod: "tag",
