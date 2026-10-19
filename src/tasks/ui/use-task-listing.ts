@@ -40,14 +40,16 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
   // JournalsRepository needs no such ref: its storage is a SettingsService slice, and those are Vue
   // `reactive`, so reading a journal's config inside a watch source tracks it. What it does need is
   // a source that reads it at all — a journal's listing filter is half of what composeFilters
-  // answers with, and editing it bumps neither version above. Serialized rather than handed over by
-  // reference because repository.update replaces the whole entity: any write to one of these
-  // journals re-runs this getter, and only a changed filter then differs from the last value.
-  const scopedFilters = (): string => {
+  // answers with, and each provider's per-journal rule (TaskVisibility) narrows the items; editing
+  // either bumps neither version above. The whole `tasks` block rather than the fields read today,
+  // so a provider gaining a rule needs no edit here. The serialization does not dedupe: the version
+  // shallowRefs make Vue force-trigger this multi-source watch, so any write to one of these
+  // journals rebuilds.
+  const scopedTaskSettings = (): string => {
     const current = request();
     if (current === null) return "";
     const names = current.kind === "period" ? [current.hostJournal, ...current.journalNames] : current.journalNames;
-    return JSON.stringify(names.map((name) => dependencies.journals.get(name).getOrUndefined()?.tasks.filter));
+    return JSON.stringify(names.map((name) => dependencies.journals.get(name).getOrUndefined()?.tasks));
   };
 
   const rows = shallowRef<readonly TaskListingRow[]>([]);
@@ -55,7 +57,7 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
   let token = 0;
 
   watch(
-    [request, indexVersion, tasksVersion, scopedFilters],
+    [request, indexVersion, tasksVersion, scopedTaskSettings],
     async ([current]) => {
       const mine = ++token;
       if (current === null) {

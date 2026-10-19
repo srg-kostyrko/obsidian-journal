@@ -488,6 +488,64 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(1);
     });
 
+    // A visibility edit that names no property changes neither index, so only the reactive
+    // repository read inside the reseed effect can carry it.
+    it("repaints a task-note cell when the journal's visibility changes after mount, with no version bump", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("tasks", { status: "open" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildHarness([decoration]);
+      const period = DayPeriod.containing(date("2026-05-25"));
+      const path = "Tasks/Write report.md" as VaultPath;
+      const tasks = harness.resolve(TaskIndex);
+      tasks.publish("note-property", { path }, [
+        {
+          ...taskItem(path, "todo"),
+          provider: "note-property",
+          relations: ["date"],
+          display: { kind: "note", path, title: "Write report" },
+          dates: { scheduled: period.anchor.toAnchor() },
+          facts: { frontmatterTags: [] },
+        },
+      ]);
+
+      const { captured } = mount(harness, () =>
+        useCellDecorations({
+          periods: () => [period],
+          journalNames: () => ["daily"],
+        }),
+      );
+      await nextTick();
+      const slot = captured.value!.get(key(period))!;
+      expect(slot.value).toHaveLength(1);
+      const versionBefore = tasks.version();
+
+      const journals = harness.resolve(JournalsRepository);
+      const journal = journals.get("daily");
+      if (journal.isNone()) throw new Error("journal missing");
+      const base = journal.value.tasks;
+      journals.update("daily", {
+        tasks: {
+          ...base,
+          providers: { ...base.providers, "note-property": { show: "none", mode: "and", conditions: [] } },
+        },
+      });
+      await nextTick();
+      expect(slot.value).toHaveLength(0);
+
+      journals.update("daily", {
+        tasks: {
+          ...base,
+          providers: { ...base.providers, "note-property": { show: "all", mode: "and", conditions: [] } },
+        },
+      });
+      await nextTick();
+      expect(slot.value).toHaveLength(1);
+      expect(tasks.version()).toBe(versionBefore);
+    });
+
     it("repaints a listing cell when the journal's task filter changes after mount", async () => {
       const decoration = buildDecoration({
         mode: "and",
