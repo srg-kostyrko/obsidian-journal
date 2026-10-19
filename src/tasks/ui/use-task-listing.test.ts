@@ -2,16 +2,20 @@ import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, nextTick, ref } from "vue";
 
 import type { AnchorString } from "@/calendar";
-import type { VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { expectOk } from "@/infrastructure/result/testing";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { tasksCoreModule } from "../module";
+import { NotePropertyTaskProvider } from "../providers/note-property/provider";
+import { NOTE_PROPERTY_PROVIDER_ID } from "../providers/note-property/slice";
 import { DEFAULT_TASK_QUERY } from "../query";
 import { TaskIndex } from "../task-index";
+import { TaskProviderToken } from "../types";
 
 import { useTaskListing, type UseTaskListingResult } from "./use-task-listing";
 
@@ -187,4 +191,51 @@ describe("useTaskListing", () => {
       expect(rows.value.at(0)?.item.key).toBe("new");
     },
   );
+
+  // A tag filter reads a task note's tags at query time; only a version bump rebuilds the listing,
+  // so the tag edit itself has to change what the provider publishes.
+  it("lists a task note under a tag filter once its frontmatter gains the tag, with no other trigger", async () => {
+    const notes = new FakeNotesService();
+    const metadata = new FakeNoteMetadataService();
+    const structures = new FakeNoteStructureService();
+    const harness = await testContainer({
+      modules: [journalsCoreModule, tasksCoreModule],
+      data: {
+        journals: { daily: fixedJournal("daily", { type: "day" }) },
+        tasksNoteProperty: { enabled: true },
+      },
+      overrides: [
+        overrideWith(NotesService, notes as never),
+        overrideWith(NoteMetadataService, metadata as never),
+        overrideWith(NoteStructureService, structures as never),
+      ],
+    });
+    harness.resolve(JournalsIndex).markReady();
+    const path = "Tasks/Ship it.md" as VaultPath;
+    const setTags = (frontmatterTags: string[]) => {
+      metadata.setMetadata(path, { title: "Ship it", tags: frontmatterTags, properties: { scheduled: "2026-09-22" } });
+      structures.setStructure(path, { listItems: [], tags: [], headings: [], frontmatterTags });
+    };
+    notes.seed(path);
+    setTags(["#task"]);
+    const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === NOTE_PROPERTY_PROVIDER_ID);
+    if (!(provider instanceof NotePropertyTaskProvider)) throw new TypeError("note-property provider not registered");
+    provider.start();
+
+    const request: TaskListingRequest = {
+      ...requestFor("2026-09-22" as AnchorString),
+      query: {
+        ...DEFAULT_TASK_QUERY,
+        filter: { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] },
+      },
+    };
+    const { rows, pending } = mountListing(harness, () => request);
+    await vi.waitFor(() => expect(pending.value).toBe(false));
+    expect(rows.value).toEqual([]);
+
+    setTags(["#task", "#work"]);
+    notes.emitMetadataChanged(path);
+
+    await vi.waitFor(() => expect(rows.value.map((row) => row.source.path)).toEqual([path]));
+  });
 });

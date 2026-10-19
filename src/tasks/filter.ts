@@ -19,8 +19,10 @@ function lineItemOf(item: TaskItem, structure: NoteStructure | undefined): Struc
 }
 
 // A whole-note item is tagged by its own frontmatter: it has no line for inline tags to sit on.
-function tagsFor(item: TaskItem, structure: NoteStructure): readonly string[] | undefined {
-  if (item.display.kind === "note") return structure.frontmatterTags;
+// Its tags come from the item, not the live structure, so a tag edit is a change to the item.
+function tagsFor(item: TaskItem, structure: NoteStructure | undefined): readonly string[] | undefined {
+  if (item.display.kind === "note") return item.facts?.frontmatterTags;
+  if (structure === undefined) return undefined;
   const listItem = lineItemOf(item, structure);
   return listItem === undefined ? undefined : tagsOf(listItem, structure);
 }
@@ -48,7 +50,6 @@ function evaluate(condition: TaskCondition, item: TaskItem, structure: NoteStruc
     .with({ type: "tag" }, (c) => {
       if (c.tags.length === 0) return true;
       // Same cold-cache read as the heading branch above: drop rather than exclude.
-      if (structure === undefined) return;
       const tags = tagsFor(item, structure);
       if (tags === undefined) return;
       const hit = c.tags.some((tag) => tags.includes(tag));

@@ -40,6 +40,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
         capabilities: { movable: false, stampable: false, retargetable: true },
         display: { kind: "note", path, title: readTitle(properties, path, state.titleProperty) },
         dates: readDates(properties, state.dates),
+        facts: { frontmatterTags: [...frontmatterTags], properties: { ...properties } },
       },
     ];
   }

@@ -29,7 +29,12 @@ function task(path: VaultPath, lineNumber: number, status: TaskStatus): TaskItem
   });
 }
 
-function taskNote(path: VaultPath, status: TaskStatus, dates?: Partial<Record<TaskDateRole, string>>): TaskItem {
+function taskNote(
+  path: VaultPath,
+  status: TaskStatus,
+  dates?: Partial<Record<TaskDateRole, string>>,
+  frontmatterTags: readonly string[] = ["#task"],
+): TaskItem {
   return buildTaskItem({
     provider: "note-property",
     key: `note-property:${path}`,
@@ -39,6 +44,7 @@ function taskNote(path: VaultPath, status: TaskStatus, dates?: Partial<Record<Ta
     capabilities: { movable: false, stampable: false, retargetable: true },
     display: { kind: "note", path, title: path },
     dates: (dates ?? { scheduled: ANCHOR }) as TaskItem["dates"],
+    facts: { frontmatterTags, properties: {} },
   });
 }
 
@@ -318,8 +324,7 @@ describe("answerTaskQuestion", () => {
     it("does not let the journal's stored tag condition exclude a dated item", () => {
       const dependencies = build({
         journalFilter: [tag("#work")],
-        structures: { [TASK_NOTE]: { ...structureWith([]), frontmatterTags: ["#home"] } },
-        dated: [taskNote(TASK_NOTE, "todo")],
+        dated: [taskNote(TASK_NOTE, "todo", undefined, ["#home"])],
       });
       expect(ask(dependencies, { status: "open" }, null)).toBe(true);
     });
@@ -331,8 +336,7 @@ describe("answerTaskQuestion", () => {
 
     it("applies the decoration's own tag condition to the note's frontmatter tags", () => {
       const dependencies = build({
-        structures: { [TASK_NOTE]: { ...structureWith([]), frontmatterTags: ["#home"] } },
-        dated: [taskNote(TASK_NOTE, "todo")],
+        dated: [taskNote(TASK_NOTE, "todo", undefined, ["#home"])],
       });
       expect(ask(dependencies, taggedOpen("#home"), null)).toBe(true);
       expect(ask(dependencies, taggedOpen("#work"), null)).toBe(false);
@@ -340,8 +344,7 @@ describe("answerTaskQuestion", () => {
 
     it("counts a dated item as something on the day before narrowing, the way a notelet is", () => {
       const dependencies = build({
-        structures: { [TASK_NOTE]: { ...structureWith([]), frontmatterTags: ["#home"] } },
-        dated: [taskNote(TASK_NOTE, "todo")],
+        dated: [taskNote(TASK_NOTE, "todo", undefined, ["#home"])],
       });
       const question: Partial<TaskQuestion> = {
         quantifier: "none",

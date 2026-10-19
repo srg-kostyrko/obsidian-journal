@@ -118,8 +118,25 @@ describe("NotePropertyTaskProvider", () => {
         capabilities: { movable: false, stampable: false, retargetable: true },
         display: { kind: "note", path, title: "a" },
         dates: { scheduled: anchor("2026-10-21") },
+        facts: { frontmatterTags: ["#task"], properties: { scheduled: "2026-10-21" } },
       },
     ]);
+  });
+
+  // Surfaces filter a task note by its tags at query time and rebuild only on a version bump, so an
+  // item that compared equal across a tag edit would leave every mounted filter stale.
+  it("bumps the index version once when a task note's frontmatter tags change", async () => {
+    const { notes, setNote, provider, index } = await build();
+    notes.seed(path);
+    setNote(path);
+    provider.start();
+    const before = index.version();
+
+    setNote(path, { frontmatterTags: ["#task", "#work"] });
+    notes.emitMetadataChanged(path);
+
+    expect(index.version()).toBe(before + 1);
+    expect(index.itemsIn(path).at(0)?.facts?.frontmatterTags).toEqual(["#task", "#work"]);
   });
 
   it("ignores notes without the task tag", async () => {

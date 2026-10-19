@@ -31,6 +31,10 @@ const under = (heading: string): TaskRule => ({
   conditions: [{ type: "heading", condition: "under", headings: [heading] }],
 });
 
+// A note-property item, tagged by the frontmatter it was published with.
+const noteItem = (frontmatterTags: string[]) =>
+  buildTaskItem({ display: { kind: "note", path, title: "Ship it" }, facts: { frontmatterTags, properties: {} } });
+
 describe("matchesFilter", () => {
   it("matches a status alias", () => {
     const filter: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["open"] }] };
@@ -73,19 +77,27 @@ describe("matchesFilter", () => {
     ).toBe(false);
   });
 
-  it("matches a tag on a note item against the note's frontmatter tags", () => {
-    const noteItem = buildTaskItem({ display: { kind: "note", path, title: "Ship it" } });
+  it("matches a tag on a note item against the frontmatter tags the item carries", () => {
     const filter: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
     // The inline #work on line 3 belongs to that line, not to the note.
-    expect(matchesFilter(noteItem, structure, filter)).toBe(false);
-    expect(matchesFilter(noteItem, { ...structure, frontmatterTags: ["#task", "#work"] }, filter)).toBe(true);
+    expect(matchesFilter(noteItem(["#task"]), structure, filter)).toBe(false);
+    expect(matchesFilter(noteItem(["#task", "#work"]), structure, filter)).toBe(true);
+    expect(matchesFilter(noteItem(["#task", "#work"]), undefined, filter)).toBe(true);
+    // The live structure is not consulted: the item's own snapshot decides.
+    expect(matchesFilter(noteItem(["#task"]), { ...structure, frontmatterTags: ["#work"] }, filter)).toBe(false);
     expect(
-      matchesFilter(
-        noteItem,
-        { ...structure, frontmatterTags: ["#work"] },
-        { ...filter, conditions: [{ type: "tag", condition: "lacks", tags: ["#work"] }] },
-      ),
+      matchesFilter(noteItem(["#work"]), structure, {
+        ...filter,
+        conditions: [{ type: "tag", condition: "lacks", tags: ["#work"] }],
+      }),
     ).toBe(false);
+  });
+
+  it("drops a tag condition for a note item that carries no tags of its own", () => {
+    const untagged = buildTaskItem({ display: { kind: "note", path, title: "Ship it" } });
+    const filter: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+    expect(matchesFilter(untagged, { ...structure, frontmatterTags: ["#work"] }, filter)).toBe(true);
+    expect(matchesFilter(untagged, structure, filter)).toBe(true);
   });
 
   it("treats an unresolved metadataCache (structure undefined) as no constraint, not a mismatch", () => {
