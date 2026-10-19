@@ -8,22 +8,31 @@ import { Flows } from "@/infrastructure/flows";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { SettingsService } from "@/settings";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
 import { EditJournalTaskNotesFlow } from "../flows/edit-journal-task-notes.flow";
+import { notePropertySlice } from "../slice";
 
 import NotePropertyJournalRow from "./NotePropertyJournalRow.vue";
 
-async function mount(providers: unknown = {}) {
+async function mount(providers: unknown = {}, enabled = true) {
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
-    data: { journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: { providers } } as never) } },
+    data: {
+      tasksNoteProperty: { enabled },
+      journals: { Daily: fixedJournal("Daily", { type: "day" }, { tasks: { providers } } as never) },
+    },
   });
   const flows = harness.resolve(Flows);
   vi.spyOn(flows, "invoke").mockReturnValue({} as never);
   harness.render(NotePropertyJournalRow, { props: { journalName: "Daily" } });
-  return { flows, repository: harness.resolve(JournalsRepository) };
+  return {
+    flows,
+    repository: harness.resolve(JournalsRepository),
+    slice: harness.resolve(SettingsService).getSlice(notePropertySlice),
+  };
 }
 
 function summary(): string {
@@ -64,6 +73,14 @@ describe("NotePropertyJournalRow", () => {
     });
     await nextTick();
     expect(summary()).toBe(m.tasks_note_visibility_summary_none());
+  });
+
+  it("is absent while the provider is disabled and appears once it is enabled", async () => {
+    const { slice } = await mount({}, false);
+    expect(screen.queryByTestId("note-property-journal-summary")).toBeNull();
+    slice.state.enabled = true;
+    await nextTick();
+    expect(summary()).toBe(m.tasks_note_visibility_summary_all());
   });
 
   it("opens the journal's task-notes modal from the edit button", async () => {
