@@ -175,14 +175,74 @@ export interface JournalsApiError extends Error {
   readonly issues?: readonly AnswerIssue[];
 }
 
+/** Why an entry entered the index. Open on purpose: new reasons are additive, so handle the default case. */
+export type AddedReason = "indexed" | "created" | "appeared" | "changed" | "moved" | (string & {});
+
+/** Why an entry left the index. Open on purpose, like `AddedReason`. */
+export type RemovedReason = "deleted" | "moved" | "changed" | "unindexed" | (string & {});
+
+/** A task's normalized status. Open on purpose: new statuses are additive, so handle the default case. */
+export type TaskStatus = "todo" | "in-progress" | "on-hold" | "done" | "cancelled" | "rolled" | (string & {});
+
+/** `open` is to-do, in progress and on hold; `done` is done and cancelled; any other value names one status. */
+export type TaskStatusFilter = "open" | "done" | "all" | TaskStatus;
+
+export interface TasksForOptions {
+  /** The period's own note, its notelets, or both. Default `both`. */
+  readonly source?: "note" | "notelets" | "both";
+  /** `rollup` adds every in-scope journal's periods inside this one — a month's days. Default `literal`. */
+  readonly depth?: "literal" | "rollup";
+  /** Omitted, the journal's own status condition applies, or `open`. Given, it replaces the journal's. */
+  readonly status?: TaskStatusFilter;
+}
+
+export interface TaskItem {
+  /** The journal whose note holds the task — under `rollup`, not necessarily the one asked about. */
+  readonly journal: string;
+  /** That note's period. */
+  readonly date: string;
+  readonly path: string;
+  readonly source: "note" | "notelet";
+  /** 0-based; null for a task that is a whole note rather than a line in one. */
+  readonly line: number | null;
+  /** The task's lines as written in the note, or a whole-note task's title. */
+  readonly text: string;
+  readonly status: TaskStatus;
+  readonly dates: {
+    readonly due?: string;
+    readonly scheduled?: string;
+    readonly start?: string;
+    readonly done?: string;
+    readonly created?: string;
+  };
+  readonly relations: readonly ("containment" | "date" | (string & {}))[];
+  /** The line of the task enclosing this one in the same note, whether or not that task matched. */
+  readonly parentLine: number | null;
+}
+
 export interface JournalsApiEvents {
   journalCreated: (event: { journal: string }) => void;
   journalRenamed: (event: { from: string; to: string }) => void;
   journalDeleted: (event: { journal: string }) => void;
-  noteAdded: (event: { journal: string; date: string; path: string }) => void;
-  noteRemoved: (event: { journal: string; date: string; path: string }) => void;
-  noteletAdded: (event: { journal: string; date: string; type: string; path: string }) => void;
-  noteletRemoved: (event: { journal: string; date: string; type: string; path: string }) => void;
+  noteAdded: (event: {
+    journal: string;
+    date: string;
+    path: string;
+    reason: AddedReason;
+    /** False for a note sharing its date with the note that owns it, such as a sync-conflict copy. */
+    canonical: boolean;
+  }) => void;
+  noteRemoved: (event: { journal: string; date: string; path: string; reason: RemovedReason }) => void;
+  noteletAdded: (event: {
+    journal: string;
+    date: string;
+    type: string;
+    path: string;
+    reason: AddedReason;
+    /** Always true: notelets do not compete for a date. */
+    canonical: boolean;
+  }) => void;
+  noteletRemoved: (event: { journal: string; date: string; type: string; path: string; reason: RemovedReason }) => void;
 }
 
 export interface JournalsApi {
@@ -196,6 +256,10 @@ export interface JournalsApi {
   notesInRange(selector: JournalSelector, range: DateRange): Promise<readonly JournalNote[]>;
   /** Only the notes on disk. Omit the range for every note the matched journals have written. */
   existingNotes(selector: JournalSelector, range?: DateRange): Promise<readonly ExistingJournalNote[]>;
+  /** The nearest existing note before the period holding the date, gaps skipped. At most one per journal. */
+  previousNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]>;
+  /** The nearest existing note after the period holding the date, gaps skipped. At most one per journal. */
+  nextNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]>;
   journalOf(file: TFile): Promise<ExistingJournalNote | null>;
   noteletOf(file: TFile): Promise<NoteletNote | null>;
   noteletsFor(
@@ -208,6 +272,8 @@ export interface JournalsApi {
     range: DateRange,
     options?: { readonly type?: string },
   ): Promise<readonly NoteletNote[]>;
+  /** What a `journal-tasks` code block in the period's note would list, per matched journal. */
+  tasksFor(selector: JournalSelector, date: DateInput, options?: TasksForOptions): Promise<readonly TaskItem[]>;
   createNotelet(
     selector: JournalSelector,
     date: DateInput,

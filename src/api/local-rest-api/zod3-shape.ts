@@ -75,6 +75,10 @@ function forge(schema: v.GenericSchema | v.GenericSchemaAsync): ForgedNode {
     case "string": {
       return new ForgedNode(schema, { typeName: "ZodString", checks: [], coerce: false, description });
     }
+    case "picklist": {
+      const { options } = schema as v.PicklistSchema<v.PicklistOptions, undefined>;
+      return new ForgedNode(schema, { typeName: "ZodEnum", values: options, description });
+    }
     case "unknown": {
       return new ForgedNode(schema, { typeName: "ZodUnknown", description });
     }

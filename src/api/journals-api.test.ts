@@ -1,8 +1,10 @@
+import { TFile } from "obsidian";
 import { describe, expect, it, vi } from "vitest";
+import { defineComponent } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { Flows } from "@/infrastructure/flows";
-import { NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { AsyncResult, Option } from "@/infrastructure/result";
@@ -15,13 +17,19 @@ import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
 import type { Prompt, PromptAnswer } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
+import { useCodeBlockPreviewPath } from "@/journals/settings/ui/use-code-block-preview-path";
 import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
 import type { NoteletEntry } from "@/journals/types";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import type { ShelfConfig } from "@/shelves/config";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
-import { testContainer } from "@/testing";
+import { tasksCoreModule } from "@/tasks/module";
+import { TaskProviderRegistry } from "@/tasks/provider-registry";
+import { TaskIndex } from "@/tasks/task-index";
+import { buildTaskItem } from "@/tasks/testing";
+import type { TaskItem } from "@/tasks/types";
+import { testContainer, type TestHarness } from "@/testing";
 
 import { JournalsApiService } from "./journals-api";
 import { apiModule } from "./module";
@@ -40,7 +48,7 @@ interface BuildOptions {
 
 async function buildApi(journals: Record<string, JournalConfig>, options: BuildOptions = {}) {
   const harness = await testContainer({
-    modules: [journalsCoreModule, shelvesCoreModule, apiModule],
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals, shelves: options.shelves ?? {} },
     initialize: options.ready === false ? [] : [VaultSubscriptionService],
   });
@@ -729,6 +737,409 @@ describe("JournalsApiService range reads", () => {
     await expect(api.existingNotes("daily", { from: "whenever", to: "2026-08-19" })).rejects.toMatchObject({
       code: "invalid-date",
     });
+  });
+});
+
+function seed(
+  harness: Awaited<ReturnType<typeof buildApi>>["harness"],
+  index: JournalsIndex,
+  notes: readonly (readonly [journalName: string, anchor: string, endDate?: string])[],
+) {
+  for (const [journalName, anchor, endDate] of notes) {
+    harness.host.putFile(`${journalName}/${anchor}.md`, "existing");
+    index.register({
+      journalName,
+      anchor: anchor as AnchorString,
+      path: `${journalName}/${anchor}.md` as VaultPath,
+      ...(endDate !== undefined && { endDate: endDate as AnchorString }),
+    });
+  }
+}
+
+describe("JournalsApiService adjacent reads", () => {
+  it("finds the nearest earlier note before the period holding the date, across a gap", async () => {
+    const { api, index, harness } = await buildApi({ monthly: fixedJournal("monthly", { type: "month" }) });
+    seed(harness, index, [
+      ["monthly", "2026-06-01"],
+      ["monthly", "2026-08-01"],
+      ["monthly", "2026-10-01"],
+    ]);
+
+    const notes = await api.previousNote("monthly", "2026-10-18");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-08-01"]);
+    expect(notes[0]?.path).toBe("monthly/2026-08-01.md");
+  });
+
+  it("finds the nearest later note after the period holding the date, across a gap", async () => {
+    const { api, index, harness } = await buildApi({ monthly: fixedJournal("monthly", { type: "month" }) });
+    seed(harness, index, [
+      ["monthly", "2026-06-01"],
+      ["monthly", "2026-08-01"],
+      ["monthly", "2026-10-01"],
+    ]);
+
+    const notes = await api.nextNote("monthly", "2026-08-15");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-10-01"]);
+  });
+
+  it("steps back from a custom interval's start, not from the date", async () => {
+    const { api, index, harness } = await buildApi({
+      sprints: customJournal("sprints", "month", 1, "2026-03-01"),
+    });
+    seed(harness, index, [
+      ["sprints", "2026-02-01", "2026-02-10"],
+      ["sprints", "2026-02-11"],
+    ]);
+
+    const notes = await api.previousNote("sprints", "2026-02-15");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-02-01"]);
+  });
+
+  it("answers once per matched journal", async () => {
+    const { api, index, harness } = await buildApi({
+      daily: fixedJournal("daily", { type: "day" }),
+      monthly: fixedJournal("monthly", { type: "month" }),
+    });
+    seed(harness, index, [
+      ["daily", "2026-10-09"],
+      ["daily", "2026-10-10"],
+      ["monthly", "2026-08-01"],
+      ["monthly", "2026-09-01"],
+    ]);
+
+    const notes = await api.previousNote({}, "2026-10-18");
+
+    expect(notes.map((note) => `${note.journal}:${note.date}`)).toEqual(["daily:2026-10-10", "monthly:2026-09-01"]);
+  });
+
+  it("leaves out a journal with no note on that side", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    seed(harness, index, [["daily", "2026-10-10"]]);
+
+    await expect(api.previousNote("daily", "2026-10-10")).resolves.toEqual([]);
+    await expect(api.nextNote("daily", "2026-10-10")).resolves.toEqual([]);
+  });
+
+  it("steps past an indexed note whose file is no longer in the vault", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+    seed(harness, index, [["daily", "2026-10-01"]]);
+    index.register({
+      journalName: "daily",
+      anchor: "2026-10-10" as AnchorString,
+      path: "daily/vanished.md" as VaultPath,
+    });
+
+    const notes = await api.previousNote("daily", "2026-10-18");
+
+    expect(notes.map((note) => note.date)).toEqual(["2026-10-01"]);
+  });
+
+  it("waits for the index to be ready", async () => {
+    const { api, index, harness } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) }, { ready: false });
+    let settled = false;
+    const pending = api.previousNote("daily", "2026-10-18").then((notes) => {
+      settled = true;
+      return notes;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    seed(harness, index, [["daily", "2026-10-10"]]);
+    index.markReady();
+
+    await expect(pending).resolves.toHaveLength(1);
+  });
+
+  it("rejects a date it cannot read with invalid-date", async () => {
+    const { api } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
+
+    await expect(api.nextNote("daily", "whenever")).rejects.toMatchObject({ code: "invalid-date" });
+  });
+});
+
+async function buildTasksApi(journals: Record<string, JournalConfig>, shelves: Record<string, ShelfConfig> = {}) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+    data: { journals, shelves },
+    initialize: [VaultSubscriptionService, TaskProviderRegistry],
+  });
+  return {
+    api: harness.resolve(JournalsApiService),
+    index: harness.resolve(JournalsIndex),
+    tasks: harness.resolve(TaskIndex),
+  };
+}
+
+function taskLine(
+  path: string,
+  line: number,
+  markdown: string,
+  overrides: Partial<Pick<TaskItem, "status" | "dates">> & { parentLine?: number } = {},
+): TaskItem {
+  const { parentLine = null, ...rest } = overrides;
+  return buildTaskItem({
+    path: path as VaultPath,
+    key: `${path}:${line}`,
+    display: { kind: "line", path: path as VaultPath, line, endLine: line, parentLine, markdown },
+    ...rest,
+  });
+}
+
+function registerNote(index: JournalsIndex, journalName: string, anchor: string, path: string): void {
+  index.register({ journalName, anchor: anchor as AnchorString, path: path as VaultPath });
+}
+
+describe("JournalsApiService tasksFor", () => {
+  const daily = fixedJournal("daily", { type: "day" });
+  const monthly = fixedJournal("monthly", { type: "month" });
+
+  it("returns the open tasks of the note for the period holding the date, in the public shape", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 3, "- [ ] Ship it 📅 2026-09-30", { dates: { due: "2026-09-30" as AnchorString } }),
+      taskLine("D/2026-09-22.md", 4, "- [x] Shipped", { status: "done" }),
+    ]);
+
+    const found = await api.tasksFor("daily", "2026-09-22");
+
+    expect(found).toEqual([
+      {
+        journal: "daily",
+        date: "2026-09-22",
+        path: "D/2026-09-22.md",
+        source: "note",
+        line: 3,
+        text: "- [ ] Ship it 📅 2026-09-30",
+        status: "todo",
+        dates: { due: "2026-09-30" },
+        relations: ["containment"],
+        parentLine: null,
+      },
+    ]);
+  });
+
+  it("answers status the way the code block's status key does", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [ ] a"),
+      taskLine("D/2026-09-22.md", 2, "- [/] b", { status: "in-progress" }),
+      taskLine("D/2026-09-22.md", 3, "- [x] c", { status: "done" }),
+      taskLine("D/2026-09-22.md", 4, "- [-] d", { status: "cancelled" }),
+    ]);
+    const lines = async (status?: string) => {
+      const found = await api.tasksFor("daily", "2026-09-22", status === undefined ? {} : { status });
+      return found.map((task) => task.line);
+    };
+
+    expect(await lines()).toEqual([1, 2]);
+    expect(await lines("done")).toEqual([3, 4]);
+    expect(await lines("all")).toEqual([1, 2, 3, 4]);
+    expect(await lines("in-progress")).toEqual([2]);
+  });
+
+  it("applies the journal's own listing filter, which an explicit status replaces", async () => {
+    const doneOnly = {
+      ...daily,
+      tasks: {
+        providers: {},
+        filter: {
+          mode: "and" as const,
+          conditions: [{ type: "status" as const, condition: "is" as const, statuses: ["done"] }],
+        },
+      },
+    };
+    const { api, index, tasks } = await buildTasksApi({ daily: doneOnly });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [ ] open"),
+      taskLine("D/2026-09-22.md", 2, "- [x] done", { status: "done" }),
+    ]);
+
+    const bare = await api.tasksFor("daily", "2026-09-22");
+    const explicit = await api.tasksFor("daily", "2026-09-22", { status: "open" });
+
+    expect(bare.map((task) => task.line)).toEqual([2]);
+    expect(explicit.map((task) => task.line)).toEqual([1]);
+  });
+
+  it("reads the notelets of the period too, unless source narrows it", async () => {
+    const { api, index, tasks } = await buildTasksApi({
+      daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_meeting: meeting } }),
+    });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: "2026-09-22" as AnchorString,
+      path: "D/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [ ] in note"),
+    ]);
+    tasks.publish("checkbox", { path: "D/Meeting 1.md" as VaultPath }, [
+      taskLine("D/Meeting 1.md", 1, "- [ ] in meeting"),
+    ]);
+    const sources = async (source?: "note" | "notelets" | "both") => {
+      const found = await api.tasksFor("daily", "2026-09-22", source === undefined ? {} : { source });
+      return found.map((task) => `${task.source}:${task.path}`);
+    };
+
+    expect(await sources()).toEqual(["note:D/2026-09-22.md", "notelet:D/Meeting 1.md"]);
+    expect(await sources("note")).toEqual(["note:D/2026-09-22.md"]);
+    expect(await sources("notelets")).toEqual(["notelet:D/Meeting 1.md"]);
+  });
+
+  it("rolls a month up into its days only when asked", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily, monthly });
+    registerNote(index, "monthly", "2026-09-01", "M/2026-09.md");
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    registerNote(index, "daily", "2026-10-01", "D/2026-10-01.md");
+    tasks.publish("checkbox", { path: "M/2026-09.md" as VaultPath }, [taskLine("M/2026-09.md", 1, "- [ ] month")]);
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [taskLine("D/2026-09-22.md", 1, "- [ ] day")]);
+    tasks.publish("checkbox", { path: "D/2026-10-01.md" as VaultPath }, [
+      taskLine("D/2026-10-01.md", 1, "- [ ] next month"),
+    ]);
+
+    const literal = await api.tasksFor("monthly", "2026-09-15");
+    const rollup = await api.tasksFor("monthly", "2026-09-15", { depth: "rollup" });
+
+    expect(literal.map((task) => task.path)).toEqual(["M/2026-09.md"]);
+    expect(rollup.map((task) => `${task.journal}:${task.date}`)).toEqual(["monthly:2026-09-01", "daily:2026-09-22"]);
+  });
+
+  it("rolls up through the host journal's shelf only", async () => {
+    const otherDaily = fixedJournal("otherDaily", { type: "day" });
+    const { api, index, tasks } = await buildTasksApi(
+      { daily, monthly, otherDaily },
+      {
+        Work: buildShelf("Work", { journals: ["daily", "monthly"] }),
+        Home: buildShelf("Home", { journals: ["otherDaily"] }),
+      },
+    );
+    registerNote(index, "monthly", "2026-09-01", "M/2026-09.md");
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    registerNote(index, "otherDaily", "2026-09-22", "O/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [taskLine("D/2026-09-22.md", 1, "- [ ] work")]);
+    tasks.publish("checkbox", { path: "O/2026-09-22.md" as VaultPath }, [taskLine("O/2026-09-22.md", 1, "- [ ] home")]);
+
+    const rollup = await api.tasksFor("monthly", "2026-09-15", { depth: "rollup" });
+
+    expect(rollup.map((task) => task.path)).toEqual(["D/2026-09-22.md"]);
+  });
+
+  it("lists an item reached through two matched journals once", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily, monthly });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [taskLine("D/2026-09-22.md", 1, "- [ ] day")]);
+
+    const found = await api.tasksFor({}, "2026-09-22", { depth: "rollup" });
+
+    expect(found.map((task) => `${task.journal}:${task.line}`)).toEqual(["daily:1"]);
+  });
+
+  it("returns only matching items, pointing a child at an enclosing task that did not match", async () => {
+    const { api, index, tasks } = await buildTasksApi({ daily });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      taskLine("D/2026-09-22.md", 1, "- [x] parent", { status: "done" }),
+      taskLine("D/2026-09-22.md", 2, "\t- [ ] child", { parentLine: 1 }),
+      taskLine("D/2026-09-22.md", 4, "\t- [ ] under a plain bullet", { parentLine: 3 }),
+    ]);
+
+    const found = await api.tasksFor("daily", "2026-09-22");
+
+    expect(found.map((task) => [task.line, task.parentLine])).toEqual([
+      [2, 1],
+      [4, null],
+    ]);
+  });
+
+  it("waits for the index to be ready", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily }, shelves: {} },
+      initialize: [TaskProviderRegistry],
+    });
+    const api = harness.resolve(JournalsApiService);
+    let settled = false;
+    const pending = api.tasksFor("daily", "2026-09-22").then((found) => {
+      settled = true;
+      return found;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+
+    harness.resolve(JournalsIndex).markReady();
+
+    await expect(pending).resolves.toEqual([]);
+  });
+
+  it("waits for the task providers to start, which on a reload comes after the index is ready", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily }, shelves: {} },
+    });
+    harness.resolve(JournalsIndex).markReady();
+    const api = harness.resolve(JournalsApiService);
+    let settled = false;
+    const pending = api.tasksFor("daily", "2026-09-22").then((found) => {
+      settled = true;
+      return found;
+    });
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+    expect(settled).toBe(false);
+
+    harness.resolve(TaskProviderRegistry).initialize();
+
+    await expect(pending).resolves.toEqual([]);
+  });
+
+  it("rejects with plugin-unloaded when Journals unloads while a note's task text is being read", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily }, shelves: {} },
+      initialize: [VaultSubscriptionService, TaskProviderRegistry],
+    });
+    harness.host.putFile("D/2026-09-22.md", "- [ ] unhydrated");
+    registerNote(harness.resolve(JournalsIndex), "daily", "2026-09-22", "D/2026-09-22.md");
+    const path = "D/2026-09-22.md" as VaultPath;
+    harness.resolve(TaskIndex).publish("checkbox", { path }, [
+      buildTaskItem({
+        path,
+        key: `${path}:0`,
+        display: { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null },
+      }),
+    ]);
+    const read = Promise.withResolvers<{ kind: "ok"; value: string }>();
+    vi.spyOn(harness.resolve(NotesService), "readCached").mockReturnValue(
+      read.promise as unknown as ReturnType<NotesService["readCached"]>,
+    );
+    const api = harness.resolve(JournalsApiService);
+    const pending = api.tasksFor("daily", "2026-09-22");
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+
+    await api[Symbol.asyncDispose]();
+    read.resolve({ kind: "ok", value: "- [ ] unhydrated" });
+
+    await expect(pending).rejects.toMatchObject({ code: "plugin-unloaded" });
+  });
+
+  it("rejects a date it cannot read with invalid-date", async () => {
+    const { api } = await buildTasksApi({ daily });
+
+    await expect(api.tasksFor("daily", "whenever")).rejects.toMatchObject({ code: "invalid-date" });
   });
 });
 
@@ -1469,7 +1880,7 @@ describe("JournalsApiService events", () => {
 
   it("reports an added note by date", async () => {
     const { api, index } = await buildApi({ daily: fixedJournal("daily", { type: "day" }) });
-    const seen: { journal: string; date: string; path: string }[] = [];
+    const seen: { journal: string; date: string; path: string; reason: string; canonical: boolean }[] = [];
     api.on("noteAdded", (event) => {
       seen.push(event);
     });
@@ -1480,7 +1891,9 @@ describe("JournalsApiService events", () => {
       path: "Journal/2026-08-18.md" as VaultPath,
     });
 
-    expect(seen).toEqual([{ journal: "daily", date: "2026-08-18", path: "Journal/2026-08-18.md" }]);
+    expect(seen).toEqual([
+      { journal: "daily", date: "2026-08-18", path: "Journal/2026-08-18.md", reason: "appeared", canonical: true },
+    ]);
   });
 
   it("reports a removed note", async () => {
@@ -1527,7 +1940,8 @@ describe("JournalsApiService events", () => {
         },
       ),
     });
-    const seen: { journal: string; date: string; type: string; path: string }[] = [];
+    const seen: { journal: string; date: string; type: string; path: string; reason: string; canonical: boolean }[] =
+      [];
     api.on("noteletAdded", (event) => {
       seen.push(event);
     });
@@ -1542,7 +1956,16 @@ describe("JournalsApiService events", () => {
       counter: 1,
     });
 
-    expect(seen).toEqual([{ journal: "weekly", date: "2026-08-17", type: "Meeting", path: "Journal/Meeting 1.md" }]);
+    expect(seen).toEqual([
+      {
+        journal: "weekly",
+        date: "2026-08-17",
+        type: "Meeting",
+        path: "Journal/Meeting 1.md",
+        reason: "appeared",
+        canonical: true,
+      },
+    ]);
   });
 
   it("reports a removed notelet", async () => {
@@ -1647,6 +2070,252 @@ describe("JournalsApiService events", () => {
     expect(notesRemoved).toEqual(["Journal/2026-08-17.md"]);
     expect(noteletsAdded).toEqual(["Journal/Meeting 1.md"]);
     expect(noteletsRemoved).toEqual(["Journal/Meeting 1.md"]);
+  });
+});
+
+function claim(date: string) {
+  return { journal: "daily", "journal-date": date };
+}
+
+async function bootApi(seed?: (host: TestHarness["host"]) => void) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+    data: {
+      journals: {
+        daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_meeting: meeting }, prompts: [mood] }),
+      },
+      shelves: {},
+    },
+  });
+  const api = harness.resolve(JournalsApiService);
+  const added: { path: string; reason: string; canonical: boolean }[] = [];
+  const removed: { path: string; reason: string }[] = [];
+  const noteletsAdded: { path: string; reason: string; canonical: boolean }[] = [];
+  api.on("noteAdded", ({ path, reason, canonical }) => {
+    added.push({ path, reason, canonical });
+  });
+  api.on("noteRemoved", ({ path, reason }) => {
+    removed.push({ path, reason });
+  });
+  api.on("noteletAdded", ({ path, reason, canonical }) => {
+    noteletsAdded.push({ path, reason, canonical });
+  });
+  seed?.(harness.host);
+  await harness.resolve(VaultSubscriptionService).initialize();
+  return { harness, api, added, removed, noteletsAdded };
+}
+
+describe("JournalsApiService event reasons", () => {
+  it("marks every note the startup walk finds as indexed", async () => {
+    const { added } = await bootApi((host) => {
+      host.putFile("D/2026-08-17.md", "", claim("2026-08-17"));
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+
+    expect(added).toEqual([
+      { path: "D/2026-08-17.md", reason: "indexed", canonical: true },
+      { path: "D/2026-08-18.md", reason: "indexed", canonical: true },
+    ]);
+  });
+
+  it("marks an existing note whose metadata resolves during startup as indexed, not appeared", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) }, shelves: {} },
+    });
+    const imported = harness.host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    const cache = harness.host.app.metadataCache;
+    const read = cache.getFileCache.bind(cache);
+    const unparsed = vi
+      .spyOn(cache, "getFileCache")
+      .mockImplementation((file) => (file === imported ? null : read(file)));
+    const batches: (() => void)[] = [];
+    vi.spyOn(harness.resolve(NoteMetadataService), "onResolved").mockImplementation((callback) => {
+      batches.push(callback);
+      return () => void batches.splice(batches.indexOf(callback), 1);
+    });
+    const added: { path: string; reason: string }[] = [];
+    harness.resolve(JournalsApiService).on("noteAdded", ({ path, reason }) => {
+      added.push({ path, reason });
+    });
+    await harness.resolve(VaultSubscriptionService).initialize();
+
+    unparsed.mockImplementation(read);
+    harness.host.emitMetadata("D/2026-08-18.md");
+    for (const batch of batches.splice(0)) batch();
+
+    expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "indexed" }]);
+  });
+
+  it("marks a note created after layout-ready as appeared while another note is still unresolved", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily: fixedJournal("daily", { type: "day" }) }, shelves: {} },
+    });
+    const pending = harness.host.putFile("D/2026-08-17.md", "", claim("2026-08-17"));
+    const cache = harness.host.app.metadataCache;
+    const read = cache.getFileCache.bind(cache);
+    const unparsed = vi
+      .spyOn(cache, "getFileCache")
+      .mockImplementation((file) => (file === pending ? null : read(file)));
+    const batches: (() => void)[] = [];
+    vi.spyOn(harness.resolve(NoteMetadataService), "onResolved").mockImplementation((callback) => {
+      batches.push(callback);
+      return () => void batches.splice(batches.indexOf(callback), 1);
+    });
+    const added: { path: string; reason: string }[] = [];
+    harness.resolve(JournalsApiService).on("noteAdded", ({ path, reason }) => {
+      added.push({ path, reason });
+    });
+    await harness.resolve(VaultSubscriptionService).initialize();
+
+    const arrived = harness.host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    harness.host.emitVault("create", arrived);
+    harness.host.emitMetadata("D/2026-08-18.md");
+    unparsed.mockImplementation(read);
+    for (const batch of batches.splice(0)) batch();
+
+    expect(added).toEqual([
+      { path: "D/2026-08-18.md", reason: "appeared" },
+      { path: "D/2026-08-17.md", reason: "indexed" },
+    ]);
+  });
+
+  it("marks a note that shows up after startup as appeared", async () => {
+    const { harness, added } = await bootApi();
+
+    harness.host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    harness.host.emitMetadata("D/2026-08-18.md");
+
+    expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "appeared", canonical: true }]);
+  });
+
+  it("marks an existing note a journal created after startup picks up as indexed", async () => {
+    const { harness, added } = await bootApi((host) => {
+      host.putFile("M/2026-08.md", "", { journal: "monthly", "journal-date": "2026-08-01" });
+    });
+
+    harness.resolve(JournalsRepository).create("monthly", { type: "month" });
+
+    expect(added).toEqual([{ path: "M/2026-08.md", reason: "indexed", canonical: true }]);
+  });
+
+  it("marks a note Journals creates as created", async () => {
+    const { api, added } = await bootApi();
+
+    const { note } = await api.ensureNote("daily", "2026-08-18", { prompt: false, confirm: false });
+
+    expect(added).toEqual([{ path: note.path, reason: "created", canonical: true }]);
+  });
+
+  it("marks an existing file Journals claims as appeared, not created", async () => {
+    const { harness, api, added } = await bootApi();
+    const [planned] = await api.notesFor("daily", "2026-08-18");
+    if (planned?.path == null) throw new Error("no planned path");
+    harness.host.putFile(planned.path, "my own words");
+
+    const { created } = await api.ensureNote("daily", "2026-08-18", { prompt: false, confirm: false });
+
+    expect(created).toBe(false);
+    expect(added).toEqual([{ path: planned.path, reason: "appeared", canonical: true }]);
+  });
+
+  it("marks a re-dated note's remove and add as changed", async () => {
+    const { harness, added, removed } = await bootApi((host) => {
+      host.putFile("D/note.md", "", claim("2026-08-17"));
+    });
+    added.length = 0;
+
+    harness.host.putFile("D/note.md", "", claim("2026-08-18"));
+    harness.host.emitMetadata("D/note.md");
+
+    expect(removed).toEqual([{ path: "D/note.md", reason: "changed" }]);
+    expect(added).toEqual([{ path: "D/note.md", reason: "changed", canonical: true }]);
+  });
+
+  it("marks an edit to a tracked field as changed, with nothing removed", async () => {
+    const { harness, added, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", { ...claim("2026-08-18"), mood: "calm" });
+    });
+    added.length = 0;
+
+    harness.host.putFile("D/2026-08-18.md", "", { ...claim("2026-08-18"), mood: "tired" });
+    harness.host.emitMetadata("D/2026-08-18.md");
+
+    expect(removed).toEqual([]);
+    expect(added).toEqual([{ path: "D/2026-08-18.md", reason: "changed", canonical: true }]);
+  });
+
+  it("marks a rename's remove and add as moved", async () => {
+    const { harness, added, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+    added.length = 0;
+    const file = harness.host.app.vault.getAbstractFileByPath("D/2026-08-18.md");
+    if (!(file instanceof TFile)) throw new Error("no file");
+
+    await harness.host.app.vault.rename(file, "D/renamed.md");
+
+    expect(removed).toEqual([{ path: "D/2026-08-18.md", reason: "moved" }]);
+    expect(added).toEqual([{ path: "D/renamed.md", reason: "moved", canonical: true }]);
+  });
+
+  it("marks a deleted note's removal as deleted", async () => {
+    const { harness, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+    const file = harness.host.app.vault.getAbstractFileByPath("D/2026-08-18.md");
+    if (!(file instanceof TFile)) throw new Error("no file");
+
+    await harness.host.app.fileManager.trashFile(file);
+
+    expect(removed).toEqual([{ path: "D/2026-08-18.md", reason: "deleted" }]);
+  });
+
+  it("marks a note that loses its claim as unindexed", async () => {
+    const { harness, removed } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+
+    harness.host.putFile("D/2026-08-18.md", "", {});
+    harness.host.emitMetadata("D/2026-08-18.md");
+
+    expect(removed).toEqual([{ path: "D/2026-08-18.md", reason: "unindexed" }]);
+  });
+
+  it("marks a second note for an occupied date as not canonical", async () => {
+    const { harness, added } = await bootApi((host) => {
+      host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
+    });
+    added.length = 0;
+
+    harness.host.putFile("D/2026-08-18 (conflict).md", "", claim("2026-08-18"));
+    harness.host.emitMetadata("D/2026-08-18 (conflict).md");
+
+    expect(added).toEqual([{ path: "D/2026-08-18 (conflict).md", reason: "appeared", canonical: false }]);
+  });
+
+  it("marks a notelet Journals creates as created", async () => {
+    const { api, noteletsAdded } = await bootApi();
+
+    const notelet = await api.createNotelet("daily", "2026-08-18", "Meeting", { prompt: false, confirm: false });
+
+    expect(noteletsAdded).toEqual([{ path: notelet.path, reason: "created", canonical: true }]);
+  });
+
+  it("never reports the settings preview's synthetic entry", async () => {
+    const { harness, added, removed } = await bootApi();
+    const Host = defineComponent({
+      template: "<div />",
+      setup() {
+        useCodeBlockPreviewPath("daily");
+      },
+    });
+
+    harness.render(Host).unmount();
+
+    expect(added).toEqual([]);
+    expect(removed).toEqual([]);
   });
 });
 

@@ -74,6 +74,19 @@ describe("zod3Shape", () => {
     expect("issues" in failed && failed.issues?.[0]?.path).toEqual(["journal"]);
   });
 
+  it("advertises a picklist as a string enum and refuses a value outside it", async () => {
+    const shape = { direction: v.pipe(v.picklist(["previous", "next"]), v.description("Which side.")) };
+
+    const json = zodToJsonSchema(z.object(zod3Shape(shape)), { strictUnions: true, pipeStrategy: "input" });
+    const refused = await z.object(zod3Shape(shape)).safeParseAsync({ direction: "sideways" });
+
+    expect(json).toMatchObject({
+      properties: { direction: { type: "string", enum: ["previous", "next"], description: "Which side." } },
+      required: ["direction"],
+    });
+    expect(refused.success).toBe(false);
+  });
+
   it("throws when the shape is built for a kind it does not map", () => {
     expect(() => zod3Shape({ n: v.number() })).toThrow(UnmappedSchemaError);
   });

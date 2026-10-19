@@ -3,7 +3,7 @@ import { match } from "ts-pattern";
 import type { CalendarDate, AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
 import { Flows, UserAborted } from "@/infrastructure/flows";
-import { NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
+import { NoteStructureService, NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
 import { Option } from "@/infrastructure/result";
@@ -27,7 +27,16 @@ import { TimelineService } from "@/journals/timeline";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { isNotelet, periodEntryOf } from "@/journals/types";
 import type { NoteletEntry } from "@/journals/types";
+import { ShelvesRepository } from "@/shelves/repository";
 import { ShelvesService } from "@/shelves/service";
+import { buildTaskListing } from "@/tasks/listing";
+import type { TaskListingDependencies, TaskListingRow } from "@/tasks/listing";
+import { TaskProviderRegistry } from "@/tasks/provider-registry";
+import { DEFAULT_TASK_QUERY } from "@/tasks/query";
+import type { TaskQuery } from "@/tasks/query";
+import { taskRollupScope } from "@/tasks/rollup-scope";
+import { isExcluded } from "@/tasks/status";
+import { TaskIndex } from "@/tasks/task-index";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
 import { ApiError } from "./errors";
@@ -47,6 +56,8 @@ import type {
   NoteletNote,
   OpenNoteletOptions,
   OpenNoteOptions,
+  TaskItem,
+  TasksForOptions,
 } from "./public-api";
 import type { TFile } from "obsidian";
 
@@ -58,10 +69,31 @@ function describeDateInput(input: DateInput): string {
   return "the given date-like value";
 }
 
+// The flat keys desugar exactly as the journal-tasks fence's do (toTaskQuery): a status is emitted
+// only when given, because a query condition replaces the journal's own condition of that type.
+function taskQueryFor(options: TasksForOptions | undefined): TaskQuery {
+  return {
+    scope: {
+      provider: [],
+      source: options?.source ?? DEFAULT_TASK_QUERY.scope.source,
+      depth: options?.depth ?? DEFAULT_TASK_QUERY.scope.depth,
+    },
+    filter: {
+      mode: "and",
+      conditions:
+        options?.status === undefined ? [] : [{ type: "status", condition: "is", statuses: [options.status] }],
+    },
+    sort: "document",
+  };
+}
+
 export class JournalsApiService implements JournalsApi {
   readonly #journals = inject(JournalsRepository);
   readonly #journalEvents = inject(JournalsEventsToken);
   readonly #shelves = inject(ShelvesService);
+  readonly #shelfConfigs = inject(ShelvesRepository);
+  readonly #tasks = inject(TaskIndex);
+  readonly #taskProviders = inject(TaskProviderRegistry);
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
   readonly #index = inject(JournalsIndex);
@@ -74,6 +106,13 @@ export class JournalsApiService implements JournalsApi {
   readonly #workspace = inject(WorkspaceService);
   readonly #inFlight = new Map<string, { readonly request: string; readonly promise: Promise<EnsureResult> }[]>();
   readonly #noteletListingDependencies = { journals: this.#journals, index: this.#index, cycle: this.#cycle };
+  readonly #taskListingDependencies: TaskListingDependencies = {
+    journals: this.#journals,
+    index: this.#index,
+    cycle: this.#cycle,
+    structure: inject(NoteStructureService),
+    tasks: this.#tasks,
+  };
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
   #disposed = false;
@@ -106,6 +145,12 @@ export class JournalsApiService implements JournalsApi {
     // whenReady never settles if readiness never arrives, so a consumer awaiting a call
     // when the user disables Journals would hang forever inside their own plugin.
     await Promise.race([this.#index.whenReady(), this.#unloaded]);
+    this.#assertLoaded();
+  }
+
+  async #readyForTasks(): Promise<void> {
+    await this.#readyForNotes();
+    await Promise.race([this.#taskProviders.whenStarted(), this.#unloaded]);
     this.#assertLoaded();
   }
 
@@ -224,6 +269,47 @@ export class JournalsApiService implements JournalsApi {
       path: this.#pathOf(name, anchor, existingPath),
       file: existingPath === null ? null : this.#files.resolve(existingPath),
     };
+  }
+
+  #existingNoteAt(name: string, anchor: AnchorString): ExistingJournalNote | null {
+    const note = this.#noteAtAnchor(name, anchor);
+    if (note === null) return null;
+    const { path, file } = note;
+    // An indexed entry whose file has since gone is not a note the caller can act on, and
+    // promising ExistingJournalNote means promising both halves are there.
+    return path === null || file === null ? null : { ...note, path, file };
+  }
+
+  async #adjacentNotes(
+    selector: JournalSelector,
+    date: DateInput,
+    direction: "previous" | "next",
+  ): Promise<readonly ExistingJournalNote[]> {
+    await this.#readyForNotes();
+    const calendarDate = this.#date(date);
+    return this.#select(selector).flatMap((name) => {
+      const note = this.#adjacentNote(name, calendarDate, direction);
+      return note === null ? [] : [note];
+    });
+  }
+
+  // Stepping from the period's anchor rather than the date is what keeps the period holding the
+  // date out of "previous"; the walk continues past a stale entry so it cannot hide an older note.
+  #adjacentNote(name: string, date: CalendarDate, direction: "previous" | "next"): ExistingJournalNote | null {
+    const start = this.#cycle.anchorOf(name, date);
+    if (start.isNone()) return null;
+    let from = start.value;
+    for (;;) {
+      const path = direction === "previous" ? this.#index.findPrevious(name, from) : this.#index.findNext(name, from);
+      const anchor = path
+        .flatMap((found) => this.#index.entryByPath(found))
+        .flatMap(periodEntryOf)
+        .map((entry) => entry.anchor);
+      if (anchor.isNone()) return null;
+      const note = this.#existingNoteAt(name, anchor.value);
+      if (note !== null) return note;
+      from = anchor.value;
+    }
   }
 
   // Eligibility is "a note exists OR the date is in timeline", not the resolver's
@@ -428,6 +514,58 @@ export class JournalsApiService implements JournalsApi {
     return this.#toApiError(cause, journal);
   }
 
+  #taskItemFrom(
+    row: TaskListingRow,
+    taskLines: Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>,
+  ): TaskItem | null {
+    const owner = this.#index.entryByPath(row.source.path);
+    if (owner.isNone()) return null;
+    const { item } = row;
+    const display = item.display;
+    return {
+      journal: owner.value.journalName,
+      date: owner.value.anchor,
+      path: item.path,
+      source: row.source.kind,
+      line: display.kind === "line" ? display.line : null,
+      text: display.kind === "line" ? (display.markdown ?? "") : display.title,
+      status: item.status,
+      dates: { ...item.dates },
+      relations: [...item.relations],
+      parentLine:
+        display.kind === "line"
+          ? this.#enclosingTaskLine(this.#taskLinesIn(item.path, taskLines), display.parentLine, display.line)
+          : null,
+    };
+  }
+
+  // The structure's parentLine names the enclosing list item whatever it is, and a list starting at
+  // line 0 hands a child its own line; only another task in the same note is a parent to report.
+  #enclosingTaskLine(
+    byLine: ReadonlyMap<number, TaskListingRow["item"]>,
+    parentLine: number | null,
+    ownLine: number,
+  ): number | null {
+    if (parentLine === null || parentLine === ownLine) return null;
+    const parent = byLine.get(parentLine);
+    return parent === undefined || isExcluded(parent.status) ? null : parentLine;
+  }
+
+  // Built once per note per call: a note's nested tasks would otherwise each rescan its whole list.
+  #taskLinesIn(
+    path: VaultPath,
+    cache: Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>,
+  ): ReadonlyMap<number, TaskListingRow["item"]> {
+    const cached = cache.get(path);
+    if (cached !== undefined) return cached;
+    const byLine = new Map<number, TaskListingRow["item"]>();
+    for (const item of this.#tasks.itemsIn(path)) {
+      if (item.display.kind === "line") byLine.set(item.display.line, item);
+    }
+    cache.set(path, byLine);
+    return byLine;
+  }
+
   async listJournals(selector?: JournalSelector): Promise<readonly JournalInfo[]> {
     return this.#select(selector).flatMap((name) => {
       const config = this.#journals.get(name);
@@ -471,14 +609,52 @@ export class JournalsApiService implements JournalsApi {
     if (window === null) return [];
     return this.#select(selector).flatMap((name) =>
       this.#existingAnchors(name, window).flatMap((anchor) => {
-        const note = this.#noteAtAnchor(name, anchor);
-        if (note === null) return [];
-        const { path, file } = note;
-        // An indexed entry whose file has since gone is not a note the caller can act on, and
-        // promising ExistingJournalNote means promising both halves are there.
-        return path === null || file === null ? [] : [{ ...note, path, file }];
+        const note = this.#existingNoteAt(name, anchor);
+        return note === null ? [] : [note];
       }),
     );
+  }
+
+  async previousNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]> {
+    return this.#adjacentNotes(selector, date, "previous");
+  }
+
+  async nextNote(selector: JournalSelector, date: DateInput): Promise<readonly ExistingJournalNote[]> {
+    return this.#adjacentNotes(selector, date, "next");
+  }
+
+  async tasksFor(selector: JournalSelector, date: DateInput, options?: TasksForOptions): Promise<readonly TaskItem[]> {
+    await this.#readyForTasks();
+    const calendarDate = this.#date(date);
+    const query = taskQueryFor(options);
+    const allJournals = [...this.#journals.find().list()];
+    const allShelves = [...this.#shelfConfigs.find().list()];
+    const seen = new Set<string>();
+    const found: TaskItem[] = [];
+    const taskLines = new Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>();
+    for (const name of this.#select(selector)) {
+      const anchor = this.#cycle.anchorOf(name, calendarDate);
+      if (anchor.isNone()) continue;
+      // The same request a journal-tasks fence in that period's note builds, so the two agree.
+      // The listing reads note text, and resumes into the container after each read.
+      const rows = await Promise.race([
+        buildTaskListing(this.#taskListingDependencies, {
+          kind: "period",
+          hostJournal: name,
+          anchor: anchor.value,
+          journalNames: taskRollupScope(name, allJournals, allShelves),
+          query,
+        }),
+        this.#unloaded,
+      ]);
+      for (const row of rows) {
+        if (row.context || seen.has(row.key)) continue;
+        seen.add(row.key);
+        const task = this.#taskItemFrom(row, taskLines);
+        if (task !== null) found.push(task);
+      }
+    }
+    return found;
   }
 
   async ensureNote(selector: JournalSelector, date: DateInput, options?: EnsureNoteOptions): Promise<EnsureResult> {
@@ -655,44 +831,52 @@ export class JournalsApiService implements JournalsApi {
         }),
       )
       .with("noteAdded", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "added" || isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          if (event.kind !== "added" || event.reason === "preview" || isNotelet(event.entry)) return;
           (handler as JournalsApiEvents["noteAdded"])({
-            journal: entry.journalName,
-            date: entry.anchor,
-            path: entry.path,
+            journal: event.entry.journalName,
+            date: event.entry.anchor,
+            path: event.entry.path,
+            reason: event.reason,
+            canonical: event.canonical,
           });
         }),
       )
       .with("noteRemoved", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "removed" || isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          if (event.kind !== "removed" || event.reason === "preview" || isNotelet(event.entry)) return;
           (handler as JournalsApiEvents["noteRemoved"])({
-            journal: entry.journalName,
-            date: entry.anchor,
-            path: entry.path,
+            journal: event.entry.journalName,
+            date: event.entry.anchor,
+            path: event.entry.path,
+            reason: event.reason,
           });
         }),
       )
       .with("noteletAdded", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "added" || !isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          const { entry } = event;
+          if (event.kind !== "added" || event.reason === "preview" || !isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteletAdded"])({
             journal: entry.journalName,
             date: entry.anchor,
             type: entry.typeName,
             path: entry.path,
+            reason: event.reason,
+            canonical: event.canonical,
           });
         }),
       )
       .with("noteletRemoved", () =>
-        this.#index.events.on("entryChanged", ({ entry, kind }) => {
-          if (kind !== "removed" || !isNotelet(entry)) return;
+        this.#index.events.on("entryChanged", (event) => {
+          const { entry } = event;
+          if (event.kind !== "removed" || event.reason === "preview" || !isNotelet(entry)) return;
           (handler as JournalsApiEvents["noteletRemoved"])({
             journal: entry.journalName,
             date: entry.anchor,
             type: entry.typeName,
             path: entry.path,
+            reason: event.reason,
           });
         }),
       )
