@@ -123,8 +123,9 @@ finds its tasks without opening the modal at all.
 
 - **Identify task notes by** — **Tag**, `#task` by default, or **Property**: a property name, and a
   **Property value** it must hold. Leave the value empty to count every note that has the property at
-  all, which is what reaches a `due:` convention whose notes carry no tag. Both compare ignoring case;
-  a list property matches when any of its items does. A tag counts wherever the note carries it, in its
+  all, which is what reaches a `due:` convention whose notes carry no tag. The tag and the
+  property value compare ignoring case; the property name must match exactly. A list property matches
+  when any of its text items does. A tag counts wherever the note carries it, in its
   properties or in its body.
 - **Excluded folders** — notes inside these folders are never task notes.
 - **Archive tag** — `#archived` by default. A note carrying it is left out, the way TaskNotes hides
@@ -205,7 +206,7 @@ matching property is set in **Date properties** and **Modified property**, the s
 - writes the current time, with its offset from UTC, as `2026-03-10T09:30:00+01:00`, into the modified
   property.
 
-Nothing else in the note changes.
+The note's body and its other property values are left alone.
 
 A **recurring** task note refuses, with a notice. A series is advanced by the plugin that manages it,
 off the completion of its current note; writing `done` ourselves would complete that note and end the
