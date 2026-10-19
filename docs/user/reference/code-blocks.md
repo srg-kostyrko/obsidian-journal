@@ -181,24 +181,35 @@ types:
 ````
 
 Lists the [tasks](/tasks#listing-tasks-in-a-note) of the period the note belongs to, with a checkbox on
-each row that ticks the task in its own note. It needs a note connected to a journal; in one connected
+each row that ticks the task in its own note — [task notes](/tasks#task-notes) dated in the period
+included. It needs a note connected to a journal; in one connected
 to none it lists nothing and says so.
 
-| Option       | Values                                                               | Default    |
-| ------------ | -------------------------------------------------------------------- | ---------- |
-| `provider`   | a list of provider ids, or one id                                    | every one  |
-| `source`     | `note`, `notelets`, `both`                                           | `both`     |
-| `depth`      | `literal`, `rollup`                                                  | `literal`  |
-| `status`     | `open`, `done`, `all`, or one status name such as `on-hold`          | `open`     |
-| `heading`    | a list of headings, or one heading                                   | none       |
-| `tag`        | a list of tags, or one tag                                           | none       |
-| `sort`       | `document`, `status`, `due`, `scheduled`, `start`, `done`, `created` | `document` |
-| `conditions` | a list of full-form conditions, for what the keys above cannot say   | none       |
+| Option       | Values                                                               | Default            |
+| ------------ | -------------------------------------------------------------------- | ------------------ |
+| `provider`   | a list of provider ids, or one id                                    | every one          |
+| `source`     | `note`, `notelets`, `both`                                           | `both`             |
+| `depth`      | `literal`, `rollup`                                                  | `literal`          |
+| `status`     | `open`, `done`, `all`, or one status name such as `on-hold`          | `open`             |
+| `heading`    | a list of headings, or one heading                                   | none               |
+| `tag`        | a list of tags, or one tag                                           | none               |
+| `sort`       | `document`, `status`, `due`, `scheduled`, `start`, `done`, `created` | `document`         |
+| `date`       | `scheduled-or-due`, `due`, `scheduled`, `start`, `done`, `created`   | `scheduled-or-due` |
+| `conditions` | a list of full-form conditions, for what the keys above cannot say   | none               |
 
 `depth: rollup` widens the listing to every other journal in the host's shelf whose periods fall inside
 this one, so a monthly note can list its days' tasks alongside its own. `status`, `heading` and `tag` are
 each shorthand for one condition; the owning journal's own **Listing filter** contributes more. See
-[Tasks](/tasks#a-journal-s-own-listing-filter) for how the two combine.
+[Tasks](/tasks#a-journal-s-own-listing-filter) for how the two combine. `date` names which of a task
+note's dates places it in the period; see [Tasks](/tasks#which-date-places-a-task-note).
+
+The period's checkbox tasks, and the task notes due in it — not those only scheduled in it:
+
+````markdown
+```journal-tasks
+date: due
+```
+````
 
 Everything still open under one heading, most recently due first:
 
