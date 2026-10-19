@@ -419,7 +419,7 @@ export function createFakeHost(): FakeHost {
     // itself is identical, and repairing every reference to the old name is the whole of what
     // it adds. Only the `[[...]]` link form is modelled — enough to tell the two APIs apart.
     async renameFile(file: TFile | TFolder, newPath: string): Promise<void> {
-      if (!(file instanceof TFile)) throw new Error(`not a file: ${file.path}`);
+      if (!(file instanceof TFile)) throw new TypeError(`not a file: ${file.path}`);
       const oldBasename = file.basename;
       await vaultApi.rename(file, newPath);
       const newBasename = file.basename;

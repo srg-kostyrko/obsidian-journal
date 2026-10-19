@@ -59,8 +59,8 @@ describe("BlocksList", () => {
   it("removes a block when the remove button is clicked", async () => {
     const { harness } = await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
     await userEvent.click(screen.getByLabelText(m.view_block_remove()));
-    const repo = harness.resolve(ViewsRepository);
-    expect(repo.get(VIEW_ID).getOr(undefined as never)?.blocks).toEqual([]);
+    const repository = harness.resolve(ViewsRepository);
+    expect(repository.get(VIEW_ID).getOr(undefined as never)?.blocks).toEqual([]);
   });
 
   it("renders a ToolbarStrip when a block's key is 'toolbar'", async () => {
@@ -92,9 +92,9 @@ describe("BlocksList", () => {
       const { harness } = await setup([{ id: BLOCK_A, key: "week-calendar", config: weekConfig }]);
       await userEvent.click(screen.getByLabelText(m.view_block_edit()));
       harness.modals.lastOpen<unknown, Record<string, unknown>>().submit({ ...weekConfig, weeks: "right" });
-      const repo = harness.resolve(ViewsRepository);
+      const repository = harness.resolve(ViewsRepository);
       await waitFor(() => {
-        const block = repo
+        const block = repository
           .get(VIEW_ID)
           .getOr(undefined as never)
           ?.blocks.find((b) => b.id === BLOCK_A);

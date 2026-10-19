@@ -14,7 +14,7 @@ import type { View, ViewId } from "./config";
 const ID_A = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa";
 const ID_B = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb";
 
-async function buildRepo(views: Record<string, View> = {}): Promise<TestHarness> {
+async function buildRepository(views: Record<string, View> = {}): Promise<TestHarness> {
   return testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, viewsCoreModule],
     data: { views },
@@ -24,34 +24,34 @@ async function buildRepo(views: Record<string, View> = {}): Promise<TestHarness>
 describe("ViewsRepository", () => {
   describe("get", () => {
     it("returns None for an unknown view id", async () => {
-      const harness = await buildRepo();
-      const repo = harness.resolve(ViewsRepository);
-      expect(repo.get("missing" as ViewId).isNone()).toBe(true);
+      const harness = await buildRepository();
+      const repository = harness.resolve(ViewsRepository);
+      expect(repository.get("missing" as ViewId).isNone()).toBe(true);
     });
 
     it("returns the stored view for a known id", async () => {
       const stored = buildView(ID_A);
-      const harness = await buildRepo({ [ID_A]: stored });
-      const repo = harness.resolve(ViewsRepository);
-      expect(repo.get(ID_A as ViewId).match({ some: (v) => v, none: () => null })).toEqual(stored);
+      const harness = await buildRepository({ [ID_A]: stored });
+      const repository = harness.resolve(ViewsRepository);
+      expect(repository.get(ID_A as ViewId).match({ some: (v) => v, none: () => null })).toEqual(stored);
     });
   });
 
   describe("find", () => {
     it("iterates all stored views", async () => {
-      const harness = await buildRepo({ [ID_A]: buildView(ID_A), [ID_B]: buildView(ID_B) });
-      const repo = harness.resolve(ViewsRepository);
-      const ids = [...repo.find().entries()].map(([id]) => id);
+      const harness = await buildRepository({ [ID_A]: buildView(ID_A), [ID_B]: buildView(ID_B) });
+      const repository = harness.resolve(ViewsRepository);
+      const ids = [...repository.find().entries()].map(([id]) => id);
       expect(ids).toEqual([ID_A, ID_B]);
     });
   });
 
   describe("inherited update", () => {
     it("rejects an id change via update with InvalidViewUpdateError", async () => {
-      const harness = await buildRepo({ [ID_A]: buildView(ID_A) });
-      const repo = harness.resolve(ViewsRepository);
+      const harness = await buildRepository({ [ID_A]: buildView(ID_A) });
+      const repository = harness.resolve(ViewsRepository);
 
-      const result = repo.update(ID_A as ViewId, { id: ID_B as ViewId });
+      const result = repository.update(ID_A as ViewId, { id: ID_B as ViewId });
 
       expect(result.isErr() && result.error).toBeInstanceOf(InvalidViewUpdateError);
     });

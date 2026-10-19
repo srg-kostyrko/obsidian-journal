@@ -46,9 +46,9 @@ async function buildApi(journals: Record<string, JournalConfig>, options: BuildO
   });
   const api = harness.resolve(JournalsApiService);
   const index = harness.resolve(JournalsIndex);
-  const repo = harness.resolve(JournalsRepository);
+  const repository = harness.resolve(JournalsRepository);
   const flows = vi.spyOn(harness.resolve(Flows), "invoke");
-  return { harness, api, index, repo, flows };
+  return { harness, api, index, repo: repository, flows };
 }
 
 describe("JournalsApiService reads", () => {

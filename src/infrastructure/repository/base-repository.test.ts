@@ -50,7 +50,7 @@ class TestRepository extends BaseRepository<string, Item, TestUnknownError, Test
 describe("BaseRepository", () => {
   let storage: Record<string, Item>;
   let events: Emitter<RepositoryEvents<string, Item>>;
-  let repo: TestRepository;
+  let repository: TestRepository;
 
   beforeEach(() => {
     storage = {
@@ -58,38 +58,38 @@ describe("BaseRepository", () => {
       b: { name: "b", count: 2 },
     };
     events = createNanoEvents<RepositoryEvents<string, Item>>();
-    repo = new TestRepository(storage, events);
+    repository = new TestRepository(storage, events);
   });
 
   describe("count", () => {
     it("returns the number of stored entities", () => {
-      expect(repo.count()).toBe(2);
+      expect(repository.count()).toBe(2);
     });
   });
 
   describe("exists", () => {
     it("returns true when the id is stored", () => {
-      expect(repo.exists("a")).toBe(true);
+      expect(repository.exists("a")).toBe(true);
     });
 
     it("returns false when the id is absent", () => {
-      expect(repo.exists("nope")).toBe(false);
+      expect(repository.exists("nope")).toBe(false);
     });
   });
 
   describe("get", () => {
     it("returns Some when the id is stored", () => {
-      expect(repo.get("a").isSome()).toBe(true);
+      expect(repository.get("a").isSome()).toBe(true);
     });
 
     it("returns None when the id is absent", () => {
-      expect(repo.get("nope").isNone()).toBe(true);
+      expect(repository.get("nope").isNone()).toBe(true);
     });
   });
 
   describe("find", () => {
     it("returns a query iterating every stored entity", () => {
-      expect([...repo.find().list()]).toEqual([
+      expect([...repository.find().list()]).toEqual([
         { name: "a", count: 1 },
         { name: "b", count: 2 },
       ]);
@@ -98,25 +98,25 @@ describe("BaseRepository", () => {
 
   describe("update", () => {
     it("merges changes into the stored entity", () => {
-      repo.update("a", { count: 99 });
+      repository.update("a", { count: 99 });
       expect(storage.a).toEqual({ name: "a", count: 99 });
     });
 
     it("emits updated with the changes", () => {
       const spy = vi.fn();
       events.on("updated", spy);
-      repo.update("a", { count: 99 });
+      repository.update("a", { count: 99 });
       expect(spy).toHaveBeenCalledWith("a", { count: 99 });
     });
 
     it("returns UnknownEntityError when the id is absent", () => {
-      const result = repo.update("nope", { count: 1 });
+      const result = repository.update("nope", { count: 1 });
       expect(result.isErr()).toBe(true);
       expect(result.isErr() && result.error).toBeInstanceOf(TestUnknownError);
     });
 
     it("returns InvalidUpdateError when changes alter the id-key", () => {
-      const result = repo.update("a", { name: "renamed" });
+      const result = repository.update("a", { name: "renamed" });
       expect(result.isErr()).toBe(true);
       expect(result.isErr() && result.error).toBeInstanceOf(TestInvalidUpdateError);
     });
@@ -124,32 +124,32 @@ describe("BaseRepository", () => {
     it("does not emit any event when the id-key is altered", () => {
       const spy = vi.fn();
       events.on("updated", spy);
-      repo.update("a", { name: "renamed" });
+      repository.update("a", { name: "renamed" });
       expect(spy).not.toHaveBeenCalled();
     });
 
     it("does not mutate storage when the id-key is altered", () => {
       const before = { ...storage.a };
-      repo.update("a", { name: "renamed" });
+      repository.update("a", { name: "renamed" });
       expect(storage.a).toEqual(before);
     });
   });
 
   describe("delete", () => {
     it("removes the stored entity", () => {
-      repo.delete("a");
+      repository.delete("a");
       expect(storage.a).toBeUndefined();
     });
 
     it("emits deleted with the id", () => {
       const spy = vi.fn();
       events.on("deleted", spy);
-      repo.delete("a");
+      repository.delete("a");
       expect(spy).toHaveBeenCalledWith("a");
     });
 
     it("returns UnknownEntityError when the id is absent", () => {
-      const result = repo.delete("nope");
+      const result = repository.delete("nope");
       expect(result.isErr()).toBe(true);
       expect(result.isErr() && result.error).toBeInstanceOf(TestUnknownError);
     });
@@ -157,19 +157,19 @@ describe("BaseRepository", () => {
 
   describe("addEntity", () => {
     it("inserts a new entity", () => {
-      repo.add("c", { name: "c", count: 3 });
+      repository.add("c", { name: "c", count: 3 });
       expect(storage.c).toEqual({ name: "c", count: 3 });
     });
 
     it("emits created with the id", () => {
       const spy = vi.fn();
       events.on("created", spy);
-      repo.add("c", { name: "c", count: 3 });
+      repository.add("c", { name: "c", count: 3 });
       expect(spy).toHaveBeenCalledWith("c");
     });
 
     it("returns UnknownEntityError when the id is already stored", () => {
-      const result = repo.add("a", { name: "a", count: 0 });
+      const result = repository.add("a", { name: "a", count: 0 });
       expect(result.isErr()).toBe(true);
       expect(result.isErr() && result.error).toBeInstanceOf(TestUnknownError);
     });

@@ -30,7 +30,7 @@ const addedRow: NavBlockSegment = {
   addDecorations: false,
 };
 
-async function buildRepo(initial: Record<string, JournalConfig> = {}) {
+async function buildRepository(initial: Record<string, JournalConfig> = {}) {
   const harness = await testContainer({ modules: [journalsCoreModule], data: { journals: initial } });
   return {
     repo: harness.resolve(JournalsRepository),
@@ -42,7 +42,7 @@ async function buildRepo(initial: Record<string, JournalConfig> = {}) {
 describe("JournalsRepository", () => {
   describe("create", () => {
     it("inserts a journal with defaults for the given write", async () => {
-      const { repo, storage } = await buildRepo();
+      const { repo, storage } = await buildRepository();
 
       const result = repo.create("daily", { type: "day" });
 
@@ -51,7 +51,7 @@ describe("JournalsRepository", () => {
     });
 
     it("emits created with the journal name", async () => {
-      const { repo, events } = await buildRepo();
+      const { repo, events } = await buildRepository();
       const spy = vi.fn();
       events.on("created", spy);
 
@@ -61,7 +61,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an empty name with InvalidJournalNameError", async () => {
-      const { repo } = await buildRepo();
+      const { repo } = await buildRepository();
 
       const result = repo.create("", { type: "day" });
 
@@ -69,7 +69,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects a name already in use with JournalNameTakenError", async () => {
-      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.create("daily", { type: "day" });
 
@@ -80,7 +80,7 @@ describe("JournalsRepository", () => {
   describe("rename", () => {
     it("stores the entity under the new key with the updated name field", async () => {
       const original = fixedJournal("daily", { type: "day" });
-      const { repo, storage } = await buildRepo({ daily: original });
+      const { repo, storage } = await buildRepository({ daily: original });
 
       repo.rename("daily", "renamed");
 
@@ -89,7 +89,7 @@ describe("JournalsRepository", () => {
 
     it("removes the old key on rename", async () => {
       const original = fixedJournal("daily", { type: "day" });
-      const { repo, storage } = await buildRepo({ daily: original });
+      const { repo, storage } = await buildRepository({ daily: original });
 
       repo.rename("daily", "renamed");
 
@@ -97,7 +97,7 @@ describe("JournalsRepository", () => {
     });
 
     it("emits renamed with old and new name", async () => {
-      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, events } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
       const spy = vi.fn();
       events.on("renamed", spy);
 
@@ -107,7 +107,7 @@ describe("JournalsRepository", () => {
     });
 
     it("does not emit created on rename", async () => {
-      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, events } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
       const created = vi.fn();
       events.on("created", created);
 
@@ -117,7 +117,7 @@ describe("JournalsRepository", () => {
     });
 
     it("does not emit deleted on rename", async () => {
-      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, events } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
       const deleted = vi.fn();
       events.on("deleted", deleted);
 
@@ -127,7 +127,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an empty new name with InvalidJournalNameError", async () => {
-      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.rename("daily", "");
 
@@ -135,7 +135,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects newName equal to oldName with InvalidJournalNameError", async () => {
-      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.rename("daily", "daily");
 
@@ -143,7 +143,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an unknown old name with UnknownJournalError", async () => {
-      const { repo } = await buildRepo();
+      const { repo } = await buildRepository();
 
       const result = repo.rename("nope", "next");
 
@@ -151,7 +151,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects a new name already in use with JournalNameTakenError", async () => {
-      const { repo } = await buildRepo({
+      const { repo } = await buildRepository({
         a: fixedJournal("a", { type: "day" }),
         b: fixedJournal("b", { type: "day" }),
       });
@@ -165,7 +165,7 @@ describe("JournalsRepository", () => {
   describe("clone", () => {
     it("stores a copy of the source config under the new name", async () => {
       const source = fixedJournal("daily", { type: "day" }, { folder: "Daily/", confirmCreation: true });
-      const { repo, storage } = await buildRepo({ daily: source });
+      const { repo, storage } = await buildRepository({ daily: source });
 
       repo.clone("daily", "daily copy");
 
@@ -174,7 +174,7 @@ describe("JournalsRepository", () => {
 
     it("leaves the source journal in place", async () => {
       const source = fixedJournal("daily", { type: "day" });
-      const { repo, storage } = await buildRepo({ daily: source });
+      const { repo, storage } = await buildRepository({ daily: source });
 
       repo.clone("daily", "daily copy");
 
@@ -182,7 +182,7 @@ describe("JournalsRepository", () => {
     });
 
     it("detaches nested values so editing the copy leaves the source untouched", async () => {
-      const { repo, storage } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, storage } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
 
       repo.clone("daily", "daily copy");
       storage["daily copy"]?.navBlock.lines.push([addedRow]);
@@ -193,7 +193,7 @@ describe("JournalsRepository", () => {
     });
 
     it("returns the stored copy", async () => {
-      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.clone("daily", "daily copy");
 
@@ -201,7 +201,7 @@ describe("JournalsRepository", () => {
     });
 
     it("emits cloned with the source and new name", async () => {
-      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, events } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
       const spy = vi.fn();
       events.on("cloned", spy);
 
@@ -211,7 +211,7 @@ describe("JournalsRepository", () => {
     });
 
     it("emits cloned after created so listeners see the stored copy", async () => {
-      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, events } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
       const calls: string[] = [];
       events.on("created", () => calls.push("created"));
       events.on("cloned", () => calls.push("cloned"));
@@ -222,7 +222,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an empty new name with InvalidJournalNameError", async () => {
-      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
 
       const result = repo.clone("daily", "");
 
@@ -230,7 +230,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects an unknown source name with UnknownJournalError", async () => {
-      const { repo } = await buildRepo();
+      const { repo } = await buildRepository();
 
       const result = repo.clone("nope", "copy");
 
@@ -238,7 +238,7 @@ describe("JournalsRepository", () => {
     });
 
     it("rejects a new name already in use with JournalNameTakenError", async () => {
-      const { repo } = await buildRepo({
+      const { repo } = await buildRepository({
         a: fixedJournal("a", { type: "day" }),
         b: fixedJournal("b", { type: "day" }),
       });
@@ -250,7 +250,10 @@ describe("JournalsRepository", () => {
 
     it("writes nothing when the new name is taken", async () => {
       const b = fixedJournal("b", { type: "day" });
-      const { repo, storage } = await buildRepo({ a: { ...fixedJournal("a", { type: "day" }), folder: "A/" }, b });
+      const { repo, storage } = await buildRepository({
+        a: { ...fixedJournal("a", { type: "day" }), folder: "A/" },
+        b,
+      });
 
       repo.clone("a", "b");
 
@@ -259,10 +262,10 @@ describe("JournalsRepository", () => {
   });
 
   describe("inherited update", () => {
-    let harness: Awaited<ReturnType<typeof buildRepo>>;
+    let harness: Awaited<ReturnType<typeof buildRepository>>;
 
     beforeEach(async () => {
-      harness = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      harness = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
     });
 
     it("rejects a name change via update with InvalidJournalUpdateError", () => {
@@ -283,7 +286,7 @@ describe("JournalsRepository", () => {
 
   describe("inherited delete", () => {
     it("removes the entity", async () => {
-      const { repo, storage } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, storage } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
 
       repo.delete("daily");
 
@@ -291,7 +294,7 @@ describe("JournalsRepository", () => {
     });
 
     it("emits deleted with the journal name", async () => {
-      const { repo, events } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo, events } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
       const spy = vi.fn();
       events.on("deleted", spy);
 
@@ -301,7 +304,7 @@ describe("JournalsRepository", () => {
     });
 
     it("returns UnknownJournalError for an unknown name", async () => {
-      const { repo } = await buildRepo();
+      const { repo } = await buildRepository();
 
       const result = repo.delete("nope");
 
@@ -311,7 +314,7 @@ describe("JournalsRepository", () => {
 
   describe("notelet types", () => {
     it("adds a type under its own id", async () => {
-      const { repo } = await buildRepo({ daily: fixedJournal("daily", { type: "day" }) });
+      const { repo } = await buildRepository({ daily: fixedJournal("daily", { type: "day" }) });
       const type = buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" });
 
       const result = repo.addNoteletType("daily", type);
@@ -323,7 +326,7 @@ describe("JournalsRepository", () => {
     it("removes only the deleted type from the record", async () => {
       const seeded = buildNoteletType({ id: "nt_1" as TypeId, name: "Standup" });
       const kept = buildNoteletType({ id: "nt_2" as TypeId, name: "Retro" });
-      const { repo } = await buildRepo({
+      const { repo } = await buildRepository({
         daily: fixedJournal("daily", { type: "day" }, { notelets: { nt_1: seeded, nt_2: kept } }),
       });
 
@@ -334,7 +337,7 @@ describe("JournalsRepository", () => {
     });
 
     it("refuses to add a type to a journal that does not exist", async () => {
-      const { repo } = await buildRepo();
+      const { repo } = await buildRepository();
 
       const result = repo.addNoteletType("gone", buildNoteletType());
 
@@ -343,7 +346,7 @@ describe("JournalsRepository", () => {
     });
 
     it("refuses to delete a type from a journal that does not exist", async () => {
-      const { repo } = await buildRepo();
+      const { repo } = await buildRepository();
 
       const result = repo.deleteNoteletType("gone", "nt_1" as TypeId);
 
@@ -355,7 +358,7 @@ describe("JournalsRepository", () => {
   describe("require", () => {
     it("returns Ok with the journal when it exists", async () => {
       const daily = fixedJournal("daily", { type: "day" });
-      const { repo } = await buildRepo({ daily });
+      const { repo } = await buildRepository({ daily });
 
       const result = repo.require("daily");
 
@@ -363,7 +366,7 @@ describe("JournalsRepository", () => {
     });
 
     it("returns Err with JournalNotFoundError when the journal is absent", async () => {
-      const { repo } = await buildRepo();
+      const { repo } = await buildRepository();
 
       const result = repo.require("nope");
 

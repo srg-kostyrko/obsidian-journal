@@ -39,9 +39,9 @@ describe("EditShelfNameFlow", () => {
     harness.modals.lastOpen<unknown, string>().submit("Office");
     await promise;
 
-    const repo = harness.resolve(ShelvesRepository);
-    expect(repo.get("Work").isNone()).toBe(true);
-    expect(repo.get("Office").getOr(undefined as never)).toEqual(buildShelf("Office", { journals: ["daily"] }));
+    const repository = harness.resolve(ShelvesRepository);
+    expect(repository.get("Work").isNone()).toBe(true);
+    expect(repository.get("Office").getOr(undefined as never)).toEqual(buildShelf("Office", { journals: ["daily"] }));
   });
 
   it("leaves the collection untouched when the modal is cancelled", async () => {

@@ -28,8 +28,8 @@ const props = defineProps<{
 
 const context = useViewContext();
 const appearanceStyle = useCalendarAppearanceStyle();
-const journalsRepo = useService(JournalsRepository);
-const shelvesRepo = useService(ShelvesRepository);
+const journalsRepository = useService(JournalsRepository);
+const shelvesRepository = useService(ShelvesRepository);
 const cycle = useService(CycleService);
 const timeline = useService(TimelineService);
 const scope = useShelfScope(() => context.shelf.value);
@@ -55,7 +55,7 @@ const sections = computed<readonly Section[]>(() => {
   const candidates = displayedJournals.value;
   const out: Section[] = [];
   for (const name of candidates) {
-    const cfg = journalsRepo.get(name).getOrUndefined();
+    const cfg = journalsRepository.get(name).getOrUndefined();
     if (!cfg) continue;
     const entries = cycle
       .intervalsInRange(name, window.value.start, window.value.end)
@@ -76,8 +76,8 @@ const sections = computed<readonly Section[]>(() => {
 // is irrelevant to the resolved cell, so Option.none() is safe here even though there's no single
 // "note behind this row".
 const segmentCells = computed<readonly SegmentDecorationCell[]>(() => {
-  const all = [...journalsRepo.find().list()];
-  const shelfList = [...shelvesRepo.find().list()];
+  const all = [...journalsRepository.find().list()];
+  const shelfList = [...shelvesRepository.find().list()];
   const out: SegmentDecorationCell[] = [];
   for (const section of sections.value) {
     for (const entry of section.entries) {

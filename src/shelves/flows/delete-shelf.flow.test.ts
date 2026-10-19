@@ -26,9 +26,9 @@ describe("DeleteShelfFlow", () => {
     harness.modals.lastOpen<unknown, string>().submit("Personal");
     await promise;
 
-    const repo = harness.resolve(ShelvesRepository);
-    expect(repo.get("Work").isNone()).toBe(true);
-    expect(repo.get("Personal").getOr(undefined as never)?.journals).toEqual(["daily"]);
+    const repository = harness.resolve(ShelvesRepository);
+    expect(repository.get("Work").isNone()).toBe(true);
+    expect(repository.get("Personal").getOr(undefined as never)?.journals).toEqual(["daily"]);
   });
 
   it("leaves the shelf in place when the modal is cancelled", async () => {

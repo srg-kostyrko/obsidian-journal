@@ -613,8 +613,8 @@ describe("DynamicCommandRegistry journal cascade", () => {
   });
 });
 
-function commandsTargeting(commandsRepo: CommandsRepository, journalName: string): [string, CommandConfig][] {
-  return [...commandsRepo.find().entries()].filter(
+function commandsTargeting(commandsRepository: CommandsRepository, journalName: string): [string, CommandConfig][] {
+  return [...commandsRepository.find().entries()].filter(
     ([, command]) => command.target.kind === "journal" && command.target.journalName === journalName,
   );
 }

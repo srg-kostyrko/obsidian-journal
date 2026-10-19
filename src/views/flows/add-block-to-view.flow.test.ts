@@ -15,9 +15,9 @@ import type { ViewId } from "../config";
 
 const VIEW_A = "11111111-1111-4111-8111-111111111111" as ViewId;
 
-function readBlocks(repo: ViewsRepository): { key: string; config: unknown }[] {
+function readBlocks(repository: ViewsRepository): { key: string; config: unknown }[] {
   return (
-    repo
+    repository
       .get(VIEW_A)
       .getOr(undefined as never)
       ?.blocks.map((b) => ({ key: b.key, config: b.config })) ?? []

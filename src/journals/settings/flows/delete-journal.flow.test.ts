@@ -139,11 +139,11 @@ describe("DeleteJournalFlow", () => {
     harness.host.putFile(path, "content", { journal: "daily", "journal-date": "2026-06-01", title: "keep" });
     harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: anchor("2026-06-01"), path });
     const connection = harness.resolve(NoteConnectionService);
-    const repo = harness.resolve(JournalsRepository);
+    const repository = harness.resolve(JournalsRepository);
     const original = connection.disconnectAll.bind(connection);
     let configPresentDuringPurge: boolean | undefined;
     vi.spyOn(connection, "disconnectAll").mockImplementation((journalName: string) => {
-      configPresentDuringPurge = repo.get(journalName).isSome();
+      configPresentDuringPurge = repository.get(journalName).isSome();
       return original(journalName);
     });
     const promise = harness.resolve(Flows).invoke(DeleteJournalFlow, { journalName: "daily" });

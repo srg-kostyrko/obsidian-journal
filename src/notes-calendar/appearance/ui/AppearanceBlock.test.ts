@@ -52,9 +52,9 @@ describe("AppearanceBlock", () => {
     await openSection();
 
     const row = screen.getByText(m.calendar_appearance_selected_ring()).closest(".setting-item");
-    if (!(row instanceof HTMLElement)) throw new Error("selected ring row not found");
+    if (!(row instanceof HTMLElement)) throw new TypeError("selected ring row not found");
     const kind = row.querySelector("select");
-    if (!(kind instanceof HTMLSelectElement)) throw new Error("selected ring picker not found");
+    if (!(kind instanceof HTMLSelectElement)) throw new TypeError("selected ring picker not found");
     await userEvent.selectOptions(kind, "transparent");
 
     expect(harness.settings.getSlice(appearanceSlice).state.selectedRing).toEqual({ type: "transparent" });

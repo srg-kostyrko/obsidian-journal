@@ -80,8 +80,8 @@ describe("ToolbarStrip", () => {
   it("removes an item when its delete button is clicked", async () => {
     const { harness } = await setup([{ id: ITEM_A, key: "shelf-selector", config: {} }]);
     await userEvent.click(screen.getByLabelText(m.view_toolbar_item_remove()));
-    const repo = harness.resolve(ViewsRepository);
-    const items = (repo.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: unknown[] }).items;
+    const repository = harness.resolve(ViewsRepository);
+    const items = (repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: unknown[] }).items;
     expect(items).toEqual([]);
   });
 
@@ -116,10 +116,12 @@ describe("ToolbarStrip", () => {
     const { harness } = await setup([{ id: ITEM_A, key: "button", config }]);
     await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
     harness.modals.lastOpen<unknown, Record<string, unknown>>().submit({ ...config, label: "B" });
-    const repo = harness.resolve(ViewsRepository);
+    const repository = harness.resolve(ViewsRepository);
     await waitFor(() => {
       const items = (
-        repo.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: { config: { label?: string } }[] }
+        repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as {
+          items: { config: { label?: string } }[];
+        }
       ).items;
       expect(items[0]?.config.label).toBe("B");
     });

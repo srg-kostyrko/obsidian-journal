@@ -184,7 +184,11 @@ export default [
   ...obsidianmd.configs.recommended,
   {
     files: ["*.config.{ts,mts,cts}", "vite.config.mts", "vitest.config.mts"],
-    rules: Object.fromEntries(Object.keys(obsidianmd.rules).map((rule) => [`obsidianmd/${rule}`, "off"])),
+    rules: {
+      ...Object.fromEntries(Object.keys(obsidianmd.rules).map((rule) => [`obsidianmd/${rule}`, "off"])),
+      // A config module is one top-level `defineConfig()` call by design.
+      "unicorn/no-top-level-side-effects": "off",
+    },
   },
   {
     languageOptions: {
@@ -304,6 +308,18 @@ export default [
       // manifest still admits; same runtime-support risk as `prefer-iterator-to-array`.
       "unicorn/prefer-set-methods": "off",
       "unicorn/prefer-group-by": "off",
+
+      // Rules newly added to unicorn's recommended set in v78, likewise not adopted.
+      // Strips the ` * ` prefix from every multi-line JSDoc, including those `build:api` publishes.
+      "unicorn/no-asterisk-prefix-in-documentation-comments": "off",
+      // Counts call sites, so it bakes into a helper whatever its one caller passes today and
+      // takes the value out of the test that reads it.
+      "unicorn/no-unnecessary-parameters": "off",
+      // Unwrapping `cond ? [x] : []` to `cond ? x : []` breaks the filter-map pairing.
+      "unicorn/no-unnecessary-array-flat-map": "off",
+      // A default applies only to `undefined`; the `||` and `??` sites it flags also cover `""`
+      // and `null` (legacy settings), so the rewrite is not equivalent.
+      "unicorn/prefer-default-parameters": "off",
 
       "no-restricted-imports": [
         "error",

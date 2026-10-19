@@ -158,15 +158,17 @@ const configuredFolder = computed(() =>
 
 const nameBlocked = computed(() => {
   if (activeType.value) return promptsInTemplate(activeType.value.nameTemplate, activeType.value.prompts).length > 0;
-  return selectedConfig.value
-    ? promptsInTemplate(selectedConfig.value.nameTemplate, selectedConfig.value.prompts).length > 0
-    : false;
+  return (
+    selectedConfig.value !== undefined &&
+    promptsInTemplate(selectedConfig.value.nameTemplate, selectedConfig.value.prompts).length > 0
+  );
 });
 const folderBlocked = computed(() => {
   if (activeType.value) return promptsInTemplate(activeType.value.folder, activeType.value.prompts).length > 0;
-  return selectedConfig.value
-    ? promptsInTemplate(selectedConfig.value.folder, selectedConfig.value.prompts).length > 0
-    : false;
+  return (
+    selectedConfig.value !== undefined &&
+    promptsInTemplate(selectedConfig.value.folder, selectedConfig.value.prompts).length > 0
+  );
 });
 
 const outOfBounds = computed(() => {

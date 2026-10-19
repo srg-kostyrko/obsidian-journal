@@ -287,38 +287,47 @@ export class TemplateEngine {
         position += token.raw.length;
         continue;
       }
-      if (spec.kind === "number") {
-        if (token.format !== undefined && token.format !== ORDINAL_FORMAT) {
-          problems.push({ token, position, problem: "unsupported-number-format" });
-        }
-        if (token.modifiers.some((modifier) => modifier.kind !== "offset")) {
-          problems.push({ token, position, problem: "modifiers-on-non-date" });
-        }
-      } else if (spec.kind === "derived") {
-        if (!hasNumberFormat(token)) {
-          problems.push({ token, position, problem: "unsupported-number-format" });
-        }
-        for (const modifier of token.modifiers) {
-          if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
-            problems.push({ token, position, problem: "unknown-unit" });
+      switch (spec.kind) {
+        case "number": {
+          if (token.format !== undefined && token.format !== ORDINAL_FORMAT) {
+            problems.push({ token, position, problem: "unsupported-number-format" });
           }
+          if (token.modifiers.some((modifier) => modifier.kind !== "offset")) {
+            problems.push({ token, position, problem: "modifiers-on-non-date" });
+          }
+          break;
         }
-      } else if (spec.kind !== "date" && spec.kind !== "clock") {
-        if (token.format !== undefined) {
-          problems.push({ token, position, problem: "format-on-non-date" });
+        case "derived": {
+          if (!hasNumberFormat(token)) {
+            problems.push({ token, position, problem: "unsupported-number-format" });
+          }
+          for (const modifier of token.modifiers) {
+            if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
+              problems.push({ token, position, problem: "unknown-unit" });
+            }
+          }
+          break;
         }
-        if (token.modifiers.length > 0) {
-          problems.push({ token, position, problem: "modifiers-on-non-date" });
+        case "date":
+        case "clock": {
+          // The grammar accepts any word as a boundary unit, and applyModifier drops one it does
+          // not understand — leaving the date silently unsnapped rather than wrong in a way anyone
+          // could see. This problem type was declared from the start and never raised.
+          for (const modifier of token.modifiers) {
+            if (modifier.kind === "offset") {
+              problems.push({ token, position, problem: "offset-on-date" });
+            } else if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
+              problems.push({ token, position, problem: "unknown-unit" });
+            }
+          }
+          break;
         }
-      } else {
-        // The grammar accepts any word as a boundary unit, and applyModifier drops one it does
-        // not understand — leaving the date silently unsnapped rather than wrong in a way anyone
-        // could see. This problem type was declared from the start and never raised.
-        for (const modifier of token.modifiers) {
-          if (modifier.kind === "offset") {
-            problems.push({ token, position, problem: "offset-on-date" });
-          } else if (modifier.kind === "boundary" && !isBoundaryUnit(modifier.unit)) {
-            problems.push({ token, position, problem: "unknown-unit" });
+        default: {
+          if (token.format !== undefined) {
+            problems.push({ token, position, problem: "format-on-non-date" });
+          }
+          if (token.modifiers.length > 0) {
+            problems.push({ token, position, problem: "modifiers-on-non-date" });
           }
         }
       }

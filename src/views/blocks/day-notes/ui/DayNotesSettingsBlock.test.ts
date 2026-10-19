@@ -24,7 +24,7 @@ async function mountSettings() {
 
 function inputFor(name: string): HTMLElement {
   const row = screen.getByText(name).closest(".setting-item");
-  if (!(row instanceof HTMLElement)) throw new Error(`No row named ${name}`);
+  if (!(row instanceof HTMLElement)) throw new TypeError(`No row named ${name}`);
   return within(row).getByRole("textbox");
 }
 

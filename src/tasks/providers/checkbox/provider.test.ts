@@ -92,7 +92,7 @@ async function build(sliceState: Record<string, unknown> = {}) {
     overrides: [overrideWith(TaskHostToken, host as never), overrideWith(NoteStructureService, structures as never)],
   });
   const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
-  if (!(provider instanceof CheckboxTaskProvider)) throw new Error("checkbox provider not registered");
+  if (!(provider instanceof CheckboxTaskProvider)) throw new TypeError("checkbox provider not registered");
   return { host, structures, provider, harness };
 }
 

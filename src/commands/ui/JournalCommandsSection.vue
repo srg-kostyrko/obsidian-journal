@@ -22,7 +22,7 @@ import type { CommandConfig } from "../config";
 const { journalName } = defineProps<{ journalName: string }>();
 
 const flows = useService(Flows);
-const commandsRepo = useService(CommandsRepository);
+const commandsRepository = useService(CommandsRepository);
 const journalsVM = useService(JournalsViewModel);
 
 const writeType = computed<JournalWrite["type"]>(
@@ -30,7 +30,7 @@ const writeType = computed<JournalWrite["type"]>(
 );
 
 const entries = computed<readonly [string, CommandConfig, JournalWrite["type"]][]>(() =>
-  [...commandsRepo.find().entries()]
+  [...commandsRepository.find().entries()]
     .filter(([, command]) => command.target.kind === "journal" && command.target.journalName === journalName)
     .map(([id, command]): [string, CommandConfig, JournalWrite["type"]] => [id, command, writeType.value])
     .toSorted((a, b) => a[1].name.localeCompare(b[1].name)),
