@@ -1,0 +1,62 @@
+import * as v from "valibot";
+
+import { inject } from "@/infrastructure/di";
+import { PluginSettingsReader } from "@/infrastructure/host";
+
+const text = (fallback: string) => v.optional(v.string(), fallback);
+
+const customStatusSchema = v.object({
+  value: v.string(),
+  isCompleted: v.optional(v.boolean(), false),
+  order: v.optional(v.number(), 0),
+});
+
+const fieldMappingSchema = v.object({
+  status: text("status"),
+  due: text("due"),
+  scheduled: text("scheduled"),
+  title: text("title"),
+  completedDate: text("completedDate"),
+  dateCreated: text("dateCreated"),
+  dateModified: text("dateModified"),
+  recurrence: text("recurrence"),
+  recurrenceParent: text("recurrence_parent"),
+  archiveTag: text("archived"),
+});
+
+const DEFAULT_CUSTOM_STATUSES = [
+  { value: "none", isCompleted: false, order: 0 },
+  { value: "open", isCompleted: false, order: 1 },
+  { value: "in-progress", isCompleted: false, order: 2 },
+  { value: "done", isCompleted: true, order: 3 },
+];
+
+// Every field is optional with TaskNotes' own default; only a wrong-typed value makes the read unrecognised.
+export const taskNotesSettingsSchema = v.object({
+  taskIdentificationMethod: v.optional(v.picklist(["tag", "property"]), "tag"),
+  taskTag: text("task"),
+  taskPropertyName: text(""),
+  taskPropertyValue: text(""),
+  excludedFolders: text(""),
+  defaultTaskStatus: text("open"),
+  fieldMapping: v.optional(fieldMappingSchema, {}),
+  customStatuses: v.optional(v.array(customStatusSchema), DEFAULT_CUSTOM_STATUSES),
+});
+
+export type TaskNotesSettings = v.InferOutput<typeof taskNotesSettingsSchema>;
+
+export type TaskNotesRead =
+  { kind: "absent" } | { kind: "unrecognised" } | { kind: "read"; settings: TaskNotesSettings };
+
+export class TaskNotesSource {
+  readonly #reader = inject(PluginSettingsReader);
+
+  read(): TaskNotesRead {
+    const plugin = this.#reader.communityPlugin("tasknotes");
+    if (plugin.isNone()) return { kind: "absent" };
+    const settings = (plugin.value as { settings?: unknown }).settings;
+    const parsed = v.safeParse(taskNotesSettingsSchema, settings);
+    if (!parsed.success) return { kind: "unrecognised" };
+    return { kind: "read", settings: parsed.output };
+  }
+}
