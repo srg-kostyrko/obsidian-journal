@@ -85,6 +85,7 @@ describe("EditNotePropertyProviderModal", () => {
     expect(submit).toHaveBeenCalled();
     expect(JSON.parse(JSON.stringify(slice.state))).toEqual({
       enabled: false,
+      setUp: false,
       identify: { by: "property", name: "type", value: "task" },
       excludedFolders: ["Templates"],
       archiveTag: "#old",

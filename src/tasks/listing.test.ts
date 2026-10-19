@@ -1,8 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
-import { NoteMetadataService, NotesService, type NoteStructure, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
+import {
+  NoteMetadataService,
+  NoteStructureService,
+  NotesService,
+  type NoteStructure,
+  type VaultPath,
+} from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { Option } from "@/infrastructure/result";
 import { JournalsIndex, type NoteletEntry } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
@@ -840,15 +846,22 @@ interface TaskNoteFixture {
 async function publishedTaskNotes(fixtures: Partial<Record<VaultPath, TaskNoteFixture>>): Promise<TaskIndex> {
   const notes = new FakeNotesService();
   const metadata = new FakeNoteMetadataService();
+  const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
     data: { tasksNoteProperty: { enabled: true } },
-    overrides: [overrideWith(NotesService, notes as never), overrideWith(NoteMetadataService, metadata as never)],
+    overrides: [
+      overrideWith(NotesService, notes as never),
+      overrideWith(NoteMetadataService, metadata as never),
+      overrideWith(NoteStructureService, structures as never),
+    ],
   });
   harness.resolve(JournalsIndex).markReady();
   for (const [path, fixture] of Object.entries(fixtures) as [VaultPath, TaskNoteFixture][]) {
+    const tags = [...(fixture.tags ?? ["#task"])];
     notes.seed(path);
-    metadata.setMetadata(path, { title: "a", tags: [...(fixture.tags ?? ["#task"])], properties: fixture.properties });
+    metadata.setMetadata(path, { title: "a", tags, properties: fixture.properties });
+    structures.setStructure(path, { ...EMPTY_STRUCTURE, frontmatterTags: tags });
   }
   const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === NOTE_PROPERTY_PROVIDER_ID);
   if (!(provider instanceof NotePropertyTaskProvider)) throw new TypeError("note-property provider not registered");

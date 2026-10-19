@@ -35,6 +35,8 @@ export const DEFAULT_RECURRENCE_PROPERTIES: string[] = ["recurrence", "recurrenc
 // Each field wraps its schema in v.fallback so a malformed value resets that field alone, not the slice.
 export const notePropertySliceSchema = v.object({
   enabled: v.optional(v.fallback(v.boolean(), false), false),
+  // Whether the provider has ever been enabled, for onboarding that must not reappear once it has.
+  setUp: v.optional(v.fallback(v.boolean(), false), false),
   identify: v.optional(v.fallback(identifySchema, DEFAULT_IDENTIFY), DEFAULT_IDENTIFY),
   excludedFolders: v.optional(v.fallback(v.array(v.string()), []), []),
   archiveTag: v.optional(v.fallback(v.string(), "#archived"), "#archived"),
@@ -69,6 +71,7 @@ export const notePropertySlice = defineSlice<"tasksNoteProperty", typeof notePro
   notePropertySliceSchema,
   {
     enabled: false,
+    setUp: false,
     identify: DEFAULT_IDENTIFY,
     excludedFolders: [],
     archiveTag: "#archived",

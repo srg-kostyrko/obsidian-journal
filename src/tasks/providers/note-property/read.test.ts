@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import type { NoteMetadata, VaultPath } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
 
 import { identifiesNote, isRecurring, readDates, readStatus, readTitle } from "./read";
 import { notePropertySliceSchema, type NotePropertySliceState } from "./slice";
@@ -13,12 +13,12 @@ function state(patch: Partial<NotePropertySliceState> = {}): NotePropertySliceSt
   return { ...defaults, ...patch };
 }
 
-function meta(tags: string[], properties: Record<string, unknown> = {}): NoteMetadata {
-  return { title: "x", tags, properties };
+function meta(frontmatterTags: string[], properties: Record<string, unknown> = {}) {
+  return { frontmatterTags, properties };
 }
 
 describe("identifiesNote", () => {
-  it("matches the tag rule against the tags getAllTags reports", () => {
+  it("matches the tag rule against the note's frontmatter tags", () => {
     expect(identifiesNote(meta(["#task"], { tags: ["task"] }), path, state())).toBe(true);
     expect(identifiesNote(meta(["#note"]), path, state())).toBe(false);
   });
@@ -41,6 +41,17 @@ describe("identifiesNote", () => {
     expect(identifiesNote(meta([], { type: "task" }), path, s)).toBe(true);
     expect(identifiesNote(meta([], { type: ["task"] }), path, s)).toBe(true);
     expect(identifiesNote(meta([], { type: "note" }), path, s)).toBe(false);
+  });
+  it("matches a YAML boolean or number against the rule value's text", () => {
+    const flag = state({ identify: { by: "property", name: "isTask", value: "true" } });
+    expect(identifiesNote(meta([], { isTask: true }), path, flag)).toBe(true);
+    expect(identifiesNote(meta([], { isTask: false }), path, flag)).toBe(false);
+    const numbered = state({ identify: { by: "property", name: "type", value: "1" } });
+    expect(identifiesNote(meta([], { type: 1 }), path, numbered)).toBe(true);
+  });
+  it("matches a boolean list item against the rule value's text", () => {
+    const s = state({ identify: { by: "property", name: "flags", value: "TRUE" } });
+    expect(identifiesNote(meta([], { flags: ["x", true] }), path, s)).toBe(true);
   });
 });
 

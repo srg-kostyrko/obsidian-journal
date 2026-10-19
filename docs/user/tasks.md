@@ -125,11 +125,12 @@ finds its tasks without opening the modal at all.
   **Property value** it must hold. Leave the value empty to count every note that has the property at
   all, which is what reaches a `due:` convention whose notes carry no tag. The tag and the
   property value compare ignoring case; the property name must match exactly. A list property matches
-  when any of its text items does. A tag counts wherever the note carries it, in its
-  properties or in its body.
+  when any of its items does, and a `true` or `1` written without quotes matches the value `true` or
+  `1`. Only a tag in the note's properties counts: a `#task` written in its body marks a line, not the
+  note, and leaves it an ordinary note.
 - **Excluded folders** — notes inside these folders are never task notes.
-- **Archive tag** — `#archived` by default. A note carrying it is left out, the way TaskNotes hides
-  archived tasks from its own views; leave it empty to keep such notes.
+- **Archive tag** — `#archived` by default. A note carrying it in its properties is left out, the way
+  TaskNotes hides archived tasks from its own views; leave it empty to keep such notes.
 - **Date properties** — which property holds each of a task's five dates: due (`due`), scheduled
   (`scheduled`), start (none), done (`completedDate`) and created (`dateCreated`). A value is read as a
   date when it starts with one in `YYYY-MM-DD` form; a time after it, as in `2026-03-10T14:00`, is
@@ -179,8 +180,8 @@ line — sort it, but never place it in a period other than the one whose note h
 ### Filters and task notes
 
 - A **tag** condition — the fence's `tag` key, a `conditions:` entry, a view block's or decoration's
-  own filter — matches a task note's tags in its properties. A tag only in its body does not count here,
-  even though it does for **Identify task notes by**.
+  own filter — matches a task note's tags in its properties. A tag only in its body does not count,
+  here or for **Identify task notes by**.
 - A **heading** condition does not apply to a task note: it sits under no heading, so a fence naming
   one still lists the period's task notes.
 - **Status** applies as it does to any task: the default `status: open` hides a task note once it is

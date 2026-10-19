@@ -1,7 +1,7 @@
 import { watch } from "vue";
 
 import { inject } from "@/infrastructure/di";
-import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals";
 import { SettingsService } from "@/settings";
 
@@ -16,6 +16,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
   readonly #notes = inject(NotesService);
   readonly #journals = inject(JournalsIndex);
   readonly #metadata = inject(NoteMetadataService);
+  readonly #structure = inject(NoteStructureService);
   readonly #settings = inject(SettingsService).getSlice(notePropertySlice);
   readonly id = NOTE_PROPERTY_PROVIDER_ID;
   readonly settingsRow = NotePropertySettingsRow;
@@ -24,8 +25,11 @@ export class NotePropertyTaskProvider implements TaskProvider {
     const state = this.#settings.state;
     if (!state.enabled) return [];
     const meta = this.#metadata.get(path);
-    if (meta.isNone() || !identifiesNote(meta.value, path, state)) return [];
+    if (meta.isNone()) return [];
     const properties = meta.value.properties as Record<string, unknown>;
+    const structure = this.#structure.get(path);
+    const frontmatterTags = structure.isSome() ? structure.value.frontmatterTags : [];
+    if (!identifiesNote({ frontmatterTags, properties }, path, state)) return [];
     return [
       {
         provider: this.id,
@@ -60,6 +64,15 @@ export class NotePropertyTaskProvider implements TaskProvider {
         if (!disposed) this.#refillAll();
       });
     }
+    // Sync, so the write lands inside the same change the refill watch below reacts to, and the
+    // first enable costs one walk and one version bump rather than two.
+    const stopSetUpWatch = watch(
+      () => this.#settings.state.enabled,
+      (enabled) => {
+        if (enabled && !this.#settings.state.setUp) this.#settings.state.setUp = true;
+      },
+      { immediate: true, flush: "sync" },
+    );
     const stopSettingsWatch = watch(
       () => this.#settings.state,
       () => this.#refillAll(),
@@ -80,6 +93,7 @@ export class NotePropertyTaskProvider implements TaskProvider {
     ];
     return () => {
       disposed = true;
+      stopSetUpWatch();
       stopSettingsWatch();
       for (const stop of stops) stop();
     };

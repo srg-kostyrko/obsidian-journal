@@ -1,5 +1,5 @@
 import { CalendarDate, type AnchorString } from "@/calendar";
-import type { NoteMetadata, VaultPath } from "@/infrastructure/host";
+import type { VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskStatus } from "@/tasks";
 import { isTaskStatus } from "@/tasks/status";
 
@@ -7,27 +7,35 @@ import type { NotePropertySliceState } from "./slice";
 
 const ISO_DATE_PREFIX = /^\d{4}-\d{2}-\d{2}(?:$|[ T])/u;
 
-function lowerStrings(value: unknown): string[] {
-  const items = Array.isArray(value) ? value : [value];
-  return items.filter((item) => typeof item === "string").map((item) => item.toLowerCase());
-}
-
 function scalarText(value: unknown): string | undefined {
   return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
     ? String(value)
     : undefined;
 }
 
-export function identifiesNote(meta: NoteMetadata, path: VaultPath, state: NotePropertySliceState): boolean {
+// YAML hands `isTask: true` and `type: 1` over as a boolean and a number, while the rule value is
+// typed as text — matching only strings would make those notes unreachable by any rule.
+function lowerScalars(value: unknown): string[] {
+  const items: unknown[] = Array.isArray(value) ? value : [value];
+  return items.flatMap((item) => scalarText(item)?.toLowerCase() ?? []);
+}
+
+export interface IdentifiableNote {
+  // Frontmatter tags only: a body tag marks a passage of the note, not the note itself.
+  readonly frontmatterTags: readonly string[];
+  readonly properties: Readonly<Record<string, unknown>>;
+}
+
+export function identifiesNote(note: IdentifiableNote, path: VaultPath, state: NotePropertySliceState): boolean {
   if (state.excludedFolders.some((folder) => path.startsWith(`${folder.replace(/\/+$/u, "")}/`))) return false;
-  const tags = new Set(meta.tags.map((tag) => tag.toLowerCase()));
+  const tags = new Set(note.frontmatterTags.map((tag) => tag.toLowerCase()));
   if (state.archiveTag !== "" && tags.has(state.archiveTag.toLowerCase())) return false;
   const rule = state.identify;
   if (rule.by === "tag") return tags.has(rule.tag.toLowerCase());
-  const value = meta.properties[rule.name];
+  const value = note.properties[rule.name];
   if (value === undefined || value === null) return false;
   if (rule.value === "") return true;
-  return lowerStrings(value).includes(rule.value.toLowerCase());
+  return lowerScalars(value).includes(rule.value.toLowerCase());
 }
 
 export function readDates(

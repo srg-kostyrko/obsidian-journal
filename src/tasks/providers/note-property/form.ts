@@ -38,7 +38,7 @@ export interface NotePropertyDraft {
 
 export type NotePropertyFormField = "tag" | "propertyName" | "statusProperty" | "statusRows";
 
-// The reader matches tags in the "#"-prefixed form getAllTags returns, so a tag typed without one
+// The reader matches tags in the "#"-prefixed form parseFrontMatterTags returns, so a tag typed without one
 // would never match a note.
 export function normalizeTag(text: string): string {
   const bare = text.trim().replace(/^#+/u, "");
@@ -88,7 +88,7 @@ export function draftFrom(state: NotePropertySliceState): NotePropertyDraft {
   };
 }
 
-export function stateFrom(draft: NotePropertyDraft): Omit<NotePropertySliceState, "enabled"> {
+export function stateFrom(draft: NotePropertyDraft): Omit<NotePropertySliceState, "enabled" | "setUp"> {
   const dates: NotePropertySliceState["dates"] = {};
   for (const role of NOTE_PROPERTY_DATE_ROLES) {
     const name = draft.dates[role].trim();

@@ -7,6 +7,7 @@ describe("notePropertySliceSchema", () => {
   it("defaults to disabled with the TaskNotes-shaped property names", () => {
     expect(v.parse(notePropertySliceSchema, {})).toEqual({
       enabled: false,
+      setUp: false,
       identify: { by: "tag", tag: "#task" },
       excludedFolders: [],
       archiveTag: "#archived",
@@ -18,6 +19,11 @@ describe("notePropertySliceSchema", () => {
       modifiedProperty: "dateModified",
       recurrenceProperties: ["recurrence", "recurrence_parent"],
     });
+  });
+  it("resets only setUp when it is malformed", () => {
+    const parsed = v.parse(notePropertySliceSchema, { enabled: true, setUp: "yes" });
+    expect(parsed.enabled).toBe(true);
+    expect(parsed.setUp).toBe(false);
   });
   it("resets only dates when it is malformed", () => {
     const parsed = v.parse(notePropertySliceSchema, { enabled: true, dates: 7, statusProperty: "state" });

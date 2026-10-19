@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
 import { anchor } from "@/calendar/testing";
-import { NoteMetadataService, NotesService, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
+import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { JournalsIndex } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { SettingsService } from "@/settings";
@@ -19,19 +19,24 @@ import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
 const path = "Tasks/a.md" as VaultPath;
 const moved = "Tasks/b.md" as VaultPath;
 
-const taskMeta = (properties: Record<string, unknown> | undefined = undefined) => ({
-  title: "a",
-  tags: ["#task"],
-  properties: properties ?? { scheduled: "2026-10-21" },
-});
+interface NoteShape {
+  readonly properties?: Record<string, unknown>;
+  readonly frontmatterTags?: string[];
+  readonly bodyTags?: string[];
+}
 
 async function build(enabled = true, ready = true) {
   const notes = new FakeNotesService();
   const metadata = new FakeNoteMetadataService();
+  const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
     data: { tasksNoteProperty: { enabled } },
-    overrides: [overrideWith(NotesService, notes as never), overrideWith(NoteMetadataService, metadata as never)],
+    overrides: [
+      overrideWith(NotesService, notes as never),
+      overrideWith(NoteMetadataService, metadata as never),
+      overrideWith(NoteStructureService, structures as never),
+    ],
   });
   const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === NOTE_PROPERTY_PROVIDER_ID);
   if (!(provider instanceof NotePropertyTaskProvider)) throw new TypeError("note-property provider not registered");
@@ -39,14 +44,30 @@ async function build(enabled = true, ready = true) {
   const journals = harness.resolve(JournalsIndex);
   if (ready) journals.markReady();
   const slice = harness.resolve(SettingsService).getSlice(notePropertySlice);
-  return { journals, notes, metadata, provider, index, slice };
+  // Mirrors what Obsidian reports: getAllTags merges body and frontmatter tags, the structure keeps them apart.
+  const setNote = (target: VaultPath, shape: NoteShape = {}) => {
+    const frontmatterTags = shape.frontmatterTags ?? ["#task"];
+    const bodyTags = shape.bodyTags ?? [];
+    metadata.setMetadata(target, {
+      title: "a",
+      tags: [...bodyTags, ...frontmatterTags],
+      properties: shape.properties ?? { scheduled: "2026-10-21" },
+    });
+    structures.setStructure(target, {
+      listItems: [],
+      tags: bodyTags.map((tag) => ({ tag, line: 3 })),
+      headings: [],
+      frontmatterTags,
+    });
+  };
+  return { journals, notes, setNote, provider, index, slice };
 }
 
 describe("NotePropertyTaskProvider", () => {
   it("publishes nothing while disabled, the shipped default", async () => {
-    const { notes, metadata, provider, index } = await build(false);
+    const { notes, setNote, provider, index } = await build(false);
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path);
 
     provider.start();
 
@@ -54,9 +75,9 @@ describe("NotePropertyTaskProvider", () => {
   });
 
   it("waits for the journals index before walking the vault", async () => {
-    const { journals, notes, metadata, provider, index } = await build(true, false);
+    const { journals, notes, setNote, provider, index } = await build(true, false);
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path);
 
     provider.start();
     expect(index.itemsIn(path)).toEqual([]);
@@ -68,9 +89,9 @@ describe("NotePropertyTaskProvider", () => {
   });
 
   it("does not walk the vault when disposed before the index is ready", async () => {
-    const { journals, notes, metadata, provider, index } = await build(true, false);
+    const { journals, notes, setNote, provider, index } = await build(true, false);
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path);
 
     provider.start()();
     journals.markReady();
@@ -81,9 +102,9 @@ describe("NotePropertyTaskProvider", () => {
   });
 
   it("publishes a note item for a tagged note once enabled", async () => {
-    const { notes, metadata, provider, index } = await build();
+    const { notes, setNote, provider, index } = await build();
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path);
 
     provider.start();
 
@@ -102,37 +123,57 @@ describe("NotePropertyTaskProvider", () => {
   });
 
   it("ignores notes without the task tag", async () => {
-    const { notes, metadata, provider, index } = await build();
+    const { notes, setNote, provider, index } = await build();
     notes.seed(path);
-    metadata.setMetadata(path, { ...taskMeta(), tags: ["#other"] });
+    setNote(path, { frontmatterTags: ["#other"] });
 
     provider.start();
 
     expect(index.itemsIn(path)).toEqual([]);
   });
 
-  it("drops the item when the tag is removed and follows a changed date", async () => {
-    const { notes, metadata, provider, index } = await build();
+  it("does not take a note whose task tag sits only in its body", async () => {
+    const { notes, setNote, provider, index } = await build();
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path, { frontmatterTags: [], bodyTags: ["#task"] });
+
     provider.start();
 
-    metadata.setMetadata(path, taskMeta({ scheduled: "2026-11-02" }));
+    expect(index.itemsIn(path)).toEqual([]);
+  });
+
+  it("keeps a note whose archive tag sits only in its body", async () => {
+    const { notes, setNote, provider, index } = await build();
+    notes.seed(path);
+    setNote(path, { bodyTags: ["#archived"] });
+
+    provider.start();
+
+    expect(index.itemsIn(path)).toHaveLength(1);
+  });
+
+  it("drops the item when the tag is removed and follows a changed date", async () => {
+    const { notes, setNote, provider, index } = await build();
+    notes.seed(path);
+    setNote(path);
+    provider.start();
+
+    setNote(path, { properties: { scheduled: "2026-11-02" } });
     notes.emitMetadataChanged(path);
     expect(index.itemsIn(path).at(0)?.dates.scheduled).toBe(anchor("2026-11-02"));
 
-    metadata.setMetadata(path, { ...taskMeta(), tags: [] });
+    setNote(path, { frontmatterTags: [] });
     notes.emitMetadataChanged(path);
     expect(index.itemsIn(path)).toEqual([]);
   });
 
   it("moves the item to the new path on rename", async () => {
-    const { notes, metadata, provider, index } = await build();
+    const { notes, setNote, provider, index } = await build();
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path);
     provider.start();
 
-    metadata.setMetadata(moved, taskMeta());
+    setNote(moved);
     await notes.rename(path, moved);
 
     expect(index.itemsIn(path)).toEqual([]);
@@ -140,9 +181,9 @@ describe("NotePropertyTaskProvider", () => {
   });
 
   it("removes the item when the note is deleted", async () => {
-    const { notes, metadata, provider, index } = await build();
+    const { notes, setNote, provider, index } = await build();
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path);
     provider.start();
 
     await notes.delete(path);
@@ -151,9 +192,9 @@ describe("NotePropertyTaskProvider", () => {
   });
 
   it("republishes from the new property in one version bump when the slice is edited", async () => {
-    const { notes, metadata, provider, index, slice } = await build();
+    const { notes, setNote, provider, index, slice } = await build();
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta({ scheduled: "2026-10-21", plan: "2026-12-01" }));
+    setNote(path, { properties: { scheduled: "2026-10-21", plan: "2026-12-01" } });
     provider.start();
     const before = index.version();
 
@@ -165,11 +206,11 @@ describe("NotePropertyTaskProvider", () => {
   });
 
   it("clears every item in one version bump when disabled", async () => {
-    const { notes, metadata, provider, index, slice } = await build();
+    const { notes, setNote, provider, index, slice } = await build();
     const other = "Tasks/c.md" as VaultPath;
     for (const target of [path, other]) {
       notes.seed(target);
-      metadata.setMetadata(target, taskMeta());
+      setNote(target);
     }
     provider.start();
     const before = index.version();
@@ -182,10 +223,54 @@ describe("NotePropertyTaskProvider", () => {
     expect(index.version()).toBe(before + 1);
   });
 
+  describe("setUp", () => {
+    it("stays false while the provider has never been enabled", async () => {
+      const { provider, slice } = await build(false);
+      provider.start();
+      await nextTick();
+
+      expect(slice.state.setUp).toBe(false);
+    });
+
+    it("turns true the first time the provider is enabled, in the same version bump as its walk", async () => {
+      const { notes, setNote, provider, index, slice } = await build(false);
+      notes.seed(path);
+      setNote(path);
+      provider.start();
+      const before = index.version();
+
+      slice.state.enabled = true;
+      await nextTick();
+
+      expect(slice.state.setUp).toBe(true);
+      expect(index.itemsIn(path)).toHaveLength(1);
+      expect(index.version()).toBe(before + 1);
+    });
+
+    it("turns true at start when the stored slice is already enabled", async () => {
+      const { provider, slice } = await build(true);
+      provider.start();
+
+      expect(slice.state.setUp).toBe(true);
+    });
+
+    it("stays true once the provider is disabled again", async () => {
+      const { provider, slice } = await build(false);
+      provider.start();
+      slice.state.enabled = true;
+      await nextTick();
+
+      slice.state.enabled = false;
+      await nextTick();
+
+      expect(slice.state.setUp).toBe(true);
+    });
+  });
+
   it("stops reacting once its disposer runs", async () => {
-    const { notes, metadata, provider, index, slice } = await build();
+    const { notes, setNote, provider, index, slice } = await build();
     notes.seed(path);
-    metadata.setMetadata(path, taskMeta());
+    setNote(path);
     const stop = provider.start();
     stop();
 
