@@ -103,9 +103,10 @@ export class NotePropertyTaskProvider implements TaskProvider {
     // Items snapshot only the properties some journal's rule names, so a rule naming a new one
     // leaves every item without it until the refill.
     const stopRulesWatch = watch(
-      () => this.#referencedNow().join("\n"),
-      () => {
-        this.#referenced = this.#referencedNow();
+      () => this.#referencedNow(),
+      (names, previous) => {
+        if (names.length === previous.length && names.every((name, at) => name === previous[at])) return;
+        this.#referenced = names;
         this.#refillAll();
       },
     );

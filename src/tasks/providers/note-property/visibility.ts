@@ -5,7 +5,18 @@ import { lowerScalars } from "./scalars";
 
 import type { TaskItem } from "../../types";
 
-const stringList = v.optional(v.fallback(v.array(v.string()), []), []);
+// Per entry, not per list: an emptied list is a no-op condition, which would quietly widen a
+// Matching rule to every task note over one unreadable entry.
+const stringList = v.optional(
+  v.fallback(
+    v.pipe(
+      v.array(v.unknown()),
+      v.transform((items) => items.filter((item): item is string => typeof item === "string")),
+    ),
+    [],
+  ),
+  [],
+);
 
 const visibilityConditionSchema = v.variant("type", [
   v.object({ type: v.literal("tag"), tags: stringList }),
@@ -39,24 +50,39 @@ export const DEFAULT_NOTE_VISIBILITY: NoteVisibility = { show: "all", mode: "and
 
 const INTERNAL_LINK = /^\[\[([^\]|#^]+)(?:[#^|][^\]]*)?\]\]$/u;
 
+function linkTarget(text: string): string | undefined {
+  const link = INTERNAL_LINK.exec(text.trim());
+  return link === null ? undefined : (link[1] ?? "").trim().replace(/\.md$/u, "");
+}
+
 // TaskNotes writes `projects: ["[[Website]]"]`, so a condition naming the link target has to match
 // the link, by its full path or by the note name alone.
 function valueForms(text: string): string[] {
-  const link = INTERNAL_LINK.exec(text.trim());
-  if (link === null) return [text];
-  const target = (link[1] ?? "").trim().replace(/\.md$/u, "");
+  const target = linkTarget(text);
+  if (target === undefined) return [text];
   const name = target.split("/").at(-1) ?? target;
   return name === target ? [target] : [target, name];
 }
 
-function propertyMatches(value: unknown, wanted: readonly string[]): boolean {
-  const forms = new Set(lowerScalars(value).flatMap(valueForms));
-  return wanted.some((candidate) => forms.has(candidate.toLowerCase()));
+// A condition typed as a link or a file name names a note too, but only by its full target: the
+// bare name of `[[Projects/Website]]` would also match `[[Archive/Website]]`.
+function wantedForms(text: string): string[] {
+  const target = linkTarget(text);
+  return target === undefined ? [text, text.replace(/\.md$/u, "")] : [target];
 }
 
-function underFolder(path: string, folder: string): boolean {
-  const prefix = folder.replace(/\/+$/u, "");
-  return prefix === "" || path.startsWith(`${prefix}/`);
+function propertyMatches(value: unknown, wanted: readonly string[]): boolean {
+  const forms = new Set(lowerScalars(value).flatMap(valueForms));
+  return wanted.some((candidate) => wantedForms(candidate.toLowerCase()).some((form) => forms.has(form)));
+}
+
+// Obsidian's tag search: `#work` finds `#work/project`, never `#workshop`.
+function tagMatches(tag: string, wanted: string): boolean {
+  return tag === wanted || tag.startsWith(`${wanted}/`);
+}
+
+function folderPrefix(folder: string): string {
+  return folder.replace(/\/+$/u, "");
 }
 
 // undefined is a condition with nothing to compare against: it is left out of the combination
@@ -65,12 +91,14 @@ function evaluate(condition: VisibilityCondition, item: TaskItem, facts: NonNull
   switch (condition.type) {
     case "tag": {
       if (condition.tags.length === 0) return;
-      const tags = new Set(facts.frontmatterTags.map((tag) => tag.toLowerCase()));
-      return condition.tags.some((tag) => tags.has(tag.toLowerCase()));
+      const tags = facts.frontmatterTags.map((tag) => tag.toLowerCase());
+      return condition.tags.some((wanted) => tags.some((tag) => tagMatches(tag, wanted.toLowerCase())));
     }
     case "folder": {
-      if (condition.folders.length === 0) return;
-      return condition.folders.some((folder) => underFolder(item.path, folder));
+      // An empty entry would be the vault root, and a root that admits every path cannot narrow.
+      const prefixes = condition.folders.map(folderPrefix).filter((prefix) => prefix !== "");
+      if (prefixes.length === 0) return;
+      return prefixes.some((prefix) => item.path.startsWith(`${prefix}/`));
     }
     case "property": {
       if (condition.values.length === 0) return;

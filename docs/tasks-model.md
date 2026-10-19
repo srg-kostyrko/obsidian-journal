@@ -168,7 +168,10 @@ journal would both list every task due that day.
 Each journal's **Dated task notes** setting is that choice: **All** (the
 default, and what a journal with no stored rule does) admits every identified
 task note; **Matching…** narrows them by tag, folder, or property equals value,
-combined with and/or; **None** admits none. It is stored on the journal's config
+combined with and/or; **None** admits none. A tag condition matches the note's
+frontmatter tags as Obsidian's tag search does — `#work` finds `#work/project`,
+never `#workshop` — and a property condition is link-aware, so `[[Website]]` in
+the note matches a condition naming `Website`. It is stored on the journal's config
 entry under `tasks.providers["note-property"]`, so a rename carries it along. It
 can only narrow the global identification, never widen it: a journal never sees
 a note identification rejected.

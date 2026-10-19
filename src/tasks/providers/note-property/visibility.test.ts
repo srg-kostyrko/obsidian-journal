@@ -43,6 +43,10 @@ function withProperty(name: string, value: unknown): TaskItem {
   return noteItem("Tasks/a.md", ["#task"], { [name]: value });
 }
 
+function tagged(...tags: string[]): TaskItem {
+  return noteItem("Work/a.md", tags);
+}
+
 describe("admits", () => {
   const item = noteItem("Work/a.md", ["#task", "#Work"]);
 
@@ -69,6 +73,29 @@ describe("admits", () => {
     expect(admits(matching([{ type: "tag", tags: ["#work"] }]), item)).toBe(true);
     expect(admits(matching([{ type: "tag", tags: ["#home", "#WORK"] }]), item)).toBe(true);
     expect(admits(matching([{ type: "tag", tags: ["#home"] }]), item)).toBe(false);
+  });
+
+  it("matches a nested tag under a condition's tag, as Obsidian's tag search does", () => {
+    expect(admits(matching([{ type: "tag", tags: ["#work"] }]), tagged("#Work/Project"))).toBe(true);
+    expect(admits(matching([{ type: "tag", tags: ["#work"] }]), tagged("#workshop"))).toBe(false);
+    expect(admits(matching([{ type: "tag", tags: ["#work/project"] }]), tagged("#work"))).toBe(false);
+  });
+
+  it("skips an empty or root folder entry, so a folder condition never widens to every path", () => {
+    const home = noteItem("Home/a.md");
+    expect(admits(matching([{ type: "folder", folders: ["", "/", "Work"] }]), home)).toBe(false);
+    expect(
+      admits(
+        matching(
+          [
+            { type: "folder", folders: ["", "/"] },
+            { type: "tag", tags: ["#home"] },
+          ],
+          "or",
+        ),
+        home,
+      ),
+    ).toBe(false);
   });
 
   it("matches a folder condition as a path prefix, never a name prefix", () => {
@@ -107,6 +134,14 @@ describe("admits", () => {
         true,
       );
       expect(admits(rule("projects", ["Web"]), withProperty("projects", "[[Website]]"))).toBe(false);
+    });
+
+    it("reads a condition value typed as a link, or with its extension, as the link target", () => {
+      const aliased = withProperty("projects", ["[[Projects/Website|Site]]"]);
+      expect(admits(rule("projects", ["[[Website]]"]), aliased)).toBe(true);
+      expect(admits(rule("projects", ["[[Projects/Website|x]]"]), aliased)).toBe(true);
+      expect(admits(rule("projects", ["Projects/Website.md"]), aliased)).toBe(true);
+      expect(admits(rule("projects", ["[[Shop]]"]), aliased)).toBe(false);
     });
 
     it("reads the property name exactly", () => {
@@ -148,6 +183,22 @@ describe("noteVisibilitySchema", () => {
       conditions: [{ type: "not-a-real-type" }, { type: "tag", tags: ["#work"] }, "garbage"],
     });
     expect(parsed).toEqual({ show: "matching", mode: "or", conditions: [{ type: "tag", tags: ["#work"] }] });
+  });
+
+  it("keeps the readable entries of a value list holding one it cannot read", () => {
+    const parsed = v.parse(noteVisibilitySchema, {
+      show: "matching",
+      conditions: [
+        { type: "tag", tags: ["#work", 3] },
+        { type: "folder", folders: [null, "Work"] },
+        { type: "property", name: "projects", values: ["Website", { x: 1 }] },
+      ],
+    });
+    expect(parsed.conditions).toEqual([
+      { type: "tag", tags: ["#work"] },
+      { type: "folder", folders: ["Work"] },
+      { type: "property", name: "projects", values: ["Website"] },
+    ]);
   });
 
   it("keeps a property condition", () => {
