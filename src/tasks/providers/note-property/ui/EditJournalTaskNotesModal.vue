@@ -29,11 +29,11 @@ const draft = reactive(
   visibilityDraftFrom(journals.get(journalName).getOrUndefined()?.tasks.providers[NOTE_PROPERTY_PROVIDER_ID]),
 );
 
-const showOptions = computed(() => [
+const showOptions = [
   { value: "all" as const, label: m.tasks_note_visibility_show_all() },
   { value: "matching" as const, label: m.tasks_note_visibility_show_matching() },
   { value: "none" as const, label: m.tasks_note_visibility_show_none() },
-]);
+];
 
 const errorBag = computed(() => visibilityFormErrors(draft));
 const valid = computed(() => errorBag.value.size === 0);
