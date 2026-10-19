@@ -7,7 +7,7 @@ import type { NoteMetadata, NoteSize, VaultPath } from "@/infrastructure/host";
 import type { Option } from "@/infrastructure/result";
 import { CycleService, JournalsIndex, JournalsRepository, TimelineService } from "@/journals";
 import type { JournalConfig, JournalWrite } from "@/journals/config";
-import { answerTaskQuestion, TaskIndex } from "@/tasks";
+import { answerTaskQuestion, TaskIndex, TaskVisibility } from "@/tasks";
 import type { TaskQuestionDependencies } from "@/tasks";
 
 import {
@@ -98,6 +98,7 @@ export class DecorationEngine {
   readonly #cycle = inject(CycleService);
   readonly #timeline = inject(TimelineService);
   readonly #tasks = inject(TaskIndex);
+  readonly #visibility = inject(TaskVisibility);
   readonly #structure = inject(NoteStructureService);
 
   // One structure read per path per evaluation: a note's structure answers every cell and every
@@ -118,6 +119,7 @@ export class DecorationEngine {
         },
       },
       tasks: this.#tasks,
+      visibility: this.#visibility,
     };
   }
 

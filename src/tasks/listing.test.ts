@@ -10,7 +10,7 @@ import {
 } from "@/infrastructure/host";
 import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { Option } from "@/infrastructure/result";
-import { JournalsIndex, type NoteletEntry } from "@/journals";
+import { JournalsIndex, type JournalConfig, type NoteletEntry } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { overrideWith, testContainer } from "@/testing";
@@ -23,8 +23,10 @@ import { DEFAULT_TASK_QUERY } from "./query";
 import { TaskIndex } from "./task-index";
 import { buildTaskItem } from "./testing";
 import { TaskProviderToken } from "./types";
+import { TaskVisibility } from "./visibility";
 
 import type { TaskRule } from "./conditions";
+import type { NoteVisibility } from "./providers/note-property/visibility";
 import type { TaskQuery } from "./query";
 import type { TaskItem } from "./types";
 
@@ -81,6 +83,7 @@ function buildDependencies(options: {
   // A real TaskIndex a provider published into, layered under the fixture's own items: datedIn is
   // the index's range lookup, and itemsIn at a task note's path answers what containment would see.
   published?: Pick<TaskIndex, "itemsIn" | "datedIn">;
+  visibility?: Pick<TaskVisibility, "admits">;
 }): TaskListingDependencies {
   const {
     items = {},
@@ -92,6 +95,7 @@ function buildDependencies(options: {
     unknownJournals = [],
     journalsWithoutCycle = [],
     published,
+    visibility = { admits: () => true },
   } = options;
   const endAnchorOf = (name: string, anchor: AnchorString): AnchorString =>
     (ends[name]?.[anchor] ?? anchor) as AnchorString;
@@ -138,6 +142,7 @@ function buildDependencies(options: {
       overlapsFrom: (name, anchor, start) => anchor >= start || endAnchorOf(name, anchor) >= start,
     },
     structure: { get: (path) => Option.fromNullable(structures[path] ?? EMPTY_STRUCTURE) },
+    visibility,
     tasks: {
       itemsIn: (path) => [...(items[path] ?? []), ...(published?.itemsIn(path) ?? [])],
       datedIn: (roles, start, end) => published?.datedIn(roles, start, end) ?? [],
@@ -842,14 +847,18 @@ interface TaskNoteFixture {
 }
 
 // The note-property provider enabled and started over the given task notes, so the index the
-// listing reads is the one a real provider published into.
-async function publishedTaskNotes(fixtures: Partial<Record<VaultPath, TaskNoteFixture>>): Promise<TaskIndex> {
+// listing reads is the one a real provider published into, and the visibility it asks is the one
+// those journals' stored rules answer.
+async function publishedHarness(
+  fixtures: Partial<Record<VaultPath, TaskNoteFixture>>,
+  journals: Record<string, JournalConfig> = {},
+) {
   const notes = new FakeNotesService();
   const metadata = new FakeNoteMetadataService();
   const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
-    data: { tasksNoteProperty: { enabled: true } },
+    data: { tasksNoteProperty: { enabled: true }, journals },
     overrides: [
       overrideWith(NotesService, notes as never),
       overrideWith(NoteMetadataService, metadata as never),
@@ -857,16 +866,29 @@ async function publishedTaskNotes(fixtures: Partial<Record<VaultPath, TaskNoteFi
     ],
   });
   harness.resolve(JournalsIndex).markReady();
-  for (const [path, fixture] of Object.entries(fixtures) as [VaultPath, TaskNoteFixture][]) {
+  const setTaskNote = (path: VaultPath, fixture: TaskNoteFixture) => {
     const tags = [...(fixture.tags ?? ["#task"])];
-    notes.seed(path);
     metadata.setMetadata(path, { title: "a", tags, properties: fixture.properties });
     structures.setStructure(path, { ...EMPTY_STRUCTURE, frontmatterTags: tags });
+  };
+  for (const [path, fixture] of Object.entries(fixtures) as [VaultPath, TaskNoteFixture][]) {
+    notes.seed(path);
+    setTaskNote(path, fixture);
   }
   const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === NOTE_PROPERTY_PROVIDER_ID);
   if (!(provider instanceof NotePropertyTaskProvider)) throw new TypeError("note-property provider not registered");
   provider.start();
-  return harness.resolve(TaskIndex);
+  return {
+    index: harness.resolve(TaskIndex),
+    visibility: harness.resolve(TaskVisibility),
+    notes,
+    setTaskNote,
+  };
+}
+
+async function publishedTaskNotes(fixtures: Partial<Record<VaultPath, TaskNoteFixture>>): Promise<TaskIndex> {
+  const { index } = await publishedHarness(fixtures);
+  return index;
 }
 
 const scheduledOn = (day: string, extra: Record<string, unknown> = {}): TaskNoteFixture => ({
@@ -1044,5 +1066,80 @@ describe("buildTaskListing — dated task notes", () => {
     const published = await publishedTaskNotes({ [DAY]: scheduledOn("2026-09-25") });
     const dependencies = buildDependencies({ published, notes: { Daily: { "2026-09-22": DAY } } });
     expect(await buildTaskListing(dependencies, request())).toEqual([]);
+  });
+});
+
+const dayOf = (journal: string): TaskListingPeriodRequest => request({ hostJournal: journal, journalNames: [journal] });
+
+describe("buildTaskListing — task-note visibility", () => {
+  const WORK_NOTE = "Tasks/work.md" as VaultPath;
+  const HOME_NOTE = "Tasks/home.md" as VaultPath;
+  const noFilter: TaskRule = { mode: "and", conditions: [] };
+  const withRule = (name: string, rule: NoteVisibility): JournalConfig =>
+    fixedJournal(name, { type: "day" }, { tasks: { filter: noFilter, providers: { "note-property": rule } } });
+  const matchingWork: NoteVisibility = {
+    show: "matching",
+    mode: "and",
+    conditions: [{ type: "tag", tags: ["#work"] }],
+  };
+  const hidden: NoteVisibility = { show: "none", mode: "and", conditions: [] };
+  const twoJournals = { Work: withRule("Work", matchingWork), Personal: withRule("Personal", hidden) };
+  const workAndHome = {
+    [WORK_NOTE]: { tags: ["#task", "#work"], properties: { scheduled: "2026-09-22" } },
+    [HOME_NOTE]: { tags: ["#task", "#home"], properties: { scheduled: "2026-09-22" } },
+  };
+
+  it("shows a day only the task notes its own journal admits", async () => {
+    const { index, visibility } = await publishedHarness(workAndHome, twoJournals);
+    const dependencies = buildDependencies({ published: index, visibility });
+
+    const work = await buildTaskListing(dependencies, dayOf("Work"));
+    const personal = await buildTaskListing(dependencies, dayOf("Personal"));
+
+    expect(work.map((row) => row.source.path)).toEqual([WORK_NOTE]);
+    expect(personal).toEqual([]);
+  });
+
+  it("asks the host journal for a period, not the journals it rolls up", async () => {
+    const { index, visibility } = await publishedHarness(workAndHome, twoJournals);
+    const dependencies = buildDependencies({ published: index, visibility });
+
+    const rows = await buildTaskListing(
+      dependencies,
+      request({ hostJournal: "Personal", journalNames: ["Personal", "Work"] }),
+    );
+
+    expect(rows).toEqual([]);
+  });
+
+  it("lists a task note once in a window when any of its journals admits it", async () => {
+    const { index, visibility } = await publishedHarness(workAndHome, twoJournals);
+    const dependencies = buildDependencies({ published: index, visibility });
+
+    const rows = await buildTaskListing(dependencies, {
+      kind: "window",
+      journalNames: ["Personal", "Work"],
+      window: { start: "2026-09-21" as AnchorString, end: "2026-09-27" as AnchorString },
+      query: DEFAULT_TASK_QUERY,
+    });
+
+    expect(rows.map((row) => row.source.path)).toEqual([WORK_NOTE]);
+  });
+
+  it("gains a task note once its frontmatter tag starts matching the journal's rule", async () => {
+    const { index, visibility, notes, setTaskNote } = await publishedHarness(
+      { [HOME_NOTE]: { tags: ["#task", "#home"], properties: { scheduled: "2026-09-22" } } },
+      twoJournals,
+    );
+    const dependencies = buildDependencies({ published: index, visibility });
+    expect(await buildTaskListing(dependencies, dayOf("Work"))).toEqual([]);
+    const before = index.version();
+
+    setTaskNote(HOME_NOTE, { tags: ["#task", "#work"], properties: { scheduled: "2026-09-22" } });
+    notes.emitMetadataChanged(HOME_NOTE);
+
+    expect(index.version()).toBe(before + 1);
+    const rows = await buildTaskListing(dependencies, dayOf("Work"));
+    expect(rows.map((row) => row.source.path)).toEqual([HOME_NOTE]);
   });
 });

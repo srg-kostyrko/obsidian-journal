@@ -12,6 +12,7 @@ import {
 } from "../listing";
 import { TaskIndex } from "../task-index";
 import { useTasksVersion } from "../use-tasks-version";
+import { TaskVisibility } from "../visibility";
 
 export interface UseTaskListingResult {
   readonly rows: Readonly<ShallowRef<readonly TaskListingRow[]>>;
@@ -27,6 +28,7 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
     cycle: useService(CycleService),
     structure: useService(NoteStructureService),
     tasks: useService(TaskIndex),
+    visibility: useService(TaskVisibility),
   };
 
   // Neither index is Vue-reactive, so both versions ride along as watch sources: a provider

@@ -16,6 +16,7 @@ export interface TaskQuestionDependencies {
   readonly cycle: Pick<TaskListingDependencies["cycle"], "startOf" | "endOf">;
   readonly structure: TaskListingDependencies["structure"];
   readonly tasks: Pick<TaskListingDependencies["tasks"], "itemsIn" | "datedIn">;
+  readonly visibility: TaskListingDependencies["visibility"];
 }
 
 interface Counted {
@@ -49,8 +50,8 @@ function structureFor(
 }
 
 // Mirrors the listing's dated pass: the period's own range, whatever the source, and every
-// non-excluded item there is something on the day — counted before the who-filter, the way a
-// notelet is a source before any of its items match.
+// non-excluded item the journal admits there is something on the day — counted before the
+// who-filter, the way a notelet is a source before any of its items match.
 function datedHere(
   dependencies: TaskQuestionDependencies,
   target: Target,
@@ -62,7 +63,12 @@ function datedHere(
   if (start.isNone() || end.isNone()) return [];
   return dependencies.tasks
     .datedIn(rolesOf(question.date), start.value.toAnchor(), end.value.toAnchor())
-    .filter((item) => !counted.has(item.key) && !isExcluded(item.status));
+    .filter(
+      (item) =>
+        !counted.has(item.key) &&
+        !isExcluded(item.status) &&
+        dependencies.visibility.admits(item, [target.journalName]),
+    );
 }
 
 // A journal's stored status condition is the question when the decoration says "as in listing",

@@ -38,6 +38,7 @@ import type { TaskQuery } from "@/tasks/query";
 import { taskRollupScope } from "@/tasks/rollup-scope";
 import { isExcluded } from "@/tasks/status";
 import { TaskIndex } from "@/tasks/task-index";
+import { TaskVisibility } from "@/tasks/visibility";
 
 import { normalizeSelector, toCalendarDate, toJournalInfo } from "./convert";
 import { ApiError } from "./errors";
@@ -120,6 +121,7 @@ export class JournalsApiService implements JournalsApi {
     cycle: this.#cycle,
     structure: inject(NoteStructureService),
     tasks: this.#tasks,
+    visibility: inject(TaskVisibility),
   };
   readonly #unloaded: Promise<never>;
   #rejectUnloaded: ((reason: unknown) => void) | undefined;
