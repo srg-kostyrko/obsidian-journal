@@ -46,7 +46,7 @@ async function addCondition(type: "tag" | "folder" | "property"): Promise<void> 
   await userEvent.click(screen.getByTestId("note-visibility-add-condition"));
   const pickers = screen.getAllByTestId("note-visibility-condition-type");
   const picker = pickers.at(-1);
-  if (!(picker instanceof HTMLSelectElement)) throw new Error("no type picker");
+  if (!(picker instanceof HTMLSelectElement)) throw new TypeError("no type picker");
   await userEvent.selectOptions(picker, type);
 }
 
