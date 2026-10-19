@@ -128,14 +128,16 @@ finds its tasks without opening the modal at all. If you changed TaskNotes' sett
 
 - **Identify task notes by** — **Tag**, `#task` by default, or **Property**: a property name, and a
   **Property value** it must hold. Leave the value empty to count every note that has the property at
-  all, which is what reaches a `due:` convention whose notes carry no tag. The tag and the
+  all, which is what reaches a `due:` convention whose notes carry no tag. A tag also matches the tags
+  nested under it, as TaskNotes does: `#task` finds `#task/work`, never `#taskforce`. The tag and the
   property value compare ignoring case; the property name must match exactly. A list property matches
   when any of its items does, and a `true` or `1` written without quotes matches the value `true` or
   `1`. Only a tag in the note's properties counts: a `#task` written in its body marks a line, not the
   note, and leaves it an ordinary note.
 - **Excluded folders** — notes inside these folders are never task notes.
-- **Archive tag** — `#archived` by default. A note carrying it in its properties is left out, the way
-  TaskNotes hides archived tasks from its own views; leave it empty to keep such notes.
+- **Archive tag** — `#archived` by default. A note carrying it, or a tag nested under it such as
+  `#archived/2025`, in its properties is left out, the way TaskNotes hides archived tasks from its own
+  views; leave it empty to keep such notes.
 - **Date properties** — which property holds each of a task's five dates: due (`due`), scheduled
   (`scheduled`), start (none), done (`completedDate`) and created (`dateCreated`). A value is read as a
   date when it starts with one in `YYYY-MM-DD` form; a time after it, as in `2026-03-10T14:00`, is

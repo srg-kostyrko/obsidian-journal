@@ -1,7 +1,7 @@
 // Leaf on purpose: journalConfigSchema imports this file, and the tasks module imports journals.
 import * as v from "valibot";
 
-import { lowerScalars } from "./scalars";
+import { lowerScalars, tagMatches } from "./scalars";
 
 import type { TaskItem } from "../../types";
 
@@ -74,11 +74,6 @@ function wantedForms(text: string): string[] {
 function propertyMatches(value: unknown, wanted: readonly string[]): boolean {
   const forms = new Set(lowerScalars(value).flatMap(valueForms));
   return wanted.some((candidate) => wantedForms(candidate.toLowerCase()).some((form) => forms.has(form)));
-}
-
-// Obsidian's tag search: `#work` finds `#work/project`, never `#workshop`.
-function tagMatches(tag: string, wanted: string): boolean {
-  return tag === wanted || tag.startsWith(`${wanted}/`);
 }
 
 function folderPrefix(folder: string): string {

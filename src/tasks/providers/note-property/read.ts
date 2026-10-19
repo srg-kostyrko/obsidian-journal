@@ -3,7 +3,7 @@ import type { VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskStatus } from "@/tasks";
 import { isTaskStatus } from "@/tasks/status";
 
-import { lowerScalars, scalarText } from "./scalars";
+import { lowerScalars, scalarText, tagMatches } from "./scalars";
 
 import type { NotePropertySliceState } from "./slice";
 
@@ -17,10 +17,11 @@ export interface IdentifiableNote {
 
 export function identifiesNote(note: IdentifiableNote, path: VaultPath, state: NotePropertySliceState): boolean {
   if (state.excludedFolders.some((folder) => path.startsWith(`${folder.replace(/\/+$/u, "")}/`))) return false;
-  const tags = new Set(note.frontmatterTags.map((tag) => tag.toLowerCase()));
-  if (state.archiveTag !== "" && tags.has(state.archiveTag.toLowerCase())) return false;
+  const tags = note.frontmatterTags.map((tag) => tag.toLowerCase());
+  const carries = (wanted: string) => tags.some((tag) => tagMatches(tag, wanted.toLowerCase()));
+  if (state.archiveTag !== "" && carries(state.archiveTag)) return false;
   const rule = state.identify;
-  if (rule.by === "tag") return tags.has(rule.tag.toLowerCase());
+  if (rule.by === "tag") return carries(rule.tag);
   // `isTask:` with nothing after it is YAML null, and still a note that has the property.
   if (rule.value === "") return Object.hasOwn(note.properties, rule.name);
   return lowerScalars(note.properties[rule.name]).includes(rule.value.toLowerCase());
