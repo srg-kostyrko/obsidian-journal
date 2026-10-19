@@ -11,9 +11,11 @@ import { JournalInfoRoute } from "./local-rest-api/routes/journal-info";
 import { JournalListRoute } from "./local-rest-api/routes/journal-list";
 import { NoteRedirectRoute, NoteSectionRedirectRoute } from "./local-rest-api/routes/note-redirect";
 import { NotesListingRoute } from "./local-rest-api/routes/notes-listing";
+import { TasksListingRoute } from "./local-rest-api/routes/tasks-listing";
 import { McpToolToken } from "./local-rest-api/tool";
 import { JournalListTool } from "./local-rest-api/tools/journal-list";
 import { JournalNotesTool } from "./local-rest-api/tools/journal-notes";
+import { JournalTasksTool } from "./local-rest-api/tools/journal-tasks";
 import { NoteAdjacentTool } from "./local-rest-api/tools/note-adjacent";
 import { NoteEnsureTool } from "./local-rest-api/tools/note-ensure";
 import { NoteletCreateTool } from "./local-rest-api/tools/notelet-create";
@@ -29,28 +31,32 @@ export const apiModule: Module = {
     c.register(CreateNoteRoute).useClass(CreateNoteRoute);
     c.register(AdjacentNoteRoute).useClass(AdjacentNoteRoute);
     c.register(CreateNoteletRoute).useClass(CreateNoteletRoute);
+    c.register(TasksListingRoute).useClass(TasksListingRoute);
     c.register(NoteRedirectRoute).useClass(NoteRedirectRoute);
     c.register(NoteSectionRedirectRoute).useClass(NoteSectionRedirectRoute);
     // The bridge adds routes in this order, and Express matches in the order routes were added:
-    // the literal notes and notelets paths must come before "/journals/:name/:date", or "notes"
-    // and "notelets" would match :date there first.
+    // the literal notes, notelets and tasks paths must come before "/journals/:name/:date", or
+    // "notes", "notelets" and "tasks" would match :date there first.
     c.register(RestRouteToken).useFactory(() => inject(JournalListRoute));
     c.register(RestRouteToken).useFactory(() => inject(JournalInfoRoute));
     c.register(RestRouteToken).useFactory(() => inject(NotesListingRoute));
     c.register(RestRouteToken).useFactory(() => inject(CreateNoteRoute));
     c.register(RestRouteToken).useFactory(() => inject(AdjacentNoteRoute));
     c.register(RestRouteToken).useFactory(() => inject(CreateNoteletRoute));
+    c.register(RestRouteToken).useFactory(() => inject(TasksListingRoute));
     c.register(RestRouteToken).useFactory(() => inject(NoteRedirectRoute));
     c.register(RestRouteToken).useFactory(() => inject(NoteSectionRedirectRoute));
 
     c.register(JournalListTool).useClass(JournalListTool);
     c.register(JournalNotesTool).useClass(JournalNotesTool);
     c.register(NoteAdjacentTool).useClass(NoteAdjacentTool);
+    c.register(JournalTasksTool).useClass(JournalTasksTool);
     c.register(NoteEnsureTool).useClass(NoteEnsureTool);
     c.register(NoteletCreateTool).useClass(NoteletCreateTool);
     c.register(McpToolToken).useFactory(() => inject(JournalListTool));
     c.register(McpToolToken).useFactory(() => inject(JournalNotesTool));
     c.register(McpToolToken).useFactory(() => inject(NoteAdjacentTool));
+    c.register(McpToolToken).useFactory(() => inject(JournalTasksTool));
     c.register(McpToolToken).useFactory(() => inject(NoteEnsureTool));
     c.register(McpToolToken).useFactory(() => inject(NoteletCreateTool));
 

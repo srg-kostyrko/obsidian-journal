@@ -175,6 +175,45 @@ export interface JournalsApiError extends Error {
   readonly issues?: readonly AnswerIssue[];
 }
 
+/** A task's normalized status. Open on purpose: new statuses are additive, so handle the default case. */
+export type TaskStatus = "todo" | "in-progress" | "on-hold" | "done" | "cancelled" | "rolled" | (string & {});
+
+/** `open` is to-do, in progress and on hold; `done` is done and cancelled; any other value names one status. */
+export type TaskStatusFilter = "open" | "done" | "all" | TaskStatus;
+
+export interface TasksForOptions {
+  /** The period's own note, its notelets, or both. Default `both`. */
+  readonly source?: "note" | "notelets" | "both";
+  /** `rollup` adds every in-scope journal's periods inside this one — a month's days. Default `literal`. */
+  readonly depth?: "literal" | "rollup";
+  /** Omitted, the journal's own status condition applies, or `open`. Given, it replaces the journal's. */
+  readonly status?: TaskStatusFilter;
+}
+
+export interface TaskItem {
+  /** The journal whose note holds the task — under `rollup`, not necessarily the one asked about. */
+  readonly journal: string;
+  /** That note's period. */
+  readonly date: string;
+  readonly path: string;
+  readonly source: "note" | "notelet";
+  /** 0-based; null for a task that is a whole note rather than a line in one. */
+  readonly line: number | null;
+  /** The task's lines as written in the note, or a whole-note task's title. */
+  readonly text: string;
+  readonly status: TaskStatus;
+  readonly dates: {
+    readonly due?: string;
+    readonly scheduled?: string;
+    readonly start?: string;
+    readonly done?: string;
+    readonly created?: string;
+  };
+  readonly relations: readonly ("containment" | "date" | (string & {}))[];
+  /** The line of the task enclosing this one in the same note, whether or not that task matched. */
+  readonly parentLine: number | null;
+}
+
 export interface JournalsApiEvents {
   journalCreated: (event: { journal: string }) => void;
   journalRenamed: (event: { from: string; to: string }) => void;
@@ -212,6 +251,8 @@ export interface JournalsApi {
     range: DateRange,
     options?: { readonly type?: string },
   ): Promise<readonly NoteletNote[]>;
+  /** What a `journal-tasks` code block in the period's note would list, per matched journal. */
+  tasksFor(selector: JournalSelector, date: DateInput, options?: TasksForOptions): Promise<readonly TaskItem[]>;
   createNotelet(
     selector: JournalSelector,
     date: DateInput,
