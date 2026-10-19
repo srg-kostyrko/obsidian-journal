@@ -18,6 +18,15 @@ function lineItemOf(item: TaskItem, structure: NoteStructure | undefined): Struc
   return structure.listItems.find((candidate) => candidate.line === line);
 }
 
+// A whole-note item is tagged by its own frontmatter: it has no line for inline tags to sit on.
+// Its tags come from the item, not the live structure, so a tag edit is a change to the item.
+function tagsFor(item: TaskItem, structure: NoteStructure | undefined): readonly string[] | undefined {
+  if (item.display.kind === "note") return item.facts?.frontmatterTags;
+  if (structure === undefined) return undefined;
+  const listItem = lineItemOf(item, structure);
+  return listItem === undefined ? undefined : tagsOf(listItem, structure);
+}
+
 // undefined means the condition does not apply to this item and is removed from the set — not
 // false, which would silently drop a whole provider under `and`, and not true, which under `or`
 // would carry every item the condition cannot even read.
@@ -40,13 +49,10 @@ function evaluate(condition: TaskCondition, item: TaskItem, structure: NoteStruc
     })
     .with({ type: "tag" }, (c) => {
       if (c.tags.length === 0) return true;
-      // Dropped rather than resolved against the note's own frontmatter tags for a note-shaped
-      // item: only the checkbox provider ships here, so nothing yields a note-kind item yet and
-      // the choice is unobservable — see "Still to establish" in docs/tasks-model.md.
       // Same cold-cache read as the heading branch above: drop rather than exclude.
-      const listItem = lineItemOf(item, structure);
-      if (listItem === undefined || structure === undefined) return;
-      const hit = c.tags.some((tag) => tagsOf(listItem, structure).includes(tag));
+      const tags = tagsFor(item, structure);
+      if (tags === undefined) return;
+      const hit = c.tags.some((tag) => tags.includes(tag));
       return c.condition === "has" ? hit : !hit;
     })
     .exhaustive();
@@ -92,4 +98,15 @@ export function composeFilters(journalFilter: TaskRule | null, queryFilter: Task
   const merged = merge(journalFilter, queryFilter);
   if (merged.conditions.some((condition) => condition.type === "status")) return merged;
   return { mode: merged.mode, conditions: [...merged.conditions, { ...DEFAULT_STATUS_CONDITION }] };
+}
+
+// A journal's stored tag and heading conditions were written for its own checkbox lines; a dated
+// item lives in no note of the journal's, so only the stored status reaches it. What the surface
+// names itself still applies in full.
+export function composeDatedFilter(journalFilter: TaskRule | null, queryFilter: TaskRule): TaskRule {
+  const statusOnly =
+    journalFilter === null
+      ? null
+      : { mode: journalFilter.mode, conditions: journalFilter.conditions.filter((c) => c.type === "status") };
+  return composeFilters(statusOnly, queryFilter);
 }

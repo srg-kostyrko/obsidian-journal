@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "Affiner davantage",
   "decoration_condition_tasks_narrow_description": "Ne compte que les tâches correspondant à celles-ci, en plus du filtre de tâches du journal.",
   "decoration_condition_tasks_narrow_add": "Ajouter une condition restrictive",
+  "decoration_condition_tasks_date_label": "Date de la tâche",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "aucune tâche n'est ouverte {source}",
         "quantifier=none,status=done": "aucune tâche n'est terminée {source}",
         "quantifier=none,status=all": "aucune tâche n'existe {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, notes de tâche selon la date planifiée ou d'échéance",
+        "date=due": "{base}, notes de tâche selon la date d'échéance",
+        "date=scheduled": "{base}, notes de tâche selon la date planifiée",
+        "date=start": "{base}, notes de tâche selon la date de début",
+        "date=done": "{base}, notes de tâche selon la date de fin",
+        "date=created": "{base}, notes de tâche selon la date de création"
       }
     }
   ],
@@ -1496,6 +1511,14 @@
   "view_block_tasks_sort_start": "Date de début",
   "view_block_tasks_sort_done": "Date de fin",
   "view_block_tasks_sort_created": "Date de création",
+  "tasks_date_choice_scheduled_or_due": "Date planifiée ou d'échéance",
+  "tasks_date_choice_due": "Date d'échéance",
+  "tasks_date_choice_scheduled": "Date planifiée",
+  "tasks_date_choice_start": "Date de début",
+  "tasks_date_choice_done": "Date de fin",
+  "tasks_date_choice_created": "Date de création",
+  "view_block_tasks_date_label": "Date de la tâche",
+  "view_block_tasks_date_description": "Quelle date d'une note de tâche la place dans une période.",
   "view_block_tasks_filter_label": "Filtre",
   "view_block_tasks_filter_status_default": "Aucune condition d’État propre, donc le filtre de la liste d’un journal décide lorsqu’il en nomme un.",
   "view_toolbar_shelf_selector_label": "Sélecteur d’étagères",
@@ -2475,6 +2498,39 @@
   "tasks_status_rolled": "Reporté",
   "tasks_settings_add_symbol": "Ajouter un symbole",
   "tasks_settings_new_symbol_label": "Nouveau symbole",
+  "tasks_settings_provider_note_property": "Notes de tâche",
+  "tasks_settings_provider_note_property_desc": "Lit une note entière comme une tâche, avec son état et ses dates dans des propriétés.",
+  "tasks_note_property_summary_tag": "Compte une note avec l'étiquette {tag}.",
+  "tasks_note_property_summary_property": "Compte une note dont la propriété {property} vaut {value}.",
+  "tasks_note_property_summary_property_any": "Compte une note qui a une propriété {property}.",
+  "tasks_note_property_identify": "Identifier les notes de tâche par",
+  "tasks_note_property_identify_property": "Propriété",
+  "tasks_note_property_tag_required": "Saisissez une étiquette.",
+  "tasks_note_property_property_required": "Saisissez un nom de propriété.",
+  "tasks_note_property_value": "Valeur de la propriété",
+  "tasks_note_property_value_desc": "Laissez vide pour compter toute note qui a la propriété.",
+  "tasks_note_property_excluded_folders": "Dossiers exclus",
+  "tasks_note_property_excluded_folders_desc": "Les notes de ces dossiers ne sont jamais des notes de tâche.",
+  "tasks_note_property_folder_label": "Dossier",
+  "tasks_note_property_add_folder": "Ajouter un dossier",
+  "tasks_note_property_archive_tag": "Étiquette d'archive",
+  "tasks_note_property_archive_tag_desc": "Les notes avec cette étiquette sont ignorées. Laissez vide pour les garder.",
+  "tasks_note_property_dates": "Propriétés de date",
+  "tasks_note_property_dates_desc": "Quelle propriété contient chaque date. La date d'achèvement est aussi inscrite quand une tâche est cochée comme terminée. Laissez-en une vide pour ignorer cette date.",
+  "tasks_note_property_status_property": "Propriété d'état",
+  "tasks_note_property_status_values": "Valeurs d'état",
+  "tasks_note_property_status_values_desc": "Quelle valeur de la propriété correspond à quel état, sans tenir compte de la casse. Toute autre valeur est lue comme à faire. Lorsque deux valeurs partagent le même état, celle qui est marquée est réécrite dans la note quand l’état d’une tâche change.",
+  "tasks_note_property_written_back_tooltip": "Réécrire cette valeur pour cet état",
+  "tasks_note_property_status_value_label": "Valeur d'état",
+  "tasks_note_property_add_value": "Ajouter une valeur",
+  "tasks_note_property_status_value_required": "Saisissez une valeur pour chaque état.",
+  "tasks_note_property_status_value_duplicate": "{value} apparaît plus d'une fois.",
+  "tasks_note_property_title_property": "Propriété de titre",
+  "tasks_note_property_title_property_desc": "Affiché à la place du nom de fichier quand une note la définit.",
+  "tasks_note_property_modified_property": "Propriété de modification",
+  "tasks_note_property_modified_property_desc": "Reçoit l'heure chaque fois qu'une tâche est cochée. Laissez vide pour l'ignorer.",
+  "tasks_note_property_recurrence_properties": "Propriétés de récurrence",
+  "tasks_note_property_recurrence_properties_desc": "Une note où l'une d'elles est définie est récurrente et n'est jamais cochée ici. Séparez les noms par des virgules.",
 
   "tasks_journal_compose": "Relation avec la règle de tout le coffre-fort",
   "tasks_journal_compose_desc": "« Hériter » n’utilise que la règle de tout le coffre-fort. « Restreindre » exige qu’une ligne satisfasse les deux règles. « Remplacer » n’utilise que la règle de ce journal.",
@@ -2488,6 +2544,7 @@
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Quelles tâches une liste affiche.",
   "tasks_tick_recurring_needs_tasks_plugin": "Cette tâche n'a pas été cochée. Les tâches récurrentes nécessitent le plugin Tasks pour passer à leur prochaine occurrence.",
+  "tasks_tick_recurring_task_note": "Cette tâche n'a pas été cochée. Une note de tâche récurrente doit être terminée dans le plugin qui gère sa série.",
   "tasks_tick_error": "Impossible de cocher la tâche.",
   "tasks_listing_empty": "Aucune tâche ne correspond à cette requête."
 }

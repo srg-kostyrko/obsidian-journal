@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "더 좁히기",
   "decoration_condition_tasks_narrow_description": "저널의 작업 필터에 더해, 이 조건에 맞는 작업만 셉니다.",
   "decoration_condition_tasks_narrow_add": "좁히기 조건 추가",
+  "decoration_condition_tasks_date_label": "작업 날짜",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "{source}에 미완료 작업이 없음",
         "quantifier=none,status=done": "{source}에 완료된 작업이 없음",
         "quantifier=none,status=all": "{source}에 작업이 없음"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, 작업 노트는 예정일 또는 마감일 기준",
+        "date=due": "{base}, 작업 노트는 마감일 기준",
+        "date=scheduled": "{base}, 작업 노트는 예정일 기준",
+        "date=start": "{base}, 작업 노트는 시작일 기준",
+        "date=done": "{base}, 작업 노트는 완료일 기준",
+        "date=created": "{base}, 작업 노트는 생성 날짜 기준"
       }
     }
   ],
@@ -1496,6 +1511,14 @@
   "view_block_tasks_sort_start": "시작일",
   "view_block_tasks_sort_done": "완료일",
   "view_block_tasks_sort_created": "생성 날짜",
+  "tasks_date_choice_scheduled_or_due": "예정일 또는 마감일",
+  "tasks_date_choice_due": "마감일",
+  "tasks_date_choice_scheduled": "예정일",
+  "tasks_date_choice_start": "시작일",
+  "tasks_date_choice_done": "완료일",
+  "tasks_date_choice_created": "생성 날짜",
+  "view_block_tasks_date_label": "작업 날짜",
+  "view_block_tasks_date_description": "작업 노트의 어떤 날짜가 기간에 배치할지 정합니다.",
   "view_block_tasks_filter_label": "필터",
   "view_block_tasks_filter_status_default": "자체 상태 조건이 없으므로 상태를 지정한 저널에서는 그 저널의 목록 필터가 결정합니다.",
   "view_toolbar_shelf_selector_label": "선반 선택기",
@@ -2461,6 +2484,39 @@
   "tasks_status_rolled": "이월",
   "tasks_settings_add_symbol": "기호 추가",
   "tasks_settings_new_symbol_label": "새 기호",
+  "tasks_settings_provider_note_property": "작업 노트",
+  "tasks_settings_provider_note_property_desc": "노트 전체를 하나의 작업으로 읽으며, 상태와 날짜는 속성에서 가져옵니다.",
+  "tasks_note_property_summary_tag": "태그 {tag}이(가) 있는 노트를 집계합니다.",
+  "tasks_note_property_summary_property": "속성 {property}이(가) {value}인 노트를 집계합니다.",
+  "tasks_note_property_summary_property_any": "속성 {property}이(가) 있는 노트를 집계합니다.",
+  "tasks_note_property_identify": "작업 노트 식별 기준",
+  "tasks_note_property_identify_property": "속성",
+  "tasks_note_property_tag_required": "태그를 입력하세요.",
+  "tasks_note_property_property_required": "속성 이름을 입력하세요.",
+  "tasks_note_property_value": "속성 값",
+  "tasks_note_property_value_desc": "비워 두면 이 속성이 있는 모든 노트를 집계합니다.",
+  "tasks_note_property_excluded_folders": "제외할 폴더",
+  "tasks_note_property_excluded_folders_desc": "이 폴더의 노트는 작업 노트가 되지 않습니다.",
+  "tasks_note_property_folder_label": "폴더",
+  "tasks_note_property_add_folder": "폴더 추가",
+  "tasks_note_property_archive_tag": "보관 태그",
+  "tasks_note_property_archive_tag_desc": "이 태그가 있는 노트는 제외됩니다. 비워 두면 제외하지 않습니다.",
+  "tasks_note_property_dates": "날짜 속성",
+  "tasks_note_property_dates_desc": "각 날짜를 어떤 속성에 담는지. 완료 날짜는 작업을 완료로 체크할 때도 기록됩니다. 비워 둔 날짜는 무시됩니다.",
+  "tasks_note_property_status_property": "상태 속성",
+  "tasks_note_property_status_values": "상태 값",
+  "tasks_note_property_status_values_desc": "어떤 속성 값이 어떤 상태를 뜻하는지(대소문자 구분 없음). 그 밖의 값은 할 일로 읽습니다. 두 값이 같은 상태를 공유하면, 표시된 값이 작업의 상태가 바뀔 때 노트에 다시 기록됩니다.",
+  "tasks_note_property_written_back_tooltip": "이 상태에 이 값을 기록",
+  "tasks_note_property_status_value_label": "상태 값",
+  "tasks_note_property_add_value": "값 추가",
+  "tasks_note_property_status_value_required": "모든 상태에 값을 입력하세요.",
+  "tasks_note_property_status_value_duplicate": "{value}이(가) 두 번 이상 나열되어 있습니다.",
+  "tasks_note_property_title_property": "제목 속성",
+  "tasks_note_property_title_property_desc": "노트에서 설정한 경우 파일 이름 대신 표시됩니다.",
+  "tasks_note_property_modified_property": "수정 시각 속성",
+  "tasks_note_property_modified_property_desc": "작업을 체크할 때마다 시각이 기록됩니다. 비워 두면 기록하지 않습니다.",
+  "tasks_note_property_recurrence_properties": "반복 속성",
+  "tasks_note_property_recurrence_properties_desc": "이 중 하나라도 설정된 노트는 반복 작업이며 여기서 체크되지 않습니다. 이름은 쉼표로 구분하세요.",
 
   "tasks_journal_compose": "보관함 전체 규칙과의 관계",
   "tasks_journal_compose_desc": "「상속」은 보관함 전체 규칙만 사용합니다. 「좁히기」는 한 줄이 두 규칙을 모두 만족해야 합니다. 「대체」는 이 저널의 규칙만 사용합니다.",
@@ -2474,6 +2530,7 @@
   "tasks_filter_conditions_label": "조건",
   "tasks_filter_conditions_desc": "목록에 표시할 작업 조건.",
   "tasks_tick_recurring_needs_tasks_plugin": "이 작업은 완료 처리되지 않았습니다. 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다.",
+  "tasks_tick_recurring_task_note": "이 작업은 완료 처리되지 않았습니다. 반복 작업 노트는 해당 시리즈를 관리하는 플러그인에서 완료해야 합니다.",
   "tasks_tick_error": "작업을 완료 처리할 수 없습니다.",
   "tasks_listing_empty": "이 쿼리와 일치하는 작업이 없습니다."
 }

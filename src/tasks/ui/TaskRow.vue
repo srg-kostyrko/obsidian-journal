@@ -4,12 +4,13 @@ import { computed, onMounted, ref, watch } from "vue";
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { isBenignFlowError } from "@/infrastructure/flows";
-import { defineOpenMode, NoticeService, WorkspaceService } from "@/infrastructure/host";
+import { defineOpenMode, NotesService, NoticeService, WorkspaceService } from "@/infrastructure/host";
 import UiMarkdown from "@/ui/UiMarkdown.vue";
 
+import { isDone } from "../status";
 import { TickService } from "../tick";
 
-import { checkboxTarget } from "./task-row-click";
+import { checkboxTarget, internalLinkTarget } from "./task-row-click";
 import { unwrapLine } from "./unwrap-line";
 
 import type { TaskListingRow } from "../listing";
@@ -19,13 +20,24 @@ const props = defineProps<{ row: TaskListingRow }>();
 const tick = useService(TickService);
 const notices = useService(NoticeService);
 const workspace = useService(WorkspaceService);
+const notes = useService(NotesService);
 
-// No provider emits a "note"-kind display yet — the note-property provider docs/tasks-model.md
-// describes is a later phase — so there is nothing today to render its link-and-write-a-property
-// behavior against. Its title renders as plain text rather than inventing untested UI for it.
+// An internal link ends at its first `]]` and is no link at all once it holds `[[`, and its alias is
+// plain text with no escape syntax (app.js 1.8.7). A zero-width space after every bracket keeps
+// both sequences out of the title without changing how it reads. A line break would end the
+// link too.
+function linkAlias(title: string): string {
+  return title.replaceAll(/[[\]]/gu, "$&\u{200B}").replaceAll(/\s*[\r\n]+\s*/gu, " ");
+}
+
+// A task note renders as the same checkbox line a line row does, so Obsidian draws both controls
+// and the click handling below needs no second path for the checkbox.
 const markdown = computed(() => {
-  const display = props.row.item.display;
-  return display.kind === "line" ? unwrapLine(display.markdown ?? "") : display.title;
+  const item = props.row.item;
+  const display = item.display;
+  if (display.kind === "line") return unwrapLine(display.markdown ?? "");
+  const marker = isDone(item.status) ? "x" : " ";
+  return `- [${marker}] [[${notes.linkTextFor(display.path)}|${linkAlias(display.title)}]]`;
 });
 
 // Obsidian renders the row's checkbox itself, inside the markdown, so there is no prop to disable
@@ -41,7 +53,24 @@ function disableContextCheckboxes(): void {
 onMounted(disableContextCheckboxes);
 watch(markdown, disableContextCheckboxes, { flush: "post" });
 
+// Obsidian follows an internal link only inside its own reading and editing views; in a plugin
+// view nothing would. The row opens the task note itself, and stops the event so a host view that
+// does follow links does not open it a second time.
+function openTaskNote(event: MouseEvent): boolean {
+  const display = props.row.item.display;
+  if (display.kind !== "note" || internalLinkTarget(event) === null) return false;
+  event.preventDefault();
+  event.stopPropagation();
+  void workspace.openNote(display.path, defineOpenMode(event)).tapErr(() => notices.show(m.common_note_open_error()));
+  return true;
+}
+
+function onLineAuxClick(event: MouseEvent): void {
+  if (event.button === 1) openTaskNote(event);
+}
+
 function onLineClick(event: MouseEvent): void {
+  if (openTaskNote(event)) return;
   const checkbox = checkboxTarget(event);
   if (checkbox === null) return;
   // Obsidian attaches no handler of its own to this checkbox, so its native default (flipping its
@@ -71,10 +100,12 @@ function openSource(event: MouseEvent): void {
     :data-context="row.context"
     :style="{ '--task-listing-depth': row.depth }"
   >
-    <div ref="line" class="task-listing-row__line" @click="onLineClick">
+    <div ref="line" class="task-listing-row__line" @click="onLineClick" @auxclick="onLineAuxClick">
       <UiMarkdown :markdown="markdown" :source-path="row.item.path" />
     </div>
+    <!-- A task note is its own source, and its line already links it by the same title. -->
     <a
+      v-if="row.source.kind !== 'task-note'"
       href="#"
       class="task-listing-row__source"
       :title="row.source.label"

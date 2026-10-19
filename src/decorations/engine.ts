@@ -107,6 +107,7 @@ export class DecorationEngine {
     return {
       journals: this.#journals,
       index: this.#index,
+      cycle: this.#cycle,
       structure: {
         get: (path) => {
           const hit = cache.get(path);

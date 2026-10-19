@@ -809,6 +809,7 @@
   "decoration_condition_tasks_narrow_label": "Звузити додатково",
   "decoration_condition_tasks_narrow_description": "Враховуються лише завдання, що відповідають цим умовам, окрім фільтра завдань журналу.",
   "decoration_condition_tasks_narrow_add": "Додати уточнювальну умову",
+  "decoration_condition_tasks_date_label": "Дата завдання",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -826,6 +827,20 @@
         "quantifier=none,status=open": "жодне завдання не відкрите {source}",
         "quantifier=none,status=done": "жодне завдання не виконане {source}",
         "quantifier=none,status=all": "немає жодного завдання {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, нотатки-завдання за запланованою датою або терміном",
+        "date=due": "{base}, нотатки-завдання за терміном виконання",
+        "date=scheduled": "{base}, нотатки-завдання за запланованою датою",
+        "date=start": "{base}, нотатки-завдання за датою початку",
+        "date=done": "{base}, нотатки-завдання за датою завершення",
+        "date=created": "{base}, нотатки-завдання за датою створення"
       }
     }
   ],
@@ -1387,6 +1402,14 @@
   "view_block_tasks_sort_start": "Дата початку",
   "view_block_tasks_sort_done": "Дата завершення",
   "view_block_tasks_sort_created": "Дата створення",
+  "tasks_date_choice_scheduled_or_due": "Запланована дата або термін",
+  "tasks_date_choice_due": "Термін виконання",
+  "tasks_date_choice_scheduled": "Запланована дата",
+  "tasks_date_choice_start": "Дата початку",
+  "tasks_date_choice_done": "Дата завершення",
+  "tasks_date_choice_created": "Дата створення",
+  "view_block_tasks_date_label": "Дата завдання",
+  "view_block_tasks_date_description": "Яка дата нотатки-завдання відносить її до періоду.",
   "view_block_tasks_filter_label": "Фільтр",
   "view_block_tasks_filter_status_default": "Немає власної умови статусу, тому вирішує фільтр списку журналу, якщо він вказує статус.",
   "view_toolbar_shelf_selector_label": "Вибір полиці",
@@ -2542,6 +2565,39 @@
   "tasks_status_rolled": "Перенесено",
   "tasks_settings_add_symbol": "Додати символ",
   "tasks_settings_new_symbol_label": "Новий символ",
+  "tasks_settings_provider_note_property": "Нотатки-завдання",
+  "tasks_settings_provider_note_property_desc": "Читає всю нотатку як одне завдання, а її статус і дати — з властивостей.",
+  "tasks_note_property_summary_tag": "Враховує нотатку з тегом {tag}.",
+  "tasks_note_property_summary_property": "Враховує нотатку, у якої властивість {property} дорівнює {value}.",
+  "tasks_note_property_summary_property_any": "Враховує нотатку, у якої є властивість {property}.",
+  "tasks_note_property_identify": "Визначати нотатки-завдання за",
+  "tasks_note_property_identify_property": "Властивість",
+  "tasks_note_property_tag_required": "Введіть тег.",
+  "tasks_note_property_property_required": "Введіть назву властивості.",
+  "tasks_note_property_value": "Значення властивості",
+  "tasks_note_property_value_desc": "Залиште порожнім, щоб враховувати кожну нотатку з цією властивістю.",
+  "tasks_note_property_excluded_folders": "Виключені теки",
+  "tasks_note_property_excluded_folders_desc": "Нотатки в цих теках ніколи не є нотатками-завданнями.",
+  "tasks_note_property_folder_label": "Тека",
+  "tasks_note_property_add_folder": "Додати теку",
+  "tasks_note_property_archive_tag": "Тег архіву",
+  "tasks_note_property_archive_tag_desc": "Нотатки з цим тегом пропускаються. Залиште порожнім, щоб не пропускати їх.",
+  "tasks_note_property_dates": "Властивості дат",
+  "tasks_note_property_dates_desc": "Яка властивість зберігає кожну дату. Дата виконання також проставляється, коли завдання позначено виконаним. Залиште поле порожнім, щоб не читати цю дату.",
+  "tasks_note_property_status_property": "Властивість статусу",
+  "tasks_note_property_status_values": "Значення статусу",
+  "tasks_note_property_status_values_desc": "Яке значення властивості означає який статус, без урахування регістру. Будь-яке інше значення читається як «до виконання». Якщо два значення мають один статус, позначене з них записується назад у нотатку, коли статус завдання змінюється.",
+  "tasks_note_property_written_back_tooltip": "Записати це значення для цього статусу",
+  "tasks_note_property_status_value_label": "Значення статусу",
+  "tasks_note_property_add_value": "Додати значення",
+  "tasks_note_property_status_value_required": "Введіть значення для кожного статусу.",
+  "tasks_note_property_status_value_duplicate": "{value} вказано більше одного разу.",
+  "tasks_note_property_title_property": "Властивість заголовка",
+  "tasks_note_property_title_property_desc": "Показується замість імені файлу, якщо нотатка її задає.",
+  "tasks_note_property_modified_property": "Властивість зміни",
+  "tasks_note_property_modified_property_desc": "Отримує час щоразу, коли завдання позначено. Залиште порожнім, щоб не проставляти його.",
+  "tasks_note_property_recurrence_properties": "Властивості повторення",
+  "tasks_note_property_recurrence_properties_desc": "Нотатка, у якій задано будь-яку з них, вважається повторюваною і ніколи не позначається тут. Розділяйте назви комами.",
 
   "tasks_journal_compose": "Відношення до правила всього сховища",
   "tasks_journal_compose_desc": "«Успадкувати» використовує лише правило всього сховища. «Звузити» вимагає, щоб рядок задовольняв обидва правила. «Замінити» використовує лише правило цього журналу.",
@@ -2555,6 +2611,7 @@
   "tasks_filter_conditions_label": "Умови",
   "tasks_filter_conditions_desc": "Які із цих завдань показує список.",
   "tasks_tick_recurring_needs_tasks_plugin": "Це завдання не було позначено. Щоб повторювані завдання переходили до наступного екземпляра, потрібен плагін Tasks.",
+  "tasks_tick_recurring_task_note": "Це завдання не було позначено. Повторювану нотатку-завдання потрібно завершувати в плагіні, який керує її серією.",
   "tasks_tick_error": "Не вдалося позначити завдання.",
   "tasks_listing_empty": "Немає завдань, що відповідають цьому запиту."
 }

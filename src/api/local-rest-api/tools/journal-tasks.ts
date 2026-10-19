@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { inject } from "@/infrastructure/di";
+import { taskDateChoices } from "@/tasks/date-choice";
 
 import { JournalsApiService } from "../../journals-api";
 import { requireJournal } from "../request";
@@ -31,6 +32,14 @@ const entries = {
       ),
     ),
   ),
+  taskDate: v.optional(
+    v.pipe(
+      v.picklist(taskDateChoices),
+      v.description(
+        "Which of a task note's dates puts a task note in the listing for the period: due, scheduled, start, done, created, or scheduled-or-due (default).",
+      ),
+    ),
+  ),
 };
 
 export class JournalTasksTool implements McpTool {
@@ -38,18 +47,19 @@ export class JournalTasksTool implements McpTool {
 
   readonly name = "journal_tasks";
   readonly description =
-    "Lists the checkbox tasks of a journal's period — the period holding the date — exactly as a journal-tasks code block in that note would: the journal's own listing filter applies, so tasks it excludes are not returned. Each task carries its path and 0-based line; change a task with vault_patch.";
+    "Lists the tasks of a journal's period — the period holding the date — exactly as a journal-tasks code block in that note would: checkbox tasks in the note and its notelets, plus task notes dated on the period. The journal's own listing filter applies, so tasks it excludes are not returned. Each task carries its path and a 0-based line (null for a task note, whose relations include \"date\"); change a task with vault_patch.";
   readonly input = entries;
   readonly annotations = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
   async call(arguments_: Record<string, unknown>): Promise<unknown> {
-    const { journal, date, source, depth, status } = v.parse(v.object(entries), arguments_);
+    const { journal, date, source, depth, status, taskDate } = v.parse(v.object(entries), arguments_);
     await requireJournal(this.#api, journal);
 
     const tasks = await this.#api.tasksFor(journal, date, {
       ...(source !== undefined && { source }),
       ...(depth !== undefined && { depth }),
       ...(status !== undefined && { status }),
+      ...(taskDate !== undefined && { date: taskDate }),
     });
     return { tasks };
   }

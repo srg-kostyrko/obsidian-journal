@@ -82,6 +82,19 @@ function taskItem(status: TaskStatus): TaskItem {
 
 const NOTELET_TASK_PATH = "journals/notelets/standup.md" as VaultPath;
 
+function taskNote(path: VaultPath, status: TaskStatus, scheduled: string): TaskItem {
+  return {
+    provider: "note-property",
+    key: `note-property:${path}`,
+    path,
+    status,
+    relations: ["date"],
+    capabilities: { movable: false, stampable: false, retargetable: true },
+    display: { kind: "note", path, title: path },
+    dates: { scheduled: scheduled as AnchorString },
+  };
+}
+
 function taskItemAt(path: VaultPath, status: TaskStatus, line = 0): TaskItem {
   const item = taskItem(status);
   return {
@@ -98,6 +111,8 @@ async function evaluateTaskCondition(
     registerNote: boolean;
     items?: readonly TaskStatus[];
     noteletItems?: readonly TaskStatus[];
+    // Task notes scheduled on the evaluated day, each its own note outside the journal.
+    taskNotes?: readonly TaskStatus[];
     journalFilter?: TaskRule;
     structure?: NoteStructure;
     observe?: (structures: FakeNoteStructureService) => void;
@@ -146,6 +161,11 @@ async function evaluateTaskCondition(
       { path: NOTELET_TASK_PATH },
       options.noteletItems.map((s) => taskItemAt(NOTELET_TASK_PATH, s)),
     );
+  }
+  const taskNotes = options.taskNotes ?? [];
+  for (const [position, status] of taskNotes.entries()) {
+    const path = `Tasks/task-${position}.md` as VaultPath;
+    harness.resolve(TaskIndex).publish("note-property", { path }, [taskNote(path, status, "2026-05-25")]);
   }
   return harness
     .resolve(DecorationEngine)
@@ -517,6 +537,46 @@ describe("DecorationEngine", () => {
       it("leaves a day with no note undecorated for none open", async () => {
         const result = await evaluateTaskCondition({ quantifier: "none", status: "open" }, { registerNote: false });
         expect(result.size).toBe(0);
+      });
+
+      it("decorates a day with no note when an open task note is scheduled on it", async () => {
+        const result = await evaluateTaskCondition({ status: "open" }, { registerNote: false, taskNotes: ["todo"] });
+        expect(result.size).toBe(1);
+      });
+
+      it("decorates none open on a day with no note when only a done task note is scheduled on it", async () => {
+        const result = await evaluateTaskCondition(
+          { quantifier: "none", status: "open" },
+          { registerNote: false, taskNotes: ["done"] },
+        );
+        expect(result.size).toBe(1);
+      });
+
+      it("does not decorate a task note by a date the question does not name", async () => {
+        const result = await evaluateTaskCondition(
+          { status: "open", date: "due" },
+          { registerNote: false, taskNotes: ["todo"] },
+        );
+        expect(result.size).toBe(0);
+      });
+
+      it("decorates the week holding a task note's date, not only the day it opens on", async () => {
+        const decoration = buildDecoration({
+          mode: "and",
+          conditions: [buildCondition("tasks", { status: "open" })],
+          styles: [buildStyle("background")],
+        });
+        const { harness } = await buildHarness({
+          weekly: fixedJournal("weekly", { type: "week" }, { decorations: [decoration] }),
+        });
+        const path = "Tasks/midweek.md" as VaultPath;
+        const week = WeekPeriod.containing(date("2026-05-27"));
+        expect(week.start.toAnchor()).not.toBe("2026-05-27");
+        harness.resolve(TaskIndex).publish("note-property", { path }, [taskNote(path, "todo", "2026-05-27")]);
+        const result = harness
+          .resolve(DecorationEngine)
+          .evaluateRange([week], [{ kind: "journal", journalName: "weekly", index: 0, decoration }]);
+        expect(result.size).toBe(1);
       });
 
       it("decorates a day holding only a notelet with an open item when the source is both", async () => {

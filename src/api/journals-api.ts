@@ -29,6 +29,7 @@ import { isNotelet, periodEntryOf } from "@/journals/types";
 import type { NoteletEntry } from "@/journals/types";
 import { ShelvesRepository } from "@/shelves/repository";
 import { ShelvesService } from "@/shelves/service";
+import { taskDateChoices } from "@/tasks/date-choice";
 import { buildTaskListing } from "@/tasks/listing";
 import type { TaskListingDependencies, TaskListingRow } from "@/tasks/listing";
 import { TaskProviderRegistry } from "@/tasks/provider-registry";
@@ -69,9 +70,15 @@ function describeDateInput(input: DateInput): string {
   return "the given date-like value";
 }
 
+const TASK_DATE_CHOICES = new Set<string>(taskDateChoices);
+
 // The flat keys desugar exactly as the journal-tasks fence's do (toTaskQuery): a status is emitted
 // only when given, because a query condition replaces the journal's own condition of that type.
 function taskQueryFor(options: TasksForOptions | undefined): TaskQuery {
+  // A JavaScript caller is not held to the type, and an unknown date would match no task note at all.
+  if (options?.date !== undefined && !TASK_DATE_CHOICES.has(options.date)) {
+    throw new ApiError("invalid-option", `date must be one of ${taskDateChoices.join(", ")}`);
+  }
   return {
     scope: {
       provider: [],
@@ -84,6 +91,7 @@ function taskQueryFor(options: TasksForOptions | undefined): TaskQuery {
         options?.status === undefined ? [] : [{ type: "status", condition: "is", statuses: [options.status] }],
     },
     sort: "document",
+    date: options?.date ?? DEFAULT_TASK_QUERY.date,
   };
 }
 
@@ -517,7 +525,25 @@ export class JournalsApiService implements JournalsApi {
   #taskItemFrom(
     row: TaskListingRow,
     taskLines: Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>,
+    asked: { readonly journal: string; readonly date: string },
   ): TaskItem | null {
+    // A dated row's journal and date are the ones asked about, not its path's owner — a task note
+    // at a period note's path would otherwise be reported as that note's own task.
+    if (row.source.kind === "task-note") {
+      const { item } = row;
+      return {
+        journal: asked.journal,
+        date: asked.date,
+        path: item.path,
+        source: "note",
+        line: null,
+        text: item.display.kind === "note" ? item.display.title : "",
+        status: item.status,
+        dates: { ...item.dates },
+        relations: [...item.relations],
+        parentLine: null,
+      };
+    }
     const owner = this.#index.entryByPath(row.source.path);
     if (owner.isNone()) return null;
     const { item } = row;
@@ -650,7 +676,7 @@ export class JournalsApiService implements JournalsApi {
       for (const row of rows) {
         if (row.context || seen.has(row.key)) continue;
         seen.add(row.key);
-        const task = this.#taskItemFrom(row, taskLines);
+        const task = this.#taskItemFrom(row, taskLines, { journal: name, date: anchor.value });
         if (task !== null) found.push(task);
       }
     }

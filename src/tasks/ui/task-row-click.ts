@@ -7,3 +7,8 @@ export function checkboxTarget(event: Event): HTMLInputElement | null {
   const target = event.target;
   return target instanceof HTMLInputElement && target.type === "checkbox" ? target : null;
 }
+
+export function internalLinkTarget(event: Event): HTMLElement | null {
+  const target = event.target;
+  return target instanceof Element ? target.closest<HTMLElement>("a.internal-link") : null;
+}

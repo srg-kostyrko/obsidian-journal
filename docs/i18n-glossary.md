@@ -287,7 +287,7 @@ classes still in the corpus, all from the same context-free-MT root cause:
 
 ## Coverage
 
-All eleven locales are complete at **926/926**. Every locale has had a line-by-line pass
+All eleven locales are complete at **1162/1162**. Every locale has had a line-by-line pass
 over every key against `en.json`, and the `decoration_breakdown_*`, `decoration_badge_*`
 and week-reanchor keys are translated everywhere.
 
@@ -360,6 +360,13 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   rather than reusing the `lacks`/`not-under` wording verbatim, to keep them unambiguous from a
   condition that legitimately lacks a tag on an item; ru/uk do the same with "без вказаного
   тега"/"без указанного тега" rather than the bare "без тега" the `lacks` branch already uses.
+- The 44 task-note keys — the six `tasks_date_choice_*` labels, `view_block_tasks_date_*`,
+  `decoration_condition_tasks_date_label` and `decoration_condition_tasks_describe_dated`,
+  `tasks_tick_recurring_task_note`, and the `tasks_settings_provider_note_property*` and
+  `tasks_note_property_*` settings keys — were translated by an agent per task, each working
+  from this file. The date choices reuse each locale's existing `view_block_tasks_sort_*`
+  wording for the date roles, so a date reads the same whether it sorts a listing or places a
+  task note in one. Not native-verified.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

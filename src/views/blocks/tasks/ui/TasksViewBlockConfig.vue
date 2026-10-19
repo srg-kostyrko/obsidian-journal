@@ -5,8 +5,10 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
 import { JournalsViewModel } from "@/journals";
+import { taskDateChoices, type TaskDateChoice } from "@/tasks/date-choice";
 import { composeFilters } from "@/tasks/filter";
 import { taskSorts, type TaskQuery } from "@/tasks/query";
+import { taskDateChoiceLabel } from "@/tasks/ui/date-choice-label";
 import { describeTaskRule } from "@/tasks/ui/describe-task-rule";
 import { editTaskFilterModal } from "@/tasks/ui/modals";
 import UiButton from "@/ui/UiButton.vue";
@@ -53,6 +55,11 @@ function updateSource(value: string | undefined): void {
 function updateSort(value: string | undefined): void {
   if (value === undefined) return;
   update({ sort: value as TaskQuery["sort"] });
+}
+
+function updateDate(value: string | undefined): void {
+  if (value === undefined) return;
+  update({ date: value as TaskDateChoice });
 }
 
 // Described as the composed filter, not as the stored one: a block that names no status is where
@@ -104,6 +111,14 @@ function editFilter(): void {
     <UiDropdown :model-value="config.sort" @update:model-value="updateSort">
       <option v-for="sort of taskSorts" :key="sort" :value="sort">
         {{ sortLabels[sort]() }}
+      </option>
+    </UiDropdown>
+  </UiSettingRow>
+  <UiSettingRow :name="m.view_block_tasks_date_label()">
+    <template #description>{{ m.view_block_tasks_date_description() }}</template>
+    <UiDropdown :model-value="config.date" @update:model-value="updateDate">
+      <option v-for="choice of taskDateChoices" :key="choice" :value="choice">
+        {{ taskDateChoiceLabel(choice) }}
       </option>
     </UiDropdown>
   </UiSettingRow>

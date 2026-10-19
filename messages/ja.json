@@ -805,6 +805,7 @@
   "decoration_condition_tasks_narrow_label": "さらに絞り込む",
   "decoration_condition_tasks_narrow_description": "ジャーナルのタスクフィルターに加えて、これらに一致するタスクだけを数えます。",
   "decoration_condition_tasks_narrow_add": "絞り込み条件を追加",
+  "decoration_condition_tasks_date_label": "タスクの日付",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -822,6 +823,20 @@
         "quantifier=none,status=open": "{source}に未完了のタスクはない",
         "quantifier=none,status=done": "{source}に完了したタスクはない",
         "quantifier=none,status=all": "{source}にタスクがない"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}、タスクノートは予定日または期限日で判定",
+        "date=due": "{base}、タスクノートは期限日で判定",
+        "date=scheduled": "{base}、タスクノートは予定日で判定",
+        "date=start": "{base}、タスクノートは開始日で判定",
+        "date=done": "{base}、タスクノートは完了日で判定",
+        "date=created": "{base}、タスクノートは作成日で判定"
       }
     }
   ],
@@ -1351,6 +1366,14 @@
   "view_block_tasks_sort_start": "開始日",
   "view_block_tasks_sort_done": "完了日",
   "view_block_tasks_sort_created": "作成日",
+  "tasks_date_choice_scheduled_or_due": "予定日または期限日",
+  "tasks_date_choice_due": "期限日",
+  "tasks_date_choice_scheduled": "予定日",
+  "tasks_date_choice_start": "開始日",
+  "tasks_date_choice_done": "完了日",
+  "tasks_date_choice_created": "作成日",
+  "view_block_tasks_date_label": "タスクの日付",
+  "view_block_tasks_date_description": "タスクノートのどの日付で期間に割り当てるか。",
   "view_block_tasks_filter_label": "フィルター",
   "view_block_tasks_filter_status_default": "独自のステータス条件はありません。ステータスを指定しているジャーナルでは、その一覧フィルターが決定します。",
   "view_toolbar_shelf_selector_label": "棚セレクター",
@@ -2464,6 +2487,39 @@
   "tasks_status_rolled": "繰り越し",
   "tasks_settings_add_symbol": "記号を追加",
   "tasks_settings_new_symbol_label": "新しい記号",
+  "tasks_settings_provider_note_property": "タスクノート",
+  "tasks_settings_provider_note_property_desc": "ノート全体を1つのタスクとして読み取り、ステータスと日付はプロパティから取得します。",
+  "tasks_note_property_summary_tag": "タグ {tag} が付いたノートを数えます。",
+  "tasks_note_property_summary_property": "プロパティ {property} が {value} のノートを数えます。",
+  "tasks_note_property_summary_property_any": "プロパティ {property} を持つノートを数えます。",
+  "tasks_note_property_identify": "タスクノートの識別方法",
+  "tasks_note_property_identify_property": "プロパティ",
+  "tasks_note_property_tag_required": "タグを入力してください。",
+  "tasks_note_property_property_required": "プロパティ名を入力してください。",
+  "tasks_note_property_value": "プロパティの値",
+  "tasks_note_property_value_desc": "空欄にすると、このプロパティを持つすべてのノートを数えます。",
+  "tasks_note_property_excluded_folders": "除外するフォルダー",
+  "tasks_note_property_excluded_folders_desc": "これらのフォルダー内のノートはタスクノートになりません。",
+  "tasks_note_property_folder_label": "フォルダー",
+  "tasks_note_property_add_folder": "フォルダーを追加",
+  "tasks_note_property_archive_tag": "アーカイブタグ",
+  "tasks_note_property_archive_tag_desc": "このタグが付いたノートは除外されます。空欄にすると除外しません。",
+  "tasks_note_property_dates": "日付のプロパティ",
+  "tasks_note_property_dates_desc": "各日付をどのプロパティに保持するか。完了日は、タスクを完了としてチェックしたときにも書き込まれます。空欄にした日付は無視されます。",
+  "tasks_note_property_status_property": "ステータスのプロパティ",
+  "tasks_note_property_status_values": "ステータスの値",
+  "tasks_note_property_status_values_desc": "どのプロパティ値がどのステータスを表すか（大文字・小文字は区別しません）。それ以外の値は未完了として読み取ります。2つの値が同じステータスを共有する場合、マークされた値がタスクのステータス変更時にノートへ書き戻されます。",
+  "tasks_note_property_written_back_tooltip": "このステータスにこの値を書き込む",
+  "tasks_note_property_status_value_label": "ステータスの値",
+  "tasks_note_property_add_value": "値を追加",
+  "tasks_note_property_status_value_required": "すべてのステータスに値を入力してください。",
+  "tasks_note_property_status_value_duplicate": "{value} が複数回指定されています。",
+  "tasks_note_property_title_property": "タイトルのプロパティ",
+  "tasks_note_property_title_property_desc": "ノートで設定されている場合、ファイル名の代わりに表示されます。",
+  "tasks_note_property_modified_property": "更新日時のプロパティ",
+  "tasks_note_property_modified_property_desc": "タスクをチェックするたびに時刻が書き込まれます。空欄にすると書き込みません。",
+  "tasks_note_property_recurrence_properties": "繰り返しのプロパティ",
+  "tasks_note_property_recurrence_properties_desc": "これらのいずれかが設定されたノートは繰り返しとみなされ、ここではチェックされません。名前はカンマで区切ります。",
 
   "tasks_journal_compose": "保管庫全体のルールとの関係",
   "tasks_journal_compose_desc": "「継承」は保管庫全体のルールのみを使用します。「絞り込み」は行が両方のルールを満たすことを求めます。「置換」はこのジャーナルのルールのみを使用します。",
@@ -2477,6 +2533,7 @@
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "一覧に表示するタスクの条件。",
   "tasks_tick_recurring_needs_tasks_plugin": "このタスクはチェックされませんでした。繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。",
+  "tasks_tick_recurring_task_note": "このタスクはチェックされませんでした。繰り返しのタスクノートは、そのシリーズを管理するプラグインで完了してください。",
   "tasks_tick_error": "タスクをチェックできませんでした。",
   "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

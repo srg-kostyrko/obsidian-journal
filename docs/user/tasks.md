@@ -2,18 +2,21 @@
 
 ::: v-pre
 
-A **task**, here, is a checkbox list item — `- [ ] Buy milk` — in any note. Journals reads them to
-answer two things about a period: [does it have an open task, and are its tasks all
-done](/decorations#tasks). This page covers turning that reading on, what status each checkbox marker
-means, and which checkbox items count as tasks in the first place.
+A **task**, here, is a checkbox list item — `- [ ] Buy milk` — in any note, or, once you turn
+[task notes](#task-notes) on, a whole note that stands for one task, with its status and dates in
+properties. Journals reads them to list a period's tasks and to answer two things about it: [does it
+have an open task, and are its tasks all done](/decorations#tasks). This page covers turning that
+reading on, what status each checkbox marker or property value means, and which items count as tasks
+in the first place.
 
 ## Turning tasks on
 
 On the main settings page, expand the **Tasks** section: it lists one row per way Journals has of
-finding tasks, checkbox items being the only one so far. **Checkbox tasks**' toggle turns checkbox
-reading on — it is on by default — and its gear icon opens checkbox tasks' own settings: the status map
-and the vault-wide identification rule, both covered below. The row's own description names the current
-identification rule in one sentence, so you can see it without opening anything.
+finding tasks. **Checkbox tasks**' toggle turns checkbox reading on — it is on by default — and its gear
+icon opens checkbox tasks' own settings: the status map and the vault-wide identification rule, both
+covered below. **Task notes** is the second row, off by default; [Task notes](#task-notes) covers it.
+Each row's own description names its current identification rule in one sentence, so you can see it
+without opening anything.
 
 ## Status symbols
 
@@ -88,10 +91,136 @@ Choosing **Narrow** or **Replace** reveals the same condition editor as the vaul
 this journal. The row's own description names which relation is active and, once narrowed or replaced,
 summarizes the rule itself, so you can see it without opening the modal.
 
+## Task notes
+
+Some vaults keep one task per note rather than one per line. The
+[TaskNotes](https://github.com/callumalpass/tasknotes) plugin does, tagging each such note `#task` and
+keeping its status and dates in properties; a hand-rolled convention of a `due:` property on a note does
+the same. A note like this one is a whole task:
+
+```markdown
+---
+tags: [task]
+status: open
+scheduled: 2026-03-10
+title: Draft the report
+---
+```
+
+Turn **Task notes** on in the **Tasks** section and each such note becomes one task. A task note lives
+in no period note, so it is placed **by its date** instead: the note above appears in the listing of
+10 March, of that week and of that month, and counts toward their [decorations](/decorations#tasks) —
+whether or not a note for that day exists. See [Which date places a task
+note](#which-date-places-a-task-note).
+
+Every journal sees every task note for now; a journal cannot yet narrow which ones reach it.
+
+### Task notes' settings
+
+The gear icon on the **Task notes** row opens its settings modal. Nothing in it applies until **Save**.
+The defaults are TaskNotes' own property names, so turning the row on over a vault TaskNotes manages
+finds its tasks without opening the modal at all.
+
+- **Identify task notes by** — **Tag**, `#task` by default, or **Property**: a property name, and a
+  **Property value** it must hold. Leave the value empty to count every note that has the property at
+  all, which is what reaches a `due:` convention whose notes carry no tag. The tag and the
+  property value compare ignoring case; the property name must match exactly. A list property matches
+  when any of its items does, and a `true` or `1` written without quotes matches the value `true` or
+  `1`. Only a tag in the note's properties counts: a `#task` written in its body marks a line, not the
+  note, and leaves it an ordinary note.
+- **Excluded folders** — notes inside these folders are never task notes.
+- **Archive tag** — `#archived` by default. A note carrying it in its properties is left out, the way
+  TaskNotes hides archived tasks from its own views; leave it empty to keep such notes.
+- **Date properties** — which property holds each of a task's five dates: due (`due`), scheduled
+  (`scheduled`), start (none), done (`completedDate`) and created (`dateCreated`). A value is read as a
+  date when it starts with one in `YYYY-MM-DD` form; a time after it, as in `2026-03-10T14:00`, is
+  ignored, and a value that is not a date counts as no date. Leave a row empty to ignore that date.
+- **Status property** — `status` by default — and **Status values**, which map what that property
+  holds to a status, in any letter case:
+
+  | Value         | Status      |
+  | ------------- | ----------- |
+  | `none`        | To-do       |
+  | `open`        | To-do       |
+  | `in-progress` | In progress |
+  | `done`        | Done        |
+
+  Any other value reads as To-do, and so does a note with no status property at all. Each row's
+  **Written back** icon works the way it does for [checkbox markers](#status-symbols): it marks the
+  value written into the note when a task's status changes, `open` for To-do and `done` for Done by
+  default.
+
+- **Title property** — `title` by default. A note that sets it is listed by that title; one that does
+  not is listed by its file name.
+- **Modified property** — `dateModified` by default, stamped whenever a task note is ticked. Leave it
+  empty to skip it.
+- **Recurrence properties** — `recurrence, recurrence_parent` by default. A note with any of them set is
+  recurring; see [Ticking a task note](#ticking-a-task-note).
+
+### Which date places a task note
+
+With no date named, a task note belongs to every period its **scheduled or due** date falls in. A task
+scheduled on Monday and due on Friday therefore appears in both days' listings, and once in that week's.
+A surface can name a single date instead — the fence's [`date` key](#fence-keys), the tasks view block's
+**Task date**, the decoration condition's [**Task date**](/decorations#tasks) — choosing among
+**Scheduled or due date**, **Due date**, **Scheduled date**, **Start date**, **Done date** and
+**Created date**. A task note with none of the chosen dates appears nowhere.
+
+Two of a listing's settings do not reach task notes. `source` picks between a period's note and its
+notelets, and a task note is neither. `depth: rollup` gathers the periods inside the host one, and a
+task note already belongs to every period holding its date, so a month's listing shows the month's
+task notes either way.
+
+A recurring task note appears on the dates it has stored, never on later occurrences computed from its
+recurrence rule.
+
+This placing by date is for task notes only. A checkbox line's own dates — a `📅 2026-03-10` on the
+line — sort it, but never place it in a period other than the one whose note holds it.
+
+### Filters and task notes
+
+- A **tag** condition — the fence's `tag` key, a `conditions:` entry, a view block's or decoration's
+  own filter — matches a task note's tags in its properties. A tag only in its body does not count,
+  here or for **Identify task notes by**.
+- A **heading** condition does not apply to a task note: it sits under no heading, so a fence naming
+  one still lists the period's task notes.
+- **Status** applies as it does to any task: the default `status: open` hides a task note once it is
+  done.
+- A [journal's own listing filter](#a-journal-s-own-listing-filter) reaches task notes through its
+  **Status** condition only. Its tag and heading conditions were written for the journal's own checkbox
+  lines, so they do not hide task notes from it. In a [tasks view block](#the-tasks-view-block), a
+  journal's listing filter does not reach task notes at all; the block's own **Filter** decides, open
+  only when it names no status.
+- `provider: checkbox` lists checkbox tasks alone, and `provider: note-property` task notes alone.
+
+A task note that is also a journal's period note — one carrying both `#task` and `journal:` properties —
+is listed once, by its date, never a second time as a task held by that period note.
+
+### Ticking a task note
+
+A task note's row ticks like any other: clicking its checkbox writes the **Written back** value for
+Done into the status property — or, on a row that is already done, the value for To-do. When the
+matching property is set in **Date properties** and **Modified property**, the same click also:
+
+- writes today's date, as `2026-03-10`, into the done-date property on a tick to Done, and removes that
+  property on a tick back to To-do;
+- writes the current time, with its offset from UTC, as `2026-03-10T09:30:00+01:00`, into the modified
+  property.
+
+The note's body and its other property values are left alone.
+
+A **recurring** task note refuses, with a notice. A series is advanced by the plugin that manages it,
+off the completion of its current note; writing `done` ourselves would complete that note and end the
+series without anything failing loudly. Tick it in that plugin instead. A note Obsidian has not yet
+read the properties of, for a moment after startup, refuses too, since whether it is recurring cannot
+be told yet.
+
 ## Listing tasks in a note
 
 A `journal-tasks` code block lists the tasks of the period the note it sits in belongs to — the note's
-own tasks, its notelets', or both. In a note connected to no journal it lists nothing and says so.
+own tasks, its notelets', or both, and the [task notes](#task-notes) dated in the period. With
+`sort: document`, the task notes come last. In a
+note connected to no journal it lists nothing and says so.
 
 ````markdown
 ```journal-tasks
@@ -99,29 +228,30 @@ sort: status
 ```
 ````
 
-A bare fence, with no keys at all, defaults to `source: both`, `depth: literal`, `status: open` and
-`sort: document`. A listing only reads notes, where a move or a rollover would write into them, so it
+A bare fence, with no keys at all, defaults to `source: both`, `depth: literal`, `status: open`,
+`sort: document` and `date: scheduled-or-due`. A listing only reads notes, where a move or a rollover would write into them, so it
 can afford to default wider than those do: a bare fence in a day note that showed everything the note
 held would just mirror the note it already sits in, telling you nothing you could not see by opening
 it. The `status: open` default gives way to the journal's own, where [it has
 one](#a-journal-s-own-listing-filter).
 
-There is no `date` key yet. A task line can carry up to five dates — due, scheduled, start, created,
-done — and filtering a listing by any of them is a later addition. Today a listing finds tasks by where
-they live, a period's own note, its notelets, or both, never by a date the task itself carries.
+A listing finds checkbox tasks by where they live — a period's own note, its notelets, or both — and
+task notes by their date; `date` names which one. See [Which date places a task
+note](#which-date-places-a-task-note).
 
 ### Fence keys
 
-| Key          | Default    | Names                                                                                                                                                                                                                                                                      |
-| ------------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `provider`   | every one  | which providers to read tasks from, by id. **Checkbox tasks** (`checkbox`) is the only one that ships, so there is nothing to narrow yet.                                                                                                                                  |
-| `source`     | `both`     | `note`, `notelets` or `both`.                                                                                                                                                                                                                                              |
-| `depth`      | `literal`  | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own.                       |
-| `status`     | `open`     | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one. The default gives way to [the journal's own **Status** condition](#a-journal-s-own-listing-filter) where it has one.       |
-| `heading`    | none       | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
-| `tag`        | none       | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                                         |
-| `sort`       | `document` | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
-| `conditions` | none       | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
+| Key          | Default            | Names                                                                                                                                                                                                                                                                      |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provider`   | every one          | which providers to read tasks from, by id: `checkbox` for **Checkbox tasks**, `note-property` for **Task notes**.                                                                                                                                                          |
+| `source`     | `both`             | `note`, `notelets` or `both`.                                                                                                                                                                                                                                              |
+| `depth`      | `literal`          | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own.                       |
+| `status`     | `open`             | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one. The default gives way to [the journal's own **Status** condition](#a-journal-s-own-listing-filter) where it has one.       |
+| `heading`    | none               | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
+| `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                                         |
+| `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
+| `date`       | `scheduled-or-due` | which of a task note's dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). Checkbox tasks are not placed by date, so it does not change which of them are listed.                                        |
+| `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
 
 `status`, `heading` and `tag` are each sugar for one condition of that type. `conditions:` adds more —
 it never replaces what the flat keys already added, even one of the same type — which is how a fence
@@ -161,6 +291,9 @@ itself responds. Ticking writes the status character your [status map](#status-s
 **Done** (or, for a row that is already done, back to **To-do**) at that one position; nothing else on
 the line changes.
 
+A task note's row ticks by writing its status property instead; see [Ticking a task
+note](#ticking-a-task-note).
+
 A **recurring** line — one carrying `🔁` anywhere on it, not only as part of a due-date signifier — is
 the one case that refuses. The [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) plugin
 owns the recurrence syntax, and only its own toggle command creates the next instance; writing the
@@ -183,6 +316,9 @@ the same in the listing as it does in the note. A task inside a blockquote or a 
 ticks, the same as one at the top level.
 
 Below the line, a small link names the note (or notelet) the task lives in; click it to open that note.
+
+A task note's row is a checkbox followed by a link to the note, named by its title; clicking the link
+opens the task note, and so does the small link below it.
 
 ### Nesting
 
@@ -208,7 +344,8 @@ role last, rather than losing it from the listing.
 A journal's settings page has its own **Listing filter** row, in the same **Tasks** section as
 **Checkbox tasks**' own settings. **Edit** opens the same condition editor `conditions:` writes by hand,
 restricted to `tag`, `heading` and `status`, scoped to this journal. Leave it empty, the default, and a
-listing reads this journal with no filter of its own.
+listing reads this journal with no filter of its own. Of its conditions, only **Status** reaches
+[task notes](#filters-and-task-notes).
 
 A journal contributes **conditions** only, not a way of combining them: its conditions join the
 surface's own — a fence's, or a tasks view block's — and the combined list is matched under **that
@@ -248,11 +385,13 @@ the view rather than to the note it sits in:
 - **Journals** — leave all off, the default, to include every journal in the view's own
   [shelf scope](/shelves#scoping-a-view); turn specific ones on to narrow it further.
 - **Source** and **Sort by** — the same `source` and `sort` this page covers above.
+- **Task date** — the same as the fence's `date`: which of a task note's dates places it in the window.
 - **Filter** — the same condition editor [a journal's own listing filter](#a-journal-s-own-listing-filter)
   uses, scoped to this block instead of to a journal. A new block holds no conditions at all, so it
   shows what is still open the same way a bare fence does, and each journal's own **Status** condition
   applies where it has one. The row says so under its summary. Add a **Status** condition here to
-  decide for every journal the block lists.
+  decide for every journal the block lists. [Task notes](#filters-and-task-notes) take this
+  **Filter** alone; no journal's own condition reaches them here.
 
 The block has no **Depth** control. Unlike the fence, which is literal about one host note unless you
 ask it to roll up, the block already walks every journal its window and its shelf scope name — there is
@@ -332,5 +471,50 @@ The default `status: open` excludes "Shopping" — it is Done — but "Buy milk"
 listing shows both: "Shopping" first, dimmed and not clickable, because it is the context that gives
 "Buy milk" its meaning, then "Buy milk" indented under it, clickable as normal. Ticking "Buy milk" writes
 its Done marker; clicking "Shopping" does nothing.
+
+### A task note on its day
+
+**Task notes** turned on, every one of its settings at its default, and a daily journal. Two task
+notes, neither of them a period note:
+
+```markdown
+---
+tags: [task]
+status: open
+scheduled: 2026-03-10
+title: Draft the report
+---
+```
+
+```markdown
+---
+tags: [task]
+status: open
+due: 2026-03-10
+recurrence: FREQ=WEEKLY
+---
+```
+
+The second is saved as `Tasks/Water the plants.md`. A bare `journal-tasks` fence in the note for
+10 March lists both: "Draft the report" by its title, scheduled that day, and "Water the plants" by its
+file name, due that day. Ticking "Draft the report" writes `status: done`, today's date into
+`completedDate` and the time into `dateModified`, and the row leaves the listing, which shows open
+tasks only. Ticking "Water the plants" changes nothing and shows a notice instead: it is recurring.
+
+### A dot on a day with no note
+
+The same settings, and a daily journal with a **Check tasks** decoration set to **Any** · **Open**.
+Today is 10 March, it has no daily note, and one task note is scheduled for it:
+
+```markdown
+---
+tags: [task]
+status: open
+scheduled: 2026-03-10
+---
+```
+
+Today's cell in the calendar is decorated: the task note is open and placed on that day by its
+scheduled date, so the day has an open task with no note of its own.
 
 :::

@@ -35,6 +35,14 @@ export interface TaskItem {
   readonly capabilities: TaskCapabilities;
   readonly display: TaskDisplay;
   readonly dates: Partial<Record<TaskDateRole, AnchorString>>;
+  // What surfaces filter a whole-note item on, captured at publish. Were they read live at query
+  // time, an edit to them would republish an equal item, the index would not bump, and no filter
+  // would recompute.
+  readonly facts?: TaskFacts;
+}
+
+export interface TaskFacts {
+  readonly frontmatterTags: readonly string[];
 }
 
 export interface TaskProvider {

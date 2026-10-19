@@ -2,7 +2,8 @@ import { CalendarDate, type AnchorString } from "@/calendar";
 import { basenameOf, type NoteStructureService, type VaultPath } from "@/infrastructure/host";
 import type { CycleService, JournalsIndex, JournalsRepository } from "@/journals";
 
-import { composeFilters, matchesFilter } from "./filter";
+import { rolesOf } from "./date-choice";
+import { composeDatedFilter, composeFilters, matchesFilter } from "./filter";
 import { isExcluded } from "./status";
 
 import type { TaskRule } from "./conditions";
@@ -15,7 +16,7 @@ export interface TaskListingDependencies {
   readonly index: Pick<JournalsIndex, "get" | "getRange" | "noteletsAt" | "noteletAnchorsInRange">;
   readonly cycle: Pick<CycleService, "startOf" | "endOf" | "anchorOf" | "overlapsFrom">;
   readonly structure: Pick<NoteStructureService, "get">;
-  readonly tasks: Pick<TaskIndex, "itemsIn" | "hydrate">;
+  readonly tasks: Pick<TaskIndex, "itemsIn" | "hydrate" | "datedIn">;
 }
 
 export interface TaskListingPeriodRequest {
@@ -41,8 +42,10 @@ export interface TaskListingWindowRequest {
 
 export type TaskListingRequest = TaskListingPeriodRequest | TaskListingWindowRequest;
 
+// "task-note" is a row reached by its date rather than by the note it sits in: its source is the
+// task note itself.
 export interface TaskListingSource {
-  readonly kind: "note" | "notelet";
+  readonly kind: "note" | "notelet" | "task-note";
   readonly path: VaultPath;
   readonly label: string;
 }
@@ -236,6 +239,12 @@ function composedFilterFor(dependencies: TaskListingDependencies, query: TaskQue
   };
 }
 
+function inScope(item: TaskItem, providers: readonly string[]): boolean {
+  return !isExcluded(item.status) && (providers.length === 0 || providers.includes(item.provider));
+}
+
+// A task note sitting at a period note's own path is still reached by its date, never by
+// containment — gathering it here too would list it under whichever note happens to hold it.
 function gather(
   dependencies: TaskListingDependencies,
   path: VaultPath,
@@ -243,7 +252,44 @@ function gather(
 ): readonly TaskItem[] {
   return dependencies.tasks
     .itemsIn(path)
-    .filter((item) => !isExcluded(item.status) && (providers.length === 0 || providers.includes(item.provider)));
+    .filter((item) => item.relations.includes("containment") && inScope(item, providers));
+}
+
+function datedRange(
+  dependencies: TaskListingDependencies,
+  request: TaskListingRequest,
+): { readonly start: AnchorString; readonly end: AnchorString } | null {
+  if (request.kind === "window") return request.window;
+  const start = dependencies.cycle.startOf(request.hostJournal, request.anchor);
+  const end = dependencies.cycle.endOf(request.hostJournal, request.anchor);
+  if (start.isNone() || end.isNone()) return null;
+  return { start: start.value.toAnchor(), end: end.value.toAnchor() };
+}
+
+// Gathered for the host period alone, whatever the depth: a dated item belongs to every period
+// holding its date, so rolling up would only find it again under each sibling. Neither does source
+// apply — a task note is neither the period's note nor one of its notelets.
+function datedItems(
+  dependencies: TaskListingDependencies,
+  request: TaskListingRequest,
+  emitted: ReadonlySet<string>,
+): readonly TaskItem[] {
+  const range = datedRange(dependencies, request);
+  if (range === null) return [];
+  const { query } = request;
+  const journalFilter =
+    request.kind === "period"
+      ? (dependencies.journals.get(request.hostJournal).getOrUndefined()?.tasks.filter ?? null)
+      : null;
+  const filter = composeDatedFilter(journalFilter, query.filter);
+  return dependencies.tasks
+    .datedIn(rolesOf(query.date), range.start, range.end)
+    .filter(
+      (item) =>
+        !emitted.has(item.key) &&
+        inScope(item, query.scope.provider) &&
+        matchesFilter(item, dependencies.structure.get(item.path).getOrUndefined(), filter),
+    );
 }
 
 function ancestorsOf(item: TaskItem, byLine: ReadonlyMap<number, TaskItem>): readonly TaskItem[] {
@@ -341,6 +387,22 @@ export async function buildTaskListing(
         context: kept.context,
       });
     }
+  }
+
+  const emitted = new Set(entries.map((entry) => entry.item.key));
+  for (const item of datedItems(dependencies, request, emitted)) {
+    entries.push({
+      id: entries.length,
+      parentId: undefined,
+      item,
+      source: {
+        kind: "task-note",
+        path: item.path,
+        label: item.display.kind === "note" ? item.display.title : basenameOf(item.path),
+      },
+      depth: 0,
+      context: false,
+    });
   }
 
   // One call, over the context rows as well as the matching ones: a context row renders its own

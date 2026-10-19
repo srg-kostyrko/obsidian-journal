@@ -6,6 +6,10 @@ import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkb
 import { EditJournalTasksFlow } from "./providers/checkbox/flows/edit-journal-tasks.flow";
 import { CheckboxTaskProvider } from "./providers/checkbox/provider";
 import { checkboxSlice } from "./providers/checkbox/slice";
+import { EditNotePropertyProviderFlow } from "./providers/note-property/flows/edit-note-property-provider.flow";
+import { NotePropertyTaskProvider } from "./providers/note-property/provider";
+import { notePropertySlice } from "./providers/note-property/slice";
+import { NotePropertyTicker } from "./providers/note-property/tick";
 import { TaskHostService } from "./task-host";
 import { TaskIndex } from "./task-index";
 import { TickService } from "./tick";
@@ -18,9 +22,13 @@ export const tasksCoreModule: Module = {
     c.register(TaskHostToken).useClass(TaskHostService);
     c.register(TaskProviderRegistry).useClass(TaskProviderRegistry);
     c.register(TaskProviderToken).useClass(CheckboxTaskProvider);
+    c.register(TaskProviderToken).useClass(NotePropertyTaskProvider);
     c.register(SliceDefinitionToken).useValue(checkboxSlice);
+    c.register(SliceDefinitionToken).useValue(notePropertySlice);
     c.register(EditCheckboxProviderFlow).useClass(EditCheckboxProviderFlow);
     c.register(EditJournalTasksFlow).useClass(EditJournalTasksFlow);
+    c.register(EditNotePropertyProviderFlow).useClass(EditNotePropertyProviderFlow);
+    c.register(NotePropertyTicker).useClass(NotePropertyTicker);
     c.register(TickService).useClass(TickService);
   },
 };

@@ -53,8 +53,9 @@ Which conditions a journal decoration offers depends on the journal's period:
 
 A condition about a note — title, tags, a property, its size — needs the note to exist. On a date with
 no note it does not match. **Check tasks** is the exception: with **Look in** set to **Notelets only** or **Note and notelets**, a
-date with only a notelet can match. **None** matches a date that has a note or notelet it looks in, where no
-counted task has the chosen status.
+date with only a notelet can match, and a date with only a [task note](/tasks#task-notes) dated on it can
+match whatever **Look in** says. **None** matches a date that has a note or notelet it looks in, or a task
+note dated on it, where no counted task has the chosen status.
 
 ### Title and tags
 
@@ -103,8 +104,9 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
 
 - **Which tasks** — **Any** matches when at least one task has the status. **All** matches when the
   period has at least one task and every one of them has the status; a period with no tasks never
-  matches. **None** matches when the period has a note or notelet it looks in and no task has the status,
-  so a note with no tasks matches and a date with nothing to look in does not.
+  matches. **None** matches when the period has a note or notelet it looks in, or a task note dated in
+  it, and no task has the status — so a note with no tasks matches, a day whose only task note is done
+  matches **None** · **Open**, and a date with nothing at all does not.
 - **Status** — **As in listing**, **Open**, **Done** or **All**. **Open** is To-do, In progress and On
   hold; **Done** is Done and Cancelled; **All** is any status. **As in listing** asks whatever
   the journal's own task listing asks: its **Status** condition if the [journal's listing
@@ -112,6 +114,15 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
   every dot that follows it changes meaning with it.
 - **Look in** — **Note only**, **Notelets only** or **Note and notelets**, which is the default. With
   notelets only, a date can match without a period note.
+- **Task date** — which of a [task note](/tasks#task-notes)'s dates places it in the period: **Scheduled
+  or due date**, the default, or one of **Due date**, **Scheduled date**, **Start date**, **Done date**
+  and **Created date**. It has no effect on checkbox tasks, and none until task notes are turned on.
+
+Task notes count toward the question alongside the period's checkbox tasks, so a dot can light a day
+that has no note at all: one task note scheduled on it is enough for **Any** · **Open**. **Look in** does
+not narrow them — a task note is neither the period's note nor one of its notelets. On a custom-interval
+journal, a decoration that pairs **Check tasks** with an [interval offset](#interval-offset) counts the
+task notes of the whole interval, not only those dated on the offset's day.
 
 **Narrow further** counts only the tasks that match its **Heading** and **Tag** conditions, with an
 and/or control for combining them. The journal's own listing filter always applies as well: a
@@ -120,7 +131,9 @@ journal's other conditions still apply, and the control decides how they combine
 asked of the tasks that remain. A journal whose filter keeps only tasks under `## Tasks` therefore
 ignores an unticked habit under `## Habits` when **All** · **Done** is asked. Under **Or**, the journal's
 conditions join yours rather than limiting them, which is how a **Tasks** view block with the **Or**
-mode behaves too.
+mode behaves too. Task notes are filtered the way [a listing filters them](/tasks#filters-and-task-notes):
+a **Tag** condition here matches a task note's own tags, a **Heading** condition does not apply to one,
+and of the journal's own filter only its **Status** condition reaches them.
 
 Not a task items are excluded entirely and never supply the "at least one task" that **All** needs.
 Rolled over tasks are neither open nor done: they never satisfy **Open** or **Done**, but they are

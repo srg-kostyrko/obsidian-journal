@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "Weiter eingrenzen",
   "decoration_condition_tasks_narrow_description": "Zählt nur Aufgaben, die diesen entsprechen, zusätzlich zum Aufgabenfilter des Journals.",
   "decoration_condition_tasks_narrow_add": "Einschränkende Bedingung hinzufügen",
+  "decoration_condition_tasks_date_label": "Aufgabendatum",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "keine Aufgabe ist offen {source}",
         "quantifier=none,status=done": "keine Aufgabe ist erledigt {source}",
         "quantifier=none,status=all": "keine Aufgabe existiert {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, Aufgabennotizen nach geplantem oder Fälligkeitsdatum",
+        "date=due": "{base}, Aufgabennotizen nach Fälligkeitsdatum",
+        "date=scheduled": "{base}, Aufgabennotizen nach geplantem Datum",
+        "date=start": "{base}, Aufgabennotizen nach Startdatum",
+        "date=done": "{base}, Aufgabennotizen nach Erledigungsdatum",
+        "date=created": "{base}, Aufgabennotizen nach Erstellungsdatum"
       }
     }
   ],
@@ -1496,6 +1511,14 @@
   "view_block_tasks_sort_start": "Startdatum",
   "view_block_tasks_sort_done": "Erledigungsdatum",
   "view_block_tasks_sort_created": "Erstellungsdatum",
+  "tasks_date_choice_scheduled_or_due": "Geplantes oder Fälligkeitsdatum",
+  "tasks_date_choice_due": "Fälligkeitsdatum",
+  "tasks_date_choice_scheduled": "Geplantes Datum",
+  "tasks_date_choice_start": "Startdatum",
+  "tasks_date_choice_done": "Erledigungsdatum",
+  "tasks_date_choice_created": "Erstellungsdatum",
+  "view_block_tasks_date_label": "Aufgabendatum",
+  "view_block_tasks_date_description": "Welches Datum einer Aufgabennotiz sie einem Zeitraum zuordnet.",
   "view_block_tasks_filter_label": "Filter",
   "view_block_tasks_filter_status_default": "Keine eigene Status-Bedingung, daher entscheidet der Anzeigefilter eines Journals, wo dieser einen Status nennt.",
   "view_toolbar_shelf_selector_label": "Regalauswahl",
@@ -2477,6 +2500,39 @@
   "tasks_status_rolled": "Übertragen",
   "tasks_settings_add_symbol": "Symbol hinzufügen",
   "tasks_settings_new_symbol_label": "Neues Symbol",
+  "tasks_settings_provider_note_property": "Aufgabennotizen",
+  "tasks_settings_provider_note_property_desc": "Liest eine ganze Notiz als eine Aufgabe, mit Status und Datumsangaben in Eigenschaften.",
+  "tasks_note_property_summary_tag": "Zählt eine Notiz mit dem Tag {tag}.",
+  "tasks_note_property_summary_property": "Zählt eine Notiz, deren Eigenschaft {property} den Wert {value} hat.",
+  "tasks_note_property_summary_property_any": "Zählt eine Notiz, die die Eigenschaft {property} hat.",
+  "tasks_note_property_identify": "Aufgabennotizen erkennen an",
+  "tasks_note_property_identify_property": "Eigenschaft",
+  "tasks_note_property_tag_required": "Gib einen Tag ein.",
+  "tasks_note_property_property_required": "Gib einen Eigenschaftsnamen ein.",
+  "tasks_note_property_value": "Eigenschaftswert",
+  "tasks_note_property_value_desc": "Leer lassen, um jede Notiz mit dieser Eigenschaft zu zählen.",
+  "tasks_note_property_excluded_folders": "Ausgeschlossene Ordner",
+  "tasks_note_property_excluded_folders_desc": "Notizen in diesen Ordnern sind nie Aufgabennotizen.",
+  "tasks_note_property_folder_label": "Ordner",
+  "tasks_note_property_add_folder": "Ordner hinzufügen",
+  "tasks_note_property_archive_tag": "Archiv-Tag",
+  "tasks_note_property_archive_tag_desc": "Notizen mit diesem Tag werden ausgelassen. Leer lassen, um sie zu behalten.",
+  "tasks_note_property_dates": "Datumseigenschaften",
+  "tasks_note_property_dates_desc": "Welche Eigenschaft welches Datum enthält. Das Erledigt-Datum wird außerdem gesetzt, wenn eine Aufgabe als erledigt abgehakt wird. Leer lassen, um dieses Datum zu ignorieren.",
+  "tasks_note_property_status_property": "Status-Eigenschaft",
+  "tasks_note_property_status_values": "Statuswerte",
+  "tasks_note_property_status_values_desc": "Welcher Eigenschaftswert welchen Status bedeutet, unabhängig von Groß- und Kleinschreibung. Jeder andere Wert gilt als zu erledigen. Teilen sich zwei Werte einen Status, wird der markierte Wert in die Notiz zurückgeschrieben, sobald sich der Status einer Aufgabe ändert.",
+  "tasks_note_property_written_back_tooltip": "Diesen Wert für diesen Status schreiben",
+  "tasks_note_property_status_value_label": "Statuswert",
+  "tasks_note_property_add_value": "Wert hinzufügen",
+  "tasks_note_property_status_value_required": "Gib für jeden Status einen Wert ein.",
+  "tasks_note_property_status_value_duplicate": "{value} ist mehr als einmal aufgeführt.",
+  "tasks_note_property_title_property": "Titel-Eigenschaft",
+  "tasks_note_property_title_property_desc": "Wird anstelle des Dateinamens angezeigt, wenn eine Notiz sie setzt.",
+  "tasks_note_property_modified_property": "Änderungs-Eigenschaft",
+  "tasks_note_property_modified_property_desc": "Erhält die Uhrzeit, wann immer eine Aufgabe abgehakt wird. Leer lassen, um das zu überspringen.",
+  "tasks_note_property_recurrence_properties": "Wiederholungs-Eigenschaften",
+  "tasks_note_property_recurrence_properties_desc": "Eine Notiz, bei der eine davon gesetzt ist, wiederholt sich und wird hier nie abgehakt. Namen durch Kommas trennen.",
 
   "tasks_journal_compose": "Verhältnis zur Vault-weiten Regel",
   "tasks_journal_compose_desc": "„Erben“ verwendet nur die Vault-weite Regel. „Einschränken“ verlangt, dass eine Zeile beide Regeln erfüllt. „Ersetzen“ verwendet nur die Regel dieses Journals.",
@@ -2490,6 +2546,7 @@
   "tasks_filter_conditions_label": "Bedingungen",
   "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",
+  "tasks_tick_recurring_task_note": "Diese Aufgabe wurde nicht abgehakt. Eine wiederkehrende Aufgabennotiz muss in dem Plugin abgeschlossen werden, das ihre Serie verwaltet.",
   "tasks_tick_error": "Die Aufgabe konnte nicht abgehakt werden.",
   "tasks_listing_empty": "Keine Aufgaben entsprechen dieser Abfrage."
 }

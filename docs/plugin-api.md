@@ -324,11 +324,12 @@ const today = await journals.tasksFor("Work Daily", "today");
 const month = await journals.tasksFor("Work Monthly", "today", { depth: "rollup", status: "all" });
 ```
 
-| option   | values                                                 | default   |
-| -------- | ------------------------------------------------------ | --------- |
-| `source` | `note`, `notelets`, `both`                             | `both`    |
-| `depth`  | `literal`, `rollup`                                    | `literal` |
-| `status` | `open`, `done`, `all`, or one status such as `on-hold` | see below |
+| option   | values                                                             | default            |
+| -------- | ------------------------------------------------------------------ | ------------------ |
+| `source` | `note`, `notelets`, `both`                                         | `both`             |
+| `depth`  | `literal`, `rollup`                                                | `literal`          |
+| `status` | `open`, `done`, `all`, or one status such as `on-hold`             | see below          |
+| `date`   | `scheduled-or-due`, `due`, `scheduled`, `start`, `done`, `created` | `scheduled-or-due` |
 
 - **Leaving `status` out and passing `status: "open"` are not the same call.** Left out, the
   journal's own status condition applies, or `open` when it has none. Passed — even as `open` — it
@@ -348,14 +349,20 @@ const month = await journals.tasksFor("Work Monthly", "today", { depth: "rollup"
   twice — as one journal's period and inside another's rollup — and the task still appears once.
   Results are grouped by journal in selector order, and in note order within each.
 - **`journal` and `date` are the note's, not the query's.** Under `rollup`, a task found in a day
-  note reports the day journal and that day.
+  note reports the day journal and that day. A task that is a whole note, listed because of a date
+  it carries (`relations` has `"date"`), has no containing note: its `journal` and `date` are the
+  journal and period you asked about. When a selector matches several journals that admit it, it
+  is returned once, attributed to the first of them in selector order.
 - **Only matching tasks are returned.** The code block also shows a non-matching parent, dimmed, to
   anchor a child; `tasksFor` does not. `parentLine` is the line of the enclosing task in the same
   note, whether or not that task matched, so the nesting can be rebuilt.
 - **`line` is 0-based**, and `text` is the task's lines as written, indentation included. Reading
   `text` reads the note, so a rolled-up year reads every note in it — the code block pays the same.
-- **`relations` is always `["containment"]` for now**: tasks belong to a period by living in its
-  notes. Matching tasks by the dates they carry is planned, and will arrive as a new option.
+- **`relations` tells the two kinds apart.** `["containment"]` is a task that lives in the
+  period's notes. `["date"]` is a task note listed because one of its dates falls in the period;
+  it has `source: "note"`, `line: null`, `parentLine: null` and its title as `text`. The `date`
+  option picks which of its dates counts, and defaults to scheduled or due. It only matters once a
+  provider that dates whole notes, such as the note-property provider, is enabled.
 - **`status` and `relations` are open unions** — handle the default case.
 
 ## Answering questions
@@ -431,6 +438,7 @@ failure — no note for a period is `file: null`.
 | `aborted`                | the user dismissed the confirmation prompt or the journal picker                                        |
 | `prompts-required`       | the journal has creation prompts, `prompt: false` was passed, and no `answers` were                     |
 | `invalid-answers`        | the `answers` passed were rejected — see [Answering questions](#answering-questions) and `error.issues` |
+| `invalid-option`         | an option passed holds a value outside the ones it accepts, such as an unknown `tasksFor` `date`        |
 | `plugin-unloaded`        | Journals was unloaded while the call was in flight                                                      |
 
 ```ts

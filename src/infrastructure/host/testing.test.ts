@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { expectOk } from "@/infrastructure/result/testing";
+import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
 import { FakeNotesService } from "./testing";
 
@@ -67,5 +67,28 @@ describe("FakeNotesService mtime", () => {
     const read = await notes.readCached(path);
     expectOk(read);
     expect(read.value).toBe("after");
+  });
+});
+
+// processFrontMatter throws out of the mutator before it writes, so the real service answers a
+// throwing mutator with a FrontmatterError and leaves the file as it was.
+describe("FakeNotesService updateFrontmatter", () => {
+  it("answers a throwing mutator with a frontmatter error and writes nothing", async () => {
+    const notes = new FakeNotesService();
+    notes.seed(path, "", { status: "open" });
+    const written: VaultPath[] = [];
+    notes.events.on("modified", (target) => written.push(target));
+    const reason = new Error("refused");
+
+    const result = await notes.updateFrontmatter(path, (frontmatter) => {
+      frontmatter.status = "done";
+      throw reason;
+    });
+
+    expectErr(result);
+    expect(result.error.kind).toBe("frontmatter-failed");
+    expect(result.error.kind === "frontmatter-failed" ? result.error.cause : undefined).toBe(reason);
+    expect(notes.frontmatterOf(path)).toEqual({ status: "open" });
+    expect(written).toEqual([]);
   });
 });

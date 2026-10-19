@@ -70,6 +70,7 @@ describe("defaultCondition", () => {
       quantifier: "any",
       status: "listing",
       source: "both",
+      date: "scheduled-or-due",
       filter: { mode: "and", conditions: [] },
     });
   });

@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { datesIn } from "./providers/checkbox/dates";
 import { TaskIndex } from "./task-index";
-import { TaskProviderToken, type TaskItem, type TaskProvider } from "./types";
+import { TaskProviderToken, type TaskDateRole, type TaskItem, type TaskProvider } from "./types";
 
 // TaskProvider.start returns a disposer; these stand-in providers never actually start, so the
 // disposer is never called, but the interface still requires one.
@@ -79,6 +80,20 @@ function lineItem(key: string, line: number, provider = "checkbox", endLine = li
     capabilities: { movable: true, stampable: true, retargetable: false },
     display: { kind: "line", path, line, endLine, parentLine: null, markdown: null },
     dates: {},
+  };
+}
+
+const day = (s: string): AnchorString => s as AnchorString;
+
+function dated(
+  key: string,
+  dates: Partial<Record<TaskDateRole, string>>,
+  relations: TaskItem["relations"] = ["date"],
+): TaskItem {
+  return {
+    ...item(key, "note-property"),
+    relations,
+    dates: Object.fromEntries(Object.entries(dates).map(([role, value]) => [role, day(value)])),
   };
 }
 
@@ -331,5 +346,65 @@ describe("TaskIndex.hydrate", () => {
     expect(hydrated.at(0)?.display).toMatchObject({ markdown: "- [ ] Dated 📅 2026-09-25" });
     expect(hydrated.at(0)?.dates).toEqual({});
     expect(hydrated.at(0)?.capabilities.retargetable).toBe(false);
+  });
+
+  describe("datedIn", () => {
+    const roles = ["scheduled", "due"] as const;
+
+    it("returns an item once when both roles fall in range", async () => {
+      const { index } = await build();
+      index.publish("note-property", { path }, [dated("n:1", { scheduled: "2026-10-20", due: "2026-10-30" })]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25")).map((i) => i.key)).toEqual(["n:1"]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-31")).map((i) => i.key)).toEqual(["n:1"]);
+    });
+
+    it("includes both bounds and excludes outside", async () => {
+      const { index } = await build();
+      index.publish("note-property", { path }, [
+        dated("n:in-start", { due: "2026-10-19" }),
+        dated("n:in-end", { due: "2026-10-25" }),
+        dated("n:out", { due: "2026-10-26" }),
+        dated("n:before", { due: "2026-10-18" }),
+      ]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25")).map((i) => i.key)).toEqual([
+        "n:in-start",
+        "n:in-end",
+      ]);
+    });
+
+    it("ignores roles that were not asked for", async () => {
+      const { index } = await build();
+      index.publish("note-property", { path }, [dated("n:1", { start: "2026-10-20" })]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toEqual([]);
+    });
+
+    it("skips items without the date relation", async () => {
+      const { index } = await build();
+      index.publish("checkbox", { path }, [dated("c:1", { due: "2026-10-20" }, ["containment"])]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toEqual([]);
+    });
+
+    it("orders by matched date then key", async () => {
+      const { index } = await build();
+      index.publish("note-property", { path }, [
+        dated("n:b", { due: "2026-10-20" }),
+        dated("n:a", { due: "2026-10-20" }),
+        dated("n:c", { scheduled: "2026-10-19", due: "2026-10-24" }),
+      ]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25")).map((i) => i.key)).toEqual([
+        "n:c",
+        "n:a",
+        "n:b",
+      ]);
+    });
+
+    it("reflects a publish that moves a date out of range", async () => {
+      const { index } = await build();
+      index.publish("note-property", { path }, [dated("n:1", { due: "2026-10-20" })]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toHaveLength(1);
+      index.publish("note-property", { path }, [dated("n:1", { due: "2026-11-20" })]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toEqual([]);
+      expect(index.datedIn(roles, day("2026-11-19"), day("2026-11-25"))).toHaveLength(1);
+    });
   });
 });

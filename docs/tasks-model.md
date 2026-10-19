@@ -66,8 +66,8 @@ if none was**, because there is no template whose headings could be meant. A
 `note-property` item has no headings at all, so the condition drops out for it
 entirely, per the rule below.
 
-Listings take both axes. **Decoration conditions take `source` only.** Rollup
-stays listing-only: the decoration engine evaluates per cell across a whole grid,
+Listings take both axes. **Decoration conditions take `source` and `date`, never
+`depth`.** Rollup stays listing-only: the decoration engine evaluates per cell across a whole grid,
 and a rolled-up year cell would walk hundreds of notes per render.
 
 **`Scope` is what containment means.** Both its axes decide which notes to read,
@@ -154,6 +154,31 @@ checklist lights a day that the user's own task queries deliberately ignore.
 Deciding which lines count is the provider's job, not a special case bolted to
 the checkbox reader.
 
+**Identification is owner-scoped; per-journal visibility of dated items is
+asker-scoped.** The two are easy to conflate (see "Which settings live where").
+Identification asks what a note _is_, and a note has one owning journal, so it
+answers the same whoever asks. A `note-property` item usually has no owner at
+all — a task note lives wherever the user keeps it, not in a period note — so
+the per-journal layer cannot apply to it, and `note-property` identification is
+global only. What a journal can still decide is which dated task notes **it**
+shows: the journal _asking_ decides, and two journals legitimately give
+different answers about the same note. Without that, a Work and a Personal daily
+journal would both list every task due that day.
+
+That setting arrives with PR 2 of #503. Until it lands every journal behaves as
+**All**: every identified task note is admitted. The principle is stated here so
+the first release does not ship a design that forecloses it, not because it is
+observable yet.
+
+When several journals ask at once — a tasks view block over a list of journals,
+`tasksFor` with a selector matching several — a dated item is admitted if **any**
+asking journal admits it, and appears once, deduplicated by item identity. The
+`journal` and `date` it reports are those of the **first admitting journal in
+the selector's resolution order**, which is deterministic and documented, not
+"whichever came first". A rollup listing is asked by its host journal alone:
+rollup does not apply to the date relation, so siblings contribute containment
+items only.
+
 | Provider        | Item is                                                                | Relations         | Movable                              |
 | --------------- | ---------------------------------------------------------------------- | ----------------- | ------------------------------------ |
 | `checkbox`      | a list item with a task marker                                         | containment, date | yes                                  |
@@ -202,6 +227,17 @@ checkbox provider's version, not the model's.
   characters, so matching is case-insensitive, and the defaults mirror what
   TaskNotes ships. The property name is configurable for the same reason the date
   property is: `FieldMapping` makes `status` a settable key there.
+
+  The shipped defaults are TaskNotes' own statuses: `none` → `todo`, `open` →
+  `todo`, `in-progress` → `in-progress`, `done` → `done`, with canonical `todo`
+  `open` (TaskNotes' `defaultTaskStatus`) and canonical `done` `done`. An
+  unknown value is `todo`, and so is a **missing** status property: TaskNotes
+  always writes one, and a hand-rolled `due:` note without a status is still
+  something to do. TaskNotes also stores a status whose value is the string
+  `"true"` or `"false"` as a YAML boolean, so the value is stringified before
+  matching and the same coercion is applied on write, which keeps a vault using
+  boolean statuses round-tripping.
+
 - **Unknown → `todo` in both.** An unrecognised state is not a finished one.
 
 **Recognition is many-to-one; writing is one-to-one.** Several symbols map to
@@ -489,10 +525,27 @@ will disagree with it about the same day.
 ```
 
 So the relation names a **role** — `due`, `scheduled`, `start`, `done`,
-`created` — defaulting to `due`. Each provider resolves a role its own way: the
+`created`. Each provider resolves a role its own way: the
 checkbox provider to a signifier, an emoji or a Dataview inline field; the
 note-property provider to a configured property name, which is what TaskNotes'
 own `FieldMapping` already is.
+
+**With no role named, an item belongs to a period when its `scheduled` _or_ `due`
+date falls inside it.** An earlier draft defaulted to `due` alone; that leaves a
+TaskNotes user who plans with `scheduled` looking at empty daily notes, which is
+the setup failure the provider exists to prevent. A task scheduled Monday and due
+Friday therefore appears in both days' listings and once in the week's. Naming a
+role narrows it to that one.
+
+Dated items belong to **every** period whose range contains the date — the day,
+its week, its month — which is the date relation's own definition. Rollup does
+not apply to them, as above, so nothing is counted twice. A task note's `done`
+and `created` roles are readable and filterable by naming them, but are not part
+of the default.
+
+A recurring task note shows on its **stored** dates only. Nothing expands a
+recurrence rule into later occurrences; that is a separate feature, not a gap in
+this one.
 
 The same role names the **retarget** target, so dragging and filtering speak one
 vocabulary. Without the axis the two providers do not mean the same thing by
@@ -572,8 +625,10 @@ _or_ `status done` would return every open note task, because the inapplicable
 heading condition alone would carry them. Dropping is the only reading that
 behaves under both combinators.
 
-`status` applies to everything. `selection` applies only to an item with a
-position inside a note. The rule is stated generally so the next condition type
+`status` applies to everything. `heading` applies only to an item with a
+position inside a note. `tag` applies to everything too, because `tagsOf()` folds
+in the note's frontmatter tags: for a note item it matches **the note's own
+frontmatter tags** and does not drop. The rule is stated generally so the next condition type
 inherits it, and the escape for someone who wants line items only is the
 `provider` scope key, which is the right place to say which kind of thing you are
 looking at.
@@ -582,6 +637,22 @@ The cost is that `mode: and` with a heading condition does not narrow note items
 so "under `## Tasks` and open" returns open note-tasks whatever their headings.
 That reads loose; the alternative silently removes an entire provider's items,
 which is an evening of debugging before someone files "the listing is broken".
+
+**A journal's stored filter reaches dated items by its `status` axis only.** The
+journal's `tasks.filter` was written for that journal's own checkbox lines: its
+`heading` conditions name headings in its template, and its `tag` conditions
+select lines. Applied to a task note found by date, a stored `tag` condition
+would silently hide notes the user never meant it for. So a journal that shows
+open work hides done task notes too, and its stored `tag` and `heading`
+conditions are skipped for dated items. A `tag` condition a **surface** names
+itself — a fence `tag:` key, a view block's or decoration's own filter — does
+apply, matching frontmatter tags; `heading` still drops. The tag axis for a
+journal's task notes is its dated-task-notes setting (PR 2), not its stored
+filter.
+
+In `composeFilters` terms this is a per-item decision on the journal side of the
+merge, taken before the query side replaces by type. The "a query condition
+replaces the journal's of the same type" rule stays intact for containment items.
 
 **`selection` — which lines inside the notes.** Its inputs are headings and tags,
 both of which `metadataCache` already resolves without interpreting a single task
@@ -682,8 +753,29 @@ very first consumer.
 A `note` item renders as a link, so clicking opens the task note, and its
 `title` comes from the provider's configured title property where one is mapped —
 TaskNotes' `FieldMapping` has `title` as a settable key — falling back to the
-basename. Ticking it writes its status **property**; there is no status character
-to overwrite.
+basename.
+
+Ticking a note item is **dispatched to the provider that owns it**: the line path
+(`TickService`'s overwrite of one status character) is unchanged, and a note item
+goes to its provider, which writes through `processFrontMatter` — there is no
+status character to overwrite. It writes the canonical value of the target type
+into the status property, the completion date (today on a tick to `done`,
+removed on an un-tick to an open type) when a completion-date property is
+mapped, and the modified-date property when one is mapped, so TaskNotes' own
+bookkeeping is not left stale. Each is a property the user named, so the write
+rule's "overwrite only tokens we found, add only tokens the user named" holds.
+
+**A recurring task note is refused with a notice**, the way a recurring line the
+plugin cannot advance is. TaskNotes drives a series off its own completion
+handling; writing `status: done` onto the single note would end the series
+silently, with nothing failing loudly — the same harm as ticking `🔁` through a
+bare file write. A note counts as recurring when it carries the recurrence
+property or the recurrence-parent property (TaskNotes 4.x materializes
+occurrences as separate notes linked to a parent, and those are driven by the
+same series). The checkbox stays clickable and gives the notice, so both providers
+refuse a recurring item identically on screen. Unlike a line, there is no
+delegate to hand it to: the model has no dependency on TaskNotes, so a
+recurring task note is read-only here.
 
 ## Decorations ask the same question
 
@@ -699,6 +791,7 @@ So both are replaced by one condition that asks the listing's question:
 { type: "tasks", quantifier: "any" | "all" | "none",
   status: "listing" | "open" | "done" | "all",
   source: "note" | "notelets" | "both",
+  date: "scheduled-or-due" | "due" | "scheduled" | "start" | "done" | "created",
   filter: { mode, conditions: [heading | tag …] } }
 ```
 
@@ -722,9 +815,18 @@ For a cell (journal J, period P) it runs in four steps, in `answerTaskQuestion`:
 4. **Quantify.** `any` needs one counted item with the status. `all` needs **at least one counted
    item and every one with the status** — the old `allTasksCompleted` returned `false` for a note with no tasks, and
    `answerTaskQuestion` (`src/tasks/answer-question.ts`) keeps that, since vacuous truth would
-   light every empty day. `none` needs **a period
-   note or a notelet to exist** and no counted item with the status, so a note with no tasks is
-   `true` and a date with neither is `false`.
+   light every empty day. `none` needs **something at P to exist** — a period
+   note, a notelet, or a dated item of any status that J's visibility admits for P — and no
+   counted item with the status. A note with no tasks is `true`, a date with neither is `false`,
+   and a day with no note whose only dated item is a done task answers "no open work" `true`. A
+   dated item counts as existence before the filter, the way a notelet does, so a filter that
+   removes it does not turn the day back into an empty one.
+
+   The dated items come from the same date relation the listing uses, on top of step 1's
+   containment gather: J's visibility admits them (PR 1 behaves as **All**), the stored filter
+   reaches them by `status` only, and the lookup for a cell is a date-range read against the
+   `note-property` index, never a walk of notes. A dot can therefore light a day that has **no
+   note**. That is intended: the task is dated there.
 
 - `has-open-task` becomes `any` · `open` · `both`
 - `all-tasks-completed` becomes `all` · `done` · `both`
@@ -747,8 +849,11 @@ Details that are load-bearing:
   quantified (status inside it would be a disjunct, not a question), so no mode makes the two agree
   about status there; the editor keeps the and/or control and the divergence is accepted.
 - **The scope refuses `depth`.** The rollup ban on decorations is unchanged — the engine evaluates per
-  cell across a whole grid. `provider` and `date` are not offered either; the listing's view block
-  does not expose them.
+  cell across a whole grid. `provider` is not offered; the listing's view block does not expose it.
+  `date` **is** offered, as a role picker defaulting to scheduled-or-due, so a dot can mean "due
+  here"; an earlier ruling (#346) withheld it only because no provider could answer a date
+  question yet. `source` does not apply to the dated items it admits, for the reason given under
+  Scope.
 - **No text hydration.** The condition reads status and `NoteStructure` only.
 
 This is a schema change to configs people already run, so it carries a **deterministic rewrite**
@@ -777,7 +882,17 @@ tasksFor(selector, date, options?): Promise<readonly TaskItem[]>;
 It returns resolved items — path, `display`, normalized `status`, dates, and
 which relation matched. Its options are the **flat sugar keys only**: `source`,
 `depth`, `date`, `status`. No `conditions` array, no `mode`, nothing about
-providers.
+providers. Omitting `date` means scheduled-or-due, as everywhere else.
+
+The public `TaskItem` was shaped for containment: `journal` is the journal whose
+note holds the task and `date` is that note's period. A dated item has neither, so
+for it `journal` and `date` are the journal and period **asked about**, `source`
+is `"note"` (it is a whole note), `line` and `parentLine` are null, and `relations`
+contains `"date"` — consumers tell the two apart by `relations`, which exists for
+this. No union is widened, so no consumer's exhaustive switch breaks. When a
+selector matches several journals, the reported journal is the first admitting one
+in resolution order (see Providers). The doc comments on those fields are reworded
+to cover both relations, under the stability policy below.
 
 That is deliberate. A consumer gets agreement with our calendar for free, and the
 public surface commits to none of the parts still moving — which is what "closed
@@ -914,13 +1029,17 @@ removes the justification.
 parsing concerns with no owner to consult: a checkbox in a project note no journal owns
 must normalize exactly as one in a day note, and a status cannot have two values.
 
-**Identification is two layers.** A global rule on the provider applies everywhere,
-including notes no journal owns. A journal may add its own rule, composed `inherit`
+**Identification is two layers for `checkbox`.** A global rule on the provider applies
+everywhere, including notes no journal owns. A journal may add its own rule, composed `inherit`
 (the default), `narrow` (global and journal) or `replace` (journal alone). This is
 deterministic despite the rollup: a note has exactly one owning journal, so the rule
 applied is the _owner's_, whoever is reading — a month rollup walking a day note reads
 it as a day-journal note. An earlier version of this section ruled identification
-global-only by conflating owner with asker.
+global-only by conflating owner with asker. The rule is owner-scoped; what a
+journal chooses to show of notes it does not own is the separate, asker-scoped
+setting described under Providers. The journal layer applies to the `checkbox`
+provider only: `note-property` identification is global, one rule on the provider
+for every note in the vault, matched against frontmatter tags or a property.
 
 **Per-journal, on the move** — `selection`, the target heading, copy-vs-move, and
 whether to stamp. The first two name headings in that journal's own template, so
@@ -1040,16 +1159,23 @@ relation — it is the checkbox provider's implementation of it.
    capability check.
 
    Dates are extracted for owned notes as soon as their text is hydrated, and stored on
-   the item — but no date lookup is exposed until step 4. Answering "what is due Friday"
-   from journal notes alone would be a half-vault answer wearing a whole-vault face.
+   the item — but no **checkbox** date lookup is exposed until step 4. Answering "what is due Friday"
+   from journal notes alone would be a half-vault answer wearing a whole-vault face. (The
+   `note-property` lookup in step 2 is not that: its index covers the whole vault.)
 
 2. `note-property` provider with its date→paths index — small, `metadataCache`
    only, no text cache, no `cachedRead`, and it covers TaskNotes plus every
-   hand-rolled `due:` / `scheduled:` convention.
+   hand-rolled `due:` / `scheduled:` convention. **The date relation's surface work
+   lands here**, because the provider is invisible without it: listings (the fence
+   and the tasks view block), the `tasks` decoration condition, and `tasksFor` with
+   its REST route and MCP tool. Checkbox items carry no date relation until step 4,
+   exactly as before. Per-journal visibility and the TaskNotes onboarding card are
+   separate pieces of work (PRs 2 and 3 of #503).
 3. Moving items between periods.
-4. `checkbox` provider, **date** relation: a vault-wide index over every checkbox
+4. `checkbox` provider, **date** relation: the vault-wide index over every checkbox
    in the vault, with its own extracted-text cache because `ListItemCache` carries
-   no text. The only piece with unmeasured memory and cold-boot cost.
+   no text. The only piece with unmeasured memory and cold-boot cost. The surfaces
+   already speak the relation by now; this step gives them a second provider to ask.
 
 The index in step 4 stores items **flat**, with a parent reference at most. Any
 nesting is derived at render time behind a visited set. Time Ruler's indefinite
@@ -1062,17 +1188,6 @@ note count.
 
 None is a decision — each is work this model is waiting on.
 
-- **The note-property status defaults.** The values TaskNotes ships for its
-  status field, mapped to the shared types, matched case-insensitively.
-- **Whether `tag` drops for an item with no position, the way `heading` does.** Filtering says
-  `status` applies to everything while the heading/tag axis applies only to an item with a
-  position inside a note — but `tagsOf()` also folds in `structure.frontmatterTags`, and a
-  note-kind item carries those without carrying any position. Whether its `tag` condition should
-  drop, the way `heading` does, or match against the note's own frontmatter tags is unsettled.
-  For this ticket it drops, matching `heading`: only the checkbox provider ships here, nothing
-  yields a note-kind item until the note-property provider arrives, and a rule with no item to
-  observe it against is unobservable and untestable today. That is a deferral, not an answer —
-  revisit it when the note-property provider lands.
 - **The phase-4 index's memory and cold-boot cost**, measured against realistic
   **link density** rather than note count. Time Ruler hung indefinitely on a
   2,000-note vault, and an anonymised copy of that same vault did not reproduce

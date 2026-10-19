@@ -950,6 +950,7 @@
   "decoration_condition_tasks_narrow_label": "Restringir mais",
   "decoration_condition_tasks_narrow_description": "Conta apenas as tarefas que correspondem a estas, além do filtro de tarefas do diário.",
   "decoration_condition_tasks_narrow_add": "Adicionar condição restritiva",
+  "decoration_condition_tasks_date_label": "Data da tarefa",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -967,6 +968,20 @@
         "quantifier=none,status=open": "nenhuma tarefa está em aberto {source}",
         "quantifier=none,status=done": "nenhuma tarefa está concluída {source}",
         "quantifier=none,status=all": "não existe nenhuma tarefa {source}"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}, notas de tarefa pela data agendada ou de vencimento",
+        "date=due": "{base}, notas de tarefa pela data de vencimento",
+        "date=scheduled": "{base}, notas de tarefa pela data agendada",
+        "date=start": "{base}, notas de tarefa pela data de início",
+        "date=done": "{base}, notas de tarefa pela data de conclusão",
+        "date=created": "{base}, notas de tarefa pela data de criação"
       }
     }
   ],
@@ -1496,6 +1511,14 @@
   "view_block_tasks_sort_start": "Data de início",
   "view_block_tasks_sort_done": "Data de conclusão",
   "view_block_tasks_sort_created": "Data de criação",
+  "tasks_date_choice_scheduled_or_due": "Data agendada ou de vencimento",
+  "tasks_date_choice_due": "Data de vencimento",
+  "tasks_date_choice_scheduled": "Data agendada",
+  "tasks_date_choice_start": "Data de início",
+  "tasks_date_choice_done": "Data de conclusão",
+  "tasks_date_choice_created": "Data de criação",
+  "view_block_tasks_date_label": "Data da tarefa",
+  "view_block_tasks_date_description": "Qual data de uma nota de tarefa a coloca em um período.",
   "view_block_tasks_filter_label": "Filtro",
   "view_block_tasks_filter_status_default": "Sem condição de Estado própria, portanto o filtro de listagem de um diário decide onde nomeia um.",
   "view_toolbar_shelf_selector_label": "Seletor de prateleira",
@@ -2472,6 +2495,39 @@
   "tasks_status_rolled": "Transferido",
   "tasks_settings_add_symbol": "Adicionar símbolo",
   "tasks_settings_new_symbol_label": "Novo símbolo",
+  "tasks_settings_provider_note_property": "Notas de tarefa",
+  "tasks_settings_provider_note_property_desc": "Lê uma nota inteira como uma tarefa, com seu estado e suas datas em propriedades.",
+  "tasks_note_property_summary_tag": "Conta uma nota com a tag {tag}.",
+  "tasks_note_property_summary_property": "Conta uma nota cuja propriedade {property} é {value}.",
+  "tasks_note_property_summary_property_any": "Conta uma nota que tem a propriedade {property}.",
+  "tasks_note_property_identify": "Identificar notas de tarefa por",
+  "tasks_note_property_identify_property": "Propriedade",
+  "tasks_note_property_tag_required": "Insira uma tag.",
+  "tasks_note_property_property_required": "Insira um nome de propriedade.",
+  "tasks_note_property_value": "Valor da propriedade",
+  "tasks_note_property_value_desc": "Deixe vazio para contar toda nota que tenha a propriedade.",
+  "tasks_note_property_excluded_folders": "Pastas excluídas",
+  "tasks_note_property_excluded_folders_desc": "Notas nessas pastas nunca são notas de tarefa.",
+  "tasks_note_property_folder_label": "Pasta",
+  "tasks_note_property_add_folder": "Adicionar pasta",
+  "tasks_note_property_archive_tag": "Tag de arquivamento",
+  "tasks_note_property_archive_tag_desc": "Notas com esta tag são deixadas de fora. Deixe vazio para mantê-las.",
+  "tasks_note_property_dates": "Propriedades de data",
+  "tasks_note_property_dates_desc": "Qual propriedade guarda cada data. A data de conclusão também é gravada quando uma tarefa é marcada como concluída. Deixe uma vazia para ignorar essa data.",
+  "tasks_note_property_status_property": "Propriedade de estado",
+  "tasks_note_property_status_values": "Valores de estado",
+  "tasks_note_property_status_values_desc": "Qual valor da propriedade significa qual estado, sem diferenciar maiúsculas de minúsculas. Qualquer outro valor é lido como a fazer. Quando dois valores compartilham um estado, o marcado é o que é gravado de volta na nota quando o estado de uma tarefa muda.",
+  "tasks_note_property_written_back_tooltip": "Gravar este valor para este estado",
+  "tasks_note_property_status_value_label": "Valor de estado",
+  "tasks_note_property_add_value": "Adicionar valor",
+  "tasks_note_property_status_value_required": "Insira um valor para cada estado.",
+  "tasks_note_property_status_value_duplicate": "{value} aparece mais de uma vez.",
+  "tasks_note_property_title_property": "Propriedade de título",
+  "tasks_note_property_title_property_desc": "Exibida no lugar do nome do arquivo quando uma nota a define.",
+  "tasks_note_property_modified_property": "Propriedade de modificação",
+  "tasks_note_property_modified_property_desc": "Recebe o horário sempre que uma tarefa é marcada. Deixe vazio para pular.",
+  "tasks_note_property_recurrence_properties": "Propriedades de recorrência",
+  "tasks_note_property_recurrence_properties_desc": "Uma nota com qualquer uma delas definida é recorrente e nunca é marcada aqui. Separe os nomes com vírgulas.",
 
   "tasks_journal_compose": "Relação com a regra de todo o cofre",
   "tasks_journal_compose_desc": "«Herdar» usa apenas a regra de todo o cofre. «Restringir» exige que uma linha satisfaça as duas regras. «Substituir» usa apenas a regra deste diário.",
@@ -2485,6 +2541,7 @@
   "tasks_filter_conditions_label": "Condições",
   "tasks_filter_conditions_desc": "Quais destas tarefas uma listagem exibe.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância.",
+  "tasks_tick_recurring_task_note": "Esta tarefa não foi marcada. Uma nota de tarefa recorrente precisa ser concluída no plugin que gerencia sua série.",
   "tasks_tick_error": "Não foi possível marcar a tarefa.",
   "tasks_listing_empty": "Nenhuma tarefa corresponde a esta consulta."
 }

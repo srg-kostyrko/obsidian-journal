@@ -179,6 +179,33 @@ describe("describeCondition", () => {
       );
     });
 
+    it("names the date choice only when it is not the default", () => {
+      const base = m.decoration_condition_tasks_describe({ quantifier: "any", status: "open", source: source("both") });
+      expect(describeCondition(buildCondition("tasks", { status: "open", date: "scheduled-or-due" }), calendar)).toBe(
+        base,
+      );
+      expect(describeCondition(buildCondition("tasks", { status: "open", date: "due" }), calendar)).toBe(
+        m.decoration_condition_tasks_describe_dated({ base, date: "due" }),
+      );
+    });
+
+    it("names the date choice before the narrowing conditions", () => {
+      const heading: TagOrHeadingCondition = { type: "heading", condition: "under", headings: ["Work"] };
+      const out = describeCondition(
+        buildCondition("tasks", { status: "open", date: "created", filter: { mode: "and", conditions: [heading] } }),
+        calendar,
+      );
+      expect(out).toBe(
+        m.decoration_condition_tasks_describe_narrowed({
+          base: m.decoration_condition_tasks_describe_dated({
+            base: m.decoration_condition_tasks_describe({ quantifier: "any", status: "open", source: source("both") }),
+            date: "created",
+          }),
+          conditions: describeTagOrHeadingCondition(heading),
+        }),
+      );
+    });
+
     it("appends the narrowing conditions", () => {
       const out = describeCondition(
         buildCondition("tasks", {

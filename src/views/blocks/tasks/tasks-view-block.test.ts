@@ -77,6 +77,15 @@ describe("tasksViewBlock", () => {
     expect(parsed.sort).toBe("due");
   });
 
+  it("reads a stored config written before the date axis as scheduled or due", () => {
+    expect(v.parse(tasksViewBlock.schema, { window: "week" }).date).toBe("scheduled-or-due");
+  });
+
+  it("keeps a stored date choice, and falls back to scheduled or due for one it does not know", () => {
+    expect(v.parse(tasksViewBlock.schema, { date: "due" }).date).toBe("due");
+    expect(v.parse(tasksViewBlock.schema, { date: "deadline" }).date).toBe("scheduled-or-due");
+  });
+
   it("rejects an unknown window", () => {
     expect(() => v.parse(tasksViewBlock.schema, { window: "fortnight" })).toThrow();
   });

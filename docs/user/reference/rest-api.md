@@ -17,22 +17,22 @@ by finding a note from a journal's name and a date instead.
 
 ## Routes
 
-| Method | Path                                     | Does                                                                           |
-| ------ | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| GET    | `/journals/`                             | `{ journals }` — every journal's info                                          |
-| GET    | `/journals/<name>/`                      | one journal's info: its write type, shelf, notelet types and questions         |
-| GET    | `/journals/<name>/notes`                 | `{ notes, notelets }` for the journal, filtered by `from`, `to` and `type`     |
-| POST   | `/journals/<name>/notes/<date>`          | creates (or finds) the period's note, answering its questions from the body    |
-| GET    | `/journals/<name>/notes/<date>/previous` | `{ note }` — the nearest existing note before the period holding `<date>`      |
-| GET    | `/journals/<name>/notes/<date>/next`     | `{ note }` — the nearest existing note after the period holding `<date>`       |
-| POST   | `/journals/<name>/notelets/<date>`       | creates a notelet of a given type in the period                                |
-| GET    | `/journals/<name>/tasks/<date>`          | `{ tasks }` — the period's tasks, filtered by `source`, `depth` and `status`   |
-| GET    | `/journals/<name>/<date>/…`              | redirects to the host's own `/vault/` route for the note, 404 if there is none |
-| POST   | `/journals/<name>/<date>/…`              | creates the note first, then redirects                                         |
-| PATCH  | `/journals/<name>/<date>/…`              | creates the note first, then redirects                                         |
-| DELETE | `/journals/<name>/<date>/…`              | redirects to the host's own delete route, 404 if there is none                 |
-| PUT    | `/journals/<name>/<date>/…`              | creates the note first, then redirects (a heading or block target)             |
-| PUT    | `/journals/<name>/<date>`                | replaces the note's whole content — answered here, not redirected (see below)  |
+| Method | Path                                     | Does                                                                                     |
+| ------ | ---------------------------------------- | ---------------------------------------------------------------------------------------- |
+| GET    | `/journals/`                             | `{ journals }` — every journal's info                                                    |
+| GET    | `/journals/<name>/`                      | one journal's info: its write type, shelf, notelet types and questions                   |
+| GET    | `/journals/<name>/notes`                 | `{ notes, notelets }` for the journal, filtered by `from`, `to` and `type`               |
+| POST   | `/journals/<name>/notes/<date>`          | creates (or finds) the period's note, answering its questions from the body              |
+| GET    | `/journals/<name>/notes/<date>/previous` | `{ note }` — the nearest existing note before the period holding `<date>`                |
+| GET    | `/journals/<name>/notes/<date>/next`     | `{ note }` — the nearest existing note after the period holding `<date>`                 |
+| POST   | `/journals/<name>/notelets/<date>`       | creates a notelet of a given type in the period                                          |
+| GET    | `/journals/<name>/tasks/<date>`          | `{ tasks }` — the period's tasks, filtered by `source`, `depth`, `status` and `taskDate` |
+| GET    | `/journals/<name>/<date>/…`              | redirects to the host's own `/vault/` route for the note, 404 if there is none           |
+| POST   | `/journals/<name>/<date>/…`              | creates the note first, then redirects                                                   |
+| PATCH  | `/journals/<name>/<date>/…`              | creates the note first, then redirects                                                   |
+| DELETE | `/journals/<name>/<date>/…`              | redirects to the host's own delete route, 404 if there is none                           |
+| PUT    | `/journals/<name>/<date>/…`              | creates the note first, then redirects (a heading or block target)                       |
+| PUT    | `/journals/<name>/<date>`                | replaces the note's whole content — answered here, not redirected (see below)            |
 
 `<name>` is a journal's name and `<date>` is `today`, `YYYY-MM-DD`, or a shift such as `+1w` or
 `-3d` — the same syntax `obsidian://journals` links use; see [Links](/reference/links) for the
@@ -56,11 +56,14 @@ segment other than `previous` or `next` answers `400 invalid-request`.
 in the note of the period holding `<date>` would list, so the journal's own listing filter applies
 and a task it hides is not returned. It takes the code block's own keys: `source` (`note`,
 `notelets` or `both`), `depth` (`literal` or `rollup`) and `status` (`open`, `done`, `all`, or one
-status such as `on-hold`). Leave `status` off and the journal's own status condition applies, or
-`open`; give it — even `status=open` — and it replaces the journal's. A `source` or `depth` it does
+status such as `on-hold`) and `taskDate` (`scheduled-or-due`, `due`, `scheduled`, `start`, `done` or
+`created`: which date of a task note puts it in the period; default `scheduled-or-due`). Leave `status` off and the journal's own status condition applies, or
+`open`; give it — even `status=open` — and it replaces the journal's. A `source`, `depth` or `taskDate` it does
 not know answers `400 invalid-request` rather than falling back to the default. Each task carries
 its `path`, its 0-based `line`, its `text` as written, its `status`, any `dates` it carries, and
-`parentLine` — the line of the task it is nested under, if any.
+`parentLine` — the line of the task it is nested under, if any. A task note listed by a date has
+`"date"` in its `relations`, a `null` `line` and `parentLine`, and the journal and period you asked
+about as its `journal` and `date`.
 
 ## Following the redirect
 
@@ -294,14 +297,14 @@ If another plugin already registered a tool under one of these names, Journals' 
 is skipped and a warning is logged — the REST routes above, and the host's own tools, keep working
 regardless.
 
-| Tool                     | Arguments                                                     | Returns                                                                    | Kind           |
-| ------------------------ | ------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------- |
-| `journal_list`           | none                                                          | `{ journals }`, the same info as [`GET /journals/`](#routes)               | Read-only      |
-| `journal_notes`          | `journal`; `from`; `to` (optional); `type` (optional)         | `{ notes, notelets }`, the same shape as `GET /journals/<name>/notes`      | Read-only      |
-| `journal_note_adjacent`  | `journal`; `date`; `direction` (`previous` or `next`)         | `{ note }`, the same shape as `GET /journals/<name>/notes/<date>/previous` | Read-only      |
-| `journal_tasks`          | `journal`; `date`; `source`, `depth`, `status` (all optional) | `{ tasks }`, the same shape as `GET /journals/<name>/tasks/<date>`         | Read-only      |
-| `journal_note_ensure`    | `journal`; `date`; `answers` (optional)                       | the note, plus whether it was just created                                 | Creates a note |
-| `journal_notelet_create` | `journal`; `date`; `type`; `answers` (optional)               | the new notelet                                                            | Creates a note |
+| Tool                     | Arguments                                                                 | Returns                                                                    | Kind           |
+| ------------------------ | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- | -------------- |
+| `journal_list`           | none                                                                      | `{ journals }`, the same info as [`GET /journals/`](#routes)               | Read-only      |
+| `journal_notes`          | `journal`; `from`; `to` (optional); `type` (optional)                     | `{ notes, notelets }`, the same shape as `GET /journals/<name>/notes`      | Read-only      |
+| `journal_note_adjacent`  | `journal`; `date`; `direction` (`previous` or `next`)                     | `{ note }`, the same shape as `GET /journals/<name>/notes/<date>/previous` | Read-only      |
+| `journal_tasks`          | `journal`; `date`; `source`, `depth`, `status`, `taskDate` (all optional) | `{ tasks }`, the same shape as `GET /journals/<name>/tasks/<date>`         | Read-only      |
+| `journal_note_ensure`    | `journal`; `date`; `answers` (optional)                                   | the note, plus whether it was just created                                 | Creates a note |
+| `journal_notelet_create` | `journal`; `date`; `type`; `answers` (optional)                           | the new notelet                                                            | Creates a note |
 
 `journal`, `date`, `from` and `to` take the same values as the routes above: a date is `today`,
 `YYYY-MM-DD`, or a shift such as `+1w`, and a single day also finds the week, month or other period

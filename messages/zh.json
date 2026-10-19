@@ -805,6 +805,7 @@
   "decoration_condition_tasks_narrow_label": "进一步收窄",
   "decoration_condition_tasks_narrow_description": "在日记的任务筛选条件之外，仅统计符合这些条件的任务。",
   "decoration_condition_tasks_narrow_add": "添加限定条件",
+  "decoration_condition_tasks_date_label": "任务日期",
   "decoration_condition_tasks_describe": [
     {
       "declarations": ["input quantifier", "input status", "input source"],
@@ -822,6 +823,20 @@
         "quantifier=none,status=open": "{source}没有未完成的任务",
         "quantifier=none,status=done": "{source}没有已完成的任务",
         "quantifier=none,status=all": "{source}没有任务"
+      }
+    }
+  ],
+  "decoration_condition_tasks_describe_dated": [
+    {
+      "declarations": ["input base", "input date"],
+      "selectors": ["date"],
+      "match": {
+        "date=scheduled-or-due": "{base}，任务笔记按计划日期或到期日期",
+        "date=due": "{base}，任务笔记按到期日期",
+        "date=scheduled": "{base}，任务笔记按计划日期",
+        "date=start": "{base}，任务笔记按开始日期",
+        "date=done": "{base}，任务笔记按完成日期",
+        "date=created": "{base}，任务笔记按创建日期"
       }
     }
   ],
@@ -1351,6 +1366,14 @@
   "view_block_tasks_sort_start": "开始日期",
   "view_block_tasks_sort_done": "完成日期",
   "view_block_tasks_sort_created": "创建日期",
+  "tasks_date_choice_scheduled_or_due": "计划日期或到期日期",
+  "tasks_date_choice_due": "到期日期",
+  "tasks_date_choice_scheduled": "计划日期",
+  "tasks_date_choice_start": "开始日期",
+  "tasks_date_choice_done": "完成日期",
+  "tasks_date_choice_created": "创建日期",
+  "view_block_tasks_date_label": "任务日期",
+  "view_block_tasks_date_description": "任务笔记的哪个日期将其归入某个时期。",
   "view_block_tasks_filter_label": "筛选",
   "view_block_tasks_filter_status_default": "没有自己的状态条件，因此指定了状态的日记将由其列表筛选条件决定。",
   "view_toolbar_shelf_selector_label": "书架选择器",
@@ -2458,6 +2481,39 @@
   "tasks_status_rolled": "已顺延",
   "tasks_settings_add_symbol": "添加符号",
   "tasks_settings_new_symbol_label": "新符号",
+  "tasks_settings_provider_note_property": "任务笔记",
+  "tasks_settings_provider_note_property_desc": "将整篇笔记读取为一个任务，其状态和日期来自属性。",
+  "tasks_note_property_summary_tag": "统计带有标签 {tag} 的笔记。",
+  "tasks_note_property_summary_property": "统计属性 {property} 为 {value} 的笔记。",
+  "tasks_note_property_summary_property_any": "统计具有属性 {property} 的笔记。",
+  "tasks_note_property_identify": "识别任务笔记的依据",
+  "tasks_note_property_identify_property": "属性",
+  "tasks_note_property_tag_required": "请输入标签。",
+  "tasks_note_property_property_required": "请输入属性名称。",
+  "tasks_note_property_value": "属性值",
+  "tasks_note_property_value_desc": "留空则统计所有具有该属性的笔记。",
+  "tasks_note_property_excluded_folders": "排除的文件夹",
+  "tasks_note_property_excluded_folders_desc": "这些文件夹中的笔记永远不是任务笔记。",
+  "tasks_note_property_folder_label": "文件夹",
+  "tasks_note_property_add_folder": "添加文件夹",
+  "tasks_note_property_archive_tag": "归档标签",
+  "tasks_note_property_archive_tag_desc": "带有此标签的笔记会被排除。留空则不排除。",
+  "tasks_note_property_dates": "日期属性",
+  "tasks_note_property_dates_desc": "每个日期保存在哪个属性中。任务被勾选为完成时，也会写入完成日期。留空的日期将被忽略。",
+  "tasks_note_property_status_property": "状态属性",
+  "tasks_note_property_status_values": "状态值",
+  "tasks_note_property_status_values_desc": "哪个属性值表示哪种状态，不区分大小写。其他任何值都读作待办。当两个值共用同一状态时，标记的那个值会在任务状态变化时写回笔记。",
+  "tasks_note_property_written_back_tooltip": "为此状态写入此值",
+  "tasks_note_property_status_value_label": "状态值",
+  "tasks_note_property_add_value": "添加值",
+  "tasks_note_property_status_value_required": "请为每个状态输入一个值。",
+  "tasks_note_property_status_value_duplicate": "{value} 被列出了不止一次。",
+  "tasks_note_property_title_property": "标题属性",
+  "tasks_note_property_title_property_desc": "笔记设置了该属性时，显示它而不是文件名。",
+  "tasks_note_property_modified_property": "修改时间属性",
+  "tasks_note_property_modified_property_desc": "每次勾选任务时写入当前时间。留空则不写入。",
+  "tasks_note_property_recurrence_properties": "重复属性",
+  "tasks_note_property_recurrence_properties_desc": "设置了其中任一属性的笔记视为重复任务，不会在此处勾选。名称之间用逗号分隔。",
 
   "tasks_journal_compose": "与全库通用规则的关系",
   "tasks_journal_compose_desc": "“继承”仅使用全库通用规则。“收窄”要求一行同时满足两条规则。“替换”仅使用本日记的规则。",
@@ -2471,6 +2527,7 @@
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "列表显示哪些任务。",
   "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。",
+  "tasks_tick_recurring_task_note": "此任务未勾选。重复的任务笔记需要在管理其系列的插件中完成。",
   "tasks_tick_error": "无法勾选该任务。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

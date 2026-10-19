@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 
-import { composeFilters, matchesFilter } from "./filter";
+import { composeDatedFilter, composeFilters, matchesFilter } from "./filter";
 import { buildTaskItem } from "./testing";
 
 import type { TaskCondition, TaskRule } from "./conditions";
@@ -30,6 +30,10 @@ const under = (heading: string): TaskRule => ({
   mode: "and",
   conditions: [{ type: "heading", condition: "under", headings: [heading] }],
 });
+
+// A note-property item, tagged by the frontmatter it was published with.
+const noteItem = (frontmatterTags: string[]) =>
+  buildTaskItem({ display: { kind: "note", path, title: "Ship it" }, facts: { frontmatterTags } });
 
 describe("matchesFilter", () => {
   it("matches a status alias", () => {
@@ -71,6 +75,29 @@ describe("matchesFilter", () => {
         ],
       }),
     ).toBe(false);
+  });
+
+  it("matches a tag on a note item against the frontmatter tags the item carries", () => {
+    const filter: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+    // The inline #work on line 3 belongs to that line, not to the note.
+    expect(matchesFilter(noteItem(["#task"]), structure, filter)).toBe(false);
+    expect(matchesFilter(noteItem(["#task", "#work"]), structure, filter)).toBe(true);
+    expect(matchesFilter(noteItem(["#task", "#work"]), undefined, filter)).toBe(true);
+    // The live structure is not consulted: the item's own snapshot decides.
+    expect(matchesFilter(noteItem(["#task"]), { ...structure, frontmatterTags: ["#work"] }, filter)).toBe(false);
+    expect(
+      matchesFilter(noteItem(["#work"]), structure, {
+        ...filter,
+        conditions: [{ type: "tag", condition: "lacks", tags: ["#work"] }],
+      }),
+    ).toBe(false);
+  });
+
+  it("drops a tag condition for a note item that carries no tags of its own", () => {
+    const untagged = buildTaskItem({ display: { kind: "note", path, title: "Ship it" } });
+    const filter: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+    expect(matchesFilter(untagged, { ...structure, frontmatterTags: ["#work"] }, filter)).toBe(true);
+    expect(matchesFilter(untagged, structure, filter)).toBe(true);
   });
 
   it("treats an unresolved metadataCache (structure undefined) as no constraint, not a mismatch", () => {
@@ -159,6 +186,40 @@ describe("composeFilters", () => {
     const query: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] };
     expect(composeFilters(journal, query).conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
+    ]);
+  });
+});
+
+describe("composeDatedFilter", () => {
+  const journal: TaskRule = {
+    mode: "and",
+    conditions: [
+      { type: "tag", condition: "has", tags: ["#work"] },
+      { type: "heading", condition: "under", headings: ["Tasks"] },
+      { type: "status", condition: "is", statuses: ["done"] },
+    ],
+  };
+
+  it("takes only the journal's status conditions", () => {
+    expect(composeDatedFilter(journal, { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["done"] },
+    ]);
+  });
+
+  it("keeps every condition the surface names, tag and heading included", () => {
+    const tag: TaskCondition = { type: "tag", condition: "has", tags: ["#home"] };
+    expect(composeDatedFilter(journal, { mode: "or", conditions: [tag] })).toEqual({
+      mode: "or",
+      conditions: [{ type: "status", condition: "is", statuses: ["done"] }, tag],
+    });
+  });
+
+  it("falls back to the listing's open default when neither side names a status", () => {
+    expect(composeDatedFilter(under("Tasks"), { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["open"] },
+    ]);
+    expect(composeDatedFilter(null, { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["open"] },
     ]);
   });
 });
