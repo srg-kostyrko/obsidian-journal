@@ -5,6 +5,7 @@ import { VISIBLE_LEAF, hostNote, openInReadingMode } from "../journeys/code-bloc
 import { expectDecorated, expectUndecorated } from "../journeys/decorations.js";
 import { calendar, openSeededCalendarView } from "../journeys/view.js";
 import { waitForNotice } from "../support/notices.js";
+import { closeSettings, expandSection, openSettings } from "../support/settings.js";
 import { frontmatterOf, seedNote, todayAnchor, waitForFrontmatter } from "../support/vault.js";
 
 // The real chain the unit suite fakes end to end: metadataCache's frontmatter and tags ->
@@ -17,6 +18,16 @@ const LIST_DAY = "2026-03-10";
 const DAY_NOTE = `${LIST_DAY}.md`;
 const TASK_NOTE = "Tasks/Write the report.md";
 const RECURRING_NOTE = "Tasks/Water the plants.md";
+
+// The fixture ships these task notes, so they exist at boot and the provider's whole-vault walk is
+// what lists them: its "all" publish replaces whatever came before it. That a walk runs at start is
+// not falsifiable here — a fresh fixture's cold metadataCache fires "changed" for every note, which
+// lists them anyway — so the unit suite owns the trigger. Their day is apart from LIST_DAY and today.
+const SHIPPED_DAY = "2026-04-14";
+const SHIPPED_DAY_NOTE = `${SHIPPED_DAY}.md`;
+const SHIPPED_TITLES = ["Shipped with the vault", "Tagged as a string"] as const;
+const BODY_TAGGED_TITLE = "Tagged in the body only";
+const PROVIDER_TOGGLE = '[data-testid="note-property-enabled"]';
 
 const TASKS_BLOCK = `${VISIBLE_LEAF} .markdown-reading-view .block-language-journal-tasks`;
 const TASK_ROWS = `${TASKS_BLOCK} .task-listing-row`;
@@ -38,6 +49,21 @@ async function rowTitled(title: string) {
     { timeoutMsg: `no listing row reads "${title}"` },
   );
   return $$(TASK_ROWS)[index];
+}
+
+async function expectShippedListing(): Promise<void> {
+  await openInReadingMode(SHIPPED_DAY_NOTE);
+  for (const title of SHIPPED_TITLES) await rowTitled(title);
+  await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(SHIPPED_TITLES.length);
+  expect(await $(TASKS_BLOCK).getText()).not.toContain(BODY_TAGGED_TITLE);
+}
+
+async function clickProviderToggle(expected: "true" | "false"): Promise<void> {
+  await openSettings();
+  await expandSection(m.tasks_settings_title());
+  await $(PROVIDER_TOGGLE).click();
+  await expect($(PROVIDER_TOGGLE)).toHaveAttribute("aria-checked", expected);
+  await closeSettings();
 }
 
 describe("task notes in a journal-tasks fence", () => {
@@ -101,6 +127,28 @@ describe("task notes in a journal-tasks fence", () => {
   });
 });
 
+describe("task notes the vault already holds at boot", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    await seedNote(SHIPPED_DAY_NOTE, hostNote("daily", SHIPPED_DAY, "```journal-tasks\n```"));
+  });
+
+  // A tag in the frontmatter's list or string form identifies a task note; a #task in the body does
+  // not, though that note carries a scheduled date on the same day.
+  it("lists the task notes found by the boot walk, by frontmatter tag only", async () => {
+    await expectShippedListing();
+  });
+
+  it("lists them again after the provider is turned off and back on in settings", async () => {
+    await clickProviderToggle("false");
+    await openInReadingMode(SHIPPED_DAY_NOTE);
+    await expect($(EMPTY)).toHaveText(m.tasks_listing_empty());
+
+    await clickProviderToggle("true");
+    await expectShippedListing();
+  });
+});
+
 describe("task notes on the calendar", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
@@ -108,7 +156,7 @@ describe("task notes on the calendar", () => {
 
   it("lights today's cell for an open task note scheduled today, with no day note for today", async () => {
     const today = todayAnchor();
-    // The fixture ships no notes, and nothing below creates one for today: the dot has to come
+    // The fixture ships no day note, and nothing below creates one for today: the dot has to come
     // from the task note alone.
     const dayNoteExists = await browser.executeObsidian(
       ({ app }, anchor) => app.vault.getMarkdownFiles().some((file) => file.basename === anchor),
