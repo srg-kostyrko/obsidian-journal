@@ -175,12 +175,17 @@ describe("NotePropertyTicker", () => {
     const frontmatter = { status: "open", recurrence: "FREQ=DAILY" };
     const { harness, notes, metadata, ticker } = await build(frontmatter);
     metadata.setMetadata(PATH, { title: "Ship it", tags: ["#task"], properties: { status: "open" } });
+    // Obsidian re-serializes the YAML whenever a frontmatter update completes, changed or not, so a
+    // refusal must abort the write rather than complete it untouched.
+    const written: VaultPath[] = [];
+    notes.events.on("modified", (path) => written.push(path));
 
     const result = await ticker.toggle(noteItem("todo"));
 
     expectErr(result);
     expect(result.error.kind).toBe("recurring-unsupported");
     expect(notes.frontmatterOf(PATH)).toEqual(frontmatter);
+    expect(written).toEqual([]);
     expect(harness.notices.messages).toEqual([m.tasks_tick_recurring_task_note()]);
   });
 

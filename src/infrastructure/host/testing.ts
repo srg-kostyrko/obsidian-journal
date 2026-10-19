@@ -4,11 +4,16 @@ import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { AsyncResult, None, Some } from "@/infrastructure/result";
 import type { Option } from "@/infrastructure/result";
 
-import { FolderNotFoundError, NoteAlreadyExistsError, NoteNotFoundError, PluginDataIOError } from "./errors";
+import {
+  FolderNotFoundError,
+  FrontmatterError,
+  NoteAlreadyExistsError,
+  NoteNotFoundError,
+  PluginDataIOError,
+} from "./errors";
 import { SuggestCancelled } from "./suggests/errors";
 
 import type {
-  FrontmatterError,
   NoteCreateError,
   NoteDeleteError,
   NoteReadError,
@@ -279,7 +284,12 @@ export class FakeNotesService implements Pick<
     const entry = this.#files.get(path);
     if (!entry) return AsyncResult.err(new NoteNotFoundError(path));
     const next = { ...entry.frontmatter };
-    mutate(next);
+    // processFrontMatter rejects with whatever the mutator threw, before it writes anything.
+    try {
+      mutate(next);
+    } catch (error) {
+      return AsyncResult.err(new FrontmatterError(path, error));
+    }
     this.#files.set(path, { ...entry, frontmatter: next });
     // `modified` means "the bytes changed", full stop — the real service emits it off
     // the generic vault "modify" listener with no opinion on whether the change is

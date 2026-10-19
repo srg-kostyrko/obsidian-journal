@@ -8,7 +8,7 @@ import {
   NoticeService,
   NotesService,
 } from "@/infrastructure/host";
-import { AsyncResult, Err, Ok, type Result } from "@/infrastructure/result";
+import { AsyncResult } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { isDone, tickTargetStatus } from "../../status";
@@ -26,6 +26,9 @@ function statusValue(canonical: string): string | boolean {
   if (canonical === "false") return false;
   return canonical;
 }
+
+// Thrown out of the frontmatter mutator to abort the write; never leaves this module.
+class RecurringAtWrite extends Error {}
 
 /**
  * Ticks a task note by writing its status property, never its body.
@@ -61,14 +64,12 @@ export class NotePropertyTicker {
     // One reading of the clock, so a tick at midnight cannot stamp two different days.
     const now = Clock.now();
     // The cache can lag the file — a sync or an edit may have made the note recurring since it was
-    // last read — so the frontmatter the write is handed gets the same check.
-    let recurring = false;
+    // last read — so the frontmatter the write is handed gets the same check. It throws rather than
+    // returning untouched: Obsidian re-serializes the YAML after a mutator returns and may rewrite the
+    // note, while a throw aborts before the file is written.
     return this.#notes
       .updateFrontmatter(item.path, (frontmatter) => {
-        if (isRecurring(frontmatter, state.recurrenceProperties)) {
-          recurring = true;
-          return;
-        }
+        if (isRecurring(frontmatter, state.recurrenceProperties)) throw new RecurringAtWrite();
         frontmatter[state.statusProperty] = statusValue(canonical);
         if (completedProperty !== "") {
           if (isDone(target)) frontmatter[completedProperty] = now.format("YYYY-MM-DD");
@@ -76,9 +77,10 @@ export class NotePropertyTicker {
         }
         if (modifiedProperty !== "") frontmatter[modifiedProperty] = now.format("YYYY-MM-DDTHH:mm:ssZ");
       })
-      .mapErr((error): TickError =>
-        error.kind === "frontmatter-failed" ? new NoteWriteError(item.path, error.cause) : error,
-      )
-      .flatMap((): Result<void, TickError> => (recurring ? new Err(this.#recurringRefusal(item)) : new Ok(undefined)));
+      .mapErr((error): TickError => {
+        if (error.kind !== "frontmatter-failed") return error;
+        if (error.cause instanceof RecurringAtWrite) return this.#recurringRefusal(item);
+        return new NoteWriteError(item.path, error.cause);
+      });
   }
 }
