@@ -7,13 +7,14 @@ import { SettingsService } from "@/settings";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
-import { notePropertySlice } from "../slice";
+import { notePropertySlice, type NotePropertySliceState } from "../slice";
 
 import EditNotePropertyProviderModal from "./EditNotePropertyProviderModal.vue";
 
-async function mount() {
+async function mount(seed: (state: NotePropertySliceState) => void = () => undefined) {
   const harness = await testContainer({ modules: [tasksCoreModule] });
   const slice = harness.resolve(SettingsService).getSlice(notePropertySlice);
+  seed(slice.state);
   const { submit, cancel } = harness.renderModal(EditNotePropertyProviderModal);
   return { harness, slice, submit, cancel };
 }
@@ -90,7 +91,7 @@ describe("EditNotePropertyProviderModal", () => {
       dates: { due: "deadline", start: "begins", done: "completedDate", created: "dateCreated" },
       statusProperty: "state",
       statusMap: { open: "todo", "in-progress": "in-progress", complete: "done" },
-      canonical: { todo: "open", done: "complete", "in-progress": "in-progress" },
+      canonical: { todo: "open", done: "Complete", "in-progress": "in-progress" },
       titleProperty: "name",
       modifiedProperty: "",
       recurrenceProperties: ["repeat", "series_parent"],
@@ -173,5 +174,53 @@ describe("EditNotePropertyProviderModal", () => {
     await userEvent.click(screen.getByTestId(`note-property-written-back-${statusRowIndex("none")}`));
     await userEvent.click(saveButton());
     expect(slice.state.canonical.todo).toBe("none");
+  });
+
+  // The written-back value is what a tick puts into the note, so it keeps the vault's own case;
+  // only the map keys, matched case-insensitively, are lowercased.
+  it("keeps the case of a written-back value", async () => {
+    const { slice } = await mount();
+    await retype(`note-property-status-value-${statusRowIndex("done")}`, "Done");
+    await userEvent.click(saveButton());
+    expect(slice.state.canonical.done).toBe("Done");
+    expect(slice.state.statusMap).toHaveProperty("done", "done");
+    expect(slice.state.statusMap).not.toHaveProperty("Done");
+  });
+
+  it("round-trips a cased written-back value through open and Save", async () => {
+    const { slice } = await mount((state) => {
+      state.canonical = { ...state.canonical, done: "Done" };
+    });
+    expect(screen.getByTestId(`note-property-written-back-${statusRowIndex("Done")}`).dataset.current).toBe("true");
+    await userEvent.click(saveButton());
+    expect(slice.state.canonical.done).toBe("Done");
+  });
+
+  // An unknown value reads as to-do, so a to-do value with no row of its own still round-trips.
+  it("keeps a stored written-back value that has no row, through open and Save", async () => {
+    const { slice } = await mount((state) => {
+      state.canonical = { ...state.canonical, todo: "backlog" };
+    });
+    const before = JSON.parse(JSON.stringify(slice.state)) as unknown;
+    await userEvent.click(saveButton());
+    expect(JSON.parse(JSON.stringify(slice.state))).toEqual(before);
+  });
+
+  it("keeps the to-do written-back value when the last to-do row is removed", async () => {
+    const { slice } = await mount();
+    await userEvent.click(screen.getByTestId(`note-property-status-remove-${statusRowIndex("open")}`));
+    await userEvent.click(screen.getByTestId(`note-property-status-remove-${statusRowIndex("none")}`));
+    await userEvent.click(saveButton());
+    expect(slice.state.canonical.todo).toBe("none");
+  });
+
+  it("drops a written-back value whose last row is remapped to another status", async () => {
+    const { slice } = await mount();
+    const row = screen.getByTestId(`note-property-status-row-${statusRowIndex("in-progress")}`);
+    const select = row.querySelector("select");
+    if (!select) throw new Error("status row has no select");
+    await userEvent.selectOptions(select, "done");
+    await userEvent.click(saveButton());
+    expect(slice.state.canonical).not.toHaveProperty("in-progress");
   });
 });

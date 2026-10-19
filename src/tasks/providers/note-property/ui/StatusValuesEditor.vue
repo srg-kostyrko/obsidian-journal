@@ -9,19 +9,27 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
-import type { StatusValueRow } from "../form";
+import type { CanonicalMark, StatusValueRow } from "../form";
 
 const rows = defineModel<StatusValueRow[]>("rows", { required: true });
-const canonical = defineModel<Record<string, number>>("canonical", { required: true });
+const canonical = defineModel<Record<string, CanonicalMark>>("canonical", { required: true });
+
+function marks(type: string, row: StatusValueRow): boolean {
+  const mark = canonical.value[type];
+  return mark !== undefined && "row" in mark && mark.row === row.id;
+}
 
 // A row can stop answering for a status two ways — removed, or remapped — and canonical[type] may
 // point at exactly that row. Left alone, ticking to that status writes a value that reads back as
-// something else, so the mark moves to another row of the type, or is dropped when none is left.
-function repairCanonical(type: string, id: number): void {
-  if (canonical.value[type] !== id) return;
-  const fallback = rows.value.find((row) => row.status === type);
-  if (fallback === undefined) delete canonical.value[type];
-  else canonical.value[type] = fallback.id;
+// something else, so the mark moves to another row of the type. With none left it is dropped —
+// except a removed to-do value: an unknown value reads as to-do, so it still round-trips and stays.
+function repairCanonical(type: string, row: StatusValueRow, removed: boolean): void {
+  if (!marks(type, row)) return;
+  const fallback = rows.value.find((candidate) => candidate.status === type);
+  const value = row.value.trim();
+  if (fallback !== undefined) canonical.value[type] = { row: fallback.id };
+  else if (removed && type === "todo" && value !== "") canonical.value[type] = { value };
+  else delete canonical.value[type];
 }
 
 function addRow(): void {
@@ -33,22 +41,22 @@ function removeRow(row: StatusValueRow): void {
   const index = rows.value.findIndex((candidate) => candidate.id === row.id);
   if (index === -1) return;
   rows.value.splice(index, 1);
-  repairCanonical(row.status, row.id);
+  repairCanonical(row.status, row, true);
 }
 
 function remapRow(row: StatusValueRow, status: string): void {
   const previous = row.status;
   if (previous === status) return;
   row.status = status;
-  repairCanonical(previous, row.id);
+  repairCanonical(previous, row, false);
 }
 
 function isCurrent(row: StatusValueRow): boolean {
-  return canonical.value[row.status] === row.id;
+  return marks(row.status, row);
 }
 
 function makeCurrent(row: StatusValueRow): void {
-  canonical.value[row.status] = row.id;
+  canonical.value[row.status] = { row: row.id };
 }
 </script>
 

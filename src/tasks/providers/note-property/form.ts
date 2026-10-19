@@ -15,6 +15,11 @@ export interface StatusValueRow {
   status: string;
 }
 
+// A mark on a row follows the row (a value is edited in place, so a mark keyed by its text would fall
+// off on the first keystroke). A stored value with no row of its type is kept verbatim: it may still
+// round-trip — an unknown value reads as todo — and opening then saving must not rewrite config.
+export type CanonicalMark = { row: number } | { value: string };
+
 export interface NotePropertyDraft {
   by: "tag" | "property";
   tag: string;
@@ -25,9 +30,7 @@ export interface NotePropertyDraft {
   dates: Record<TaskDateRole, string>;
   statusProperty: string;
   statusRows: StatusValueRow[];
-  // Keyed by row id, not by value: a value is edited in place, and a mark keyed by its text would
-  // fall off the row on the first keystroke.
-  canonical: Record<string, number>;
+  canonical: Record<string, CanonicalMark>;
   titleProperty: string;
   modifiedProperty: string;
   recurrenceProperties: string;
@@ -48,14 +51,19 @@ function statusKey(value: string): string {
 
 export function draftFrom(state: NotePropertySliceState): NotePropertyDraft {
   const statusRows = Object.entries(state.statusMap).map(([value, status], id) => ({ id, value, status }));
-  const canonical: Record<string, number> = {};
+  const canonical: Record<string, CanonicalMark> = {};
   for (const [type, value] of Object.entries(state.canonical)) {
-    // A written-back value the map does not read back as its type would break every tick's round
-    // trip; it has no row to mark, so it is dropped here and Save repairs it.
     const row = statusRows.find(
       (candidate) => candidate.status === type && statusKey(candidate.value) === statusKey(value),
     );
-    if (row) canonical[type] = row.id;
+    if (row === undefined) {
+      canonical[type] = { value };
+      continue;
+    }
+    // Map keys are stored lowercased, but the written-back value keeps the case the vault uses
+    // (`Done`); the row shows that spelling so Save writes it back unchanged.
+    row.value = value;
+    canonical[type] = { row: row.id };
   }
   return {
     by: state.identify.by,
@@ -89,9 +97,13 @@ export function stateFrom(draft: NotePropertyDraft): Omit<NotePropertySliceState
   const statusMap: Record<string, string> = {};
   for (const row of draft.statusRows) statusMap[statusKey(row.value)] = row.status;
   const canonical: Record<string, string> = {};
-  for (const [type, id] of Object.entries(draft.canonical)) {
-    const row = draft.statusRows.find((candidate) => candidate.id === id);
-    if (row?.status === type) canonical[type] = statusKey(row.value);
+  for (const [type, mark] of Object.entries(draft.canonical)) {
+    if ("value" in mark) {
+      canonical[type] = mark.value;
+      continue;
+    }
+    const row = draft.statusRows.find((candidate) => candidate.id === mark.row);
+    if (row?.status === type) canonical[type] = row.value.trim();
   }
   return {
     identify:
