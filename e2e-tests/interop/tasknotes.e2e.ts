@@ -11,16 +11,18 @@ import {
   waitForDialogClosed,
   waitForModalOpen,
 } from "../support/settings.js";
-import { seedNote } from "../support/vault.js";
+import { seedNote, waitForFrontmatter } from "../support/vault.js";
 
 // Real TaskNotes 4.13.9, configured through the fixture's own data.json, which it merges over its
-// defaults on load. It names `#chore` as the task tag and excludes `Archive/`, so a listing built
-// from Journals' own defaults (`#task`, nothing excluded) differs from one built from the copy.
+// defaults on load. It names `#chore` as the task tag, excludes `Archive/`, keeps the scheduled date
+// in `when` and calls its one completed status `shipped`, so a listing built from Journals' own
+// defaults (`#task`, nothing excluded, `scheduled`, `done`) differs from one built from the copy.
 const FIXTURE = "./e2e-tests/fixtures/e2e-tasknotes-setup";
 
 const DAY = "2026-05-12";
 const DAY_NOTE = `${DAY}.md`;
 const COPIED_TITLE = "Clean the gutters";
+const COPIED_NOTE = "Tasks/Gutters.md";
 const PROVIDER_TOGGLE = '[data-testid="note-property-enabled"]';
 const PROVIDER_SUMMARY = '[data-testid="note-property-summary"]';
 const TASK_ROWS = `${VISIBLE_LEAF} .markdown-reading-view .block-language-journal-tasks .task-listing-row`;
@@ -36,12 +38,20 @@ describe("setting task notes up from TaskNotes", () => {
   // A plugin can be listed as enabled and never instantiate (see Templater's pin in wdio.conf.mts);
   // without this the card's absence would read as a Journals failure.
   it("loads TaskNotes with the fixture's settings", async () => {
-    const taskTag = await browser.executeObsidian(({ app }) => {
+    const read = await browser.executeObsidian(({ app }) => {
       const plugins = (app as unknown as { plugins: { getPlugin(id: string): unknown } }).plugins;
-      const plugin = plugins.getPlugin("tasknotes") as { settings?: { taskTag?: unknown } } | null;
-      return plugin?.settings?.taskTag ?? null;
+      const plugin = plugins.getPlugin("tasknotes") as {
+        settings?: { taskTag?: unknown; fieldMapping?: { scheduled?: unknown; due?: unknown } };
+      } | null;
+      const settings = plugin?.settings;
+      return {
+        taskTag: settings?.taskTag ?? null,
+        scheduled: settings?.fieldMapping?.scheduled ?? null,
+        due: settings?.fieldMapping?.due ?? null,
+      };
     });
-    expect(taskTag).toBe("chore");
+    // `due` is not in the fixture: TaskNotes fills it in, which is what the copy then reads.
+    expect(read).toEqual({ taskTag: "chore", scheduled: "when", due: "due" });
   });
 
   it("copies TaskNotes' settings, turns task notes on, and lists what TaskNotes tracks", async () => {
@@ -70,6 +80,20 @@ describe("setting task notes up from TaskNotes", () => {
     );
     // The `#task` note and the `#chore` note under Archive/ share the day; the copy leaves both out.
     await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(1);
+  });
+
+  it("ticks a task note into TaskNotes' own completed status", async () => {
+    await openInReadingMode(DAY_NOTE);
+    // The copy lists this note alone, as the test above shows.
+    const row = $(TASK_ROWS);
+    await expect(row).toHaveText(expect.stringContaining(COPIED_TITLE));
+    await row.$("input[type=checkbox]").click();
+
+    await waitForFrontmatter(
+      COPIED_NOTE,
+      (frontmatter) => frontmatter.status === "shipped",
+      `waited for ticking "${COPIED_TITLE}" to write status: shipped into ${COPIED_NOTE}`,
+    );
   });
 
   // Left to itself on a first run TaskNotes writes seven .base files and a "Start Here" note into
