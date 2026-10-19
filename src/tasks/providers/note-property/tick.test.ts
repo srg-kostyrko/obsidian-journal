@@ -54,7 +54,7 @@ async function build(
     data: { tasksNoteProperty: { enabled: true, ...slice } },
     overrides: [overrideWith(NotesService, notes as never), overrideWith(NoteMetadataService, metadata as never)],
   });
-  return { harness, notes, ticker: harness.resolve(NotePropertyTicker) };
+  return { harness, notes, metadata, ticker: harness.resolve(NotePropertyTicker) };
 }
 
 describe("NotePropertyTicker", () => {
@@ -166,6 +166,20 @@ describe("NotePropertyTicker", () => {
     expectErr(result);
     expect(result.error.kind).toBe("recurring-unsupported");
     expect(update).not.toHaveBeenCalled();
+    expect(notes.frontmatterOf(PATH)).toEqual(frontmatter);
+    expect(harness.notices.messages).toEqual([m.tasks_tick_recurring_task_note()]);
+  });
+
+  // The cache lags the file: a sync or an edit can add recurrence after the cache last read it.
+  it("refuses a note whose live frontmatter is recurring though its cached metadata is not", async () => {
+    const frontmatter = { status: "open", recurrence: "FREQ=DAILY" };
+    const { harness, notes, metadata, ticker } = await build(frontmatter);
+    metadata.setMetadata(PATH, { title: "Ship it", tags: ["#task"], properties: { status: "open" } });
+
+    const result = await ticker.toggle(noteItem("todo"));
+
+    expectErr(result);
+    expect(result.error.kind).toBe("recurring-unsupported");
     expect(notes.frontmatterOf(PATH)).toEqual(frontmatter);
     expect(harness.notices.messages).toEqual([m.tasks_tick_recurring_task_note()]);
   });

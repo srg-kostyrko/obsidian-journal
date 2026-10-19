@@ -8,7 +8,7 @@ import {
   NoticeService,
   NotesService,
 } from "@/infrastructure/host";
-import { AsyncResult } from "@/infrastructure/result";
+import { AsyncResult, Err, Ok, type Result } from "@/infrastructure/result";
 import { SettingsService } from "@/settings";
 
 import { isDone, tickTargetStatus } from "../../status";
@@ -36,6 +36,11 @@ export class NotePropertyTicker {
   readonly #notices = inject(NoticeService);
   readonly #settings = inject(SettingsService).getSlice(notePropertySlice);
 
+  #recurringRefusal(item: TaskItem): RecurringUnsupportedError {
+    this.#notices.show(m.tasks_tick_recurring_task_note());
+    return new RecurringUnsupportedError(item.path);
+  }
+
   toggle(item: TaskItem): AsyncResult<void, TickError> {
     const state = this.#settings.state;
     // A recurring series is advanced by the plugin that owns it, off the completion of its current
@@ -44,8 +49,7 @@ export class NotePropertyTicker {
     const meta = this.#metadata.get(item.path);
     if (meta.isNone()) return AsyncResult.err(new NoteNotFoundError(item.path));
     if (isRecurring(meta.value.properties, state.recurrenceProperties)) {
-      this.#notices.show(m.tasks_tick_recurring_task_note());
-      return AsyncResult.err(new RecurringUnsupportedError(item.path));
+      return AsyncResult.err(this.#recurringRefusal(item));
     }
 
     const target = tickTargetStatus(item.status);
@@ -56,8 +60,15 @@ export class NotePropertyTicker {
     const modifiedProperty = state.modifiedProperty;
     // One reading of the clock, so a tick at midnight cannot stamp two different days.
     const now = Clock.now();
+    // The cache can lag the file — a sync or an edit may have made the note recurring since it was
+    // last read — so the frontmatter the write is handed gets the same check.
+    let recurring = false;
     return this.#notes
       .updateFrontmatter(item.path, (frontmatter) => {
+        if (isRecurring(frontmatter, state.recurrenceProperties)) {
+          recurring = true;
+          return;
+        }
         frontmatter[state.statusProperty] = statusValue(canonical);
         if (completedProperty !== "") {
           if (isDone(target)) frontmatter[completedProperty] = now.format("YYYY-MM-DD");
@@ -67,6 +78,7 @@ export class NotePropertyTicker {
       })
       .mapErr((error): TickError =>
         error.kind === "frontmatter-failed" ? new NoteWriteError(item.path, error.cause) : error,
-      );
+      )
+      .flatMap((): Result<void, TickError> => (recurring ? new Err(this.#recurringRefusal(item)) : new Ok(undefined)));
   }
 }
