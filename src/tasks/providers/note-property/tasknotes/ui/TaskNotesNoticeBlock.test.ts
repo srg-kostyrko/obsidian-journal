@@ -9,6 +9,7 @@ import { testContainer, type TestHarness } from "@/testing";
 
 import { tasksCoreModule } from "../../../../module";
 import { notePropertySlice } from "../../slice";
+import { editNotePropertyProviderModal } from "../../ui/modals";
 import { SetUpFromTaskNotesFlow } from "../flows/set-up-from-tasknotes.flow";
 import { taskNotesNoticeSlice } from "../slice";
 import { TaskNotesSource } from "../source";
@@ -77,7 +78,7 @@ describe("TaskNotesNoticeBlock", () => {
     harness.render(TaskNotesNoticeBlock);
     await userEvent.click(await screen.findByText(m.tasks_tasknotes_notice_set_up()));
 
-    expect(harness.modals.lastOpen()).toBeDefined();
+    expect(harness.modals.lastOpen().definition).toBe(editNotePropertyProviderModal);
     harness.modals.lastOpen().cancel();
 
     await vi.waitFor(() => expect(screen.queryByText(m.tasks_tasknotes_notice_heading())).toBeNull());

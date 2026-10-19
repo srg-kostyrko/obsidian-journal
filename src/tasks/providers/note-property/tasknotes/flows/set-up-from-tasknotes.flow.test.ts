@@ -88,4 +88,16 @@ describe("SetUpFromTaskNotesFlow", () => {
     expect(slice.state).toEqual(stored);
     expect(harness.modals.opens).toHaveLength(0);
   });
+
+  it("leaves a configuration made by hand alone", async () => {
+    const { harness, slice } = await build(taskNotesPlugin(settings));
+    slice.state = { ...slice.state, enabled: false, setUp: true, statusProperty: "state" };
+    const stored = JSON.parse(JSON.stringify(slice.state)) as unknown;
+
+    const result = await harness.resolve(SetUpFromTaskNotesFlow).execute();
+
+    expect(result.kind).toBe("ok");
+    expect(slice.state).toEqual(stored);
+    expect(harness.modals.opens).toHaveLength(0);
+  });
 });

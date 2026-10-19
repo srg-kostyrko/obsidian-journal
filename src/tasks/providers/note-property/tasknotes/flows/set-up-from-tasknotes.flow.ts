@@ -14,6 +14,8 @@ export class SetUpFromTaskNotesFlow implements Flow<Record<string, never>, void,
   readonly #flows = inject(Flows);
 
   execute(): AsyncResult<void, FlowError> {
+    // The copy is a first-run convenience; once task notes have been set up, the config is the user's.
+    if (this.#slice.state.setUp) return AsyncResult.ok();
     // Read again at click time: TaskNotes may have been disabled since the card rendered.
     const read = this.#source.read();
     if (read.kind !== "read") return AsyncResult.ok();
