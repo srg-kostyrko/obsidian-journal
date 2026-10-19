@@ -36,6 +36,16 @@ describe("identifiesNote", () => {
     expect(identifiesNote(meta([], { due: "x" }), path, s)).toBe(true);
     expect(identifiesNote(meta([], {}), path, s)).toBe(false);
   });
+  it("matches a property rule with an empty value whatever the property holds, empty included", () => {
+    const s = state({ identify: { by: "property", name: "isTask", value: "" } });
+    expect(identifiesNote(meta([], { isTask: null }), path, s)).toBe(true);
+    expect(identifiesNote(meta([], { isTask: "" }), path, s)).toBe(true);
+    expect(identifiesNote(meta([], { other: "x" }), path, s)).toBe(false);
+  });
+  it("rejects an empty property for a rule that names a value", () => {
+    const s = state({ identify: { by: "property", name: "isTask", value: "true" } });
+    expect(identifiesNote(meta([], { isTask: null }), path, s)).toBe(false);
+  });
   it("matches a property rule by value, scalar or list", () => {
     const s = state({ identify: { by: "property", name: "type", value: "task" } });
     expect(identifiesNote(meta([], { type: "task" }), path, s)).toBe(true);

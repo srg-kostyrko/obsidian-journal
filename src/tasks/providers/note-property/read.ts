@@ -32,10 +32,9 @@ export function identifiesNote(note: IdentifiableNote, path: VaultPath, state: N
   if (state.archiveTag !== "" && tags.has(state.archiveTag.toLowerCase())) return false;
   const rule = state.identify;
   if (rule.by === "tag") return tags.has(rule.tag.toLowerCase());
-  const value = note.properties[rule.name];
-  if (value === undefined || value === null) return false;
-  if (rule.value === "") return true;
-  return lowerScalars(value).includes(rule.value.toLowerCase());
+  // `isTask:` with nothing after it is YAML null, and still a note that has the property.
+  if (rule.value === "") return Object.hasOwn(note.properties, rule.name);
+  return lowerScalars(note.properties[rule.name]).includes(rule.value.toLowerCase());
 }
 
 export function readDates(
