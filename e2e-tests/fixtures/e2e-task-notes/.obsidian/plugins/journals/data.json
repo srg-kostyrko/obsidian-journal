@@ -23,6 +23,21 @@
           "styles": [{ "type": "corner", "placement": "top-left", "color": { "type": "custom", "color": "#ff0000" } }]
         }
       ]
+    },
+    "personal": {
+      "name": "personal",
+      "write": { "type": "day" },
+      "folder": "Personal",
+      "timeline": { "start": "2019-01-01", "end": { "kind": "date", "date": "2019-12-31" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
     }
   }
 }
