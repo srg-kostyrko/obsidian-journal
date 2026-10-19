@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 
-import { composeFilters, matchesFilter } from "./filter";
+import { composeDatedFilter, composeFilters, matchesFilter } from "./filter";
 import { buildTaskItem } from "./testing";
 
 import type { TaskCondition, TaskRule } from "./conditions";
@@ -70,6 +70,21 @@ describe("matchesFilter", () => {
           { type: "status", condition: "is", statuses: ["done"] },
         ],
       }),
+    ).toBe(false);
+  });
+
+  it("matches a tag on a note item against the note's frontmatter tags", () => {
+    const noteItem = buildTaskItem({ display: { kind: "note", path, title: "Ship it" } });
+    const filter: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+    // The inline #work on line 3 belongs to that line, not to the note.
+    expect(matchesFilter(noteItem, structure, filter)).toBe(false);
+    expect(matchesFilter(noteItem, { ...structure, frontmatterTags: ["#task", "#work"] }, filter)).toBe(true);
+    expect(
+      matchesFilter(
+        noteItem,
+        { ...structure, frontmatterTags: ["#work"] },
+        { ...filter, conditions: [{ type: "tag", condition: "lacks", tags: ["#work"] }] },
+      ),
     ).toBe(false);
   });
 
@@ -159,6 +174,40 @@ describe("composeFilters", () => {
     const query: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] };
     expect(composeFilters(journal, query).conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
+    ]);
+  });
+});
+
+describe("composeDatedFilter", () => {
+  const journal: TaskRule = {
+    mode: "and",
+    conditions: [
+      { type: "tag", condition: "has", tags: ["#work"] },
+      { type: "heading", condition: "under", headings: ["Tasks"] },
+      { type: "status", condition: "is", statuses: ["done"] },
+    ],
+  };
+
+  it("takes only the journal's status conditions", () => {
+    expect(composeDatedFilter(journal, { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["done"] },
+    ]);
+  });
+
+  it("keeps every condition the surface names, tag and heading included", () => {
+    const tag: TaskCondition = { type: "tag", condition: "has", tags: ["#home"] };
+    expect(composeDatedFilter(journal, { mode: "or", conditions: [tag] })).toEqual({
+      mode: "or",
+      conditions: [{ type: "status", condition: "is", statuses: ["done"] }, tag],
+    });
+  });
+
+  it("falls back to the listing's open default when neither side names a status", () => {
+    expect(composeDatedFilter(under("Tasks"), { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["open"] },
+    ]);
+    expect(composeDatedFilter(null, { mode: "and", conditions: [] }).conditions).toEqual([
+      { type: "status", condition: "is", statuses: ["open"] },
     ]);
   });
 });

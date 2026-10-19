@@ -519,6 +519,9 @@ export class JournalsApiService implements JournalsApi {
     row: TaskListingRow,
     taskLines: Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>,
   ): TaskItem | null {
+    // A dated row's journal and date are the ones asked about, not its path's owner — a task note
+    // at a period note's path would otherwise be reported as that note's own task.
+    if (row.source.kind === "task-note") return null;
     const owner = this.#index.entryByPath(row.source.path);
     if (owner.isNone()) return null;
     const { item } = row;

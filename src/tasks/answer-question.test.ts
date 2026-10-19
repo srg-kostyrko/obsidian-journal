@@ -269,7 +269,7 @@ describe("answerTaskQuestion", () => {
           anchorOf: () => Option.none(),
           overlapsFrom: () => true,
         },
-        tasks: { ...dependencies.tasks, hydrate: (items) => Promise.resolve(items) },
+        tasks: { ...dependencies.tasks, datedIn: () => [], hydrate: (items) => Promise.resolve(items) },
       };
       const rows = await buildTaskListing(listing, {
         kind: "period",

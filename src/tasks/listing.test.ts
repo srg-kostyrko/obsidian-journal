@@ -1,14 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
-import type { NoteStructure, VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NotesService, type NoteStructure, type VaultPath } from "@/infrastructure/host";
+import { FakeNoteMetadataService, FakeNotesService } from "@/infrastructure/host/testing";
 import { Option } from "@/infrastructure/result";
-import type { NoteletEntry } from "@/journals";
+import { JournalsIndex, type NoteletEntry } from "@/journals";
+import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { overrideWith, testContainer } from "@/testing";
 
 import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
+import { tasksCoreModule } from "./module";
+import { NotePropertyTaskProvider } from "./providers/note-property/provider";
+import { NOTE_PROPERTY_PROVIDER_ID } from "./providers/note-property/slice";
 import { DEFAULT_TASK_QUERY } from "./query";
+import { TaskIndex } from "./task-index";
 import { buildTaskItem } from "./testing";
+import { TaskProviderToken } from "./types";
 
 import type { TaskRule } from "./conditions";
 import type { TaskQuery } from "./query";
@@ -64,6 +72,9 @@ function buildDependencies(options: {
   // Journals the repository does not know, and journals whose cycle cannot place a date.
   unknownJournals?: readonly string[];
   journalsWithoutCycle?: readonly string[];
+  // A real TaskIndex a provider published into, layered under the fixture's own items: datedIn is
+  // the index's range lookup, and itemsIn at a task note's path answers what containment would see.
+  published?: Pick<TaskIndex, "itemsIn" | "datedIn">;
 }): TaskListingDependencies {
   const {
     items = {},
@@ -74,6 +85,7 @@ function buildDependencies(options: {
     journalFilters = {},
     unknownJournals = [],
     journalsWithoutCycle = [],
+    published,
   } = options;
   const endAnchorOf = (name: string, anchor: AnchorString): AnchorString =>
     (ends[name]?.[anchor] ?? anchor) as AnchorString;
@@ -121,7 +133,8 @@ function buildDependencies(options: {
     },
     structure: { get: (path) => Option.fromNullable(structures[path] ?? EMPTY_STRUCTURE) },
     tasks: {
-      itemsIn: (path) => items[path] ?? [],
+      itemsIn: (path) => [...(items[path] ?? []), ...(published?.itemsIn(path) ?? [])],
+      datedIn: (roles, start, end) => published?.datedIn(roles, start, end) ?? [],
       // Hydration is the seam under test only for its position in the pipeline; give every line
       // item a markdown so the rows are complete.
       hydrate: (given) =>
@@ -812,5 +825,211 @@ describe("buildTaskListing — window request", () => {
       query: DEFAULT_TASK_QUERY,
     });
     expect(rows.map((row) => row.key)).toEqual([`${DAY}:3`]);
+  });
+});
+
+const TASK_NOTE = "Tasks/a.md" as VaultPath;
+
+interface TaskNoteFixture {
+  readonly tags?: readonly string[];
+  readonly properties: Record<string, unknown>;
+}
+
+// The note-property provider enabled and started over the given task notes, so the index the
+// listing reads is the one a real provider published into.
+async function publishedTaskNotes(fixtures: Partial<Record<VaultPath, TaskNoteFixture>>): Promise<TaskIndex> {
+  const notes = new FakeNotesService();
+  const metadata = new FakeNoteMetadataService();
+  const harness = await testContainer({
+    modules: [journalsCoreModule, tasksCoreModule],
+    data: { tasksNoteProperty: { enabled: true } },
+    overrides: [overrideWith(NotesService, notes as never), overrideWith(NoteMetadataService, metadata as never)],
+  });
+  harness.resolve(JournalsIndex).markReady();
+  for (const [path, fixture] of Object.entries(fixtures) as [VaultPath, TaskNoteFixture][]) {
+    notes.seed(path);
+    metadata.setMetadata(path, { title: "a", tags: [...(fixture.tags ?? ["#task"])], properties: fixture.properties });
+  }
+  const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === NOTE_PROPERTY_PROVIDER_ID);
+  if (!(provider instanceof NotePropertyTaskProvider)) throw new TypeError("note-property provider not registered");
+  provider.start();
+  return harness.resolve(TaskIndex);
+}
+
+const scheduledOn = (day: string, extra: Record<string, unknown> = {}): TaskNoteFixture => ({
+  properties: { scheduled: day, ...extra },
+});
+
+const tagFilter = (tag: string): TaskRule => ({
+  mode: "and",
+  conditions: [{ type: "tag", condition: "has", tags: [tag] }],
+});
+
+describe("buildTaskListing — dated task notes", () => {
+  it("lists a task note once on the day its date falls on, and not on the next", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({ published });
+
+    const rows = await buildTaskListing(dependencies, request());
+    expect(rows).toHaveLength(1);
+    expect(rows.at(0)?.item.relations).toContain("date");
+    expect(rows.at(0)?.source).toEqual({ kind: "task-note", path: TASK_NOTE, label: "a" });
+    expect(rows.at(0)?.depth).toBe(0);
+    expect(rows.at(0)?.context).toBe(false);
+
+    const next = await buildTaskListing(dependencies, request({ anchor: "2026-09-23" as AnchorString }));
+    expect(next).toEqual([]);
+  });
+
+  it("lists it on the week and the month holding its date, by the period's range", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-23") });
+    const dependencies = buildDependencies({
+      published,
+      ends: { Weekly: { "2026-09-21": "2026-09-27" }, Monthly: { "2026-09-01": "2026-09-30" } },
+    });
+
+    const week = await buildTaskListing(
+      dependencies,
+      request({ hostJournal: "Weekly", anchor: "2026-09-21" as AnchorString, journalNames: ["Weekly"] }),
+    );
+    const month = await buildTaskListing(
+      dependencies,
+      request({ hostJournal: "Monthly", anchor: "2026-09-01" as AnchorString, journalNames: ["Monthly"] }),
+    );
+    expect(week.map((row) => row.source.path)).toEqual([TASK_NOTE]);
+    expect(month.map((row) => row.source.path)).toEqual([TASK_NOTE]);
+  });
+
+  it("adds no dated items when the host journal's cycle cannot place the period", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const rows = await buildTaskListing(buildDependencies({ published, journalsWithoutCycle: ["Daily"] }), request());
+    expect(rows).toEqual([]);
+  });
+
+  it("takes only the role the surface names", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({ published });
+    expect(await buildTaskListing(dependencies, request({ query: withQuery({ date: "due" }) }))).toEqual([]);
+    expect(await buildTaskListing(dependencies, request({ query: withQuery({ date: "scheduled" }) }))).toHaveLength(1);
+  });
+
+  it("does not let the journal's stored tag condition hide a task note", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({ published, journalFilters: { Daily: tagFilter("#work") } });
+    const rows = await buildTaskListing(dependencies, request());
+    expect(rows.map((row) => row.source.path)).toEqual([TASK_NOTE]);
+  });
+
+  it("matches a tag the surface names against the task note's frontmatter tags", async () => {
+    const tagged = "Tasks/b.md" as VaultPath;
+    const published = await publishedTaskNotes({
+      [TASK_NOTE]: scheduledOn("2026-09-22"),
+      [tagged]: { tags: ["#task", "#work"], properties: { scheduled: "2026-09-22" } },
+    });
+    const dependencies = buildDependencies({
+      published,
+      structures: {
+        [TASK_NOTE]: { ...EMPTY_STRUCTURE, frontmatterTags: ["#task"] },
+        [tagged]: { ...EMPTY_STRUCTURE, frontmatterTags: ["#task", "#work"] },
+      },
+    });
+    const rows = await buildTaskListing(dependencies, request({ query: withQuery({ filter: tagFilter("#work") }) }));
+    expect(rows.map((row) => row.source.path)).toEqual([tagged]);
+  });
+
+  it("lets the journal's stored status condition hide a task note", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({
+      published,
+      journalFilters: { Daily: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] } },
+    });
+    expect(await buildTaskListing(dependencies, request())).toEqual([]);
+  });
+
+  it("gathers dated items for the host period alone under rollup, so a task note appears once", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({
+      published,
+      items: { [DAY]: [line(DAY, 3)], [OTHER_DAY]: [line(OTHER_DAY, 3)] },
+      notes: { Daily: { "2026-09-22": DAY, "2026-09-23": OTHER_DAY } },
+      ends: { Monthly: { "2026-09-01": "2026-09-30" } },
+    });
+    const rows = await buildTaskListing(
+      dependencies,
+      request({
+        hostJournal: "Monthly",
+        anchor: "2026-09-01" as AnchorString,
+        journalNames: ["Monthly", "Daily"],
+        query: withQuery({ scope: { provider: [], source: "both", depth: "rollup" } }),
+      }),
+    );
+    expect(rows.filter((row) => row.source.kind === "task-note")).toHaveLength(1);
+    expect(rows.map((row) => row.key)).toEqual([`${DAY}:3`, `${OTHER_DAY}:3`, "note-property:Tasks/a.md"]);
+  });
+
+  it("lists a dated item whatever the source, which it is not reached through", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({ published, notes: { Daily: { "2026-09-22": DAY } } });
+    const rows = await buildTaskListing(
+      dependencies,
+      request({ query: withQuery({ scope: { provider: [], source: "notelets", depth: "literal" } }) }),
+    );
+    expect(rows.map((row) => row.source.path)).toEqual([TASK_NOTE]);
+  });
+
+  it("keeps the provider scope over dated items", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({ published });
+    const rows = await buildTaskListing(
+      dependencies,
+      request({ query: withQuery({ scope: { provider: ["checkbox"], source: "both", depth: "literal" } }) }),
+    );
+    expect(rows).toEqual([]);
+  });
+
+  it("lists a task note once in a window over two journals", async () => {
+    const published = await publishedTaskNotes({ [TASK_NOTE]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({
+      published,
+      notes: { Daily: { "2026-09-22": DAY }, Work: { "2026-09-22": OTHER_DAY } },
+    });
+    const rows = await buildTaskListing(dependencies, {
+      kind: "window",
+      journalNames: ["Daily", "Work"],
+      window: { start: "2026-09-21" as AnchorString, end: "2026-09-27" as AnchorString },
+      query: DEFAULT_TASK_QUERY,
+    });
+    expect(rows.map((row) => row.source.path)).toEqual([TASK_NOTE]);
+  });
+
+  it("lists a task note that is also the period's own note once, beside that note's checkboxes", async () => {
+    const published = await publishedTaskNotes({ [DAY]: scheduledOn("2026-09-22") });
+    const dependencies = buildDependencies({
+      published,
+      items: { [DAY]: [line(DAY, 3)] },
+      notes: { Daily: { "2026-09-22": DAY } },
+    });
+    const rows = await buildTaskListing(dependencies, request());
+    expect(rows.map((row) => [row.key, row.source.kind])).toEqual([
+      [`${DAY}:3`, "note"],
+      [`note-property:${DAY}`, "task-note"],
+    ]);
+  });
+
+  // No shipped provider yields an item with both relations yet; the model already allows one.
+  it("lists an item reached by both relations once, as the containment row", async () => {
+    const both = line(DAY, 3, { relations: ["containment", "date"], dates: { due: "2026-09-22" as AnchorString } });
+    const dependencies = buildDependencies({
+      published: { itemsIn: (path) => (path === DAY ? [both] : []), datedIn: () => [both] },
+      notes: { Daily: { "2026-09-22": DAY } },
+    });
+    const rows = await buildTaskListing(dependencies, request());
+    expect(rows.map((row) => [row.key, row.source.kind])).toEqual([[`${DAY}:3`, "note"]]);
+  });
+
+  it("does not gather a date-only item by containment from the note it sits in", async () => {
+    const published = await publishedTaskNotes({ [DAY]: scheduledOn("2026-09-25") });
+    const dependencies = buildDependencies({ published, notes: { Daily: { "2026-09-22": DAY } } });
+    expect(await buildTaskListing(dependencies, request())).toEqual([]);
   });
 });
