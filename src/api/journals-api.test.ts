@@ -2252,7 +2252,7 @@ describe("JournalsApiService event reasons", () => {
     });
     added.length = 0;
     const file = harness.host.app.vault.getAbstractFileByPath("D/2026-08-18.md");
-    if (!(file instanceof TFile)) throw new Error("no file");
+    if (!(file instanceof TFile)) throw new TypeError("no file");
 
     await harness.host.app.vault.rename(file, "D/renamed.md");
 
@@ -2265,7 +2265,7 @@ describe("JournalsApiService event reasons", () => {
       host.putFile("D/2026-08-18.md", "", claim("2026-08-18"));
     });
     const file = harness.host.app.vault.getAbstractFileByPath("D/2026-08-18.md");
-    if (!(file instanceof TFile)) throw new Error("no file");
+    if (!(file instanceof TFile)) throw new TypeError("no file");
 
     await harness.host.app.fileManager.trashFile(file);
 
