@@ -105,7 +105,7 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
 - **Which tasks** — **Any** matches when at least one task has the status. **All** matches when the
   period has at least one task and every one of them has the status; a period with no tasks never
   matches. **None** matches when the period has a note or notelet it looks in, or a task note dated in
-  it, and no task has the status — so a note with no tasks matches, a day whose only task note is done
+  it that the journal [shows](/tasks#which-task-notes-a-journal-shows), and no task has the status — so a note with no tasks matches, a day whose only task note is done
   matches **None** · **Open**, and a date with nothing at all does not.
 - **Status** — **As in listing**, **Open**, **Done** or **All**. **Open** is To-do, In progress and On
   hold; **Done** is Done and Cancelled; **All** is any status. **As in listing** asks whatever
@@ -119,7 +119,8 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
   and **Created date**. It has no effect on checkbox tasks, and none until task notes are turned on.
 
 Task notes count toward the question alongside the period's checkbox tasks, so a dot can light a day
-that has no note at all: one task note scheduled on it is enough for **Any** · **Open**. **Look in** does
+that has no note at all: one task note scheduled on it is enough for **Any** · **Open**. Only the task
+notes the cell's journal [shows](/tasks#which-task-notes-a-journal-shows) count. **Look in** does
 not narrow them — a task note is neither the period's note nor one of its notelets. On a custom-interval
 journal, a decoration that pairs **Check tasks** with an [interval offset](#interval-offset) counts the
 task notes of the whole interval, not only those dated on the offset's day.
