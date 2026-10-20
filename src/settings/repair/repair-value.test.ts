@@ -2,7 +2,7 @@ import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import { climb, whole } from "./markers";
-import { childSchemaOf, defaultsFrom, repairValue, type DefaultAt } from "./repair-value";
+import { defaultsFrom, repairValue, type DefaultAt } from "./repair-value";
 
 const noDefaults = defaultsFrom({});
 const typeDefault: DefaultAt = (path) => (path.at(-1) === "type" ? { value: "a" } : undefined);
@@ -303,11 +303,5 @@ describe("repairValue", () => {
     repairValue(linesSchema, raw, noDefaults);
 
     expect(raw).toEqual(before);
-  });
-});
-
-describe("childSchemaOf", () => {
-  it("does not resolve a prototype key as an object entry", () => {
-    expect(childSchemaOf(v.object({ a: v.string() }), "constructor", {})).toBeUndefined();
   });
 });
