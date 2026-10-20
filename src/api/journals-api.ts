@@ -531,30 +531,16 @@ export class JournalsApiService implements JournalsApi {
   ): TaskItem | null {
     // A dated row's journal and date are the ones asked about, not its path's owner — a task note
     // at a period note's path would otherwise be reported as that note's own task.
-    if (row.source.kind === "task-note") {
-      const { item } = row;
-      return {
-        journal: asked.journal,
-        date: asked.date,
-        path: item.path,
-        source: "note",
-        line: null,
-        text: item.display.kind === "note" ? item.display.title : "",
-        status: item.status,
-        dates: { ...item.dates },
-        relations: [...item.relations],
-        parentLine: null,
-      };
-    }
-    const owner = this.#index.entryByPath(row.source.path);
-    if (owner.isNone()) return null;
+    const dated = row.source.kind === "task-note";
+    const owner = dated ? undefined : this.#index.entryByPath(row.source.path).getOrUndefined();
+    if (!dated && owner === undefined) return null;
     const { item } = row;
     const display = item.display;
     return {
-      journal: owner.value.journalName,
-      date: owner.value.anchor,
+      journal: owner?.journalName ?? asked.journal,
+      date: owner?.anchor ?? asked.date,
       path: item.path,
-      source: row.source.kind,
+      source: row.source.kind === "notelet" ? "notelet" : "note",
       line: display.kind === "line" ? display.line : null,
       text: display.kind === "line" ? (display.markdown ?? "") : display.title,
       status: item.status,
@@ -657,9 +643,10 @@ export class JournalsApiService implements JournalsApi {
     const query = taskQueryFor(options);
     const allJournals = [...this.#journals.find().list()];
     const allShelves = [...this.#shelfConfigs.find().list()];
-    const seen = new Set<string>();
-    const found: TaskItem[] = [];
-    const taskLines = new Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>();
+    const listings: {
+      readonly asked: { readonly journal: string; readonly date: string };
+      readonly rows: readonly TaskListingRow[];
+    }[] = [];
     for (const name of this.#select(selector)) {
       const anchor = this.#cycle.anchorOf(name, calendarDate);
       if (anchor.isNone()) continue;
@@ -675,11 +662,23 @@ export class JournalsApiService implements JournalsApi {
         }),
         this.#unloaded,
       ]);
-      for (const row of rows) {
-        if (row.context || seen.has(row.key)) continue;
-        seen.add(row.key);
-        const task = this.#taskItemFrom(row, taskLines, { journal: name, date: anchor.value });
-        if (task !== null) found.push(task);
+      listings.push({ asked: { journal: name, date: anchor.value }, rows });
+    }
+    // A dated line in a period's own note is reached twice — by its note, and by its date from any
+    // other selected journal whose period holds that date. Taking every row reached by its note
+    // before any reached by date is what attributes the line to the journal that holds it,
+    // whatever order the journals were selected in.
+    const seen = new Set<string>();
+    const found: TaskItem[] = [];
+    const taskLines = new Map<VaultPath, ReadonlyMap<number, TaskListingRow["item"]>>();
+    for (const byDate of [false, true]) {
+      for (const { asked, rows } of listings) {
+        for (const row of rows) {
+          if (row.context || seen.has(row.key) || (row.source.kind === "task-note") !== byDate) continue;
+          seen.add(row.key);
+          const task = this.#taskItemFrom(row, taskLines, asked);
+          if (task !== null) found.push(task);
+        }
       }
     }
     return found;

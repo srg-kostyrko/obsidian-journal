@@ -55,15 +55,22 @@ segment other than `previous` or `next` answers `400 invalid-request`.
 `GET /journals/<name>/tasks/<date>` answers what a [`journal-tasks` code block](/tasks#listing-tasks-in-a-note)
 in the note of the period holding `<date>` would list, so the journal's own listing filter applies
 and a task it hides is not returned. It takes the code block's own keys: `source` (`note`,
-`notelets` or `both`), `depth` (`literal` or `rollup`) and `status` (`open`, `done`, `all`, or one
-status such as `on-hold`) and `taskDate` (`scheduled-or-due`, `due`, `scheduled`, `start`, `done` or
-`created`: which date of a task note puts it in the period; default `scheduled-or-due`). Leave `status` off and the journal's own status condition applies, or
-`open`; give it — even `status=open` — and it replaces the journal's. A `source`, `depth` or `taskDate` it does
-not know answers `400 invalid-request` rather than falling back to the default. Each task carries
-its `path`, its 0-based `line`, its `text` as written, its `status`, any `dates` it carries, and
-`parentLine` — the line of the task it is nested under, if any. A task note listed by a date has
-`"date"` in its `relations`, a `null` `line` and `parentLine`, and the journal and period you asked
-about as its `journal` and `date`.
+`notelets` or `both`), `depth` (`literal` or `rollup`), `status` (`open`, `done`, `all`, or one
+status such as `on-hold`) and `taskDate` (`scheduled-or-due`, `due`, `scheduled`, `start`, `done`
+or `created`: which of a task's dates places it in the period; default `scheduled-or-due`). Leave
+`status` off and the journal's own status condition applies, or `open`; give it — even
+`status=open` — and it replaces the journal's. A `source`, `depth` or `taskDate` it does not know
+answers `400 invalid-request` rather than falling back to the default. Each task carries its
+`path`, its 0-based `line`, its `text` as written, its `status`, any `dates` it carries, and
+`parentLine` — the line of the task it is nested under, if any; in a note no journal owns only
+dated lines are tracked, so a dated subtask there under an undated task has a `null` `parentLine`.
+
+`relations` lists every way a task can be placed: `"containment"` when it sits in a journal's note
+or notelet, `"date"` when it carries a date that can place it. A dated checkbox line in a period's
+note has both, even when it was returned because it sits in that period. A task reached only by its
+date — a task note, or a dated checkbox line outside the period's notes — has the journal and period
+you asked about as its `journal` and `date`. A task note also has a `null` `line` and `parentLine`;
+a checkbox line keeps its own.
 
 ## Following the redirect
 

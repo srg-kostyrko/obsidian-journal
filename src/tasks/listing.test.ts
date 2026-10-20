@@ -17,6 +17,7 @@ import { overrideWith, testContainer } from "@/testing";
 
 import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
 import { tasksCoreModule } from "./module";
+import { CHECKBOX_PROVIDER_ID } from "./providers/checkbox/extract";
 import { NotePropertyTaskProvider } from "./providers/note-property/provider";
 import { NOTE_PROPERTY_PROVIDER_ID } from "./providers/note-property/slice";
 import { DEFAULT_TASK_QUERY } from "./query";
@@ -117,6 +118,18 @@ function buildDependencies(options: {
           if (anchor >= start && anchor <= end) found.set(anchor as AnchorString, path);
         }
         return found;
+      },
+      entryByPath: (path) => {
+        const periodNotes = Object.entries(notes).flatMap(([name, anchors]) =>
+          Object.entries(anchors ?? {}).map(([anchor, held]) => ({ name, anchor: anchor as AnchorString, held })),
+        );
+        const period = periodNotes.find(({ held }) => held === path);
+        if (period !== undefined) return Option.some({ journalName: period.name, anchor: period.anchor, path });
+        const noteletSlots = Object.entries(notelets).flatMap(([name, anchors]) =>
+          Object.entries(anchors ?? {}).map(([anchor, held]) => ({ name, anchor: anchor as AnchorString, held })),
+        );
+        const notelet = noteletSlots.find(({ held }) => held.includes(path));
+        return notelet === undefined ? Option.none() : Option.some(noteletEntry(notelet.name, notelet.anchor, path));
       },
       noteletsAt: (name, anchor) => (notelets[name]?.[anchor] ?? []).map((path) => noteletEntry(name, anchor, path)),
       noteletAnchorsInRange: (name, start, end) =>
@@ -1141,5 +1154,166 @@ describe("buildTaskListing — task-note visibility", () => {
     expect(index.version()).toBe(before + 1);
     const rows = await buildTaskListing(dependencies, dayOf("Work"));
     expect(rows.map((row) => row.source.path)).toEqual([HOME_NOTE]);
+  });
+});
+
+const PROJECT = "project/ideas.md" as VaultPath;
+
+async function publishedCheckboxes(items: readonly TaskItem[]): Promise<TaskIndex> {
+  const harness = await testContainer({ modules: [journalsCoreModule, tasksCoreModule] });
+  const index = harness.resolve(TaskIndex);
+  index.publish(CHECKBOX_PROVIDER_ID, "all", items);
+  return index;
+}
+
+const DUE_TODAY: Partial<TaskItem> = {
+  relations: ["containment", "date"],
+  dates: { due: "2026-09-22" as AnchorString },
+};
+
+const TASKS_AND_HABITS: NoteStructure = {
+  ...EMPTY_STRUCTURE,
+  headings: [
+    { line: 0, heading: "## Tasks", level: 2 },
+    { line: 10, heading: "## Habits", level: 2 },
+  ],
+  listItems: [
+    { marker: "-", line: 2, endLine: 2, parent: null },
+    { marker: "-", line: 12, endLine: 12, parent: null },
+  ],
+};
+
+describe("buildTaskListing — dated checkbox lines", () => {
+  it("a dated checkbox in a project note lists in its day and once in its week", async () => {
+    const published = await publishedCheckboxes([
+      line(PROJECT, 1, { relations: ["date"], dates: { due: "2026-09-23" as AnchorString } }),
+    ]);
+    const dependencies = buildDependencies({
+      published,
+      notes: { Daily: { "2026-09-22": DAY, "2026-09-23": OTHER_DAY } },
+      ends: { Weekly: { "2026-09-21": "2026-09-27" } },
+    });
+
+    const day = await buildTaskListing(dependencies, request({ anchor: "2026-09-23" as AnchorString }));
+    const week = await buildTaskListing(
+      dependencies,
+      request({
+        hostJournal: "Weekly",
+        anchor: "2026-09-21" as AnchorString,
+        journalNames: ["Weekly", "Daily"],
+        query: withQuery({ scope: { provider: [], source: "both", depth: "rollup" } }),
+      }),
+    );
+
+    expect(day.map((row) => row.item.key)).toEqual([`${PROJECT}:1`]);
+    expect(day.at(0)?.source).toEqual({ kind: "task-note", path: PROJECT, label: "ideas" });
+    expect(week.map((row) => row.item.key)).toEqual([`${PROJECT}:1`]);
+  });
+
+  it("an owned line matched by both relations lists once", async () => {
+    const published = await publishedCheckboxes([
+      line(DAY, 3, { relations: ["containment", "date"], dates: { due: "2026-09-22" as AnchorString } }),
+    ]);
+    const dependencies = buildDependencies({ published, notes: { Daily: { "2026-09-22": DAY } } });
+
+    const rows = await buildTaskListing(dependencies, request());
+
+    expect(rows.map((row) => row.item.key)).toEqual([`${DAY}:3`]);
+    expect(rows.at(0)?.source.kind).toBe("note");
+  });
+
+  describe("an owned line keeps its owning journal's listing filter", () => {
+    const underTasks: TaskRule = {
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }],
+    };
+
+    async function dayWithHabit() {
+      const published = await publishedCheckboxes([line(DAY, 2, DUE_TODAY), line(DAY, 12, DUE_TODAY)]);
+      return buildDependencies({
+        published,
+        notes: { Daily: { "2026-09-22": DAY } },
+        structures: { [DAY]: TASKS_AND_HABITS },
+        journalFilters: { Daily: underTasks },
+        ends: { Weekly: { "2026-09-21": "2026-09-27" } },
+      });
+    }
+
+    it("leaves a dated line outside the owner's heading out of that day's own listing", async () => {
+      const rows = await buildTaskListing(await dayWithHabit(), request());
+
+      expect(rows.map((row) => row.item.key)).toEqual([`${DAY}:2`]);
+    });
+
+    it("leaves it out when another journal reaches it by date", async () => {
+      const rows = await buildTaskListing(
+        await dayWithHabit(),
+        request({ hostJournal: "Weekly", anchor: "2026-09-21" as AnchorString, journalNames: ["Weekly"] }),
+      );
+
+      expect(rows.map((row) => row.item.key)).toEqual([`${DAY}:2`]);
+    });
+
+    it("lets the surface's own condition compose with the owner's filter, as containment does", async () => {
+      const published = await publishedCheckboxes([
+        line(DAY, 2, { ...DUE_TODAY, status: "done" }),
+        line(DAY, 12, { ...DUE_TODAY, status: "done" }),
+      ]);
+      const dependencies = buildDependencies({
+        published,
+        notes: { Daily: { "2026-09-22": DAY } },
+        structures: { [DAY]: TASKS_AND_HABITS },
+        journalFilters: { Daily: underTasks },
+        ends: { Weekly: { "2026-09-21": "2026-09-27" } },
+      });
+      const weekly = (query: TaskQuery) =>
+        buildTaskListing(
+          dependencies,
+          request({ hostJournal: "Weekly", anchor: "2026-09-21" as AnchorString, journalNames: ["Weekly"], query }),
+        );
+      const done: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] };
+
+      const doneRows = await weekly(withQuery({ filter: done }));
+
+      expect(doneRows.map((row) => row.item.key)).toEqual([`${DAY}:2`]);
+      expect(await weekly(DEFAULT_TASK_QUERY)).toEqual([]);
+    });
+
+    it("treats a line whose owning journal is gone as owned by no journal", async () => {
+      const published = await publishedCheckboxes([line(DAY, 12, { ...DUE_TODAY, status: "done" })]);
+      const dependencies = buildDependencies({
+        published,
+        notes: { Daily: { "2026-09-22": DAY } },
+        structures: { [DAY]: TASKS_AND_HABITS },
+        unknownJournals: ["Daily"],
+        journalFilters: {
+          Weekly: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] },
+        },
+        ends: { Weekly: { "2026-09-21": "2026-09-27" } },
+      });
+
+      const rows = await buildTaskListing(
+        dependencies,
+        request({ hostJournal: "Weekly", anchor: "2026-09-21" as AnchorString, journalNames: ["Weekly"] }),
+      );
+
+      expect(rows.map((row) => row.item.key)).toEqual([`${DAY}:12`]);
+    });
+
+    it("still lists a dated line in a note no journal owns, whatever heading it sits under", async () => {
+      const published = await publishedCheckboxes([
+        line(PROJECT, 2, { relations: ["date"], dates: { due: "2026-09-22" as AnchorString } }),
+        line(PROJECT, 12, { relations: ["date"], dates: { due: "2026-09-22" as AnchorString } }),
+      ]);
+      const dependencies = buildDependencies({
+        published,
+        structures: { [PROJECT]: TASKS_AND_HABITS },
+        journalFilters: { Daily: underTasks },
+      });
+
+      const rows = await buildTaskListing(dependencies, request());
+
+      expect(rows.map((row) => row.item.key).toSorted()).toEqual([`${PROJECT}:12`, `${PROJECT}:2`]);
+    });
   });
 });

@@ -209,8 +209,11 @@ task notes either way.
 A recurring task note appears on the dates it has stored, never on later occurrences computed from its
 recurrence rule.
 
-This placing by date is for task notes only. A checkbox line's own dates — a `📅 2026-03-10` on the
-line — sort it, but never place it in a period other than the one whose note holds it.
+A checkbox line is placed by date the same way, but only when it carries a date: a `📅 2026-03-10` on
+the line puts it in the listing of 10 March, whichever note holds it (see [Dated lines from anywhere in
+the vault](#dated-lines-from-anywhere-in-the-vault)). The surface's chosen date picks which of the
+line's dates counts, and a line with no such date is not placed by date at all — it is listed only in
+the period whose note or notelet holds it, so one in a note no journal owns is not listed at all.
 
 ### Filters and task notes
 
@@ -297,7 +300,8 @@ be told yet.
 ## Listing tasks in a note
 
 A `journal-tasks` code block lists the tasks of the period the note it sits in belongs to — the note's
-own tasks, its notelets', or both, and the [task notes](#task-notes) dated in the period. With
+own tasks, its notelets', or both, the [task notes](#task-notes) dated in the period, and dated
+checkbox lines from anywhere in the vault. With
 `sort: document`, the task notes come last. In a
 note connected to no journal it lists nothing and says so.
 
@@ -315,7 +319,8 @@ it. The `status: open` default gives way to the journal's own, where [it has
 one](#a-journal-s-own-listing-filter).
 
 A listing finds checkbox tasks by where they live — a period's own note, its notelets, or both — and
-task notes by their date; `date` names which one. See [Which date places a task
+also by their date, which is how task notes and dated checkbox lines from anywhere in the vault reach
+it; `date` names which of the dates places them. See [Which date places a task
 note](#which-date-places-a-task-note).
 
 ### Fence keys
@@ -329,7 +334,7 @@ note](#which-date-places-a-task-note).
 | `heading`    | none               | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
 | `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                                         |
 | `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
-| `date`       | `scheduled-or-due` | which of a task note's dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). Checkbox tasks are not placed by date, so it does not change which of them are listed.                                        |
+| `date`       | `scheduled-or-due` | which of a task note's, or a dated checkbox line's, dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). A checkbox line with no such date is not placed by date.                                         |
 | `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
 
 `status`, `heading` and `tag` are each sugar for one condition of that type. `conditions:` adds more —
@@ -447,6 +452,44 @@ The editor's own **Status** control offers only three groupings — **Open**, **
 three names the `status:` fence key accepts as aliases. A fence, or the `conditions:` escape hatch, can
 instead name one status directly, such as `on-hold`, which the settings editor has no button for.
 
+### Dated lines from anywhere in the vault
+
+A checkbox line that carries a date also appears **by that date**, wherever its note lives — a project
+note, an archive folder, another journal's note. A task in `Projects/Launch.md` written
+`- [ ] Ship it 📅 2026-10-30` shows up in the listing of 30 October, lights that day's [tasks
+decoration](/decorations#tasks), and is returned by the plugin API. A line with no date is listed only
+in the period whose note or notelet holds it, as before, so one in a note no journal owns is not listed.
+
+Two date formats are read:
+
+- **Tasks emoji** — `📅` due, `⏳` scheduled, `🛫` start, `✅` done and `➕` created, each followed by
+  a `YYYY-MM-DD` date.
+- **Dataview inline fields** — `[due:: 2026-10-30]` or `(due:: 2026-10-30)`, with the keys `due`,
+  `scheduled`, `start`, `created` and `completion`, the last of which is the done date.
+
+A dated line in a note a journal owns keeps that journal's [own listing
+filter](#a-journal-s-own-listing-filter) wherever it is listed by date. A daily journal that lists only
+what sits under `## Tasks` keeps a dated habit under `## Habits` out of its own day, and out of a weekly
+note's listing, its tasks decoration and the plugin API's answer too. The whole filter applies, its
+**Status** condition included: a weekly journal set to show every status still leaves out a done line
+from a daily note when the daily journal's filter hides done tasks — the same rule a rollup already
+applies to the daily notes it walks. A condition the fence or block names itself still replaces the
+journal's of the same kind. A line in a note no journal owns has no such filter, and is filtered the
+way a [task note](#filters-and-task-notes) is.
+
+Which of a task's dates places it in a period is the fence's `date` key, covered under [Fence
+keys](#fence-keys). The [vault-wide identification rule](#which-checkbox-items-count-as-tasks) still
+decides which lines count as tasks; a journal's own rule applies to the notes that journal owns.
+
+Only the task's own line is read for dates, never its subtasks: a dated subtask is a task in its own
+right and appears by its own date.
+
+The lines are found by reading your vault once at startup, after Obsidian has indexed it, so a
+vault-wide listing is complete a moment after launch rather than instantly. There is nothing to turn
+on: it follows **Checkbox tasks**' toggle. Notes under Obsidian's **Files and links → Excluded files**
+are skipped, unless a journal owns them, in which case their tasks stay. A change to **Excluded files**
+takes effect at the next restart, or the next time you change a checkbox tasks setting.
+
 ### One thing to expect right after startup
 
 For a moment after Obsidian starts, before it has finished reading your notes, a listing filtered by
@@ -464,7 +507,7 @@ the view rather than to the note it sits in:
 - **Journals** — leave all off, the default, to include every journal in the view's own
   [shelf scope](/shelves#scoping-a-view); turn specific ones on to narrow it further.
 - **Source** and **Sort by** — the same `source` and `sort` this page covers above.
-- **Task date** — the same as the fence's `date`: which of a task note's dates places it in the window.
+- **Task date** — the same as the fence's `date`: which of a task note's, or a dated checkbox line's, dates places it in the window.
   A task note is listed when any of the block's journals [shows it](#which-task-notes-a-journal-shows).
 - **Filter** — the same condition editor [a journal's own listing filter](#a-journal-s-own-listing-filter)
   uses, scoped to this block instead of to a journal. A new block holds no conditions at all, so it

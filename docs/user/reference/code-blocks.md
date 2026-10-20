@@ -201,7 +201,7 @@ to none it lists nothing and says so.
 this one, so a monthly note can list its days' tasks alongside its own. `status`, `heading` and `tag` are
 each shorthand for one condition; the owning journal's own **Listing filter** contributes more. See
 [Tasks](/tasks#a-journal-s-own-listing-filter) for how the two combine. `date` names which of a task
-note's dates places it in the period; see [Tasks](/tasks#which-date-places-a-task-note).
+note's, or a dated checkbox line's, dates places it in the period; see [Tasks](/tasks#which-date-places-a-task-note).
 
 The period's checkbox tasks, and the task notes due in it — not those only scheduled in it:
 

@@ -1,11 +1,11 @@
 import { createNanoEvents } from "nanoevents";
 
 import type { AnchorString } from "@/calendar";
-import { inject, InjectorToken } from "@/infrastructure/di";
+import { inject } from "@/infrastructure/di";
 import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { NotesService, type VaultPath } from "@/infrastructure/host";
 
-import { TaskProviderToken, type TaskDateRole, type TaskItem } from "./types";
+import type { TaskDateRole, TaskItem } from "./types";
 
 export interface TaskIndexEvents {
   changed: () => void;
@@ -23,13 +23,6 @@ export class TaskIndex {
   // Text is not in metadataCache, so a "line" item's markdown is hydrated lazily on request and
   // cached per path, keyed by mtime — a modified note invalidates precisely, a re-read is free.
   readonly #text = new Map<VaultPath, { readonly mtime: number; readonly lines: readonly string[] }>();
-  // Dates and retargetable ride on the item, but reading them out of a line's text is a dialect
-  // only the owning provider knows — the index just delegates once the text exists. Resolved
-  // through the injector rather than injected as a field: a provider (CheckboxTaskProvider) needs
-  // the host, which needs this index, so eagerly injecting TaskProviderToken here at construction
-  // closes a cycle. Deferring the lookup to hydrate() — already documented as "lazy on request" —
-  // resolves it after every constructor in the chain has already returned.
-  readonly #injector = inject(InjectorToken);
   readonly events: Subscribable<TaskIndexEvents> = this.#emitter;
 
   #set(path: VaultPath, providerId: string, items: readonly TaskItem[]): void {
@@ -135,7 +128,6 @@ export class TaskIndex {
       items.filter((item) => item.display.kind === "line" && item.display.markdown === null).map((item) => item.path),
     );
     for (const path of paths) await this.#readInto(path);
-    const providers = new Map(this.#injector.resolve(TaskProviderToken).map((provider) => [provider.id, provider]));
     return items.map((item) => {
       if (item.display.kind !== "line" || item.display.markdown !== null) return item;
       const cached = this.#text.get(item.path);
@@ -144,8 +136,6 @@ export class TaskIndex {
       // carries its real position, and blank markdown is indistinguishable from a real empty line.
       const markdown = cached?.lines.slice(item.display.line, item.display.endLine + 1).join("\n");
       if (!markdown) return item;
-      const provider = providers.get(item.provider);
-      if (provider?.hydrateItem) return provider.hydrateItem(item, markdown);
       return { ...item, display: { ...item.display, markdown } };
     });
   }

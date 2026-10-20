@@ -1,4 +1,4 @@
-import { ref, shallowRef, watch, type Ref, type ShallowRef } from "vue";
+import { computed, ref, shallowRef, watch, type Ref, type ShallowRef } from "vue";
 
 import { useService } from "@/infrastructure/di";
 import { NoteStructureService } from "@/infrastructure/host";
@@ -22,8 +22,9 @@ export interface UseTaskListingResult {
 // request returns null for "not connected to a journal" — the fence and view block both have such
 // a state, and there is nothing to build a listing from until it resolves to a real request.
 export function useTaskListing(request: () => TaskListingRequest | null): UseTaskListingResult {
+  const journals = useService(JournalsRepository);
   const dependencies: TaskListingDependencies = {
-    journals: useService(JournalsRepository),
+    journals,
     index: useService(JournalsIndex),
     cycle: useService(CycleService),
     structure: useService(NoteStructureService),
@@ -52,12 +53,21 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
     return JSON.stringify(names.map((name) => dependencies.journals.get(name).getOrUndefined()?.tasks));
   };
 
+  // The dated pass answers an owned line to its owning journal's filter whichever journal asks, so
+  // a journal the request never names still decides rows. Every journal's filter, not just the
+  // owners of what is in range today: finding those would mean running the dated pass here. The
+  // computed dedupes, so a write to any journal re-serializes the filters but rebuilds only when
+  // one of them actually changed.
+  const ownerFilters = computed(() =>
+    JSON.stringify([...journals.find().list()].map((journal) => [journal.name, journal.tasks.filter])),
+  );
+
   const rows = shallowRef<readonly TaskListingRow[]>([]);
   const pending = ref(false);
   let token = 0;
 
   watch(
-    [request, indexVersion, tasksVersion, scopedTaskSettings],
+    [request, indexVersion, tasksVersion, scopedTaskSettings, ownerFilters],
     async ([current]) => {
       const mine = ++token;
       if (current === null) {

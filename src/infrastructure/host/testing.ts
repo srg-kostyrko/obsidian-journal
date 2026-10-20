@@ -80,6 +80,7 @@ export class FakeNotesService implements Pick<
   | "listInFolder"
   | "listFolders"
   | "allMarkdownNotes"
+  | "isUserIgnored"
   | "create"
   | "read"
   | "readCached"
@@ -94,6 +95,7 @@ export class FakeNotesService implements Pick<
 > {
   readonly #files = new Map<VaultPath, FakeEntry>();
   readonly #folders = new Set<VaultPath>(["" as VaultPath]);
+  readonly #ignored = new Set<VaultPath>();
   readonly #emitter: TypedEmitter<NotesEvents> = createNanoEvents();
   // Real Obsidian moves a file's mtime forward on every vault write. This fake's writes are
   // synchronous, so a Date.now() stand-in would collide within the same millisecond — a cache
@@ -185,6 +187,18 @@ export class FakeNotesService implements Pick<
     return [...this.#files.keys()];
   }
 
+  isUserIgnored(path: VaultPath): boolean {
+    return this.#ignored.has(path);
+  }
+
+  ignore(path: VaultPath): void {
+    this.#ignored.add(path);
+  }
+
+  unignore(path: VaultPath): void {
+    this.#ignored.delete(path);
+  }
+
   listFolders(): VaultPath[] {
     return [...this.#folders];
   }
@@ -269,10 +283,12 @@ export class FakeNotesService implements Pick<
     for (const folder of this.#folders) {
       if (folder === path || folder.startsWith(`${path}/`)) this.#folders.delete(folder);
     }
-    // No per-file "deleted": the real service trashes the folder in one call and only relays
-    // vault "delete" events for a TFile, and Obsidian raises that event for the folder alone.
+    // Obsidian trashes a folder by removing each file under it first, and raises vault "delete"
+    // for every one — which the real service relays — before the folder's own, which it does not.
     for (const file of this.#files.keys()) {
-      if (file.startsWith(`${path}/`)) this.#files.delete(file);
+      if (!file.startsWith(`${path}/`)) continue;
+      this.#files.delete(file);
+      this.#emitter.emit("deleted", file);
     }
     return AsyncResult.ok(undefined);
   }

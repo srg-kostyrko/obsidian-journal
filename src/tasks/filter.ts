@@ -100,9 +100,9 @@ export function composeFilters(journalFilter: TaskRule | null, queryFilter: Task
   return { mode: merged.mode, conditions: [...merged.conditions, { ...DEFAULT_STATUS_CONDITION }] };
 }
 
-// A journal's stored tag and heading conditions were written for its own checkbox lines; a dated
-// item lives in no note of the journal's, so only the stored status reaches it. What the surface
-// names itself still applies in full.
+// A journal's stored tag and heading conditions were written for its own checkbox lines; a task
+// note, or a dated line in a note no journal owns, is none of them, so only the stored status
+// reaches it. What the surface names itself still applies in full.
 export function composeDatedFilter(journalFilter: TaskRule | null, queryFilter: TaskRule): TaskRule {
   const statusOnly =
     journalFilter === null

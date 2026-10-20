@@ -92,3 +92,40 @@ describe("FakeNotesService updateFrontmatter", () => {
     expect(written).toEqual([]);
   });
 });
+
+describe("FakeNotesService ignore", () => {
+  it("ignore() marks a path as user-ignored", () => {
+    const notes = new FakeNotesService();
+    const target = "Private/diary.md" as VaultPath;
+    expect(notes.isUserIgnored(target)).toBe(false);
+    notes.ignore(target);
+    expect(notes.isUserIgnored(target)).toBe(true);
+    expect(notes.isUserIgnored("Other.md" as VaultPath)).toBe(false);
+  });
+
+  it("unignore() lifts the mark", () => {
+    const notes = new FakeNotesService();
+    const target = "Private/diary.md" as VaultPath;
+    notes.ignore(target);
+    notes.unignore(target);
+    expect(notes.isUserIgnored(target)).toBe(false);
+  });
+});
+
+// Obsidian's adapter removes each file under a trashed folder before the folder itself, and the
+// vault raises "delete" for every one of them; the real NotesService relays each as "deleted".
+describe("FakeNotesService deleteFolder", () => {
+  it("emits deleted for every note under the folder, nested ones included, and for nothing beside it", async () => {
+    const notes = new FakeNotesService();
+    notes.seed("project/a.md" as VaultPath);
+    notes.seed("project/deep/b.md" as VaultPath);
+    notes.seed("projects/c.md" as VaultPath);
+    const deleted: VaultPath[] = [];
+    notes.events.on("deleted", (removed) => deleted.push(removed));
+
+    expectOk(await notes.deleteFolder("project" as VaultPath));
+
+    expect(deleted.toSorted()).toEqual(["project/a.md", "project/deep/b.md"]);
+    expect(notes.find("projects/c.md" as VaultPath).isSome()).toBe(true);
+  });
+});

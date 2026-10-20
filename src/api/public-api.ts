@@ -192,14 +192,14 @@ export interface TasksForOptions {
   readonly depth?: "literal" | "rollup";
   /** Omitted, the journal's own status condition applies, or `open`. Given, it replaces the journal's. */
   readonly status?: TaskStatusFilter;
-  /** Which date puts a task note in the listing for the period. Default `scheduled-or-due`. */
+  /** Which of a task's dates puts a task matched by date in the listing for the period. Default `scheduled-or-due`. */
   readonly date?: "scheduled-or-due" | "due" | "scheduled" | "start" | "done" | "created";
 }
 
 export interface TaskItem {
-  /** The journal whose note holds the task, or for a `date` task note the journal asked about. */
+  /** The journal whose note holds the task, or for a task reached only by its date the journal asked about. */
   readonly journal: string;
-  /** The period of the note that holds the task, or for a `date` task note the period asked about. */
+  /** The period of the note that holds the task, or for a task reached only by its date the period asked about. */
   readonly date: string;
   readonly path: string;
   readonly source: "note" | "notelet";
@@ -215,8 +215,12 @@ export interface TaskItem {
     readonly done?: string;
     readonly created?: string;
   };
+  /** Every way the task can be placed — a dated line in a period's note has both — not how it was found. */
   readonly relations: readonly ("containment" | "date" | (string & {}))[];
-  /** The line of the task enclosing this one in the same note, whether or not that task matched. */
+  /**
+   * The line of the task enclosing this one in the same note, whether or not that task matched. In a
+   * note no journal owns only dated lines are tracked, so an undated enclosing task there is not named.
+   */
   readonly parentLine: number | null;
 }
 

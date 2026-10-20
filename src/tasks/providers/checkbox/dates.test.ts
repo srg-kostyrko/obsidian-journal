@@ -23,4 +23,26 @@ describe("datesIn", () => {
   it("rejects a malformed token with trailing digits rather than truncating it to a valid date", () => {
     expect(datesIn("- [ ] A 📅 2026-09-251").due).toBeUndefined();
   });
+  it("reads Dataview inline fields in brackets and parentheses", () => {
+    expect(datesIn("- [ ] a [due:: 2026-10-24] (scheduled:: 2026-10-22)")).toEqual({
+      due: "2026-10-24",
+      scheduled: "2026-10-22",
+    });
+  });
+  it("maps completion to done and reads start and created", () => {
+    expect(datesIn("[completion:: 2026-10-01] [start:: 2026-09-30] [created:: 2026-09-29]")).toEqual({
+      done: "2026-10-01",
+      start: "2026-09-30",
+      created: "2026-09-29",
+    });
+  });
+  it("an emoji signifier wins over an inline field for the same role", () => {
+    expect(datesIn("📅 2026-10-24 [due:: 2026-11-01]")).toEqual({ due: "2026-10-24" });
+  });
+  it("rejects a malformed inline date", () => {
+    expect(datesIn("[due:: 2026-10-241]")).toEqual({});
+  });
+  it("ignores an unknown inline key", () => {
+    expect(datesIn("[deadline:: 2026-10-24]")).toEqual({});
+  });
 });

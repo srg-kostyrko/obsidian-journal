@@ -345,24 +345,33 @@ const month = await journals.tasksFor("Work Monthly", "today", { depth: "rollup"
 - **`rollup` reaches the journal's shelf**, the way the code block's does: the journals on the same
   shelf, or every journal when it is on none. A month rolls up into the days of its shelf-mates,
   never into another shelf's.
-- **Each task is returned once.** A selector matching several journals can reach the same note
-  twice — as one journal's period and inside another's rollup — and the task still appears once.
-  Results are grouped by journal in selector order, and in note order within each.
+- **Each task is returned once.** A selector matching several journals can reach the same task
+  twice — as one journal's period and inside another's rollup, or in its own period's note and by
+  its date from another journal's period — and the task still appears once. The tasks found in a
+  selected period's notes come first, grouped by journal in selector order and in note order within
+  each; the tasks reached only by their date follow, in the same journal order.
 - **`journal` and `date` are the note's, not the query's.** Under `rollup`, a task found in a day
-  note reports the day journal and that day. A task that is a whole note, listed because of a date
-  it carries (`relations` has `"date"`), has no containing note: its `journal` and `date` are the
-  journal and period you asked about. When a selector matches several journals that admit it, it
-  is returned once, attributed to the first of them in selector order.
+  note reports the day journal and that day, even when its date also falls in another selected
+  journal's period. A task reached only by a date it carries — a task note, or a dated checkbox
+  line outside the selected periods' notes — reports the journal and period you asked about. When
+  a selector matches several journals that admit it, it is returned once, attributed to the first
+  of them in selector order.
 - **Only matching tasks are returned.** The code block also shows a non-matching parent, dimmed, to
   anchor a child; `tasksFor` does not. `parentLine` is the line of the enclosing task in the same
-  note, whether or not that task matched, so the nesting can be rebuilt.
+  note, whether or not that task matched, so the nesting can be rebuilt. In a note no journal owns
+  only dated lines are tracked, so a dated subtask there under an undated task has a `null`
+  `parentLine`.
 - **`line` is 0-based**, and `text` is the task's lines as written, indentation included. Reading
   `text` reads the note, so a rolled-up year reads every note in it — the code block pays the same.
-- **`relations` tells the two kinds apart.** `["containment"]` is a task that lives in the
-  period's notes. `["date"]` is a task note listed because one of its dates falls in the period;
-  it has `source: "note"`, `line: null`, `parentLine: null` and its title as `text`. The `date`
-  option picks which of its dates counts, and defaults to scheduled or due. It only matters once a
-  provider that dates whole notes, such as the note-property provider, is enabled.
+- **`relations` lists every way a task can be placed, not how this call found it.**
+  `"containment"` means the task sits in a journal's note or notelet; `"date"` means it carries a
+  date that can place it in a period. A checkbox line in a period's note with a date on it has
+  both, `["containment", "date"]`, even when it was returned because it sits in the period you
+  asked about. A dated checkbox line in a note no journal owns has `["date"]` alone, with its own
+  `line`. A task note has `["date"]` too, with `source: "note"`, `line: null`, `parentLine: null`
+  and its title as `text`. The `date` option picks which of a task's dates places it, and defaults
+  to scheduled or due. Task notes only appear once a provider that dates whole notes, such as the
+  note-property provider, is enabled.
 - **`status` and `relations` are open unions** — handle the default case.
 
 ## Answering questions

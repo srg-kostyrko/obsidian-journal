@@ -64,6 +64,20 @@ async function buildHarness(): Promise<TestHarness> {
   });
 }
 
+function setDailyStatuses(harness: TestHarness, statuses: string[]): void {
+  const journals = harness.resolve(JournalsRepository);
+  const stored = journals.require("daily");
+  expectOk(stored);
+  expectOk(
+    journals.update("daily", {
+      tasks: {
+        ...stored.value.tasks,
+        filter: { mode: "and", conditions: [{ type: "status", condition: "is", statuses }] },
+      },
+    }),
+  );
+}
+
 describe("useTaskListing", () => {
   it("builds rows from the request, resolved against the journal and task indexes", async () => {
     const harness = await buildHarness();
@@ -134,6 +148,76 @@ describe("useTaskListing", () => {
     expectOk(written);
 
     await vi.waitFor(() => expect(rows.value.map((row) => row.item.key)).toEqual(["open", "finished"]));
+  });
+
+  // The dated pass answers an owned line to its owning journal's filter, whichever journal asks, so
+  // a Weekly listing depends on Daily's stored filter although Daily is nowhere in its request.
+  describe("a dated line owned by a journal the request does not name", () => {
+    const owned = "Daily/2026-09-22.md" as VaultPath;
+    const dated = (status: TaskStatus): TaskItem => ({
+      ...taskItem(owned, "dated", "- [ ] Dated", status),
+      relations: ["date"],
+      dates: { due: "2026-09-23" as AnchorString },
+    });
+    const weekly: TaskListingRequest = {
+      kind: "period",
+      hostJournal: "weekly",
+      anchor: "2026-09-23" as AnchorString,
+      journalNames: ["weekly"],
+      query: { ...DEFAULT_TASK_QUERY, filter: { mode: "and", conditions: [] } },
+    };
+
+    async function weeklyOver(status: TaskStatus): Promise<TestHarness> {
+      const harness = await testContainer({
+        modules: [journalsCoreModule, tasksCoreModule],
+        data: {
+          journals: {
+            daily: fixedJournal("daily", { type: "day" }),
+            weekly: fixedJournal("weekly", { type: "week" }),
+          },
+        },
+      });
+      harness
+        .resolve(JournalsIndex)
+        .register({ journalName: "daily", anchor: "2026-09-22" as AnchorString, path: owned });
+      harness.resolve(TaskIndex).publish("test", { path: owned }, [dated(status)]);
+      return harness;
+    }
+
+    it("rebuilds when the owner's filter starts admitting the line", async () => {
+      const harness = await weeklyOver("done");
+      const { rows, pending } = mountListing(harness, () => weekly);
+      await vi.waitFor(() => expect(pending.value).toBe(false));
+      expect(rows.value).toEqual([]);
+
+      setDailyStatuses(harness, ["all"]);
+
+      await vi.waitFor(() => expect(rows.value.map((row) => row.item.key)).toEqual(["dated"]));
+    });
+
+    it("rebuilds when the owner's filter stops admitting the line", async () => {
+      const harness = await weeklyOver("todo");
+      const { rows } = mountListing(harness, () => weekly);
+      await vi.waitFor(() => expect(rows.value.map((row) => row.item.key)).toEqual(["dated"]));
+
+      setDailyStatuses(harness, ["done"]);
+
+      await vi.waitFor(() => expect(rows.value).toEqual([]));
+    });
+
+    it("does not rebuild when the owner changes anything but its listing filter", async () => {
+      const harness = await weeklyOver("todo");
+      const tasks = harness.resolve(TaskIndex);
+      const { rows } = mountListing(harness, () => weekly);
+      await vi.waitFor(() => expect(rows.value.map((row) => row.item.key)).toEqual(["dated"]));
+      const datedIn = vi.spyOn(tasks, "datedIn");
+
+      expectOk(harness.resolve(JournalsRepository).update("daily", { folder: "Elsewhere" }));
+      await nextTick();
+      await nextTick();
+
+      expect(datedIn).not.toHaveBeenCalled();
+    });
   });
 
   it(

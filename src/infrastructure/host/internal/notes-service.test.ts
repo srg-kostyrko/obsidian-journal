@@ -104,6 +104,22 @@ describe("NotesService", () => {
     });
   });
 
+  describe("isUserIgnored", () => {
+    it("reports a path Obsidian's excluded files match", () => {
+      const { service, host } = build();
+      Object.assign(host.app.metadataCache, {
+        isUserIgnored: (target: string) => target === "Private/diary.md",
+      });
+      expect(service.isUserIgnored("Private/diary.md" as VaultPath)).toBe(true);
+      expect(service.isUserIgnored(path)).toBe(false);
+    });
+
+    it("reports nothing ignored when the host has no isUserIgnored", () => {
+      const { service } = build();
+      expect(service.isUserIgnored("Private/diary.md" as VaultPath)).toBe(false);
+    });
+  });
+
   describe("listFolders", () => {
     it("returns every loaded folder path including the root as empty string", () => {
       const { service, host } = build();
@@ -394,6 +410,27 @@ describe("NotesService", () => {
       await service.deleteFolder("Daily/2026" as VaultPath);
       expect(host.folders.has("Daily/2026")).toBe(false);
       expect(host.folders.has("Daily")).toBe(true);
+    });
+
+    it("raises a vault delete for every entry under the folder, deepest first, before the folder's own", async () => {
+      const { service, host } = build();
+      host.putFolder("Daily/2026/05");
+      host.putFile("Daily/2026/a.md");
+      host.putFile("Daily/2026/05/b.md");
+      host.putFile("Daily/2026-x.md");
+      const raised: string[] = [];
+      host.app.vault.on("delete", (entry) => {
+        raised.push(entry.path);
+      });
+      const deleted: VaultPath[] = [];
+      service.events.on("deleted", (removed) => deleted.push(removed));
+
+      await service.deleteFolder("Daily/2026" as VaultPath);
+
+      expect(raised.at(-1)).toBe("Daily/2026");
+      expect(raised.indexOf("Daily/2026/05/b.md")).toBeLessThan(raised.indexOf("Daily/2026/05"));
+      expect(raised.toSorted()).toEqual(["Daily/2026", "Daily/2026/05", "Daily/2026/05/b.md", "Daily/2026/a.md"]);
+      expect(deleted.toSorted()).toEqual(["Daily/2026/05/b.md", "Daily/2026/a.md"]);
     });
 
     it("returns FolderNotFoundError when the folder does not exist", async () => {

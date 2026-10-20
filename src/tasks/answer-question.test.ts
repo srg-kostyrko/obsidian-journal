@@ -70,17 +70,34 @@ function build(options: {
   dated?: readonly TaskItem[];
   // Each journal's stored task-note rule, answered by the provider's own verdict.
   visibilityRules?: Partial<Record<string, NoteVisibility>>;
+  // Per-journal stored filters, over journalFilter; and which journal's period note each path is.
+  journalFilters?: Partial<Record<string, readonly TaskCondition[]>>;
+  owners?: Partial<Record<VaultPath, string>>;
 }): TaskQuestionDependencies {
-  const { items = {}, notelets = [], journalFilter, structures = {}, dated = [], visibilityRules = {} } = options;
+  const {
+    items = {},
+    notelets = [],
+    journalFilter,
+    structures = {},
+    dated = [],
+    visibilityRules = {},
+    journalFilters = {},
+    owners = {},
+  } = options;
   return {
     journals: {
       get: (name) => {
         const base = fixedJournal(name, { type: "day" });
-        const filter: TaskRule | undefined = journalFilter && { mode: "and", conditions: [...journalFilter] };
+        const conditions = journalFilters[name] ?? journalFilter;
+        const filter: TaskRule | undefined = conditions && { mode: "and", conditions: [...conditions] };
         return Option.some(filter ? { ...base, tasks: { ...base.tasks, filter } } : base);
       },
     },
     index: {
+      entryByPath: (path) => {
+        const journalName = owners[path];
+        return journalName === undefined ? Option.none() : Option.some({ journalName, anchor: ANCHOR, path });
+      },
       noteletsAt: (name, anchor) =>
         notelets.map((path): NoteletEntry => ({
           kind: "notelet",
@@ -151,6 +168,15 @@ const taggedOpen = (...tags: string[]): Partial<TaskQuestion> => ({
   status: "open",
   filter: { mode: "and", conditions: [tag(...tags)] },
 });
+
+function datedLine(lineNumber: number): TaskItem {
+  return { ...task(DAY, lineNumber, "todo"), relations: ["containment", "date"], dates: { due: ANCHOR } };
+}
+
+function askAs(dependencies: TaskQuestionDependencies, journalName: string): boolean {
+  const path = journalName === "Daily" ? DAY : null;
+  return answerTaskQuestion(dependencies, { journalName, anchor: ANCHOR, path }, BASE_QUESTION);
+}
 
 describe("answerTaskQuestion", () => {
   describe("any", () => {
@@ -383,6 +409,51 @@ describe("answerTaskQuestion", () => {
     });
   });
 
+  describe("a dated line in an owned note", () => {
+    const habits = structureWith([
+      { line: 0, heading: "## Tasks" },
+      { line: 10, heading: "## Habits" },
+    ]);
+    const owned = (lineNumber: number) =>
+      build({
+        journalFilters: { Daily: [heading("## Tasks")] },
+        owners: { [DAY]: "Daily" },
+        structures: { [DAY]: habits },
+        items: { [DAY]: [datedLine(lineNumber)] },
+        dated: [datedLine(lineNumber)],
+      });
+
+    it("does not light its own day by date when the owner's heading condition hides it", () => {
+      expect(askAs(owned(12), "Daily")).toBe(false);
+      expect(askAs(owned(2), "Daily")).toBe(true);
+    });
+
+    it("does not light another journal's cell by date either", () => {
+      expect(askAs(owned(12), "Weekly")).toBe(false);
+      expect(askAs(owned(2), "Weekly")).toBe(true);
+    });
+
+    it("lets an explicit status replace the owner's stored one by type", () => {
+      const done = { ...datedLine(2), status: "done" as const };
+      const dependencies = build({
+        journalFilters: { Daily: [heading("## Tasks"), status("is", ["todo"])] },
+        owners: { [DAY]: "Daily" },
+        structures: { [DAY]: habits },
+        items: { [DAY]: [done] },
+        dated: [done],
+      });
+      const weekly = (question: Partial<TaskQuestion>) =>
+        answerTaskQuestion(
+          dependencies,
+          { journalName: "Weekly", anchor: ANCHOR, path: null },
+          { ...BASE_QUESTION, ...question },
+        );
+
+      expect(weekly({ status: "done" })).toBe(true);
+      expect(weekly({ status: "listing" })).toBe(false);
+    });
+  });
+
   describe("task-note visibility", () => {
     const rules: Partial<Record<string, NoteVisibility>> = {
       Work: { show: "matching", mode: "and", conditions: [{ type: "tag", tags: ["#work"] }] },
@@ -477,6 +548,17 @@ describe("answerTaskQuestion", () => {
         "an open item in a sibling note the day does not own",
         build({
           items: { ["Daily/2026-09-23.md" as VaultPath]: [task("Daily/2026-09-23.md" as VaultPath, 1, "todo")] },
+        }),
+        DAY,
+      ],
+      [
+        "an open line in the day's note dated on it, outside the journal's heading filter",
+        build({
+          journalFilter: [heading("## Tasks")],
+          owners: { [DAY]: "Daily" },
+          structures: { [DAY]: tasksStructure },
+          items: { [DAY]: [{ ...task(DAY, 12, "todo"), relations: ["containment", "date"], dates: { due: ANCHOR } }] },
+          dated: [{ ...task(DAY, 12, "todo"), relations: ["containment", "date"], dates: { due: ANCHOR } }],
         }),
         DAY,
       ],
