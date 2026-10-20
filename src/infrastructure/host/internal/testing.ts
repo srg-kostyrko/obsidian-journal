@@ -443,17 +443,26 @@ export function createFakeHost(): FakeHost {
     async trashFile(file: TFile | TFolder): Promise<void> {
       detachChild(file);
       if (file instanceof TFolder) {
+        // Obsidian's adapter removes everything under a folder, deepest first, and the vault raises
+        // "delete" for each entry before the folder's own.
         const prefix = `${file.path}/`;
+        const removed: (TFile | TFolder)[] = [];
         for (const path of folders) {
           if (path !== file.path && !path.startsWith(prefix)) continue;
+          const folder = folderObjects.get(path);
+          if (folder !== undefined && path !== file.path) removed.push(folder);
           folders.delete(path);
           folderObjects.delete(path);
         }
-        for (const path of fileObjects.keys()) {
+        for (const [path, child] of fileObjects) {
           if (!path.startsWith(prefix)) continue;
+          removed.push(child);
           files.delete(path);
           fileObjects.delete(path);
         }
+        const depth = (entry: TFile | TFolder): number => entry.path.split("/").length;
+        const deepestFirst = removed.toSorted((a, b) => depth(b) - depth(a));
+        for (const entry of deepestFirst) vault.emit("delete", entry);
       } else {
         files.delete(file.path);
         fileObjects.delete(file.path);
