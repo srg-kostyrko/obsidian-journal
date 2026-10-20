@@ -67,7 +67,10 @@ function save(): void {
   }
   // Edited conditions first, then whatever this editor could not render, in its original
   // relative order — the same stable placement as EditCheckboxProviderModal's save().
-  const checkbox: CheckboxJournalRule | undefined =
+  // This editor owns identification only; the dated-visibility rule shares the entry, so an
+  // inheriting journal that has one keeps an entry to hold it.
+  const dated = config.value.tasks.providers.checkbox?.dated;
+  const identification: CheckboxJournalRule | undefined =
     compose.value === "inherit"
       ? undefined
       : {
@@ -75,6 +78,10 @@ function save(): void {
           mode: draft.value.mode,
           conditions: [...draft.value.conditions.map((condition) => ({ ...condition })), ...preservedConditions],
         };
+  const checkbox: CheckboxJournalRule | undefined =
+    dated === undefined
+      ? identification
+      : { ...(identification ?? { compose: "inherit", mode: "and", conditions: [] }), dated };
   journals.update(journalName, {
     tasks: { ...config.value.tasks, providers: { ...config.value.tasks.providers, checkbox } },
   });

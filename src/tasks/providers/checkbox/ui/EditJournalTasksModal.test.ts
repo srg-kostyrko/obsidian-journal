@@ -143,6 +143,30 @@ describe("EditJournalTasksModal", () => {
     expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
   });
 
+  it("keeps the journal's dated rule when switched back to inherit", async () => {
+    const dated = { show: "none", mode: "and", conditions: [] };
+    const { repository } = await mount({ checkbox: { compose: "narrow", mode: "and", conditions: [], dated } });
+
+    await userEvent.click(screen.getByTestId("compose-inherit"));
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    expect(stored?.compose).toBe("inherit");
+    expect(stored?.dated).toEqual(dated);
+  });
+
+  it("keeps the journal's dated rule across an identification Save", async () => {
+    const dated = { show: "matching", mode: "and", conditions: [{ type: "folder", folders: ["Work"] }] };
+    const { repository } = await mount({ checkbox: { compose: "inherit", mode: "and", conditions: [], dated } });
+
+    await userEvent.click(screen.getByTestId("compose-narrow"));
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    expect(stored?.compose).toBe("narrow");
+    expect(stored?.dated).toEqual(dated);
+  });
+
   // The journal's tasks.providers schema declares only `checkbox`, so a second provider's own
   // entry can't be modeled through the fixture — v.object strips any other key on that read
   // path. It is reachable the way a real one would ever get there: written live through
