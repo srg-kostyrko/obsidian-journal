@@ -155,7 +155,7 @@ export function gateViolations(
         const entryPath = field(path, key);
         const marker = markerAlong(entry);
         if (key === discriminant) {
-          if (marker !== "climb") report(entryPath, "discriminant-unmarked");
+          if (!topLevel && marker !== "climb") report(entryPath, "discriminant-unmarked");
           continue;
         }
         if (marker !== undefined) continue;

@@ -64,11 +64,26 @@ describe("gateViolations", () => {
     expect(gateViolations("root", schema)).toEqual([{ root: "root", path: "[].a", reason: "no-default" }]);
   });
 
-  it("exempts the entries of every option of a root variant", () => {
+  it("exempts the entries of every option of a root variant, its unmarked discriminant included", () => {
     const schema = v.variant("kind", [
-      v.object({ kind: v.pipe(v.literal("a"), climb("kind")), x: v.string() }),
-      v.object({ kind: v.pipe(v.literal("b"), climb("kind")), y: v.string() }),
+      v.object({ kind: v.literal("a"), x: v.string() }),
+      v.object({ kind: v.literal("b"), y: v.object({ deep: v.string() }) }),
     ]);
+
+    expect(gateViolations("root", schema)).toEqual([{ root: "root", path: "(kind=b).y.deep", reason: "no-default" }]);
+  });
+
+  it("treats lazy, intersect, tuple, map and set as leaves", () => {
+    const bare = v.object({ bare: v.string() });
+    const schema = v.object({
+      nested: v.object({
+        lazy: v.optional(v.lazy(() => bare)),
+        intersect: v.optional(v.intersect([bare, v.object({ other: v.string() })])),
+        tuple: v.optional(v.tuple([bare])),
+        map: v.optional(v.map(v.string(), bare)),
+        set: v.optional(v.set(bare)),
+      }),
+    });
 
     expect(gateViolations("root", schema)).toEqual([]);
   });
@@ -84,7 +99,7 @@ describe("gateViolations", () => {
     expect(gateViolations("root", schema)).toEqual([]);
   });
 
-  it("requires every variant discriminant to carry climb, at any depth", () => {
+  it("requires every variant discriminant below the top level to carry climb", () => {
     const schema = v.object({
       nested: v.optional(
         v.variant("kind", [
@@ -92,13 +107,13 @@ describe("gateViolations", () => {
           v.object({ kind: v.pipe(v.literal("b"), climb("kind")), extra: v.string() }),
         ]),
       ),
-      top: v.variant("type", [v.object({ type: v.optional(v.literal("c"), "c") })]),
+      list: v.array(v.variant("type", [v.object({ type: v.optional(v.literal("c"), "c") })])),
     });
 
     expect(gateViolations("root", schema)).toEqual([
       { root: "root", path: "nested(kind=a).kind", reason: "discriminant-unmarked" },
       { root: "root", path: "nested(kind=b).extra", reason: "no-default" },
-      { root: "root", path: "top(type=c).type", reason: "discriminant-unmarked" },
+      { root: "root", path: "list[](type=c).type", reason: "discriminant-unmarked" },
     ]);
   });
 
