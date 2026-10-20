@@ -815,6 +815,21 @@ describe("journal decoration repair on load", () => {
       { ...decoration, styles: [{ ...border, bottom: { ...visible, show: false } }] },
     ]);
   });
+
+  it("a border whose mode is unreadable is dropped, keeping the other styles and the conditions", async () => {
+    const hidden = { show: false, width: 1, color: { type: "custom", color: "#ff0000" }, style: "solid" } as const;
+    const left = { ...hidden, show: true };
+    const border = { ...buildStyle("border", { left, right: hidden, top: hidden, bottom: hidden }), border: 3 };
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [border as never, buildStyle("shape")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([{ ...decoration, styles: [buildStyle("shape")] }]);
+  });
 });
 
 const configuredNoteletType = () =>
