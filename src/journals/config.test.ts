@@ -2,12 +2,13 @@ import * as v from "valibot";
 import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { buildDecoration, buildStyle } from "@/decorations/testing";
 import { testContainer } from "@/testing";
 
 import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
 import { journalsCoreModule } from "./module";
 import { JournalsRepository } from "./repository";
-import { buildNavSegment, fixedJournal, unwrap } from "./testing";
+import { buildNavSegment, buildNoteletType, fixedJournal, unwrap } from "./testing";
 
 import type { JournalWrite } from "./config";
 
@@ -643,5 +644,52 @@ describe("journal nav block repair on load", () => {
       (record) => record.message === "collection entry fields reset to defaults",
     );
     expect(repair?.fields).toMatchObject({ fields: ["navBlock.showAdjacent"] });
+  });
+});
+
+async function loadJournal(raw: unknown): Promise<ReturnType<JournalsRepository["get"]>> {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: raw } },
+    allow: { dataRepair: true },
+  });
+  return harness.resolve(JournalsRepository).get("daily");
+}
+
+describe("journal decoration repair on load", () => {
+  it("a journal whose only decoration has a bad condition keeps no decoration, not the seeded default", async () => {
+    const broken = buildDecoration({ conditions: [{ type: "moon-phase" } as never], styles: [buildStyle("color")] });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [broken] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([]);
+  });
+});
+
+const configuredNoteletType = () =>
+  buildNoteletType({
+    id: "nt_1" as never,
+    name: "Meeting",
+    folder: "Meetings",
+    templates: ["t.md"],
+    counter: { enabled: false, frontmatterKey: "meeting-index" },
+    confirmCreation: true,
+  });
+
+describe("journal notelet type repair on load", () => {
+  it.each([
+    ["prompts", { prompts: [{ type: "moon", variable: "m", question: "M?", frontmatterKey: "m" }] }],
+    ["templates", { templates: [5] }],
+  ])("a notelet type whose only %s item is unreadable empties that list and keeps the rest", async (field, bad) => {
+    const raw = fixedJournal(
+      "daily",
+      { type: "day" },
+      { notelets: { nt_1: { ...configuredNoteletType(), ...(bad as object) } } },
+    );
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.notelets.nt_1).toEqual({ ...configuredNoteletType(), [field]: [] });
   });
 });

@@ -244,18 +244,17 @@ on it.
 
 ### Settings and schema
 
-- A stored value that fails its schema on reload now costs the failing field,
-  at its own depth, in collections and slices alike: `repairValue`
-  (`src/settings/repair/`) deletes the deepest bad key so its `v.optional`
-  default fills in, or drops a bad list item. That only holds for a field whose
-  default is inert. A variant discriminant, or a default that carries meaning
-  (an empty list that widens a filter to "any", say),
-  must be marked `climb`, or a list that must not be trimmed `whole`, or the
-  silent default widens or changes what the user configured. A schema with no
-  `v.optional` on a field cannot be defaulted there; the repair climbs to the
-  parent instead, so new persisted fields need a default. A root-level
-  `v.check` on an item names no field and still resets the entry, and a slice
-  that cannot be walked still falls back to its whole defaults.
+- A repair default that carries meaning is written over the user's value with
+  only a log line. The loader repairs a failing field at its own depth (the
+  rules are in [`docs/architecture.md`](docs/architecture.md) under "Schemas
+  and types"), so a field whose `v.optional` default changes what it means —
+  an empty list read as "any", a variant discriminant — must carry `climb`, or
+  the repair silently widens or retypes what the user configured. The
+  never-empty rule does not cover every list: with no enclosing list item to
+  drop, a list whose last item fails is emptied, so a meaning-bearing list
+  there needs its own `climb`. A root-level `v.check` names no field, so it
+  costs every top-level field its issues named, and then the whole entry or
+  slice.
 - The `@/journals` barrel re-exports settings flows that import
   `settings/ui/modals.ts`. Anything under `src/journals/settings/ui/` that
   `modals.ts` reaches must import services from their own submodules

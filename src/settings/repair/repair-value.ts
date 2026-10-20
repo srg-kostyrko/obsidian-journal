@@ -177,41 +177,55 @@ export function repairValue<TSchema extends AnySchema>(
   raw: unknown,
   defaultAt: DefaultAt,
 ): RepairResult<v.InferOutput<TSchema>> | undefined {
-  const working: unknown = structuredClone(raw);
+  let working: unknown = structuredClone(raw);
   let applied: RepairPath[] = [];
   let deepest = 0;
 
+  const empty = (list: RepairPath): RepairPath => {
+    const key = list.at(-1);
+    if (key === undefined) working = [];
+    else (valueAt(working, list.slice(0, -1)) as Record<string | number, unknown>)[key] = [];
+    return list;
+  };
+
   const apply = (start: RepairPath): boolean => {
     let target = start;
-    // Set when the target is a list that refused to drop its last live item: deleting or
-    // defaulting that list would empty it just the same, so only dropping it from its own
-    // parent list, or climbing past it, is allowed.
-    let keepList = false;
+    // The outermost list that refused to drop its last live item. From there only dropping an
+    // enclosing item from a list that keeps others is honest; deleting or defaulting anything
+    // on the way up would lose more than emptying this list, which is what the repair falls to.
+    let refused: RepairPath | undefined;
     for (;;) {
       const key = target.at(-1);
-      if (key === undefined) return false;
+      if (key === undefined) {
+        if (refused === undefined) return false;
+        target = empty(refused);
+        break;
+      }
       const parentPath = target.slice(0, -1);
       const container = valueAt(working, parentPath);
-      if (!keepList) {
-        const replacement = defaultAt(target, childOf(container, key));
-        if (replacement !== undefined && (Array.isArray(container) || isRecord(container))) {
-          (container as Record<string | number, unknown>)[key] = structuredClone(replacement.value);
-          break;
-        }
-        if (isRecord(container) && typeof key === "string") {
-          Reflect.deleteProperty(container, key);
-          break;
-        }
-      }
-      // Dropping the last live item would turn "these items" into "no items", which a list's
-      // default usually reads as "any"; the parent is the honest unit to lose instead.
       const inList = Array.isArray(container) && typeof key === "number";
-      if (inList && liveCount(container) > 1) {
+      // Dropping the last live item would turn "these items" into "no items", which a list's
+      // default usually reads as "any"; the enclosing item is the honest unit to lose instead.
+      const droppable = inList && liveCount(container) > 1;
+      const replacement = refused !== undefined && droppable ? undefined : defaultAt(target, childOf(container, key));
+      if (replacement !== undefined && (Array.isArray(container) || isRecord(container))) {
+        if (refused === undefined) {
+          (container as Record<string | number, unknown>)[key] = structuredClone(replacement.value);
+        } else {
+          target = empty(refused);
+        }
+        break;
+      }
+      if (refused === undefined && isRecord(container) && typeof key === "string") {
+        Reflect.deleteProperty(container, key);
+        break;
+      }
+      if (droppable) {
         container[key] = DROPPED;
         break;
       }
+      if (inList) refused = parentPath;
       target = truncateAtMarkers(schema, working, parentPath);
-      keepList = inList && target.length === parentPath.length;
     }
     applied = applied.filter((path) => !isPrefix(target, path));
     applied.push(target);
@@ -253,9 +267,9 @@ function liveCount(list: readonly unknown[]): number {
 }
 
 /** Top-level defaults only: deeper fields fall through to their own `v.optional` default. */
-export function defaultsFrom(top: Record<string, unknown>): DefaultAt {
+export function defaultsFrom(top: unknown): DefaultAt {
   return (path) => {
     const key = path.length === 1 ? path[0] : undefined;
-    return typeof key === "string" && Object.hasOwn(top, key) ? { value: top[key] } : undefined;
+    return isRecord(top) && typeof key === "string" && Object.hasOwn(top, key) ? { value: top[key] } : undefined;
   };
 }

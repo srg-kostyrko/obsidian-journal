@@ -69,6 +69,56 @@ describe("repairValue", () => {
     expect(result).toEqual({ value: { conditions: [{ typeIds: ["b"] }] }, fields: ["conditions.0"] });
   });
 
+  it("empties a lone bad item's list rather than substitute a non-empty top-level default", () => {
+    const schema = v.object({ ids: v.array(v.string()), n: v.number() });
+
+    const result = repairValue(schema, { ids: [5], n: 1 }, defaultsFrom({ ids: ["x"], n: 0 }));
+
+    expect(result).toEqual({ value: { ids: [], n: 1 }, fields: ["ids"] });
+  });
+
+  it("empties the outermost list that refused its last drop when nothing above it can be dropped", () => {
+    const schema = v.object({ rules: v.array(v.object({ ids: v.array(v.string()) })), n: v.number() });
+
+    const result = repairValue(
+      schema,
+      { rules: [{ ids: [7] }], n: 1 },
+      defaultsFrom({ rules: [{ ids: ["x"] }], n: 0 }),
+    );
+
+    expect(result).toEqual({ value: { rules: [], n: 1 }, fields: ["rules"] });
+  });
+
+  it("empties a root list rather than give up on its last item", () => {
+    const result = repairValue(v.array(v.string()), [5], noDefaults);
+
+    expect(result).toEqual({ value: [], fields: [""] });
+  });
+
+  it("does not default an enclosing object to escape a refused last drop", () => {
+    const schema = v.object({
+      items: v.array(
+        v.object({
+          name: v.string(),
+          filter: v.optional(v.object({ ids: v.array(v.string()), on: v.boolean() }), () => ({ ids: [], on: false })),
+        }),
+      ),
+    });
+    const raw = {
+      items: [
+        { name: "a", filter: { ids: [7], on: true } },
+        { name: "b", filter: { ids: ["x"], on: true } },
+      ],
+    };
+
+    const result = repairValue(schema, raw, noDefaults);
+
+    expect(result).toEqual({
+      value: { items: [{ name: "b", filter: { ids: ["x"], on: true } }] },
+      fields: ["items.0"],
+    });
+  });
+
   it("honours climb on a discriminant", () => {
     const schema = v.object({
       items: v.array(

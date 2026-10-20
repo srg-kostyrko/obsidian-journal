@@ -494,12 +494,21 @@ function repairCollectionEntry<TItem extends AnySchema>(
     return { value: fallback[field] };
   };
 
-  const deep = repairValue(definition.itemSchema, value, defaultAt);
-  if (deep !== undefined) return deep;
+  return (
+    repairValue(definition.itemSchema, value, defaultAt) ??
+    resetNamedFields(definition.itemSchema, value, issues, defaultAt)
+  );
+}
 
-  // A check spanning the whole item can still fail once the deep repairs are in, and it names
-  // no field the walk could climb to. Resetting every top-level field an issue named is what
-  // the entry kept before deep repair existed, so it stays the floor.
+// A check spanning the whole value can still fail once the deep repairs are in, and it names
+// no field the walk could climb to. Resetting every top-level field an issue named is what the
+// value kept before deep repair existed, so it stays the floor.
+function resetNamedFields<TSchema extends AnySchema>(
+  schema: TSchema,
+  value: Record<string, unknown>,
+  issues: readonly BaseIssue<unknown>[],
+  defaultAt: DefaultAt,
+): RepairResult<InferOutput<TSchema>> | undefined {
   const fields = new Set<string>();
   for (const issue of issues) {
     const key = issue.path?.[0]?.key;
@@ -508,11 +517,11 @@ function repairCollectionEntry<TItem extends AnySchema>(
   }
   const candidate: Record<string, unknown> = { ...value };
   for (const field of fields) {
-    const fallback = defaultField(field);
+    const fallback = defaultAt([field], value[field]);
     if (fallback === undefined) delete candidate[field];
-    else candidate[field] = fallback.value;
+    else candidate[field] = structuredClone(fallback.value);
   }
-  const parsed = v.safeParse(definition.itemSchema, candidate);
+  const parsed = v.safeParse(schema, candidate);
   return parsed.success ? { value: parsed.output, fields: [...fields] } : undefined;
 }
 
@@ -527,7 +536,10 @@ function parseSliceValue<TSchema extends AnySchema>(
   const parsed = v.safeParse(definition.schema, raw);
   if (parsed.success) return parsed.output;
   const issues = parsed.issues.map((issue) => issue.message);
-  const repaired = repairValue(definition.schema, raw, defaultsFrom(definition.defaults as Record<string, unknown>));
+  const defaultAt = defaultsFrom(definition.defaults);
+  const repaired =
+    repairValue(definition.schema, raw, defaultAt) ??
+    (isRecord(raw) ? resetNamedFields(definition.schema, raw, parsed.issues, defaultAt) : undefined);
   if (repaired !== undefined) {
     logger.warn("slice fields reset to defaults", { sliceKey: definition.key, fields: repaired.fields, issues });
     return repaired.value;

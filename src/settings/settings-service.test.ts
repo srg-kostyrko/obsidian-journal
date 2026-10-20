@@ -209,6 +209,23 @@ const weekSlice = defineSlice(
   { week: { dow: 1, doy: 4 }, global: true },
 );
 
+const checkedWeekSlice = defineSlice(
+  "calendar",
+  v.pipe(
+    v.object({
+      week: v.object({
+        dow: v.optional(v.pipe(v.number(), v.maxValue(6)), 1),
+        doy: v.optional(v.number(), 4),
+      }),
+      global: v.boolean(),
+    }),
+    v.check((slice) => slice.week.dow !== slice.week.doy, "dow and doy must differ"),
+  ),
+  { week: { dow: 1, doy: 4 }, global: true },
+);
+
+const pendingSlice = defineSlice("pending", v.array(v.object({ path: v.string() })), []);
+
 const boardSchema = v.object({
   name: v.string(),
   lines: v.array(v.array(v.object({ label: v.string(), link: v.optional(v.picklist(["none", "self"]), "none") }))),
@@ -336,6 +353,39 @@ describe("SettingsService", () => {
       const repairs = harness.logs.records.filter((record) => record.message === "slice fields reset to defaults");
       expect(repairs).toHaveLength(1);
       expect(repairs[0]?.fields).toMatchObject({ sliceKey: "calendar", fields: ["week.dow"] });
+    });
+
+    it("resets only the top-level field the issues name when the deep repair still fails a slice-wide check", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ slices: [checkedWeekSlice], collections: [] })],
+        data: { calendar: { week: { dow: 9, doy: 1 }, global: false } },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.getSlice(checkedWeekSlice).state).toEqual({ week: { dow: 1, doy: 4 }, global: false });
+      const repair = harness.logs.records.find((record) => record.message === "slice fields reset to defaults");
+      expect(repair?.fields).toMatchObject({ sliceKey: "calendar", fields: ["week"] });
+    });
+
+    it("resets the whole slice when the stored value is not an object", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ slices: [weekSlice], collections: [] })],
+        data: { calendar: "nonsense" },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.getSlice(weekSlice).state).toEqual({ week: { dow: 1, doy: 4 }, global: true });
+      expect(harness.logs.records.map((record) => record.message)).toContain("slice reset to defaults");
+    });
+
+    it("drops one bad entry of a list-rooted slice and keeps the others", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ slices: [pendingSlice], collections: [] })],
+        data: { pending: [{ path: "a" }, { path: 5 }, { path: "c" }] },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.getSlice(pendingSlice).state).toEqual([{ path: "a" }, { path: "c" }]);
     });
   });
 
