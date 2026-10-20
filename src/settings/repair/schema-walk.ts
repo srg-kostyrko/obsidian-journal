@@ -79,6 +79,10 @@ function firstObjectOption(variant: SchemaNode): AnySchema | undefined {
   return first;
 }
 
+export function isRecordSchema(schema: AnySchema): boolean {
+  return structural(schema).type === "record";
+}
+
 /** The schema for `key` inside `value`, or undefined where the structure cannot be followed. */
 export function childSchemaOf(parent: AnySchema, key: string | number, value: unknown): AnySchema | undefined {
   for (let current: AnySchema | undefined = parent; current !== undefined;) {
@@ -112,22 +116,33 @@ function hasDefault(schema: AnySchema): boolean {
   return false;
 }
 
-function sharedLiteralKey(options: readonly AnySchema[]): string | undefined {
+function discriminantValues(entry: AnySchema): readonly unknown[] | undefined {
+  const shape: SchemaNode & { options?: readonly unknown[] } = structural(entry);
+  if (shape.type === "literal") return [shape.literal];
+  if (shape.type === "picklist") return shape.options;
+  return undefined;
+}
+
+function sharedDiscriminantKey(options: readonly AnySchema[]): string | undefined {
   const shapes: SchemaNode[] = options.map((option) => structural(option));
   const first = shapes.at(0);
   if (first === undefined || shapes.some((shape) => !OBJECTS.has(shape.type))) return undefined;
-  return Object.keys(first.entries ?? {}).find((key) =>
-    shapes.every((shape) => {
+  return Object.keys(first.entries ?? {}).find((key) => {
+    const seen = new Set<unknown>();
+    return shapes.every((shape) => {
       const entry = shape.entries?.[key];
-      return entry !== undefined && structural(entry).type === "literal";
-    }),
-  );
+      const values = entry === undefined ? undefined : discriminantValues(entry);
+      if (values === undefined || values.some((value) => seen.has(value))) return false;
+      for (const value of values) seen.add(value);
+      return true;
+    });
+  });
 }
 
 function optionLabel(option: SchemaNode, key: string | undefined, index: number): string {
   const entry = key === undefined ? undefined : option.entries?.[key];
-  const literal = entry === undefined ? undefined : (structural(entry) as SchemaNode).literal;
-  return key === undefined || literal === undefined ? `(${index})` : `(${key}=${String(literal)})`;
+  const values = entry === undefined ? undefined : discriminantValues(entry);
+  return key === undefined || values === undefined ? `(${index})` : `(${key}=${values.map(String).join("|")})`;
 }
 
 function field(path: string, key: string): string {
@@ -177,7 +192,7 @@ export function gateViolations(
       }
     } else if (shape.type === "union") {
       const unionOptions = shape.options ?? [];
-      const shared = sharedLiteralKey(unionOptions);
+      const shared = sharedDiscriminantKey(unionOptions);
       if (shared !== undefined) report(path, "union-should-be-variant");
       for (const [index, option] of unionOptions.entries()) {
         walk(option, `${path}${optionLabel(structural(option), shared, index)}`, topLevel);

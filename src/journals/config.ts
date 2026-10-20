@@ -51,7 +51,7 @@ const writeCustom = v.object({
   anchorDate: v.pipe(anchorString, climb(ownsNotes)),
 });
 
-const writeSchema = v.union([writeFixed, writeCustom]);
+const writeSchema = v.variant("type", [writeFixed, writeCustom]);
 
 const widensTimeline = "an unset bound shows periods the user cut off";
 

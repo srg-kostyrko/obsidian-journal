@@ -134,6 +134,34 @@ describe("gateViolations", () => {
     ]);
   });
 
+  it("reports a union of objects told apart by a picklist key", () => {
+    const schema = v.object({
+      nested: v.optional(
+        v.union([
+          v.object({ kind: v.pipe(v.picklist(["a", "b"]), climb("kind")), x: v.optional(v.string()) }),
+          v.object({ kind: v.pipe(v.literal("c"), climb("kind")), y: v.optional(v.string()) }),
+        ]),
+      ),
+    });
+
+    expect(gateViolations("root", schema)).toEqual([
+      { root: "root", path: "nested", reason: "union-should-be-variant" },
+    ]);
+  });
+
+  it("does not ask for a variant when the key's values overlap across options", () => {
+    const schema = v.object({
+      nested: v.optional(
+        v.union([
+          v.object({ kind: v.pipe(v.picklist(["a", "b"]), climb("kind")), x: v.optional(v.string()) }),
+          v.object({ kind: v.pipe(v.literal("b"), climb("kind")), y: v.optional(v.string()) }),
+        ]),
+      ),
+    });
+
+    expect(gateViolations("root", schema)).toEqual([]);
+  });
+
   it("treats a union of literals or primitives as a leaf", () => {
     const schema = v.object({
       nested: v.object({

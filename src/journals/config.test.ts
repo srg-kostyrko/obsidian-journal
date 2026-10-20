@@ -683,6 +683,16 @@ async function loadJournal(raw: unknown): Promise<ReturnType<JournalsRepository[
   return harness.resolve(JournalsRepository).get("daily");
 }
 
+async function loadJournalLogged(raw: unknown) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: raw } },
+    allow: { dataRepair: true },
+  });
+  const repair = harness.logs.records.find((record) => record.message === "collection entry fields reset to defaults");
+  return { journal: unwrap(harness.resolve(JournalsRepository).get("daily")), repair };
+}
+
 const keptDecoration = () =>
   buildDecoration({
     mode: "or",
@@ -877,24 +887,21 @@ describe("journal prompt, numbering and frontmatter repair on load", () => {
     expect(journal).toEqual({ ...stored, numbering: { ...stored.numbering, sources: [twoSources()[0]] } });
   });
 
-  it("an unreadable allowBefore resets only that flag, keeping the numbering sources", async () => {
+  // Each of these flags rewrites notes when it changes: a false add flag strips the derived date
+  // from every note the journal writes, and allowBefore decides whether earlier notes are numbered.
+  it.each([
+    ["numbering", "allowBefore"],
+    ["frontmatter", "addStartDate"],
+    ["frontmatter", "addEndDate"],
+  ] as const)("an unreadable %s.%s resets only that flag to false and logs it", async (group, flag) => {
     const stored = numberedJournal();
     const raw = structuredClone(stored);
-    (raw.numbering as { allowBefore: unknown }).allowBefore = "yes";
+    (raw[group] as Record<string, unknown>)[flag] = "yes";
 
-    const journal = unwrap(await loadJournal(raw));
+    const { journal, repair } = await loadJournalLogged(raw);
 
-    expect(journal).toEqual({ ...stored, numbering: { ...stored.numbering, allowBefore: false } });
-  });
-
-  it("an unreadable addStartDate resets only that flag, keeping the journal's own frontmatter keys", async () => {
-    const stored = numberedJournal();
-    const raw = structuredClone(stored);
-    (raw.frontmatter as { addStartDate: unknown }).addStartDate = 1;
-
-    const journal = unwrap(await loadJournal(raw));
-
-    expect(journal).toEqual({ ...stored, frontmatter: { ...stored.frontmatter, addStartDate: false } });
+    expect(journal).toEqual({ ...stored, [group]: { ...stored[group], [flag]: false } });
+    expect(repair?.fields).toMatchObject({ fields: [`${group}.${flag}`] });
   });
 
   // A numbering source writes its counter under this key; any default would start a second
@@ -951,5 +958,25 @@ describe("journal notelet counter repair on load", () => {
     const journal = unwrap(await loadJournal(raw));
 
     expect(journal.notelets.nt_1?.counter).toEqual({ enabled: true, frontmatterKey: "meeting-index" });
+  });
+});
+
+describe("journal write repair on load", () => {
+  const customWrite = { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString } as const;
+
+  it.each([
+    ["duration", 0],
+    ["every", "fortnight"],
+    ["anchorDate", "soon"],
+  ] as const)("a custom write with an unreadable %s falls to the journal default as a whole", async (key, bad) => {
+    const stored = fixedJournal("daily", customWrite, { folder: "Sprints" });
+    const raw = structuredClone(stored);
+    (raw.write as Record<string, unknown>)[key] = bad;
+
+    const { journal, repair } = await loadJournalLogged(raw);
+
+    expect(journal.write).toEqual({ type: "day" });
+    expect(journal.folder).toBe("Sprints");
+    expect(repair?.fields).toMatchObject({ fields: ["write"] });
   });
 });
