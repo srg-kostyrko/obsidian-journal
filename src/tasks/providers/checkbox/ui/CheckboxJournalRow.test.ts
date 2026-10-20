@@ -46,6 +46,25 @@ describe("CheckboxJournalRow", () => {
     expect(summary).toContain("work");
   });
 
+  it("summarizes the dated rule", async () => {
+    await mount({
+      checkbox: {
+        compose: "inherit",
+        mode: "and",
+        conditions: [],
+        dated: { show: "none", mode: "and", conditions: [] },
+      },
+    });
+    expect(screen.getByTestId("checkbox-journal-dated-summary").textContent).toBe(
+      m.tasks_checkbox_dated_summary_none(),
+    );
+  });
+
+  it("summarizes a journal with no dated rule as showing every dated task", async () => {
+    await mount();
+    expect(screen.getByTestId("checkbox-journal-dated-summary").textContent).toBe(m.tasks_checkbox_dated_summary_all());
+  });
+
   // A summary read once at mount would go stale the moment the modal saved.
   it("refreshes the summary when the journal's rule changes", async () => {
     const { repository } = await mount();

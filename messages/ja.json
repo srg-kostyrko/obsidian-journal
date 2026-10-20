@@ -2539,6 +2539,12 @@
   "tasks_note_visibility_conditions_desc": "タグはカンマで区切ります。条件がない場合、すべてのタスクノートが表示されます。",
   "tasks_note_visibility_mode": "条件の組み合わせ方",
   "tasks_note_visibility_modal_title": "タスクノート — {journal}",
+  "tasks_checkbox_dated_title": "日付付きタスク",
+  "tasks_checkbox_dated_desc": "このジャーナルの一覧と装飾に含める日付付きタスク。条件は日付付きタスクを絞り込むだけで、追加することはありません。",
+  "tasks_checkbox_dated_conditions_desc": "タグはカンマで区切ります。条件がない場合、すべての日付付きタスクが表示されます。",
+  "tasks_checkbox_dated_summary_all": "すべての日付付きタスクを表示します。",
+  "tasks_checkbox_dated_summary_matching": "{conditions} に一致する日付付きタスクを表示します。",
+  "tasks_checkbox_dated_summary_none": "日付付きタスクを表示しません。",
 
   "tasks_journal_compose": "保管庫全体のルールとの関係",
   "tasks_journal_compose_desc": "「継承」は保管庫全体のルールのみを使用します。「絞り込み」は行が両方のルールを満たすことを求めます。「置換」はこのジャーナルのルールのみを使用します。",

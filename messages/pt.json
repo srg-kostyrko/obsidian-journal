@@ -2547,6 +2547,12 @@
   "tasks_note_visibility_conditions_desc": "Separe as tags com vírgulas. Sem condições, todas as notas de tarefa são mostradas.",
   "tasks_note_visibility_mode": "Como as condições se combinam",
   "tasks_note_visibility_modal_title": "Notas de tarefa — {journal}",
+  "tasks_checkbox_dated_title": "Tarefas com data",
+  "tasks_checkbox_dated_desc": "Quais tarefas com data as listagens e decorações deste diário incluem. As condições apenas restringem as tarefas com data; nunca adicionam nenhuma.",
+  "tasks_checkbox_dated_conditions_desc": "Separe as tags com vírgulas. Sem condições, todas as tarefas com data são mostradas.",
+  "tasks_checkbox_dated_summary_all": "Mostra todas as tarefas com data.",
+  "tasks_checkbox_dated_summary_matching": "Mostra as tarefas com data que correspondem a {conditions}.",
+  "tasks_checkbox_dated_summary_none": "Não mostra nenhuma tarefa com data.",
 
   "tasks_journal_compose": "Relação com a regra de todo o cofre",
   "tasks_journal_compose_desc": "«Herdar» usa apenas a regra de todo o cofre. «Restringir» exige que uma linha satisfaça as duas regras. «Substituir» usa apenas a regra deste diário.",

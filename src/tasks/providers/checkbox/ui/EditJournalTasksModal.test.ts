@@ -155,6 +155,37 @@ describe("EditJournalTasksModal", () => {
     expect(stored?.dated).toEqual(dated);
   });
 
+  it("saving None under inherit keeps identification inherited and stores the dated rule", async () => {
+    const { repository } = await mount();
+
+    await userEvent.click(screen.getByText(m.tasks_note_visibility_show_none()));
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+
+    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    expect(stored).toEqual({
+      compose: "inherit",
+      mode: "and",
+      conditions: [],
+      dated: { show: "none", mode: "and", conditions: [] },
+    });
+  });
+
+  it("stores no entry when neither identification nor the dated rule is set", async () => {
+    const { repository } = await mount();
+    await userEvent.click(screen.getByText(m.common_action_submit()));
+    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
+  });
+
+  it("a Matching rule with an empty condition cannot be saved", async () => {
+    await mount();
+
+    await userEvent.click(screen.getByText(m.tasks_note_visibility_show_matching()));
+    await userEvent.click(screen.getByTestId("note-visibility-add-condition"));
+
+    const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
+    expect(saveButton.disabled).toBe(true);
+  });
+
   it("keeps the journal's dated rule across an identification Save", async () => {
     const dated = { show: "matching", mode: "and", conditions: [{ type: "folder", folders: ["Work"] }] };
     const { repository } = await mount({ checkbox: { compose: "inherit", mode: "and", conditions: [], dated } });

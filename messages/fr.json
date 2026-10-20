@@ -2550,6 +2550,12 @@
   "tasks_note_visibility_conditions_desc": "Séparez les étiquettes par des virgules. Sans condition, toutes les notes de tâche sont affichées.",
   "tasks_note_visibility_mode": "Combinaison des conditions",
   "tasks_note_visibility_modal_title": "Notes de tâche — {journal}",
+  "tasks_checkbox_dated_title": "Tâches datées",
+  "tasks_checkbox_dated_desc": "Quelles tâches datées les listes et les décorations de ce journal incluent. Les conditions ne font que restreindre les tâches datées ; elles n’en ajoutent jamais.",
+  "tasks_checkbox_dated_conditions_desc": "Séparez les étiquettes par des virgules. Sans condition, toutes les tâches datées sont affichées.",
+  "tasks_checkbox_dated_summary_all": "Affiche toutes les tâches datées.",
+  "tasks_checkbox_dated_summary_matching": "Affiche les tâches datées correspondant à {conditions}.",
+  "tasks_checkbox_dated_summary_none": "N’affiche aucune tâche datée.",
 
   "tasks_journal_compose": "Relation avec la règle de tout le coffre-fort",
   "tasks_journal_compose_desc": "« Hériter » n’utilise que la règle de tout le coffre-fort. « Restreindre » exige qu’une ligne satisfasse les deux règles. « Remplacer » n’utilise que la règle de ce journal.",

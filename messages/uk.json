@@ -2617,6 +2617,12 @@
   "tasks_note_visibility_conditions_desc": "Розділяйте теги комами. Без умов показуються всі нотатки-завдання.",
   "tasks_note_visibility_mode": "Як поєднуються умови",
   "tasks_note_visibility_modal_title": "Нотатки-завдання — {journal}",
+  "tasks_checkbox_dated_title": "Завдання з датою",
+  "tasks_checkbox_dated_desc": "Які завдання з датою включають списки й оформлення цього журналу. Умови лише звужують набір завдань з датою і ніколи не додають нових.",
+  "tasks_checkbox_dated_conditions_desc": "Розділяйте теги комами. Без умов показуються всі завдання з датою.",
+  "tasks_checkbox_dated_summary_all": "Показує всі завдання з датою.",
+  "tasks_checkbox_dated_summary_matching": "Показує завдання з датою, що відповідають умовам: {conditions}.",
+  "tasks_checkbox_dated_summary_none": "Не показує завдання з датою.",
 
   "tasks_journal_compose": "Відношення до правила всього сховища",
   "tasks_journal_compose_desc": "«Успадкувати» використовує лише правило всього сховища. «Звузити» вимагає, щоб рядок задовольняв обидва правила. «Замінити» використовує лише правило цього журналу.",
