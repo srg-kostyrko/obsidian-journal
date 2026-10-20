@@ -60,6 +60,28 @@ async function openStyleCanvas(): Promise<void> {
   await waitForModalOpen();
 }
 
+const BOX_EDGES = ["left", "top", "width", "height"] as const;
+type Box = Record<(typeof BOX_EDGES)[number], number>;
+
+async function canvasBoxes(): Promise<{ cell: Box; preview: Box }> {
+  const [cell, preview] = await browser.execute(() =>
+    [".decoration-canvas .cell", ".decoration-canvas .decoration-preview"].map((selector): Box => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      return { left: rect?.left ?? 0, top: rect?.top ?? 0, width: rect?.width ?? 0, height: rect?.height ?? 0 };
+    }),
+  );
+  const missing: Box = { left: 0, top: 0, width: 0, height: 0 };
+  return { cell: cell ?? missing, preview: preview ?? missing };
+}
+
+function sameBox({ cell, preview }: { cell: Box; preview: Box }): boolean {
+  return BOX_EDGES.every((edge) => Math.abs(preview[edge] - cell[edge]) < 0.5);
+}
+
+function expectSameBox({ cell, preview }: { cell: Box; preview: Box }): void {
+  for (const edge of BOX_EDGES) expect(preview[edge]).toBeCloseTo(cell[edge], 0);
+}
+
 describe("settings", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-journeys", plugins: ["journals"] });
@@ -785,16 +807,30 @@ describe("settings", () => {
     // land on one box only while the source size and the scale factor stay in step. jsdom has
     // no layout, so a drift between them shows up nowhere but a real boot. Measured through
     // getBoundingClientRect because getSize reports the pre-transform layout box.
-    it("lands the magnified preview on the region overlay's box", async () => {
-      await openStyleCanvas();
+    describe("lands the magnified preview on the region overlay's box", () => {
+      it("at the canvas column's own width", async () => {
+        await openStyleCanvas();
 
-      const [cellWidth, previewWidth] = await browser.execute(() =>
-        [".decoration-canvas .cell", ".decoration-canvas .decoration-preview"].map(
-          (selector) => document.querySelector(selector)?.getBoundingClientRect().width ?? 0,
-        ),
-      );
+        expectSameBox(await canvasBoxes());
+      });
 
-      expect(previewWidth).toBeCloseTo(cellWidth, 0);
+      // A column narrower than the full-size cell shrinks the cell, which a fixed scale factor
+      // does not follow. Whether the column is that narrow depends on the window, so it is
+      // forced here rather than left to whatever size the window opened at.
+      it("in a canvas column too narrow for the full-size cell", async () => {
+        await openStyleCanvas();
+        await browser.execute(() => {
+          document.querySelector<HTMLElement>(".decoration-canvas")?.style.setProperty("width", "240px");
+        });
+
+        // The scale follows the cell through a ResizeObserver, a frame or so after the reflow;
+        // the wait gives it that, and the assertions below report the boxes if it never lands.
+        await browser.waitUntil(async () => sameBox(await canvasBoxes()), { timeout: 2000 }).catch(() => false);
+
+        const settled = await canvasBoxes();
+        expect(settled.cell.width).toBeLessThan(240);
+        expectSameBox(settled);
+      });
     });
   });
 
