@@ -10,7 +10,7 @@ export const taskQuestionStatuses = ["listing", "open", "done", "all"] as const;
 const EMPTY_RULE: TaskRule = { mode: "and", conditions: [] };
 
 // Status is the question here, not a filter row: a stored status row is hand-edited data, stripped
-// rather than rejected so it cannot fail the journal's whole decorations field.
+// rather than rejected so it cannot cost its decoration.
 const questionFilterSchema = v.pipe(
   taskRuleSchema,
   v.transform((rule): TaskRule => ({ ...rule, conditions: rule.conditions.filter((c) => c.type !== "status") })),

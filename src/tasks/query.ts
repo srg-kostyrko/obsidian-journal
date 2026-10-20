@@ -8,6 +8,9 @@ import { taskDateChoiceSchema } from "./date-choice";
 export const taskSorts = ["document", "status", "due", "scheduled", "start", "done", "created"] as const;
 export type TaskSort = (typeof taskSorts)[number];
 
+// The fallbacks stay because the tasks view block parses its stored config with this schema and no
+// repair, so an unreadable value would show an error in place of the block until block configs are
+// repaired when read.
 const scopeSchema = v.object({
   provider: v.optional(v.array(v.string()), []),
   source: v.optional(v.fallback(v.picklist(["note", "notelets", "both"]), "both"), "both"),
