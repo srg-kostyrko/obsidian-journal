@@ -104,6 +104,22 @@ describe("NotesService", () => {
     });
   });
 
+  describe("isUserIgnored", () => {
+    it("reports a path Obsidian's excluded files match", () => {
+      const { service, host } = build();
+      Object.assign(host.app.metadataCache, {
+        isUserIgnored: (target: string) => target === "Private/diary.md",
+      });
+      expect(service.isUserIgnored("Private/diary.md" as VaultPath)).toBe(true);
+      expect(service.isUserIgnored(path)).toBe(false);
+    });
+
+    it("reports nothing ignored when the host has no isUserIgnored", () => {
+      const { service } = build();
+      expect(service.isUserIgnored("Private/diary.md" as VaultPath)).toBe(false);
+    });
+  });
+
   describe("listFolders", () => {
     it("returns every loaded folder path including the root as empty string", () => {
       const { service, host } = build();

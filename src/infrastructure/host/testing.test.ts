@@ -92,3 +92,14 @@ describe("FakeNotesService updateFrontmatter", () => {
     expect(written).toEqual([]);
   });
 });
+
+describe("FakeNotesService ignore", () => {
+  it("ignore() marks a path as user-ignored", () => {
+    const notes = new FakeNotesService();
+    const target = "Private/diary.md" as VaultPath;
+    expect(notes.isUserIgnored(target)).toBe(false);
+    notes.ignore(target);
+    expect(notes.isUserIgnored(target)).toBe(true);
+    expect(notes.isUserIgnored("Other.md" as VaultPath)).toBe(false);
+  });
+});

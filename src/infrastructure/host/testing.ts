@@ -80,6 +80,7 @@ export class FakeNotesService implements Pick<
   | "listInFolder"
   | "listFolders"
   | "allMarkdownNotes"
+  | "isUserIgnored"
   | "create"
   | "read"
   | "readCached"
@@ -94,6 +95,7 @@ export class FakeNotesService implements Pick<
 > {
   readonly #files = new Map<VaultPath, FakeEntry>();
   readonly #folders = new Set<VaultPath>(["" as VaultPath]);
+  readonly #ignored = new Set<VaultPath>();
   readonly #emitter: TypedEmitter<NotesEvents> = createNanoEvents();
   // Real Obsidian moves a file's mtime forward on every vault write. This fake's writes are
   // synchronous, so a Date.now() stand-in would collide within the same millisecond — a cache
@@ -183,6 +185,14 @@ export class FakeNotesService implements Pick<
 
   allMarkdownNotes(): VaultPath[] {
     return [...this.#files.keys()];
+  }
+
+  isUserIgnored(path: VaultPath): boolean {
+    return this.#ignored.has(path);
+  }
+
+  ignore(path: VaultPath): void {
+    this.#ignored.add(path);
   }
 
   listFolders(): VaultPath[] {

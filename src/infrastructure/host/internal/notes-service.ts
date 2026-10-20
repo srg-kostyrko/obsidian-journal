@@ -129,6 +129,12 @@ export class NotesService {
       .map((folder) => folder.path as VaultPath);
   }
 
+  isUserIgnored(path: VaultPath): boolean {
+    // Not in obsidian.d.ts, but present in app.js from 1.8.7 through 1.14.4.
+    const cache: object & { isUserIgnored?: (path: string) => boolean } = this.#app.metadataCache;
+    return cache.isUserIgnored?.(path) ?? false;
+  }
+
   listFiles(): VaultPath[] {
     return this.#app.vault.getFiles().map((file) => file.path as VaultPath);
   }
