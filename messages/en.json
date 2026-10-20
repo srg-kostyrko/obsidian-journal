@@ -2552,6 +2552,12 @@
   "tasks_note_visibility_conditions_desc": "Separate tags with commas. With no conditions, every task note is shown.",
   "tasks_note_visibility_mode": "How conditions combine",
   "tasks_note_visibility_modal_title": "Task notes — {journal}",
+  "tasks_checkbox_dated_title": "Dated tasks",
+  "tasks_checkbox_dated_desc": "Which tasks that reach this journal by their date its listings and decorations include. Checkboxes always show in the period note that holds them.",
+  "tasks_checkbox_dated_conditions_desc": "Separate tags with commas. With no conditions, every dated task is shown.",
+  "tasks_checkbox_dated_summary_all": "Shows every dated task.",
+  "tasks_checkbox_dated_summary_matching": "Shows dated tasks matching {conditions}.",
+  "tasks_checkbox_dated_summary_none": "Shows no tasks by their date.",
 
   "tasks_journal_compose": "Relation to the vault-wide rule",
   "tasks_journal_compose_desc": "Inherit uses the vault-wide rule alone. Narrow requires a line to satisfy both rules. Replace uses this journal's rule alone.",

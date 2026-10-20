@@ -21,7 +21,7 @@ function lineItemOf(item: TaskItem, structure: NoteStructure | undefined): Struc
 // A whole-note item is tagged by its own frontmatter: it has no line for inline tags to sit on.
 // Its tags come from the item, not the live structure, so a tag edit is a change to the item.
 function tagsFor(item: TaskItem, structure: NoteStructure | undefined): readonly string[] | undefined {
-  if (item.display.kind === "note") return item.facts?.frontmatterTags;
+  if (item.display.kind === "note") return item.facts?.tags;
   if (structure === undefined) return undefined;
   const listItem = lineItemOf(item, structure);
   return listItem === undefined ? undefined : tagsOf(listItem, structure);

@@ -33,7 +33,7 @@ const under = (heading: string): TaskRule => ({
 
 // A note-property item, tagged by the frontmatter it was published with.
 const noteItem = (frontmatterTags: string[]) =>
-  buildTaskItem({ display: { kind: "note", path, title: "Ship it" }, facts: { frontmatterTags } });
+  buildTaskItem({ display: { kind: "note", path, title: "Ship it" }, facts: { tags: frontmatterTags } });
 
 describe("matchesFilter", () => {
   it("matches a status alias", () => {

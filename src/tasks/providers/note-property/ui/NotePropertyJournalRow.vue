@@ -6,13 +6,12 @@ import { useService } from "@/infrastructure/di";
 import { Flows } from "@/infrastructure/flows";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsService } from "@/settings";
+import { describeVisibility } from "@/tasks/visibility-rule/describe";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { EditJournalTaskNotesFlow } from "../flows/edit-journal-task-notes.flow";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "../slice";
-
-import { describeVisibility } from "./describe-visibility";
 
 const { journalName } = defineProps<{ journalName: string }>();
 
@@ -21,7 +20,11 @@ const journals = useService(JournalsRepository);
 const slice = useService(SettingsService).getSlice(notePropertySlice);
 
 const summary = computed(() =>
-  describeVisibility(journals.get(journalName).getOrUndefined()?.tasks.providers[NOTE_PROPERTY_PROVIDER_ID]),
+  describeVisibility(journals.get(journalName).getOrUndefined()?.tasks.providers[NOTE_PROPERTY_PROVIDER_ID], {
+    all: m.tasks_note_visibility_summary_all,
+    none: m.tasks_note_visibility_summary_none,
+    matching: m.tasks_note_visibility_summary_matching,
+  }),
 );
 
 function configure(): void {

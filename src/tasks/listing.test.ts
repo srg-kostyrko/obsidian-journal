@@ -18,6 +18,7 @@ import { overrideWith, testContainer } from "@/testing";
 import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
 import { tasksCoreModule } from "./module";
 import { CHECKBOX_PROVIDER_ID } from "./providers/checkbox/extract";
+import { settle, startedCheckboxes, type CheckboxNoteFixture } from "./providers/checkbox/testing";
 import { NotePropertyTaskProvider } from "./providers/note-property/provider";
 import { NOTE_PROPERTY_PROVIDER_ID } from "./providers/note-property/slice";
 import { DEFAULT_TASK_QUERY } from "./query";
@@ -27,9 +28,9 @@ import { TaskProviderToken } from "./types";
 import { TaskVisibility } from "./visibility";
 
 import type { TaskRule } from "./conditions";
-import type { NoteVisibility } from "./providers/note-property/visibility";
 import type { TaskQuery } from "./query";
 import type { TaskItem } from "./types";
+import type { VisibilityRule } from "./visibility-rule/rule";
 
 const DAY = "Daily/2026-09-22.md" as VaultPath;
 const OTHER_DAY = "Daily/2026-09-23.md" as VaultPath;
@@ -1088,14 +1089,14 @@ describe("buildTaskListing — task-note visibility", () => {
   const WORK_NOTE = "Tasks/work.md" as VaultPath;
   const HOME_NOTE = "Tasks/home.md" as VaultPath;
   const noFilter: TaskRule = { mode: "and", conditions: [] };
-  const withRule = (name: string, rule: NoteVisibility): JournalConfig =>
+  const withRule = (name: string, rule: VisibilityRule): JournalConfig =>
     fixedJournal(name, { type: "day" }, { tasks: { filter: noFilter, providers: { "note-property": rule } } });
-  const matchingWork: NoteVisibility = {
+  const matchingWork: VisibilityRule = {
     show: "matching",
     mode: "and",
     conditions: [{ type: "tag", tags: ["#work"] }],
   };
-  const hidden: NoteVisibility = { show: "none", mode: "and", conditions: [] };
+  const hidden: VisibilityRule = { show: "none", mode: "and", conditions: [] };
   const twoJournals = { Work: withRule("Work", matchingWork), Personal: withRule("Personal", hidden) };
   const workAndHome = {
     [WORK_NOTE]: { tags: ["#task", "#work"], properties: { scheduled: "2026-09-22" } },
@@ -1315,5 +1316,134 @@ describe("buildTaskListing — dated checkbox lines", () => {
 
       expect(rows.map((row) => row.item.key).toSorted()).toEqual([`${PROJECT}:12`, `${PROJECT}:2`]);
     });
+  });
+});
+
+function datedLine(extra: Partial<CheckboxNoteFixture> = {}): CheckboxNoteFixture {
+  return { text: "# Ideas\n- [ ] Pay 📅 2026-09-22", lines: [1], ...extra };
+}
+
+async function listed(
+  harness: Awaited<ReturnType<typeof startedCheckboxes>>,
+  journal: string,
+  anchor = "2026-09-22",
+  notes: AnchorMap = {},
+): Promise<readonly string[]> {
+  const dependencies = buildDependencies({ published: harness.tasks, visibility: harness.visibility, notes });
+  const rows = await buildTaskListing(
+    dependencies,
+    request({ hostJournal: journal, journalNames: [journal], anchor: anchor as AnchorString }),
+  );
+  return rows.map((row) => row.item.key);
+}
+
+describe("buildTaskListing — dated checkbox visibility", () => {
+  const WORK_IDEAS = "Projects/Work/ideas.md" as VaultPath;
+  const HOME_IDEAS = "Projects/Home/ideas.md" as VaultPath;
+  const noFilter: TaskRule = { mode: "and", conditions: [] };
+  const withDated = (name: string, dated?: VisibilityRule): JournalConfig =>
+    fixedJournal(
+      name,
+      { type: "day" },
+      {
+        tasks: {
+          filter: noFilter,
+          providers:
+            dated === undefined ? {} : { checkbox: { compose: "inherit", mode: "and", conditions: [], dated } },
+        },
+      },
+    );
+  const none: VisibilityRule = { show: "none", mode: "and", conditions: [] };
+  const matching = (condition: VisibilityRule["conditions"][number]): VisibilityRule => ({
+    show: "matching",
+    mode: "and",
+    conditions: [condition],
+  });
+
+  it("None hides dated checkbox lines from that journal only", async () => {
+    const harness = await startedCheckboxes(
+      { [WORK_IDEAS]: datedLine(), [HOME_IDEAS]: datedLine() },
+      { Work: withDated("Work", none), Personal: withDated("Personal") },
+    );
+
+    expect(await listed(harness, "Work")).toEqual([]);
+    expect(await listed(harness, "Personal")).toEqual([`${HOME_IDEAS}:1`, `${WORK_IDEAS}:1`]);
+  });
+
+  it("Matching by tag reads the line's own tags and the note's frontmatter tags", async () => {
+    const inline = "Projects/inline.md" as VaultPath;
+    const frontmatter = "Projects/frontmatter.md" as VaultPath;
+    const other = "Projects/other.md" as VaultPath;
+    const harness = await startedCheckboxes(
+      {
+        [inline]: datedLine({ tags: [{ line: 1, tag: "#work" }] }),
+        [frontmatter]: datedLine({ frontmatterTags: ["#work"] }),
+        [other]: datedLine({ tags: [{ line: 1, tag: "#home" }], frontmatterTags: ["#home"] }),
+      },
+      { Work: withDated("Work", matching({ type: "tag", tags: ["#work"] })) },
+    );
+
+    expect(await listed(harness, "Work")).toEqual([`${frontmatter}:1`, `${inline}:1`]);
+  });
+
+  it("Matching by folder reads the containing note's path", async () => {
+    const harness = await startedCheckboxes(
+      { [WORK_IDEAS]: datedLine(), [HOME_IDEAS]: datedLine() },
+      { Work: withDated("Work", matching({ type: "folder", folders: ["Projects/Work"] })) },
+    );
+
+    expect(await listed(harness, "Work")).toEqual([`${WORK_IDEAS}:1`]);
+  });
+
+  it("Matching by property is link-aware and refills when a rule names a new property", async () => {
+    const harness = await startedCheckboxes(
+      {
+        [WORK_IDEAS]: datedLine({ properties: { project: "[[Website]]" } }),
+        [HOME_IDEAS]: datedLine({ properties: { project: "[[Garden]]" } }),
+      },
+      { Work: withDated("Work", none) },
+    );
+    expect(await listed(harness, "Work")).toEqual([]);
+
+    harness.repository.update("Work", {
+      tasks: {
+        filter: noFilter,
+        providers: {
+          checkbox: {
+            compose: "inherit",
+            mode: "and",
+            conditions: [],
+            dated: matching({ type: "property", name: "project", values: ["Website"] }),
+          },
+        },
+      },
+    });
+    await settle();
+
+    expect(await listed(harness, "Work")).toEqual([`${WORK_IDEAS}:1`]);
+  });
+
+  it("the rule never hides a line from its own journal's period note by containment", async () => {
+    const workDay = "Work/2026-09-22.md" as VaultPath;
+    const harness = await startedCheckboxes(
+      {
+        [workDay]: {
+          text: "# Day\n- [ ] Pay 📅 2026-09-22\n- [ ] Call\n- [ ] Ship 📅 2026-09-25",
+          lines: [1, 2, 3],
+          owner: { journalName: "Work", anchor: "2026-09-22" as AnchorString },
+        },
+        [HOME_IDEAS]: datedLine(),
+      },
+      { Work: withDated("Work", none) },
+    );
+    const notes: AnchorMap = { Work: { "2026-09-22": workDay } };
+
+    expect(await listed(harness, "Work", "2026-09-22", notes)).toEqual([
+      `${workDay}:1`,
+      `${workDay}:2`,
+      `${workDay}:3`,
+    ]);
+    // Reached by its date alone, an owned line is gated like any other.
+    expect(await listed(harness, "Work", "2026-09-25", notes)).toEqual([]);
   });
 });

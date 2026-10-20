@@ -381,6 +381,14 @@ Be precise about what that pass was, because "reviewed" overstates it for nine o
   locale's existing **task note** wording; the plugin name TaskNotes stays untranslated.
   Not native-verified. Worth a native eye: whether `_set_up`'s trailing ellipsis reads as
   "opens something" in each locale, as it does in en.
+- The six `tasks_checkbox_dated_*` keys — a journal's **Dated tasks** section in the checkbox
+  modal (`title`, `desc`, `conditions_desc`) and its row summary (`summary_all`,
+  `summary_matching`, `summary_none`) — were translated by an agent working from this file.
+  The **dated task** term is each locale's existing **task** noun with a "with a date" or
+  "dated" qualifier (`tareas con fecha`, `tâches datées`, `задачи с датой`), and the section
+  copy follows the matching `tasks_note_visibility_*` key for tone. `desc` and `summary_none`
+  say the rule covers tasks reached **by their date**, because a checkbox always shows in the
+  period note that holds it. Not native-verified.
 - **uk** was reviewed by a native speaker, apart from the agent-translated additions
   noted below. It is the only locale where the rest of the output was verified by
   someone who reads the language.

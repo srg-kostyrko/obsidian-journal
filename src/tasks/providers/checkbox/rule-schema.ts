@@ -2,6 +2,7 @@
 import * as v from "valibot";
 
 import { taskConditionSchema } from "../../conditions";
+import { visibilityRuleSchema } from "../../visibility-rule/rule";
 
 import type { TaskCondition } from "../../conditions";
 
@@ -22,10 +23,13 @@ export const checkboxRuleSchema = v.object({
   conditions: v.optional(v.array(taskConditionSchema), []),
 });
 
+// Identification is owner-scoped and `dated` asker-scoped, so they stay separate fields. Absent is
+// All; an unreadable `dated` falls back to absent on its own rather than taking identification with it.
 export const checkboxJournalRuleSchema = v.object({
   compose: v.optional(v.fallback(v.picklist(["inherit", "narrow", "replace"]), "inherit"), "inherit"),
   mode: v.optional(v.fallback(v.picklist(["and", "or"]), "and"), "and"),
   conditions: v.optional(v.array(taskConditionSchema), []),
+  dated: v.optional(v.fallback(v.optional(visibilityRuleSchema), undefined)),
 });
 
 export type CheckboxRule = v.InferOutput<typeof checkboxRuleSchema>;

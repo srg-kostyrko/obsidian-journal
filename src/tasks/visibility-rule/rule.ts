@@ -1,9 +1,9 @@
 // Leaf on purpose: journalConfigSchema imports this file, and the tasks module imports journals.
 import * as v from "valibot";
 
-import { lowerScalars, tagMatches } from "./scalars";
+import type { VaultPath } from "@/infrastructure/host";
 
-import type { TaskItem } from "../../types";
+import { lowerScalars, tagMatches } from "./scalars";
 
 // Per entry, not per list: an emptied list is a no-op condition, which would quietly widen a
 // Matching rule to every task note over one unreadable entry.
@@ -38,15 +38,15 @@ const conditionsSchema = v.pipe(
   ),
 );
 
-export const noteVisibilitySchema = v.object({
+export const visibilityRuleSchema = v.object({
   show: v.optional(v.fallback(v.picklist(["all", "matching", "none"]), "all"), "all"),
   mode: v.optional(v.fallback(v.picklist(["and", "or"]), "and"), "and"),
   conditions: v.optional(v.fallback(conditionsSchema, []), []),
 });
 
-export type NoteVisibility = v.InferOutput<typeof noteVisibilitySchema>;
+export type VisibilityRule = v.InferOutput<typeof visibilityRuleSchema>;
 
-export const DEFAULT_NOTE_VISIBILITY: NoteVisibility = { show: "all", mode: "and", conditions: [] };
+export const DEFAULT_VISIBILITY_RULE: VisibilityRule = { show: "all", mode: "and", conditions: [] };
 
 const INTERNAL_LINK = /^\[\[([^\]|#^]+)(?:[#^|][^\]]*)?\]\]$/u;
 
@@ -82,38 +82,41 @@ function folderPrefix(folder: string): string {
 
 // undefined is a condition with nothing to compare against: it is left out of the combination
 // rather than deciding it, the way the form would refuse to save it.
-function evaluate(condition: VisibilityCondition, item: TaskItem, facts: NonNullable<TaskItem["facts"]>) {
+function evaluate(condition: VisibilityCondition, subject: VisibilitySubject) {
   switch (condition.type) {
     case "tag": {
       if (condition.tags.length === 0) return;
-      const tags = facts.frontmatterTags.map((tag) => tag.toLowerCase());
+      const tags = subject.tags.map((tag) => tag.toLowerCase());
       return condition.tags.some((wanted) => tags.some((tag) => tagMatches(tag, wanted.toLowerCase())));
     }
     case "folder": {
       // An empty entry would be the vault root, and a root that admits every path cannot narrow.
       const prefixes = condition.folders.map(folderPrefix).filter((prefix) => prefix !== "");
       if (prefixes.length === 0) return;
-      return prefixes.some((prefix) => item.path.startsWith(`${prefix}/`));
+      return prefixes.some((prefix) => subject.path.startsWith(`${prefix}/`));
     }
     case "property": {
       if (condition.values.length === 0) return;
-      return propertyMatches(facts.properties?.[condition.name], condition.values);
+      return propertyMatches(subject.properties?.[condition.name], condition.values);
     }
   }
 }
 
-// An item without facts is not a task note, and the rule is about task notes only.
-export function admits(rule: NoteVisibility | undefined, item: TaskItem): boolean {
-  if (rule === undefined || item.facts === undefined) return true;
-  if (rule.show === "all") return true;
+export interface VisibilitySubject {
+  readonly path: VaultPath;
+  readonly tags: readonly string[];
+  readonly properties?: Readonly<Record<string, unknown>>;
+}
+
+export function admitsSubject(rule: VisibilityRule | undefined, subject: VisibilitySubject): boolean {
+  if (rule === undefined || rule.show === "all") return true;
   if (rule.show === "none") return false;
-  const facts = item.facts;
-  const verdicts = rule.conditions.flatMap((condition) => evaluate(condition, item, facts) ?? []);
+  const verdicts = rule.conditions.flatMap((condition) => evaluate(condition, subject) ?? []);
   if (verdicts.length === 0) return true;
   return rule.mode === "and" ? verdicts.every(Boolean) : verdicts.some(Boolean);
 }
 
-export function referencedProperties(rules: Iterable<NoteVisibility | undefined>): ReadonlySet<string> {
+export function referencedProperties(rules: Iterable<VisibilityRule | undefined>): ReadonlySet<string> {
   const names = new Set<string>();
   for (const rule of rules) {
     if (rule?.show !== "matching") continue;

@@ -2533,6 +2533,12 @@
   "tasks_note_visibility_conditions_desc": "标签之间用逗号分隔。没有条件时，显示所有任务笔记。",
   "tasks_note_visibility_mode": "条件组合方式",
   "tasks_note_visibility_modal_title": "任务笔记 — {journal}",
+  "tasks_checkbox_dated_title": "带日期的任务",
+  "tasks_checkbox_dated_desc": "按日期进入此日记的任务中，哪些会被其列表和装饰包含。复选框始终显示在包含它们的周期笔记中。",
+  "tasks_checkbox_dated_conditions_desc": "标签之间用逗号分隔。没有条件时，显示所有带日期的任务。",
+  "tasks_checkbox_dated_summary_all": "显示所有带日期的任务。",
+  "tasks_checkbox_dated_summary_matching": "显示符合 {conditions} 的带日期的任务。",
+  "tasks_checkbox_dated_summary_none": "不按日期显示任务。",
 
   "tasks_journal_compose": "与全库通用规则的关系",
   "tasks_journal_compose_desc": "“继承”仅使用全库通用规则。“收窄”要求一行同时满足两条规则。“替换”仅使用本日记的规则。",

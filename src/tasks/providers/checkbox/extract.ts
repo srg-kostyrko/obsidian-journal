@@ -2,6 +2,8 @@ import type { AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskItem } from "@/tasks";
 
+import { tagsOf } from "../../note-structure";
+
 import { datesIn } from "./dates";
 import { identifies } from "./identification";
 import { normalizeStatus } from "./normalize";
@@ -20,10 +22,12 @@ export interface ExtractInput {
   readonly statusMap: Record<string, string>;
   readonly owned: boolean;
   readonly lineDates: LineDates | undefined;
+  // The containing note's properties some journal's dated rule names; undefined when none does.
+  readonly properties?: Readonly<Record<string, unknown>>;
 }
 
 export function extractItems(input: ExtractInput): readonly TaskItem[] {
-  const { path, structure, vault, journal, statusMap, owned, lineDates } = input;
+  const { path, structure, vault, journal, statusMap, owned, lineDates, properties } = input;
   const items: TaskItem[] = [];
   for (const listItem of structure.listItems) {
     const dates = lineDates?.get(listItem.line) ?? {};
@@ -47,6 +51,13 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
         markdown: null,
       },
       dates: { ...dates },
+      // Only the date relation is gated by a journal's dated rule, so only a dated line needs them.
+      ...(dated && {
+        facts:
+          properties === undefined
+            ? { tags: tagsOf(listItem, structure) }
+            : { tags: tagsOf(listItem, structure), properties },
+      }),
     });
   }
   return items;

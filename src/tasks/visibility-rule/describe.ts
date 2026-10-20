@@ -1,6 +1,6 @@
 import { formatConjunction, formatDisjunction, m } from "@/i18n";
 
-import type { NoteVisibility, VisibilityCondition } from "../visibility";
+import type { VisibilityRule, VisibilityCondition } from "./rule";
 
 // Each list matches on any of its entries, so it reads as "or" whatever the rule's mode.
 function describeCondition(condition: VisibilityCondition): string | undefined {
@@ -26,13 +26,19 @@ function describeCondition(condition: VisibilityCondition): string | undefined {
   }
 }
 
-// A condition with nothing to compare is left out of matching (visibility.ts), so it is left out
-// here too, and Matching with none left reads as what it does: every task note.
-export function describeVisibility(rule: NoteVisibility | undefined): string {
-  if (rule === undefined || rule.show === "all") return m.tasks_note_visibility_summary_all();
-  if (rule.show === "none") return m.tasks_note_visibility_summary_none();
+export interface VisibilityWording {
+  all: () => string;
+  none: () => string;
+  matching: (parameters: { conditions: string }) => string;
+}
+
+// A condition with nothing to compare is left out of matching (rule.ts), so it is left out
+// here too, and Matching with none left reads as what it does: everything.
+export function describeVisibility(rule: VisibilityRule | undefined, wording: VisibilityWording): string {
+  if (rule === undefined || rule.show === "all") return wording.all();
+  if (rule.show === "none") return wording.none();
   const parts = rule.conditions.flatMap((condition) => describeCondition(condition) ?? []);
-  if (parts.length === 0) return m.tasks_note_visibility_summary_all();
+  if (parts.length === 0) return wording.all();
   const joined = rule.mode === "or" ? formatDisjunction(parts) : formatConjunction(parts);
-  return m.tasks_note_visibility_summary_matching({ conditions: joined });
+  return wording.matching({ conditions: joined });
 }

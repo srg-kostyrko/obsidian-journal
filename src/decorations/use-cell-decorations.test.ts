@@ -507,7 +507,7 @@ describe("useCellDecorations", () => {
           relations: ["date"],
           display: { kind: "note", path, title: "Write report" },
           dates: { scheduled: period.anchor.toAnchor() },
-          facts: { frontmatterTags: [] },
+          facts: { tags: [] },
         },
       ]);
 

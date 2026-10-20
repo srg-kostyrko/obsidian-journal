@@ -2539,6 +2539,12 @@
   "tasks_note_visibility_conditions_desc": "Separa las etiquetas con comas. Sin condiciones, se muestran todas las notas de tarea.",
   "tasks_note_visibility_mode": "Cómo se combinan las condiciones",
   "tasks_note_visibility_modal_title": "Notas de tarea — {journal}",
+  "tasks_checkbox_dated_title": "Tareas con fecha",
+  "tasks_checkbox_dated_desc": "Qué tareas que llegan a este diario por su fecha incluyen sus listados y decoraciones. Las casillas se muestran siempre en la nota del periodo que las contiene.",
+  "tasks_checkbox_dated_conditions_desc": "Separa las etiquetas con comas. Sin condiciones, se muestran todas las tareas con fecha.",
+  "tasks_checkbox_dated_summary_all": "Muestra todas las tareas con fecha.",
+  "tasks_checkbox_dated_summary_matching": "Muestra las tareas con fecha que coinciden con {conditions}.",
+  "tasks_checkbox_dated_summary_none": "No muestra ninguna tarea por su fecha.",
 
   "tasks_journal_compose": "Relación con la regla de toda la bóveda",
   "tasks_journal_compose_desc": "«Heredar» usa solo la regla de toda la bóveda. «Restringir» exige que una línea cumpla ambas reglas. «Reemplazar» usa solo la regla de este diario.",

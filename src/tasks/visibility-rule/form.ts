@@ -1,4 +1,4 @@
-// Storage stays permissive (visibility.ts drops what it cannot read); this schema is stricter and is
+// Storage stays permissive (rule.ts drops what it cannot read); this schema is stricter and is
 // parsed only against the journal modal's in-memory draft.
 import { cloneFnJSON } from "@vueuse/core";
 import * as v from "valibot";
@@ -6,7 +6,7 @@ import * as v from "valibot";
 import { m } from "@/i18n";
 import { conditionValues } from "@/tasks/ui/condition-text";
 
-import { DEFAULT_NOTE_VISIBILITY, type NoteVisibility, type VisibilityCondition } from "./visibility";
+import { DEFAULT_VISIBILITY_RULE, type VisibilityRule, type VisibilityCondition } from "./rule";
 
 // Tags are one comma-separated field: a tag cannot hold a comma. Folders and property values are
 // one input per entry, since either can.
@@ -16,8 +16,8 @@ export type VisibilityConditionDraft =
   | { id: number; type: "property"; name: string; values: string[] };
 
 export interface VisibilityDraft {
-  show: NoteVisibility["show"];
-  mode: NoteVisibility["mode"];
+  show: VisibilityRule["show"];
+  mode: VisibilityRule["mode"];
   conditions: VisibilityConditionDraft[];
 }
 
@@ -30,10 +30,10 @@ export function emptyCondition(type: VisibilityCondition["type"]): VisibilityCon
   return { id: nextId, type, name: "", values: [""] };
 }
 
-export function visibilityDraftFrom(stored: NoteVisibility | undefined): VisibilityDraft {
+export function visibilityDraftFrom(stored: VisibilityRule | undefined): VisibilityDraft {
   // The stored rule is a reactive proxy into the journal config; the draft must share none of its
   // arrays, or an edit reaches the store before Save.
-  const rule = cloneFnJSON(stored ?? DEFAULT_NOTE_VISIBILITY);
+  const rule = cloneFnJSON(stored ?? DEFAULT_VISIBILITY_RULE);
   return {
     show: rule.show,
     mode: rule.mode,
@@ -83,7 +83,7 @@ function isNoOp(condition: VisibilityCondition): boolean {
 }
 
 // undefined for the default: a journal opened and saved untouched gains no key.
-export function visibilityFrom(draft: VisibilityDraft): NoteVisibility | undefined {
+export function visibilityFrom(draft: VisibilityDraft): VisibilityRule | undefined {
   // Under All or None the form does not validate conditions, so an unfinished row is dropped
   // rather than stored; the finished ones stay, ready for a switch back to Matching.
   const conditions = draft.conditions.map(conditionFrom).filter((condition) => !isNoOp(condition));

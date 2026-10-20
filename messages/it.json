@@ -2550,6 +2550,12 @@
   "tasks_note_visibility_conditions_desc": "Separa i tag con virgole. Senza condizioni, viene mostrata ogni nota attività.",
   "tasks_note_visibility_mode": "Come si combinano le condizioni",
   "tasks_note_visibility_modal_title": "Note attività — {journal}",
+  "tasks_checkbox_dated_title": "Attività con data",
+  "tasks_checkbox_dated_desc": "Quali attività che raggiungono questo diario tramite la loro data includono i suoi elenchi e le sue decorazioni. Le caselle compaiono sempre nella nota del periodo che le contiene.",
+  "tasks_checkbox_dated_conditions_desc": "Separa i tag con virgole. Senza condizioni, viene mostrata ogni attività con data.",
+  "tasks_checkbox_dated_summary_all": "Mostra ogni attività con data.",
+  "tasks_checkbox_dated_summary_matching": "Mostra le attività con data corrispondenti a {conditions}.",
+  "tasks_checkbox_dated_summary_none": "Non mostra nessuna attività in base alla data.",
 
   "tasks_journal_compose": "Relazione con la regola di tutto il vault",
   "tasks_journal_compose_desc": "«Eredita» usa solo la regola di tutto il vault. «Restringi» richiede che una riga soddisfi entrambe le regole. «Sostituisci» usa solo la regola di questo diario.",

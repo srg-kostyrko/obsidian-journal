@@ -8,6 +8,8 @@ import { useModal } from "@/infrastructure/host/modals";
 import { JournalsRepository } from "@/journals/repository";
 import type { TaskCondition } from "@/tasks/conditions";
 import RuleEditor from "@/tasks/ui/RuleEditor.vue";
+import VisibilityRuleEditor from "@/tasks/ui/VisibilityRuleEditor.vue";
+import { visibilityDraftFrom, visibilityFormErrors, visibilityFrom } from "@/tasks/visibility-rule/form";
 import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
@@ -52,7 +54,8 @@ const draft = ref<{ mode: "and" | "or"; conditions: TaskCondition[] }>({
 const ruleErrors = computed(() =>
   compose.value === "inherit" ? new Map<number, string>() : checkboxRuleConditionErrors(draft.value),
 );
-const ruleValid = computed(() => ruleErrors.value.size === 0);
+const datedDraft = ref(visibilityDraftFrom(stored?.dated));
+const ruleValid = computed(() => ruleErrors.value.size === 0 && visibilityFormErrors(datedDraft.value).size === 0);
 
 function save(): void {
   // Belt-and-braces alongside the disabled Save button: a disabled native <button> never
@@ -67,7 +70,9 @@ function save(): void {
   }
   // Edited conditions first, then whatever this editor could not render, in its original
   // relative order — the same stable placement as EditCheckboxProviderModal's save().
-  const checkbox: CheckboxJournalRule | undefined =
+  // An inheriting journal with a dated rule still needs an entry to hold it.
+  const dated = visibilityFrom(datedDraft.value);
+  const identification: CheckboxJournalRule | undefined =
     compose.value === "inherit"
       ? undefined
       : {
@@ -75,6 +80,10 @@ function save(): void {
           mode: draft.value.mode,
           conditions: [...draft.value.conditions.map((condition) => ({ ...condition })), ...preservedConditions],
         };
+  const checkbox: CheckboxJournalRule | undefined =
+    dated === undefined
+      ? identification
+      : { ...(identification ?? { compose: "inherit", mode: "and", conditions: [] }), dated };
   journals.update(journalName, {
     tasks: { ...config.value.tasks, providers: { ...config.value.tasks.providers, checkbox } },
   });
@@ -104,6 +113,12 @@ function save(): void {
     :label="m.tasks_settings_rule()"
     :description="m.tasks_settings_rule_desc()"
     :errors="ruleErrors"
+  />
+  <UiSettingRow :name="m.tasks_checkbox_dated_title()" heading />
+  <VisibilityRuleEditor
+    v-model="datedDraft"
+    :description="m.tasks_checkbox_dated_desc()"
+    :conditions-description="m.tasks_checkbox_dated_conditions_desc()"
   />
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>

@@ -8,13 +8,19 @@ import { fixedJournal } from "@/journals/testing";
 
 import { answerTaskQuestion, type TaskQuestionDependencies } from "./answer-question";
 import { buildTaskListing, type TaskListingDependencies } from "./listing";
-import { admits as admitsNote, type NoteVisibility } from "./providers/note-property/visibility";
+import { startedCheckboxes } from "./providers/checkbox/testing";
 import { DEFAULT_TASK_QUERY } from "./query";
 import { buildTaskItem } from "./testing";
+import { admitsSubject, type VisibilityRule } from "./visibility-rule/rule";
 
 import type { TaskCondition, TaskRule } from "./conditions";
 import type { TaskQuestion } from "./question";
 import type { TaskDateRole, TaskItem, TaskStatus } from "./types";
+
+function admitsNote(rule: VisibilityRule | undefined, item: TaskItem): boolean {
+  if (item.facts === undefined) return true;
+  return admitsSubject(rule, { path: item.path, tags: item.facts.tags, properties: item.facts.properties });
+}
 
 const DAY = "Daily/2026-09-22.md" as VaultPath;
 const NOTELET = "Daily/2026-09-22 Standup.md" as VaultPath;
@@ -45,7 +51,7 @@ function taskNote(
     capabilities: { movable: false, stampable: false, retargetable: true },
     display: { kind: "note", path, title: path },
     dates: (dates ?? { scheduled: ANCHOR }) as TaskItem["dates"],
-    facts: { frontmatterTags },
+    facts: { tags: frontmatterTags },
   });
 }
 
@@ -69,7 +75,9 @@ function build(options: {
   // What the index's range lookup holds: every item a provider published under the date relation.
   dated?: readonly TaskItem[];
   // Each journal's stored task-note rule, answered by the provider's own verdict.
-  visibilityRules?: Partial<Record<string, NoteVisibility>>;
+  visibilityRules?: Partial<Record<string, VisibilityRule>>;
+  // A real provider's verdict, in place of the task-note rules above.
+  visibility?: TaskQuestionDependencies["visibility"];
   // Per-journal stored filters, over journalFilter; and which journal's period note each path is.
   journalFilters?: Partial<Record<string, readonly TaskCondition[]>>;
   owners?: Partial<Record<VaultPath, string>>;
@@ -109,7 +117,7 @@ function build(options: {
         })),
     },
     structure: { get: (path) => Option.fromNullable(structures[path]) },
-    visibility: {
+    visibility: options.visibility ?? {
       admits: (item, journalNames) =>
         journalNames.length === 0 || journalNames.some((name) => admitsNote(visibilityRules[name], item)),
     },
@@ -455,7 +463,7 @@ describe("answerTaskQuestion", () => {
   });
 
   describe("task-note visibility", () => {
-    const rules: Partial<Record<string, NoteVisibility>> = {
+    const rules: Partial<Record<string, VisibilityRule>> = {
       Work: { show: "matching", mode: "and", conditions: [{ type: "tag", tags: ["#work"] }] },
       Personal: { show: "none", mode: "and", conditions: [] },
     };
@@ -478,6 +486,31 @@ describe("answerTaskQuestion", () => {
       });
       expect(askOf(dependencies, "Work", { quantifier: "none", status: "open" })).toBe(false);
       expect(askOf(dependencies, "Daily", { quantifier: "none", status: "open" })).toBe(true);
+    });
+  });
+
+  describe("dated checkbox visibility", () => {
+    it("a journal set to None does not light a cell for a dated checkbox line", async () => {
+      const project = "Projects/ideas.md" as VaultPath;
+      const { tasks, visibility } = await startedCheckboxes(
+        { [project]: { text: "# Ideas\n- [ ] Pay 📅 2026-09-22", lines: [1] } },
+        {
+          Work: fixedJournal("Work", { type: "day" }, {
+            tasks: { providers: { checkbox: { compose: "inherit", dated: { show: "none" } } } },
+          } as never),
+          Personal: fixedJournal("Personal", { type: "day" }),
+        },
+      );
+      const dependencies = build({ dated: tasks.datedIn(["due"], ANCHOR, ANCHOR), visibility });
+      const askOf = (journalName: string) =>
+        answerTaskQuestion(
+          dependencies,
+          { journalName, anchor: ANCHOR, path: null },
+          { ...BASE_QUESTION, status: "open" },
+        );
+
+      expect(askOf("Work")).toBe(false);
+      expect(askOf("Personal")).toBe(true);
     });
   });
 

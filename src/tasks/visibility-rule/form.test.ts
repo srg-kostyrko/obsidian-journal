@@ -2,13 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 
-import { emptyCondition, visibilityDraftFrom, visibilityFormErrors, visibilityFrom } from "./visibility-form";
+import { emptyCondition, visibilityDraftFrom, visibilityFormErrors, visibilityFrom } from "./form";
 
-import type { NoteVisibility } from "./visibility";
+import type { VisibilityRule } from "./rule";
 
 describe("visibility form", () => {
   it("round-trips a stored rule unchanged", () => {
-    const rule: NoteVisibility = {
+    const rule: VisibilityRule = {
       show: "matching",
       mode: "or",
       conditions: [
@@ -21,7 +21,7 @@ describe("visibility form", () => {
   });
 
   it("shares no array with the stored rule", () => {
-    const rule: NoteVisibility = { show: "matching", mode: "and", conditions: [{ type: "folder", folders: ["A"] }] };
+    const rule: VisibilityRule = { show: "matching", mode: "and", conditions: [{ type: "folder", folders: ["A"] }] };
     const draft = visibilityDraftFrom(rule);
     const condition = draft.conditions.at(0);
     if (condition?.type !== "folder") throw new Error("no folder condition");

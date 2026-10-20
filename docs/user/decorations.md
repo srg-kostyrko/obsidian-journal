@@ -55,8 +55,9 @@ A condition about a note — title, tags, a property, its size — needs the not
 no note it does not match. **Check tasks** is the exception: with **Look in** set to **Notelets only**
 or **Note and notelets**, a date with only a notelet can match, and a date with only a [task
 note](/tasks#task-notes), or a [dated checkbox line](/tasks#dated-lines-from-anywhere-in-the-vault)
-from anywhere in the vault, dated on it can match whatever **Look in** says. **None** matches a date
-that has a note or notelet it looks in, or a task note or dated checkbox line dated on it, where no
+from anywhere in the vault, dated on it can match whatever **Look in** says, provided the journal
+[shows](/tasks#which-dated-lines-a-journal-shows) it. **None** matches a date
+that has a note or notelet it looks in, or a task note or dated checkbox line the journal shows dated on it, where no
 counted task has the chosen status.
 
 ### Title and tags
@@ -107,7 +108,8 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
 - **Which tasks** — **Any** matches when at least one task has the status. **All** matches when the
   period has at least one task and every one of them has the status; a period with no tasks never
   matches. **None** matches when the period has a note or notelet it looks in, or a task note the
-  journal [shows](/tasks#which-task-notes-a-journal-shows) or a dated checkbox line dated in it, and
+  journal [shows](/tasks#which-task-notes-a-journal-shows) or a dated checkbox line it
+  [shows](/tasks#which-dated-lines-a-journal-shows) dated in it, and
   no task has the status — so a note with no tasks matches, a day whose only task note or dated line
   is done matches **None** · **Open**, and a date with nothing at all does not.
 - **Status** — **As in listing**, **Open**, **Done** or **All**. **Open** is To-do, In progress and On
@@ -128,9 +130,10 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
 Task notes and dated checkbox lines count toward the question alongside the period's checkbox
 tasks, so a dot can light a day that has no note at all: one task note scheduled on it, or one
 `- [ ] Ship it 📅 2026-10-30` line in a project note due on it, is enough for **Any** · **Open**. Only
-the task notes the cell's journal [shows](/tasks#which-task-notes-a-journal-shows) count. **Look in**
-does not narrow either — a task note is neither the period's note nor one of its notelets, and a
-dated line counts by its date wherever it sits. On a custom-interval
+the task notes and dated lines the cell's journal shows count
+([task notes](/tasks#which-task-notes-a-journal-shows), [dated lines](/tasks#which-dated-lines-a-journal-shows)).
+**Look in** does not narrow either — a task note is neither the period's note nor one of its notelets,
+and a dated line counts by its date wherever it sits. On a custom-interval
 journal, a decoration that pairs **Check tasks** with an [interval offset](#interval-offset) counts the
 task notes of the whole interval, not only those dated on the offset's day.
 

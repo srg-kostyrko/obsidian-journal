@@ -2,7 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 
-import { describeVisibility } from "./describe-visibility";
+import { describeVisibility as describe_ } from "./describe";
+
+const wording = {
+  all: m.tasks_note_visibility_summary_all,
+  none: m.tasks_note_visibility_summary_none,
+  matching: m.tasks_note_visibility_summary_matching,
+};
+const describeVisibility = (rule: Parameters<typeof describe_>[0]) => describe_(rule, wording);
 
 const tag = m.tasks_note_visibility_condition_tag({ tags: "#work" });
 const folder = m.tasks_note_visibility_condition_folder({ folders: "Projects" });

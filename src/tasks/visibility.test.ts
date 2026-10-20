@@ -9,12 +9,12 @@ import { tasksCoreModule } from "./module";
 import { buildTaskItem } from "./testing";
 import { TaskVisibility } from "./visibility";
 
-import type { NoteVisibility } from "./providers/note-property/visibility";
+import type { VisibilityRule } from "./visibility-rule/rule";
 
 const noFilter = { mode: "and" as const, conditions: [] };
-const withRule = (name: string, rule: NoteVisibility) =>
+const withRule = (name: string, rule: VisibilityRule) =>
   fixedJournal(name, { type: "day" }, { tasks: { providers: { "note-property": rule }, filter: noFilter } });
-const matching = (tag: string): NoteVisibility => ({
+const matching = (tag: string): VisibilityRule => ({
   show: "matching",
   mode: "and",
   conditions: [{ type: "tag", tags: [tag] }],
@@ -26,7 +26,7 @@ const noteItem = (tags: string[]) =>
     key: "note-property:a.md",
     path: "a.md" as VaultPath,
     display: { kind: "note", path: "a.md" as VaultPath, title: "a" },
-    facts: { frontmatterTags: tags },
+    facts: { tags: tags },
   });
 
 async function build() {

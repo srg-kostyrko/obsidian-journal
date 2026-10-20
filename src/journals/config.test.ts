@@ -140,6 +140,20 @@ describe("journalConfigSchema", () => {
     expect(parsed.tasks.filter.conditions).toHaveLength(1);
   });
 
+  it("keeps a checkbox entry's dated-visibility rule beside its identification", () => {
+    const checkbox = {
+      compose: "inherit",
+      mode: "and",
+      conditions: [],
+      dated: { show: "none", mode: "and", conditions: [] },
+    };
+    const parsed = v.parse(journalConfigSchema, {
+      ...journalDefaultsFor({ type: "day" }, "Daily"),
+      tasks: { providers: { checkbox } },
+    });
+    expect(parsed.tasks.providers.checkbox).toEqual(checkbox);
+  });
+
   it("keeps a per-journal note-property visibility rule", () => {
     const rule = { show: "matching", mode: "or", conditions: [{ type: "folder", folders: ["Work"] }] };
     const parsed = v.parse(journalConfigSchema, {

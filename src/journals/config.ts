@@ -5,7 +5,7 @@ import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorat
 import { defineCollection } from "@/settings";
 import { taskRuleSchema } from "@/tasks/conditions";
 import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
-import { noteVisibilitySchema } from "@/tasks/providers/note-property/visibility";
+import { visibilityRuleSchema } from "@/tasks/visibility-rule/rule";
 
 import { DEFAULT_NOTELET_FIELD, noteletTypeCollection, noteletTypeSchema } from "./notelets/config";
 import { promptsSchema } from "./prompts/config";
@@ -181,7 +181,7 @@ export const journalConfigSchema = v.object({
         v.fallback(
           v.object({
             checkbox: v.optional(v.fallback(v.optional(checkboxJournalRuleSchema), undefined)),
-            "note-property": v.optional(v.fallback(v.optional(noteVisibilitySchema), undefined)),
+            "note-property": v.optional(v.fallback(v.optional(visibilityRuleSchema), undefined)),
           }),
           () => ({}),
         ),
