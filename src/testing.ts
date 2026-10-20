@@ -44,6 +44,7 @@ const REPAIR_WARNINGS = new Set([
   "collection seed entry failed validation; omitting",
   "collection discarded; stored value is not an object",
   "slice reset to defaults",
+  "slice fields reset to defaults",
 ]);
 
 /**

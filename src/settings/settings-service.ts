@@ -17,6 +17,7 @@ import {
   UnregisteredSliceError,
 } from "./errors";
 import { runMigrations } from "./migrations";
+import { defaultsFrom, repairValue, type DefaultAt, type RepairResult } from "./repair";
 import { SnapshotService } from "./snapshots/snapshot-service";
 import { CollectionDefinitionToken, MigrationToken, SettingsEventsToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
@@ -450,175 +451,78 @@ function parseCollectionValue<TItem extends AnySchema>(
   return out;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 // Resetting a whole entity because one field went bad silently discards everything the
-// user configured — and the next save writes that loss over their data. Substitute the
-// default only for the fields the issues name, so a broken date format costs a date
-// format rather than the journal's write type, folder and templates.
+// user configured — and the next save writes that loss over their data. Repair each failure
+// at its own depth, and only when that cannot produce a valid entry fall back to resetting
+// the top-level fields the issues name.
 function repairCollectionEntry<TItem extends AnySchema>(
   definition: CollectionDefinition<string, TItem>,
   id: string,
   value: unknown,
   issues: readonly BaseIssue<unknown>[],
-): { value: InferOutput<TItem>; fields: string[] } | undefined {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
-
+): RepairResult<InferOutput<TItem>> | undefined {
+  if (!isRecord(value)) return undefined;
+  let defaults: Record<string, unknown> | undefined;
+  const defaultField = (key: string): { value: unknown } | undefined => {
+    defaults ??= definition.defaultItem(id, value) as Record<string, unknown>;
+    return Object.hasOwn(defaults, key) ? { value: defaults[key] } : undefined;
+  };
   // `definition.nested` is keyed on the item schema's own field names (see CollectionNested in
   // schema.ts) so authors get a compile error for a stray key; that key set is generic here, so
   // widen to look it up by the runtime string an issue path actually names.
   const nestedMap = definition.nested as Readonly<Record<string, AnyNestedCollectionDefinition>> | undefined;
 
-  const plain = new Set<string>();
-  // A list field whose failures all sit on individual items keeps the items that still read: a
-  // question of a type a newer version added would otherwise wipe every question beside it.
-  const droppedItems = new Map<string, Set<number>>();
-  const nested = new Map<string, { definition: AnyNestedCollectionDefinition; issues: BaseIssue<unknown>[] }>();
+  const defaultAt: DefaultAt = (path) => {
+    const [key, entryId, field] = path;
+    if (typeof key !== "string") return;
+    if (path.length === 1) return defaultField(key);
+    const nested = nestedMap?.[key];
+    const container = value[key];
+    if (nested === undefined || typeof entryId !== "string" || !isRecord(container) || path.length > 3) {
+      return;
+    }
+    const fallback = nested.defaultItem(entryId, container[entryId]);
+    // defaultItem's contract only promises it keeps what still parses, not that its result
+    // does; a fallback that fails its own schema must not be written, so the walk climbs past it.
+    if (!v.safeParse(nested.itemSchema, fallback).success) return;
+    if (path.length === 2) return { value: fallback };
+    if (typeof field !== "string" || !isRecord(fallback) || !Object.hasOwn(fallback, field)) return;
+    return { value: fallback[field] };
+  };
+
+  return (
+    repairValue(definition.itemSchema, value, defaultAt) ??
+    resetNamedFields(definition.itemSchema, value, issues, defaultAt)
+  );
+}
+
+// A check spanning the whole value can still fail once the deep repairs are in, and it names
+// no field the walk could climb to. Resetting every top-level field an issue named is what the
+// value kept before deep repair existed, so it stays the floor.
+function resetNamedFields<TSchema extends AnySchema>(
+  schema: TSchema,
+  value: Record<string, unknown>,
+  issues: readonly BaseIssue<unknown>[],
+  defaultAt: DefaultAt,
+): RepairResult<InferOutput<TSchema>> | undefined {
+  const fields = new Set<string>();
   for (const issue of issues) {
-    // A root-level check reports no path, so there is no field to swap out.
     const key = issue.path?.[0]?.key;
     if (typeof key !== "string") return undefined;
-    const nestedDefinition = nestedMap?.[key];
-    if (nestedDefinition !== undefined) {
-      const existing = nested.get(key);
-      if (existing) existing.issues.push(issue);
-      else nested.set(key, { definition: nestedDefinition, issues: [issue] });
-      continue;
-    }
-    const index = issue.path?.[1]?.key;
-    if (typeof index === "number" && Array.isArray((value as Record<string, unknown>)[key])) {
-      const indexes = droppedItems.get(key) ?? new Set<number>();
-      indexes.add(index);
-      droppedItems.set(key, indexes);
-      continue;
-    }
-    plain.add(key);
-  }
-  for (const field of plain) droppedItems.delete(field);
-  if (plain.size === 0 && nested.size === 0 && droppedItems.size === 0) return undefined;
-
-  const defaults = definition.defaultItem(id, value) as Record<string, unknown>;
-  const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
-  const fields: string[] = [];
-  const partiallyRepaired = new Set<string>();
-  for (const field of plain) {
-    candidate[field] = defaults[field];
-    fields.push(field);
-  }
-  for (const [field, indexes] of droppedItems) {
-    candidate[field] = (candidate[field] as unknown[]).filter((_, index) => !indexes.has(index));
-    fields.push(...[...indexes].map((index) => `${field}.${index}`));
-    partiallyRepaired.add(field);
-  }
-  for (const [field, entry] of nested) {
-    const repaired = repairNestedCollection(entry.definition, candidate[field], entry.issues);
-    if (repaired === undefined) {
-      candidate[field] = defaults[field];
-      fields.push(field);
-      continue;
-    }
-    candidate[field] = repaired.value;
-    fields.push(...repaired.fields.map((nestedField) => `${field}.${nestedField}`));
-    partiallyRepaired.add(field);
-  }
-
-  const parsed = v.safeParse(definition.itemSchema, candidate);
-  if (parsed.success) return { value: parsed.output, fields };
-  if (partiallyRepaired.size === 0) return undefined;
-
-  // A repair that only touched one entry inside a nested field, or only dropped a few items out
-  // of a list field, can still fail a check spanning the whole item (a nested default colliding
-  // with a sibling field, or a list that is still invalid once the dropped items are gone, say).
-  // Retry with the old whole-field reset for every field either mechanism touched, and only give
-  // up if that also fails — never widen the loss past what the pre-nested-repair code discarded.
-  for (const field of partiallyRepaired) candidate[field] = defaults[field];
-  const retryFields = [...plain, ...nested.keys(), ...droppedItems.keys()];
-  const retried = v.safeParse(definition.itemSchema, candidate);
-  return retried.success ? { value: retried.output, fields: retryFields } : undefined;
-}
-
-function repairNestedCollection(
-  definition: AnyNestedCollectionDefinition,
-  container: unknown,
-  issues: readonly BaseIssue<unknown>[],
-): { value: Record<string, unknown>; fields: string[] } | undefined {
-  if (container === null || typeof container !== "object" || Array.isArray(container)) return undefined;
-
-  const byEntry = new Map<string, BaseIssue<unknown>[]>();
-  for (const issue of issues) {
-    // An issue on the container itself names no entry, so there is nothing to repair inside it.
-    const entryId = issue.path?.[1]?.key;
-    if (typeof entryId !== "string") return undefined;
-    const existing = byEntry.get(entryId);
-    if (existing) existing.push(issue);
-    else byEntry.set(entryId, [issue]);
-  }
-
-  const out: Record<string, unknown> = { ...(container as Record<string, unknown>) };
-  const fields: string[] = [];
-  for (const [entryId, entryIssues] of byEntry) {
-    const entryValue = out[entryId];
-    const repaired = repairNestedEntry(definition, entryId, entryValue, entryIssues);
-    if (repaired === undefined) {
-      const fallback = definition.defaultItem(entryId, entryValue);
-      // defaultItem's contract only promises it keeps what still parses, not that its result
-      // does — a lenient default here would silently escalate this per-entry reset into the
-      // whole-field reset the caller falls back to, so verify before writing it into the container.
-      if (!v.safeParse(definition.itemSchema, fallback).success) return undefined;
-      out[entryId] = fallback;
-      fields.push(entryId);
-      continue;
-    }
-    out[entryId] = repaired.value;
-    fields.push(...repaired.fields.map((field) => `${entryId}.${field}`));
-  }
-  return { value: out, fields };
-}
-
-function repairNestedEntry(
-  definition: AnyNestedCollectionDefinition,
-  entryId: string,
-  value: unknown,
-  issues: readonly BaseIssue<unknown>[],
-): { value: unknown; fields: string[] } | undefined {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) return undefined;
-
-  const fields = new Set<string>();
-  const droppedItems = new Map<string, Set<number>>();
-  for (const issue of issues) {
-    const key = issue.path?.[2]?.key;
-    if (typeof key !== "string") return undefined;
-    const index = issue.path?.[3]?.key;
-    if (typeof index === "number" && Array.isArray((value as Record<string, unknown>)[key])) {
-      const indexes = droppedItems.get(key) ?? new Set<number>();
-      indexes.add(index);
-      droppedItems.set(key, indexes);
-      continue;
-    }
     fields.add(key);
   }
-  for (const field of fields) droppedItems.delete(field);
-  if (fields.size === 0 && droppedItems.size === 0) return undefined;
-
-  const defaults = definition.defaultItem(entryId, value) as Record<string, unknown>;
-  const candidate: Record<string, unknown> = { ...(value as Record<string, unknown>) };
-  for (const field of fields) candidate[field] = defaults[field];
-
-  // Store the pre-parse candidate, not parsed.output: repairNestedCollection's caller re-parses
-  // the whole item, so returning the already-transformed output would run any v.transform in
-  // the entry schema twice for a repaired entry while its untouched siblings run it once.
-  const dropped: Record<string, unknown> = { ...candidate };
-  for (const [field, indexes] of droppedItems) {
-    dropped[field] = (dropped[field] as unknown[]).filter((_, index) => !indexes.has(index));
+  const candidate: Record<string, unknown> = { ...value };
+  for (const field of fields) {
+    const fallback = defaultAt([field], value[field]);
+    if (fallback === undefined) delete candidate[field];
+    else candidate[field] = structuredClone(fallback.value);
   }
-  if (v.safeParse(definition.itemSchema, dropped).success) {
-    const droppedFields = [...droppedItems].flatMap(([field, indexes]) =>
-      [...indexes].map((index) => `${field}.${index}`),
-    );
-    return { value: dropped, fields: [...fields, ...droppedFields] };
-  }
-
-  for (const field of droppedItems.keys()) candidate[field] = defaults[field];
-  const parsed = v.safeParse(definition.itemSchema, candidate);
-  return parsed.success ? { value: candidate, fields: [...fields, ...droppedItems.keys()] } : undefined;
+  const parsed = v.safeParse(schema, candidate);
+  return parsed.success ? { value: parsed.output, fields: [...fields] } : undefined;
 }
 
 function parseSliceValue<TSchema extends AnySchema>(
@@ -631,9 +535,15 @@ function parseSliceValue<TSchema extends AnySchema>(
   if (raw === undefined) return structuredClone(definition.defaults);
   const parsed = v.safeParse(definition.schema, raw);
   if (parsed.success) return parsed.output;
-  logger.warn("slice reset to defaults", {
-    sliceKey: definition.key,
-    issues: parsed.issues.map((issue) => issue.message),
-  });
+  const issues = parsed.issues.map((issue) => issue.message);
+  const defaultAt = defaultsFrom(definition.defaults);
+  const repaired =
+    repairValue(definition.schema, raw, defaultAt) ??
+    (isRecord(raw) ? resetNamedFields(definition.schema, raw, parsed.issues, defaultAt) : undefined);
+  if (repaired !== undefined) {
+    logger.warn("slice fields reset to defaults", { sliceKey: definition.key, fields: repaired.fields, issues });
+    return repaired.value;
+  }
+  logger.warn("slice reset to defaults", { sliceKey: definition.key, issues });
   return structuredClone(definition.defaults);
 }

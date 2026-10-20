@@ -143,6 +143,18 @@ Brands are structural — `{ __brand: true }` — not a unique `symbol`. A uniqu
 symbol trips TS4023 ("cannot be named") the moment a schema's inferred type
 crosses a module boundary.
 
+A field that can be repaired carries its default on the schema itself, as
+`v.optional(schema, default)`; the settings loader repairs a value that fails
+its schema at the depth of the failure, deleting the deepest bad key so that
+default fills in, or dropping a bad list item. `climb(reason)` and
+`whole(reason)` (`@/settings`) mark the fields with no inert default: a failure
+at or below a `climb` field is repaired at its parent, and a failure inside a
+`whole` list drops the item that holds the list rather than one of its items. A
+list is never emptied by dropping its last item: the repair drops the nearest
+enclosing list item that has siblings instead, and only when there is none
+before a substituted default or the root does it empty that list, never default
+anything wider.
+
 ## Internationalization
 
 User-facing copy goes in `messages/en.json` only. `compile:i18n` generates

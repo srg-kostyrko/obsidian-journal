@@ -244,23 +244,17 @@ on it.
 
 ### Settings and schema
 
-- A stored value that fails its schema on reload costs different amounts
-  depending on where it sits, and the "whole entity is wiped" reading is out of
-  date for collections. `repairCollectionEntry`
-  (`src/settings/settings-service.ts:335`) reads `issue.path[0].key` off every
-  issue, substitutes just those fields from `defaultItem`, and re-parses, so a
-  clearable field with a schema `minLength` costs that field alone —
-  `journalConfigSchema.dateFormat` seeded empty comes back as the write type's
-  default with `write`, `folder`, `nameTemplate` and `templates` untouched. Two
-  shapes still take the whole-value reset: a **slice**, because `parseSliceValue`
-  (`:360`) has no repair path and falls back to `definition.defaults` wholesale —
-  one out-of-range `dow` discards the rest of the calendar slice with it; and a
-  **collection entry whose issue carries no path**, which a root-level `v.check`
-  on the item schema produces, because the repair has no field to swap and
-  returns `undefined` into the entity reset at `:325`. No current item schema
-  has such a check, so that one is a shape to avoid rather than a live instance.
-  Relax the schema and fall back on read, or coerce on write, when the field is
-  in a slice.
+- A repair default that carries meaning is written over the user's value with
+  only a log line. The loader repairs a failing field at its own depth (the
+  rules are in [`docs/architecture.md`](docs/architecture.md) under "Schemas
+  and types"), so a field whose `v.optional` default changes what it means —
+  an empty list read as "any", a variant discriminant — must carry `climb`, or
+  the repair silently widens or retypes what the user configured. The
+  never-empty rule does not cover every list: with no enclosing list item to
+  drop, a list whose last item fails is emptied, so a meaning-bearing list
+  there needs its own `climb`. A root-level `v.check` names no field, so it
+  costs every top-level field its issues named, and then the whole entry or
+  slice.
 - The `@/journals` barrel re-exports settings flows that import
   `settings/ui/modals.ts`. Anything under `src/journals/settings/ui/` that
   `modals.ts` reaches must import services from their own submodules
