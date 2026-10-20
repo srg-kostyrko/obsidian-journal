@@ -365,12 +365,19 @@ How the provider fills the index sits **behind that seam**. A central index sits
 front of the providers from phase 1: providers push item sets into it and every
 consumer reads it synchronously, so no two surfaces can disagree. Phase 1 bounds
 the fill set to notes the plugin owns — period notes and their notelets. Phase 4
-widens that fill set to the vault; it does not change the seam.
+widens that fill set to the vault; it does not change the seam. For notes the
+plugin does not own, the checkbox provider stores dated items only and keeps no
+text: an undated checkbox in a project note can be reached by no relation, so
+storing it is waste. Obsidian's Excluded files bound the walk of non-owned notes
+only; an owned note in an excluded folder keeps its items.
 
 The index stores two tiers. Structure — status, position, tags, capabilities —
 fills synchronously from `metadataCache`, so a decoration is correct on first
 paint. Line text hydrates lazily, keyed by `(path, mtime)`, which is why
-`display.markdown` is `null` until something asks for it.
+`display.markdown` is `null` until something asks for it. Dates are the one
+exception to "structure fills synchronously": `ListItemCache` carries no text, so
+they are extracted when the provider fills, from the note's text, and follow the
+synchronous publish in a second one.
 
 So `NoteMetadata.tasks` **goes**. It is read in exactly four lines, all of them
 inside the two checks the `tasks` condition replaced, `hasOpenTask` and `allTasksCompleted`
@@ -1040,7 +1047,11 @@ everywhere, including notes no journal owns. A journal may add its own rule, com
 (the default), `narrow` (global and journal) or `replace` (journal alone). This is
 deterministic despite the rollup: a note has exactly one owning journal, so the rule
 applied is the _owner's_, whoever is reading — a month rollup walking a day note reads
-it as a day-journal note. An earlier version of this section ruled identification
+it as a day-journal note. That one verdict serves both relations: the owning
+journal's composed rule decides identification whether a journal asks by
+containment or by date, so a line its `narrow` rejects is not a task when another
+journal asks by date either. For a note no journal owns only the global rule
+applies. An earlier version of this section ruled identification
 global-only by conflating owner with asker. The rule is owner-scoped; what a
 journal chooses to show of notes it does not own is the separate, asker-scoped
 setting described under Providers. The journal layer applies to the `checkbox`
@@ -1164,8 +1175,8 @@ relation — it is the checkbox provider's implementation of it.
    move: whatever enforces "overwrite only tokens we found", and the Tasks
    capability check.
 
-   Dates are extracted for owned notes as soon as their text is hydrated, and stored on
-   the item — but no **checkbox** date lookup is exposed until step 4. Answering "what is due Friday"
+   Dates are extracted at fill time, which means reading the text of owned notes
+   that have checkboxes, and stored on the item — but no **checkbox** date lookup is exposed until step 4. Answering "what is due Friday"
    from journal notes alone would be a half-vault answer wearing a whole-vault face. (The
    `note-property` lookup in step 2 is not that: its index covers the whole vault.)
 
@@ -1178,26 +1189,49 @@ relation — it is the checkbox provider's implementation of it.
    exactly as before. Per-journal visibility and the TaskNotes onboarding card are
    separate pieces of work (PRs 2 and 3 of #503).
 3. Moving items between periods.
-4. `checkbox` provider, **date** relation: the vault-wide index over every checkbox
-   in the vault, with its own extracted-text cache because `ListItemCache` carries
-   no text. The only piece with unmeasured memory and cold-boot cost. The surfaces
-   already speak the relation by now; this step gives them a second provider to ask.
+4. `checkbox` provider, **date** relation: the vault-wide index over every dated
+   checkbox in the vault, read once at boot because `ListItemCache` carries no
+   text, and keeping none of it. Its memory and cold-boot cost is measured (see
+   "Still to establish"). The surfaces already speak the relation by now; this
+   step gives them a second provider to ask.
 
 The index in step 4 stores items **flat**, with a parent reference at most. Any
 nesting is derived at render time behind a visited set. Time Ruler's indefinite
 hang was not volume — it was a 2,000-note vault whose tasks formed a link graph
 its `descendants()` recursion walked with no cycle guard, and their fix was to
-remove the capability. Measure that step against realistic **link density**, not
-note count.
+remove the capability. A flat index never follows links, so link density does not
+bear on step 4; the nesting derived at render time is the only walk left, and the
+visited set is what bounds it.
 
 ## Still to establish
 
 None is a decision — each is work this model is waiting on.
 
-- **The phase-4 index's memory and cold-boot cost**, measured against realistic
-  **link density** rather than note count. Time Ruler hung indefinitely on a
-  2,000-note vault, and an anonymised copy of that same vault did not reproduce
-  it.
+- **The phase-4 index's memory and cold-boot cost — closed.** Measured 2026-10-20
+  on real Obsidian (latest stable), no plugins, desktop Linux: a walk over every
+  note whose `metadataCache` shows a task, reading with `cachedRead` or
+  `adapter.read`, 16 reads in flight, on synthetic vaults with deliberately dense
+  tasks (~33 per task-bearing note) and wikilinks.
+
+  |                                                           | 5k notes          | 20k notes            |
+  | --------------------------------------------------------- | ----------------- | -------------------- |
+  | notes with checkboxes / checkbox lines / dated lines      | 1,513 / 50k / 20k | 7,063 / 224k / 89.5k |
+  | Obsidian warm boot (vault already indexed)                | ~2 s              | ~5–6 s               |
+  | Obsidian first-ever index, for scale                      | 12 s              | 47 s                 |
+  | **walk**                                                  | **0.35 s**        | **1.5 s**            |
+  | worst main-thread gap during walk                         | 13 ms             | 23–28 ms             |
+  | flat index retained, text dropped, all items              | 6–9 MB            | 27 MB                |
+  | same, every note's lines kept                             | 12.5 MB           | 54 MB                |
+  | extra text Obsidian retains when reading via `cachedRead` | ~4 MB             | ~22 MB               |
+
+  Keeping every note's lines doubles the retained memory, which is why the index
+  drops text and, for notes the plugin does not own, stores dated items only.
+  One in flight was no slower than 16. A flat index never follows links, so link
+  density does not bear on it; Time Ruler's hang (a 2,000-note vault whose tasks
+  formed a link graph) belongs to subtree work, not here. Not measured: mobile,
+  and a cold OS page cache — the files were freshly generated, so reads were
+  warm.
+
 - **Nesting is unrecoverable from `parent` alone for a note whose list starts at line 0.**
   Obsidian encodes a root item's parent as `-(list's first line)` and a child's parent as its
   parent's `position.start.line`; for a list starting at line 0 both encodings produce the same
