@@ -921,7 +921,8 @@ providers. Omitting `date` means scheduled-or-due, as everywhere else.
 The public `TaskItem` was shaped for containment: `journal` is the journal whose
 note holds the task and `date` is that note's period. A dated item has neither, so
 for it `journal` and `date` are the journal and period **asked about**, `source`
-is `"note"` (it is a whole note), `line` and `parentLine` are null, and `relations`
+names where it lives (`"notelet"` when its path is a notelet, `"note"` otherwise —
+never how it was reached; #540), `line` and `parentLine` are null, and `relations`
 contains `"date"` — consumers tell the two apart by `relations`, which exists for
 this. No union is widened, so no consumer's exhaustive switch breaks. When a
 selector matches several journals, the reported journal is the first admitting one

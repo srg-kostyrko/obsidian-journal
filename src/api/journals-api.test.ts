@@ -1131,6 +1131,34 @@ describe("JournalsApiService tasksFor", () => {
     expect(found.map((task) => `${task.journal}:${task.date}:${task.line}`)).toEqual(["daily:2026-09-22:1"]);
   });
 
+  it("reports a dated line in a notelet as a notelet task when it is reached by its date", async () => {
+    const { api, index, tasks } = await buildTasksApi({
+      monthly,
+      daily: { ...daily, notelets: { nt_meeting: meeting } },
+    });
+    index.register({
+      kind: "notelet",
+      journalName: "daily",
+      anchor: "2026-09-22" as AnchorString,
+      path: "D/Meeting 1.md" as VaultPath,
+      typeName: "Meeting",
+      typeId: "nt_meeting" as TypeId,
+      counter: 1,
+    });
+    tasks.publish("checkbox", { path: "D/Meeting 1.md" as VaultPath }, [
+      {
+        ...taskLine("D/Meeting 1.md", 1, "- [ ] follow up", { dates: { due: "2026-09-22" as AnchorString } }),
+        relations: ["containment", "date"],
+      },
+    ]);
+
+    const found = await api.tasksFor("monthly", "2026-09-22");
+
+    expect(found.map((task) => `${task.journal}:${task.source}:${task.path}`)).toEqual([
+      "monthly:notelet:D/Meeting 1.md",
+    ]);
+  });
+
   // The monthly journal reaches the day note's dated lines by date; the day journal's heading
   // condition still decides which of them it may return.
   it("keeps a dated line its owning journal's filter hides out, whichever journal reaches it", async () => {
