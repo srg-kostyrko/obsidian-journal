@@ -1254,6 +1254,52 @@ describe("buildTaskListing — dated checkbox lines", () => {
       expect(rows.map((row) => row.item.key)).toEqual([`${DAY}:2`]);
     });
 
+    it("lets the surface's own condition compose with the owner's filter, as containment does", async () => {
+      const published = await publishedCheckboxes([
+        line(DAY, 2, { ...DUE_TODAY, status: "done" }),
+        line(DAY, 12, { ...DUE_TODAY, status: "done" }),
+      ]);
+      const dependencies = buildDependencies({
+        published,
+        notes: { Daily: { "2026-09-22": DAY } },
+        structures: { [DAY]: TASKS_AND_HABITS },
+        journalFilters: { Daily: underTasks },
+        ends: { Weekly: { "2026-09-21": "2026-09-27" } },
+      });
+      const weekly = (query: TaskQuery) =>
+        buildTaskListing(
+          dependencies,
+          request({ hostJournal: "Weekly", anchor: "2026-09-21" as AnchorString, journalNames: ["Weekly"], query }),
+        );
+      const done: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] };
+
+      const doneRows = await weekly(withQuery({ filter: done }));
+
+      expect(doneRows.map((row) => row.item.key)).toEqual([`${DAY}:2`]);
+      expect(await weekly(DEFAULT_TASK_QUERY)).toEqual([]);
+    });
+
+    it("treats a line whose owning journal is gone as owned by no journal", async () => {
+      const published = await publishedCheckboxes([line(DAY, 12, { ...DUE_TODAY, status: "done" })]);
+      const dependencies = buildDependencies({
+        published,
+        notes: { Daily: { "2026-09-22": DAY } },
+        structures: { [DAY]: TASKS_AND_HABITS },
+        unknownJournals: ["Daily"],
+        journalFilters: {
+          Weekly: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] },
+        },
+        ends: { Weekly: { "2026-09-21": "2026-09-27" } },
+      });
+
+      const rows = await buildTaskListing(
+        dependencies,
+        request({ hostJournal: "Weekly", anchor: "2026-09-21" as AnchorString, journalNames: ["Weekly"] }),
+      );
+
+      expect(rows.map((row) => row.item.key)).toEqual([`${DAY}:12`]);
+    });
+
     it("still lists a dated line in a note no journal owns, whatever heading it sits under", async () => {
       const published = await publishedCheckboxes([
         line(PROJECT, 2, { relations: ["date"], dates: { due: "2026-09-22" as AnchorString } }),

@@ -260,8 +260,10 @@ export function datedFilterFor(
   const unowned = composeDatedFilter(askerFilter, queryFilter);
   return (item) => {
     if (item.display.kind !== "line") return unowned;
+    // Owned means what TaskHost.ownerOf means: indexed under a journal the repository still holds.
     const owner = dependencies.index.entryByPath(item.path).getOrUndefined();
-    return owner === undefined ? unowned : ownerFilter(owner.journalName);
+    if (owner === undefined || dependencies.journals.get(owner.journalName).isNone()) return unowned;
+    return ownerFilter(owner.journalName);
   };
 }
 

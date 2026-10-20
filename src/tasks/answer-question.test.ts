@@ -432,6 +432,26 @@ describe("answerTaskQuestion", () => {
       expect(askAs(owned(12), "Weekly")).toBe(false);
       expect(askAs(owned(2), "Weekly")).toBe(true);
     });
+
+    it("lets an explicit status replace the owner's stored one by type", () => {
+      const done = { ...datedLine(2), status: "done" as const };
+      const dependencies = build({
+        journalFilters: { Daily: [heading("## Tasks"), status("is", ["todo"])] },
+        owners: { [DAY]: "Daily" },
+        structures: { [DAY]: habits },
+        items: { [DAY]: [done] },
+        dated: [done],
+      });
+      const weekly = (question: Partial<TaskQuestion>) =>
+        answerTaskQuestion(
+          dependencies,
+          { journalName: "Weekly", anchor: ANCHOR, path: null },
+          { ...BASE_QUESTION, ...question },
+        );
+
+      expect(weekly({ status: "done" })).toBe(true);
+      expect(weekly({ status: "listing" })).toBe(false);
+    });
   });
 
   describe("task-note visibility", () => {
