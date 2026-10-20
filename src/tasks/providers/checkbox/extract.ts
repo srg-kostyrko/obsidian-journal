@@ -2,7 +2,7 @@ import type { AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskItem } from "@/tasks";
 
-import { tagsOf } from "../../note-structure";
+import { headingsOf, tagsOf } from "../../note-structure";
 
 import { datesIn } from "./dates";
 import { identifies } from "./identification";
@@ -51,12 +51,15 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
         markdown: null,
       },
       dates: { ...dates },
-      // Only the date relation is gated by a journal's dated rule, so only a dated line needs them.
+      // Only a dated line is read by journals other than the note's own: by a dated rule, and by the
+      // owning journal's heading condition on whichever surface asks. Headings ride along so a
+      // heading edit above an unchanged line is a changed item there too.
       ...(dated && {
-        facts:
-          properties === undefined
-            ? { tags: tagsOf(listItem, structure) }
-            : { tags: tagsOf(listItem, structure), properties },
+        facts: {
+          tags: tagsOf(listItem, structure),
+          headings: headingsOf(listItem.line, structure),
+          ...(properties !== undefined && { properties }),
+        },
       }),
     });
   }

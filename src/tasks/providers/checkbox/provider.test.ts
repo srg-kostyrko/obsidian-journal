@@ -1119,7 +1119,7 @@ describe("CheckboxTaskProvider dated visibility", () => {
       { Work: workJournal() },
     );
     const [dated, undated] = tasks.itemsIn(workDay);
-    expect(dated?.facts).toEqual({ tags: ["#bills", "#work"] });
+    expect(dated?.facts).toEqual({ tags: ["#bills", "#work"], headings: [] });
     expect(undated?.facts).toBeUndefined();
 
     const named = await startedCheckboxes(
@@ -1132,7 +1132,38 @@ describe("CheckboxTaskProvider dated visibility", () => {
       },
       { Work: workJournal(matchingProject) },
     );
-    expect(named.tasks.itemsIn(projectPath).at(0)?.facts).toEqual({ tags: [], properties: { project: "[[Website]]" } });
+    expect(named.tasks.itemsIn(projectPath).at(0)?.facts).toEqual({
+      tags: [],
+      headings: [],
+      properties: { project: "[[Website]]" },
+    });
+  });
+
+  // The owning journal's heading condition decides a dated line on every surface that asks, so a
+  // heading renamed above an unchanged line has to reach the index as a changed item: a Weekly cell
+  // repaints only off the version, never off the Daily note's metadata-changed.
+  it("bumps the index version when a heading above a dated line is renamed", async () => {
+    const { tasks, structures, notes } = await startedCheckboxes(
+      {
+        [workDay]: {
+          text: "## Habits\n- [ ] Pay 📅 2026-09-22",
+          lines: [1],
+          headings: [{ heading: "Habits", level: 2, line: 0 }],
+          owner: { journalName: "Work", anchor: anchor("2026-09-22") },
+        },
+      },
+      { Work: workJournal() },
+    );
+    const before = tasks.version();
+
+    const current = structures.get(workDay).getOrUndefined();
+    if (current === undefined) throw new Error("structure not seeded");
+    structures.setStructure(workDay, { ...current, headings: [{ heading: "Tasks", level: 2, line: 0 }] });
+    notes.emitMetadataChanged(workDay);
+    await settle();
+
+    expect(tasks.version()).toBeGreaterThan(before);
+    expect(tasks.itemsIn(workDay).at(0)?.facts?.headings).toEqual(["Tasks"]);
   });
 
   it("republishes a dated line whose referenced property changed, and its journal admits it", async () => {

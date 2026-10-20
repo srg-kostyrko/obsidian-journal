@@ -19,6 +19,7 @@ export interface CheckboxNoteFixture {
   // One checkbox list item per line number, in `text`.
   readonly lines: readonly number[];
   readonly tags?: readonly { readonly line: number; readonly tag: string }[];
+  readonly headings?: readonly { readonly heading: string; readonly level: number; readonly line: number }[];
   readonly frontmatterTags?: readonly string[];
   readonly properties?: Record<string, unknown>;
   readonly owner?: { readonly journalName: string; readonly anchor: AnchorString };
@@ -49,7 +50,7 @@ export async function startedCheckboxes(
     structures.setStructure(path, {
       listItems: fixture.lines.map((line) => ({ marker: " ", line, endLine: line, parent: null })),
       tags: [...(fixture.tags ?? [])],
-      headings: [],
+      headings: [...(fixture.headings ?? [])],
       frontmatterTags,
     });
     metadata.setMetadata(path, { title: path, tags: frontmatterTags, properties: fixture.properties ?? {} });
@@ -66,6 +67,7 @@ export async function startedCheckboxes(
     repository: harness.resolve(JournalsRepository),
     provider,
     notes,
+    structures,
     metadata,
   };
 }

@@ -35,14 +35,16 @@ export interface TaskItem {
   readonly capabilities: TaskCapabilities;
   readonly display: TaskDisplay;
   readonly dates: Partial<Record<TaskDateRole, AnchorString>>;
-  // What a whole-note item is filtered on, or a dated line gated on, captured at publish. Were they
-  // read live at query time, an edit to them would republish an equal item, the index would not
-  // bump, and no filter would recompute.
+  // What a whole-note item is filtered on, or a dated line gated and filtered on, captured at
+  // publish. Were they read live at query time, an edit to them would republish an equal item, the
+  // index would not bump, and no filter would recompute.
   readonly facts?: TaskFacts;
 }
 
 export interface TaskFacts {
   readonly tags: readonly string[];
+  // A dated line's heading chain. Absent on a task note, which has no line to sit under.
+  readonly headings?: readonly string[];
   // Only the properties some journal's visibility rule names: a snapshot of the whole frontmatter
   // would make every unrelated edit (TaskNotes rewrites dateModified on each one) a changed item.
   readonly properties?: Readonly<Record<string, unknown>>;
