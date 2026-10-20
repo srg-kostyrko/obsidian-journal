@@ -197,6 +197,37 @@ const cappedTreatsPetCollection = defineCollection(
   { nested: { treats: defineNestedCollection(treatSchema, treatDefaults) } },
 );
 
+const weekSlice = defineSlice(
+  "calendar",
+  v.object({
+    week: v.object({
+      dow: v.optional(v.pipe(v.number(), v.maxValue(6)), 1),
+      doy: v.optional(v.number(), 4),
+    }),
+    global: v.boolean(),
+  }),
+  { week: { dow: 1, doy: 4 }, global: true },
+);
+
+const boardSchema = v.object({
+  name: v.string(),
+  lines: v.array(v.array(v.object({ label: v.string(), link: v.optional(v.picklist(["none", "self"]), "none") }))),
+});
+const boardCollection = defineCollection("boards", boardSchema, (id) => ({ name: id, lines: [] }));
+
+function boardLines(): { label: string; link: string }[][] {
+  return [
+    [
+      { label: "a", link: "self" },
+      { label: "b", link: "self" },
+    ],
+    [
+      { label: "c", link: "self" },
+      { label: "d", link: "self" },
+    ],
+  ];
+}
+
 // Supplies this file's synthetic slice/collection/migration definitions to testContainer's
 // `modules`. A bare testContainer() registers zero slices and zero collections, so these
 // deliberately shadow-named keys (`calendar`, `journals`, `pets`) collide with nothing real.
@@ -293,12 +324,43 @@ describe("SettingsService", () => {
       });
       expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(1);
     });
+
+    it("repairs a deep slice field and keeps its siblings", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ slices: [weekSlice], collections: [] })],
+        data: { calendar: { week: { dow: 9, doy: 7 }, global: false } },
+        allow: { dataRepair: true },
+      });
+
+      expect(harness.settings.getSlice(weekSlice).state).toEqual({ week: { dow: 1, doy: 7 }, global: false });
+      const repairs = harness.logs.records.filter((record) => record.message === "slice fields reset to defaults");
+      expect(repairs).toHaveLength(1);
+      expect(repairs[0]?.fields).toMatchObject({ sliceKey: "calendar", fields: ["week.dow"] });
+    });
   });
 
   // These fixtures are already at CURRENT_VERSION and register no migration: a stored version
   // below it would fail runMigrations, and initialize would return Err before hydrating — which
   // surfaces as an undefined collection record rather than a migration error. Hence expectOk.
   describe("initialize — collection entry repair", () => {
+    it("repairs a deep collection field and keeps its siblings", async () => {
+      const stored = boardLines();
+      stored[1][0].link = "future";
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [boardCollection] })],
+        data: { boards: { main: { name: "Main", lines: stored } } },
+        allow: { dataRepair: true },
+      });
+
+      const expected = boardLines();
+      expected[1][0].link = "none";
+      expect(harness.settings.recordOf(boardCollection).main).toEqual({ name: "Main", lines: expected });
+      const repair = harness.logs.records.find(
+        (record) => record.message === "collection entry fields reset to defaults",
+      );
+      expect(repair?.fields).toMatchObject({ sliceKey: "boards/main", fields: ["lines.1.0.link"] });
+    });
+
     it("keeps the fields that validate and repairs only the ones that do not", async () => {
       const harness = await testContainer({
         modules: [testSettingsModule({ collections: [petCollection] })],
@@ -502,7 +564,7 @@ describe("SettingsService", () => {
       });
     });
 
-    it("discards a whole nested field rather than write an entry fallback default that fails its own schema", async () => {
+    it("drops the nested entry rather than write an entry fallback default that fails its own schema, keeping its siblings", async () => {
       const harness = await testContainer({
         modules: [testSettingsModule({ collections: [mismatchedNestedPetCollection] })],
         data: {
@@ -522,7 +584,7 @@ describe("SettingsService", () => {
         name: "Rex",
         kind: "dog",
         sound: "woof",
-        treats: {},
+        treats: { t1: { label: "Bone", crunchy: false } },
       });
     });
 
@@ -921,6 +983,24 @@ describe("SettingsService", () => {
       const reload = await harness.settings.reload();
       expectOk(reload);
       expect(harness.settings.getSlice(calendarSlice).state.dow).toBe(6);
+    });
+
+    it("repairs a deep field on reload as on boot", async () => {
+      const harness = await testContainer({
+        modules: [testSettingsModule({ collections: [boardCollection] })],
+        data: { boards: { main: { name: "Main", lines: boardLines() } } },
+        allow: { dataRepair: true },
+      });
+      const record = harness.settings.recordOf(boardCollection);
+      const stored = boardLines();
+      stored[0][1].link = "future";
+      await harness.data.save({ version: CURRENT_VERSION, boards: { main: { name: "Main", lines: stored } } });
+
+      expectOk(await harness.settings.reload());
+
+      const expected = boardLines();
+      expected[0][1].link = "none";
+      expect(record.main).toEqual({ name: "Main", lines: expected });
     });
 
     it("applies externally added collection entries through the recordOf reference", async () => {
