@@ -75,18 +75,22 @@ interface CanvasBoxes {
   preview: Box;
   /** The width .stage leaves for the cell, inside its own padding. */
   stageContentWidth: number;
+  /** The cell's width at full magnification, from the canvas's own custom properties. */
+  fullCellWidth: number;
 }
 
 // Throws rather than returning zeroes for a missing element: two absent boxes are equal, and
 // every comparison below would pass on a canvas that never rendered.
 async function canvasBoxes(): Promise<CanvasBoxes> {
-  const { cell, preview, stageContentWidth } = await browser.execute(() => {
+  const { cell, preview, stageContentWidth, fullCellWidth } = await browser.execute(() => {
     function box(selector: string): Box | null {
       const rect = document.querySelector(selector)?.getBoundingClientRect();
       return rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
     }
     const stage = document.querySelector<HTMLElement>(".decoration-canvas .stage");
     const styles = stage ? getComputedStyle(stage) : null;
+    const canvas = document.querySelector<HTMLElement>(".decoration-canvas");
+    const canvasStyles = canvas ? getComputedStyle(canvas) : null;
     return {
       cell: box(".decoration-canvas .cell"),
       preview: box(".decoration-canvas .decoration-preview"),
@@ -94,12 +98,16 @@ async function canvasBoxes(): Promise<CanvasBoxes> {
         stage && styles
           ? stage.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight)
           : null,
+      fullCellWidth: canvasStyles
+        ? Number.parseFloat(canvasStyles.getPropertyValue("--cell-source-size")) *
+          Number.parseFloat(canvasStyles.getPropertyValue("--cell-max-magnification"))
+        : null,
     };
   });
-  if (!cell || !preview || stageContentWidth === null) {
-    throw new StyleCanvasMissingError({ cell, preview, stageContentWidth });
+  if (!cell || !preview || stageContentWidth === null || !fullCellWidth) {
+    throw new StyleCanvasMissingError({ cell, preview, stageContentWidth, fullCellWidth });
   }
-  return { cell, preview, stageContentWidth };
+  return { cell, preview, stageContentWidth, fullCellWidth };
 }
 
 function sameBox({ cell, preview }: CanvasBoxes): boolean {
@@ -840,7 +848,10 @@ describe("settings", () => {
       it("at the canvas column's own width", async () => {
         await openStyleCanvas();
 
-        expectSameBox(await canvasBoxes());
+        // As large as the column allows, so a collapsed cell with an unscaled preview cannot pass.
+        const boxes = await canvasBoxes();
+        expect(boxes.cell.width).toBeCloseTo(Math.min(boxes.fullCellWidth, boxes.stageContentWidth), 0);
+        expectSameBox(boxes);
       });
 
       // A column narrower than the full-size cell shrinks the cell, which a fixed scale factor
