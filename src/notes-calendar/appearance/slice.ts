@@ -17,7 +17,7 @@ export const appearanceSliceSchema = v.object({
     color: v.optional(colorSchema, () => ({ ...activeColor })),
     background: v.optional(colorSchema, () => ({ ...activeBackground })),
   }),
-  selectedRing: v.optional(colorSchema, { type: "theme", name: "interactive-accent" }),
+  selectedRing: v.optional(colorSchema, () => ({ ...activeBackground })),
 });
 
 export type AppearanceSliceState = v.InferOutput<typeof appearanceSliceSchema>;
@@ -28,6 +28,6 @@ export const appearanceSlice = defineSlice<"appearance", typeof appearanceSliceS
   {
     today: { color: todayColor, background: todayBackground },
     active: { color: activeColor, background: activeBackground },
-    selectedRing: { type: "theme", name: "interactive-accent" },
+    selectedRing: activeBackground,
   },
 );

@@ -23,7 +23,7 @@ export const accentFill = (): ColorSettings => ({ type: "theme", name: "interact
 export const accentInk = (): ColorSettings => ({ type: "theme", name: "text-accent" });
 
 export const borderSideSchema = v.object({
-  show: v.optional(v.boolean(), true),
+  show: v.optional(v.boolean(), false),
   width: v.optional(v.pipe(v.number(), v.minValue(0)), 1),
   color: v.optional(colorSchema, accentInk),
   style: v.optional(v.string(), "solid"),
@@ -32,10 +32,12 @@ export type BorderSide = v.InferOutput<typeof borderSideSchema>;
 
 export const defaultBorderSide = (): BorderSide => ({ show: true, width: 1, color: accentInk(), style: "solid" });
 
-const backgroundStyle = v.object({ type: discriminant("background"), color: v.optional(colorSchema, accentFill) });
-const colorStyle = v.object({ type: discriminant("color"), color: v.optional(colorSchema, accentInk) });
+const onlyItsColor = v.pipe(colorSchema, climb("a background or color style is only its color"));
+const backgroundStyle = v.object({ type: discriminant("background"), color: onlyItsColor });
+const colorStyle = v.object({ type: discriminant("color"), color: onlyItsColor });
 
-const borderSide = v.optional(borderSideSchema, defaultBorderSide);
+// A repair never shows more than the user wrote, so a lost side comes back hidden.
+const borderSide = v.optional(borderSideSchema, () => ({ ...defaultBorderSide(), show: false }));
 const borderStyle = v.object({
   type: discriminant("border"),
   border: v.optional(v.union([v.literal("uniform"), v.literal("different")]), "uniform"),
@@ -78,8 +80,6 @@ const cornerStyle = v.object({
 
 const iconStyle = v.object({
   type: discriminant("icon"),
-  // A stored icon name is user data typed into UiIconSuggest, so it stays a free-form string
-  // rather than coming from src/ui/icons.ts.
   icon: v.optional(v.string(), "star"),
   placement_x: v.optional(placementX, "center"),
   placement_y: v.optional(placementY, "top"),

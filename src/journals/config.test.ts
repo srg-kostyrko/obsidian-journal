@@ -717,6 +717,34 @@ describe("journal decoration repair on load", () => {
       { ...decoration, styles: [{ ...shape, color: buildStyle("shape").color }, buildStyle("background")] },
     ]);
   });
+
+  it("a background style with an unreadable color is dropped, keeping the other styles and the conditions", async () => {
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ type: "background", color: { type: "custom", color: 5 } } as never, buildStyle("shape")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([{ ...decoration, styles: [buildStyle("shape")] }]);
+  });
+
+  it("a border side whose visibility is unreadable is hidden, leaving the other sides alone", async () => {
+    const visible = { show: true, width: 2, color: { type: "custom", color: "#ff0000" }, style: "dashed" } as const;
+    const border = buildStyle("border", { border: "different", left: visible, right: visible, top: visible });
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ ...border, bottom: { ...visible, show: "yes" } } as never],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([
+      { ...decoration, styles: [{ ...border, bottom: { ...visible, show: false } }] },
+    ]);
+  });
 });
 
 const configuredNoteletType = () =>
