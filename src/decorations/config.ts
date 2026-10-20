@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { whole } from "@/settings/repair";
 import { taskQuestionSchema } from "@/tasks/question";
 
 import { dateConditionSchema } from "./date-condition";
@@ -235,7 +236,10 @@ export type CalendarDecorationCondition = v.InferOutput<typeof calendarCondition
 
 export const calendarDecorationSchema = v.object({
   mode: v.union([v.literal("and"), v.literal("or")]),
-  conditions: v.array(calendarConditionSchema),
+  conditions: v.pipe(
+    v.array(calendarConditionSchema),
+    whole("a decoration missing one condition matches different days"),
+  ),
   styles: v.array(decorationStyleSchema),
 });
 export type CalendarDecoration = v.InferOutput<typeof calendarDecorationSchema>;
@@ -255,7 +259,10 @@ export type JournalDecorationHasNoteletCondition = v.InferOutput<typeof hasNotel
 
 export const decorationSchema = v.object({
   mode: v.union([v.literal("and"), v.literal("or")]),
-  conditions: v.array(decorationConditionSchema),
+  conditions: v.pipe(
+    v.array(decorationConditionSchema),
+    whole("a decoration missing one condition matches different days"),
+  ),
   styles: v.array(decorationStyleSchema),
 });
 export type JournalDecoration = v.InferOutput<typeof decorationSchema>;

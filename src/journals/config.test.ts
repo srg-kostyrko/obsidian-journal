@@ -2,7 +2,7 @@ import * as v from "valibot";
 import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
-import { buildDecoration, buildStyle } from "@/decorations/testing";
+import { buildCondition, buildDecoration, buildStyle } from "@/decorations/testing";
 import { testContainer } from "@/testing";
 
 import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
@@ -656,7 +656,32 @@ async function loadJournal(raw: unknown): Promise<ReturnType<JournalsRepository[
   return harness.resolve(JournalsRepository).get("daily");
 }
 
+const keptDecoration = () =>
+  buildDecoration({
+    mode: "or",
+    conditions: [buildCondition("weekday", { weekdays: [1] })],
+    styles: [buildStyle("color")],
+  });
+
 describe("journal decoration repair on load", () => {
+  it.each([
+    ["an unknown condition type", { type: "moon-phase" }],
+    [
+      "a note-size condition with a negative threshold",
+      { type: "note-size", unit: "words", condition: "gt", value: -1 },
+    ],
+  ])("a decoration with %s is dropped whole, keeping its sibling", async (_label, bad) => {
+    const broken = buildDecoration({
+      conditions: [buildCondition("has-note"), bad as never],
+      styles: [buildStyle("color")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [broken, keptDecoration()] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([keptDecoration()]);
+  });
+
   it("a journal whose only decoration has a bad condition keeps no decoration, not the seeded default", async () => {
     const broken = buildDecoration({ conditions: [{ type: "moon-phase" } as never], styles: [buildStyle("color")] });
     const raw = fixedJournal("daily", { type: "day" }, { decorations: [broken] });
