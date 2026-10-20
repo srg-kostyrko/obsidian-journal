@@ -1,4 +1,4 @@
-import { browser, expect } from "@wdio/globals";
+import { type $, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { UnsettledReadError } from "../support/errors.js";
@@ -26,6 +26,21 @@ async function settled<T>(read: () => Promise<T | null>, what: string): Promise<
   return value;
 }
 
+type HoverTarget = ReturnType<typeof $>;
+
+// The popover lives only while the pointer sits on its badge, and the pointer is session state. A
+// sibling worker's Obsidian boot can cover this window at any moment; the OS then reports the
+// pointer gone, the badge's mouseleave unmounts the popover, and a pointer that has not moved never
+// reopens it. So no read trusts a hover it did not just make: every attempt parks the pointer off
+// the grid, lets the previous popover close, and crosses into the badge afresh. False means the
+// leftover is still open, and the caller's poll tries again.
+async function hoverAfresh(badge: HoverTarget, popover: HoverTarget): Promise<boolean> {
+  await browser.action("pointer").move({ duration: 0, x: 0, y: 0 }).perform();
+  if (await popover.isExisting()) return false;
+  await badge.moveTo();
+  return true;
+}
+
 // The popover-walk test fails on a nightly leg now and then with the popover simply gone, and does
 // not reproduce locally. Every way it can go is a different event: a point that misses the popover
 // hit-tests elsewhere, a real crossing out fires the badge's mouseleave toward that element, the OS
@@ -50,10 +65,11 @@ async function recordPopoverLoss(anchor: string, target: { x: number; y: number 
           `popover=${JSON.stringify(popover?.getBoundingClientRect())} hit=${hit?.tagName}.${hit?.className} ` +
           `inPopover=${popover?.contains(hit) ?? false} focus=${document.hasFocus()}`,
       );
-      if (badge === null) return;
+      // Every retry re-records the hit test, but the listeners go on once, or one loss logs N times.
+      if (!(badge instanceof HTMLElement) || badge.dataset.e2eTrail !== undefined) return;
+      badge.dataset.e2eTrail = "";
 
-      badge.addEventListener("mouseleave", (event) => {
-        const mouse = event as MouseEvent;
+      badge.addEventListener("mouseleave", (mouse) => {
         const related = mouse.relatedTarget as Element | null;
         log(
           `badge mouseleave trusted=${mouse.isTrusted} at=${mouse.clientX},${mouse.clientY} ` +
@@ -120,6 +136,7 @@ describe("decoration mark limit", () => {
     const cell = calendar.cell(dayAnchor(DAY));
     const badge = cell.$('.place-right_top [data-testid="mark-overflow"]');
     await badge.waitForDisplayed({ timeoutMsg: "the overflow badge did not render" });
+    const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
 
     // moveTo() resolves the badge's centre at call time, so a hover sent while the grid is still
     // laying its marks out lands beside the badge and is simply lost — there is no second pointer
@@ -130,7 +147,7 @@ describe("decoration mark limit", () => {
     // failure on a nightly leg. Re-hovering is what the retry needs — a replaced badge sits under
     // a pointer that has not moved, so no mouseenter reopens the popover on its own.
     const marks = await settled(async () => {
-      await badge.moveTo();
+      if (!(await hoverAfresh(badge, popover))) return null;
       return browser.execute((anchor: string) => {
         const selector = `.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"] .place-right_top`;
         const slot = document.querySelector(selector);
@@ -141,6 +158,9 @@ describe("decoration mark limit", () => {
         // popover copy first and compare it against itself.
         const cellMark = slot?.querySelector(":scope > .shape-decoration");
         if (popover == null || popoverMark == null || cellMark == null) return null;
+        // Placement is measured a tick after mount, once the marks' sizes are written; a fresh
+        // hover read before then would compare a popover mark that has no size yet.
+        if (!popover.classList.contains("mark-overflow__popover--placed")) return null;
         const cellHeight = cellMark.getBoundingClientRect().height;
         // A mark still waiting on layout measures zero, and the ratio below is satisfied by two
         // zeroes — so an unmeasured mark is "not painted yet", the same as a missing one.
@@ -174,43 +194,36 @@ describe("decoration mark limit", () => {
     const popover = cell.$('.place-right_top [data-testid="mark-overflow-popover"]');
 
     // The test above leaves the pointer parked on this same badge with its popover still open, and
-    // the popover opens on `mouseenter`, which never fires again for a pointer that has not left.
-    // So this test inherited its starting state instead of creating it, and had no way back: on
-    // the one nightly leg where the carried-over popover was gone, a move onto a badge the pointer
-    // was already inside opened nothing and the wait ran to its timeout. Park the pointer off the
-    // grid first so the hover below is a real crossing.
-    await browser.action("pointer").move({ duration: 0, x: 0, y: 0 }).perform();
-    await browser.waitUntil(async () => !(await popover.isExisting()), {
-      timeoutMsg: "the popover the previous test left open never closed",
-    });
-
-    // moveTo() resolves the badge's centre at call time, so a hover sent while the grid is still
-    // laying its marks out lands beside the badge and is simply lost. Re-hover until the popover
-    // opens, the way the test above does.
+    // the popover opens on `mouseenter`, which never fires again for a pointer that has not left —
+    // so every attempt starts from a real crossing (hoverAfresh), never from inherited state.
+    // The whole walk is one attempt: hover, wait for the popover's placement, step one pixel past
+    // the badge, check the popover survived. A hover lost anywhere in it is re-driven by the next
+    // attempt rather than waited out. A popover that is not flush with its badge fails every
+    // attempt, so the behavior stays falsifiable.
     // The popover element is rendered before its placement offset is computed, and it stays
     // `visibility: hidden` until then. Moving the pointer while it is hidden lands on the cell
     // behind, fires the badge's mouseleave, and unmounts the popover before the pointer can walk
-    // into it. Wait for visible placement, not just DOM existence.
+    // into it. So the walk starts only from a displayed popover.
     await browser.waitUntil(
       async () => {
-        await badge.moveTo();
-        return popover.isDisplayed();
+        if (!(await hoverAfresh(badge, popover))) return false;
+        if (!(await popover.isDisplayed())) return false;
+
+        // Read the badge's box after the hover, so it is the settled one the pointer is sitting in.
+        // One pixel past its border box: with the popover flush against the badge that point lands
+        // inside the popover; with any gap it lands in the calendar cell behind, which is not a
+        // descendant of the badge and fires its mouseleave.
+        const location = await badge.getLocation();
+        const size = await badge.getSize();
+        const badgeCenterX = Math.round(location.x + size.width / 2);
+        const justBelowBadge = Math.round(location.y + size.height) + 1;
+
+        await recordPopoverLoss(dayAnchor(DAY), { x: badgeCenterX, y: justBelowBadge });
+        await browser.action("pointer").move({ duration: 0, x: badgeCenterX, y: justBelowBadge }).perform();
+        return popover.isExisting();
       },
-      { timeoutMsg: "the popover did not open before the pointer moved into it" },
+      { timeoutMsg: "the popover closed as the pointer moved from the badge into it" },
     );
-
-    // Read the badge's box after the hover, so it is the settled one the pointer is sitting in.
-    // One pixel past its border box: with the popover flush against the badge that point lands
-    // inside the popover; with any gap it lands in the calendar cell behind, which is not a
-    // descendant of the badge and fires its mouseleave.
-    const location = await badge.getLocation();
-    const size = await badge.getSize();
-    const badgeCenterX = Math.round(location.x + size.width / 2);
-    const justBelowBadge = Math.round(location.y + size.height) + 1;
-
-    await recordPopoverLoss(dayAnchor(DAY), { x: badgeCenterX, y: justBelowBadge });
-    await browser.action("pointer").move({ duration: 0, x: badgeCenterX, y: justBelowBadge }).perform();
-    await expect(popover).toExist();
   });
 
   // A popover hangs off its badge's right edge, so the left_bottom badge of a first-column cell
@@ -237,25 +250,22 @@ describe("decoration mark limit", () => {
     const badge = cell.$('.place-left_bottom [data-testid="mark-overflow"]');
     await badge.waitForDisplayed({ timeoutMsg: "the left_bottom overflow badge did not render" });
     const popover = cell.$('.place-left_bottom [data-testid="mark-overflow-popover"]');
-    await browser.waitUntil(
-      async () => {
-        await badge.moveTo();
-        return popover.isExisting();
-      },
-      { timeoutMsg: "the overflow popover did not open on hover" },
-    );
 
-    const edges = await settled(
-      () =>
-        browser.execute(() => {
-          const el = document.querySelector('.place-left_bottom [data-testid="mark-overflow-popover"]');
-          const leaf = el?.closest(".workspace-leaf-content");
-          return el == null || leaf == null
-            ? null
-            : { popover: el.getBoundingClientRect().left, leaf: leaf.getBoundingClientRect().left };
-        }),
-      "the popover and the surface it draws over",
-    );
+    // The hover and the read are one attempt, so a popover lost between them is re-hovered, not
+    // waited out. Only a placed popover counts: before its offset lands it sits where it would
+    // overflow, which is the very edge this test measures.
+    const edges = await settled(async () => {
+      if (!(await hoverAfresh(badge, popover))) return null;
+      return browser.execute((cellAnchor: string) => {
+        const el = document.querySelector(
+          `[data-anchor="${CSS.escape(cellAnchor)}"] .place-left_bottom [data-testid="mark-overflow-popover"]`,
+        );
+        const leaf = el?.closest(".workspace-leaf-content");
+        return el == null || leaf == null || !el.classList.contains("mark-overflow__popover--placed")
+          ? null
+          : { popover: el.getBoundingClientRect().left, leaf: leaf.getBoundingClientRect().left };
+      }, anchor);
+    }, "the popover and the surface it draws over");
 
     expect(edges.popover).toBeGreaterThanOrEqual(edges.leaf);
   });
