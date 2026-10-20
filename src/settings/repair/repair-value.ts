@@ -83,7 +83,10 @@ function firstObjectOption(variant: SchemaNode): AnySchema | undefined {
 export function childSchemaOf(parent: AnySchema, key: string | number, value: unknown): AnySchema | undefined {
   for (let current: AnySchema | undefined = parent; current !== undefined;) {
     const shape: SchemaNode = structural(current);
-    if (OBJECTS.has(shape.type)) return typeof key === "string" ? (shape.entries?.[key] ?? shape.rest) : undefined;
+    if (OBJECTS.has(shape.type)) {
+      if (typeof key !== "string") return undefined;
+      return shape.entries !== undefined && Object.hasOwn(shape.entries, key) ? shape.entries[key] : shape.rest;
+    }
     if (shape.type === "array") return typeof key === "number" ? shape.item : undefined;
     if (shape.type === "record") return typeof key === "string" ? shape.value : undefined;
     if (shape.type !== "variant") return undefined;
@@ -157,7 +160,7 @@ function truncateAtMarkers(schema: AnySchema, root: unknown, path: RepairPath): 
     if (child === undefined) return path;
     const marker = markerAlong(child);
     if (marker === "climb") return path.slice(0, index);
-    if (marker === "whole" && index < path.length - 1) return path.slice(0, index);
+    if (marker === "whole") return path.slice(0, index);
     parentSchema = child;
     parentValue = childOf(parentValue, key);
   }
@@ -180,27 +183,35 @@ export function repairValue<TSchema extends AnySchema>(
 
   const apply = (start: RepairPath): boolean => {
     let target = start;
+    // Set when the target is a list that refused to drop its last live item: deleting or
+    // defaulting that list would empty it just the same, so only dropping it from its own
+    // parent list, or climbing past it, is allowed.
+    let keepList = false;
     for (;;) {
       const key = target.at(-1);
       if (key === undefined) return false;
       const parentPath = target.slice(0, -1);
       const container = valueAt(working, parentPath);
-      const replacement = defaultAt(target, childOf(container, key));
-      if (replacement !== undefined && (Array.isArray(container) || isRecord(container))) {
-        (container as Record<string | number, unknown>)[key] = structuredClone(replacement.value);
-        break;
-      }
-      if (isRecord(container) && typeof key === "string") {
-        Reflect.deleteProperty(container, key);
-        break;
+      if (!keepList) {
+        const replacement = defaultAt(target, childOf(container, key));
+        if (replacement !== undefined && (Array.isArray(container) || isRecord(container))) {
+          (container as Record<string | number, unknown>)[key] = structuredClone(replacement.value);
+          break;
+        }
+        if (isRecord(container) && typeof key === "string") {
+          Reflect.deleteProperty(container, key);
+          break;
+        }
       }
       // Dropping the last live item would turn "these items" into "no items", which a list's
       // default usually reads as "any"; the parent is the honest unit to lose instead.
-      if (Array.isArray(container) && typeof key === "number" && liveCount(container) > 1) {
+      const inList = Array.isArray(container) && typeof key === "number";
+      if (inList && liveCount(container) > 1) {
         container[key] = DROPPED;
         break;
       }
       target = truncateAtMarkers(schema, working, parentPath);
+      keepList = inList && target.length === parentPath.length;
     }
     applied = applied.filter((path) => !isPrefix(target, path));
     applied.push(target);

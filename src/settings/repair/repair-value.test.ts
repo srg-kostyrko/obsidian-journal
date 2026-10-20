@@ -2,7 +2,7 @@ import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import { climb, whole } from "./markers";
-import { defaultsFrom, repairValue, type DefaultAt } from "./repair-value";
+import { childSchemaOf, defaultsFrom, repairValue, type DefaultAt } from "./repair-value";
 
 const noDefaults = defaultsFrom({});
 const typeDefault: DefaultAt = (path) => (path.at(-1) === "type" ? { value: "a" } : undefined);
@@ -59,6 +59,16 @@ describe("repairValue", () => {
     expect(result).toEqual({ value: { rules: [{ ids: ["x"] }] }, fields: ["rules.0"] });
   });
 
+  it("drops the item rather than empty a non-empty list whose default is empty", () => {
+    const schema = v.object({
+      conditions: v.array(v.object({ typeIds: v.optional(v.array(v.string()), () => []) })),
+    });
+
+    const result = repairValue(schema, { conditions: [{ typeIds: [7] }, { typeIds: ["b"] }] }, noDefaults);
+
+    expect(result).toEqual({ value: { conditions: [{ typeIds: ["b"] }] }, fields: ["conditions.0"] });
+  });
+
   it("honours climb on a discriminant", () => {
     const schema = v.object({
       items: v.array(
@@ -97,6 +107,44 @@ describe("repairValue", () => {
       value: { decorations: [{ conditions: [{ day: 3 }], color: "blue" }] },
       fields: ["decorations.0"],
     });
+  });
+
+  it("repairs a whole list of the wrong shape at its parent instead of defaulting it", () => {
+    const schema = v.object({
+      decorations: v.array(
+        v.object({
+          conditions: v.optional(v.pipe(v.array(v.object({ day: v.number() })), whole("conditions")), () => []),
+          color: v.string(),
+        }),
+      ),
+    });
+    const raw = {
+      decorations: [
+        { conditions: "bad", color: "red" },
+        { conditions: [{ day: 3 }], color: "blue" },
+      ],
+    };
+
+    const result = repairValue(schema, raw, noDefaults);
+
+    expect(result).toEqual({
+      value: { decorations: [{ conditions: [{ day: 3 }], color: "blue" }] },
+      fields: ["decorations.0"],
+    });
+  });
+
+  it("reads a marker through a record", () => {
+    const schema = v.object({
+      byId: v.record(
+        v.string(),
+        v.object({ name: v.string(), kind: v.optional(v.pipe(v.picklist(["x", "y"]), climb("kind")), "x") }),
+      ),
+    });
+    const raw = { byId: { first: { name: "f", kind: "zzz" }, other: { name: "o", kind: "y" } } };
+
+    const result = repairValue(schema, raw, noDefaults);
+
+    expect(result).toEqual({ value: { byId: { other: { name: "o", kind: "y" } } }, fields: ["byId.first"] });
   });
 
   it("climbs when a default fails an object-level check", () => {
@@ -205,5 +253,11 @@ describe("repairValue", () => {
     repairValue(linesSchema, raw, noDefaults);
 
     expect(raw).toEqual(before);
+  });
+});
+
+describe("childSchemaOf", () => {
+  it("does not resolve a prototype key as an object entry", () => {
+    expect(childSchemaOf(v.object({ a: v.string() }), "constructor", {})).toBeUndefined();
   });
 });
