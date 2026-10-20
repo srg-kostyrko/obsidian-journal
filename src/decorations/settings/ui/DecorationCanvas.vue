@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, useId, watch } from "vue";
+import { useElementSize } from "@vueuse/core";
+import { computed, ref, useId, useTemplateRef, watch } from "vue";
 
 import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
@@ -42,6 +43,17 @@ const inspectorId = useId();
 const SIDES: readonly BorderSideName[] = ["top", "right", "bottom", "left"];
 
 const previewDay = new Date().getDate();
+
+// The magnification is measured rather than fixed: a canvas column narrower than the full-size
+// cell shrinks the cell, and a constant scale would then leave the preview overhanging the region
+// overlay it is supposed to sit under. 26px is the cell height floor NotesCalendarCell reserves.
+const CELL_SOURCE_SIZE_PX = 26;
+const canvasStyle = { "--cell-source-size": `${CELL_SOURCE_SIZE_PX}px` };
+const cell = useTemplateRef<HTMLElement>("cell");
+const { width: cellWidth } = useElementSize(cell);
+const cellStyle = computed(() =>
+  cellWidth.value > 0 ? { "--cell-magnification": cellWidth.value / CELL_SOURCE_SIZE_PX } : {},
+);
 
 const slotIndexOfActive = computed(() => props.styles.findLastIndex((s) => s.type === activeLayer.value));
 const activeName = computed(() => `${props.name}.${slotIndexOfActive.value}`);
@@ -161,11 +173,11 @@ function removeActive(): void {
 </script>
 
 <template>
-  <div class="decoration-canvas">
+  <div class="decoration-canvas" :style="canvasStyle">
     <DecorationLayerStrip v-model="activeLayer" :occupied="slots.occupied.value" :panel-id="inspectorId" />
 
     <div class="stage">
-      <div class="cell">
+      <div ref="cell" class="cell" :style="cellStyle">
         <DecorationPreview :styles="styles">{{ previewDay }}</DecorationPreview>
         <CanvasRegionWhole
           v-if="activeLayer === 'background' || activeLayer === 'color'"
@@ -225,9 +237,9 @@ function removeActive(): void {
      cell really is and the whole thing is scaled up. Stretching the preview over the square
      instead leaves a 1px border a hairline and a 0.4em dot a speck, twelve times smaller than
      the share of the cell they will really occupy — which is the one thing the canvas exists
-     to show. 26px is the cell height floor NotesCalendarCell reserves. */
-  --cell-source-size: 26px;
-  --cell-magnification: 12;
+     to show. 12 is the most it is magnified; the script sets --cell-source-size and the
+     measured scale. */
+  --cell-max-magnification: 12;
 
   display: flex;
   flex-direction: column;
@@ -240,21 +252,26 @@ function removeActive(): void {
 }
 .cell {
   position: relative;
-  width: calc(var(--cell-source-size) * var(--cell-magnification));
-  height: calc(var(--cell-source-size) * var(--cell-magnification));
+  width: calc(var(--cell-source-size) * var(--cell-max-magnification));
+  max-width: 100%;
+  aspect-ratio: 1;
+  /* Sized by max-width alone: a flex shrink or a cross-axis stretch would resize one axis
+     and leave the other on the aspect ratio's answer for the unshrunk width. */
+  flex-shrink: 0;
+  align-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 /* The overlay regions are absolutely positioned against .cell, so the scaled preview must
-   land on exactly the same box or the two coordinate spaces drift apart (see the CRITICAL 1
-   review finding). It does: a centered source-sized box scaled about its own centre. The
-   preview's own 2em floor would fight that, so the box is stated outright instead. */
+   land on exactly the same box or the two coordinate spaces drift apart. It does: a centered
+   source-sized box scaled about its own centre. The preview's own 2em floor would fight that,
+   so the box is stated outright instead. */
 .cell :deep(.decoration-preview) {
   width: var(--cell-source-size);
   height: var(--cell-source-size);
   min-width: 0;
   min-height: 0;
-  transform: scale(var(--cell-magnification));
+  transform: scale(var(--cell-magnification, var(--cell-max-magnification)));
 }
 </style>

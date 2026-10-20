@@ -47,6 +47,9 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
+- The decoration editor's style canvas now draws its preview lined up with the regions you click,
+  instead of overhanging them whenever the editor was too narrow for the full-size canvas — which
+  a 960px-wide window already was. The canvas shrinks to fit its column instead.
 - Plugin API consumers no longer receive `noteAdded` and `noteRemoved` for a note that does not exist whenever a code block preview is shown in a journal's settings.
 
 ### Changed
