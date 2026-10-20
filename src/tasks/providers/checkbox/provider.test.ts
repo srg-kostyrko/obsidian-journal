@@ -371,6 +371,13 @@ describe("CheckboxTaskProvider", () => {
   });
 });
 
+// Past boot: reads run only once the index is ready, and these tests are about what happens after.
+async function live() {
+  const built = await build();
+  built.harness.resolve(JournalsIndex).markReady();
+  return built;
+}
+
 function items(listLines: readonly number[]): NoteStructure {
   return structure({ listItems: listLines.map((line) => ({ marker: " ", line, endLine: line, parent: null })) });
 }
@@ -386,7 +393,7 @@ function datedLines(published: readonly TaskItem[] = []): Record<number, string 
 const ownedText = ["# Day", "", "intro", "", "- [ ] Pay 📅 2026-10-24", "- [ ] Call"].join("\n");
 
 async function ownedDay() {
-  const built = await build();
+  const built = await live();
   built.host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
   built.notes.seed(dayPath, ownedText);
   built.structures.setStructure(dayPath, items([4, 5]));
@@ -405,7 +412,7 @@ async function ownedDay() {
 
 describe("CheckboxTaskProvider date relation", () => {
   it("a metadata change in a note no journal owns publishes its dated lines", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
     structures.setStructure(projectPath, items([1]));
@@ -420,7 +427,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("an undated checkbox in a note no journal owns publishes nothing", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, "# Ideas\n- [ ] Someday");
     structures.setStructure(projectPath, items([1]));
@@ -432,7 +439,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("an owned note republishes at once, then again with its dates", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
     notes.seed(dayPath, ownedText);
     structures.setStructure(dayPath, items([4, 5]));
@@ -455,7 +462,7 @@ describe("CheckboxTaskProvider date relation", () => {
   // The undated item above the dated one is what makes this falsifiable: after the insert it sits
   // on the line the cached date is keyed by, so a cache applied without its line stamp dates it.
   it("a line inserted above a dated line ends with dates on the right line", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
     notes.seed(dayPath, ["# Day", "", "intro", "- [ ] Call", "- [ ] Pay 📅 2026-10-24"].join("\n"));
     structures.setStructure(dayPath, items([3, 4]));
@@ -489,7 +496,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("removing a note's last checkbox clears its dates", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
     structures.setStructure(projectPath, items([1]));
@@ -529,7 +536,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("a note that joins a journal gains its undated items; one that leaves keeps only dated ones", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, ownedText);
     structures.setStructure(projectPath, items([4, 5]));
@@ -554,7 +561,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("a read that a newer edit overtook is discarded", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, "");
     structures.setStructure(projectPath, items([1]));
@@ -571,7 +578,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("a failed or vanished read publishes nothing for that path", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
     structures.setStructure(projectPath, items([1]));
@@ -593,7 +600,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("an excluded note no journal owns is not read", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
     structures.setStructure(projectPath, items([1]));
@@ -619,7 +626,7 @@ describe("CheckboxTaskProvider date relation", () => {
 
   it("rename moves a non-owned note's dated items; delete clears them", async () => {
     const moved = "project/renamed.md" as VaultPath;
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start();
     notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
     structures.setStructure(projectPath, items([1]));
@@ -641,7 +648,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("drops a read still in flight when its disposer runs", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     const stop = provider.start();
     notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
     structures.setStructure(projectPath, items([1]));
@@ -656,7 +663,7 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 
   it("stops reading once its disposer runs", async () => {
-    const { host, structures, notes, provider } = await build();
+    const { host, structures, notes, provider } = await live();
     provider.start()();
     notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
     structures.setStructure(projectPath, items([1]));
@@ -832,6 +839,52 @@ describe("CheckboxTaskProvider boot walk", () => {
     expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
   });
 
+  it("a checkbox settings change reads a note taken out of Excluded files", async () => {
+    const { host, notes, provider, journals, slice } = await vault();
+    notes.ignore(projectPath);
+    provider.start();
+    journals.markReady();
+    await flush();
+    expect(notes.reads).not.toContain(projectPath);
+
+    notes.unignore(projectPath);
+    slice.state.rule = { mode: "or", conditions: [] };
+    await nextTick();
+    await flush();
+
+    expect(notes.reads.filter((path) => path === projectPath)).toHaveLength(1);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("a full refill from the host reads an excluded note a journal has taken over", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.ignore(projectPath);
+    provider.start();
+    journals.markReady();
+    await flush();
+    expect(notes.reads).not.toContain(projectPath);
+
+    host.owned.set(projectPath, { path: projectPath, journalName: "Daily", rule: undefined });
+    host.emit({ kind: "all" });
+    await flush();
+
+    expect(notes.reads.filter((path) => path === projectPath)).toHaveLength(1);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+    expect(host.published.get(projectPath)?.at(0)?.relations).toEqual(["containment", "date"]);
+  });
+
+  it("a full refill reads nothing it has already read", async () => {
+    const { host, notes } = await walked();
+    const readsBefore = notes.reads.length;
+    host.publishes.length = 0;
+
+    host.emit({ kind: "all" });
+    await flush();
+
+    expect(notes.reads.length).toBe(readsBefore);
+    expect(host.publishes).toEqual(["all"]);
+  });
+
   it("a full refill from the host keeps a deleted journal's dated lines, now as no journal's", async () => {
     const { host } = await walked();
 
@@ -852,6 +905,23 @@ describe("CheckboxTaskProvider boot walk", () => {
 
     expect(host.published.has(projectPath)).toBe(false);
     expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+  });
+
+  it("a metadata change before the index is ready reads nothing; the walk reads it once ready", async () => {
+    const { host, notes, provider, journals } = await vault();
+    provider.start();
+
+    notes.emitMetadataChanged(projectPath);
+    host.emit({ kind: "note", path: dayPath });
+    await flush();
+
+    expect(notes.reads).toEqual([]);
+
+    journals.markReady();
+    await flush();
+
+    expect(notes.reads.toSorted()).toEqual([dayPath, projectPath].toSorted());
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
   });
 
   it("stops walking once its disposer runs", async () => {
@@ -898,6 +968,7 @@ describe("CheckboxTaskProvider hydration wiring", () => {
     });
     const journals = harness.resolve(JournalsIndex);
     journals.register({ journalName: "Daily", anchor: anchor("2026-09-22"), path });
+    journals.markReady();
     structures.setStructure(path, structure({ listItems: [{ marker: " ", line: 4, endLine: 4, parent: null }] }));
     harness.host.putFile(path, "one\ntwo\nthree\nfour\n- [ ] Water plants 📅 2026-09-25\n");
 

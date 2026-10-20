@@ -88,7 +88,10 @@ export class CheckboxTaskProvider implements TaskProvider {
     });
   }
 
+  // Nothing is read before the index is ready: the first index, a reindex and a sync catch-up each
+  // change every note at once, and the walk that readiness starts reads them one at a time.
   async #readDates(path: VaultPath): Promise<void> {
+    if (!this.#journals.isReady()) return;
     if (await this.#load(path)) this.#publish(path, this.#ownerOf(path));
   }
 
@@ -124,19 +127,30 @@ export class CheckboxTaskProvider implements TaskProvider {
   }
 
   // Sequential and silent: one note read at a time, and a single "all" publish at the end rather
-  // than one per note. Owned notes are read too — fill no longer dates them any other way.
+  // than one per note. Owned notes are read too — fill no longer dates them any other way. Cached
+  // notes are skipped, so a walk after the first reads only what the cache never held — a note taken
+  // out of Excluded files, or an excluded one a journal has since taken over — and publishes nothing
+  // when it read nothing.
   async #walk(): Promise<void> {
     const run = ++this.#walks;
     if (!this.#settings.state.enabled) return;
+    let read = false;
     for (const path of this.#notes.allMarkdownNotes()) {
       if (run !== this.#walks) return;
       if (this.#lineDates.has(path)) continue;
       const structure = this.#structure.get(path);
       if (structure.isNone() || structure.value.listItems.length === 0) continue;
       if (this.#ownerOf(path) === undefined && this.#notes.isUserIgnored(path)) continue;
+      read = true;
       await this.#load(path);
     }
-    if (run === this.#walks) this.#refillAll();
+    if (run === this.#walks && read) this.#refillAll();
+  }
+
+  // Obsidian announces no change to Excluded files, so a settings change or a full refill is when
+  // the walk looks again.
+  #rewalk(): void {
+    if (this.#journals.isReady()) void this.#walk();
   }
 
   #stopReading(): void {
@@ -177,7 +191,6 @@ export class CheckboxTaskProvider implements TaskProvider {
 
   start(): () => void {
     let disposed = false;
-    let enabled = this.#settings.state.enabled;
     this.#refillAll();
     // The registry starts before layout-ready, when the file list is partial and notes restored from
     // cached metadata emit no metadata-changed; index readiness is the signal that the walk is complete.
@@ -195,21 +208,21 @@ export class CheckboxTaskProvider implements TaskProvider {
     const stopSettingsWatch = watch(
       () => this.#settings.state,
       () => {
-        const was = enabled;
-        enabled = this.#settings.state.enabled;
         // Reads that land while off would be stale by the time it is back on, so the cache goes
         // with the switch and switching on walks the vault afresh.
-        if (!enabled) this.#stopReading();
+        if (!this.#settings.state.enabled) this.#stopReading();
         this.#refillAll();
-        if (enabled && !was && this.#journals.isReady()) void this.#walk();
+        this.#rewalk();
       },
       { deep: true },
     );
     const stopOwnedNotesWatch = this.#host.onOwnedNotesChanged((change) => {
       // A single note refills at once — it is one structure read, and a decoration repaints off it.
       if (change.kind === "note") this.#refreshPath(change.path);
-      else if (change.kind === "all") this.#refillAll();
-      else this.#refreshJournal(change.journalName);
+      else if (change.kind === "all") {
+        this.#refillAll();
+        this.#rewalk();
+      } else this.#refreshJournal(change.journalName);
     });
     // Every path, owned or not: the owned-note change above repaints structure at once, and the
     // read here is what brings the dates after it.

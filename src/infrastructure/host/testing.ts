@@ -195,6 +195,10 @@ export class FakeNotesService implements Pick<
     this.#ignored.add(path);
   }
 
+  unignore(path: VaultPath): void {
+    this.#ignored.delete(path);
+  }
+
   listFolders(): VaultPath[] {
     return [...this.#folders];
   }

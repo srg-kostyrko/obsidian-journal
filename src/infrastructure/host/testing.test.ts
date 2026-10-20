@@ -102,4 +102,12 @@ describe("FakeNotesService ignore", () => {
     expect(notes.isUserIgnored(target)).toBe(true);
     expect(notes.isUserIgnored("Other.md" as VaultPath)).toBe(false);
   });
+
+  it("unignore() lifts the mark", () => {
+    const notes = new FakeNotesService();
+    const target = "Private/diary.md" as VaultPath;
+    notes.ignore(target);
+    notes.unignore(target);
+    expect(notes.isUserIgnored(target)).toBe(false);
+  });
 });
