@@ -71,6 +71,9 @@ export class CheckboxTaskProvider implements TaskProvider {
     const structure = this.#structure.get(path);
     if (structure.isNone()) return [];
     const cached = this.#lineDates.get(path);
+    // Dates come only from this provider's own read, never from hydration: the index hydrates
+    // from the same lines, and a second parse there could disagree with the relation the item was
+    // indexed under.
     // Dates are keyed by line, so once the task lines have moved a cached entry would hang them on
     // whichever item now sits there; until the re-read lands the note fills undated instead.
     const lineDates = cached?.lines === lineStampOf(structure.value) ? cached.dates : undefined;
@@ -229,13 +232,5 @@ export class CheckboxTaskProvider implements TaskProvider {
       for (const stop of stopNoteWatches) stop();
       this.#stopReading();
     };
-  }
-
-  // TaskIndex.hydrate calls this once a line item's markdown exists — metadataCache carries no line
-  // text. Dates stay as fill set them: fill parsed the same lines, and a second parse here could
-  // disagree with the relation the item was indexed under.
-  hydrateItem(item: TaskItem, markdown: string): TaskItem {
-    if (item.display.kind !== "line") return item;
-    return { ...item, display: { ...item.display, markdown } };
   }
 }

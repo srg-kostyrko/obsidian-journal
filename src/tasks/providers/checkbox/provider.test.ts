@@ -3,7 +3,6 @@ import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
-import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
 import {
@@ -883,50 +882,6 @@ describe("CheckboxTaskProvider boot walk", () => {
     expect(host.published.get(dayPath)).toHaveLength(2);
     expect(datedLines(host.published.get(dayPath))).toEqual({});
     expect(host.published.get(projectPath) ?? []).toEqual([]);
-  });
-});
-
-describe("CheckboxTaskProvider.hydrateItem", () => {
-  const path = "a.md" as VaultPath;
-  function lineItem(): TaskItem {
-    return {
-      provider: CHECKBOX_PROVIDER_ID,
-      key: `${path}:0`,
-      path,
-      status: "todo",
-      relations: ["containment"],
-      capabilities: { movable: true, stampable: true, retargetable: false },
-      display: { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null },
-      dates: {},
-    };
-  }
-
-  it("fills markdown and keeps the dates fill found", async () => {
-    const { provider } = await build();
-    const dated: TaskItem = {
-      ...lineItem(),
-      relations: ["containment", "date"],
-      capabilities: { movable: true, stampable: true, retargetable: true },
-      dates: { due: "2026-09-25" as AnchorString },
-    };
-    const hydrated = provider.hydrateItem(dated, "- [ ] Water plants 📅 2026-09-26");
-    expect(hydrated.display).toMatchObject({ markdown: "- [ ] Water plants 📅 2026-09-26" });
-    expect(hydrated.dates).toEqual({ due: "2026-09-25" });
-    expect(hydrated.relations).toEqual(["containment", "date"]);
-    expect(hydrated.capabilities.retargetable).toBe(true);
-  });
-
-  it("does not date an item fill left undated", async () => {
-    const { provider } = await build();
-    const hydrated = provider.hydrateItem(lineItem(), "- [ ] Water plants 📅 2026-09-25");
-    expect(hydrated.dates).toEqual({});
-    expect(hydrated.capabilities.retargetable).toBe(false);
-  });
-
-  it("leaves a note-display item untouched, never reading display fields that don't exist on it", async () => {
-    const { provider } = await build();
-    const noteItem: TaskItem = { ...lineItem(), display: { kind: "note", path, title: "Ideas" } };
-    expect(provider.hydrateItem(noteItem, "irrelevant")).toBe(noteItem);
   });
 });
 
