@@ -205,18 +205,27 @@ export async function pickModalIcon(icon: string): Promise<void> {
 // Choose a frontmatter property in the open modal's UiPropertySuggest, whose popup Obsidian also
 // renders at the document root. The typing is retried because a just-seeded note reaches
 // metadataTypeManager's registry a beat after the vault write, and only a fresh input event
-// reopens the popup with the current candidates.
+// reopens the popup with the current candidates. The pick is retried with it: Obsidian closes the
+// popup on the input's blur, which a sibling worker's boot taking OS focus fires, and a WebDriver
+// click on the vanished row waits out 30s on the stale element before it throws (#541). So the
+// row's reachability is checked through WebDriver, but the click is dispatched in the page, where
+// finding the row and clicking it cannot be split by a blur.
 export async function pickModalProperty(name: string): Promise<void> {
   const input = activeModal().$(".ui-property-suggest input");
-  const row = $(`.journal-suggestion-property=${name}`);
   await browser.waitUntil(
     async () => {
       await input.setValue(name);
-      return row.isClickable();
+      if (!(await $(`.journal-suggestion-property=${name}`).isClickable())) return false;
+      return browser.execute((property) => {
+        const row = [...document.querySelectorAll<HTMLElement>(".journal-suggestion-property")].find(
+          (element) => element.textContent.trim() === property,
+        );
+        row?.click();
+        return row !== undefined;
+      }, name);
     },
-    { timeout: 5000, interval: 250, timeoutMsg: `the "${name}" property was never suggested` },
+    { timeout: 5000, interval: 250, timeoutMsg: `the "${name}" property was never picked` },
   );
-  await row.click();
 }
 
 // Choose a date in the open dialog's DatePicker. The trigger opens the picker as a SECOND dialog
