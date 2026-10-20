@@ -156,3 +156,48 @@ describe("the dated tasks a journal shows", () => {
     await rowTitled("Book the venue");
   });
 });
+
+// Obsidian's adapter removes every file under a trashed folder one by one, and the vault raises
+// "delete" for each before the folder's own — so the provider's per-path "deleted" handler is what
+// drops these lines, with no folder-level sweep needed.
+describe("a dated checkbox line in a trashed folder", () => {
+  const TRIP = "Scratch/Trip.md";
+  const GEAR = "Scratch/Gear/List.md";
+
+  before(async () => {
+    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    await seedNote(DAY_NOTE, hostNote("daily", LIST_DAY, FENCE_WITH_CHECKBOX));
+    await seedNote(TRIP, `- [ ] Pack the tent 📅 ${LIST_DAY}\n`);
+    await seedNote(GEAR, `- [ ] Buy a stove 📅 ${LIST_DAY}\n`);
+  });
+
+  it("leaves the day's listing once the folder holding it is trashed", async () => {
+    await openInReadingMode(DAY_NOTE);
+    await rowTitled("Pack the tent");
+    await rowTitled("Buy a stove");
+
+    const deleted = await browser.executeObsidian(async ({ app }) => {
+      const folder = app.vault.getFolderByPath("Scratch");
+      if (folder === null) return null;
+      const paths: string[] = [];
+      const ref = app.vault.on("delete", (file) => {
+        paths.push(file.path);
+      });
+      await app.fileManager.trashFile(folder);
+      app.vault.offref(ref);
+      return paths;
+    });
+    expect(deleted).toEqual(expect.arrayContaining([TRIP, GEAR, "Scratch"]));
+
+    await browser.waitUntil(
+      async () => {
+        const texts = await rowTexts();
+        return (
+          texts.some((text) => text.includes(CHECKBOX_TASK)) &&
+          texts.every((text) => !text.includes("Pack the tent") && !text.includes("Buy a stove"))
+        );
+      },
+      { timeoutMsg: "a line from the trashed folder is still listed" },
+    );
+  });
+});
