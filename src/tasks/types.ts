@@ -35,9 +35,9 @@ export interface TaskItem {
   readonly capabilities: TaskCapabilities;
   readonly display: TaskDisplay;
   readonly dates: Partial<Record<TaskDateRole, AnchorString>>;
-  // What surfaces filter a whole-note item on, captured at publish. Were they read live at query
-  // time, an edit to them would republish an equal item, the index would not bump, and no filter
-  // would recompute.
+  // What a whole-note item is filtered on, or a dated line gated on, captured at publish. Were they
+  // read live at query time, an edit to them would republish an equal item, the index would not
+  // bump, and no filter would recompute.
   readonly facts?: TaskFacts;
 }
 

@@ -8,6 +8,7 @@ import { fixedJournal } from "@/journals/testing";
 
 import { answerTaskQuestion, type TaskQuestionDependencies } from "./answer-question";
 import { buildTaskListing, type TaskListingDependencies } from "./listing";
+import { startedCheckboxes } from "./providers/checkbox/testing";
 import { DEFAULT_TASK_QUERY } from "./query";
 import { buildTaskItem } from "./testing";
 import { admitsSubject, type VisibilityRule } from "./visibility-rule/rule";
@@ -75,6 +76,8 @@ function build(options: {
   dated?: readonly TaskItem[];
   // Each journal's stored task-note rule, answered by the provider's own verdict.
   visibilityRules?: Partial<Record<string, VisibilityRule>>;
+  // A real provider's verdict, in place of the task-note rules above.
+  visibility?: TaskQuestionDependencies["visibility"];
 }): TaskQuestionDependencies {
   const { items = {}, notelets = [], journalFilter, structures = {}, dated = [], visibilityRules = {} } = options;
   return {
@@ -97,7 +100,7 @@ function build(options: {
         })),
     },
     structure: { get: (path) => Option.fromNullable(structures[path]) },
-    visibility: {
+    visibility: options.visibility ?? {
       admits: (item, journalNames) =>
         journalNames.length === 0 || journalNames.some((name) => admitsNote(visibilityRules[name], item)),
     },
@@ -412,6 +415,31 @@ describe("answerTaskQuestion", () => {
       });
       expect(askOf(dependencies, "Work", { quantifier: "none", status: "open" })).toBe(false);
       expect(askOf(dependencies, "Daily", { quantifier: "none", status: "open" })).toBe(true);
+    });
+  });
+
+  describe("dated checkbox visibility", () => {
+    it("a journal set to None does not light a cell for a dated checkbox line", async () => {
+      const project = "Projects/ideas.md" as VaultPath;
+      const { tasks, visibility } = await startedCheckboxes(
+        { [project]: { text: "# Ideas\n- [ ] Pay 📅 2026-09-22", lines: [1] } },
+        {
+          Work: fixedJournal("Work", { type: "day" }, {
+            tasks: { providers: { checkbox: { compose: "inherit", dated: { show: "none" } } } },
+          } as never),
+          Personal: fixedJournal("Personal", { type: "day" }),
+        },
+      );
+      const dependencies = build({ dated: tasks.datedIn(["due"], ANCHOR, ANCHOR), visibility });
+      const askOf = (journalName: string) =>
+        answerTaskQuestion(
+          dependencies,
+          { journalName, anchor: ANCHOR, path: null },
+          { ...BASE_QUESTION, status: "open" },
+        );
+
+      expect(askOf("Work")).toBe(false);
+      expect(askOf("Personal")).toBe(true);
     });
   });
 

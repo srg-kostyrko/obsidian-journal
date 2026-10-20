@@ -2,9 +2,11 @@ import * as v from "valibot";
 import { watch } from "vue";
 
 import { inject } from "@/infrastructure/di";
-import { NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex } from "@/journals/journals-index";
+import { JournalsRepository } from "@/journals/repository";
 import { SettingsService } from "@/settings";
+import { admitsSubject, referencedProperties } from "@/tasks/visibility-rule/rule";
 
 import { TaskHostToken, type OwnedNote, type TaskItem, type TaskProvider } from "../../types";
 
@@ -33,7 +35,10 @@ export class CheckboxTaskProvider implements TaskProvider {
   readonly #notes = inject(NotesService);
   readonly #structure = inject(NoteStructureService);
   readonly #journals = inject(JournalsIndex);
+  readonly #repository = inject(JournalsRepository);
+  readonly #metadata = inject(NoteMetadataService);
   readonly #settings = inject(SettingsService).getSlice(checkboxSlice);
+  #referenced: readonly string[] = [];
   readonly #lineDates = new Map<VaultPath, CachedLineDates>();
   // Drawn from one counter rather than per path, so a path cleared by a delete and read again
   // cannot hand a stale in-flight read the number it was waiting for.
@@ -45,6 +50,24 @@ export class CheckboxTaskProvider implements TaskProvider {
   readonly id = CHECKBOX_PROVIDER_ID;
   readonly settingsRow = CheckboxSettingsRow;
   readonly journalRow = CheckboxJournalRow;
+
+  #referencedNow(): readonly string[] {
+    const rules = this.#repository.find().map((journal) => journal.tasks.providers[CHECKBOX_PROVIDER_ID]?.dated);
+    return [...referencedProperties(rules)].toSorted();
+  }
+
+  // Only the properties some journal's dated rule names: the whole frontmatter would make every
+  // unrelated edit a changed item.
+  #snapshot(path: VaultPath): Record<string, unknown> | undefined {
+    if (this.#referenced.length === 0) return undefined;
+    const properties = this.#metadata.get(path).getOrUndefined()?.properties ?? {};
+    const picked: Record<string, unknown> = {};
+    for (const name of this.#referenced) {
+      const value = properties[name];
+      if (Object.hasOwn(properties, name) && value !== undefined) picked[name] = structuredClone(value);
+    }
+    return picked;
+  }
 
   #ownerOf(path: VaultPath): OwnedNote | undefined {
     return this.#host.ownerOf(path, this.id).getOrUndefined();
@@ -85,6 +108,7 @@ export class CheckboxTaskProvider implements TaskProvider {
       statusMap: this.#settings.state.statusMap,
       owned: owner !== undefined,
       lineDates,
+      properties: lineDates === undefined || lineDates.size === 0 ? undefined : this.#snapshot(path),
     });
   }
 
@@ -189,8 +213,17 @@ export class CheckboxTaskProvider implements TaskProvider {
     this.#host.publish(this.id, "all", items);
   }
 
+  // Gates the date relation only: a journal reaches its own notes' lines by containment first, and
+  // the listing never asks about those.
+  admits(item: TaskItem, journalName: string): boolean {
+    if (item.facts === undefined) return true;
+    const rule = this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id]?.dated;
+    return admitsSubject(rule, { path: item.path, tags: item.facts.tags, properties: item.facts.properties });
+  }
+
   start(): () => void {
     let disposed = false;
+    this.#referenced = this.#referencedNow();
     this.#refillAll();
     // The registry starts before layout-ready, when the file list is partial and notes restored from
     // cached metadata emit no metadata-changed; index readiness is the signal that the walk is complete.
@@ -216,6 +249,16 @@ export class CheckboxTaskProvider implements TaskProvider {
       },
       { deep: true },
     );
+    // Items snapshot only the properties some journal's dated rule names, so a rule naming a new
+    // one leaves every dated line without it until the refill.
+    const stopRulesWatch = watch(
+      () => this.#referencedNow(),
+      (names, previous) => {
+        if (names.length === previous.length && names.every((name, at) => name === previous[at])) return;
+        this.#referenced = names;
+        this.#refillAll();
+      },
+    );
     const stopOwnedNotesWatch = this.#host.onOwnedNotesChanged((change) => {
       // A single note refills at once — it is one structure read, and a decoration repaints off it.
       if (change.kind === "note") this.#refreshPath(change.path);
@@ -240,6 +283,7 @@ export class CheckboxTaskProvider implements TaskProvider {
     ];
     return () => {
       stopSettingsWatch();
+      stopRulesWatch();
       stopOwnedNotesWatch();
       disposed = true;
       for (const stop of stopNoteWatches) stop();

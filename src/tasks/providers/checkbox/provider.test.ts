@@ -28,6 +28,7 @@ import { TaskHostToken, TaskProviderToken, type OwnedNote, type OwnedNoteChange,
 import { CHECKBOX_PROVIDER_ID } from "./extract";
 import { CheckboxTaskProvider } from "./provider";
 import { checkboxSlice } from "./slice";
+import { settle, startedCheckboxes } from "./testing";
 import EditJournalTasksModal from "./ui/EditJournalTasksModal.vue";
 
 const dayPath = "Daily/2026-09-22.md" as VaultPath;
@@ -1084,5 +1085,83 @@ describe("EditJournalTasksModal Save reaching the checkbox provider", () => {
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
     expect(index.itemsIn(path)).toHaveLength(0);
+  });
+});
+
+function workJournal(dated?: unknown) {
+  return fixedJournal("Work", { type: "day" }, {
+    tasks: { providers: dated === undefined ? {} : { checkbox: { compose: "inherit", dated } } },
+  } as never);
+}
+
+describe("CheckboxTaskProvider dated visibility", () => {
+  const workDay = "Work/2026-09-22.md" as VaultPath;
+  const matchingProject = {
+    show: "matching",
+    mode: "and",
+    conditions: [{ type: "property", name: "project", values: ["Website"] }],
+  } as const;
+
+  it("puts facts on dated lines only, with properties only once a rule names one", async () => {
+    const { tasks } = await startedCheckboxes(
+      {
+        [workDay]: {
+          text: "# Day\n- [ ] Pay 📅 2026-09-22\n- [ ] Call",
+          lines: [1, 2],
+          tags: [{ line: 1, tag: "#bills" }],
+          frontmatterTags: ["#work"],
+          properties: { project: "[[Website]]", mood: "fine" },
+          owner: { journalName: "Work", anchor: anchor("2026-09-22") },
+        },
+      },
+      { Work: workJournal() },
+    );
+    const [dated, undated] = tasks.itemsIn(workDay);
+    expect(dated?.facts).toEqual({ tags: ["#bills", "#work"] });
+    expect(undated?.facts).toBeUndefined();
+
+    const named = await startedCheckboxes(
+      {
+        [projectPath]: {
+          text: "# Ideas\n- [ ] Pay 📅 2026-09-22",
+          lines: [1],
+          properties: { project: "[[Website]]", mood: "fine" },
+        },
+      },
+      { Work: workJournal(matchingProject) },
+    );
+    expect(named.tasks.itemsIn(projectPath).at(0)?.facts).toEqual({ tags: [], properties: { project: "[[Website]]" } });
+  });
+
+  it("republishes a dated line whose referenced property changed, and its journal admits it", async () => {
+    const { tasks, visibility, metadata, notes } = await startedCheckboxes(
+      {
+        [projectPath]: { text: "# Ideas\n- [ ] Pay 📅 2026-09-22", lines: [1], properties: { project: "[[Garden]]" } },
+      },
+      { Work: workJournal(matchingProject) },
+    );
+    const line = () => tasks.itemsIn(projectPath).at(0);
+    const before = line();
+    expect(before && visibility.admits(before, ["Work"])).toBe(false);
+
+    metadata.setMetadata(projectPath, { title: "ideas", tags: [], properties: { project: "[[Website]]" } });
+    notes.emitMetadataChanged(projectPath);
+    await settle();
+
+    const after = line();
+    expect(after && visibility.admits(after, ["Work"])).toBe(true);
+  });
+
+  it("admits a dated line for a journal with no checkbox entry, and refuses it under None", async () => {
+    const { tasks, visibility } = await startedCheckboxes(
+      { [projectPath]: { text: "# Ideas\n- [ ] Pay 📅 2026-09-22", lines: [1] } },
+      {
+        Work: workJournal({ show: "none" }),
+        Personal: fixedJournal("Personal", { type: "day" }),
+      },
+    );
+    const item = tasks.itemsIn(projectPath).at(0);
+    expect(item && visibility.admits(item, ["Personal"])).toBe(true);
+    expect(item && visibility.admits(item, ["Work"])).toBe(false);
   });
 });
