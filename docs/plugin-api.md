@@ -359,10 +359,12 @@ const month = await journals.tasksFor("Work Monthly", "today", { depth: "rollup"
 - **`line` is 0-based**, and `text` is the task's lines as written, indentation included. Reading
   `text` reads the note, so a rolled-up year reads every note in it — the code block pays the same.
 - **`relations` tells the two kinds apart.** `["containment"]` is a task that lives in the
-  period's notes. `["date"]` is a task note listed because one of its dates falls in the period;
-  it has `source: "note"`, `line: null`, `parentLine: null` and its title as `text`. The `date`
-  option picks which of its dates counts, and defaults to scheduled or due. It only matters once a
-  provider that dates whole notes, such as the note-property provider, is enabled.
+  period's notes. `["date"]` is a task listed because one of its dates falls in the period, wherever it lives. A
+  task note carries it with `source: "note"`, `line: null`, `parentLine: null` and its title as
+  `text`. A checkbox line carries it too when it holds a date and sits in a note no matching journal
+  owns, with its own `line`. The `date` option picks which of its dates counts, and defaults to
+  scheduled or due. Task notes only appear once a provider that dates whole notes, such as the
+  note-property provider, is enabled.
 - **`status` and `relations` are open unions** — handle the default case.
 
 ## Answering questions

@@ -533,17 +533,21 @@ export class JournalsApiService implements JournalsApi {
     // at a period note's path would otherwise be reported as that note's own task.
     if (row.source.kind === "task-note") {
       const { item } = row;
+      const display = item.display;
       return {
         journal: asked.journal,
         date: asked.date,
         path: item.path,
         source: "note",
-        line: null,
-        text: item.display.kind === "note" ? item.display.title : "",
+        line: display.kind === "line" ? display.line : null,
+        text: display.kind === "line" ? (display.markdown ?? "") : display.title,
         status: item.status,
         dates: { ...item.dates },
         relations: [...item.relations],
-        parentLine: null,
+        parentLine:
+          display.kind === "line"
+            ? this.#enclosingTaskLine(this.#taskLinesIn(item.path, taskLines), display.parentLine, display.line)
+            : null,
       };
     }
     const owner = this.#index.entryByPath(row.source.path);

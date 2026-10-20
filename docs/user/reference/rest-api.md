@@ -57,13 +57,13 @@ in the note of the period holding `<date>` would list, so the journal's own list
 and a task it hides is not returned. It takes the code block's own keys: `source` (`note`,
 `notelets` or `both`), `depth` (`literal` or `rollup`) and `status` (`open`, `done`, `all`, or one
 status such as `on-hold`) and `taskDate` (`scheduled-or-due`, `due`, `scheduled`, `start`, `done` or
-`created`: which date of a task note puts it in the period; default `scheduled-or-due`). Leave `status` off and the journal's own status condition applies, or
+`created`: which date of a task puts it in the period when it is matched by date; default `scheduled-or-due`). Leave `status` off and the journal's own status condition applies, or
 `open`; give it — even `status=open` — and it replaces the journal's. A `source`, `depth` or `taskDate` it does
 not know answers `400 invalid-request` rather than falling back to the default. Each task carries
 its `path`, its 0-based `line`, its `text` as written, its `status`, any `dates` it carries, and
-`parentLine` — the line of the task it is nested under, if any. A task note listed by a date has
-`"date"` in its `relations`, a `null` `line` and `parentLine`, and the journal and period you asked
-about as its `journal` and `date`.
+`parentLine` — the line of the task it is nested under, if any. A task listed by a date has
+`"date"` in its `relations`, and the journal and period you asked
+about as its `journal` and `date`. A task note also has a `null` `line` and `parentLine`; a checkbox line keeps its own.
 
 ## Following the redirect
 
