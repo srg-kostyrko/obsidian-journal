@@ -176,6 +176,17 @@ entry under `tasks.providers["note-property"]`, so a rename carries it along. It
 can only narrow the global identification, never widen it: a journal never sees
 a note identification rejected.
 
+The asker-scoped rule has a second provider: `checkbox`. Each journal's **Dated
+tasks** setting takes the same three answers and conditions for dated checkbox
+lines, with a tag condition reading the line's own tags plus its note's
+frontmatter tags, and folder and property conditions reading the containing
+note. It is stored as `dated` on the journal's `tasks.providers.checkbox` entry,
+a field separate from the owner-scoped identification rule there. It gates
+**only date-relation matches**: a journal always sees the lines in its own
+period notes by containment, whatever its rule says, while a line one of its own
+notes reaches by date alone — Monday's note, dated Friday, asked by Friday — is
+gated like any other.
+
 When several journals ask at once — a tasks view block over a list of journals,
 `tasksFor` with a selector matching several — a dated item is admitted if **any**
 asking journal admits it, and appears once, deduplicated by item identity. The
