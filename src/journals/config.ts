@@ -107,29 +107,25 @@ const navBlockSegmentLinkSchema = v.union([
 ]);
 
 export const navBlockSegmentSchema = v.object({
-  template: v.string(),
-  fontSize: v.number(),
-  bold: v.boolean(),
-  italic: v.boolean(),
-  color: colorSchema,
-  background: colorSchema,
-  link: navBlockSegmentLinkSchema,
-  journal: v.string(),
-  // Clearable, so no minLength: a clearable field that fails the parse resets the whole
-  // journal to defaults on reload. Optional so a hand-edited data.json still loads.
+  template: v.optional(v.string(), ""),
+  fontSize: v.optional(v.number(), 1),
+  bold: v.optional(v.boolean(), false),
+  italic: v.optional(v.boolean(), false),
+  color: v.optional(colorSchema, () => ({ type: "theme" as const, name: "text-normal" })),
+  background: v.optional(colorSchema, () => ({ type: "transparent" as const })),
+  link: v.optional(navBlockSegmentLinkSchema, "none"),
+  journal: v.optional(v.string(), ""),
   linkDate: v.optional(v.string(), ""),
-  addDecorations: v.boolean(),
+  addDecorations: v.optional(v.boolean(), false),
 });
 
 export const navBlockSchema = v.object({
-  type: v.picklist(["create", "existing"]),
-  lines: v.array(v.array(navBlockSegmentSchema)),
-  decorateWholeBlock: v.boolean(),
-  // Which devices draw the adjacent periods. Falls back rather than failing: a failure here
-  // carries the path key "navBlock", which repairCollectionEntry substitutes wholesale from the
-  // defaults, taking the journal's own lines with it. Read only by the navigation block — the
-  // interval block has no adjacent periods, the way it has no use for `type` either.
-  showAdjacent: v.optional(v.fallback(v.picklist(["all", "desktop", "mobile", "none"]), "all"), "all"),
+  type: v.optional(v.picklist(["create", "existing"]), "create"),
+  lines: v.optional(v.array(v.array(navBlockSegmentSchema)), () => []),
+  decorateWholeBlock: v.optional(v.boolean(), false),
+  // Read only by the navigation block — the interval block has no adjacent periods, the way
+  // it has no use for `type` either.
+  showAdjacent: v.optional(v.picklist(["all", "desktop", "mobile", "none"]), "all"),
 });
 
 export type NavBlockSegmentLink = v.InferOutput<typeof navBlockSegmentLinkSchema>;

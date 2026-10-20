@@ -2,9 +2,12 @@ import * as v from "valibot";
 import { describe, it, expect } from "vitest";
 
 import type { AnchorString } from "@/calendar";
+import { testContainer } from "@/testing";
 
 import { journalConfigCollection, journalConfigSchema, journalDefaultsFor, navBlockSchema } from "./config";
-import { buildNavSegment } from "./testing";
+import { journalsCoreModule } from "./module";
+import { JournalsRepository } from "./repository";
+import { buildNavSegment, fixedJournal, unwrap } from "./testing";
 
 import type { JournalWrite } from "./config";
 
@@ -469,16 +472,9 @@ describe("navBlockSchema", () => {
     expect(parsed.output.showAdjacent).toBe(stored);
   });
 
-  it("falls back to showing the adjacent periods everywhere rather than failing the block", () => {
-    // repairCollectionEntry reads issue.path[0].key, so a failure here would substitute the
-    // whole navBlock from defaults and take the user's lines with it.
-    const lines = [[buildNavSegment({ template: "kept" })]];
-    const value = { type: "create" as const, decorateWholeBlock: false, lines, showAdjacent: "tablet" };
-    const parsed = v.safeParse(navBlockSchema, value);
-    expect(parsed.success).toBe(true);
-    if (!parsed.success) return;
-    expect(parsed.output.showAdjacent).toBe("all");
-    expect(parsed.output.lines).toEqual(lines);
+  it("rejects an unknown showAdjacent so the repair walk can default it", () => {
+    const value = { type: "create" as const, decorateWholeBlock: false, lines: [], showAdjacent: "tablet" };
+    expect(v.safeParse(navBlockSchema, value).success).toBe(false);
   });
 
   it("rejects unknown link kinds", () => {
@@ -594,5 +590,58 @@ describe("journalDefaultsFor identity between journals", () => {
     first.intervalBlock.lines.push([]);
 
     expect(second.intervalBlock.lines).toHaveLength(before);
+  });
+});
+
+const seededLines = () => [
+  [buildNavSegment({ template: "a" }), buildNavSegment({ template: "b" })],
+  [buildNavSegment({ template: "c" }), buildNavSegment({ template: "d", link: "week" })],
+];
+
+describe("journal nav block repair on load", () => {
+  it("a journal's nav block keeps its other segments when one link is unknown", async () => {
+    const stored = fixedJournal(
+      "daily",
+      { type: "day" },
+      {
+        navBlock: {
+          ...journalDefaultsFor({ type: "day" }, "daily").navBlock,
+          lines: seededLines(),
+          decorateWholeBlock: true,
+          showAdjacent: "desktop",
+        },
+      },
+    );
+    const raw = structuredClone(stored);
+    (raw.navBlock.lines[1]?.[1] as { link: string }).link = "fortnight";
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: raw } },
+      allow: { dataRepair: true },
+    });
+
+    const { navBlock } = unwrap(harness.resolve(JournalsRepository).get("daily"));
+    const expected = structuredClone(stored.navBlock);
+    (expected.lines[1]?.[1] as { link: string }).link = "none";
+    expect(navBlock).toEqual(expected);
+  });
+
+  it("an unknown showAdjacent resets only showAdjacent", async () => {
+    const base = journalDefaultsFor({ type: "day" }, "daily").navBlock;
+    const raw = fixedJournal("daily", { type: "day" }, { navBlock: { ...base, lines: seededLines() } });
+    (raw.navBlock as { showAdjacent: string }).showAdjacent = "tablet";
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: raw } },
+      allow: { dataRepair: true },
+    });
+
+    const { navBlock } = unwrap(harness.resolve(JournalsRepository).get("daily"));
+    expect(navBlock.showAdjacent).toBe("all");
+    expect(navBlock.lines).toEqual(seededLines());
+    const repair = harness.logs.records.find(
+      (record) => record.message === "collection entry fields reset to defaults",
+    );
+    expect(repair?.fields).toMatchObject({ fields: ["navBlock.showAdjacent"] });
   });
 });

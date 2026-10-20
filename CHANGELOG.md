@@ -52,6 +52,7 @@ All notable changes to this project will be documented in this file.
   instead of overhanging them whenever the editor was too narrow for the full-size canvas — which
   a 960px-wide window already was. The canvas shrinks to fit its column instead.
 - Plugin API consumers no longer receive `noteAdded` and `noteRemoved` for a note that does not exist whenever a code block preview is shown in a journal's settings.
+- A navigation block no longer resets to its default when one of its settings can't be read; only that setting does.
 
 ### Changed
 

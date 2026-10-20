@@ -244,23 +244,18 @@ on it.
 
 ### Settings and schema
 
-- A stored value that fails its schema on reload costs different amounts
-  depending on where it sits, and the "whole entity is wiped" reading is out of
-  date for collections. `repairCollectionEntry`
-  (`src/settings/settings-service.ts:335`) reads `issue.path[0].key` off every
-  issue, substitutes just those fields from `defaultItem`, and re-parses, so a
-  clearable field with a schema `minLength` costs that field alone —
-  `journalConfigSchema.dateFormat` seeded empty comes back as the write type's
-  default with `write`, `folder`, `nameTemplate` and `templates` untouched. Two
-  shapes still take the whole-value reset: a **slice**, because `parseSliceValue`
-  (`:360`) has no repair path and falls back to `definition.defaults` wholesale —
-  one out-of-range `dow` discards the rest of the calendar slice with it; and a
-  **collection entry whose issue carries no path**, which a root-level `v.check`
-  on the item schema produces, because the repair has no field to swap and
-  returns `undefined` into the entity reset at `:325`. No current item schema
-  has such a check, so that one is a shape to avoid rather than a live instance.
-  Relax the schema and fall back on read, or coerce on write, when the field is
-  in a slice.
+- A stored value that fails its schema on reload now costs the failing field,
+  at its own depth, in collections and slices alike: `repairValue`
+  (`src/settings/repair/`) deletes the deepest bad key so its `v.optional`
+  default fills in, or drops a bad list item. That only holds for a field whose
+  default is inert. A variant discriminant, or a default that carries meaning
+  (an empty list that widens a filter to "any", say),
+  must be marked `climb`, or a list that must not be trimmed `whole`, or the
+  silent default widens or changes what the user configured. A schema with no
+  `v.optional` on a field cannot be defaulted there; the repair climbs to the
+  parent instead, so new persisted fields need a default. A root-level
+  `v.check` on an item names no field and still resets the entry, and a slice
+  that cannot be walked still falls back to its whole defaults.
 - The `@/journals` barrel re-exports settings flows that import
   `settings/ui/modals.ts`. Anything under `src/journals/settings/ui/` that
   `modals.ts` reaches must import services from their own submodules
