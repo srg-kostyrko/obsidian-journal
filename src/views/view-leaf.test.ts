@@ -353,6 +353,28 @@ describe("JournalViewLeaf", () => {
       expect(repair?.fields).toMatchObject({ key: "tasks", fields: [field] });
       await leaf.onClose();
     });
+
+    // Each of these reads an empty or default value as "every", so a repaired block would show what
+    // it was set up to leave out.
+    it.each([
+      { key: "tasks", setting: "an unreadable journal", config: { journals: [42] } },
+      { key: "tasks", setting: "one unreadable journal among good ones", config: { journals: ["Daily", 42] } },
+      { key: "tasks", setting: "an unreadable provider", config: { scope: { provider: [42] } } },
+      { key: "notelets", setting: "an unreadable journal", config: { journals: [42] } },
+      { key: "notelets", setting: "an unreadable notelet type", config: { types: [42] } },
+      {
+        key: "month-calendar",
+        setting: "an unreadable hidden weekday",
+        config: { before: 0, after: 0, hiddenWeekdays: [9] },
+      },
+    ])("shows the error panel for a $key block with $setting", async ({ key, config }) => {
+      const view = buildView(VIEW_A, { blocks: [{ id: BLOCK_STUB, key, config }] });
+      const { leafInstance, containerEl } = await buildLeaf(view, { modules: [tasksCoreModule] });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.textContent).toContain(m.view_block_config_error());
+      await leaf.onClose();
+    });
   });
 
   describe("refDate wall clock", () => {

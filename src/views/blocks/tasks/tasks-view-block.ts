@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { climb } from "@/settings/repair";
 import { DEFAULT_TASK_QUERY, taskQuerySchema } from "@/tasks/query";
 import { icons } from "@/ui/icons";
 
@@ -17,8 +18,12 @@ import TasksViewBlockConfig from "./ui/TasksViewBlockConfig.vue";
 // against documented fence examples, and that gate does not reach view blocks.
 const schema = v.object({
   window: v.optional(v.picklist(windowKinds), "day"),
-  journals: v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
+  journals: v.pipe(
+    v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
+    climb("an empty journal list means every journal"),
+  ),
   ...taskQuerySchema.entries,
+  scope: v.pipe(taskQuerySchema.entries.scope, climb("an empty provider list means every provider")),
 });
 
 export type TasksViewBlockConfig = v.InferOutput<typeof schema>;
