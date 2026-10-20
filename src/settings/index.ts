@@ -20,6 +20,7 @@ export {
   UnregisteredSubpageError,
 } from "./errors";
 export { settingsModule } from "./module";
+export { climb, defaultsFrom, repairValue, whole, type DefaultAt, type RepairPath, type RepairResult } from "./repair";
 export { ReloadHintService } from "./reload-hint";
 export { SettingsService } from "./settings-service";
 export {
