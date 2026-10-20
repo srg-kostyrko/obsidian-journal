@@ -116,7 +116,7 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
   notelets only, a date can match without a period note.
 - **Task date** — which of a [task note](/tasks#task-notes)'s dates places it in the period: **Scheduled
   or due date**, the default, or one of **Due date**, **Scheduled date**, **Start date**, **Done date**
-  and **Created date**. It has no effect on checkbox tasks, and none until task notes are turned on.
+  and **Created date**. It also picks which date of a dated checkbox line places it.
 
 Task notes count toward the question alongside the period's checkbox tasks, so a dot can light a day
 that has no note at all: one task note scheduled on it is enough for **Any** · **Open**. Only the task

@@ -209,8 +209,11 @@ task notes either way.
 A recurring task note appears on the dates it has stored, never on later occurrences computed from its
 recurrence rule.
 
-This placing by date is for task notes only. A checkbox line's own dates — a `📅 2026-03-10` on the
-line — sort it, but never place it in a period other than the one whose note holds it.
+A checkbox line is placed by date the same way, but only when it carries a date: a `📅 2026-03-10` on
+the line puts it in the listing of 10 March, whichever note holds it (see [Dated lines from anywhere in
+the vault](#dated-lines-from-anywhere-in-the-vault)). The surface's chosen date picks which of the
+line's dates counts, and a line with no such date is not placed by date at all — it is listed only in
+the period whose note holds it.
 
 ### Filters and task notes
 
@@ -297,7 +300,8 @@ be told yet.
 ## Listing tasks in a note
 
 A `journal-tasks` code block lists the tasks of the period the note it sits in belongs to — the note's
-own tasks, its notelets', or both, and the [task notes](#task-notes) dated in the period. With
+own tasks, its notelets', or both, the [task notes](#task-notes) dated in the period, and dated
+checkbox lines from anywhere in the vault. With
 `sort: document`, the task notes come last. In a
 note connected to no journal it lists nothing and says so.
 
@@ -315,7 +319,8 @@ it. The `status: open` default gives way to the journal's own, where [it has
 one](#a-journal-s-own-listing-filter).
 
 A listing finds checkbox tasks by where they live — a period's own note, its notelets, or both — and
-task notes by their date; `date` names which one. See [Which date places a task
+also by their date, which is how task notes and dated checkbox lines from anywhere in the vault reach
+it; `date` names which of the dates places them. See [Which date places a task
 note](#which-date-places-a-task-note).
 
 ### Fence keys
@@ -329,7 +334,7 @@ note](#which-date-places-a-task-note).
 | `heading`    | none               | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
 | `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                                         |
 | `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
-| `date`       | `scheduled-or-due` | which of a task note's dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). Checkbox tasks are not placed by date, so it does not change which of them are listed.                                        |
+| `date`       | `scheduled-or-due` | which of a task note's, or a dated checkbox line's, dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). A checkbox line with no such date is not placed by date.                                         |
 | `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
 
 `status`, `heading` and `tag` are each sugar for one condition of that type. `conditions:` adds more —
@@ -492,7 +497,7 @@ the view rather than to the note it sits in:
 - **Journals** — leave all off, the default, to include every journal in the view's own
   [shelf scope](/shelves#scoping-a-view); turn specific ones on to narrow it further.
 - **Source** and **Sort by** — the same `source` and `sort` this page covers above.
-- **Task date** — the same as the fence's `date`: which of a task note's dates places it in the window.
+- **Task date** — the same as the fence's `date`: which of a task note's, or a dated checkbox line's, dates places it in the window.
   A task note is listed when any of the block's journals [shows it](#which-task-notes-a-journal-shows).
 - **Filter** — the same condition editor [a journal's own listing filter](#a-journal-s-own-listing-filter)
   uses, scoped to this block instead of to a journal. A new block holds no conditions at all, so it
