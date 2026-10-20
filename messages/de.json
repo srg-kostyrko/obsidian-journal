@@ -2553,11 +2553,11 @@
   "tasks_note_visibility_mode": "Verknüpfung der Bedingungen",
   "tasks_note_visibility_modal_title": "Aufgabennotizen – {journal}",
   "tasks_checkbox_dated_title": "Datierte Aufgaben",
-  "tasks_checkbox_dated_desc": "Welche datierten Aufgaben die Listen und Dekorationen dieses Journals einschließen. Bedingungen schränken die datierten Aufgaben nur ein; sie fügen nie eine hinzu.",
+  "tasks_checkbox_dated_desc": "Welche Aufgaben, die dieses Journal über ihr Datum erreichen, seine Listen und Dekorationen einschließen. Kontrollkästchen erscheinen immer in der Periodennotiz, die sie enthält.",
   "tasks_checkbox_dated_conditions_desc": "Tags durch Kommas trennen. Ohne Bedingungen wird jede datierte Aufgabe angezeigt.",
   "tasks_checkbox_dated_summary_all": "Zeigt jede datierte Aufgabe.",
   "tasks_checkbox_dated_summary_matching": "Zeigt datierte Aufgaben passend zu {conditions}.",
-  "tasks_checkbox_dated_summary_none": "Zeigt keine datierten Aufgaben.",
+  "tasks_checkbox_dated_summary_none": "Zeigt keine Aufgaben nach ihrem Datum.",
 
   "tasks_journal_compose": "Verhältnis zur Vault-weiten Regel",
   "tasks_journal_compose_desc": "„Erben“ verwendet nur die Vault-weite Regel. „Einschränken“ verlangt, dass eine Zeile beide Regeln erfüllt. „Ersetzen“ verwendet nur die Regel dieses Journals.",
