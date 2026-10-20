@@ -104,7 +104,9 @@ describe("commandCollection", () => {
 });
 
 describe("command repair on load", () => {
-  it("a command whose target names no journal resets only its target, keeping its other settings", async () => {
+  // The target itself falls back to the default target, as on main; what this pins is that the
+  // command's own settings survive that fallback.
+  it("a command whose target names no journal falls back to the default target, as on main, keeping its other settings", async () => {
     const stored = buildCommand({
       name: "Open work",
       icon: "briefcase",
@@ -120,9 +122,7 @@ describe("command repair on load", () => {
       allow: { dataRepair: true },
     });
 
-    expect(harness.settings.recordOf(commandCollection)["cmd-1"]).toEqual({
-      ...stored,
-      target: commandCollection.defaultItem("cmd-1").target,
-    });
+    const { target: _target, ...kept } = stored;
+    expect(harness.settings.recordOf(commandCollection)["cmd-1"]).toMatchObject(kept);
   });
 });

@@ -16,9 +16,9 @@ const intervalMarker = v.object({
 const calendarMarker = v.object({
   oldJournalId: v.pipe(v.string(), climb(namesNotes)),
   kind: v.pipe(v.literal("calendar"), climb("discriminant")),
-  // Not `climb`, which would lose the whole marker for one bad section; a section missing from
-  // the map is skipped, so the empty default migrates nothing.
-  sectionToName: v.optional(v.record(sectionName, v.string()), () => ({})),
+  // A section missing from the map strips the legacy keys from that section's notes, so neither a
+  // default nor a dropped section is safe; the whole marker goes instead.
+  sectionToName: v.pipe(v.record(sectionName, v.string()), climb(namesNotes)),
 });
 
 // Notes already in the current shape but written by a plugin version that anchored a
