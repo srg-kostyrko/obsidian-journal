@@ -369,7 +369,11 @@ widens that fill set to the vault; it does not change the seam. For notes the
 plugin does not own, the checkbox provider stores dated items only and keeps no
 text: an undated checkbox in a project note can be reached by no relation, so
 storing it is waste. Obsidian's Excluded files bound the walk of non-owned notes
-only; an owned note in an excluded folder keeps its items.
+only; an owned note in an excluded folder keeps its items. Obsidian announces no
+change to Excluded files, so the walk runs again on every checkbox settings change
+and every full refill, reading only the notes it has not read yet. Nothing is read
+before the journals index is ready: the walk that readiness starts covers every
+note a boot-time change touched, one read at a time.
 
 The index stores two tiers. Structure — status, position, tags, capabilities —
 fills synchronously from `metadataCache`, so a decoration is correct on first
@@ -1228,9 +1232,14 @@ None is a decision — each is work this model is waiting on.
   drops text and, for notes the plugin does not own, stores dated items only.
   One in flight was no slower than 16. A flat index never follows links, so link
   density does not bear on it; Time Ruler's hang (a 2,000-note vault whose tasks
-  formed a link graph) belongs to subtree work, not here. Not measured: mobile,
-  and a cold OS page cache — the files were freshly generated, so reads were
-  warm.
+  formed a link graph) belongs to subtree work, not here. Not measured: mobile;
+  a cold OS page cache — the files were freshly generated, so reads were warm;
+  and the real index's publish and sort cost, which the spike's walk did not
+  include. A review estimate in plain Node on the dense 20k shape puts it at
+  ~200 ms for the burst when the walk ends, ~100 ms to re-sort each date role
+  after every version bump, and ~190 ms for the `JSON.stringify` unchanged check
+  on a settings refill — a real vault is likely 5–10× lower. It wants measuring
+  in the spike harness; the closure above covers the walk and memory only.
 
 - **Nesting is unrecoverable from `parent` alone for a note whose list starts at line 0.**
   Obsidian encodes a root item's parent as `-(list's first line)` and a child's parent as its

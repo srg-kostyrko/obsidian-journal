@@ -213,7 +213,7 @@ A checkbox line is placed by date the same way, but only when it carries a date:
 the line puts it in the listing of 10 March, whichever note holds it (see [Dated lines from anywhere in
 the vault](#dated-lines-from-anywhere-in-the-vault)). The surface's chosen date picks which of the
 line's dates counts, and a line with no such date is not placed by date at all — it is listed only in
-the period whose note holds it.
+the period whose note or notelet holds it, so one in a note no journal owns is not listed at all.
 
 ### Filters and task notes
 
@@ -458,7 +458,7 @@ A checkbox line that carries a date also appears **by that date**, wherever its 
 note, an archive folder, another journal's note. A task in `Projects/Launch.md` written
 `- [ ] Ship it 📅 2026-10-30` shows up in the listing of 30 October, lights that day's [tasks
 decoration](/decorations#tasks), and is returned by the plugin API. A line with no date is listed only
-in the note, or notelet, that holds it, as before.
+in the period whose note or notelet holds it, as before, so one in a note no journal owns is not listed.
 
 Two date formats are read:
 
