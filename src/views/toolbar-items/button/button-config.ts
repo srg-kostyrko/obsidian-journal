@@ -2,31 +2,36 @@ import { match, P } from "ts-pattern";
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { climb } from "@/settings/repair";
 import { icons } from "@/ui/icons";
 
 import type { ToolbarItemAppearance } from "../appearance";
 
+const otherAction = "a default makes it a different action";
+
 const levelField = v.picklist(["day", "week", "month", "quarter", "year"] as const);
-const levelsField = v.pipe(v.array(levelField), v.minLength(1));
-const modeField = v.picklist(["select-only", "navigate", "create"] as const);
-const stepUnitField = v.picklist(["day", "week", "month", "quarter", "year"] as const);
+// Not `climb`, which would lose the whole action for one bad level. The empty default never
+// parses, so an absent list still climbs to the action.
+const levelsField = v.optional(v.pipe(v.array(levelField), v.minLength(1)), () => []);
+const modeField = v.pipe(v.picklist(["select-only", "navigate", "create"] as const), climb(otherAction));
+const stepUnitField = v.pipe(v.picklist(["day", "week", "month", "quarter", "year"] as const), climb(otherAction));
 
 export const buttonActionSchema = v.variant("type", [
   v.object({
-    type: v.literal("pick-date"),
+    type: v.pipe(v.literal("pick-date"), climb("discriminant")),
     mode: modeField,
     levels: levelsField,
     journal: v.optional(v.string()),
   }),
   v.object({
-    type: v.literal("current"),
+    type: v.pipe(v.literal("current"), climb("discriminant")),
     mode: modeField,
     levels: levelsField,
     journal: v.optional(v.string()),
   }),
   v.object({
-    type: v.literal("navigate-step"),
-    direction: v.picklist(["prev", "next"] as const),
+    type: v.pipe(v.literal("navigate-step"), climb("discriminant")),
+    direction: v.pipe(v.picklist(["prev", "next"] as const), climb(otherAction)),
     unit: stepUnitField,
     amount: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1)), 1),
   }),

@@ -773,3 +773,134 @@ describe("journal notelet type repair on load", () => {
     expect(journal.notelets.nt_1).toEqual({ ...configuredNoteletType(), [field]: [] });
   });
 });
+
+const askedPrompts = () => [
+  { type: "text", variable: "mood", question: "Mood?", frontmatterKey: "mood", required: false },
+  { type: "number", variable: "sleep", question: "Hours slept?", frontmatterKey: "sleep", required: true },
+];
+
+const twoSources = () => [
+  { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+  { variable: "lap", frontmatterKey: "journal-lap", anchorValue: 3, reset: { kind: "after", count: 4 } },
+];
+
+const numberedJournal = () =>
+  fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      frontmatter: {
+        dateField: "date",
+        startDateField: "from",
+        endDateField: "to",
+        noteletField: "kind",
+        addStartDate: true,
+        addEndDate: true,
+      },
+      numbering: {
+        enabled: true,
+        anchorDate: "2024-01-01" as AnchorString,
+        allowBefore: true,
+        sources: twoSources() as never,
+      },
+      prompts: askedPrompts() as never,
+    },
+  );
+
+describe("journal prompt, numbering and frontmatter repair on load", () => {
+  it("a prompt with an unknown type is dropped, keeping the other prompt and every other field", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.prompts as unknown[]).unshift({ type: "slider", variable: "x", question: "X?", frontmatterKey: "x" });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal).toEqual(stored);
+  });
+
+  it("a numbering source with an unreadable reset is dropped, keeping the other source", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.numbering.sources[1] as { reset: unknown }).reset = { kind: "after", count: 0 };
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal).toEqual({ ...stored, numbering: { ...stored.numbering, sources: [twoSources()[0]] } });
+  });
+
+  it("an unreadable allowBefore resets only that flag, keeping the numbering sources", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.numbering as { allowBefore: unknown }).allowBefore = "yes";
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal).toEqual({ ...stored, numbering: { ...stored.numbering, allowBefore: false } });
+  });
+
+  it("an unreadable addStartDate resets only that flag, keeping the journal's own frontmatter keys", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.frontmatter as { addStartDate: unknown }).addStartDate = 1;
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal).toEqual({ ...stored, frontmatter: { ...stored.frontmatter, addStartDate: false } });
+  });
+
+  // A numbering source writes its counter under this key; any default would start a second
+  // count beside the notes already carrying the first.
+  it("a numbering source with an unreadable frontmatter key is dropped rather than given a default key", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.numbering.sources[1] as { frontmatterKey: unknown }).frontmatterKey = "";
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.numbering.sources).toEqual([twoSources()[0]]);
+  });
+
+  // The variable is what templates and stored answers are keyed by.
+  it("a prompt with an unreadable variable is dropped rather than given a default variable", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.prompts[1] as { variable: unknown }).variable = 7;
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.prompts).toEqual([askedPrompts()[0]]);
+  });
+});
+
+describe("journal select prompt repair on load", () => {
+  it("a select option with an empty label is dropped, keeping the question and its other options", async () => {
+    const select = {
+      type: "select",
+      variable: "place",
+      question: "Where?",
+      frontmatterKey: "place",
+      required: false,
+      options: [
+        { label: "Home", value: "home" },
+        { label: "", value: "office" },
+      ],
+    };
+    const raw = fixedJournal("daily", { type: "day" }, { prompts: [select] as never });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.prompts).toEqual([{ ...select, options: [{ label: "Home", value: "home" }] }]);
+  });
+});
+
+describe("journal notelet counter repair on load", () => {
+  it("an unreadable counter flag resets only the flag, keeping the type's own counter key", async () => {
+    const raw = fixedJournal("daily", { type: "day" }, {
+      notelets: { nt_1: { ...configuredNoteletType(), counter: { enabled: "no", frontmatterKey: "meeting-index" } } },
+    } as never);
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.notelets.nt_1?.counter).toEqual({ enabled: true, frontmatterKey: "meeting-index" });
+  });
+});

@@ -1,13 +1,20 @@
 import * as v from "valibot";
 
 import { defineSlice } from "@/settings";
+import { climb } from "@/settings/repair";
 import type { TaskDateRole } from "@/tasks";
 
 export const NOTE_PROPERTY_PROVIDER_ID = "note-property";
 
+const identifies = "a default identifies different notes as tasks";
+
 const identifySchema = v.variant("by", [
-  v.object({ by: v.literal("tag"), tag: v.string() }),
-  v.object({ by: v.literal("property"), name: v.string(), value: v.string() }),
+  v.object({ by: v.pipe(v.literal("tag"), climb("discriminant")), tag: v.pipe(v.string(), climb(identifies)) }),
+  v.object({
+    by: v.pipe(v.literal("property"), climb("discriminant")),
+    name: v.pipe(v.string(), climb(identifies)),
+    value: v.pipe(v.string(), climb(identifies)),
+  }),
 ]);
 
 const stringRecord = v.record(v.string(), v.string());

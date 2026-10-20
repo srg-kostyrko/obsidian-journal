@@ -1,10 +1,12 @@
 import * as v from "valibot";
 
 import { defineSlice } from "@/settings";
+import { climb } from "@/settings/repair";
 
 const startupOverrideSchema = v.object({
-  weekdays: v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))),
-  journalName: v.string(),
+  // An override with no weekdays never applies, so the empty default is inert.
+  weekdays: v.optional(v.array(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(6))), () => []),
+  journalName: v.pipe(v.string(), climb("a default would open another journal on these days")),
 });
 
 // `@/commands` depends on `@/journals`, so importing its open-mode schema here would point the

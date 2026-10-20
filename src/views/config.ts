@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineCollection } from "@/settings";
+import { climb } from "@/settings/repair";
 import { icons } from "@/ui/icons";
 
 import { DEFAULT_CALENDAR_VIEW_ID, defaultCalendarView } from "./default-view";
@@ -21,9 +22,9 @@ const blockInstanceIdSchema = v.pipe(
 );
 
 const viewBlockInstanceSchema = v.object({
-  id: blockInstanceIdSchema,
-  key: v.pipe(v.string(), v.minLength(1)),
-  config: v.record(v.string(), v.unknown()),
+  id: v.pipe(blockInstanceIdSchema, climb("a block without an id or key cannot render")),
+  key: v.pipe(v.string(), v.minLength(1), climb("a block without an id or key cannot render")),
+  config: v.optional(v.record(v.string(), v.unknown()), () => ({})),
 });
 
 export const FALLBACK_VIEW_ICON = icons.entity.view;

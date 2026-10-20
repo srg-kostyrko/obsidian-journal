@@ -3,6 +3,7 @@ import * as v from "valibot";
 import type { AnchorString } from "@/calendar";
 import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
+import { climb } from "@/settings/repair";
 import { taskRuleSchema } from "@/tasks/conditions";
 import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
 import { visibilityRuleSchema } from "@/tasks/visibility-rule/rule";
@@ -37,57 +38,75 @@ const optionalAnchorString = v.pipe(
   v.transform((s) => s as AnchorString),
 );
 
+const ownsNotes = "a different period owns different notes";
+
 const writeFixed = v.object({
-  type: v.picklist(["day", "week", "month", "quarter", "year"]),
+  type: v.pipe(v.picklist(["day", "week", "month", "quarter", "year"]), climb(ownsNotes)),
 });
 
 const writeCustom = v.object({
-  type: v.literal("custom"),
-  every: v.picklist(["day", "week", "month", "quarter", "year"]),
-  duration: v.pipe(v.number(), v.integer(), v.minValue(1)),
-  anchorDate: anchorString,
+  type: v.pipe(v.literal("custom"), climb(ownsNotes)),
+  every: v.pipe(v.picklist(["day", "week", "month", "quarter", "year"]), climb(ownsNotes)),
+  duration: v.pipe(v.number(), v.integer(), v.minValue(1), climb(ownsNotes)),
+  anchorDate: v.pipe(anchorString, climb(ownsNotes)),
 });
 
 const writeSchema = v.union([writeFixed, writeCustom]);
 
-const timelineEnd = v.union([
-  v.object({ kind: v.literal("never") }),
-  v.object({ kind: v.literal("date"), date: optionalAnchorString }),
-  v.object({ kind: v.literal("repeats"), count: v.pipe(v.number(), v.integer(), v.minValue(1)) }),
+const widensTimeline = "an unset bound shows periods the user cut off";
+
+const timelineEnd = v.variant("kind", [
+  v.object({ kind: v.pipe(v.literal("never"), climb("discriminant")) }),
+  v.object({
+    kind: v.pipe(v.literal("date"), climb("discriminant")),
+    date: v.pipe(optionalAnchorString, climb(widensTimeline)),
+  }),
+  v.object({
+    kind: v.pipe(v.literal("repeats"), climb("discriminant")),
+    count: v.pipe(v.number(), v.integer(), v.minValue(1), climb(widensTimeline)),
+  }),
 ]);
 
 const timelineSchema = v.object({
-  start: optionalAnchorString,
-  end: timelineEnd,
+  start: v.pipe(optionalAnchorString, climb(widensTimeline)),
+  end: v.pipe(timelineEnd, climb(widensTimeline)),
 });
+
+const keyedNotes = "existing notes carry this key; a default orphans them";
 
 const frontmatterFieldsSchema = v.object({
-  dateField: v.pipe(v.string(), v.minLength(1)),
-  startDateField: v.pipe(v.string(), v.minLength(1)),
-  endDateField: v.pipe(v.string(), v.minLength(1)),
+  dateField: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
+  startDateField: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
+  endDateField: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
   noteletField: v.optional(v.pipe(v.string(), v.minLength(1)), DEFAULT_NOTELET_FIELD),
-  addStartDate: v.boolean(),
-  addEndDate: v.boolean(),
+  addStartDate: v.optional(v.boolean(), false),
+  addEndDate: v.optional(v.boolean(), false),
 });
 
-const numberingReset = v.union([
-  v.object({ kind: v.literal("never") }),
-  v.object({ kind: v.literal("after"), count: v.pipe(v.number(), v.integer(), v.minValue(1)) }),
+const renumbers = "a default renumbers existing notes";
+
+const numberingReset = v.variant("kind", [
+  v.object({ kind: v.pipe(v.literal("never"), climb("discriminant")) }),
+  v.object({
+    kind: v.pipe(v.literal("after"), climb("discriminant")),
+    count: v.pipe(v.number(), v.integer(), v.minValue(1), climb(renumbers)),
+  }),
 ]);
 
 const numberingSource = v.object({
-  variable: v.pipe(v.string(), v.minLength(1)),
-  frontmatterKey: v.pipe(v.string(), v.minLength(1)),
-  anchorValue: v.pipe(v.number(), v.integer()),
-  reset: numberingReset,
+  variable: v.pipe(v.string(), v.minLength(1), climb("templates name the source by its variable")),
+  frontmatterKey: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
+  anchorValue: v.pipe(v.number(), v.integer(), climb(renumbers)),
+  reset: v.pipe(numberingReset, climb(renumbers)),
 });
 
 const numberingSchema = v.pipe(
   v.object({
-    enabled: v.boolean(),
-    anchorDate: optionalAnchorString,
-    allowBefore: v.boolean(),
-    sources: v.array(numberingSource),
+    // Its default depends on the write type, which a field default cannot see.
+    enabled: v.pipe(v.boolean(), climb("on for custom journals, off for fixed ones")),
+    anchorDate: v.pipe(optionalAnchorString, climb(renumbers)),
+    allowBefore: v.optional(v.boolean(), false),
+    sources: v.optional(v.array(numberingSource), () => []),
   }),
   v.check(
     (value) => new Set(value.sources.map((s) => s.variable)).size === value.sources.length,

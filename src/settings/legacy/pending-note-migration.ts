@@ -1,19 +1,24 @@
 import * as v from "valibot";
 
 import { defineSlice } from "@/settings";
+import { climb } from "@/settings/repair";
 
 const sectionName = v.picklist(["day", "week", "month", "quarter", "year"] as const);
 
+const namesNotes = "a marker names the notes it migrates";
+
 const intervalMarker = v.object({
-  oldJournalId: v.string(),
-  kind: v.literal("interval"),
-  name: v.string(),
+  oldJournalId: v.pipe(v.string(), climb(namesNotes)),
+  kind: v.pipe(v.literal("interval"), climb("discriminant")),
+  name: v.pipe(v.string(), climb(namesNotes)),
 });
 
 const calendarMarker = v.object({
-  oldJournalId: v.string(),
-  kind: v.literal("calendar"),
-  sectionToName: v.record(sectionName, v.string()),
+  oldJournalId: v.pipe(v.string(), climb(namesNotes)),
+  kind: v.pipe(v.literal("calendar"), climb("discriminant")),
+  // Not `climb`, which would lose the whole marker for one bad section; a section missing from
+  // the map is skipped, so the empty default migrates nothing.
+  sectionToName: v.optional(v.record(sectionName, v.string()), () => ({})),
 });
 
 // Notes already in the current shape but written by a plugin version that anchored a
@@ -21,8 +26,8 @@ const calendarMarker = v.object({
 // week, or the week's representative day. Their journal-date must be re-canonicalized to
 // the week start, the only anchor the current version accepts.
 const weekAnchorMarker = v.object({
-  kind: v.literal("week-anchor"),
-  journalName: v.string(),
+  kind: v.pipe(v.literal("week-anchor"), climb("discriminant")),
+  journalName: v.pipe(v.string(), climb(namesNotes)),
 });
 
 export const pendingNoteMigrationSchema = v.array(

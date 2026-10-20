@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { Option } from "@/infrastructure/result";
 import { defineNestedCollection } from "@/settings";
+import { climb } from "@/settings/repair";
 
 import { promptsSchema } from "../prompts/config";
 
@@ -18,8 +19,9 @@ export const typeIdSchema = v.pipe(
 );
 
 const noteletCounterSchema = v.object({
-  enabled: v.boolean(),
-  frontmatterKey: v.pipe(v.string(), v.minLength(1)),
+  // Defaulted rather than climbed: climbing resets the whole counter, its key included.
+  enabled: v.optional(v.boolean(), true),
+  frontmatterKey: v.pipe(v.string(), v.minLength(1), climb("notelets already carry their index under this key")),
 });
 
 export const noteletTypeSchema = v.object({

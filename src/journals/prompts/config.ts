@@ -1,15 +1,18 @@
 import * as v from "valibot";
 
+import { climb } from "@/settings/repair";
+
 const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
 
+// No option text is inert: the value is what earlier answers stored, the label what the user reads.
 const promptOptionSchema = v.object({
-  label: v.pipe(v.string(), v.minLength(1)),
-  value: v.pipe(v.string(), v.minLength(1)),
+  label: v.pipe(v.string(), v.minLength(1), climb("an option is its label and value")),
+  value: v.pipe(v.string(), v.minLength(1), climb("an option is its label and value")),
 });
 
 const promptBase = v.object({
-  variable: v.pipe(v.string(), v.minLength(1)),
-  question: v.pipe(v.string(), v.minLength(1)),
+  variable: v.pipe(v.string(), v.minLength(1), climb("templates and answers are keyed by the variable")),
+  question: v.pipe(v.string(), v.minLength(1), climb("a question has no inert wording")),
   // Clearable: "" means the answer is never stored, so it renders into the body once and is
   // then gone. A prompt reaching the note name or folder must carry a real key — enforced in
   // settings, because fill state is a frontmatter question and never a filename parse.
@@ -24,16 +27,16 @@ export const promptSchema = v.variant("type", [
   v.object({
     ...promptBase.entries,
     ...requiredFlag,
-    type: v.literal("text"),
+    type: v.pipe(v.literal("text"), climb("discriminant")),
     // No default on purpose: absent means one line, so nothing is written for the common case
     // and a version that predates the flag reads the question as ordinary text.
     multiline: v.optional(v.boolean()),
   }),
-  v.object({ ...promptBase.entries, ...requiredFlag, type: v.literal("number") }),
+  v.object({ ...promptBase.entries, ...requiredFlag, type: v.pipe(v.literal("number"), climb("discriminant")) }),
   v.object({
     ...promptBase.entries,
     ...requiredFlag,
-    type: v.literal("date"),
+    type: v.pipe(v.literal("date"), climb("discriminant")),
     // Clearable, so no minLength: a `minLength` here would fail only the one question that holds
     // it, and the settings-service repair drops just that question rather than the whole
     // `prompts` array — a `format` issue would silently lose that one question, no louder than
@@ -42,14 +45,16 @@ export const promptSchema = v.variant("type", [
     // "YYYY-MM-DD" and formatToRegexp("") does not invert a note name.
     format: v.optional(v.string(), DEFAULT_DATE_FORMAT),
   }),
-  v.object({ ...promptBase.entries, type: v.literal("toggle") }),
+  v.object({ ...promptBase.entries, type: v.pipe(v.literal("toggle"), climb("discriminant")) }),
   v.object({
     ...promptBase.entries,
     ...requiredFlag,
-    type: v.literal("select"),
-    options: v.pipe(v.array(promptOptionSchema), v.minLength(1)),
+    type: v.pipe(v.literal("select"), climb("discriminant")),
+    // Not `climb`: that would drop the whole question for one bad option. The empty default
+    // never parses, so an absent list still drops the question.
+    options: v.optional(v.pipe(v.array(promptOptionSchema), v.minLength(1)), () => []),
   }),
-  v.object({ ...promptBase.entries, ...requiredFlag, type: v.literal("note") }),
+  v.object({ ...promptBase.entries, ...requiredFlag, type: v.pipe(v.literal("note"), climb("discriminant")) }),
 ]);
 
 export const promptsSchema = v.pipe(
