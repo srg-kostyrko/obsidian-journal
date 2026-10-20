@@ -40,7 +40,10 @@ const colorStyle = v.object({ type: discriminant("color"), color: onlyItsColor }
 const borderSide = v.optional(borderSideSchema, () => ({ ...defaultBorderSide(), show: false }));
 const borderStyle = v.object({
   type: discriminant("border"),
-  border: v.optional(v.union([v.literal("uniform"), v.literal("different")]), "uniform"),
+  border: v.pipe(
+    v.union([v.literal("uniform"), v.literal("different")]),
+    climb("a uniform border can show sides the user hid"),
+  ),
   left: borderSide,
   right: borderSide,
   top: borderSide,
