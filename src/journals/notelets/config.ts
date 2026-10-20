@@ -39,9 +39,9 @@ export type NoteletType = v.InferOutput<typeof noteletTypeSchema>;
 export type NoteletCounter = v.InferOutput<typeof noteletCounterSchema>;
 
 // An absent `id` does not parse on its own: the `""` default still runs through the wrapped
-// minLength(1) pipe and fails, so it comes back only via repairCollectionEntry substituting the
-// record key. The record key is the identity — a stored id that disagrees with it would make
-// every config reference unresolvable.
+// minLength(1) pipe and fails, so it comes back only through the load repair, which takes it from
+// these defaults and so from the record key. The record key is the identity — a stored id that
+// disagrees with it would make every config reference unresolvable.
 export function noteletTypeDefaults(id: string, raw?: unknown): NoteletType {
   const stored = (raw as { name?: unknown } | null | undefined)?.name;
   const name = typeof stored === "string" && stored.trim() !== "" ? stored : "Notelet";

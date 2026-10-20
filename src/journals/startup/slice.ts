@@ -13,9 +13,8 @@ const startupOverrideSchema = v.object({
 // dependency backwards — defined locally instead.
 const openModeSchema = v.picklist(["active", "tab", "split", "window"]);
 
-// `overrides`, `openMode` and `pinned` are all optional so a stored payload from before each was
-// introduced still parses: a slice has no per-field repair path, and a payload that fails the
-// schema resets every startup setting to its default rather than just the missing field.
+// `overrides`, `openMode` and `pinned` are optional so a payload stored before each existed parses
+// as it is, rather than going through the load repair and logging a reset.
 export const startupSliceSchema = v.object({
   journalName: v.string(),
   overrides: v.optional(v.array(startupOverrideSchema), () => []),
