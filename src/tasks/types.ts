@@ -59,10 +59,6 @@ export interface TaskProvider {
   // stays on or off globally, so no enable toggle here.
   readonly journalRow?: Component;
   start(): () => void;
-  // Text is not in metadataCache, so date roles and retargetable can only be read once the line's
-  // markdown exists — hydration calls this with it. The index has no dialect of its own: a
-  // provider that declares no hydrateItem leaves dates and retargetable as extraction set them.
-  hydrateItem?(item: TaskItem, markdown: string): TaskItem;
   // Whether `journalName` shows this item. Called from reactive effects, so an implementation reads
   // the journal's config synchronously for the effect to track it. Absent means every journal shows all.
   admits?(item: TaskItem, journalName: string): boolean;

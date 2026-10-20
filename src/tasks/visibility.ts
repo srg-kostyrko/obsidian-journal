@@ -4,8 +4,7 @@ import { TaskProviderToken, type TaskItem, type TaskProvider } from "./types";
 
 export class TaskVisibility {
   // Resolved through the injector on first use, not injected as a field: providers need the host,
-  // which needs the index, so an eager TaskProviderToken injection closes a construction cycle
-  // (see TaskIndex.hydrate).
+  // which needs the index, so an eager TaskProviderToken injection closes a construction cycle.
   readonly #injector = inject(InjectorToken);
   #providers: ReadonlyMap<string, TaskProvider> | undefined;
 

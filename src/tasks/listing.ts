@@ -352,9 +352,8 @@ function comparatorFor(sort: TaskSort): (a: Entry, b: Entry) => number {
       return rank === 0 ? a.id - b.id : rank;
     };
   }
-  // Whatever is left names a date role, which only exists once hydration has read the line — so
-  // this comparator runs after the await, never before it. An item carrying no date of the role
-  // sorts last, so naming a role never buries the items that answer it.
+  // Whatever is left names a date role. An item carrying no date of the role sorts last, so naming
+  // a role never buries the items that answer it.
   return (a, b) => {
     const left = a.item.dates[sort];
     const right = b.item.dates[sort];
