@@ -360,6 +360,7 @@ describe("JournalViewLeaf", () => {
       { key: "tasks", setting: "an unreadable journal", config: { journals: [42] } },
       { key: "tasks", setting: "one unreadable journal among good ones", config: { journals: ["Daily", 42] } },
       { key: "tasks", setting: "an unreadable provider", config: { scope: { provider: [42] } } },
+      { key: "custom-intervals", setting: "an unreadable journal list", config: { window: "month", journals: 42 } },
       { key: "notelets", setting: "an unreadable journal", config: { journals: [42] } },
       { key: "notelets", setting: "an unreadable notelet type", config: { types: [42] } },
       {
