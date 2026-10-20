@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { cloneFnJSON } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModalService } from "@/infrastructure/host/modals";
 
+import { readBlockConfig, type ViewBlockDefinition } from "../define-view-block";
 import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
 
@@ -15,7 +17,6 @@ import ToolbarStrip from "./ToolbarStrip.vue";
 import { useSortableList } from "./use-sortable-list";
 
 import type { BlockInstanceId, ViewId } from "../config";
-import type { ViewBlockDefinition } from "../define-view-block";
 
 const props = defineProps<{ viewId: ViewId }>();
 
@@ -68,7 +69,11 @@ function edit(row: RowEntry): void {
   void modals
     .open(editBlockModal, {
       component: row.definition.configComponent,
-      config: row.config,
+      // Seeded repaired, or an editor that spreads its config carries an unreadable field into a
+      // write that validation rejects.
+      config: cloneFnJSON(
+        (readBlockConfig(row.definition, row.config)?.value ?? row.config) as Record<string, unknown>,
+      ),
       typeLabel: row.definition.label(),
     })
     .tap((next) => void viewsService.updateBlockConfig(props.viewId, row.id, next));
