@@ -897,12 +897,14 @@ describe("CheckboxTaskProvider boot walk", () => {
     expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
   });
 
-  it("a full refill drops a note that vanished with no delete event of its own", async () => {
+  it("trashing a folder drops the dated lines of the notes inside it", async () => {
     const { host, notes } = await walked();
 
     void notes.deleteFolder("project" as VaultPath);
-    host.emit({ kind: "all" });
 
+    expect(host.published.get(projectPath)).toEqual([]);
+    // Forgotten, not just unpublished: a later full refill does not bring the lines back.
+    host.emit({ kind: "all" });
     expect(host.published.has(projectPath)).toBe(false);
     expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
   });
