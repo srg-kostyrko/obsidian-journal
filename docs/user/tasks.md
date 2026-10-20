@@ -507,8 +507,8 @@ that date shows it.
 
 Where it applies follows the task notes' rule: a `journal-tasks` code block asks the journal whose note
 it sits in, a tasks view block shows a line when any journal it lists shows it, and a [Check
-tasks](/decorations#tasks) decoration asks its cell's journal. With no journal in play, such as a
-plugin API call naming none, every dated line is shown.
+tasks](/decorations#tasks) decoration asks its cell's journal. The plugin API's `tasksFor` asks each
+journal it matches.
 
 For a Work and Personal split, give `personal` **None** for **Dated tasks** while `work` keeps **All**:
 `- [ ] Book the venue 📅 2026-03-10` in a project note then appears in `work`'s note for 10 March and
@@ -531,7 +531,7 @@ the view rather than to the note it sits in:
 - **Journals** — leave all off, the default, to include every journal in the view's own
   [shelf scope](/shelves#scoping-a-view); turn specific ones on to narrow it further.
 - **Source** and **Sort by** — the same `source` and `sort` this page covers above.
-- **Task date** — the same as the fence's `date`: which of a task note's, or a dated checkbox line's, dates places it in the window.
+- **Task date** — the same as the fence's `date`: which of a task note's, or a dated checkbox line's, dates places it in the window. Dated lines are admitted when any of the block's journals shows them, as task notes are.
   A task note is listed when any of the block's journals [shows it](#which-task-notes-a-journal-shows).
 - **Filter** — the same condition editor [a journal's own listing filter](#a-journal-s-own-listing-filter)
   uses, scoped to this block instead of to a journal. A new block holds no conditions at all, so it
