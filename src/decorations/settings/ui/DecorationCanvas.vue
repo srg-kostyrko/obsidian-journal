@@ -237,9 +237,8 @@ function removeActive(): void {
      cell really is and the whole thing is scaled up. Stretching the preview over the square
      instead leaves a 1px border a hairline and a 0.4em dot a speck, twelve times smaller than
      the share of the cell they will really occupy — which is the one thing the canvas exists
-     to show. --cell-source-size comes from the script, which also derives the scale from it.
-     12 is the most the cell is magnified; a column too narrow for that shrinks the cell, and
-     its measured width then sets the scale. */
+     to show. 12 is the most it is magnified; the script sets --cell-source-size and the
+     measured scale. */
   --cell-max-magnification: 12;
 
   display: flex;
@@ -265,9 +264,9 @@ function removeActive(): void {
   justify-content: center;
 }
 /* The overlay regions are absolutely positioned against .cell, so the scaled preview must
-   land on exactly the same box or the two coordinate spaces drift apart (see the CRITICAL 1
-   review finding). It does: a centered source-sized box scaled about its own centre. The
-   preview's own 2em floor would fight that, so the box is stated outright instead. */
+   land on exactly the same box or the two coordinate spaces drift apart. It does: a centered
+   source-sized box scaled about its own centre. The preview's own 2em floor would fight that,
+   so the box is stated outright instead. */
 .cell :deep(.decoration-preview) {
   width: var(--cell-source-size);
   height: var(--cell-source-size);

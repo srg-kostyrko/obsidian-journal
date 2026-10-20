@@ -63,22 +63,51 @@ async function openStyleCanvas(): Promise<void> {
 const BOX_EDGES = ["left", "top", "width", "height"] as const;
 type Box = Record<(typeof BOX_EDGES)[number], number>;
 
-async function canvasBoxes(): Promise<{ cell: Box; preview: Box }> {
-  const [cell, preview] = await browser.execute(() =>
-    [".decoration-canvas .cell", ".decoration-canvas .decoration-preview"].map((selector): Box => {
+class StyleCanvasMissingError extends Error {
+  constructor(seen: unknown) {
+    super(`style canvas not rendered: ${JSON.stringify(seen)}`);
+    this.name = "StyleCanvasMissingError";
+  }
+}
+
+interface CanvasBoxes {
+  cell: Box;
+  preview: Box;
+  /** The width .stage leaves for the cell, inside its own padding. */
+  stageContentWidth: number;
+}
+
+// Throws rather than returning zeroes for a missing element: two absent boxes are equal, and
+// every comparison below would pass on a canvas that never rendered.
+async function canvasBoxes(): Promise<CanvasBoxes> {
+  const { cell, preview, stageContentWidth } = await browser.execute(() => {
+    function box(selector: string): Box | null {
       const rect = document.querySelector(selector)?.getBoundingClientRect();
-      return { left: rect?.left ?? 0, top: rect?.top ?? 0, width: rect?.width ?? 0, height: rect?.height ?? 0 };
-    }),
-  );
-  const missing: Box = { left: 0, top: 0, width: 0, height: 0 };
-  return { cell: cell ?? missing, preview: preview ?? missing };
+      return rect ? { left: rect.left, top: rect.top, width: rect.width, height: rect.height } : null;
+    }
+    const stage = document.querySelector<HTMLElement>(".decoration-canvas .stage");
+    const styles = stage ? getComputedStyle(stage) : null;
+    return {
+      cell: box(".decoration-canvas .cell"),
+      preview: box(".decoration-canvas .decoration-preview"),
+      stageContentWidth:
+        stage && styles
+          ? stage.clientWidth - Number.parseFloat(styles.paddingLeft) - Number.parseFloat(styles.paddingRight)
+          : null,
+    };
+  });
+  if (!cell || !preview || stageContentWidth === null) {
+    throw new StyleCanvasMissingError({ cell, preview, stageContentWidth });
+  }
+  return { cell, preview, stageContentWidth };
 }
 
-function sameBox({ cell, preview }: { cell: Box; preview: Box }): boolean {
-  return BOX_EDGES.every((edge) => Math.abs(preview[edge] - cell[edge]) < 0.5);
+function sameBox({ cell, preview }: CanvasBoxes): boolean {
+  return cell.width > 0 && BOX_EDGES.every((edge) => Math.abs(preview[edge] - cell[edge]) < 0.5);
 }
 
-function expectSameBox({ cell, preview }: { cell: Box; preview: Box }): void {
+function expectSameBox({ cell, preview }: CanvasBoxes): void {
+  expect(cell.width).toBeGreaterThan(0);
   for (const edge of BOX_EDGES) expect(preview[edge]).toBeCloseTo(cell[edge], 0);
 }
 
@@ -827,8 +856,12 @@ describe("settings", () => {
         // the wait gives it that, and the assertions below report the boxes if it never lands.
         await browser.waitUntil(async () => sameBox(await canvasBoxes()), { timeout: 2000 }).catch(() => false);
 
+        // The cell fills the column and stays square, so a cell collapsed to its source size with
+        // the preview unscaled cannot pass as "the same box".
         const settled = await canvasBoxes();
-        expect(settled.cell.width).toBeLessThan(240);
+        expect(settled.stageContentWidth).toBeLessThan(240);
+        expect(settled.cell.width).toBeCloseTo(settled.stageContentWidth, 0);
+        expect(settled.cell.height).toBeCloseTo(settled.cell.width, 0);
         expectSameBox(settled);
       });
     });
