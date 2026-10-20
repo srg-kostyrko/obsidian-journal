@@ -82,7 +82,7 @@ describe("ToolbarStrip", () => {
     const { harness } = await setup([{ id: ITEM_A, key: "shelf-selector", config: {} }]);
     await userEvent.click(screen.getByLabelText(m.view_toolbar_item_remove()));
     const repository = harness.resolve(ViewsRepository);
-    const items = (repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: unknown[] }).items;
+    const items = (repository.get(VIEW_ID).getOrUndefined()?.blocks[0]?.config as { items: unknown[] }).items;
     expect(items).toEqual([]);
   });
 
@@ -120,7 +120,7 @@ describe("ToolbarStrip", () => {
     const repository = harness.resolve(ViewsRepository);
     await waitFor(() => {
       const items = (
-        repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as {
+        repository.get(VIEW_ID).getOrUndefined()?.blocks[0]?.config as {
           items: { config: { label?: string } }[];
         }
       ).items;
@@ -150,9 +150,8 @@ describe("ToolbarStrip", () => {
     modal.submit({ ...modal.props.config, label: "B" });
     const repository = harness.resolve(ViewsRepository);
     await waitFor(() => {
-      const items = (
-        repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: { config: unknown }[] }
-      ).items;
+      const items = (repository.get(VIEW_ID).getOrUndefined()?.blocks[0]?.config as { items: { config: unknown }[] })
+        .items;
       expect(v.safeParse(buttonItemConfigSchema, items[0]?.config).success).toBe(true);
       expect(items[0]?.config).toMatchObject({ action: { amount: 1 }, label: "B" });
       expect(items[0]?.config).not.toHaveProperty("icon");

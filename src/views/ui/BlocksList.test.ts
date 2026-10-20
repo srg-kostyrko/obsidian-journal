@@ -62,7 +62,7 @@ describe("BlocksList", () => {
     const { harness } = await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
     await userEvent.click(screen.getByLabelText(m.view_block_remove()));
     const repository = harness.resolve(ViewsRepository);
-    expect(repository.get(VIEW_ID).getOr(undefined as never)?.blocks).toEqual([]);
+    expect(repository.get(VIEW_ID).getOrUndefined()?.blocks).toEqual([]);
   });
 
   it("renders a ToolbarStrip when a block's key is 'toolbar'", async () => {
@@ -98,7 +98,7 @@ describe("BlocksList", () => {
       await waitFor(() => {
         const block = repository
           .get(VIEW_ID)
-          .getOr(undefined as never)
+          .getOrUndefined()
           ?.blocks.find((b) => b.id === BLOCK_A);
         expect((block?.config as { weeks?: string }).weeks).toBe("right");
       });
@@ -115,7 +115,7 @@ describe("BlocksList", () => {
       await waitFor(() => {
         const config = repository
           .get(VIEW_ID)
-          .getOr(undefined as never)
+          .getOrUndefined()
           ?.blocks.find((b) => b.id === BLOCK_A)?.config;
         expect(v.safeParse(tasksViewBlock.schema, config).success).toBe(true);
         expect(config).toMatchObject({ window: "week", sort: "document" });
