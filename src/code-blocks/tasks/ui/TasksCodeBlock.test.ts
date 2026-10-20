@@ -7,7 +7,8 @@ import type { AnchorString } from "@/calendar";
 import { initLocale, m } from "@/i18n";
 import { MarkdownRenderService, type VaultPath } from "@/infrastructure/host";
 import { FakeMarkdownRenderService } from "@/infrastructure/host/testing";
-import { JournalsIndex } from "@/journals";
+import { expectOk } from "@/infrastructure/result/testing";
+import { JournalsIndex, JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
@@ -171,5 +172,50 @@ describe("TasksCodeBlock", () => {
     });
 
     await vi.waitFor(() => expect(screen.getByText("- [ ] Ship it")).toBeTruthy());
+  });
+
+  // A dated line answers to its owning journal's filter whichever fence reaches it, so a Weekly
+  // fence depends on Daily's stored filter although Daily is off its shelf and so outside its request.
+  it("drops a Daily-owned dated line from a Weekly fence once Daily's filter stops admitting it", async () => {
+    const WEEK = "Weekly/2026-W39.md" as VaultPath;
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule],
+      data: {
+        journals: { Daily: daily, Weekly: fixedJournal("Weekly", { type: "week" }) },
+        shelves: { review: buildShelf("review", { journals: ["Weekly"] }) },
+      },
+      overrides: [
+        overrideWith(MarkdownRenderService, new FakeMarkdownRenderService() as unknown as MarkdownRenderService),
+      ],
+    });
+    harness
+      .resolve(JournalsIndex)
+      .register({ journalName: "Weekly", anchor: "2026-09-21" as AnchorString, path: WEEK });
+    seedHost(harness);
+    harness.resolve(TaskIndex).publish("checkbox", { path: HOST }, [
+      buildTaskItem({
+        path: HOST,
+        key: `${HOST}:3`,
+        relations: ["date"],
+        dates: { due: DAY },
+        display: { kind: "line", path: HOST, line: 3, endLine: 3, parentLine: null, markdown: "- [ ] Dated" },
+      }),
+    ]);
+    harness.render(TasksCodeBlock, { props: { path: WEEK, config: DEFAULT_CONFIG } });
+    await vi.waitFor(() => expect(screen.getByText("- [ ] Dated")).toBeTruthy());
+
+    const journals = harness.resolve(JournalsRepository);
+    const stored = journals.require("Daily");
+    expectOk(stored);
+    expectOk(
+      journals.update("Daily", {
+        tasks: {
+          ...stored.value.tasks,
+          filter: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] },
+        },
+      }),
+    );
+
+    await vi.waitFor(() => expect(screen.queryByText("- [ ] Dated")).toBeNull());
   });
 });
