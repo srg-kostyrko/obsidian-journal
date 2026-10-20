@@ -1045,9 +1045,21 @@ describe("JournalsApiService tasksFor", () => {
     expect(found.map((task) => `${task.journal}:${task.line}`)).toEqual(["daily:1"]);
   });
 
-  it("tasksFor returns a dated checkbox line from a note no journal owns", async () => {
+  it("returns a dated checkbox line from a note no journal owns, under the period asked about", async () => {
     const { api, tasks } = await buildTasksApi({ daily: fixedJournal("daily", { type: "day" }) });
     tasks.publish("checkbox", { path: "Projects/a.md" as VaultPath }, [
+      buildTaskItem({
+        path: "Projects/a.md" as VaultPath,
+        key: "Projects/a.md:2",
+        display: {
+          kind: "line",
+          path: "Projects/a.md" as VaultPath,
+          line: 2,
+          endLine: 2,
+          parentLine: null,
+          markdown: null,
+        },
+      }),
       buildTaskItem({
         path: "Projects/a.md" as VaultPath,
         key: "Projects/a.md:3",
@@ -1057,7 +1069,7 @@ describe("JournalsApiService tasksFor", () => {
           path: "Projects/a.md" as VaultPath,
           line: 3,
           endLine: 3,
-          parentLine: null,
+          parentLine: 2,
           markdown: "- [ ] ship",
         },
         dates: { due: "2026-10-24" as AnchorString },
@@ -1066,8 +1078,47 @@ describe("JournalsApiService tasksFor", () => {
 
     const found = await api.tasksFor({}, "2026-10-24");
 
-    expect(found).toHaveLength(1);
-    expect(found[0]).toMatchObject({ path: "Projects/a.md", line: 3, relations: ["date"] });
+    expect(found).toEqual([
+      {
+        journal: "daily",
+        date: "2026-10-24",
+        path: "Projects/a.md",
+        source: "note",
+        line: 3,
+        text: "- [ ] ship",
+        status: "todo",
+        dates: { due: "2026-10-24" },
+        relations: ["date"],
+        parentLine: 2,
+      },
+    ]);
+  });
+
+  // Journal order is the falsifier: the monthly journal reaches the day note's dated line through
+  // its date pass, and asked first it would claim the line before the day journal that holds it.
+  it("attributes a dated line in a period's note to that note's journal, whichever journal is asked first", async () => {
+    const { api, index, tasks } = await buildTasksApi({ monthly, daily });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    tasks.publish("checkbox", { path: "D/2026-09-22.md" as VaultPath }, [
+      buildTaskItem({
+        path: "D/2026-09-22.md" as VaultPath,
+        key: "D/2026-09-22.md:1",
+        relations: ["containment", "date"],
+        display: {
+          kind: "line",
+          path: "D/2026-09-22.md" as VaultPath,
+          line: 1,
+          endLine: 1,
+          parentLine: null,
+          markdown: null,
+        },
+        dates: { due: "2026-09-22" as AnchorString },
+      }),
+    ]);
+
+    const found = await api.tasksFor({}, "2026-09-22");
+
+    expect(found.map((task) => `${task.journal}:${task.date}:${task.line}`)).toEqual(["daily:2026-09-22:1"]);
   });
 
   describe("dated task notes", () => {
