@@ -16,14 +16,12 @@ const questionFilterSchema = v.pipe(
   v.transform((rule): TaskRule => ({ ...rule, conditions: rule.conditions.filter((c) => c.type !== "status") })),
 );
 
-// These fields sit inside a decoration's conditions, which the settings repair treats whole: without
-// the fallbacks one unreadable field would drop the decoration.
 export const taskQuestionSchema = v.object({
-  quantifier: v.optional(v.fallback(v.picklist(["any", "all", "none"]), "any"), "any"),
-  status: v.optional(v.fallback(v.picklist(taskQuestionStatuses), "listing"), "listing"),
-  source: v.optional(v.fallback(v.picklist(["note", "notelets", "both"]), "both"), "both"),
-  date: v.optional(v.fallback(taskDateChoiceSchema, "scheduled-or-due"), "scheduled-or-due"),
-  filter: v.optional(v.fallback(questionFilterSchema, EMPTY_RULE), EMPTY_RULE),
+  quantifier: v.optional(v.picklist(["any", "all", "none"]), "any"),
+  status: v.optional(v.picklist(taskQuestionStatuses), "listing"),
+  source: v.optional(v.picklist(["note", "notelets", "both"]), "both"),
+  date: v.optional(taskDateChoiceSchema, "scheduled-or-due"),
+  filter: v.optional(questionFilterSchema, EMPTY_RULE),
 });
 
 export type TaskQuestion = v.InferOutput<typeof taskQuestionSchema>;

@@ -709,6 +709,28 @@ describe("journal decoration repair on load", () => {
     expect(journal.decorations).toEqual([keptDecoration()]);
   });
 
+  it.each([
+    ["quantifier", "most"],
+    ["date", "someday"],
+  ])("a tasks condition with an unreadable %s drops its decoration, keeping its sibling", async (field, bad) => {
+    const broken = buildDecoration({
+      conditions: [{ ...buildCondition("tasks"), [field]: bad }],
+      styles: [buildStyle("color")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [broken, keptDecoration()] });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: raw } },
+      allow: { dataRepair: true },
+    });
+
+    expect(unwrap(harness.resolve(JournalsRepository).get("daily")).decorations).toEqual([keptDecoration()]);
+    const repair = harness.logs.records.find(
+      (record) => record.message === "collection entry fields reset to defaults",
+    );
+    expect(repair?.fields).toMatchObject({ fields: ["decorations.0"] });
+  });
+
   it("a journal whose only decoration has a bad condition keeps no decoration, not the seeded default", async () => {
     const broken = buildDecoration({ conditions: [{ type: "moon-phase" } as never], styles: [buildStyle("color")] });
     const raw = fixedJournal("daily", { type: "day" }, { decorations: [broken] });
