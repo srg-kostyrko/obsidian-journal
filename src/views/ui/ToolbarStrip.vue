@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cloneFnJSON } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
@@ -9,6 +10,7 @@ import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
+import { readToolbarItemConfig } from "../define-toolbar-item";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
 import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
@@ -41,12 +43,14 @@ const source = computed<Row[]>(() => {
     .map((view) => view.blocks.find((b) => b.id === props.blockId))
     .map((block) => (block ? toolbarItems.itemsOf(block) : []))
     .getOr([]);
-  return items.map((item) => ({
-    id: item.id,
-    key: item.key,
-    config: item.config,
-    definition: viewsService.getToolbarItemDefinition(item.key).getOrUndefined(),
-  }));
+  return items.map((item) => {
+    const definition = viewsService.getToolbarItemDefinition(item.key).getOrUndefined();
+    // Read as the live view reads it, so the preview and the editor never see an unreadable field.
+    const config = definition
+      ? ((readToolbarItemConfig(definition, item.config)?.value ?? item.config) as Record<string, unknown>)
+      : item.config;
+    return { id: item.id, key: item.key, config, definition };
+  });
 });
 
 const rows = ref<Row[]>([]);
@@ -62,12 +66,13 @@ const remove = (id: BlockInstanceId): void => void viewsService.removeToolbarIte
 
 function edit(row: Row): void {
   if (!row.definition?.configComponent) return;
+  const config = cloneFnJSON(row.config);
   void modals
     .open(editToolbarItemModal, {
       component: row.definition.configComponent,
-      config: row.config,
+      config,
       typeLabel: row.definition.label(),
-      summary: row.definition.summary?.(row.config),
+      summary: row.definition.summary?.(config),
     })
     .tap((next) => void viewsService.updateToolbarItemConfig(props.viewId, props.blockId, row.id, next));
 }

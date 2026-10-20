@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { h, nextTick } from "vue";
+import { defineComponent, h, nextTick, type PropType } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
 import { m } from "@/i18n";
@@ -13,6 +13,7 @@ import { notesCalendarModule } from "@/notes-calendar/module";
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { FALLBACK_VIEW_ICON, type BlockInstanceId, type View, type ViewId } from "./config";
@@ -258,18 +259,118 @@ describe("JournalViewLeaf", () => {
       await leaf.onClose();
     });
 
-    it("reports a block whose config fails the registered schema", async () => {
-      const trivialBlock = defineViewBlock<{ x: number }>({
+    it("renders a block whose config has one bad field, with that field defaulted", async () => {
+      const trivialBlock = defineViewBlock<{ x: number; label: string }>({
         key: "trivial-block",
         label: () => "Trivial",
-        schema: v.object({ x: v.number() }),
+        schema: v.object({ x: v.number(), label: v.string() }),
+        defaultConfig: { x: 7, label: "default" },
+        component: defineComponent({
+          props: { config: { type: Object as PropType<{ x: number; label: string }>, required: true } },
+          setup: (props) => () => h("p", { class: "trivial" }, `${props.config.x}:${props.config.label}`),
+        }),
+      });
+      const view = buildView(VIEW_A, {
+        blocks: [{ id: BLOCK_STUB, key: "trivial-block", config: { x: "not-a-number", label: "kept" } }],
+      });
+      const { harness, leafInstance, containerEl } = await buildLeaf(view, {
+        modules: [testBlocksModule([trivialBlock])],
+      });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.querySelector(".trivial")?.textContent).toBe("7:kept");
+      expect(containerEl.textContent).not.toContain(m.view_block_config_error());
+      const repair = harness.logs.records.find(
+        (record) => record.message === "view-block config fields reset to defaults",
+      );
+      expect(repair?.fields).toEqual({ key: "trivial-block", viewId: VIEW_A, blockId: BLOCK_STUB, fields: ["x"] });
+      await leaf.onClose();
+    });
+
+    it("still shows the error panel when the config cannot be repaired", async () => {
+      const unrepairableBlock = defineViewBlock<{ x: number }>({
+        key: "unrepairable-block",
+        label: () => "Unrepairable",
+        schema: v.pipe(
+          v.object({ x: v.number() }),
+          v.check(() => false),
+        ),
         defaultConfig: { x: 0 },
         component: { setup: () => noop },
       });
       const view = buildView(VIEW_A, {
-        blocks: [{ id: BLOCK_STUB, key: "trivial-block", config: { x: "not-a-number" } }],
+        blocks: [{ id: BLOCK_STUB, key: "unrepairable-block", config: { x: 1 } }],
       });
-      const { leafInstance, containerEl } = await buildLeaf(view, { modules: [testBlocksModule([trivialBlock])] });
+      const { leafInstance, containerEl } = await buildLeaf(view, {
+        modules: [testBlocksModule([unrepairableBlock])],
+      });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.textContent).toContain(m.view_block_config_error());
+      await leaf.onClose();
+    });
+
+    it("renders a toolbar whose one item has an unreadable id, with its other items", async () => {
+      const view = buildView(VIEW_A, {
+        blocks: [
+          {
+            id: BLOCK_STUB,
+            key: "toolbar",
+            config: {
+              items: [
+                { id: "not-a-uuid", key: "spacer", config: {} },
+                { id: "33333333-3333-4333-8333-333333333333", key: "shelf-selector", config: {} },
+              ],
+            },
+          },
+        ],
+      });
+      const { leafInstance, containerEl } = await buildLeaf(view, {
+        shelves: { Personal: buildShelf("Personal") },
+      });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.textContent).not.toContain(m.view_block_config_error());
+      expect(containerEl.querySelector(".jv-toolbar-spacer")).toBeNull();
+      expect(containerEl.textContent).toContain(m.common_label_all_journals());
+      await leaf.onClose();
+    });
+
+    it.each([
+      { field: "sort", config: { window: "week", sort: "priority" } },
+      { field: "filter.mode", config: { window: "week", filter: { mode: "xor", conditions: [] } } },
+    ])("renders a tasks block whose stored $field is unreadable, with it defaulted", async ({ field, config }) => {
+      const view = buildView(VIEW_A, {
+        blocks: [{ id: BLOCK_STUB, key: "tasks", config }],
+      });
+      const { harness, leafInstance, containerEl } = await buildLeaf(view, { modules: [tasksCoreModule] });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.textContent).not.toContain(m.view_block_config_error());
+      const repair = harness.logs.records.find(
+        (record) => record.message === "view-block config fields reset to defaults",
+      );
+      expect(repair?.fields).toMatchObject({ key: "tasks", fields: [field] });
+      await leaf.onClose();
+    });
+
+    // Each of these reads an empty or default value as "every", so a repaired block would show what
+    // it was set up to leave out.
+    it.each([
+      { key: "tasks", setting: "an unreadable journal", config: { journals: [42] } },
+      { key: "tasks", setting: "one unreadable journal among good ones", config: { journals: ["Daily", 42] } },
+      { key: "tasks", setting: "an unreadable provider", config: { scope: { provider: [42] } } },
+      { key: "custom-intervals", setting: "an unreadable journal list", config: { window: "month", journals: 42 } },
+      { key: "notelets", setting: "an unreadable journal", config: { journals: [42] } },
+      { key: "notelets", setting: "an unreadable notelet type", config: { types: [42] } },
+      {
+        key: "month-calendar",
+        setting: "an unreadable hidden weekday",
+        config: { before: 0, after: 0, hiddenWeekdays: [9] },
+      },
+    ])("shows the error panel for a $key block with $setting", async ({ key, config }) => {
+      const view = buildView(VIEW_A, { blocks: [{ id: BLOCK_STUB, key, config }] });
+      const { leafInstance, containerEl } = await buildLeaf(view, { modules: [tasksCoreModule] });
       const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
       await leaf.onOpen();
       expect(containerEl.textContent).toContain(m.view_block_config_error());

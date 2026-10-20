@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
+import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
@@ -7,6 +8,7 @@ import { journalsCoreModule } from "@/journals/module";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer } from "@/testing";
 
+import { tasksViewBlock } from "../blocks/tasks/tasks-view-block";
 import { viewsCoreModule } from "../module";
 import { ViewsRepository } from "../repository";
 
@@ -60,7 +62,7 @@ describe("BlocksList", () => {
     const { harness } = await setup([{ id: BLOCK_A, key: "divider", config: {} }]);
     await userEvent.click(screen.getByLabelText(m.view_block_remove()));
     const repository = harness.resolve(ViewsRepository);
-    expect(repository.get(VIEW_ID).getOr(undefined as never)?.blocks).toEqual([]);
+    expect(repository.get(VIEW_ID).getOrUndefined()?.blocks).toEqual([]);
   });
 
   it("renders a ToolbarStrip when a block's key is 'toolbar'", async () => {
@@ -96,9 +98,27 @@ describe("BlocksList", () => {
       await waitFor(() => {
         const block = repository
           .get(VIEW_ID)
-          .getOr(undefined as never)
+          .getOrUndefined()
           ?.blocks.find((b) => b.id === BLOCK_A);
         expect((block?.config as { weeks?: string }).weeks).toBe("right");
+      });
+    });
+
+    // TasksViewBlockConfig writes `{ ...props.config, ...patch }`, so an editor seeded with the raw
+    // stored config carries the unreadable value into a write that validation then rejects.
+    it("an edit to a block with an unreadable field stores the repaired config with the edit", async () => {
+      const { harness } = await setup([{ id: BLOCK_A, key: "tasks", config: { window: "day", sort: "priority" } }]);
+      await userEvent.click(screen.getByLabelText(m.view_block_edit()));
+      const modal = harness.modals.lastOpen<{ config: Record<string, unknown> }, Record<string, unknown>>();
+      modal.submit({ ...modal.props.config, window: "week" });
+      const repository = harness.resolve(ViewsRepository);
+      await waitFor(() => {
+        const config = repository
+          .get(VIEW_ID)
+          .getOrUndefined()
+          ?.blocks.find((b) => b.id === BLOCK_A)?.config;
+        expect(v.safeParse(tasksViewBlock.schema, config).success).toBe(true);
+        expect(config).toMatchObject({ window: "week", sort: "document" });
       });
     });
   });

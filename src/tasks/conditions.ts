@@ -4,9 +4,8 @@ import * as v from "valibot";
 
 import { climb } from "@/settings/repair";
 
-// The fallbacks stay because the tasks fence and the tasks view block parse with these schemas and
-// no repair, so an unreadable value would show an error in place of the block until block configs
-// are repaired when read.
+// The condition fallbacks stay because the tasks fence parses this schema with no repair, and
+// removing one would change how a fence in a note reads.
 export const taskConditionSchema = v.variant("type", [
   v.object({
     type: v.pipe(v.literal("tag"), climb("discriminant")),
@@ -26,7 +25,7 @@ export const taskConditionSchema = v.variant("type", [
 ]);
 
 export const taskRuleSchema = v.object({
-  mode: v.optional(v.fallback(v.picklist(["and", "or"]), "and"), "and"),
+  mode: v.optional(v.picklist(["and", "or"]), "and"),
   conditions: v.optional(v.array(taskConditionSchema), []),
 });
 

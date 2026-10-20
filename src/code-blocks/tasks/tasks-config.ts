@@ -6,9 +6,9 @@ import { DEFAULT_TASK_QUERY, taskSorts, type TaskQuery } from "@/tasks/query";
 
 import { asFenceStringList, asRecord } from "../fence-record";
 
-// Same double-wrap query.ts's own scope/sort fields use: `optional` covers a missing key,
-// `fallback` covers a present one that fails the enum check (wrong type, or a value the block
-// does not know) — both land on the same default rather than throwing into an error panel.
+// A fence is hand-typed YAML that no repair pass reads, so the schema itself absorbs a bad value:
+// `optional` covers a missing key, `fallback` a present one that fails the enum check (wrong type,
+// or a value the block does not know) — both land on the same default rather than an error panel.
 const sourceEntry = v.optional(
   v.fallback(v.picklist(["note", "notelets", "both"]), DEFAULT_TASK_QUERY.scope.source),
   DEFAULT_TASK_QUERY.scope.source,

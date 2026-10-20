@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { climb } from "@/settings/repair";
 import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
@@ -11,8 +12,11 @@ import NoteletsBlockConfig from "./ui/NoteletsBlockConfig.vue";
 
 const schema = v.object({
   window: v.optional(v.picklist(windowKinds), "day"),
-  journals: v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
-  types: v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
+  journals: v.pipe(
+    v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
+    climb("an empty journal list means every journal"),
+  ),
+  types: v.pipe(v.optional(v.array(v.pipe(v.string(), v.minLength(1)))), climb("an empty type list means every type")),
 });
 
 export type NoteletsBlockConfig = v.InferOutput<typeof schema>;

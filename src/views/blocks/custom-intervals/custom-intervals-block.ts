@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { climb } from "@/settings/repair";
 import { icons } from "@/ui/icons";
 
 import { defineViewBlock } from "../../define-view-block";
@@ -10,7 +11,10 @@ import CustomIntervalsBlockConfig from "./ui/CustomIntervalsBlockConfig.vue";
 import { windowKinds } from "./window-resolution";
 
 const schema = v.object({
-  journals: v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
+  journals: v.pipe(
+    v.optional(v.array(v.pipe(v.string(), v.minLength(1)))),
+    climb("an absent journal list means every journal"),
+  ),
   window: v.union([
     v.picklist(windowKinds),
     v.pipe(

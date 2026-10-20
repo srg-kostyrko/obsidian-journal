@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
+import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 
@@ -14,7 +15,7 @@ import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.fl
 import { viewsCoreModule } from "../module";
 import { ViewsRepository } from "../repository";
 import { provideViewContextStub } from "../testing";
-import { buttonConfigFor } from "../toolbar-items/button/button-config";
+import { buttonConfigFor, buttonItemConfigSchema } from "../toolbar-items/button/button-config";
 import { buttonItem } from "../toolbar-items/button/button-item";
 import { existingNavigationItem } from "../toolbar-items/existing-navigation/existing-navigation-item";
 import { provideViewContext } from "../view-context";
@@ -81,7 +82,7 @@ describe("ToolbarStrip", () => {
     const { harness } = await setup([{ id: ITEM_A, key: "shelf-selector", config: {} }]);
     await userEvent.click(screen.getByLabelText(m.view_toolbar_item_remove()));
     const repository = harness.resolve(ViewsRepository);
-    const items = (repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: unknown[] }).items;
+    const items = (repository.get(VIEW_ID).getOrUndefined()?.blocks[0]?.config as { items: unknown[] }).items;
     expect(items).toEqual([]);
   });
 
@@ -119,11 +120,41 @@ describe("ToolbarStrip", () => {
     const repository = harness.resolve(ViewsRepository);
     await waitFor(() => {
       const items = (
-        repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as {
+        repository.get(VIEW_ID).getOrUndefined()?.blocks[0]?.config as {
           items: { config: { label?: string } }[];
         }
       ).items;
       expect(items[0]?.config.label).toBe("B");
+    });
+  });
+
+  it("previews an item with an unreadable field from its repaired config", async () => {
+    const config = { action: { type: "current", mode: "navigate", levels: ["day"] }, label: 42 };
+    const { container } = await setup([{ id: ITEM_A, key: "button", config }]);
+    const preview = container.querySelector(".jv-item-preview");
+    expect(preview?.textContent).toContain(m.common_label_today());
+    expect(preview?.textContent).not.toContain("42");
+  });
+
+  // An editor writes `{ ...props.config, ...patch }`, so one seeded with the raw stored config
+  // carries the unreadable value into a write that validation then rejects.
+  it("an edit to an item with an unreadable field stores the repaired config with the edit", async () => {
+    const config = {
+      action: { type: "navigate-step", direction: "next", unit: "day", amount: 1 },
+      icon: 42,
+      label: "A",
+    };
+    const { harness } = await setup([{ id: ITEM_A, key: "button", config }]);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
+    const modal = harness.modals.lastOpen<{ config: Record<string, unknown> }, Record<string, unknown>>();
+    modal.submit({ ...modal.props.config, label: "B" });
+    const repository = harness.resolve(ViewsRepository);
+    await waitFor(() => {
+      const items = (repository.get(VIEW_ID).getOrUndefined()?.blocks[0]?.config as { items: { config: unknown }[] })
+        .items;
+      expect(v.safeParse(buttonItemConfigSchema, items[0]?.config).success).toBe(true);
+      expect(items[0]?.config).toMatchObject({ action: { amount: 1 }, label: "B" });
+      expect(items[0]?.config).not.toHaveProperty("icon");
     });
   });
 });

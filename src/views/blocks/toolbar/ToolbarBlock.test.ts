@@ -85,12 +85,31 @@ describe("ToolbarBlock", () => {
     expect(container.querySelectorAll(".jv-toolbar-spacer").length).toBe(1);
   });
 
-  it("skips items whose config fails schema validation", async () => {
-    const { container } = await mountToolbar([
-      { id: "i1", key: "spacer", config: {} },
-      { id: "i2", key: "period-buttons", config: { week: "nope" } },
-    ]);
+  it("renders an item with an unreadable field from its repaired config", async () => {
+    const { container } = await mountToolbar(
+      [{ id: "i1", key: "stub", config: { name: 42 } }],
+      [testItemsModule(stubItem)],
+    );
+    expect(container.querySelector<HTMLElement>("[data-stub]")?.dataset.stub).toBe("");
+  });
+
+  it("skips items whose config cannot be repaired", async () => {
+    const unrepairable = defineToolbarItem<{ name: string }>({
+      ...stubItem,
+      schema: v.pipe(
+        v.object({ name: v.string() }),
+        v.check(() => false),
+      ),
+    });
+    const { container } = await mountToolbar(
+      [
+        { id: "i1", key: "spacer", config: {} },
+        { id: "i2", key: "stub", config: { name: "x" } },
+      ],
+      [testItemsModule(unrepairable)],
+    );
     expect(container.querySelectorAll(".jv-toolbar-spacer").length).toBe(1);
+    expect(container.querySelector("[data-stub]")).toBeNull();
   });
 
   it("passes the parsed item config through to the rendered component", async () => {

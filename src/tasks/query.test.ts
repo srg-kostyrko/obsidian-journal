@@ -22,14 +22,20 @@ describe("taskQuerySchema", () => {
     expect(parsed.filter.conditions).toEqual([]);
   });
 
-  it("falls back to document order on a sort key it does not know", () => {
-    expect(v.parse(taskQuerySchema, { sort: "priority" }).sort).toBe("document");
+  // An unreadable value is the read-time repair's to reset, so it reaches the log rather than
+  // being swapped silently here.
+  it.each([
+    ["sort", { sort: "priority" }],
+    ["date", { date: "whenever" }],
+    ["scope.source", { scope: { source: "vault" } }],
+    ["scope.depth", { scope: { depth: "deep" } }],
+    ["filter.mode", { filter: { mode: "xor" } }],
+  ])("rejects an unknown %s", (_field, raw) => {
+    expect(v.safeParse(taskQuerySchema, raw).success).toBe(false);
   });
 
-  it("falls back to scheduled-or-due on a date choice it does not know", () => {
+  it("accepts every date choice it knows", () => {
     expect(v.parse(taskQuerySchema, { date: "start" }).date).toBe("start");
-    expect(v.parse(taskQuerySchema, { date: "whenever" }).date).toBe("scheduled-or-due");
-    expect(DEFAULT_TASK_QUERY.date).toBe("scheduled-or-due");
   });
 
   it("freezes the shared default so a consumer's mutation fails loudly instead of corrupting later queries", () => {

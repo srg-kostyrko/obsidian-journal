@@ -68,6 +68,13 @@ describe("ToolbarItemsService", () => {
       const block = { id: "b1" as BlockInstanceId, key: "toolbar", config: { items: "garbage" } };
       expect(service.itemsOf(block)).toEqual([]);
     });
+
+    it("keeps the good items when one stored item is bad", async () => {
+      const service = await build();
+      const bad = { id: "not-a-uuid", key: "spacer", config: {} } as unknown as ToolbarItemInstance;
+      const view = viewWith([item(ID_A), bad, item(ID_B)]);
+      expect(service.itemsOf(view.blocks[0]).map((i) => i.id)).toEqual([ID_A, ID_B]);
+    });
   });
 
   describe("resolveItems", () => {
@@ -84,11 +91,54 @@ describe("ToolbarItemsService", () => {
       expect(service.resolveItems([item(ID_A, "nope")])).toEqual([]);
     });
 
-    it("skips an item whose config fails the item schema", async () => {
-      const service = await buildWithTestItem({ schema: v.object({ x: v.number() }), defaultConfig: () => ({ x: 0 }) });
-      const bad = { id: ID_A as BlockInstanceId, key: "test-item", config: { x: "no" } };
+    it("repairs one bad config field instead of skipping the item", async () => {
+      const service = await buildWithTestItem({
+        schema: v.object({ x: v.number(), y: v.string() }),
+        defaultConfig: () => ({ x: 0, y: "" }),
+      });
+      const bad = { id: ID_A as BlockInstanceId, key: "test-item", config: { x: "no", y: "kept" } };
+      const resolved = service.resolveItems([bad]);
+      expect(resolved.map((r) => r.id)).toEqual([ID_A]);
+      expect(resolved[0].config).toEqual({ x: 0, y: "kept" });
+    });
+
+    it("skips an item whose config cannot be repaired", async () => {
+      const service = await buildWithTestItem({
+        schema: v.pipe(
+          v.object({ x: v.number() }),
+          v.check(() => false),
+        ),
+        defaultConfig: () => ({ x: 0 }),
+      });
+      const bad = { id: ID_A as BlockInstanceId, key: "test-item", config: { x: 1 } };
       expect(service.resolveItems([bad])).toEqual([]);
     });
+
+    it("skips a step button whose direction is unreadable rather than give it another action", async () => {
+      const service = await build();
+      const step = {
+        id: ID_A as BlockInstanceId,
+        key: "button",
+        config: { action: { type: "navigate-step", direction: 7, unit: "month", amount: 1 }, label: "Next month" },
+      };
+
+      const resolved = service.resolveItems([step, item(ID_B)]);
+
+      expect(resolved.map((r) => r.id)).toEqual([ID_B]);
+    });
+
+    it.each(["target", "direction"])(
+      "skips an existing-note navigation whose %s is unreadable rather than send it elsewhere",
+      async (field) => {
+        const service = await build();
+        const config = { target: "week", direction: "previous", label: "‹", tooltip: "Previous week", [field]: 7 };
+        const navigation = { id: ID_A as BlockInstanceId, key: "existing-navigation", config };
+
+        const resolved = service.resolveItems([navigation, item(ID_B)]);
+
+        expect(resolved.map((r) => r.id)).toEqual([ID_B]);
+      },
+    );
   });
 
   describe("addItem", () => {
@@ -113,6 +163,24 @@ describe("ToolbarItemsService", () => {
       const result = service.addItem(viewWith([]), "b1" as BlockInstanceId, "test-item", { x: 99 });
       expectOk(result);
       expect(service.itemsOf(result.value!.blocks[0])[0].config).toEqual({ x: 99 });
+    });
+
+    it("an add after a bad item keeps every good item in the store", async () => {
+      const service = await build();
+      const bad = { id: "not-a-uuid", key: "spacer", config: {} } as unknown as ToolbarItemInstance;
+      const result = service.addItem(viewWith([item(ID_A), bad, item(ID_B)]), "b1" as BlockInstanceId, "spacer");
+      expectOk(result);
+      const stored = (result.value!.blocks[0].config as { items: ToolbarItemInstance[] }).items;
+      expect(stored.map((i) => i.id)).toEqual([ID_A, ID_B, result.value!.itemId]);
+    });
+
+    it("adds after a lone bad item", async () => {
+      const service = await build();
+      const bad = { id: "not-a-uuid", key: "spacer", config: {} } as unknown as ToolbarItemInstance;
+      const result = service.addItem(viewWith([bad]), "b1" as BlockInstanceId, "spacer");
+      expectOk(result);
+      const stored = (result.value!.blocks[0].config as { items: ToolbarItemInstance[] }).items;
+      expect(stored.map((i) => i.id)).toEqual([result.value!.itemId]);
     });
 
     it("returns Ok(null) when the block id is absent", async () => {

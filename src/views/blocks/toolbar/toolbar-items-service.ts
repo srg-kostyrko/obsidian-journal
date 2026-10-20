@@ -1,16 +1,18 @@
+import { cloneFnJSON } from "@vueuse/core";
 import * as v from "valibot";
 
 import { inject } from "@/infrastructure/di";
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { Err, Ok, Option, type Result } from "@/infrastructure/result";
+import { defaultsFrom, repairValue } from "@/settings/repair";
 
+import { readToolbarItemConfig, type ToolbarItemDefinition } from "../../define-toolbar-item";
 import { InvalidToolbarItemConfigError, UnknownToolbarItemKeyError } from "../../errors";
 import { ToolbarItemDefinitionToken } from "../../tokens";
 
 import { toolbarItemSchema, type ToolbarItemInstance } from "./toolbar-config";
 
 import type { BlockInstanceId, View, ViewBlockInstance } from "../../config";
-import type { ToolbarItemDefinition } from "../../define-toolbar-item";
 
 export interface ResolvedToolbarItem {
   readonly id: BlockInstanceId;
@@ -47,8 +49,15 @@ export class ToolbarItemsService {
 
   itemsOf(block: ViewBlockInstance): ToolbarItemInstance[] {
     const raw = (block.config as { items?: unknown }).items ?? [];
-    const parsed = v.safeParse(v.array(toolbarItemSchema), raw);
-    return parsed.success ? parsed.output : [];
+    const schema = v.array(toolbarItemSchema);
+    const parsed = v.safeParse(schema, raw);
+    if (parsed.success) return parsed.output;
+    // Item by item, because #withItems writes back whatever this returns: rejecting the whole
+    // list for one bad item would make the next edit erase every good one.
+    const repaired = repairValue(schema, cloneFnJSON(raw), defaultsFrom({}));
+    if (!repaired) return [];
+    this.#logger.warn("toolbar items repaired", { blockId: block.id, fields: repaired.fields });
+    return repaired.value;
   }
 
   resolveItems(items: readonly ToolbarItemInstance[]): ResolvedToolbarItem[] {
@@ -59,12 +68,19 @@ export class ToolbarItemsService {
         this.#logger.warn("unknown toolbar item key", { key: item.key, itemId: item.id });
         continue;
       }
-      const parsed = v.safeParse(definition.schema, item.config);
-      if (!parsed.success) {
+      const read = readToolbarItemConfig(definition, item.config);
+      if (!read) {
         this.#logger.warn("invalid toolbar item config", { key: item.key, itemId: item.id });
         continue;
       }
-      resolved.push({ id: item.id, definition, config: parsed.output });
+      if (read.fields.length > 0) {
+        this.#logger.warn("toolbar item config fields reset to defaults", {
+          key: item.key,
+          itemId: item.id,
+          fields: read.fields,
+        });
+      }
+      resolved.push({ id: item.id, definition, config: read.value });
     }
     return resolved;
   }

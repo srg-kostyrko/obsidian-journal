@@ -11,6 +11,7 @@ import { buildTaskItem } from "@/tasks/testing";
 import { testContainer } from "@/testing";
 import { icons } from "@/ui/icons";
 
+import { readBlockConfig } from "../../define-view-block";
 import { viewsCoreModule } from "../../module";
 import { ViewBlockDefinitionToken } from "../../tokens";
 
@@ -81,9 +82,12 @@ describe("tasksViewBlock", () => {
     expect(v.parse(tasksViewBlock.schema, { window: "week" }).date).toBe("scheduled-or-due");
   });
 
-  it("keeps a stored date choice, and falls back to scheduled or due for one it does not know", () => {
+  it("keeps a stored date choice, and repairs one it does not know to scheduled or due", () => {
     expect(v.parse(tasksViewBlock.schema, { date: "due" }).date).toBe("due");
-    expect(v.parse(tasksViewBlock.schema, { date: "deadline" }).date).toBe("scheduled-or-due");
+    expect(readBlockConfig(tasksViewBlock, { date: "deadline" })).toMatchObject({
+      value: { date: "scheduled-or-due" },
+      fields: ["date"],
+    });
   });
 
   it("rejects an unknown window", () => {
