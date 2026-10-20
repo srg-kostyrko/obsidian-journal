@@ -3,18 +3,18 @@ import { describe, expect, it } from "vitest";
 
 import type { VaultPath } from "@/infrastructure/host";
 
-import { buildTaskItem } from "../../testing";
+import { buildTaskItem } from "../testing";
 
 import {
-  admits,
-  DEFAULT_NOTE_VISIBILITY,
-  noteVisibilitySchema,
+  admitsSubject,
+  DEFAULT_VISIBILITY_RULE,
+  visibilityRuleSchema,
   referencedProperties,
-  type NoteVisibility,
+  type VisibilityRule,
   type VisibilityCondition,
-} from "./visibility";
+} from "./rule";
 
-import type { TaskItem } from "../../types";
+import type { TaskItem } from "../types";
 
 function noteItem(
   path: string,
@@ -27,15 +27,19 @@ function noteItem(
     path: path as VaultPath,
     relations: ["date"],
     display: { kind: "note", path: path as VaultPath, title: "t" },
-    facts: { frontmatterTags, properties },
+    facts: { tags: frontmatterTags, properties },
   });
 }
 
-function matching(conditions: VisibilityCondition[], mode: "and" | "or" = "and"): NoteVisibility {
+function admits(rule: VisibilityRule | undefined, item: TaskItem): boolean {
+  return admitsSubject(rule, { path: item.path, tags: item.facts?.tags ?? [], properties: item.facts?.properties });
+}
+
+function matching(conditions: VisibilityCondition[], mode: "and" | "or" = "and"): VisibilityRule {
   return { show: "matching", mode, conditions };
 }
 
-function rule(name: string, values: string[]): NoteVisibility {
+function rule(name: string, values: string[]): VisibilityRule {
   return matching([{ type: "property", name, values }]);
 }
 
@@ -47,22 +51,16 @@ function tagged(...tags: string[]): TaskItem {
   return noteItem("Work/a.md", tags);
 }
 
-describe("admits", () => {
+describe("admitsSubject", () => {
   const item = noteItem("Work/a.md", ["#task", "#Work"]);
 
   it("admits everything when the journal has no rule, or shows all", () => {
     expect(admits(undefined, item)).toBe(true);
-    expect(admits(DEFAULT_NOTE_VISIBILITY, item)).toBe(true);
+    expect(admits(DEFAULT_VISIBILITY_RULE, item)).toBe(true);
   });
 
   it("admits nothing when the journal shows none", () => {
     expect(admits({ show: "none", mode: "and", conditions: [] }, item)).toBe(false);
-  });
-
-  it("leaves an item that carries no facts alone, so only task notes are narrowed", () => {
-    const line = buildTaskItem();
-    expect(admits({ show: "none", mode: "and", conditions: [] }, line)).toBe(true);
-    expect(admits(matching([{ type: "tag", tags: ["#work"] }]), line)).toBe(true);
   });
 
   it("treats matching with no conditions as all, since there is nothing to narrow by", () => {
@@ -170,14 +168,14 @@ describe("admits", () => {
   });
 });
 
-describe("noteVisibilitySchema", () => {
+describe("visibilityRuleSchema", () => {
   it("defaults a rule it cannot read to all", () => {
-    expect(v.parse(noteVisibilitySchema, {})).toEqual(DEFAULT_NOTE_VISIBILITY);
-    expect(v.parse(noteVisibilitySchema, { show: "weird", mode: 3 })).toEqual(DEFAULT_NOTE_VISIBILITY);
+    expect(v.parse(visibilityRuleSchema, {})).toEqual(DEFAULT_VISIBILITY_RULE);
+    expect(v.parse(visibilityRuleSchema, { show: "weird", mode: 3 })).toEqual(DEFAULT_VISIBILITY_RULE);
   });
 
   it("drops a condition of a type this version does not know and keeps the rest", () => {
-    const parsed = v.parse(noteVisibilitySchema, {
+    const parsed = v.parse(visibilityRuleSchema, {
       show: "matching",
       mode: "or",
       conditions: [{ type: "not-a-real-type" }, { type: "tag", tags: ["#work"] }, "garbage"],
@@ -186,7 +184,7 @@ describe("noteVisibilitySchema", () => {
   });
 
   it("keeps the readable entries of a value list holding one it cannot read", () => {
-    const parsed = v.parse(noteVisibilitySchema, {
+    const parsed = v.parse(visibilityRuleSchema, {
       show: "matching",
       conditions: [
         { type: "tag", tags: ["#work", 3] },
@@ -203,7 +201,7 @@ describe("noteVisibilitySchema", () => {
 
   it("keeps a property condition", () => {
     const condition = { type: "property", name: "projects", values: ["Website"] };
-    expect(v.parse(noteVisibilitySchema, { show: "matching", conditions: [condition] }).conditions).toEqual([
+    expect(v.parse(visibilityRuleSchema, { show: "matching", conditions: [condition] }).conditions).toEqual([
       condition,
     ]);
   });

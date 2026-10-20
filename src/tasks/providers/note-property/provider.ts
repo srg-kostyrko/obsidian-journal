@@ -4,6 +4,7 @@ import { inject } from "@/infrastructure/di";
 import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 import { SettingsService } from "@/settings";
+import { admitsSubject, referencedProperties } from "@/tasks/visibility-rule/rule";
 
 import { TaskHostToken, type TaskItem, type TaskProvider } from "../../types";
 
@@ -11,7 +12,6 @@ import { identifiesNote, readDates, readStatus, readTitle } from "./read";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
 import NotePropertyJournalRow from "./ui/NotePropertyJournalRow.vue";
 import NotePropertySettingsRow from "./ui/NotePropertySettingsRow.vue";
-import { admits, referencedProperties } from "./visibility";
 
 export class NotePropertyTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
@@ -61,8 +61,8 @@ export class NotePropertyTaskProvider implements TaskProvider {
         dates: readDates(properties, state.dates),
         facts:
           this.#referenced.length === 0
-            ? { frontmatterTags: [...frontmatterTags] }
-            : { frontmatterTags: [...frontmatterTags], properties: this.#snapshot(properties) },
+            ? { tags: [...frontmatterTags] }
+            : { tags: [...frontmatterTags], properties: this.#snapshot(properties) },
       },
     ];
   }
@@ -78,7 +78,10 @@ export class NotePropertyTaskProvider implements TaskProvider {
   }
 
   admits(item: TaskItem, journalName: string): boolean {
-    return admits(this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id], item);
+    // An item without facts is not a task note, and the rule is about task notes only.
+    if (item.facts === undefined) return true;
+    const rule = this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id];
+    return admitsSubject(rule, { path: item.path, tags: item.facts.tags, properties: item.facts.properties });
   }
 
   start(): () => void {

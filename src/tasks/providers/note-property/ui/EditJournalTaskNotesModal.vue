@@ -6,6 +6,13 @@ import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { JournalsRepository } from "@/journals/repository";
 import FolderInput from "@/journals/settings/ui/FolderInput.vue";
+import {
+  emptyCondition,
+  visibilityDraftFrom,
+  visibilityFormErrors,
+  visibilityFrom,
+} from "@/tasks/visibility-rule/form";
+import type { VisibilityCondition } from "@/tasks/visibility-rule/rule";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
@@ -16,9 +23,6 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 import { NOTE_PROPERTY_PROVIDER_ID } from "../slice";
-import { emptyCondition, visibilityDraftFrom, visibilityFormErrors, visibilityFrom } from "../visibility-form";
-
-import type { VisibilityCondition } from "../visibility";
 
 const { journalName } = defineProps<{ journalName: string }>();
 

@@ -1,4 +1,4 @@
-// Leaf on purpose: visibility.ts reads property values and tags through these, and journalConfigSchema imports it.
+// Leaf on purpose: rule.ts reads property values and tags through these, and journalConfigSchema imports it.
 
 export function scalarText(value: unknown): string | undefined {
   return typeof value === "string" || typeof value === "number" || typeof value === "boolean"

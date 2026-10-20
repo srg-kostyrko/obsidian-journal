@@ -1210,7 +1210,7 @@ describe("JournalsApiService tasksFor", () => {
       );
       const { api, tasks } = await buildTasksApi({ personal, work });
       tasks.publish("note-property", { path: TASK_NOTE as VaultPath }, [
-        { ...taskNote({ due: "2026-09-22" as AnchorString }), facts: { frontmatterTags: ["#task", "#work"] } },
+        { ...taskNote({ due: "2026-09-22" as AnchorString }), facts: { tags: ["#task", "#work"] } },
       ]);
 
       const found = await api.tasksFor({}, "2026-09-22");

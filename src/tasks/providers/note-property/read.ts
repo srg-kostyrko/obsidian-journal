@@ -2,8 +2,7 @@ import { CalendarDate, type AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskStatus } from "@/tasks";
 import { isTaskStatus } from "@/tasks/status";
-
-import { lowerScalars, scalarText, tagMatches } from "./scalars";
+import { lowerScalars, scalarText, tagMatches } from "@/tasks/visibility-rule/scalars";
 
 import type { NotePropertySliceState } from "./slice";
 

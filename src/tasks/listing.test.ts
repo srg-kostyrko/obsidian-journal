@@ -27,9 +27,9 @@ import { TaskProviderToken } from "./types";
 import { TaskVisibility } from "./visibility";
 
 import type { TaskRule } from "./conditions";
-import type { NoteVisibility } from "./providers/note-property/visibility";
 import type { TaskQuery } from "./query";
 import type { TaskItem } from "./types";
+import type { VisibilityRule } from "./visibility-rule/rule";
 
 const DAY = "Daily/2026-09-22.md" as VaultPath;
 const OTHER_DAY = "Daily/2026-09-23.md" as VaultPath;
@@ -1076,14 +1076,14 @@ describe("buildTaskListing — task-note visibility", () => {
   const WORK_NOTE = "Tasks/work.md" as VaultPath;
   const HOME_NOTE = "Tasks/home.md" as VaultPath;
   const noFilter: TaskRule = { mode: "and", conditions: [] };
-  const withRule = (name: string, rule: NoteVisibility): JournalConfig =>
+  const withRule = (name: string, rule: VisibilityRule): JournalConfig =>
     fixedJournal(name, { type: "day" }, { tasks: { filter: noFilter, providers: { "note-property": rule } } });
-  const matchingWork: NoteVisibility = {
+  const matchingWork: VisibilityRule = {
     show: "matching",
     mode: "and",
     conditions: [{ type: "tag", tags: ["#work"] }],
   };
-  const hidden: NoteVisibility = { show: "none", mode: "and", conditions: [] };
+  const hidden: VisibilityRule = { show: "none", mode: "and", conditions: [] };
   const twoJournals = { Work: withRule("Work", matchingWork), Personal: withRule("Personal", hidden) };
   const workAndHome = {
     [WORK_NOTE]: { tags: ["#task", "#work"], properties: { scheduled: "2026-09-22" } },

@@ -8,13 +8,18 @@ import { fixedJournal } from "@/journals/testing";
 
 import { answerTaskQuestion, type TaskQuestionDependencies } from "./answer-question";
 import { buildTaskListing, type TaskListingDependencies } from "./listing";
-import { admits as admitsNote, type NoteVisibility } from "./providers/note-property/visibility";
 import { DEFAULT_TASK_QUERY } from "./query";
 import { buildTaskItem } from "./testing";
+import { admitsSubject, type VisibilityRule } from "./visibility-rule/rule";
 
 import type { TaskCondition, TaskRule } from "./conditions";
 import type { TaskQuestion } from "./question";
 import type { TaskDateRole, TaskItem, TaskStatus } from "./types";
+
+function admitsNote(rule: VisibilityRule | undefined, item: TaskItem): boolean {
+  if (item.facts === undefined) return true;
+  return admitsSubject(rule, { path: item.path, tags: item.facts.tags, properties: item.facts.properties });
+}
 
 const DAY = "Daily/2026-09-22.md" as VaultPath;
 const NOTELET = "Daily/2026-09-22 Standup.md" as VaultPath;
@@ -45,7 +50,7 @@ function taskNote(
     capabilities: { movable: false, stampable: false, retargetable: true },
     display: { kind: "note", path, title: path },
     dates: (dates ?? { scheduled: ANCHOR }) as TaskItem["dates"],
-    facts: { frontmatterTags },
+    facts: { tags: frontmatterTags },
   });
 }
 
@@ -69,7 +74,7 @@ function build(options: {
   // What the index's range lookup holds: every item a provider published under the date relation.
   dated?: readonly TaskItem[];
   // Each journal's stored task-note rule, answered by the provider's own verdict.
-  visibilityRules?: Partial<Record<string, NoteVisibility>>;
+  visibilityRules?: Partial<Record<string, VisibilityRule>>;
 }): TaskQuestionDependencies {
   const { items = {}, notelets = [], journalFilter, structures = {}, dated = [], visibilityRules = {} } = options;
   return {
@@ -384,7 +389,7 @@ describe("answerTaskQuestion", () => {
   });
 
   describe("task-note visibility", () => {
-    const rules: Partial<Record<string, NoteVisibility>> = {
+    const rules: Partial<Record<string, VisibilityRule>> = {
       Work: { show: "matching", mode: "and", conditions: [{ type: "tag", tags: ["#work"] }] },
       Personal: { show: "none", mode: "and", conditions: [] },
     };

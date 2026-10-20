@@ -42,7 +42,7 @@ export interface TaskItem {
 }
 
 export interface TaskFacts {
-  readonly frontmatterTags: readonly string[];
+  readonly tags: readonly string[];
   // Only the properties some journal's visibility rule names: a snapshot of the whole frontmatter
   // would make every unrelated edit (TaskNotes rewrites dateModified on each one) a changed item.
   readonly properties?: Readonly<Record<string, unknown>>;

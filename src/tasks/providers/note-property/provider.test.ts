@@ -8,16 +8,16 @@ import { JournalsIndex, JournalsRepository, type JournalConfig } from "@/journal
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
+import type { VisibilityRule } from "@/tasks/visibility-rule/rule";
 import { overrideWith, testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../module";
 import { TaskIndex } from "../../task-index";
+import { buildTaskItem } from "../../testing";
 import { TaskProviderToken } from "../../types";
 
 import { NotePropertyTaskProvider } from "./provider";
 import { NOTE_PROPERTY_PROVIDER_ID, notePropertySlice } from "./slice";
-
-import type { NoteVisibility } from "./visibility";
 
 const path = "Tasks/a.md" as VaultPath;
 const moved = "Tasks/b.md" as VaultPath;
@@ -126,7 +126,7 @@ describe("NotePropertyTaskProvider", () => {
         capabilities: { movable: false, stampable: false, retargetable: true },
         display: { kind: "note", path, title: "a" },
         dates: { scheduled: anchor("2026-10-21") },
-        facts: { frontmatterTags: ["#task"] },
+        facts: { tags: ["#task"] },
       },
     ]);
   });
@@ -144,7 +144,7 @@ describe("NotePropertyTaskProvider", () => {
     notes.emitMetadataChanged(path);
 
     expect(index.version()).toBe(before + 1);
-    expect(index.itemsIn(path).at(0)?.facts?.frontmatterTags).toEqual(["#task", "#work"]);
+    expect(index.itemsIn(path).at(0)?.facts?.tags).toEqual(["#task", "#work"]);
   });
 
   // TaskNotes rewrites dateModified on every edit; a property no surface reads must not re-render them all.
@@ -322,12 +322,12 @@ describe("NotePropertyTaskProvider", () => {
 
   describe("properties a journal's visibility names", () => {
     const noFilter = { mode: "and" as const, conditions: [] };
-    const byProject: NoteVisibility = {
+    const byProject: VisibilityRule = {
       show: "matching",
       mode: "and",
       conditions: [{ type: "property", name: "projects", values: ["Website"] }],
     };
-    const withRule = (rule: NoteVisibility) =>
+    const withRule = (rule: VisibilityRule) =>
       fixedJournal("Work", { type: "day" }, { tasks: { providers: { "note-property": rule }, filter: noFilter } });
 
     it("snapshots a property a journal's rule names, and only that one", async () => {
@@ -449,6 +449,12 @@ describe("NotePropertyTaskProvider", () => {
       });
 
       expect(provider.admits(item, "Work")).toBe(true);
+    });
+
+    it("leaves an item that carries no facts alone, so only task notes are narrowed", async () => {
+      const { provider } = await build(true, true, { Work: withRule({ ...byProject, show: "none" }) });
+
+      expect(provider.admits(buildTaskItem(), "Work")).toBe(true);
     });
   });
 });
