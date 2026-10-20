@@ -113,6 +113,32 @@ describe("ToolbarItemsService", () => {
       const bad = { id: ID_A as BlockInstanceId, key: "test-item", config: { x: 1 } };
       expect(service.resolveItems([bad])).toEqual([]);
     });
+
+    it("skips a step button whose direction is unreadable rather than give it another action", async () => {
+      const service = await build();
+      const step = {
+        id: ID_A as BlockInstanceId,
+        key: "button",
+        config: { action: { type: "navigate-step", direction: 7, unit: "month", amount: 1 }, label: "Next month" },
+      };
+
+      const resolved = service.resolveItems([step, item(ID_B)]);
+
+      expect(resolved.map((r) => r.id)).toEqual([ID_B]);
+    });
+
+    it.each(["target", "direction"])(
+      "skips an existing-note navigation whose %s is unreadable rather than send it elsewhere",
+      async (field) => {
+        const service = await build();
+        const config = { target: "week", direction: "previous", label: "‹", tooltip: "Previous week", [field]: 7 };
+        const navigation = { id: ID_A as BlockInstanceId, key: "existing-navigation", config };
+
+        const resolved = service.resolveItems([navigation, item(ID_B)]);
+
+        expect(resolved.map((r) => r.id)).toEqual([ID_B]);
+      },
+    );
   });
 
   describe("addItem", () => {

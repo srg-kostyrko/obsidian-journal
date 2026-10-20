@@ -139,7 +139,11 @@ describe("ToolbarStrip", () => {
   // An editor writes `{ ...props.config, ...patch }`, so one seeded with the raw stored config
   // carries the unreadable value into a write that validation then rejects.
   it("an edit to an item with an unreadable field stores the repaired config with the edit", async () => {
-    const config = { action: { type: "navigate-step", direction: "next", unit: "day", amount: 0 }, label: "A" };
+    const config = {
+      action: { type: "navigate-step", direction: "next", unit: "day", amount: 1 },
+      icon: 42,
+      label: "A",
+    };
     const { harness } = await setup([{ id: ITEM_A, key: "button", config }]);
     await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
     const modal = harness.modals.lastOpen<{ config: Record<string, unknown> }, Record<string, unknown>>();
@@ -151,6 +155,7 @@ describe("ToolbarStrip", () => {
       ).items;
       expect(v.safeParse(buttonItemConfigSchema, items[0]?.config).success).toBe(true);
       expect(items[0]?.config).toMatchObject({ action: { amount: 1 }, label: "B" });
+      expect(items[0]?.config).not.toHaveProperty("icon");
     });
   });
 });

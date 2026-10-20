@@ -60,7 +60,8 @@ All notable changes to this project will be documented in this file.
   whole, so it never marks days it wasn't set up to mark. A view block with one unreadable setting
   now shows with that setting at its default, instead of an error saying its settings are not valid.
 - One unreadable toolbar item no longer hides the whole toolbar, or erases its other items the next
-  time the toolbar is edited.
+  time the toolbar is edited. A button or navigation item whose action can't be read is still left
+  out, rather than shown with its own label over a different action.
 
 ### Changed
 
