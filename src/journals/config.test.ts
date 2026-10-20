@@ -114,23 +114,6 @@ describe("journalConfigSchema", () => {
     expect(parsed.tasks.filter.conditions).toHaveLength(1);
   });
 
-  // The live path this protects: a vault synced from a newer version added a condition type this
-  // version's v.variant does not know. Before providers/filter each carried their own v.fallback,
-  // that rejection failed the whole `tasks` object, and repairCollectionEntry only ever sees
-  // issue.path[0].key === "tasks" (tasks is not in journalConfigCollection's `nested` map) — so it
-  // reset providers right along with the filter that actually caused the failure.
-  it("keeps a valid provider rule when the listing filter holds a condition type this version does not know", () => {
-    const parsed = v.parse(journalConfigSchema, {
-      ...journalDefaultsFor({ type: "day" }, "Daily"),
-      tasks: {
-        providers: { checkbox: { compose: "narrow", mode: "and", conditions: [] } },
-        filter: { mode: "and", conditions: [{ type: "not-a-real-type" }] },
-      },
-    });
-    expect(parsed.tasks.providers.checkbox?.compose).toBe("narrow");
-    expect(parsed.tasks.filter).toEqual({ mode: "and", conditions: [] });
-  });
-
   // Mirror of the above: a bad provider rule must not take a valid listing filter down with it.
   it("keeps a valid listing filter when a provider rule holds a condition type this version does not know", () => {
     const parsed = v.parse(journalConfigSchema, {
@@ -179,13 +162,6 @@ describe("journalConfigSchema", () => {
     });
     expect(degraded.tasks.providers.checkbox).toEqual(checkbox);
     expect(degraded.tasks.providers["note-property"]).toEqual({ show: "all", mode: "and", conditions: [] });
-
-    const garbage = v.parse(journalConfigSchema, {
-      ...journalDefaultsFor({ type: "day" }, "Daily"),
-      tasks: { providers: { checkbox, "note-property": 42 } },
-    });
-    expect(garbage.tasks.providers.checkbox).toEqual(checkbox);
-    expect(garbage.tasks.providers["note-property"]).toBeUndefined();
   });
 
   it("keeps a valid note-property rule when the checkbox rule holds a condition type this version does not know", () => {
@@ -647,6 +623,57 @@ describe("journal nav block repair on load", () => {
   });
 });
 
+async function loadTasks(tasks: unknown) {
+  const raw = fixedJournal("daily", { type: "day" }, { tasks: tasks as never });
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: raw } },
+    allow: { dataRepair: true },
+  });
+  const repair = harness.logs.records.find((record) => record.message === "collection entry fields reset to defaults");
+  return { tasks: unwrap(harness.resolve(JournalsRepository).get("daily")).tasks, repair };
+}
+
+describe("journal tasks repair on load", () => {
+  const checkbox = { compose: "narrow", mode: "and", conditions: [] };
+  const heading = { type: "heading", condition: "under", headings: ["## Tasks"] };
+
+  it("a provider namespace that is not an object reads as no provider rules, keeping the filter", async () => {
+    const { tasks, repair } = await loadTasks({ providers: "garbage", filter: { mode: "or", conditions: [heading] } });
+
+    expect(tasks).toEqual({ providers: {}, filter: { mode: "or", conditions: [heading] } });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.providers"] });
+  });
+
+  it("an unreadable note-property rule is dropped alone, keeping the checkbox rule", async () => {
+    const { tasks, repair } = await loadTasks({ providers: { checkbox, "note-property": 42 } });
+
+    expect(tasks.providers).toEqual({ checkbox });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.providers.note-property"] });
+  });
+
+  // The live path: a vault synced from a newer version holds a condition type this one does not know.
+  it("a listing filter condition of an unknown type is dropped alone, keeping the filter's other conditions", async () => {
+    const { tasks, repair } = await loadTasks({
+      providers: { checkbox },
+      filter: { mode: "or", conditions: [heading, { type: "not-a-real-type" }] },
+    });
+
+    expect(tasks).toEqual({ providers: { checkbox }, filter: { mode: "or", conditions: [heading] } });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions.1"] });
+  });
+
+  it("a listing filter whose only condition is unreadable keeps no condition, and the provider rule stays", async () => {
+    const { tasks, repair } = await loadTasks({
+      providers: { checkbox },
+      filter: { mode: "and", conditions: [{ type: "not-a-real-type" }] },
+    });
+
+    expect(tasks).toEqual({ providers: { checkbox }, filter: { mode: "and", conditions: [] } });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions"] });
+  });
+});
+
 async function loadJournal(raw: unknown): Promise<ReturnType<JournalsRepository["get"]>> {
   const harness = await testContainer({
     modules: [journalsCoreModule],
@@ -654,6 +681,16 @@ async function loadJournal(raw: unknown): Promise<ReturnType<JournalsRepository[
     allow: { dataRepair: true },
   });
   return harness.resolve(JournalsRepository).get("daily");
+}
+
+async function loadJournalLogged(raw: unknown) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: raw } },
+    allow: { dataRepair: true },
+  });
+  const repair = harness.logs.records.find((record) => record.message === "collection entry fields reset to defaults");
+  return { journal: unwrap(harness.resolve(JournalsRepository).get("daily")), repair };
 }
 
 const keptDecoration = () =>
@@ -682,6 +719,28 @@ describe("journal decoration repair on load", () => {
     expect(journal.decorations).toEqual([keptDecoration()]);
   });
 
+  it.each([
+    ["quantifier", "most"],
+    ["date", "someday"],
+  ])("a tasks condition with an unreadable %s drops its decoration, keeping its sibling", async (field, bad) => {
+    const broken = buildDecoration({
+      conditions: [{ ...buildCondition("tasks"), [field]: bad }],
+      styles: [buildStyle("color")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [broken, keptDecoration()] });
+    const harness = await testContainer({
+      modules: [journalsCoreModule],
+      data: { journals: { daily: raw } },
+      allow: { dataRepair: true },
+    });
+
+    expect(unwrap(harness.resolve(JournalsRepository).get("daily")).decorations).toEqual([keptDecoration()]);
+    const repair = harness.logs.records.find(
+      (record) => record.message === "collection entry fields reset to defaults",
+    );
+    expect(repair?.fields).toMatchObject({ fields: ["decorations.0"] });
+  });
+
   it("a journal whose only decoration has a bad condition keeps no decoration, not the seeded default", async () => {
     const broken = buildDecoration({ conditions: [{ type: "moon-phase" } as never], styles: [buildStyle("color")] });
     const raw = fixedJournal("daily", { type: "day" }, { decorations: [broken] });
@@ -689,6 +748,76 @@ describe("journal decoration repair on load", () => {
     const journal = unwrap(await loadJournal(raw));
 
     expect(journal.decorations).toEqual([]);
+  });
+
+  it("a style with an unknown type is dropped, keeping the decoration's conditions and other styles", async () => {
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ type: "glow", radius: 2 } as never, buildStyle("shape")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration, keptDecoration()] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([{ ...decoration, styles: [buildStyle("shape")] }, keptDecoration()]);
+  });
+
+  it("a style with one unreadable color resets only that color", async () => {
+    const shape = buildStyle("shape", { size: 0.8, shape: "square", placement_x: "left", placement_y: "top" });
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ ...shape, color: { type: "custom", color: 5 } } as never, buildStyle("background")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([
+      { ...decoration, styles: [{ ...shape, color: buildStyle("shape").color }, buildStyle("background")] },
+    ]);
+  });
+
+  it("a background style with an unreadable color is dropped, keeping the other styles and the conditions", async () => {
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ type: "background", color: { type: "custom", color: 5 } } as never, buildStyle("shape")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([{ ...decoration, styles: [buildStyle("shape")] }]);
+  });
+
+  it("a border side whose visibility is unreadable is hidden, leaving the other sides alone", async () => {
+    const visible = { show: true, width: 2, color: { type: "custom", color: "#ff0000" }, style: "dashed" } as const;
+    const border = buildStyle("border", { border: "different", left: visible, right: visible, top: visible });
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ ...border, bottom: { ...visible, show: "yes" } } as never],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([
+      { ...decoration, styles: [{ ...border, bottom: { ...visible, show: false } }] },
+    ]);
+  });
+
+  it("a border whose mode is unreadable is dropped, keeping the other styles and the conditions", async () => {
+    const hidden = { show: false, width: 1, color: { type: "custom", color: "#ff0000" }, style: "solid" } as const;
+    const left = { ...hidden, show: true };
+    const border = { ...buildStyle("border", { left, right: hidden, top: hidden, bottom: hidden }), border: 3 };
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [border as never, buildStyle("shape")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([{ ...decoration, styles: [buildStyle("shape")] }]);
   });
 });
 
@@ -716,5 +845,153 @@ describe("journal notelet type repair on load", () => {
     const journal = unwrap(await loadJournal(raw));
 
     expect(journal.notelets.nt_1).toEqual({ ...configuredNoteletType(), [field]: [] });
+  });
+});
+
+const askedPrompts = () => [
+  { type: "text", variable: "mood", question: "Mood?", frontmatterKey: "mood", required: false },
+  { type: "number", variable: "sleep", question: "Hours slept?", frontmatterKey: "sleep", required: true },
+];
+
+const twoSources = () => [
+  { variable: "index", frontmatterKey: "journal-index", anchorValue: 1, reset: { kind: "never" } },
+  { variable: "lap", frontmatterKey: "journal-lap", anchorValue: 3, reset: { kind: "after", count: 4 } },
+];
+
+const numberedJournal = () =>
+  fixedJournal(
+    "daily",
+    { type: "day" },
+    {
+      frontmatter: {
+        dateField: "date",
+        startDateField: "from",
+        endDateField: "to",
+        noteletField: "kind",
+        addStartDate: true,
+        addEndDate: true,
+      },
+      numbering: {
+        enabled: true,
+        anchorDate: "2024-01-01" as AnchorString,
+        allowBefore: true,
+        sources: twoSources() as never,
+      },
+      prompts: askedPrompts() as never,
+    },
+  );
+
+describe("journal prompt, numbering and frontmatter repair on load", () => {
+  it("a prompt with an unknown type is dropped, keeping the other prompt and every other field", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.prompts as unknown[]).unshift({ type: "slider", variable: "x", question: "X?", frontmatterKey: "x" });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal).toEqual(stored);
+  });
+
+  it("a numbering source with an unreadable reset is dropped, keeping the other source", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.numbering.sources[1] as { reset: unknown }).reset = { kind: "after", count: 0 };
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal).toEqual({ ...stored, numbering: { ...stored.numbering, sources: [twoSources()[0]] } });
+  });
+
+  // Each of these flags rewrites notes when it changes: a false add flag strips the derived date
+  // from every note the journal writes, and allowBefore decides whether earlier notes are numbered.
+  it.each([
+    ["numbering", "allowBefore"],
+    ["frontmatter", "addStartDate"],
+    ["frontmatter", "addEndDate"],
+  ] as const)("an unreadable %s.%s resets only that flag to false and logs it", async (group, flag) => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw[group] as Record<string, unknown>)[flag] = "yes";
+
+    const { journal, repair } = await loadJournalLogged(raw);
+
+    expect(journal).toEqual({ ...stored, [group]: { ...stored[group], [flag]: false } });
+    expect(repair?.fields).toMatchObject({ fields: [`${group}.${flag}`] });
+  });
+
+  // A numbering source writes its counter under this key; any default would start a second
+  // count beside the notes already carrying the first.
+  it("a numbering source with an unreadable frontmatter key is dropped rather than given a default key", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.numbering.sources[1] as { frontmatterKey: unknown }).frontmatterKey = "";
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.numbering.sources).toEqual([twoSources()[0]]);
+  });
+
+  // The variable is what templates and stored answers are keyed by.
+  it("a prompt with an unreadable variable is dropped rather than given a default variable", async () => {
+    const stored = numberedJournal();
+    const raw = structuredClone(stored);
+    (raw.prompts[1] as { variable: unknown }).variable = 7;
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.prompts).toEqual([askedPrompts()[0]]);
+  });
+});
+
+describe("journal select prompt repair on load", () => {
+  it("a select option with an empty label is dropped, keeping the question and its other options", async () => {
+    const select = {
+      type: "select",
+      variable: "place",
+      question: "Where?",
+      frontmatterKey: "place",
+      required: false,
+      options: [
+        { label: "Home", value: "home" },
+        { label: "", value: "office" },
+      ],
+    };
+    const raw = fixedJournal("daily", { type: "day" }, { prompts: [select] as never });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.prompts).toEqual([{ ...select, options: [{ label: "Home", value: "home" }] }]);
+  });
+});
+
+describe("journal notelet counter repair on load", () => {
+  it("an unreadable counter flag resets only the flag, keeping the type's own counter key", async () => {
+    const raw = fixedJournal("daily", { type: "day" }, {
+      notelets: { nt_1: { ...configuredNoteletType(), counter: { enabled: "no", frontmatterKey: "meeting-index" } } },
+    } as never);
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.notelets.nt_1?.counter).toEqual({ enabled: true, frontmatterKey: "meeting-index" });
+  });
+});
+
+describe("journal write repair on load", () => {
+  const customWrite = { type: "custom", every: "week", duration: 2, anchorDate: "2024-01-01" as AnchorString } as const;
+
+  it.each([
+    ["duration", 0],
+    ["every", "fortnight"],
+    ["anchorDate", "soon"],
+  ] as const)("a custom write with an unreadable %s falls to the journal default as a whole", async (key, bad) => {
+    const stored = fixedJournal("daily", customWrite, { folder: "Sprints" });
+    const raw = structuredClone(stored);
+    (raw.write as Record<string, unknown>)[key] = bad;
+
+    const { journal, repair } = await loadJournalLogged(raw);
+
+    expect(journal.write).toEqual({ type: "day" });
+    expect(journal.folder).toBe("Sprints");
+    expect(repair?.fields).toMatchObject({ fields: ["write"] });
   });
 });

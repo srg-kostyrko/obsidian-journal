@@ -1,7 +1,10 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
+import { testContainer } from "@/testing";
+
 import { commandCollection, sameCommandOwner } from "./config";
+import { commandsCoreModule } from "./module";
 import { buildCommand } from "./testing";
 
 describe("commandCollection", () => {
@@ -97,5 +100,29 @@ describe("commandCollection", () => {
       expect(sameCommandOwner(notelet, journal)).toBe(false);
       expect(sameCommandOwner(journal, notelet)).toBe(false);
     });
+  });
+});
+
+describe("command repair on load", () => {
+  // The target itself falls back to the default target, as on main; what this pins is that the
+  // command's own settings survive that fallback.
+  it("a command whose target names no journal falls back to the default target, as on main, keeping its other settings", async () => {
+    const stored = buildCommand({
+      name: "Open work",
+      icon: "briefcase",
+      showInRibbon: true,
+      openMode: "split",
+      pinned: true,
+      type: "next",
+      context: "open_note",
+    });
+    const harness = await testContainer({
+      modules: [commandsCoreModule],
+      data: { commands: { "cmd-1": { ...stored, target: { kind: "journal", journalName: "" } } } },
+      allow: { dataRepair: true },
+    });
+
+    const { target: _target, ...kept } = stored;
+    expect(harness.settings.recordOf(commandCollection)["cmd-1"]).toMatchObject(kept);
   });
 });

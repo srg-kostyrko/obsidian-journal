@@ -1,6 +1,6 @@
 // Storage stays permissive: taskRuleSchema (conditions.ts) accepts a condition with an empty
-// tags/headings/statuses list, because a stored value that fails its schema is repaired or reset
-// wholesale for a slice (see CLAUDE.md), and legacy data can already carry one. This schema is
+// tags/headings/statuses list, because a stored value that fails its schema is lost to the load
+// repair, and legacy data can already carry one. This schema is
 // stricter and is parsed only by the listing filter's editor, against the in-memory draft, never
 // against anything read from or written to a journal or view block config. The checkbox provider's
 // own rule-form-schema.ts shares the tag/heading arm shapes with this file (condition-form-schema.ts)

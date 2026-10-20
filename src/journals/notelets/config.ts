@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { Option } from "@/infrastructure/result";
 import { defineNestedCollection } from "@/settings";
+import { climb } from "@/settings/repair";
 
 import { promptsSchema } from "../prompts/config";
 
@@ -18,8 +19,9 @@ export const typeIdSchema = v.pipe(
 );
 
 const noteletCounterSchema = v.object({
-  enabled: v.boolean(),
-  frontmatterKey: v.pipe(v.string(), v.minLength(1)),
+  // Defaulted rather than climbed: climbing resets the whole counter, its key included.
+  enabled: v.optional(v.boolean(), true),
+  frontmatterKey: v.pipe(v.string(), v.minLength(1), climb("notelets already carry their index under this key")),
 });
 
 export const noteletTypeSchema = v.object({
@@ -37,9 +39,9 @@ export type NoteletType = v.InferOutput<typeof noteletTypeSchema>;
 export type NoteletCounter = v.InferOutput<typeof noteletCounterSchema>;
 
 // An absent `id` does not parse on its own: the `""` default still runs through the wrapped
-// minLength(1) pipe and fails, so it comes back only via repairCollectionEntry substituting the
-// record key. The record key is the identity — a stored id that disagrees with it would make
-// every config reference unresolvable.
+// minLength(1) pipe and fails, so it comes back only through the load repair, which takes it from
+// these defaults and so from the record key. The record key is the identity — a stored id that
+// disagrees with it would make every config reference unresolvable.
 export function noteletTypeDefaults(id: string, raw?: unknown): NoteletType {
   const stored = (raw as { name?: unknown } | null | undefined)?.name;
   const name = typeof stored === "string" && stored.trim() !== "" ? stored : "Notelet";

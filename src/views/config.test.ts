@@ -1,6 +1,9 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
+import { CollectionDefinitionToken } from "@/settings";
+import { testContainer } from "@/testing";
+
 import { viewSchema, viewsCollection } from "./config";
 
 describe("viewsCollection", () => {
@@ -85,5 +88,32 @@ describe("viewsCollection", () => {
       const result = v.safeParse(viewSchema, withoutField);
       expect(result.success && result.output.openOnStartup).toBe(false);
     });
+  });
+});
+
+describe("view repair on load", () => {
+  const VIEW_ID = "3f8c8b7e-1c1a-4d5e-9b9b-1c1a4d5e9b9b";
+  const KEPT_BLOCK = { id: "5f8c8b7e-1c1a-4d5e-9b9b-1c1a4d5e9b9b", key: "calendar", config: { window: "month" } };
+  const BARE_BLOCK_ID = "6f8c8b7e-1c1a-4d5e-9b9b-1c1a4d5e9b9b";
+
+  async function loadViews(blocks: unknown[]) {
+    const harness = await testContainer({
+      modules: [{ register: (c) => c.register(CollectionDefinitionToken).useValue(viewsCollection) }],
+      data: { views: { [VIEW_ID]: { ...viewsCollection.defaultItem(VIEW_ID), name: "Mine", blocks } } },
+      allow: { dataRepair: true },
+    });
+    return harness.settings.recordOf(viewsCollection)[VIEW_ID];
+  }
+
+  it("a block whose config is unreadable keeps its place with an empty config", async () => {
+    const view = await loadViews([{ id: BARE_BLOCK_ID, key: "toolbar", config: "items" }, KEPT_BLOCK]);
+
+    expect(view?.blocks).toEqual([{ id: BARE_BLOCK_ID, key: "toolbar", config: {} }, KEPT_BLOCK]);
+  });
+
+  it("a block without a key is dropped rather than given a default key", async () => {
+    const view = await loadViews([{ id: BARE_BLOCK_ID, key: "", config: {} }, KEPT_BLOCK]);
+
+    expect(view?.blocks).toEqual([KEPT_BLOCK]);
   });
 });

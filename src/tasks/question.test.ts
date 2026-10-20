@@ -14,24 +14,20 @@ describe("taskQuestionSchema", () => {
     });
   });
 
-  it("falls back to scheduled-or-due for an unknown date choice", () => {
-    expect(v.parse(taskQuestionSchema, { date: "whenever" }).date).toBe("scheduled-or-due");
+  // A decoration with an unreadable condition is dropped whole by the load repair, so nothing here
+  // may quietly substitute a different question.
+  it.each([
+    ["date", "whenever"],
+    ["status", "bogus"],
+    ["quantifier", "most"],
+    ["source", "elsewhere"],
+    ["filter", 7],
+  ])("rejects an unreadable %s", (field, bad) => {
+    expect(v.safeParse(taskQuestionSchema, { [field]: bad }).success).toBe(false);
   });
 
   it("keeps a stored date choice", () => {
     expect(v.parse(taskQuestionSchema, { date: "due" }).date).toBe("due");
-  });
-
-  it("falls back to listing for an unknown status", () => {
-    expect(v.parse(taskQuestionSchema, { status: "bogus" }).status).toBe("listing");
-  });
-
-  it("falls back to any for an unknown quantifier", () => {
-    expect(v.parse(taskQuestionSchema, { quantifier: "most" }).quantifier).toBe("any");
-  });
-
-  it("falls back to both for an unknown source", () => {
-    expect(v.parse(taskQuestionSchema, { source: "elsewhere" }).source).toBe("both");
   });
 
   it("keeps a known quantifier, status and source", () => {
@@ -56,9 +52,5 @@ describe("taskQuestionSchema", () => {
       mode: "or",
       conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }],
     });
-  });
-
-  it("falls back to an empty filter when the filter is not a rule", () => {
-    expect(v.parse(taskQuestionSchema, { filter: 7 }).filter).toEqual({ mode: "and", conditions: [] });
   });
 });

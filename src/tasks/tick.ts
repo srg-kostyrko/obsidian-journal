@@ -59,8 +59,7 @@ function isAddressableLine(line: number): boolean {
 // refuse a value that is not one marker, which would break the checkbox shape rather than fill it.
 // A line terminator is one code point and would cut the user's line in two, taking every item
 // below it with it; StatusMapEditor trims and cannot author one, but the slice schema is a
-// `v.record(v.string(), v.string())` behind a fallback, so a synced or hand-edited data.json
-// reaches here with no repair.
+// `v.record(v.string(), v.string())`, so a synced or hand-edited data.json can carry one.
 export function canonicalSymbol(canonical: Record<string, string>, status: TaskStatus): string | null {
   const symbol: string | undefined = canonical[status];
   if (symbol === undefined || [...symbol].length !== 1 || /[\r\n]/u.test(symbol)) return null;

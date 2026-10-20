@@ -1,6 +1,6 @@
 // Storage stays permissive: checkboxRuleSchema/checkboxJournalRuleSchema in rule-schema.ts accept
 // a condition with an empty tags/headings list, because a stored value that fails its schema is
-// repaired or reset wholesale for a slice (see CLAUDE.md), and legacy data can already carry one.
+// lost to the load repair, and legacy data can already carry one.
 // This schema is stricter and is parsed only by the two settings modals, against the in-memory
 // draft, never against anything read from or written to the slice or the journal config.
 //

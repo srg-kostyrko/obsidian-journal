@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { repairMarkerOf, type RepairMarker } from "./markers";
+import { childSchemaOf, isRecordSchema, markerAlong } from "./schema-walk";
 
 type AnySchema = v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>;
 
@@ -12,89 +12,8 @@ export interface RepairResult<T> {
   fields: string[];
 }
 
-interface SchemaNode {
-  readonly type: string;
-  readonly pipe?: readonly unknown[];
-  readonly wrapped?: AnySchema;
-  readonly entries?: Readonly<Record<string, AnySchema>>;
-  readonly rest?: AnySchema;
-  readonly item?: AnySchema;
-  readonly value?: AnySchema;
-  readonly key?: string;
-  readonly options?: readonly AnySchema[];
-}
-
-const WRAPPERS = new Set(["optional", "nullable", "nullish", "exact_optional"]);
-const OBJECTS = new Set(["object", "loose_object", "strict_object", "object_with_rest"]);
-
-function unwrapOnce(schema: AnySchema): AnySchema | undefined {
-  const n: SchemaNode = schema;
-  if (WRAPPERS.has(n.type) && n.wrapped !== undefined) return n.wrapped;
-  const root = n.pipe?.[0];
-  return root === undefined || root === schema ? undefined : (root as AnySchema);
-}
-
-function structural(schema: AnySchema): AnySchema {
-  let current = schema;
-  for (let next = unwrapOnce(current); next !== undefined; next = unwrapOnce(current)) current = next;
-  return current;
-}
-
-// A marker may sit on any layer: `v.pipe(v.optional(x), climb(…))` and `v.optional(v.pipe(x, climb(…)))`
-// both mark the field.
-function markerAlong(schema: AnySchema): RepairMarker | undefined {
-  for (let current: AnySchema | undefined = schema; current !== undefined; current = unwrapOnce(current)) {
-    const marker = repairMarkerOf(current);
-    if (marker !== undefined) return marker;
-  }
-  return undefined;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
-}
-
-function variantOption(variant: SchemaNode, value: unknown): AnySchema | undefined {
-  if (!isRecord(value) || variant.key === undefined) return undefined;
-  const options = variant.options ?? [];
-  for (const option of options) {
-    const shape: SchemaNode = structural(option);
-    if (shape.type === "variant") {
-      const nested = variantOption(shape, value);
-      if (nested !== undefined) return nested;
-      continue;
-    }
-    const discriminant = shape.entries?.[variant.key];
-    if (discriminant !== undefined && v.is(discriminant, value[variant.key])) return option;
-  }
-  return undefined;
-}
-
-function firstObjectOption(variant: SchemaNode): AnySchema | undefined {
-  let first = variant.options?.[0];
-  for (let shape: SchemaNode | undefined = first && structural(first); shape?.type === "variant";) {
-    first = shape.options?.[0];
-    shape = first && structural(first);
-  }
-  return first;
-}
-
-/** The schema for `key` inside `value`, or undefined where the structure cannot be followed. */
-export function childSchemaOf(parent: AnySchema, key: string | number, value: unknown): AnySchema | undefined {
-  for (let current: AnySchema | undefined = parent; current !== undefined;) {
-    const shape: SchemaNode = structural(current);
-    if (OBJECTS.has(shape.type)) {
-      if (typeof key !== "string") return undefined;
-      return shape.entries !== undefined && Object.hasOwn(shape.entries, key) ? shape.entries[key] : shape.rest;
-    }
-    if (shape.type === "array") return typeof key === "number" ? shape.item : undefined;
-    if (shape.type === "record") return typeof key === "string" ? shape.value : undefined;
-    if (shape.type !== "variant") return undefined;
-    // An unknown discriminant matches no option, yet its own marker must still be read; every
-    // option declares the same key, so the first one stands in for all of them.
-    current = variantOption(shape, value) ?? (key === shape.key ? firstObjectOption(shape) : undefined);
-  }
-  return undefined;
 }
 
 const DROPPED: unique symbol = Symbol("dropped");
@@ -167,6 +86,17 @@ function truncateAtMarkers(schema: AnySchema, root: unknown, path: RepairPath): 
   return path;
 }
 
+function isRecordAt(schema: AnySchema, root: unknown, path: RepairPath): boolean {
+  let current: AnySchema | undefined = schema;
+  let value = root;
+  for (const key of path) {
+    if (current === undefined) return false;
+    current = childSchemaOf(current, key, value);
+    value = childOf(value, key);
+  }
+  return current !== undefined && isRecordSchema(current);
+}
+
 function isPrefix(prefix: RepairPath, path: RepairPath): boolean {
   return prefix.length <= path.length && prefix.every((key, index) => path[index] === key);
 }
@@ -216,7 +146,11 @@ export function repairValue<TSchema extends AnySchema>(
         }
         break;
       }
-      if (refused === undefined && isRecord(container) && typeof key === "string") {
+      // Like a list, a record emptied by dropping its entries reads as "none" where its default
+      // names some, so the record itself is the unit to repair.
+      const emptiesRecord =
+        isRecord(container) && Object.keys(container).length === 1 && isRecordAt(schema, working, parentPath);
+      if (refused === undefined && isRecord(container) && typeof key === "string" && !emptiesRecord) {
         Reflect.deleteProperty(container, key);
         break;
       }

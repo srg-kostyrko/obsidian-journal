@@ -1,14 +1,23 @@
 import * as v from "valibot";
 
-import { colorSchema } from "@/decorations";
+import { colorSchema, type ColorSettings } from "@/decorations";
 import { defineSlice } from "@/settings";
 
-const styleSchema = v.object({ color: colorSchema, background: colorSchema });
+const todayColor: ColorSettings = { type: "theme", name: "text-accent" };
+const todayBackground: ColorSettings = { type: "transparent" };
+const activeColor: ColorSettings = { type: "theme", name: "text-on-accent" };
+const activeBackground: ColorSettings = { type: "theme", name: "interactive-accent" };
 
 export const appearanceSliceSchema = v.object({
-  today: styleSchema,
-  active: styleSchema,
-  selectedRing: v.optional(colorSchema, { type: "theme", name: "interactive-accent" }),
+  today: v.object({
+    color: v.optional(colorSchema, () => ({ ...todayColor })),
+    background: v.optional(colorSchema, () => ({ ...todayBackground })),
+  }),
+  active: v.object({
+    color: v.optional(colorSchema, () => ({ ...activeColor })),
+    background: v.optional(colorSchema, () => ({ ...activeBackground })),
+  }),
+  selectedRing: v.optional(colorSchema, () => ({ ...activeBackground })),
 });
 
 export type AppearanceSliceState = v.InferOutput<typeof appearanceSliceSchema>;
@@ -17,11 +26,8 @@ export const appearanceSlice = defineSlice<"appearance", typeof appearanceSliceS
   "appearance",
   appearanceSliceSchema,
   {
-    today: { color: { type: "theme", name: "text-accent" }, background: { type: "transparent" } },
-    active: {
-      color: { type: "theme", name: "text-on-accent" },
-      background: { type: "theme", name: "interactive-accent" },
-    },
-    selectedRing: { type: "theme", name: "interactive-accent" },
+    today: { color: todayColor, background: todayBackground },
+    active: { color: activeColor, background: activeBackground },
+    selectedRing: activeBackground,
   },
 );

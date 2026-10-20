@@ -2,26 +2,21 @@ import { match } from "ts-pattern";
 import * as v from "valibot";
 
 import { defineCollection } from "@/settings";
+import { climb } from "@/settings/repair";
 
-const commandTargetSchema = v.union([
+const picksNotes = "a default opens different notes";
+const targetWriteType = v.pipe(v.picklist(["day", "week", "month", "quarter", "year"]), climb(picksNotes));
+const targetName = v.pipe(v.string(), v.minLength(1), climb(picksNotes));
+
+const commandTargetSchema = v.variant("kind", [
+  v.object({ kind: v.pipe(v.literal("all"), climb("discriminant")), writeType: targetWriteType }),
+  v.object({ kind: v.pipe(v.literal("journal"), climb("discriminant")), journalName: targetName }),
   v.object({
-    kind: v.literal("all"),
-    writeType: v.picklist(["day", "week", "month", "quarter", "year"]),
+    kind: v.pipe(v.literal("shelf"), climb("discriminant")),
+    shelfName: targetName,
+    writeType: targetWriteType,
   }),
-  v.object({
-    kind: v.literal("journal"),
-    journalName: v.pipe(v.string(), v.minLength(1)),
-  }),
-  v.object({
-    kind: v.literal("shelf"),
-    shelfName: v.pipe(v.string(), v.minLength(1)),
-    writeType: v.picklist(["day", "week", "month", "quarter", "year"]),
-  }),
-  v.object({
-    kind: v.literal("notelet"),
-    journalName: v.pipe(v.string(), v.minLength(1)),
-    typeId: v.pipe(v.string(), v.minLength(1)),
-  }),
+  v.object({ kind: v.pipe(v.literal("notelet"), climb("discriminant")), journalName: targetName, typeId: targetName }),
 ]);
 
 const commandTypeSchema = v.picklist([

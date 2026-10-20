@@ -2,7 +2,7 @@ import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
 import { climb, whole } from "./markers";
-import { childSchemaOf, defaultsFrom, repairValue, type DefaultAt } from "./repair-value";
+import { defaultsFrom, repairValue, type DefaultAt } from "./repair-value";
 
 const noDefaults = defaultsFrom({});
 const typeDefault: DefaultAt = (path) => (path.at(-1) === "type" ? { value: "a" } : undefined);
@@ -197,6 +197,30 @@ describe("repairValue", () => {
     expect(result).toEqual({ value: { byId: { other: { name: "o", kind: "y" } } }, fields: ["byId.first"] });
   });
 
+  it("repairs a record field whose every entry fails rather than empty it", () => {
+    const schema = v.object({ map: v.optional(v.record(v.string(), v.string()), { a: "one" }), n: v.number() });
+
+    const result = repairValue(schema, { map: { x: 1, y: 2 }, n: 3 }, noDefaults);
+
+    expect(result).toEqual({ value: { map: { a: "one" }, n: 3 }, fields: ["map"] });
+  });
+
+  it("drops only the failing entry of a record that keeps another", () => {
+    const schema = v.object({ map: v.optional(v.record(v.string(), v.string()), { a: "one" }) });
+
+    const result = repairValue(schema, { map: { x: 1, y: "two" } }, noDefaults);
+
+    expect(result).toEqual({ value: { map: { y: "two" } }, fields: ["map.x"] });
+  });
+
+  it("gives a top-level record whose every entry fails its top-level default", () => {
+    const schema = v.object({ map: v.record(v.string(), v.string()) });
+
+    const result = repairValue(schema, { map: { x: 1 } }, defaultsFrom({ map: { a: "one" } }));
+
+    expect(result).toEqual({ value: { map: { a: "one" } }, fields: ["map"] });
+  });
+
   it("climbs when a default fails an object-level check", () => {
     const schema = v.object({
       ranges: v.array(
@@ -304,11 +328,5 @@ describe("repairValue", () => {
     repairValue(linesSchema, raw, noDefaults);
 
     expect(raw).toEqual(before);
-  });
-});
-
-describe("childSchemaOf", () => {
-  it("does not resolve a prototype key as an object entry", () => {
-    expect(childSchemaOf(v.object({ a: v.string() }), "constructor", {})).toBeUndefined();
   });
 });

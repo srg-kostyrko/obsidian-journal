@@ -3,6 +3,7 @@ import * as v from "valibot";
 import type { AnchorString } from "@/calendar";
 import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorations/config";
 import { defineCollection } from "@/settings";
+import { climb } from "@/settings/repair";
 import { taskRuleSchema } from "@/tasks/conditions";
 import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
 import { visibilityRuleSchema } from "@/tasks/visibility-rule/rule";
@@ -37,57 +38,75 @@ const optionalAnchorString = v.pipe(
   v.transform((s) => s as AnchorString),
 );
 
+const ownsNotes = "a different period owns different notes";
+
 const writeFixed = v.object({
-  type: v.picklist(["day", "week", "month", "quarter", "year"]),
+  type: v.pipe(v.picklist(["day", "week", "month", "quarter", "year"]), climb(ownsNotes)),
 });
 
 const writeCustom = v.object({
-  type: v.literal("custom"),
-  every: v.picklist(["day", "week", "month", "quarter", "year"]),
-  duration: v.pipe(v.number(), v.integer(), v.minValue(1)),
-  anchorDate: anchorString,
+  type: v.pipe(v.literal("custom"), climb(ownsNotes)),
+  every: v.pipe(v.picklist(["day", "week", "month", "quarter", "year"]), climb(ownsNotes)),
+  duration: v.pipe(v.number(), v.integer(), v.minValue(1), climb(ownsNotes)),
+  anchorDate: v.pipe(anchorString, climb(ownsNotes)),
 });
 
-const writeSchema = v.union([writeFixed, writeCustom]);
+const writeSchema = v.variant("type", [writeFixed, writeCustom]);
 
-const timelineEnd = v.union([
-  v.object({ kind: v.literal("never") }),
-  v.object({ kind: v.literal("date"), date: optionalAnchorString }),
-  v.object({ kind: v.literal("repeats"), count: v.pipe(v.number(), v.integer(), v.minValue(1)) }),
+const widensTimeline = "an unset bound shows periods the user cut off";
+
+const timelineEnd = v.variant("kind", [
+  v.object({ kind: v.pipe(v.literal("never"), climb("discriminant")) }),
+  v.object({
+    kind: v.pipe(v.literal("date"), climb("discriminant")),
+    date: v.pipe(optionalAnchorString, climb(widensTimeline)),
+  }),
+  v.object({
+    kind: v.pipe(v.literal("repeats"), climb("discriminant")),
+    count: v.pipe(v.number(), v.integer(), v.minValue(1), climb(widensTimeline)),
+  }),
 ]);
 
 const timelineSchema = v.object({
-  start: optionalAnchorString,
-  end: timelineEnd,
+  start: v.pipe(optionalAnchorString, climb(widensTimeline)),
+  end: v.pipe(timelineEnd, climb(widensTimeline)),
 });
+
+const keyedNotes = "existing notes carry this key; a default orphans them";
 
 const frontmatterFieldsSchema = v.object({
-  dateField: v.pipe(v.string(), v.minLength(1)),
-  startDateField: v.pipe(v.string(), v.minLength(1)),
-  endDateField: v.pipe(v.string(), v.minLength(1)),
+  dateField: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
+  startDateField: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
+  endDateField: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
   noteletField: v.optional(v.pipe(v.string(), v.minLength(1)), DEFAULT_NOTELET_FIELD),
-  addStartDate: v.boolean(),
-  addEndDate: v.boolean(),
+  addStartDate: v.optional(v.boolean(), false),
+  addEndDate: v.optional(v.boolean(), false),
 });
 
-const numberingReset = v.union([
-  v.object({ kind: v.literal("never") }),
-  v.object({ kind: v.literal("after"), count: v.pipe(v.number(), v.integer(), v.minValue(1)) }),
+const renumbers = "a default renumbers existing notes";
+
+const numberingReset = v.variant("kind", [
+  v.object({ kind: v.pipe(v.literal("never"), climb("discriminant")) }),
+  v.object({
+    kind: v.pipe(v.literal("after"), climb("discriminant")),
+    count: v.pipe(v.number(), v.integer(), v.minValue(1), climb(renumbers)),
+  }),
 ]);
 
 const numberingSource = v.object({
-  variable: v.pipe(v.string(), v.minLength(1)),
-  frontmatterKey: v.pipe(v.string(), v.minLength(1)),
-  anchorValue: v.pipe(v.number(), v.integer()),
-  reset: numberingReset,
+  variable: v.pipe(v.string(), v.minLength(1), climb("templates name the source by its variable")),
+  frontmatterKey: v.pipe(v.string(), v.minLength(1), climb(keyedNotes)),
+  anchorValue: v.pipe(v.number(), v.integer(), climb(renumbers)),
+  reset: v.pipe(numberingReset, climb(renumbers)),
 });
 
 const numberingSchema = v.pipe(
   v.object({
-    enabled: v.boolean(),
-    anchorDate: optionalAnchorString,
-    allowBefore: v.boolean(),
-    sources: v.array(numberingSource),
+    // Its default depends on the write type, which a field default cannot see.
+    enabled: v.pipe(v.boolean(), climb("on for custom journals, off for fixed ones")),
+    anchorDate: v.pipe(optionalAnchorString, climb(renumbers)),
+    allowBefore: v.optional(v.boolean(), false),
+    sources: v.optional(v.array(numberingSource), () => []),
   }),
   v.check(
     (value) => new Set(value.sources.map((s) => s.variable)).size === value.sources.length,
@@ -151,42 +170,20 @@ export const journalConfigSchema = v.object({
   decorations: v.optional(v.array(decorationSchema), []),
   prompts: v.optional(promptsSchema, () => []),
   notelets: v.optional(v.record(v.string(), noteletTypeSchema), () => ({})),
-  // Splitting `tasks` into `providers` and `filter` gave a bad value in one sub-field a sibling to
-  // take down with it, so each is wrapped in its own v.fallback (the same idiom
-  // checkboxJournalRuleSchema already uses per comparator): a validation failure in one degrades
-  // to that sub-field's own default rather than failing the whole `tasks` object. This matters
-  // because repairCollectionEntry (settings-service.ts) only substitutes defaults for the fields
-  // it can name from issue.path[0].key, i.e. "tasks" itself — `tasks` is not registered in
-  // journalConfigCollection's `nested` map, so it cannot repair inside this object on its own.
-  // Confirmed empirically (2026-09-25) before the fallback existed: a valid providers.checkbox
-  // rule was wiped by an unrelated invalid filter.conditions entry (the live case: a vault synced
-  // from a newer version with a condition type this v.variant does not know). The trade: a
-  // v.fallback catch clears the failing dataset's issues, so repairCollectionEntry never sees one
-  // and nothing is logged — the loss is silent, on purpose, in exchange for not losing the
-  // sibling. Whoever adds a third sub-field to `tasks` needs the same per-field v.fallback; the
-  // underlying gap — repairCollectionEntry cannot reach inside a plain (non-`nested`) sub-object —
-  // is still there for it. The same holds one level deeper, inside `providers`: each provider key
-  // carries its own v.fallback, so a bad rule for one provider resets that rule alone and never a
-  // sibling provider's. A provider added here needs the same, one per key, not one around the
-  // namespace.
   tasks: v.optional(
     v.object({
       // Keyed by provider id, the key TaskHost reads a journal's rule under. Kept in its own object
       // so the listing filter below is not a sibling of the provider namespace.
       providers: v.optional(
-        v.fallback(
-          v.object({
-            checkbox: v.optional(v.fallback(v.optional(checkboxJournalRuleSchema), undefined)),
-            "note-property": v.optional(v.fallback(v.optional(visibilityRuleSchema), undefined)),
-          }),
-          () => ({}),
-        ),
+        v.object({
+          // A rule whose conditions cannot be read inherits the global rule whole: repairing inside
+          // it could leave a `replace` rule with no conditions, which counts every checkbox a task.
+          checkbox: v.optional(v.fallback(v.optional(checkboxJournalRuleSchema), undefined)),
+          "note-property": v.optional(visibilityRuleSchema),
+        }),
         () => ({}),
       ),
-      filter: v.optional(
-        v.fallback(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
-        () => v.parse(taskRuleSchema, {}),
-      ),
+      filter: v.optional(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
     }),
     () => ({ providers: {}, filter: v.parse(taskRuleSchema, {}) }),
   ),

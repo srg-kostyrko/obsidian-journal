@@ -6,7 +6,8 @@ import type { VaultPath } from "@/infrastructure/host";
 import { lowerScalars, tagMatches } from "./scalars";
 
 // Per entry, not per list: an emptied list is a no-op condition, which would quietly widen a
-// Matching rule to every task note over one unreadable entry.
+// Matching rule to every task note over one unreadable entry. The fallback stays because each
+// condition is parsed inside conditionsSchema's transform, which the settings repair never sees.
 const stringList = v.optional(
   v.fallback(
     v.pipe(
@@ -38,6 +39,8 @@ const conditionsSchema = v.pipe(
   ),
 );
 
+// The field fallbacks stay although the settings load repairs at depth: this rule is also the
+// checkbox rule's `dated`, whose own fallback would otherwise take the whole rule for one bad field.
 export const visibilityRuleSchema = v.object({
   show: v.optional(v.fallback(v.picklist(["all", "matching", "none"]), "all"), "all"),
   mode: v.optional(v.fallback(v.picklist(["and", "or"]), "and"), "and"),

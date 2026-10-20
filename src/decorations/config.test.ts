@@ -1,7 +1,7 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { decorationConditionSchema, decorationSchema } from "./config";
+import { decorationConditionSchema } from "./config";
 
 // Interval offsets are 1-based in both directions (1 = first day, -1 = last day), so a
 // stored 0 could never match anything. It is coerced rather than rejected, since existing
@@ -94,17 +94,8 @@ describe("tasks condition schema", () => {
     expect(v.parse(decorationConditionSchema, { type: "tasks" })).toEqual(defaults);
   });
 
-  it("falls back to the listing status for an unknown one", () => {
-    expect(v.parse(decorationConditionSchema, { type: "tasks", status: "weird" })).toEqual(defaults);
-  });
-
-  it("keeps the decoration's other conditions when a tasks status is unknown", () => {
-    const parsed = v.parse(decorationSchema, {
-      mode: "and",
-      styles: [],
-      conditions: [{ type: "has-note" }, { type: "tasks", status: "weird" }],
-    });
-    expect(parsed.conditions).toEqual([{ type: "has-note" }, defaults]);
+  it("rejects an unknown status rather than reading a different question", () => {
+    expect(v.safeParse(decorationConditionSchema, { type: "tasks", status: "weird" }).success).toBe(false);
   });
 
   it("strips a status row from the stored filter", () => {

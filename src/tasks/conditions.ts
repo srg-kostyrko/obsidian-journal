@@ -1,20 +1,25 @@
 // Leaf on purpose: journalConfigSchema imports this file and the tasks module imports journals —
-// any further import here closes a cycle. valibot only.
+// any further import here closes a cycle. valibot and the repair markers only.
 import * as v from "valibot";
 
+import { climb } from "@/settings/repair";
+
+// The fallbacks stay because the tasks fence and the tasks view block parse with these schemas and
+// no repair, so an unreadable value would show an error in place of the block until block configs
+// are repaired when read.
 export const taskConditionSchema = v.variant("type", [
   v.object({
-    type: v.literal("tag"),
+    type: v.pipe(v.literal("tag"), climb("discriminant")),
     condition: v.optional(v.fallback(v.picklist(["has", "lacks"]), "has"), "has"),
     tags: v.optional(v.array(v.string()), []),
   }),
   v.object({
-    type: v.literal("heading"),
+    type: v.pipe(v.literal("heading"), climb("discriminant")),
     condition: v.optional(v.fallback(v.picklist(["under", "not-under"]), "under"), "under"),
     headings: v.optional(v.array(v.string()), []),
   }),
   v.object({
-    type: v.literal("status"),
+    type: v.pipe(v.literal("status"), climb("discriminant")),
     condition: v.optional(v.fallback(v.picklist(["is", "is-not"]), "is"), "is"),
     statuses: v.optional(v.array(v.string()), []),
   }),
