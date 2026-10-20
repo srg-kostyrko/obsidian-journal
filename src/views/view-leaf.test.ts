@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { h, nextTick } from "vue";
+import { defineComponent, h, nextTick, type PropType } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
 import { m } from "@/i18n";
@@ -258,18 +258,51 @@ describe("JournalViewLeaf", () => {
       await leaf.onClose();
     });
 
-    it("reports a block whose config fails the registered schema", async () => {
-      const trivialBlock = defineViewBlock<{ x: number }>({
+    it("renders a block whose config has one bad field, with that field defaulted", async () => {
+      const trivialBlock = defineViewBlock<{ x: number; label: string }>({
         key: "trivial-block",
         label: () => "Trivial",
-        schema: v.object({ x: v.number() }),
+        schema: v.object({ x: v.number(), label: v.string() }),
+        defaultConfig: { x: 7, label: "default" },
+        component: defineComponent({
+          props: { config: { type: Object as PropType<{ x: number; label: string }>, required: true } },
+          setup: (props) => () => h("p", { class: "trivial" }, `${props.config.x}:${props.config.label}`),
+        }),
+      });
+      const view = buildView(VIEW_A, {
+        blocks: [{ id: BLOCK_STUB, key: "trivial-block", config: { x: "not-a-number", label: "kept" } }],
+      });
+      const { harness, leafInstance, containerEl } = await buildLeaf(view, {
+        modules: [testBlocksModule([trivialBlock])],
+      });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.querySelector(".trivial")?.textContent).toBe("7:kept");
+      expect(containerEl.textContent).not.toContain(m.view_block_config_error());
+      const repair = harness.logs.records.find(
+        (record) => record.message === "view-block config fields reset to defaults",
+      );
+      expect(repair?.fields).toEqual({ key: "trivial-block", viewId: VIEW_A, blockId: BLOCK_STUB, fields: ["x"] });
+      await leaf.onClose();
+    });
+
+    it("still shows the error panel when the config cannot be repaired", async () => {
+      const unrepairableBlock = defineViewBlock<{ x: number }>({
+        key: "unrepairable-block",
+        label: () => "Unrepairable",
+        schema: v.pipe(
+          v.object({ x: v.number() }),
+          v.check(() => false),
+        ),
         defaultConfig: { x: 0 },
         component: { setup: () => noop },
       });
       const view = buildView(VIEW_A, {
-        blocks: [{ id: BLOCK_STUB, key: "trivial-block", config: { x: "not-a-number" } }],
+        blocks: [{ id: BLOCK_STUB, key: "unrepairable-block", config: { x: 1 } }],
       });
-      const { leafInstance, containerEl } = await buildLeaf(view, { modules: [testBlocksModule([trivialBlock])] });
+      const { leafInstance, containerEl } = await buildLeaf(view, {
+        modules: [testBlocksModule([unrepairableBlock])],
+      });
       const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
       await leaf.onOpen();
       expect(containerEl.textContent).toContain(m.view_block_config_error());

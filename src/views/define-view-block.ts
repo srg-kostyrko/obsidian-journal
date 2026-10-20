@@ -1,4 +1,7 @@
+import { cloneFnJSON } from "@vueuse/core";
 import * as v from "valibot";
+
+import { defaultsFrom, repairValue, type RepairResult } from "@/settings/repair";
 
 import type { BlockInstanceId } from "./config";
 import type { BaseIssue, BaseSchema } from "valibot";
@@ -31,7 +34,7 @@ export interface ViewBlockDefinition<TConfig = unknown> extends Omit<ViewBlockDe
 }
 
 export function defineViewBlock<TConfig>(input: ViewBlockDefinitionInput<TConfig>): ViewBlockDefinition<TConfig> {
-  const { schema, summary } = input;
+  const { summary } = input;
   // A stored block config is persisted unparsed — viewBlockInstanceSchema keeps it a bare record —
   // so a summary reading it raw sees whatever a past version wrote: the legacy "current-month"
   // window every vault seeded before 3.5 still holds, or a field the schema would have defaulted.
@@ -39,8 +42,20 @@ export function defineViewBlock<TConfig>(input: ViewBlockDefinitionInput<TConfig
   const safeSummary =
     summary &&
     ((config: unknown): string | undefined => {
-      const parsed = v.safeParse(schema, config);
-      return parsed.success ? summary(parsed.output) : undefined;
+      const read = readBlockConfig(input, config);
+      return read ? summary(read.value) : undefined;
     });
   return { ...input, summary: safeSummary, __brand: "view-block" };
+}
+
+/** Parses a stored block config, repairing each unreadable field rather than rejecting the block. */
+export function readBlockConfig<TConfig>(
+  definition: Pick<ViewBlockDefinitionInput<TConfig>, "schema" | "defaultConfig">,
+  config: unknown,
+): RepairResult<TConfig> | undefined {
+  const parsed = v.safeParse(definition.schema, config);
+  if (parsed.success) return { value: parsed.output, fields: [] };
+  if (config === undefined) return undefined;
+  // structuredClone throws on a reactive proxy, and a stored config arrives as one.
+  return repairValue(definition.schema, cloneFnJSON(config), defaultsFrom(definition.defaultConfig));
 }

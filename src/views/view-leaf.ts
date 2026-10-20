@@ -1,5 +1,4 @@
 import { ItemView, type WorkspaceLeaf } from "obsidian";
-import * as v from "valibot";
 import { computed, createApp, defineComponent, h, reactive, shallowRef, type App as VueApp, type VNode } from "vue";
 
 import type { AnchorString } from "@/calendar/types";
@@ -12,6 +11,7 @@ import { useShelfScope } from "@/notes-calendar/use-shelf-scope";
 import { ShelvesRepository } from "@/shelves";
 
 import { FALLBACK_VIEW_ICON, type ViewId } from "./config";
+import { readBlockConfig } from "./define-view-block";
 import { resolveLeafShelf } from "./leaf-shelf";
 import { ViewsRepository } from "./repository";
 import { ViewsService } from "./service";
@@ -184,15 +184,23 @@ function buildRootComponent(viewId: ViewId, leafState: JournalViewLeafState, inj
             logger.warn("unknown view-block key", { key: block.key, viewId });
             return h(ViewErrorPanel, { key: block.id, message: m.view_block_unknown_error() });
           }
-          const parsed = v.safeParse(definition.schema, block.config);
-          if (!parsed.success) {
+          const read = readBlockConfig(definition, block.config);
+          if (!read) {
             logger.warn("invalid view-block config", { key: block.key, viewId, blockId: block.id });
             return h(ViewErrorPanel, { key: block.id, message: m.view_block_config_error() });
+          }
+          if (read.fields.length > 0) {
+            logger.warn("view-block config fields reset to defaults", {
+              key: block.key,
+              viewId,
+              blockId: block.id,
+              fields: read.fields,
+            });
           }
           return h(definition.component, {
             key: block.id,
             instanceId: block.id,
-            config: parsed.output,
+            config: read.value,
           });
         });
         return h("div", { class: "journal-view-root" }, children);
