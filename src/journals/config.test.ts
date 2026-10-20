@@ -114,23 +114,6 @@ describe("journalConfigSchema", () => {
     expect(parsed.tasks.filter.conditions).toHaveLength(1);
   });
 
-  // The live path this protects: a vault synced from a newer version added a condition type this
-  // version's v.variant does not know. Before providers/filter each carried their own v.fallback,
-  // that rejection failed the whole `tasks` object, and repairCollectionEntry only ever sees
-  // issue.path[0].key === "tasks" (tasks is not in journalConfigCollection's `nested` map) — so it
-  // reset providers right along with the filter that actually caused the failure.
-  it("keeps a valid provider rule when the listing filter holds a condition type this version does not know", () => {
-    const parsed = v.parse(journalConfigSchema, {
-      ...journalDefaultsFor({ type: "day" }, "Daily"),
-      tasks: {
-        providers: { checkbox: { compose: "narrow", mode: "and", conditions: [] } },
-        filter: { mode: "and", conditions: [{ type: "not-a-real-type" }] },
-      },
-    });
-    expect(parsed.tasks.providers.checkbox?.compose).toBe("narrow");
-    expect(parsed.tasks.filter).toEqual({ mode: "and", conditions: [] });
-  });
-
   // Mirror of the above: a bad provider rule must not take a valid listing filter down with it.
   it("keeps a valid listing filter when a provider rule holds a condition type this version does not know", () => {
     const parsed = v.parse(journalConfigSchema, {
@@ -179,13 +162,6 @@ describe("journalConfigSchema", () => {
     });
     expect(degraded.tasks.providers.checkbox).toEqual(checkbox);
     expect(degraded.tasks.providers["note-property"]).toEqual({ show: "all", mode: "and", conditions: [] });
-
-    const garbage = v.parse(journalConfigSchema, {
-      ...journalDefaultsFor({ type: "day" }, "Daily"),
-      tasks: { providers: { checkbox, "note-property": 42 } },
-    });
-    expect(garbage.tasks.providers.checkbox).toEqual(checkbox);
-    expect(garbage.tasks.providers["note-property"]).toBeUndefined();
   });
 
   it("keeps a valid note-property rule when the checkbox rule holds a condition type this version does not know", () => {
@@ -644,6 +620,57 @@ describe("journal nav block repair on load", () => {
       (record) => record.message === "collection entry fields reset to defaults",
     );
     expect(repair?.fields).toMatchObject({ fields: ["navBlock.showAdjacent"] });
+  });
+});
+
+async function loadTasks(tasks: unknown) {
+  const raw = fixedJournal("daily", { type: "day" }, { tasks: tasks as never });
+  const harness = await testContainer({
+    modules: [journalsCoreModule],
+    data: { journals: { daily: raw } },
+    allow: { dataRepair: true },
+  });
+  const repair = harness.logs.records.find((record) => record.message === "collection entry fields reset to defaults");
+  return { tasks: unwrap(harness.resolve(JournalsRepository).get("daily")).tasks, repair };
+}
+
+describe("journal tasks repair on load", () => {
+  const checkbox = { compose: "narrow", mode: "and", conditions: [] };
+  const heading = { type: "heading", condition: "under", headings: ["## Tasks"] };
+
+  it("a provider namespace that is not an object reads as no provider rules, keeping the filter", async () => {
+    const { tasks, repair } = await loadTasks({ providers: "garbage", filter: { mode: "or", conditions: [heading] } });
+
+    expect(tasks).toEqual({ providers: {}, filter: { mode: "or", conditions: [heading] } });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.providers"] });
+  });
+
+  it("an unreadable note-property rule is dropped alone, keeping the checkbox rule", async () => {
+    const { tasks, repair } = await loadTasks({ providers: { checkbox, "note-property": 42 } });
+
+    expect(tasks.providers).toEqual({ checkbox });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.providers.note-property"] });
+  });
+
+  // The live path: a vault synced from a newer version holds a condition type this one does not know.
+  it("a listing filter condition of an unknown type is dropped alone, keeping the filter's other conditions", async () => {
+    const { tasks, repair } = await loadTasks({
+      providers: { checkbox },
+      filter: { mode: "or", conditions: [heading, { type: "not-a-real-type" }] },
+    });
+
+    expect(tasks).toEqual({ providers: { checkbox }, filter: { mode: "or", conditions: [heading] } });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions.1"] });
+  });
+
+  it("a listing filter whose only condition is unreadable keeps no condition, and the provider rule stays", async () => {
+    const { tasks, repair } = await loadTasks({
+      providers: { checkbox },
+      filter: { mode: "and", conditions: [{ type: "not-a-real-type" }] },
+    });
+
+    expect(tasks).toEqual({ providers: { checkbox }, filter: { mode: "and", conditions: [] } });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions"] });
   });
 });
 

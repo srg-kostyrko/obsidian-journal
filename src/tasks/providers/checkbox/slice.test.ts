@@ -1,43 +1,58 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
 
-import { checkboxSliceSchema } from "./slice";
+import { journalsCoreModule } from "@/journals/module";
+import { testContainer } from "@/testing";
 
-describe("checkboxSliceSchema", () => {
-  it("keeps the other fields when one value is unusable", () => {
-    const parsed = v.parse(checkboxSliceSchema, {
-      enabled: true,
-      rule: { mode: "nonsense", conditions: [] },
-      statusMap: { " ": "todo" },
-      canonical: { done: "x" },
-    });
-    expect(parsed.rule.mode).toBe("and");
-    expect(parsed.statusMap).toEqual({ " ": "todo" });
+import { tasksCoreModule } from "../../module";
+
+import { DEFAULT_CANONICAL, checkboxSlice, checkboxSliceSchema } from "./slice";
+
+async function load(stored: Record<string, unknown>) {
+  const harness = await testContainer({
+    modules: [journalsCoreModule, tasksCoreModule],
+    data: { tasksCheckbox: stored },
+    allow: { dataRepair: true },
   });
-  it("accepts any string in the status map so a bad entry cannot reset the slice", () => {
-    const parsed = v.parse(checkboxSliceSchema, { statusMap: { "?": "whatever" } });
-    expect(parsed.statusMap["?"]).toBe("whatever");
-  });
-  it("resets only statusMap when it is not an object", () => {
-    const parsed = v.parse(checkboxSliceSchema, {
-      enabled: false,
-      rule: { mode: "and", conditions: [] },
-      statusMap: "not-an-object",
-      canonical: { done: "x" },
+  const repair = harness.logs.records.find((record) => record.message === "slice fields reset to defaults");
+  return { state: harness.settings.getSlice(checkboxSlice).state, repair };
+}
+
+const tag = { type: "tag", condition: "has", tags: ["#todo"] };
+
+describe("checkboxSlice repair on load", () => {
+  it("accepts any string in the status map so an unknown status name cannot reset the slice", async () => {
+    const harness = await testContainer({
+      modules: [journalsCoreModule, tasksCoreModule],
+      data: { tasksCheckbox: { statusMap: { "?": "whatever" } } },
     });
-    expect(parsed.enabled).toBe(false);
-    expect(parsed.rule).toEqual({ mode: "and", conditions: [] });
-    expect(parsed.statusMap).toEqual({ " ": "todo", x: "done", X: "done", "/": "in-progress", "-": "cancelled" });
+    expect(harness.settings.getSlice(checkboxSlice).state.statusMap["?"]).toBe("whatever");
   });
-  it("resets only canonical when it has non-string values", () => {
-    const parsed = v.parse(checkboxSliceSchema, {
-      enabled: false,
-      rule: { mode: "and", conditions: [] },
-      statusMap: { " ": "todo" },
-      canonical: { done: 5 },
-    });
-    expect(parsed.enabled).toBe(false);
-    expect(parsed.rule).toEqual({ mode: "and", conditions: [] });
-    expect(parsed.canonical).toEqual({ todo: " ", done: "x", "in-progress": "/", cancelled: "-" });
+
+  it.each([
+    ["enabled", "yes", true, "enabled"],
+    ["rule", { mode: "nonsense", conditions: [tag] }, { mode: "and", conditions: [tag] }, "rule.mode"],
+    [
+      "rule",
+      { mode: "or", conditions: [tag, { type: "moon-phase" }] },
+      { mode: "or", conditions: [tag] },
+      "rule.conditions.1",
+    ],
+    ["rule", "nonsense", { mode: "and", conditions: [] }, "rule"],
+    ["statusMap", { " ": "todo", "?": 5 }, { " ": "todo" }, "statusMap.?"],
+    [
+      "statusMap",
+      "not-an-object",
+      { " ": "todo", x: "done", X: "done", "/": "in-progress", "-": "cancelled" },
+      "statusMap",
+    ],
+    ["canonical", { done: 5 }, {}, "canonical.done"],
+    ["canonical", 7, DEFAULT_CANONICAL, "canonical"],
+  ] as const)("an unreadable %s (%j) repairs to %j and logs it", async (key, stored, expected, field) => {
+    const siblings = { enabled: false, canonical: { done: "x" } };
+    const { state, repair } = await load({ ...siblings, [key]: stored });
+
+    expect(state).toEqual({ ...v.parse(checkboxSliceSchema, siblings), [key]: expected });
+    expect(repair?.fields).toMatchObject({ sliceKey: "tasksCheckbox", fields: [field] });
   });
 });

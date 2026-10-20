@@ -39,32 +39,30 @@ export const DEFAULT_CANONICAL: Record<string, string> = {
 };
 export const DEFAULT_RECURRENCE_PROPERTIES: string[] = ["recurrence", "recurrence_parent"];
 
-// Each field wraps its schema in v.fallback so a malformed value resets that field alone, not the slice.
 export const notePropertySliceSchema = v.object({
-  enabled: v.optional(v.fallback(v.boolean(), false), false),
+  enabled: v.optional(v.boolean(), false),
   // Whether the provider has ever been enabled, for onboarding that must not reappear once it has.
-  setUp: v.optional(v.fallback(v.boolean(), false), false),
-  identify: v.optional(v.fallback(identifySchema, DEFAULT_IDENTIFY), DEFAULT_IDENTIFY),
-  excludedFolders: v.optional(v.fallback(v.array(v.string()), []), []),
-  archiveTag: v.optional(v.fallback(v.string(), "#archived"), "#archived"),
+  setUp: v.optional(v.boolean(), false),
+  identify: v.optional(identifySchema, DEFAULT_IDENTIFY),
+  excludedFolders: v.optional(v.array(v.string()), []),
+  archiveTag: v.optional(v.string(), "#archived"),
   dates: v.optional(
-    v.fallback(
-      v.object({
-        due: v.optional(v.string()),
-        scheduled: v.optional(v.string()),
-        start: v.optional(v.string()),
-        done: v.optional(v.string()),
-        created: v.optional(v.string()),
-      }),
-      DEFAULT_DATES,
-    ),
+    v.object({
+      due: v.optional(v.string()),
+      scheduled: v.optional(v.string()),
+      start: v.optional(v.string()),
+      done: v.optional(v.string()),
+      created: v.optional(v.string()),
+    }),
     DEFAULT_DATES,
   ),
-  statusProperty: v.optional(v.fallback(v.string(), "status"), "status"),
-  statusMap: v.optional(v.fallback(stringRecord, DEFAULT_STATUS_MAP), DEFAULT_STATUS_MAP),
-  canonical: v.optional(v.fallback(stringRecord, DEFAULT_CANONICAL), DEFAULT_CANONICAL),
-  titleProperty: v.optional(v.fallback(v.string(), "title"), "title"),
-  modifiedProperty: v.optional(v.fallback(v.string(), "dateModified"), "dateModified"),
+  statusProperty: v.optional(v.string(), "status"),
+  statusMap: v.optional(stringRecord, DEFAULT_STATUS_MAP),
+  canonical: v.optional(stringRecord, DEFAULT_CANONICAL),
+  titleProperty: v.optional(v.string(), "title"),
+  modifiedProperty: v.optional(v.string(), "dateModified"),
+  // The deep repair empties a list whose only entry is unreadable, which would switch off the
+  // recurring-task guard in tick.ts; the defaults keep it on.
   recurrenceProperties: v.optional(
     v.fallback(v.array(v.string()), DEFAULT_RECURRENCE_PROPERTIES),
     DEFAULT_RECURRENCE_PROPERTIES,

@@ -19,12 +19,15 @@ export function isEditableCondition(condition: TaskCondition): condition is Chec
 }
 
 export const checkboxRuleSchema = v.object({
-  mode: v.optional(v.fallback(v.picklist(["and", "or"]), "and"), "and"),
+  mode: v.optional(v.picklist(["and", "or"]), "and"),
   conditions: v.optional(v.array(taskConditionSchema), []),
 });
 
 // Identification is owner-scoped and `dated` asker-scoped, so they stay separate fields. Absent is
-// All; an unreadable `dated` falls back to absent on its own rather than taking identification with it.
+// All. The per-field fallbacks stay although the settings load repairs at depth: provider.ts
+// re-parses each journal's rule at read time with no repair, and one unreadable field there would
+// drop the journal's whole rule, so an unreadable `dated` falls back to absent on its own rather
+// than taking identification with it.
 export const checkboxJournalRuleSchema = v.object({
   compose: v.optional(v.fallback(v.picklist(["inherit", "narrow", "replace"]), "inherit"), "inherit"),
   mode: v.optional(v.fallback(v.picklist(["and", "or"]), "and"), "and"),
