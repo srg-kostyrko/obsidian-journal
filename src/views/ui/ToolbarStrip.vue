@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { cloneFnJSON } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
 
 import { m } from "@/i18n";
@@ -9,6 +10,7 @@ import { icons } from "@/ui/icons";
 import UiIconButton from "@/ui/UiIconButton.vue";
 
 import { ToolbarItemsService } from "../blocks/toolbar/toolbar-items-service";
+import { readToolbarItemConfig } from "../define-toolbar-item";
 import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.flow";
 import { ViewsService } from "../service";
 import { ViewsViewModel } from "../view-model";
@@ -62,12 +64,17 @@ const remove = (id: BlockInstanceId): void => void viewsService.removeToolbarIte
 
 function edit(row: Row): void {
   if (!row.definition?.configComponent) return;
+  // Seeded repaired, or an editor that spreads its config carries an unreadable field into a
+  // write that validation rejects.
+  const config = cloneFnJSON(
+    (readToolbarItemConfig(row.definition, row.config)?.value ?? row.config) as Record<string, unknown>,
+  );
   void modals
     .open(editToolbarItemModal, {
       component: row.definition.configComponent,
-      config: row.config,
+      config,
       typeLabel: row.definition.label(),
-      summary: row.definition.summary?.(row.config),
+      summary: row.definition.summary?.(config),
     })
     .tap((next) => void viewsService.updateToolbarItemConfig(props.viewId, props.blockId, row.id, next));
 }

@@ -1,5 +1,6 @@
 import userEvent from "@testing-library/user-event";
 import { screen, waitFor } from "@testing-library/vue";
+import * as v from "valibot";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 
@@ -14,7 +15,7 @@ import { AddToolbarItemToBlockFlow } from "../flows/add-toolbar-item-to-block.fl
 import { viewsCoreModule } from "../module";
 import { ViewsRepository } from "../repository";
 import { provideViewContextStub } from "../testing";
-import { buttonConfigFor } from "../toolbar-items/button/button-config";
+import { buttonConfigFor, buttonItemConfigSchema } from "../toolbar-items/button/button-config";
 import { buttonItem } from "../toolbar-items/button/button-item";
 import { existingNavigationItem } from "../toolbar-items/existing-navigation/existing-navigation-item";
 import { provideViewContext } from "../view-context";
@@ -124,6 +125,24 @@ describe("ToolbarStrip", () => {
         }
       ).items;
       expect(items[0]?.config.label).toBe("B");
+    });
+  });
+
+  // An editor writes `{ ...props.config, ...patch }`, so one seeded with the raw stored config
+  // carries the unreadable value into a write that validation then rejects.
+  it("an edit to an item with an unreadable field stores the repaired config with the edit", async () => {
+    const config = { action: { type: "navigate-step", direction: "next", unit: "day", amount: 0 }, label: "A" };
+    const { harness } = await setup([{ id: ITEM_A, key: "button", config }]);
+    await userEvent.click(screen.getByLabelText(m.view_toolbar_item_edit()));
+    const modal = harness.modals.lastOpen<{ config: Record<string, unknown> }, Record<string, unknown>>();
+    modal.submit({ ...modal.props.config, label: "B" });
+    const repository = harness.resolve(ViewsRepository);
+    await waitFor(() => {
+      const items = (
+        repository.get(VIEW_ID).getOr(undefined as never)?.blocks[0]?.config as { items: { config: unknown }[] }
+      ).items;
+      expect(v.safeParse(buttonItemConfigSchema, items[0]?.config).success).toBe(true);
+      expect(items[0]?.config).toMatchObject({ action: { amount: 1 }, label: "B" });
     });
   });
 });

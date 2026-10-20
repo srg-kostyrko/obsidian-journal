@@ -1,3 +1,7 @@
+import type { RepairResult } from "@/settings/repair";
+
+import { readBlockConfig } from "./define-view-block";
+
 import type { BlockInstanceId } from "./config";
 import type { BaseIssue, BaseSchema } from "valibot";
 import type { Component } from "vue";
@@ -39,4 +43,12 @@ export interface ToolbarItemDefinition<TConfig = unknown> extends Omit<ToolbarIt
 
 export function defineToolbarItem<TConfig>(input: ToolbarItemDefinitionInput<TConfig>): ToolbarItemDefinition<TConfig> {
   return { ...input, __brand: "toolbar-item" } as ToolbarItemDefinition<TConfig>;
+}
+
+/** Parses a stored toolbar item config, repairing each unreadable field rather than rejecting the item. */
+export function readToolbarItemConfig(
+  definition: Pick<ToolbarItemDefinition, "schema" | "defaultConfig">,
+  config: unknown,
+): RepairResult<unknown> | undefined {
+  return readBlockConfig({ schema: definition.schema, defaultConfig: definition.defaultConfig() }, config);
 }

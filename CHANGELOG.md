@@ -58,6 +58,8 @@ All notable changes to this project will be documented in this file.
   decorations, and a journal's listing filter keeps its other conditions; only the unreadable value
   goes back to its default or is left out. A decoration with an unreadable condition is still dropped
   whole, so it never marks days it wasn't set up to mark.
+- One unreadable toolbar item no longer hides the whole toolbar, or erases its other items the next
+  time the toolbar is edited.
 
 ### Changed
 
