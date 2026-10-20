@@ -690,6 +690,33 @@ describe("journal decoration repair on load", () => {
 
     expect(journal.decorations).toEqual([]);
   });
+
+  it("a style with an unknown type is dropped, keeping the decoration's conditions and other styles", async () => {
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ type: "glow", radius: 2 } as never, buildStyle("shape")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration, keptDecoration()] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([{ ...decoration, styles: [buildStyle("shape")] }, keptDecoration()]);
+  });
+
+  it("a style with one unreadable color resets only that color", async () => {
+    const shape = buildStyle("shape", { size: 0.8, shape: "square", placement_x: "left", placement_y: "top" });
+    const decoration = buildDecoration({
+      conditions: [buildCondition("has-note")],
+      styles: [{ ...shape, color: { type: "custom", color: 5 } } as never, buildStyle("background")],
+    });
+    const raw = fixedJournal("daily", { type: "day" }, { decorations: [decoration] });
+
+    const journal = unwrap(await loadJournal(raw));
+
+    expect(journal.decorations).toEqual([
+      { ...decoration, styles: [{ ...shape, color: buildStyle("shape").color }, buildStyle("background")] },
+    ]);
+  });
 });
 
 const configuredNoteletType = () =>

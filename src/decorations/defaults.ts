@@ -1,26 +1,14 @@
 import { match } from "ts-pattern";
 
-import { DATE_CONDITION_ANY } from "./date-condition";
-
-import type {
-  BorderSide,
-  ColorSettings,
-  JournalDecoration,
-  JournalDecorationCondition,
-  JournalDecorationStyle,
+import {
+  accentFill,
+  accentInk,
+  defaultBorderSide,
+  type JournalDecoration,
+  type JournalDecorationCondition,
+  type JournalDecorationStyle,
 } from "./config";
-
-// Every slot arrives visible. Under the last-wins cascade a transparent value is a declaration
-// that cancels a broader scope's, not an absence, so an invisible default silently switches off
-// a vault-wide rule. Theme variables rather than hex so a decoration follows the user's theme.
-const accentFill: ColorSettings = { type: "theme", name: "interactive-accent" };
-const accentInk: ColorSettings = { type: "theme", name: "text-accent" };
-const defaultBorderSide = (): BorderSide => ({
-  show: true,
-  width: 1,
-  color: accentInk,
-  style: "solid",
-});
+import { DATE_CONDITION_ANY } from "./date-condition";
 
 export function defaultDecoration(): JournalDecoration {
   return { mode: "and", conditions: [], styles: [] };
@@ -31,8 +19,8 @@ export function defaultStyle<T extends JournalDecorationStyle["type"]>(
 ): Extract<JournalDecorationStyle, { type: T }>;
 export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecorationStyle {
   return match<JournalDecorationStyle["type"], JournalDecorationStyle>(type)
-    .with("background", () => ({ type: "background", color: accentFill }))
-    .with("color", () => ({ type: "color", color: accentInk }))
+    .with("background", () => ({ type: "background", color: accentFill() }))
+    .with("color", () => ({ type: "color", color: accentInk() }))
     .with("border", () => ({
       type: "border",
       border: "uniform",
@@ -45,11 +33,11 @@ export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecor
       type: "shape",
       size: 0.4,
       shape: "circle",
-      color: accentInk,
+      color: accentInk(),
       placement_x: "center",
       placement_y: "bottom",
     }))
-    .with("corner", () => ({ type: "corner", placement: "top-left", color: accentInk }))
+    .with("corner", () => ({ type: "corner", placement: "top-left", color: accentInk() }))
     .with("icon", () => ({
       type: "icon",
       // A stored icon name is user data typed into UiIconSuggest, so it stays a free-form
@@ -57,7 +45,7 @@ export function defaultStyle(type: JournalDecorationStyle["type"]): JournalDecor
       icon: "star",
       placement_x: "center",
       placement_y: "top",
-      color: accentInk,
+      color: accentInk(),
       size: 0.5,
     }))
     .exhaustive();
