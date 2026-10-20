@@ -47,7 +47,7 @@ export class JournalTasksTool implements McpTool {
 
   readonly name = "journal_tasks";
   readonly description =
-    "Lists the tasks of a journal's period — the period holding the date — exactly as a journal-tasks code block in that note would: checkbox tasks in the note and its notelets, plus tasks matched to the period by date (task notes, and checkbox lines carrying a date). The journal's own listing filter applies, so tasks it excludes are not returned. Each task carries its path and a 0-based line (null for a task note; a task matched by date has \"date\" in its relations); change a task with vault_patch.";
+    "Lists the tasks of a journal's period — the period holding the date — exactly as a journal-tasks code block in that note would: checkbox tasks in the note and its notelets, plus tasks matched to the period by date (task notes, and checkbox lines carrying a date). The journal's own listing filter applies, so tasks it excludes are not returned. Each task carries its path and a 0-based line (null for a task note). relations lists every way a task can be placed, not how it was found: \"containment\" for a task in a journal's note or notelet, \"date\" for one carrying a date, so a dated line in the period's own note has both. Change a task with vault_patch.";
   readonly input = entries;
   readonly annotations = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false };
 
