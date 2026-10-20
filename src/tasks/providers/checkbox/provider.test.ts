@@ -3,11 +3,19 @@ import { screen } from "@testing-library/vue";
 import { describe, expect, it } from "vitest";
 import { nextTick } from "vue";
 
+import type { AnchorString } from "@/calendar";
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
-import { NoteStructureService, type NoteStructure, type VaultPath } from "@/infrastructure/host";
-import { FakeNoteStructureService } from "@/infrastructure/host/testing";
-import { Option } from "@/infrastructure/result";
+import {
+  NoteReadError,
+  NoteStructureService,
+  NotesService,
+  type NoteNotFoundError,
+  type NoteStructure,
+  type VaultPath,
+} from "@/infrastructure/host";
+import { FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
+import { AsyncResult, Option } from "@/infrastructure/result";
 import { JournalsIndex } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
@@ -83,17 +91,58 @@ class FakeTaskHost {
   }
 }
 
+// Reads can be held open, so a test decides when each one lands and in what order, and can fail
+// on demand; every other method is the shared fake's.
+class GatedNotesService extends FakeNotesService {
+  readonly #gates: (() => void)[] = [];
+  readonly reads: VaultPath[] = [];
+  gated = false;
+  failing = false;
+
+  override readCached(path: VaultPath): AsyncResult<string, NoteNotFoundError | NoteReadError> {
+    this.reads.push(path);
+    if (this.failing) return AsyncResult.err(new NoteReadError(path, new Error("unreadable")));
+    const pending = super.readCached(path);
+    if (!this.gated) return pending;
+    const gate = new Promise<void>((resolve) => this.#gates.push(resolve));
+    return AsyncResult.fromPromise(
+      gate.then(() =>
+        pending.match({
+          ok: (text) => text,
+          err: (error) => {
+            throw error;
+          },
+        }),
+      ),
+      (cause) => new NoteReadError(path, cause),
+    );
+  }
+
+  release(at: number): void {
+    this.#gates.at(at)?.();
+  }
+}
+
+function flush(): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, 0));
+}
+
 async function build(sliceState: Record<string, unknown> = {}) {
   const host = new FakeTaskHost();
   const structures = new FakeNoteStructureService();
+  const notes = new GatedNotesService();
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
     data: { tasksCheckbox: sliceState },
-    overrides: [overrideWith(TaskHostToken, host as never), overrideWith(NoteStructureService, structures as never)],
+    overrides: [
+      overrideWith(TaskHostToken, host as never),
+      overrideWith(NoteStructureService, structures as never),
+      overrideWith(NotesService, notes as never),
+    ],
   });
   const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
   if (!(provider instanceof CheckboxTaskProvider)) throw new TypeError("checkbox provider not registered");
-  return { host, structures, provider, harness };
+  return { host, structures, notes, provider, harness };
 }
 
 describe("CheckboxTaskProvider", () => {
@@ -323,6 +372,304 @@ describe("CheckboxTaskProvider", () => {
   });
 });
 
+function items(listLines: readonly number[]): NoteStructure {
+  return structure({ listItems: listLines.map((line) => ({ marker: " ", line, endLine: line, parent: null })) });
+}
+
+function datedLines(published: readonly TaskItem[] = []): Record<number, string | undefined> {
+  const found: Record<number, string | undefined> = {};
+  for (const item of published) {
+    if (item.display.kind === "line" && item.relations.includes("date")) found[item.display.line] = item.dates.due;
+  }
+  return found;
+}
+
+const ownedText = ["# Day", "", "intro", "", "- [ ] Pay 📅 2026-10-24", "- [ ] Call"].join("\n");
+
+async function ownedDay() {
+  const built = await build();
+  built.host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+  built.notes.seed(dayPath, ownedText);
+  built.structures.setStructure(dayPath, items([4, 5]));
+  built.provider.start();
+  // What the host does for an owned note: metadata-changed reaches both the provider and, as a
+  // note change, the host's own listener.
+  const touch = (text?: string) => {
+    if (text === undefined) built.notes.emitMetadataChanged(dayPath);
+    else built.notes.externalEdit(dayPath, text);
+    built.host.emit({ kind: "note", path: dayPath });
+  };
+  touch();
+  await flush();
+  return { ...built, touch };
+}
+
+describe("CheckboxTaskProvider date relation", () => {
+  it("a metadata change in a note no journal owns publishes its dated lines", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(projectPath, items([1]));
+
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+
+    const published = host.published.get(projectPath);
+    expect(published).toHaveLength(1);
+    expect(published?.at(0)?.relations).toEqual(["date"]);
+    expect(published?.at(0)?.dates.due).toBe("2026-10-24");
+  });
+
+  it("an undated checkbox in a note no journal owns publishes nothing", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, "# Ideas\n- [ ] Someday");
+    structures.setStructure(projectPath, items([1]));
+
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+
+    expect(host.published.get(projectPath) ?? []).toEqual([]);
+  });
+
+  it("an owned note republishes at once, then again with its dates", async () => {
+    const { host, structures, notes, provider } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    notes.seed(dayPath, ownedText);
+    structures.setStructure(dayPath, items([4, 5]));
+    provider.start();
+
+    notes.emitMetadataChanged(dayPath);
+    host.emit({ kind: "note", path: dayPath });
+
+    expect(host.published.get(dayPath)).toHaveLength(2);
+    expect(datedLines(host.published.get(dayPath))).toEqual({});
+
+    await flush();
+
+    expect(host.published.get(dayPath)).toHaveLength(2);
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+    const undated = host.published.get(dayPath)?.find((item) => item.key === `${dayPath}:5`);
+    expect(undated?.relations).toEqual(["containment"]);
+  });
+
+  // The undated item above the dated one is what makes this falsifiable: after the insert it sits
+  // on the line the cached date is keyed by, so a cache applied without its line stamp dates it.
+  it("a line inserted above a dated line ends with dates on the right line", async () => {
+    const { host, structures, notes, provider } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    notes.seed(dayPath, ["# Day", "", "intro", "- [ ] Call", "- [ ] Pay 📅 2026-10-24"].join("\n"));
+    structures.setStructure(dayPath, items([3, 4]));
+    provider.start();
+    notes.emitMetadataChanged(dayPath);
+    await flush();
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+
+    structures.setStructure(dayPath, items([4, 5]));
+    notes.externalEdit(dayPath, ["# Day", "", "inserted", "intro", "- [ ] Call", "- [ ] Pay 📅 2026-10-24"].join("\n"));
+    host.emit({ kind: "note", path: dayPath });
+
+    expect(host.published.get(dayPath)).toHaveLength(2);
+    expect(datedLines(host.published.get(dayPath))).toEqual({});
+
+    await flush();
+
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 5: "2026-10-24" });
+  });
+
+  it("an in-place date edit republishes the old date at once, then the new one", async () => {
+    const { host, touch } = await ownedDay();
+
+    touch(ownedText.replace("2026-10-24", "2026-10-25"));
+
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+
+    await flush();
+
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-25" });
+  });
+
+  it("removing a note's last checkbox clears its dates", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(projectPath, items([1]));
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+    expect(host.published.get(projectPath)).toHaveLength(1);
+    const readsBefore = notes.reads.length;
+
+    structures.setStructure(projectPath, items([]));
+    notes.externalEdit(projectPath, "# Ideas\nPay 📅 2026-10-24");
+    await flush();
+
+    expect(host.published.get(projectPath)).toEqual([]);
+    expect(notes.reads.length).toBe(readsBefore);
+
+    // A refresh that is not a metadata change must not read a note with nothing to read either.
+    host.owned.set(projectPath, { path: projectPath, journalName: "Other", rule: undefined });
+    host.emit({ kind: "note", path: projectPath });
+    host.owned.delete(projectPath);
+    host.emit({ kind: "note", path: projectPath });
+    await flush();
+
+    expect(host.published.get(projectPath)).toEqual([]);
+    expect(notes.reads.length).toBe(readsBefore);
+  });
+
+  it("a failed read drops the note's cached dates", async () => {
+    const { host, notes, touch } = await ownedDay();
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+
+    notes.failing = true;
+    touch();
+    await flush();
+
+    expect(host.published.get(dayPath)).toHaveLength(2);
+    expect(datedLines(host.published.get(dayPath))).toEqual({});
+  });
+
+  it("a note that joins a journal gains its undated items; one that leaves keeps only dated ones", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, ownedText);
+    structures.setStructure(projectPath, items([4, 5]));
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+    expect(host.published.get(projectPath)?.map((item) => item.key)).toEqual([`${projectPath}:4`]);
+
+    host.owned.set(projectPath, { path: projectPath, journalName: "Daily", rule: undefined });
+    host.emit({ kind: "note", path: projectPath });
+
+    expect(host.published.get(projectPath)?.map((item) => item.relations)).toEqual([
+      ["containment", "date"],
+      ["containment"],
+    ]);
+
+    host.owned.delete(projectPath);
+    host.emit({ kind: "note", path: projectPath });
+
+    const left = host.published.get(projectPath);
+    expect(left?.map((item) => item.key)).toEqual([`${projectPath}:4`]);
+    expect(left?.at(0)?.relations).toEqual(["date"]);
+  });
+
+  it("a read that a newer edit overtook is discarded", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, "");
+    structures.setStructure(projectPath, items([1]));
+    notes.gated = true;
+
+    notes.externalEdit(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    notes.externalEdit(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-25");
+    notes.release(1);
+    await flush();
+    notes.release(0);
+    await flush();
+
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-25" });
+  });
+
+  it("a failed or vanished read publishes nothing for that path", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(projectPath, items([1]));
+    notes.failing = true;
+
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+
+    expect(host.published.get(projectPath) ?? []).toEqual([]);
+
+    notes.failing = false;
+    notes.gated = true;
+    notes.emitMetadataChanged(projectPath);
+    void notes.delete(projectPath);
+    notes.release(0);
+    await flush();
+
+    expect(host.published.get(projectPath)).toEqual([]);
+  });
+
+  it("an excluded note no journal owns is not read", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(projectPath, items([1]));
+    notes.ignore(projectPath);
+
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+
+    expect(notes.reads).not.toContain(projectPath);
+    expect(host.published.get(projectPath) ?? []).toEqual([]);
+
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    notes.seed(dayPath, ownedText);
+    structures.setStructure(dayPath, items([4, 5]));
+    notes.ignore(dayPath);
+    notes.emitMetadataChanged(dayPath);
+    host.emit({ kind: "note", path: dayPath });
+    await flush();
+
+    expect(host.published.get(dayPath)).toHaveLength(2);
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+  });
+
+  it("rename moves a non-owned note's dated items; delete clears them", async () => {
+    const moved = "project/renamed.md" as VaultPath;
+    const { host, structures, notes, provider } = await build();
+    provider.start();
+    notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(projectPath, items([1]));
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+    expect(host.published.get(projectPath)).toHaveLength(1);
+
+    structures.setStructure(moved, items([1]));
+    void notes.rename(projectPath, moved);
+    await flush();
+
+    expect(host.published.get(projectPath)).toEqual([]);
+    expect(host.published.get(moved)?.map((item) => item.key)).toEqual([`${moved}:1`]);
+
+    void notes.delete(moved);
+    await flush();
+
+    expect(host.published.get(moved)).toEqual([]);
+  });
+
+  it("drops a read still in flight when its disposer runs", async () => {
+    const { host, structures, notes, provider } = await build();
+    const stop = provider.start();
+    notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(projectPath, items([1]));
+    notes.gated = true;
+    notes.emitMetadataChanged(projectPath);
+
+    stop();
+    notes.release(0);
+    await flush();
+
+    expect(host.published.has(projectPath)).toBe(false);
+  });
+
+  it("stops reading once its disposer runs", async () => {
+    const { host, structures, notes, provider } = await build();
+    provider.start()();
+    notes.seed(projectPath, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(projectPath, items([1]));
+
+    notes.emitMetadataChanged(projectPath);
+    await flush();
+
+    expect(notes.reads).toEqual([]);
+    expect(host.published.has(projectPath)).toBe(false);
+  });
+});
+
 describe("CheckboxTaskProvider.hydrateItem", () => {
   const path = "a.md" as VaultPath;
   function lineItem(): TaskItem {
@@ -338,17 +685,24 @@ describe("CheckboxTaskProvider.hydrateItem", () => {
     };
   }
 
-  it("fills markdown, dates and retargetable from the line's text", async () => {
+  it("fills markdown and keeps the dates fill found", async () => {
     const { provider } = await build();
-    const hydrated = provider.hydrateItem(lineItem(), "- [ ] Water plants 📅 2026-09-25");
-    expect(hydrated.display).toMatchObject({ markdown: "- [ ] Water plants 📅 2026-09-25" });
-    expect(hydrated.dates.due).toBe("2026-09-25");
+    const dated: TaskItem = {
+      ...lineItem(),
+      relations: ["containment", "date"],
+      capabilities: { movable: true, stampable: true, retargetable: true },
+      dates: { due: "2026-09-25" as AnchorString },
+    };
+    const hydrated = provider.hydrateItem(dated, "- [ ] Water plants 📅 2026-09-26");
+    expect(hydrated.display).toMatchObject({ markdown: "- [ ] Water plants 📅 2026-09-26" });
+    expect(hydrated.dates).toEqual({ due: "2026-09-25" });
+    expect(hydrated.relations).toEqual(["containment", "date"]);
     expect(hydrated.capabilities.retargetable).toBe(true);
   });
 
-  it("leaves retargetable false and dates empty when the line carries no date signifier", async () => {
+  it("does not date an item fill left undated", async () => {
     const { provider } = await build();
-    const hydrated = provider.hydrateItem(lineItem(), "- [ ] Water plants");
+    const hydrated = provider.hydrateItem(lineItem(), "- [ ] Water plants 📅 2026-09-25");
     expect(hydrated.dates).toEqual({});
     expect(hydrated.capabilities.retargetable).toBe(false);
   });
@@ -360,13 +714,10 @@ describe("CheckboxTaskProvider.hydrateItem", () => {
   });
 });
 
-// Proves the wiring, not just the method: TaskIndex resolves hydrateItem from the provider it
-// finds under TaskProviderToken by id, so this exercises the real DI registration end to end. If
-// CheckboxTaskProvider never implemented hydrateItem, TaskIndex.hydrate would silently fall back
-// to setting markdown alone, and this is the test that would catch it — a checkbox item's dates
-// would come back empty with no error anywhere.
+// End to end through the real host and index: the dates come from the provider's own read of the
+// note at fill time, and hydration must deliver the markdown without dropping them.
 describe("CheckboxTaskProvider hydration wiring", () => {
-  it("hydrates a real checkbox item through TaskIndex with dates and retargetable set", async () => {
+  it("hydrates a real checkbox item through TaskIndex, its read dates and retargetable kept", async () => {
     const structures = new FakeNoteStructureService();
     const path = "Daily/2026-09-22.md" as VaultPath;
     const harness = await testContainer({
@@ -382,6 +733,8 @@ describe("CheckboxTaskProvider hydration wiring", () => {
     const provider = harness.resolve(TaskProviderToken).find((candidate) => candidate.id === CHECKBOX_PROVIDER_ID);
     if (!provider) throw new Error("checkbox provider not registered");
     provider.start();
+    harness.host.emitMetadata(path);
+    await flush();
 
     const index = harness.resolve(TaskIndex);
     const published = index.itemsIn(path);

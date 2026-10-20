@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 
+import type { AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 
-import { extractItems } from "./extract";
+import { extractItems, lineDatesOf, lineStampOf } from "./extract";
 import { DEFAULT_STATUS_MAP } from "./slice";
 
 const path = "journal/2026-09-22.md" as VaultPath;
@@ -22,6 +23,8 @@ const base = {
   vault: { mode: "and" as const, conditions: [] },
   journal: null,
   statusMap: DEFAULT_STATUS_MAP,
+  owned: true,
+  lineDates: undefined,
 };
 
 describe("extractItems", () => {
@@ -81,6 +84,8 @@ describe("extractItems", () => {
       vault: { mode: "and", conditions: [] },
       journal: null,
       statusMap: { " ": "todo" },
+      owned: true,
+      lineDates: undefined,
     });
     expect(items.map((item) => item.display.kind === "line" && item.display.parentLine)).toEqual([null, 3]);
   });
@@ -92,5 +97,52 @@ describe("extractItems", () => {
     const acceptsEverything = { compose: "replace" as const, mode: "and" as const, conditions: [] };
     expect(extractItems({ ...base, vault: rejectsEverything, journal: null })).toHaveLength(0);
     expect(extractItems({ ...base, vault: rejectsEverything, journal: acceptsEverything })).toHaveLength(3);
+  });
+
+  it("an owned note keeps undated items and adds the date relation to dated ones", () => {
+    const lineDates = new Map([[4, { due: "2026-10-24" as AnchorString }]]);
+    const items = extractItems({ ...base, lineDates });
+    const dated = items.find((item) => item.key === `${path}:4`);
+    const undated = items.find((item) => item.key === `${path}:5`);
+    expect(dated?.relations).toEqual(["containment", "date"]);
+    expect(dated?.dates.due).toBe("2026-10-24");
+    expect(dated?.capabilities.retargetable).toBe(true);
+    expect(undated?.relations).toEqual(["containment"]);
+    expect(undated?.dates).toEqual({});
+    expect(undated?.capabilities.retargetable).toBe(false);
+  });
+  it("a note no journal owns keeps only dated items, by date alone", () => {
+    const lineDates = new Map([[4, { due: "2026-10-24" as AnchorString }]]);
+    const items = extractItems({ ...base, owned: false, lineDates });
+    expect(items).toHaveLength(1);
+    expect(items.at(0)?.key).toBe(`${path}:4`);
+    expect(items.at(0)?.relations).toEqual(["date"]);
+    expect(items.at(0)?.dates).toEqual({ due: "2026-10-24" });
+  });
+  it("without line dates an owned note fills as before", () => {
+    const items = extractItems(base);
+    expect(items.map((item) => item.relations)).toEqual([["containment"], ["containment"], ["containment"]]);
+    expect(items.map((item) => item.dates)).toEqual([{}, {}, {}]);
+    expect(items.every((item) => !item.capabilities.retargetable)).toBe(true);
+  });
+  it("lineDatesOf reads each task item's own lines", () => {
+    const text = ["# Plan", "- [ ] Parent", "  - [ ] Child 📅 2026-10-24", "- [ ] Sibling [due:: 2026-10-25]"].join(
+      "\n",
+    );
+    const nested: NoteStructure = {
+      ...structure,
+      listItems: [
+        { marker: " ", line: 1, endLine: 1, parent: null },
+        { marker: " ", line: 2, endLine: 2, parent: 1 },
+        { marker: " ", line: 3, endLine: 3, parent: null },
+      ],
+    };
+    expect([...lineDatesOf(text, nested)]).toEqual([
+      [2, { due: "2026-10-24" }],
+      [3, { due: "2026-10-25" }],
+    ]);
+  });
+  it("lineStampOf names every task item's line", () => {
+    expect(lineStampOf(structure)).toBe("4,5,6");
   });
 });
