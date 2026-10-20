@@ -52,7 +52,10 @@ All notable changes to this project will be documented in this file.
   instead of overhanging them whenever the editor was too narrow for the full-size canvas — which
   a 960px-wide window already was. The canvas shrinks to fit its column instead.
 - Plugin API consumers no longer receive `noteAdded` and `noteRemoved` for a note that does not exist whenever a code block preview is shown in a journal's settings.
-- A navigation block no longer resets to its default when one of its settings can't be read; only that setting does.
+- A setting that can't be read no longer resets everything around it. A navigation block keeps its
+  other segments, a calendar or startup section keeps its other options, and a notelet type keeps its
+  folder, templates and counter; only the unreadable value goes back to its default. A decoration with
+  an unreadable condition is still dropped whole, so it never marks days it wasn't set up to mark.
 
 ### Changed
 
