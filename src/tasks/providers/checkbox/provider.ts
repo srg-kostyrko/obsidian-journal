@@ -178,12 +178,6 @@ export class CheckboxTaskProvider implements TaskProvider {
     }
     for (const path of this.#lineDates.keys()) {
       if (owned.has(path)) continue;
-      // Trashing a folder emits no per-file delete, so the cache can outlive the note.
-      if (this.#notes.find(path).isNone()) {
-        this.#lineDates.delete(path);
-        this.#generation.delete(path);
-        continue;
-      }
       items.push(...this.#itemsFor(path, undefined));
     }
     this.#host.publish(this.id, "all", items);
