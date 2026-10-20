@@ -6,7 +6,7 @@ import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../module";
 
-import { DEFAULT_CANONICAL, checkboxSlice, checkboxSliceSchema } from "./slice";
+import { DEFAULT_CANONICAL, DEFAULT_STATUS_MAP, checkboxSlice, checkboxSliceSchema } from "./slice";
 
 async function load(stored: Record<string, unknown>) {
   const harness = await testContainer({
@@ -46,7 +46,7 @@ describe("checkboxSlice repair on load", () => {
       { " ": "todo", x: "done", X: "done", "/": "in-progress", "-": "cancelled" },
       "statusMap",
     ],
-    ["canonical", { done: 5 }, {}, "canonical.done"],
+    ["canonical", { done: 5 }, DEFAULT_CANONICAL, "canonical"],
     ["canonical", 7, DEFAULT_CANONICAL, "canonical"],
   ] as const)("an unreadable %s (%j) repairs to %j and logs it", async (key, stored, expected, field) => {
     const siblings = { enabled: false, canonical: { done: "x" } };
@@ -54,5 +54,18 @@ describe("checkboxSlice repair on load", () => {
 
     expect(state).toEqual({ ...v.parse(checkboxSliceSchema, siblings), [key]: expected });
     expect(repair?.fields).toMatchObject({ sliceKey: "tasksCheckbox", fields: [field] });
+  });
+
+  // An empty status map reads every marker as to-do and an empty canonical map refuses every tick,
+  // so a map whose every entry is unreadable takes the defaults instead.
+  it("a status map and canonical map of a newer shape repair to the defaults", async () => {
+    const { state, repair } = await load({
+      statusMap: { " ": { s: "todo" }, x: { s: "done" } },
+      canonical: { done: { s: "x" } },
+    });
+
+    expect(state.statusMap).toEqual(DEFAULT_STATUS_MAP);
+    expect(state.canonical).toEqual(DEFAULT_CANONICAL);
+    expect(repair?.fields).toMatchObject({ sliceKey: "tasksCheckbox", fields: ["statusMap", "canonical"] });
   });
 });

@@ -1,6 +1,6 @@
 import * as v from "valibot";
 
-import { childSchemaOf, markerAlong } from "./schema-walk";
+import { childSchemaOf, isRecordSchema, markerAlong } from "./schema-walk";
 
 type AnySchema = v.BaseSchema<unknown, unknown, v.BaseIssue<unknown>>;
 
@@ -86,6 +86,17 @@ function truncateAtMarkers(schema: AnySchema, root: unknown, path: RepairPath): 
   return path;
 }
 
+function isRecordAt(schema: AnySchema, root: unknown, path: RepairPath): boolean {
+  let current: AnySchema | undefined = schema;
+  let value = root;
+  for (const key of path) {
+    if (current === undefined) return false;
+    current = childSchemaOf(current, key, value);
+    value = childOf(value, key);
+  }
+  return current !== undefined && isRecordSchema(current);
+}
+
 function isPrefix(prefix: RepairPath, path: RepairPath): boolean {
   return prefix.length <= path.length && prefix.every((key, index) => path[index] === key);
 }
@@ -135,7 +146,11 @@ export function repairValue<TSchema extends AnySchema>(
         }
         break;
       }
-      if (refused === undefined && isRecord(container) && typeof key === "string") {
+      // Like a list, a record emptied by dropping its entries reads as "none" where its default
+      // names some, so the record itself is the unit to repair.
+      const emptiesRecord =
+        isRecord(container) && Object.keys(container).length === 1 && isRecordAt(schema, working, parentPath);
+      if (refused === undefined && isRecord(container) && typeof key === "string" && !emptiesRecord) {
         Reflect.deleteProperty(container, key);
         break;
       }

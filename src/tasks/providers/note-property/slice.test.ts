@@ -6,7 +6,13 @@ import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../module";
 
-import { DEFAULT_CANONICAL, DEFAULT_IDENTIFY, notePropertySlice, notePropertySliceSchema } from "./slice";
+import {
+  DEFAULT_CANONICAL,
+  DEFAULT_IDENTIFY,
+  DEFAULT_STATUS_MAP,
+  notePropertySlice,
+  notePropertySliceSchema,
+} from "./slice";
 
 async function load(stored: Record<string, unknown>) {
   const harness = await testContainer({
@@ -49,7 +55,9 @@ describe("notePropertySlice repair on load", () => {
     ["dates", 7, { due: "due", scheduled: "scheduled", done: "completedDate", created: "dateCreated" }, "dates"],
     ["statusProperty", 5, "status", "statusProperty"],
     ["statusMap", { open: "todo", x: 5 }, { open: "todo" }, "statusMap.x"],
+    ["statusMap", { open: 1 }, DEFAULT_STATUS_MAP, "statusMap"],
     ["canonical", 7, DEFAULT_CANONICAL, "canonical"],
+    ["canonical", { done: { s: "done" } }, DEFAULT_CANONICAL, "canonical"],
     ["titleProperty", 5, "title", "titleProperty"],
     ["modifiedProperty", 5, "dateModified", "modifiedProperty"],
   ] as const)("an unreadable %s (%j) repairs to %j and logs it", async (key, stored, expected, field) => {

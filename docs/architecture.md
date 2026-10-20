@@ -153,7 +153,8 @@ at or below a `climb` field is repaired at its parent, and a failure inside a
 list is never emptied by dropping its last item: the repair drops the nearest
 enclosing list item that has siblings instead, and only when there is none
 before a substituted default or the root does it empty that list, never default
-anything wider.
+anything wider. A record is not emptied by dropping its entries either: when its
+last entry fails, the record field itself is repaired, so its default fills in.
 
 ## Internationalization
 
