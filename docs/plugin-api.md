@@ -368,8 +368,13 @@ const month = await journals.tasksFor("Work Monthly", "today", { depth: "rollup"
   date that can place it in a period. A checkbox line in a period's note with a date on it has
   both, `["containment", "date"]`, even when it was returned because it sits in the period you
   asked about. A dated checkbox line in a note no journal owns has `["date"]` alone, with its own
-  `line`. A task note has `["date"]` too, with `source: "note"`, `line: null`, `parentLine: null`
-  and its title as `text`. The `date` option picks which of a task's dates places it, and defaults
+  `line`. A task note has `["date"]` too, with `line: null`, `parentLine: null` and its title as
+  `text`.
+- **`source` names where the task lives, not how the call reached it.** A task in a notelet reports
+  `"notelet"` whether it was found in the period's notelets or reached by its date from another
+  period; everything else — a period's note, a note no journal owns, a task note — reports `"note"`.
+  The `source` option, by contrast, picks which of the selected periods' notes are read, and does
+  not narrow what is reached by date. The `date` option picks which of a task's dates places it, and defaults
   to scheduled or due. Task notes only appear once a provider that dates whole notes, such as the
   note-property provider, is enabled.
 - **`status` and `relations` are open unions** — handle the default case.

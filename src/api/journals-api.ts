@@ -532,7 +532,8 @@ export class JournalsApiService implements JournalsApi {
     // A dated row's journal and date are the ones asked about, not its path's owner — a task note
     // at a period note's path would otherwise be reported as that note's own task.
     const dated = row.source.kind === "task-note";
-    const owner = dated ? undefined : this.#index.entryByPath(row.source.path).getOrUndefined();
+    const indexed = this.#index.entryByPath(row.source.path).getOrUndefined();
+    const owner = dated ? undefined : indexed;
     if (!dated && owner === undefined) return null;
     const { item } = row;
     const display = item.display;
@@ -540,7 +541,9 @@ export class JournalsApiService implements JournalsApi {
       journal: owner?.journalName ?? asked.journal,
       date: owner?.anchor ?? asked.date,
       path: item.path,
-      source: row.source.kind === "notelet" ? "notelet" : "note",
+      // Where the task lives, read off its path: the listing tags a row reached by date as
+      // "task-note" whatever note holds it, a notelet included.
+      source: indexed !== undefined && isNotelet(indexed) ? "notelet" : "note",
       line: display.kind === "line" ? display.line : null,
       text: display.kind === "line" ? (display.markdown ?? "") : display.title,
       status: item.status,

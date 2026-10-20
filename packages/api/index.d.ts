@@ -205,6 +205,7 @@ export interface TaskItem {
   /** The period of the note that holds the task, or for a task reached only by its date the period asked about. */
   readonly date: string;
   readonly path: string;
+  /** Where the task lives, however it was reached: `notelet` for one in a notelet, `note` for anything else. */
   readonly source: "note" | "notelet";
   /** 0-based; null for a task that is a whole note rather than a line in one. */
   readonly line: number | null;
