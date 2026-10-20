@@ -447,6 +447,34 @@ The editor's own **Status** control offers only three groupings — **Open**, **
 three names the `status:` fence key accepts as aliases. A fence, or the `conditions:` escape hatch, can
 instead name one status directly, such as `on-hold`, which the settings editor has no button for.
 
+### Dated lines from anywhere in the vault
+
+A checkbox line that carries a date also appears **by that date**, wherever its note lives — a project
+note, an archive folder, another journal's note. A task in `Projects/Launch.md` written
+`- [ ] Ship it 📅 2026-10-30` shows up in the listing of 30 October, lights that day's [tasks
+decoration](/decorations#tasks), and is returned by the plugin API. A line with no date is listed only
+in the note, or notelet, that holds it, as before.
+
+Two date formats are read:
+
+- **Tasks emoji** — `📅` due, `⏳` scheduled, `🛫` start, `✅` done and `➕` created, each followed by
+  a `YYYY-MM-DD` date.
+- **Dataview inline fields** — `[due:: 2026-10-30]` or `(due:: 2026-10-30)`, with the keys `due`,
+  `scheduled`, `start`, `created` and `completion`, the last of which is the done date.
+
+Which of a task's dates places it in a period is the fence's `date` key, covered under [Fence
+keys](#fence-keys). The [vault-wide identification rule](#which-checkbox-items-count-as-tasks) still
+decides which lines count as tasks; a journal's own rule applies to the notes that journal owns.
+
+Only the task's own line is read for dates, never its subtasks: a dated subtask is a task in its own
+right and appears by its own date.
+
+The lines are found by reading your vault once at startup, after Obsidian has indexed it, so a
+vault-wide listing is complete a moment after launch rather than instantly. There is nothing to turn
+on: it follows **Checkbox tasks**' toggle. Notes under Obsidian's **Files and links → Excluded files**
+are skipped, unless a journal owns them, in which case their tasks stay. A change to **Excluded files**
+takes effect at the next restart, or the next time you change a checkbox tasks setting.
+
 ### One thing to expect right after startup
 
 For a moment after Obsidian starts, before it has finished reading your notes, a listing filtered by
