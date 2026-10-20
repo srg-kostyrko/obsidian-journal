@@ -300,7 +300,7 @@ describe("repairValue", () => {
     expect(repairValue(schema, { a: 2, b: 1 }, defaultsFrom({ a: 0, b: 1 }))).toBeUndefined();
   });
 
-  it("runs a transform once on the repaired value", () => {
+  it("feeds a transform only stored values, never its own output", () => {
     const seen: number[] = [];
     const schema = v.object({
       doubled: v.pipe(
@@ -316,7 +316,8 @@ describe("repairValue", () => {
     const result = repairValue(schema, { doubled: 3, flag: "yes" }, noDefaults);
 
     expect(result).toEqual({ value: { doubled: 6, flag: false }, fields: ["flag"] });
-    expect(new Set(seen)).toEqual(new Set([3]));
+    expect(seen.length).toBeGreaterThan(1);
+    expect(seen).toEqual(seen.map(() => 3));
   });
 
   it("leaves the caller's raw value untouched", () => {
