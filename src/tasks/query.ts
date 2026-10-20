@@ -8,13 +8,10 @@ import { taskDateChoiceSchema } from "./date-choice";
 export const taskSorts = ["document", "status", "due", "scheduled", "start", "done", "created"] as const;
 export type TaskSort = (typeof taskSorts)[number];
 
-// The fallbacks stay because the tasks view block parses its stored config with this schema and no
-// repair, so an unreadable value would show an error in place of the block until block configs are
-// repaired when read.
 const scopeSchema = v.object({
   provider: v.optional(v.array(v.string()), []),
-  source: v.optional(v.fallback(v.picklist(["note", "notelets", "both"]), "both"), "both"),
-  depth: v.optional(v.fallback(v.picklist(["literal", "rollup"]), "literal"), "literal"),
+  source: v.optional(v.picklist(["note", "notelets", "both"]), "both"),
+  depth: v.optional(v.picklist(["literal", "rollup"]), "literal"),
 });
 
 // The status a listing shows when nothing — the journal's filter, the surface's, or a fence key —
@@ -33,8 +30,8 @@ export const DEFAULT_STATUS_CONDITION: TaskCondition = { type: "status", conditi
 export const taskQuerySchema = v.object({
   scope: v.optional(scopeSchema, () => v.parse(scopeSchema, {})),
   filter: v.optional(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
-  sort: v.optional(v.fallback(v.picklist(taskSorts), "document"), "document"),
-  date: v.optional(v.fallback(taskDateChoiceSchema, "scheduled-or-due"), "scheduled-or-due"),
+  sort: v.optional(v.picklist(taskSorts), "document"),
+  date: v.optional(taskDateChoiceSchema, "scheduled-or-due"),
 });
 
 export type TaskQuery = v.InferOutput<typeof taskQuerySchema>;

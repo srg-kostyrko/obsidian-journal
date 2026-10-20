@@ -13,6 +13,7 @@ import { notesCalendarModule } from "@/notes-calendar/module";
 import type { ShelfConfig } from "@/shelves";
 import { shelvesCoreModule } from "@/shelves/module";
 import { buildShelf } from "@/shelves/testing";
+import { tasksCoreModule } from "@/tasks/module";
 import { testContainer, type TestHarness } from "@/testing";
 
 import { FALLBACK_VIEW_ICON, type BlockInstanceId, type View, type ViewId } from "./config";
@@ -306,6 +307,21 @@ describe("JournalViewLeaf", () => {
       const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
       await leaf.onOpen();
       expect(containerEl.textContent).toContain(m.view_block_config_error());
+      await leaf.onClose();
+    });
+
+    it("renders a tasks block whose stored sort is unreadable, with sort defaulted", async () => {
+      const view = buildView(VIEW_A, {
+        blocks: [{ id: BLOCK_STUB, key: "tasks", config: { window: "week", sort: "priority" } }],
+      });
+      const { harness, leafInstance, containerEl } = await buildLeaf(view, { modules: [tasksCoreModule] });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.textContent).not.toContain(m.view_block_config_error());
+      const repair = harness.logs.records.find(
+        (record) => record.message === "view-block config fields reset to defaults",
+      );
+      expect(repair?.fields).toMatchObject({ key: "tasks", fields: ["sort"] });
       await leaf.onClose();
     });
   });

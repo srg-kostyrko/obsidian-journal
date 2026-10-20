@@ -672,6 +672,16 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({ providers: { checkbox }, filter: { mode: "and", conditions: [] } });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions"] });
   });
+
+  it("an unreadable listing filter mode resets to and, keeping the conditions", async () => {
+    const { tasks, repair } = await loadTasks({
+      providers: { checkbox },
+      filter: { mode: "xor", conditions: [heading] },
+    });
+
+    expect(tasks).toEqual({ providers: { checkbox }, filter: { mode: "and", conditions: [heading] } });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.mode"] });
+  });
 });
 
 async function loadJournal(raw: unknown): Promise<ReturnType<JournalsRepository["get"]>> {
@@ -722,6 +732,7 @@ describe("journal decoration repair on load", () => {
   it.each([
     ["quantifier", "most"],
     ["date", "someday"],
+    ["filter", { mode: "xor", conditions: [] }],
   ])("a tasks condition with an unreadable %s drops its decoration, keeping its sibling", async (field, bad) => {
     const broken = buildDecoration({
       conditions: [{ ...buildCondition("tasks"), [field]: bad }],
