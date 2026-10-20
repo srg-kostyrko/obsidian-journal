@@ -92,7 +92,9 @@ this journal. The row's own description names which relation is active and, once
 summarizes the rule itself, so you can see it without opening the modal.
 
 The same section carries a **Task notes** row, which decides which [task notes](#task-notes) this
-journal shows; [Which task notes a journal shows](#which-task-notes-a-journal-shows) covers it.
+journal shows; [Which task notes a journal shows](#which-task-notes-a-journal-shows) covers it. Dated
+checkbox lines have their own choice in the **Checkbox tasks** modal, covered under [Which dated lines a
+journal shows](#which-dated-lines-a-journal-shows).
 
 ## Task notes
 
@@ -469,7 +471,9 @@ Two date formats are read:
 
 Which of a task's dates places it in a period is the fence's `date` key, covered under [Fence
 keys](#fence-keys). The [vault-wide identification rule](#which-checkbox-items-count-as-tasks) still
-decides which lines count as tasks; a journal's own rule applies to the notes that journal owns.
+decides which lines count as tasks; a journal's own rule applies to the notes that journal owns, and
+each journal can narrow which dated lines it shows, as [Which dated lines a journal
+shows](#which-dated-lines-a-journal-shows) explains.
 
 Only the task's own line is read for dates, never its subtasks: a dated subtask is a task in its own
 right and appears by its own date.
@@ -479,6 +483,36 @@ vault-wide listing is complete a moment after launch rather than instantly. Ther
 on: it follows **Checkbox tasks**' toggle. Notes under Obsidian's **Files and links → Excluded files**
 are skipped, unless a journal owns them, in which case their tasks stay. A change to **Excluded files**
 takes effect at the next restart, or the next time you change a checkbox tasks setting.
+
+### Which dated lines a journal shows
+
+Left alone, every journal with a period on a line's date shows it: a Work and a Personal daily journal
+would both list the venue booking dated tomorrow. On the journal's settings page, expand **Tasks**:
+below **Checkbox tasks**' summary, a second sentence says what this journal shows of them, and the
+**Edit** button opens a modal whose **Dated tasks** section holds **Show**, with the same choices and
+conditions as [Which task notes a journal shows](#which-task-notes-a-journal-shows):
+
+- **All** (default) — every dated line.
+- **Matching** — only dated lines that meet the conditions below it.
+- **None** — no dated lines.
+
+A **Tag** condition matches the line's own tags and its note's tags in properties. **Folder** and
+**Property** conditions read the note that holds the line. **Save** stays disabled while a row has no
+value, as it does for task notes.
+
+The setting only narrows, and only what arrives by date. A checkbox in one of the journal's own period
+notes is always listed there, whatever the setting says. A line in one of its notes that is dated for
+another day is a dated line like any other: it is shown on its date only if the journal asked about
+that date shows it.
+
+Where it applies follows the task notes' rule: a `journal-tasks` code block asks the journal whose note
+it sits in, a tasks view block shows a line when any journal it lists shows it, and a [Check
+tasks](/decorations#tasks) decoration asks its cell's journal. With no journal in play, such as a
+plugin API call naming none, every dated line is shown.
+
+For a Work and Personal split, give `personal` **None** for **Dated tasks** while `work` keeps **All**:
+`- [ ] Book the venue 📅 2026-03-10` in a project note then appears in `work`'s note for 10 March and
+no longer in `personal`'s, which still lists its own checkboxes.
 
 ### One thing to expect right after startup
 

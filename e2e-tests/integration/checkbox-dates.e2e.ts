@@ -1,8 +1,17 @@
-import { $$, browser, expect } from "@wdio/globals";
+import { $, $$, browser, expect } from "@wdio/globals";
 
+import { m } from "../../src/i18n/paraglide/messages.js";
 import { VISIBLE_LEAF, hostNote, openInReadingMode } from "../journeys/code-blocks.js";
 import { expectDecorated, expectUndecorated } from "../journeys/decorations.js";
 import { calendar, openSeededCalendarView } from "../journeys/view.js";
+import {
+  clickIcon,
+  closeSettings,
+  expandSection,
+  goBack,
+  openSettings,
+  waitForModalOpen,
+} from "../support/settings.js";
 import { seedNote, todayAnchor } from "../support/vault.js";
 
 // A checkbox line in a note no journal owns reaches the day its date names: Obsidian's metadataCache
@@ -104,5 +113,46 @@ describe("a dated checkbox line on the calendar", () => {
     await seedNote("Projects/Today.md", `- [ ] Call the printer 📅 ${today}\n`);
 
     await expectDecorated(calendar.cell(today));
+  });
+});
+
+// `personal` owns its own folder and a timeline of March 2026 alone, so the seeded Calendar view's
+// "today" — which spans every journal — still resolves to `daily` alone for the calendar test above.
+const PERSONAL_NOTE = `Personal/${LIST_DAY}.md`;
+const DATED_SUMMARY = '[data-testid="checkbox-journal-dated-summary"]';
+const DIALOG = ".modal-container:not(:has(.mod-settings))";
+
+describe("the dated tasks a journal shows", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    await seedNote(DAY_NOTE, hostNote("daily", LIST_DAY, FENCE_WITH_CHECKBOX));
+    await seedNote(PERSONAL_NOTE, hostNote("personal", LIST_DAY, FENCE_WITH_CHECKBOX));
+  });
+
+  afterEach(closeSettings);
+
+  it("a journal set to None no longer lists the project line", async () => {
+    await openInReadingMode(PERSONAL_NOTE);
+    await rowTitled("Book the venue");
+
+    await openSettings();
+    await clickIcon(m.journal_dashboard_edit({ name: "personal" }));
+    await expandSection(m.tasks_settings_title());
+    await expect($(DATED_SUMMARY)).toHaveText(m.tasks_checkbox_dated_summary_all());
+    await $('[data-testid="checkbox-journal-edit"]').click();
+    await waitForModalOpen();
+    await $(DIALOG).$('[data-testid="note-visibility-show"]').$(`span=${m.tasks_note_visibility_show_none()}`).click();
+    // The compose buttons carry mod-cta too while Inherit is chosen, so submitModal would click Inherit.
+    await $(DIALOG).$(`button=${m.common_action_submit()}`).click();
+    await $(DIALOG).waitForExist({ reverse: true, timeoutMsg: "modal did not close after submit" });
+    await expect($(DATED_SUMMARY)).toHaveText(m.tasks_checkbox_dated_summary_none());
+    await goBack();
+    await closeSettings();
+
+    await openInReadingMode(PERSONAL_NOTE);
+    await expectNoRowTitled("Book the venue");
+
+    await openInReadingMode(DAY_NOTE);
+    await rowTitled("Book the venue");
   });
 });
