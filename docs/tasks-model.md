@@ -66,7 +66,8 @@ if none was**, because there is no template whose headings could be meant. A
 dated line in a note a journal **does** own takes that owner's full stored filter
 however it is reached — by its note or by its date, from its own period or from
 any other journal's — so the date relation never re-admits a line the owner's
-`selection` excludes. A
+`selection` excludes, unless the surface names its own `heading` condition, which
+replaces the owner's by type exactly as it does for containment. A
 `note-property` item has no headings at all, so the condition drops out for it
 entirely, per the rule below.
 
@@ -665,7 +666,7 @@ journal's `tasks.filter` was written for that journal's own checkbox lines: its
 select lines. Applied to a task note found by date, a stored `tag` condition
 would silently hide notes the user never meant it for. So a journal that shows
 open work hides done task notes too, and its stored `tag` and `heading`
-conditions are skipped for dated items. A `tag` condition a **surface** names
+conditions are skipped for task notes and for dated lines in notes no journal owns. A `tag` condition a **surface** names
 itself — a fence `tag:` key, a view block's or decoration's own filter — does
 apply, matching frontmatter tags; `heading` still drops. The tag axis for a
 journal's task notes is its dated-task-notes setting, not its stored

@@ -114,7 +114,11 @@ listing that shows nothing for it cannot disagree. It is one row that reads as a
   hold; **Done** is Done and Cancelled; **All** is any status. **As in listing** asks whatever
   the journal's own task listing asks: its **Status** condition if the [journal's listing
   filter](/tasks#a-journal-s-own-listing-filter) has one, Open if it does not. Edit that filter and
-  every dot that follows it changes meaning with it.
+  every dot that follows it changes meaning with it. A dated checkbox line from another journal's
+  note answers to _that_ journal's whole listing filter instead, status included, the way the
+  listing shows it: on a weekly journal that shows every status, a dot set to **As in listing**
+  still does not take a done line from a daily note as a match when the daily journal's filter
+  shows only open tasks.
 - **Look in** — **Note only**, **Notelets only** or **Note and notelets**, which is the default. With
   notelets only, a date can match without a period note.
 - **Task date** — which of a [task note](/tasks#task-notes)'s dates places it in the period: **Scheduled
