@@ -128,6 +128,14 @@ describe("ToolbarStrip", () => {
     });
   });
 
+  it("previews an item with an unreadable field from its repaired config", async () => {
+    const config = { action: { type: "current", mode: "navigate", levels: ["day"] }, label: 42 };
+    const { container } = await setup([{ id: ITEM_A, key: "button", config }]);
+    const preview = container.querySelector(".jv-item-preview");
+    expect(preview?.textContent).toContain(m.common_label_today());
+    expect(preview?.textContent).not.toContain("42");
+  });
+
   // An editor writes `{ ...props.config, ...patch }`, so one seeded with the raw stored config
   // carries the unreadable value into a write that validation then rejects.
   it("an edit to an item with an unreadable field stores the repaired config with the edit", async () => {

@@ -310,9 +310,38 @@ describe("JournalViewLeaf", () => {
       await leaf.onClose();
     });
 
-    it("renders a tasks block whose stored sort is unreadable, with sort defaulted", async () => {
+    it("renders a toolbar whose one item has an unreadable id, with its other items", async () => {
       const view = buildView(VIEW_A, {
-        blocks: [{ id: BLOCK_STUB, key: "tasks", config: { window: "week", sort: "priority" } }],
+        blocks: [
+          {
+            id: BLOCK_STUB,
+            key: "toolbar",
+            config: {
+              items: [
+                { id: "not-a-uuid", key: "spacer", config: {} },
+                { id: "33333333-3333-4333-8333-333333333333", key: "shelf-selector", config: {} },
+              ],
+            },
+          },
+        ],
+      });
+      const { leafInstance, containerEl } = await buildLeaf(view, {
+        shelves: { Personal: buildShelf("Personal") },
+      });
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(containerEl.textContent).not.toContain(m.view_block_config_error());
+      expect(containerEl.querySelector(".jv-toolbar-spacer")).toBeNull();
+      expect(containerEl.textContent).toContain(m.common_label_all_journals());
+      await leaf.onClose();
+    });
+
+    it.each([
+      { field: "sort", config: { window: "week", sort: "priority" } },
+      { field: "filter.mode", config: { window: "week", filter: { mode: "xor", conditions: [] } } },
+    ])("renders a tasks block whose stored $field is unreadable, with it defaulted", async ({ field, config }) => {
+      const view = buildView(VIEW_A, {
+        blocks: [{ id: BLOCK_STUB, key: "tasks", config }],
       });
       const { harness, leafInstance, containerEl } = await buildLeaf(view, { modules: [tasksCoreModule] });
       const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
@@ -321,7 +350,7 @@ describe("JournalViewLeaf", () => {
       const repair = harness.logs.records.find(
         (record) => record.message === "view-block config fields reset to defaults",
       );
-      expect(repair?.fields).toMatchObject({ key: "tasks", fields: ["sort"] });
+      expect(repair?.fields).toMatchObject({ key: "tasks", fields: [field] });
       await leaf.onClose();
     });
   });

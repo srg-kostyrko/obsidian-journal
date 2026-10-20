@@ -43,12 +43,14 @@ const source = computed<Row[]>(() => {
     .map((view) => view.blocks.find((b) => b.id === props.blockId))
     .map((block) => (block ? toolbarItems.itemsOf(block) : []))
     .getOr([]);
-  return items.map((item) => ({
-    id: item.id,
-    key: item.key,
-    config: item.config,
-    definition: viewsService.getToolbarItemDefinition(item.key).getOrUndefined(),
-  }));
+  return items.map((item) => {
+    const definition = viewsService.getToolbarItemDefinition(item.key).getOrUndefined();
+    // Read as the live view reads it, so the preview and the editor never see an unreadable field.
+    const config = definition
+      ? ((readToolbarItemConfig(definition, item.config)?.value ?? item.config) as Record<string, unknown>)
+      : item.config;
+    return { id: item.id, key: item.key, config, definition };
+  });
 });
 
 const rows = ref<Row[]>([]);
@@ -64,11 +66,7 @@ const remove = (id: BlockInstanceId): void => void viewsService.removeToolbarIte
 
 function edit(row: Row): void {
   if (!row.definition?.configComponent) return;
-  // Seeded repaired, or an editor that spreads its config carries an unreadable field into a
-  // write that validation rejects.
-  const config = cloneFnJSON(
-    (readToolbarItemConfig(row.definition, row.config)?.value ?? row.config) as Record<string, unknown>,
-  );
+  const config = cloneFnJSON(row.config);
   void modals
     .open(editToolbarItemModal, {
       component: row.definition.configComponent,

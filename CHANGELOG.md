@@ -57,7 +57,8 @@ All notable changes to this project will be documented in this file.
   folder, templates and counter, a decoration keeps its other styles, a shelf keeps its other
   decorations, and a journal's listing filter keeps its other conditions; only the unreadable value
   goes back to its default or is left out. A decoration with an unreadable condition is still dropped
-  whole, so it never marks days it wasn't set up to mark.
+  whole, so it never marks days it wasn't set up to mark. A view block with one unreadable setting
+  now shows with that setting at its default, instead of an error saying its settings are not valid.
 - One unreadable toolbar item no longer hides the whole toolbar, or erases its other items the next
   time the toolbar is edited.
 
