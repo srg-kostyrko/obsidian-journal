@@ -597,6 +597,47 @@ describe("useCellDecorations", () => {
       expect(slot.value).toHaveLength(1);
     });
 
+    // An owned dated line answers to its owning journal's filter whichever journal's cell asks, so a
+    // Weekly cell depends on Daily's stored filter although Daily is not in its scope.
+    it("repaints a Weekly cell when the filter of the journal owning its dated line changes", async () => {
+      const decoration = buildDecoration({
+        mode: "and",
+        conditions: [buildCondition("tasks", { status: "listing" })],
+        styles: [buildStyle("background")],
+      });
+      const { harness } = await buildWeeklyHarness([decoration]);
+      const week = WeekPeriod.containing(date("2026-06-10"));
+      const path = "Daily/2026-06-08.md" as VaultPath;
+      harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: "2026-06-08" as never, path });
+      harness
+        .resolve(TaskIndex)
+        .publish("test", { path }, [
+          { ...taskItem(path, "todo"), relations: ["date"], dates: { due: "2026-06-10" as never } },
+        ]);
+
+      const cells = mountCells(harness, [week], ["weekly"]);
+      await nextTick();
+      const slot = cells.get(key(week))!;
+      expect(slot.value).toHaveLength(1);
+
+      const journals = harness.resolve(JournalsRepository);
+      const journal = journals.get("daily");
+      if (journal.isNone()) throw new Error("journal missing");
+      const base = journal.value.tasks;
+      journals.update("daily", {
+        tasks: {
+          ...base,
+          filter: { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["done"] }] },
+        },
+      });
+      await nextTick();
+      expect(slot.value).toHaveLength(0);
+
+      journals.update("daily", { tasks: base });
+      await nextTick();
+      expect(slot.value).toHaveLength(1);
+    });
+
     it("repaints a none cell when a notelet appears and disappears on a day with no note", async () => {
       const decoration = buildDecoration({
         mode: "and",
