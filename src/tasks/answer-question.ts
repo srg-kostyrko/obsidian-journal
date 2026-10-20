@@ -2,8 +2,8 @@ import type { AnchorString } from "@/calendar";
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 
 import { rolesOf } from "./date-choice";
-import { composeDatedFilter, composeFilters, matchesFilter } from "./filter";
-import { sourceNotes, type TaskListingDependencies } from "./listing";
+import { composeFilters, matchesFilter } from "./filter";
+import { datedFilterFor, sourceNotes, type TaskListingDependencies } from "./listing";
 import { isExcluded } from "./status";
 
 import type { TaskCondition, TaskRule } from "./conditions";
@@ -12,7 +12,7 @@ import type { TaskItem } from "./types";
 
 export interface TaskQuestionDependencies {
   readonly journals: TaskListingDependencies["journals"];
-  readonly index: Pick<TaskListingDependencies["index"], "noteletsAt">;
+  readonly index: Pick<TaskListingDependencies["index"], "entryByPath" | "noteletsAt">;
   readonly cycle: Pick<TaskListingDependencies["cycle"], "startOf" | "endOf">;
   readonly structure: TaskListingDependencies["structure"];
   readonly tasks: Pick<TaskListingDependencies["tasks"], "itemsIn" | "datedIn">;
@@ -83,7 +83,7 @@ export function answerTaskQuestion(
   const journalFilter = dependencies.journals.get(target.journalName).getOrUndefined()?.tasks.filter ?? null;
   const asked: TaskRule = { mode: question.filter.mode, conditions: [...question.filter.conditions, ...explicit] };
   const contained = split(composeFilters(journalFilter, asked));
-  const dated = split(composeDatedFilter(journalFilter, asked));
+  const datedFilter = datedFilterFor(dependencies, journalFilter, asked);
 
   const sources = sourceNotes(dependencies, [target], question.source);
   // A task note sitting at a period note's own path is reached by its date, never by containment.
@@ -103,10 +103,13 @@ export function answerTaskQuestion(
   const containedHits = counted.filter(({ item, structure }) => matchesFilter(item, structure, contained.what));
 
   const present = datedHere(dependencies, target, question, new Set(counted.map(({ item }) => item.key)));
-  const datedCounted: Counted[] = present
-    .map((item) => ({ item, structure: structureFor(dependencies, dated.who, item.path) }))
-    .filter(({ item, structure }) => matchesFilter(item, structure, dated.who));
-  const datedHits = datedCounted.filter(({ item, structure }) => matchesFilter(item, structure, dated.what));
+  const datedCounted = present
+    .map((item) => {
+      const { who, what } = split(datedFilter(item));
+      return { item, structure: structureFor(dependencies, who, item.path), who, what };
+    })
+    .filter(({ item, structure, who }) => matchesFilter(item, structure, who));
+  const datedHits = datedCounted.filter(({ item, structure, what }) => matchesFilter(item, structure, what));
 
   const total = counted.length + datedCounted.length;
   const hits = containedHits.length + datedHits.length;

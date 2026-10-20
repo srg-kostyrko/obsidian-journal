@@ -467,6 +467,12 @@ Two date formats are read:
 - **Dataview inline fields** — `[due:: 2026-10-30]` or `(due:: 2026-10-30)`, with the keys `due`,
   `scheduled`, `start`, `created` and `completion`, the last of which is the done date.
 
+A dated line in a note a journal owns keeps that journal's [own listing
+filter](#a-journal-s-own-listing-filter) wherever it is listed by date. A daily journal that lists only
+what sits under `## Tasks` keeps a dated habit under `## Habits` out of its own day, and out of a weekly
+note's listing, its tasks decoration and the plugin API's answer too. A line in a note no journal owns
+has no such filter, and is filtered the way a [task note](#filters-and-task-notes) is.
+
 Which of a task's dates places it in a period is the fence's `date` key, covered under [Fence
 keys](#fence-keys). The [vault-wide identification rule](#which-checkbox-items-count-as-tasks) still
 decides which lines count as tasks; a journal's own rule applies to the notes that journal owns.

@@ -14,7 +14,7 @@ import type { TaskVisibility } from "./visibility";
 
 export interface TaskListingDependencies {
   readonly journals: Pick<JournalsRepository, "get">;
-  readonly index: Pick<JournalsIndex, "get" | "getRange" | "noteletsAt" | "noteletAnchorsInRange">;
+  readonly index: Pick<JournalsIndex, "get" | "getRange" | "entryByPath" | "noteletsAt" | "noteletAnchorsInRange">;
   readonly cycle: Pick<CycleService, "startOf" | "endOf" | "anchorOf" | "overlapsFrom">;
   readonly structure: Pick<NoteStructureService, "get">;
   readonly tasks: Pick<TaskIndex, "itemsIn" | "hydrate" | "datedIn">;
@@ -229,15 +229,39 @@ export function sourceNotes(
   return notes;
 }
 
-function composedFilterFor(dependencies: TaskListingDependencies, query: TaskQuery): (name: string) => TaskRule {
+function composedFilterFor(
+  dependencies: { readonly journals: TaskListingDependencies["journals"] },
+  queryFilter: TaskRule,
+): (name: string) => TaskRule {
   const cache = new Map<string, TaskRule>();
   return (journalName) => {
     const cached = cache.get(journalName);
     if (cached !== undefined) return cached;
     const owner = dependencies.journals.get(journalName).getOrUndefined();
-    const composed = composeFilters(owner?.tasks.filter ?? null, query.filter);
+    const composed = composeFilters(owner?.tasks.filter ?? null, queryFilter);
     cache.set(journalName, composed);
     return composed;
+  };
+}
+
+// A dated line in a note a journal owns answers to that owner's filter whoever reaches it by date,
+// exactly as it does when reached through its note: otherwise a line the owner's heading condition
+// hides from its own day comes straight back through the date pass. Only what no journal owns, and
+// a whole-note item, falls to the asker's status axis.
+export function datedFilterFor(
+  dependencies: {
+    readonly journals: TaskListingDependencies["journals"];
+    readonly index: Pick<TaskListingDependencies["index"], "entryByPath">;
+  },
+  askerFilter: TaskRule | null,
+  queryFilter: TaskRule,
+): (item: TaskItem) => TaskRule {
+  const ownerFilter = composedFilterFor(dependencies, queryFilter);
+  const unowned = composeDatedFilter(askerFilter, queryFilter);
+  return (item) => {
+    if (item.display.kind !== "line") return unowned;
+    const owner = dependencies.index.entryByPath(item.path).getOrUndefined();
+    return owner === undefined ? unowned : ownerFilter(owner.journalName);
   };
 }
 
@@ -283,7 +307,7 @@ function datedItems(
     request.kind === "period"
       ? (dependencies.journals.get(request.hostJournal).getOrUndefined()?.tasks.filter ?? null)
       : null;
-  const filter = composeDatedFilter(journalFilter, query.filter);
+  const filterOf = datedFilterFor(dependencies, journalFilter, query.filter);
   // A period asks its own journal, not the ones it rolls up: the dated pass is the host's alone.
   const askers = request.kind === "period" ? [request.hostJournal] : request.journalNames;
   return dependencies.tasks
@@ -293,7 +317,7 @@ function datedItems(
         !emitted.has(item.key) &&
         inScope(item, query.scope.provider) &&
         dependencies.visibility.admits(item, askers) &&
-        matchesFilter(item, dependencies.structure.get(item.path).getOrUndefined(), filter),
+        matchesFilter(item, dependencies.structure.get(item.path).getOrUndefined(), filterOf(item)),
     );
 }
 
@@ -369,7 +393,7 @@ export async function buildTaskListing(
   request: TaskListingRequest,
 ): Promise<readonly TaskListingRow[]> {
   const { query } = request;
-  const filterFor = composedFilterFor(dependencies, query);
+  const filterFor = composedFilterFor(dependencies, query.filter);
   const entries: Entry[] = [];
 
   const notes = sourceNotes(dependencies, targetPeriods(dependencies, request), query.scope.source);

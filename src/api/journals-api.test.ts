@@ -4,9 +4,16 @@ import { defineComponent } from "vue";
 
 import type { AnchorString } from "@/calendar";
 import { Flows } from "@/infrastructure/flows";
-import { NoteMetadataService, NotesService, WorkspaceOpenError, WorkspaceService } from "@/infrastructure/host";
+import {
+  NoteMetadataService,
+  NoteStructureService,
+  NotesService,
+  WorkspaceOpenError,
+  WorkspaceService,
+} from "@/infrastructure/host";
 import type { VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
+import { FakeNoteStructureService } from "@/infrastructure/host/testing";
 import { AsyncResult, Option } from "@/infrastructure/result";
 import { CreateNoteletFlow } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
@@ -29,7 +36,7 @@ import { TaskProviderRegistry } from "@/tasks/provider-registry";
 import { TaskIndex } from "@/tasks/task-index";
 import { buildTaskItem } from "@/tasks/testing";
 import type { TaskItem } from "@/tasks/types";
-import { testContainer, type TestHarness } from "@/testing";
+import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { JournalsApiService } from "./journals-api";
 import { apiModule } from "./module";
@@ -861,15 +868,18 @@ describe("JournalsApiService adjacent reads", () => {
 });
 
 async function buildTasksApi(journals: Record<string, JournalConfig>, shelves: Record<string, ShelfConfig> = {}) {
+  const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
     data: { journals, shelves },
     initialize: [VaultSubscriptionService, TaskProviderRegistry],
+    overrides: [overrideWith(NoteStructureService, structures as never)],
   });
   return {
     api: harness.resolve(JournalsApiService),
     index: harness.resolve(JournalsIndex),
     tasks: harness.resolve(TaskIndex),
+    structures,
   };
 }
 
@@ -1119,6 +1129,47 @@ describe("JournalsApiService tasksFor", () => {
     const found = await api.tasksFor({}, "2026-09-22");
 
     expect(found.map((task) => `${task.journal}:${task.date}:${task.line}`)).toEqual(["daily:2026-09-22:1"]);
+  });
+
+  // The monthly journal reaches the day note's dated lines by date; the day journal's heading
+  // condition still decides which of them it may return.
+  it("keeps a dated line its owning journal's filter hides out, whichever journal reaches it", async () => {
+    const underTasks = {
+      ...daily,
+      tasks: {
+        providers: {},
+        filter: {
+          mode: "and" as const,
+          conditions: [{ type: "heading" as const, condition: "under" as const, headings: ["## Tasks"] }],
+        },
+      },
+    };
+    const { api, index, tasks, structures } = await buildTasksApi({ monthly, daily: underTasks });
+    registerNote(index, "daily", "2026-09-22", "D/2026-09-22.md");
+    structures.setStructure("D/2026-09-22.md" as VaultPath, {
+      listItems: [
+        { marker: "-", line: 1, endLine: 1, parent: null },
+        { marker: "-", line: 3, endLine: 3, parent: null },
+      ],
+      tags: [],
+      headings: [
+        { line: 0, heading: "## Tasks", level: 2 },
+        { line: 2, heading: "## Habits", level: 2 },
+      ],
+      frontmatterTags: [],
+    });
+    const due = { dates: { due: "2026-09-22" as AnchorString } };
+    tasks.publish(
+      "checkbox",
+      { path: "D/2026-09-22.md" as VaultPath },
+      [taskLine("D/2026-09-22.md", 1, "- [ ] ship", due), taskLine("D/2026-09-22.md", 3, "- [ ] stretch", due)].map(
+        (item): TaskItem => ({ ...item, relations: ["containment", "date"] }),
+      ),
+    );
+
+    const found = await api.tasksFor({}, "2026-09-22");
+
+    expect(found.map((task) => `${task.journal}:${task.line}`)).toEqual(["daily:1"]);
   });
 
   describe("dated task notes", () => {

@@ -63,6 +63,10 @@ Per-journal resolution needs a journal, and the date relation reaches items no
 journal owns — a checkbox in a project note, dated next Friday. For those the
 fence's explicit `selection` applies if one was given, and **nothing is filtered
 if none was**, because there is no template whose headings could be meant. A
+dated line in a note a journal **does** own takes that owner's full stored filter
+however it is reached — by its note or by its date, from its own period or from
+any other journal's — so the date relation never re-admits a line the owner's
+`selection` excludes. A
 `note-property` item has no headings at all, so the condition drops out for it
 entirely, per the rule below.
 
@@ -655,7 +659,7 @@ so "under `## Tasks` and open" returns open note-tasks whatever their headings.
 That reads loose; the alternative silently removes an entire provider's items,
 which is an evening of debugging before someone files "the listing is broken".
 
-**A journal's stored filter reaches dated items by its `status` axis only.** The
+**A journal's stored filter reaches task notes, and dated lines no journal owns, by its `status` axis only.** The
 journal's `tasks.filter` was written for that journal's own checkbox lines: its
 `heading` conditions name headings in its template, and its `tag` conditions
 select lines. Applied to a task note found by date, a stored `tag` condition
@@ -840,8 +844,9 @@ For a cell (journal J, period P) it runs in four steps, in `answerTaskQuestion`:
    removes it does not turn the day back into an empty one.
 
    The dated items come from the same date relation the listing uses, on top of step 1's
-   containment gather: J's visibility admits them, the stored filter
-   reaches them by `status` only, and the lookup for a cell is a date-range read against the
+   containment gather: J's visibility admits them, J's stored filter
+   reaches them by `status` only — except a dated line in a note some journal owns, which takes
+   that owner's whole filter, as the listing does — and the lookup for a cell is a date-range read against the
    `note-property` index, never a walk of notes. A dot can therefore light a day that has **no
    note**. That is intended: the task is dated there.
 
