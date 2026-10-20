@@ -3,6 +3,7 @@ import { watch } from "vue";
 
 import { inject } from "@/infrastructure/di";
 import { NoteStructureService, NotesService, type VaultPath } from "@/infrastructure/host";
+import { JournalsIndex } from "@/journals/journals-index";
 import { SettingsService } from "@/settings";
 
 import { TaskHostToken, type OwnedNote, type TaskItem, type TaskProvider } from "../../types";
@@ -31,12 +32,16 @@ export class CheckboxTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
   readonly #notes = inject(NotesService);
   readonly #structure = inject(NoteStructureService);
+  readonly #journals = inject(JournalsIndex);
   readonly #settings = inject(SettingsService).getSlice(checkboxSlice);
   readonly #lineDates = new Map<VaultPath, CachedLineDates>();
   // Drawn from one counter rather than per path, so a path cleared by a delete and read again
   // cannot hand a stale in-flight read the number it was waiting for.
   readonly #generation = new Map<VaultPath, number>();
   #reads = 0;
+  // Bumped by every walk start, every disable and dispose, so a walk that is no longer the latest
+  // stops at its next note rather than racing the one that replaced it.
+  #walks = 0;
   readonly id = CHECKBOX_PROVIDER_ID;
   readonly settingsRow = CheckboxSettingsRow;
   readonly journalRow = CheckboxJournalRow;
@@ -81,26 +86,29 @@ export class CheckboxTaskProvider implements TaskProvider {
   }
 
   async #readDates(path: VaultPath): Promise<void> {
+    if (await this.#load(path)) this.#publish(path, this.#ownerOf(path));
+  }
+
+  // Answers whether the entry it settled on still stands — false when a newer read overtook it or
+  // the provider was off — so the caller publishes only what is current.
+  async #load(path: VaultPath): Promise<boolean> {
     const generation = ++this.#reads;
     this.#generation.set(path, generation);
     if (!this.#settings.state.enabled) {
       this.#lineDates.delete(path);
-      return;
+      return false;
     }
-    const owner = this.#ownerOf(path);
     const before = this.#structure.get(path);
     if (before.isNone() || before.value.listItems.length === 0) {
       this.#lineDates.set(path, NO_LINE_DATES);
-      this.#publish(path, owner);
-      return;
+      return true;
     }
-    if (owner === undefined && this.#notes.isUserIgnored(path)) {
+    if (this.#ownerOf(path) === undefined && this.#notes.isUserIgnored(path)) {
       this.#lineDates.delete(path);
-      this.#host.publish(this.id, { path }, []);
-      return;
+      return true;
     }
     const read = await this.#notes.readCached(path);
-    if (this.#generation.get(path) !== generation) return;
+    if (this.#generation.get(path) !== generation) return false;
     const structure = this.#structure.get(path);
     if (read.isErr() || structure.isNone()) this.#lineDates.delete(path);
     else {
@@ -109,7 +117,30 @@ export class CheckboxTaskProvider implements TaskProvider {
         dates: lineDatesOf(read.value, structure.value),
       });
     }
-    this.#publish(path, this.#ownerOf(path));
+    return true;
+  }
+
+  // Sequential and silent: one note read at a time, and a single "all" publish at the end rather
+  // than one per note. Owned notes are read too — fill no longer dates them any other way.
+  async #walk(): Promise<void> {
+    const run = ++this.#walks;
+    if (!this.#settings.state.enabled) return;
+    for (const path of this.#notes.allMarkdownNotes()) {
+      if (run !== this.#walks) return;
+      if (this.#lineDates.has(path)) continue;
+      const structure = this.#structure.get(path);
+      if (structure.isNone() || structure.value.listItems.length === 0) continue;
+      if (this.#ownerOf(path) === undefined && this.#notes.isUserIgnored(path)) continue;
+      await this.#load(path);
+    }
+    if (run === this.#walks) this.#refillAll();
+  }
+
+  #stopReading(): void {
+    this.#walks++;
+    // An empty generation map discards every read still in flight.
+    this.#generation.clear();
+    this.#lineDates.clear();
   }
 
   #forget(path: VaultPath): void {
@@ -120,14 +151,39 @@ export class CheckboxTaskProvider implements TaskProvider {
 
   // One "all" publish rather than one per note: the index replaces this provider's whole store in
   // a single version bump, where N publishes bump it N times and every consumer recomputes on each.
+  // Notes no journal owns ride along from the cache, or a full refill would erase their dated items.
   #refillAll(): void {
     const items: TaskItem[] = [];
-    for (const note of this.#host.ownedNotes(this.id)) items.push(...this.#itemsFor(note.path, note));
+    const owned = new Set<VaultPath>();
+    for (const note of this.#host.ownedNotes(this.id)) {
+      owned.add(note.path);
+      items.push(...this.#itemsFor(note.path, note));
+    }
+    for (const path of this.#lineDates.keys()) {
+      if (owned.has(path)) continue;
+      // Trashing a folder emits no per-file delete, so the cache can outlive the note.
+      if (this.#notes.find(path).isNone()) {
+        this.#lineDates.delete(path);
+        this.#generation.delete(path);
+        continue;
+      }
+      items.push(...this.#itemsFor(path, undefined));
+    }
     this.#host.publish(this.id, "all", items);
   }
 
   start(): () => void {
+    let disposed = false;
+    let enabled = this.#settings.state.enabled;
     this.#refillAll();
+    // The registry starts before layout-ready, when the file list is partial and notes restored from
+    // cached metadata emit no metadata-changed; index readiness is the signal that the walk is complete.
+    if (this.#journals.isReady()) void this.#walk();
+    else {
+      void this.#journals.whenReady().then(() => {
+        if (!disposed) void this.#walk();
+      });
+    }
     // enabled, rule and statusMap feed #itemsFor, so a settings-dashboard edit to any of them must
     // take effect rather than sit stale until an unrelated note or journal event happens to fire a
     // refresh. (`canonical` names the symbol a write emits and is read by nothing here, but it sits
@@ -135,7 +191,15 @@ export class CheckboxTaskProvider implements TaskProvider {
     // must catch are nested one level into the slice, not on the slice object itself.
     const stopSettingsWatch = watch(
       () => this.#settings.state,
-      () => this.#refillAll(),
+      () => {
+        const was = enabled;
+        enabled = this.#settings.state.enabled;
+        // Reads that land while off would be stale by the time it is back on, so the cache goes
+        // with the switch and switching on walks the vault afresh.
+        if (!enabled) this.#stopReading();
+        this.#refillAll();
+        if (enabled && !was && this.#journals.isReady()) void this.#walk();
+      },
       { deep: true },
     );
     const stopOwnedNotesWatch = this.#host.onOwnedNotesChanged((change) => {
@@ -161,10 +225,9 @@ export class CheckboxTaskProvider implements TaskProvider {
     return () => {
       stopSettingsWatch();
       stopOwnedNotesWatch();
+      disposed = true;
       for (const stop of stopNoteWatches) stop();
-      // An empty generation map discards every read still in flight.
-      this.#generation.clear();
-      this.#lineDates.clear();
+      this.#stopReading();
     };
   }
 

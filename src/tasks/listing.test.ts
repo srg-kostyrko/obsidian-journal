@@ -17,6 +17,7 @@ import { overrideWith, testContainer } from "@/testing";
 
 import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
 import { tasksCoreModule } from "./module";
+import { CHECKBOX_PROVIDER_ID } from "./providers/checkbox/extract";
 import { NotePropertyTaskProvider } from "./providers/note-property/provider";
 import { NOTE_PROPERTY_PROVIDER_ID } from "./providers/note-property/slice";
 import { DEFAULT_TASK_QUERY } from "./query";
@@ -1141,5 +1142,54 @@ describe("buildTaskListing — task-note visibility", () => {
     expect(index.version()).toBe(before + 1);
     const rows = await buildTaskListing(dependencies, dayOf("Work"));
     expect(rows.map((row) => row.source.path)).toEqual([HOME_NOTE]);
+  });
+});
+
+const PROJECT = "project/ideas.md" as VaultPath;
+
+async function publishedCheckboxes(items: readonly TaskItem[]): Promise<TaskIndex> {
+  const harness = await testContainer({ modules: [journalsCoreModule, tasksCoreModule] });
+  const index = harness.resolve(TaskIndex);
+  index.publish(CHECKBOX_PROVIDER_ID, "all", items);
+  return index;
+}
+
+describe("buildTaskListing — dated checkbox lines", () => {
+  it("a dated checkbox in a project note lists in its day and once in its week", async () => {
+    const published = await publishedCheckboxes([
+      line(PROJECT, 1, { relations: ["date"], dates: { due: "2026-09-23" as AnchorString } }),
+    ]);
+    const dependencies = buildDependencies({
+      published,
+      notes: { Daily: { "2026-09-22": DAY, "2026-09-23": OTHER_DAY } },
+      ends: { Weekly: { "2026-09-21": "2026-09-27" } },
+    });
+
+    const day = await buildTaskListing(dependencies, request({ anchor: "2026-09-23" as AnchorString }));
+    const week = await buildTaskListing(
+      dependencies,
+      request({
+        hostJournal: "Weekly",
+        anchor: "2026-09-21" as AnchorString,
+        journalNames: ["Weekly", "Daily"],
+        query: withQuery({ scope: { provider: [], source: "both", depth: "rollup" } }),
+      }),
+    );
+
+    expect(day.map((row) => row.item.key)).toEqual([`${PROJECT}:1`]);
+    expect(day.at(0)?.source).toEqual({ kind: "task-note", path: PROJECT, label: "ideas" });
+    expect(week.map((row) => row.item.key)).toEqual([`${PROJECT}:1`]);
+  });
+
+  it("an owned line matched by both relations lists once", async () => {
+    const published = await publishedCheckboxes([
+      line(DAY, 3, { relations: ["containment", "date"], dates: { due: "2026-09-22" as AnchorString } }),
+    ]);
+    const dependencies = buildDependencies({ published, notes: { Daily: { "2026-09-22": DAY } } });
+
+    const rows = await buildTaskListing(dependencies, request());
+
+    expect(rows.map((row) => row.item.key)).toEqual([`${DAY}:3`]);
+    expect(rows.at(0)?.source.kind).toBe("note");
   });
 });

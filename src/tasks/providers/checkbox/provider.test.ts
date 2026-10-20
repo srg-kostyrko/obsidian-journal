@@ -670,6 +670,222 @@ describe("CheckboxTaskProvider date relation", () => {
   });
 });
 
+const projectText = "# Ideas\n- [ ] Pay 📅 2026-10-24";
+
+// An owned day note with one dated and one undated line, and a project note no journal owns with
+// one dated line; nothing started.
+async function vault() {
+  const built = await build();
+  built.host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+  built.notes.seed(dayPath, ownedText);
+  built.structures.setStructure(dayPath, items([4, 5]));
+  built.notes.seed(projectPath, projectText);
+  built.structures.setStructure(projectPath, items([1]));
+  return {
+    ...built,
+    journals: built.harness.resolve(JournalsIndex),
+    slice: built.harness.resolve(SettingsService).getSlice(checkboxSlice),
+  };
+}
+
+async function walked() {
+  const built = await vault();
+  built.provider.start();
+  built.journals.markReady();
+  await flush();
+  return built;
+}
+
+describe("CheckboxTaskProvider boot walk", () => {
+  it("start publishes owned notes at once and dated lines from the whole vault once the index is ready", async () => {
+    const { host, provider, journals } = await vault();
+
+    provider.start();
+    await flush();
+
+    expect(host.publishes).toEqual(["all"]);
+    expect(host.published.get(dayPath)?.map((item) => item.relations)).toEqual([["containment"], ["containment"]]);
+    expect(host.published.has(projectPath)).toBe(false);
+
+    journals.markReady();
+    await flush();
+
+    expect(host.publishes).toEqual(["all", "all"]);
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+    expect(host.published.get(projectPath)?.map((item) => item.relations)).toEqual([["date"]]);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("walks at once when the index is already ready", async () => {
+    const { host, provider, journals } = await vault();
+    journals.markReady();
+
+    provider.start();
+    await flush();
+
+    expect(host.publishes).toEqual(["all", "all"]);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("the walk reads only notes with checkbox items", async () => {
+    const plain = "project/plain.md" as VaultPath;
+    const unparsed = "project/unparsed.md" as VaultPath;
+    const excluded = "archive/old.md" as VaultPath;
+    const { notes, structures, provider, journals } = await vault();
+    notes.seed(plain, "# Plain\n- a bullet");
+    structures.setStructure(plain, items([]));
+    notes.seed(unparsed, "- [ ] Pay 📅 2026-10-24");
+    notes.seed(excluded, projectText);
+    structures.setStructure(excluded, items([1]));
+    notes.ignore(excluded);
+
+    provider.start();
+    journals.markReady();
+    await flush();
+
+    expect(notes.reads.toSorted()).toEqual([dayPath, projectPath].toSorted());
+  });
+
+  it("an edit during the walk is not undone by it", async () => {
+    const { host, notes, structures, provider, harness } = await build();
+    notes.seed(projectPath, projectText);
+    structures.setStructure(projectPath, items([1]));
+    notes.gated = true;
+    provider.start();
+    harness.resolve(JournalsIndex).markReady();
+    await flush();
+    expect(notes.reads).toEqual([projectPath]);
+
+    notes.externalEdit(projectPath, projectText.replace("2026-10-24", "2026-10-25"));
+    notes.release(1);
+    await flush();
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-25" });
+
+    notes.release(0);
+    await flush();
+
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-25" });
+  });
+
+  it("disabling the provider during the walk publishes nothing it read", async () => {
+    const { host, notes, provider, journals, slice } = await vault();
+    notes.gated = true;
+    provider.start();
+    journals.markReady();
+    await flush();
+    notes.release(0);
+    await flush();
+    // The walk's last read is in flight, so nothing but the walk's own end can still publish.
+    expect(notes.reads).toEqual([dayPath, projectPath]);
+
+    slice.state.enabled = false;
+    await nextTick();
+    const publishesAtDisable = host.publishes.length;
+    notes.release(1);
+    await flush();
+
+    expect(host.publishes.length).toBe(publishesAtDisable);
+    expect(host.published.get(dayPath)).toEqual([]);
+    expect(host.published.get(projectPath) ?? []).toEqual([]);
+  });
+
+  it("a disabled provider does not walk", async () => {
+    const built = await build({ enabled: false });
+    built.notes.seed(projectPath, projectText);
+    built.structures.setStructure(projectPath, items([1]));
+    built.provider.start();
+    built.harness.resolve(JournalsIndex).markReady();
+    await flush();
+
+    expect(built.notes.reads).toEqual([]);
+    expect(built.host.publishes).toEqual(["all"]);
+  });
+
+  it("a checkbox settings change refills without re-reading", async () => {
+    const { host, notes, slice } = await walked();
+    const readsBefore = notes.reads.length;
+    host.publishes.length = 0;
+
+    slice.state.rule = { mode: "or", conditions: [] };
+    await nextTick();
+    await flush();
+
+    expect(host.publishes).toEqual(["all"]);
+    expect(notes.reads.length).toBe(readsBefore);
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("disabling publishes nothing; enabling again brings the dated lines back", async () => {
+    const { host, slice } = await walked();
+
+    slice.state.enabled = false;
+    await nextTick();
+
+    expect(host.published.get(dayPath)).toEqual([]);
+    expect(host.published.has(projectPath)).toBe(false);
+
+    slice.state.enabled = true;
+    await nextTick();
+    await flush();
+
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("a full refill from the host keeps a deleted journal's dated lines, now as no journal's", async () => {
+    const { host } = await walked();
+
+    host.owned.delete(dayPath);
+    host.emit({ kind: "all" });
+
+    const left = host.published.get(dayPath);
+    expect(left?.map((item) => item.key)).toEqual([`${dayPath}:4`]);
+    expect(left?.at(0)?.relations).toEqual(["date"]);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("a full refill drops a note that vanished with no delete event of its own", async () => {
+    const { host, notes } = await walked();
+
+    void notes.deleteFolder("project" as VaultPath);
+    host.emit({ kind: "all" });
+
+    expect(host.published.has(projectPath)).toBe(false);
+    expect(datedLines(host.published.get(dayPath))).toEqual({ 4: "2026-10-24" });
+  });
+
+  it("stops walking once its disposer runs", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.gated = true;
+    const stop = provider.start();
+    journals.markReady();
+    await flush();
+
+    stop();
+    notes.release(0);
+    await flush();
+
+    expect(notes.reads).toEqual([dayPath]);
+    expect(host.publishes).toEqual(["all"]);
+  });
+
+  it("a read that fails during the walk leaves that note undated and walks on", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.failing = true;
+
+    provider.start();
+    journals.markReady();
+    await flush();
+
+    expect(notes.reads).toEqual([dayPath, projectPath]);
+    expect(host.publishes).toEqual(["all", "all"]);
+    expect(host.published.get(dayPath)).toHaveLength(2);
+    expect(datedLines(host.published.get(dayPath))).toEqual({});
+    expect(host.published.get(projectPath) ?? []).toEqual([]);
+  });
+});
+
 describe("CheckboxTaskProvider.hydrateItem", () => {
   const path = "a.md" as VaultPath;
   function lineItem(): TaskItem {
