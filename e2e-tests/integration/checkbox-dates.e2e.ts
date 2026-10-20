@@ -68,11 +68,12 @@ describe("dated checkbox lines in notes no journal owns", () => {
   it("follows an edit to the line's date", async () => {
     await seedNote(PROJECT_NOTE, `- [ ] Book the venue 📅 ${NEXT_DAY}\n- [ ] Undated chore\n`);
 
-    await openInReadingMode(DAY_NOTE);
-    await expectNoRowTitled("Book the venue");
-
+    // The new day's row proves the index holds the moved date before the old day is checked.
     await openInReadingMode(NEXT_DAY_NOTE);
     await rowTitled("Book the venue");
+
+    await openInReadingMode(DAY_NOTE);
+    await expectNoRowTitled("Book the venue");
   });
 
   it("dates a nested child line, never its undated parent", async () => {
