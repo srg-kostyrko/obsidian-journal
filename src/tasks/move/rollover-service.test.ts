@@ -29,7 +29,7 @@ import { NOTE_PROPERTY_PROVIDER_ID } from "../providers/note-property/slice";
 import { TaskIndex } from "../task-index";
 import { buildTaskItem } from "../testing";
 
-import { rollNotice, type RollReport } from "./report";
+import { rollNotice, rollSentences, type RollReport } from "./report";
 import { RolloverService } from "./rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "./settings";
 
@@ -904,6 +904,31 @@ describe("rollNotice", () => {
         m.tasks_roll_source_unread({ date: "2026-10-16" }),
       ].join(" "),
     );
+  });
+
+  it("rollSentences names each sentence's kind and the source it is about", () => {
+    const report = reportOf({
+      rolled: 1,
+      notes: 1,
+      sources: [anchor("2026-10-20")],
+      read: [anchor("2026-10-19"), anchor("2026-10-20")],
+      missingHeading: [anchor("2026-10-19")],
+      heading: "Tasks",
+      skippedBlockIds: 2,
+      changedSources: [{ path: "daily/2026-10-20.md" as VaultPath, anchor: anchor("2026-10-20") }],
+    });
+
+    expect(rollSentences(report).map(({ kind, anchor }) => ({ kind, anchor }))).toEqual([
+      { kind: "rolled", anchor: null },
+      { kind: "missing-heading", anchor: "2026-10-19" },
+      { kind: "block-ids-skipped", anchor: null },
+      { kind: "source-changed", anchor: "2026-10-20" },
+    ]);
+    expect(
+      rollSentences(report)
+        .map(({ text }) => text)
+        .join(" "),
+    ).toBe(rollNotice(report));
   });
 
   it("words an unwritten source by the roll's mode", () => {
