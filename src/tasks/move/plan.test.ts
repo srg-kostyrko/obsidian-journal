@@ -5,6 +5,7 @@ import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 import { extractItems } from "../providers/checkbox/extract";
 import { DEFAULT_STATUS_MAP } from "../providers/checkbox/slice";
 
+import { placeGroups } from "./placement";
 import { planSource, type RollSource } from "./plan";
 
 import type { TaskRule } from "../conditions";
@@ -146,16 +147,51 @@ describe("planSource", () => {
     );
   });
 
-  it("groups roots by their selection heading in source order", () => {
+  it("groups consecutive roots by their selection heading, keeping source order", () => {
+    const either: TaskRule = {
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: ["Work", "Home"] }],
+    };
+    const source = sourceOf([
+      "## Work",
+      "- [ ] a",
+      "- [ ] a2",
+      "## Home",
+      "- [ ] b",
+      "## Work",
+      "- [ ] c",
+      "## Other",
+      "- [ ] d",
+    ]);
+    expect(planSource(source, { selection: either, mode: "copy", rolledMarker }).block).toEqual([
+      { heading: "Work", lines: ["- [ ] a", "- [ ] a2"] },
+      { heading: "Home", lines: ["- [ ] b"] },
+      { heading: "Work", lines: ["- [ ] c"] },
+    ]);
+  });
+
+  it("sections sharing a fallback destination arrive in source order", () => {
     const either: TaskRule = {
       mode: "and",
       conditions: [{ type: "heading", condition: "under", headings: ["Work", "Home"] }],
     };
     const source = sourceOf(["## Work", "- [ ] a", "## Home", "- [ ] b", "## Work", "- [ ] c", "## Other", "- [ ] d"]);
-    expect(planSource(source, { selection: either, mode: "copy", rolledMarker }).block).toEqual([
-      { heading: "Work", lines: ["- [ ] a", "- [ ] c"] },
-      { heading: "Home", lines: ["- [ ] b"] },
-    ]);
+    const { block } = planSource(source, { selection: either, mode: "copy", rolledMarker });
+    expect(placeGroups("## Tasks\n- [ ] t\n\n## End\n", block, "Tasks")).toBe(
+      "## Tasks\n- [ ] t\n- [ ] a\n- [ ] b\n- [ ] c\n\n## End\n",
+    );
+  });
+
+  it("same-section groups land in source order under their own heading", () => {
+    const either: TaskRule = {
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: ["Work", "Home"] }],
+    };
+    const source = sourceOf(["## Work", "- [ ] a", "## Home", "- [ ] b", "## Work", "- [ ] c"]);
+    const { block } = planSource(source, { selection: either, mode: "copy", rolledMarker });
+    expect(placeGroups("## Home\n- [ ] h\n## Work\n- [ ] w\n", block, "")).toBe(
+      "## Home\n- [ ] h\n- [ ] b\n## Work\n- [ ] w\n- [ ] a\n- [ ] c\n",
+    );
   });
 
   it("emits a shared context ancestor once", () => {

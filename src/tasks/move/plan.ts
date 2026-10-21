@@ -108,23 +108,25 @@ export function planSource(source: RollSource, options: PlanOptions): SourcePlan
   // A context line stays in the source, so its target line is always a copy and must not claim the anchor.
   const emitRoot = (text: string): string => (mode === "copy" ? stripId(text) : text);
   const emitted = new Set<number>();
-  const groups = new Map<string | null, string[]>();
+  // Only neighbors merge: sections that fall back to one destination must still arrive in source order.
+  const groups: { heading: string | null; lines: string[] }[] = [];
   for (const root of roots) {
-    const group = groups.get(root.heading) ?? [];
-    groups.set(root.heading, group);
+    const last = groups.at(-1);
+    const group = last?.heading === root.heading ? last : { heading: root.heading, lines: [] };
+    if (group !== last) groups.push(group);
     for (const ancestor of ancestorsOf(lines, root.line)) {
       if (emitted.has(ancestor)) continue;
       emitted.add(ancestor);
-      group.push(stripId(lines[ancestor] ?? ""));
+      group.lines.push(stripId(lines[ancestor] ?? ""));
     }
-    group.push(...root.lines.map(emitRoot));
+    group.lines.push(...root.lines.map(emitRoot));
   }
 
   return {
     path,
     roots,
     refusedForBlockId,
-    block: [...groups].map(([heading, groupLines]) => ({ heading, lines: groupLines })),
+    block: groups,
     selectionMissedHeading: named.length > 0 && structure.headings.every((heading) => !named.includes(heading.heading)),
   };
 }
