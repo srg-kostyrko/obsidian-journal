@@ -2586,13 +2586,23 @@
     }
   ],
   "tasks_move_summary_heading": "原标题缺失时，放在 {heading} 下方。",
+  "tasks_move_summary_automatic": "自动结转。",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action}{source}{heading}",
-        "hasHeading=*": "{action}{source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action}{source}{heading}{automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action}{source}{heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action}{source}{automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action}{source}"
       }
     }
   ],
@@ -2631,6 +2641,9 @@
   "tasks_move_look_back": "回溯笔记数",
   "tasks_move_look_back_desc": "从多少篇之前的笔记中取出未完成的任务。",
   "tasks_move_look_back_invalid": "请输入不小于 1 的整数。",
+  "tasks_move_automatic_label": "自动结转",
+  "tasks_move_automatic_desc": "只要当前笔记在此库中打开，就自动将未完成的任务结转到其中。",
+  "tasks_move_automatic_needs_stamp": "需要“移动”，或开启“标记为已结转”。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "列表显示哪些任务。",
   "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。",

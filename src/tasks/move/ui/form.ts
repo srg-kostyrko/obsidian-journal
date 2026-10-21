@@ -1,6 +1,6 @@
 import { m } from "@/i18n";
 
-import type { JournalMoveConfig } from "../settings";
+import { automaticBlocked, type JournalMoveConfig, type MoveDefaults } from "../settings";
 
 export type ModeChoice = "default" | "copy" | "move";
 export type StampChoice = "default" | "on" | "off";
@@ -12,6 +12,7 @@ export interface JournalMoveDraft {
   targetHeading: string;
   // An emptied number input reads back "" at runtime, which Number.isSafeInteger rejects.
   lookBack: number | undefined;
+  automatic: boolean;
 }
 
 // placeGroups matches a heading by its text, so "## Tasks" typed the way it reads in the note would
@@ -34,6 +35,7 @@ export function draftFrom(move: JournalMoveConfig): JournalMoveDraft {
     source: move.source,
     targetHeading: move.targetHeading,
     lookBack: move.lookBack,
+    automatic: move.automatic,
   };
 }
 
@@ -41,8 +43,22 @@ function validLookBack(value: JournalMoveDraft["lookBack"]): value is number {
   return value !== undefined && Number.isSafeInteger(value) && value >= 1;
 }
 
-export function journalMoveErrors(draft: JournalMoveDraft): { lookBack?: string[] } {
-  return validLookBack(draft.lookBack) ? {} : { lookBack: [m.tasks_move_look_back_invalid()] };
+/** The draft's mode and stamp after Default choices resolve against the global defaults. */
+export function draftBlocksAutomatic(draft: JournalMoveDraft, defaults: MoveDefaults): boolean {
+  const mode = draft.mode === "default" ? defaults.mode : draft.mode;
+  const stamp = draft.stamp === "default" ? defaults.stamp : draft.stamp === "on";
+  return automaticBlocked({ mode, stamp }) !== null;
+}
+
+export function journalMoveErrors(
+  draft: JournalMoveDraft,
+  defaults: MoveDefaults,
+): { lookBack?: string[]; automatic?: string[] } {
+  return {
+    ...(!validLookBack(draft.lookBack) && { lookBack: [m.tasks_move_look_back_invalid()] }),
+    ...(draft.automatic &&
+      draftBlocksAutomatic(draft, defaults) && { automatic: [m.tasks_move_automatic_needs_stamp()] }),
+  };
 }
 
 /** The stored config for a valid draft; a Default choice leaves its field absent. */
@@ -54,5 +70,6 @@ export function configFrom(draft: JournalMoveDraft): JournalMoveConfig {
     source: draft.source,
     targetHeading: headingText(draft.targetHeading),
     lookBack,
+    automatic: draft.automatic,
   };
 }

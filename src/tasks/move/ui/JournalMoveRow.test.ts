@@ -46,6 +46,16 @@ describe("JournalMoveRow", () => {
     expect(summary()).toContain(m.tasks_move_summary({ action: "move", count: 1 }));
   });
 
+  it("the summary mentions automatic", async () => {
+    await mount({ automatic: true });
+    expect(summary()).toContain(m.tasks_move_summary_automatic());
+  });
+
+  it("the summary stays silent about automatic when it is off", async () => {
+    await mount();
+    expect(summary()).not.toContain(m.tasks_move_summary_automatic());
+  });
+
   it("describes the journal's own settings over the global defaults", async () => {
     await mount({ mode: "copy", stamp: false, lookBack: 3, source: "both", targetHeading: "Tasks" });
     expect(summary()).toContain(m.tasks_move_summary({ action: "copy", count: 3 }));
@@ -73,7 +83,13 @@ describe("JournalMoveRow", () => {
     const harness = await mount();
     await userEvent.click(screen.getByRole("button", { name: m.tasks_move_edit() }));
 
-    const edited: JournalMoveConfig = { mode: "move", source: "notelets", targetHeading: "", lookBack: 2 };
+    const edited: JournalMoveConfig = {
+      mode: "move",
+      source: "notelets",
+      targetHeading: "",
+      lookBack: 2,
+      automatic: false,
+    };
     harness.modals.lastOpen<{ move: JournalMoveConfig }, JournalMoveConfig>().submit(edited);
 
     const repository = harness.resolve(JournalsRepository);
@@ -98,7 +114,7 @@ describe("JournalMoveRow", () => {
 
     harness.modals
       .lastOpen<{ move: JournalMoveConfig }, JournalMoveConfig>()
-      .submit({ source: "note", targetHeading: "", lookBack: 2 });
+      .submit({ source: "note", targetHeading: "", lookBack: 2, automatic: false });
 
     await vi.waitFor(() => {
       expect(repository.get("Daily").getOrUndefined()?.tasks.move.lookBack).toBe(2);

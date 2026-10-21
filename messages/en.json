@@ -2605,13 +2605,23 @@
     }
   ],
   "tasks_move_summary_heading": "Places them under {heading} when the heading they came from is missing.",
+  "tasks_move_summary_automatic": "Rolls over automatically.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2650,6 +2660,9 @@
   "tasks_move_look_back": "Look back",
   "tasks_move_look_back_desc": "How many earlier notes to take unfinished tasks from.",
   "tasks_move_look_back_invalid": "Enter a whole number of 1 or more.",
+  "tasks_move_automatic_label": "Automatic rollover",
+  "tasks_move_automatic_desc": "Roll unfinished tasks into the current note on its own, whenever it is open in this vault.",
+  "tasks_move_automatic_needs_stamp": "Needs Move, or Mark as rolled turned on.",
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Which of those tasks a listing shows.",
   "tasks_tick_recurring_needs_tasks_plugin": "This task was not ticked. Recurring tasks need the Tasks plugin to advance to their next instance.",

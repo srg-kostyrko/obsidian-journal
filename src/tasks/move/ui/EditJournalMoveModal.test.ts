@@ -104,7 +104,7 @@ describe("EditJournalMoveModal", () => {
     await userEvent.type(lookBack, "3");
     await save();
 
-    expect(submitted(submit)).toEqual({ source: "both", targetHeading: "Tasks", lookBack: 3 });
+    expect(submitted(submit)).toEqual({ source: "both", targetHeading: "Tasks", lookBack: 3, automatic: false });
   });
 
   // Placement matches a heading by its text, so the markdown hashes would make the setting match nothing.
@@ -115,5 +115,51 @@ describe("EditJournalMoveModal", () => {
     await save();
 
     expect(submitted(submit).targetHeading).toBe("Tasks");
+  });
+
+  it("automatic is disabled in copy without stamping", async () => {
+    await mount({ mode: "copy", stamp: false });
+
+    expect(screen.getByRole("checkbox", { name: m.tasks_move_automatic_label() }).getAttribute("aria-disabled")).toBe(
+      "true",
+    );
+    expect(screen.getByText(m.tasks_move_automatic_needs_stamp())).toBeTruthy();
+  });
+
+  it("automatic follows the global default when the draft says Default", async () => {
+    await mount({}, { mode: "copy", stamp: false });
+
+    expect(screen.getByRole("checkbox", { name: m.tasks_move_automatic_label() }).getAttribute("aria-disabled")).toBe(
+      "true",
+    );
+  });
+
+  it("turning stamping off while automatic is on blocks save", async () => {
+    const { submit } = await mount({ automatic: true });
+
+    await userEvent.selectOptions(screen.getByTestId("move-stamp"), "off");
+
+    expect(screen.getByText(m.tasks_move_automatic_needs_stamp()).className).toContain("tasks-move-form-error");
+    await save();
+    expect(submit).not.toHaveBeenCalled();
+  });
+
+  it("stores automatic when it is turned on", async () => {
+    const { submit } = await mount();
+
+    await userEvent.click(screen.getByRole("checkbox", { name: m.tasks_move_automatic_label() }));
+    await save();
+
+    expect(submitted(submit).automatic).toBe(true);
+  });
+
+  it("automatic stays switchable off while the mode blocks it", async () => {
+    const { submit } = await mount({ automatic: true });
+    await userEvent.selectOptions(screen.getByTestId("move-stamp"), "off");
+
+    await userEvent.click(screen.getByRole("checkbox", { name: m.tasks_move_automatic_label() }));
+    await save();
+
+    expect(submitted(submit)).toMatchObject({ automatic: false, stamp: false });
   });
 });

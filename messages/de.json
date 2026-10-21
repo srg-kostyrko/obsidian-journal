@@ -2605,13 +2605,23 @@
     }
   ],
   "tasks_move_summary_heading": "Legt sie unter {heading} ab, wenn die Überschrift fehlt, unter der sie standen.",
+  "tasks_move_summary_automatic": "Überträgt automatisch.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2650,6 +2660,9 @@
   "tasks_move_look_back": "Rückblick",
   "tasks_move_look_back_desc": "Aus wie vielen früheren Notizen unerledigte Aufgaben übernommen werden.",
   "tasks_move_look_back_invalid": "Gib eine ganze Zahl ab 1 ein.",
+  "tasks_move_automatic_label": "Automatisches Übertragen",
+  "tasks_move_automatic_desc": "Überträgt unerledigte Aufgaben von selbst in die aktuelle Notiz, sobald sie in diesem Vault geöffnet ist.",
+  "tasks_move_automatic_needs_stamp": "Erfordert Verschieben oder eingeschaltetes „Als übertragen markieren“.",
   "tasks_filter_conditions_label": "Bedingungen",
   "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",

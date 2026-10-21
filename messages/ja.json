@@ -2592,13 +2592,23 @@
     }
   ],
   "tasks_move_summary_heading": "元の見出しがない場合は{heading}の下に置きます。",
+  "tasks_move_summary_automatic": "自動で繰り越します。",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action}{source}{heading}",
-        "hasHeading=*": "{action}{source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action}{source}{heading}{automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action}{source}{heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action}{source}{automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action}{source}"
       }
     }
   ],
@@ -2637,6 +2647,9 @@
   "tasks_move_look_back": "さかのぼる数",
   "tasks_move_look_back_desc": "未完了のタスクを取り出す前のノートの数。",
   "tasks_move_look_back_invalid": "1以上の整数を入力してください。",
+  "tasks_move_automatic_label": "自動繰り越し",
+  "tasks_move_automatic_desc": "この保管庫で現在のノートが開かれているとき、未完了のタスクを自動的にそのノートへ繰り越します。",
+  "tasks_move_automatic_needs_stamp": "「移動」か、「繰り越し済みとしてマーク」をオンにする必要があります。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "一覧に表示するタスクの条件。",
   "tasks_tick_recurring_needs_tasks_plugin": "このタスクはチェックされませんでした。繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。",

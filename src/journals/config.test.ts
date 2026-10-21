@@ -74,14 +74,19 @@ describe("journalConfigSchema", () => {
     expect(parsed.success && parsed.output.tasks).toEqual({
       providers: {},
       filter: { mode: "and", conditions: [] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
   });
 
   it("a stored journal without tasks.move parses with the default move block", () => {
     const stored = { ...journalDefaultsFor({ type: "day" }, "daily"), tasks: { providers: {} } };
     const parsed = v.safeParse(journalConfigSchema, stored);
-    expect(parsed.success && parsed.output.tasks.move).toEqual({ source: "note", targetHeading: "", lookBack: 1 });
+    expect(parsed.success && parsed.output.tasks.move).toEqual({
+      source: "note",
+      targetHeading: "",
+      lookBack: 1,
+      automatic: false,
+    });
   });
 
   it("keeps a per-journal checkbox rule", () => {
@@ -112,7 +117,7 @@ describe("journalConfigSchema", () => {
     expect(parsed.tasks).toEqual({
       providers: {},
       filter: { mode: "and", conditions: [] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
   });
 
@@ -658,7 +663,7 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: {},
       filter: { mode: "or", conditions: [heading] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.providers"] });
   });
@@ -680,7 +685,7 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: { checkbox },
       filter: { mode: "or", conditions: [heading] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions.1"] });
   });
@@ -694,7 +699,7 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: { checkbox },
       filter: { mode: "and", conditions: [] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions"] });
   });
@@ -708,7 +713,7 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: { checkbox },
       filter: { mode: "and", conditions: [heading] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.mode"] });
   });

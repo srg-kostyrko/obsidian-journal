@@ -2589,13 +2589,23 @@
     }
   ],
   "tasks_move_summary_heading": "원래 있던 제목이 없으면 {heading} 아래에 둡니다.",
+  "tasks_move_summary_automatic": "자동으로 이월합니다.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2634,6 +2644,9 @@
   "tasks_move_look_back": "되돌아볼 노트 수",
   "tasks_move_look_back_desc": "완료되지 않은 작업을 가져올 이전 노트의 수.",
   "tasks_move_look_back_invalid": "1 이상의 정수를 입력하세요.",
+  "tasks_move_automatic_label": "자동 이월",
+  "tasks_move_automatic_desc": "이 보관함에서 현재 노트가 열려 있을 때마다 완료되지 않은 작업을 스스로 그 노트로 이월합니다.",
+  "tasks_move_automatic_needs_stamp": "이동이 필요하거나 ‘이월됨으로 표시’를 켜야 합니다.",
   "tasks_filter_conditions_label": "조건",
   "tasks_filter_conditions_desc": "목록에 표시할 작업 조건.",
   "tasks_tick_recurring_needs_tasks_plugin": "이 작업은 완료 처리되지 않았습니다. 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다.",

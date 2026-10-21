@@ -2603,13 +2603,23 @@
     }
   ],
   "tasks_move_summary_heading": "Le colloca sotto {heading} se manca l'intestazione da cui provengono.",
+  "tasks_move_summary_automatic": "Riporta automaticamente.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2648,6 +2658,9 @@
   "tasks_move_look_back": "Note precedenti",
   "tasks_move_look_back_desc": "Da quante note precedenti prendere le attività non completate.",
   "tasks_move_look_back_invalid": "Inserisci un numero intero pari o superiore a 1.",
+  "tasks_move_automatic_label": "Riporto automatico",
+  "tasks_move_automatic_desc": "Riporta da solo le attività non completate nella nota corrente, ogni volta che è aperta in questo vault.",
+  "tasks_move_automatic_needs_stamp": "Richiede Sposta, oppure Contrassegna come riportata attivo.",
   "tasks_filter_conditions_label": "Condizioni",
   "tasks_filter_conditions_desc": "Quali di queste attività mostra un elenco.",
   "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",

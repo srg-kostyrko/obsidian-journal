@@ -10,10 +10,11 @@ import UiDropdown from "@/ui/UiDropdown.vue";
 import UiNumberInput from "@/ui/UiNumberInput.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
+import UiToggle from "@/ui/UiToggle.vue";
 
 import { moveDefaultsSlice, type JournalMoveConfig } from "../settings";
 
-import { configFrom, draftFrom, journalMoveErrors, stampChoice } from "./form";
+import { configFrom, draftBlocksAutomatic, draftFrom, journalMoveErrors, stampChoice } from "./form";
 
 // Store-agnostic: the caller re-reads its journal after this resolves and writes the result back.
 const { move } = defineProps<{ move: JournalMoveConfig }>();
@@ -21,7 +22,8 @@ const api = useModal<JournalMoveConfig>();
 const defaults = useService(SettingsService).getSlice(moveDefaultsSlice);
 
 const draft = reactive(draftFrom(move));
-const errorBag = computed(() => journalMoveErrors(draft));
+const errorBag = computed(() => journalMoveErrors(draft, defaults.state));
+const blocked = computed(() => draftBlocksAutomatic(draft, defaults.state));
 const valid = computed(() => Object.keys(errorBag.value).length === 0);
 
 function save(): void {
@@ -66,6 +68,22 @@ function save(): void {
     </template>
     <UiNumberInput v-model="draft.lookBack" :min="1" :step="1" narrow data-testid="move-look-back" />
   </UiSettingRow>
+  <UiSettingRow :name="m.tasks_move_automatic_label()">
+    <template #description>
+      {{ m.tasks_move_automatic_desc() }}
+      <span v-if="blocked && !draft.automatic" class="tasks-move-form-note">{{
+        m.tasks_move_automatic_needs_stamp()
+      }}</span>
+      <span v-for="error of errorBag.automatic" :key="error" class="tasks-move-form-error">{{ error }}</span>
+    </template>
+    <!-- Stays switchable while on, or a blocked draft could never be fixed by turning it off. -->
+    <UiToggle
+      v-model="draft.automatic"
+      :disabled="blocked && !draft.automatic"
+      :tooltip="m.tasks_move_automatic_label()"
+      data-testid="move-automatic"
+    />
+  </UiSettingRow>
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
     <UiButton cta :disabled="!valid" @click="save">{{ m.common_action_submit() }}</UiButton>
@@ -73,6 +91,11 @@ function save(): void {
 </template>
 
 <style scoped>
+.tasks-move-form-note {
+  color: var(--text-muted);
+  display: block;
+}
+
 .tasks-move-form-error {
   color: var(--text-error);
   display: block;

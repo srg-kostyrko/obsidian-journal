@@ -2600,13 +2600,23 @@
     }
   ],
   "tasks_move_summary_heading": "Coloca-as sob {heading} quando falta o cabeçalho de onde vieram.",
+  "tasks_move_summary_automatic": "Transfere automaticamente.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2645,6 +2655,9 @@
   "tasks_move_look_back": "Notas anteriores",
   "tasks_move_look_back_desc": "De quantas notas anteriores as tarefas não concluídas são tiradas.",
   "tasks_move_look_back_invalid": "Digite um número inteiro igual ou maior que 1.",
+  "tasks_move_automatic_label": "Transferência automática",
+  "tasks_move_automatic_desc": "Transfere sozinho as tarefas por concluir para a nota atual, sempre que ela estiver aberta neste cofre.",
+  "tasks_move_automatic_needs_stamp": "Requer Mover, ou Marcar como transferida ativado.",
   "tasks_filter_conditions_label": "Condições",
   "tasks_filter_conditions_desc": "Quais destas tarefas uma listagem exibe.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância.",
