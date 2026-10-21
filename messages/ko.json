@@ -2694,5 +2694,6 @@
     }
   ],
   "tasks_roll_source_indexing": "{date} 노트를 아직 색인하는 중입니다. 잠시 후 다시 시도하세요.",
+  "tasks_roll_source_unread": "{date} 노트를 읽을 수 없습니다.",
   "tasks_listing_empty": "이 쿼리와 일치하는 작업이 없습니다."
 }

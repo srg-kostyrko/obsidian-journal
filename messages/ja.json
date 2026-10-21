@@ -2697,5 +2697,6 @@
     }
   ],
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
+  "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
   "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

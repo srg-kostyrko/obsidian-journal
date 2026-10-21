@@ -38,6 +38,7 @@ const REPORT: RollReport = {
   changedSources: [],
   failedSources: [],
   skippedSources: [],
+  unreadSources: [],
 };
 
 const commandsModule: Module = {

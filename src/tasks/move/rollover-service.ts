@@ -153,9 +153,9 @@ export class RolloverService {
 
   // A note whose structure has not resolved, or lags its text, is not planned: an empty plan would
   // read as "nothing to roll", a stale one rolls the wrong lines.
-  async #readSource(path: VaultPath): Promise<RollSource | "indexing" | null> {
+  async #readSource(path: VaultPath): Promise<RollSource | "indexing" | "unread"> {
     const content = await this.#notes.read(path);
-    if (content.isErr()) return null;
+    if (content.isErr()) return "unread";
     const structure = this.#structure.get(path);
     if (structure.isNone() || !inSync(content.value, structure.value, this.#checkbox.state.rolledMarker)) {
       return "indexing";
@@ -241,12 +241,13 @@ export class RolloverService {
 
       const plans: AnchoredPlan[] = [];
       const indexing = new Set<AnchorString>();
+      const unread = new Set<AnchorString>();
       for (const anchor of read) {
         for (const path of this.#sourcePaths(journalName, anchor, move.source)) {
           const source = await this.#readSource(path);
           if (source === "indexing") indexing.add(anchor);
-          if (source === null || source === "indexing") continue;
-          plans.push({ anchor, plan: planSource(source, { selection, mode: move.mode, rolledMarker: marker }) });
+          else if (source === "unread") unread.add(anchor);
+          else plans.push({ anchor, plan: planSource(source, { selection, mode: move.mode, rolledMarker: marker }) });
         }
       }
       const contributing = plans.filter(({ plan }) => plan.roots.length > 0);
@@ -291,6 +292,7 @@ export class RolloverService {
         changedSources,
         failedSources,
         skippedSources: read.filter((anchor) => indexing.has(anchor)),
+        unreadSources: read.filter((anchor) => unread.has(anchor)),
       };
       return report;
     });

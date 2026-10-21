@@ -2691,5 +2691,6 @@
     }
   ],
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
+  "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

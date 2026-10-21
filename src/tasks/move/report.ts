@@ -32,6 +32,8 @@ export interface RollReport {
   readonly failedSources: readonly ChangedSource[];
   // Anchors with a note whose metadata had not caught up with its text, so it was not read.
   readonly skippedSources: readonly AnchorString[];
+  // Anchors with a note that failed to read, so it was not planned.
+  readonly unreadSources: readonly AnchorString[];
 }
 
 function uniqueAnchors(sources: readonly ChangedSource[]): readonly AnchorString[] {
@@ -45,7 +47,7 @@ function outcomeSentence(report: RollReport): string | null {
     return m.tasks_roll_done({ count: report.rolled, notes: report.notes, oldest });
   }
   // An anchor with a sentence of its own explaining why nothing came from it is not "empty".
-  const explained = new Set([...report.missingHeading, ...report.skippedSources]);
+  const explained = new Set([...report.missingHeading, ...report.skippedSources, ...report.unreadSources]);
   const firstEmpty = report.read.find((anchor) => !explained.has(anchor));
   return firstEmpty === undefined ? null : m.tasks_roll_nothing({ oldest: firstEmpty });
 }
@@ -61,6 +63,7 @@ export function rollNotice(report: RollReport): string {
     ...uniqueAnchors(report.changedSources).map((date) => m.tasks_roll_source_changed({ date, mode: report.mode })),
     ...uniqueAnchors(report.failedSources).map((date) => m.tasks_roll_source_write_failed({ date, mode: report.mode })),
     ...report.skippedSources.map((date) => m.tasks_roll_source_indexing({ date })),
+    ...report.unreadSources.map((date) => m.tasks_roll_source_unread({ date })),
   ]
     .filter((sentence): sentence is string => sentence !== null)
     .join(" ");

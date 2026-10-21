@@ -2708,5 +2708,6 @@
     }
   ],
   "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
+  "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
   "tasks_listing_empty": "Aucune tâche ne correspond à cette requête."
 }

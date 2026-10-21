@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { UserAborted } from "@/infrastructure/flows";
 import {
   NoteNotFoundError,
+  NoteReadError,
   NoteStructureService,
   NotesService,
   NoteWriteError,
@@ -159,6 +160,7 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     changedSources: [],
     failedSources: [],
     skippedSources: [],
+    unreadSources: [],
     ...overrides,
   };
 }
@@ -461,6 +463,28 @@ describe("RolloverService", () => {
     expect(rollNotice(report)).not.toContain(m.tasks_roll_source_write_failed({ date: "2026-10-20", mode: "copy" }));
   });
 
+  it("reports a source that fails to read instead of calling it empty", async () => {
+    const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
+    put("daily", "2026-10-19", "- [ ] One\n");
+    const unreadable = put("daily", "2026-10-20", "- [ ] Two\n");
+    const target = put("daily", TODAY, "");
+    const read = notes.read.bind(notes);
+    vi.spyOn(notes, "read").mockImplementation((path) =>
+      path === unreadable ? AsyncResult.err(new NoteReadError(path, "locked")) : read(path),
+    );
+
+    const report = await roll();
+
+    expect(await text(target)).toBe("- [ ] One\n");
+    expect(report.unreadSources).toEqual(["2026-10-20"]);
+    expect(rollNotice(report)).toBe(
+      [
+        m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-19" }),
+        m.tasks_roll_source_unread({ date: "2026-10-20" }),
+      ].join(" "),
+    );
+  });
+
   describe("a target write that fails", () => {
     it("leaves every source byte-identical when the write is refused", async () => {
       const { service, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
@@ -597,6 +621,7 @@ describe("rollNotice", () => {
       changedSources: [{ path: "daily/2026-10-20.md" as VaultPath, anchor: anchor("2026-10-20") }],
       failedSources: [{ path: "daily/2026-10-18.md" as VaultPath, anchor: anchor("2026-10-18") }],
       skippedSources: [anchor("2026-10-17")],
+      unreadSources: [anchor("2026-10-16")],
     });
 
     expect(rollNotice(report)).toBe(
@@ -608,6 +633,7 @@ describe("rollNotice", () => {
         m.tasks_roll_source_changed({ date: "2026-10-20", mode: "copy" }),
         m.tasks_roll_source_write_failed({ date: "2026-10-18", mode: "copy" }),
         m.tasks_roll_source_indexing({ date: "2026-10-17" }),
+        m.tasks_roll_source_unread({ date: "2026-10-16" }),
       ].join(" "),
     );
   });
@@ -630,6 +656,12 @@ describe("rollNotice", () => {
         m.tasks_roll_source_write_failed({ date: "2026-10-18", mode: "copy" }),
       ].join(" "),
     );
+  });
+
+  it("does not call a source that failed to read empty", () => {
+    const report = reportOf({ read: [anchor("2026-10-20")], unreadSources: [anchor("2026-10-20")] });
+
+    expect(rollNotice(report)).toBe(m.tasks_roll_source_unread({ date: "2026-10-20" }));
   });
 
   it("says nothing was rolled from the oldest note read", () => {

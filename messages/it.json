@@ -2708,5 +2708,6 @@
     }
   ],
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
+  "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
   "tasks_listing_empty": "Nessuna attività corrisponde a questa query."
 }

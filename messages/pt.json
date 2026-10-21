@@ -2705,5 +2705,6 @@
     }
   ],
   "tasks_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Tente novamente em instantes.",
+  "tasks_roll_source_unread": "Não foi possível ler a nota de {date}.",
   "tasks_listing_empty": "Nenhuma tarefa corresponde a esta consulta."
 }
