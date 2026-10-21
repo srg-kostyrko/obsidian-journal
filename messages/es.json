@@ -2648,7 +2648,7 @@
   "tasks_move_look_back_desc": "De cuántas notas anteriores se toman las tareas sin terminar.",
   "tasks_move_look_back_invalid": "Introduce un número entero mayor o igual que 1.",
   "tasks_move_automatic_label": "Traslado automático",
-  "tasks_move_automatic_desc": "Traslada las tareas sin terminar a la nota actual por sí solo, siempre que esté abierta en esta bóveda.",
+  "tasks_move_automatic_desc": "Traslada por sí solo las tareas sin terminar a la nota actual siempre que esa nota exista y esta bóveda esté abierta.",
   "tasks_move_automatic_needs_stamp": "Requiere Mover, o tener activado Marcar como trasladada.",
   "tasks_filter_conditions_label": "Condiciones",
   "tasks_filter_conditions_desc": "Qué tareas muestra un listado.",

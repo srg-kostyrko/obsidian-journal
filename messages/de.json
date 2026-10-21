@@ -2661,7 +2661,7 @@
   "tasks_move_look_back_desc": "Aus wie vielen früheren Notizen unerledigte Aufgaben übernommen werden.",
   "tasks_move_look_back_invalid": "Gib eine ganze Zahl ab 1 ein.",
   "tasks_move_automatic_label": "Automatisches Übertragen",
-  "tasks_move_automatic_desc": "Überträgt unerledigte Aufgaben von selbst in die aktuelle Notiz, sobald sie in diesem Vault geöffnet ist.",
+  "tasks_move_automatic_desc": "Überträgt unerledigte Aufgaben von selbst in die aktuelle Notiz, sobald diese existiert und dieser Vault geöffnet ist.",
   "tasks_move_automatic_needs_stamp": "Erfordert Verschieben oder eingeschaltetes „Als übertragen markieren“.",
   "tasks_filter_conditions_label": "Bedingungen",
   "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",

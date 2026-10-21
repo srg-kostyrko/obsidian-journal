@@ -2656,7 +2656,7 @@
   "tasks_move_look_back_desc": "De quantas notas anteriores as tarefas não concluídas são tiradas.",
   "tasks_move_look_back_invalid": "Digite um número inteiro igual ou maior que 1.",
   "tasks_move_automatic_label": "Transferência automática",
-  "tasks_move_automatic_desc": "Transfere sozinho as tarefas por concluir para a nota atual, sempre que ela estiver aberta neste cofre.",
+  "tasks_move_automatic_desc": "Transfere sozinho as tarefas por concluir para a nota atual sempre que essa nota existir e este cofre estiver aberto.",
   "tasks_move_automatic_needs_stamp": "Requer Mover, ou Marcar como transferida ativado.",
   "tasks_filter_conditions_label": "Condições",
   "tasks_filter_conditions_desc": "Quais destas tarefas uma listagem exibe.",

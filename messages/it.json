@@ -2659,7 +2659,7 @@
   "tasks_move_look_back_desc": "Da quante note precedenti prendere le attività non completate.",
   "tasks_move_look_back_invalid": "Inserisci un numero intero pari o superiore a 1.",
   "tasks_move_automatic_label": "Riporto automatico",
-  "tasks_move_automatic_desc": "Riporta da solo le attività non completate nella nota corrente, ogni volta che è aperta in questo vault.",
+  "tasks_move_automatic_desc": "Riporta da solo le attività non completate nella nota corrente ogni volta che quella nota esiste e questo vault è aperto.",
   "tasks_move_automatic_needs_stamp": "Richiede Sposta, oppure Contrassegna come riportata attivo.",
   "tasks_filter_conditions_label": "Condizioni",
   "tasks_filter_conditions_desc": "Quali di queste attività mostra un elenco.",

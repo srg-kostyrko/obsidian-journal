@@ -2642,7 +2642,7 @@
   "tasks_move_look_back_desc": "从多少篇之前的笔记中取出未完成的任务。",
   "tasks_move_look_back_invalid": "请输入不小于 1 的整数。",
   "tasks_move_automatic_label": "自动结转",
-  "tasks_move_automatic_desc": "只要当前笔记在此库中打开，就自动将未完成的任务结转到其中。",
+  "tasks_move_automatic_desc": "只要当前笔记存在且此库处于打开状态，就自动将未完成的任务结转到其中。",
   "tasks_move_automatic_needs_stamp": "需要“移动”，或开启“标记为已结转”。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "列表显示哪些任务。",

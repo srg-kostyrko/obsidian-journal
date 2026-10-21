@@ -2648,7 +2648,7 @@
   "tasks_move_look_back_desc": "未完了のタスクを取り出す前のノートの数。",
   "tasks_move_look_back_invalid": "1以上の整数を入力してください。",
   "tasks_move_automatic_label": "自動繰り越し",
-  "tasks_move_automatic_desc": "この保管庫で現在のノートが開かれているとき、未完了のタスクを自動的にそのノートへ繰り越します。",
+  "tasks_move_automatic_desc": "現在のノートが存在し、この保管庫が開いているときは、未完了のタスクを自動的にそのノートへ繰り越します。",
   "tasks_move_automatic_needs_stamp": "「移動」か、「繰り越し済みとしてマーク」をオンにする必要があります。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "一覧に表示するタスクの条件。",

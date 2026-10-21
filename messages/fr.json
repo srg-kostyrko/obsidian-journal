@@ -2659,7 +2659,7 @@
   "tasks_move_look_back_desc": "Le nombre de notes précédentes d’où reprendre les tâches non terminées.",
   "tasks_move_look_back_invalid": "Saisissez un nombre entier égal ou supérieur à 1.",
   "tasks_move_automatic_label": "Report automatique",
-  "tasks_move_automatic_desc": "Reporte tout seul les tâches non terminées dans la note actuelle, dès qu’elle est ouverte dans ce coffre-fort.",
+  "tasks_move_automatic_desc": "Reporte tout seul les tâches non terminées dans la note actuelle dès que cette note existe et que ce coffre-fort est ouvert.",
   "tasks_move_automatic_needs_stamp": "Nécessite Déplacer, ou Marquer comme reportée activé.",
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Quelles tâches une liste affiche.",

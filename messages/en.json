@@ -2661,7 +2661,7 @@
   "tasks_move_look_back_desc": "How many earlier notes to take unfinished tasks from.",
   "tasks_move_look_back_invalid": "Enter a whole number of 1 or more.",
   "tasks_move_automatic_label": "Automatic rollover",
-  "tasks_move_automatic_desc": "Roll unfinished tasks into the current note on its own, whenever it is open in this vault.",
+  "tasks_move_automatic_desc": "Roll unfinished tasks into the current note on its own whenever that note exists and this vault is open.",
   "tasks_move_automatic_needs_stamp": "Needs Move, or Mark as rolled turned on.",
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Which of those tasks a listing shows.",
