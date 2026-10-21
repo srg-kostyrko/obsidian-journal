@@ -57,6 +57,12 @@ export interface FakeEditorState {
   text: string;
   cursorLine: number;
   readonly changes: { from: FakeEditorPosition; to: FakeEditorPosition; text: string }[];
+  // "preview" is reading mode, where the view keeps its editor but the user cannot type into it.
+  mode: "source" | "preview";
+  // Each save records the buffer it wrote, so a test can tell what reached disk and in what order.
+  readonly saves: string[];
+  // While set, a save takes the buffer only once this settles, the way vault.modify awaits the disk.
+  pendingSave: Promise<void> | null;
 }
 
 export interface FakeWorkspaceState {
@@ -113,7 +119,7 @@ interface FakeLeaf {
 }
 
 interface FakeMarkdownLeaf {
-  readonly view: { file: TFile | null; editor?: ReturnType<typeof fakeEditor> };
+  readonly view: { file: TFile | null } & Partial<ReturnType<typeof fakeView>>;
   openFile(file: TFile): Promise<void>;
   getContainer(): { win: Window };
   getRoot(): object;
@@ -235,8 +241,25 @@ function offsetOf(text: string, position: FakeEditorPosition): number {
   return lines.slice(0, position.line).reduce((sum, text) => sum + text.length + 1, 0) + position.ch;
 }
 
+function positionOf(text: string, offset: number): FakeEditorPosition {
+  const before = text.slice(0, Math.max(0, Math.min(offset, text.length))).split("\n");
+  return { line: before.length - 1, ch: before.at(-1)?.length ?? 0 };
+}
+
+function fakeView(state: FakeEditorState) {
+  return {
+    editor: fakeEditor(state),
+    getMode: (): "source" | "preview" => state.mode,
+    async save(): Promise<void> {
+      if (state.pendingSave !== null) await state.pendingSave;
+      state.saves.push(state.text);
+    },
+  };
+}
+
 function fakeEditor(state: FakeEditorState) {
   return {
+    offsetToPos: (offset: number): FakeEditorPosition => positionOf(state.text, offset),
     getValue: (): string => state.text,
     getCursor: (): FakeEditorPosition => ({ line: state.cursorLine, ch: 0 }),
     lineCount: (): number => state.text.split("\n").length,
@@ -597,7 +620,7 @@ export function createFakeHost(): FakeHost {
         const state = workspaceState.editors.get(path);
         return {
           file: fileObjects.get(path) ?? (state === undefined ? null : makeFile(path)),
-          ...(state !== undefined && { editor: fakeEditor(state) }),
+          ...(state !== undefined && fakeView(state)),
         };
       },
       async openFile(file: TFile): Promise<void> {
@@ -640,7 +663,7 @@ export function createFakeHost(): FakeHost {
     get activeEditor() {
       const state = workspaceState.activeEditor;
       if (state === null) return null;
-      return { file: fileObjects.get(state.path) ?? makeFile(state.path), editor: fakeEditor(state) };
+      return { file: fileObjects.get(state.path) ?? makeFile(state.path), ...fakeView(state) };
     },
     getLeavesOfType(type: string): FakeLeaf[] | FakeMarkdownLeaf[] {
       // The tracked branch is keyed by registered journal view types (`journal-view:*`),
@@ -775,7 +798,15 @@ export function createFakeHost(): FakeHost {
       return file;
     },
     openEditor(path, text, cursorLine = 0, { active = true } = {}): FakeEditorState {
-      const state: FakeEditorState = { path, text, cursorLine, changes: [] };
+      const state: FakeEditorState = {
+        path,
+        text,
+        cursorLine,
+        changes: [],
+        mode: "source",
+        saves: [],
+        pendingSave: null,
+      };
       workspaceState.editors.set(path, state);
       workspaceState.openPaths.add(path);
       workspaceState.openWindows.set(path, workspaceState.openWindows.get(path) ?? MAIN_WINDOW);

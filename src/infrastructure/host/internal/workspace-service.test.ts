@@ -4,7 +4,7 @@ import { Container } from "@/infrastructure/di";
 import { Some } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
-import { WorkspaceOpenError } from "../errors";
+import { NoteWriteError, WorkspaceOpenError } from "../errors";
 
 import { createFakeHost } from "./testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
@@ -619,18 +619,164 @@ describe("WorkspaceService", () => {
       expect(editor.text).toBe("A\n");
     });
 
-    it("leaves a popout's background view and a deferred view alone", () => {
+    it("edits a popout's background view, whose unsaved typing a disk write would lose", () => {
       const { service, host } = build();
-      const popout = host.openEditor(path, "a\n", 0, { active: false });
+      host.putFile(path, "a\n");
+      const popout = host.openEditor(path, "a\ntyped\n", 0, { active: false });
       host.workspace.openWindows.set(path, "popout");
+      const active = host.openEditor(other, "a\ntyped\n");
+
+      expect(service.openNoteText(path).getOrUndefined()).toBe("a\ntyped\n");
+      expect(service.replaceLinesInOpenNote(path, replaceFirst)).toBe("applied");
+      expect(popout.text).toBe("X\ntyped\n");
+      expect(active.changes).toEqual([]);
+    });
+
+    it("leaves a deferred view alone: it has loaded nothing to lose", () => {
+      const { service, host } = build();
       const deferredPath = "Daily/2026-05-15.md" as VaultPath;
       const deferred = host.openEditor(deferredPath, "b\n", 0, { active: false });
       host.workspace.deferredPaths.add(deferredPath);
+      host.workspace.openWindows.set(deferredPath, "popout");
+      const loaded = host.openEditor(path, "a\n", 0, { active: false });
 
-      expect(service.replaceLinesInOpenNote(path, replaceFirst)).toBe("not-open");
       expect(service.replaceLinesInOpenNote(deferredPath, replaceFirst)).toBe("not-open");
-      expect(popout.changes).toEqual([]);
+      expect(service.openNoteText(deferredPath).isNone()).toBe(true);
       expect(deferred.changes).toEqual([]);
+      expect(loaded.changes).toEqual([]);
+    });
+
+    describe("the active editor in reading mode", () => {
+      it("reads as no editor, so a command cannot act on a line the user cannot see a cursor on", () => {
+        const { service, host } = build();
+        const reading = host.openEditor(path, "- [ ] task\n");
+        reading.mode = "preview";
+
+        expect(service.activeEditorState().isNone()).toBe(true);
+        expect(service.isEditingActiveNote()).toBe(false);
+        reading.mode = "source";
+        expect(service.activeEditorState().isSome()).toBe(true);
+        expect(service.isEditingActiveNote()).toBe(true);
+      });
+    });
+
+    describe("processOpenNote", () => {
+      it("applies only the difference, as one change, so typing at the very end stays on its own line", () => {
+        const { service, host } = build();
+        const editor = host.openEditor(path, "# Month\nMonth goals.\n", 0, { active: false });
+        editor.text = "# Month\nMonth goals.\nNot saved yet.";
+        const active = host.openEditor(other, "# Month\nMonth goals.\n");
+
+        const result = service.processOpenNote(path, (text) => {
+          const lines = text.split("\n");
+          lines.splice(2, 0, "- [ ] launch project");
+          return lines.join("\n");
+        });
+
+        expect(result).toBe("applied");
+        expect(editor.text).toBe("# Month\nMonth goals.\n- [ ] launch project\nNot saved yet.");
+        expect(editor.changes).toEqual([
+          { from: { line: 2, ch: 0 }, to: { line: 2, ch: 0 }, text: "- [ ] launch project\n" },
+        ]);
+        expect(active.changes).toEqual([]);
+        expect(editor.saves).toEqual([]);
+      });
+
+      it("finds the view in a popout", () => {
+        const { service, host } = build();
+        const popout = host.openEditor(path, "a\nb", 0, { active: false });
+        host.workspace.openWindows.set(path, "popout");
+        host.openEditor(other, "a\nb");
+
+        expect(service.processOpenNote(path, (text) => text.replace("b", "B"))).toBe("applied");
+
+        expect(popout.text).toBe("a\nB");
+        expect(popout.changes).toEqual([{ from: { line: 1, ch: 0 }, to: { line: 1, ch: 1 }, text: "B" }]);
+      });
+
+      it("never splits a surrogate pair", () => {
+        const { service, host } = build();
+        const editor = host.openEditor(path, "x \u{1F600} y");
+
+        service.processOpenNote(path, (text) => text.replace("\u{1F600}", "\u{1F603}"));
+        service.processOpenNote(path, (text) => text.replace("\u{1F603}", "\u{10603}"));
+
+        expect(editor.text).toBe("x \u{10603} y");
+        expect(editor.changes.map((change) => change.text)).toEqual(["\u{1F603}", "\u{10603}"]);
+      });
+
+      it("refuses without editing when the transform declines", () => {
+        const { service, host } = build();
+        const editor = host.openEditor(path, "a\n");
+        const seen: string[] = [];
+        editor.text = "typed\na\n";
+
+        const result = service.processOpenNote(path, (text) => {
+          seen.push(text);
+          return null;
+        });
+
+        expect(result).toBe("refused");
+        expect(seen).toEqual(["typed\na\n"]);
+        expect(editor.changes).toEqual([]);
+      });
+
+      it("is not-open, and runs nothing, when no loaded view holds the note", () => {
+        const { service, host } = build();
+        host.openEditor(other, "a\n");
+        const deferredPath = "Daily/2026-05-15.md" as VaultPath;
+        host.openEditor(deferredPath, "b\n", 0, { active: false });
+        host.workspace.deferredPaths.add(deferredPath);
+        const transform = vi.fn((text: string) => text);
+
+        expect(service.processOpenNote(path, transform)).toBe("not-open");
+        expect(service.processOpenNote(deferredPath, transform)).toBe("not-open");
+        expect(transform).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("saveOpenNote", () => {
+      it("resolves once the view holding the note, in any window, has saved its buffer", async () => {
+        const { service, host } = build();
+        const editor = host.openEditor(path, "a\n", 0, { active: false });
+        host.workspace.openWindows.set(path, "popout");
+        const active = host.openEditor(other, "a\n");
+        editor.text = "a\nb\n";
+        const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+        editor.pendingSave = gate;
+        let settled = false;
+
+        const pending = service.saveOpenNote(path);
+        void Promise.resolve(pending).then(() => {
+          settled = true;
+        });
+        await new Promise((resolve) => window.setTimeout(resolve, 0));
+        expect(settled).toBe(false);
+        release();
+        expectOk(await pending);
+
+        expect(editor.saves).toEqual(["a\nb\n"]);
+        expect(active.saves).toEqual([]);
+      });
+
+      it("reports a save that fails as a write error", async () => {
+        const { service, host } = build();
+        const editor = host.openEditor(path, "a\n");
+        editor.pendingSave = Promise.reject(new Error("disk full"));
+
+        const result = await service.saveOpenNote(path);
+
+        expectErr(result);
+        expect(result.error).toBeInstanceOf(NoteWriteError);
+      });
+
+      it("does nothing when no view holds the note", async () => {
+        const { service, host } = build();
+        const editor = host.openEditor(other, "a\n");
+
+        expectOk(await service.saveOpenNote(path));
+        expect(editor.saves).toEqual([]);
+      });
     });
 
     it("refuses a range outside the buffer", () => {
