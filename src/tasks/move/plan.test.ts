@@ -321,6 +321,35 @@ describe("planItem", () => {
     }
   });
 
+  it("a checkbox line in a code fence, comment or frontmatter is not a task", () => {
+    const hidden = [
+      ["Example:", "```", "- [ ] example", "```"],
+      ["Example:", "~~~md", "- [ ] example", "~~~"],
+      ["<!--", "- [ ] example", "-->"],
+      ["%%", "- [ ] example", "%%"],
+      ["---", "- [ ] example", "---"],
+    ];
+    for (const lines of hidden) {
+      const line = lines.indexOf("- [ ] example");
+      expect(planItem({ path, content: lines.join("\n") }, line, move)).toEqual({
+        kind: "refused",
+        reason: "not-a-task",
+      });
+    }
+  });
+
+  it("the cursor in a code fence nested under a task resolves to that task", () => {
+    const lines = ["- [ ] real", "  ```", "  - [ ] example", "  ```"];
+    const result = planItem({ path, content: lines.join("\n") }, 2, move);
+    expect(result.kind === "planned" ? result.plan.block : result).toEqual([{ heading: null, lines }]);
+  });
+
+  it("a real task after a code fence is planned", () => {
+    const source = { path, content: ["```", "- [ ] example", "```", "- [ ] real"].join("\n") };
+    const result = planItem(source, 3, move);
+    expect(result.kind === "planned" ? result.plan.block : result).toEqual([{ heading: null, lines: ["- [ ] real"] }]);
+  });
+
   it("a quoted task resolves within its quote", () => {
     const source = sourceOf(["> - [ ] Parent", ">   - [ ] Child", "> plain", "- [ ] free"]);
     const child = planItem(source, 1, copy);

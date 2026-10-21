@@ -5,6 +5,7 @@ import { headingsOf } from "../note-structure";
 import { carriesMarker, CHECKBOX_PROVIDER_ID } from "../providers/checkbox/extract";
 import { isOpen } from "../status";
 
+import { hiddenLines } from "./hidden-lines";
 import { lineHasTag } from "./line-tags";
 import { ancestorsOf, isCheckboxLine, isListLine, subtreeEnd, TRAILING_BLOCK_ID } from "./subtree";
 
@@ -151,8 +152,11 @@ export interface ItemPlanOptions {
   readonly allowBlockId?: boolean;
 }
 
+// A list line in a code fence, a comment or frontmatter is example text, not an item.
 function containingListLine(lines: readonly string[], line: number): number | null {
+  const hidden = hiddenLines(lines);
   for (let index = Math.min(line, lines.length - 1); index >= 0; index--) {
+    if (hidden.has(index)) continue;
     if (isListLine(lines[index] ?? "") && subtreeEnd(lines, index) >= line) return index;
   }
   return null;
