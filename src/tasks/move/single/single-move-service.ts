@@ -100,26 +100,55 @@ export class SingleMoveService {
     return read.isOk() ? read.value.replaceAll(/\r$/gmu, "") : undefined;
   }
 
+  #planAt(path: VaultPath, content: string, line: number, move: EffectiveMove, rolledMarker: string, allow: boolean) {
+    const planned = planItem({ path, content }, line, { mode: move.mode, rolledMarker, allowBlockId: allow });
+    return planned.kind === "planned" ? planned.plan : null;
+  }
+
   // Planned again on the text as it is now, under the lock: a move queued behind another of the same
   // task would otherwise copy it a second time before its source check refused it.
-  async #replan(
+  #replan(
     path: VaultPath,
+    content: string,
     confirmed: Confirmed,
     move: EffectiveMove,
     rolledMarker: string,
-  ): Promise<SourcePlan | "unread" | null> {
-    const content = await this.#currentText(path);
-    if (content === undefined) return "unread";
+  ): SourcePlan | null {
     const { root, allowBlockId } = confirmed;
-    const again = planItem({ path, content }, root.line, { mode: move.mode, rolledMarker, allowBlockId });
-    if (again.kind === "refused") return null;
-    const now = again.plan.roots.at(0);
+    const again = this.#planAt(path, content, root.line, move, rolledMarker, allowBlockId);
+    const now = again?.roots.at(0);
     const same =
       now?.line === root.line &&
       now.end === root.end &&
       now.lines.length === root.lines.length &&
       now.lines.every((line, index) => line === root.lines[index]);
-    return same ? again.plan : null;
+    return same ? again : null;
+  }
+
+  // Only the user can write the source while the creation prompt is up, since this move holds the
+  // lock, so an edit confined to the task's own lines is taken as theirs and what moves is the task as
+  // it reads now. A change outside them leaves the line number pointing at something unknown.
+  #afterPrompt(
+    path: VaultPath,
+    planned: { readonly content: string; readonly plan: SourcePlan },
+    content: string,
+    confirmed: Confirmed,
+    move: EffectiveMove,
+    rolledMarker: string,
+  ): SourcePlan | null {
+    if (content === planned.content) return planned.plan;
+    const { line, end } = confirmed.root;
+    const was = planned.content.split("\n");
+    const now = content.split("\n");
+    const below = was.length - end - 1;
+    const outside = (index: number): boolean => index < line || index >= now.length - below;
+    const untouched = now.every((text, index) => {
+      if (!outside(index)) return true;
+      return text === (index < line ? was[index] : was[index - now.length + was.length]);
+    });
+    if (!untouched || now.length - below <= line) return null;
+    const plan = this.#planAt(path, content, line, move, rolledMarker, confirmed.allowBlockId);
+    return plan?.roots.at(0)?.end === now.length - below - 1 ? plan : null;
   }
 
   #ensureTarget(target: MoveTarget): AsyncResult<VaultPath, SingleMoveError> {
@@ -162,10 +191,17 @@ export class SingleMoveService {
         ...(target.noteletTitle !== undefined && { noteletTitle: target.noteletTitle }),
         outcome,
       });
-      const plan = await this.#replan(source.path, confirmed, move, marker);
-      if (plan === null) return report("nothing");
-      if (plan === "unread") return report("unread");
+      const before = await this.#currentText(source.path);
+      if (before === undefined) return report("unread");
+      const planned = this.#replan(source.path, before, confirmed, move, marker);
+      if (planned === null) return report("nothing");
       const path = yield* this.#ensureTarget(target);
+      // Read once more: creating the target may have asked first, and the user can edit the task meanwhile.
+      const after = await this.#currentText(source.path);
+      if (after === undefined) return report("unread");
+      const plan = this.#afterPrompt(source.path, { content: before, plan: planned }, after, confirmed, move, marker);
+      const root = plan?.roots.at(0);
+      if (plan === null || root === undefined) return report("nothing");
       // Only an existing note can be the source, and ensuring one writes nothing.
       if (path === source.path) return yield* AsyncResult.err(new SingleMoveRefusedError("same-note"));
       // The target goes first, and reaches disk first: a failure before the source is written leaves a
@@ -174,7 +210,7 @@ export class SingleMoveService {
         flush: true,
       });
       const rewrite = sourceRewrite(move, marker);
-      return report(rewrite === null ? "done" : await this.#rewriteSource(source.path, confirmed.root, rewrite));
+      return report(rewrite === null ? "done" : await this.#rewriteSource(source.path, root, rewrite));
     });
   }
 

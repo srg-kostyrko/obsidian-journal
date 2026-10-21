@@ -695,6 +695,52 @@ describe("SingleMoveService", () => {
     expect(editor.text).toBe("- [ ] Call Bob #rolled\n");
   });
 
+  describe("an edit made while the target's creation prompt is open", () => {
+    it("to the task itself is what moves, and the source is marked to match", async () => {
+      const { harness, edit, text, move, index } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", {}, { confirmCreation: true }),
+      });
+      const { editor, state } = edit("# Day\n- [ ] Call Bob\n- [ ] Other\n", 1);
+
+      const pending = move(state, target("monthly", "2026-10-01", null));
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+      editor.text = "# Day\n- [ ] Call Bob tomorrow\n    - ask about Friday\n- [ ] Other\n";
+      harness.modals.lastOpen<unknown, boolean>().submit(true);
+      const result = await pending;
+
+      expectOk(result);
+      expect(result.value.outcome).toBe("done");
+      const created = index.get("monthly", anchor("2026-10-01")).getOrUndefined();
+      expect(created).toBeDefined();
+      if (created === undefined) return;
+      expect(await text(created)).toContain("- [ ] Call Bob tomorrow\n    - ask about Friday\n");
+      expect(await text(created)).not.toContain("Other");
+      expect(editor.text).toBe("# Day\n- [ ] Call Bob tomorrow #rolled\n    - ask about Friday\n- [ ] Other\n");
+    });
+
+    it("above the task moves nothing, since the line under the cursor is no longer the task", async () => {
+      const { harness, edit, text, move, index } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", { mode: "move" }, { confirmCreation: true }),
+      });
+      const { editor, state } = edit("# Day\n- [ ] Call Bob\n- [ ] Other\n", 1);
+
+      const pending = move(state, target("monthly", "2026-10-01", null));
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+      editor.text = "# Day\n- [ ] Typed above\n- [ ] Call Bob\n- [ ] Other\n";
+      harness.modals.lastOpen<unknown, boolean>().submit(true);
+      const result = await pending;
+
+      expectOk(result);
+      expect(result.value.outcome).toBe("nothing");
+      const created = index.get("monthly", anchor("2026-10-01")).getOr("missing" as VaultPath);
+      expect(await text(created)).not.toContain("- [ ]");
+      expect(editor.text).toBe("# Day\n- [ ] Typed above\n- [ ] Call Bob\n- [ ] Other\n");
+      expect(editor.changes).toEqual([]);
+    });
+  });
+
   it("waits for a roll writing into the same journal", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 9, 21, 9, 0, 0));
