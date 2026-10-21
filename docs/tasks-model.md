@@ -1147,8 +1147,19 @@ default.
 
 _"Move task to a period's note"_ takes a line from any note, including one no
 journal owns, so there is no source journal to read from: **the target journal's
-config applies**, because placement is about the target's template. `selection`
-does not apply at all — the user picked the line.
+config applies**, because placement is about the target's template. _"Move task
+to the containing period"_ does have a source journal and uses the target's
+config anyway, so the two single-item commands treat one line the same way.
+`selection` does not apply to either — the user picked the line — so placement
+skips the source-heading match and goes straight to the target heading, then
+the end.
+
+The **containing period** is a coarser journal's period at the anchor whose
+period holds the source note's start date: coarser by write kind (day < week <
+month < quarter < year < decade), among the source journal's shelf, or every
+journal when it is on no shelf — the write-type nav rows' fallback, not a shared
+helper. Custom-interval journals are neither source nor target, since "coarser
+than" is undefined for them; _"a period's note"_ reaches them.
 
 ### Where a moved item lands
 
