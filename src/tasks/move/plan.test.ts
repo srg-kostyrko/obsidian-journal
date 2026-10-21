@@ -268,6 +268,25 @@ describe("planSource", () => {
     expect(plan.block).toEqual([{ heading: null, lines: ["- [ ] other"] }]);
   });
 
+  it("a checkbox line in a code fence, comment or frontmatter is not a root", () => {
+    const lines = [
+      "---",
+      "- [ ] in frontmatter",
+      "---",
+      "```",
+      "- [ ] in a fence",
+      "```",
+      "%%",
+      "- [ ] in a comment",
+      "%%",
+      "- [ ] Real",
+    ];
+    const plan = planSource(sourceOf(lines), { selection: anySelection, mode: "copy", rolledMarker });
+
+    expect(plan.roots.map((root) => root.line)).toEqual([9]);
+    expect(plan.block).toEqual([{ heading: null, lines: ["- [ ] Real"] }]);
+  });
+
   it("two runs over the same input give identical plans", () => {
     const source = sourceOf(["## Tasks", "- [x] Shopping", "    - [ ] milk ^m", "## Habits", "- [ ] stretch"]);
     const shuffled: RollSource = { ...source, items: source.items.toReversed() };
