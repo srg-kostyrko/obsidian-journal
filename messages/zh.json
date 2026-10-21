@@ -2692,5 +2692,19 @@
   ],
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
+  "tasks_move_pick_target": "将任务移动到哪条笔记?",
+  "tasks_move_pick_journal": "将任务移动到哪个日记?",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

@@ -59,14 +59,19 @@ export class MoveTargets {
     const label = periodOfKind(candidate.kind, CalendarDate.fromAnchor(at)).format(
       accessibleFormatPattern(candidate.kind),
     );
+    return this.targetsAt(candidate.name, at, label);
+  }
+
+  /** The period note at an anchor, then its existing notelets sorted by path. */
+  targetsAt(journalName: string, anchor: AnchorString, label: string): readonly MoveTarget[] {
     const period: MoveTarget = {
-      journalName: candidate.name,
-      anchor: at,
-      path: this.#index.get(candidate.name, at).getOrUndefined() ?? null,
+      journalName,
+      anchor,
+      path: this.#index.get(journalName, anchor).getOrUndefined() ?? null,
       label,
     };
     const notelets = this.#index
-      .noteletsAt(candidate.name, at)
+      .noteletsAt(journalName, anchor)
       .map((notelet) => notelet.path)
       .toSorted((a, b) => collator.compare(a, b))
       .map((path) => ({ ...period, path, noteletTitle: basenameOf(path) }));

@@ -2711,5 +2711,19 @@
   ],
   "tasks_roll_source_indexing": "{date} is still being indexed. Try again in a moment.",
   "tasks_roll_source_unread": "{date} could not be read.",
+  "tasks_move_pick_target": "Move the task to which note?",
+  "tasks_move_pick_journal": "Move the task to which journal?",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
   "tasks_listing_empty": "No tasks match this query."
 }

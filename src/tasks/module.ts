@@ -5,6 +5,7 @@ import { RolloverCommands } from "./move/rollover-commands";
 import { RolloverService } from "./move/rollover-service";
 import { moveDefaultsSlice } from "./move/settings";
 import { MoveTargets } from "./move/single/containing";
+import { MoveTargetPicker } from "./move/single/pick-target";
 import { TaskProviderRegistry } from "./provider-registry";
 import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkbox-provider.flow";
 import { EditJournalTasksFlow } from "./providers/checkbox/flows/edit-journal-tasks.flow";
@@ -47,6 +48,7 @@ export const tasksCoreModule: Module = {
     c.register(TickService).useClass(TickService);
     c.register(RolloverService).useClass(RolloverService);
     c.register(MoveTargets).useClass(MoveTargets);
+    c.register(MoveTargetPicker).useClass(MoveTargetPicker);
   },
 };
 

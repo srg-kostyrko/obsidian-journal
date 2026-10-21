@@ -2711,5 +2711,19 @@
   ],
   "tasks_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Versuche es gleich noch einmal.",
   "tasks_roll_source_unread": "Die Notiz vom {date} konnte nicht gelesen werden.",
+  "tasks_move_pick_target": "In welche Notiz soll die Aufgabe verschoben werden?",
+  "tasks_move_pick_journal": "In welches Journal soll die Aufgabe verschoben werden?",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
   "tasks_listing_empty": "Keine Aufgaben entsprechen dieser Abfrage."
 }

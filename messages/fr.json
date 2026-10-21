@@ -2709,5 +2709,19 @@
   ],
   "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
   "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
+  "tasks_move_pick_target": "Déplacer la tâche vers quelle note ?",
+  "tasks_move_pick_journal": "Déplacer la tâche vers quel journal ?",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
   "tasks_listing_empty": "Aucune tâche ne correspond à cette requête."
 }

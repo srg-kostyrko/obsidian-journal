@@ -2698,5 +2698,19 @@
   ],
   "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
   "tasks_roll_source_unread": "No se pudo leer la nota del {date}.",
+  "tasks_move_pick_target": "¿A qué nota quieres mover la tarea?",
+  "tasks_move_pick_journal": "¿A qué diario quieres mover la tarea?",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
   "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }

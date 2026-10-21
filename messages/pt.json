@@ -2706,5 +2706,19 @@
   ],
   "tasks_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Tente novamente em instantes.",
   "tasks_roll_source_unread": "Não foi possível ler a nota de {date}.",
+  "tasks_move_pick_target": "Mover a tarefa para qual nota?",
+  "tasks_move_pick_journal": "Mover a tarefa para qual diário?",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
   "tasks_listing_empty": "Nenhuma tarefa corresponde a esta consulta."
 }
