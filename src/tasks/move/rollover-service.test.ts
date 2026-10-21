@@ -238,6 +238,46 @@ describe("RolloverService", () => {
     expect(await text(day)).toBe("- [ ] From day\n");
   });
 
+  it("notelets as the source reach a day holding only a notelet", async () => {
+    const { roll, put, putNotelet, text } = await rolloverFor({ daily: dayJournal("daily", { source: "notelets" }) });
+    put("daily", "2026-10-18", "- [ ] From day\n");
+    putNotelet("daily", "2026-10-20", "a", "- [ ] From a\n");
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(target)).toBe("- [ ] From a\n");
+    expect(report).toMatchObject({ rolled: 1, sources: ["2026-10-20"], read: ["2026-10-20"] });
+  });
+
+  it("note and notelets count a notelet-only day as one the look-back reads", async () => {
+    const { roll, put, putNotelet, text } = await rolloverFor({
+      daily: dayJournal("daily", { source: "both", lookBack: 2 }),
+    });
+    const tooOld = put("daily", "2026-10-17", "- [ ] Too old\n");
+    putNotelet("daily", "2026-10-18", "a", "- [ ] From a\n");
+    put("daily", "2026-10-19", "- [ ] From day\n");
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(target)).toBe("- [ ] From a\n- [ ] From day\n");
+    expect(await text(tooOld)).toBe("- [ ] Too old\n");
+    expect(report).toMatchObject({ read: ["2026-10-18", "2026-10-19"] });
+  });
+
+  it("the note as the source steps over a notelet-only day", async () => {
+    const { roll, put, putNotelet, text } = await rolloverFor({ daily: dayJournal("daily") });
+    put("daily", "2026-10-18", "- [ ] From day\n");
+    putNotelet("daily", "2026-10-20", "a", "- [ ] From a\n");
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(target)).toBe("- [ ] From day\n");
+    expect(report).toMatchObject({ read: ["2026-10-18"] });
+  });
+
   it("creates today's note when it is missing before writing", async () => {
     const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily") });
     put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");

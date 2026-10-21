@@ -11,7 +11,7 @@ import {
   type NoteWriteError,
   type VaultPath,
 } from "@/infrastructure/host";
-import { AsyncResult, attempt, type Result } from "@/infrastructure/result";
+import { AsyncResult, attempt, type Option, type Result } from "@/infrastructure/result";
 import { CycleService } from "@/journals/cycle";
 import { JournalNotFoundError } from "@/journals/errors";
 import { EnsureJournalEntryFlow } from "@/journals/flows";
@@ -110,14 +110,25 @@ export class RolloverService {
       .okOr(new NoCurrentPeriodError(journalName));
   }
 
-  #lookBack(journalName: string, from: AnchorString, count: number): readonly AnchorString[] {
+  // A notelet needs no period note at its anchor, so a source that reads notelets steps over the
+  // anchors holding either kind.
+  #previousAnchor(journalName: string, from: AnchorString, source: EffectiveMove["source"]): Option<AnchorString> {
+    const note = this.#index
+      .findPrevious(journalName, from)
+      .flatMap((path) => this.#index.entryByPath(path))
+      .map((entry) => entry.anchor);
+    if (source === "note") return note;
+    const notelet = this.#index.previousNoteletAnchor(journalName, from);
+    if (note.isNone()) return notelet;
+    if (notelet.isNone()) return note;
+    return note.value > notelet.value ? note : notelet;
+  }
+
+  #lookBack(journalName: string, from: AnchorString, move: EffectiveMove): readonly AnchorString[] {
     const found: AnchorString[] = [];
     let cursor = from;
-    while (found.length < count) {
-      const previous = this.#index
-        .findPrevious(journalName, cursor)
-        .flatMap((path) => this.#index.entryByPath(path))
-        .map((entry) => entry.anchor);
+    while (found.length < move.lookBack) {
+      const previous = this.#previousAnchor(journalName, cursor, move.source);
       if (previous.isNone()) break;
       found.push(previous.value);
       cursor = previous.value;
@@ -226,7 +237,7 @@ export class RolloverService {
       const move = effectiveMove(config.tasks.move, this.#defaults.state);
       const selection = selectionOf(config.tasks.filter);
       const marker = this.#checkbox.state.rolledMarker;
-      const read = this.#lookBack(journalName, today, move.lookBack);
+      const read = this.#lookBack(journalName, today, move);
 
       const plans: AnchoredPlan[] = [];
       const indexing = new Set<AnchorString>();

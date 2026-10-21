@@ -181,6 +181,11 @@ export class JournalsIndex {
     return this.#notelets.get(journalName)?.anchorsInRange(start, end) ?? [];
   }
 
+  // Strictly before `from`, like findPrevious: a notelet needs no period note at its anchor.
+  previousNoteletAnchor(journalName: string, from: AnchorString): Option<AnchorString> {
+    return Option.fromNullable(this.#notelets.get(journalName)?.previousAnchor(from));
+  }
+
   register(entry: IndexedNote, origin: EntryOrigin = "live"): "registered" | "collision" {
     if (origin === "preview") this.#previews.add(entry.path);
     const existing = this.#byPath.get(entry.path);
