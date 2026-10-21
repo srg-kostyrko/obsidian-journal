@@ -4,6 +4,7 @@ import { SliceDefinitionToken } from "@/settings";
 import { RolloverCommands } from "./move/rollover-commands";
 import { RolloverService } from "./move/rollover-service";
 import { moveDefaultsSlice } from "./move/settings";
+import { MoveTargets } from "./move/single/containing";
 import { TaskProviderRegistry } from "./provider-registry";
 import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkbox-provider.flow";
 import { EditJournalTasksFlow } from "./providers/checkbox/flows/edit-journal-tasks.flow";
@@ -45,6 +46,7 @@ export const tasksCoreModule: Module = {
     c.register(TaskVisibility).useClass(TaskVisibility);
     c.register(TickService).useClass(TickService);
     c.register(RolloverService).useClass(RolloverService);
+    c.register(MoveTargets).useClass(MoveTargets);
   },
 };
 
