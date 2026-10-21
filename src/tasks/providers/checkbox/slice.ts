@@ -2,6 +2,7 @@ import * as v from "valibot";
 
 import { defineSlice } from "@/settings";
 
+import { markerProblem } from "./marker";
 import { checkboxRuleSchema } from "./rule-schema";
 
 export const DEFAULT_STATUS_MAP: Record<string, string> = {
@@ -26,7 +27,13 @@ export const checkboxSliceSchema = v.object({
   rule: v.optional(checkboxRuleSchema, { mode: "and", conditions: [] }),
   statusMap: v.optional(v.record(v.string(), v.string()), DEFAULT_STATUS_MAP),
   canonical: v.optional(v.record(v.string(), v.string()), DEFAULT_CANONICAL),
-  rolledMarker: v.optional(v.string(), "#rolled"),
+  rolledMarker: v.optional(
+    v.pipe(
+      v.string(),
+      v.check((marker) => markerProblem(marker) === null),
+    ),
+    "#rolled",
+  ),
 });
 
 export type CheckboxSliceState = v.InferOutput<typeof checkboxSliceSchema>;
