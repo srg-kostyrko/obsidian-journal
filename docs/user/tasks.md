@@ -654,7 +654,7 @@ that journal. **Edit** opens:
 ### What the notice says
 
 The notice names how many tasks rolled and the oldest note they came from, or that the earlier note held
-no unfinished tasks. Two other cases are worth knowing:
+no unfinished tasks. Three other cases are worth knowing:
 
 - **"No Tasks heading in …"** — the earlier note has none of the headings the listing filter's
   **Under** conditions name, so nothing could match. The notice names the first of them. Usually the
@@ -664,6 +664,8 @@ no unfinished tasks. Two other cases are worth knowing:
   read **"… changed while rolling"** and **"… could not be updated"**, and say the tasks were copied
   but are still in the earlier note too. Either way, mark or remove the originals by hand, or delete
   the copies.
+- **"… could not be read"** — Obsidian failed to read the earlier note, so nothing was taken from it.
+  Run the command again once the note opens normally.
 
 The command writes today's note before it touches the earlier one, so a failure part-way leaves a task
 in both notes, never in neither.
