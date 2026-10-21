@@ -2727,8 +2727,8 @@
       "declarations": ["input journal", "input dates", "input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar a nota de {dates}. Marque ou remova os originais lá, ou apague as cópias, antes de executar Transferir tarefas não concluídas.",
-        "count=*": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar as notas de {dates}. Marque ou remova os originais lá, ou apague as cópias, antes de executar Transferir tarefas não concluídas."
+        "count=1": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar a nota de {dates}. Marque ou remova os originais na nota de {dates}, ou apague as cópias, antes de executar Transferir tarefas não concluídas.",
+        "count=*": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar as notas de {dates}. Marque ou remova os originais nas notas de {dates}, ou apague as cópias, antes de executar Transferir tarefas não concluídas."
       }
     }
   ],

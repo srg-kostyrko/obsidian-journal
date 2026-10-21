@@ -2730,8 +2730,8 @@
       "declarations": ["input journal", "input dates", "input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare la nota del {dates}. Contrassegna o rimuovi lì gli originali, oppure elimina le copie, prima di eseguire Riporta le attività non completate.",
-        "count=*": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare le note del {dates}. Contrassegna o rimuovi lì gli originali, oppure elimina le copie, prima di eseguire Riporta le attività non completate."
+        "count=1": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare la nota del {dates}. Contrassegna o rimuovi gli originali nella nota del {dates}, oppure elimina le copie, prima di eseguire Riporta le attività non completate.",
+        "count=*": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare le note del {dates}. Contrassegna o rimuovi gli originali nelle note del {dates}, oppure elimina le copie, prima di eseguire Riporta le attività non completate."
       }
     }
   ],

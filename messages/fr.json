@@ -2730,8 +2730,8 @@
       "declarations": ["input journal", "input dates", "input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais la note du {dates} n’a pas pu être mise à jour. Marquez ou supprimez les originaux dans cette note, ou effacez les copies, avant de lancer Reporter les tâches non terminées.",
-        "count=*": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais les notes du {dates} n’ont pas pu être mises à jour. Marquez ou supprimez les originaux dans ces notes, ou effacez les copies, avant de lancer Reporter les tâches non terminées."
+        "count=1": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais la note du {dates} n’a pas pu être mise à jour. Marquez ou supprimez les originaux dans la note du {dates}, ou effacez les copies, avant de lancer Reporter les tâches non terminées.",
+        "count=*": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais les notes du {dates} n’ont pas pu être mises à jour. Marquez ou supprimez les originaux dans les notes du {dates}, ou effacez les copies, avant de lancer Reporter les tâches non terminées."
       }
     }
   ],

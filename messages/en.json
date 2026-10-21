@@ -2732,8 +2732,8 @@
       "declarations": ["input journal", "input dates", "input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} could not be updated. Mark or remove the originals there, or delete the copies, before running Roll over unfinished tasks.",
-        "count=*": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} could not be updated. Mark or remove the originals there, or delete the copies, before running Roll over unfinished tasks."
+        "count=1": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} could not be updated. Mark or remove the originals in {dates}, or delete the copies, before running Roll over unfinished tasks.",
+        "count=*": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} could not be updated. Mark or remove the originals in {dates}, or delete the copies, before running Roll over unfinished tasks."
       }
     }
   ],

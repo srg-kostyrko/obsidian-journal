@@ -2719,8 +2719,8 @@
       "declarations": ["input journal", "input dates", "input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudo actualizar la nota del {dates}. Marca o elimina allí las originales, o borra las copias, antes de ejecutar Trasladar tareas sin terminar.",
-        "count=*": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudieron actualizar las notas del {dates}. Marca o elimina allí las originales, o borra las copias, antes de ejecutar Trasladar tareas sin terminar."
+        "count=1": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudo actualizar la nota del {dates}. Marca o elimina las originales en la nota del {dates}, o borra las copias, antes de ejecutar Trasladar tareas sin terminar.",
+        "count=*": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudieron actualizar las notas del {dates}. Marca o elimina las originales en las notas del {dates}, o borra las copias, antes de ejecutar Trasladar tareas sin terminar."
       }
     }
   ],

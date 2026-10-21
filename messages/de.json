@@ -2732,8 +2732,8 @@
       "declarations": ["input journal", "input dates", "input count"],
       "selectors": ["count"],
       "match": {
-        "count=1": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notiz vom {dates} konnte nicht aktualisiert werden. Markiere oder entferne dort die Originale oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
-        "count=*": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notizen vom {dates} konnten nicht aktualisiert werden. Markiere oder entferne dort die Originale oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst."
+        "count=1": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notiz vom {dates} konnte nicht aktualisiert werden. Markiere oder entferne die Originale in der Notiz vom {dates} oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
+        "count=*": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notizen vom {dates} konnten nicht aktualisiert werden. Markiere oder entferne die Originale in den Notizen vom {dates} oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst."
       }
     }
   ],
