@@ -62,6 +62,16 @@ describe("rewriteSource", () => {
     expect(rewriteSource(content, [inner, outer], { kind: "stamp", marker: "#rolled" })).toEqual({ reason: "changed" });
   });
 
+  it("a root planned on the editor's LF text applies to a CRLF file and keeps its line endings", () => {
+    const crlf = content.replaceAll("\n", "\r\n");
+    expect(rewriteSource(crlf, roots, { kind: "stamp", marker: "#rolled" })).toEqual({
+      content: ["# Day", "- [ ] a #rolled", "    - [ ] a child", "- [ ] b", "- [ ] c #rolled"].join("\r\n"),
+    });
+    expect(rewriteSource(crlf, roots, { kind: "remove" })).toEqual({ content: "# Day\r\n- [ ] b" });
+    const drifted = ["# Day", "- [ ] a", "    - [x] a child", "- [ ] b", "- [ ] c"].join("\r\n");
+    expect(rewriteSource(drifted, roots, { kind: "remove" })).toEqual({ reason: "changed" });
+  });
+
   it("remove deletes each subtree and keeps context ancestors", () => {
     const nested = ["- [x] Shopping", "    - [ ] milk", "        - note", "    - [x] bread", "- [ ] other"].join("\n");
     expect(rewriteSource(nested, [root(nested, 1, 2)], { kind: "remove" })).toEqual({

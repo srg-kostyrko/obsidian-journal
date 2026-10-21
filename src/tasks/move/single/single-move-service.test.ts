@@ -401,6 +401,24 @@ describe("SingleMoveService", () => {
       expect(elsewhere.changes).toEqual([]);
     });
 
+    it("a CRLF file on disk matches the editor's LF text and keeps its line endings", async () => {
+      const { harness, put, edit, text, move, notes } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", { mode: "move" }),
+      });
+      const month = put("monthly", "2026-10-01", "");
+      const { state } = edit("- [ ] Keep\n- [ ] Call Bob\n    - detail\n- [ ] Other\n", 1);
+      harness.host.closeEditor(SOURCE);
+      notes.seed(SOURCE, "- [ ] Keep\r\n- [ ] Call Bob\r\n    - detail\r\n- [ ] Other\r\n");
+
+      const result = await move(state, target("monthly", "2026-10-01", month));
+
+      expectOk(result);
+      expect(result.value.outcome).toBe("done");
+      expect(await text(month)).toBe("- [ ] Call Bob\n    - detail\n");
+      expect(await text(SOURCE)).toBe("- [ ] Keep\r\n- [ ] Other\r\n");
+    });
+
     it("is left alone and reported when the file changes during the target write", async () => {
       const { harness, put, edit, text, move, notes } = await moverFor({
         daily: journal("daily", "day"),

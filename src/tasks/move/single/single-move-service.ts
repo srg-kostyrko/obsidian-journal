@@ -94,7 +94,8 @@ export class SingleMoveService {
     const open = this.#workspace.openNoteText(path);
     if (open.isSome()) return open.value;
     const read = await this.#notes.read(path);
-    return read.isOk() ? read.value : undefined;
+    // The task was picked in an editor, whose buffer is LF whatever the file's line endings.
+    return read.isOk() ? read.value.replaceAll(/\r$/gmu, "") : undefined;
   }
 
   // Planned again on the text as it is now, under the lock: a move queued behind another of the same
