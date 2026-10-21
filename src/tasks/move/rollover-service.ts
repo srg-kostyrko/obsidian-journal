@@ -52,20 +52,21 @@ function hasTag(line: string, tag: string): boolean {
   return new RegExp(String.raw`(?:^|\s)${escaped}(?=[\s,.;:!?)]|$)`, "iu").test(line);
 }
 
-const QUOTE_PREFIX = /^(?:\s*>)*\s*/u;
-const ATX_HEADING = /^(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$/u;
+const ATX_HEADING = /^[ \t]*(#{1,6})(?=[ \t]|$)(.*)$/u;
+// Obsidian's text for a heading: trailing whitespace and a whitespace-preceded closing #-run go.
+const ATX_CLOSING = /(?:^|[ \t])[ \t#]*$/u;
 const HEADING_UNDERLINE = { 1: /^\s*=+\s*$/u, 2: /^\s*-+\s*$/u } as const;
 
+// metadataCache lists root headings only, so a quoted heading never needs matching here.
 function holdsHeading(lines: readonly string[], heading: NoteStructure["headings"][number]): boolean {
-  const line = (lines[heading.line] ?? "").replace(QUOTE_PREFIX, "").replace(/\r$/u, "");
+  const line = (lines[heading.line] ?? "").replace(/\r$/u, "");
   const atx = ATX_HEADING.exec(line);
-  if (atx !== null) return atx[1]?.length === heading.level && (atx[2] ?? "").trim() === heading.heading.trim();
+  if (atx !== null) {
+    const text = (atx[2] ?? "").replace(ATX_CLOSING, "").trim();
+    return atx[1]?.length === heading.level && text === heading.heading;
+  }
   const underline = heading.level === 1 || heading.level === 2 ? HEADING_UNDERLINE[heading.level] : null;
-  return (
-    underline !== null &&
-    underline.test((lines[heading.line + 1] ?? "").replace(QUOTE_PREFIX, "")) &&
-    line.trim() === heading.heading.trim()
-  );
+  return underline !== null && underline.test(lines[heading.line + 1] ?? "") && line.trim() === heading.heading;
 }
 
 // Looser than hasTag: Obsidian reads a tag wrapped in markup or brackets, and only a tag that is gone

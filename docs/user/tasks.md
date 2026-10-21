@@ -613,7 +613,7 @@ A rolled-over task is neither open nor done: it leaves open listings, stops ligh
 open-task dots, and is not taken again by the next roll. The marker is a tag, so your own Dataview, Tasks or search queries
 can exclude it too. A block id stays at the end of the line, after the marker, and the copy in today's
 note drops it, so links to the block keep pointing at the original. Only the top task of each rolled
-group is marked. The tasks nested under it read as **Rolled over** too, without a marker of their own,
+group is marked. Every task nested under it, done ones included, reads as **Rolled over** too, without a marker of its own,
 so they leave open listings and the calendar's open-task dots along with it and never roll again — but
 your own Dataview, Tasks or search queries see no tag on them and still count them as unfinished.
 

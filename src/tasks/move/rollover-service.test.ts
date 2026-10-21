@@ -375,7 +375,7 @@ describe("RolloverService", () => {
       conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
     };
     const { roll, put, structures, text } = await rolloverFor({ daily: dayJournal("daily", {}, underTasks) });
-    const content = "Tasks\n=====\n> ## Log ##\n- [ ] write **#Work**\n";
+    const content = "Tasks\n=====\n## Log ##\n- [ ] write **#Work**\n";
     const source = put("daily", "2026-10-20", content);
     structures.setStructure(source, {
       listItems: [{ marker: " ", line: 3, endLine: 3, parent: null }],
@@ -392,6 +392,68 @@ describe("RolloverService", () => {
 
     expect(report).toMatchObject({ rolled: 1, skippedSources: [] });
     expect(await text(target)).toBe("- [ ] write **#Work**\n");
+  });
+
+  // The heading text each row pairs with is what Obsidian's metadataCache stores for that line.
+  it.each([
+    ["## ##", ""],
+    ["# #", ""],
+    ["## #", ""],
+    ["## Tasks # #", "Tasks"],
+    ["## Tasks #tag", "Tasks #tag"],
+    ["## `code`", "`code`"],
+    ["## C#", "C#"],
+    ["##", ""],
+  ])("a heading written %j that Obsidian reads as %j is current", async (written, cached) => {
+    const { roll, put, structures, text } = await rolloverFor({ daily: dayJournal("daily") });
+    const source = put("daily", "2026-10-20", `${written}\n- [ ] write\n## Other\n`);
+    structures.setStructure(source, {
+      listItems: [{ marker: " ", line: 1, endLine: 1, parent: null }],
+      headings: [
+        { heading: cached, level: (/^#+/u.exec(written)?.[0] ?? "").length, line: 0 },
+        { heading: "Other", level: 2, line: 2 },
+      ],
+      tags: written.includes("#tag") ? [{ tag: "#tag", line: 0 }] : [],
+      frontmatterTags: [],
+    });
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(report).toMatchObject({ rolled: 1, skippedSources: [] });
+    expect(await text(target)).toBe("- [ ] write\n");
+  });
+
+  it("a heading carrying a tag, renamed since the last parse, skips the source", async () => {
+    const underTasks: TaskRule = {
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: ["Tasks #tag"] }],
+    };
+    const { roll, put, notes, structures, text } = await rolloverFor({
+      daily: dayJournal("daily", { mode: "move" }, underTasks),
+    });
+    const source = put("daily", "2026-10-20", "## Tasks #tag\n- [ ] write\n## Log\n- [ ] note\n");
+    structures.setStructure(source, {
+      listItems: [
+        { marker: " ", line: 1, endLine: 1, parent: null },
+        { marker: " ", line: 3, endLine: 3, parent: null },
+      ],
+      headings: [
+        { heading: "Tasks #tag", level: 2, line: 0 },
+        { heading: "Log", level: 2, line: 2 },
+      ],
+      tags: [{ tag: "#tag", line: 0 }],
+      frontmatterTags: [],
+    });
+    const renamed = "## Habits #tag\n- [ ] write\n## Log\n- [ ] note\n";
+    notes.seed(source, renamed);
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(source)).toBe(renamed);
+    expect(await text(target)).toBe("");
+    expect(report).toMatchObject({ rolled: 0, skippedSources: ["2026-10-20"] });
   });
 
   it("reports a source still being indexed instead of calling it empty", async () => {

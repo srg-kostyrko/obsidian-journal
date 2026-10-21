@@ -38,9 +38,10 @@ export function carriesMarker(
   return structure.tags.some((tag) => tag.line === listItem.line && tag.tag.toLowerCase() === wanted);
 }
 
-// Only the root of a rolled group is stamped, but the whole group was taken: its open children read
-// as rolled too, or listings and open-task dots count them after the copy. The walk follows parent
-// lines, so it stops at a non-task parent, whose own parent the structure does not hold.
+// Only the root of a rolled group is stamped, but its whole subtree was copied: every task nested
+// under a stamped root reads as rolled too, done ones included, or listings and open-task dots count
+// the open ones a second time beside their copies. The walk follows parent lines, so it stops at a
+// non-task parent, whose own parent the structure does not hold.
 function underRolledAncestor(
   listItem: StructureListItem,
   structure: NoteStructure,
