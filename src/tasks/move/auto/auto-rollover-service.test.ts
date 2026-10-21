@@ -670,6 +670,48 @@ describe("AutoRolloverService", () => {
     expect(calls("work")).toBe(1);
   });
 
+  it("a roll by hand that could not update an earlier note pauses an automatic journal", async () => {
+    const { put, edit, text, boot, resume, notes, harness, realRoll } = await autoFor({
+      daily: automatic("daily"),
+      work: automatic("work"),
+    });
+    const target = put("daily", "2026-10-21", "");
+    const workTarget = put("work", "2026-10-21", "");
+    await boot();
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    failWrites(notes, new Set([source]));
+
+    expectOk(await realRoll("daily", { interactive: true }));
+    // What the command says about its own roll, before the pause has its say.
+    harness.notices.show("rolled by hand");
+    await vi.advanceTimersByTimeAsync(0);
+    expect(harness.notices.messages).toEqual(["rolled by hand", pausedUnwritten("daily", ["2026-10-20"])]);
+
+    edit(source, "- [ ] Call Bob\n- [ ] Later item\n");
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    await resume();
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    expect(await text(workTarget)).toBe("- [ ] Work item\n");
+  });
+
+  it("a roll by hand that could not update an earlier note leaves a journal that is not automatic alone", async () => {
+    const { put, boot, notes, harness, realRoll } = await autoFor({
+      daily: automatic("daily"),
+      work: dayJournal("work"),
+    });
+    put("daily", "2026-10-21", "");
+    put("work", "2026-10-21", "");
+    await boot();
+    const workSource = put("work", "2026-10-20", "- [ ] Work item\n");
+    failWrites(notes, new Set([workSource]));
+
+    expectOk(await realRoll("work", { interactive: true }));
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(harness.notices.messages).toEqual([]);
+  });
+
   it("a roll by hand that skipped an earlier note leaves the pause in place, and a clean one lifts it", async () => {
     const { put, edit, text, boot, resume, notes, harness, realRoll } = await autoFor({
       daily: automatic("daily"),

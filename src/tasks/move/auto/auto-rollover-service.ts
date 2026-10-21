@@ -14,7 +14,7 @@ import { isNotelet, type EntryChangedEvent } from "@/journals/types";
 import { SettingsService } from "@/settings";
 
 import { AutomaticRollRefusedError, NoCurrentPeriodError } from "../errors";
-import { RolloverService } from "../rollover-service";
+import { RolloverService, type RollOptions } from "../rollover-service";
 import { automaticBlocked, effectiveMove, moveDefaultsSlice } from "../settings";
 
 import { noticeFor } from "./notice-policy";
@@ -71,6 +71,7 @@ export class AutoRolloverService {
   // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
   #timer: number | undefined;
   #delayTimer: number | undefined;
+  readonly #noticeTimers = new Set<number>();
   #wake: (() => void) | undefined;
   readonly #unload = new AbortController();
   #disposed = false;
@@ -88,17 +89,37 @@ export class AutoRolloverService {
         rekey(this.#seen, oldName, newName);
       }),
       this.#index.events.on("entryChanged", (event) => this.#onEntry(event)),
-      // The pause asks for a roll by hand once the leftovers are dealt with; one that wrote every
-      // source it took from is that roll.
-      this.#rollover.events.on("rolled", (report) => {
-        if (isClean(report) && this.#paused.get(report.journalName) === "write-failed") {
-          this.#paused.delete(report.journalName);
-        }
-      }),
+      this.#rollover.events.on("rolled", (report, options) => this.#onRolled(report, options)),
     );
     // Before the startup scan lands the index is empty rather than authoritative: no entry for
     // today's anchor would read as "no current note".
     void this.#index.whenReady().then(() => this.#checkpoint({ delayed: true }));
+  }
+
+  #onRolled(report: RollReport, options: RollOptions): void {
+    const name = report.journalName;
+    // The pause asks for a roll by hand once the leftovers are dealt with; one that wrote every
+    // source it took from is that roll.
+    if (isClean(report) && this.#paused.get(name) === "write-failed") this.#paused.delete(name);
+    if (options.requireAutomatic === true || !this.#isAutomatic(name)) return;
+    // A roll by hand leaves the same leftovers for the next checkpoint to copy again.
+    const unwritten = unwrittenAnchors(report);
+    if (unwritten.length === 0) return;
+    this.#paused.set(name, "write-failed");
+    // After the command's own notice, which it shows once the roll has returned.
+    const timer = window.setTimeout(() => {
+      this.#noticeTimers.delete(timer);
+      this.#notices.show(this.#pausedUnwrittenNotice(name, unwritten));
+    }, 0);
+    this.#noticeTimers.add(timer);
+  }
+
+  #pausedUnwrittenNotice(name: string, unwritten: readonly string[]): string {
+    return m.tasks_auto_roll_paused_unwritten({
+      journal: name,
+      dates: formatConjunction(unwritten),
+      count: unwritten.length,
+    });
   }
 
   // Obsidian replays "create" for every file while it loads, and those notes are not new. The flag
@@ -268,13 +289,7 @@ export class AutoRolloverService {
     // would copy them again.
     if (unwritten.length > 0) {
       this.#paused.set(name, "write-failed");
-      this.#notices.show(
-        m.tasks_auto_roll_paused_unwritten({
-          journal: name,
-          dates: formatConjunction(unwritten),
-          count: unwritten.length,
-        }),
-      );
+      this.#notices.show(this.#pausedUnwrittenNotice(name, unwritten));
     }
   }
 
@@ -285,6 +300,8 @@ export class AutoRolloverService {
     window.clearTimeout(this.#delayTimer);
     this.#delayTimer = undefined;
     this.#wake?.();
+    for (const timer of this.#noticeTimers) window.clearTimeout(timer);
+    this.#noticeTimers.clear();
     this.#unload.abort();
     for (const stop of this.#stops.splice(0)) stop();
   }

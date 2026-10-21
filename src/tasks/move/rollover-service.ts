@@ -144,7 +144,7 @@ function headingOf(selection: TaskRule): string | null {
 }
 
 interface RolloverEvents {
-  rolled: (report: RollReport) => void;
+  rolled: (report: RollReport, options: RollOptions) => void;
 }
 
 /** Rolls a journal's unfinished checkbox items from its previous notes into today's. */
@@ -405,6 +405,6 @@ export class RolloverService {
   roll(journalName: string, options: RollOptions): AsyncResult<RollReport, RollError> {
     return this.#locks
       .run([journalName], () => this.#rollNow(journalName, options))
-      .tap((report) => this.#emitter.emit("rolled", report));
+      .tap((report) => this.#emitter.emit("rolled", report, options));
   }
 }
