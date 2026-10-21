@@ -340,6 +340,19 @@ describe("planItem", () => {
     expect(planItem(source, 1, copy).kind).toBe("planned");
   });
 
+  it("a line under a rolled ancestor is refused, even through a plain bullet", () => {
+    const source = sourceOf([
+      "- [ ] Project #rolled",
+      "    - [ ] step",
+      "    - notes",
+      "        - [ ] deeper",
+      "- [ ] Fresh",
+      "    - [ ] child",
+    ]);
+    for (const line of [1, 3]) expect(planItem(source, line, copy)).toEqual({ kind: "refused", reason: "rolled" });
+    expect(planItem(source, 5, copy).kind).toBe("planned");
+  });
+
   it("reads the rolled marker off the editor text, not a structure that lags it", () => {
     const parsed = sourceOf(["- [ ] fresh", "- [ ] write"]);
     const typed = { path, content: "- [ ] fresh #rolled\n- [ ] write" };

@@ -171,7 +171,11 @@ export function planItem(
   const lines = content.split("\n");
   const itemLine = containingListLine(lines, line);
   if (itemLine === null || !isCheckboxLine(lines[itemLine] ?? "")) return { kind: "refused", reason: "not-a-task" };
-  if (lineHasTag(lines[itemLine] ?? "", rolledMarker)) return { kind: "refused", reason: "rolled" };
+  // The roll stamps only a root, so a line under a stamped ancestor has already gone with it.
+  const rolled = [...ancestorsOf(lines, itemLine), itemLine].some((index) =>
+    lineHasTag(lines[index] ?? "", rolledMarker),
+  );
+  if (rolled) return { kind: "refused", reason: "rolled" };
   const root = plannedRoot(lines, itemLine, null);
   if (mode === "move" && root.hasBlockId && !allowBlockId) return { kind: "refused", reason: "block-id" };
   return {
