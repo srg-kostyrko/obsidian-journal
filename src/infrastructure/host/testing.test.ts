@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 
-import { FakeNotesService } from "./testing";
+import { FakeAppActivity, FakeNotesService } from "./testing";
 
 import type { VaultPath } from "./types";
 
@@ -127,5 +127,20 @@ describe("FakeNotesService deleteFolder", () => {
 
     expect(deleted.toSorted()).toEqual(["project/a.md", "project/deep/b.md"]);
     expect(notes.find("projects/c.md" as VaultPath).isSome()).toBe(true);
+  });
+});
+
+describe("FakeAppActivity", () => {
+  it("resume reaches each subscriber until it unsubscribes", () => {
+    const activity = new FakeAppActivity();
+    const calls: string[] = [];
+    const stop = activity.onResume(() => calls.push("a"));
+    activity.onResume(() => calls.push("b"));
+    activity.resume();
+    stop();
+    activity.resume();
+
+    expect(calls).toEqual(["a", "b", "b"]);
+    expect(activity.subscriberCount).toBe(1);
   });
 });

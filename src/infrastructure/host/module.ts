@@ -3,6 +3,7 @@ import type { Module } from "@/infrastructure/di";
 import { CodeBlockService } from "./code-blocks/internal/code-block-service";
 import { CommandService } from "./commands/internal/command-service";
 import { InputSuggestService } from "./input-suggests/internal/input-suggest-service";
+import { AppActivity } from "./internal/app-activity";
 import { MarkdownRenderService } from "./internal/markdown-render-service";
 import { MetadataTypeService } from "./internal/metadata-type-service";
 import { NoteMetadataService } from "./internal/note-metadata-service";
@@ -36,6 +37,8 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(MarkdownRenderService).useClass(MarkdownRenderService);
       c.register(NoticeService).useClass(NoticeService);
       c.register(PlatformService).useClass(PlatformService);
+      // Eager, so it is already listening when the first popout opens: a lazy instance misses it.
+      c.register(AppActivity).useClass(AppActivity).eager();
       c.register(PluginSettingsReader).useClass(PluginSettingsReader);
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(TemplaterService).useClass(TemplaterService);

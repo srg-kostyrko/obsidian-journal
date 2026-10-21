@@ -184,6 +184,8 @@ export interface FakeHost {
   emitProtocol(action: string, parameters: Record<string, string>): void;
   /** Emits on the fake workspace's event bus — for a plugin's own custom events (e.g. a reload signal). */
   emitWorkspace(event: string, ...arguments_: unknown[]): void;
+  /** The fake window `id` names — `"main"` is the workspace's own; any other id is a popout. */
+  windowFor(id: string): Window;
   triggerUnload(): void;
   setLayoutReady(): void;
   runCodeBlockProcessor(
@@ -586,14 +588,13 @@ export function createFakeHost(): FakeHost {
   function windowFor(id: string): Window {
     const existing = windowObjects.get(id);
     if (existing) return existing;
-    const created = {
-      id,
-      get activeWindow(): Window {
-        return windowFor(workspaceState.activeWindow);
-      },
-    } as unknown as Window;
-    windowObjects.set(id, created);
-    return created;
+    // Each window and its document are real event targets, so a service listening for focus or
+    // visibility can be driven by dispatching the DOM event on them.
+    const document_ = Object.assign(new EventTarget(), { visibilityState: "visible" });
+    const created = Object.assign(new EventTarget(), { id, document: document_ });
+    Object.defineProperty(created, "activeWindow", { get: () => windowFor(workspaceState.activeWindow) });
+    windowObjects.set(id, created as unknown as Window);
+    return created as unknown as Window;
   }
 
   function makeLeaf(placement: "left" | "right" | "tab", openMode: PaneType | false = false) {
@@ -765,6 +766,15 @@ export function createFakeHost(): FakeHost {
     register(callback: () => void): void {
       unloadCallbacks.push(callback);
     },
+    registerDomEvent(
+      target: EventTarget,
+      type: string,
+      callback: EventListener,
+      options?: boolean | AddEventListenerOptions,
+    ): void {
+      target.addEventListener(type, callback, options);
+      unloadCallbacks.push(() => target.removeEventListener(type, callback, options));
+    },
     addCommand(command: Command): Command {
       commands.set(command.id, command);
       return command;
@@ -888,6 +898,7 @@ export function createFakeHost(): FakeHost {
     emitWorkspace(event, ...arguments_): void {
       workspaceEvents.emit(event, ...arguments_);
     },
+    windowFor,
     triggerUnload(): void {
       for (const callback of unloadCallbacks) callback();
       unloadCallbacks.length = 0;

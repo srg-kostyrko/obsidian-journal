@@ -118,6 +118,13 @@ export class Plugin {
 
   registerEvent(_eventRef: unknown): void {}
 
+  registerDomEvent(
+    _target: EventTarget,
+    _type: string,
+    _callback: EventListener,
+    _options?: boolean | AddEventListenerOptions,
+  ): void {}
+
   registerMarkdownCodeBlockProcessor(
     _language: string,
     _handler: (source: string, element: HTMLElement, context: MarkdownPostProcessorContext) => unknown,
