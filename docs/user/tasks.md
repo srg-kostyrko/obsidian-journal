@@ -593,8 +593,10 @@ counts the unfinished ones it left in place.
 
 Each task goes under the heading of the same name in today's note, when the heading it sat under is one
 the listing filter names and today's note has it. Otherwise it goes under the journal's **Target
-heading**, and with none set, or no such heading in the note, at the end of the note. Tasks from the
-oldest note come first, each note's in the order they were written.
+heading**, and with none set, or no such heading in the note, at the end of the note. Under a heading,
+they go after that section's own lines and before its first subheading, so a `### Someday` list
+inside `## Tasks` is left alone. Tasks from the oldest note come first, each note's in the order they
+were written.
 
 ### Copy, and the rolled marker
 

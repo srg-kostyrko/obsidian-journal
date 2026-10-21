@@ -54,7 +54,9 @@ function insertionIndex(lines: readonly string[], group: BlockGroup, targetHeadi
     const at = headings.findIndex((h) => h.text === text);
     const heading = headings[at];
     if (!heading) continue;
-    const end = headings.slice(at + 1).find((h) => h.level <= heading.level)?.index ?? lines.length;
+    // Any next heading ends the section's own lines: a child heading opens a subsection whose items
+    // are not this section's, and an equal or higher one ends the section.
+    const end = headings.at(at + 1)?.index ?? lines.length;
     return lastNonBlank(lines, heading.index + 1, end) + 1;
   }
   return lastNonBlank(lines, 0, lines.length) + 1;
@@ -75,7 +77,7 @@ function segmentsOf(target: string): Segment[] {
   return segments;
 }
 
-/** Inserts each group's lines under its matching heading in the target text, else the configured heading, else the end. */
+/** Inserts each group's lines under its matching heading, else the configured heading, else the end; a section's lines end at its first subheading. */
 export function placeGroups(target: string, groups: readonly BlockGroup[], targetHeading: string): string {
   const eol = target.includes("\r\n") ? "\r\n" : "\n";
   const segments = segmentsOf(target);

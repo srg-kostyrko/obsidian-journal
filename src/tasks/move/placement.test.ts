@@ -78,10 +78,23 @@ describe("placeGroups", () => {
     expect(placeGroups("last line", g, "")).toBe("last line\n- [ ] x\n- [ ] y");
   });
 
-  it("inserting after existing items in a section goes before the next heading", () => {
+  it("inserting after existing items in a section goes before its first child heading", () => {
     const target = "## Tasks\n- [ ] a\n  - [ ] a1\n\n### Sub\n- [ ] s\n\n## Next\n- [ ] n\n";
     expect(placeGroups(target, [group(null, "- [ ] x")], "Tasks")).toBe(
-      "## Tasks\n- [ ] a\n  - [ ] a1\n\n### Sub\n- [ ] s\n- [ ] x\n\n## Next\n- [ ] n\n",
+      "## Tasks\n- [ ] a\n  - [ ] a1\n- [ ] x\n\n### Sub\n- [ ] s\n\n## Next\n- [ ] n\n",
+    );
+  });
+
+  it("a section's child subsection keeps its own items to itself", () => {
+    const target = "## Tasks\n- [ ] a\n- [ ] b\n\n### Someday\n- [ ] s1\n- [ ] s2\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(
+      "## Tasks\n- [ ] a\n- [ ] b\n- [ ] x\n\n### Someday\n- [ ] s1\n- [ ] s2\n",
+    );
+  });
+
+  it("a section holding only a child heading receives lines directly under its own heading", () => {
+    expect(placeGroups("## Tasks\n### Someday\n- [ ] s\n", [group(null, "- [ ] x")], "Tasks")).toBe(
+      "## Tasks\n- [ ] x\n### Someday\n- [ ] s\n",
     );
   });
 
