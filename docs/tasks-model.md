@@ -953,7 +953,12 @@ note with unsaved typing races the view's own save, and the e2e caught exactly
 that — moved lines run onto the end of the typed line. A deferred view has
 loaded nothing and is skipped, so the file is written. Because a view saves on a
 debounce, the target's view is saved before the source is touched, or
-target-before-source would hold in the buffers and not on disk.
+target-before-source would hold in the buffers and not on disk. Only a
+MarkdownView is saved: an embed editor — a canvas card, an editable hover
+popover — saves itself, so a target held only by one is ordered in the buffers
+alone. Even a MarkdownView's save returns at once when one is already in flight,
+leaving the edit to the save it queues behind that one, so the order on disk is
+best-effort in that window rather than guaranteed.
 
 ### Items nest, so movement is per subtree
 
@@ -1012,7 +1017,8 @@ with them the next parent up — and it cannot see a parent on the note's first 
 which the structure cannot tell from no parent. The roll's own eligibility check
 walks the text and has neither gap. The single-task commands refuse on the same
 text walk, so they may refuse a line the listing still shows as open: one under a
-stamped ancestor with a plain bullet between them. The user's own queries see no tag on a child
+stamped ancestor with a plain bullet between them, or under a stamped parent on
+the note's first line. The user's own queries see no tag on a child
 and still count it open; stamping every line is what that would take, and it is
 declined above.
 

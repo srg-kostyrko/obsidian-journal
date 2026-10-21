@@ -678,7 +678,7 @@ no unfinished tasks. Four other cases are worth knowing:
 The command writes and saves today's note before it touches the earlier one, so a failure part-way leaves
 a task in both notes, never in neither. A note open in an editor, in any window, is edited there rather
 than on disk, so its unsaved typing is kept; an earlier note whose open editor has unsaved lines above a
-task reports it as changed rather than marking the wrong line.
+task reports it as changed rather than marking or removing the wrong lines.
 
 ## Moving one task
 
@@ -741,14 +741,15 @@ itself, the task as it then reads is what moves.
 On success the notice reads "Copied the task to …" or "Moved the task to …", with the period — and the
 notelet's name, for a notelet. The other outcomes:
 
-- **"… changed while moving"** — the task's text changed after it was copied, so the original was left
-  as it was. The task is in the destination already: mark or remove the original
+- **"… changed while moving"** — the task, or the lines above it, changed after it was copied, so the
+  original was left as it was. The task is in the destination already: mark or remove the original
   by hand, or delete the copy.
 - **"… could not be marked as rolled"** or **"… could not be updated"** — the same, when saving the
   original note failed.
 - **"The task is no longer where it was. Nothing was moved."** — by the time the command came to write,
   the task's lines no longer matched what it picked: it had already been moved or marked, or lines
-  above it were added or removed. A destination note created for it is kept, empty of the task.
+  above it were added or removed — or, while a question about creating the destination was open, the
+  lines below it changed. A destination note created for it is kept, empty of the task.
 - **"… could not be read. Nothing was moved."** — Obsidian failed to read the original note.
 - **"No coarser journal contains this note's period."** — no journal in scope writes a longer period
   whose timeline includes this one, or the note belongs to a custom interval journal.
