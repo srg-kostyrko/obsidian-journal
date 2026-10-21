@@ -144,6 +144,18 @@ describe("EditJournalMoveModal", () => {
     expect(submit).not.toHaveBeenCalled();
   });
 
+  it("the automatic error clears once stamping is back on, and save goes through", async () => {
+    const { submit } = await mount({ automatic: true });
+    await userEvent.selectOptions(screen.getByTestId("move-stamp"), "off");
+    expect(screen.getByText(m.tasks_move_automatic_needs_stamp())).toBeTruthy();
+
+    await userEvent.selectOptions(screen.getByTestId("move-stamp"), "on");
+
+    expect(screen.queryByText(m.tasks_move_automatic_needs_stamp())).toBeNull();
+    await save();
+    expect(submitted(submit)).toMatchObject({ automatic: true, stamp: true });
+  });
+
   it("stores automatic when it is turned on", async () => {
     const { submit } = await mount();
 

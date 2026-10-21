@@ -704,6 +704,16 @@ describe("journal tasks repair on load", () => {
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions"] });
   });
 
+  it("an unreadable automatic flag repairs to off, keeping the rest of the move block", async () => {
+    const { tasks, repair } = await loadTasks({
+      providers: { checkbox },
+      move: { mode: "move", source: "both", targetHeading: "Tasks", lookBack: 3, automatic: "yes" },
+    });
+
+    expect(tasks.move).toEqual({ mode: "move", source: "both", targetHeading: "Tasks", lookBack: 3, automatic: false });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.move.automatic"] });
+  });
+
   it("an unreadable listing filter mode resets to and, keeping the conditions", async () => {
     const { tasks, repair } = await loadTasks({
       providers: { checkbox },
