@@ -62,7 +62,7 @@ Reached with **Configure** on a journal's row — on the main settings page, or 
 | **Tasks**                   | **Checkbox tasks** — **Relation to the vault-wide rule** — **Inherit**, **Narrow**, **Replace**                                                                                 | [Tasks](/tasks#a-journal-s-own-rule)                            |
 |                             | **Task notes** — **Edit**: **All**, **None**, **Matching**; shown while task notes are on                                                                                       | [Tasks](/tasks#which-task-notes-a-journal-shows)                |
 |                             | **Listing filter** — **Edit**                                                                                                                                                   | [Tasks](/tasks#a-journal-s-own-listing-filter)                  |
-|                             | **Roll over** — **Edit**: **Copy or move**, **Mark as rolled**, **Source**, **Target heading**, **Look back**                                                                   | [Tasks](/tasks#roll-over-settings)                              |
+|                             | **Roll over** — **Edit**: **Copy or move**, **Mark as rolled**, **Source**, **Target heading**, **Look back**, **Automatic rollover**                                           | [Tasks](/tasks#roll-over-settings)                              |
 
 ## A notelet type's page
 

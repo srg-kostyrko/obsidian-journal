@@ -654,6 +654,7 @@ that journal. **Edit** opens:
   with 3 a journal you write on weekdays reads back to the previous Wednesday on a Monday. With **Mark as rolled**
   on, or under **Move**, a task taken once is marked or removed, so raising it does not bring the same
   task twice.
+- **Automatic rollover** — off by default. See [Automatic rollover](#automatic-rollover).
 
 ### What the notice says
 
@@ -680,6 +681,65 @@ a task in both notes, never in neither. A note open in an editor, in any window,
 than on disk, so its unsaved typing is kept, and an earlier note is saved once it is marked or has its
 lines removed; one whose editor gained lines above a task while the command ran reports it as changed
 rather than marking or removing the wrong lines.
+
+### Automatic rollover
+
+Turn on **Automatic rollover** in a journal's **Roll over** settings and the journal rolls by itself:
+whenever the note for the current period exists, the unfinished tasks of its earlier notes are taken
+into it, with no command run. It reads the same notes, takes the same tasks and places them the same
+way as **Roll over unfinished tasks**, under the same **Source**, **Target heading** and **Look back**.
+
+It looks at these moments:
+
+- once Obsidian has finished loading the vault;
+- at midnight, which is also where every week, month, quarter and year begins;
+- when you come back to Obsidian — any of its windows gains focus or becomes visible again — so a
+  computer that slept through midnight still rolls on waking;
+- when the note for the current period is added to the journal — created through Journals, made by
+  another plugin or by hand, or arriving from another device by sync.
+
+Each time, it first waits until no note has been created, changed or deleted for five seconds, so that a
+sync catching up after startup or a wake has landed before anything is read. A vault still busy after a
+minute is left alone until the next of those moments.
+
+Rolling is continuous rather than once a day. A task taken is marked or removed from the earlier note,
+so each look picks up only what is new: an open task you add to yesterday's note in the afternoon rolls
+into today's note the next time Obsidian looks. A note made ahead of time — Friday's note written on
+Monday for planning — gets nothing until its period arrives, and from then on it rolls like any other.
+Once its period has ended, a note gets no more automatic rolls.
+
+Automatic rollover never creates a note. With no note for the current period it does nothing until
+one exists — made by you, by the journal's own automatic note creation, or by sync — and it does nothing
+when today is outside the journal's [timeline](/journals#timeline).
+
+It needs **Move**, or **Copy** with **Mark as rolled** on. A copy that leaves the original unmarked would
+take the same task again at every look, so the setting cannot be turned on while the journal's
+**Copy or move** and **Mark as rolled**, defaults included, resolve to that combination. If a
+journal that already has it on ends up there anyway — say the **Mark as rolled** default in
+**Checkbox tasks**' settings is turned off — it pauses, and a notice says so once until Obsidian restarts. It resumes at the next look
+after the setting allows it again.
+
+When it rolls something, the notice says so in the same words as the command's. When there was nothing
+to roll, or no earlier note, it says nothing. Anything else the notice would report — a missing
+heading, a task left in place for its block id under **Move**, unfinished task notes left behind, an
+earlier note that is still being indexed or could not be read — is shown once for each earlier note
+until Obsidian restarts, not again at every look. With two or more journals rolling automatically,
+each notice starts with the journal's name.
+
+If an earlier note could not be updated after its tasks were copied, the journal stops rolling
+automatically until Obsidian restarts, since the next look would copy the same tasks again. The tasks
+are then in both notes: mark or remove the originals by hand, or delete the copies from today's note
+and run **Roll over unfinished tasks** once the earlier note can be written again.
+
+**Two devices.** Each device rolls on its own; nothing records which one rolled. A device that has
+already received the other's roll by sync finds the tasks marked or removed and takes nothing. Two
+devices that both roll before either has synced write the same lines in the same place, so a sync
+that combines identical changes keeps one copy. That can still go wrong: if you edited one of the notes
+between the two rolls, or your sync tool does not combine two identical insertions into one — Obsidian
+Sync's merge is documented to sometimes create duplicate text — today's note can end up with the
+tasks twice. Nothing is lost when that happens: under **Copy** the originals are
+still in the earlier note, a [task listing](#listing-tasks-in-a-note) shows anything left unfinished, and
+the command is there to roll by hand.
 
 ## Moving one task
 
