@@ -671,14 +671,15 @@ no unfinished tasks. Four other cases are worth knowing:
 - **"… could not be read"** — Obsidian failed to read the earlier note, so nothing was taken from it.
   Run the command again once the note opens normally.
 - **"… is still being indexed"** — the earlier note was edited a moment ago and Obsidian has not yet
-  caught up with its task lines, headings or tags, so nothing was taken from it: rolling by what the
-  note used to say could take lines from under a heading that has since been renamed. Run the command
-  again in a moment.
+  caught up with its task lines, headings or tags, or it is open in an editor holding typing that is
+  not saved yet, so nothing was taken from it: rolling by what the note used to say could take lines
+  from under a heading that has since been renamed. Run the command again in a moment.
 
 The command writes and saves today's note before it touches the earlier one, so a failure part-way leaves
 a task in both notes, never in neither. A note open in an editor, in any window, is edited there rather
-than on disk, so its unsaved typing is kept; an earlier note whose open editor has unsaved lines above a
-task reports it as changed rather than marking or removing the wrong lines.
+than on disk, so its unsaved typing is kept, and an earlier note is saved once it is marked or has its
+lines removed; one whose editor gained lines above a task while the command ran reports it as changed
+rather than marking or removing the wrong lines.
 
 ## Moving one task
 

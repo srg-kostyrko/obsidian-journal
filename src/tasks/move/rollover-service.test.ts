@@ -145,6 +145,15 @@ async function rolloverFor(journals: Record<string, JournalConfig>) {
   };
 }
 
+// Typing that reaches the view while the target is written, after the source was read.
+function typeWhileTargetIsWritten(notes: FakeNotesService, target: VaultPath, type: () => void): void {
+  const process = notes.process.bind(notes);
+  vi.spyOn(notes, "process").mockImplementation((path, transform) => {
+    if (path === target) type();
+    return process(path, transform);
+  });
+}
+
 function reportOf(overrides: Partial<RollReport>): RollReport {
   return {
     journalName: "daily",
@@ -692,13 +701,15 @@ describe("RolloverService", () => {
       expect(await text(source)).toBe("- [ ] Call Bob #rolled\n");
     });
 
-    it("stamps an open source through its view, keeping typing it has not saved", async () => {
-      const { harness, roll, put, text } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
+    it("stamps an open source through its view, keeping typing that arrived since the read, and saves it", async () => {
+      const { harness, roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
       const source = put("daily", "2026-10-20", "- [ ] Call Bob\n- [ ] Other\n");
       const closed = put("daily", "2026-10-19", "- [ ] Earlier\n");
       const target = put("daily", TODAY, "");
       const view = harness.host.openEditor(source, "- [ ] Call Bob\n- [ ] Other\n", 0, { active: false });
-      view.text = "- [ ] Call Bob\n- [ ] Other\nTyped, unsaved";
+      typeWhileTargetIsWritten(notes, target, () => {
+        view.text = "- [ ] Call Bob\n- [ ] Other\nTyped, unsaved";
+      });
 
       const report = await roll();
 
@@ -706,22 +717,54 @@ describe("RolloverService", () => {
       expect(await text(target)).toBe("- [ ] Earlier\n- [ ] Call Bob\n- [ ] Other\n");
       expect(view.text).toBe("- [ ] Call Bob #rolled\n- [ ] Other #rolled\nTyped, unsaved");
       expect(view.changes).toHaveLength(1);
-      expect(await text(source)).toBe("- [ ] Call Bob\n- [ ] Other\n");
+      expect(view.saves).toEqual([view.text]);
       expect(await text(closed)).toBe("- [ ] Earlier #rolled\n");
     });
 
-    it("an open source whose unsaved typing moved the planned lines is reported and left alone", async () => {
-      const { harness, roll, put } = await rolloverFor({ daily: dayJournal("daily") });
+    it("an open source whose typing since the read moved the planned lines is reported and left alone", async () => {
+      const { harness, roll, put, notes } = await rolloverFor({ daily: dayJournal("daily") });
       const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
-      put("daily", TODAY, "");
+      const target = put("daily", TODAY, "");
       const view = harness.host.openEditor(source, "- [ ] Call Bob\n", 0, { active: false });
-      view.text = "- [ ] Typed above\n- [ ] Call Bob\n";
+      typeWhileTargetIsWritten(notes, target, () => {
+        view.text = "- [ ] Typed above\n- [ ] Call Bob\n";
+      });
 
       const report = await roll();
 
       expect(report.changedSources).toEqual([{ path: source, anchor: "2026-10-20" }]);
       expect(view.changes).toEqual([]);
     });
+
+    it("an open source holding unsaved typing is skipped: metadataCache has parsed only what is saved", async () => {
+      const { harness, roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+      const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+      const target = put("daily", TODAY, "");
+      const view = harness.host.openEditor(source, "- [ ] Call Bob\n", 0, { active: false });
+      view.text = "- [ ] Typed above #private\n- [ ] Call Bob\n";
+
+      const report = await roll();
+
+      expect(report.skippedSources).toEqual(["2026-10-20"]);
+      expect(await text(target)).toBe("");
+      expect(view.changes).toEqual([]);
+    });
+
+    for (const mode of ["copy", "move"] as const) {
+      it(`a second roll right after a ${mode} through an open source's view takes nothing again`, async () => {
+        const { harness, roll, put, text } = await rolloverFor({ daily: dayJournal("daily", { mode }) });
+        const source = put("daily", "2026-10-20", "- [ ] Call Bob\n- [ ] Other\n");
+        const target = put("daily", TODAY, "");
+        harness.host.openEditor(source, "- [ ] Call Bob\n- [ ] Other\n", 0, { active: false });
+
+        const first = await roll();
+        const second = await roll();
+
+        expect(first.rolled).toBe(2);
+        expect(second.rolled).toBe(0);
+        expect(await text(target)).toBe("- [ ] Call Bob\n- [ ] Other\n");
+      });
+    }
   });
 
   it("a source edited between read and write is reported and not rewritten", async () => {

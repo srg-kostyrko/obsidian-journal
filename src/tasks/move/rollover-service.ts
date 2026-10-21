@@ -119,7 +119,8 @@ export class RolloverService {
   readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #defaults = inject(SettingsService).getSlice(moveDefaultsSlice);
   readonly #locks = inject(MoveLocks);
-  readonly #writers: NoteWriters = { workspace: inject(WorkspaceService), notes: this.#notes };
+  readonly #workspace = inject(WorkspaceService);
+  readonly #writers: NoteWriters = { workspace: this.#workspace, notes: this.#notes };
   readonly #listing: TaskListingDependencies = {
     journals: this.#journals,
     index: this.#index,
@@ -178,15 +179,21 @@ export class RolloverService {
   }
 
   // A note whose structure has not resolved, or lags its text, is not planned: an empty plan would
-  // read as "nothing to roll", a stale one rolls the wrong lines.
+  // read as "nothing to roll", a stale one rolls the wrong lines. An open view is read rather than the
+  // file, since an edit made through it reaches disk only on save; metadataCache parses only what is
+  // saved, so a view holding unsaved typing has no structure that describes it yet.
   async #readSource(path: VaultPath): Promise<RollSource | "indexing" | "unread"> {
-    const content = await this.#notes.read(path);
-    if (content.isErr()) return "unread";
+    const disk = await this.#notes.read(path);
+    if (disk.isErr()) return "unread";
+    const open = this.#workspace.openNoteText(path);
+    // The editor's buffer is LF whatever the file's line endings.
+    if (open.isSome() && open.value !== disk.value.replaceAll(/\r$/gmu, "")) return "indexing";
+    const content = open.isSome() ? open.value : disk.value;
     const structure = this.#structure.get(path);
-    if (structure.isNone() || !inSync(content.value, structure.value, this.#checkbox.state.rolledMarker)) {
+    if (structure.isNone() || !inSync(content, structure.value, this.#checkbox.state.rolledMarker)) {
       return "indexing";
     }
-    return { path, content: content.value, structure: structure.value, items: this.#itemsOf(path, structure.value) };
+    return { path, content, structure: structure.value, items: this.#itemsOf(path, structure.value) };
   }
 
   // The provider's own inputs, so a line rolls exactly when the provider calls it a task.
@@ -226,7 +233,8 @@ export class RolloverService {
         const outcome = rewriteSource(content, roots, rewrite);
         return "reason" in outcome ? null : outcome.content;
       },
-      { flush: false },
+      // Saved before the lock is released, so the next roll reads the stamp or removal off disk too.
+      { flush: true },
     ).map((written) => (written === "refused" ? "changed" : "written"));
   }
 
