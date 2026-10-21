@@ -338,6 +338,11 @@ describe("planItem", () => {
     }
   });
 
+  it("a checkbox line in a comment opened after a backslash-escaped backtick is not a task", () => {
+    const lines = ["Text \\` <!-- hidden `", "- [ ] example", "-->"];
+    expect(planItem({ path, content: lines.join("\n") }, 1, move)).toEqual({ kind: "refused", reason: "not-a-task" });
+  });
+
   it("the cursor in a code fence nested under a task resolves to that task", () => {
     const lines = ["- [ ] real", "  ```", "  - [ ] example", "  ```"];
     const result = planItem({ path, content: lines.join("\n") }, 2, move);
