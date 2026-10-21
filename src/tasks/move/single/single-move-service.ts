@@ -228,10 +228,16 @@ export class SingleMoveService {
       const marker = this.#checkbox.state.rolledMarker;
       // The confirm stays outside the lock so a pending answer never holds up a roll into the journal.
       const confirmed = yield* this.#plan(source, move.mode, marker);
-      // The source journal too: a roll of it reads this note and could take the same task.
+      // The source journal too: a roll of it reads this note and could take the same task. And the note
+      // itself: a note in no journal has no journal key, yet two moves from it into different
+      // journals would both copy the same task.
       const sourceJournal = this.#index.entryByPath(source.path).map((entry) => entry.journalName);
-      const journals = [target.journalName, ...(sourceJournal.isSome() ? [sourceJournal.value] : [])];
-      return yield* this.#locks.run(journals, () => this.#write(source, target, confirmed, move, marker));
+      const keys = [
+        target.journalName,
+        ...(sourceJournal.isSome() ? [sourceJournal.value] : []),
+        `note:${source.path}`,
+      ];
+      return yield* this.#locks.run(keys, () => this.#write(source, target, confirmed, move, marker));
     });
   }
 }

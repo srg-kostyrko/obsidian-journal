@@ -551,7 +551,7 @@ describe("SingleMoveService", () => {
   });
 
   it("waits for a move already writing into the same journal, and only that journal", async () => {
-    const { put, edit, text, service, notes } = await moverFor({
+    const { harness, put, edit, text, service, notes } = await moverFor({
       daily: journal("daily", "day"),
       monthly: journal("monthly", "month"),
       yearly: journal("yearly", "year"),
@@ -570,7 +570,11 @@ describe("SingleMoveService", () => {
     const first = service.move(state, target("monthly", "2026-10-01", month));
     await vi.waitFor(() => expect(written()).toEqual([month]));
     const second = service.move({ ...state, cursorLine: 1 }, target("monthly", "2026-10-01", month));
-    const elsewhere = service.move({ ...state, cursorLine: 2 }, target("yearly", "2026-01-01", year));
+    const inbox = "Inbox.md" as VaultPath;
+    notes.seed(inbox, "- [ ] Three\n");
+    harness.host.openEditor(inbox, "- [ ] Three\n", 0, { active: false });
+    const fromInbox: ActiveEditorState = { path: inbox, content: "- [ ] Three\n", cursorLine: 0 };
+    const elsewhere = service.move(fromInbox, target("yearly", "2026-01-01", year));
     await vi.waitFor(() => expect(written()).toEqual([month, year]));
     release();
     await Promise.all([first, second, elsewhere]);
@@ -600,6 +604,31 @@ describe("SingleMoveService", () => {
       expect(await text(month)).toBe("- [ ] Call Bob\n    - detail\n");
       expect(editor.changes).toHaveLength(1);
       expect(editor.text).toContain("- [ ] Other\n");
+    }
+  });
+
+  it("two moves of the same task from a note in no journal, into two journals, copy it once", async () => {
+    for (const mode of ["copy", "move"] as const) {
+      const { put, edit, text, service } = await moverFor({
+        monthly: journal("monthly", "month", { mode }),
+        yearly: journal("yearly", "year", { mode }),
+      });
+      const month = put("monthly", "2026-10-01", "");
+      const year = put("yearly", "2026-01-01", "");
+      const { editor, state } = edit("- [ ] Call Bob\n- [ ] Other\n", 0);
+
+      const [first, second] = await Promise.all([
+        service.move(state, target("monthly", "2026-10-01", month)),
+        service.move(state, target("yearly", "2026-01-01", year)),
+      ]);
+
+      expectOk(first);
+      expectOk(second);
+      expect(first.value.outcome).toBe("done");
+      expect(second.value).toEqual({ mode, label: LABEL, outcome: "nothing" });
+      expect(await text(month)).toBe("- [ ] Call Bob\n");
+      expect(await text(year)).toBe("");
+      expect(editor.changes).toHaveLength(1);
     }
   });
 
@@ -792,7 +821,11 @@ describe("SingleMoveService", () => {
     const roll = harness.resolve(RolloverService).roll("daily", { interactive: true });
     await vi.waitFor(() => expect(written()).toEqual([today]));
     const single = service.move(state, target("daily", "2026-10-21", today));
-    const elsewhere = service.move({ ...state, cursorLine: 1 }, target("monthly", "2026-10-01", month));
+    const inbox = "Inbox.md" as VaultPath;
+    notes.seed(inbox, "- [ ] Other\n");
+    harness.host.openEditor(inbox, "- [ ] Other\n", 0, { active: false });
+    const fromInbox: ActiveEditorState = { path: inbox, content: "- [ ] Other\n", cursorLine: 0 };
+    const elsewhere = service.move(fromInbox, target("monthly", "2026-10-01", month));
     await vi.waitFor(() => expect(written()).toContain(month));
     expect(written().filter((path) => path === today)).toHaveLength(1);
     release();
