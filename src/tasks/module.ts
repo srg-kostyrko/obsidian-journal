@@ -1,6 +1,7 @@
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
+import { MoveLocks } from "./move/locks";
 import { RolloverCommands } from "./move/rollover-commands";
 import { RolloverService } from "./move/rollover-service";
 import { moveDefaultsSlice } from "./move/settings";
@@ -46,6 +47,7 @@ export const tasksCoreModule: Module = {
     c.register(NotePropertyTicker).useClass(NotePropertyTicker);
     c.register(TaskVisibility).useClass(TaskVisibility);
     c.register(TickService).useClass(TickService);
+    c.register(MoveLocks).useClass(MoveLocks);
     c.register(RolloverService).useClass(RolloverService);
     c.register(MoveTargets).useClass(MoveTargets);
     c.register(MoveTargetPicker).useClass(MoveTargetPicker);

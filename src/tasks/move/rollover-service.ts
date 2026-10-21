@@ -32,6 +32,7 @@ import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
 import { NoCurrentPeriodError, type RollError } from "./errors";
+import { MoveLocks } from "./locks";
 import { placeGroups } from "./placement";
 import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
 import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
@@ -125,7 +126,7 @@ export class RolloverService {
   readonly #host = inject(TaskHostToken);
   readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #defaults = inject(SettingsService).getSlice(moveDefaultsSlice);
-  readonly #running = new Map<string, Promise<unknown>>();
+  readonly #locks = inject(MoveLocks);
   readonly #listing: TaskListingDependencies = {
     journals: this.#journals,
     index: this.#index,
@@ -330,24 +331,7 @@ export class RolloverService {
     });
   }
 
-  // One roll per journal at a time: a second one planned before the first wrote would read the same
-  // open lines and copy them again.
   roll(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
-    const previous = this.#running.get(journalName) ?? Promise.resolve();
-    const run = attempt.in(this, async function* (this: RolloverService) {
-      await previous;
-      return yield* this.#rollNow(journalName, options);
-    });
-    // The tail never rejects: a roll that throws hands its rejection to its own caller, not to the
-    // next roll queued behind it.
-    const settled = Promise.resolve(run).then(
-      () => true,
-      () => false,
-    );
-    this.#running.set(journalName, settled);
-    void settled.then(() => {
-      if (this.#running.get(journalName) === settled) this.#running.delete(journalName);
-    });
-    return run;
+    return this.#locks.run(journalName, () => this.#rollNow(journalName, options));
   }
 }
