@@ -1340,9 +1340,9 @@ case at most checkpoints. Every other sentence (a missing heading, block ids
 left in place under move, task notes skipped, an earlier note still indexing or
 unreadable, a source that changed or failed) is shown once per note and kind per
 session; the indexing sentence says the note rolls at the next check rather than
-asking the user to retry. Every notice is prefixed with the journal's name,
+asking the user to retry. Every roll notice is prefixed with the journal's name,
 whatever the number of automatic journals, since nobody pressed anything that
-would say which journal it was.
+would say which journal it was; the pause notices name it in their own text.
 
 **Session pauses.** Two conditions pause a journal for the session, held in
 memory only. The mode guard above lifts as soon as the settings allow a roll
@@ -1353,8 +1353,10 @@ source whose write failed or that changed under the roll (the pause notice names
 every such note and replaces the roll's own changed and failed sentences), and
 any other roll error or throw except an ended period or a deleted journal. That
 pause lifts when a roll of the journal — in practice the manual command —
-finishes with no changed or failed source (`RolloverService` emits `rolled` on
-every finished roll), and otherwise lasts until restart.
+finishes with every source read and written — none changed, failed, still
+indexing or unreadable, since a skipped source may be the very note the pause
+is about (`RolloverService` emits `rolled` on every finished roll) — and
+otherwise lasts until restart.
 
 ## Build order
 

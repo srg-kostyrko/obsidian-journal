@@ -719,7 +719,7 @@ It needs **Move**, or **Copy** with **Mark as rolled** on. A copy that leaves th
 take the same task again at every look, so the setting cannot be turned on while the journal's
 **Copy or move** and **Mark as rolled**, defaults included, resolve to that combination. If a
 journal that already has it on ends up there anyway — say the **Mark as rolled** default in
-**Checkbox tasks**' settings is turned off — it pauses, and a notice says so once until Obsidian restarts. It resumes at the next look
+**Checkbox tasks**' settings is turned off — it pauses, with a notice each time it does. It resumes at the next look
 after the setting allows it again.
 
 When it rolls something, the notice says so in the same words as the command's, starting with the
@@ -735,8 +735,8 @@ copy the same tasks again, and a notice names every earlier note affected. The s
 notice of its own, when a roll fails part-way for any other reason, since today's note may already hold
 what was copied. The tasks
 are then in both notes: mark or remove the originals by hand, or delete the copies from the current
-note, then run **Roll over unfinished tasks**. A run of that command that updates every earlier note
-it took from resumes automatic rolling for the journal; otherwise it stays paused until Obsidian
+note, then run **Roll over unfinished tasks**. A run of that command that reads every earlier note — none still being indexed or unreadable — and
+updates every one it took from resumes automatic rolling for the journal; otherwise it stays paused until Obsidian
 restarts.
 
 **Two devices.** Each device rolls on its own; nothing records which one rolled. A device that has
