@@ -2573,5 +2573,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "This task was not ticked. Recurring tasks need the Tasks plugin to advance to their next instance.",
   "tasks_tick_recurring_task_note": "This task was not ticked. A recurring task note has to be completed in the plugin that manages its series.",
   "tasks_tick_error": "Could not tick the task.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "Rolled 1 task forward from {oldest}.",
+        "notes=1,count=*": "Rolled {count} tasks forward from {oldest}.",
+        "notes=*,count=*": "Rolled {count} tasks forward from {notes} notes, oldest {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "No unfinished tasks in {oldest}.",
+  "tasks_roll_no_previous": "There is no earlier note to roll tasks from.",
+  "tasks_roll_missing_heading": "No {heading} heading in {date}. Check the journal's task filter.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 task note was not moved.",
+        "count=*": "{count} task notes were not moved."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 task with a block link was left in place.",
+        "count=*": "{count} tasks with a block link were left in place."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "{date} changed while rolling. Run the command again.",
   "tasks_listing_empty": "No tasks match this query."
 }

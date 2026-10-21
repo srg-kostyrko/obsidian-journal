@@ -2571,5 +2571,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "Cette tâche n'a pas été cochée. Les tâches récurrentes nécessitent le plugin Tasks pour passer à leur prochaine occurrence.",
   "tasks_tick_recurring_task_note": "Cette tâche n'a pas été cochée. Une note de tâche récurrente doit être terminée dans le plugin qui gère sa série.",
   "tasks_tick_error": "Impossible de cocher la tâche.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest", "local countPlural = count: plural"],
+      "selectors": ["notes", "countPlural"],
+      "match": {
+        "notes=1,countPlural=one": "{count} tâche reportée depuis la note du {oldest}.",
+        "notes=1,countPlural=*": "{count} tâches reportées depuis la note du {oldest}.",
+        "notes=*,countPlural=*": "{count} tâches reportées depuis {notes} notes, la plus ancienne du {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "Aucune tâche non terminée dans la note du {oldest}.",
+  "tasks_roll_no_previous": "Aucune note antérieure dont reporter les tâches.",
+  "tasks_roll_missing_heading": "Aucun en-tête {heading} dans la note du {date}. Vérifiez le filtre de tâches du journal.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} note de tâche n’a pas été déplacée.",
+        "countPlural=*": "{count} notes de tâche n’ont pas été déplacées."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} tâche avec un lien de bloc a été laissée en place.",
+        "countPlural=*": "{count} tâches avec un lien de bloc ont été laissées en place."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "La note du {date} a été modifiée pendant le report. Relancez la commande.",
   "tasks_listing_empty": "Aucune tâche ne correspond à cette requête."
 }

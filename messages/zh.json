@@ -2554,5 +2554,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。",
   "tasks_tick_recurring_task_note": "此任务未勾选。重复的任务笔记需要在管理其系列的插件中完成。",
   "tasks_tick_error": "无法勾选该任务。",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "已从 {oldest} 的笔记结转 1 项任务。",
+        "notes=1,count=*": "已从 {oldest} 的笔记结转 {count} 项任务。",
+        "notes=*,count=*": "已从 {notes} 条笔记结转 {count} 项任务，最早的是 {oldest}。"
+      }
+    }
+  ],
+  "tasks_roll_nothing": "{oldest} 的笔记中没有未完成的任务。",
+  "tasks_roll_no_previous": "没有可从中结转任务的更早笔记。",
+  "tasks_roll_missing_heading": "{date} 的笔记中没有 {heading} 标题。请检查该日记的任务筛选条件。",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "有 1 条任务笔记未被移动。",
+        "count=*": "有 {count} 条任务笔记未被移动。"
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "有 1 项带块链接的任务保留在原处。",
+        "count=*": "有 {count} 项带块链接的任务保留在原处。"
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "{date} 的笔记在结转过程中发生了更改。请重新运行该命令。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

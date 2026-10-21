@@ -2571,5 +2571,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",
   "tasks_tick_recurring_task_note": "Questa attività non è stata contrassegnata. Una nota attività ricorrente va completata nel plugin che ne gestisce la serie.",
   "tasks_tick_error": "Non è stato possibile contrassegnare l'attività.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "1 attività riportata dalla nota del {oldest}.",
+        "notes=1,count=*": "{count} attività riportate dalla nota del {oldest}.",
+        "notes=*,count=*": "{count} attività riportate da {notes} note, la più vecchia del {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "Nessuna attività in sospeso nella nota del {oldest}.",
+  "tasks_roll_no_previous": "Non c'è nessuna nota precedente da cui riportare le attività.",
+  "tasks_roll_missing_heading": "Nessuna intestazione {heading} nella nota del {date}. Controlla il filtro delle attività del diario.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota attività non è stata spostata.",
+        "count=*": "{count} note attività non sono state spostate."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 attività con un link a blocco è stata lasciata al suo posto.",
+        "count=*": "{count} attività con un link a blocco sono state lasciate al loro posto."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "La nota del {date} è cambiata durante il riporto. Esegui di nuovo il comando.",
   "tasks_listing_empty": "Nessuna attività corrisponde a questa query."
 }

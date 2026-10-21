@@ -2646,5 +2646,46 @@
   "tasks_tick_recurring_needs_tasks_plugin": "Эта задача не была отмечена. Чтобы повторяющиеся задачи переходили к следующему экземпляру, нужен плагин Tasks.",
   "tasks_tick_recurring_task_note": "Эта задача не была отмечена. Повторяющуюся заметку-задачу нужно завершать в плагине, который управляет её серией.",
   "tasks_tick_error": "Не удалось отметить задачу.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest", "local countPlural = count: plural"],
+      "selectors": ["notes", "countPlural"],
+      "match": {
+        "notes=1,countPlural=one": "Перенесена {count} задача из заметки за {oldest}.",
+        "notes=1,countPlural=few": "Перенесены {count} задачи из заметки за {oldest}.",
+        "notes=1,countPlural=many": "Перенесено {count} задач из заметки за {oldest}.",
+        "notes=1,countPlural=*": "Перенесено {count} задачи из заметки за {oldest}.",
+        "notes=*,countPlural=*": "Перенесено задач: {count}, из заметок: {notes}, самая ранняя — за {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "В заметке за {oldest} нет незавершённых задач.",
+  "tasks_roll_no_previous": "Нет более ранней заметки, из которой можно перенести задачи.",
+  "tasks_roll_missing_heading": "В заметке за {date} нет заголовка {heading}. Проверьте фильтр задач журнала.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} заметка-задача не перенесена.",
+        "countPlural=few": "{count} заметки-задачи не перенесены.",
+        "countPlural=many": "{count} заметок-задач не перенесено.",
+        "countPlural=*": "{count} заметки-задачи не перенесено."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} задача со ссылкой на блок оставлена на месте.",
+        "countPlural=few": "{count} задачи со ссылкой на блок оставлены на месте.",
+        "countPlural=many": "{count} задач со ссылкой на блок оставлено на месте.",
+        "countPlural=*": "{count} задачи со ссылкой на блок оставлено на месте."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "Заметка за {date} изменилась во время переноса. Выполните команду ещё раз.",
   "tasks_listing_empty": "Нет задач, соответствующих этому запросу."
 }

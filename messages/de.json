@@ -2573,5 +2573,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",
   "tasks_tick_recurring_task_note": "Diese Aufgabe wurde nicht abgehakt. Eine wiederkehrende Aufgabennotiz muss in dem Plugin abgeschlossen werden, das ihre Serie verwaltet.",
   "tasks_tick_error": "Die Aufgabe konnte nicht abgehakt werden.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "1 Aufgabe aus der Notiz vom {oldest} übertragen.",
+        "notes=1,count=*": "{count} Aufgaben aus der Notiz vom {oldest} übertragen.",
+        "notes=*,count=*": "{count} Aufgaben aus {notes} Notizen übertragen, die älteste vom {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "Keine offenen Aufgaben in der Notiz vom {oldest}.",
+  "tasks_roll_no_previous": "Es gibt keine frühere Notiz, aus der Aufgaben übertragen werden können.",
+  "tasks_roll_missing_heading": "Keine Überschrift {heading} in der Notiz vom {date}. Prüfe den Aufgabenfilter des Journals.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Aufgabennotiz wurde nicht verschoben.",
+        "count=*": "{count} Aufgabennotizen wurden nicht verschoben."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Aufgabe mit Blocklink wurde an ihrer Stelle belassen.",
+        "count=*": "{count} Aufgaben mit Blocklink wurden an ihrer Stelle belassen."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "Die Notiz vom {date} wurde während des Übertragens geändert. Führe den Befehl erneut aus.",
   "tasks_listing_empty": "Keine Aufgaben entsprechen dieser Abfrage."
 }

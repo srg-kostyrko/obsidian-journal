@@ -1,6 +1,7 @@
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
+import { RolloverService } from "./move/rollover-service";
 import { moveDefaultsSlice } from "./move/settings";
 import { TaskProviderRegistry } from "./provider-registry";
 import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkbox-provider.flow";
@@ -42,6 +43,7 @@ export const tasksCoreModule: Module = {
     c.register(NotePropertyTicker).useClass(NotePropertyTicker);
     c.register(TaskVisibility).useClass(TaskVisibility);
     c.register(TickService).useClass(TickService);
+    c.register(RolloverService).useClass(RolloverService);
   },
 };
 

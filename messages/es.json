@@ -2560,5 +2560,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",
   "tasks_tick_recurring_task_note": "Esta tarea no se marcó. Una nota de tarea recurrente debe completarse en el complemento que gestiona su serie.",
   "tasks_tick_error": "No se pudo marcar la tarea.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "Se trasladó 1 tarea desde la nota del {oldest}.",
+        "notes=1,count=*": "Se trasladaron {count} tareas desde la nota del {oldest}.",
+        "notes=*,count=*": "Se trasladaron {count} tareas desde {notes} notas; la más antigua es del {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "No hay tareas pendientes en la nota del {oldest}.",
+  "tasks_roll_no_previous": "No hay ninguna nota anterior desde la que trasladar tareas.",
+  "tasks_roll_missing_heading": "No hay ningún encabezado {heading} en la nota del {date}. Comprueba el filtro de tareas del diario.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota de tarea no se movió.",
+        "count=*": "{count} notas de tarea no se movieron."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 tarea con un enlace de bloque se dejó en su sitio.",
+        "count=*": "{count} tareas con un enlace de bloque se dejaron en su sitio."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "La nota del {date} cambió durante el traslado. Vuelve a ejecutar el comando.",
   "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }

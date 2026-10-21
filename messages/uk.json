@@ -2638,5 +2638,46 @@
   "tasks_tick_recurring_needs_tasks_plugin": "Це завдання не було позначено. Щоб повторювані завдання переходили до наступного екземпляра, потрібен плагін Tasks.",
   "tasks_tick_recurring_task_note": "Це завдання не було позначено. Повторювану нотатку-завдання потрібно завершувати в плагіні, який керує її серією.",
   "tasks_tick_error": "Не вдалося позначити завдання.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest", "local countPlural = count: plural"],
+      "selectors": ["notes", "countPlural"],
+      "match": {
+        "notes=1,countPlural=one": "Перенесено {count} завдання з нотатки за {oldest}.",
+        "notes=1,countPlural=few": "Перенесено {count} завдання з нотатки за {oldest}.",
+        "notes=1,countPlural=many": "Перенесено {count} завдань з нотатки за {oldest}.",
+        "notes=1,countPlural=*": "Перенесено {count} завдання з нотатки за {oldest}.",
+        "notes=*,countPlural=*": "Перенесено завдань: {count}, з нотаток: {notes}, найдавніша — за {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "У нотатці за {oldest} немає незавершених завдань.",
+  "tasks_roll_no_previous": "Немає ранішої нотатки, з якої можна перенести завдання.",
+  "tasks_roll_missing_heading": "У нотатці за {date} немає заголовка {heading}. Перевірте фільтр завдань журналу.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} нотатку-завдання не перенесено.",
+        "countPlural=few": "{count} нотатки-завдання не перенесено.",
+        "countPlural=many": "{count} нотаток-завдань не перенесено.",
+        "countPlural=*": "{count} нотатки-завдання не перенесено."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} завдання з посиланням на блок залишено на місці.",
+        "countPlural=few": "{count} завдання з посиланням на блок залишено на місці.",
+        "countPlural=many": "{count} завдань з посиланням на блок залишено на місці.",
+        "countPlural=*": "{count} завдання з посиланням на блок залишено на місці."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "Нотатка за {date} змінилася під час перенесення. Виконайте команду ще раз.",
   "tasks_listing_empty": "Немає завдань, що відповідають цьому запиту."
 }

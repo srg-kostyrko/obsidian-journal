@@ -2560,5 +2560,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "このタスクはチェックされませんでした。繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。",
   "tasks_tick_recurring_task_note": "このタスクはチェックされませんでした。繰り返しのタスクノートは、そのシリーズを管理するプラグインで完了してください。",
   "tasks_tick_error": "タスクをチェックできませんでした。",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "{oldest}のノートからタスク1件を繰り越しました。",
+        "notes=1,count=*": "{oldest}のノートからタスク{count}件を繰り越しました。",
+        "notes=*,count=*": "{notes}件のノートからタスク{count}件を繰り越しました（最も古いノートは{oldest}）。"
+      }
+    }
+  ],
+  "tasks_roll_nothing": "{oldest}のノートに未完了のタスクはありません。",
+  "tasks_roll_no_previous": "タスクを繰り越せる以前のノートがありません。",
+  "tasks_roll_missing_heading": "{date}のノートに見出し{heading}がありません。ジャーナルのタスクフィルターを確認してください。",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "タスクノート1件は移動されませんでした。",
+        "count=*": "タスクノート{count}件は移動されませんでした。"
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "ブロックリンクのあるタスク1件はそのまま残しました。",
+        "count=*": "ブロックリンクのあるタスク{count}件はそのまま残しました。"
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "繰り越し中に{date}のノートが変更されました。もう一度コマンドを実行してください。",
   "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

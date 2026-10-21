@@ -2568,5 +2568,40 @@
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância.",
   "tasks_tick_recurring_task_note": "Esta tarefa não foi marcada. Uma nota de tarefa recorrente precisa ser concluída no plugin que gerencia sua série.",
   "tasks_tick_error": "Não foi possível marcar a tarefa.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "1 tarefa transferida da nota de {oldest}.",
+        "notes=1,count=*": "{count} tarefas transferidas da nota de {oldest}.",
+        "notes=*,count=*": "{count} tarefas transferidas de {notes} notas, a mais antiga de {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "Nenhuma tarefa pendente na nota de {oldest}.",
+  "tasks_roll_no_previous": "Não há nenhuma nota anterior da qual transferir tarefas.",
+  "tasks_roll_missing_heading": "Nenhum cabeçalho {heading} na nota de {date}. Verifique o filtro de tarefas do diário.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota de tarefa não foi movida.",
+        "count=*": "{count} notas de tarefa não foram movidas."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 tarefa com link de bloco foi deixada no lugar.",
+        "count=*": "{count} tarefas com link de bloco foram deixadas no lugar."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": "A nota de {date} mudou durante a transferência. Execute o comando novamente.",
   "tasks_listing_empty": "Nenhuma tarefa corresponde a esta consulta."
 }

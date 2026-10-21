@@ -18,7 +18,7 @@ import CheckboxSettingsRow from "./ui/CheckboxSettingsRow.vue";
 
 // A rule the schema cannot parse must not take the note's items with it — falling back to the
 // global rule alone (the same treatment as no journal rule at all) is safer than dropping the note.
-function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
+export function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
   const parsed = v.safeParse(checkboxJournalRuleSchema, rule);
   return parsed.success ? parsed.output : null;
 }
