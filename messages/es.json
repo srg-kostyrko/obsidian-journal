@@ -2422,6 +2422,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regla de identificación",
   "tasks_settings_rule_desc": "Qué elementos de lista con casilla cuentan como tareas.",
+  "tasks_checkbox_marker": "Marca de traslado",
+  "tasks_checkbox_marker_desc": "La etiqueta que una copia añade a la línea original. Las líneas que la llevan figuran como trasladadas.",
+  "tasks_checkbox_marker_required": "Introduce una etiqueta.",
+  "tasks_checkbox_marker_spaces": "Una etiqueta no puede contener espacios.",
+  "tasks_checkbox_marker_changed": "Las líneas marcadas con la marca anterior volverán a figurar como sin terminar.",
   "tasks_settings_add_condition": "Agregar condición",
   "tasks_settings_condition_tag": "Etiqueta",
   "tasks_settings_condition_heading": "Encabezado",
@@ -2557,6 +2562,69 @@
   "tasks_journal_filter_title": "Filtro de listado",
   "tasks_journal_filter_none": "Este diario no tiene un filtro de listado propio.",
   "tasks_journal_filter_edit": "Editar",
+  "tasks_move_title": "Trasladar",
+  "tasks_move_edit": "Editar",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copia las tareas sin terminar de la nota anterior y marca las originales como trasladadas.",
+        "action=copy-stamp,count=*": "Copia las tareas sin terminar de las {count} notas anteriores y marca las originales como trasladadas.",
+        "action=copy,count=1": "Copia las tareas sin terminar de la nota anterior.",
+        "action=copy,count=*": "Copia las tareas sin terminar de las {count} notas anteriores.",
+        "action=move,count=1": "Mueve las tareas sin terminar de la nota anterior.",
+        "action=move,count=*": "Mueve las tareas sin terminar de las {count} notas anteriores."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Busca solo en la nota.",
+        "source=notelets": "Busca solo en sus notas breves.",
+        "source=both": "Busca en la nota y en sus notas breves."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Las coloca bajo {heading} si la nota lo tiene.",
+  "tasks_move_defaults_desc": "Todos los diarios usan estos valores salvo que definan los suyos.",
+  "tasks_move_mode": "Copiar o mover",
+  "tasks_move_mode_desc": "Copiar conserva la línea original en la nota anterior. Mover la quita de allí.",
+  "tasks_move_mode_copy": "Copiar",
+  "tasks_move_mode_move": "Mover",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Predeterminado (copiar)",
+        "mode=move": "Predeterminado (mover)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Marcar como trasladada",
+  "tasks_move_stamp_desc": "Añade la marca de traslado a cada línea original que deja una copia, para que deje de figurar como sin terminar.",
+  "tasks_move_stamp_on": "Activado",
+  "tasks_move_stamp_off": "Desactivado",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Predeterminado (activado)",
+        "stamp=off": "Predeterminado (desactivado)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "De qué notas del periodo anterior se toman las tareas.",
+  "tasks_move_heading": "Encabezado de destino",
+  "tasks_move_heading_desc": "Dónde van las tareas cuando la nota no tiene el encabezado bajo el que estaban. Déjalo vacío para añadirlas al final.",
+  "tasks_move_look_back": "Notas anteriores",
+  "tasks_move_look_back_desc": "De cuántas notas anteriores se toman las tareas sin terminar.",
+  "tasks_move_look_back_invalid": "Introduce un número entero mayor o igual que 1.",
   "tasks_filter_conditions_label": "Condiciones",
   "tasks_filter_conditions_desc": "Qué tareas muestra un listado.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",

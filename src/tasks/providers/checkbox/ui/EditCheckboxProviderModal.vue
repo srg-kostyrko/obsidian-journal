@@ -7,10 +7,15 @@ import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { SettingsService } from "@/settings";
 import type { TaskCondition } from "@/tasks/conditions";
+import { moveDefaultsSlice } from "@/tasks/move/settings";
 import RuleEditor from "@/tasks/ui/RuleEditor.vue";
 import UiButton from "@/ui/UiButton.vue";
+import UiDropdown from "@/ui/UiDropdown.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
+import UiTextInput from "@/ui/UiTextInput.vue";
+import UiToggle from "@/ui/UiToggle.vue";
 
+import { markerErrors, normalizeMarker } from "../marker-form";
 import { checkboxRuleConditionErrors } from "../rule-form-schema";
 import { isEditableCondition } from "../rule-schema";
 import { checkboxSlice } from "../slice";
@@ -22,7 +27,9 @@ import StatusMapEditor from "./StatusMapEditor.vue";
 const CHECKBOX_CONDITION_TYPES: readonly TaskCondition["type"][] = ["tag", "heading"];
 
 const api = useModal();
-const slice = useService(SettingsService).getSlice(checkboxSlice);
+const settings = useService(SettingsService);
+const slice = settings.getSlice(checkboxSlice);
+const moveDefaults = settings.getSlice(moveDefaultsSlice);
 
 // A deep copy, not a live binding: the editors below mutate their model in place, and the whole
 // point of the modal is that nothing reaches settings until Save. cloneFnJSON rather than toRaw —
@@ -44,6 +51,9 @@ const draft = reactive<{
   statusMap: Record<string, string>;
   canonical: Record<string, string>;
   rule: { mode: "and" | "or"; conditions: TaskCondition[] };
+  rolledMarker: string;
+  moveMode: "copy" | "move";
+  moveStamp: boolean;
 }>({
   statusMap: cloneFnJSON(slice.state.statusMap),
   canonical: cloneFnJSON(slice.state.canonical),
@@ -51,6 +61,9 @@ const draft = reactive<{
     mode: slice.state.rule.mode,
     conditions: storedConditions.filter(isEditableCondition),
   },
+  rolledMarker: slice.state.rolledMarker,
+  moveMode: moveDefaults.state.mode,
+  moveStamp: moveDefaults.state.stamp,
 });
 
 // Recomputed on every keystroke against the draft, never against the slice — nothing here
@@ -59,10 +72,17 @@ const draft = reactive<{
 const ruleErrors = computed(() => checkboxRuleConditionErrors(draft.rule));
 const ruleValid = computed(() => ruleErrors.value.size === 0);
 
+const marker = computed(() => normalizeMarker(draft.rolledMarker));
+const errorBag = computed(() => ({ rolledMarker: markerErrors(marker.value) }));
+// Read against the slice, not the value at open: a marker changed elsewhere while this is open is
+// the one the stamped lines carry now.
+const markerChanged = computed(() => marker.value !== slice.state.rolledMarker);
+const valid = computed(() => ruleValid.value && errorBag.value.rolledMarker.length === 0);
+
 function save(): void {
   // Belt-and-braces alongside the disabled Save button: a disabled native <button> never
   // dispatches click, but nothing stops a future caller from invoking save() directly.
-  if (!ruleValid.value) return;
+  if (!valid.value) return;
   // Writes back only the fields this modal owns, so a concurrent change to a field it does
   // not own (enabled) survives; a concurrent edit to statusMap/canonical/rule while the
   // modal is open is legitimately overwritten by this Save.
@@ -74,6 +94,9 @@ function save(): void {
     mode: draft.rule.mode,
     conditions: [...draft.rule.conditions, ...preservedConditions],
   };
+  slice.state.rolledMarker = marker.value;
+  moveDefaults.state.mode = draft.moveMode;
+  moveDefaults.state.stamp = draft.moveStamp;
   api.submit();
 }
 </script>
@@ -87,8 +110,43 @@ function save(): void {
     :description="m.tasks_settings_rule_desc()"
     :errors="ruleErrors"
   />
+  <UiSettingRow :name="m.tasks_move_title()" heading>
+    <template #description>{{ m.tasks_move_defaults_desc() }}</template>
+  </UiSettingRow>
+  <UiSettingRow :name="m.tasks_checkbox_marker()">
+    <template #description>
+      {{ m.tasks_checkbox_marker_desc() }}
+      <span v-if="markerChanged && errorBag.rolledMarker.length === 0" class="tasks-checkbox-marker-changed">
+        {{ m.tasks_checkbox_marker_changed() }}
+      </span>
+      <span v-for="error of errorBag.rolledMarker" :key="error" class="tasks-move-form-error">{{ error }}</span>
+    </template>
+    <UiTextInput v-model="draft.rolledMarker" placeholder="#rolled" data-testid="checkbox-rolled-marker" />
+  </UiSettingRow>
+  <UiSettingRow :name="m.tasks_move_mode()">
+    <template #description>{{ m.tasks_move_mode_desc() }}</template>
+    <UiDropdown v-model="draft.moveMode" data-testid="move-default-mode">
+      <option value="copy">{{ m.tasks_move_mode_copy() }}</option>
+      <option value="move">{{ m.tasks_move_mode_move() }}</option>
+    </UiDropdown>
+  </UiSettingRow>
+  <UiSettingRow :name="m.tasks_move_stamp()">
+    <template #description>{{ m.tasks_move_stamp_desc() }}</template>
+    <UiToggle v-model="draft.moveStamp" :tooltip="m.tasks_move_stamp()" data-testid="move-default-stamp" />
+  </UiSettingRow>
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
-    <UiButton cta :disabled="!ruleValid" @click="save">{{ m.common_action_submit() }}</UiButton>
+    <UiButton cta :disabled="!valid" @click="save">{{ m.common_action_submit() }}</UiButton>
   </UiSettingRow>
 </template>
+
+<style scoped>
+.tasks-move-form-error {
+  color: var(--text-error);
+  display: block;
+}
+.tasks-checkbox-marker-changed {
+  color: var(--text-warning);
+  display: block;
+}
+</style>

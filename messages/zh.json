@@ -2416,6 +2416,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "识别规则",
   "tasks_settings_rule_desc": "哪些复选框列表项算作任务。",
+  "tasks_checkbox_marker": "结转标记",
+  "tasks_checkbox_marker_desc": "复制时添加到原行的标签。带有此标签的行视为已结转。",
+  "tasks_checkbox_marker_required": "请输入标签。",
+  "tasks_checkbox_marker_spaces": "标签不能包含空格。",
+  "tasks_checkbox_marker_changed": "带有旧标记的行将重新显示为未完成。",
   "tasks_settings_add_condition": "添加条件",
   "tasks_settings_condition_tag": "标签",
   "tasks_settings_condition_heading": "标题",
@@ -2551,6 +2556,69 @@
   "tasks_journal_filter_title": "列表筛选条件",
   "tasks_journal_filter_none": "此日记没有自己的列表筛选条件。",
   "tasks_journal_filter_edit": "编辑",
+  "tasks_move_title": "结转",
+  "tasks_move_edit": "编辑",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "从上一篇笔记复制未完成的任务，并将原行标记为已结转。",
+        "action=copy-stamp,count=*": "从之前的 {count} 篇笔记复制未完成的任务，并将原行标记为已结转。",
+        "action=copy,count=1": "从上一篇笔记复制未完成的任务。",
+        "action=copy,count=*": "从之前的 {count} 篇笔记复制未完成的任务。",
+        "action=move,count=1": "从上一篇笔记移动未完成的任务。",
+        "action=move,count=*": "从之前的 {count} 篇笔记移动未完成的任务。"
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "仅查找笔记本身。",
+        "source=notelets": "仅查找其子笔记。",
+        "source=both": "查找笔记及其子笔记。"
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "笔记中有 {heading} 时，放在其下方。",
+  "tasks_move_defaults_desc": "未单独设置的日记使用这些值。",
+  "tasks_move_mode": "复制或移动",
+  "tasks_move_mode_desc": "复制会在较早的笔记中保留原行。移动会将其移除。",
+  "tasks_move_mode_copy": "复制",
+  "tasks_move_mode_move": "移动",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "默认（复制）",
+        "mode=move": "默认（移动）"
+      }
+    }
+  ],
+  "tasks_move_stamp": "标记为已结转",
+  "tasks_move_stamp_desc": "为复制后留下的每个原行添加结转标记，使其不再显示为未完成。",
+  "tasks_move_stamp_on": "开",
+  "tasks_move_stamp_off": "关",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "默认（开）",
+        "stamp=off": "默认（关）"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "从上一时段的哪些笔记中取出任务。",
+  "tasks_move_heading": "目标标题",
+  "tasks_move_heading_desc": "笔记中没有任务原来所在的标题时任务的放置位置。留空则添加到末尾。",
+  "tasks_move_look_back": "回溯笔记数",
+  "tasks_move_look_back_desc": "从多少篇之前的笔记中取出未完成的任务。",
+  "tasks_move_look_back_invalid": "请输入不小于 1 的整数。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "列表显示哪些任务。",
   "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。",

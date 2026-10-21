@@ -7,6 +7,7 @@ import { SettingsService } from "@/settings";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
+import { moveDefaultsSlice } from "../../../move/settings";
 import { checkboxSlice } from "../slice";
 
 import EditCheckboxProviderModal from "./EditCheckboxProviderModal.vue";
@@ -507,5 +508,86 @@ describe("empty-condition validation", () => {
     await userEvent.tab();
 
     expect(screen.getByText(m.tasks_condition_values_required())).toBeTruthy();
+  });
+});
+
+async function typeMarker(text: string): Promise<void> {
+  const input = screen.getByTestId("checkbox-rolled-marker");
+  await userEvent.clear(input);
+  if (text !== "") await userEvent.type(input, text);
+}
+
+describe("rolled marker", () => {
+  it("editing the marker shows the consequence line", async () => {
+    await mount();
+    expect(screen.queryByText(m.tasks_checkbox_marker_changed())).toBeNull();
+
+    await typeMarker("#carried");
+
+    expect(screen.getByText(m.tasks_checkbox_marker_changed())).toBeTruthy();
+  });
+
+  // The consequence is about what the stored marker stops matching, so retyping the same tag in a
+  // spelling that normalizes to it changes nothing and must not warn.
+  it("shows no consequence line for a spelling that normalizes to the stored marker", async () => {
+    await mount();
+
+    await typeMarker("  rolled ");
+
+    expect(screen.queryByText(m.tasks_checkbox_marker_changed())).toBeNull();
+  });
+
+  it("trims the marker and adds a missing # on Save", async () => {
+    const { slice } = await mount();
+
+    await typeMarker("  carried ");
+    await save();
+
+    expect(slice.state.rolledMarker).toBe("#carried");
+  });
+
+  it("rejects an empty marker with an inline error", async () => {
+    const { slice, submit } = await mount();
+
+    await typeMarker(" ".repeat(3));
+    await save();
+
+    expect(screen.getByText(m.tasks_checkbox_marker_required())).toBeTruthy();
+    expect(submit).not.toHaveBeenCalled();
+    expect(slice.state.rolledMarker).toBe("#rolled");
+  });
+
+  it("rejects a marker containing a space with an inline error", async () => {
+    const { slice, submit } = await mount();
+
+    await typeMarker("#rolled over");
+    await save();
+
+    expect(screen.getByText(m.tasks_checkbox_marker_spaces())).toBeTruthy();
+    expect(submit).not.toHaveBeenCalled();
+    expect(slice.state.rolledMarker).toBe("#rolled");
+  });
+});
+
+describe("roll over defaults", () => {
+  it("writes the global mode and stamp defaults on Save", async () => {
+    const { harness } = await mount();
+    const defaults = harness.resolve(SettingsService).getSlice(moveDefaultsSlice);
+
+    await userEvent.selectOptions(screen.getByTestId("move-default-mode"), "move");
+    await userEvent.click(screen.getByTestId("move-default-stamp"));
+    await save();
+
+    expect(defaults.state).toEqual({ mode: "move", stamp: false });
+  });
+
+  it("leaves the global defaults untouched until Save", async () => {
+    const { harness } = await mount();
+    const defaults = harness.resolve(SettingsService).getSlice(moveDefaultsSlice);
+
+    await userEvent.selectOptions(screen.getByTestId("move-default-mode"), "move");
+    await userEvent.click(screen.getByText(m.common_action_cancel()));
+
+    expect(defaults.state.mode).toBe("copy");
   });
 });

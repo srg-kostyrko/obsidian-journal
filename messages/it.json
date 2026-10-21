@@ -2433,6 +2433,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regola di identificazione",
   "tasks_settings_rule_desc": "Quali elementi di elenco con casella contano come attività.",
+  "tasks_checkbox_marker": "Marcatore di riporto",
+  "tasks_checkbox_marker_desc": "Il tag che una copia aggiunge alla riga originale. Le righe che lo portano risultano riportate.",
+  "tasks_checkbox_marker_required": "Inserisci un tag.",
+  "tasks_checkbox_marker_spaces": "Un tag non può contenere spazi.",
+  "tasks_checkbox_marker_changed": "Le righe contrassegnate con il vecchio marcatore risulteranno di nuovo non completate.",
   "tasks_settings_add_condition": "Aggiungi condizione",
   "tasks_settings_condition_tag": "Tag",
   "tasks_settings_condition_heading": "Intestazione",
@@ -2568,6 +2573,69 @@
   "tasks_journal_filter_title": "Filtro dell'elenco",
   "tasks_journal_filter_none": "Questo diario non ha un filtro dell'elenco proprio.",
   "tasks_journal_filter_edit": "Modifica",
+  "tasks_move_title": "Riporta",
+  "tasks_move_edit": "Modifica",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copia le attività non completate dalla nota precedente e contrassegna le originali come riportate.",
+        "action=copy-stamp,count=*": "Copia le attività non completate dalle {count} note precedenti e contrassegna le originali come riportate.",
+        "action=copy,count=1": "Copia le attività non completate dalla nota precedente.",
+        "action=copy,count=*": "Copia le attività non completate dalle {count} note precedenti.",
+        "action=move,count=1": "Sposta le attività non completate dalla nota precedente.",
+        "action=move,count=*": "Sposta le attività non completate dalle {count} note precedenti."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Cerca solo nella nota.",
+        "source=notelets": "Cerca solo nelle sue note brevi.",
+        "source=both": "Cerca nella nota e nelle sue note brevi."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Le colloca sotto {heading} se la nota lo contiene.",
+  "tasks_move_defaults_desc": "Ogni diario usa questi valori, a meno che non imposti i propri.",
+  "tasks_move_mode": "Copia o sposta",
+  "tasks_move_mode_desc": "Copia mantiene la riga originale nella nota precedente. Sposta la rimuove da lì.",
+  "tasks_move_mode_copy": "Copia",
+  "tasks_move_mode_move": "Sposta",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Predefinito (copia)",
+        "mode=move": "Predefinito (sposta)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Contrassegna come riportata",
+  "tasks_move_stamp_desc": "Aggiunge il marcatore di riporto a ogni riga originale lasciata da una copia, così non risulta più non completata.",
+  "tasks_move_stamp_on": "Attivo",
+  "tasks_move_stamp_off": "Disattivo",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Predefinito (attivo)",
+        "stamp=off": "Predefinito (disattivo)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Da quali note del periodo precedente prendere le attività.",
+  "tasks_move_heading": "Intestazione di destinazione",
+  "tasks_move_heading_desc": "Dove finiscono le attività quando la nota non ha l'intestazione sotto cui si trovavano. Lascia vuoto per aggiungerle alla fine.",
+  "tasks_move_look_back": "Note precedenti",
+  "tasks_move_look_back_desc": "Da quante note precedenti prendere le attività non completate.",
+  "tasks_move_look_back_invalid": "Inserisci un numero intero pari o superiore a 1.",
   "tasks_filter_conditions_label": "Condizioni",
   "tasks_filter_conditions_desc": "Quali di queste attività mostra un elenco.",
   "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",

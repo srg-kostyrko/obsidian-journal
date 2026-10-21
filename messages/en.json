@@ -2435,6 +2435,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Identification rule",
   "tasks_settings_rule_desc": "Which checkbox list items count as tasks.",
+  "tasks_checkbox_marker": "Rolled marker",
+  "tasks_checkbox_marker_desc": "The tag a copy adds to the original line. Lines carrying it read as rolled.",
+  "tasks_checkbox_marker_required": "Enter a tag.",
+  "tasks_checkbox_marker_spaces": "A tag cannot contain spaces.",
+  "tasks_checkbox_marker_changed": "Lines stamped with the old marker will read as unfinished again.",
   "tasks_settings_add_condition": "Add condition",
   "tasks_settings_condition_tag": "Tag",
   "tasks_settings_condition_heading": "Heading",
@@ -2570,6 +2575,69 @@
   "tasks_journal_filter_title": "Listing filter",
   "tasks_journal_filter_none": "This journal has no listing filter of its own.",
   "tasks_journal_filter_edit": "Edit",
+  "tasks_move_title": "Roll over",
+  "tasks_move_edit": "Edit",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copies unfinished tasks from the previous note and marks the originals as rolled.",
+        "action=copy-stamp,count=*": "Copies unfinished tasks from the previous {count} notes and marks the originals as rolled.",
+        "action=copy,count=1": "Copies unfinished tasks from the previous note.",
+        "action=copy,count=*": "Copies unfinished tasks from the previous {count} notes.",
+        "action=move,count=1": "Moves unfinished tasks from the previous note.",
+        "action=move,count=*": "Moves unfinished tasks from the previous {count} notes."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Looks in the note only.",
+        "source=notelets": "Looks in its notelets only.",
+        "source=both": "Looks in the note and its notelets."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Places them under {heading} when the note has it.",
+  "tasks_move_defaults_desc": "Every journal uses these unless it sets its own.",
+  "tasks_move_mode": "Copy or move",
+  "tasks_move_mode_desc": "Copy keeps the original line in the earlier note. Move takes it out.",
+  "tasks_move_mode_copy": "Copy",
+  "tasks_move_mode_move": "Move",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Default (copy)",
+        "mode=move": "Default (move)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Mark as rolled",
+  "tasks_move_stamp_desc": "Adds the rolled marker to each original line a copy leaves behind, so it no longer reads as unfinished.",
+  "tasks_move_stamp_on": "On",
+  "tasks_move_stamp_off": "Off",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Default (on)",
+        "stamp=off": "Default (off)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Which of the earlier period's notes to take tasks from.",
+  "tasks_move_heading": "Target heading",
+  "tasks_move_heading_desc": "Where tasks land when the note lacks the heading they sat under. Leave empty to add them at the end.",
+  "tasks_move_look_back": "Look back",
+  "tasks_move_look_back_desc": "How many earlier notes to take unfinished tasks from.",
+  "tasks_move_look_back_invalid": "Enter a whole number of 1 or more.",
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Which of those tasks a listing shows.",
   "tasks_tick_recurring_needs_tasks_plugin": "This task was not ticked. Recurring tasks need the Tasks plugin to advance to their next instance.",

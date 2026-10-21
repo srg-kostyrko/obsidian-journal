@@ -2433,6 +2433,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Règle d’identification",
   "tasks_settings_rule_desc": "Quels éléments de liste avec case à cocher comptent comme des tâches.",
+  "tasks_checkbox_marker": "Marqueur de report",
+  "tasks_checkbox_marker_desc": "L’étiquette qu’une copie ajoute à la ligne d’origine. Les lignes qui la portent sont considérées comme reportées.",
+  "tasks_checkbox_marker_required": "Saisissez une étiquette.",
+  "tasks_checkbox_marker_spaces": "Une étiquette ne peut pas contenir d’espaces.",
+  "tasks_checkbox_marker_changed": "Les lignes marquées avec l’ancien marqueur seront de nouveau considérées comme non terminées.",
   "tasks_settings_add_condition": "Ajouter une condition",
   "tasks_settings_condition_tag": "Étiquette",
   "tasks_settings_condition_heading": "En-tête",
@@ -2568,6 +2573,69 @@
   "tasks_journal_filter_title": "Filtre de la liste",
   "tasks_journal_filter_none": "Ce journal n’a pas de filtre de liste propre.",
   "tasks_journal_filter_edit": "Modifier",
+  "tasks_move_title": "Reporter",
+  "tasks_move_edit": "Modifier",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copie les tâches non terminées de la note précédente et marque les originales comme reportées.",
+        "action=copy-stamp,count=*": "Copie les tâches non terminées des {count} notes précédentes et marque les originales comme reportées.",
+        "action=copy,count=1": "Copie les tâches non terminées de la note précédente.",
+        "action=copy,count=*": "Copie les tâches non terminées des {count} notes précédentes.",
+        "action=move,count=1": "Déplace les tâches non terminées de la note précédente.",
+        "action=move,count=*": "Déplace les tâches non terminées des {count} notes précédentes."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Cherche uniquement dans la note.",
+        "source=notelets": "Cherche uniquement dans ses notes brèves.",
+        "source=both": "Cherche dans la note et ses notes brèves."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Les place sous {heading} si la note le contient.",
+  "tasks_move_defaults_desc": "Chaque journal utilise ces valeurs, sauf s’il définit les siennes.",
+  "tasks_move_mode": "Copier ou déplacer",
+  "tasks_move_mode_desc": "Copier conserve la ligne d’origine dans la note précédente. Déplacer l’en retire.",
+  "tasks_move_mode_copy": "Copier",
+  "tasks_move_mode_move": "Déplacer",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Par défaut (copier)",
+        "mode=move": "Par défaut (déplacer)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Marquer comme reportée",
+  "tasks_move_stamp_desc": "Ajoute le marqueur de report à chaque ligne d’origine laissée par une copie, pour qu’elle ne soit plus considérée comme non terminée.",
+  "tasks_move_stamp_on": "Activé",
+  "tasks_move_stamp_off": "Désactivé",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Par défaut (activé)",
+        "stamp=off": "Par défaut (désactivé)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Les notes de la période précédente d’où proviennent les tâches.",
+  "tasks_move_heading": "En-tête de destination",
+  "tasks_move_heading_desc": "Où vont les tâches quand la note n’a pas l’en-tête sous lequel elles se trouvaient. Laissez vide pour les ajouter à la fin.",
+  "tasks_move_look_back": "Notes précédentes",
+  "tasks_move_look_back_desc": "Le nombre de notes précédentes d’où reprendre les tâches non terminées.",
+  "tasks_move_look_back_invalid": "Saisissez un nombre entier égal ou supérieur à 1.",
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Quelles tâches une liste affiche.",
   "tasks_tick_recurring_needs_tasks_plugin": "Cette tâche n'a pas été cochée. Les tâches récurrentes nécessitent le plugin Tasks pour passer à leur prochaine occurrence.",

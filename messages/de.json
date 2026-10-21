@@ -2435,6 +2435,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Erkennungsregel",
   "tasks_settings_rule_desc": "Welche Kontrollkästchen-Listeneinträge als Aufgaben zählen.",
+  "tasks_checkbox_marker": "Übertragen-Markierung",
+  "tasks_checkbox_marker_desc": "Das Tag, das eine Kopie der ursprünglichen Zeile hinzufügt. Zeilen damit gelten als übertragen.",
+  "tasks_checkbox_marker_required": "Gib ein Tag ein.",
+  "tasks_checkbox_marker_spaces": "Ein Tag darf keine Leerzeichen enthalten.",
+  "tasks_checkbox_marker_changed": "Zeilen mit der alten Markierung gelten wieder als unerledigt.",
   "tasks_settings_add_condition": "Bedingung hinzufügen",
   "tasks_settings_condition_tag": "Tag",
   "tasks_settings_condition_heading": "Überschrift",
@@ -2570,6 +2575,69 @@
   "tasks_journal_filter_title": "Anzeigefilter",
   "tasks_journal_filter_none": "Dieses Journal hat keinen eigenen Anzeigefilter.",
   "tasks_journal_filter_edit": "Bearbeiten",
+  "tasks_move_title": "Übertragen",
+  "tasks_move_edit": "Bearbeiten",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Kopiert unerledigte Aufgaben aus der vorherigen Notiz und markiert die Originale als übertragen.",
+        "action=copy-stamp,count=*": "Kopiert unerledigte Aufgaben aus den vorherigen {count} Notizen und markiert die Originale als übertragen.",
+        "action=copy,count=1": "Kopiert unerledigte Aufgaben aus der vorherigen Notiz.",
+        "action=copy,count=*": "Kopiert unerledigte Aufgaben aus den vorherigen {count} Notizen.",
+        "action=move,count=1": "Verschiebt unerledigte Aufgaben aus der vorherigen Notiz.",
+        "action=move,count=*": "Verschiebt unerledigte Aufgaben aus den vorherigen {count} Notizen."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Sucht nur in der Notiz.",
+        "source=notelets": "Sucht nur in ihren Kurznotizen.",
+        "source=both": "Sucht in der Notiz und ihren Kurznotizen."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Legt sie unter {heading} ab, wenn die Notiz diese Überschrift hat.",
+  "tasks_move_defaults_desc": "Jedes Journal verwendet diese Werte, sofern es keine eigenen festlegt.",
+  "tasks_move_mode": "Kopieren oder verschieben",
+  "tasks_move_mode_desc": "Kopieren behält die ursprüngliche Zeile in der früheren Notiz. Verschieben entfernt sie dort.",
+  "tasks_move_mode_copy": "Kopieren",
+  "tasks_move_mode_move": "Verschieben",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Standard (kopieren)",
+        "mode=move": "Standard (verschieben)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Als übertragen markieren",
+  "tasks_move_stamp_desc": "Fügt jeder ursprünglichen Zeile, die eine Kopie zurücklässt, die Übertragen-Markierung hinzu, damit sie nicht mehr als unerledigt gilt.",
+  "tasks_move_stamp_on": "An",
+  "tasks_move_stamp_off": "Aus",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Standard (an)",
+        "stamp=off": "Standard (aus)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Aus welchen Notizen des früheren Zeitraums Aufgaben übernommen werden.",
+  "tasks_move_heading": "Zielüberschrift",
+  "tasks_move_heading_desc": "Wohin Aufgaben kommen, wenn der Notiz die Überschrift fehlt, unter der sie standen. Leer lassen, um sie am Ende anzufügen.",
+  "tasks_move_look_back": "Rückblick",
+  "tasks_move_look_back_desc": "Aus wie vielen früheren Notizen unerledigte Aufgaben übernommen werden.",
+  "tasks_move_look_back_invalid": "Gib eine ganze Zahl ab 1 ein.",
   "tasks_filter_conditions_label": "Bedingungen",
   "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",

@@ -2430,6 +2430,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regra de identificação",
   "tasks_settings_rule_desc": "Quais itens de lista com caixa de seleção contam como tarefas.",
+  "tasks_checkbox_marker": "Marcador de transferência",
+  "tasks_checkbox_marker_desc": "A tag que uma cópia adiciona à linha original. Linhas com ela constam como transferidas.",
+  "tasks_checkbox_marker_required": "Digite uma tag.",
+  "tasks_checkbox_marker_spaces": "Uma tag não pode conter espaços.",
+  "tasks_checkbox_marker_changed": "As linhas marcadas com o marcador antigo voltarão a constar como não concluídas.",
   "tasks_settings_add_condition": "Adicionar condição",
   "tasks_settings_condition_tag": "Tag",
   "tasks_settings_condition_heading": "Cabeçalho",
@@ -2565,6 +2570,69 @@
   "tasks_journal_filter_title": "Filtro de listagem",
   "tasks_journal_filter_none": "Este diário não tem um filtro de listagem próprio.",
   "tasks_journal_filter_edit": "Editar",
+  "tasks_move_title": "Transferir",
+  "tasks_move_edit": "Editar",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copia as tarefas não concluídas da nota anterior e marca as originais como transferidas.",
+        "action=copy-stamp,count=*": "Copia as tarefas não concluídas das {count} notas anteriores e marca as originais como transferidas.",
+        "action=copy,count=1": "Copia as tarefas não concluídas da nota anterior.",
+        "action=copy,count=*": "Copia as tarefas não concluídas das {count} notas anteriores.",
+        "action=move,count=1": "Move as tarefas não concluídas da nota anterior.",
+        "action=move,count=*": "Move as tarefas não concluídas das {count} notas anteriores."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Procura apenas na nota.",
+        "source=notelets": "Procura apenas nas suas notas breves.",
+        "source=both": "Procura na nota e nas suas notas breves."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Coloca-as sob {heading} quando a nota o tiver.",
+  "tasks_move_defaults_desc": "Todo diário usa esses valores, a menos que defina os seus.",
+  "tasks_move_mode": "Copiar ou mover",
+  "tasks_move_mode_desc": "Copiar mantém a linha original na nota anterior. Mover a retira de lá.",
+  "tasks_move_mode_copy": "Copiar",
+  "tasks_move_mode_move": "Mover",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Padrão (copiar)",
+        "mode=move": "Padrão (mover)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Marcar como transferida",
+  "tasks_move_stamp_desc": "Adiciona o marcador de transferência a cada linha original que uma cópia deixa para trás, para que ela deixe de constar como não concluída.",
+  "tasks_move_stamp_on": "Ativado",
+  "tasks_move_stamp_off": "Desativado",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Padrão (ativado)",
+        "stamp=off": "Padrão (desativado)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "De quais notas do período anterior as tarefas são tiradas.",
+  "tasks_move_heading": "Cabeçalho de destino",
+  "tasks_move_heading_desc": "Onde as tarefas ficam quando a nota não tem o cabeçalho em que estavam. Deixe vazio para adicioná-las ao final.",
+  "tasks_move_look_back": "Notas anteriores",
+  "tasks_move_look_back_desc": "De quantas notas anteriores as tarefas não concluídas são tiradas.",
+  "tasks_move_look_back_invalid": "Digite um número inteiro igual ou maior que 1.",
   "tasks_filter_conditions_label": "Condições",
   "tasks_filter_conditions_desc": "Quais destas tarefas uma listagem exibe.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância.",

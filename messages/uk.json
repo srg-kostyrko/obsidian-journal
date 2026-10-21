@@ -2500,6 +2500,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Правило визначення",
   "tasks_settings_rule_desc": "Які пункти списку з чекбоксом вважаються завданнями.",
+  "tasks_checkbox_marker": "Мітка перенесення",
+  "tasks_checkbox_marker_desc": "Тег, який копіювання додає до вихідного рядка. Рядки з ним вважаються перенесеними.",
+  "tasks_checkbox_marker_required": "Введіть тег.",
+  "tasks_checkbox_marker_spaces": "Тег не може містити пробілів.",
+  "tasks_checkbox_marker_changed": "Рядки зі старою міткою знову вважатимуться незавершеними.",
   "tasks_settings_add_condition": "Додати умову",
   "tasks_settings_condition_tag": "Тег",
   "tasks_settings_condition_heading": "Заголовок",
@@ -2635,6 +2640,69 @@
   "tasks_journal_filter_title": "Фільтр списку",
   "tasks_journal_filter_none": "У цього журналу немає власного фільтра списку.",
   "tasks_journal_filter_edit": "Редагувати",
+  "tasks_move_title": "Перенесення",
+  "tasks_move_edit": "Редагувати",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Копіює незавершені завдання з попередньої нотатки й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*": "Копіює незавершені завдання з попередніх нотаток ({count}) й позначає вихідні рядки як перенесені.",
+        "action=copy,count=1": "Копіює незавершені завдання з попередньої нотатки.",
+        "action=copy,count=*": "Копіює незавершені завдання з попередніх нотаток ({count}).",
+        "action=move,count=1": "Переміщує незавершені завдання з попередньої нотатки.",
+        "action=move,count=*": "Переміщує незавершені завдання з попередніх нотаток ({count})."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Шукає лише в нотатці.",
+        "source=notelets": "Шукає лише в її піднотатках.",
+        "source=both": "Шукає в нотатці та її піднотатках."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Розміщує їх під {heading}, якщо він є в нотатці.",
+  "tasks_move_defaults_desc": "Кожен журнал використовує ці значення, якщо не задає власних.",
+  "tasks_move_mode": "Копіювати чи перемістити",
+  "tasks_move_mode_desc": "Під час копіювання вихідний рядок лишається в ранішій нотатці. Під час переміщення його звідти прибирають.",
+  "tasks_move_mode_copy": "Копіювати",
+  "tasks_move_mode_move": "Перемістити",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "За замовчуванням (копіювати)",
+        "mode=move": "За замовчуванням (перемістити)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Позначати як перенесені",
+  "tasks_move_stamp_desc": "Додає мітку перенесення до кожного вихідного рядка, який лишає копіювання, щоб він більше не вважався незавершеним.",
+  "tasks_move_stamp_on": "Увімк.",
+  "tasks_move_stamp_off": "Вимк.",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "За замовчуванням (увімк.)",
+        "stamp=off": "За замовчуванням (вимк.)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "З яких нотаток попереднього періоду брати завдання.",
+  "tasks_move_heading": "Цільовий заголовок",
+  "tasks_move_heading_desc": "Куди потрапляють завдання, якщо в нотатці немає заголовка, під яким вони були. Залиште порожнім, щоб додавати їх у кінець.",
+  "tasks_move_look_back": "Глибина перенесення",
+  "tasks_move_look_back_desc": "Зі скількох попередніх нотаток брати незавершені завдання.",
+  "tasks_move_look_back_invalid": "Введіть ціле число, не менше за 1.",
   "tasks_filter_conditions_label": "Умови",
   "tasks_filter_conditions_desc": "Які із цих завдань показує список.",
   "tasks_tick_recurring_needs_tasks_plugin": "Це завдання не було позначено. Щоб повторювані завдання переходили до наступного екземпляра, потрібен плагін Tasks.",
