@@ -31,8 +31,15 @@ function codeSpanEnd(line: string, at: number, length: number): number {
   return -1;
 }
 
+function isEscaped(line: string, index: number, from: number): boolean {
+  let backslashes = 0;
+  for (let i = index - 1; i >= from && line.charAt(i) === "\\"; i--) backslashes++;
+  return backslashes % 2 === 1;
+}
+
 // The comment still open at the end of `line`, given the one open at its start. A marker inside
-// inline code is literal text.
+// inline code is literal text. A backslash escapes only a marker's first character and the rest is
+// scanned again, so a backslash before two backticks still opens a one-backtick span.
 function commentAfter(line: string, open: CommentOpen | null): CommentOpen | null {
   let comment = open;
   let at = 0;
@@ -49,6 +56,10 @@ function commentAfter(line: string, open: CommentOpen | null): CommentOpen | nul
     const found = next.exec(line);
     if (!found) return null;
     const token = found[0];
+    if (isEscaped(line, found.index, at)) {
+      at = found.index + 1;
+      continue;
+    }
     at = found.index + token.length;
     if (token === "<!--" || token === "%%") {
       comment = token;

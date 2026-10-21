@@ -79,6 +79,35 @@ describe("placeGroups", () => {
     expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
   });
 
+  it("a backslash-escaped backtick opens no inline code, so a marker after it still opens a comment", () => {
+    const target = "Text \\` <!-- hidden `\n## Tasks\n## Other\n-->\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
+    const shortened = "Text \\``a` <!-- hidden ``\n## Tasks\n## Other\n-->\n";
+    expect(placeGroups(shortened, [group("Tasks", "- [ ] x")], "")).toBe(`${shortened}- [ ] x\n`);
+  });
+
+  it("an escaped backslash leaves the backtick after it free to open inline code", () => {
+    const target = "Text \\\\` <!-- shown `\n## Tasks\n- [ ] a\n## Other\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(
+      "Text \\\\` <!-- shown `\n## Tasks\n- [ ] a\n- [ ] x\n## Other\n",
+    );
+  });
+
+  it("a backslash-escaped comment opener opens no comment", () => {
+    const html = "Text \\<!-- shown\n## Tasks\n- [ ] a\n## Other\n";
+    expect(placeGroups(html, [group("Tasks", "- [ ] x")], "")).toBe(
+      "Text \\<!-- shown\n## Tasks\n- [ ] a\n- [ ] x\n## Other\n",
+    );
+    const obsidian = "Text \\%% shown\n## Tasks\n- [ ] a\n## Other\n";
+    expect(placeGroups(obsidian, [group("Tasks", "- [ ] x")], "")).toBe(
+      "Text \\%% shown\n## Tasks\n- [ ] a\n- [ ] x\n## Other\n",
+    );
+    const doubled = "Text \\\\<!-- hidden\n## Tasks\n-->\n## Other\n- [ ] o\n";
+    expect(placeGroups(doubled, [group("Tasks", "- [ ] x")], "")).toBe(`${doubled}- [ ] x\n`);
+    const tripled = "Text \\%%% hidden\n## Tasks\n%%\n## Other\n- [ ] o\n";
+    expect(placeGroups(tripled, [group("Tasks", "- [ ] x")], "")).toBe(`${tripled}- [ ] x\n`);
+  });
+
   it("a four-backtick fence is not closed by three backticks", () => {
     const target = "````\n```\n## Tasks\n```\n````\n## Other\n- [ ] o\n";
     expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
