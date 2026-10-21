@@ -11,22 +11,25 @@ export class QuietWindow {
   wait(): Promise<"quiet" | "busy"> {
     return new Promise<"quiet" | "busy">((resolve) => {
       let quiet = 0;
+      let ceiling = 0;
+      const stops: (() => void)[] = [];
       const finish = (verdict: "quiet" | "busy"): void => {
         window.clearTimeout(quiet);
         window.clearTimeout(ceiling);
-        for (const stop of stops) stop();
+        for (const stop of stops.splice(0)) stop();
         resolve(verdict);
       };
       const restart = (): void => {
         window.clearTimeout(quiet);
         quiet = window.setTimeout(() => finish("quiet"), QUIET_MS);
       };
-      const ceiling: number = window.setTimeout(() => finish("busy"), MAX_WAIT_MS);
-      const stops = [
+      ceiling = window.setTimeout(() => finish("busy"), MAX_WAIT_MS);
+      stops.push(
         this.#notes.events.on("created", restart),
         this.#notes.events.on("modified", restart),
+        this.#notes.events.on("renamed", restart),
         this.#notes.events.on("deleted", restart),
-      ];
+      );
       restart();
     });
   }

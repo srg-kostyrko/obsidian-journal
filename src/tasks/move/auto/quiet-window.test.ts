@@ -62,6 +62,19 @@ describe("QuietWindow", () => {
     expect(result.value).toBe("quiet");
   });
 
+  it("a rename restarts the wait too", async () => {
+    const { quiet, notes } = await setup();
+    const result = settled(quiet.wait());
+
+    await vi.advanceTimersByTimeAsync(QUIET_MS - 1);
+    expectOk(await notes.rename(path, "Daily/renamed.md" as VaultPath));
+    await vi.advanceTimersByTimeAsync(QUIET_MS - 1);
+    expect(result.value).toBeNull();
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(result.value).toBe("quiet");
+  });
+
   it("gives up busy at the ceiling", async () => {
     const { quiet, notes } = await setup();
     const result = settled(quiet.wait());
