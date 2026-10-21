@@ -12,6 +12,7 @@ export {
   PluginDataIOError,
   WorkspaceOpenError,
 } from "./errors";
+export { AppActivity } from "./internal/app-activity";
 export { MarkdownRenderService } from "./internal/markdown-render-service";
 export { MetadataTypeService } from "./internal/metadata-type-service";
 export { NoteMetadataService } from "./internal/note-metadata-service";

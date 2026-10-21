@@ -2603,13 +2603,23 @@
     }
   ],
   "tasks_move_summary_heading": "Les place sous {heading} quand l’en-tête d’où elles viennent est absent.",
+  "tasks_move_summary_automatic": "Reporte automatiquement.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2648,6 +2658,9 @@
   "tasks_move_look_back": "Notes précédentes",
   "tasks_move_look_back_desc": "Le nombre de notes précédentes d’où reprendre les tâches non terminées.",
   "tasks_move_look_back_invalid": "Saisissez un nombre entier égal ou supérieur à 1.",
+  "tasks_move_automatic_label": "Report automatique",
+  "tasks_move_automatic_desc": "Reporte tout seul les tâches non terminées dans la note actuelle dès que cette note existe et que ce coffre-fort est ouvert.",
+  "tasks_move_automatic_needs_stamp": "Nécessite Déplacer, ou Marquer comme reportée activé.",
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Quelles tâches une liste affiche.",
   "tasks_tick_recurring_needs_tasks_plugin": "Cette tâche n'a pas été cochée. Les tâches récurrentes nécessitent le plugin Tasks pour passer à leur prochaine occurrence.",
@@ -2711,6 +2724,20 @@
   ],
   "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
   "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
+  "tasks_auto_roll_paused": "Le report automatique est en pause pour {journal}. Activez Marquer comme reportée ou utilisez Déplacer.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais la note du {dates} n’a pas pu être mise à jour. Marquez ou supprimez les originaux dans la note du {dates}, ou effacez les copies, avant de lancer Reporter les tâches non terminées.",
+        "count=*": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais les notes du {dates} n’ont pas pu être mises à jour. Marquez ou supprimez les originaux dans les notes du {dates}, ou effacez les copies, avant de lancer Reporter les tâches non terminées."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "Le report automatique est en pause pour {journal} : un report n’a pas abouti, la note actuelle contient donc peut-être déjà des tâches que les notes précédentes proposent encore. Vérifiez les deux avant de lancer Reporter les tâches non terminées.",
+  "tasks_auto_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Elle sera reportée à la prochaine vérification.",
+  "tasks_auto_roll_prefix": "{journal} : {notice}",
   "tasks_move_pick_target": "Déplacer la tâche vers quelle note ?",
   "tasks_move_pick_journal": "Déplacer la tâche vers quel journal ?",
   "tasks_move_block_link_title": "Déplacer une tâche liée ?",

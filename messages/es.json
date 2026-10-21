@@ -2592,13 +2592,23 @@
     }
   ],
   "tasks_move_summary_heading": "Las coloca bajo {heading} si falta el encabezado del que venían.",
+  "tasks_move_summary_automatic": "Traslada automáticamente.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2637,6 +2647,9 @@
   "tasks_move_look_back": "Notas anteriores",
   "tasks_move_look_back_desc": "De cuántas notas anteriores se toman las tareas sin terminar.",
   "tasks_move_look_back_invalid": "Introduce un número entero mayor o igual que 1.",
+  "tasks_move_automatic_label": "Traslado automático",
+  "tasks_move_automatic_desc": "Traslada por sí solo las tareas sin terminar a la nota actual siempre que esa nota exista y esta bóveda esté abierta.",
+  "tasks_move_automatic_needs_stamp": "Requiere Mover, o tener activado Marcar como trasladada.",
   "tasks_filter_conditions_label": "Condiciones",
   "tasks_filter_conditions_desc": "Qué tareas muestra un listado.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",
@@ -2700,6 +2713,20 @@
   ],
   "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
   "tasks_roll_source_unread": "No se pudo leer la nota del {date}.",
+  "tasks_auto_roll_paused": "El traslado automático está en pausa para {journal}. Activa Marcar como trasladada o usa Mover.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudo actualizar la nota del {dates}. Marca o elimina las originales en la nota del {dates}, o borra las copias, antes de ejecutar Trasladar tareas sin terminar.",
+        "count=*": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudieron actualizar las notas del {dates}. Marca o elimina las originales en las notas del {dates}, o borra las copias, antes de ejecutar Trasladar tareas sin terminar."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "El traslado automático está en pausa para {journal}: un traslado no terminó, así que la nota actual puede tener ya tareas que las notas anteriores aún ofrecen. Revisa ambas antes de ejecutar Trasladar tareas sin terminar.",
+  "tasks_auto_roll_source_indexing": "La nota del {date} todavía se está indexando. Se trasladará en la próxima comprobación.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "¿A qué nota quieres mover la tarea?",
   "tasks_move_pick_journal": "¿A qué diario quieres mover la tarea?",
   "tasks_move_block_link_title": "¿Mover una tarea enlazada?",

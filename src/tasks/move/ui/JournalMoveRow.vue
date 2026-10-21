@@ -35,7 +35,9 @@ const summary = computed(() => {
     action: m.tasks_move_summary({ action: actionOf(effective), count: effective.lookBack }),
     source: m.tasks_move_summary_source({ source: effective.source }),
     heading: hasHeading ? m.tasks_move_summary_heading({ heading: effective.targetHeading }) : "",
+    automatic: effective.automatic ? m.tasks_move_summary_automatic() : "",
     hasHeading: hasHeading ? "yes" : "no",
+    hasAutomatic: effective.automatic ? "yes" : "no",
   });
 });
 

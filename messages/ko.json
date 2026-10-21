@@ -2589,13 +2589,23 @@
     }
   ],
   "tasks_move_summary_heading": "원래 있던 제목이 없으면 {heading} 아래에 둡니다.",
+  "tasks_move_summary_automatic": "자동으로 이월합니다.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2634,6 +2644,9 @@
   "tasks_move_look_back": "되돌아볼 노트 수",
   "tasks_move_look_back_desc": "완료되지 않은 작업을 가져올 이전 노트의 수.",
   "tasks_move_look_back_invalid": "1 이상의 정수를 입력하세요.",
+  "tasks_move_automatic_label": "자동 이월",
+  "tasks_move_automatic_desc": "현재 노트가 있고 이 보관함이 열려 있을 때마다 완료되지 않은 작업을 스스로 그 노트로 이월합니다.",
+  "tasks_move_automatic_needs_stamp": "이동이 필요하거나 ‘이월됨으로 표시’를 켜야 합니다.",
   "tasks_filter_conditions_label": "조건",
   "tasks_filter_conditions_desc": "목록에 표시할 작업 조건.",
   "tasks_tick_recurring_needs_tasks_plugin": "이 작업은 완료 처리되지 않았습니다. 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다.",
@@ -2697,6 +2710,20 @@
   ],
   "tasks_roll_source_indexing": "{date} 노트를 아직 색인하는 중입니다. 잠시 후 다시 시도하세요.",
   "tasks_roll_source_unread": "{date} 노트를 읽을 수 없습니다.",
+  "tasks_auto_roll_paused": "{journal}의 자동 이월이 일시 중지되었습니다. ‘이월됨으로 표시’를 켜거나 이동을 사용하세요.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal}의 자동 이월이 일시 중지되었습니다: 작업은 이미 현재 노트에 있지만 {dates} 노트를 업데이트할 수 없습니다. {dates} 노트의 원본을 표시하거나 제거하거나 사본을 삭제한 뒤 ‘완료되지 않은 작업 이월’을 실행하세요.",
+        "count=*": "{journal}의 자동 이월이 일시 중지되었습니다: 작업은 이미 현재 노트에 있지만 {dates} 노트를 업데이트할 수 없습니다. {dates} 노트의 원본을 표시하거나 제거하거나 사본을 삭제한 뒤 ‘완료되지 않은 작업 이월’을 실행하세요."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "{journal}의 자동 이월이 일시 중지되었습니다: 이월이 끝나지 않아 이전 노트에 남아 있는 작업이 현재 노트에도 이미 있을 수 있습니다. ‘완료되지 않은 작업 이월’을 실행하기 전에 두 노트를 모두 확인하세요.",
+  "tasks_auto_roll_source_indexing": "{date} 노트를 아직 색인하는 중입니다. 다음 확인 때 이월됩니다.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "작업을 어느 노트로 옮길까요?",
   "tasks_move_pick_journal": "작업을 어느 저널로 옮길까요?",
   "tasks_move_block_link_title": "링크된 작업을 옮길까요?",

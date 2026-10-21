@@ -22,6 +22,7 @@ import type {
   WorkspaceOpenError,
 } from "./errors";
 import type { Disposer } from "./input-suggests/types";
+import type { AppActivity } from "./internal/app-activity";
 import type { MarkdownRenderService } from "./internal/markdown-render-service";
 import type { NoteMetadataService } from "./internal/note-metadata-service";
 import type { NoteSizeEvents, NoteSizeService } from "./internal/note-size-service";
@@ -560,6 +561,24 @@ export class FakeNoticeService implements Pick<NoticeService, "show"> {
 
   show(message: string): void {
     this.messages.push(message);
+  }
+}
+
+export class FakeAppActivity implements Pick<AppActivity, "onResume"> {
+  readonly #callbacks = new Set<() => void>();
+
+  get subscriberCount(): number {
+    return this.#callbacks.size;
+  }
+
+  onResume(callback: () => void): () => void {
+    const entry = (): void => callback();
+    this.#callbacks.add(entry);
+    return () => this.#callbacks.delete(entry);
+  }
+
+  resume(): void {
+    for (const callback of this.#callbacks) callback();
   }
 }
 

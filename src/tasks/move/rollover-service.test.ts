@@ -29,7 +29,7 @@ import { NOTE_PROPERTY_PROVIDER_ID } from "../providers/note-property/slice";
 import { TaskIndex } from "../task-index";
 import { buildTaskItem } from "../testing";
 
-import { rollNotice, type RollReport } from "./report";
+import { rollNotice, rollSentences, type RollReport } from "./report";
 import { RolloverService } from "./rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "./settings";
 
@@ -163,10 +163,13 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     sources: [],
     read: [],
     noPrevious: false,
+    noTarget: false,
     missingHeading: [],
     heading: null,
     skippedNoteItems: 0,
     skippedBlockIds: 0,
+    skippedNoteItemsAt: [],
+    skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
     skippedSources: [],
@@ -312,6 +315,32 @@ describe("RolloverService", () => {
 
     const target = `daily/${TODAY}.md` as VaultPath;
     expect(notes.find(target).isSome()).toBe(true);
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+  });
+
+  it("a roll that may not create its target writes nothing when today's note is missing", async () => {
+    const { service, put, text, notes } = await rolloverFor({ daily: dayJournal("daily"), work: dayJournal("work") });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
+    const neighbor = put("work", TODAY, "- [ ] Work item\n");
+
+    const result = await service.roll("daily", { interactive: false, createTarget: false });
+
+    expectOk(result);
+    expect(result.value).toMatchObject({ noTarget: true, rolled: 0 });
+    expect(notes.find(`daily/${TODAY}.md` as VaultPath).isNone()).toBe(true);
+    expect(await text(source)).toBe("- [ ] Call Bob\n- [x] Done thing\n");
+    expect(await text(neighbor)).toBe("- [ ] Work item\n");
+  });
+
+  it("a roll that may not create its target still rolls into one that exists", async () => {
+    const { service, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
+    const target = put("daily", TODAY, "");
+
+    const result = await service.roll("daily", { interactive: false, createTarget: false });
+
+    expectOk(result);
+    expect(result.value).toMatchObject({ noTarget: false, rolled: 1 });
     expect(await text(target)).toBe("- [ ] Call Bob\n");
   });
 
@@ -574,6 +603,21 @@ describe("RolloverService", () => {
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     expect(await text(source)).toBe("- [ ] Linked ^abc\n");
     expect(report).toMatchObject({ rolled: 1, skippedBlockIds: 1 });
+  });
+
+  it("counts block links by the note they stay in", async () => {
+    const { roll, put } = await rolloverFor({ daily: dayJournal("daily", { mode: "move", lookBack: 2 }) });
+    put("daily", "2026-10-19", "- [ ] Old link ^one\n- [ ] Old link too ^two\n");
+    put("daily", "2026-10-20", "- [ ] New link ^three\n- [ ] Call Bob\n");
+    put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(report.skippedBlockIds).toBe(3);
+    expect(report.skippedBlockIdsAt).toEqual([
+      { anchor: "2026-10-19", count: 2 },
+      { anchor: "2026-10-20", count: 1 },
+    ]);
   });
 
   it("copy without stamping leaves the source untouched", async () => {
@@ -842,6 +886,7 @@ describe("RolloverService", () => {
     const report = await roll();
 
     expect(report).toMatchObject({ rolled: 1, skippedNoteItems: 1 });
+    expect(report.skippedNoteItemsAt).toEqual([{ anchor: "2026-10-20", count: 1 }]);
     expect(await text(source)).toBe("- [ ] Call Bob #rolled\n");
   });
 
@@ -904,6 +949,31 @@ describe("rollNotice", () => {
         m.tasks_roll_source_unread({ date: "2026-10-16" }),
       ].join(" "),
     );
+  });
+
+  it("rollSentences names each sentence's kind and the source it is about", () => {
+    const report = reportOf({
+      rolled: 1,
+      notes: 1,
+      sources: [anchor("2026-10-20")],
+      read: [anchor("2026-10-19"), anchor("2026-10-20")],
+      missingHeading: [anchor("2026-10-19")],
+      heading: "Tasks",
+      skippedBlockIds: 2,
+      changedSources: [{ path: "daily/2026-10-20.md" as VaultPath, anchor: anchor("2026-10-20") }],
+    });
+
+    expect(rollSentences(report).map(({ kind, anchor }) => ({ kind, anchor }))).toEqual([
+      { kind: "rolled", anchor: null },
+      { kind: "missing-heading", anchor: "2026-10-19" },
+      { kind: "block-ids-skipped", anchor: null },
+      { kind: "source-changed", anchor: "2026-10-20" },
+    ]);
+    expect(
+      rollSentences(report)
+        .map(({ text }) => text)
+        .join(" "),
+    ).toBe(rollNotice(report));
   });
 
   it("words an unwritten source by the roll's mode", () => {

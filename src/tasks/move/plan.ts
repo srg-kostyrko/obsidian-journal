@@ -109,6 +109,8 @@ export function planSource(source: RollSource, options: PlanOptions): SourcePlan
   const { selection, mode, rolledMarker } = options;
   const lines = content.split("\n");
   const named = positiveHeadings(selection);
+  // Read off the text whatever the structure lists: a line in a fence, comment or frontmatter is example text.
+  const hidden = hiddenLines(lines);
 
   const checkboxes = checkboxLines(source.items);
   const rolledLines = new Set(checkboxes.filter(({ item }) => item.status === "rolled").map(({ line }) => line));
@@ -117,6 +119,7 @@ export function planSource(source: RollSource, options: PlanOptions): SourcePlan
   const isRolled = (line: number): boolean => rolledLines.has(line) || carriesMarker({ line }, structure, rolledMarker);
   const eligible = checkboxes.filter(
     ({ item, line }) =>
+      !hidden.has(line) &&
       isOpen(item.status) &&
       matchesFilter(item, structure, selection) &&
       ancestorsOf(lines, line).every((ancestor) => !isRolled(ancestor)),

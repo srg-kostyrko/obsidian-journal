@@ -1,7 +1,9 @@
+import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { Flows } from "@/infrastructure/flows";
 import {
   NoteStructureService,
@@ -12,7 +14,7 @@ import {
   type NoteWriteError,
   type VaultPath,
 } from "@/infrastructure/host";
-import { AsyncResult, attempt, type Option, type Result } from "@/infrastructure/result";
+import { AsyncResult, attempt, Err, type Option, type Result } from "@/infrastructure/result";
 import { CycleService } from "@/journals/cycle";
 import { JournalNotFoundError } from "@/journals/errors";
 import { EnsureJournalEntryFlow } from "@/journals/flows";
@@ -32,16 +34,16 @@ import { TaskIndex } from "../task-index";
 import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
-import { NoCurrentPeriodError, type RollError } from "./errors";
+import { AutomaticRollRefusedError, NoCurrentPeriodError, type RollError } from "./errors";
 import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
 import { rewriteNote, type NoteWriters } from "./note-write";
 import { placeGroups } from "./placement";
 import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
-import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
+import { automaticBlocked, effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
 import { rewriteSource, sourceRewrite, type SourceRewrite } from "./source-write";
 
-import type { ChangedSource, RollReport } from "./report";
+import type { AnchoredCount, ChangedSource, RollReport } from "./report";
 import type { TaskRule } from "../conditions";
 
 interface AnchoredPlan {
@@ -94,6 +96,42 @@ function inSync(content: string, structure: NoteStructure, marker: string): bool
   );
 }
 
+export interface RollOptions {
+  readonly interactive: boolean;
+  // False for a roll nobody asked for: a missing target is reported, never created.
+  readonly createTarget?: boolean;
+  // True for an automatic roll: settings can change while it waits for the lock, so it is refused
+  // unless the journal is still automatic, and allowed to be, once the lock is held.
+  readonly requireAutomatic?: boolean;
+}
+
+function noTargetReport(journalName: string, mode: RollReport["mode"], heading: string | null): RollReport {
+  return {
+    journalName,
+    mode,
+    rolled: 0,
+    notes: 0,
+    sources: [],
+    read: [],
+    noPrevious: false,
+    noTarget: true,
+    missingHeading: [],
+    heading,
+    skippedNoteItems: 0,
+    skippedBlockIds: 0,
+    skippedNoteItemsAt: [],
+    skippedBlockIdsAt: [],
+    changedSources: [],
+    failedSources: [],
+    skippedSources: [],
+    unreadSources: [],
+  };
+}
+
+function sum(counts: readonly AnchoredCount[]): number {
+  return counts.reduce((total, { count }) => total + count, 0);
+}
+
 function selectionOf(filter: TaskRule): TaskRule {
   return { mode: filter.mode, conditions: filter.conditions.filter((condition) => condition.type !== "status") };
 }
@@ -103,6 +141,10 @@ function headingOf(selection: TaskRule): string | null {
     condition.type === "heading" && condition.condition === "under" ? condition.headings : [],
   );
   return named.at(0) ?? null;
+}
+
+interface RolloverEvents {
+  rolled: (report: RollReport, options: RollOptions) => void;
 }
 
 /** Rolls a journal's unfinished checkbox items from its previous notes into today's. */
@@ -128,6 +170,9 @@ export class RolloverService {
     tasks: inject(TaskIndex),
     visibility: inject(TaskVisibility),
   };
+  readonly #emitter: TypedEmitter<RolloverEvents> = createNanoEvents();
+  /** Fires after every roll that finished, whoever asked for it. */
+  readonly events: Subscribable<RolloverEvents> = this.#emitter;
 
   #todayAnchor(journalName: string): Result<AnchorString, NoCurrentPeriodError> {
     return this.#cycle
@@ -239,12 +284,13 @@ export class RolloverService {
 
   // Counted through the listing, not a query of our own, so the count matches what the period shows.
   // No source scope: a task note is reached by its date, which the listing never scopes by source.
-  async #openNoteItems(journalName: string, anchors: readonly AnchorString[]): Promise<number> {
+  async #openNoteItems(journalName: string, anchors: readonly AnchorString[]): Promise<readonly AnchoredCount[]> {
     const query = v.parse(taskQuerySchema, {
       scope: { provider: [NOTE_PROPERTY_PROVIDER_ID], depth: "literal" },
       filter: { mode: "and", conditions: [DEFAULT_STATUS_CONDITION] },
     });
     const keys = new Set<string>();
+    const counts: AnchoredCount[] = [];
     for (const anchor of anchors) {
       const rows = await buildTaskListing(this.#listing, {
         kind: "period",
@@ -253,19 +299,31 @@ export class RolloverService {
         journalNames: [journalName],
         query,
       });
+      // An item a later anchor's listing also reaches counts once, at the oldest.
+      const before = keys.size;
       for (const row of rows) {
         if (!row.context && isOpen(row.item.status)) keys.add(row.key);
       }
+      if (keys.size > before) counts.push({ anchor, count: keys.size - before });
     }
-    return keys.size;
+    return counts;
   }
 
-  #rollNow(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
+  #rollNow(journalName: string, options: RollOptions): AsyncResult<RollReport, RollError> {
     return attempt.in(this, async function* (this: RolloverService) {
       const config = yield* this.#journals.get(journalName).okOr(new JournalNotFoundError(journalName));
       const today = yield* this.#todayAnchor(journalName);
       const move = effectiveMove(config.tasks.move, this.#defaults.state);
+      if (options.requireAutomatic === true) {
+        const refused = config.tasks.move.automatic ? automaticBlocked(move) : "not-automatic";
+        if (refused !== null) return yield* new Err(new AutomaticRollRefusedError(journalName, refused));
+      }
       const selection = selectionOf(config.tasks.filter);
+      const heading = headingOf(selection);
+      const createTarget = options.createTarget ?? true;
+      if (!createTarget && this.#index.get(journalName, today).isNone()) {
+        return noTargetReport(journalName, move.mode, heading);
+      }
       const marker = this.#checkbox.state.rolledMarker;
       const read = this.#lookBack(journalName, today, move);
 
@@ -285,6 +343,10 @@ export class RolloverService {
       const changedSources: ChangedSource[] = [];
       const failedSources: ChangedSource[] = [];
       if (contributing.length > 0) {
+        // The reads await, and the note can be deleted meanwhile.
+        if (!createTarget && this.#index.get(journalName, today).isNone()) {
+          return noTargetReport(journalName, move.mode, heading);
+        }
         const target = yield* this.#targetPath(journalName, today, options.interactive);
         const groups = contributing.flatMap(({ plan }) => plan.block);
         // The target goes first, and reaches disk first: a failure before the sources are written leaves
@@ -303,7 +365,13 @@ export class RolloverService {
         }
       }
 
-      const heading = headingOf(selection);
+      const skippedNoteItemsAt = await this.#openNoteItems(journalName, read);
+      const skippedBlockIdsAt = read.flatMap((anchor) => {
+        const count = plans
+          .filter((entry) => entry.anchor === anchor)
+          .reduce((total, { plan }) => total + plan.refusedForBlockId.length, 0);
+        return count > 0 ? [{ anchor, count }] : [];
+      });
       const report: RollReport = {
         journalName,
         mode: move.mode,
@@ -312,6 +380,7 @@ export class RolloverService {
         sources: [...new Set(contributing.map(({ anchor }) => anchor))],
         read,
         noPrevious: read.length === 0,
+        noTarget: false,
         missingHeading:
           heading === null
             ? []
@@ -320,8 +389,10 @@ export class RolloverService {
                 return atAnchor.length > 0 && atAnchor.every(({ plan }) => plan.selectionMissedHeading);
               }),
         heading,
-        skippedNoteItems: await this.#openNoteItems(journalName, read),
-        skippedBlockIds: plans.reduce((sum, { plan }) => sum + plan.refusedForBlockId.length, 0),
+        skippedNoteItems: sum(skippedNoteItemsAt),
+        skippedBlockIds: sum(skippedBlockIdsAt),
+        skippedNoteItemsAt,
+        skippedBlockIdsAt,
         changedSources,
         failedSources,
         skippedSources: read.filter((anchor) => indexing.has(anchor)),
@@ -331,7 +402,9 @@ export class RolloverService {
     });
   }
 
-  roll(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
-    return this.#locks.run([journalName], () => this.#rollNow(journalName, options));
+  roll(journalName: string, options: RollOptions): AsyncResult<RollReport, RollError> {
+    return this.#locks
+      .run([journalName], () => this.#rollNow(journalName, options))
+      .tap((report) => this.#emitter.emit("rolled", report, options));
   }
 }

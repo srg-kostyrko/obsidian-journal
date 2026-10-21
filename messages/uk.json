@@ -2679,13 +2679,23 @@
     }
   ],
   "tasks_move_summary_heading": "Розміщує їх під {heading}, якщо заголовка, під яким вони були, немає.",
+  "tasks_move_summary_automatic": "Переносить автоматично.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2724,6 +2734,9 @@
   "tasks_move_look_back": "Глибина перенесення",
   "tasks_move_look_back_desc": "Зі скількох попередніх нотаток брати незавершені завдання.",
   "tasks_move_look_back_invalid": "Введіть ціле число, не менше за 1.",
+  "tasks_move_automatic_label": "Автоматичне перенесення",
+  "tasks_move_automatic_desc": "Саме переносить незавершені завдання до поточної нотатки, коли вона існує і це сховище відкрите.",
+  "tasks_move_automatic_needs_stamp": "Потрібен режим «Перемістити» або ввімкнене «Позначати як перенесені».",
   "tasks_filter_conditions_label": "Умови",
   "tasks_filter_conditions_desc": "Які із цих завдань показує список.",
   "tasks_tick_recurring_needs_tasks_plugin": "Це завдання не було позначено. Щоб повторювані завдання переходили до наступного екземпляра, потрібен плагін Tasks.",
@@ -2793,6 +2806,20 @@
   ],
   "tasks_roll_source_indexing": "Нотатка за {date} ще індексується. Спробуйте ще раз трохи згодом.",
   "tasks_roll_source_unread": "Не вдалося прочитати нотатку за {date}.",
+  "tasks_auto_roll_paused": "Автоматичне перенесення для {journal} призупинено. Увімкніть «Позначати як перенесені» або виберіть «Перемістити».",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Автоматичне перенесення для {journal} призупинено: завдання вже в поточній нотатці, але не вдалося оновити нотатку за {dates}. Перш ніж запускати «Перенести незавершені завдання», позначте або видаліть вихідні завдання в нотатці за {dates} чи видаліть копії.",
+        "count=*": "Автоматичне перенесення для {journal} призупинено: завдання вже в поточній нотатці, але не вдалося оновити нотатки за {dates}. Перш ніж запускати «Перенести незавершені завдання», позначте або видаліть вихідні завдання в нотатках за {dates} чи видаліть копії."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "Автоматичне перенесення для {journal} призупинено: перенесення не завершилося, тож у поточній нотатці вже можуть бути завдання, які лишилися в попередніх нотатках. Перевірте обидві сторони, перш ніж запускати «Перенести незавершені завдання».",
+  "tasks_auto_roll_source_indexing": "Нотатка за {date} ще індексується. Її буде перенесено під час наступної перевірки.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "До якої нотатки перемістити завдання?",
   "tasks_move_pick_journal": "До якого журналу перемістити завдання?",
   "tasks_move_block_link_title": "Перемістити пов’язане завдання?",

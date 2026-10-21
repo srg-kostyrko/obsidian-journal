@@ -2687,13 +2687,23 @@
     }
   ],
   "tasks_move_summary_heading": "Помещает их под {heading}, если заголовка, под которым они были, нет.",
+  "tasks_move_summary_automatic": "Переносит автоматически.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2732,6 +2742,9 @@
   "tasks_move_look_back": "Глубина переноса",
   "tasks_move_look_back_desc": "Из скольких предыдущих заметок брать незавершённые задачи.",
   "tasks_move_look_back_invalid": "Введите целое число не меньше 1.",
+  "tasks_move_automatic_label": "Автоматический перенос",
+  "tasks_move_automatic_desc": "Сам переносит незавершённые задачи в текущую заметку, когда она существует и это хранилище открыто.",
+  "tasks_move_automatic_needs_stamp": "Нужен режим «Переместить» или включённая отметка «Отмечать как перенесённые».",
   "tasks_filter_conditions_label": "Условия",
   "tasks_filter_conditions_desc": "Какие из этих задач показывает список.",
   "tasks_tick_recurring_needs_tasks_plugin": "Эта задача не была отмечена. Чтобы повторяющиеся задачи переходили к следующему экземпляру, нужен плагин Tasks.",
@@ -2801,6 +2814,20 @@
   ],
   "tasks_roll_source_indexing": "Заметка за {date} ещё индексируется. Попробуйте ещё раз чуть позже.",
   "tasks_roll_source_unread": "Не удалось прочитать заметку за {date}.",
+  "tasks_auto_roll_paused": "Автоматический перенос для {journal} приостановлен. Включите «Отмечать как перенесённые» или выберите «Переместить».",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Автоматический перенос для {journal} приостановлен: задачи уже в текущей заметке, но не удалось обновить заметку за {dates}. Прежде чем запускать «Перенести незавершённые задачи», отметьте или удалите исходные задачи в заметке за {dates} либо удалите копии.",
+        "count=*": "Автоматический перенос для {journal} приостановлен: задачи уже в текущей заметке, но не удалось обновить заметки за {dates}. Прежде чем запускать «Перенести незавершённые задачи», отметьте или удалите исходные задачи в заметках за {dates} либо удалите копии."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "Автоматический перенос для {journal} приостановлен: перенос не завершился, поэтому в текущей заметке уже могут быть задачи, которые остались в прежних заметках. Проверьте обе стороны, прежде чем запускать «Перенести незавершённые задачи».",
+  "tasks_auto_roll_source_indexing": "Заметка за {date} ещё индексируется. Она будет перенесена при следующей проверке.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "В какую заметку переместить задачу?",
   "tasks_move_pick_journal": "В какой журнал переместить задачу?",
   "tasks_move_block_link_title": "Переместить связанную задачу?",

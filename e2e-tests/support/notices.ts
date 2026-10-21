@@ -8,8 +8,8 @@ export async function noticeTexts(): Promise<string[]> {
   return $$(".notice-container .notice").map(async (notice) => notice.getText());
 }
 
-export async function waitForNotice(text: string): Promise<void> {
-  await waitForState(noticeTexts, (texts) => texts.includes(text), `no notice read "${text}"`);
+export async function waitForNotice(text: string, timeout?: number): Promise<void> {
+  await waitForState(noticeTexts, (texts) => texts.includes(text), `no notice read "${text}"`, timeout);
 }
 
 // A Notice fades IN on creation, and WebDriver's getText() reads an opacity:0 element as empty

@@ -1261,8 +1261,109 @@ identical, recurrence and due date untouched.
 
 Copy-by-default also makes a deep reach recoverable — nothing was destroyed, a
 stale list is merely sitting in today's note — while under-reaching loses real
-work. If rollover ever runs automatically on note creation the notice fires
-unread, which is an argument for keeping it manual, not for adding a bound.
+work. Rollover can run automatically, where the notice may fire unread; that
+is answered by what an automatic run says and by the mode it requires (see
+"Automatic rollover" below), not by adding a bound.
+
+### Automatic rollover
+
+A journal opts in per journal (`tasks.move.automatic`, off by default). It is
+the bulk rollover run unattended, with the same look-back, source, placement
+and refusals, and one difference: it never creates the target. With no note
+for the current period it does nothing; a note made later, by any route, is
+itself a trigger.
+
+**The trigger is that the period is current, not that the note was created.**
+A note receives automatic rolls while it exists and its period contains today,
+read from the clock at the moment of each check, never cached. A note made ahead
+of time gets nothing until its period arrives; a note whose period has ended
+gets no more. Every write type behaves the same.
+
+**Checkpoints.** The index becoming ready after boot (an empty pre-walk index
+would read as "no current note"); local midnight, one timer re-armed after every
+run, since every longer period also starts at a midnight; app resume — focus or
+`visibilitychange` on any window, because timers do not advance through a
+suspend; and a period entry added while its period is current, gated on
+`workspace.layoutReady` read at event time so the boot create-replay does not
+count. A journal outside its timeline, or whose current entry has no file in the
+vault (a settings preview), is skipped.
+
+**Continuous.** Every checkpoint rolls whatever is still eligible. A taken item
+is stamped or removed, so a rerun picks up only what is new — an item written
+into yesterday's note in the afternoon rolls at the next checkpoint — and
+nothing about past runs is recorded anywhere. That is what keeps the standing
+rule: eligibility is read from the source's own lines.
+
+**The mode guard.** Continuity is only safe when taking an item leaves a record
+in the source, so automatic rollover requires **move**, or **copy with
+stamping**. Copy without a stamp would re-take every item at every checkpoint.
+The journal's settings refuse to turn it on in that combination; a journal that
+reaches it later (a global default changed underneath it) is skipped, with one
+notice per session. The guard is read twice: before the roll is queued, and
+again by the roll itself once it holds the journal's move lock
+(`requireAutomatic`), since a setting can change while it waits behind another
+move; a roll that finds the journal blocked or no longer automatic there writes
+nothing.
+
+**Determinism.** There is no device distinction and no assumption about the
+sync tool. Any signal a second device could consult — a stamp, a removal, a
+"rolled already" record in the target — travels by the same sync and arrives
+with the same delay, so no in-note record closes the two-device race; such a
+record was considered and rejected. Instead, given the same sources and target,
+every device produces byte-identical edits at the same position: the same lines,
+order, placement and stamp, with no timestamps or device-specific content. Where
+the sync combines identical edits, the race does no harm.
+
+**Settle, then re-read.** Every checkpoint first waits for a quiet vault — no
+file created, modified, renamed or deleted for 5 s — and only then reads sources
+and target. The boot and resume checkpoints start that wait only after a 30 s
+delay (`RESUME_DELAY_MS`), since that is when a sync tool starts catching up and
+its first seconds can be as quiet as a vault with nothing to fetch; a resume
+arriving while a delay-free wait (midnight, a new note) is under way adds the
+delay to that wait, at most once per wait. A vault still busy at the 60 s ceiling
+is not read: the wait goes round again, each round with its own ceiling — when in
+doubt, don't roll. Checkpoints arriving during the wait are absorbed by it; one
+arriving during a roll schedules exactly one follow-up run. With no journal
+automatic, a checkpoint only re-arms the midnight timer. Journals roll one at a
+time, in name order. The window is a heuristic, and no length suits every sync
+setup: it lets a sync already under way land, but a sync that starts after the
+vault has gone quiet still races the roll.
+
+**Leftover risk.** Two devices that both roll before either has synced, plus an
+edit made between the runs or a merge that does not combine identical
+insertions (Obsidian Sync's merge is documented to sometimes create duplicate
+text), can still duplicate. So can partial delivery: device B receives device
+A's target, already holding the rolled items, and goes quiet before A's stamps
+or removals in the source arrive, so B reads the items as still open and takes
+them again. The user manual states both, with why they are recoverable: copy
+destroys nothing, the listing shows what is left, and the manual command remains.
+
+**Silent when empty.** A roll that writes always shows its notice; a check that
+finds nothing to roll, or no earlier note, shows nothing — that is the normal
+case at most checkpoints. Every other sentence (a missing heading, block ids
+left in place under move, task notes skipped, an earlier note still indexing or
+unreadable, a source that changed or failed) is shown once per note and kind per
+session; the indexing sentence says the note rolls at the next check rather than
+asking the user to retry. Every roll notice is prefixed with the journal's name,
+whatever the number of automatic journals, since nobody pressed anything that
+would say which journal it was; the pause notices name it in their own text.
+
+**Session pauses.** Two conditions pause a journal for the session, held in
+memory only. The mode guard above lifts as soon as the settings allow a roll
+again, and leaves the paused set when it does, so a later block is announced
+again. The other is a roll that may have left items in the target while the
+source still offers them, so the next checkpoint would copy them again: a
+source whose write failed or that changed under the roll (the pause notice names
+every such note and replaces the roll's own changed and failed sentences), and
+any other roll error or throw except an ended period or a deleted journal. That
+pause lifts when a roll of the journal — in practice the manual command —
+finishes with every source read and written — none changed, failed, still
+indexing or unreadable, since a skipped source may be the very note the pause
+is about (`RolloverService` emits `rolled` on every finished roll) — and
+otherwise lasts until restart. A manual roll of an automatic journal that leaves
+a source failed or changed pauses it the same way, its pause notice following
+the command's own. Both pauses, and the once-per-session record of what was
+announced, follow the journal through a rename.
 
 ## Build order
 

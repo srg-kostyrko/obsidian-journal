@@ -64,4 +64,4 @@ export function buildNoteletMetadata(overrides: Partial<NoteletMetadata> = {}): 
 }
 
 /** The move block a journal parses to when it stores none. */
-export const noMove = { source: "note" as const, targetHeading: "", lookBack: 1 };
+export const noMove = { source: "note" as const, targetHeading: "", lookBack: 1, automatic: false };

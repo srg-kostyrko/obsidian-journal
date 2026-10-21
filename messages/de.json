@@ -2605,13 +2605,23 @@
     }
   ],
   "tasks_move_summary_heading": "Legt sie unter {heading} ab, wenn die Überschrift fehlt, unter der sie standen.",
+  "tasks_move_summary_automatic": "Überträgt automatisch.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2650,6 +2660,9 @@
   "tasks_move_look_back": "Rückblick",
   "tasks_move_look_back_desc": "Aus wie vielen früheren Notizen unerledigte Aufgaben übernommen werden.",
   "tasks_move_look_back_invalid": "Gib eine ganze Zahl ab 1 ein.",
+  "tasks_move_automatic_label": "Automatisches Übertragen",
+  "tasks_move_automatic_desc": "Überträgt unerledigte Aufgaben von selbst in die aktuelle Notiz, sobald diese existiert und dieser Vault geöffnet ist.",
+  "tasks_move_automatic_needs_stamp": "Erfordert Verschieben oder eingeschaltetes „Als übertragen markieren“.",
   "tasks_filter_conditions_label": "Bedingungen",
   "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",
@@ -2713,6 +2726,20 @@
   ],
   "tasks_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Versuche es gleich noch einmal.",
   "tasks_roll_source_unread": "Die Notiz vom {date} konnte nicht gelesen werden.",
+  "tasks_auto_roll_paused": "Automatisches Übertragen ist für {journal} pausiert. Schalte „Als übertragen markieren“ ein oder nutze Verschieben.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notiz vom {dates} konnte nicht aktualisiert werden. Markiere oder entferne die Originale in der Notiz vom {dates} oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
+        "count=*": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notizen vom {dates} konnten nicht aktualisiert werden. Markiere oder entferne die Originale in den Notizen vom {dates} oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "Automatisches Übertragen ist für {journal} pausiert: Ein Übertragen wurde nicht abgeschlossen, daher enthält die aktuelle Notiz womöglich schon Aufgaben, die die früheren Notizen noch anbieten. Prüfe beide, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
+  "tasks_auto_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Sie wird bei der nächsten Prüfung übertragen.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "In welche Notiz soll die Aufgabe verschoben werden?",
   "tasks_move_pick_journal": "In welches Journal soll die Aufgabe verschoben werden?",
   "tasks_move_block_link_title": "Verknüpfte Aufgabe verschieben?",

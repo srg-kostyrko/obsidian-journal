@@ -2592,13 +2592,23 @@
     }
   ],
   "tasks_move_summary_heading": "元の見出しがない場合は{heading}の下に置きます。",
+  "tasks_move_summary_automatic": "自動で繰り越します。",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action}{source}{heading}",
-        "hasHeading=*": "{action}{source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action}{source}{heading}{automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action}{source}{heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action}{source}{automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action}{source}"
       }
     }
   ],
@@ -2637,6 +2647,9 @@
   "tasks_move_look_back": "さかのぼる数",
   "tasks_move_look_back_desc": "未完了のタスクを取り出す前のノートの数。",
   "tasks_move_look_back_invalid": "1以上の整数を入力してください。",
+  "tasks_move_automatic_label": "自動繰り越し",
+  "tasks_move_automatic_desc": "現在のノートが存在し、この保管庫が開いているときは、未完了のタスクを自動的にそのノートへ繰り越します。",
+  "tasks_move_automatic_needs_stamp": "「移動」か、「繰り越し済みとしてマーク」をオンにする必要があります。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "一覧に表示するタスクの条件。",
   "tasks_tick_recurring_needs_tasks_plugin": "このタスクはチェックされませんでした。繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。",
@@ -2700,6 +2713,20 @@
   ],
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
+  "tasks_auto_roll_paused": "{journal}の自動繰り越しは一時停止中です。「繰り越し済みとしてマーク」をオンにするか、「移動」を使用してください。",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートを更新できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートの元のタスクをマークまたは削除するか、コピーを削除してください。",
+        "count=*": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートを更新できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートの元のタスクをマークまたは削除するか、コピーを削除してください。"
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "{journal}の自動繰り越しは一時停止中です：繰り越しが完了しなかったため、以前のノートに残っているタスクがすでに現在のノートにもある可能性があります。「未完了のタスクを繰り越す」を手動で実行する前に、両方を確認してください。",
+  "tasks_auto_roll_source_indexing": "{date}のノートはまだインデックス作成中です。次の確認時に繰り越されます。",
+  "tasks_auto_roll_prefix": "{journal}：{notice}",
   "tasks_move_pick_target": "タスクをどのノートに移動しますか？",
   "tasks_move_pick_journal": "タスクをどのジャーナルに移動しますか？",
   "tasks_move_block_link_title": "リンクされたタスクを移動しますか？",

@@ -2600,13 +2600,23 @@
     }
   ],
   "tasks_move_summary_heading": "Coloca-as sob {heading} quando falta o cabeçalho de onde vieram.",
+  "tasks_move_summary_automatic": "Transfere automaticamente.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2645,6 +2655,9 @@
   "tasks_move_look_back": "Notas anteriores",
   "tasks_move_look_back_desc": "De quantas notas anteriores as tarefas não concluídas são tiradas.",
   "tasks_move_look_back_invalid": "Digite um número inteiro igual ou maior que 1.",
+  "tasks_move_automatic_label": "Transferência automática",
+  "tasks_move_automatic_desc": "Transfere sozinho as tarefas por concluir para a nota atual sempre que essa nota existir e este cofre estiver aberto.",
+  "tasks_move_automatic_needs_stamp": "Requer Mover, ou Marcar como transferida ativado.",
   "tasks_filter_conditions_label": "Condições",
   "tasks_filter_conditions_desc": "Quais destas tarefas uma listagem exibe.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarefa não foi marcada. Tarefas recorrentes precisam do plugin Tasks para avançar para a próxima instância.",
@@ -2708,6 +2721,20 @@
   ],
   "tasks_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Tente novamente em instantes.",
   "tasks_roll_source_unread": "Não foi possível ler a nota de {date}.",
+  "tasks_auto_roll_paused": "A transferência automática está pausada para {journal}. Ative Marcar como transferida ou use Mover.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar a nota de {dates}. Marque ou remova os originais na nota de {dates}, ou apague as cópias, antes de executar Transferir tarefas não concluídas.",
+        "count=*": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar as notas de {dates}. Marque ou remova os originais nas notas de {dates}, ou apague as cópias, antes de executar Transferir tarefas não concluídas."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "A transferência automática está pausada para {journal}: uma transferência não terminou, então a nota atual pode já conter tarefas que as notas anteriores ainda oferecem. Verifique ambas antes de executar Transferir tarefas não concluídas.",
+  "tasks_auto_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Ela será transferida na próxima verificação.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "Mover a tarefa para qual nota?",
   "tasks_move_pick_journal": "Mover a tarefa para qual diário?",
   "tasks_move_block_link_title": "Mover uma tarefa vinculada?",

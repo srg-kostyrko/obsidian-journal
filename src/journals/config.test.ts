@@ -74,14 +74,19 @@ describe("journalConfigSchema", () => {
     expect(parsed.success && parsed.output.tasks).toEqual({
       providers: {},
       filter: { mode: "and", conditions: [] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
   });
 
   it("a stored journal without tasks.move parses with the default move block", () => {
     const stored = { ...journalDefaultsFor({ type: "day" }, "daily"), tasks: { providers: {} } };
     const parsed = v.safeParse(journalConfigSchema, stored);
-    expect(parsed.success && parsed.output.tasks.move).toEqual({ source: "note", targetHeading: "", lookBack: 1 });
+    expect(parsed.success && parsed.output.tasks.move).toEqual({
+      source: "note",
+      targetHeading: "",
+      lookBack: 1,
+      automatic: false,
+    });
   });
 
   it("keeps a per-journal checkbox rule", () => {
@@ -112,7 +117,7 @@ describe("journalConfigSchema", () => {
     expect(parsed.tasks).toEqual({
       providers: {},
       filter: { mode: "and", conditions: [] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
   });
 
@@ -658,7 +663,7 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: {},
       filter: { mode: "or", conditions: [heading] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.providers"] });
   });
@@ -680,7 +685,7 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: { checkbox },
       filter: { mode: "or", conditions: [heading] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions.1"] });
   });
@@ -694,9 +699,19 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: { checkbox },
       filter: { mode: "and", conditions: [] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions"] });
+  });
+
+  it("an unreadable automatic flag repairs to off, keeping the rest of the move block", async () => {
+    const { tasks, repair } = await loadTasks({
+      providers: { checkbox },
+      move: { mode: "move", source: "both", targetHeading: "Tasks", lookBack: 3, automatic: "yes" },
+    });
+
+    expect(tasks.move).toEqual({ mode: "move", source: "both", targetHeading: "Tasks", lookBack: 3, automatic: false });
+    expect(repair?.fields).toMatchObject({ fields: ["tasks.move.automatic"] });
   });
 
   it("an unreadable listing filter mode resets to and, keeping the conditions", async () => {
@@ -708,7 +723,7 @@ describe("journal tasks repair on load", () => {
     expect(tasks).toEqual({
       providers: { checkbox },
       filter: { mode: "and", conditions: [heading] },
-      move: { source: "note", targetHeading: "", lookBack: 1 },
+      move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
     expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.mode"] });
   });

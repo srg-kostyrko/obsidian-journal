@@ -2603,13 +2603,23 @@
     }
   ],
   "tasks_move_summary_heading": "Le colloca sotto {heading} se manca l'intestazione da cui provengono.",
+  "tasks_move_summary_automatic": "Riporta automaticamente.",
   "tasks_move_summary_line": [
     {
-      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
-      "selectors": ["hasHeading"],
+      "declarations": [
+        "input action",
+        "input source",
+        "input heading",
+        "input hasHeading",
+        "input automatic",
+        "input hasAutomatic"
+      ],
+      "selectors": ["hasHeading", "hasAutomatic"],
       "match": {
-        "hasHeading=yes": "{action} {source} {heading}",
-        "hasHeading=*": "{action} {source}"
+        "hasHeading=yes,hasAutomatic=yes": "{action} {source} {heading} {automatic}",
+        "hasHeading=yes,hasAutomatic=*": "{action} {source} {heading}",
+        "hasHeading=*,hasAutomatic=yes": "{action} {source} {automatic}",
+        "hasHeading=*,hasAutomatic=*": "{action} {source}"
       }
     }
   ],
@@ -2648,6 +2658,9 @@
   "tasks_move_look_back": "Note precedenti",
   "tasks_move_look_back_desc": "Da quante note precedenti prendere le attività non completate.",
   "tasks_move_look_back_invalid": "Inserisci un numero intero pari o superiore a 1.",
+  "tasks_move_automatic_label": "Riporto automatico",
+  "tasks_move_automatic_desc": "Riporta da solo le attività non completate nella nota corrente ogni volta che quella nota esiste e questo vault è aperto.",
+  "tasks_move_automatic_needs_stamp": "Richiede Sposta, oppure Contrassegna come riportata attivo.",
   "tasks_filter_conditions_label": "Condizioni",
   "tasks_filter_conditions_desc": "Quali di queste attività mostra un elenco.",
   "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",
@@ -2711,6 +2724,20 @@
   ],
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
   "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
+  "tasks_auto_roll_paused": "Il riporto automatico è in pausa per {journal}. Attiva Contrassegna come riportata oppure usa Sposta.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare la nota del {dates}. Contrassegna o rimuovi gli originali nella nota del {dates}, oppure elimina le copie, prima di eseguire Riporta le attività non completate.",
+        "count=*": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare le note del {dates}. Contrassegna o rimuovi gli originali nelle note del {dates}, oppure elimina le copie, prima di eseguire Riporta le attività non completate."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "Il riporto automatico è in pausa per {journal}: un riporto non è terminato, quindi la nota corrente potrebbe già contenere attività che le note precedenti offrono ancora. Controlla entrambe prima di eseguire Riporta le attività non completate.",
+  "tasks_auto_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Verrà riportata al prossimo controllo.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "In quale nota vuoi spostare l'attività?",
   "tasks_move_pick_journal": "In quale diario vuoi spostare l'attività?",
   "tasks_move_block_link_title": "Spostare un'attività collegata?",
