@@ -395,6 +395,8 @@
   ],
   "command_open_next": "Abrir la siguiente nota",
   "command_open_previous": "Abrir la nota anterior",
+  "command_roll_over": "Trasladar tareas sin terminar",
+  "command_roll_over_pick_journal": "¿En qué diario quieres trasladar las tareas?",
   "command_open_view": "Abrir {name}",
   "command_view_change_shelf": "Cambiar estante en {name}",
   "command_view_shelf_needs_open_view": "Abre primero {name} para elegir su estante.",
@@ -2573,6 +2575,8 @@
   ],
   "tasks_roll_nothing": "No hay tareas pendientes en la nota del {oldest}.",
   "tasks_roll_no_previous": "No hay ninguna nota anterior desde la que trasladar tareas.",
+  "tasks_roll_no_current_period": "Hoy queda fuera de la línea de tiempo de este diario.",
+  "tasks_roll_failed": "No se pudieron trasladar las tareas.",
   "tasks_roll_missing_heading": "No hay ningún encabezado {heading} en la nota del {date}. Comprueba el filtro de listado del diario.",
   "tasks_roll_note_items_skipped": [
     {

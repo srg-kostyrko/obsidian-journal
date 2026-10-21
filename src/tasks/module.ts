@@ -1,6 +1,7 @@
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
+import { RolloverCommands } from "./move/rollover-commands";
 import { RolloverService } from "./move/rollover-service";
 import { moveDefaultsSlice } from "./move/settings";
 import { TaskProviderRegistry } from "./provider-registry";
@@ -51,5 +52,6 @@ export const tasksModule: Module = {
   register(c) {
     tasksCoreModule.register(c);
     tasksUiModule.register(c);
+    c.register(RolloverCommands).useClass(RolloverCommands).eager();
   },
 };

@@ -395,6 +395,8 @@
   ],
   "command_open_next": "Ouvrir la note suivante",
   "command_open_previous": "Ouvrir la note précédente",
+  "command_roll_over": "Reporter les tâches non terminées",
+  "command_roll_over_pick_journal": "Reporter les tâches dans quel journal ?",
   "command_open_view": "Ouvrir {name}",
   "command_view_change_shelf": "Changer d’étagère dans {name}",
   "command_view_shelf_needs_open_view": "Ouvrez d’abord {name} pour choisir son étagère.",
@@ -2584,6 +2586,8 @@
   ],
   "tasks_roll_nothing": "Aucune tâche non terminée dans la note du {oldest}.",
   "tasks_roll_no_previous": "Aucune note antérieure dont reporter les tâches.",
+  "tasks_roll_no_current_period": "Aujourd’hui est en dehors de la chronologie de ce journal.",
+  "tasks_roll_failed": "Les tâches n’ont pas pu être reportées.",
   "tasks_roll_missing_heading": "Aucun en-tête {heading} dans la note du {date}. Vérifiez le filtre de la liste du journal.",
   "tasks_roll_note_items_skipped": [
     {

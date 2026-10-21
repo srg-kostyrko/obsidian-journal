@@ -384,6 +384,8 @@
   ],
   "command_open_next": "次のノートを開く",
   "command_open_previous": "前のノートを開く",
+  "command_roll_over": "未完了のタスクを繰り越す",
+  "command_roll_over_pick_journal": "どのジャーナルでタスクを繰り越しますか？",
   "command_open_view": "{name} を開く",
   "command_view_change_shelf": "{name} の棚を変更",
   "command_view_shelf_needs_open_view": "先に {name} を開いて、その棚を選んでください。",
@@ -2573,6 +2575,8 @@
   ],
   "tasks_roll_nothing": "{oldest}のノートに未完了のタスクはありません。",
   "tasks_roll_no_previous": "タスクを繰り越せる以前のノートがありません。",
+  "tasks_roll_no_current_period": "今日はこのジャーナルのタイムライン外です。",
+  "tasks_roll_failed": "タスクを繰り越せませんでした。",
   "tasks_roll_missing_heading": "{date}のノートに見出し{heading}がありません。ジャーナルの一覧フィルターを確認してください。",
   "tasks_roll_note_items_skipped": [
     {

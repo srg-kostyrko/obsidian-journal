@@ -397,6 +397,8 @@
   ],
   "command_open_next": "Открыть следующую заметку",
   "command_open_previous": "Открыть предыдущую заметку",
+  "command_roll_over": "Перенести незавершённые задачи",
+  "command_roll_over_pick_journal": "В каком журнале перенести задачи?",
   "command_open_view": "Открыть {name}",
   "command_view_change_shelf": "Изменить полку в {name}",
   "command_view_shelf_needs_open_view": "Сначала откройте {name}, чтобы выбрать полку.",
@@ -2661,6 +2663,8 @@
   ],
   "tasks_roll_nothing": "В заметке за {oldest} нет незавершённых задач.",
   "tasks_roll_no_previous": "Нет более ранней заметки, из которой можно перенести задачи.",
+  "tasks_roll_no_current_period": "Сегодня находится за пределами временной шкалы этого журнала.",
+  "tasks_roll_failed": "Не удалось перенести задачи.",
   "tasks_roll_missing_heading": "В заметке за {date} нет заголовка {heading}. Проверьте фильтр списка журнала.",
   "tasks_roll_note_items_skipped": [
     {

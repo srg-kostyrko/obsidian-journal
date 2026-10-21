@@ -395,6 +395,8 @@
   ],
   "command_open_next": "Abrir a próxima nota",
   "command_open_previous": "Abrir a nota anterior",
+  "command_roll_over": "Transferir tarefas não concluídas",
+  "command_roll_over_pick_journal": "Transferir tarefas em qual diário?",
   "command_open_view": "Abrir {name}",
   "command_view_change_shelf": "Alterar prateleira em {name}",
   "command_view_shelf_needs_open_view": "Abra primeiro {name} para escolher a sua prateleira.",
@@ -2581,6 +2583,8 @@
   ],
   "tasks_roll_nothing": "Nenhuma tarefa pendente na nota de {oldest}.",
   "tasks_roll_no_previous": "Não há nenhuma nota anterior da qual transferir tarefas.",
+  "tasks_roll_no_current_period": "Hoje está fora da linha do tempo deste diário.",
+  "tasks_roll_failed": "Não foi possível transferir as tarefas.",
   "tasks_roll_missing_heading": "Nenhum cabeçalho {heading} na nota de {date}. Verifique o filtro de listagem do diário.",
   "tasks_roll_note_items_skipped": [
     {

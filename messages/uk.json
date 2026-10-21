@@ -384,6 +384,8 @@
   ],
   "command_open_next": "Відкрити наступну нотатку",
   "command_open_previous": "Відкрити попередню нотатку",
+  "command_roll_over": "Перенести незавершені завдання",
+  "command_roll_over_pick_journal": "У якому журналі перенести завдання?",
   "command_open_view": "Відкрити {name}",
   "command_view_change_shelf": "Змінити полицю в {name}",
   "command_view_shelf_needs_open_view": "Спочатку відкрийте {name}, щоб вибрати полицю.",
@@ -2653,6 +2655,8 @@
   ],
   "tasks_roll_nothing": "У нотатці за {oldest} немає незавершених завдань.",
   "tasks_roll_no_previous": "Немає ранішої нотатки, з якої можна перенести завдання.",
+  "tasks_roll_no_current_period": "Сьогодні поза часовою шкалою цього журналу.",
+  "tasks_roll_failed": "Не вдалося перенести завдання.",
   "tasks_roll_missing_heading": "У нотатці за {date} немає заголовка {heading}. Перевірте фільтр списку журналу.",
   "tasks_roll_note_items_skipped": [
     {

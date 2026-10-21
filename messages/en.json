@@ -332,6 +332,8 @@
   ],
   "command_open_next": "Open next note",
   "command_open_previous": "Open previous note",
+  "command_roll_over": "Roll over unfinished tasks",
+  "command_roll_over_pick_journal": "Roll tasks forward in which journal?",
   "command_open_view": "Open {name}",
   "command_view_change_shelf": "Change shelf in {name}",
   "command_view_shelf_needs_open_view": "Open {name} first to choose its shelf.",
@@ -2586,6 +2588,8 @@
   ],
   "tasks_roll_nothing": "No unfinished tasks in {oldest}.",
   "tasks_roll_no_previous": "There is no earlier note to roll tasks from.",
+  "tasks_roll_no_current_period": "Today is outside this journal's timeline.",
+  "tasks_roll_failed": "Tasks could not be rolled forward.",
   "tasks_roll_missing_heading": "No {heading} heading in {date}. Check the journal's listing filter.",
   "tasks_roll_note_items_skipped": [
     {

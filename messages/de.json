@@ -395,6 +395,8 @@
   ],
   "command_open_next": "Nächste Notiz öffnen",
   "command_open_previous": "Vorherige Notiz öffnen",
+  "command_roll_over": "Unerledigte Aufgaben übertragen",
+  "command_roll_over_pick_journal": "Aufgaben in welchem Journal übertragen?",
   "command_open_view": "{name} öffnen",
   "command_view_change_shelf": "Regal in {name} wechseln",
   "command_view_shelf_needs_open_view": "Öffne zuerst {name}, um das Regal zu wählen.",
@@ -2586,6 +2588,8 @@
   ],
   "tasks_roll_nothing": "Keine offenen Aufgaben in der Notiz vom {oldest}.",
   "tasks_roll_no_previous": "Es gibt keine frühere Notiz, aus der Aufgaben übertragen werden können.",
+  "tasks_roll_no_current_period": "Heute liegt außerhalb der Zeitleiste dieses Journals.",
+  "tasks_roll_failed": "Aufgaben konnten nicht übertragen werden.",
   "tasks_roll_missing_heading": "Keine Überschrift {heading} in der Notiz vom {date}. Prüfe den Anzeigefilter des Journals.",
   "tasks_roll_note_items_skipped": [
     {
