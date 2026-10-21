@@ -28,7 +28,11 @@ export interface ExtractInput {
 }
 
 // Only a tag on the item's own first line counts: a child's tag or a frontmatter tag is not the item's stamp.
-export function carriesMarker(listItem: StructureListItem, structure: NoteStructure, marker: string): boolean {
+export function carriesMarker(
+  listItem: Pick<StructureListItem, "line">,
+  structure: NoteStructure,
+  marker: string,
+): boolean {
   if (marker === "") return false;
   const wanted = marker.toLowerCase();
   return structure.tags.some((tag) => tag.line === listItem.line && tag.tag.toLowerCase() === wanted);

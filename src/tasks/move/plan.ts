@@ -2,7 +2,7 @@ import type { NoteStructure, VaultPath } from "@/infrastructure/host";
 
 import { matchesFilter } from "../filter";
 import { headingsOf } from "../note-structure";
-import { CHECKBOX_PROVIDER_ID } from "../providers/checkbox/extract";
+import { carriesMarker, CHECKBOX_PROVIDER_ID } from "../providers/checkbox/extract";
 import { isOpen } from "../status";
 
 import { ancestorsOf, subtreeEnd, TRAILING_BLOCK_ID } from "./subtree";
@@ -21,6 +21,7 @@ export interface PlannedRoot {
   readonly line: number;
   readonly end: number;
   readonly firstLine: string;
+  readonly lines: readonly string[];
   readonly heading: string | null;
   readonly hasBlockId: boolean;
 }
@@ -41,6 +42,7 @@ export interface SourcePlan {
 export interface PlanOptions {
   readonly selection: TaskRule;
   readonly mode: "copy" | "move";
+  readonly rolledMarker: string;
 }
 
 function positiveHeadings(selection: TaskRule): readonly string[] {
@@ -62,20 +64,27 @@ function checkboxLines(items: readonly TaskItem[]): readonly LineItem[] {
     .toSorted((a, b) => a.line - b.line);
 }
 
+function stripId(text: string): string {
+  return text.replace(TRAILING_BLOCK_ID, "");
+}
+
 /** Picks a source note's roots and the block they carry into the target. */
 export function planSource(source: RollSource, options: PlanOptions): SourcePlan {
   const { path, content, structure } = source;
-  const { selection, mode } = options;
+  const { selection, mode, rolledMarker } = options;
   const lines = content.split("\n");
   const named = positiveHeadings(selection);
 
   const checkboxes = checkboxLines(source.items);
   const rolledLines = new Set(checkboxes.filter(({ item }) => item.status === "rolled").map(({ line }) => line));
+  // Read off the text as well as the items: identification drops lines it rejects, and a stamped
+  // parent it drops must still keep its children from rolling a second time.
+  const isRolled = (line: number): boolean => rolledLines.has(line) || carriesMarker({ line }, structure, rolledMarker);
   const eligible = checkboxes.filter(
     ({ item, line }) =>
       isOpen(item.status) &&
       matchesFilter(item, structure, selection) &&
-      ancestorsOf(lines, line).every((ancestor) => !rolledLines.has(ancestor)),
+      ancestorsOf(lines, line).every((ancestor) => !isRolled(ancestor)),
   );
 
   const candidates: PlannedRoot[] = [];
@@ -83,18 +92,21 @@ export function planSource(source: RollSource, options: PlanOptions): SourcePlan
     const previous = candidates.at(-1);
     if (previous !== undefined && line <= previous.end) continue;
     const end = subtreeEnd(lines, line);
+    const planned = lines.slice(line, end + 1);
     candidates.push({
       line,
       end,
       firstLine: lines[line] ?? "",
+      lines: planned,
       heading: headingsOf(line, structure).find((heading) => named.includes(heading)) ?? null,
-      hasBlockId: lines.slice(line, end + 1).some((text) => TRAILING_BLOCK_ID.test(text)),
+      hasBlockId: planned.some((text) => TRAILING_BLOCK_ID.test(text)),
     });
   }
   const refusedForBlockId = mode === "move" ? candidates.filter((root) => root.hasBlockId) : [];
   const roots = mode === "move" ? candidates.filter((root) => !root.hasBlockId) : candidates;
 
-  const emit = (text: string): string => (mode === "copy" ? text.replace(TRAILING_BLOCK_ID, "") : text);
+  // A context line stays in the source, so its target line is always a copy and must not claim the anchor.
+  const emitRoot = (text: string): string => (mode === "copy" ? stripId(text) : text);
   const emitted = new Set<number>();
   const groups = new Map<string | null, string[]>();
   for (const root of roots) {
@@ -103,9 +115,9 @@ export function planSource(source: RollSource, options: PlanOptions): SourcePlan
     for (const ancestor of ancestorsOf(lines, root.line)) {
       if (emitted.has(ancestor)) continue;
       emitted.add(ancestor);
-      group.push(emit(lines[ancestor] ?? ""));
+      group.push(stripId(lines[ancestor] ?? ""));
     }
-    group.push(...lines.slice(root.line, root.end + 1).map(emit));
+    group.push(...root.lines.map(emitRoot));
   }
 
   return {

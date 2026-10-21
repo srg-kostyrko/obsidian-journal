@@ -8,12 +8,15 @@ import { DEFAULT_STATUS_MAP } from "../providers/checkbox/slice";
 import { planSource, type RollSource } from "./plan";
 
 import type { TaskRule } from "../conditions";
+import type { CheckboxRule } from "../providers/checkbox/rule-schema";
 
 const path = "Daily/2026-10-20.md" as VaultPath;
 const anySelection: TaskRule = { mode: "and", conditions: [] };
+const rolledMarker = "#rolled";
+const identifyAll: CheckboxRule = { mode: "and", conditions: [] };
 
 // Builds the structure Obsidian would report: checkbox lines only, headings, and inline tags.
-function sourceOf(lines: readonly string[]): RollSource {
+function sourceOf(lines: readonly string[], vault: CheckboxRule = identifyAll, marker = rolledMarker): RollSource {
   const structure: NoteStructure = {
     listItems: lines.flatMap((text, line) => {
       const marker = /^\s*[-*+]\s+\[(.)\]/u.exec(text)?.[1];
@@ -33,12 +36,12 @@ function sourceOf(lines: readonly string[]): RollSource {
   const items = extractItems({
     path,
     structure,
-    vault: { mode: "and", conditions: [] },
+    vault,
     journal: null,
     statusMap: DEFAULT_STATUS_MAP,
     owned: true,
     lineDates: undefined,
-    rolledMarker: "#rolled",
+    rolledMarker: marker,
   });
   return { path, content: lines.join("\n"), structure, items };
 }
@@ -53,17 +56,63 @@ describe("planSource", () => {
     const plan = planSource(sourceOf(["- [x] Shopping", "    - [ ] milk", "    - [x] bread"]), {
       selection: anySelection,
       mode: "copy",
+      rolledMarker,
     });
     expect(plan.roots.map((root) => root.line)).toEqual([1]);
     expect(plan.block).toEqual([{ heading: null, lines: ["- [x] Shopping", "    - [ ] milk"] }]);
+  });
+
+  it("a rolled parent the identification rule rejects still blocks its children", () => {
+    const tagged: CheckboxRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#task"] }] };
+    const source = sourceOf(
+      ["- [ ] Project #rolled", "    - [ ] sub #task", "- [ ] Other", "    - [ ] fresh #task"],
+      tagged,
+    );
+    expect(source.items.map((item) => item.key)).toEqual([`${path}:1`, `${path}:3`]);
+    expect(
+      planSource(source, { selection: anySelection, mode: "copy", rolledMarker }).roots.map((root) => root.line),
+    ).toEqual([3]);
+  });
+
+  it("a rolled ancestor two levels up blocks the root", () => {
+    const tagged: CheckboxRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#task"] }] };
+    const lines = [
+      "- [ ] Project #Rolled",
+      "    - note",
+      "        - [ ] deep #task",
+      "- [ ] Other",
+      "    - note",
+      "        - [ ] free #task",
+    ];
+    const source = sourceOf(lines, tagged);
+    expect(
+      planSource(source, { selection: anySelection, mode: "copy", rolledMarker }).roots.map((root) => root.line),
+    ).toEqual([5]);
+  });
+
+  it("an empty marker never reads an ancestor as rolled", () => {
+    const source = sourceOf(["- [x] Project #rolled", "    - [ ] sub"], identifyAll, "");
+    expect(
+      planSource(source, { selection: anySelection, mode: "copy", rolledMarker: "" }).roots.map((root) => root.line),
+    ).toEqual([1]);
   });
 
   it("an open child under an open root travels with the root and is not a root", () => {
     const plan = planSource(sourceOf(["- [ ] Project", "    - [ ] step", "- [x] done sibling"]), {
       selection: anySelection,
       mode: "copy",
+      rolledMarker,
     });
-    expect(plan.roots).toEqual([{ line: 0, end: 1, firstLine: "- [ ] Project", heading: null, hasBlockId: false }]);
+    expect(plan.roots).toEqual([
+      {
+        line: 0,
+        end: 1,
+        firstLine: "- [ ] Project",
+        lines: ["- [ ] Project", "    - [ ] step"],
+        heading: null,
+        hasBlockId: false,
+      },
+    ]);
     expect(plan.block).toEqual([{ heading: null, lines: ["- [ ] Project", "    - [ ] step"] }]);
   });
 
@@ -71,13 +120,14 @@ describe("planSource", () => {
     const plan = planSource(sourceOf(["- [ ] Project #rolled", "    - [ ] sub", "- [ ] fresh"]), {
       selection: anySelection,
       mode: "copy",
+      rolledMarker,
     });
     expect(plan.roots.map((root) => root.line)).toEqual([2]);
   });
 
   it("a done line and a line outside the selection heading stay", () => {
     const source = sourceOf(["## Tasks", "- [ ] write", "- [x] shipped", "## Habits", "- [ ] stretch"]);
-    const plan = planSource(source, { selection: underTasks, mode: "copy" });
+    const plan = planSource(source, { selection: underTasks, mode: "copy", rolledMarker });
     expect(plan.roots.map((root) => root.line)).toEqual([1]);
     expect(plan.roots.at(0)?.heading).toBe("Tasks");
     expect(plan.block).toEqual([{ heading: "Tasks", lines: ["- [ ] write"] }]);
@@ -85,13 +135,15 @@ describe("planSource", () => {
 
   it("selection names a heading the note lacks", () => {
     const source = sourceOf(["## Habits", "- [ ] stretch #daily", "- [ ] read"]);
-    expect(planSource(source, { selection: underTasks, mode: "copy" }).selectionMissedHeading).toBe(true);
+    expect(planSource(source, { selection: underTasks, mode: "copy", rolledMarker }).selectionMissedHeading).toBe(true);
     const tagged: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#daily"] }] };
-    const byTag = planSource(source, { selection: tagged, mode: "copy" });
+    const byTag = planSource(source, { selection: tagged, mode: "copy", rolledMarker });
     expect(byTag.selectionMissedHeading).toBe(false);
     expect(byTag.roots.map((root) => root.line)).toEqual([1]);
     const withTasks = sourceOf(["## Tasks", "- [ ] write"]);
-    expect(planSource(withTasks, { selection: underTasks, mode: "copy" }).selectionMissedHeading).toBe(false);
+    expect(planSource(withTasks, { selection: underTasks, mode: "copy", rolledMarker }).selectionMissedHeading).toBe(
+      false,
+    );
   });
 
   it("groups roots by their selection heading in source order", () => {
@@ -100,7 +152,7 @@ describe("planSource", () => {
       conditions: [{ type: "heading", condition: "under", headings: ["Work", "Home"] }],
     };
     const source = sourceOf(["## Work", "- [ ] a", "## Home", "- [ ] b", "## Work", "- [ ] c", "## Other", "- [ ] d"]);
-    expect(planSource(source, { selection: either, mode: "copy" }).block).toEqual([
+    expect(planSource(source, { selection: either, mode: "copy", rolledMarker }).block).toEqual([
       { heading: "Work", lines: ["- [ ] a", "- [ ] c"] },
       { heading: "Home", lines: ["- [ ] b"] },
     ]);
@@ -108,21 +160,34 @@ describe("planSource", () => {
 
   it("emits a shared context ancestor once", () => {
     const source = sourceOf(["- [x] Shopping", "    - [ ] milk", "    - [x] bread", "    - [ ] eggs"]);
-    expect(planSource(source, { selection: anySelection, mode: "copy" }).block).toEqual([
+    expect(planSource(source, { selection: anySelection, mode: "copy", rolledMarker }).block).toEqual([
       { heading: null, lines: ["- [x] Shopping", "    - [ ] milk", "    - [ ] eggs"] },
     ]);
   });
 
   it("copy strips the block id from emitted lines and move keeps it", () => {
+    const rootLines = ["- [ ] milk ^m1", "- [x] done"];
+    expect(planSource(sourceOf(rootLines), { selection: anySelection, mode: "copy", rolledMarker }).block).toEqual([
+      { heading: null, lines: ["- [ ] milk"] },
+    ]);
     const lines = ["- [x] Shopping ^list", "    - [ ] milk ^m1", "        - semi-skimmed", "- [x] done ^d"];
-    const copy = planSource(sourceOf(lines), { selection: anySelection, mode: "copy" });
+    const copy = planSource(sourceOf(lines), { selection: anySelection, mode: "copy", rolledMarker });
     expect(copy.block).toEqual([
       { heading: null, lines: ["- [x] Shopping", "    - [ ] milk", "        - semi-skimmed"] },
     ]);
     expect(copy.roots.at(0)?.hasBlockId).toBe(true);
     const moveLines = ["- [x] Shopping ^list", "    - [ ] milk", "- [x] done ^d"];
-    const move = planSource(sourceOf(moveLines), { selection: anySelection, mode: "move" });
-    expect(move.block).toEqual([{ heading: null, lines: ["- [x] Shopping ^list", "    - [ ] milk"] }]);
+    const move = planSource(sourceOf(moveLines), { selection: anySelection, mode: "move", rolledMarker });
+    expect(move.block).toEqual([{ heading: null, lines: ["- [x] Shopping", "    - [ ] milk"] }]);
+  });
+
+  it("a context ancestor loses its block id in move mode too", () => {
+    const plan = planSource(sourceOf(["- [x] Shopping ^list", "    - [ ] milk", "- [x] done ^d"]), {
+      selection: anySelection,
+      mode: "move",
+      rolledMarker,
+    });
+    expect(plan.block).toEqual([{ heading: null, lines: ["- [x] Shopping", "    - [ ] milk"] }]);
   });
 
   it("in move mode a root with a block id in its subtree is refused, not planned", () => {
@@ -133,7 +198,7 @@ describe("planSource", () => {
       "    - [ ] eggs",
       "- [ ] other",
     ]);
-    const plan = planSource(source, { selection: anySelection, mode: "move" });
+    const plan = planSource(source, { selection: anySelection, mode: "move", rolledMarker });
     expect(plan.refusedForBlockId.map((root) => root.line)).toEqual([1]);
     expect(plan.roots.map((root) => root.line)).toEqual([3, 4]);
     expect(plan.block).toEqual([{ heading: null, lines: ["- [x] Shopping", "    - [ ] eggs", "- [ ] other"] }]);
@@ -141,15 +206,15 @@ describe("planSource", () => {
 
   it("a refused root emits no context of its own", () => {
     const source = sourceOf(["- [x] Shopping", "    - [ ] milk ^m1", "- [ ] other"]);
-    const plan = planSource(source, { selection: anySelection, mode: "move" });
+    const plan = planSource(source, { selection: anySelection, mode: "move", rolledMarker });
     expect(plan.block).toEqual([{ heading: null, lines: ["- [ ] other"] }]);
   });
 
   it("two runs over the same input give identical plans", () => {
     const source = sourceOf(["## Tasks", "- [x] Shopping", "    - [ ] milk ^m", "## Habits", "- [ ] stretch"]);
     const shuffled: RollSource = { ...source, items: source.items.toReversed() };
-    expect(planSource(shuffled, { selection: anySelection, mode: "copy" })).toStrictEqual(
-      planSource(source, { selection: anySelection, mode: "copy" }),
+    expect(planSource(shuffled, { selection: anySelection, mode: "copy", rolledMarker })).toStrictEqual(
+      planSource(source, { selection: anySelection, mode: "copy", rolledMarker }),
     );
   });
 });
