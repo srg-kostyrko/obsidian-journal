@@ -21,7 +21,18 @@ function frontmatterEnd(lines: readonly string[]): number {
 const COMMENT_CLOSE = { "<!--": "-->", "%%": "%%" } as const;
 type CommentOpen = keyof typeof COMMENT_CLOSE;
 
-// The comment still open at the end of `line`, given the one open at its start.
+// A code span opened by a run of N backticks closes at the next run of exactly N; unclosed, the run is literal.
+function codeSpanEnd(line: string, at: number, length: number): number {
+  const runs = /`+/g;
+  runs.lastIndex = at;
+  for (let run = runs.exec(line); run; run = runs.exec(line)) {
+    if (run[0].length === length) return run.index + length;
+  }
+  return -1;
+}
+
+// The comment still open at the end of `line`, given the one open at its start. A marker inside
+// inline code is literal text.
 function commentAfter(line: string, open: CommentOpen | null): CommentOpen | null {
   let comment = open;
   let at = 0;
@@ -33,11 +44,18 @@ function commentAfter(line: string, open: CommentOpen | null): CommentOpen | nul
       comment = null;
       continue;
     }
-    const html = line.indexOf("<!--", at);
-    const obsidian = line.indexOf("%%", at);
-    if (html === -1 && obsidian === -1) return null;
-    comment = obsidian === -1 || (html !== -1 && html < obsidian) ? "<!--" : "%%";
-    at = (comment === "<!--" ? html : obsidian) + comment.length;
+    const next = /`+|<!--|%%/g;
+    next.lastIndex = at;
+    const found = next.exec(line);
+    if (!found) return null;
+    const token = found[0];
+    at = found.index + token.length;
+    if (token === "<!--" || token === "%%") {
+      comment = token;
+      continue;
+    }
+    const end = codeSpanEnd(line, at, token.length);
+    if (end !== -1) at = end;
   }
 }
 

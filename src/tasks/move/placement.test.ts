@@ -56,6 +56,29 @@ describe("placeGroups", () => {
     );
   });
 
+  it("a comment marker inside inline code opens no comment", () => {
+    const html = "Use the `<!--` marker\n## Tasks\n- [ ] a\n## Log\n- [ ] l\n";
+    expect(placeGroups(html, [group("Tasks", "- [ ] x")], "")).toBe(
+      "Use the `<!--` marker\n## Tasks\n- [ ] a\n- [ ] x\n## Log\n- [ ] l\n",
+    );
+    const obsidian = "Type `%%` to hide\n## Tasks\n- [ ] a\n## Log\n";
+    expect(placeGroups(obsidian, [group("Tasks", "- [ ] x")], "")).toBe(
+      "Type `%%` to hide\n## Tasks\n- [ ] a\n- [ ] x\n## Log\n",
+    );
+  });
+
+  it("an inline code span closes only on a backtick run of its own length", () => {
+    const target = "``a ` <!-- b``\n## Tasks\n- [ ] a\n## Other\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(
+      "``a ` <!-- b``\n## Tasks\n- [ ] a\n- [ ] x\n## Other\n",
+    );
+  });
+
+  it("an unclosed backtick is literal, so a marker after it still opens a comment", () => {
+    const target = "a ` stray <!-- start\n## Tasks\n-->\n## Other\n- [ ] o\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
+  });
+
   it("a four-backtick fence is not closed by three backticks", () => {
     const target = "````\n```\n## Tasks\n```\n````\n## Other\n- [ ] o\n";
     expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
