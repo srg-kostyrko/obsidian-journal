@@ -2724,6 +2724,8 @@
   ],
   "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
   "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
+  "tasks_auto_roll_paused": "Le report automatique est en pause pour {journal}. Activez Marquer comme reportée ou utilisez Déplacer.",
+  "tasks_auto_roll_prefix": "{journal} : {notice}",
   "tasks_move_pick_target": "Déplacer la tâche vers quelle note ?",
   "tasks_move_pick_journal": "Déplacer la tâche vers quel journal ?",
   "tasks_move_block_link_title": "Déplacer une tâche liée ?",

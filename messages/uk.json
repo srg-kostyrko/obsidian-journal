@@ -2806,6 +2806,8 @@
   ],
   "tasks_roll_source_indexing": "Нотатка за {date} ще індексується. Спробуйте ще раз трохи згодом.",
   "tasks_roll_source_unread": "Не вдалося прочитати нотатку за {date}.",
+  "tasks_auto_roll_paused": "Автоматичне перенесення для {journal} призупинено. Увімкніть «Позначати як перенесені» або виберіть «Перемістити».",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "До якої нотатки перемістити завдання?",
   "tasks_move_pick_journal": "До якого журналу перемістити завдання?",
   "tasks_move_block_link_title": "Перемістити пов’язане завдання?",

@@ -2726,6 +2726,8 @@
   ],
   "tasks_roll_source_indexing": "{date} is still being indexed. Try again in a moment.",
   "tasks_roll_source_unread": "{date} could not be read.",
+  "tasks_auto_roll_paused": "Automatic rollover is paused for {journal}. Turn on Mark as rolled or use Move.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "Move the task to which note?",
   "tasks_move_pick_journal": "Move the task to which journal?",
   "tasks_move_block_link_title": "Move a linked task?",

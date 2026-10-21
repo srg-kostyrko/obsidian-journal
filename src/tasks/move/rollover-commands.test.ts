@@ -31,6 +31,7 @@ const REPORT: RollReport = {
   sources: [anchor("2026-10-20")],
   read: [anchor("2026-10-20")],
   noPrevious: false,
+  noTarget: false,
   missingHeading: [],
   heading: null,
   skippedNoteItems: 0,

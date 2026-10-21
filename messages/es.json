@@ -2713,6 +2713,8 @@
   ],
   "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
   "tasks_roll_source_unread": "No se pudo leer la nota del {date}.",
+  "tasks_auto_roll_paused": "El traslado automático está en pausa para {journal}. Activa Marcar como trasladada o usa Mover.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "¿A qué nota quieres mover la tarea?",
   "tasks_move_pick_journal": "¿A qué diario quieres mover la tarea?",
   "tasks_move_block_link_title": "¿Mover una tarea enlazada?",

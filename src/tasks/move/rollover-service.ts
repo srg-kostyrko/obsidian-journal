@@ -94,6 +94,33 @@ function inSync(content: string, structure: NoteStructure, marker: string): bool
   );
 }
 
+export interface RollOptions {
+  readonly interactive: boolean;
+  // False for a roll nobody asked for: a missing target is reported, never created.
+  readonly createTarget?: boolean;
+}
+
+function noTargetReport(journalName: string, mode: RollReport["mode"], heading: string | null): RollReport {
+  return {
+    journalName,
+    mode,
+    rolled: 0,
+    notes: 0,
+    sources: [],
+    read: [],
+    noPrevious: false,
+    noTarget: true,
+    missingHeading: [],
+    heading,
+    skippedNoteItems: 0,
+    skippedBlockIds: 0,
+    changedSources: [],
+    failedSources: [],
+    skippedSources: [],
+    unreadSources: [],
+  };
+}
+
 function selectionOf(filter: TaskRule): TaskRule {
   return { mode: filter.mode, conditions: filter.conditions.filter((condition) => condition.type !== "status") };
 }
@@ -260,12 +287,17 @@ export class RolloverService {
     return keys.size;
   }
 
-  #rollNow(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
+  #rollNow(journalName: string, options: RollOptions): AsyncResult<RollReport, RollError> {
     return attempt.in(this, async function* (this: RolloverService) {
       const config = yield* this.#journals.get(journalName).okOr(new JournalNotFoundError(journalName));
       const today = yield* this.#todayAnchor(journalName);
       const move = effectiveMove(config.tasks.move, this.#defaults.state);
       const selection = selectionOf(config.tasks.filter);
+      const heading = headingOf(selection);
+      const createTarget = options.createTarget ?? true;
+      if (!createTarget && this.#index.get(journalName, today).isNone()) {
+        return noTargetReport(journalName, move.mode, heading);
+      }
       const marker = this.#checkbox.state.rolledMarker;
       const read = this.#lookBack(journalName, today, move);
 
@@ -285,6 +317,10 @@ export class RolloverService {
       const changedSources: ChangedSource[] = [];
       const failedSources: ChangedSource[] = [];
       if (contributing.length > 0) {
+        // The reads await, and the note can be deleted meanwhile.
+        if (!createTarget && this.#index.get(journalName, today).isNone()) {
+          return noTargetReport(journalName, move.mode, heading);
+        }
         const target = yield* this.#targetPath(journalName, today, options.interactive);
         const groups = contributing.flatMap(({ plan }) => plan.block);
         // The target goes first, and reaches disk first: a failure before the sources are written leaves
@@ -303,7 +339,6 @@ export class RolloverService {
         }
       }
 
-      const heading = headingOf(selection);
       const report: RollReport = {
         journalName,
         mode: move.mode,
@@ -312,6 +347,7 @@ export class RolloverService {
         sources: [...new Set(contributing.map(({ anchor }) => anchor))],
         read,
         noPrevious: read.length === 0,
+        noTarget: false,
         missingHeading:
           heading === null
             ? []
@@ -331,7 +367,7 @@ export class RolloverService {
     });
   }
 
-  roll(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
+  roll(journalName: string, options: RollOptions): AsyncResult<RollReport, RollError> {
     return this.#locks.run([journalName], () => this.#rollNow(journalName, options));
   }
 }

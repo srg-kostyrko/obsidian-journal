@@ -1,6 +1,7 @@
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
+import { AutoRolloverService } from "./move/auto/auto-rollover-service";
 import { QuietWindow } from "./move/auto/quiet-window";
 import { MoveLocks } from "./move/locks";
 import { RolloverCommands } from "./move/rollover-commands";
@@ -65,5 +66,6 @@ export const tasksModule: Module = {
     tasksUiModule.register(c);
     c.register(RolloverCommands).useClass(RolloverCommands).eager();
     c.register(SingleMoveCommands).useClass(SingleMoveCommands).eager();
+    c.register(AutoRolloverService).useClass(AutoRolloverService).eager();
   },
 };

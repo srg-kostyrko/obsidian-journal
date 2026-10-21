@@ -20,6 +20,8 @@ export interface RollReport {
   // Every anchor the look-back reached, oldest first.
   readonly read: readonly AnchorString[];
   readonly noPrevious: boolean;
+  // Today's note was missing and the roll was not allowed to create it, so nothing was read or written.
+  readonly noTarget: boolean;
   // Anchors where no note read carried the selection's heading.
   readonly missingHeading: readonly AnchorString[];
   // The heading the selection names, the one missingHeading reports as absent.

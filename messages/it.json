@@ -2724,6 +2724,8 @@
   ],
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
   "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
+  "tasks_auto_roll_paused": "Il riporto automatico è in pausa per {journal}. Attiva Contrassegna come riportata oppure usa Sposta.",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "In quale nota vuoi spostare l'attività?",
   "tasks_move_pick_journal": "In quale diario vuoi spostare l'attività?",
   "tasks_move_block_link_title": "Spostare un'attività collegata?",

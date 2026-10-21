@@ -2707,6 +2707,8 @@
   ],
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
+  "tasks_auto_roll_paused": "{journal} 的自动结转已暂停。请开启“标记为已结转”，或使用“移动”。",
+  "tasks_auto_roll_prefix": "{journal}：{notice}",
   "tasks_move_pick_target": "将任务移动到哪条笔记？",
   "tasks_move_pick_journal": "将任务移动到哪个日记？",
   "tasks_move_block_link_title": "移动带链接的任务？",

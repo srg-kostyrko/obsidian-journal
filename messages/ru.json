@@ -2814,6 +2814,8 @@
   ],
   "tasks_roll_source_indexing": "Заметка за {date} ещё индексируется. Попробуйте ещё раз чуть позже.",
   "tasks_roll_source_unread": "Не удалось прочитать заметку за {date}.",
+  "tasks_auto_roll_paused": "Автоматический перенос для {journal} приостановлен. Включите «Отмечать как перенесённые» или выберите «Переместить».",
+  "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "В какую заметку переместить задачу?",
   "tasks_move_pick_journal": "В какой журнал переместить задачу?",
   "tasks_move_block_link_title": "Переместить связанную задачу?",

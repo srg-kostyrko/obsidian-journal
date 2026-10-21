@@ -163,6 +163,7 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     sources: [],
     read: [],
     noPrevious: false,
+    noTarget: false,
     missingHeading: [],
     heading: null,
     skippedNoteItems: 0,
@@ -312,6 +313,32 @@ describe("RolloverService", () => {
 
     const target = `daily/${TODAY}.md` as VaultPath;
     expect(notes.find(target).isSome()).toBe(true);
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+  });
+
+  it("a roll that may not create its target writes nothing when today's note is missing", async () => {
+    const { service, put, text, notes } = await rolloverFor({ daily: dayJournal("daily"), work: dayJournal("work") });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
+    const neighbor = put("work", TODAY, "- [ ] Work item\n");
+
+    const result = await service.roll("daily", { interactive: false, createTarget: false });
+
+    expectOk(result);
+    expect(result.value).toMatchObject({ noTarget: true, rolled: 0 });
+    expect(notes.find(`daily/${TODAY}.md` as VaultPath).isNone()).toBe(true);
+    expect(await text(source)).toBe("- [ ] Call Bob\n- [x] Done thing\n");
+    expect(await text(neighbor)).toBe("- [ ] Work item\n");
+  });
+
+  it("a roll that may not create its target still rolls into one that exists", async () => {
+    const { service, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
+    const target = put("daily", TODAY, "");
+
+    const result = await service.roll("daily", { interactive: false, createTarget: false });
+
+    expectOk(result);
+    expect(result.value).toMatchObject({ noTarget: false, rolled: 1 });
     expect(await text(target)).toBe("- [ ] Call Bob\n");
   });
 
