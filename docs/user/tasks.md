@@ -628,7 +628,10 @@ the main settings page, under **Roll over**:
 
 - **Rolled marker** — the tag written on a copied line. It must be something Obsidian reads as a tag:
   letters, numbers, `_`, `-` and `/`, not only numbers. Changing it does not touch notes already
-  stamped, so their lines read as unfinished again — and roll again — until you change it back.
+  stamped, so their lines read as unfinished again — and roll again — until you change it back. The
+  marker applies to every line that carries it, not only to lines the command stamped, so if `#rolled`
+  already means something else in your vault, change it here: until you do, those lines read as
+  **Rolled over** and leave open listings and the calendar's open-task dots.
 - **Copy or move** — **Copy** by default.
 - **Mark as rolled** — on by default.
 
