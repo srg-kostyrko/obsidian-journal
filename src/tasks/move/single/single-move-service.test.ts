@@ -7,6 +7,7 @@ import { m } from "@/i18n";
 import { UserAborted } from "@/infrastructure/flows";
 import {
   NoteStructureService,
+  NoteReadError,
   NotesService,
   NoteWriteError,
   WorkspaceService,
@@ -441,6 +442,26 @@ describe("SingleMoveService", () => {
       expect(result.value.outcome).toBe("write-failed");
       expect(await text(month)).toBe("- [ ] Call Bob\n");
       expect(await text(SOURCE)).toBe("- [ ] Call Bob\n");
+    });
+
+    it("reports a source that cannot be read again, and writes nothing", async () => {
+      const { harness, put, edit, text, move, notes } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", { mode: "move" }),
+      });
+      const month = put("monthly", "2026-10-01", "");
+      const { state } = edit("- [ ] Call Bob\n", 0);
+      harness.host.closeEditor(SOURCE);
+      const read = notes.read.bind(notes);
+      vi.spyOn(notes, "read").mockImplementation((path) =>
+        path === SOURCE ? AsyncResult.err(new NoteReadError(path, "unreadable")) : read(path),
+      );
+
+      const result = await move(state, target("monthly", "2026-10-01", month));
+
+      expectOk(result);
+      expect(result.value).toEqual({ mode: "move", label: LABEL, outcome: "unread" });
+      expect(await text(month)).toBe("");
     });
   });
 

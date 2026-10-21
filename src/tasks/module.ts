@@ -7,6 +7,7 @@ import { RolloverService } from "./move/rollover-service";
 import { moveDefaultsSlice } from "./move/settings";
 import { MoveTargets } from "./move/single/containing";
 import { MoveTargetPicker } from "./move/single/pick-target";
+import { SingleMoveCommands } from "./move/single/single-move-commands";
 import { SingleMoveService } from "./move/single/single-move-service";
 import { TaskProviderRegistry } from "./provider-registry";
 import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkbox-provider.flow";
@@ -61,5 +62,6 @@ export const tasksModule: Module = {
     tasksCoreModule.register(c);
     tasksUiModule.register(c);
     c.register(RolloverCommands).useClass(RolloverCommands).eager();
+    c.register(SingleMoveCommands).useClass(SingleMoveCommands).eager();
   },
 };

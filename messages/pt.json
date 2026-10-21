@@ -397,6 +397,8 @@
   "command_open_previous": "Abrir a nota anterior",
   "command_roll_over": "Transferir tarefas não concluídas",
   "command_roll_over_pick_journal": "Transferir tarefas em qual diário?",
+  "command_move_task_to_containing_period": "Mover a tarefa para o período que a contém",
+  "command_move_task_to_period_note": "Mover a tarefa para a nota de um período",
   "command_open_view": "Abrir {name}",
   "command_view_change_shelf": "Alterar prateleira em {name}",
   "command_view_shelf_needs_open_view": "Abra primeiro {name} para escolher a sua prateleira.",
@@ -2720,6 +2722,46 @@
         "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
         "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
         "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
+  "tasks_move_needs_editor": "Primeiro coloque o cursor em uma tarefa de uma nota.",
+  "tasks_move_not_journal_note": "Esta nota não faz parte de nenhum diário.",
+  "tasks_move_no_containing": "Nenhum diário de período mais longo contém o período desta nota.",
+  "tasks_move_not_a_task": "O cursor não está em uma tarefa.",
+  "tasks_move_already_rolled": "Esta tarefa já foi transferida.",
+  "tasks_move_same_note": "A tarefa já está nessa nota.",
+  "tasks_move_out_of_timeline": "Essa data está fora da linha do tempo do diário.",
+  "tasks_move_failed": "Não foi possível mover a tarefa.",
+  "tasks_move_done": [
+    {
+      "declarations": ["input target", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Tarefa copiada para {target}.",
+        "mode=move": "Tarefa movida para {target}."
+      }
+    }
+  ],
+  "tasks_move_nothing": "A tarefa já foi movida.",
+  "tasks_move_source_unread": "Não foi possível ler a nota {noteName}. Nada foi movido.",
+  "tasks_move_source_changed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "A nota {noteName} mudou durante a movimentação. A tarefa foi copiada, mas não marcada como transferida.",
+        "mode=move": "A nota {noteName} mudou durante a movimentação. A tarefa foi copiada, mas não removida."
+      }
+    }
+  ],
+  "tasks_move_source_write_failed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Não foi possível marcar a nota {noteName} como transferida. A tarefa foi copiada e pode ser movida novamente.",
+        "mode=move": "Não foi possível atualizar a nota {noteName}. A tarefa foi copiada e continua também lá."
       }
     }
   ],

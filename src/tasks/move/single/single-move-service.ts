@@ -32,8 +32,11 @@ export interface SingleMoveReport {
   readonly mode: "copy" | "move";
   readonly label: string;
   readonly noteletTitle?: string;
-  /** "nothing": the task had already left or been stamped by the time the move ran; nothing was written. */
-  readonly outcome: "done" | "nothing" | "changed" | "write-failed";
+  /**
+   * "nothing": the task had already left or been stamped by the time the move ran; "unread": the source
+   * could not be read again before the write. Neither writes anything.
+   */
+  readonly outcome: "done" | "nothing" | "unread" | "changed" | "write-failed";
 }
 
 interface Confirmed {
@@ -101,9 +104,9 @@ export class SingleMoveService {
     confirmed: Confirmed,
     move: EffectiveMove,
     rolledMarker: string,
-  ): Promise<SourcePlan | null> {
+  ): Promise<SourcePlan | "unread" | null> {
     const content = await this.#currentText(path);
-    if (content === undefined) return null;
+    if (content === undefined) return "unread";
     const { root, allowBlockId } = confirmed;
     const again = planItem({ path, content }, root.line, { mode: move.mode, rolledMarker, allowBlockId });
     if (again.kind === "refused") return null;
@@ -158,6 +161,7 @@ export class SingleMoveService {
       });
       const plan = await this.#replan(source.path, confirmed, move, marker);
       if (plan === null) return report("nothing");
+      if (plan === "unread") return report("unread");
       const path = yield* this.#ensureTarget(target);
       // Only an existing note can be the source, and ensuring one writes nothing.
       if (path === source.path) return yield* AsyncResult.err(new SingleMoveRefusedError("same-note"));
