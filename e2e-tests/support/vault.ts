@@ -387,8 +387,9 @@ export function waitForContent(
   path: string,
   predicate: (content: string) => boolean,
   timeoutMsg: string,
+  timeout?: number,
 ): Promise<void> {
-  return waitForState(() => contentOf(path), predicate, timeoutMsg);
+  return waitForState(() => contentOf(path), predicate, timeoutMsg, timeout);
 }
 
 // Folder-aware create-or-overwrite: the fixture carries no note folders and vault.create does

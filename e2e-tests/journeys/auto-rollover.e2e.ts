@@ -13,6 +13,10 @@ const SOURCE = `daily/${SOURCE_DATE}.md`;
 const TODAY = "2026-09-26";
 const TARGET = `daily/${TODAY}.md`;
 
+// The boot checkpoint waits out RESUME_DELAY_MS (30 s) and then QUIET_MS (5 s); the rest is slack
+// for a slow boot. Those modules pull in the plugin's DI graph, which the e2e runner cannot load.
+const ROLL_WAIT_MS = 30_000 + 5000 + 30_000;
+
 class NoteMissingError extends Error {
   constructor(path: string) {
     super(`expected ${path} to exist`);
@@ -32,15 +36,25 @@ describe("automatic rollover at boot", () => {
     await reloadObsidianOn(TODAY, { vault: "./e2e-tests/fixtures/e2e-auto-rollover", plugins: ["journals"] });
   });
 
-  it("copies the open task into today's note and marks the original, with no command run", async () => {
-    // The roll waits for five quiet seconds first; the default wait budget covers it.
-    await waitForContent(TARGET, (content) => content.split("\n").includes("- [ ] milk"), "waited for the roll");
+  it("copies the open task into today's note and marks the original, with no command run", async function () {
+    this.timeout(ROLL_WAIT_MS + 30_000);
+    await waitForContent(
+      TARGET,
+      (content) => content.split("\n").includes("- [ ] milk"),
+      "waited for the roll",
+      ROLL_WAIT_MS,
+    );
     await waitForContent(
       SOURCE,
       (content) => content.split("\n").includes("- [ ] milk #rolled"),
       "waited for the source stamp",
     );
-    await waitForNotice(m.tasks_roll_done({ count: 1, notes: 1, oldest: SOURCE_DATE }));
+    await waitForNotice(
+      m.tasks_auto_roll_prefix({
+        journal: "daily",
+        notice: m.tasks_roll_done({ count: 1, notes: 1, oldest: SOURCE_DATE }),
+      }),
+    );
 
     const target = await readNote(TARGET);
     expect(target).not.toContain("bread");
@@ -54,8 +68,9 @@ describe("automatic rollover in copy mode without Mark as rolled", () => {
     await reloadObsidianOn(TODAY, { vault: "./e2e-tests/fixtures/e2e-auto-rollover-blocked", plugins: ["journals"] });
   });
 
-  it("rolls nothing and says it is paused", async () => {
-    await waitForNotice(m.tasks_auto_roll_paused({ journal: "daily" }));
+  it("rolls nothing and says it is paused", async function () {
+    this.timeout(ROLL_WAIT_MS + 30_000);
+    await waitForNotice(m.tasks_auto_roll_paused({ journal: "daily" }), ROLL_WAIT_MS);
 
     expect(await readNote(TARGET)).not.toContain("milk");
     const source = await readNote(SOURCE);
