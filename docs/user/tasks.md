@@ -698,9 +698,12 @@ It looks at these moments:
 - when the note for the current period is added to the journal — created through Journals, made by
   another plugin or by hand, or arriving from another device by sync.
 
-Each time, it first waits until no note has been created, changed or deleted for five seconds, so that a
-sync catching up after startup or a wake has landed before anything is read. A vault still busy after a
-minute is left alone until the next of those moments.
+Each time, it first waits until no file has been created, changed, renamed or deleted for five
+seconds, and only then reads anything. After Obsidian has loaded the vault, and when you come back to
+it, that wait starts only after a further 30 seconds, so a sync already under way has a chance to land
+first. The wait cannot see a sync that has not started yet: one that begins after the vault has gone
+quiet still races the roll (see **Two devices** below). A vault still busy after a minute is not read;
+the wait simply starts again until the vault settles.
 
 Rolling is continuous rather than once a day. A task taken is marked or removed from the earlier note,
 so each look picks up only what is new: an open task you add to yesterday's note in the afternoon rolls
@@ -719,17 +722,22 @@ journal that already has it on ends up there anyway — say the **Mark as rolled
 **Checkbox tasks**' settings is turned off — it pauses, and a notice says so once until Obsidian restarts. It resumes at the next look
 after the setting allows it again.
 
-When it rolls something, the notice says so in the same words as the command's. When there was nothing
-to roll, or no earlier note, it says nothing. Anything else the notice would report — a missing
-heading, a task left in place for its block id under **Move**, unfinished task notes left behind, an
-earlier note that is still being indexed or could not be read — is shown once for each earlier note
-until Obsidian restarts, not again at every look. With two or more journals rolling automatically,
-each notice starts with the journal's name.
+When it rolls something, the notice says so in the same words as the command's, starting with the
+journal's name. When there was nothing to roll, or no earlier note, it says nothing. Anything else the
+notice would report — a missing heading, a task left in place for its block id under **Move**,
+unfinished task notes left behind, an earlier note that could not be read — is shown once for each
+earlier note until Obsidian restarts, not again at every look. An earlier note that is still being
+indexed is reported once in the same way, and its tasks roll at a later look.
 
-If an earlier note could not be updated after its tasks were copied, the journal stops rolling
-automatically until Obsidian restarts, since the next look would copy the same tasks again. The tasks
-are then in both notes: mark or remove the originals by hand, or delete the copies from today's note
-and run **Roll over unfinished tasks** once the earlier note can be written again.
+If an earlier note could not be updated after its tasks were copied — the write failed, or the note
+changed while it was being rolled — the journal stops rolling automatically, since the next look would
+copy the same tasks again, and a notice names every earlier note affected. The same happens, with a
+notice of its own, when a roll fails part-way for any other reason, since today's note may already hold
+what was copied. The tasks
+are then in both notes: mark or remove the originals by hand, or delete the copies from the current
+note, then run **Roll over unfinished tasks**. A run of that command that updates every earlier note
+it took from resumes automatic rolling for the journal; otherwise it stays paused until Obsidian
+restarts.
 
 **Two devices.** Each device rolls on its own; nothing records which one rolled. A device that has
 already received the other's roll by sync finds the tasks marked or removed and takes nothing. Two
@@ -737,7 +745,9 @@ devices that both roll before either has synced write the same lines in the same
 that combines identical changes keeps one copy. That can still go wrong: if you edited one of the notes
 between the two rolls, or your sync tool does not combine two identical insertions into one — Obsidian
 Sync's merge is documented to sometimes create duplicate text — today's note can end up with the
-tasks twice. Nothing is lost when that happens: under **Copy** the originals are
+tasks twice. The same happens when a sync delivers the other device's roll in pieces: if today's note,
+with the tasks already in it, arrives and the vault goes quiet before the earlier note's marks or
+removals do, this device still finds the tasks unfinished and takes them again. Nothing is lost when that happens: under **Copy** the originals are
 still in the earlier note, a [task listing](#listing-tasks-in-a-note) shows anything left unfinished, and
 the command is there to roll by hand.
 

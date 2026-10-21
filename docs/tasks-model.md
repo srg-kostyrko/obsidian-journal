@@ -1311,33 +1311,50 @@ order, placement and stamp, with no timestamps or device-specific content. Where
 the sync combines identical edits, the race does no harm.
 
 **Settle, then re-read.** Every checkpoint first waits for a quiet vault — no
-note created, modified or deleted for 5 s, up to a 60 s ceiling — and only then
-reads sources and target. A vault still busy at the ceiling skips that
-checkpoint: when in doubt, don't roll. Checkpoints arriving during the wait are
-absorbed by it; one arriving during a roll schedules exactly one follow-up run.
-Journals roll one at a time, in name order. The window is a heuristic, and no
-length suits every sync setup.
+file created, modified, renamed or deleted for 5 s — and only then reads sources
+and target. The boot and resume checkpoints start that wait only after a 30 s
+delay (`RESUME_DELAY_MS`), since that is when a sync tool starts catching up and
+its first seconds can be as quiet as a vault with nothing to fetch; a resume
+arriving while a delay-free wait (midnight, a new note) is under way adds the
+delay to that wait, at most once per wait. A vault still busy at the 60 s ceiling
+is not read: the wait goes round again, each round with its own ceiling — when in
+doubt, don't roll. Checkpoints arriving during the wait are absorbed by it; one
+arriving during a roll schedules exactly one follow-up run. With no journal
+automatic, a checkpoint only re-arms the midnight timer. Journals roll one at a
+time, in name order. The window is a heuristic, and no length suits every sync
+setup: it lets a sync already under way land, but a sync that starts after the
+vault has gone quiet still races the roll.
 
 **Leftover risk.** Two devices that both roll before either has synced, plus an
 edit made between the runs or a merge that does not combine identical
 insertions (Obsidian Sync's merge is documented to sometimes create duplicate
-text), can still duplicate. The user manual states this, with why it is
-recoverable: copy destroys nothing, the listing shows what is left, and the
-manual command remains.
+text), can still duplicate. So can partial delivery: device B receives device
+A's target, already holding the rolled items, and goes quiet before A's stamps
+or removals in the source arrive, so B reads the items as still open and takes
+them again. The user manual states both, with why they are recoverable: copy
+destroys nothing, the listing shows what is left, and the manual command remains.
 
 **Silent when empty.** A roll that writes always shows its notice; a check that
 finds nothing to roll, or no earlier note, shows nothing — that is the normal
 case at most checkpoints. Every other sentence (a missing heading, block ids
 left in place under move, task notes skipped, an earlier note still indexing or
 unreadable, a source that changed or failed) is shown once per note and kind per
-session. With two or more automatic journals each notice is prefixed with the
-journal's name.
+session; the indexing sentence says the note rolls at the next check rather than
+asking the user to retry. Every notice is prefixed with the journal's name,
+whatever the number of automatic journals, since nobody pressed anything that
+would say which journal it was.
 
 **Session pauses.** Two conditions pause a journal for the session, held in
-memory only: the mode guard above, which lifts as soon as the settings allow a
-roll again, and a failed source write, which does not — the items reached the
-target while the source still offers them, so the next checkpoint would copy
-them again.
+memory only. The mode guard above lifts as soon as the settings allow a roll
+again, and leaves the paused set when it does, so a later block is announced
+again. The other is a roll that may have left items in the target while the
+source still offers them, so the next checkpoint would copy them again: a
+source whose write failed or that changed under the roll (the pause notice names
+every such note and replaces the roll's own changed and failed sentences), and
+any other roll error or throw except an ended period or a deleted journal. That
+pause lifts when a roll of the journal — in practice the manual command —
+finishes with no changed or failed source (`RolloverService` emits `rolled` on
+every finished roll), and otherwise lasts until restart.
 
 ## Build order
 
