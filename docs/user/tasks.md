@@ -678,6 +678,80 @@ no unfinished tasks. Four other cases are worth knowing:
 The command writes today's note before it touches the earlier one, so a failure part-way leaves a task
 in both notes, never in neither.
 
+## Moving one task
+
+Two commands take the single task under the cursor and put it in another note. The palette lists them
+while a note is open in the editor.
+
+- **Move task to the containing period** sends it up to a longer period that holds the note's date:
+  from a daily note, that week's or that month's note. It looks among the journals on the same
+  [shelf](/shelves) as the note's journal, or every journal when that journal is on no shelf, and takes
+  those that write a longer period than the note's own — weekly, monthly, quarterly, yearly or decade —
+  and whose timeline includes the period. With one such note it goes straight there; with more, or when
+  the period already has [notelets](/notelets), it asks which, listing each period's note followed by
+  its existing notelets, from the shortest period up. Two journals of the same length are both offered,
+  each labeled with its journal's name. The note must belong to a journal, and
+  [custom interval](/periods#custom-intervals) journals take no part, neither as the note you move
+  from nor as a destination.
+- **Move task to a period's note** works from any note, in a journal or not. It asks for a journal —
+  skipped when you have only one — and a date in that journal's timeline, then for the period's note or
+  one of its existing notelets, skipping that question when the period has no notelets. Custom interval
+  journals are offered here.
+
+A period note that does not exist yet is created first, the same way any new note is, so a journal that
+confirms creation or asks questions does so here too. Neither command creates a notelet.
+
+### What moves
+
+The task is the one whose line holds the cursor, or whose text the cursor's line continues. It brings
+every line nested under it, and never its parent: a list line it sits under is copied as context, so
+the task keeps its meaning, but the parent stays as it was in the original note and is not marked. A
+cursor on a plain bullet, or on a line outside any list item, is refused.
+
+Any task moves, whatever its status — the [listing filter](#a-journal-s-own-listing-filter) and the
+roll's **Source** and **Look back** play no part, because you picked the line. A task that already
+carries the **Rolled marker** is refused.
+
+### How it lands
+
+The journal the task moves **to** decides what happens, using the same
+[roll-over settings](#roll-over-settings) its own roll would:
+
+- **Copy or move** — under **Copy**, the original stays and, with **Mark as rolled** on, its line gets
+  the **Rolled marker**; the copy drops any block id, so links keep pointing at the original. Under
+  **Move**, the lines leave the original note.
+- **Target heading** — the task goes under that heading when the destination has it, and at the end of
+  the note otherwise. A heading the task sat under in the original note is not matched.
+
+Under **Move**, a task with a block id on any of its lines asks first: removing it breaks the links that
+point to it. **Move anyway** goes ahead; **Cancel** leaves both notes untouched.
+
+The edit to the note you are typing in goes through the open editor, so unsaved typing is kept and one
+undo reverses it. The destination is written first, so a failure part-way leaves the task in both notes,
+never in neither.
+
+### What the notice says
+
+On success the notice reads "Copied the task to …" or "Moved the task to …", with the period — and the
+notelet's name, for a notelet. The other outcomes:
+
+- **"… changed while moving"** — the note's text around the task changed after the command started, so
+  the original was left as it was. The task is in the destination already: mark or remove the original
+  by hand, or delete the copy.
+- **"… could not be marked as rolled"** or **"… could not be updated"** — the same, when saving the
+  original note failed.
+- **"The task was already moved."** — by the time the command came to write, the task's lines no
+  longer matched what it picked, usually because it had already been moved or marked. Nothing was
+  written.
+- **"… could not be read. Nothing was moved."** — Obsidian failed to read the original note.
+- **"No coarser journal contains this note's period."** — no journal in scope writes a longer period
+  whose timeline includes this one.
+
+The rest say why nothing happened: the cursor is not on a task, the task was already rolled over, the
+note is not part of a journal (for the containing period), the date is outside the journal's timeline,
+you picked the note the task is already in, or no note is open in the editor. Cancelling any question
+writes nothing and shows no notice.
+
 ## Examples
 
 ### An in-progress day
@@ -855,5 +929,31 @@ every roll-over setting at its default. Yesterday's note holds:
 **Roll over unfinished tasks** adds `- [ ] milk` to the end of today's note and changes yesterday's line
 to `- [ ] milk #rolled`. `bread` is done and `water` sits outside the filter, so neither moves, and the
 notice reads "Rolled 1 task forward from" yesterday's date.
+
+### Moving a nested task into the month
+
+A daily and a monthly journal on one shelf, every roll-over setting at its default. The note for
+25 September 2026 holds:
+
+```markdown
+## Tasks
+
+- [ ] launch project
+  - [ ] draft outline
+  - [ ] book room
+- [ ] groceries
+```
+
+With the cursor on `draft outline`, **Move task to the containing period** goes straight to the
+September 2026 note, the only longer period on the shelf, and adds to its end:
+
+```markdown
+- [ ] launch project
+  - [ ] draft outline
+```
+
+The day's `draft outline` line becomes `- [ ] draft outline #rolled`, indented as before, and
+`launch project`, `book room` and `groceries` are left as they were. The notice reads "Copied the task
+to September 2026."
 
 :::

@@ -14,6 +14,7 @@ journals you want, and bind to hotkeys or the ribbon.
 | Change which note a command opens              | [A command's settings](#a-command-s-settings) |
 | Open a note from outside Obsidian              | [Links](/reference/links)                     |
 | Carry unfinished tasks into today's note       | [Tasks](/tasks#rolling-tasks-forward)         |
+| Move one task to another period's note         | [Tasks](/tasks#moving-one-task)               |
 
 ## Built-in commands
 
@@ -26,6 +27,8 @@ journals you want, and bind to hotkeys or the ribbon.
 | **Open** _view_                            | Opens a [view](/views).                                                                                                                                                                             |
 | **Change shelf in** _view_                 | Picks the shelf an open view shows.                                                                                                                                                                 |
 | **Roll over unfinished tasks**             | Rolls the open note's journal's unfinished tasks into today's note, copying or moving them; asks for a journal when the open note is not a journal note. See [Tasks](/tasks#rolling-tasks-forward). |
+| **Move task to the containing period**     | Copies or moves the task at the cursor into a longer period's note that holds the open note's date, from a journal on its shelf, or any if on none. See [Tasks](/tasks#moving-one-task).            |
+| **Move task to a period's note**           | Copies or moves the task at the cursor into the period's note, or a notelet, for a journal and date you pick. See [Tasks](/tasks#moving-one-task).                                                  |
 
 The palette lists a command only where it can do something — **Open next note** only while a journal
 note is open, for example. A hotkey or ribbon button runs it anyway and shows a notice saying why nothing happened.
