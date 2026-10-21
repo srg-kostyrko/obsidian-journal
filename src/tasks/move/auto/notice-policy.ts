@@ -53,16 +53,13 @@ function shownText(report: RollReport, sentence: RollSentence, seen: Set<string>
   return autoText(sentence);
 }
 
-/**
- * What an automatic roll tells the user, named for its journal: the rolled sentence always, every
- * other refusal or warning once per note and kind for as long as `seen` lives, and none of the kinds
- * in `omit`. Null when there is nothing left to say.
- */
+/** Builds a journal-named notice for an automatic roll, or null when there is nothing new to say. */
 export function noticeFor(
   report: RollReport,
   seen: Set<string>,
   omit: ReadonlySet<RollSentenceKind> = new Set(),
 ): string | null {
+  // A warning repeats on every roll that reads the same note, so `seen` lets each say it once.
   const shown = rollSentences(report)
     .filter((sentence) => !omit.has(sentence.kind))
     .map((sentence) => shownText(report, sentence, seen))
