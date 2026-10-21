@@ -395,6 +395,8 @@
   ],
   "command_open_next": "다음 노트 열기",
   "command_open_previous": "이전 노트 열기",
+  "command_roll_over": "완료되지 않은 작업 이월",
+  "command_roll_over_pick_journal": "어느 저널에서 작업을 이월할까요?",
   "command_open_view": "{name} 열기",
   "command_view_change_shelf": "{name}의 선반 변경",
   "command_view_shelf_needs_open_view": "선반을 선택하려면 먼저 {name}을(를) 여세요.",
@@ -2417,6 +2419,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "식별 규칙",
   "tasks_settings_rule_desc": "어떤 체크박스 목록 항목을 작업으로 볼지.",
+  "tasks_checkbox_marker": "이월 표시",
+  "tasks_checkbox_marker_desc": "복사할 때 원래 줄에 추가하는 태그. 이 태그가 있는 줄은 이월됨으로 처리됩니다.",
+  "tasks_checkbox_marker_required": "태그를 입력하세요.",
+  "tasks_checkbox_marker_invalid": "문자, 숫자, _, -, /만 사용하고 숫자가 아닌 문자를 하나 이상 넣으세요.",
+  "tasks_checkbox_marker_changed": "이전 표시가 붙은 줄은 다시 완료되지 않은 작업으로 처리됩니다.",
   "tasks_settings_add_condition": "조건 추가",
   "tasks_settings_condition_tag": "태그",
   "tasks_settings_condition_heading": "제목",
@@ -2552,10 +2559,141 @@
   "tasks_journal_filter_title": "목록 필터",
   "tasks_journal_filter_none": "이 저널에는 자체 목록 필터가 없습니다.",
   "tasks_journal_filter_edit": "편집",
+  "tasks_move_title": "이월",
+  "tasks_move_edit": "편집",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "이전 노트에서 완료되지 않은 작업을 복사하고 원래 줄을 이월됨으로 표시합니다.",
+        "action=copy-stamp,count=*": "이전 노트 {count}개에서 완료되지 않은 작업을 복사하고 원래 줄을 이월됨으로 표시합니다.",
+        "action=copy,count=1": "이전 노트에서 완료되지 않은 작업을 복사합니다.",
+        "action=copy,count=*": "이전 노트 {count}개에서 완료되지 않은 작업을 복사합니다.",
+        "action=move,count=1": "이전 노트에서 완료되지 않은 작업을 이동합니다.",
+        "action=move,count=*": "이전 노트 {count}개에서 완료되지 않은 작업을 이동합니다."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "노트에서만 찾습니다.",
+        "source=notelets": "서브노트에서만 찾습니다.",
+        "source=both": "노트와 그 서브노트에서 찾습니다."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "원래 있던 제목이 없으면 {heading} 아래에 둡니다.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "자체 설정이 없는 저널은 이 값을 사용합니다.",
+  "tasks_move_mode": "복사 또는 이동",
+  "tasks_move_mode_desc": "복사는 원래 줄을 이전 노트에 남깁니다. 이동은 원래 줄을 없앱니다.",
+  "tasks_move_mode_copy": "복사",
+  "tasks_move_mode_move": "이동",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "기본값 (복사)",
+        "mode=move": "기본값 (이동)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "이월됨으로 표시",
+  "tasks_move_stamp_desc": "복사 후 남는 각 원래 줄에 이월 표시를 추가해 더 이상 완료되지 않은 작업으로 보이지 않게 합니다.",
+  "tasks_move_stamp_on": "켜기",
+  "tasks_move_stamp_off": "끄기",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "기본값 (켜기)",
+        "stamp=off": "기본값 (끄기)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "이전 기간의 어떤 노트에서 작업을 가져올지.",
+  "tasks_move_heading": "대상 제목",
+  "tasks_move_heading_desc": "작업이 있던 제목이 노트에 없을 때 작업을 둘 위치. 비워 두면 끝에 추가합니다.",
+  "tasks_move_look_back": "되돌아볼 노트 수",
+  "tasks_move_look_back_desc": "완료되지 않은 작업을 가져올 이전 노트의 수.",
+  "tasks_move_look_back_invalid": "1 이상의 정수를 입력하세요.",
   "tasks_filter_conditions_label": "조건",
   "tasks_filter_conditions_desc": "목록에 표시할 작업 조건.",
   "tasks_tick_recurring_needs_tasks_plugin": "이 작업은 완료 처리되지 않았습니다. 반복 작업을 다음 항목으로 진행하려면 Tasks 플러그인이 필요합니다.",
   "tasks_tick_recurring_task_note": "이 작업은 완료 처리되지 않았습니다. 반복 작업 노트는 해당 시리즈를 관리하는 플러그인에서 완료해야 합니다.",
   "tasks_tick_error": "작업을 완료 처리할 수 없습니다.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "{oldest} 노트에서 작업 1개를 이월했습니다.",
+        "notes=1,count=*": "{oldest} 노트에서 작업 {count}개를 이월했습니다.",
+        "notes=*,count=*": "노트 {notes}개에서 작업 {count}개를 이월했습니다(가장 오래된 노트는 {oldest})."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "{oldest} 노트에 완료되지 않은 작업이 없습니다.",
+  "tasks_roll_no_previous": "작업을 이월할 이전 노트가 없습니다.",
+  "tasks_roll_no_current_period": "오늘은 이 저널의 타임라인 범위 밖입니다.",
+  "tasks_roll_failed": "작업을 이월하지 못했습니다.",
+  "tasks_roll_missing_heading": "{date} 노트에 {heading} 제목이 없습니다. 저널의 목록 필터를 확인하세요.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "작업 노트 1개는 이동되지 않았습니다.",
+        "count=*": "작업 노트 {count}개는 이동되지 않았습니다."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "블록 링크가 있는 작업 1개는 그대로 두었습니다.",
+        "count=*": "블록 링크가 있는 작업 {count}개는 그대로 두었습니다."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "이월하는 동안 {date} 노트가 변경되었습니다. 작업은 복사되었지만 이월됨으로 표시되지 않았습니다.",
+        "mode=move": "이월하는 동안 {date} 노트가 변경되었습니다. 작업은 복사되었지만 제거되지 않았습니다."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} 노트를 이월됨으로 표시하지 못했습니다. 작업은 복사되었으며 다시 이월될 수 있습니다.",
+        "mode=move": "{date} 노트를 업데이트하지 못했습니다. 작업은 복사되었으며 원래 노트에도 그대로 남아 있습니다."
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "{date} 노트를 아직 색인하는 중입니다. 잠시 후 다시 시도하세요.",
+  "tasks_roll_source_unread": "{date} 노트를 읽을 수 없습니다.",
   "tasks_listing_empty": "이 쿼리와 일치하는 작업이 없습니다."
 }

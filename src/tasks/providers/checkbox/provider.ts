@@ -18,7 +18,7 @@ import CheckboxSettingsRow from "./ui/CheckboxSettingsRow.vue";
 
 // A rule the schema cannot parse must not take the note's items with it — falling back to the
 // global rule alone (the same treatment as no journal rule at all) is safer than dropping the note.
-function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
+export function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
   const parsed = v.safeParse(checkboxJournalRuleSchema, rule);
   return parsed.success ? parsed.output : null;
 }
@@ -106,6 +106,7 @@ export class CheckboxTaskProvider implements TaskProvider {
       vault: this.#settings.state.rule,
       journal: owner === undefined ? null : parseJournalRule(owner.rule),
       statusMap: this.#settings.state.statusMap,
+      rolledMarker: this.#settings.state.rolledMarker,
       owned: owner !== undefined,
       lineDates,
       properties: lineDates === undefined || lineDates.size === 0 ? undefined : this.#snapshot(path),
@@ -227,7 +228,7 @@ export class CheckboxTaskProvider implements TaskProvider {
         if (!disposed) void this.#walk();
       });
     }
-    // enabled, rule and statusMap feed #itemsFor, so a settings-dashboard edit to any of them must
+    // enabled, rule, statusMap and rolledMarker feed #itemsFor, so a settings-dashboard edit to any of them must
     // take effect rather than sit stale until an unrelated note or journal event happens to fire a
     // refresh. (`canonical` names the symbol a write emits and is read by nothing here, but it sits
     // in the same slice and a deep watch cannot tell the fields apart.) Deep because the fields it

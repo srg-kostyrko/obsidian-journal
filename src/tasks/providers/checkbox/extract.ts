@@ -1,5 +1,5 @@
 import type { AnchorString } from "@/calendar";
-import type { NoteStructure, VaultPath } from "@/infrastructure/host";
+import type { NoteStructure, StructureListItem, VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskItem } from "@/tasks";
 
 import { headingsOf, tagsOf } from "../../note-structure";
@@ -22,12 +22,47 @@ export interface ExtractInput {
   readonly statusMap: Record<string, string>;
   readonly owned: boolean;
   readonly lineDates: LineDates | undefined;
+  readonly rolledMarker: string;
   // The containing note's properties some journal's dated rule names; undefined when none does.
   readonly properties?: Readonly<Record<string, unknown>>;
 }
 
+// Only a tag on the item's own first line counts: a child's tag or a frontmatter tag is not the item's stamp.
+export function carriesMarker(
+  listItem: Pick<StructureListItem, "line">,
+  structure: NoteStructure,
+  marker: string,
+): boolean {
+  if (marker === "") return false;
+  const wanted = marker.toLowerCase();
+  return structure.tags.some((tag) => tag.line === listItem.line && tag.tag.toLowerCase() === wanted);
+}
+
+// Only the root of a rolled group is stamped, but its whole subtree was copied: every task nested
+// under a stamped root reads as rolled too, done ones included, or listings and open-task dots count
+// the open ones a second time beside their copies. The walk follows parent lines, so it stops at a
+// non-task parent, whose own parent the structure does not hold.
+function underRolledAncestor(
+  listItem: StructureListItem,
+  structure: NoteStructure,
+  marker: string,
+  byLine: ReadonlyMap<number, StructureListItem>,
+): boolean {
+  let parent = listItem.parent;
+  let below = listItem.line;
+  while (parent !== null && parent < below) {
+    if (carriesMarker({ line: parent }, structure, marker)) return true;
+    below = parent;
+    parent = byLine.get(parent)?.parent ?? null;
+  }
+  return false;
+}
+
 export function extractItems(input: ExtractInput): readonly TaskItem[] {
-  const { path, structure, vault, journal, statusMap, owned, lineDates, properties } = input;
+  const { path, structure, vault, journal, statusMap, owned, lineDates, rolledMarker, properties } = input;
+  const byLine = new Map(structure.listItems.map((listItem) => [listItem.line, listItem]));
+  const rolled = (listItem: StructureListItem): boolean =>
+    carriesMarker(listItem, structure, rolledMarker) || underRolledAncestor(listItem, structure, rolledMarker, byLine);
   const items: TaskItem[] = [];
   for (const listItem of structure.listItems) {
     const dates = lineDates?.get(listItem.line) ?? {};
@@ -39,7 +74,7 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
       provider: CHECKBOX_PROVIDER_ID,
       key: `${path}:${listItem.line}`,
       path,
-      status: normalizeStatus(listItem.marker, statusMap),
+      status: rolled(listItem) ? "rolled" : normalizeStatus(listItem.marker, statusMap),
       relations: owned ? (dated ? ["containment", "date"] : ["containment"]) : ["date"],
       capabilities: { movable: true, stampable: true, retargetable: dated },
       display: {

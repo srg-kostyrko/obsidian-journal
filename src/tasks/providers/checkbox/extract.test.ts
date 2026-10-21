@@ -25,6 +25,7 @@ const base = {
   statusMap: DEFAULT_STATUS_MAP,
   owned: true,
   lineDates: undefined,
+  rolledMarker: "#rolled",
 };
 
 describe("extractItems", () => {
@@ -86,6 +87,7 @@ describe("extractItems", () => {
       statusMap: { " ": "todo" },
       owned: true,
       lineDates: undefined,
+      rolledMarker: "#rolled",
     });
     expect(items.map((item) => item.display.kind === "line" && item.display.parentLine)).toEqual([null, 3]);
   });
@@ -144,5 +146,79 @@ describe("extractItems", () => {
   });
   it("lineStampOf names every task item's line", () => {
     expect(lineStampOf(structure)).toBe("4,5,6");
+  });
+});
+
+function item(marker: string, line: number, parent: number | null = null) {
+  return { marker, line, endLine: line, parent };
+}
+
+function noteWith(overrides: Partial<NoteStructure>): NoteStructure {
+  return {
+    listItems: [item(" ", 2)],
+    tags: [],
+    headings: [],
+    frontmatterTags: [],
+    ...overrides,
+  };
+}
+
+describe("rolled marker", () => {
+  it("a line carrying the marker on its own line reads as rolled", () => {
+    const items = extractItems({ ...base, structure: noteWith({ tags: [{ tag: "#rolled", line: 2 }] }) });
+    expect(items.at(0)?.status).toBe("rolled");
+  });
+  it("matches the marker case-insensitively", () => {
+    const items = extractItems({ ...base, structure: noteWith({ tags: [{ tag: "#Rolled", line: 2 }] }) });
+    expect(items.at(0)?.status).toBe("rolled");
+  });
+  it("the marker on a child line does not make its parent rolled", () => {
+    const structure = noteWith({
+      listItems: [{ marker: " ", line: 2, endLine: 3, parent: null }, item(" ", 3, 2)],
+      tags: [{ tag: "#rolled", line: 3 }],
+    });
+    const items = extractItems({ ...base, structure });
+    expect(items.map((i) => i.status)).toEqual(["todo", "rolled"]);
+  });
+  it("an item under a stamped ancestor reads as rolled, one under an unstamped sibling root does not", () => {
+    const structure = noteWith({
+      listItems: [item(" ", 2), item(" ", 3, 2), item("x", 4, 3), item(" ", 5), item(" ", 6, 5)],
+      tags: [{ tag: "#rolled", line: 2 }],
+    });
+    const items = extractItems({ ...base, structure });
+    expect(items.map((i) => i.status)).toEqual(["rolled", "rolled", "rolled", "todo", "todo"]);
+  });
+  it("a stamped non-task parent makes its task children rolled", () => {
+    const structure = noteWith({
+      listItems: [item(" ", 3, 2), item(" ", 5, 4)],
+      tags: [{ tag: "#rolled", line: 2 }],
+    });
+    expect(extractItems({ ...base, structure }).map((i) => i.status)).toEqual(["rolled", "todo"]);
+  });
+  it("an ancestor's marker rolls nothing when the marker is empty", () => {
+    const structure = noteWith({
+      listItems: [item(" ", 2), item(" ", 3, 2)],
+      tags: [{ tag: "#rolled", line: 2 }],
+    });
+    expect(extractItems({ ...base, rolledMarker: "", structure }).map((i) => i.status)).toEqual(["todo", "todo"]);
+  });
+  it("a frontmatter tag equal to the marker rolls nothing", () => {
+    const items = extractItems({ ...base, structure: noteWith({ frontmatterTags: ["rolled"] }) });
+    expect(items.at(0)?.status).toBe("todo");
+  });
+  it("a done line carrying the marker still reads as rolled", () => {
+    const items = extractItems({
+      ...base,
+      structure: noteWith({ listItems: [item("x", 2)], tags: [{ tag: "#rolled", line: 2 }] }),
+    });
+    expect(items.at(0)?.status).toBe("rolled");
+  });
+  it("an empty marker rolls nothing", () => {
+    const items = extractItems({
+      ...base,
+      rolledMarker: "",
+      structure: noteWith({ tags: [{ tag: "#rolled", line: 2 }] }),
+    });
+    expect(items.at(0)?.status).toBe("todo");
   });
 });

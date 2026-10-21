@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { VaultPath } from "@/infrastructure/host";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { fixedJournal, noMove } from "@/journals/testing";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "./module";
@@ -13,7 +13,11 @@ import type { VisibilityRule } from "./visibility-rule/rule";
 
 const noFilter = { mode: "and" as const, conditions: [] };
 const withRule = (name: string, rule: VisibilityRule) =>
-  fixedJournal(name, { type: "day" }, { tasks: { providers: { "note-property": rule }, filter: noFilter } });
+  fixedJournal(
+    name,
+    { type: "day" },
+    { tasks: { providers: { "note-property": rule }, filter: noFilter, move: noMove } },
+  );
 const matching = (tag: string): VisibilityRule => ({
   show: "matching",
   mode: "and",

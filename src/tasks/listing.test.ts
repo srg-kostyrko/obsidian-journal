@@ -12,12 +12,13 @@ import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } f
 import { Option } from "@/infrastructure/result";
 import { JournalsIndex, type JournalConfig, type NoteletEntry } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { fixedJournal, noMove } from "@/journals/testing";
 import { overrideWith, testContainer } from "@/testing";
 
 import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
 import { tasksCoreModule } from "./module";
-import { CHECKBOX_PROVIDER_ID } from "./providers/checkbox/extract";
+import { CHECKBOX_PROVIDER_ID, extractItems } from "./providers/checkbox/extract";
+import { DEFAULT_STATUS_MAP } from "./providers/checkbox/slice";
 import { settle, startedCheckboxes, type CheckboxNoteFixture } from "./providers/checkbox/testing";
 import { NotePropertyTaskProvider } from "./providers/note-property/provider";
 import { NOTE_PROPERTY_PROVIDER_ID } from "./providers/note-property/slice";
@@ -210,6 +211,37 @@ describe("buildTaskListing", () => {
           line(DAY, 4, { status: "in-progress" }),
         ],
       },
+      notes: { Daily: { "2026-09-22": DAY } },
+    });
+    const rows = await buildTaskListing(dependencies, request());
+    expect(rows.map((row) => row.key)).toEqual([`${DAY}:3`, `${DAY}:4`]);
+  });
+
+  it("leaves the open children of a rolled-over task out of an open listing", async () => {
+    const structure: NoteStructure = {
+      listItems: [
+        { marker: " ", line: 1, endLine: 1, parent: null },
+        { marker: " ", line: 2, endLine: 2, parent: 1 },
+        { marker: " ", line: 3, endLine: 3, parent: null },
+        { marker: " ", line: 4, endLine: 4, parent: 3 },
+      ],
+      tags: [{ tag: "#rolled", line: 1 }],
+      headings: [],
+      frontmatterTags: [],
+    };
+    const items = extractItems({
+      path: DAY,
+      structure,
+      vault: NO_CONDITIONS,
+      journal: null,
+      statusMap: DEFAULT_STATUS_MAP,
+      owned: true,
+      lineDates: undefined,
+      rolledMarker: "#rolled",
+    });
+    const dependencies = buildDependencies({
+      items: { [DAY]: items },
+      structures: { [DAY]: structure },
       notes: { Daily: { "2026-09-22": DAY } },
     });
     const rows = await buildTaskListing(dependencies, request());
@@ -1090,7 +1122,11 @@ describe("buildTaskListing — task-note visibility", () => {
   const HOME_NOTE = "Tasks/home.md" as VaultPath;
   const noFilter: TaskRule = { mode: "and", conditions: [] };
   const withRule = (name: string, rule: VisibilityRule): JournalConfig =>
-    fixedJournal(name, { type: "day" }, { tasks: { filter: noFilter, providers: { "note-property": rule } } });
+    fixedJournal(
+      name,
+      { type: "day" },
+      { tasks: { filter: noFilter, move: noMove, providers: { "note-property": rule } } },
+    );
   const matchingWork: VisibilityRule = {
     show: "matching",
     mode: "and",
@@ -1348,6 +1384,7 @@ describe("buildTaskListing — dated checkbox visibility", () => {
       {
         tasks: {
           filter: noFilter,
+          move: noMove,
           providers:
             dated === undefined ? {} : { checkbox: { compose: "inherit", mode: "and", conditions: [], dated } },
         },
@@ -1408,6 +1445,7 @@ describe("buildTaskListing — dated checkbox visibility", () => {
     harness.repository.update("Work", {
       tasks: {
         filter: noFilter,
+        move: noMove,
         providers: {
           checkbox: {
             compose: "inherit",

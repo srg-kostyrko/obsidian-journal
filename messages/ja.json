@@ -384,6 +384,8 @@
   ],
   "command_open_next": "次のノートを開く",
   "command_open_previous": "前のノートを開く",
+  "command_roll_over": "未完了のタスクを繰り越す",
+  "command_roll_over_pick_journal": "どのジャーナルでタスクを繰り越しますか？",
   "command_open_view": "{name} を開く",
   "command_view_change_shelf": "{name} の棚を変更",
   "command_view_shelf_needs_open_view": "先に {name} を開いて、その棚を選んでください。",
@@ -2420,6 +2422,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "識別ルール",
   "tasks_settings_rule_desc": "どのチェックボックス項目をタスクとして扱うか。",
+  "tasks_checkbox_marker": "繰り越しマーカー",
+  "tasks_checkbox_marker_desc": "コピー時に元の行へ追加するタグ。このタグがある行は繰り越し済みとして扱われます。",
+  "tasks_checkbox_marker_required": "タグを入力してください。",
+  "tasks_checkbox_marker_invalid": "文字、数字、_、-、/ のみを使い、数字以外の文字を少なくとも1つ含めてください。",
+  "tasks_checkbox_marker_changed": "古いマーカーが付いた行は、再び未完了として扱われます。",
   "tasks_settings_add_condition": "条件を追加",
   "tasks_settings_condition_tag": "タグ",
   "tasks_settings_condition_heading": "見出し",
@@ -2555,10 +2562,141 @@
   "tasks_journal_filter_title": "一覧フィルター",
   "tasks_journal_filter_none": "このジャーナルには独自の一覧フィルターがありません。",
   "tasks_journal_filter_edit": "編集",
+  "tasks_move_title": "繰り越し",
+  "tasks_move_edit": "編集",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "前のノートから未完了のタスクをコピーし、元の行を繰り越し済みとしてマークします。",
+        "action=copy-stamp,count=*": "前の{count}件のノートから未完了のタスクをコピーし、元の行を繰り越し済みとしてマークします。",
+        "action=copy,count=1": "前のノートから未完了のタスクをコピーします。",
+        "action=copy,count=*": "前の{count}件のノートから未完了のタスクをコピーします。",
+        "action=move,count=1": "前のノートから未完了のタスクを移動します。",
+        "action=move,count=*": "前の{count}件のノートから未完了のタスクを移動します。"
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "ノートのみを対象にします。",
+        "source=notelets": "サブノートのみを対象にします。",
+        "source=both": "ノートとそのサブノートを対象にします。"
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "元の見出しがない場合は{heading}の下に置きます。",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action}{source}{heading}",
+        "hasHeading=*": "{action}{source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "独自の設定がないジャーナルはこれらの値を使います。",
+  "tasks_move_mode": "コピーまたは移動",
+  "tasks_move_mode_desc": "コピーは元の行を前のノートに残します。移動は元の行を取り除きます。",
+  "tasks_move_mode_copy": "コピー",
+  "tasks_move_mode_move": "移動",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "デフォルト（コピー）",
+        "mode=move": "デフォルト（移動）"
+      }
+    }
+  ],
+  "tasks_move_stamp": "繰り越し済みとしてマーク",
+  "tasks_move_stamp_desc": "コピーで残る元の各行に繰り越しマーカーを追加し、未完了として扱われないようにします。",
+  "tasks_move_stamp_on": "オン",
+  "tasks_move_stamp_off": "オフ",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "デフォルト（オン）",
+        "stamp=off": "デフォルト（オフ）"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "前の期間のどのノートからタスクを取り出すか。",
+  "tasks_move_heading": "移動先の見出し",
+  "tasks_move_heading_desc": "元の見出しがノートにない場合のタスクの置き場所。空のままにすると末尾に追加します。",
+  "tasks_move_look_back": "さかのぼる数",
+  "tasks_move_look_back_desc": "未完了のタスクを取り出す前のノートの数。",
+  "tasks_move_look_back_invalid": "1以上の整数を入力してください。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "一覧に表示するタスクの条件。",
   "tasks_tick_recurring_needs_tasks_plugin": "このタスクはチェックされませんでした。繰り返しタスクを次のインスタンスに進めるには、Tasksプラグインが必要です。",
   "tasks_tick_recurring_task_note": "このタスクはチェックされませんでした。繰り返しのタスクノートは、そのシリーズを管理するプラグインで完了してください。",
   "tasks_tick_error": "タスクをチェックできませんでした。",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "{oldest}のノートからタスク1件を繰り越しました。",
+        "notes=1,count=*": "{oldest}のノートからタスク{count}件を繰り越しました。",
+        "notes=*,count=*": "{notes}件のノートからタスク{count}件を繰り越しました（最も古いノートは{oldest}）。"
+      }
+    }
+  ],
+  "tasks_roll_nothing": "{oldest}のノートに未完了のタスクはありません。",
+  "tasks_roll_no_previous": "タスクを繰り越せる以前のノートがありません。",
+  "tasks_roll_no_current_period": "今日はこのジャーナルのタイムライン外です。",
+  "tasks_roll_failed": "タスクを繰り越せませんでした。",
+  "tasks_roll_missing_heading": "{date}のノートに見出し{heading}がありません。ジャーナルの一覧フィルターを確認してください。",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "タスクノート1件は移動されませんでした。",
+        "count=*": "タスクノート{count}件は移動されませんでした。"
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "ブロックリンクのあるタスク1件はそのまま残しました。",
+        "count=*": "ブロックリンクのあるタスク{count}件はそのまま残しました。"
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "繰り越し中に{date}のノートが変更されました。タスクはコピーされましたが、繰り越し済みとしてマークされていません。",
+        "mode=move": "繰り越し中に{date}のノートが変更されました。タスクはコピーされましたが、削除されていません。"
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date}のノートを繰り越し済みとしてマークできませんでした。タスクはコピーされたため、再度繰り越される可能性があります。",
+        "mode=move": "{date}のノートを更新できませんでした。タスクはコピーされ、元のノートにも残っています。"
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
+  "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
   "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

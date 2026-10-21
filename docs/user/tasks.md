@@ -555,6 +555,129 @@ ask it to roll up, the block already walks every journal its window and its shel
 no narrower "just this one note" state for it to be literal about, and nothing beyond that configured
 scope for a rollup to widen into.
 
+## Rolling tasks forward
+
+**Roll over unfinished tasks**, in the command palette, takes the unfinished tasks from a journal's
+earlier notes and puts them into the note for today. It runs for the journal of the note you have open;
+with no journal note open, it asks which journal. The note for today is the one for the period that
+contains today — today's daily note, this week's weekly note — and it is created if it does not exist
+yet, the same way any new note is, so a journal that confirms creation or asks questions does so here
+too. Nothing is created when there is nothing to roll, and nothing rolls when today is outside the
+journal's [timeline](/journals#timeline). The command does not open the note.
+
+### Which tasks roll
+
+The command reads the journal's earlier notes that exist — by default only the last one, however long
+ago it was written, so after a two-week break it still finds the note from before the break. From
+those notes it takes **checkbox tasks** that are:
+
+- **open** — To-do, In progress or On hold. Done, cancelled and already rolled-over tasks stay where
+  they are. This is fixed: the **Status** conditions in the journal's
+  [listing filter](#a-journal-s-own-listing-filter) do not apply, so a filter set to **All** for a
+  listing does not drag finished work forward.
+- **inside the listing filter's other conditions.** Its **Heading** and **Tag** conditions decide which
+  lines roll, so a journal filtered to the `Tasks` heading rolls only what sits under `Tasks` and
+  leaves a `Habits` list alone. With no listing filter, every open checkbox task rolls.
+- **tasks at all**, under the [identification rule](#which-checkbox-items-count-as-tasks) that applies
+  to the note.
+
+A task brings everything nested under it, whatever each nested line's own status. When an open task
+sits under a parent that does not roll — a done `Shopping` over an open `milk` — the parent is copied
+too, so the task keeps its meaning, but it is not marked and it stays as it was in the earlier note.
+A line nested under a task that was already rolled over never rolls on its own.
+
+[Task notes](#task-notes) never roll: moving one would mean changing its date property. The notice
+counts the unfinished ones it left in place.
+
+### Where they land
+
+Each task goes under the heading of the same name in today's note, when the heading it sat under is one
+the listing filter names and today's note has it. Otherwise it goes under the journal's **Target
+heading**, and with none set, or no such heading in the note, at the end of the note. Under a heading,
+they go after that section's own lines and before its first subheading, so a `### Someday` list
+inside `## Tasks` is left alone. A heading inside a code block or a comment — `%% … %%` or
+`<!-- … -->` — is not one a task lands under. Tasks from the oldest note come first, each note's in the order they
+were written.
+
+### Copy, and the rolled marker
+
+By default the command **copies**: the task stays in the earlier note, which keeps the record of what
+that day held, and its line gets the **Rolled marker** — `#rolled` unless you change it — so it reads as
+**Rolled over** from then on:
+
+```markdown
+- [ ] Call the bank #rolled
+```
+
+A rolled-over task is neither open nor done: it leaves open listings, stops lighting the calendar's
+open-task dots, and is not taken again by the next roll. The marker is a tag, so your own Dataview, Tasks or search queries
+can exclude it too. A block id stays at the end of the line, after the marker, and the copy in today's
+note drops it, so links to the block keep pointing at the original. Only the top task of each rolled
+group is marked. Every task nested under it, done ones included, reads as **Rolled over** too, without a marker of its own,
+so they leave open listings and the calendar's open-task dots along with it and never roll again — but
+your own Dataview, Tasks or search queries see no tag on them and still count them as unfinished.
+
+Turn **Mark as rolled** off and the original is left untouched — which also means the next roll copies
+it again.
+
+**Move** instead takes the lines out of the earlier note. A task whose group carries a block id is left
+where it is under **Move**, since removing it would break the links to that block, and the notice counts
+it.
+
+### Roll-over settings
+
+The **Rolled marker** and the defaults for every journal live in **Checkbox tasks**' settings modal, on
+the main settings page, under **Roll over**:
+
+- **Rolled marker** — the tag written on a copied line. It must be something Obsidian reads as a tag:
+  letters, numbers, `_`, `-` and `/`, not only numbers. Changing it does not touch notes already
+  stamped, so their lines read as unfinished again — and roll again — until you change it back. The
+  marker applies to every line that carries it, not only to lines the command stamped, so if `#rolled`
+  already means something else in your vault, change it here: until you do, those lines and the tasks
+  nested under them read as **Rolled over** and leave open listings and the calendar's open-task dots.
+- **Copy or move** — **Copy** by default.
+- **Mark as rolled** — on by default.
+
+A journal's **Tasks** section has its own **Roll over** row, which summarizes what the command does for
+that journal. **Edit** opens:
+
+- **Copy or move** and **Mark as rolled** — **Default** follows the setting above; pick a value to set
+  this journal's own.
+- **Source** — **Note only** (the default), **Notelets only**, or **Note and notelets**: which of the
+  earlier periods' notes to take tasks from, the period note or its [notelets](/notelets). The
+  earlier notes counted are the ones the source reads: under **Notelets only**, periods with a
+  notelet, so a period with only its period note is skipped; under **Note and notelets**, periods
+  with either, so one holding only notelets still counts. Tasks always land in today's period note, never in a notelet.
+- **Target heading** — the heading tasks go under when the heading they came from is not in today's
+  note. Type the heading's text; leading `#` markers are dropped.
+- **Look back** — how many earlier notes to take tasks from, 1 by default. Each is an existing note, so
+  with 3 a journal you write on weekdays reads back to the previous Wednesday on a Monday. With **Mark as rolled**
+  on, or under **Move**, a task taken once is marked or removed, so raising it does not bring the same
+  task twice.
+
+### What the notice says
+
+The notice names how many tasks rolled and the oldest note they came from, or that the earlier note held
+no unfinished tasks. Four other cases are worth knowing:
+
+- **"No Tasks heading in …"** — the earlier note has none of the headings the listing filter's
+  **Under** conditions name, so nothing could match. The notice names the first of them. Usually the
+  heading was renamed in the template or misspelled in the filter.
+- **"… changed while rolling"** or **"… could not be marked as rolled"** — the tasks reached today's note
+  but the earlier note was left as it was, so they would roll again. Under **Move** the same two cases
+  read **"… changed while rolling"** and **"… could not be updated"**, and say the tasks were copied
+  but are still in the earlier note too. Either way, mark or remove the originals by hand, or delete
+  the copies.
+- **"… could not be read"** — Obsidian failed to read the earlier note, so nothing was taken from it.
+  Run the command again once the note opens normally.
+- **"… is still being indexed"** — the earlier note was edited a moment ago and Obsidian has not yet
+  caught up with its task lines, headings or tags, so nothing was taken from it: rolling by what the
+  note used to say could take lines from under a heading that has since been renamed. Run the command
+  again in a moment.
+
+The command writes today's note before it touches the earlier one, so a failure part-way leaves a task
+in both notes, never in neither.
+
 ## Examples
 
 ### An in-progress day
@@ -712,5 +835,25 @@ scheduled: 2026-03-10
 
 Today's cell in the calendar is decorated: the task note is open and placed on that day by its
 scheduled date, so the day has an open task with no note of its own.
+
+### Rolling the Tasks heading forward
+
+A daily journal whose [listing filter](#a-journal-s-own-listing-filter) is **Under** heading `Tasks`,
+every roll-over setting at its default. Yesterday's note holds:
+
+```markdown
+## Tasks
+
+- [ ] milk
+- [x] bread
+
+## Habits
+
+- [ ] water
+```
+
+**Roll over unfinished tasks** adds `- [ ] milk` to the end of today's note and changes yesterday's line
+to `- [ ] milk #rolled`. `bread` is done and `water` sits outside the filter, so neither moves, and the
+notice reads "Rolled 1 task forward from" yesterday's date.
 
 :::

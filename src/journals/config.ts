@@ -5,6 +5,7 @@ import { colorSchema, decorationSchema, type JournalDecoration } from "@/decorat
 import { defineCollection } from "@/settings";
 import { climb } from "@/settings/repair";
 import { taskRuleSchema } from "@/tasks/conditions";
+import { journalMoveSchema } from "@/tasks/move/settings";
 import { checkboxJournalRuleSchema } from "@/tasks/providers/checkbox/rule-schema";
 import { visibilityRuleSchema } from "@/tasks/visibility-rule/rule";
 
@@ -184,8 +185,9 @@ export const journalConfigSchema = v.object({
         () => ({}),
       ),
       filter: v.optional(taskRuleSchema, () => v.parse(taskRuleSchema, {})),
+      move: v.optional(journalMoveSchema, () => v.parse(journalMoveSchema, {})),
     }),
-    () => ({ providers: {}, filter: v.parse(taskRuleSchema, {}) }),
+    () => ({ providers: {}, filter: v.parse(taskRuleSchema, {}), move: v.parse(journalMoveSchema, {}) }),
   ),
   navBlock: v.optional(navBlockSchema, () => ({
     type: "create" as const,
@@ -430,7 +432,7 @@ export function journalDefaultsFor(write: JournalWrite, name = ""): JournalConfi
     templates: [],
     prompts: [],
     notelets: {},
-    tasks: { providers: {}, filter: v.parse(taskRuleSchema, {}) },
+    tasks: { providers: {}, filter: v.parse(taskRuleSchema, {}), move: v.parse(journalMoveSchema, {}) },
     confirmCreation: false,
     autoCreate: false,
     decorations: structuredClone(isCustom ? customDecorations : fixedDecorations),

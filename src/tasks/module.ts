@@ -1,6 +1,9 @@
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
+import { RolloverCommands } from "./move/rollover-commands";
+import { RolloverService } from "./move/rollover-service";
+import { moveDefaultsSlice } from "./move/settings";
 import { TaskProviderRegistry } from "./provider-registry";
 import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkbox-provider.flow";
 import { EditJournalTasksFlow } from "./providers/checkbox/flows/edit-journal-tasks.flow";
@@ -29,6 +32,7 @@ export const tasksCoreModule: Module = {
     c.register(TaskProviderToken).useClass(CheckboxTaskProvider);
     c.register(TaskProviderToken).useClass(NotePropertyTaskProvider);
     c.register(SliceDefinitionToken).useValue(checkboxSlice);
+    c.register(SliceDefinitionToken).useValue(moveDefaultsSlice);
     c.register(SliceDefinitionToken).useValue(notePropertySlice);
     c.register(SliceDefinitionToken).useValue(taskNotesNoticeSlice);
     c.register(EditCheckboxProviderFlow).useClass(EditCheckboxProviderFlow);
@@ -40,6 +44,7 @@ export const tasksCoreModule: Module = {
     c.register(NotePropertyTicker).useClass(NotePropertyTicker);
     c.register(TaskVisibility).useClass(TaskVisibility);
     c.register(TickService).useClass(TickService);
+    c.register(RolloverService).useClass(RolloverService);
   },
 };
 
@@ -47,5 +52,6 @@ export const tasksModule: Module = {
   register(c) {
     tasksCoreModule.register(c);
     tasksUiModule.register(c);
+    c.register(RolloverCommands).useClass(RolloverCommands).eager();
   },
 };

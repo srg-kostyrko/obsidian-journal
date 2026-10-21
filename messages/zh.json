@@ -384,6 +384,8 @@
   ],
   "command_open_next": "打开下一条笔记",
   "command_open_previous": "打开上一条笔记",
+  "command_roll_over": "结转未完成的任务",
+  "command_roll_over_pick_journal": "在哪个日记中结转任务？",
   "command_open_view": "打开 {name}",
   "command_view_change_shelf": "切换 {name} 中的书架",
   "command_view_shelf_needs_open_view": "请先打开 {name} 以选择其书架。",
@@ -2414,6 +2416,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "识别规则",
   "tasks_settings_rule_desc": "哪些复选框列表项算作任务。",
+  "tasks_checkbox_marker": "结转标记",
+  "tasks_checkbox_marker_desc": "复制时添加到原行的标签。带有此标签的行视为已结转。",
+  "tasks_checkbox_marker_required": "请输入标签。",
+  "tasks_checkbox_marker_invalid": "只能使用字母、数字、_、- 或 /，且至少包含一个非数字字符。",
+  "tasks_checkbox_marker_changed": "带有旧标记的行将重新显示为未完成。",
   "tasks_settings_add_condition": "添加条件",
   "tasks_settings_condition_tag": "标签",
   "tasks_settings_condition_heading": "标题",
@@ -2549,10 +2556,141 @@
   "tasks_journal_filter_title": "列表筛选条件",
   "tasks_journal_filter_none": "此日记没有自己的列表筛选条件。",
   "tasks_journal_filter_edit": "编辑",
+  "tasks_move_title": "结转",
+  "tasks_move_edit": "编辑",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "从上一篇笔记复制未完成的任务，并将原行标记为已结转。",
+        "action=copy-stamp,count=*": "从之前的 {count} 篇笔记复制未完成的任务，并将原行标记为已结转。",
+        "action=copy,count=1": "从上一篇笔记复制未完成的任务。",
+        "action=copy,count=*": "从之前的 {count} 篇笔记复制未完成的任务。",
+        "action=move,count=1": "从上一篇笔记移动未完成的任务。",
+        "action=move,count=*": "从之前的 {count} 篇笔记移动未完成的任务。"
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "仅查找笔记本身。",
+        "source=notelets": "仅查找其子笔记。",
+        "source=both": "查找笔记及其子笔记。"
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "原标题缺失时，放在 {heading} 下方。",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action}{source}{heading}",
+        "hasHeading=*": "{action}{source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "未单独设置的日记使用这些值。",
+  "tasks_move_mode": "复制或移动",
+  "tasks_move_mode_desc": "复制会在较早的笔记中保留原行。移动会将其移除。",
+  "tasks_move_mode_copy": "复制",
+  "tasks_move_mode_move": "移动",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "默认（复制）",
+        "mode=move": "默认（移动）"
+      }
+    }
+  ],
+  "tasks_move_stamp": "标记为已结转",
+  "tasks_move_stamp_desc": "为复制后留下的每个原行添加结转标记，使其不再显示为未完成。",
+  "tasks_move_stamp_on": "开",
+  "tasks_move_stamp_off": "关",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "默认（开）",
+        "stamp=off": "默认（关）"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "从上一时段的哪些笔记中取出任务。",
+  "tasks_move_heading": "目标标题",
+  "tasks_move_heading_desc": "笔记中没有任务原来所在的标题时任务的放置位置。留空则添加到末尾。",
+  "tasks_move_look_back": "回溯笔记数",
+  "tasks_move_look_back_desc": "从多少篇之前的笔记中取出未完成的任务。",
+  "tasks_move_look_back_invalid": "请输入不小于 1 的整数。",
   "tasks_filter_conditions_label": "条件",
   "tasks_filter_conditions_desc": "列表显示哪些任务。",
   "tasks_tick_recurring_needs_tasks_plugin": "此任务未勾选。重复任务需要 Tasks 插件才能推进到下一次实例。",
   "tasks_tick_recurring_task_note": "此任务未勾选。重复的任务笔记需要在管理其系列的插件中完成。",
   "tasks_tick_error": "无法勾选该任务。",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "已从 {oldest} 的笔记结转 1 项任务。",
+        "notes=1,count=*": "已从 {oldest} 的笔记结转 {count} 项任务。",
+        "notes=*,count=*": "已从 {notes} 条笔记结转 {count} 项任务，最早的是 {oldest}。"
+      }
+    }
+  ],
+  "tasks_roll_nothing": "{oldest} 的笔记中没有未完成的任务。",
+  "tasks_roll_no_previous": "没有可从中结转任务的更早笔记。",
+  "tasks_roll_no_current_period": "今天不在此日记的时间线范围内。",
+  "tasks_roll_failed": "无法结转任务。",
+  "tasks_roll_missing_heading": "{date} 的笔记中没有 {heading} 标题。请检查该日记的列表筛选条件。",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "有 1 条任务笔记未被移动。",
+        "count=*": "有 {count} 条任务笔记未被移动。"
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "有 1 项带块链接的任务保留在原处。",
+        "count=*": "有 {count} 项带块链接的任务保留在原处。"
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} 的笔记在结转过程中发生了更改。其任务已复制，但未标记为已结转。",
+        "mode=move": "{date} 的笔记在结转过程中发生了更改。其任务已复制，但未移除。"
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "无法将 {date} 的笔记标记为已结转。其任务已复制，可能会再次结转。",
+        "mode=move": "无法更新 {date} 的笔记。其任务已复制，原处也仍然保留。"
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
+  "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

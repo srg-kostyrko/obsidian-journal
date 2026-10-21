@@ -6,7 +6,7 @@ import { NoteMetadataService, NoteStructureService, NotesService, type VaultPath
 import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { JournalsIndex, JournalsRepository, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { fixedJournal, noMove } from "@/journals/testing";
 import { SettingsService } from "@/settings";
 import type { VisibilityRule } from "@/tasks/visibility-rule/rule";
 import { overrideWith, testContainer } from "@/testing";
@@ -328,7 +328,11 @@ describe("NotePropertyTaskProvider", () => {
       conditions: [{ type: "property", name: "projects", values: ["Website"] }],
     };
     const withRule = (rule: VisibilityRule) =>
-      fixedJournal("Work", { type: "day" }, { tasks: { providers: { "note-property": rule }, filter: noFilter } });
+      fixedJournal(
+        "Work",
+        { type: "day" },
+        { tasks: { providers: { "note-property": rule }, filter: noFilter, move: noMove } },
+      );
 
     it("snapshots a property a journal's rule names, and only that one", async () => {
       const { notes, setNote, provider, index } = await build(true, true, { Work: withRule(byProject) });
@@ -368,7 +372,9 @@ describe("NotePropertyTaskProvider", () => {
       provider.start();
       const before = index.version();
 
-      repository.update("Work", { tasks: { filter: noFilter, providers: { "note-property": byProject } } });
+      repository.update("Work", {
+        tasks: { filter: noFilter, move: noMove, providers: { "note-property": byProject } },
+      });
       await nextTick();
 
       expect(index.version()).toBe(before + 1);
@@ -383,7 +389,7 @@ describe("NotePropertyTaskProvider", () => {
       const before = index.version();
 
       repository.update("Work", {
-        tasks: { filter: noFilter, providers: { "note-property": { ...byProject, mode: "or" } } },
+        tasks: { filter: noFilter, move: noMove, providers: { "note-property": { ...byProject, mode: "or" } } },
       });
       await nextTick();
 
@@ -396,7 +402,7 @@ describe("NotePropertyTaskProvider", () => {
           "a rule stops naming the property",
           (repository: JournalsRepository) =>
             repository.update("Work", {
-              tasks: { filter: noFilter, providers: { "note-property": { ...byProject, show: "all" } } },
+              tasks: { filter: noFilter, move: noMove, providers: { "note-property": { ...byProject, show: "all" } } },
             }),
         ],
         ["the journal naming the property is deleted", (repository: JournalsRepository) => repository.delete("Work")],
@@ -445,7 +451,7 @@ describe("NotePropertyTaskProvider", () => {
       expect(provider.admits(item, "Unknown")).toBe(true);
 
       repository.update("Work", {
-        tasks: { filter: noFilter, providers: { "note-property": { ...byProject, show: "all" } } },
+        tasks: { filter: noFilter, move: noMove, providers: { "note-property": { ...byProject, show: "all" } } },
       });
 
       expect(provider.admits(item, "Work")).toBe(true);

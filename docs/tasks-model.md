@@ -949,8 +949,13 @@ reason.
 
 ### Items nest, so movement is per subtree
 
-Eligibility defaults to `status: open` and is set through the same axis as a
-listing's. But an item can nest, and then what moves is not the item:
+Eligibility is the move's own: an item is eligible when its status is open
+(`todo`, `in-progress` or `on-hold`). It does **not** come from the journal's
+listing filter, which supplies only `selection` — the filter's heading and tag
+conditions, with its status conditions removed. A listing's status condition is
+tuned for reading, often to show done items too, and a roll inheriting it would
+copy finished work forward. `rolled` is never eligible. But an item can nest, and
+then what moves is not the item:
 
 ```
 - [x] Shopping
@@ -981,6 +986,26 @@ unstamped in the source, because it is context in one and a record in the other.
 
 **`movable` is therefore a property of a subtree, not of an item.**
 
+The stamp goes on each **root** line only, and so **a line with a `rolled`
+ancestor is never eligible**. That is the eligibility mirror of rule 1: without
+it, an open child under a stamped root becomes a root of its own on the next run
+and rolls again. Stamping every open line in the subtree would also stop that,
+but it writes markers the user never sees a reason for, and it breaks the round
+trip when the user later removes the root's marker by hand — the children read
+as open again together with their root.
+
+The same derivation serves reading: **an item whose ancestor list item carries
+the marker on its own line normalizes to `rolled`** too, with nothing written to
+it. Without that, the copied group's open children stay `todo` in the source, and
+every open listing and open-task decoration counts them a second time beside
+their copies. The provider walks the structure's parent lines, so the walk stops
+at a parent that is not itself a task — `NoteStructure` drops those lines, and
+with them the next parent up — and it cannot see a parent on the note's first line,
+which the structure cannot tell from no parent. The roll's own eligibility check
+walks the text and has neither gap. The user's own queries see no tag on a child
+and still count it open; stamping every line is what that would take, and it is
+declined above.
+
 ### Block references
 
 `ListItemCache` carries `id`, so a line's `^blockid` is always visible to us, and
@@ -997,12 +1022,15 @@ That makes copy mode the worse of the two by default: links silently start
 pointing somewhere the user never chose. Dropping it leaves every existing link
 resolving to the source line, which in copy mode is still there.
 
-**Move mode warns when a line carries one**, because removing it breaks every
-`[[note#^abc1234]]` that pointed at it. The warning cannot say how many:
+**Move mode does not remove a line that carries one**, because removing it breaks
+every `[[note#^abc1234]]` that pointed at it. A bulk roll in move mode leaves a
+root whose subtree carries a block id in the source and reports it; the
+single-item commands, where the user picked the line, warn instead. Neither can
+say how many links are at stake:
 `resolvedLinks` is `Record<path, Record<path, number>>` with no anchor
 information, `getBacklinksForFile` is not in the public typings, and reading
 `LinkCache.link` for every note is the whole-vault walk this plugin criticises
-other plugins for. So it says what is true and no more.
+other plugins for. So the report or warning says what is true and no more.
 
 **Reach is unbounded, and reported.** `JournalIndex.findPrevious` binary-searches
 the anchors of notes that _exist_, so it already spans gaps — after a two-week
@@ -1018,6 +1046,37 @@ and moved the old notes into a subfolder, which broke the sort, and moving that
 folder elsewhere fixed it. We resolve a note's period from its frontmatter claim
 and sort resolved anchors, so a folder reorganisation cannot make an old note
 sort as yesterday. The reach was not what failed there.
+
+### Look-back
+
+A bulk roll reads a set number of **existing** notes before the target, default
+1, any whole number of 1 or more, set per journal. It is counted in notes, not
+days or periods: a count of existing notes works the same for days, weeks, months
+and custom intervals, and it does not lose Mondays for someone who journals on
+weekdays only — the failure a one-day window produced in Nested Daily Todos #1.
+Finding each note still spans gaps as above, so with look-back 1 the note before
+a two-week break is the one read. The number is bounded on purpose: "everything
+not yet rolled" would let a first run over an old journal pull every forgotten
+checkbox into today. When automatic rollover arrives it reads the same setting,
+because it is the same operation and the two must agree on what "unfinished items
+from before" means.
+
+**No fold rule is needed.** Other plugins pick a winner when the same open item
+appears in several of the notes they read, because they leave nothing in the
+source to say it was taken. Here a taken item is stamped (copy, with stamping
+on) or removed (move), so it cannot be eligible twice. Copy with stamping off
+leaves nothing behind, and the next roll takes the same lines again. Two _different_ lines with the same text
+in different notes are two items, and both roll. In the target, items arrive
+oldest source note first, each note's items in their source order, so the same
+inputs always give the same text.
+
+### A reference instead of a copy — considered and declined
+
+Review leaves a `![[note#^id]]` embed in the target rather than moving the line.
+That is a different feature, not a variant of this one: the target would hold an
+embed rather than a checkbox, nobody has established whether a task inside an
+embed can be ticked, and listings, decorations and `tasksFor` would all still see
+the task in its source period, not in the one it was rolled into.
 
 ### What the move reports
 

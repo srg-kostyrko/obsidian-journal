@@ -132,6 +132,12 @@ export class NoteletIndex {
     return out;
   }
 
+  previousAnchor(from: AnchorString): AnchorString | undefined {
+    const result = this.#bsearch(from);
+    const at = result.found ? result.index : result.insertionPoint;
+    return at > 0 ? this.#sortedAnchors[at - 1] : undefined;
+  }
+
   clear(): void {
     this.#byAnchor.clear();
     this.#byType.clear();

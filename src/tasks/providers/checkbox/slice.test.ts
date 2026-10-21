@@ -56,6 +56,21 @@ describe("checkboxSlice repair on load", () => {
     expect(repair?.fields).toMatchObject({ sliceKey: "tasksCheckbox", fields: [field] });
   });
 
+  // A marker Obsidian does not parse as a tag is stamped and never read back, so the line rolls again.
+  it.each(["rolled", "#123", ""])("a rolled marker %j repairs to #rolled and logs it", async (stored) => {
+    const { state, repair } = await load({ rolledMarker: stored });
+
+    expect(state.rolledMarker).toBe("#rolled");
+    expect(repair?.fields).toMatchObject({ sliceKey: "tasksCheckbox", fields: ["rolledMarker"] });
+  });
+
+  it("a nested-tag rolled marker survives the load", async () => {
+    const { state, repair } = await load({ rolledMarker: "#roll/over" });
+
+    expect(state.rolledMarker).toBe("#roll/over");
+    expect(repair).toBeUndefined();
+  });
+
   // An empty status map reads every marker as to-do and an empty canonical map refuses every tick,
   // so a map whose every entry is unreadable takes the defaults instead.
   it("a status map and canonical map of a newer shape repair to the defaults", async () => {

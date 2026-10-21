@@ -384,6 +384,8 @@
   ],
   "command_open_next": "Відкрити наступну нотатку",
   "command_open_previous": "Відкрити попередню нотатку",
+  "command_roll_over": "Перенести незавершені завдання",
+  "command_roll_over_pick_journal": "У якому журналі перенести завдання?",
   "command_open_view": "Відкрити {name}",
   "command_view_change_shelf": "Змінити полицю в {name}",
   "command_view_shelf_needs_open_view": "Спочатку відкрийте {name}, щоб вибрати полицю.",
@@ -2498,6 +2500,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Правило визначення",
   "tasks_settings_rule_desc": "Які пункти списку з чекбоксом вважаються завданнями.",
+  "tasks_checkbox_marker": "Мітка перенесення",
+  "tasks_checkbox_marker_desc": "Тег, який копіювання додає до вихідного рядка. Рядки з ним вважаються перенесеними.",
+  "tasks_checkbox_marker_required": "Введіть тег.",
+  "tasks_checkbox_marker_invalid": "Використовуйте лише літери, цифри, _, - або /, і принаймні один символ, що не є цифрою.",
+  "tasks_checkbox_marker_changed": "Рядки зі старою міткою знову вважатимуться незавершеними.",
   "tasks_settings_add_condition": "Додати умову",
   "tasks_settings_condition_tag": "Тег",
   "tasks_settings_condition_heading": "Заголовок",
@@ -2633,10 +2640,156 @@
   "tasks_journal_filter_title": "Фільтр списку",
   "tasks_journal_filter_none": "У цього журналу немає власного фільтра списку.",
   "tasks_journal_filter_edit": "Редагувати",
+  "tasks_move_title": "Перенесення",
+  "tasks_move_edit": "Редагувати",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count", "local countPlural = count: plural"],
+      "selectors": ["action", "count", "countPlural"],
+      "match": {
+        "action=copy-stamp,count=1,countPlural=*": "Копіює незавершені завдання з попередньої нотатки й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=one": "Копіює незавершені завдання з {count} попередньої нотатки й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=few": "Копіює незавершені завдання з {count} попередніх нотаток й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=many": "Копіює незавершені завдання з {count} попередніх нотаток й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=*": "Копіює незавершені завдання з {count} попередніх нотаток й позначає вихідні рядки як перенесені.",
+        "action=copy,count=1,countPlural=*": "Копіює незавершені завдання з попередньої нотатки.",
+        "action=copy,count=*,countPlural=one": "Копіює незавершені завдання з {count} попередньої нотатки.",
+        "action=copy,count=*,countPlural=few": "Копіює незавершені завдання з {count} попередніх нотаток.",
+        "action=copy,count=*,countPlural=many": "Копіює незавершені завдання з {count} попередніх нотаток.",
+        "action=copy,count=*,countPlural=*": "Копіює незавершені завдання з {count} попередніх нотаток.",
+        "action=move,count=1,countPlural=*": "Переміщує незавершені завдання з попередньої нотатки.",
+        "action=move,count=*,countPlural=one": "Переміщує незавершені завдання з {count} попередньої нотатки.",
+        "action=move,count=*,countPlural=few": "Переміщує незавершені завдання з {count} попередніх нотаток.",
+        "action=move,count=*,countPlural=many": "Переміщує незавершені завдання з {count} попередніх нотаток.",
+        "action=move,count=*,countPlural=*": "Переміщує незавершені завдання з {count} попередніх нотаток."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Шукає лише в нотатці.",
+        "source=notelets": "Шукає лише в її піднотатках.",
+        "source=both": "Шукає в нотатці та її піднотатках."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Розміщує їх під {heading}, якщо заголовка, під яким вони були, немає.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "Кожен журнал використовує ці значення, якщо не задає власних.",
+  "tasks_move_mode": "Копіювати чи перемістити",
+  "tasks_move_mode_desc": "Під час копіювання вихідний рядок лишається в ранішій нотатці. Під час переміщення його звідти прибирають.",
+  "tasks_move_mode_copy": "Копіювати",
+  "tasks_move_mode_move": "Перемістити",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "За замовчуванням (копіювати)",
+        "mode=move": "За замовчуванням (перемістити)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Позначати як перенесені",
+  "tasks_move_stamp_desc": "Додає мітку перенесення до кожного вихідного рядка, який лишає копіювання, щоб він більше не вважався незавершеним.",
+  "tasks_move_stamp_on": "Увімк.",
+  "tasks_move_stamp_off": "Вимк.",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "За замовчуванням (увімк.)",
+        "stamp=off": "За замовчуванням (вимк.)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "З яких нотаток попереднього періоду брати завдання.",
+  "tasks_move_heading": "Цільовий заголовок",
+  "tasks_move_heading_desc": "Куди потрапляють завдання, якщо в нотатці немає заголовка, під яким вони були. Залиште порожнім, щоб додавати їх у кінець.",
+  "tasks_move_look_back": "Глибина перенесення",
+  "tasks_move_look_back_desc": "Зі скількох попередніх нотаток брати незавершені завдання.",
+  "tasks_move_look_back_invalid": "Введіть ціле число, не менше за 1.",
   "tasks_filter_conditions_label": "Умови",
   "tasks_filter_conditions_desc": "Які із цих завдань показує список.",
   "tasks_tick_recurring_needs_tasks_plugin": "Це завдання не було позначено. Щоб повторювані завдання переходили до наступного екземпляра, потрібен плагін Tasks.",
   "tasks_tick_recurring_task_note": "Це завдання не було позначено. Повторювану нотатку-завдання потрібно завершувати в плагіні, який керує її серією.",
   "tasks_tick_error": "Не вдалося позначити завдання.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest", "local countPlural = count: plural"],
+      "selectors": ["notes", "countPlural"],
+      "match": {
+        "notes=1,countPlural=one": "Перенесено {count} завдання з нотатки за {oldest}.",
+        "notes=1,countPlural=few": "Перенесено {count} завдання з нотатки за {oldest}.",
+        "notes=1,countPlural=many": "Перенесено {count} завдань з нотатки за {oldest}.",
+        "notes=1,countPlural=*": "Перенесено {count} завдання з нотатки за {oldest}.",
+        "notes=*,countPlural=*": "Перенесено завдань: {count}, з нотаток: {notes}, найдавніша — за {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "У нотатці за {oldest} немає незавершених завдань.",
+  "tasks_roll_no_previous": "Немає ранішої нотатки, з якої можна перенести завдання.",
+  "tasks_roll_no_current_period": "Сьогодні поза часовою шкалою цього журналу.",
+  "tasks_roll_failed": "Не вдалося перенести завдання.",
+  "tasks_roll_missing_heading": "У нотатці за {date} немає заголовка {heading}. Перевірте фільтр списку журналу.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} нотатку-завдання не перенесено.",
+        "countPlural=few": "{count} нотатки-завдання не перенесено.",
+        "countPlural=many": "{count} нотаток-завдань не перенесено.",
+        "countPlural=*": "{count} нотатки-завдання не перенесено."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} завдання з посиланням на блок залишено на місці.",
+        "countPlural=few": "{count} завдання з посиланням на блок залишено на місці.",
+        "countPlural=many": "{count} завдань з посиланням на блок залишено на місці.",
+        "countPlural=*": "{count} завдання з посиланням на блок залишено на місці."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Нотатка за {date} змінилася під час перенесення. Її завдання скопійовано, але не позначено як перенесені.",
+        "mode=move": "Нотатка за {date} змінилася під час перенесення. Її завдання скопійовано, але не вилучено."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Не вдалося позначити нотатку за {date} як перенесену. Її завдання скопійовано, і їх може бути перенесено повторно.",
+        "mode=move": "Не вдалося оновити нотатку за {date}. Її завдання скопійовано, і вони також залишилися в ній."
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "Нотатка за {date} ще індексується. Спробуйте ще раз трохи згодом.",
+  "tasks_roll_source_unread": "Не вдалося прочитати нотатку за {date}.",
   "tasks_listing_empty": "Немає завдань, що відповідають цьому запиту."
 }

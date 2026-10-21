@@ -332,6 +332,8 @@
   ],
   "command_open_next": "Open next note",
   "command_open_previous": "Open previous note",
+  "command_roll_over": "Roll over unfinished tasks",
+  "command_roll_over_pick_journal": "Roll tasks forward in which journal?",
   "command_open_view": "Open {name}",
   "command_view_change_shelf": "Change shelf in {name}",
   "command_view_shelf_needs_open_view": "Open {name} first to choose its shelf.",
@@ -2433,6 +2435,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Identification rule",
   "tasks_settings_rule_desc": "Which checkbox list items count as tasks.",
+  "tasks_checkbox_marker": "Rolled marker",
+  "tasks_checkbox_marker_desc": "The tag a copy adds to the original line. Lines carrying it read as rolled.",
+  "tasks_checkbox_marker_required": "Enter a tag.",
+  "tasks_checkbox_marker_invalid": "Use letters, numbers, _, - or / only, with at least one character that is not a number.",
+  "tasks_checkbox_marker_changed": "Lines stamped with the old marker will read as unfinished again.",
   "tasks_settings_add_condition": "Add condition",
   "tasks_settings_condition_tag": "Tag",
   "tasks_settings_condition_heading": "Heading",
@@ -2568,10 +2575,141 @@
   "tasks_journal_filter_title": "Listing filter",
   "tasks_journal_filter_none": "This journal has no listing filter of its own.",
   "tasks_journal_filter_edit": "Edit",
+  "tasks_move_title": "Roll over",
+  "tasks_move_edit": "Edit",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copies unfinished tasks from the previous note and marks the originals as rolled.",
+        "action=copy-stamp,count=*": "Copies unfinished tasks from the previous {count} notes and marks the originals as rolled.",
+        "action=copy,count=1": "Copies unfinished tasks from the previous note.",
+        "action=copy,count=*": "Copies unfinished tasks from the previous {count} notes.",
+        "action=move,count=1": "Moves unfinished tasks from the previous note.",
+        "action=move,count=*": "Moves unfinished tasks from the previous {count} notes."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Looks in the note only.",
+        "source=notelets": "Looks in its notelets only.",
+        "source=both": "Looks in the note and its notelets."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Places them under {heading} when the heading they came from is missing.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "Every journal uses these unless it sets its own.",
+  "tasks_move_mode": "Copy or move",
+  "tasks_move_mode_desc": "Copy keeps the original line in the earlier note. Move takes it out.",
+  "tasks_move_mode_copy": "Copy",
+  "tasks_move_mode_move": "Move",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Default (copy)",
+        "mode=move": "Default (move)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Mark as rolled",
+  "tasks_move_stamp_desc": "Adds the rolled marker to each original line a copy leaves behind, so it no longer reads as unfinished.",
+  "tasks_move_stamp_on": "On",
+  "tasks_move_stamp_off": "Off",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Default (on)",
+        "stamp=off": "Default (off)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Which of the earlier period's notes to take tasks from.",
+  "tasks_move_heading": "Target heading",
+  "tasks_move_heading_desc": "Where tasks land when the note lacks the heading they sat under. Leave empty to add them at the end.",
+  "tasks_move_look_back": "Look back",
+  "tasks_move_look_back_desc": "How many earlier notes to take unfinished tasks from.",
+  "tasks_move_look_back_invalid": "Enter a whole number of 1 or more.",
   "tasks_filter_conditions_label": "Conditions",
   "tasks_filter_conditions_desc": "Which of those tasks a listing shows.",
   "tasks_tick_recurring_needs_tasks_plugin": "This task was not ticked. Recurring tasks need the Tasks plugin to advance to their next instance.",
   "tasks_tick_recurring_task_note": "This task was not ticked. A recurring task note has to be completed in the plugin that manages its series.",
   "tasks_tick_error": "Could not tick the task.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "Rolled 1 task forward from {oldest}.",
+        "notes=1,count=*": "Rolled {count} tasks forward from {oldest}.",
+        "notes=*,count=*": "Rolled {count} tasks forward from {notes} notes, oldest {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "No unfinished tasks in {oldest}.",
+  "tasks_roll_no_previous": "There is no earlier note to roll tasks from.",
+  "tasks_roll_no_current_period": "Today is outside this journal's timeline.",
+  "tasks_roll_failed": "Tasks could not be rolled forward.",
+  "tasks_roll_missing_heading": "No {heading} heading in {date}. Check the journal's listing filter.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 task note was not moved.",
+        "count=*": "{count} task notes were not moved."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 task with a block link was left in place.",
+        "count=*": "{count} tasks with a block link were left in place."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} changed while rolling. Its tasks were copied but not marked as rolled.",
+        "mode=move": "{date} changed while rolling. Its tasks were copied but not removed."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} could not be marked as rolled. Its tasks were copied and may roll again.",
+        "mode=move": "{date} could not be updated. Its tasks were copied and are still there too."
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "{date} is still being indexed. Try again in a moment.",
+  "tasks_roll_source_unread": "{date} could not be read.",
   "tasks_listing_empty": "No tasks match this query."
 }

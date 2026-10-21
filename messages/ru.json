@@ -397,6 +397,8 @@
   ],
   "command_open_next": "Открыть следующую заметку",
   "command_open_previous": "Открыть предыдущую заметку",
+  "command_roll_over": "Перенести незавершённые задачи",
+  "command_roll_over_pick_journal": "В каком журнале перенести задачи?",
   "command_open_view": "Открыть {name}",
   "command_view_change_shelf": "Изменить полку в {name}",
   "command_view_shelf_needs_open_view": "Сначала откройте {name}, чтобы выбрать полку.",
@@ -2506,6 +2508,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Правило определения",
   "tasks_settings_rule_desc": "Какие пункты списка с чекбоксом считаются задачами.",
+  "tasks_checkbox_marker": "Метка переноса",
+  "tasks_checkbox_marker_desc": "Тег, который копирование добавляет к исходной строке. Строки с ним считаются перенесёнными.",
+  "tasks_checkbox_marker_required": "Введите тег.",
+  "tasks_checkbox_marker_invalid": "Используйте только буквы, цифры, _, - или /, и хотя бы один символ, кроме цифр.",
+  "tasks_checkbox_marker_changed": "Строки со старой меткой снова будут считаться незавершёнными.",
   "tasks_settings_add_condition": "Добавить условие",
   "tasks_settings_condition_tag": "Тег",
   "tasks_settings_condition_heading": "Заголовок",
@@ -2641,10 +2648,156 @@
   "tasks_journal_filter_title": "Фильтр списка",
   "tasks_journal_filter_none": "У этого журнала нет собственного фильтра списка.",
   "tasks_journal_filter_edit": "Редактировать",
+  "tasks_move_title": "Перенос",
+  "tasks_move_edit": "Редактировать",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count", "local countPlural = count: plural"],
+      "selectors": ["action", "count", "countPlural"],
+      "match": {
+        "action=copy-stamp,count=1,countPlural=*": "Копирует незавершённые задачи из предыдущей заметки и отмечает исходные строки как перенесённые.",
+        "action=copy-stamp,count=*,countPlural=one": "Копирует незавершённые задачи из {count} предыдущей заметки и отмечает исходные строки как перенесённые.",
+        "action=copy-stamp,count=*,countPlural=few": "Копирует незавершённые задачи из {count} предыдущих заметок и отмечает исходные строки как перенесённые.",
+        "action=copy-stamp,count=*,countPlural=many": "Копирует незавершённые задачи из {count} предыдущих заметок и отмечает исходные строки как перенесённые.",
+        "action=copy-stamp,count=*,countPlural=*": "Копирует незавершённые задачи из {count} предыдущих заметок и отмечает исходные строки как перенесённые.",
+        "action=copy,count=1,countPlural=*": "Копирует незавершённые задачи из предыдущей заметки.",
+        "action=copy,count=*,countPlural=one": "Копирует незавершённые задачи из {count} предыдущей заметки.",
+        "action=copy,count=*,countPlural=few": "Копирует незавершённые задачи из {count} предыдущих заметок.",
+        "action=copy,count=*,countPlural=many": "Копирует незавершённые задачи из {count} предыдущих заметок.",
+        "action=copy,count=*,countPlural=*": "Копирует незавершённые задачи из {count} предыдущих заметок.",
+        "action=move,count=1,countPlural=*": "Перемещает незавершённые задачи из предыдущей заметки.",
+        "action=move,count=*,countPlural=one": "Перемещает незавершённые задачи из {count} предыдущей заметки.",
+        "action=move,count=*,countPlural=few": "Перемещает незавершённые задачи из {count} предыдущих заметок.",
+        "action=move,count=*,countPlural=many": "Перемещает незавершённые задачи из {count} предыдущих заметок.",
+        "action=move,count=*,countPlural=*": "Перемещает незавершённые задачи из {count} предыдущих заметок."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Ищет только в заметке.",
+        "source=notelets": "Ищет только в её подзаметках.",
+        "source=both": "Ищет в заметке и её подзаметках."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Помещает их под {heading}, если заголовка, под которым они были, нет.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "Каждый журнал использует эти значения, если не задаёт свои.",
+  "tasks_move_mode": "Копировать или переместить",
+  "tasks_move_mode_desc": "При копировании исходная строка остаётся в более ранней заметке. При перемещении она оттуда удаляется.",
+  "tasks_move_mode_copy": "Копировать",
+  "tasks_move_mode_move": "Переместить",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "По умолчанию (копировать)",
+        "mode=move": "По умолчанию (переместить)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Отмечать как перенесённые",
+  "tasks_move_stamp_desc": "Добавляет метку переноса к каждой исходной строке, которую оставляет копирование, чтобы она больше не считалась незавершённой.",
+  "tasks_move_stamp_on": "Вкл.",
+  "tasks_move_stamp_off": "Выкл.",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "По умолчанию (вкл.)",
+        "stamp=off": "По умолчанию (выкл.)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Из каких заметок предыдущего периода брать задачи.",
+  "tasks_move_heading": "Целевой заголовок",
+  "tasks_move_heading_desc": "Куда попадают задачи, если в заметке нет заголовка, под которым они были. Оставьте пустым, чтобы добавлять их в конец.",
+  "tasks_move_look_back": "Глубина переноса",
+  "tasks_move_look_back_desc": "Из скольких предыдущих заметок брать незавершённые задачи.",
+  "tasks_move_look_back_invalid": "Введите целое число не меньше 1.",
   "tasks_filter_conditions_label": "Условия",
   "tasks_filter_conditions_desc": "Какие из этих задач показывает список.",
   "tasks_tick_recurring_needs_tasks_plugin": "Эта задача не была отмечена. Чтобы повторяющиеся задачи переходили к следующему экземпляру, нужен плагин Tasks.",
   "tasks_tick_recurring_task_note": "Эта задача не была отмечена. Повторяющуюся заметку-задачу нужно завершать в плагине, который управляет её серией.",
   "tasks_tick_error": "Не удалось отметить задачу.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest", "local countPlural = count: plural"],
+      "selectors": ["notes", "countPlural"],
+      "match": {
+        "notes=1,countPlural=one": "Перенесена {count} задача из заметки за {oldest}.",
+        "notes=1,countPlural=few": "Перенесены {count} задачи из заметки за {oldest}.",
+        "notes=1,countPlural=many": "Перенесено {count} задач из заметки за {oldest}.",
+        "notes=1,countPlural=*": "Перенесено {count} задачи из заметки за {oldest}.",
+        "notes=*,countPlural=*": "Перенесено задач: {count}, из заметок: {notes}, самая ранняя — за {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "В заметке за {oldest} нет незавершённых задач.",
+  "tasks_roll_no_previous": "Нет более ранней заметки, из которой можно перенести задачи.",
+  "tasks_roll_no_current_period": "Сегодня находится за пределами временной шкалы этого журнала.",
+  "tasks_roll_failed": "Не удалось перенести задачи.",
+  "tasks_roll_missing_heading": "В заметке за {date} нет заголовка {heading}. Проверьте фильтр списка журнала.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} заметка-задача не перенесена.",
+        "countPlural=few": "{count} заметки-задачи не перенесены.",
+        "countPlural=many": "{count} заметок-задач не перенесено.",
+        "countPlural=*": "{count} заметки-задачи не перенесено."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} задача со ссылкой на блок оставлена на месте.",
+        "countPlural=few": "{count} задачи со ссылкой на блок оставлены на месте.",
+        "countPlural=many": "{count} задач со ссылкой на блок оставлено на месте.",
+        "countPlural=*": "{count} задачи со ссылкой на блок оставлено на месте."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Заметка за {date} изменилась во время переноса. Её задачи скопированы, но не отмечены как перенесённые.",
+        "mode=move": "Заметка за {date} изменилась во время переноса. Её задачи скопированы, но не удалены."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Не удалось отметить заметку за {date} как перенесённую. Её задачи скопированы и могут быть перенесены повторно.",
+        "mode=move": "Не удалось обновить заметку за {date}. Её задачи скопированы и остались также в ней."
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "Заметка за {date} ещё индексируется. Попробуйте ещё раз чуть позже.",
+  "tasks_roll_source_unread": "Не удалось прочитать заметку за {date}.",
   "tasks_listing_empty": "Нет задач, соответствующих этому запросу."
 }

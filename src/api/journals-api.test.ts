@@ -25,7 +25,7 @@ import type { TypeId } from "@/journals/notelets/config";
 import type { Prompt, PromptAnswer } from "@/journals/prompts/config";
 import { JournalsRepository } from "@/journals/repository";
 import { useCodeBlockPreviewPath } from "@/journals/settings/ui/use-code-block-preview-path";
-import { buildNoteletType, customJournal, fixedJournal } from "@/journals/testing";
+import { buildNoteletType, customJournal, fixedJournal, noMove } from "@/journals/testing";
 import type { NoteletEntry } from "@/journals/types";
 import { VaultSubscriptionService } from "@/journals/vault-subscription";
 import type { ShelfConfig } from "@/shelves/config";
@@ -956,6 +956,7 @@ describe("JournalsApiService tasksFor", () => {
     const doneOnly = {
       ...daily,
       tasks: {
+        move: noMove,
         providers: {},
         filter: {
           mode: "and" as const,
@@ -1165,6 +1166,7 @@ describe("JournalsApiService tasksFor", () => {
     const underTasks = {
       ...daily,
       tasks: {
+        move: noMove,
         providers: {},
         filter: {
           mode: "and" as const,
@@ -1273,7 +1275,13 @@ describe("JournalsApiService tasksFor", () => {
       const personal = fixedJournal(
         "personal",
         { type: "day" },
-        { tasks: { filter: noFilter, providers: { "note-property": { show: "none", mode: "and", conditions: [] } } } },
+        {
+          tasks: {
+            filter: noFilter,
+            move: noMove,
+            providers: { "note-property": { show: "none", mode: "and", conditions: [] } },
+          },
+        },
       );
       const work = fixedJournal(
         "work",
@@ -1281,6 +1289,7 @@ describe("JournalsApiService tasksFor", () => {
         {
           tasks: {
             filter: noFilter,
+            move: noMove,
             providers: {
               "note-property": { show: "matching", mode: "and", conditions: [{ type: "tag", tags: ["#work"] }] },
             },

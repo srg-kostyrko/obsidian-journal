@@ -395,6 +395,8 @@
   ],
   "command_open_next": "Nächste Notiz öffnen",
   "command_open_previous": "Vorherige Notiz öffnen",
+  "command_roll_over": "Unerledigte Aufgaben übertragen",
+  "command_roll_over_pick_journal": "Aufgaben in welchem Journal übertragen?",
   "command_open_view": "{name} öffnen",
   "command_view_change_shelf": "Regal in {name} wechseln",
   "command_view_shelf_needs_open_view": "Öffne zuerst {name}, um das Regal zu wählen.",
@@ -2433,6 +2435,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Erkennungsregel",
   "tasks_settings_rule_desc": "Welche Kontrollkästchen-Listeneinträge als Aufgaben zählen.",
+  "tasks_checkbox_marker": "Übertragen-Markierung",
+  "tasks_checkbox_marker_desc": "Das Tag, das eine Kopie der ursprünglichen Zeile hinzufügt. Zeilen damit gelten als übertragen.",
+  "tasks_checkbox_marker_required": "Gib ein Tag ein.",
+  "tasks_checkbox_marker_invalid": "Nur Buchstaben, Ziffern, _, - oder / verwenden, mit mindestens einem Zeichen, das keine Ziffer ist.",
+  "tasks_checkbox_marker_changed": "Zeilen mit der alten Markierung gelten wieder als unerledigt.",
   "tasks_settings_add_condition": "Bedingung hinzufügen",
   "tasks_settings_condition_tag": "Tag",
   "tasks_settings_condition_heading": "Überschrift",
@@ -2568,10 +2575,141 @@
   "tasks_journal_filter_title": "Anzeigefilter",
   "tasks_journal_filter_none": "Dieses Journal hat keinen eigenen Anzeigefilter.",
   "tasks_journal_filter_edit": "Bearbeiten",
+  "tasks_move_title": "Übertragen",
+  "tasks_move_edit": "Bearbeiten",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Kopiert unerledigte Aufgaben aus der vorherigen Notiz und markiert die Originale als übertragen.",
+        "action=copy-stamp,count=*": "Kopiert unerledigte Aufgaben aus den vorherigen {count} Notizen und markiert die Originale als übertragen.",
+        "action=copy,count=1": "Kopiert unerledigte Aufgaben aus der vorherigen Notiz.",
+        "action=copy,count=*": "Kopiert unerledigte Aufgaben aus den vorherigen {count} Notizen.",
+        "action=move,count=1": "Verschiebt unerledigte Aufgaben aus der vorherigen Notiz.",
+        "action=move,count=*": "Verschiebt unerledigte Aufgaben aus den vorherigen {count} Notizen."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Sucht nur in der Notiz.",
+        "source=notelets": "Sucht nur in ihren Kurznotizen.",
+        "source=both": "Sucht in der Notiz und ihren Kurznotizen."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Legt sie unter {heading} ab, wenn die Überschrift fehlt, unter der sie standen.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "Jedes Journal verwendet diese Werte, sofern es keine eigenen festlegt.",
+  "tasks_move_mode": "Kopieren oder verschieben",
+  "tasks_move_mode_desc": "Kopieren behält die ursprüngliche Zeile in der früheren Notiz. Verschieben entfernt sie dort.",
+  "tasks_move_mode_copy": "Kopieren",
+  "tasks_move_mode_move": "Verschieben",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Standard (kopieren)",
+        "mode=move": "Standard (verschieben)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Als übertragen markieren",
+  "tasks_move_stamp_desc": "Fügt jeder ursprünglichen Zeile, die eine Kopie zurücklässt, die Übertragen-Markierung hinzu, damit sie nicht mehr als unerledigt gilt.",
+  "tasks_move_stamp_on": "An",
+  "tasks_move_stamp_off": "Aus",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Standard (an)",
+        "stamp=off": "Standard (aus)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Aus welchen Notizen des früheren Zeitraums Aufgaben übernommen werden.",
+  "tasks_move_heading": "Zielüberschrift",
+  "tasks_move_heading_desc": "Wohin Aufgaben kommen, wenn der Notiz die Überschrift fehlt, unter der sie standen. Leer lassen, um sie am Ende anzufügen.",
+  "tasks_move_look_back": "Rückblick",
+  "tasks_move_look_back_desc": "Aus wie vielen früheren Notizen unerledigte Aufgaben übernommen werden.",
+  "tasks_move_look_back_invalid": "Gib eine ganze Zahl ab 1 ein.",
   "tasks_filter_conditions_label": "Bedingungen",
   "tasks_filter_conditions_desc": "Welche dieser Aufgaben eine Liste anzeigt.",
   "tasks_tick_recurring_needs_tasks_plugin": "Diese Aufgabe wurde nicht abgehakt. Wiederkehrende Aufgaben benötigen das Tasks-Plugin, um zur nächsten Instanz überzugehen.",
   "tasks_tick_recurring_task_note": "Diese Aufgabe wurde nicht abgehakt. Eine wiederkehrende Aufgabennotiz muss in dem Plugin abgeschlossen werden, das ihre Serie verwaltet.",
   "tasks_tick_error": "Die Aufgabe konnte nicht abgehakt werden.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "1 Aufgabe aus der Notiz vom {oldest} übertragen.",
+        "notes=1,count=*": "{count} Aufgaben aus der Notiz vom {oldest} übertragen.",
+        "notes=*,count=*": "{count} Aufgaben aus {notes} Notizen übertragen, die älteste vom {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "Keine offenen Aufgaben in der Notiz vom {oldest}.",
+  "tasks_roll_no_previous": "Es gibt keine frühere Notiz, aus der Aufgaben übertragen werden können.",
+  "tasks_roll_no_current_period": "Heute liegt außerhalb der Zeitleiste dieses Journals.",
+  "tasks_roll_failed": "Aufgaben konnten nicht übertragen werden.",
+  "tasks_roll_missing_heading": "Keine Überschrift {heading} in der Notiz vom {date}. Prüfe den Anzeigefilter des Journals.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Aufgabennotiz wurde nicht verschoben.",
+        "count=*": "{count} Aufgabennotizen wurden nicht verschoben."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 Aufgabe mit Blocklink wurde an ihrer Stelle belassen.",
+        "count=*": "{count} Aufgaben mit Blocklink wurden an ihrer Stelle belassen."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Die Notiz vom {date} wurde während des Übertragens geändert. Ihre Aufgaben wurden kopiert, aber nicht als übertragen markiert.",
+        "mode=move": "Die Notiz vom {date} wurde während des Übertragens geändert. Ihre Aufgaben wurden kopiert, aber nicht entfernt."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Die Notiz vom {date} konnte nicht als übertragen markiert werden. Ihre Aufgaben wurden kopiert und werden womöglich erneut übertragen.",
+        "mode=move": "Die Notiz vom {date} konnte nicht aktualisiert werden. Ihre Aufgaben wurden kopiert und stehen auch dort noch."
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Versuche es gleich noch einmal.",
+  "tasks_roll_source_unread": "Die Notiz vom {date} konnte nicht gelesen werden.",
   "tasks_listing_empty": "Keine Aufgaben entsprechen dieser Abfrage."
 }

@@ -321,6 +321,43 @@ describe("CheckboxTaskProvider", () => {
     expect(host.published.get(dayPath)).toHaveLength(1);
   });
 
+  it("publishes the children of a stamped root as rolled and those of an unstamped root as todo", async () => {
+    const { host, structures, provider, harness } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    structures.setStructure(
+      dayPath,
+      structure({
+        listItems: [
+          { marker: " ", line: 4, endLine: 4, parent: null },
+          { marker: " ", line: 5, endLine: 5, parent: 4 },
+          { marker: " ", line: 6, endLine: 6, parent: null },
+          { marker: " ", line: 7, endLine: 7, parent: 6 },
+        ],
+        tags: [{ tag: "#rolled", line: 4 }],
+      }),
+    );
+    provider.start();
+    expect(host.published.get(dayPath)?.map((item) => item.status)).toEqual(["rolled", "rolled", "todo", "todo"]);
+
+    harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = "#carried";
+    await nextTick();
+
+    expect(host.published.get(dayPath)?.map((item) => item.status)).toEqual(["todo", "todo", "todo", "todo"]);
+  });
+
+  it("changing the marker republishes stamped lines as todo", async () => {
+    const { host, structures, provider, harness } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    structures.setStructure(dayPath, structure({ tags: [{ tag: "#rolled", line: 4 }] }));
+    provider.start();
+    expect(host.published.get(dayPath)?.at(0)?.status).toBe("rolled");
+
+    harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = "#carried";
+    await nextTick();
+
+    expect(host.published.get(dayPath)?.at(0)?.status).toBe("todo");
+  });
+
   // A full refill replaces the provider's whole store, so it goes out as one "all" publish: per-note
   // publishing bumps the index version once per note and makes every consumer recompute that often.
   it("refills every owned note in a single publish", async () => {

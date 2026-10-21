@@ -10,7 +10,7 @@ import { JournalsIndex } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
 import { journalsCoreModule } from "@/journals/module";
 import type { TypeId } from "@/journals/notelets/config";
-import { customJournal, fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal, noMove } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { TaskIndex } from "@/tasks";
 import type { TaskItem, TaskQuestion, TaskStatus } from "@/tasks";
@@ -129,7 +129,7 @@ async function evaluateTaskCondition(
       { type: "day" },
       {
         decorations: [decoration],
-        tasks: { providers: {}, filter: options.journalFilter ?? { mode: "and", conditions: [] } },
+        tasks: { providers: {}, filter: options.journalFilter ?? { mode: "and", conditions: [] }, move: noMove },
       },
     ),
   });

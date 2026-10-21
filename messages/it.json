@@ -395,6 +395,8 @@
   ],
   "command_open_next": "Apri la nota successiva",
   "command_open_previous": "Apri la nota precedente",
+  "command_roll_over": "Riporta le attività non completate",
+  "command_roll_over_pick_journal": "In quale diario riportare le attività?",
   "command_open_view": "Apri {name}",
   "command_view_change_shelf": "Cambia scaffale in {name}",
   "command_view_shelf_needs_open_view": "Apri prima {name} per scegliere il suo scaffale.",
@@ -2431,6 +2433,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regola di identificazione",
   "tasks_settings_rule_desc": "Quali elementi di elenco con casella contano come attività.",
+  "tasks_checkbox_marker": "Marcatore di riporto",
+  "tasks_checkbox_marker_desc": "Il tag che una copia aggiunge alla riga originale. Le righe che lo portano risultano riportate.",
+  "tasks_checkbox_marker_required": "Inserisci un tag.",
+  "tasks_checkbox_marker_invalid": "Usa solo lettere, numeri, _, - o /, con almeno un carattere che non sia un numero.",
+  "tasks_checkbox_marker_changed": "Le righe contrassegnate con il vecchio marcatore risulteranno di nuovo non completate.",
   "tasks_settings_add_condition": "Aggiungi condizione",
   "tasks_settings_condition_tag": "Tag",
   "tasks_settings_condition_heading": "Intestazione",
@@ -2566,10 +2573,141 @@
   "tasks_journal_filter_title": "Filtro dell'elenco",
   "tasks_journal_filter_none": "Questo diario non ha un filtro dell'elenco proprio.",
   "tasks_journal_filter_edit": "Modifica",
+  "tasks_move_title": "Riporta",
+  "tasks_move_edit": "Modifica",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copia le attività non completate dalla nota precedente e contrassegna le originali come riportate.",
+        "action=copy-stamp,count=*": "Copia le attività non completate dalle {count} note precedenti e contrassegna le originali come riportate.",
+        "action=copy,count=1": "Copia le attività non completate dalla nota precedente.",
+        "action=copy,count=*": "Copia le attività non completate dalle {count} note precedenti.",
+        "action=move,count=1": "Sposta le attività non completate dalla nota precedente.",
+        "action=move,count=*": "Sposta le attività non completate dalle {count} note precedenti."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Cerca solo nella nota.",
+        "source=notelets": "Cerca solo nelle sue note brevi.",
+        "source=both": "Cerca nella nota e nelle sue note brevi."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Le colloca sotto {heading} se manca l'intestazione da cui provengono.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "Ogni diario usa questi valori, a meno che non imposti i propri.",
+  "tasks_move_mode": "Copia o sposta",
+  "tasks_move_mode_desc": "Copia mantiene la riga originale nella nota precedente. Sposta la rimuove da lì.",
+  "tasks_move_mode_copy": "Copia",
+  "tasks_move_mode_move": "Sposta",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Predefinito (copia)",
+        "mode=move": "Predefinito (sposta)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Contrassegna come riportata",
+  "tasks_move_stamp_desc": "Aggiunge il marcatore di riporto a ogni riga originale lasciata da una copia, così non risulta più non completata.",
+  "tasks_move_stamp_on": "Attivo",
+  "tasks_move_stamp_off": "Disattivo",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Predefinito (attivo)",
+        "stamp=off": "Predefinito (disattivo)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "Da quali note del periodo precedente prendere le attività.",
+  "tasks_move_heading": "Intestazione di destinazione",
+  "tasks_move_heading_desc": "Dove finiscono le attività quando la nota non ha l'intestazione sotto cui si trovavano. Lascia vuoto per aggiungerle alla fine.",
+  "tasks_move_look_back": "Note precedenti",
+  "tasks_move_look_back_desc": "Da quante note precedenti prendere le attività non completate.",
+  "tasks_move_look_back_invalid": "Inserisci un numero intero pari o superiore a 1.",
   "tasks_filter_conditions_label": "Condizioni",
   "tasks_filter_conditions_desc": "Quali di queste attività mostra un elenco.",
   "tasks_tick_recurring_needs_tasks_plugin": "Questa attività non è stata contrassegnata. Le attività ricorrenti richiedono il plugin Tasks per passare alla prossima occorrenza.",
   "tasks_tick_recurring_task_note": "Questa attività non è stata contrassegnata. Una nota attività ricorrente va completata nel plugin che ne gestisce la serie.",
   "tasks_tick_error": "Non è stato possibile contrassegnare l'attività.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "1 attività riportata dalla nota del {oldest}.",
+        "notes=1,count=*": "{count} attività riportate dalla nota del {oldest}.",
+        "notes=*,count=*": "{count} attività riportate da {notes} note, la più vecchia del {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "Nessuna attività in sospeso nella nota del {oldest}.",
+  "tasks_roll_no_previous": "Non c'è nessuna nota precedente da cui riportare le attività.",
+  "tasks_roll_no_current_period": "Oggi è fuori dalla cronologia di questo diario.",
+  "tasks_roll_failed": "Non è stato possibile riportare le attività.",
+  "tasks_roll_missing_heading": "Nessuna intestazione {heading} nella nota del {date}. Controlla il filtro dell'elenco del diario.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota attività non è stata spostata.",
+        "count=*": "{count} note attività non sono state spostate."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 attività con un link a blocco è stata lasciata al suo posto.",
+        "count=*": "{count} attività con un link a blocco sono state lasciate al loro posto."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La nota del {date} è cambiata durante il riporto. Le sue attività sono state copiate, ma non contrassegnate come riportate.",
+        "mode=move": "La nota del {date} è cambiata durante il riporto. Le sue attività sono state copiate, ma non rimosse."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Non è stato possibile contrassegnare la nota del {date} come riportata. Le sue attività sono state copiate e potrebbero essere riportate di nuovo.",
+        "mode=move": "Non è stato possibile aggiornare la nota del {date}. Le sue attività sono state copiate e sono ancora anche lì."
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
+  "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
   "tasks_listing_empty": "Nessuna attività corrisponde a questa query."
 }

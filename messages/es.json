@@ -395,6 +395,8 @@
   ],
   "command_open_next": "Abrir la siguiente nota",
   "command_open_previous": "Abrir la nota anterior",
+  "command_roll_over": "Trasladar tareas sin terminar",
+  "command_roll_over_pick_journal": "¿En qué diario quieres trasladar las tareas?",
   "command_open_view": "Abrir {name}",
   "command_view_change_shelf": "Cambiar estante en {name}",
   "command_view_shelf_needs_open_view": "Abre primero {name} para elegir su estante.",
@@ -2420,6 +2422,11 @@
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regla de identificación",
   "tasks_settings_rule_desc": "Qué elementos de lista con casilla cuentan como tareas.",
+  "tasks_checkbox_marker": "Marca de traslado",
+  "tasks_checkbox_marker_desc": "La etiqueta que una copia añade a la línea original. Las líneas que la llevan figuran como trasladadas.",
+  "tasks_checkbox_marker_required": "Introduce una etiqueta.",
+  "tasks_checkbox_marker_invalid": "Usa solo letras, números, _, - o /, con al menos un carácter que no sea un número.",
+  "tasks_checkbox_marker_changed": "Las líneas marcadas con la marca anterior volverán a figurar como sin terminar.",
   "tasks_settings_add_condition": "Agregar condición",
   "tasks_settings_condition_tag": "Etiqueta",
   "tasks_settings_condition_heading": "Encabezado",
@@ -2555,10 +2562,141 @@
   "tasks_journal_filter_title": "Filtro de listado",
   "tasks_journal_filter_none": "Este diario no tiene un filtro de listado propio.",
   "tasks_journal_filter_edit": "Editar",
+  "tasks_move_title": "Trasladar",
+  "tasks_move_edit": "Editar",
+  "tasks_move_summary": [
+    {
+      "declarations": ["input action", "input count"],
+      "selectors": ["action", "count"],
+      "match": {
+        "action=copy-stamp,count=1": "Copia las tareas sin terminar de la nota anterior y marca las originales como trasladadas.",
+        "action=copy-stamp,count=*": "Copia las tareas sin terminar de las {count} notas anteriores y marca las originales como trasladadas.",
+        "action=copy,count=1": "Copia las tareas sin terminar de la nota anterior.",
+        "action=copy,count=*": "Copia las tareas sin terminar de las {count} notas anteriores.",
+        "action=move,count=1": "Mueve las tareas sin terminar de la nota anterior.",
+        "action=move,count=*": "Mueve las tareas sin terminar de las {count} notas anteriores."
+      }
+    }
+  ],
+  "tasks_move_summary_source": [
+    {
+      "declarations": ["input source"],
+      "selectors": ["source"],
+      "match": {
+        "source=note": "Busca solo en la nota.",
+        "source=notelets": "Busca solo en sus notas breves.",
+        "source=both": "Busca en la nota y en sus notas breves."
+      }
+    }
+  ],
+  "tasks_move_summary_heading": "Las coloca bajo {heading} si falta el encabezado del que venían.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
+  "tasks_move_defaults_desc": "Todos los diarios usan estos valores salvo que definan los suyos.",
+  "tasks_move_mode": "Copiar o mover",
+  "tasks_move_mode_desc": "Copiar conserva la línea original en la nota anterior. Mover la quita de allí.",
+  "tasks_move_mode_copy": "Copiar",
+  "tasks_move_mode_move": "Mover",
+  "tasks_move_mode_default": [
+    {
+      "declarations": ["input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Predeterminado (copiar)",
+        "mode=move": "Predeterminado (mover)"
+      }
+    }
+  ],
+  "tasks_move_stamp": "Marcar como trasladada",
+  "tasks_move_stamp_desc": "Añade la marca de traslado a cada línea original que deja una copia, para que deje de figurar como sin terminar.",
+  "tasks_move_stamp_on": "Activado",
+  "tasks_move_stamp_off": "Desactivado",
+  "tasks_move_stamp_default": [
+    {
+      "declarations": ["input stamp"],
+      "selectors": ["stamp"],
+      "match": {
+        "stamp=on": "Predeterminado (activado)",
+        "stamp=off": "Predeterminado (desactivado)"
+      }
+    }
+  ],
+  "tasks_move_source_desc": "De qué notas del periodo anterior se toman las tareas.",
+  "tasks_move_heading": "Encabezado de destino",
+  "tasks_move_heading_desc": "Dónde van las tareas cuando la nota no tiene el encabezado bajo el que estaban. Déjalo vacío para añadirlas al final.",
+  "tasks_move_look_back": "Notas anteriores",
+  "tasks_move_look_back_desc": "De cuántas notas anteriores se toman las tareas sin terminar.",
+  "tasks_move_look_back_invalid": "Introduce un número entero mayor o igual que 1.",
   "tasks_filter_conditions_label": "Condiciones",
   "tasks_filter_conditions_desc": "Qué tareas muestra un listado.",
   "tasks_tick_recurring_needs_tasks_plugin": "Esta tarea no se marcó. Las tareas recurrentes necesitan el complemento Tasks para avanzar a su siguiente instancia.",
   "tasks_tick_recurring_task_note": "Esta tarea no se marcó. Una nota de tarea recurrente debe completarse en el complemento que gestiona su serie.",
   "tasks_tick_error": "No se pudo marcar la tarea.",
+  "tasks_roll_done": [
+    {
+      "declarations": ["input count", "input notes", "input oldest"],
+      "selectors": ["notes", "count"],
+      "match": {
+        "notes=1,count=1": "Se trasladó 1 tarea desde la nota del {oldest}.",
+        "notes=1,count=*": "Se trasladaron {count} tareas desde la nota del {oldest}.",
+        "notes=*,count=*": "Se trasladaron {count} tareas desde {notes} notas; la más antigua es del {oldest}."
+      }
+    }
+  ],
+  "tasks_roll_nothing": "No hay tareas pendientes en la nota del {oldest}.",
+  "tasks_roll_no_previous": "No hay ninguna nota anterior desde la que trasladar tareas.",
+  "tasks_roll_no_current_period": "Hoy queda fuera de la línea de tiempo de este diario.",
+  "tasks_roll_failed": "No se pudieron trasladar las tareas.",
+  "tasks_roll_missing_heading": "No hay ningún encabezado {heading} en la nota del {date}. Comprueba el filtro de listado del diario.",
+  "tasks_roll_note_items_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 nota de tarea no se movió.",
+        "count=*": "{count} notas de tarea no se movieron."
+      }
+    }
+  ],
+  "tasks_roll_block_ids_skipped": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "1 tarea con un enlace de bloque se dejó en su sitio.",
+        "count=*": "{count} tareas con un enlace de bloque se dejaron en su sitio."
+      }
+    }
+  ],
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La nota del {date} cambió durante el traslado. Sus tareas se copiaron, pero no se marcaron como trasladadas.",
+        "mode=move": "La nota del {date} cambió durante el traslado. Sus tareas se copiaron, pero no se quitaron."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "No se pudo marcar la nota del {date} como trasladada. Sus tareas se copiaron y podrían volver a trasladarse.",
+        "mode=move": "No se pudo actualizar la nota del {date}. Sus tareas se copiaron y siguen también allí."
+      }
+    }
+  ],
+  "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
+  "tasks_roll_source_unread": "No se pudo leer la nota del {date}.",
   "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }

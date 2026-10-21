@@ -10,6 +10,7 @@ import { manual } from "@/ui/manual";
 import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconedRow from "@/ui/UiIconedRow.vue";
 
+import JournalMoveRow from "../move/ui/JournalMoveRow.vue";
 import { TaskProviderToken, type TaskProvider } from "../types";
 
 import JournalTaskFilterRow from "./JournalTaskFilterRow.vue";
@@ -51,5 +52,6 @@ const composeLabel = computed(() =>
     <!-- Not provider-specific — the listing filter decides which tasks a listing shows, not what
          counts as a task, so it renders as its own row rather than inside a provider's. -->
     <JournalTaskFilterRow :journal-name="journalName" />
+    <JournalMoveRow :journal-name="journalName" />
   </UiCollapsibleBlock>
 </template>

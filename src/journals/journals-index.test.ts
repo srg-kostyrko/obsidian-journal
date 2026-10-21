@@ -864,4 +864,23 @@ describe("JournalsIndex", () => {
       expect(new JournalsIndex().noteletAnchorsInRange("daily", a("2026-01-01"), a("2026-01-31"))).toEqual([]);
     });
   });
+
+  describe("previousNoteletAnchor", () => {
+    it("finds the nearest anchor holding a notelet strictly before the given one", () => {
+      const index = new JournalsIndex();
+      index.register(notelet("daily", "2026-01-03", "a.md", "Standup"));
+      index.register(notelet("daily", "2026-01-05", "b.md", "Standup"));
+      index.register(notelet("daily", "2026-01-05", "c.md", "Meeting"));
+      index.register(notelet("weekly", "2026-01-06", "d.md", "Standup"));
+      index.register(entry("daily", "2026-01-04", "Daily/2026-01-04.md"));
+
+      expect(index.previousNoteletAnchor("daily", a("2026-01-06")).getOrUndefined()).toBe(a("2026-01-05"));
+      expect(index.previousNoteletAnchor("daily", a("2026-01-05")).getOrUndefined()).toBe(a("2026-01-03"));
+      expect(index.previousNoteletAnchor("daily", a("2026-01-03")).isNone()).toBe(true);
+    });
+
+    it("is none for a journal with no notelets at all", () => {
+      expect(new JournalsIndex().previousNoteletAnchor("daily", a("2026-01-31")).isNone()).toBe(true);
+    });
+  });
 });

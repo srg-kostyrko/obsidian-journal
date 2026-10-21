@@ -33,6 +33,7 @@ in order.
 | **Calendar decorations**                                         | **Marks shown per position**                                                                              | [Decorations](/decorations#marks-shown-per-position)                       |
 |                                                                  | vault-wide decorations                                                                                    | [Decorations](/decorations#where-decorations-live)                         |
 | **Tasks**                                                        | **Checkbox tasks** — **Enable**, **Status symbols**, **Identification rule**                              | [Tasks](/tasks)                                                            |
+|                                                                  | **Checkbox tasks** — **Roll over**: **Rolled marker**, **Copy or move**, **Mark as rolled**               | [Tasks](/tasks#roll-over-settings)                                         |
 |                                                                  | **Task notes** — on or off, **Configure**                                                                 | [Tasks](/tasks#task-notes-settings)                                        |
 | **Calendar highlighting**                                        | **Today**, **Active**, **Selected date — ring** colors                                                    | [Views](/views#month-calendar-and-week-calendar)                           |
 | **Logging**                                                      | **Log level**, **Export logs**                                                                            | [Troubleshooting](/troubleshooting#reporting-a-bug)                        |
@@ -61,6 +62,7 @@ Reached with **Configure** on a journal's row — on the main settings page, or 
 | **Tasks**                   | **Checkbox tasks** — **Relation to the vault-wide rule** — **Inherit**, **Narrow**, **Replace**                                                                                 | [Tasks](/tasks#a-journal-s-own-rule)                            |
 |                             | **Task notes** — **Edit**: **All**, **None**, **Matching**; shown while task notes are on                                                                                       | [Tasks](/tasks#which-task-notes-a-journal-shows)                |
 |                             | **Listing filter** — **Edit**                                                                                                                                                   | [Tasks](/tasks#a-journal-s-own-listing-filter)                  |
+|                             | **Roll over** — **Edit**: **Copy or move**, **Mark as rolled**, **Source**, **Target heading**, **Look back**                                                                   | [Tasks](/tasks#roll-over-settings)                              |
 
 ## A notelet type's page
 
