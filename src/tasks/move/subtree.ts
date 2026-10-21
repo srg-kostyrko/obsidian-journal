@@ -12,6 +12,19 @@ export function indentOf(line: string): number {
   return width;
 }
 
+const QUOTE_PREFIX = /^(?:>[ \t]?)*/u;
+
+interface Measured {
+  readonly depth: number;
+  readonly body: string;
+}
+
+// A quoted list nests by the indent after its `>` markers, and only among lines at one quote depth.
+function measure(line: string): Measured {
+  const prefix = QUOTE_PREFIX.exec(line)?.[0] ?? "";
+  return { depth: prefix.split(">").length - 1, body: line.slice(prefix.length) };
+}
+
 function isBlank(line: string): boolean {
   return line.trim() === "";
 }
@@ -20,12 +33,20 @@ function isBlank(line: string): boolean {
 // endLine stops before its children.
 /** The last line index of the subtree rooted at `root`. */
 export function subtreeEnd(lines: readonly string[], root: number): number {
-  const base = indentOf(lines.at(root) ?? "");
+  const base = measure(lines.at(root) ?? "");
+  const baseIndent = indentOf(base.body);
   let end = root;
   for (let index = root + 1; index < lines.length; index++) {
     const line = lines[index] ?? "";
-    if (isBlank(line)) continue;
-    if (indentOf(line) <= base) break;
+    // An unquoted blank line ends a quote.
+    if (isBlank(line)) {
+      if (base.depth > 0) break;
+      continue;
+    }
+    const { depth, body } = measure(line);
+    if (depth !== base.depth) break;
+    if (isBlank(body)) continue;
+    if (indentOf(body) <= baseIndent) break;
     end = index;
   }
   return end;
@@ -34,12 +55,19 @@ export function subtreeEnd(lines: readonly string[], root: number): number {
 /** List-line indices enclosing `root`, nearest last. */
 export function ancestorsOf(lines: readonly string[], root: number): readonly number[] {
   const chain: number[] = [];
-  let threshold = indentOf(lines.at(root) ?? "");
+  const base = measure(lines.at(root) ?? "");
+  let threshold = indentOf(base.body);
   for (let index = root - 1; index >= 0 && threshold > 0; index--) {
     const line = lines[index] ?? "";
-    if (isBlank(line)) continue;
-    const indent = indentOf(line);
-    if (!LIST_LINE.test(line)) {
+    if (isBlank(line)) {
+      if (base.depth > 0) break;
+      continue;
+    }
+    const { depth, body } = measure(line);
+    if (depth !== base.depth) break;
+    if (isBlank(body)) continue;
+    const indent = indentOf(body);
+    if (!LIST_LINE.test(body)) {
       if (indent === 0) break;
       continue;
     }

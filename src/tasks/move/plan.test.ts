@@ -20,7 +20,7 @@ const identifyAll: CheckboxRule = { mode: "and", conditions: [] };
 function sourceOf(lines: readonly string[], vault: CheckboxRule = identifyAll, marker = rolledMarker): RollSource {
   const structure: NoteStructure = {
     listItems: lines.flatMap((text, line) => {
-      const marker = /^\s*[-*+]\s+\[(.)\]/u.exec(text)?.[1];
+      const marker = /^(?:>\s?)*\s*[-*+]\s+\[(.)\]/u.exec(text)?.[1];
       return marker === undefined ? [] : [{ marker, line, endLine: line, parent: null }];
     }),
     headings: lines.flatMap((text, line) => {
@@ -96,6 +96,28 @@ describe("planSource", () => {
     expect(
       planSource(source, { selection: anySelection, mode: "copy", rolledMarker: "" }).roots.map((root) => root.line),
     ).toEqual([1]);
+  });
+
+  it("a quoted parent and its quoted child roll together", () => {
+    const plan = planSource(sourceOf(["> - [ ] Parent", ">   - [ ] Child", "> - [x] done", "- [ ] free"]), {
+      selection: anySelection,
+      mode: "copy",
+      rolledMarker,
+    });
+    expect(plan.roots.map((root) => [root.line, root.end])).toEqual([
+      [0, 1],
+      [3, 3],
+    ]);
+    expect(plan.block).toEqual([{ heading: null, lines: ["> - [ ] Parent", ">   - [ ] Child", "- [ ] free"] }]);
+  });
+
+  it("a quoted rolled parent blocks its quoted child", () => {
+    const plan = planSource(sourceOf(["> - [ ] Parent #rolled", ">   - [ ] Child", "- [ ] free"]), {
+      selection: anySelection,
+      mode: "copy",
+      rolledMarker,
+    });
+    expect(plan.roots.map((root) => root.line)).toEqual([2]);
   });
 
   it("an open child under an open root travels with the root and is not a root", () => {
