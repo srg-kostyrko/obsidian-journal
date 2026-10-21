@@ -18,9 +18,34 @@ function frontmatterEnd(lines: readonly string[]): number {
   return -1;
 }
 
+const COMMENT_CLOSE = { "<!--": "-->", "%%": "%%" } as const;
+type CommentOpen = keyof typeof COMMENT_CLOSE;
+
+// The comment still open at the end of `line`, given the one open at its start.
+function commentAfter(line: string, open: CommentOpen | null): CommentOpen | null {
+  let comment = open;
+  let at = 0;
+  for (;;) {
+    if (comment !== null) {
+      const close = line.indexOf(COMMENT_CLOSE[comment], at);
+      if (close === -1) return comment;
+      at = close + COMMENT_CLOSE[comment].length;
+      comment = null;
+      continue;
+    }
+    const html = line.indexOf("<!--", at);
+    const obsidian = line.indexOf("%%", at);
+    if (html === -1 && obsidian === -1) return null;
+    comment = obsidian === -1 || (html !== -1 && html < obsidian) ? "<!--" : "%%";
+    at = (comment === "<!--" ? html : obsidian) + comment.length;
+  }
+}
+
+// A heading inside a comment is hidden: inserting under it would hide the inserted tasks too.
 function scanHeadings(lines: readonly string[]): HeadingAt[] {
   const found: HeadingAt[] = [];
   let fence: { char: string; length: number } | null = null;
+  let comment: CommentOpen | null = null;
   for (let i = frontmatterEnd(lines) + 1; i < lines.length; i++) {
     const line = (lines[i] ?? "").replace(/\r$/, "");
     const trimmed = line.trimStart();
@@ -30,10 +55,13 @@ function scanHeadings(lines: readonly string[]): HeadingAt[] {
       if (closes) fence = null;
       continue;
     }
-    if (marker) {
+    if (comment === null && marker) {
       fence = { char: marker.charAt(0), length: marker.length };
       continue;
     }
+    const inComment = comment !== null;
+    comment = commentAfter(line, comment);
+    if (inComment) continue;
     const match = HEADING.exec(line);
     if (match) found.push({ index: i, level: (match[1] ?? "").length, text: match[2] ?? "" });
   }

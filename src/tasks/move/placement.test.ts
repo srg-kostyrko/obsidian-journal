@@ -36,6 +36,26 @@ describe("placeGroups", () => {
     expect(placeGroups(front, [group("Tasks", "- [ ] x")], "")).toBe(`${front}- [ ] x\n`);
   });
 
+  it("a heading line inside an HTML or Obsidian comment is not a section", () => {
+    const html = "<!--\n## Tasks\nhidden\n## Draft\n-->\n## Other\n- [ ] o\n";
+    expect(placeGroups(html, [group("Tasks", "- [ ] x")], "")).toBe(`${html}- [ ] x\n`);
+    const obsidian = "%%\n## Tasks\n%%\n## Other\n- [ ] o\n";
+    expect(placeGroups(obsidian, [group("Tasks", "- [ ] x")], "")).toBe(`${obsidian}- [ ] x\n`);
+    const opensMidLine = "draft <!-- start\n## Tasks\nend -->\n## Other\n- [ ] o\n";
+    expect(placeGroups(opensMidLine, [group(null, "- [ ] x")], "Tasks")).toBe(`${opensMidLine}- [ ] x\n`);
+  });
+
+  it("a comment closed on its own line leaves the following heading real", () => {
+    const target = "%% note %%\n<!-- aside -->\n## Tasks\n- [ ] a\n## Other\n- [ ] o\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(
+      "%% note %%\n<!-- aside -->\n## Tasks\n- [ ] a\n- [ ] x\n## Other\n- [ ] o\n",
+    );
+    const fenced = "```\n%%\n```\n## Tasks\n- [ ] a\n## Other\n";
+    expect(placeGroups(fenced, [group("Tasks", "- [ ] x")], "")).toBe(
+      "```\n%%\n```\n## Tasks\n- [ ] a\n- [ ] x\n## Other\n",
+    );
+  });
+
   it("a four-backtick fence is not closed by three backticks", () => {
     const target = "````\n```\n## Tasks\n```\n````\n## Other\n- [ ] o\n";
     expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
