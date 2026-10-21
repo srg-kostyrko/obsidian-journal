@@ -24,6 +24,12 @@ export class AppActivity {
     // closed window's listeners until the plugin unloads.
     this.#plugin.registerEvent(this.#app.workspace.on("window-open", (_, win) => this.#watch(win)));
     this.#plugin.registerEvent(this.#app.workspace.on("window-close", (_, win) => this.#unwatch(win)));
+    // A plugin enabled or reloaded mid-session sees no window-open for a popout already up, and every
+    // popout holds a leaf.
+    this.#app.workspace.iterateAllLeaves((leaf) => {
+      const { win } = leaf.getContainer();
+      if (win !== main) this.#watch(win);
+    });
     this.#plugin.register(() => {
       for (const win of this.#popouts.keys()) this.#unwatch(win);
     });

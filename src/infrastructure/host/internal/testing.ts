@@ -699,6 +699,9 @@ export function createFakeHost(): FakeHost {
         return side === undefined ? [main] : [markdownLeafFor(path, side), main];
       });
     },
+    iterateAllLeaves(callback: (leaf: FakeMarkdownLeaf) => void): void {
+      for (const path of workspaceState.openPaths) callback(markdownLeafFor(path));
+    },
     containerEl: { win: windowFor(MAIN_WINDOW) },
     rootSplit: splits.root,
     leftSplit: splits.left,

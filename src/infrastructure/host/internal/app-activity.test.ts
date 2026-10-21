@@ -6,8 +6,7 @@ import { AppActivity } from "./app-activity";
 import { createFakeHost, type FakeHost } from "./testing";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-function build(): { activity: AppActivity; host: FakeHost } {
-  const host = createFakeHost();
+function build(host = createFakeHost()): { activity: AppActivity; host: FakeHost } {
   const c = new Container();
   c.register(InternalPluginToken).useValue(host.plugin);
   c.register(InternalObsidianAppToken).useValue(host.app);
@@ -40,6 +39,34 @@ describe("AppActivity", () => {
     setVisibility(popout, "visible");
 
     expect(callback).toHaveBeenCalledTimes(4);
+  });
+
+  it("a popout already open when it starts resumes too", () => {
+    const host = createFakeHost();
+    host.openEditor("Daily/2026-10-21.md", "");
+    host.workspace.openWindows.set("Daily/2026-10-21.md", "popout");
+    host.openEditor("Daily/2026-10-20.md", "");
+    const { activity } = build(host);
+    const callback = vi.fn();
+    activity.onResume(callback);
+
+    host.windowFor("popout").dispatchEvent(new Event("focus"));
+    setVisibility(host.windowFor("popout"), "visible");
+    host.windowFor("main").dispatchEvent(new Event("focus"));
+
+    expect(callback).toHaveBeenCalledTimes(3);
+  });
+
+  it("a window opened twice is watched once", () => {
+    const { activity, host } = build();
+    const callback = vi.fn();
+    activity.onResume(callback);
+    const popout = openPopout(host, "popout");
+    host.emitWorkspace("window-open", {}, popout);
+
+    popout.dispatchEvent(new Event("focus"));
+
+    expect(callback).toHaveBeenCalledOnce();
   });
 
   it("hidden does not", () => {
