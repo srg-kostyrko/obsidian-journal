@@ -325,6 +325,6 @@ export class RolloverService {
   }
 
   roll(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
-    return this.#locks.run(journalName, () => this.#rollNow(journalName, options));
+    return this.#locks.run([journalName], () => this.#rollNow(journalName, options));
   }
 }

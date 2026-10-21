@@ -644,6 +644,57 @@ describe("SingleMoveService", () => {
     expect(editor.text).toBe("- [ ] Call Bob\n");
   });
 
+  it("a move out of a journal's note waits for a roll of that journal, which may take the same task", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 21, 9, 0, 0));
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const { harness, put, edit, text, service, notes, structures } = await moverFor({
+      daily: journal("daily", "day"),
+      monthly: journal("monthly", "month"),
+      weekly: journal("weekly", "week"),
+    });
+    expect(put("daily", "2026-10-20", "- [ ] Call Bob\n")).toBe(SOURCE);
+    structures.setStructure(SOURCE, {
+      listItems: [{ marker: " ", line: 0, endLine: 0, parent: null }],
+      headings: [],
+      tags: [],
+      frontmatterTags: [],
+    });
+    const today = put("daily", "2026-10-21", "");
+    const month = put("monthly", "2026-10-01", "");
+    const week = put("weekly", "2026-10-19", "");
+    const { editor, state } = edit("- [ ] Call Bob\n", 0);
+    const process = notes.process.bind(notes);
+    const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+    const spy = vi.spyOn(notes, "process");
+    spy.mockImplementationOnce((path, transform) =>
+      AsyncResult.fromPromise(gate, () => new NoteWriteError(path, "gate")).flatMap(() => process(path, transform)),
+    );
+    const written = (): VaultPath[] => spy.mock.calls.map(([path]) => path);
+
+    const roll = harness.resolve(RolloverService).roll("daily", { interactive: true });
+    await vi.waitFor(() => expect(written()).toEqual([today]));
+    const single = service.move(state, target("monthly", "2026-10-01", month));
+    const loose = "notes/loose.md" as VaultPath;
+    notes.seed(loose, "- [ ] Loose\n");
+    const unrelated = service.move(
+      { path: loose, content: "- [ ] Loose\n", cursorLine: 0 },
+      target("weekly", "2026-10-19", week),
+    );
+    await vi.waitFor(() => expect(written()).toContain(week));
+    expect(written()).not.toContain(month);
+    release();
+    const [, moved] = await Promise.all([roll, single, unrelated]);
+
+    expectOk(moved);
+    expect(moved.value.outcome).toBe("nothing");
+    expect(await text(today)).toBe("- [ ] Call Bob\n");
+    expect(await text(month)).toBe("");
+    expect(editor.text).toBe("- [ ] Call Bob #rolled\n");
+  });
+
   it("waits for a roll writing into the same journal", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(new Date(2026, 9, 21, 9, 0, 0));
