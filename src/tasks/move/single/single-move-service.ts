@@ -33,10 +33,7 @@ export interface SingleMoveReport {
   readonly mode: "copy" | "move";
   readonly label: string;
   readonly noteletTitle?: string;
-  /**
-   * "nothing": the task had already left or been stamped by the time the move ran; "unread": the source
-   * could not be read again before the write. Neither writes anything.
-   */
+  /** How far the move got, which the notice reports. */
   readonly outcome: "done" | "nothing" | "unread" | "changed" | "write-failed";
 }
 
@@ -162,6 +159,7 @@ export class SingleMoveService {
   async #rewriteSource(path: VaultPath, root: PlannedRoot, rewrite: SourceRewrite): Promise<SourceOutcome> {
     const edited = this.#workspace.replaceLinesInOpenNote(path, (content) => lineChange(content, root, rewrite));
     if (edited === "applied") return "done";
+    // The task's text changed after it was copied, so the target holds it and the source is left as is.
     if (edited === "refused") return "changed";
     // No open view holds the note, so nothing unsaved can be lost: the file is the source.
     let refused = false;
@@ -173,6 +171,7 @@ export class SingleMoveService {
       }
       return outcome.content;
     });
+    // The target already holds the task; only the source's mark or removal is missing.
     if (written.isErr()) return "write-failed";
     return refused ? "changed" : "done";
   }
@@ -192,8 +191,10 @@ export class SingleMoveService {
         outcome,
       });
       const before = await this.#currentText(source.path);
+      // Nothing is written to either note when the source cannot be read again before the write.
       if (before === undefined) return report("unread");
       const planned = this.#replan(source.path, before, confirmed, move, marker);
+      // The task already left, was stamped, or shifted while this move waited its turn.
       if (planned === null) return report("nothing");
       const path = yield* this.#ensureTarget(target);
       // Read once more: creating the target may have asked first, and the user can edit the task meanwhile.
@@ -201,6 +202,7 @@ export class SingleMoveService {
       if (after === undefined) return report("unread");
       const plan = this.#afterPrompt(source.path, { content: before, plan: planned }, after, confirmed, move, marker);
       const root = plan?.roots.at(0);
+      // A note created for the target stays, but no task went into it.
       if (plan === null || root === undefined) return report("nothing");
       // Only an existing note can be the source, and ensuring one writes nothing.
       if (path === source.path) return yield* AsyncResult.err(new SingleMoveRefusedError("same-note"));
