@@ -13,7 +13,7 @@ import { JournalsEventsToken } from "@/journals/tokens";
 import { isNotelet, type EntryChangedEvent } from "@/journals/types";
 import { SettingsService } from "@/settings";
 
-import { NoCurrentPeriodError } from "../errors";
+import { AutomaticRollRefusedError, NoCurrentPeriodError } from "../errors";
 import { RolloverService } from "../rollover-service";
 import { automaticBlocked, effectiveMove, moveDefaultsSlice } from "../settings";
 
@@ -218,14 +218,17 @@ export class AutoRolloverService {
     this.#notices.show(m.tasks_auto_roll_paused_error({ journal: name }));
   }
 
+  #pauseBlocked(name: string): void {
+    if (this.#paused.has(name)) return;
+    this.#paused.set(name, "blocked");
+    this.#notices.show(m.tasks_auto_roll_paused({ journal: name }));
+  }
+
   async #rollJournal(name: string, config: JournalConfig): Promise<void> {
     const paused = this.#paused.get(name);
     if (paused === "write-failed") return;
     if (automaticBlocked(effectiveMove(config.tasks.move, this.#defaults.state)) !== null) {
-      if (paused === undefined) {
-        this.#paused.set(name, "blocked");
-        this.#notices.show(m.tasks_auto_roll_paused({ journal: name }));
-      }
+      this.#pauseBlocked(name);
       return;
     }
     // Lifted, so a later block is announced again.
@@ -236,8 +239,13 @@ export class AutoRolloverService {
     const target = this.#index.get(name, current.value);
     if (target.isNone() || this.#notes.find(target.value).isNone()) return;
 
-    const result = await this.#rollover.roll(name, { interactive: false, createTarget: false });
+    const result = await this.#rollover.roll(name, { interactive: false, createTarget: false, requireAutomatic: true });
     if (result.isErr()) {
+      // Read again once the roll held the lock, since settings can change while it waits for one.
+      if (result.error instanceof AutomaticRollRefusedError) {
+        if (result.error.reason === "copy-without-stamp") this.#pauseBlocked(name);
+        return;
+      }
       // Midnight can pass between the check above and the roll's own; settings can delete the
       // journal meanwhile. Neither wrote anything.
       if (result.error instanceof NoCurrentPeriodError || result.error instanceof JournalNotFoundError) {

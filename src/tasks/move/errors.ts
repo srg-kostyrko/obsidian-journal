@@ -12,8 +12,25 @@ export class NoCurrentPeriodError extends Error {
   }
 }
 
+export class AutomaticRollRefusedError extends Error {
+  readonly kind = "automatic-roll-refused" as const;
+
+  constructor(
+    readonly journalName: string,
+    readonly reason: "not-automatic" | "copy-without-stamp",
+  ) {
+    super(`Journal ${journalName} cannot roll automatically: ${reason}`);
+    this.name = "AutomaticRollRefusedError";
+  }
+}
+
 export type RollError =
-  JournalNotFoundError | NoCurrentPeriodError | NoteCreationError | NoteNotFoundError | NoteWriteError;
+  | AutomaticRollRefusedError
+  | JournalNotFoundError
+  | NoCurrentPeriodError
+  | NoteCreationError
+  | NoteNotFoundError
+  | NoteWriteError;
 
 export class SingleMoveRefusedError extends Error {
   readonly kind = "single-move-refused" as const;

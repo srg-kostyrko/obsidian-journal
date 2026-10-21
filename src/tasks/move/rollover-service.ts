@@ -14,7 +14,7 @@ import {
   type NoteWriteError,
   type VaultPath,
 } from "@/infrastructure/host";
-import { AsyncResult, attempt, type Option, type Result } from "@/infrastructure/result";
+import { AsyncResult, attempt, Err, type Option, type Result } from "@/infrastructure/result";
 import { CycleService } from "@/journals/cycle";
 import { JournalNotFoundError } from "@/journals/errors";
 import { EnsureJournalEntryFlow } from "@/journals/flows";
@@ -34,13 +34,13 @@ import { TaskIndex } from "../task-index";
 import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
-import { NoCurrentPeriodError, type RollError } from "./errors";
+import { AutomaticRollRefusedError, NoCurrentPeriodError, type RollError } from "./errors";
 import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
 import { rewriteNote, type NoteWriters } from "./note-write";
 import { placeGroups } from "./placement";
 import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
-import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
+import { automaticBlocked, effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
 import { rewriteSource, sourceRewrite, type SourceRewrite } from "./source-write";
 
 import type { AnchoredCount, ChangedSource, RollReport } from "./report";
@@ -100,6 +100,9 @@ export interface RollOptions {
   readonly interactive: boolean;
   // False for a roll nobody asked for: a missing target is reported, never created.
   readonly createTarget?: boolean;
+  // True for an automatic roll: settings can change while it waits for the lock, so it is refused
+  // unless the journal is still automatic, and allowed to be, once the lock is held.
+  readonly requireAutomatic?: boolean;
 }
 
 function noTargetReport(journalName: string, mode: RollReport["mode"], heading: string | null): RollReport {
@@ -311,6 +314,10 @@ export class RolloverService {
       const config = yield* this.#journals.get(journalName).okOr(new JournalNotFoundError(journalName));
       const today = yield* this.#todayAnchor(journalName);
       const move = effectiveMove(config.tasks.move, this.#defaults.state);
+      if (options.requireAutomatic === true) {
+        const refused = config.tasks.move.automatic ? automaticBlocked(move) : "not-automatic";
+        if (refused !== null) return yield* new Err(new AutomaticRollRefusedError(journalName, refused));
+      }
       const selection = selectionOf(config.tasks.filter);
       const heading = headingOf(selection);
       const createTarget = options.createTarget ?? true;

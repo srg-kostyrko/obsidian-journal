@@ -26,6 +26,7 @@ import { overrideWith, testContainer } from "@/testing";
 import { taskRuleSchema, type TaskRule } from "../../conditions";
 import { tasksCoreModule } from "../../module";
 import { NoCurrentPeriodError } from "../errors";
+import { MoveLocks } from "../locks";
 import { RolloverService } from "../rollover-service";
 import { journalMoveSchema, moveDefaultsSlice, type JournalMoveConfig } from "../settings";
 
@@ -170,6 +171,13 @@ function failWrites(notes: FakeNotesService, paths: Set<VaultPath>): void {
   );
 }
 
+// Another move on the journal, still running: whatever rolls it next waits its turn.
+function holdLock(locks: MoveLocks, journalName: string): () => void {
+  const held = Promise.withResolvers<void>();
+  void locks.run([journalName], () => AsyncResult.fromPromise(held.promise, (cause) => cause));
+  return held.resolve;
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 9, 21, 9, 0, 0));
@@ -195,7 +203,11 @@ describe("AutoRolloverService", () => {
     expect(await text(source)).toBe("- [ ] Call Bob #rolled\n- [x] Done thing\n");
     expect(await text(workSource)).toBe("- [ ] Work item\n");
     expect(await text(workTarget)).toBe("");
-    expect(roll).toHaveBeenCalledExactlyOnceWith("daily", { interactive: false, createTarget: false });
+    expect(roll).toHaveBeenCalledExactlyOnceWith("daily", {
+      interactive: false,
+      createTarget: false,
+      requireAutomatic: true,
+    });
     expect(harness.notices.messages).toEqual([named("daily", doneFrom("2026-10-20"))]);
   });
 
@@ -437,6 +449,56 @@ describe("AutoRolloverService", () => {
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     const paused = m.tasks_auto_roll_paused({ journal: "daily" });
     expect(harness.notices.messages).toEqual([paused, named("daily", doneFrom("2026-10-20")), paused]);
+  });
+
+  it("a stamp turned off while the roll waits behind another move copies nothing", async () => {
+    const { put, text, boot, harness } = await autoFor({
+      daily: automatic("daily"),
+      work: automatic("work", { mode: "move" }),
+    });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    const workTarget = put("work", "2026-10-21", "");
+    const release = holdLock(harness.resolve(MoveLocks), "daily");
+    await boot();
+
+    harness.resolve(SettingsService).getSlice(moveDefaultsSlice).state = { mode: "copy", stamp: false };
+    release();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(await text(target)).toBe("");
+    expect(await text(source)).toBe("- [ ] Call Bob\n");
+    expect(await text(workTarget)).toBe("- [ ] Work item\n");
+    expect(harness.notices.messages).toEqual([
+      m.tasks_auto_roll_paused({ journal: "daily" }),
+      named("work", doneFrom("2026-10-20")),
+    ]);
+  });
+
+  it("a journal no longer automatic once the roll gets its turn copies nothing", async () => {
+    const { put, text, boot, harness } = await autoFor({ daily: automatic("daily"), work: automatic("work") });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    const workTarget = put("work", "2026-10-21", "");
+    const release = holdLock(harness.resolve(MoveLocks), "daily");
+    await boot();
+
+    const journals = harness.resolve(JournalsRepository);
+    const daily = journals.get("daily");
+    expect(daily.isSome()).toBe(true);
+    if (daily.isSome()) {
+      const move = { ...daily.value.tasks.move, automatic: false };
+      expectOk(journals.update("daily", { tasks: { ...daily.value.tasks, move } }));
+    }
+    release();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(await text(target)).toBe("");
+    expect(await text(source)).toBe("- [ ] Call Bob\n");
+    expect(await text(workTarget)).toBe("- [ ] Work item\n");
+    expect(harness.notices.messages).toEqual([named("work", doneFrom("2026-10-20"))]);
   });
 
   it("a missing heading is reported once per note per session", async () => {
