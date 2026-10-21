@@ -2748,7 +2748,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "Die Aufgabe wurde bereits verschoben.",
+  "tasks_move_nothing": "Die Aufgabe ist nicht mehr dort, wo sie war. Es wurde nichts verschoben.",
   "tasks_move_source_unread": "Die Notiz {noteName} konnte nicht gelesen werden. Es wurde nichts verschoben.",
   "tasks_move_source_changed": [
     {

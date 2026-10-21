@@ -2729,7 +2729,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "任务已被移动。",
+  "tasks_move_nothing": "任务已不在原处。未移动任何内容。",
   "tasks_move_source_unread": "无法读取笔记 {noteName}。未移动任何内容。",
   "tasks_move_source_changed": [
     {

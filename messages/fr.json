@@ -2746,7 +2746,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "La tâche a déjà été déplacée.",
+  "tasks_move_nothing": "La tâche n’est plus là où elle était. Rien n’a été déplacé.",
   "tasks_move_source_unread": "La note {noteName} n’a pas pu être lue. Rien n’a été déplacé.",
   "tasks_move_source_changed": [
     {

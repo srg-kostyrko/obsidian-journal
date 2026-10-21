@@ -2746,7 +2746,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "L'attività è già stata spostata.",
+  "tasks_move_nothing": "L'attività non è più dove si trovava. Non è stato spostato nulla.",
   "tasks_move_source_unread": "Non è stato possibile leggere la nota {noteName}. Non è stato spostato nulla.",
   "tasks_move_source_changed": [
     {

@@ -2743,7 +2743,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "A tarefa já foi movida.",
+  "tasks_move_nothing": "A tarefa não está mais onde estava. Nada foi movido.",
   "tasks_move_source_unread": "Não foi possível ler a nota {noteName}. Nada foi movido.",
   "tasks_move_source_changed": [
     {

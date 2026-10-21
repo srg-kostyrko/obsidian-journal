@@ -2735,7 +2735,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "La tarea ya se movió.",
+  "tasks_move_nothing": "La tarea ya no está donde estaba. No se movió nada.",
   "tasks_move_source_unread": "No se pudo leer la nota {noteName}. No se movió nada.",
   "tasks_move_source_changed": [
     {

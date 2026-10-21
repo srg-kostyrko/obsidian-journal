@@ -2828,7 +2828,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "Завдання вже переміщено.",
+  "tasks_move_nothing": "Завдання більше немає на попередньому місці. Нічого не переміщено.",
   "tasks_move_source_unread": "Не вдалося прочитати нотатку {noteName}. Нічого не переміщено.",
   "tasks_move_source_changed": [
     {

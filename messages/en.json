@@ -2748,7 +2748,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "The task was already moved.",
+  "tasks_move_nothing": "The task is no longer where it was. Nothing was moved.",
   "tasks_move_source_unread": "{noteName} could not be read. Nothing was moved.",
   "tasks_move_source_changed": [
     {

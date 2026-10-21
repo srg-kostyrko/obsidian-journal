@@ -2836,7 +2836,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "Задача уже перемещена.",
+  "tasks_move_nothing": "Задачи больше нет на прежнем месте. Ничего не перемещено.",
   "tasks_move_source_unread": "Не удалось прочитать заметку {noteName}. Ничего не перемещено.",
   "tasks_move_source_changed": [
     {

@@ -2735,7 +2735,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "タスクはすでに移動されています。",
+  "tasks_move_nothing": "タスクは元の場所にありません。何も移動されていません。",
   "tasks_move_source_unread": "ノート「{noteName}」を読み込めませんでした。何も移動していません。",
   "tasks_move_source_changed": [
     {

@@ -2732,7 +2732,7 @@
       }
     }
   ],
-  "tasks_move_nothing": "작업이 이미 옮겨졌습니다.",
+  "tasks_move_nothing": "작업이 원래 위치에 없습니다. 아무것도 옮기지 않았습니다.",
   "tasks_move_source_unread": "{noteName} 노트를 읽을 수 없습니다. 아무것도 옮기지 않았습니다.",
   "tasks_move_source_changed": [
     {
