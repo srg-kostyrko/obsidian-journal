@@ -38,8 +38,30 @@ export function carriesMarker(
   return structure.tags.some((tag) => tag.line === listItem.line && tag.tag.toLowerCase() === wanted);
 }
 
+// Only the root of a rolled group is stamped, but the whole group was taken: its open children read
+// as rolled too, or listings and open-task dots count them after the copy. The walk follows parent
+// lines, so it stops at a non-task parent, whose own parent the structure does not hold.
+function underRolledAncestor(
+  listItem: StructureListItem,
+  structure: NoteStructure,
+  marker: string,
+  byLine: ReadonlyMap<number, StructureListItem>,
+): boolean {
+  let parent = listItem.parent;
+  let below = listItem.line;
+  while (parent !== null && parent < below) {
+    if (carriesMarker({ line: parent }, structure, marker)) return true;
+    below = parent;
+    parent = byLine.get(parent)?.parent ?? null;
+  }
+  return false;
+}
+
 export function extractItems(input: ExtractInput): readonly TaskItem[] {
   const { path, structure, vault, journal, statusMap, owned, lineDates, rolledMarker, properties } = input;
+  const byLine = new Map(structure.listItems.map((listItem) => [listItem.line, listItem]));
+  const rolled = (listItem: StructureListItem): boolean =>
+    carriesMarker(listItem, structure, rolledMarker) || underRolledAncestor(listItem, structure, rolledMarker, byLine);
   const items: TaskItem[] = [];
   for (const listItem of structure.listItems) {
     const dates = lineDates?.get(listItem.line) ?? {};
@@ -51,7 +73,7 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
       provider: CHECKBOX_PROVIDER_ID,
       key: `${path}:${listItem.line}`,
       path,
-      status: carriesMarker(listItem, structure, rolledMarker) ? "rolled" : normalizeStatus(listItem.marker, statusMap),
+      status: rolled(listItem) ? "rolled" : normalizeStatus(listItem.marker, statusMap),
       relations: owned ? (dated ? ["containment", "date"] : ["containment"]) : ["date"],
       capabilities: { movable: true, stampable: true, retargetable: dated },
       display: {

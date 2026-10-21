@@ -437,6 +437,14 @@ describe("TickService", () => {
     expect(await contentOf(notes)).toBe("- [ ] Ship it #rolled\n");
   });
 
+  it("ticks an open child of a rolled-over parent by its own symbol, leaving the parent alone", async () => {
+    const { notes, service } = await build({ content: "- [ ] Ship it #rolled\n    - [ ] step\n- [ ] other\n" });
+
+    expectOk(await service.toggle(item(1, "    - [ ] step", { status: "rolled" satisfies TaskStatus })));
+
+    expect(await contentOf(notes)).toBe("- [ ] Ship it #rolled\n    - [x] step\n- [ ] other\n");
+  });
+
   it("leaves the note untouched when the line moved", async () => {
     const content = "- [ ] Something else\n";
     const { notes, service } = await build({ content });

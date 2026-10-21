@@ -994,6 +994,18 @@ but it writes markers the user never sees a reason for, and it breaks the round
 trip when the user later removes the root's marker by hand — the children read
 as open again together with their root.
 
+The same derivation serves reading: **an item whose ancestor list item carries
+the marker on its own line normalizes to `rolled`** too, with nothing written to
+it. Without that, the copied group's open children stay `todo` in the source, and
+every open listing and open-task decoration counts them a second time beside
+their copies. The provider walks the structure's parent lines, so the walk stops
+at a parent that is not itself a task — `NoteStructure` drops those lines, and
+with them the next parent up — and it cannot see a parent on the note's first line,
+which the structure cannot tell from no parent. The roll's own eligibility check
+walks the text and has neither gap. The user's own queries see no tag on a child
+and still count it open; stamping every line is what that would take, and it is
+declined above.
+
 ### Block references
 
 `ListItemCache` carries `id`, so a line's `^blockid` is always visible to us, and

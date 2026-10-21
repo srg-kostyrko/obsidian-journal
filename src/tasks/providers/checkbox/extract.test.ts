@@ -180,6 +180,28 @@ describe("rolled marker", () => {
     const items = extractItems({ ...base, structure });
     expect(items.map((i) => i.status)).toEqual(["todo", "rolled"]);
   });
+  it("an item under a stamped ancestor reads as rolled, one under an unstamped sibling root does not", () => {
+    const structure = noteWith({
+      listItems: [item(" ", 2), item(" ", 3, 2), item("x", 4, 3), item(" ", 5), item(" ", 6, 5)],
+      tags: [{ tag: "#rolled", line: 2 }],
+    });
+    const items = extractItems({ ...base, structure });
+    expect(items.map((i) => i.status)).toEqual(["rolled", "rolled", "rolled", "todo", "todo"]);
+  });
+  it("a stamped non-task parent makes its task children rolled", () => {
+    const structure = noteWith({
+      listItems: [item(" ", 3, 2), item(" ", 5, 4)],
+      tags: [{ tag: "#rolled", line: 2 }],
+    });
+    expect(extractItems({ ...base, structure }).map((i) => i.status)).toEqual(["rolled", "todo"]);
+  });
+  it("an ancestor's marker rolls nothing when the marker is empty", () => {
+    const structure = noteWith({
+      listItems: [item(" ", 2), item(" ", 3, 2)],
+      tags: [{ tag: "#rolled", line: 2 }],
+    });
+    expect(extractItems({ ...base, rolledMarker: "", structure }).map((i) => i.status)).toEqual(["todo", "todo"]);
+  });
   it("a frontmatter tag equal to the marker rolls nothing", () => {
     const items = extractItems({ ...base, structure: noteWith({ frontmatterTags: ["rolled"] }) });
     expect(items.at(0)?.status).toBe("todo");

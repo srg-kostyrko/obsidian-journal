@@ -613,7 +613,9 @@ A rolled-over task is neither open nor done: it leaves open listings, stops ligh
 open-task dots, and is not taken again by the next roll. The marker is a tag, so your own Dataview, Tasks or search queries
 can exclude it too. A block id stays at the end of the line, after the marker, and the copy in today's
 note drops it, so links to the block keep pointing at the original. Only the top task of each rolled
-group is marked; the lines under it are kept from rolling again by having a rolled-over parent.
+group is marked. The tasks nested under it read as **Rolled over** too, without a marker of their own,
+so they leave open listings and the calendar's open-task dots along with it and never roll again — but
+your own Dataview, Tasks or search queries see no tag on them and still count them as unfinished.
 
 Turn **Mark as rolled** off and the original is left untouched — which also means the next roll copies
 it again.
@@ -631,8 +633,8 @@ the main settings page, under **Roll over**:
   letters, numbers, `_`, `-` and `/`, not only numbers. Changing it does not touch notes already
   stamped, so their lines read as unfinished again — and roll again — until you change it back. The
   marker applies to every line that carries it, not only to lines the command stamped, so if `#rolled`
-  already means something else in your vault, change it here: until you do, those lines read as
-  **Rolled over** and leave open listings and the calendar's open-task dots.
+  already means something else in your vault, change it here: until you do, those lines and the tasks
+  nested under them read as **Rolled over** and leave open listings and the calendar's open-task dots.
 - **Copy or move** — **Copy** by default.
 - **Mark as rolled** — on by default.
 
