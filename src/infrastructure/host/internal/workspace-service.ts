@@ -1,5 +1,5 @@
 import { createNanoEvents } from "nanoevents";
-import { Menu, TFile } from "obsidian";
+import { MarkdownView, Menu, TFile } from "obsidian";
 
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
@@ -24,7 +24,7 @@ import type {
   VaultPath,
   WorkspaceEvents,
 } from "../types";
-import type { Editor, MarkdownFileInfo, MarkdownView, WorkspaceLeaf } from "obsidian";
+import type { Editor, WorkspaceLeaf } from "obsidian";
 
 // Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
 interface ConfigurableVault {
@@ -65,17 +65,6 @@ const FILE_MENU_SECTIONS = [
 // real gap is a single IPC hop; this is that hop with room for a loaded machine, not a
 // measured bound. Sized generously on purpose — see pickFromMenu for why waiting is free.
 export const NATIVE_PICK_DELIVERY_GRACE_MS = 500;
-
-// The active editor may be a canvas embed rather than a MarkdownView, so neither is assumed.
-interface SavingView {
-  save(): Promise<void>;
-  getMode(): string;
-}
-
-interface HoldingView {
-  readonly editor: Editor;
-  readonly view: Partial<SavingView>;
-}
 
 const HIGH_SURROGATE = /^[\uD800-\uDBFF]$/u;
 const LOW_SURROGATE = /^[\uDC00-\uDFFF]$/u;
@@ -215,27 +204,32 @@ export class WorkspaceService {
   // The active editor first, since a command ran there; otherwise a view in any window, because an
   // edit is not a focus change and a popout's unsaved typing is lost to a disk write all the same.
   // A deferred view has no file and no editor yet, so it holds nothing unsaved.
-  #viewHolding(path: VaultPath): HoldingView | undefined {
-    const active = this.#activeView();
-    if (active?.file?.path === path && active.editor !== undefined) return { editor: active.editor, view: active };
+  #editorHolding(path: VaultPath): Editor | undefined {
+    const active = this.#app.workspace.activeEditor;
+    if (active?.file?.path === path && active.editor !== undefined) return active.editor;
+    return this.#markdownViewHolding(path)?.editor;
+  }
+
+  // The active editor can be an embed — a canvas card, an editable hover popover — which is no
+  // MarkdownView and saves itself on its own terms, so only a MarkdownView is ever saved directly.
+  #markdownViewHolding(path: VaultPath): MarkdownView | undefined {
+    const active = this.#app.workspace.activeEditor;
+    if (active instanceof MarkdownView && active.file?.path === path) return active;
     for (const leaf of this.#app.workspace.getLeavesOfType("markdown")) {
       if (leaf.isDeferred) continue;
-      const view = leaf.view as MarkdownView | undefined;
-      if (view?.file?.path === path && view.editor !== undefined) return { editor: view.editor, view };
+      const view = leaf.view;
+      if (view instanceof MarkdownView && view.file?.path === path) return view;
     }
     return undefined;
   }
 
   // Reading mode keeps an editor that the user cannot type into or see a cursor in.
   #editingView(): { readonly file: TFile | null; readonly editor: Editor } | undefined {
-    const active = this.#activeView();
+    const active = this.#app.workspace.activeEditor;
     const editor = active?.editor;
-    if (active === null || editor === undefined || active.getMode?.() === "preview") return undefined;
+    if (active === null || editor === undefined) return undefined;
+    if (active instanceof MarkdownView && active.getMode() === "preview") return undefined;
     return { file: active.file, editor };
-  }
-
-  #activeView(): (MarkdownFileInfo & Partial<SavingView>) | null {
-    return this.#app.workspace.activeEditor;
   }
 
   #activeEditor(): Editor | undefined {
@@ -323,7 +317,7 @@ export class WorkspaceService {
 
   /** The text of an open view of `path`, unsaved typing included. */
   openNoteText(path: VaultPath): Option<string> {
-    const editor = this.#viewHolding(path)?.editor;
+    const editor = this.#editorHolding(path);
     return editor === undefined ? new None<string>() : new Some<string>(editor.getValue());
   }
 
@@ -332,7 +326,7 @@ export class WorkspaceService {
   // the typing the view has not saved.
   /** Rewrites an open view of `path` through `transform`, or refuses when it returns null. */
   processOpenNote(path: VaultPath, transform: (content: string) => string | null): "applied" | "refused" | "not-open" {
-    const editor = this.#viewHolding(path)?.editor;
+    const editor = this.#editorHolding(path);
     if (editor === undefined) return "not-open";
     const before = editor.getValue();
     const after = transform(before);
@@ -346,8 +340,14 @@ export class WorkspaceService {
   // must order its writes on disk saves first.
   /** Saves the open view of `path`, unsaved typing included; nothing when no view holds it. */
   saveOpenNote(path: VaultPath): AsyncResult<void, NoteWriteError> {
-    const view = this.#viewHolding(path)?.view;
-    return AsyncResult.fromPromise(Promise.resolve(view?.save?.()), (cause) => new NoteWriteError(path, cause));
+    // With only an embed holding the note there is nothing to flush here; the embed autosaves.
+    const view = this.#markdownViewHolding(path);
+    return AsyncResult.fromPromise(
+      (async () => {
+        await view?.save();
+      })(),
+      (cause) => new NoteWriteError(path, cause),
+    );
   }
 
   // One replaceRange is one undo step. The verdict is reached on the buffer as it stands now, so
@@ -357,7 +357,7 @@ export class WorkspaceService {
     path: VaultPath,
     verify: (content: string) => LineReplacement | null,
   ): "applied" | "refused" | "not-open" {
-    const editor = this.#viewHolding(path)?.editor;
+    const editor = this.#editorHolding(path);
     if (editor === undefined) return "not-open";
     const change = verify(editor.getValue());
     const last = editor.lastLine();

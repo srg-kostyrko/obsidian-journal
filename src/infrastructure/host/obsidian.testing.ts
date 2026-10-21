@@ -374,6 +374,13 @@ export interface WorkspaceLeaf {
   readonly containerEl: HTMLElement;
 }
 
+// The fake host builds each view from its buffer onto this prototype, so `instanceof` is what this models.
+export class MarkdownView {
+  getViewType(): string {
+    return "markdown";
+  }
+}
+
 export class ItemView {
   readonly leaf: WorkspaceLeaf;
   readonly containerEl: HTMLElement;

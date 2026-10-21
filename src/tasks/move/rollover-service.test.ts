@@ -677,6 +677,21 @@ describe("RolloverService", () => {
       expect(await text(target)).toBe("# Today\n");
     });
 
+    it("rolls into a target being edited in a canvas card, through that card's editor", async () => {
+      const { harness, roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+      const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+      const target = put("daily", TODAY, "# Today\n");
+      const card = harness.host.openEditor(target, "# Today\n", 0, { embed: true });
+      card.text = "# Today\nTyped in the card";
+
+      const report = await roll();
+
+      expect(report.rolled).toBe(1);
+      expect(card.text).toBe("# Today\nTyped in the card\n- [ ] Call Bob");
+      expect(card.saves).toEqual([]);
+      expect(await text(source)).toBe("- [ ] Call Bob #rolled\n");
+    });
+
     it("stamps an open source through its view, keeping typing it has not saved", async () => {
       const { harness, roll, put, text } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
       const source = put("daily", "2026-10-20", "- [ ] Call Bob\n- [ ] Other\n");

@@ -770,6 +770,28 @@ describe("WorkspaceService", () => {
         expect(result.error).toBeInstanceOf(NoteWriteError);
       });
 
+      it("leaves a note edited in an embed to the embed's own autosave", async () => {
+        const { service, host } = build();
+        const embed = host.openEditor(path, "a\n", 0, { embed: true });
+        host.openEditor(other, "x\n", 0, { active: false });
+
+        expect(service.processOpenNote(path, (text) => `${text}b\n`)).toBe("applied");
+        expect(embed.text).toBe("a\nb\n");
+        expectOk(await service.saveOpenNote(path));
+        expect(embed.saves).toEqual([]);
+      });
+
+      it("saves a markdown view of a note the active embed is editing", async () => {
+        const { service, host } = build();
+        const embed = host.openEditor(path, "a\n", 0, { embed: true });
+        host.workspace.openPaths.add(path);
+        host.workspace.openWindows.set(path, "popout");
+        embed.text = "a\nb\n";
+
+        expectOk(await service.saveOpenNote(path));
+        expect(embed.saves).toEqual(["a\nb\n"]);
+      });
+
       it("does nothing when no view holds the note", async () => {
         const { service, host } = build();
         const editor = host.openEditor(other, "a\n");
