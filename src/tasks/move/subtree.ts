@@ -1,4 +1,5 @@
 const LIST_LINE = /^\s*(?:[-*+]|\d+[.)])(?:\s|$)/u;
+const CHECKBOX_LINE = /^\s*(?:[-*+]|\d+[.)])\s+\[.\]/u;
 export const TRAILING_BLOCK_ID = /\s\^[A-Za-z0-9-]+\s*$/u;
 
 /** Leading whitespace width of a line, counting a tab as four columns. */
@@ -23,6 +24,14 @@ interface Measured {
 function measure(line: string): Measured {
   const prefix = QUOTE_PREFIX.exec(line)?.[0] ?? "";
   return { depth: prefix.split(">").length - 1, body: line.slice(prefix.length) };
+}
+
+export function isListLine(line: string): boolean {
+  return LIST_LINE.test(measure(line).body);
+}
+
+export function isCheckboxLine(line: string): boolean {
+  return CHECKBOX_LINE.test(measure(line).body);
 }
 
 function isBlank(line: string): boolean {
