@@ -2436,7 +2436,7 @@
   "tasks_checkbox_marker": "Marqueur de report",
   "tasks_checkbox_marker_desc": "L’étiquette qu’une copie ajoute à la ligne d’origine. Les lignes qui la portent sont considérées comme reportées.",
   "tasks_checkbox_marker_required": "Saisissez une étiquette.",
-  "tasks_checkbox_marker_spaces": "Une étiquette ne peut pas contenir d’espaces.",
+  "tasks_checkbox_marker_invalid": "Utilisez uniquement des lettres, des chiffres, _, - ou /, avec au moins un caractère qui n’est pas un chiffre.",
   "tasks_checkbox_marker_changed": "Les lignes marquées avec l’ancien marqueur seront de nouveau considérées comme non terminées.",
   "tasks_settings_add_condition": "Ajouter une condition",
   "tasks_settings_condition_tag": "Étiquette",
@@ -2600,7 +2600,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Les place sous {heading} si la note le contient.",
+  "tasks_move_summary_heading": "Les place sous {heading} quand l’en-tête d’où elles viennent est absent.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "Chaque journal utilise ces valeurs, sauf s’il définit les siennes.",
   "tasks_move_mode": "Copier ou déplacer",
   "tasks_move_mode_desc": "Copier conserve la ligne d’origine dans la note précédente. Déplacer l’en retire.",

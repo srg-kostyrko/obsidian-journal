@@ -557,19 +557,53 @@ describe("rolled marker", () => {
     expect(slice.state.rolledMarker).toBe("#rolled");
   });
 
-  it("rejects a marker containing a space with an inline error", async () => {
+  // Rolled detection reads metadataCache's tags, so a marker Obsidian would not parse as a tag is
+  // stamped, never read back, and rolls the line again on every run.
+  it.each(["#rolled over", "#123", "#done!", "#a,b"])("rejects %s with an inline error", async (marker) => {
     const { slice, submit } = await mount();
 
-    await typeMarker("#rolled over");
+    await typeMarker(marker);
     await save();
 
-    expect(screen.getByText(m.tasks_checkbox_marker_spaces())).toBeTruthy();
+    expect(screen.getByText(m.tasks_checkbox_marker_invalid())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
     expect(slice.state.rolledMarker).toBe("#rolled");
+  });
+
+  it.each(["#rolled", "#roll/over", "#\u{FC}ber_2", "#roll-2"])("accepts %s", async (marker) => {
+    const { slice, submit } = await mount();
+
+    await typeMarker(marker);
+    await save();
+
+    expect(submit).toHaveBeenCalled();
+    expect(slice.state.rolledMarker).toBe(marker);
   });
 });
 
 describe("roll over defaults", () => {
+  it("does not revert a default changed elsewhere while the modal was open", async () => {
+    const { harness } = await mount();
+    const defaults = harness.resolve(SettingsService).getSlice(moveDefaultsSlice);
+
+    defaults.state.mode = "move";
+    defaults.state.stamp = false;
+    await save();
+
+    expect(defaults.state).toEqual({ mode: "move", stamp: false });
+  });
+
+  it("writes only the default the user changed", async () => {
+    const { harness } = await mount();
+    const defaults = harness.resolve(SettingsService).getSlice(moveDefaultsSlice);
+
+    await userEvent.click(screen.getByTestId("move-default-stamp"));
+    defaults.state.mode = "move";
+    await save();
+
+    expect(defaults.state).toEqual({ mode: "move", stamp: false });
+  });
+
   it("writes the global mode and stamp defaults on Save", async () => {
     const { harness } = await mount();
     const defaults = harness.resolve(SettingsService).getSlice(moveDefaultsSlice);

@@ -2433,7 +2433,7 @@
   "tasks_checkbox_marker": "Marcador de transferência",
   "tasks_checkbox_marker_desc": "A tag que uma cópia adiciona à linha original. Linhas com ela constam como transferidas.",
   "tasks_checkbox_marker_required": "Digite uma tag.",
-  "tasks_checkbox_marker_spaces": "Uma tag não pode conter espaços.",
+  "tasks_checkbox_marker_invalid": "Use apenas letras, números, _, - ou /, com pelo menos um caractere que não seja número.",
   "tasks_checkbox_marker_changed": "As linhas marcadas com o marcador antigo voltarão a constar como não concluídas.",
   "tasks_settings_add_condition": "Adicionar condição",
   "tasks_settings_condition_tag": "Tag",
@@ -2597,7 +2597,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Coloca-as sob {heading} quando a nota o tiver.",
+  "tasks_move_summary_heading": "Coloca-as sob {heading} quando falta o cabeçalho de onde vieram.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "Todo diário usa esses valores, a menos que defina os seus.",
   "tasks_move_mode": "Copiar ou mover",
   "tasks_move_mode_desc": "Copiar mantém a linha original na nota anterior. Mover a retira de lá.",

@@ -47,10 +47,26 @@ describe("JournalMoveRow", () => {
   });
 
   it("describes the journal's own settings over the global defaults", async () => {
-    await mount({ mode: "copy", stamp: false, lookBack: 3, source: "both", targetHeading: "## Tasks" });
+    await mount({ mode: "copy", stamp: false, lookBack: 3, source: "both", targetHeading: "Tasks" });
     expect(summary()).toContain(m.tasks_move_summary({ action: "copy", count: 3 }));
     expect(summary()).toContain(m.tasks_move_summary_source({ source: "both" }));
-    expect(summary()).toContain(m.tasks_move_summary_heading({ heading: "## Tasks" }));
+    expect(summary()).toContain(m.tasks_move_summary_heading({ heading: "Tasks" }));
+  });
+
+  // Sentence spacing belongs to the locale: Japanese runs sentences together with no space.
+  it("leaves the joining of its sentences to the locale", async () => {
+    initLocale("ja");
+    try {
+      await mount({ targetHeading: "Tasks" });
+      expect(summary()).not.toMatch(/。\s/u);
+      expect(summary()).toBe(
+        m.tasks_move_summary({ action: "copy-stamp", count: 1 }) +
+          m.tasks_move_summary_source({ source: "note" }) +
+          m.tasks_move_summary_heading({ heading: "Tasks" }),
+      );
+    } finally {
+      initLocale("en");
+    }
   });
 
   it("writes the edited settings back to the journal", async () => {

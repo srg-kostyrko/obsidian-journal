@@ -30,6 +30,7 @@ const api = useModal();
 const settings = useService(SettingsService);
 const slice = settings.getSlice(checkboxSlice);
 const moveDefaults = settings.getSlice(moveDefaultsSlice);
+const openMoveDefaults = { mode: moveDefaults.state.mode, stamp: moveDefaults.state.stamp };
 
 // A deep copy, not a live binding: the editors below mutate their model in place, and the whole
 // point of the modal is that nothing reaches settings until Save. cloneFnJSON rather than toRaw —
@@ -95,8 +96,10 @@ function save(): void {
     conditions: [...draft.rule.conditions, ...preservedConditions],
   };
   slice.state.rolledMarker = marker.value;
-  moveDefaults.state.mode = draft.moveMode;
-  moveDefaults.state.stamp = draft.moveStamp;
+  // Only what the user changed here: an untouched control must not revert a write made elsewhere
+  // while the modal was open.
+  if (draft.moveMode !== openMoveDefaults.mode) moveDefaults.state.mode = draft.moveMode;
+  if (draft.moveStamp !== openMoveDefaults.stamp) moveDefaults.state.stamp = draft.moveStamp;
   api.submit();
 }
 </script>

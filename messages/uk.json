@@ -2503,7 +2503,7 @@
   "tasks_checkbox_marker": "Мітка перенесення",
   "tasks_checkbox_marker_desc": "Тег, який копіювання додає до вихідного рядка. Рядки з ним вважаються перенесеними.",
   "tasks_checkbox_marker_required": "Введіть тег.",
-  "tasks_checkbox_marker_spaces": "Тег не може містити пробілів.",
+  "tasks_checkbox_marker_invalid": "Використовуйте лише літери, цифри, _, - або /, і принаймні один символ, що не є цифрою.",
   "tasks_checkbox_marker_changed": "Рядки зі старою міткою знову вважатимуться незавершеними.",
   "tasks_settings_add_condition": "Додати умову",
   "tasks_settings_condition_tag": "Тег",
@@ -2644,15 +2644,24 @@
   "tasks_move_edit": "Редагувати",
   "tasks_move_summary": [
     {
-      "declarations": ["input action", "input count"],
-      "selectors": ["action", "count"],
+      "declarations": ["input action", "input count", "local countPlural = count: plural"],
+      "selectors": ["action", "count", "countPlural"],
       "match": {
-        "action=copy-stamp,count=1": "Копіює незавершені завдання з попередньої нотатки й позначає вихідні рядки як перенесені.",
-        "action=copy-stamp,count=*": "Копіює незавершені завдання з попередніх нотаток ({count}) й позначає вихідні рядки як перенесені.",
-        "action=copy,count=1": "Копіює незавершені завдання з попередньої нотатки.",
-        "action=copy,count=*": "Копіює незавершені завдання з попередніх нотаток ({count}).",
-        "action=move,count=1": "Переміщує незавершені завдання з попередньої нотатки.",
-        "action=move,count=*": "Переміщує незавершені завдання з попередніх нотаток ({count})."
+        "action=copy-stamp,count=1,countPlural=*": "Копіює незавершені завдання з попередньої нотатки й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=one": "Копіює незавершені завдання з {count} попередньої нотатки й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=few": "Копіює незавершені завдання з {count} попередніх нотаток й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=many": "Копіює незавершені завдання з {count} попередніх нотаток й позначає вихідні рядки як перенесені.",
+        "action=copy-stamp,count=*,countPlural=*": "Копіює незавершені завдання з {count} попередніх нотаток й позначає вихідні рядки як перенесені.",
+        "action=copy,count=1,countPlural=*": "Копіює незавершені завдання з попередньої нотатки.",
+        "action=copy,count=*,countPlural=one": "Копіює незавершені завдання з {count} попередньої нотатки.",
+        "action=copy,count=*,countPlural=few": "Копіює незавершені завдання з {count} попередніх нотаток.",
+        "action=copy,count=*,countPlural=many": "Копіює незавершені завдання з {count} попередніх нотаток.",
+        "action=copy,count=*,countPlural=*": "Копіює незавершені завдання з {count} попередніх нотаток.",
+        "action=move,count=1,countPlural=*": "Переміщує незавершені завдання з попередньої нотатки.",
+        "action=move,count=*,countPlural=one": "Переміщує незавершені завдання з {count} попередньої нотатки.",
+        "action=move,count=*,countPlural=few": "Переміщує незавершені завдання з {count} попередніх нотаток.",
+        "action=move,count=*,countPlural=many": "Переміщує незавершені завдання з {count} попередніх нотаток.",
+        "action=move,count=*,countPlural=*": "Переміщує незавершені завдання з {count} попередніх нотаток."
       }
     }
   ],
@@ -2667,7 +2676,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Розміщує їх під {heading}, якщо він є в нотатці.",
+  "tasks_move_summary_heading": "Розміщує їх під {heading}, якщо заголовка, під яким вони були, немає.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "Кожен журнал використовує ці значення, якщо не задає власних.",
   "tasks_move_mode": "Копіювати чи перемістити",
   "tasks_move_mode_desc": "Під час копіювання вихідний рядок лишається в ранішій нотатці. Під час переміщення його звідти прибирають.",

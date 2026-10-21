@@ -2438,7 +2438,7 @@
   "tasks_checkbox_marker": "Rolled marker",
   "tasks_checkbox_marker_desc": "The tag a copy adds to the original line. Lines carrying it read as rolled.",
   "tasks_checkbox_marker_required": "Enter a tag.",
-  "tasks_checkbox_marker_spaces": "A tag cannot contain spaces.",
+  "tasks_checkbox_marker_invalid": "Use letters, numbers, _, - or / only, with at least one character that is not a number.",
   "tasks_checkbox_marker_changed": "Lines stamped with the old marker will read as unfinished again.",
   "tasks_settings_add_condition": "Add condition",
   "tasks_settings_condition_tag": "Tag",
@@ -2602,7 +2602,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Places them under {heading} when the note has it.",
+  "tasks_move_summary_heading": "Places them under {heading} when the heading they came from is missing.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "Every journal uses these unless it sets its own.",
   "tasks_move_mode": "Copy or move",
   "tasks_move_mode_desc": "Copy keeps the original line in the earlier note. Move takes it out.",

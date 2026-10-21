@@ -2425,7 +2425,7 @@
   "tasks_checkbox_marker": "繰り越しマーカー",
   "tasks_checkbox_marker_desc": "コピー時に元の行へ追加するタグ。このタグがある行は繰り越し済みとして扱われます。",
   "tasks_checkbox_marker_required": "タグを入力してください。",
-  "tasks_checkbox_marker_spaces": "タグにスペースは使えません。",
+  "tasks_checkbox_marker_invalid": "文字、数字、_、-、/ のみを使い、数字以外の文字を少なくとも1つ含めてください。",
   "tasks_checkbox_marker_changed": "古いマーカーが付いた行は、再び未完了として扱われます。",
   "tasks_settings_add_condition": "条件を追加",
   "tasks_settings_condition_tag": "タグ",
@@ -2589,7 +2589,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "ノートに{heading}がある場合はその下に置きます。",
+  "tasks_move_summary_heading": "元の見出しがない場合は{heading}の下に置きます。",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action}{source}{heading}",
+        "hasHeading=*": "{action}{source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "独自の設定がないジャーナルはこれらの値を使います。",
   "tasks_move_mode": "コピーまたは移動",
   "tasks_move_mode_desc": "コピーは元の行を前のノートに残します。移動は元の行を取り除きます。",

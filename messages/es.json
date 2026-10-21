@@ -2425,7 +2425,7 @@
   "tasks_checkbox_marker": "Marca de traslado",
   "tasks_checkbox_marker_desc": "La etiqueta que una copia añade a la línea original. Las líneas que la llevan figuran como trasladadas.",
   "tasks_checkbox_marker_required": "Introduce una etiqueta.",
-  "tasks_checkbox_marker_spaces": "Una etiqueta no puede contener espacios.",
+  "tasks_checkbox_marker_invalid": "Usa solo letras, números, _, - o /, con al menos un carácter que no sea un número.",
   "tasks_checkbox_marker_changed": "Las líneas marcadas con la marca anterior volverán a figurar como sin terminar.",
   "tasks_settings_add_condition": "Agregar condición",
   "tasks_settings_condition_tag": "Etiqueta",
@@ -2589,7 +2589,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Las coloca bajo {heading} si la nota lo tiene.",
+  "tasks_move_summary_heading": "Las coloca bajo {heading} si falta el encabezado del que venían.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "Todos los diarios usan estos valores salvo que definan los suyos.",
   "tasks_move_mode": "Copiar o mover",
   "tasks_move_mode_desc": "Copiar conserva la línea original en la nota anterior. Mover la quita de allí.",

@@ -98,12 +98,22 @@ describe("EditJournalMoveModal", () => {
     const { submit } = await mount();
 
     await userEvent.selectOptions(screen.getByTestId("move-source"), "both");
-    await userEvent.type(screen.getByTestId("move-heading"), "  ## Tasks  ");
+    await userEvent.type(screen.getByTestId("move-heading"), "  Tasks  ");
     const lookBack = screen.getByTestId("move-look-back");
     await userEvent.clear(lookBack);
     await userEvent.type(lookBack, "3");
     await save();
 
-    expect(submitted(submit)).toEqual({ source: "both", targetHeading: "## Tasks", lookBack: 3 });
+    expect(submitted(submit)).toEqual({ source: "both", targetHeading: "Tasks", lookBack: 3 });
+  });
+
+  // Placement matches a heading by its text, so the markdown hashes would make the setting match nothing.
+  it('stores a target heading typed as "## Tasks" as its text', async () => {
+    const { submit } = await mount();
+
+    await userEvent.type(screen.getByTestId("move-heading"), "## Tasks");
+    await save();
+
+    expect(submitted(submit).targetHeading).toBe("Tasks");
   });
 });

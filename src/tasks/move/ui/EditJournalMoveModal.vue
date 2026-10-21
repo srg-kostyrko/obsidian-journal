@@ -57,7 +57,7 @@ function save(): void {
   </UiSettingRow>
   <UiSettingRow :name="m.tasks_move_heading()">
     <template #description>{{ m.tasks_move_heading_desc() }}</template>
-    <UiTextInput v-model="draft.targetHeading" placeholder="## Tasks" data-testid="move-heading" />
+    <UiTextInput v-model="draft.targetHeading" placeholder="Tasks" data-testid="move-heading" />
   </UiSettingRow>
   <UiSettingRow :name="m.tasks_move_look_back()">
     <template #description>

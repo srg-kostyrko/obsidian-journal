@@ -2419,7 +2419,7 @@
   "tasks_checkbox_marker": "结转标记",
   "tasks_checkbox_marker_desc": "复制时添加到原行的标签。带有此标签的行视为已结转。",
   "tasks_checkbox_marker_required": "请输入标签。",
-  "tasks_checkbox_marker_spaces": "标签不能包含空格。",
+  "tasks_checkbox_marker_invalid": "只能使用字母、数字、_、- 或 /，且至少包含一个非数字字符。",
   "tasks_checkbox_marker_changed": "带有旧标记的行将重新显示为未完成。",
   "tasks_settings_add_condition": "添加条件",
   "tasks_settings_condition_tag": "标签",
@@ -2583,7 +2583,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "笔记中有 {heading} 时，放在其下方。",
+  "tasks_move_summary_heading": "原标题缺失时，放在 {heading} 下方。",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action}{source}{heading}",
+        "hasHeading=*": "{action}{source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "未单独设置的日记使用这些值。",
   "tasks_move_mode": "复制或移动",
   "tasks_move_mode_desc": "复制会在较早的笔记中保留原行。移动会将其移除。",

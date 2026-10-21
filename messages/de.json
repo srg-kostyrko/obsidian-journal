@@ -2438,7 +2438,7 @@
   "tasks_checkbox_marker": "Übertragen-Markierung",
   "tasks_checkbox_marker_desc": "Das Tag, das eine Kopie der ursprünglichen Zeile hinzufügt. Zeilen damit gelten als übertragen.",
   "tasks_checkbox_marker_required": "Gib ein Tag ein.",
-  "tasks_checkbox_marker_spaces": "Ein Tag darf keine Leerzeichen enthalten.",
+  "tasks_checkbox_marker_invalid": "Nur Buchstaben, Ziffern, _, - oder / verwenden, mit mindestens einem Zeichen, das keine Ziffer ist.",
   "tasks_checkbox_marker_changed": "Zeilen mit der alten Markierung gelten wieder als unerledigt.",
   "tasks_settings_add_condition": "Bedingung hinzufügen",
   "tasks_settings_condition_tag": "Tag",
@@ -2602,7 +2602,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Legt sie unter {heading} ab, wenn die Notiz diese Überschrift hat.",
+  "tasks_move_summary_heading": "Legt sie unter {heading} ab, wenn die Überschrift fehlt, unter der sie standen.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "Jedes Journal verwendet diese Werte, sofern es keine eigenen festlegt.",
   "tasks_move_mode": "Kopieren oder verschieben",
   "tasks_move_mode_desc": "Kopieren behält die ursprüngliche Zeile in der früheren Notiz. Verschieben entfernt sie dort.",

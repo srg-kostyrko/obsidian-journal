@@ -28,13 +28,15 @@ const move = computed(() => journals.get(journalName).getOrUndefined()?.tasks.mo
 
 const summary = computed(() => {
   const stored = move.value;
-  if (stored === undefined) return [];
+  if (stored === undefined) return "";
   const effective = effectiveMove(stored, defaults.state);
-  return [
-    m.tasks_move_summary({ action: actionOf(effective), count: effective.lookBack }),
-    m.tasks_move_summary_source({ source: effective.source }),
-    ...(effective.targetHeading === "" ? [] : [m.tasks_move_summary_heading({ heading: effective.targetHeading })]),
-  ];
+  const hasHeading = effective.targetHeading !== "";
+  return m.tasks_move_summary_line({
+    action: m.tasks_move_summary({ action: actionOf(effective), count: effective.lookBack }),
+    source: m.tasks_move_summary_source({ source: effective.source }),
+    heading: hasHeading ? m.tasks_move_summary_heading({ heading: effective.targetHeading }) : "",
+    hasHeading: hasHeading ? "yes" : "no",
+  });
 });
 
 function edit(): void {
@@ -53,7 +55,7 @@ function edit(): void {
 <template>
   <UiSettingRow :name="m.tasks_move_title()">
     <template #description>
-      <span data-testid="move-summary">{{ summary.join(" ") }}</span>
+      <span data-testid="move-summary">{{ summary }}</span>
     </template>
     <UiButton @click="edit">{{ m.tasks_move_edit() }}</UiButton>
   </UiSettingRow>

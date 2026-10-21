@@ -2436,7 +2436,7 @@
   "tasks_checkbox_marker": "Marcatore di riporto",
   "tasks_checkbox_marker_desc": "Il tag che una copia aggiunge alla riga originale. Le righe che lo portano risultano riportate.",
   "tasks_checkbox_marker_required": "Inserisci un tag.",
-  "tasks_checkbox_marker_spaces": "Un tag non può contenere spazi.",
+  "tasks_checkbox_marker_invalid": "Usa solo lettere, numeri, _, - o /, con almeno un carattere che non sia un numero.",
   "tasks_checkbox_marker_changed": "Le righe contrassegnate con il vecchio marcatore risulteranno di nuovo non completate.",
   "tasks_settings_add_condition": "Aggiungi condizione",
   "tasks_settings_condition_tag": "Tag",
@@ -2600,7 +2600,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Le colloca sotto {heading} se la nota lo contiene.",
+  "tasks_move_summary_heading": "Le colloca sotto {heading} se manca l'intestazione da cui provengono.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "Ogni diario usa questi valori, a meno che non imposti i propri.",
   "tasks_move_mode": "Copia o sposta",
   "tasks_move_mode_desc": "Copia mantiene la riga originale nella nota precedente. Sposta la rimuove da lì.",

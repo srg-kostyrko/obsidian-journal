@@ -14,6 +14,15 @@ export interface JournalMoveDraft {
   lookBack: number | undefined;
 }
 
+// placeGroups matches a heading by its text, so "## Tasks" typed the way it reads in the note would
+// never match anything.
+export function headingText(text: string): string {
+  return text
+    .trim()
+    .replace(/^#{1,6}\s+/u, "")
+    .trim();
+}
+
 export function stampChoice(stamp: boolean): "on" | "off" {
   return stamp ? "on" : "off";
 }
@@ -43,7 +52,7 @@ export function configFrom(draft: JournalMoveDraft): JournalMoveConfig {
     ...(draft.mode !== "default" && { mode: draft.mode }),
     ...(draft.stamp !== "default" && { stamp: draft.stamp === "on" }),
     source: draft.source,
-    targetHeading: draft.targetHeading.trim(),
+    targetHeading: headingText(draft.targetHeading),
     lookBack,
   };
 }

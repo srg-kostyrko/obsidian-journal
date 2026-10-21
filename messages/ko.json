@@ -2422,7 +2422,7 @@
   "tasks_checkbox_marker": "이월 표시",
   "tasks_checkbox_marker_desc": "복사할 때 원래 줄에 추가하는 태그. 이 태그가 있는 줄은 이월됨으로 처리됩니다.",
   "tasks_checkbox_marker_required": "태그를 입력하세요.",
-  "tasks_checkbox_marker_spaces": "태그에는 공백을 넣을 수 없습니다.",
+  "tasks_checkbox_marker_invalid": "문자, 숫자, _, -, /만 사용하고 숫자가 아닌 문자를 하나 이상 넣으세요.",
   "tasks_checkbox_marker_changed": "이전 표시가 붙은 줄은 다시 완료되지 않은 작업으로 처리됩니다.",
   "tasks_settings_add_condition": "조건 추가",
   "tasks_settings_condition_tag": "태그",
@@ -2586,7 +2586,17 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "노트에 {heading} 제목이 있으면 그 아래에 둡니다.",
+  "tasks_move_summary_heading": "원래 있던 제목이 없으면 {heading} 아래에 둡니다.",
+  "tasks_move_summary_line": [
+    {
+      "declarations": ["input action", "input source", "input heading", "input hasHeading"],
+      "selectors": ["hasHeading"],
+      "match": {
+        "hasHeading=yes": "{action} {source} {heading}",
+        "hasHeading=*": "{action} {source}"
+      }
+    }
+  ],
   "tasks_move_defaults_desc": "자체 설정이 없는 저널은 이 값을 사용합니다.",
   "tasks_move_mode": "복사 또는 이동",
   "tasks_move_mode_desc": "복사는 원래 줄을 이전 노트에 남깁니다. 이동은 원래 줄을 없앱니다.",
