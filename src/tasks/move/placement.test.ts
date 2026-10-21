@@ -30,14 +30,14 @@ describe("placeGroups", () => {
   it("a heading line inside a code fence or frontmatter is not a section", () => {
     const fenced = "```\n## Tasks\n```\n## Other\n- [ ] o\n";
     expect(placeGroups(fenced, [group("Tasks", "- [ ] x")], "")).toBe(`${fenced}- [ ] x\n`);
-    const tilde = "~~~\n# Tasks\n~~~\n## Other\n- [ ] o\n";
+    const tilde = "~~~\n## Tasks\n~~~\n## Other\n- [ ] o\n";
     expect(placeGroups(tilde, [group(null, "- [ ] x")], "Tasks")).toBe(`${tilde}- [ ] x\n`);
     const front = "---\n## Tasks\ntitle: t\n---\n## Other\n- [ ] o\n";
     expect(placeGroups(front, [group("Tasks", "- [ ] x")], "")).toBe(`${front}- [ ] x\n`);
   });
 
   it("a four-backtick fence is not closed by three backticks", () => {
-    const target = "````\n```\n## Tasks\n````\n## Other\n- [ ] o\n";
+    const target = "````\n```\n## Tasks\n```\n````\n## Other\n- [ ] o\n";
     expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
   });
 
