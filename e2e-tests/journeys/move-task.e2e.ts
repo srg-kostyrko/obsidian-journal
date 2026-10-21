@@ -7,7 +7,7 @@ import { contentOf, openNote, waitForActiveNote, waitForContent } from "../suppo
 import { waitForState } from "../support/wait.js";
 
 // The single move's real-vault seams: the source rewritten through the active editor, the target
-// through vault.process while another pane holds it with unsaved typing. Both notes ship in the
+// through the other pane that holds it with unsaved typing. Both notes ship in the
 // fixture so their metadata has resolved before the command runs. No clock pin: the containing
 // period comes from the source note's own date, never from today.
 const FIXTURE = "./e2e-tests/fixtures/e2e-move-task";
@@ -15,6 +15,9 @@ const SOURCE = "daily/2026-09-25.md";
 const TARGET = "monthly/2026-09.md";
 const TARGET_LABEL = "September 2026";
 const UNSAVED = "Month goals, revised.";
+// Typed on the empty last line, so the buffer ends without a newline: a write that bypassed the view
+// ran the moved lines onto the end of it.
+const TYPED_AT_END = "Not saved yet.";
 
 class NoteMissingError extends Error {
   constructor(path: string) {
@@ -47,14 +50,16 @@ class StagingError extends Error {
   }
 }
 
-// The target goes in a split and gets its body line retyped without saving; the source then takes
-// the other pane and the cursor lands on the child task. The browser side reports a failed step by
-// name, since a class defined here does not exist in the page.
-async function stageSplit(): Promise<void> {
+type Typing = "retype-body" | "append-at-end";
+
+// The target goes in a split and gets unsaved typing — its body line retyped, or a line typed at its
+// very end; the source then takes the other pane and the cursor lands on the child task. The browser
+// side reports a failed step by name, since a class defined here does not exist in the page.
+async function stageSplit(typing: Typing): Promise<void> {
   await openNote(TARGET);
   await waitForActiveNote(TARGET);
   const opened = await browser.executeObsidian(
-    async ({ app, obsidian }, sourcePath, targetPath, unsaved) => {
+    async ({ app, obsidian }, sourcePath, targetPath, unsaved, typedAtEnd, how) => {
       const target = app.workspace.getActiveViewOfType(obsidian.MarkdownView);
       if (target?.file?.path !== targetPath) return "target not active";
       const file = app.vault.getAbstractFileByPath(sourcePath);
@@ -62,6 +67,12 @@ async function stageSplit(): Promise<void> {
       const leaf = app.workspace.getLeaf("split");
       await leaf.openFile(file, { active: true });
       const editor = target.editor;
+      if (how === "append-at-end") {
+        const last = editor.lastLine();
+        if (editor.getLine(last) !== "") return "target does not end with a newline";
+        editor.replaceRange(typedAtEnd, { line: last, ch: 0 });
+        return "ok";
+      }
       const line = editor.getValue().split("\n").indexOf("Month goals.");
       editor.replaceRange(unsaved, { line, ch: 0 }, { line, ch: editor.getLine(line).length });
       return "ok";
@@ -69,6 +80,8 @@ async function stageSplit(): Promise<void> {
     SOURCE,
     TARGET,
     UNSAVED,
+    TYPED_AT_END,
+    typing,
   );
   if (opened !== "ok") throw new StagingError(opened);
   await waitForActiveNote(SOURCE);
@@ -85,13 +98,25 @@ async function stageSplit(): Promise<void> {
   if (!placed) throw new StagingError("no active editor");
 }
 
+const DONE_NOTICE = (): string =>
+  m.tasks_move_done({
+    mode: "copy",
+    target: m.tasks_move_target_row({
+      label: TARGET_LABEL,
+      journal: "",
+      notelet: "",
+      hasJournal: "no",
+      hasNotelet: "no",
+    }),
+  });
+
 describe("moving one task to its containing period", () => {
-  before(async () => {
+  beforeEach(async () => {
     await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
   });
 
   it("copies the child under its parent into the month note, which an open pane shows, and marks the original", async () => {
-    await stageSplit();
+    await stageSplit("retype-body");
     const before = await readNote(TARGET);
     // Still on disk as shipped: the pane's edit has not saved, so the write meets unsaved typing.
     expect(before).toContain("Month goals.");
@@ -99,14 +124,7 @@ describe("moving one task to its containing period", () => {
 
     await runCommand("journals:move-task-to-containing-period");
 
-    const target = m.tasks_move_target_row({
-      label: TARGET_LABEL,
-      journal: "",
-      notelet: "",
-      hasJournal: "no",
-      hasNotelet: "no",
-    });
-    await waitForNotice(m.tasks_move_done({ mode: "copy", target }));
+    await waitForNotice(DONE_NOTICE());
     await waitForContent(
       SOURCE,
       (content) => content.includes("\t- [ ] draft outline #rolled"),
@@ -132,5 +150,31 @@ describe("moving one task to its containing period", () => {
     expect(sourceLines).toContain("- [ ] launch project");
     expect(sourceLines).toContain("\t- [ ] book room");
     expect(sourceLines).toContain("- [ ] groceries");
+  });
+
+  it("lands on its own lines after typing the open month pane has not saved at its very end", async () => {
+    await stageSplit("append-at-end");
+    expect(await readNote(TARGET)).not.toContain(TYPED_AT_END);
+
+    await runCommand("journals:move-task-to-containing-period");
+
+    await waitForNotice(DONE_NOTICE());
+    await waitForState(
+      () => openViewText(TARGET),
+      (text) => text.includes("\t- [ ] draft outline"),
+      "waited for the open month pane to show the copied task",
+    );
+    const viewText = (await openViewText(TARGET)) ?? "";
+    for (const text of [viewText, await readNote(TARGET)]) {
+      const lines = text.split("\n");
+      expect(lines).toContain(TYPED_AT_END);
+      expect(lines.indexOf("- [ ] launch project")).toBe(lines.indexOf(TYPED_AT_END) + 1);
+      expect(lines.indexOf("\t- [ ] draft outline")).toBe(lines.indexOf("- [ ] launch project") + 1);
+    }
+    await waitForContent(
+      SOURCE,
+      (content) => content.includes("\t- [ ] draft outline #rolled"),
+      "waited for the source stamp",
+    );
   });
 });
