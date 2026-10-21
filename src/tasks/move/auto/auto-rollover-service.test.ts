@@ -2,13 +2,14 @@ import * as v from "valibot";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
-import { m } from "@/i18n";
+import { formatConjunction, m } from "@/i18n";
 import type { Module } from "@/infrastructure/di";
 import {
   AppActivity,
   NoteStructureService,
   NotesService,
   NoteWriteError,
+  WorkspaceService,
   type NoteStructure,
   type VaultPath,
 } from "@/infrastructure/host";
@@ -18,18 +19,21 @@ import { expectOk } from "@/infrastructure/result/testing";
 import { JournalsIndex, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { SettingsService } from "@/settings";
 import { overrideWith, testContainer } from "@/testing";
 
 import { taskRuleSchema, type TaskRule } from "../../conditions";
 import { tasksCoreModule } from "../../module";
 import { NoCurrentPeriodError } from "../errors";
 import { RolloverService } from "../rollover-service";
-import { journalMoveSchema, type JournalMoveConfig } from "../settings";
+import { journalMoveSchema, moveDefaultsSlice, type JournalMoveConfig } from "../settings";
 
-import { AutoRolloverService } from "./auto-rollover-service";
+import { AutoRolloverService, RESUME_DELAY_MS } from "./auto-rollover-service";
 import { MAX_WAIT_MS, QUIET_MS, QuietWindow } from "./quiet-window";
 
 const HOUR = 60 * 60 * 1000;
+// What a boot or a return to the app waits before it reads anything in a vault with nothing to sync.
+const SETTLE = RESUME_DELAY_MS + QUIET_MS;
 
 function structureOf(text: string): NoteStructure {
   const lines = text.split("\n");
@@ -106,6 +110,11 @@ async function autoFor(journals: Record<string, JournalConfig>, data: Record<str
     index.register({ journalName, anchor: anchor(at), path });
     return path;
   };
+  // An edit the user makes outside any open view, read back by metadataCache.
+  const edit = (path: VaultPath, text: string): void => {
+    notes.seed(path, text);
+    structures.setStructure(path, structureOf(text));
+  };
   const text = async (path: VaultPath): Promise<string> => {
     const result = await notes.read(path);
     expectOk(result);
@@ -118,7 +127,11 @@ async function autoFor(journals: Record<string, JournalConfig>, data: Record<str
   // What the startup scan does once it has filled the index.
   const boot = async (): Promise<void> => {
     index.markReady();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await vi.advanceTimersByTimeAsync(SETTLE);
+  };
+  const resume = async (): Promise<void> => {
+    activity.resume();
+    await vi.advanceTimersByTimeAsync(SETTLE);
   };
   return {
     harness,
@@ -126,11 +139,13 @@ async function autoFor(journals: Record<string, JournalConfig>, data: Record<str
     activity,
     index,
     put,
+    edit,
     text,
     roll,
     realRoll,
     calls,
     boot,
+    resume,
     service: harness.resolve(AutoRolloverService),
   };
 }
@@ -139,6 +154,20 @@ const underTasks: TaskRule = {
   mode: "and",
   conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
 };
+
+const named = (journal: string, notice: string): string => m.tasks_auto_roll_prefix({ journal, notice });
+const doneFrom = (oldest: string, count = 1): string => m.tasks_roll_done({ count, notes: 1, oldest });
+const missing = (date: string): string => named("daily", m.tasks_roll_missing_heading({ heading: "Tasks", date }));
+const pausedUnwritten = (journal: string, dates: readonly string[]): string =>
+  m.tasks_auto_roll_paused_unwritten({ journal, dates: formatConjunction(dates), count: dates.length });
+
+// Fails every write `process` makes to one of `paths`, the way a locked or read-only file would.
+function failWrites(notes: FakeNotesService, paths: Set<VaultPath>): void {
+  const process = notes.process.bind(notes);
+  vi.spyOn(notes, "process").mockImplementation((path, transform) =>
+    paths.has(path) ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
+  );
+}
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -166,15 +195,31 @@ describe("AutoRolloverService", () => {
     expect(await text(workSource)).toBe("- [ ] Work item\n");
     expect(await text(workTarget)).toBe("");
     expect(roll).toHaveBeenCalledExactlyOnceWith("daily", { interactive: false, createTarget: false });
-    expect(harness.notices.messages).toEqual([m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-20" })]);
+    expect(harness.notices.messages).toEqual([named("daily", doneFrom("2026-10-20"))]);
   });
 
-  it("waits out a quiet vault before reading anything", async () => {
+  it("a boot waits out the start delay and then a quiet vault before reading anything", async () => {
     const { put, text, index } = await autoFor({ daily: automatic("daily") });
     put("daily", "2026-10-20", "- [ ] Call Bob\n");
     const target = put("daily", "2026-10-21", "");
 
     index.markReady();
+    await vi.advanceTimersByTimeAsync(SETTLE - 1);
+    expect(await text(target)).toBe("");
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+  });
+
+  it("the quiet window starts only once the start delay is over", async () => {
+    const { put, text, index, notes } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    const syncing = put("work", "2026-10-21", "");
+
+    index.markReady();
+    await vi.advanceTimersByTimeAsync(RESUME_DELAY_MS + 2000);
+    notes.emitModified(syncing);
     await vi.advanceTimersByTimeAsync(QUIET_MS - 1);
     expect(await text(target)).toBe("");
     await vi.advanceTimersByTimeAsync(1);
@@ -201,7 +246,7 @@ describe("AutoRolloverService", () => {
     expect(await text(friday)).toBe("- [ ] Planned ahead\n- [ ] Plan\n- [ ] Call Bob\n");
   });
 
-  it("a note created while its period is current rolls right away", async () => {
+  it("a note created while its period is current rolls once the vault is quiet, with no start delay", async () => {
     const { put, text, calls, boot } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
     put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
     await boot();
@@ -216,19 +261,35 @@ describe("AutoRolloverService", () => {
     expect(calls("daily")).toBe(1);
   });
 
-  it("the midnight timer rolls into the new day", async () => {
+  it("the midnight timer rolls into the new day once the vault is quiet, with no start delay", async () => {
     const { put, text, calls, boot } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
     put("daily", "2026-10-21", "- [ ] Today item\n- [x] Done thing\n");
     const tomorrow = put("daily", "2026-10-22", "");
     await boot();
     expect(calls("daily")).toBe(1);
 
-    await vi.advanceTimersByTimeAsync(15 * HOUR - QUIET_MS - 1);
+    await vi.advanceTimersByTimeAsync(15 * HOUR - SETTLE - 1);
     expect(await text(tomorrow)).toBe("");
     await vi.advanceTimersByTimeAsync(1 + QUIET_MS);
 
     expect(await text(tomorrow)).toBe("- [ ] Today item\n");
     expect(calls("daily")).toBe(2);
+  });
+
+  it("a return to the app while the midnight wait is under way still waits out the start delay", async () => {
+    const { put, text, boot, activity } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
+    put("daily", "2026-10-21", "- [ ] Today item\n");
+    const tomorrow = put("daily", "2026-10-22", "");
+    await boot();
+
+    await vi.advanceTimersByTimeAsync(15 * HOUR - SETTLE + 1000);
+    activity.resume();
+    // The midnight wait's own quiet, then the delay the return asked for, then quiet again.
+    await vi.advanceTimersByTimeAsync(QUIET_MS - 1000 + SETTLE - 1);
+    expect(await text(tomorrow)).toBe("");
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(await text(tomorrow)).toBe("- [ ] Today item\n");
   });
 
   it("waking after midnight rolls into the new day once", async () => {
@@ -244,7 +305,7 @@ describe("AutoRolloverService", () => {
     vi.setSystemTime(new Date(2026, 9, 22, 7, 0, 0));
     activity.resume();
     activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await vi.advanceTimersByTimeAsync(SETTLE);
 
     expect(await text(tomorrow)).toBe("- [ ] Today item\n");
     expect(await text(today)).toBe("- [ ] Today item #rolled\n");
@@ -266,8 +327,9 @@ describe("AutoRolloverService", () => {
     index.markReady();
     await vi.advanceTimersByTimeAsync(0);
     activity.resume();
+    await vi.advanceTimersByTimeAsync(RESUME_DELAY_MS);
     activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS * 3);
+    await vi.advanceTimersByTimeAsync(SETTLE * 3);
 
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     expect(calls("daily")).toBe(1);
@@ -289,17 +351,17 @@ describe("AutoRolloverService", () => {
     );
 
     index.markReady();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await vi.advanceTimersByTimeAsync(SETTLE);
     expect(calls("daily")).toBe(1);
     for (let i = 0; i < 5; i += 1) activity.resume();
     gate.resolve();
-    await vi.advanceTimersByTimeAsync(QUIET_MS * 4);
+    await vi.advanceTimersByTimeAsync(SETTLE * 4);
 
     expect(calls("daily")).toBe(2);
   });
 
-  it("a busy vault defers the roll to the next checkpoint", async () => {
-    const { put, text, calls, index, activity, notes } = await autoFor({
+  it("a vault still busy at the ceiling waits for quiet again, reading nothing meanwhile", async () => {
+    const { put, text, calls, index, notes } = await autoFor({
       daily: automatic("daily"),
       work: dayJournal("work"),
     });
@@ -308,31 +370,43 @@ describe("AutoRolloverService", () => {
     const syncing = put("work", "2026-10-21", "");
 
     index.markReady();
-    for (let elapsed = 0; elapsed < MAX_WAIT_MS; elapsed += 1000) {
+    await vi.advanceTimersByTimeAsync(RESUME_DELAY_MS);
+    for (let elapsed = 0; elapsed < MAX_WAIT_MS + 10_000; elapsed += 1000) {
       notes.emitModified(syncing);
       await vi.advanceTimersByTimeAsync(1000);
     }
-    await vi.advanceTimersByTimeAsync(10 * 60 * 1000);
     expect(calls("daily")).toBe(0);
     expect(await text(target)).toBe("");
 
-    activity.resume();
     await vi.advanceTimersByTimeAsync(QUIET_MS);
 
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     expect(calls("daily")).toBe(1);
+    expect(await text(syncing)).toBe("");
+  });
+
+  it("with no journal automatic, a checkpoint waits for nothing and arms only the midnight timer", async () => {
+    const { put, calls, boot, resume, harness } = await autoFor({ work: dayJournal("work") });
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    put("work", "2026-10-21", "");
+    const wait = vi.spyOn(harness.resolve(QuietWindow), "wait");
+    await boot();
+    await resume();
+
+    expect(wait).not.toHaveBeenCalled();
+    expect(calls("work")).toBe(0);
+    expect(vi.getTimerCount()).toBe(1);
   });
 
   it("copy without stamping is paused with one notice per session", async () => {
-    const { put, text, calls, boot, activity, harness } = await autoFor(
+    const { put, text, calls, boot, resume, harness } = await autoFor(
       { daily: automatic("daily"), work: dayJournal("work") },
       { tasksMove: { mode: "copy", stamp: false } },
     );
     const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
     const target = put("daily", "2026-10-21", "");
     await boot();
-    activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await resume();
 
     expect(calls("daily")).toBe(0);
     expect(await text(source)).toBe("- [ ] Call Bob\n");
@@ -340,26 +414,32 @@ describe("AutoRolloverService", () => {
     expect(harness.notices.messages).toEqual([m.tasks_auto_roll_paused({ journal: "daily" })]);
   });
 
-  it("nothing to roll is silent", async () => {
-    const { put, text, calls, boot, harness } = await autoFor({
-      daily: automatic("daily"),
-      fresh: automatic("fresh"),
-      work: dayJournal("work"),
-    });
-    put("daily", "2026-10-20", "- [x] Done thing\n");
+  it("a block that lifts and returns is announced again", async () => {
+    const { put, edit, text, boot, resume, harness } = await autoFor(
+      { daily: automatic("daily"), work: automatic("work", { mode: "move" }) },
+      { tasksMove: { mode: "copy", stamp: false } },
+    );
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
     const target = put("daily", "2026-10-21", "");
-    put("fresh", "2026-10-21", "");
-    put("work", "2026-10-20", "- [ ] Work item\n");
+    put("work", "2026-10-21", "");
+    const defaults = harness.resolve(SettingsService).getSlice(moveDefaultsSlice);
     await boot();
-
-    expect(calls("daily")).toBe(1);
-    expect(calls("fresh")).toBe(1);
     expect(await text(target)).toBe("");
-    expect(harness.notices.messages).toEqual([]);
+
+    defaults.state = { mode: "copy", stamp: true };
+    await resume();
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    defaults.state = { mode: "copy", stamp: false };
+    edit(source, "- [ ] Call Bob #rolled\n- [ ] Later item\n");
+    await resume();
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    const paused = m.tasks_auto_roll_paused({ journal: "daily" });
+    expect(harness.notices.messages).toEqual([paused, named("daily", doneFrom("2026-10-20")), paused]);
   });
 
   it("a missing heading is reported once per note per session", async () => {
-    const { put, boot, activity, harness } = await autoFor({
+    const { put, boot, resume, harness } = await autoFor({
       daily: automatic("daily", {}, underTasks),
       work: dayJournal("work", {}, underTasks),
     });
@@ -369,51 +449,145 @@ describe("AutoRolloverService", () => {
     put("work", "2026-10-20", "# Notes\n- [ ] Work item\n");
     put("work", "2026-10-21", "");
     await boot();
-    activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await resume();
 
-    expect(harness.notices.messages).toEqual([m.tasks_roll_missing_heading({ heading: "Tasks", date: "2026-10-20" })]);
+    expect(harness.notices.messages).toEqual([missing("2026-10-20")]);
 
     await vi.advanceTimersByTimeAsync(15 * HOUR);
 
-    expect(harness.notices.messages).toEqual([
-      m.tasks_roll_missing_heading({ heading: "Tasks", date: "2026-10-20" }),
-      m.tasks_roll_missing_heading({ heading: "Tasks", date: "2026-10-21" }),
-    ]);
+    expect(harness.notices.messages).toEqual([missing("2026-10-20"), missing("2026-10-21")]);
   });
 
   it("a source that cannot be updated pauses its journal after one copy", async () => {
-    const { put, text, calls, boot, activity, notes, harness } = await autoFor({
+    const { put, text, calls, boot, resume, notes, harness } = await autoFor({
       daily: automatic("daily"),
       work: automatic("work"),
     });
     const failing = put("daily", "2026-10-20", "- [ ] Call Bob\n");
     const target = put("daily", "2026-10-21", "");
     const workTarget = put("work", "2026-10-21", "");
-    const process = notes.process.bind(notes);
-    vi.spyOn(notes, "process").mockImplementation((path, transform) =>
-      path === failing ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
-    );
+    failWrites(notes, new Set([failing]));
     await boot();
     put("work", "2026-10-20", "- [ ] Work item\n");
-    activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
-    activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await resume();
+    await resume();
 
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     expect(await text(failing)).toBe("- [ ] Call Bob\n");
     expect(calls("daily")).toBe(1);
     expect(await text(workTarget)).toBe("- [ ] Work item\n");
-    const failedNotice = harness.notices.messages.filter((message) =>
-      message.includes(m.tasks_roll_source_write_failed({ date: "2026-10-20", mode: "copy" })),
+    expect(harness.notices.messages).toEqual([
+      named("daily", doneFrom("2026-10-20")),
+      pausedUnwritten("daily", ["2026-10-20"]),
+      named("work", doneFrom("2026-10-20")),
+    ]);
+  });
+
+  it("the pause names every earlier note that could not be updated", async () => {
+    const { put, boot, notes, harness } = await autoFor({
+      daily: automatic("daily", { lookBack: 3 }),
+      work: dayJournal("work"),
+    });
+    const older = put("daily", "2026-10-18", "- [ ] Older item\n");
+    put("daily", "2026-10-19", "- [x] Done thing\n");
+    const newer = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    failWrites(notes, new Set([older, newer]));
+    await boot();
+
+    expect(harness.notices.messages).toEqual([
+      named("daily", m.tasks_roll_done({ count: 2, notes: 2, oldest: "2026-10-18" })),
+      pausedUnwritten("daily", ["2026-10-18", "2026-10-20"]),
+    ]);
+  });
+
+  it("a source that changed while rolling pauses its journal too", async () => {
+    const { put, edit, text, calls, boot, resume, notes, harness } = await autoFor({
+      daily: automatic("daily"),
+      work: automatic("work"),
+    });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    put("work", "2026-10-21", "");
+    const process = notes.process.bind(notes);
+    // Typed between the plan and the write, so the write no longer finds the line it planned.
+    let typed = false;
+    vi.spyOn(notes, "process").mockImplementation((path, transform) => {
+      if (path === source && !typed) {
+        typed = true;
+        edit(source, "- [ ] Call Bob, edited\n");
+      }
+      return process(path, transform);
+    });
+    await boot();
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    await resume();
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    expect(await text(source)).toBe("- [ ] Call Bob, edited\n");
+    expect(calls("daily")).toBe(1);
+    expect(calls("work")).toBe(2);
+    expect(harness.notices.messages).toEqual([
+      named("daily", doneFrom("2026-10-20")),
+      pausedUnwritten("daily", ["2026-10-20"]),
+      named("work", doneFrom("2026-10-20")),
+    ]);
+  });
+
+  it("a target that cannot be saved pauses its journal after one copy", async () => {
+    const { put, calls, boot, resume, harness } = await autoFor({
+      daily: automatic("daily"),
+      work: automatic("work"),
+    });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    put("work", "2026-10-21", "");
+    const editor = harness.host.openEditor(target, "");
+    const workspace = harness.resolve(WorkspaceService);
+    const save = workspace.saveOpenNote.bind(workspace);
+    vi.spyOn(workspace, "saveOpenNote").mockImplementation((path) =>
+      path === target ? AsyncResult.err(new NoteWriteError(path, "disk full")) : save(path),
     );
-    expect(failedNotice).toHaveLength(1);
-    expect(
-      harness.notices.messages.filter(
-        (message) => message === m.tasks_auto_roll_paused_failed({ journal: "daily", date: "2026-10-20" }),
-      ),
-    ).toHaveLength(1);
+    await boot();
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    await resume();
+
+    expect(editor.text.match(/Call Bob/gu)).toHaveLength(1);
+    expect(calls("daily")).toBe(1);
+    expect(calls("work")).toBe(2);
+    expect(harness.notices.messages).toEqual([
+      m.tasks_auto_roll_paused_error({ journal: "daily" }),
+      named("work", doneFrom("2026-10-20")),
+    ]);
+  });
+
+  it("a clean roll by hand lifts that journal's pause, and only that journal's", async () => {
+    const { put, edit, text, calls, boot, resume, notes, realRoll } = await autoFor({
+      daily: automatic("daily"),
+      work: automatic("work"),
+    });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    const workSource = put("work", "2026-10-20", "- [ ] Work item\n");
+    const workTarget = put("work", "2026-10-21", "");
+    const failing = new Set([source, workSource]);
+    failWrites(notes, failing);
+    await boot();
+    expect(calls("daily")).toBe(1);
+    expect(calls("work")).toBe(1);
+
+    failing.delete(source);
+    edit(source, "- [ ] Call Bob #rolled\n");
+    expectOk(await realRoll("daily", { interactive: true }));
+    expectOk(await realRoll("work", { interactive: true }));
+    edit(source, "- [ ] Call Bob #rolled\n- [ ] Later item\n");
+    edit(workSource, "- [ ] Work item\n- [ ] Later work\n");
+    await resume();
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n- [ ] Later item\n");
+    expect(await text(workTarget)).toBe("- [ ] Work item\n- [ ] Work item\n");
+    expect(calls("daily")).toBe(2);
+    expect(calls("work")).toBe(1);
   });
 
   it("a block link that stays put is announced once per note as the look-back moves on", async () => {
@@ -430,11 +604,20 @@ describe("AutoRolloverService", () => {
 
     expect(await text(tomorrow)).toBe("- [ ] Call Bob\n");
     expect(harness.notices.messages).toEqual([
-      [
-        m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-20" }),
-        m.tasks_roll_block_ids_skipped({ count: 1 }),
-      ].join(" "),
-      m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-21" }),
+      named("daily", [doneFrom("2026-10-20"), m.tasks_roll_block_ids_skipped({ count: 1 })].join(" ")),
+      named("daily", doneFrom("2026-10-21")),
+    ]);
+  });
+
+  it("an earlier note still indexing is said in the automatic wording", async () => {
+    const { put, boot, harness } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    harness.host.openEditor(source, "- [ ] Call Bob\n- [ ] Typed, not saved\n");
+    await boot();
+
+    expect(harness.notices.messages).toEqual([
+      named("daily", m.tasks_auto_roll_source_indexing({ date: "2026-10-20" })),
     ]);
   });
 
@@ -450,7 +633,7 @@ describe("AutoRolloverService", () => {
   });
 
   it("a run that throws leaves the next checkpoint working", async () => {
-    const { put, text, boot, activity, harness } = await autoFor({
+    const { put, text, boot, resume, harness } = await autoFor({
       daily: automatic("daily"),
       work: dayJournal("work"),
     });
@@ -461,8 +644,7 @@ describe("AutoRolloverService", () => {
     expect(await text(target)).toBe("");
     expect(harness.logs.records.some((record) => record.level === "error")).toBe(true);
 
-    activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await resume();
 
     expect(await text(target)).toBe("- [ ] Call Bob\n");
   });
@@ -482,7 +664,7 @@ describe("AutoRolloverService", () => {
   });
 
   it("a settings preview standing in for today's note rolls nothing", async () => {
-    const { put, calls, boot, index, activity } = await autoFor({
+    const { put, calls, boot, resume, index } = await autoFor({
       daily: automatic("daily"),
       work: dayJournal("work"),
     });
@@ -494,22 +676,20 @@ describe("AutoRolloverService", () => {
       { journalName: "daily", anchor: anchor("2026-10-21"), path: "@journal-code-block-preview@1" as VaultPath },
       "preview",
     );
-    activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await resume();
 
     expect(calls("daily")).toBe(0);
   });
 
   it("no current note means no roll and no note is created", async () => {
-    const { put, text, calls, boot, notes, activity } = await autoFor({
+    const { put, text, calls, boot, resume, notes } = await autoFor({
       daily: automatic("daily"),
       work: dayJournal("work"),
     });
     const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
     put("work", "2026-10-21", "");
     await boot();
-    activity.resume();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await resume();
 
     expect(calls("daily")).toBe(0);
     expect(notes.find("daily/2026-10-21.md" as VaultPath).isNone()).toBe(true);
@@ -530,8 +710,8 @@ describe("AutoRolloverService", () => {
     expect(calls("daily")).toBe(1);
   });
 
-  it("one journal failing does not stop the next", async () => {
-    const { put, text, roll, boot, harness } = await autoFor({
+  it("one journal throwing pauses it and does not stop the next", async () => {
+    const { put, text, roll, boot, resume, calls, harness } = await autoFor({
       alpha: automatic("alpha"),
       beta: automatic("beta"),
       work: dayJournal("work"),
@@ -544,37 +724,29 @@ describe("AutoRolloverService", () => {
       throw new Error("boom");
     });
     await boot();
+    await resume();
 
     expect(await text(alphaSource)).toBe("- [ ] Alpha item\n");
     expect(await text(alphaTarget)).toBe("");
     expect(await text(betaTarget)).toBe("- [ ] Beta item\n");
+    expect(calls("alpha")).toBe(1);
+    expect(calls("beta")).toBe(2);
     expect(harness.notices.messages).toEqual([
-      m.tasks_auto_roll_prefix({
-        journal: "beta",
-        notice: m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-20" }),
-      }),
+      m.tasks_auto_roll_paused_error({ journal: "alpha" }),
+      named("beta", doneFrom("2026-10-20")),
     ]);
     expect(harness.logs.records.some((record) => record.level === "error")).toBe(true);
   });
 
-  it("journal prefix only when several journals are automatic", async () => {
-    const two = await autoFor({ alpha: automatic("alpha"), beta: automatic("beta"), work: dayJournal("work") });
-    two.put("alpha", "2026-10-20", "- [ ] Alpha item\n");
-    two.put("alpha", "2026-10-21", "");
-    two.put("beta", "2026-10-21", "");
-    await two.boot();
-    const done = m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-20" });
+  it("names the journal even when it is the only automatic one", async () => {
+    const { put, boot, harness } = await autoFor({ alpha: automatic("alpha"), work: dayJournal("work") });
+    put("alpha", "2026-10-20", "- [ ] Alpha item\n");
+    put("alpha", "2026-10-21", "");
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    put("work", "2026-10-21", "");
+    await boot();
 
-    expect(two.harness.notices.messages).toEqual([m.tasks_auto_roll_prefix({ journal: "alpha", notice: done })]);
-
-    const one = await autoFor({ alpha: automatic("alpha"), work: dayJournal("work") });
-    one.put("alpha", "2026-10-20", "- [ ] Alpha item\n");
-    one.put("alpha", "2026-10-21", "");
-    one.put("work", "2026-10-20", "- [ ] Work item\n");
-    one.put("work", "2026-10-21", "");
-    await one.boot();
-
-    expect(one.harness.notices.messages).toEqual([done]);
+    expect(harness.notices.messages).toEqual([named("alpha", doneFrom("2026-10-20"))]);
   });
 
   it("unloading stops the timer and a run before its next journal", async () => {
@@ -594,12 +766,26 @@ describe("AutoRolloverService", () => {
     });
 
     index.markReady();
-    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    await vi.advanceTimersByTimeAsync(SETTLE);
     await vi.advanceTimersByTimeAsync(48 * HOUR);
 
     expect(calls("alpha")).toBe(1);
     expect(calls("beta")).toBe(0);
     expect(await text(betaTarget)).toBe("");
     expect(activity.subscriberCount).toBe(0);
+  });
+
+  it("unloading during the start delay reads nothing and leaves no timer", async () => {
+    const { put, calls, index, service } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+
+    index.markReady();
+    await vi.advanceTimersByTimeAsync(1000);
+    service[Symbol.dispose]();
+    expect(vi.getTimerCount()).toBe(0);
+    await vi.advanceTimersByTimeAsync(SETTLE);
+
+    expect(calls("daily")).toBe(0);
   });
 });

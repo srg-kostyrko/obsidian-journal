@@ -1,7 +1,9 @@
+import { createNanoEvents } from "nanoevents";
 import * as v from "valibot";
 
 import { CalendarDate, type AnchorString } from "@/calendar";
 import { inject } from "@/infrastructure/di";
+import type { Subscribable, TypedEmitter } from "@/infrastructure/events";
 import { Flows } from "@/infrastructure/flows";
 import {
   NoteStructureService,
@@ -138,6 +140,10 @@ function headingOf(selection: TaskRule): string | null {
   return named.at(0) ?? null;
 }
 
+interface RolloverEvents {
+  rolled: (report: RollReport) => void;
+}
+
 /** Rolls a journal's unfinished checkbox items from its previous notes into today's. */
 export class RolloverService {
   readonly #journals = inject(JournalsRepository);
@@ -161,6 +167,9 @@ export class RolloverService {
     tasks: inject(TaskIndex),
     visibility: inject(TaskVisibility),
   };
+  readonly #emitter: TypedEmitter<RolloverEvents> = createNanoEvents();
+  /** Fires after every roll that finished, whoever asked for it. */
+  readonly events: Subscribable<RolloverEvents> = this.#emitter;
 
   #todayAnchor(journalName: string): Result<AnchorString, NoCurrentPeriodError> {
     return this.#cycle
@@ -387,6 +396,8 @@ export class RolloverService {
   }
 
   roll(journalName: string, options: RollOptions): AsyncResult<RollReport, RollError> {
-    return this.#locks.run([journalName], () => this.#rollNow(journalName, options));
+    return this.#locks
+      .run([journalName], () => this.#rollNow(journalName, options))
+      .tap((report) => this.#emitter.emit("rolled", report));
   }
 }

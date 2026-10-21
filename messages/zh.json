@@ -2708,7 +2708,18 @@
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
   "tasks_auto_roll_paused": "{journal} 的自动结转已暂停。请开启“标记为已结转”，或使用“移动”。",
-  "tasks_auto_roll_paused_failed": "{journal} 的自动结转已暂停：无法更新 {date} 的笔记。问题解决后，请手动运行“结转未完成的任务”。",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal} 的自动结转已暂停：任务已在当前笔记中，但无法更新 {dates} 的笔记。手动运行“结转未完成的任务”之前，请在那里标记或删除原任务，或删除副本。",
+        "count=*": "{journal} 的自动结转已暂停：任务已在当前笔记中，但无法更新 {dates} 的笔记。手动运行“结转未完成的任务”之前，请在那里标记或删除原任务，或删除副本。"
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "{journal} 的自动结转已暂停：一次结转未完成，因此当前笔记中可能已有早先笔记中仍保留的任务。手动运行“结转未完成的任务”之前，请检查两者。",
+  "tasks_auto_roll_source_indexing": "{date} 的笔记仍在建立索引。将在下次检查时结转。",
   "tasks_auto_roll_prefix": "{journal}：{notice}",
   "tasks_move_pick_target": "将任务移动到哪条笔记？",
   "tasks_move_pick_journal": "将任务移动到哪个日记？",

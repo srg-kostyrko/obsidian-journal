@@ -2727,7 +2727,18 @@
   "tasks_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Versuche es gleich noch einmal.",
   "tasks_roll_source_unread": "Die Notiz vom {date} konnte nicht gelesen werden.",
   "tasks_auto_roll_paused": "Automatisches Übertragen ist für {journal} pausiert. Schalte „Als übertragen markieren“ ein oder nutze Verschieben.",
-  "tasks_auto_roll_paused_failed": "Automatisches Übertragen ist für {journal} pausiert: Die Notiz vom {date} konnte nicht aktualisiert werden. Führe „Unerledigte Aufgaben übertragen“ von Hand aus, sobald das behoben ist.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notiz vom {dates} konnte nicht aktualisiert werden. Markiere oder entferne dort die Originale oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
+        "count=*": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notizen vom {dates} konnten nicht aktualisiert werden. Markiere oder entferne dort die Originale oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "Automatisches Übertragen ist für {journal} pausiert: Ein Übertragen wurde nicht abgeschlossen, daher enthält die aktuelle Notiz womöglich schon Aufgaben, die die früheren Notizen noch anbieten. Prüfe beide, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
+  "tasks_auto_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Sie wird bei der nächsten Prüfung übertragen.",
   "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "In welche Notiz soll die Aufgabe verschoben werden?",
   "tasks_move_pick_journal": "In welches Journal soll die Aufgabe verschoben werden?",

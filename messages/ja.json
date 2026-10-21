@@ -2714,7 +2714,18 @@
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
   "tasks_auto_roll_paused": "{journal}の自動繰り越しは一時停止中です。「繰り越し済みとしてマーク」をオンにするか、「移動」を使用してください。",
-  "tasks_auto_roll_paused_failed": "{journal}の自動繰り越しは一時停止中です：{date}のノートを更新できませんでした。解決したら「未完了のタスクを繰り越す」を手動で実行してください。",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートを更新できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、そのノートの元のタスクをマークまたは削除するか、コピーを削除してください。",
+        "count=*": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートを更新できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、そのノートの元のタスクをマークまたは削除するか、コピーを削除してください。"
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "{journal}の自動繰り越しは一時停止中です：繰り越しが完了しなかったため、以前のノートに残っているタスクがすでに現在のノートにもある可能性があります。「未完了のタスクを繰り越す」を手動で実行する前に、両方を確認してください。",
+  "tasks_auto_roll_source_indexing": "{date}のノートはまだインデックス作成中です。次の確認時に繰り越されます。",
   "tasks_auto_roll_prefix": "{journal}：{notice}",
   "tasks_move_pick_target": "タスクをどのノートに移動しますか？",
   "tasks_move_pick_journal": "タスクをどのジャーナルに移動しますか？",

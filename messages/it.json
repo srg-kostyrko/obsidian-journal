@@ -2725,7 +2725,18 @@
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
   "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
   "tasks_auto_roll_paused": "Il riporto automatico è in pausa per {journal}. Attiva Contrassegna come riportata oppure usa Sposta.",
-  "tasks_auto_roll_paused_failed": "Il riporto automatico è in pausa per {journal}: non è stato possibile aggiornare la nota del {date}. Esegui Riporta le attività non completate a mano una volta risolto.",
+  "tasks_auto_roll_paused_unwritten": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare la nota del {dates}. Contrassegna o rimuovi lì gli originali, oppure elimina le copie, prima di eseguire Riporta le attività non completate.",
+        "count=*": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare le note del {dates}. Contrassegna o rimuovi lì gli originali, oppure elimina le copie, prima di eseguire Riporta le attività non completate."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_error": "Il riporto automatico è in pausa per {journal}: un riporto non è terminato, quindi la nota corrente potrebbe già contenere attività che le note precedenti offrono ancora. Controlla entrambe prima di eseguire Riporta le attività non completate.",
+  "tasks_auto_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Verrà riportata al prossimo controllo.",
   "tasks_auto_roll_prefix": "{journal}: {notice}",
   "tasks_move_pick_target": "In quale nota vuoi spostare l'attività?",
   "tasks_move_pick_journal": "In quale diario vuoi spostare l'attività?",
