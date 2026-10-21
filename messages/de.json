@@ -2689,8 +2689,26 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "Die Notiz vom {date} wurde während des Übertragens geändert. Ihre Aufgaben wurden kopiert, aber nicht als übertragen markiert.",
-  "tasks_roll_source_write_failed": "Die Notiz vom {date} konnte nicht als übertragen markiert werden. Ihre Aufgaben wurden kopiert und werden womöglich erneut übertragen.",
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Die Notiz vom {date} wurde während des Übertragens geändert. Ihre Aufgaben wurden kopiert, aber nicht als übertragen markiert.",
+        "mode=move": "Die Notiz vom {date} wurde während des Übertragens geändert. Ihre Aufgaben wurden kopiert, aber nicht entfernt."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Die Notiz vom {date} konnte nicht als übertragen markiert werden. Ihre Aufgaben wurden kopiert und werden womöglich erneut übertragen.",
+        "mode=move": "Die Notiz vom {date} konnte nicht aktualisiert werden. Ihre Aufgaben wurden kopiert und stehen auch dort noch."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Versuche es gleich noch einmal.",
   "tasks_listing_empty": "Keine Aufgaben entsprechen dieser Abfrage."
 }

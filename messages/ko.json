@@ -2673,8 +2673,26 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "이월하는 동안 {date} 노트가 변경되었습니다. 작업은 복사되었지만 이월됨으로 표시되지 않았습니다.",
-  "tasks_roll_source_write_failed": "{date} 노트를 이월됨으로 표시하지 못했습니다. 작업은 복사되었으며 다시 이월될 수 있습니다.",
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "이월하는 동안 {date} 노트가 변경되었습니다. 작업은 복사되었지만 이월됨으로 표시되지 않았습니다.",
+        "mode=move": "이월하는 동안 {date} 노트가 변경되었습니다. 작업은 복사되었지만 제거되지 않았습니다."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} 노트를 이월됨으로 표시하지 못했습니다. 작업은 복사되었으며 다시 이월될 수 있습니다.",
+        "mode=move": "{date} 노트를 업데이트하지 못했습니다. 작업은 복사되었으며 원래 노트에도 그대로 남아 있습니다."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date} 노트를 아직 색인하는 중입니다. 잠시 후 다시 시도하세요.",
   "tasks_listing_empty": "이 쿼리와 일치하는 작업이 없습니다."
 }

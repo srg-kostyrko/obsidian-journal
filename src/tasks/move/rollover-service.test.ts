@@ -146,6 +146,7 @@ async function rolloverFor(journals: Record<string, JournalConfig>) {
 function reportOf(overrides: Partial<RollReport>): RollReport {
   return {
     journalName: "daily",
+    mode: "copy",
     rolled: 0,
     notes: 0,
     sources: [],
@@ -402,6 +403,24 @@ describe("RolloverService", () => {
     expect(report.failedSources).toEqual([{ path: failing, anchor: "2026-10-19" }]);
   });
 
+  it("says a failed source under move still holds its tasks", async () => {
+    const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { mode: "move" }) });
+    const failing = put("daily", "2026-10-20", "- [ ] Two\n");
+    const target = put("daily", TODAY, "");
+    const process = notes.process.bind(notes);
+    vi.spyOn(notes, "process").mockImplementation((path, transform) =>
+      path === failing ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
+    );
+
+    const report = await roll();
+
+    expect(await text(target)).toBe("- [ ] Two\n");
+    expect(await text(failing)).toBe("- [ ] Two\n");
+    expect(report.mode).toBe("move");
+    expect(rollNotice(report)).toContain(m.tasks_roll_source_write_failed({ date: "2026-10-20", mode: "move" }));
+    expect(rollNotice(report)).not.toContain(m.tasks_roll_source_write_failed({ date: "2026-10-20", mode: "copy" }));
+  });
+
   describe("a target write that fails", () => {
     it("leaves every source byte-identical when the write is refused", async () => {
       const { service, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
@@ -453,6 +472,7 @@ describe("RolloverService", () => {
     expect(await text(edited)).toBe("- [ ] Inserted above\n- [ ] Call Bob\n");
     expect(await text(steady)).toBe("- [ ] Write report #rolled\n");
     expect(report.changedSources).toEqual([{ path: edited, anchor: "2026-10-19" }]);
+    expect(report.mode).toBe("copy");
   });
 
   it("note-property items in the source period are counted, not moved", async () => {
@@ -545,9 +565,29 @@ describe("rollNotice", () => {
         m.tasks_roll_missing_heading({ heading: "Tasks", date: "2026-10-19" }),
         m.tasks_roll_note_items_skipped({ count: 2 }),
         m.tasks_roll_block_ids_skipped({ count: 1 }),
-        m.tasks_roll_source_changed({ date: "2026-10-20" }),
-        m.tasks_roll_source_write_failed({ date: "2026-10-18" }),
+        m.tasks_roll_source_changed({ date: "2026-10-20", mode: "copy" }),
+        m.tasks_roll_source_write_failed({ date: "2026-10-18", mode: "copy" }),
         m.tasks_roll_source_indexing({ date: "2026-10-17" }),
+      ].join(" "),
+    );
+  });
+
+  it("words an unwritten source by the roll's mode", () => {
+    const sources = {
+      changedSources: [{ path: "daily/2026-10-20.md" as VaultPath, anchor: anchor("2026-10-20") }],
+      failedSources: [{ path: "daily/2026-10-18.md" as VaultPath, anchor: anchor("2026-10-18") }],
+    };
+
+    expect(rollNotice(reportOf({ ...sources, mode: "move" }))).toBe(
+      [
+        m.tasks_roll_source_changed({ date: "2026-10-20", mode: "move" }),
+        m.tasks_roll_source_write_failed({ date: "2026-10-18", mode: "move" }),
+      ].join(" "),
+    );
+    expect(rollNotice(reportOf({ ...sources, mode: "copy" }))).toBe(
+      [
+        m.tasks_roll_source_changed({ date: "2026-10-20", mode: "copy" }),
+        m.tasks_roll_source_write_failed({ date: "2026-10-18", mode: "copy" }),
       ].join(" "),
     );
   });

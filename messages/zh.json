@@ -2670,8 +2670,26 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "{date} 的笔记在结转过程中发生了更改。其任务已复制，但未标记为已结转。",
-  "tasks_roll_source_write_failed": "无法将 {date} 的笔记标记为已结转。其任务已复制，可能会再次结转。",
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} 的笔记在结转过程中发生了更改。其任务已复制，但未标记为已结转。",
+        "mode=move": "{date} 的笔记在结转过程中发生了更改。其任务已复制，但未移除。"
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "无法将 {date} 的笔记标记为已结转。其任务已复制，可能会再次结转。",
+        "mode=move": "无法更新 {date} 的笔记。其任务已复制，原处也仍然保留。"
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

@@ -2676,8 +2676,26 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "La nota del {date} cambió durante el traslado. Sus tareas se copiaron, pero no se marcaron como trasladadas.",
-  "tasks_roll_source_write_failed": "No se pudo marcar la nota del {date} como trasladada. Sus tareas se copiaron y podrían volver a trasladarse.",
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La nota del {date} cambió durante el traslado. Sus tareas se copiaron, pero no se marcaron como trasladadas.",
+        "mode=move": "La nota del {date} cambió durante el traslado. Sus tareas se copiaron, pero no se quitaron."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "No se pudo marcar la nota del {date} como trasladada. Sus tareas se copiaron y podrían volver a trasladarse.",
+        "mode=move": "No se pudo actualizar la nota del {date}. Sus tareas se copiaron y siguen también allí."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
   "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }

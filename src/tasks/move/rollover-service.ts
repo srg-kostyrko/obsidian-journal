@@ -261,6 +261,7 @@ export class RolloverService {
       const heading = headingOf(selection);
       const report: RollReport = {
         journalName,
+        mode: move.mode,
         rolled: contributing.reduce((sum, { plan }) => sum + plan.roots.length, 0),
         notes: contributing.length,
         sources: [...new Set(contributing.map(({ anchor }) => anchor))],

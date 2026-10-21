@@ -9,6 +9,8 @@ export interface ChangedSource {
 
 export interface RollReport {
   readonly journalName: string;
+  // Decides what an unwritten source means: copy left it unmarked, move left the lines in place.
+  readonly mode: "copy" | "move";
   // Roots written to the target; context ancestors carried along are not counted.
   readonly rolled: number;
   // Source notes that contributed at least one root.
@@ -56,8 +58,8 @@ export function rollNotice(report: RollReport): string {
     ...(heading === null ? [] : report.missingHeading.map((date) => m.tasks_roll_missing_heading({ heading, date }))),
     report.skippedNoteItems > 0 ? m.tasks_roll_note_items_skipped({ count: report.skippedNoteItems }) : null,
     report.skippedBlockIds > 0 ? m.tasks_roll_block_ids_skipped({ count: report.skippedBlockIds }) : null,
-    ...uniqueAnchors(report.changedSources).map((date) => m.tasks_roll_source_changed({ date })),
-    ...uniqueAnchors(report.failedSources).map((date) => m.tasks_roll_source_write_failed({ date })),
+    ...uniqueAnchors(report.changedSources).map((date) => m.tasks_roll_source_changed({ date, mode: report.mode })),
+    ...uniqueAnchors(report.failedSources).map((date) => m.tasks_roll_source_write_failed({ date, mode: report.mode })),
     ...report.skippedSources.map((date) => m.tasks_roll_source_indexing({ date })),
   ]
     .filter((sentence): sentence is string => sentence !== null)

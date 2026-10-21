@@ -2676,8 +2676,26 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "繰り越し中に{date}のノートが変更されました。タスクはコピーされましたが、繰り越し済みとしてマークされていません。",
-  "tasks_roll_source_write_failed": "{date}のノートを繰り越し済みとしてマークできませんでした。タスクはコピーされたため、再度繰り越される可能性があります。",
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "繰り越し中に{date}のノートが変更されました。タスクはコピーされましたが、繰り越し済みとしてマークされていません。",
+        "mode=move": "繰り越し中に{date}のノートが変更されました。タスクはコピーされましたが、削除されていません。"
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date}のノートを繰り越し済みとしてマークできませんでした。タスクはコピーされたため、再度繰り越される可能性があります。",
+        "mode=move": "{date}のノートを更新できませんでした。タスクはコピーされ、元のノートにも残っています。"
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

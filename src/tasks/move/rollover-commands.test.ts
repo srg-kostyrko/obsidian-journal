@@ -25,6 +25,7 @@ const ORPHAN = "notes/orphan.md" as VaultPath;
 
 const REPORT: RollReport = {
   journalName: "daily",
+  mode: "copy",
   rolled: 2,
   notes: 1,
   sources: [anchor("2026-10-20")],

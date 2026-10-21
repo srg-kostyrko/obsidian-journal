@@ -2687,8 +2687,26 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "La nota del {date} è cambiata durante il riporto. Le sue attività sono state copiate, ma non contrassegnate come riportate.",
-  "tasks_roll_source_write_failed": "Non è stato possibile contrassegnare la nota del {date} come riportata. Le sue attività sono state copiate e potrebbero essere riportate di nuovo.",
+  "tasks_roll_source_changed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La nota del {date} è cambiata durante il riporto. Le sue attività sono state copiate, ma non contrassegnate come riportate.",
+        "mode=move": "La nota del {date} è cambiata durante il riporto. Le sue attività sono state copiate, ma non rimosse."
+      }
+    }
+  ],
+  "tasks_roll_source_write_failed": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Non è stato possibile contrassegnare la nota del {date} come riportata. Le sue attività sono state copiate e potrebbero essere riportate di nuovo.",
+        "mode=move": "Non è stato possibile aggiornare la nota del {date}. Le sue attività sono state copiate e sono ancora anche lì."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
   "tasks_listing_empty": "Nessuna attività corrisponde a questa query."
 }
