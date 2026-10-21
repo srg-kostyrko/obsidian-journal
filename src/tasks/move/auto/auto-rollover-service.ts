@@ -72,6 +72,7 @@ export class AutoRolloverService {
   #timer: number | undefined;
   #delayTimer: number | undefined;
   #wake: (() => void) | undefined;
+  readonly #unload = new AbortController();
   #disposed = false;
   #phase: "idle" | "waiting" | "rolling" = "idle";
   #dirty = false;
@@ -167,8 +168,8 @@ export class AutoRolloverService {
         await this.#sleep(RESUME_DELAY_MS);
         if (this.#disposed) return false;
       }
-      const verdict = await this.#quiet.wait();
-      if (this.#disposed) return false;
+      const verdict = await this.#quiet.wait(this.#unload.signal);
+      if (this.#disposed || verdict === "cancelled") return false;
       if (verdict === "busy") {
         // Nothing left to roll, so nothing to wait for.
         if (this.#optedIn().length === 0) {
@@ -284,6 +285,7 @@ export class AutoRolloverService {
     window.clearTimeout(this.#delayTimer);
     this.#delayTimer = undefined;
     this.#wake?.();
+    this.#unload.abort();
     for (const stop of this.#stops.splice(0)) stop();
   }
 }

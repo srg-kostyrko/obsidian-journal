@@ -178,6 +178,23 @@ function holdLock(locks: MoveLocks, journalName: string): () => void {
   return held.resolve;
 }
 
+// Subscriptions to the notes' events made from here on that are still live.
+function liveListeners(notes: FakeNotesService): () => number {
+  const on = notes.events.on.bind(notes.events);
+  let live = 0;
+  vi.spyOn(notes.events, "on").mockImplementation((event, callback) => {
+    const off = on(event, callback);
+    live += 1;
+    let stopped = false;
+    return () => {
+      if (!stopped) live -= 1;
+      stopped = true;
+      off();
+    };
+  });
+  return () => live;
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date(2026, 9, 21, 9, 0, 0));
@@ -953,6 +970,27 @@ describe("AutoRolloverService", () => {
     expect(vi.getTimerCount()).toBe(0);
     await vi.advanceTimersByTimeAsync(SETTLE);
 
+    expect(calls("daily")).toBe(0);
+  });
+
+  it("unloading while waiting for quiet leaves no timer or listener behind", async () => {
+    const { put, calls, index, notes, service } = await autoFor({
+      daily: automatic("daily"),
+      work: dayJournal("work"),
+    });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    const live = liveListeners(notes);
+
+    index.markReady();
+    await vi.advanceTimersByTimeAsync(RESUME_DELAY_MS + 1000);
+    expect(live()).toBe(4);
+    service[Symbol.dispose]();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(vi.getTimerCount()).toBe(0);
+    expect(live()).toBe(0);
+    await vi.advanceTimersByTimeAsync(SETTLE);
     expect(calls("daily")).toBe(0);
   });
 });

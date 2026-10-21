@@ -21,12 +21,31 @@ async function setup(): Promise<{ quiet: QuietWindow; notes: FakeNotesService }>
   return { quiet: harness.resolve(QuietWindow), notes };
 }
 
-function settled(promise: Promise<"quiet" | "busy">): { value: "quiet" | "busy" | null } {
-  const state: { value: "quiet" | "busy" | null } = { value: null };
+type Verdict = "quiet" | "busy" | "cancelled";
+
+function settled(promise: Promise<Verdict>): { value: Verdict | null } {
+  const state: { value: Verdict | null } = { value: null };
   void promise.then((value) => {
     state.value = value;
   });
   return state;
+}
+
+// Subscriptions to the notes' events made from here on that are still live.
+function liveListeners(notes: FakeNotesService): () => number {
+  const on = notes.events.on.bind(notes.events);
+  let live = 0;
+  vi.spyOn(notes.events, "on").mockImplementation((event, callback) => {
+    const off = on(event, callback);
+    live += 1;
+    let stopped = false;
+    return () => {
+      if (!stopped) live -= 1;
+      stopped = true;
+      off();
+    };
+  });
+  return () => live;
 }
 
 afterEach(() => {
@@ -101,6 +120,36 @@ describe("QuietWindow", () => {
     expectOk(await notes.create("Daily/2026-10-22.md" as VaultPath, ""));
     expectOk(await notes.delete("Daily/2026-10-22.md" as VaultPath));
 
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("an abort ends the wait cancelled and leaves no timer or listener behind", async () => {
+    const { quiet, notes } = await setup();
+    const live = liveListeners(notes);
+    const controller = new AbortController();
+    const result = settled(quiet.wait(controller.signal));
+    const other = settled(quiet.wait());
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(live()).toBe(8);
+
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(result.value).toBe("cancelled");
+    expect(live()).toBe(4);
+    expect(vi.getTimerCount()).toBe(2);
+    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    expect(other.value).toBe("quiet");
+  });
+
+  it("an already aborted signal waits for nothing", async () => {
+    const { quiet, notes } = await setup();
+    const live = liveListeners(notes);
+    const result = settled(quiet.wait(AbortSignal.abort()));
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(result.value).toBe("cancelled");
+    expect(live()).toBe(0);
     expect(vi.getTimerCount()).toBe(0);
   });
 
