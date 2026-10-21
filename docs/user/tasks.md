@@ -737,7 +737,8 @@ what was copied. The tasks
 are then in both notes: mark or remove the originals by hand, or delete the copies from the current
 note, then run **Roll over unfinished tasks**. A run of that command that reads every earlier note — none still being indexed or unreadable — and
 updates every one it took from resumes automatic rolling for the journal; otherwise it stays paused until Obsidian
-restarts.
+restarts. A run of the command that itself leaves an earlier note not updated pauses an automatic journal in the
+same way, with the same notice after the command's own. Renaming a paused journal keeps it paused.
 
 **Two devices.** Each device rolls on its own; nothing records which one rolled. A device that has
 already received the other's roll by sync finds the tasks marked or removed and takes nothing. Two

@@ -1299,7 +1299,11 @@ in the source, so automatic rollover requires **move**, or **copy with
 stamping**. Copy without a stamp would re-take every item at every checkpoint.
 The journal's settings refuse to turn it on in that combination; a journal that
 reaches it later (a global default changed underneath it) is skipped, with one
-notice per session.
+notice per session. The guard is read twice: before the roll is queued, and
+again by the roll itself once it holds the journal's move lock
+(`requireAutomatic`), since a setting can change while it waits behind another
+move; a roll that finds the journal blocked or no longer automatic there writes
+nothing.
 
 **Determinism.** There is no device distinction and no assumption about the
 sync tool. Any signal a second device could consult — a stamp, a removal, a
@@ -1356,7 +1360,10 @@ pause lifts when a roll of the journal — in practice the manual command —
 finishes with every source read and written — none changed, failed, still
 indexing or unreadable, since a skipped source may be the very note the pause
 is about (`RolloverService` emits `rolled` on every finished roll) — and
-otherwise lasts until restart.
+otherwise lasts until restart. A manual roll of an automatic journal that leaves
+a source failed or changed pauses it the same way, its pause notice following
+the command's own. Both pauses, and the once-per-session record of what was
+announced, follow the journal through a rename.
 
 ## Build order
 
