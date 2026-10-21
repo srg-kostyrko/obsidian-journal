@@ -2661,7 +2661,7 @@
   ],
   "tasks_roll_nothing": "В заметке за {oldest} нет незавершённых задач.",
   "tasks_roll_no_previous": "Нет более ранней заметки, из которой можно перенести задачи.",
-  "tasks_roll_missing_heading": "В заметке за {date} нет заголовка {heading}. Проверьте фильтр задач журнала.",
+  "tasks_roll_missing_heading": "В заметке за {date} нет заголовка {heading}. Проверьте фильтр списка журнала.",
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
@@ -2686,6 +2686,8 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "Заметка за {date} изменилась во время переноса. Выполните команду ещё раз.",
+  "tasks_roll_source_changed": "Заметка за {date} изменилась во время переноса. Её задачи скопированы, но не отмечены как перенесённые.",
+  "tasks_roll_source_write_failed": "Не удалось отметить заметку за {date} как перенесённую. Её задачи скопированы и могут быть перенесены повторно.",
+  "tasks_roll_source_indexing": "Заметка за {date} ещё индексируется. Попробуйте ещё раз чуть позже.",
   "tasks_listing_empty": "Нет задач, соответствующих этому запросу."
 }

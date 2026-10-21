@@ -11,7 +11,7 @@ import {
   type NoteWriteError,
   type VaultPath,
 } from "@/infrastructure/host";
-import { AsyncResult, attempt, Err, type Result } from "@/infrastructure/result";
+import { AsyncResult, attempt, type Result } from "@/infrastructure/result";
 import { CycleService } from "@/journals/cycle";
 import { JournalNotFoundError } from "@/journals/errors";
 import { EnsureJournalEntryFlow } from "@/journals/flows";
@@ -93,6 +93,7 @@ export class RolloverService {
   readonly #host = inject(TaskHostToken);
   readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #defaults = inject(SettingsService).getSlice(moveDefaultsSlice);
+  readonly #running = new Map<string, Promise<unknown>>();
   readonly #listing: TaskListingDependencies = {
     journals: this.#journals,
     index: this.#index,
@@ -139,13 +140,15 @@ export class RolloverService {
     return [...note, ...notelets];
   }
 
-  // A note whose structure has not resolved, or lags its text, is skipped rather than planned: an
-  // empty plan would read as "nothing to roll", a stale one rolls the wrong lines.
-  async #readSource(path: VaultPath): Promise<RollSource | null> {
+  // A note whose structure has not resolved, or lags its text, is not planned: an empty plan would
+  // read as "nothing to roll", a stale one rolls the wrong lines.
+  async #readSource(path: VaultPath): Promise<RollSource | "indexing" | null> {
     const content = await this.#notes.read(path);
+    if (content.isErr()) return null;
     const structure = this.#structure.get(path);
-    if (content.isErr() || structure.isNone()) return null;
-    if (!inSync(content.value, structure.value, this.#checkbox.state.rolledMarker)) return null;
+    if (structure.isNone() || !inSync(content.value, structure.value, this.#checkbox.state.rolledMarker)) {
+      return "indexing";
+    }
     return { path, content: content.value, structure: structure.value, items: this.#itemsOf(path, structure.value) };
   }
 
@@ -194,13 +197,10 @@ export class RolloverService {
   }
 
   // Counted through the listing, not a query of our own, so the count matches what the period shows.
-  async #openNoteItems(
-    journalName: string,
-    anchors: readonly AnchorString[],
-    source: EffectiveMove["source"],
-  ): Promise<number> {
+  // No source scope: a task note is reached by its date, which the listing never scopes by source.
+  async #openNoteItems(journalName: string, anchors: readonly AnchorString[]): Promise<number> {
     const query = v.parse(taskQuerySchema, {
-      scope: { provider: [NOTE_PROPERTY_PROVIDER_ID], source, depth: "literal" },
+      scope: { provider: [NOTE_PROPERTY_PROVIDER_ID], depth: "literal" },
       filter: { mode: "and", conditions: [DEFAULT_STATUS_CONDITION] },
     });
     const keys = new Set<string>();
@@ -219,7 +219,7 @@ export class RolloverService {
     return keys.size;
   }
 
-  roll(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
+  #rollNow(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
     return attempt.in(this, async function* (this: RolloverService) {
       const config = yield* this.#journals.get(journalName).okOr(new JournalNotFoundError(journalName));
       const today = yield* this.#todayAnchor(journalName);
@@ -229,16 +229,19 @@ export class RolloverService {
       const read = this.#lookBack(journalName, today, move.lookBack);
 
       const plans: AnchoredPlan[] = [];
+      const indexing = new Set<AnchorString>();
       for (const anchor of read) {
         for (const path of this.#sourcePaths(journalName, anchor, move.source)) {
           const source = await this.#readSource(path);
-          if (source === null) continue;
+          if (source === "indexing") indexing.add(anchor);
+          if (source === null || source === "indexing") continue;
           plans.push({ anchor, plan: planSource(source, { selection, mode: move.mode, rolledMarker: marker }) });
         }
       }
       const contributing = plans.filter(({ plan }) => plan.roots.length > 0);
 
       const changedSources: ChangedSource[] = [];
+      const failedSources: ChangedSource[] = [];
       if (contributing.length > 0) {
         const target = yield* this.#targetPath(journalName, today, options.interactive);
         const groups = contributing.flatMap(({ plan }) => plan.block);
@@ -246,13 +249,12 @@ export class RolloverService {
         yield* this.#notes.process(target, (content) => placeGroups(content, groups, move.targetHeading));
         const rewrite = sourceRewrite(move, marker);
         if (rewrite !== null) {
-          let failure: NoteNotFoundError | NoteWriteError | undefined;
+          // A failed source is reported, not raised: its items already sit in the target.
           for (const { anchor, plan } of contributing) {
             const outcome = await this.#rewrite(plan.path, plan.roots, rewrite);
-            if (outcome.isErr()) failure ??= outcome.error;
+            if (outcome.isErr()) failedSources.push({ path: plan.path, anchor });
             else if (outcome.value === "changed") changedSources.push({ path: plan.path, anchor });
           }
-          if (failure !== undefined) return yield* new Err(failure);
         }
       }
 
@@ -272,11 +274,29 @@ export class RolloverService {
                 return atAnchor.length > 0 && atAnchor.every(({ plan }) => plan.selectionMissedHeading);
               }),
         heading,
-        skippedNoteItems: await this.#openNoteItems(journalName, read, move.source),
+        skippedNoteItems: await this.#openNoteItems(journalName, read),
         skippedBlockIds: plans.reduce((sum, { plan }) => sum + plan.refusedForBlockId.length, 0),
         changedSources,
+        failedSources,
+        skippedSources: read.filter((anchor) => indexing.has(anchor)),
       };
       return report;
     });
+  }
+
+  // One roll per journal at a time: a second one planned before the first wrote would read the same
+  // open lines and copy them again.
+  roll(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
+    const previous = this.#running.get(journalName) ?? Promise.resolve();
+    const run = attempt.in(this, async function* (this: RolloverService) {
+      await previous;
+      return yield* this.#rollNow(journalName, options);
+    });
+    const settled = Promise.resolve(run);
+    this.#running.set(journalName, settled);
+    void settled.then(() => {
+      if (this.#running.get(journalName) === settled) this.#running.delete(journalName);
+    });
+    return run;
   }
 }

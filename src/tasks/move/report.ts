@@ -26,6 +26,14 @@ export interface RollReport {
   readonly skippedBlockIds: number;
   // Refused because the text no longer matched the plan; their items reached the target anyway.
   readonly changedSources: readonly ChangedSource[];
+  // The source write failed; their items reached the target and are not marked as rolled.
+  readonly failedSources: readonly ChangedSource[];
+  // Anchors with a note whose metadata had not caught up with its text, so it was not read.
+  readonly skippedSources: readonly AnchorString[];
+}
+
+function uniqueAnchors(sources: readonly ChangedSource[]): readonly AnchorString[] {
+  return [...new Set(sources.map((source) => source.anchor))];
 }
 
 function outcomeSentence(report: RollReport): string | null {
@@ -34,22 +42,23 @@ function outcomeSentence(report: RollReport): string | null {
   if (report.rolled > 0 && oldest !== undefined) {
     return m.tasks_roll_done({ count: report.rolled, notes: report.notes, oldest });
   }
-  // A missing heading already says why nothing rolled; "no unfinished tasks" would contradict it.
-  if (report.missingHeading.length > 0) return null;
-  const firstRead = report.read.at(0);
-  return firstRead === undefined ? null : m.tasks_roll_nothing({ oldest: firstRead });
+  // An anchor with a sentence of its own explaining why nothing came from it is not "empty".
+  const explained = new Set([...report.missingHeading, ...report.skippedSources]);
+  const firstEmpty = report.read.find((anchor) => !explained.has(anchor));
+  return firstEmpty === undefined ? null : m.tasks_roll_nothing({ oldest: firstEmpty });
 }
 
 /** The notice summarizing a roll, one sentence per outcome in a fixed order. */
 export function rollNotice(report: RollReport): string {
   const heading = report.heading;
-  const changedAnchors = [...new Set(report.changedSources.map((source) => source.anchor))];
   return [
     outcomeSentence(report),
     ...(heading === null ? [] : report.missingHeading.map((date) => m.tasks_roll_missing_heading({ heading, date }))),
     report.skippedNoteItems > 0 ? m.tasks_roll_note_items_skipped({ count: report.skippedNoteItems }) : null,
     report.skippedBlockIds > 0 ? m.tasks_roll_block_ids_skipped({ count: report.skippedBlockIds }) : null,
-    ...changedAnchors.map((date) => m.tasks_roll_source_changed({ date })),
+    ...uniqueAnchors(report.changedSources).map((date) => m.tasks_roll_source_changed({ date })),
+    ...uniqueAnchors(report.failedSources).map((date) => m.tasks_roll_source_write_failed({ date })),
+    ...report.skippedSources.map((date) => m.tasks_roll_source_indexing({ date })),
   ]
     .filter((sentence): sentence is string => sentence !== null)
     .join(" ");

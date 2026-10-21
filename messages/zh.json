@@ -2567,7 +2567,7 @@
   ],
   "tasks_roll_nothing": "{oldest} 的笔记中没有未完成的任务。",
   "tasks_roll_no_previous": "没有可从中结转任务的更早笔记。",
-  "tasks_roll_missing_heading": "{date} 的笔记中没有 {heading} 标题。请检查该日记的任务筛选条件。",
+  "tasks_roll_missing_heading": "{date} 的笔记中没有 {heading} 标题。请检查该日记的列表筛选条件。",
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],
@@ -2588,6 +2588,8 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "{date} 的笔记在结转过程中发生了更改。请重新运行该命令。",
+  "tasks_roll_source_changed": "{date} 的笔记在结转过程中发生了更改。其任务已复制，但未标记为已结转。",
+  "tasks_roll_source_write_failed": "无法将 {date} 的笔记标记为已结转。其任务已复制，可能会再次结转。",
+  "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

@@ -2653,7 +2653,7 @@
   ],
   "tasks_roll_nothing": "У нотатці за {oldest} немає незавершених завдань.",
   "tasks_roll_no_previous": "Немає ранішої нотатки, з якої можна перенести завдання.",
-  "tasks_roll_missing_heading": "У нотатці за {date} немає заголовка {heading}. Перевірте фільтр завдань журналу.",
+  "tasks_roll_missing_heading": "У нотатці за {date} немає заголовка {heading}. Перевірте фільтр списку журналу.",
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
@@ -2678,6 +2678,8 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "Нотатка за {date} змінилася під час перенесення. Виконайте команду ще раз.",
+  "tasks_roll_source_changed": "Нотатка за {date} змінилася під час перенесення. Її завдання скопійовано, але не позначено як перенесені.",
+  "tasks_roll_source_write_failed": "Не вдалося позначити нотатку за {date} як перенесену. Її завдання скопійовано, і їх може бути перенесено повторно.",
+  "tasks_roll_source_indexing": "Нотатка за {date} ще індексується. Спробуйте ще раз трохи згодом.",
   "tasks_listing_empty": "Немає завдань, що відповідають цьому запиту."
 }

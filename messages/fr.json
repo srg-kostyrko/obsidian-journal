@@ -2584,7 +2584,7 @@
   ],
   "tasks_roll_nothing": "Aucune tâche non terminée dans la note du {oldest}.",
   "tasks_roll_no_previous": "Aucune note antérieure dont reporter les tâches.",
-  "tasks_roll_missing_heading": "Aucun en-tête {heading} dans la note du {date}. Vérifiez le filtre de tâches du journal.",
+  "tasks_roll_missing_heading": "Aucun en-tête {heading} dans la note du {date}. Vérifiez le filtre de la liste du journal.",
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],
@@ -2605,6 +2605,8 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "La note du {date} a été modifiée pendant le report. Relancez la commande.",
+  "tasks_roll_source_changed": "La note du {date} a été modifiée pendant le report. Ses tâches ont été copiées, mais pas marquées comme reportées.",
+  "tasks_roll_source_write_failed": "La note du {date} n’a pas pu être marquée comme reportée. Ses tâches ont été copiées et pourraient être reportées à nouveau.",
+  "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
   "tasks_listing_empty": "Aucune tâche ne correspond à cette requête."
 }

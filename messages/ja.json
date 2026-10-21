@@ -2573,7 +2573,7 @@
   ],
   "tasks_roll_nothing": "{oldest}のノートに未完了のタスクはありません。",
   "tasks_roll_no_previous": "タスクを繰り越せる以前のノートがありません。",
-  "tasks_roll_missing_heading": "{date}のノートに見出し{heading}がありません。ジャーナルのタスクフィルターを確認してください。",
+  "tasks_roll_missing_heading": "{date}のノートに見出し{heading}がありません。ジャーナルの一覧フィルターを確認してください。",
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],
@@ -2594,6 +2594,8 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "繰り越し中に{date}のノートが変更されました。もう一度コマンドを実行してください。",
+  "tasks_roll_source_changed": "繰り越し中に{date}のノートが変更されました。タスクはコピーされましたが、繰り越し済みとしてマークされていません。",
+  "tasks_roll_source_write_failed": "{date}のノートを繰り越し済みとしてマークできませんでした。タスクはコピーされたため、再度繰り越される可能性があります。",
+  "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_listing_empty": "このクエリに一致するタスクはありません。"
 }

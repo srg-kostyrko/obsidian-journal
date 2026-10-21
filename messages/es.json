@@ -2573,7 +2573,7 @@
   ],
   "tasks_roll_nothing": "No hay tareas pendientes en la nota del {oldest}.",
   "tasks_roll_no_previous": "No hay ninguna nota anterior desde la que trasladar tareas.",
-  "tasks_roll_missing_heading": "No hay ningún encabezado {heading} en la nota del {date}. Comprueba el filtro de tareas del diario.",
+  "tasks_roll_missing_heading": "No hay ningún encabezado {heading} en la nota del {date}. Comprueba el filtro de listado del diario.",
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],
@@ -2594,6 +2594,8 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "La nota del {date} cambió durante el traslado. Vuelve a ejecutar el comando.",
+  "tasks_roll_source_changed": "La nota del {date} cambió durante el traslado. Sus tareas se copiaron, pero no se marcaron como trasladadas.",
+  "tasks_roll_source_write_failed": "No se pudo marcar la nota del {date} como trasladada. Sus tareas se copiaron y podrían volver a trasladarse.",
+  "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
   "tasks_listing_empty": "Ninguna tarea coincide con esta consulta."
 }

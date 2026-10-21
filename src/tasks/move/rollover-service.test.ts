@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { anchor } from "@/calendar/testing";
 import { m } from "@/i18n";
+import { UserAborted } from "@/infrastructure/flows";
 import {
+  NoteNotFoundError,
   NoteStructureService,
   NotesService,
   NoteWriteError,
@@ -53,11 +55,17 @@ function structureOf(text: string): NoteStructure {
   };
 }
 
-function dayJournal(name: string, move: Partial<JournalMoveConfig> = {}, filter?: TaskRule): JournalConfig {
+function dayJournal(
+  name: string,
+  move: Partial<JournalMoveConfig> = {},
+  filter?: TaskRule,
+  overrides: Partial<JournalConfig> = {},
+): JournalConfig {
   return fixedJournal(
     name,
     { type: "day" },
     {
+      ...overrides,
       folder: name,
       tasks: {
         providers: {},
@@ -91,6 +99,13 @@ async function rolloverFor(journals: Record<string, JournalConfig>) {
     index.register({ kind: "notelet", journalName, anchor: anchor(at), path, typeName: "Meeting", typeId: null });
     return path;
   };
+  // Indexed, but metadataCache has not parsed it yet.
+  const putUnparsed = (journalName: string, at: string, text: string): VaultPath => {
+    const path = `${journalName}/${at}.md` as VaultPath;
+    notes.seed(path, text);
+    index.register({ journalName, anchor: anchor(at), path });
+    return path;
+  };
   const text = async (path: VaultPath): Promise<string> => {
     const result = await notes.read(path);
     expectOk(result);
@@ -100,6 +115,12 @@ async function rolloverFor(journals: Record<string, JournalConfig>) {
   const resolveMetadata = async (): Promise<void> => {
     for (const path of notes.allMarkdownNotes()) structures.setStructure(path, structureOf(await text(path)));
   };
+  // metadataCache re-parsing each note as soon as it is written.
+  const followWrites = (): void => {
+    notes.events.on("metadata-changed", (path) => {
+      void notes.read(path).tap((content) => structures.setStructure(path, structureOf(content)));
+    });
+  };
   const service = harness.resolve(RolloverService);
   const roll = async (interactive = true): Promise<RollReport> => {
     const result = await service.roll("daily", { interactive });
@@ -107,8 +128,11 @@ async function rolloverFor(journals: Record<string, JournalConfig>) {
     return result.value;
   };
   return {
+    harness,
     service,
     roll,
+    putUnparsed,
+    followWrites,
     tasks: harness.resolve(TaskIndex),
     checkbox: harness.resolve(SettingsService).getSlice(checkboxSlice),
     notes,
@@ -132,6 +156,8 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     skippedNoteItems: 0,
     skippedBlockIds: 0,
     changedSources: [],
+    failedSources: [],
+    skippedSources: [],
     ...overrides,
   };
 }
@@ -249,7 +275,56 @@ describe("RolloverService", () => {
 
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     expect(await text(source)).toBe("- [ ] Call Bob #rolled\n");
-    expect(second).toMatchObject({ rolled: 0, read: ["2026-10-20"] });
+    expect(second).toMatchObject({ rolled: 0, read: ["2026-10-20"], skippedSources: ["2026-10-20"] });
+  });
+
+  it("reports a source still being indexed instead of calling it empty", async () => {
+    const { roll, put, putUnparsed, text } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
+    put("daily", "2026-10-19", "- [x] Done thing\n");
+    const unparsed = putUnparsed("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(target)).toBe("");
+    expect(await text(unparsed)).toBe("- [ ] Call Bob\n");
+    expect(rollNotice(report)).toBe(
+      [m.tasks_roll_nothing({ oldest: "2026-10-19" }), m.tasks_roll_source_indexing({ date: "2026-10-20" })].join(" "),
+    );
+  });
+
+  it("a second roll started during the first waits for it and rolls nothing", async () => {
+    const { service, put, text, followWrites } = await rolloverFor({ daily: dayJournal("daily") });
+    followWrites();
+    put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
+    const target = put("daily", TODAY, "");
+
+    const [first, second] = await Promise.all([
+      service.roll("daily", { interactive: true }),
+      service.roll("daily", { interactive: true }),
+    ]);
+
+    expectOk(first);
+    expectOk(second);
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    expect(rollNotice(second.value)).toBe(m.tasks_roll_nothing({ oldest: "2026-10-20" }));
+  });
+
+  it("cancelling the creation prompt writes nothing", async () => {
+    const { service, put, text, notes, harness } = await rolloverFor({
+      daily: dayJournal("daily", {}, undefined, { confirmCreation: true }),
+    });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+
+    const pending = service.roll("daily", { interactive: true });
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen<unknown, boolean>().submit(false);
+    const result = await pending;
+
+    expectErr(result);
+    expect(result.error).toBeInstanceOf(UserAborted);
+    expect(await text(source)).toBe("- [ ] Call Bob\n");
+    expect(notes.find(`daily/${TODAY}.md` as VaultPath).isNone()).toBe(true);
   });
 
   it("move mode removes the subtree from the source and keeps context", async () => {
@@ -293,20 +368,57 @@ describe("RolloverService", () => {
   });
 
   it("writes the target before any source", async () => {
-    const { service, put, text, notes } = await rolloverFor({ daily: dayJournal("daily") });
-    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
+    const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 3 }) });
+    const first = put("daily", "2026-10-18", "- [ ] One\n");
+    const failing = put("daily", "2026-10-19", "- [ ] Two\n- [x] Done thing\n");
+    const third = put("daily", "2026-10-20", "- [ ] Three\n");
     const target = put("daily", TODAY, "");
     const process = notes.process.bind(notes);
     vi.spyOn(notes, "process").mockImplementation((path, transform) =>
-      path === source ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
+      path === failing ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
     );
 
-    const result = await service.roll("daily", { interactive: true });
+    const report = await roll();
 
-    expectErr(result);
-    expect(result.error).toBeInstanceOf(NoteWriteError);
-    expect(await text(target)).toBe("- [ ] Call Bob\n");
-    expect(await text(source)).toBe("- [ ] Call Bob\n- [x] Done thing\n");
+    expect(await text(target)).toBe("- [ ] One\n- [ ] Two\n- [ ] Three\n");
+    expect(await text(first)).toBe("- [ ] One #rolled\n");
+    expect(await text(failing)).toBe("- [ ] Two\n- [x] Done thing\n");
+    expect(await text(third)).toBe("- [ ] Three #rolled\n");
+    expect(report.failedSources).toEqual([{ path: failing, anchor: "2026-10-19" }]);
+  });
+
+  describe("a target write that fails", () => {
+    it("leaves every source byte-identical when the write is refused", async () => {
+      const { service, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { lookBack: 2 }) });
+      const older = put("daily", "2026-10-19", "- [ ] One\n");
+      const newer = put("daily", "2026-10-20", "- [ ] Two\n");
+      const target = put("daily", TODAY, "# Today\n");
+      const process = notes.process.bind(notes);
+      vi.spyOn(notes, "process").mockImplementation((path, transform) =>
+        path === target ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
+      );
+
+      const result = await service.roll("daily", { interactive: true });
+
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(NoteWriteError);
+      expect(await text(older)).toBe("- [ ] One\n");
+      expect(await text(newer)).toBe("- [ ] Two\n");
+    });
+
+    it("leaves every source byte-identical when the target vanished", async () => {
+      const { service, put, text, harness } = await rolloverFor({ daily: dayJournal("daily") });
+      const source = put("daily", "2026-10-20", "- [ ] One\n");
+      harness
+        .resolve(JournalsIndex)
+        .register({ journalName: "daily", anchor: anchor(TODAY), path: `daily/${TODAY}.md` as VaultPath });
+
+      const result = await service.roll("daily", { interactive: true });
+
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(NoteNotFoundError);
+      expect(await text(source)).toBe("- [ ] One\n");
+    });
   });
 
   it("a source edited between read and write is reported and not rewritten", async () => {
@@ -332,6 +444,13 @@ describe("RolloverService", () => {
     const { roll, put, text, tasks } = await rolloverFor({ daily: dayJournal("daily") });
     const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
     put("daily", TODAY, "");
+    tasks.publish("checkbox", { path: source }, [
+      buildTaskItem({
+        path: source,
+        key: `${source}:0`,
+        display: { kind: "line", path: source, line: 0, endLine: 0, parentLine: null, markdown: "- [ ] Call Bob" },
+      }),
+    ]);
     const taskNote = (path: string, status: "todo" | "done", scheduled: string) =>
       buildTaskItem({
         provider: NOTE_PROPERTY_PROVIDER_ID,
@@ -401,6 +520,8 @@ describe("rollNotice", () => {
       skippedNoteItems: 2,
       skippedBlockIds: 1,
       changedSources: [{ path: "daily/2026-10-20.md" as VaultPath, anchor: anchor("2026-10-20") }],
+      failedSources: [{ path: "daily/2026-10-18.md" as VaultPath, anchor: anchor("2026-10-18") }],
+      skippedSources: [anchor("2026-10-17")],
     });
 
     expect(rollNotice(report)).toBe(
@@ -410,6 +531,8 @@ describe("rollNotice", () => {
         m.tasks_roll_note_items_skipped({ count: 2 }),
         m.tasks_roll_block_ids_skipped({ count: 1 }),
         m.tasks_roll_source_changed({ date: "2026-10-20" }),
+        m.tasks_roll_source_write_failed({ date: "2026-10-18" }),
+        m.tasks_roll_source_indexing({ date: "2026-10-17" }),
       ].join(" "),
     );
   });

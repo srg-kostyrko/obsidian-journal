@@ -2586,7 +2586,7 @@
   ],
   "tasks_roll_nothing": "No unfinished tasks in {oldest}.",
   "tasks_roll_no_previous": "There is no earlier note to roll tasks from.",
-  "tasks_roll_missing_heading": "No {heading} heading in {date}. Check the journal's task filter.",
+  "tasks_roll_missing_heading": "No {heading} heading in {date}. Check the journal's listing filter.",
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],
@@ -2607,6 +2607,8 @@
       }
     }
   ],
-  "tasks_roll_source_changed": "{date} changed while rolling. Run the command again.",
+  "tasks_roll_source_changed": "{date} changed while rolling. Its tasks were copied but not marked as rolled.",
+  "tasks_roll_source_write_failed": "{date} could not be marked as rolled. Its tasks were copied and may roll again.",
+  "tasks_roll_source_indexing": "{date} is still being indexed. Try again in a moment.",
   "tasks_listing_empty": "No tasks match this query."
 }
