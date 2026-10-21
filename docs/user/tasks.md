@@ -641,9 +641,10 @@ that journal. **Edit** opens:
 - **Copy or move** and **Mark as rolled** — **Default** follows the setting above; pick a value to set
   this journal's own.
 - **Source** — **Note only** (the default), **Notelets only**, or **Note and notelets**: which of the
-  earlier periods' notes to take tasks from, the period note or its [notelets](/notelets). With
-  notelets in the source, a period that holds only notelets, and no period note, still counts as an
-  earlier note. Tasks always land in today's period note, never in a notelet.
+  earlier periods' notes to take tasks from, the period note or its [notelets](/notelets). The
+  earlier notes counted are the ones the source reads: under **Notelets only**, periods with a
+  notelet, so a period with only its period note is skipped; under **Note and notelets**, periods
+  with either, so one holding only notelets still counts. Tasks always land in today's period note, never in a notelet.
 - **Target heading** — the heading tasks go under when the heading they came from is not in today's
   note. Type the heading's text; leading `#` markers are dropped.
 - **Look back** — how many earlier notes to take tasks from, 1 by default. Each is an existing note, so

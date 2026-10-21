@@ -110,17 +110,17 @@ export class RolloverService {
       .okOr(new NoCurrentPeriodError(journalName));
   }
 
-  // A notelet needs no period note at its anchor, so a source that reads notelets steps over the
-  // anchors holding either kind.
+  // A step is an anchor holding what the source reads: a notelet needs no period note at its anchor,
+  // and a period note alone gives a notelets-only roll nothing.
   #previousAnchor(journalName: string, from: AnchorString, source: EffectiveMove["source"]): Option<AnchorString> {
+    const notelet = this.#index.previousNoteletAnchor(journalName, from);
+    if (source === "notelets") return notelet;
     const note = this.#index
       .findPrevious(journalName, from)
       .flatMap((path) => this.#index.entryByPath(path))
       .map((entry) => entry.anchor);
-    if (source === "note") return note;
-    const notelet = this.#index.previousNoteletAnchor(journalName, from);
+    if (source === "note" || notelet.isNone()) return note;
     if (note.isNone()) return notelet;
-    if (notelet.isNone()) return note;
     return note.value > notelet.value ? note : notelet;
   }
 

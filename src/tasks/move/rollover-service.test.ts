@@ -252,6 +252,20 @@ describe("RolloverService", () => {
     expect(report).toMatchObject({ rolled: 1, sources: ["2026-10-20"], read: ["2026-10-20"] });
   });
 
+  it("notelets as the source step over a day holding only a period note", async () => {
+    const { roll, put, putNotelet, text } = await rolloverFor({ daily: dayJournal("daily", { source: "notelets" }) });
+    putNotelet("daily", "2026-10-19", "a", "- [ ] From a\n");
+    const day = put("daily", "2026-10-20", "- [ ] From day\n");
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(target)).toBe("- [ ] From a\n");
+    expect(await text(day)).toBe("- [ ] From day\n");
+    expect(report).toMatchObject({ rolled: 1, sources: ["2026-10-19"], read: ["2026-10-19"] });
+    expect(rollNotice(report)).toBe(m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-19" }));
+  });
+
   it("note and notelets count a notelet-only day as one the look-back reads", async () => {
     const { roll, put, putNotelet, text } = await rolloverFor({
       daily: dayJournal("daily", { source: "both", lookBack: 2 }),
