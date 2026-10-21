@@ -606,8 +606,8 @@ that day held, and its line gets the **Rolled marker** — `#rolled` unless you 
 - [ ] Call the bank #rolled
 ```
 
-A rolled-over task is neither open nor done: it leaves open listings, stops lighting the calendar, and
-is not taken again by the next roll. The marker is a tag, so your own Dataview, Tasks or search queries
+A rolled-over task is neither open nor done: it leaves open listings, stops lighting the calendar's
+open-task dots, and is not taken again by the next roll. The marker is a tag, so your own Dataview, Tasks or search queries
 can exclude it too. A block id stays at the end of the line, after the marker, and the copy in today's
 note drops it, so links to the block keep pointing at the original. Only the top task of each rolled
 group is marked; the lines under it are kept from rolling again by having a rolled-over parent.
@@ -650,11 +650,14 @@ that journal. **Edit** opens:
 The notice names how many tasks rolled and the oldest note they came from, or that the earlier note held
 no unfinished tasks. Two other cases are worth knowing:
 
-- **"No Tasks heading in …"** — the listing filter names a heading the earlier note does not have, so
-  nothing could match. Usually the heading was renamed in the template or misspelled in the filter.
+- **"No Tasks heading in …"** — the earlier note has none of the headings the listing filter's
+  **Under** conditions name, so nothing could match. The notice names the first of them. Usually the
+  heading was renamed in the template or misspelled in the filter.
 - **"… changed while rolling"** or **"… could not be marked as rolled"** — the tasks reached today's note
-  but the earlier note was left as it was, so they would roll again. Mark or remove the originals by
-  hand, or delete the copies.
+  but the earlier note was left as it was, so they would roll again. Under **Move** the same two cases
+  read **"… changed while rolling"** and **"… could not be updated"**, and say the tasks were copied
+  but are still in the earlier note too. Either way, mark or remove the originals by hand, or delete
+  the copies.
 
 The command writes today's note before it touches the earlier one, so a failure part-way leaves a task
 in both notes, never in neither.

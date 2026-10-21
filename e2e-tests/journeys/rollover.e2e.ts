@@ -16,15 +16,25 @@ const SOURCE = `daily/${SOURCE_DATE}.md`;
 const TODAY = "2026-09-26";
 const TARGET = `daily/${TODAY}.md`;
 
+class NoteMissingError extends Error {
+  constructor(path: string) {
+    super(`expected ${path} to exist`);
+    this.name = "NoteMissingError";
+  }
+}
+
+// WebDriver serializes a missing note's undefined as null, so the guard has to reject both.
 async function readNote(path: string): Promise<string> {
   const content = await contentOf(path);
-  expect(content).toBeDefined();
-  return content ?? "";
+  if (content === undefined || content === null) throw new NoteMissingError(path);
+  return content;
 }
 
 describe("rolling unfinished tasks forward", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    // The roll reads today when the command runs, so pinning it after boot is enough to fix the
+    // target period, and with it the target note's path.
     await pinClock(`${TODAY}T12:00:00`);
   });
 

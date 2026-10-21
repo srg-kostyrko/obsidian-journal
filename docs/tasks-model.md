@@ -1010,12 +1010,15 @@ That makes copy mode the worse of the two by default: links silently start
 pointing somewhere the user never chose. Dropping it leaves every existing link
 resolving to the source line, which in copy mode is still there.
 
-**Move mode warns when a line carries one**, because removing it breaks every
-`[[note#^abc1234]]` that pointed at it. The warning cannot say how many:
+**Move mode does not remove a line that carries one**, because removing it breaks
+every `[[note#^abc1234]]` that pointed at it. A bulk roll in move mode leaves a
+root whose subtree carries a block id in the source and reports it; the
+single-item commands, where the user picked the line, warn instead. Neither can
+say how many links are at stake:
 `resolvedLinks` is `Record<path, Record<path, number>>` with no anchor
 information, `getBacklinksForFile` is not in the public typings, and reading
 `LinkCache.link` for every note is the whole-vault walk this plugin criticises
-other plugins for. So it says what is true and no more.
+other plugins for. So the report or warning says what is true and no more.
 
 **Reach is unbounded, and reported.** `JournalIndex.findPrevious` binary-searches
 the anchors of notes that _exist_, so it already spans gaps — after a two-week
@@ -1048,8 +1051,9 @@ from before" means.
 
 **No fold rule is needed.** Other plugins pick a winner when the same open item
 appears in several of the notes they read, because they leave nothing in the
-source to say it was taken. Here a taken item is stamped (copy) or removed
-(move), so it cannot be eligible twice. Two _different_ lines with the same text
+source to say it was taken. Here a taken item is stamped (copy, with stamping
+on) or removed (move), so it cannot be eligible twice. Copy with stamping off
+leaves nothing behind, and the next roll takes the same lines again. Two _different_ lines with the same text
 in different notes are two items, and both roll. In the target, items arrive
 oldest source note first, each note's items in their source order, so the same
 inputs always give the same text.

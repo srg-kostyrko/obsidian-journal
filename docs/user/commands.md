@@ -17,15 +17,15 @@ journals you want, and bind to hotkeys or the ribbon.
 
 ## Built-in commands
 
-| Command                                    | What it does                                                                                                    |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| **Open next note**, **Open previous note** | Opens the next or previous note that already exists in the open note's journal. Never creates one.              |
-| **Zoom out**, **Zoom in**                  | Opens the note one period length longer or shorter than the open note's. See [Zoom](#zoom).                     |
-| **Insert link to journal note**            | Asks for a journal and a date, and inserts a link to that note at the cursor.                                   |
-| **Connect note to a journal**              | Connects the open note to a journal and date. See [Notes](/notes#connect-note-to-a-journal).                    |
-| **Open** _view_                            | Opens a [view](/views).                                                                                         |
-| **Change shelf in** _view_                 | Picks the shelf an open view shows.                                                                             |
-| **Roll over unfinished tasks**             | Copies the open note's journal's unfinished tasks into today's note. See [Tasks](/tasks#rolling-tasks-forward). |
+| Command                                    | What it does                                                                                                                                                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Open next note**, **Open previous note** | Opens the next or previous note that already exists in the open note's journal. Never creates one.                                                                                                  |
+| **Zoom out**, **Zoom in**                  | Opens the note one period length longer or shorter than the open note's. See [Zoom](#zoom).                                                                                                         |
+| **Insert link to journal note**            | Asks for a journal and a date, and inserts a link to that note at the cursor.                                                                                                                       |
+| **Connect note to a journal**              | Connects the open note to a journal and date. See [Notes](/notes#connect-note-to-a-journal).                                                                                                        |
+| **Open** _view_                            | Opens a [view](/views).                                                                                                                                                                             |
+| **Change shelf in** _view_                 | Picks the shelf an open view shows.                                                                                                                                                                 |
+| **Roll over unfinished tasks**             | Rolls the open note's journal's unfinished tasks into today's note, copying or moving them; asks for a journal when the open note is not a journal note. See [Tasks](/tasks#rolling-tasks-forward). |
 
 The palette lists a command only where it can do something — **Open next note** only while a journal
 note is open, for example. A hotkey or ribbon button runs it anyway and shows a notice saying why nothing happened.
