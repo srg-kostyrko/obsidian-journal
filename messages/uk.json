@@ -2793,6 +2793,8 @@
   "tasks_roll_source_unread": "Не вдалося прочитати нотатку за {date}.",
   "tasks_move_pick_target": "До якої нотатки перемістити завдання?",
   "tasks_move_pick_journal": "До якого журналу перемістити завдання?",
+  "tasks_move_block_link_warning": "Це завдання має посилання на блок. Якщо його перемістити, посилання на нього перестануть працювати.",
+  "tasks_move_block_link_confirm": "Усе одно перемістити",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

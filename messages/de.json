@@ -2713,6 +2713,8 @@
   "tasks_roll_source_unread": "Die Notiz vom {date} konnte nicht gelesen werden.",
   "tasks_move_pick_target": "In welche Notiz soll die Aufgabe verschoben werden?",
   "tasks_move_pick_journal": "In welches Journal soll die Aufgabe verschoben werden?",
+  "tasks_move_block_link_warning": "Diese Aufgabe hat einen Blocklink. Wenn du sie verschiebst, funktionieren Links darauf nicht mehr.",
+  "tasks_move_block_link_confirm": "Trotzdem verschieben",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

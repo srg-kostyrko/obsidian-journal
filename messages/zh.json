@@ -2694,6 +2694,8 @@
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
   "tasks_move_pick_target": "将任务移动到哪条笔记？",
   "tasks_move_pick_journal": "将任务移动到哪个日记？",
+  "tasks_move_block_link_warning": "此任务带有块链接。移动后，指向它的链接将失效。",
+  "tasks_move_block_link_confirm": "仍然移动",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

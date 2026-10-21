@@ -2700,6 +2700,8 @@
   "tasks_roll_source_unread": "No se pudo leer la nota del {date}.",
   "tasks_move_pick_target": "¿A qué nota quieres mover la tarea?",
   "tasks_move_pick_journal": "¿A qué diario quieres mover la tarea?",
+  "tasks_move_block_link_warning": "Esta tarea tiene un enlace de bloque. Si la mueves, se romperán los enlaces que apuntan a ella.",
+  "tasks_move_block_link_confirm": "Mover de todos modos",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

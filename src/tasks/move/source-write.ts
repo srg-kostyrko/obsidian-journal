@@ -1,6 +1,7 @@
 import { subtreeEnd, TRAILING_BLOCK_ID } from "./subtree";
 
 import type { PlannedRoot } from "./plan";
+import type { EffectiveMove } from "./settings";
 
 const TRAILING_SPACE = /\s*$/u;
 
@@ -12,6 +13,13 @@ export function stampLine(line: string, marker: string): string {
 }
 
 export type SourceRewrite = { readonly kind: "stamp"; readonly marker: string } | { readonly kind: "remove" };
+
+/** What a move does to the line it leaves behind, or null when it leaves the source alone. */
+export function sourceRewrite(move: Pick<EffectiveMove, "mode" | "stamp">, marker: string): SourceRewrite | null {
+  if (move.mode === "move") return { kind: "remove" };
+  // An empty marker would stamp a bare space and never read back as rolled.
+  return move.stamp && marker !== "" ? { kind: "stamp", marker } : null;
+}
 
 export type SourceRewriteOutcome = { readonly content: string } | { readonly reason: "changed" };
 

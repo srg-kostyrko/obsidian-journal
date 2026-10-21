@@ -340,6 +340,15 @@ describe("planItem", () => {
     expect(planItem(source, 1, copy).kind).toBe("planned");
   });
 
+  it("reads the rolled marker off the editor text, not a structure that lags it", () => {
+    const parsed = sourceOf(["- [ ] fresh", "- [ ] write"]);
+    const typed = { path, content: "- [ ] fresh #rolled\n- [ ] write" };
+    expect(planItem({ ...parsed, ...typed }, 0, copy)).toEqual({ kind: "refused", reason: "rolled" });
+    expect(planItem({ ...parsed, ...typed }, 1, copy).kind).toBe("planned");
+    const stale = sourceOf(["- [ ] fresh #rolled", "- [ ] write"]);
+    expect(planItem({ ...stale, content: "- [ ] fresh\n- [ ] write" }, 0, copy).kind).toBe("planned");
+  });
+
   it("a done task is planned", () => {
     const result = planItem(sourceOf(["- [x] shipped", "- [-] dropped"]), 1, move);
     expect(result.kind === "planned" ? result.plan.block : result).toEqual([

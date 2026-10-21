@@ -2697,6 +2697,8 @@
   "tasks_roll_source_unread": "{date} 노트를 읽을 수 없습니다.",
   "tasks_move_pick_target": "작업을 어느 노트로 옮길까요?",
   "tasks_move_pick_journal": "작업을 어느 저널로 옮길까요?",
+  "tasks_move_block_link_warning": "이 작업에는 블록 링크가 있습니다. 옮기면 이 작업을 가리키는 링크가 끊어집니다.",
+  "tasks_move_block_link_confirm": "그래도 옮기기",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

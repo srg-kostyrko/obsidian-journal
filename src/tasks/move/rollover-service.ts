@@ -32,11 +32,12 @@ import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
 import { NoCurrentPeriodError, type RollError } from "./errors";
+import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
 import { placeGroups } from "./placement";
 import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
 import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
-import { rewriteSource, type SourceRewrite } from "./source-write";
+import { rewriteSource, sourceRewrite, type SourceRewrite } from "./source-write";
 
 import type { ChangedSource, RollReport } from "./report";
 import type { TaskRule } from "../conditions";
@@ -47,11 +48,6 @@ interface AnchoredPlan {
 }
 
 const CHECKBOX = /^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[(.)\]/u;
-
-function hasTag(line: string, tag: string): boolean {
-  const escaped = tag.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
-  return new RegExp(String.raw`(?:^|\s)${escaped}(?=[\s,.;:!?)]|$)`, "iu").test(line);
-}
 
 const ATX_HEADING = /^[ \t]*(#{1,6})(?=[ \t]|$)(.*)$/u;
 // Obsidian's text for a heading: trailing whitespace and a whitespace-preceded closing #-run go.
@@ -70,7 +66,7 @@ function holdsHeading(lines: readonly string[], heading: NoteStructure["headings
   return underline !== null && underline.test(lines[heading.line + 1] ?? "") && line.trim() === heading.heading;
 }
 
-// Looser than hasTag: Obsidian reads a tag wrapped in markup or brackets, and only a tag that is gone
+// Looser than lineHasTag: Obsidian reads a tag wrapped in markup or brackets, and only a tag that is gone
 // or has grown longer matters here.
 function holdsTag(lines: readonly string[], tag: NoteStructure["tags"][number]): boolean {
   const line = lines[tag.line];
@@ -88,7 +84,7 @@ function inSync(content: string, structure: NoteStructure, marker: string): bool
   const tasksAgree = structure.listItems.every((item) => {
     const line = lines[item.line];
     if (line === undefined || CHECKBOX.exec(line)?.[1] !== item.marker) return false;
-    return marker === "" || hasTag(line, marker) === carriesMarker(item, structure, marker);
+    return marker === "" || lineHasTag(line, marker) === carriesMarker(item, structure, marker);
   });
   return (
     tasksAgree &&
@@ -106,12 +102,6 @@ function headingOf(selection: TaskRule): string | null {
     condition.type === "heading" && condition.condition === "under" ? condition.headings : [],
   );
   return named.at(0) ?? null;
-}
-
-function sourceRewrite(move: EffectiveMove, marker: string): SourceRewrite | null {
-  if (move.mode === "move") return { kind: "remove" };
-  // An empty marker would stamp a bare space and never read back as rolled.
-  return move.stamp && marker !== "" ? { kind: "stamp", marker } : null;
 }
 
 /** Rolls a journal's unfinished checkbox items from its previous notes into today's. */

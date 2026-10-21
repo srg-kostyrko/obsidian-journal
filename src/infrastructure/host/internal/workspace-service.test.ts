@@ -519,6 +519,88 @@ describe("WorkspaceService", () => {
     });
   });
 
+  describe("the active editor", () => {
+    const other = "Daily/2026-05-14.md" as VaultPath;
+
+    it("reads no state when no editor is active", () => {
+      const { service } = build();
+      expect(service.activeEditorState().isNone()).toBe(true);
+    });
+
+    it("reads the buffer, not the file on disk, with the cursor's line", () => {
+      const { service, host } = build();
+      host.putFile(path, "- [ ] saved\n");
+      host.putFile(other, "- [ ] elsewhere\n");
+      host.openEditor(path, "- [ ] saved\n- [ ] typed\n", 1);
+
+      expect(service.activeEditorState().getOrUndefined()).toEqual({
+        path,
+        content: "- [ ] saved\n- [ ] typed\n",
+        cursorLine: 1,
+      });
+    });
+
+    it("replaces a line range as one change and leaves the other lines alone", () => {
+      const { service, host } = build();
+      const editor = host.openEditor(path, "a\nb\nc\nd\n");
+
+      const applied = service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 2, lines: ["B"] }));
+
+      expect(applied).toBe(true);
+      expect(editor.text).toBe("a\nB\nd\n");
+      expect(editor.changes).toHaveLength(1);
+    });
+
+    it("removes the last lines of a buffer with no trailing newline", () => {
+      const { service, host } = build();
+      const removed = host.openEditor(path, "a\nb\nc");
+      service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 2, lines: [] }));
+      expect(removed.text).toBe("a");
+
+      const stamped = host.openEditor(path, "a\nb");
+      service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 1, lines: ["b #x"] }));
+      expect(stamped.text).toBe("a\nb #x");
+
+      const emptied = host.openEditor(path, "a\nb");
+      service.replaceLinesInActiveEditor(path, () => ({ from: 0, to: 1, lines: [] }));
+      expect(emptied.text).toBe("");
+    });
+
+    it("verifies against the buffer as it is at write time", () => {
+      const { service, host } = build();
+      const editor = host.openEditor(path, "- [ ] task\n");
+      editor.text = "- [ ] typed above\n- [ ] task\n";
+      const seen: string[] = [];
+
+      const applied = service.replaceLinesInActiveEditor(path, (content) => {
+        seen.push(content);
+        return null;
+      });
+
+      expect(applied).toBe(false);
+      expect(seen).toEqual(["- [ ] typed above\n- [ ] task\n"]);
+      expect(editor.changes).toEqual([]);
+    });
+
+    it("writes nothing when the active editor shows another note", () => {
+      const { service, host } = build();
+      const editor = host.openEditor(other, "a\nb\n");
+      const verify = vi.fn(() => ({ from: 0, to: 0, lines: ["A"] }));
+
+      expect(service.replaceLinesInActiveEditor(path, verify)).toBe(false);
+      expect(verify).not.toHaveBeenCalled();
+      expect(editor.text).toBe("a\nb\n");
+    });
+
+    it("refuses a range outside the buffer", () => {
+      const { service, host } = build();
+      const editor = host.openEditor(path, "a\nb");
+
+      expect(service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 2, lines: [] }))).toBe(false);
+      expect(editor.changes).toEqual([]);
+    });
+  });
+
   describe("openNote pinned", () => {
     const a = "Daily/2026-05-12.md" as VaultPath;
     const b = "Daily/2026-05-13.md" as VaultPath;

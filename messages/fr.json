@@ -2711,6 +2711,8 @@
   "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
   "tasks_move_pick_target": "Déplacer la tâche vers quelle note ?",
   "tasks_move_pick_journal": "Déplacer la tâche vers quel journal ?",
+  "tasks_move_block_link_warning": "Cette tâche a un lien de bloc. La déplacer casse les liens qui pointent vers elle.",
+  "tasks_move_block_link_confirm": "Déplacer quand même",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

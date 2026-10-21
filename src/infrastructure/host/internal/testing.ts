@@ -45,8 +45,23 @@ class FakeDispatcher {
   }
 }
 
+export interface FakeEditorPosition {
+  readonly line: number;
+  readonly ch: number;
+}
+
+// The buffer is separate from the file on disk, the way unsaved typing is: a test edits `text`
+// between a read and a write to stage what the user typed in the meantime.
+export interface FakeEditorState {
+  path: string;
+  text: string;
+  cursorLine: number;
+  readonly changes: { from: FakeEditorPosition; to: FakeEditorPosition; text: string }[];
+}
+
 export interface FakeWorkspaceState {
   activeFile: TFile | null;
+  activeEditor: FakeEditorState | null;
   openPaths: Set<string>;
   // Which window each open path's leaf sits in, and which window the user is currently in.
   // Popout windows are what make workspace-wide leaf reuse steal focus, so leaf lookups that
@@ -135,6 +150,8 @@ export interface FakeHost {
   readonly promptedDeletions: readonly TFile[];
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
+  /** Makes an editor holding `text` for `path` the active one. */
+  openEditor(path: string, text: string, cursorLine?: number): FakeEditorState;
   putFolder(path: string): TFolder;
   putPlugin(id: string, instance: object): void;
   putCorePlugin(id: string, instance: object, enabled?: boolean): void;
@@ -205,6 +222,31 @@ function metadataWithFrontmatter(metadata: CachedMetadata, frontmatter: Record<s
   return next;
 }
 
+function offsetOf(text: string, position: FakeEditorPosition): number {
+  const lines = text.split("\n");
+  const line = lines[position.line];
+  if (line === undefined || position.ch < 0 || position.ch > line.length) {
+    throw new RangeError(`No position ${position.line}:${position.ch} in the editor`);
+  }
+  return lines.slice(0, position.line).reduce((sum, text) => sum + text.length + 1, 0) + position.ch;
+}
+
+function fakeEditor(state: FakeEditorState) {
+  return {
+    getValue: (): string => state.text,
+    getCursor: (): FakeEditorPosition => ({ line: state.cursorLine, ch: 0 }),
+    lineCount: (): number => state.text.split("\n").length,
+    lastLine: (): number => state.text.split("\n").length - 1,
+    getLine: (line: number): string => state.text.split("\n")[line] ?? "",
+    replaceRange(text: string, from: FakeEditorPosition, to: FakeEditorPosition = from): void {
+      const start = offsetOf(state.text, from);
+      const end = offsetOf(state.text, to);
+      state.changes.push({ from, to, text });
+      state.text = state.text.slice(0, start) + text + state.text.slice(end);
+    },
+  };
+}
+
 export function createFakeHost(): FakeHost {
   const files = new Map<string, FakeFileSystemEntry>();
   const folders = new Set<string>([""]);
@@ -215,6 +257,7 @@ export function createFakeHost(): FakeHost {
   const workspaceEvents = new FakeDispatcher();
   const workspaceState: FakeWorkspaceState = {
     activeFile: null,
+    activeEditor: null,
     openPaths: new Set(),
     openWindows: new Map(),
     activeWindow: MAIN_WINDOW,
@@ -584,6 +627,11 @@ export function createFakeHost(): FakeHost {
     getActiveFile(): TFile | null {
       return workspaceState.activeFile;
     },
+    get activeEditor() {
+      const state = workspaceState.activeEditor;
+      if (state === null) return null;
+      return { file: fileObjects.get(state.path) ?? makeFile(state.path), editor: fakeEditor(state) };
+    },
     getLeavesOfType(type: string): FakeLeaf[] | FakeMarkdownLeaf[] {
       // The tracked branch is keyed by registered journal view types (`journal-view:*`),
       // so it never collides with the note-path fallback used for `"markdown"` lookups.
@@ -715,6 +763,11 @@ export function createFakeHost(): FakeHost {
       fileObjects.set(path, file);
       attachChild(file);
       return file;
+    },
+    openEditor(path, text, cursorLine = 0): FakeEditorState {
+      const state: FakeEditorState = { path, text, cursorLine, changes: [] };
+      workspaceState.activeEditor = state;
+      return state;
     },
     putFolder(path): TFolder {
       ensureFolderChain(path);

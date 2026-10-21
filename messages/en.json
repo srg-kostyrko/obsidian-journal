@@ -2713,6 +2713,8 @@
   "tasks_roll_source_unread": "{date} could not be read.",
   "tasks_move_pick_target": "Move the task to which note?",
   "tasks_move_pick_journal": "Move the task to which journal?",
+  "tasks_move_block_link_warning": "This task has a block link. Moving it breaks links that point to it.",
+  "tasks_move_block_link_confirm": "Move anyway",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

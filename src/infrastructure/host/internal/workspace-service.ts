@@ -15,7 +15,15 @@ import { buildMarkdownLink } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-import type { MenuItemSpec, OpenMode, PinTarget, VaultPath, WorkspaceEvents } from "../types";
+import type {
+  ActiveEditorState,
+  LineReplacement,
+  MenuItemSpec,
+  OpenMode,
+  PinTarget,
+  VaultPath,
+  WorkspaceEvents,
+} from "../types";
 import type { Editor, MarkdownView, WorkspaceLeaf } from "obsidian";
 
 // Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
@@ -240,6 +248,41 @@ export class WorkspaceService {
 
   hasActiveEditor(): boolean {
     return this.#activeEditor() !== undefined;
+  }
+
+  activeEditorState(): Option<ActiveEditorState> {
+    const active = this.#app.workspace.activeEditor;
+    const editor = active?.editor;
+    const file = active?.file;
+    if (editor === undefined || !(file instanceof TFile)) return new None<ActiveEditorState>();
+    return new Some<ActiveEditorState>({
+      path: file.path as VaultPath,
+      content: editor.getValue(),
+      cursorLine: editor.getCursor().line,
+    });
+  }
+
+  // One replaceRange is one undo step. The verdict is reached on the buffer as it stands now, so
+  // typing since the caller read it can only refuse the change, never shift where it lands.
+  /** Replaces a line range in the active editor if it still shows `path` and `verify` approves. */
+  replaceLinesInActiveEditor(path: VaultPath, verify: (content: string) => LineReplacement | null): boolean {
+    const active = this.#app.workspace.activeEditor;
+    const editor = active?.editor;
+    if (editor === undefined || active?.file?.path !== path) return false;
+    const change = verify(editor.getValue());
+    const last = editor.lastLine();
+    if (change === null || change.from < 0 || change.to < change.from || change.to > last) return false;
+    const { from, to, lines } = change;
+    const endOf = (line: number) => ({ line, ch: editor.getLine(line).length });
+    if (to < last) {
+      editor.replaceRange(lines.map((line) => `${line}\n`).join(""), { line: from, ch: 0 }, { line: to + 1, ch: 0 });
+    } else if (lines.length > 0) {
+      editor.replaceRange(lines.join("\n"), { line: from, ch: 0 }, endOf(to));
+    } else {
+      // The last line has no newline of its own to take, so the one ending the line above goes.
+      editor.replaceRange("", from === 0 ? { line: 0, ch: 0 } : endOf(from - 1), endOf(to));
+    }
+    return true;
   }
 
   insertNoteLinkAtCursor(targetPath: VaultPath): boolean {

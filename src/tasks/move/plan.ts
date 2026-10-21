@@ -5,6 +5,7 @@ import { headingsOf } from "../note-structure";
 import { carriesMarker, CHECKBOX_PROVIDER_ID } from "../providers/checkbox/extract";
 import { isOpen } from "../status";
 
+import { lineHasTag } from "./line-tags";
 import { ancestorsOf, isCheckboxLine, isListLine, subtreeEnd, TRAILING_BLOCK_ID } from "./subtree";
 
 import type { TaskRule } from "../conditions";
@@ -157,14 +158,20 @@ function containingListLine(lines: readonly string[], line: number): number | nu
   return null;
 }
 
+// Text only: the source is the editor's buffer, which runs ahead of metadataCache, so a structure
+// read by line number would judge whatever line used to sit there.
 /** Plans moving the one checkbox item whose subtree holds `line`, whatever its status. */
-export function planItem(source: RollSource, line: number, options: ItemPlanOptions): ItemPlan {
-  const { path, content, structure } = source;
+export function planItem(
+  source: Pick<RollSource, "path" | "content">,
+  line: number,
+  options: ItemPlanOptions,
+): ItemPlan {
+  const { path, content } = source;
   const { mode, rolledMarker, allowBlockId = false } = options;
   const lines = content.split("\n");
   const itemLine = containingListLine(lines, line);
   if (itemLine === null || !isCheckboxLine(lines[itemLine] ?? "")) return { kind: "refused", reason: "not-a-task" };
-  if (carriesMarker({ line: itemLine }, structure, rolledMarker)) return { kind: "refused", reason: "rolled" };
+  if (lineHasTag(lines[itemLine] ?? "", rolledMarker)) return { kind: "refused", reason: "rolled" };
   const root = plannedRoot(lines, itemLine, null);
   if (mode === "move" && root.hasBlockId && !allowBlockId) return { kind: "refused", reason: "block-id" };
   return {

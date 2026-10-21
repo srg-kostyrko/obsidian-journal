@@ -2711,6 +2711,8 @@
   "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
   "tasks_move_pick_target": "In quale nota vuoi spostare l'attività?",
   "tasks_move_pick_journal": "In quale diario vuoi spostare l'attività?",
+  "tasks_move_block_link_warning": "Questa attività ha un link a blocco. Spostarla interrompe i link che puntano a essa.",
+  "tasks_move_block_link_confirm": "Sposta comunque",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
