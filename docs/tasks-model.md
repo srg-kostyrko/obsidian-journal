@@ -947,6 +947,14 @@ In move mode, where the source line is removed, **a failure between the two
 writes leaves a duplicate, never a gap.** The target is written first for that
 reason.
 
+**A note an editor holds is written through that editor**, in whichever window
+it sits, as one edit spanning only the changed text: `vault.process` against a
+note with unsaved typing races the view's own save, and the e2e caught exactly
+that — moved lines run onto the end of the typed line. A deferred view has
+loaded nothing and is skipped, so the file is written. Because a view saves on a
+debounce, the target's view is saved before the source is touched, or
+target-before-source would hold in the buffers and not on disk.
+
 ### Items nest, so movement is per subtree
 
 Eligibility is the move's own: an item is eligible when its status is open
@@ -1002,7 +1010,9 @@ their copies. The provider walks the structure's parent lines, so the walk stops
 at a parent that is not itself a task — `NoteStructure` drops those lines, and
 with them the next parent up — and it cannot see a parent on the note's first line,
 which the structure cannot tell from no parent. The roll's own eligibility check
-walks the text and has neither gap. The user's own queries see no tag on a child
+walks the text and has neither gap. The single-task commands refuse on the same
+text walk, so they may refuse a line the listing still shows as open: one under a
+stamped ancestor with a plain bullet between them. The user's own queries see no tag on a child
 and still count it open; stamping every line is what that would take, and it is
 declined above.
 
@@ -1208,10 +1218,12 @@ period's **existing** notelets alongside it. Creating a notelet is
 `CreateNoteletFlow`'s work — it picks a type and asks its questions — and a move
 does not trigger it.
 
-Placement inside a notelet degrades one step: match the source heading if the
-notelet has it, otherwise append at the end. The configured target heading is a
-journal-level setting describing the journal's template, and it says nothing
-about a notelet type's.
+Placement inside a notelet is the same as in a period note: the single-task
+commands skip the source-heading match, so the target journal's configured
+heading applies when the notelet has a heading of that text, and the move
+appends at the end otherwise. The heading describes the journal's template, not
+a notelet type's, so in a notelet it matches only by coincidence of text — which
+is what it takes for a user who gives both templates a `## Tasks` heading.
 
 ### Recurring lines
 

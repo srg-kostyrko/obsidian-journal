@@ -675,13 +675,15 @@ no unfinished tasks. Four other cases are worth knowing:
   note used to say could take lines from under a heading that has since been renamed. Run the command
   again in a moment.
 
-The command writes today's note before it touches the earlier one, so a failure part-way leaves a task
-in both notes, never in neither.
+The command writes and saves today's note before it touches the earlier one, so a failure part-way leaves
+a task in both notes, never in neither. A note open in an editor, in any window, is edited there rather
+than on disk, so its unsaved typing is kept; an earlier note whose open editor has unsaved lines above a
+task reports it as changed rather than marking the wrong line.
 
 ## Moving one task
 
 Two commands take the single task under the cursor and put it in another note. The palette lists them
-while a note is open in the editor.
+while a note is open for editing; in reading mode there is no cursor to read, and the commands say so.
 
 - **Move task to the containing period** sends it up to a longer period that holds the note's date:
   from a daily note, that week's or that month's note. It looks among the journals on the same
@@ -710,7 +712,9 @@ cursor on a plain bullet, or on a line outside any list item, is refused.
 
 Any task moves, whatever its status — the [listing filter](#a-journal-s-own-listing-filter) and the
 roll's **Source** and **Look back** play no part, because you picked the line. A task that already
-carries the **Rolled marker** is refused.
+carries the **Rolled marker** is refused, and so is a line nested anywhere under one that does — even
+under a plain bullet in between, so this can refuse a line a listing still shows as open. A line that
+cannot move is refused before any question is asked.
 
 ### How it lands
 
@@ -726,30 +730,32 @@ The journal the task moves **to** decides what happens, using the same
 Under **Move**, a task with a block id on any of its lines asks first: removing it breaks the links that
 point to it. **Move anyway** goes ahead; **Cancel** leaves both notes untouched.
 
-The edit to the note you are typing in goes through the open editor, so unsaved typing is kept and one
-undo reverses it. The destination is written first, so a failure part-way leaves the task in both notes,
-never in neither.
+A note open in an editor — the one you are typing in, or the destination, in any window — is edited
+there rather than on disk, so its unsaved typing is kept and one undo reverses the edit. The destination
+is written, and saved, before the original is touched, so a failure part-way leaves the task in both
+notes, never in neither. If a question about creating the destination is open while you edit the task
+itself, the task as it then reads is what moves.
 
 ### What the notice says
 
 On success the notice reads "Copied the task to …" or "Moved the task to …", with the period — and the
 notelet's name, for a notelet. The other outcomes:
 
-- **"… changed while moving"** — the note's text around the task changed after the command started, so
-  the original was left as it was. The task is in the destination already: mark or remove the original
+- **"… changed while moving"** — the task's text changed after it was copied, so the original was left
+  as it was. The task is in the destination already: mark or remove the original
   by hand, or delete the copy.
 - **"… could not be marked as rolled"** or **"… could not be updated"** — the same, when saving the
   original note failed.
-- **"The task was already moved."** — by the time the command came to write, the task's lines no
-  longer matched what it picked, usually because it had already been moved or marked. Nothing was
-  written.
+- **"The task is no longer where it was. Nothing was moved."** — by the time the command came to write,
+  the task's lines no longer matched what it picked: it had already been moved or marked, or lines
+  above it were added or removed. A destination note created for it is kept, empty of the task.
 - **"… could not be read. Nothing was moved."** — Obsidian failed to read the original note.
 - **"No coarser journal contains this note's period."** — no journal in scope writes a longer period
-  whose timeline includes this one.
+  whose timeline includes this one, or the note belongs to a custom interval journal.
 
 The rest say why nothing happened: the cursor is not on a task, the task was already rolled over, the
 note is not part of a journal (for the containing period), the date is outside the journal's timeline,
-you picked the note the task is already in, or no note is open in the editor. Cancelling any question
+you picked the note the task is already in, or no note is open for editing. Cancelling any question
 writes nothing and shows no notice.
 
 ## Examples
