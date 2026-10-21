@@ -292,7 +292,12 @@ export class RolloverService {
       await previous;
       return yield* this.#rollNow(journalName, options);
     });
-    const settled = Promise.resolve(run);
+    // The tail never rejects: a roll that throws hands its rejection to its own caller, not to the
+    // next roll queued behind it.
+    const settled = Promise.resolve(run).then(
+      () => true,
+      () => false,
+    );
     this.#running.set(journalName, settled);
     void settled.then(() => {
       if (this.#running.get(journalName) === settled) this.#running.delete(journalName);

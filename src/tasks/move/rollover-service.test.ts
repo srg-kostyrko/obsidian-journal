@@ -310,6 +310,21 @@ describe("RolloverService", () => {
     expect(rollNotice(second.value)).toBe(m.tasks_roll_nothing({ oldest: "2026-10-20" }));
   });
 
+  it("a roll that throws does not block the next one", async () => {
+    const { service, put, text, notes } = await rolloverFor({ daily: dayJournal("daily") });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", TODAY, "");
+    vi.spyOn(notes, "process").mockImplementationOnce(() => {
+      throw new Error("bug");
+    });
+
+    await expect(Promise.resolve(service.roll("daily", { interactive: true }))).rejects.toThrow("bug");
+    const second = await service.roll("daily", { interactive: true });
+
+    expectOk(second);
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+  });
+
   it("cancelling the creation prompt writes nothing", async () => {
     const { service, put, text, notes, harness } = await rolloverFor({
       daily: dayJournal("daily", {}, undefined, { confirmCreation: true }),
