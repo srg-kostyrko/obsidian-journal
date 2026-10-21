@@ -719,6 +719,26 @@ describe("SingleMoveService", () => {
       expect(editor.text).toBe("# Day\n- [ ] Call Bob tomorrow #rolled\n    - ask about Friday\n- [ ] Other\n");
     });
 
+    it("that turns the task into its parent's continuation text moves nothing, not the parent", async () => {
+      const { harness, edit, text, move, index } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", { mode: "move" }, { confirmCreation: true }),
+      });
+      const { editor, state } = edit("# Day\n- [ ] Parent\n    - [ ] Call Bob\n- [ ] Other\n", 2);
+
+      const pending = move(state, target("monthly", "2026-10-01", null));
+      await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+      editor.text = "# Day\n- [ ] Parent\n    more about the parent\n- [ ] Other\n";
+      harness.modals.lastOpen<unknown, boolean>().submit(true);
+      const result = await pending;
+
+      expectOk(result);
+      expect(result.value.outcome).toBe("nothing");
+      const created = index.get("monthly", anchor("2026-10-01")).getOr("missing" as VaultPath);
+      expect(await text(created)).not.toContain("Parent");
+      expect(editor.changes).toEqual([]);
+    });
+
     it("above the task moves nothing, since the line under the cursor is no longer the task", async () => {
       const { harness, edit, text, move, index } = await moverFor({
         daily: journal("daily", "day"),

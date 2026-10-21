@@ -145,7 +145,9 @@ export class SingleMoveService {
     });
     if (!untouched || now.length - below <= line) return null;
     const plan = this.#planAt(path, content, line, move, rolledMarker, confirmed.allowBlockId);
-    return plan?.roots.at(0)?.end === now.length - below - 1 ? plan : null;
+    // A root starting above `line` is a parent the edited lines now continue, not the task.
+    const root = plan?.roots.at(0);
+    return root?.line === line && root.end === now.length - below - 1 ? plan : null;
   }
 
   #ensureTarget(target: MoveTarget): AsyncResult<VaultPath, SingleMoveError> {
