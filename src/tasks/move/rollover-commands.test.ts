@@ -36,6 +36,8 @@ const REPORT: RollReport = {
   heading: null,
   skippedNoteItems: 0,
   skippedBlockIds: 0,
+  skippedNoteItemsAt: [],
+  skippedBlockIdsAt: [],
   changedSources: [],
   failedSources: [],
   skippedSources: [],

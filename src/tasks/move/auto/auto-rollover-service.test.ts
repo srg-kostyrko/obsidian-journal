@@ -8,6 +8,7 @@ import {
   AppActivity,
   NoteStructureService,
   NotesService,
+  NoteWriteError,
   type NoteStructure,
   type VaultPath,
 } from "@/infrastructure/host";
@@ -26,7 +27,7 @@ import { RolloverService } from "../rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "../settings";
 
 import { AutoRolloverService } from "./auto-rollover-service";
-import { MAX_WAIT_MS, QUIET_MS } from "./quiet-window";
+import { MAX_WAIT_MS, QUIET_MS, QuietWindow } from "./quiet-window";
 
 const HOUR = 60 * 60 * 1000;
 
@@ -379,6 +380,91 @@ describe("AutoRolloverService", () => {
       m.tasks_roll_missing_heading({ heading: "Tasks", date: "2026-10-20" }),
       m.tasks_roll_missing_heading({ heading: "Tasks", date: "2026-10-21" }),
     ]);
+  });
+
+  it("a source that cannot be updated pauses its journal after one copy", async () => {
+    const { put, text, calls, boot, activity, notes, harness } = await autoFor({
+      daily: automatic("daily"),
+      work: automatic("work"),
+    });
+    const failing = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    const workTarget = put("work", "2026-10-21", "");
+    const process = notes.process.bind(notes);
+    vi.spyOn(notes, "process").mockImplementation((path, transform) =>
+      path === failing ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
+    );
+    await boot();
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    activity.resume();
+    await vi.advanceTimersByTimeAsync(QUIET_MS);
+    activity.resume();
+    await vi.advanceTimersByTimeAsync(QUIET_MS);
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    expect(await text(failing)).toBe("- [ ] Call Bob\n");
+    expect(calls("daily")).toBe(1);
+    expect(await text(workTarget)).toBe("- [ ] Work item\n");
+    const failedNotice = harness.notices.messages.filter((message) =>
+      message.includes(m.tasks_roll_source_write_failed({ date: "2026-10-20", mode: "copy" })),
+    );
+    expect(failedNotice).toHaveLength(1);
+    expect(
+      harness.notices.messages.filter(
+        (message) => message === m.tasks_auto_roll_paused_failed({ journal: "daily", date: "2026-10-20" }),
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("a block link that stays put is announced once per note as the look-back moves on", async () => {
+    const { put, text, boot, harness } = await autoFor({
+      daily: automatic("daily", { mode: "move", lookBack: 2 }),
+      work: dayJournal("work"),
+    });
+    put("daily", "2026-10-20", "- [ ] Linked ^abc\n- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    const tomorrow = put("daily", "2026-10-22", "");
+    put("work", "2026-10-20", "- [ ] Linked ^def\n");
+    await boot();
+    await vi.advanceTimersByTimeAsync(15 * HOUR);
+
+    expect(await text(tomorrow)).toBe("- [ ] Call Bob\n");
+    expect(harness.notices.messages).toEqual([
+      [
+        m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-20" }),
+        m.tasks_roll_block_ids_skipped({ count: 1 }),
+      ].join(" "),
+      m.tasks_roll_done({ count: 1, notes: 1, oldest: "2026-10-21" }),
+    ]);
+  });
+
+  it("a period ending between the check and the roll is logged, not reported", async () => {
+    const { put, roll, boot, harness } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    roll.mockImplementationOnce((name) => AsyncResult.err(new NoCurrentPeriodError(name)));
+    await boot();
+
+    expect(harness.notices.messages).toEqual([]);
+    expect(harness.logs.records.filter((record) => record.level === "error")).toEqual([]);
+  });
+
+  it("a run that throws leaves the next checkpoint working", async () => {
+    const { put, text, boot, activity, harness } = await autoFor({
+      daily: automatic("daily"),
+      work: dayJournal("work"),
+    });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    vi.spyOn(harness.resolve(QuietWindow), "wait").mockRejectedValueOnce(new Error("boom"));
+    await boot();
+    expect(await text(target)).toBe("");
+    expect(harness.logs.records.some((record) => record.level === "error")).toBe(true);
+
+    activity.resume();
+    await vi.advanceTimersByTimeAsync(QUIET_MS);
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
   });
 
   it("the boot create-replay does not trigger", async () => {

@@ -22,6 +22,8 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     heading: null,
     skippedNoteItems: 0,
     skippedBlockIds: 0,
+    skippedNoteItemsAt: [],
+    skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
     skippedSources: [],
@@ -30,9 +32,23 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
   };
 }
 
-const blockIds = (at: string): RollReport => reportOf({ read: [anchor(at)], skippedBlockIds: 1 });
+const blockIds = (read: readonly string[], at: Record<string, number>): RollReport => {
+  const counts = Object.entries(at).map(([date, count]) => ({ anchor: anchor(date), count }));
+  return reportOf({
+    read: read.map((date) => anchor(date)),
+    skippedBlockIds: counts.reduce((total, { count }) => total + count, 0),
+    skippedBlockIdsAt: counts,
+  });
+};
 const unreadIn = (journalName: string): RollReport =>
   reportOf({ journalName, read: [anchor("2026-10-20")], unreadSources: [anchor("2026-10-20")] });
+
+const noteItems = (read: readonly string[], at: string, count: number): RollReport =>
+  reportOf({
+    read: read.map((date) => anchor(date)),
+    skippedNoteItems: count,
+    skippedNoteItemsAt: [{ anchor: anchor(at), count }],
+  });
 
 const rolled = reportOf({ rolled: 2, notes: 1, sources: [anchor("2026-10-20")], read: [anchor("2026-10-20")] });
 const done = m.tasks_roll_done({ count: 2, notes: 1, oldest: "2026-10-20" });
@@ -73,13 +89,25 @@ describe("noticeFor", () => {
     expect(noticeFor(withChange, seen, false)).toBe(done);
   });
 
-  it("shows a count again once the look-back reads other notes", () => {
+  it("announces a count once per note, however the look-back shifts", () => {
     const seen = new Set<string>();
-    const sentence = m.tasks_roll_block_ids_skipped({ count: 1 });
 
-    expect(noticeFor(blockIds("2026-10-20"), seen, false)).toBe(sentence);
-    expect(noticeFor(blockIds("2026-10-20"), seen, false)).toBeNull();
-    expect(noticeFor(blockIds("2026-10-21"), seen, false)).toBe(sentence);
+    expect(noticeFor(blockIds(["2026-10-19", "2026-10-20"], { "2026-10-20": 1 }), seen, false)).toBe(
+      m.tasks_roll_block_ids_skipped({ count: 1 }),
+    );
+    expect(noticeFor(blockIds(["2026-10-20", "2026-10-21"], { "2026-10-20": 1 }), seen, false)).toBeNull();
+    expect(noticeFor(blockIds(["2026-10-20", "2026-10-21"], { "2026-10-20": 1, "2026-10-21": 2 }), seen, false)).toBe(
+      m.tasks_roll_block_ids_skipped({ count: 2 }),
+    );
+  });
+
+  it("announces skipped task notes once per note", () => {
+    const seen = new Set<string>();
+
+    expect(noticeFor(noteItems(["2026-10-20"], "2026-10-20", 3), seen, false)).toBe(
+      m.tasks_roll_note_items_skipped({ count: 3 }),
+    );
+    expect(noticeFor(noteItems(["2026-10-20", "2026-10-21"], "2026-10-20", 3), seen, false)).toBeNull();
   });
 
   it("says nothing about a roll that found nothing", () => {

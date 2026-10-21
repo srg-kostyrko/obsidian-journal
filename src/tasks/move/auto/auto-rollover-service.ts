@@ -11,6 +11,7 @@ import { TimelineService } from "@/journals/timeline";
 import { isNotelet, type EntryChangedEvent } from "@/journals/types";
 import { SettingsService } from "@/settings";
 
+import { NoCurrentPeriodError } from "../errors";
 import { RolloverService } from "../rollover-service";
 import { automaticBlocked, effectiveMove, moveDefaultsSlice } from "../settings";
 
@@ -33,7 +34,7 @@ export class AutoRolloverService {
 
   // In memory on purpose: a record of past runs would be plugin state the note cannot rebuild.
   readonly #seen = new Set<string>();
-  readonly #paused = new Set<string>();
+  readonly #paused = new Map<string, "blocked" | "write-failed">();
   readonly #stops: (() => void)[] = [];
   // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
   #timer: number | undefined;
@@ -79,7 +80,9 @@ export class AutoRolloverService {
       this.#dirty = true;
       return;
     }
-    void this.#run();
+    this.#run().catch((error: unknown) => {
+      this.#logger.error("automatic rollover run failed", { error });
+    });
   }
 
   #schedule(): void {
@@ -125,9 +128,10 @@ export class AutoRolloverService {
   }
 
   async #rollJournal(name: string, config: JournalConfig, prefix: boolean): Promise<void> {
+    if (this.#paused.get(name) === "write-failed") return;
     if (automaticBlocked(effectiveMove(config.tasks.move, this.#defaults.state)) !== null) {
       if (!this.#paused.has(name)) {
-        this.#paused.add(name);
+        this.#paused.set(name, "blocked");
         this.#notices.show(m.tasks_auto_roll_paused({ journal: name }));
       }
       return;
@@ -140,12 +144,25 @@ export class AutoRolloverService {
 
     const result = await this.#rollover.roll(name, { interactive: false, createTarget: false });
     if (result.isErr()) {
-      this.#logger.error("automatic rollover failed", { journalName: name, error: result.error });
+      // Midnight can pass between the check above and the roll's own.
+      if (result.error instanceof NoCurrentPeriodError) {
+        this.#logger.info("the period ended before the roll", { journalName: name });
+      } else {
+        this.#logger.error("automatic rollover failed", { journalName: name, error: result.error });
+      }
       return;
     }
-    if (result.value.noTarget) return;
-    const notice = noticeFor(result.value, this.#seen, prefix);
+    const report = result.value;
+    if (report.noTarget) return;
+    const notice = noticeFor(report, this.#seen, prefix);
     if (notice !== null) this.#notices.show(notice);
+    // The items reached the target but the source still offers them, so the next checkpoint
+    // would copy them again.
+    const failed = report.failedSources.at(0);
+    if (failed !== undefined) {
+      this.#paused.set(name, "write-failed");
+      this.#notices.show(m.tasks_auto_roll_paused_failed({ journal: name, date: failed.anchor }));
+    }
   }
 
   [Symbol.dispose](): void {

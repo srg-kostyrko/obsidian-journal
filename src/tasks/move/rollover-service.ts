@@ -41,7 +41,7 @@ import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "
 import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
 import { rewriteSource, sourceRewrite, type SourceRewrite } from "./source-write";
 
-import type { ChangedSource, RollReport } from "./report";
+import type { AnchoredCount, ChangedSource, RollReport } from "./report";
 import type { TaskRule } from "../conditions";
 
 interface AnchoredPlan {
@@ -114,11 +114,17 @@ function noTargetReport(journalName: string, mode: RollReport["mode"], heading: 
     heading,
     skippedNoteItems: 0,
     skippedBlockIds: 0,
+    skippedNoteItemsAt: [],
+    skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
     skippedSources: [],
     unreadSources: [],
   };
+}
+
+function sum(counts: readonly AnchoredCount[]): number {
+  return counts.reduce((total, { count }) => total + count, 0);
 }
 
 function selectionOf(filter: TaskRule): TaskRule {
@@ -266,12 +272,13 @@ export class RolloverService {
 
   // Counted through the listing, not a query of our own, so the count matches what the period shows.
   // No source scope: a task note is reached by its date, which the listing never scopes by source.
-  async #openNoteItems(journalName: string, anchors: readonly AnchorString[]): Promise<number> {
+  async #openNoteItems(journalName: string, anchors: readonly AnchorString[]): Promise<readonly AnchoredCount[]> {
     const query = v.parse(taskQuerySchema, {
       scope: { provider: [NOTE_PROPERTY_PROVIDER_ID], depth: "literal" },
       filter: { mode: "and", conditions: [DEFAULT_STATUS_CONDITION] },
     });
     const keys = new Set<string>();
+    const counts: AnchoredCount[] = [];
     for (const anchor of anchors) {
       const rows = await buildTaskListing(this.#listing, {
         kind: "period",
@@ -280,11 +287,14 @@ export class RolloverService {
         journalNames: [journalName],
         query,
       });
+      // An item a later anchor's listing also reaches counts once, at the oldest.
+      const before = keys.size;
       for (const row of rows) {
         if (!row.context && isOpen(row.item.status)) keys.add(row.key);
       }
+      if (keys.size > before) counts.push({ anchor, count: keys.size - before });
     }
-    return keys.size;
+    return counts;
   }
 
   #rollNow(journalName: string, options: RollOptions): AsyncResult<RollReport, RollError> {
@@ -339,6 +349,13 @@ export class RolloverService {
         }
       }
 
+      const skippedNoteItemsAt = await this.#openNoteItems(journalName, read);
+      const skippedBlockIdsAt = read.flatMap((anchor) => {
+        const count = plans
+          .filter((entry) => entry.anchor === anchor)
+          .reduce((total, { plan }) => total + plan.refusedForBlockId.length, 0);
+        return count > 0 ? [{ anchor, count }] : [];
+      });
       const report: RollReport = {
         journalName,
         mode: move.mode,
@@ -356,8 +373,10 @@ export class RolloverService {
                 return atAnchor.length > 0 && atAnchor.every(({ plan }) => plan.selectionMissedHeading);
               }),
         heading,
-        skippedNoteItems: await this.#openNoteItems(journalName, read),
-        skippedBlockIds: plans.reduce((sum, { plan }) => sum + plan.refusedForBlockId.length, 0),
+        skippedNoteItems: sum(skippedNoteItemsAt),
+        skippedBlockIds: sum(skippedBlockIdsAt),
+        skippedNoteItemsAt,
+        skippedBlockIdsAt,
         changedSources,
         failedSources,
         skippedSources: read.filter((anchor) => indexing.has(anchor)),

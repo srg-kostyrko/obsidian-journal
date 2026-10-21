@@ -7,6 +7,11 @@ export interface ChangedSource {
   readonly anchor: AnchorString;
 }
 
+export interface AnchoredCount {
+  readonly anchor: AnchorString;
+  readonly count: number;
+}
+
 export interface RollReport {
   readonly journalName: string;
   // Decides what an unwritten source means: copy left it unmarked, move left the lines in place.
@@ -28,6 +33,9 @@ export interface RollReport {
   readonly heading: string | null;
   readonly skippedNoteItems: number;
   readonly skippedBlockIds: number;
+  // The same two counts by the anchor they were found at, oldest first; each sums to its total.
+  readonly skippedNoteItemsAt: readonly AnchoredCount[];
+  readonly skippedBlockIdsAt: readonly AnchoredCount[];
   // Refused because the text no longer matched the plan; their items reached the target anyway.
   readonly changedSources: readonly ChangedSource[];
   // The source write failed; their items reached the target and are not marked as rolled.
@@ -87,8 +95,17 @@ function perAnchor(
   return anchors.map((anchor) => ({ kind, text: text(anchor), anchor }));
 }
 
-function counted(kind: RollSentenceKind, count: number, text: (count: number) => string): readonly RollSentence[] {
-  return count > 0 ? [{ kind, text: text(count), anchor: null }] : [];
+export type CountedKind = "note-items-skipped" | "block-ids-skipped";
+
+/** The sentence for a count of skipped items, whichever sources it sums over. */
+export function countedSentence(kind: CountedKind, count: number): string {
+  return kind === "note-items-skipped"
+    ? m.tasks_roll_note_items_skipped({ count })
+    : m.tasks_roll_block_ids_skipped({ count });
+}
+
+function counted(kind: CountedKind, count: number): readonly RollSentence[] {
+  return count > 0 ? [{ kind, text: countedSentence(kind, count), anchor: null }] : [];
 }
 
 /** A roll's outcome sentences, in the fixed order its notice shows them. */
@@ -100,8 +117,8 @@ export function rollSentences(report: RollReport): readonly RollSentence[] {
     ...(heading === null
       ? []
       : perAnchor("missing-heading", report.missingHeading, (date) => m.tasks_roll_missing_heading({ heading, date }))),
-    ...counted("note-items-skipped", report.skippedNoteItems, (count) => m.tasks_roll_note_items_skipped({ count })),
-    ...counted("block-ids-skipped", report.skippedBlockIds, (count) => m.tasks_roll_block_ids_skipped({ count })),
+    ...counted("note-items-skipped", report.skippedNoteItems),
+    ...counted("block-ids-skipped", report.skippedBlockIds),
     ...perAnchor("source-changed", uniqueAnchors(report.changedSources), (date) =>
       m.tasks_roll_source_changed({ date, mode }),
     ),

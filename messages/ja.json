@@ -2714,6 +2714,7 @@
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
   "tasks_auto_roll_paused": "{journal}の自動繰り越しは一時停止中です。「繰り越し済みとしてマーク」をオンにするか、「移動」を使用してください。",
+  "tasks_auto_roll_paused_failed": "{journal}の自動繰り越しは一時停止中です：{date}のノートを更新できませんでした。解決したら「未完了のタスクを繰り越す」を手動で実行してください。",
   "tasks_auto_roll_prefix": "{journal}：{notice}",
   "tasks_move_pick_target": "タスクをどのノートに移動しますか？",
   "tasks_move_pick_journal": "タスクをどのジャーナルに移動しますか？",

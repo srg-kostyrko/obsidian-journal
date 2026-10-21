@@ -168,6 +168,8 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     heading: null,
     skippedNoteItems: 0,
     skippedBlockIds: 0,
+    skippedNoteItemsAt: [],
+    skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
     skippedSources: [],
@@ -603,6 +605,21 @@ describe("RolloverService", () => {
     expect(report).toMatchObject({ rolled: 1, skippedBlockIds: 1 });
   });
 
+  it("counts block links by the note they stay in", async () => {
+    const { roll, put } = await rolloverFor({ daily: dayJournal("daily", { mode: "move", lookBack: 2 }) });
+    put("daily", "2026-10-19", "- [ ] Old link ^one\n- [ ] Old link too ^two\n");
+    put("daily", "2026-10-20", "- [ ] New link ^three\n- [ ] Call Bob\n");
+    put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(report.skippedBlockIds).toBe(3);
+    expect(report.skippedBlockIdsAt).toEqual([
+      { anchor: "2026-10-19", count: 2 },
+      { anchor: "2026-10-20", count: 1 },
+    ]);
+  });
+
   it("copy without stamping leaves the source untouched", async () => {
     const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily", { stamp: false }) });
     const source = put("daily", "2026-10-20", "- [ ] Call Bob\n- [x] Done thing\n");
@@ -869,6 +886,7 @@ describe("RolloverService", () => {
     const report = await roll();
 
     expect(report).toMatchObject({ rolled: 1, skippedNoteItems: 1 });
+    expect(report.skippedNoteItemsAt).toEqual([{ anchor: "2026-10-20", count: 1 }]);
     expect(await text(source)).toBe("- [ ] Call Bob #rolled\n");
   });
 
