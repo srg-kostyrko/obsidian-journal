@@ -68,8 +68,7 @@ function holdsHeading(lines: readonly string[], heading: NoteStructure["headings
   return underline !== null && underline.test(lines[heading.line + 1] ?? "") && line.trim() === heading.heading;
 }
 
-// Looser than lineHasTag: Obsidian reads a tag wrapped in markup or brackets, and only a tag that is gone
-// or has grown longer matters here.
+// Looser than lineHasTag: only a tag that is gone or has grown longer matters here.
 function holdsTag(lines: readonly string[], tag: NoteStructure["tags"][number]): boolean {
   const line = lines[tag.line];
   if (line === undefined) return false;

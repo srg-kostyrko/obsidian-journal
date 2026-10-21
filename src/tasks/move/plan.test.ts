@@ -387,6 +387,25 @@ describe("planItem", () => {
     expect(planItem(source, 5, copy).kind).toBe("planned");
   });
 
+  it.each(["- [ ] write **#rolled**", "- [ ] write ==#rolled==", "- [ ] write [#rolled]", "- [ ] write #work#rolled"])(
+    "a marker Obsidian reads through the markup around it is rolled: %j",
+    (line) => {
+      expect(planItem({ path, content: line }, 0, copy)).toEqual({ kind: "refused", reason: "rolled" });
+    },
+  );
+
+  it.each(["- [ ] write (#rolled)", "- [ ] write x#rolled", "- [ ] write #rolled/sub", "- [ ] write `#rolled`"])(
+    "a marker Obsidian does not read as the tag leaves the line free: %j",
+    (line) => {
+      expect(planItem({ path, content: line }, 0, copy).kind).toBe("planned");
+    },
+  );
+
+  it("a parent stamped inside markup holds back its child", () => {
+    const source = { path, content: ["- [ ] Project **#rolled**", "    - [ ] step"].join("\n") };
+    expect(planItem(source, 1, copy)).toEqual({ kind: "refused", reason: "rolled" });
+  });
+
   it("reads the rolled marker off the editor text, not a structure that lags it", () => {
     const parsed = sourceOf(["- [ ] fresh", "- [ ] write"]);
     const typed = { path, content: "- [ ] fresh #rolled\n- [ ] write" };

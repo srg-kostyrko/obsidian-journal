@@ -403,6 +403,26 @@ describe("RolloverService", () => {
     expect(await text(target)).toBe("- [ ] write **#Work**\n");
   });
 
+  it("a marker inside markup that Obsidian lists as a tag keeps the structure current", async () => {
+    const { roll, put, structures, text } = await rolloverFor({ daily: dayJournal("daily") });
+    const source = put("daily", "2026-10-20", "- [ ] stamped **#rolled**\n- [ ] fresh\n");
+    structures.setStructure(source, {
+      listItems: [
+        { marker: " ", line: 0, endLine: 0, parent: null },
+        { marker: " ", line: 1, endLine: 1, parent: null },
+      ],
+      headings: [],
+      tags: [{ tag: "#rolled", line: 0 }],
+      frontmatterTags: [],
+    });
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(report).toMatchObject({ rolled: 1, skippedSources: [] });
+    expect(await text(target)).toBe("- [ ] fresh\n");
+  });
+
   // The heading text each row pairs with is what Obsidian's metadataCache stores for that line.
   it.each([
     ["## ##", ""],
