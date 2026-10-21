@@ -1,6 +1,6 @@
 import type { BlockGroup } from "./plan";
 
-const HEADING = /^(#{1,6})[ \t]+(.*?)[ \t]*(?:#+[ \t]*)?$/;
+const HEADING = /^(#{1,6})[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$/;
 
 interface HeadingAt {
   readonly index: number;
@@ -55,21 +55,45 @@ function insertionIndex(lines: readonly string[], group: BlockGroup, targetHeadi
     const heading = headings[at];
     if (!heading) continue;
     const end = headings.slice(at + 1).find((h) => h.level <= heading.level)?.index ?? lines.length;
-    return lastNonBlank(lines, heading.index + 1, end) + 1 || heading.index + 1;
+    return lastNonBlank(lines, heading.index + 1, end) + 1;
   }
   return lastNonBlank(lines, 0, lines.length) + 1;
+}
+
+interface Segment {
+  text: string;
+  term: string;
+}
+
+function segmentsOf(target: string): Segment[] {
+  const pieces = target.split("\n");
+  const last = pieces.pop() ?? "";
+  const segments = pieces.map((piece): Segment =>
+    piece.endsWith("\r") ? { text: piece.slice(0, -1), term: "\r\n" } : { text: piece, term: "\n" },
+  );
+  if (last !== "") segments.push({ text: last, term: "" });
+  return segments;
 }
 
 /** Inserts each group's lines under its matching heading in the target text, else the configured heading, else the end. */
 export function placeGroups(target: string, groups: readonly BlockGroup[], targetHeading: string): string {
   const eol = target.includes("\r\n") ? "\r\n" : "\n";
-  const trailing = target === "" || target.endsWith("\n");
-  const lines = target === "" ? [] : target.split("\n").map((l) => l.replace(/\r$/, ""));
-  if (target !== "" && trailing) lines.pop();
+  const segments = segmentsOf(target);
   for (const group of groups) {
     if (group.lines.length === 0) continue;
-    const inserted = group.lines.map((l) => l.replace(/\r$/, ""));
-    lines.splice(insertionIndex(lines, group, targetHeading), 0, ...inserted);
+    const at = insertionIndex(
+      segments.map((seg) => seg.text.replace(/\r$/, "")),
+      group,
+      targetHeading,
+    );
+    const inserted = group.lines.map((line): Segment => ({ text: line.replace(/\r$/, ""), term: eol }));
+    const previous = segments[at - 1];
+    if (at === segments.length && previous?.term === "") {
+      previous.term = previous.text.endsWith("\r") ? "\n" : eol;
+      const final = inserted.at(-1);
+      if (final) final.term = "";
+    }
+    segments.splice(at, 0, ...inserted);
   }
-  return lines.join(eol) + (trailing ? eol : "");
+  return segments.map((seg) => seg.text + seg.term).join("");
 }

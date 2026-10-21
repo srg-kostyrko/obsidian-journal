@@ -28,10 +28,46 @@ describe("placeGroups", () => {
   });
 
   it("a heading line inside a code fence or frontmatter is not a section", () => {
-    const target = "---\ntitle: ## Tasks\n---\n```\n## Tasks\n```\ntext\n";
-    expect(placeGroups(target, [group(null, "- [ ] x")], "Tasks")).toBe(`${target}- [ ] x\n`);
-    const fm = "---\n# Tasks\n---\n~~~\n# Tasks\n~~~\n";
-    expect(placeGroups(fm, [group("Tasks", "- [ ] x")], "Tasks")).toBe(`${fm}- [ ] x\n`);
+    const fenced = "```\n## Tasks\n```\n## Other\n- [ ] o\n";
+    expect(placeGroups(fenced, [group("Tasks", "- [ ] x")], "")).toBe(`${fenced}- [ ] x\n`);
+    const tilde = "~~~\n# Tasks\n~~~\n## Other\n- [ ] o\n";
+    expect(placeGroups(tilde, [group(null, "- [ ] x")], "Tasks")).toBe(`${tilde}- [ ] x\n`);
+    const front = "---\n## Tasks\ntitle: t\n---\n## Other\n- [ ] o\n";
+    expect(placeGroups(front, [group("Tasks", "- [ ] x")], "")).toBe(`${front}- [ ] x\n`);
+  });
+
+  it("a four-backtick fence is not closed by three backticks", () => {
+    const target = "````\n```\n## Tasks\n````\n## Other\n- [ ] o\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
+  });
+
+  it("a hash tag line is not a heading", () => {
+    const target = "#Tasks\n## Other\n- [ ] o\n";
+    expect(placeGroups(target, [group("Tasks", "- [ ] x")], "")).toBe(`${target}- [ ] x\n`);
+  });
+
+  it("a trailing hash belongs to the heading unless a closing sequence follows whitespace", () => {
+    const target = "## C#\n- [ ] a\n\n## Tasks ##\n- [ ] b\n";
+    expect(placeGroups(target, [group("C#", "- [ ] x")], "")).toBe("## C#\n- [ ] a\n- [ ] x\n\n## Tasks ##\n- [ ] b\n");
+    expect(placeGroups(target, [group("Tasks", "- [ ] y")], "")).toBe(
+      "## C#\n- [ ] a\n\n## Tasks ##\n- [ ] b\n- [ ] y\n",
+    );
+  });
+
+  it("an earlier insertion shifts the section a later group lands in", () => {
+    const target = "## A\n- [ ] a\n## B\n- [ ] b\n";
+    expect(placeGroups(target, [group("A", "- [ ] x"), group("B", "- [ ] y")], "")).toBe(
+      "## A\n- [ ] a\n- [ ] x\n## B\n- [ ] b\n- [ ] y\n",
+    );
+  });
+
+  it("a mixed-ending target keeps every existing line byte-identical", () => {
+    expect(placeGroups("a\nb\r\nc\n", [group(null, "- [ ] x")], "")).toBe("a\nb\r\nc\n- [ ] x\r\n");
+    expect(placeGroups("a\r\nb\nc\r\n", [group(null, "- [ ] x")], "")).toBe("a\r\nb\nc\r\n- [ ] x\r\n");
+  });
+
+  it("a target ending in a lone carriage return keeps it", () => {
+    expect(placeGroups("a\nb\r", [group(null, "- [ ] x")], "")).toBe("a\nb\r\n- [ ] x");
   });
 
   it("appending to an empty note, a frontmatter-only note and a note with no trailing newline keeps lines separate", () => {
