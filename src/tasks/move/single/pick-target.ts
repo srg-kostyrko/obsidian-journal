@@ -6,14 +6,17 @@ import { defineSuggest, SuggestService } from "@/infrastructure/host";
 import { ModalService } from "@/infrastructure/host/modals";
 import { AsyncResult, attempt } from "@/infrastructure/result";
 import { CycleService } from "@/journals/cycle";
+import { JournalNotFoundError, NoJournalsError, OutOfTimelineError } from "@/journals/errors";
+import { periodLabelOf } from "@/journals/notelets/ui/period-label";
 import { pickingForWrite } from "@/journals/picking";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
-import { accessibleFormatPattern } from "@/notes-calendar/cell-format";
 
 import { MoveTargets, type MoveTarget } from "./containing";
 
 const SOURCE = "move-task";
+
+type PickPeriodError = UserAborted | JournalNotFoundError | NoJournalsError | OutOfTimelineError;
 
 const journalSuggest = defineSuggest<string[], string>({
   placeholder: () => m.tasks_move_pick_journal(),
@@ -60,23 +63,34 @@ export class MoveTargetPicker {
       .mapErr(() => new UserAborted(SOURCE));
   }
 
-  pickPeriodTarget(): AsyncResult<MoveTarget, UserAborted> {
+  pickPeriodTarget(): AsyncResult<MoveTarget, PickPeriodError> {
     return attempt.in(this, async function* (this: MoveTargetPicker) {
       const names = [...this.#journals.find().ids()];
       const [only] = names;
+      if (only === undefined) return yield* AsyncResult.err(new NoJournalsError());
       const journalName =
-        names.length === 1 && only !== undefined
+        names.length === 1
           ? only
           : yield* this.#suggests.open(journalSuggest, names).mapErr(() => new UserAborted(SOURCE));
-      const config = yield* this.#journals.get(journalName).okOrElse(() => new UserAborted(SOURCE));
+      const config = yield* this.#journals.get(journalName).okOrElse(() => new JournalNotFoundError(journalName));
       const period = yield* this.#modals
         .open(datePickerModal, {
           picking: pickingForWrite(config.write),
           bounds: this.#timeline.boundsOf(journalName),
         })
         .mapErr(() => new UserAborted(SOURCE));
-      const anchor = this.#cycle.anchorOf(journalName, period.anchor).getOrUndefined() ?? period.anchor.toAnchor();
-      const label = period.format(accessibleFormatPattern(period.kind));
+      const anchor = yield* this.#cycle
+        .anchorOf(journalName, period.anchor)
+        .okOrElse(() => new OutOfTimelineError(journalName, period.anchor.toAnchor()));
+      const start = this.#cycle.startOf(journalName, anchor).getOrUndefined();
+      const end = this.#cycle.endOf(journalName, anchor).getOrUndefined();
+      if (start === undefined || end === undefined)
+        return yield* AsyncResult.err(new JournalNotFoundError(journalName));
+      const label = periodLabelOf({
+        start: start.toAnchor(),
+        end: end.toAnchor(),
+        kind: config.write.type === "custom" ? null : config.write.type,
+      });
       return yield* this.pickTarget(this.#targets.targetsAt(journalName, anchor, label));
     });
   }

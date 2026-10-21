@@ -2698,8 +2698,8 @@
   ],
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
-  "tasks_move_pick_target": "タスクをどのノートに移動しますか?",
-  "tasks_move_pick_journal": "タスクをどのジャーナルに移動しますか?",
+  "tasks_move_pick_target": "タスクをどのノートに移動しますか？",
+  "tasks_move_pick_journal": "タスクをどのジャーナルに移動しますか？",
   "tasks_move_target_row": [
     {
       "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],

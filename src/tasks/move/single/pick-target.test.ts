@@ -8,8 +8,9 @@ import type { VaultPath } from "@/infrastructure/host";
 import type { Result } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { JournalsIndex, type JournalConfig } from "@/journals";
+import { JournalNotFoundError, NoJournalsError } from "@/journals/errors";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { customJournal, fixedJournal } from "@/journals/testing";
 import { shelvesCoreModule } from "@/shelves/module";
 import { testContainer } from "@/testing";
 
@@ -19,12 +20,12 @@ import { MoveTargetPicker } from "./pick-target";
 
 import type { MoveTarget } from "./containing";
 
-function okValue(result: Result<MoveTarget, UserAborted>): MoveTarget {
+function okValue(result: Result<MoveTarget, unknown>): MoveTarget {
   expectOk(result);
   return result.value;
 }
 
-function errorOf(result: Result<MoveTarget, UserAborted>): UserAborted {
+function errorOf(result: Result<MoveTarget, unknown>): unknown {
   expectErr(result);
   return result.error;
 }
@@ -92,6 +93,28 @@ describe("MoveTargetPicker.pickTarget", () => {
     ]);
     open.choose(targets[1]);
     expect(okValue(await promise)).toEqual(targets[1]);
+  });
+
+  it("a period note and its notelet from one journal share a label without a journal suffix", async () => {
+    const { harness, picker } = await setup([]);
+    const targets = [month("a", "October 2026"), month("a", "October 2026", "Retro")];
+
+    void picker.pickTarget(targets);
+    const open = harness.suggests.lastOpen<readonly MoveTarget[], MoveTarget>();
+    const rows = targets.map((target) => open.definition.render(target, document.createElement("div")));
+
+    expect(rows).toEqual(["October 2026", "October 2026 · Retro"]);
+  });
+
+  it("composes the row text in English", async () => {
+    const { harness, picker } = await setup([]);
+    const targets = [month("a", "October 2026"), month("a", "October 2026", "Retro"), month("b", "October 2026")];
+
+    void picker.pickTarget(targets);
+    const open = harness.suggests.lastOpen<readonly MoveTarget[], MoveTarget>();
+    const rows = targets.map((target) => open.definition.render(target, document.createElement("div")));
+
+    expect(rows).toEqual(["October 2026 — a", "October 2026 · Retro — a", "October 2026 — b"]);
   });
 
   it("the journal is left off when every label is distinct", async () => {
@@ -178,5 +201,38 @@ describe("MoveTargetPicker.pickPeriodTarget", () => {
     await tick();
     harness.modals.lastOpen().cancel();
     expect(errorOf(await second)).toBeInstanceOf(UserAborted);
+  });
+
+  it("a custom interval is targeted at its start and labelled by its range", async () => {
+    const { harness, picker } = await setup([customJournal("sprints", "day", 7, "2026-06-01")]);
+
+    const promise = picker.pickPeriodTarget();
+    await tick();
+    harness.modals.lastOpen().submit(DayPeriod.containing(date("2026-06-10")));
+    const target = okValue(await promise);
+
+    expect(target.anchor).toBe(anchor("2026-06-08"));
+    expect(target.label).toBe("Jun 8, 2026 – Jun 14, 2026");
+  });
+
+  it("a journal that vanishes after the pick is reported", async () => {
+    const { harness, picker } = await setup([daily, weekly]);
+
+    const promise = picker.pickPeriodTarget();
+    harness.suggests.lastOpen<string[], string>().choose("ghost");
+
+    const result = await promise;
+    expectErr(result);
+    expect(result.error).toBeInstanceOf(JournalNotFoundError);
+  });
+
+  it("no journals is reported without opening a picker", async () => {
+    const { harness, picker } = await setup([]);
+
+    const result = await picker.pickPeriodTarget();
+
+    expectErr(result);
+    expect(result.error).toBeInstanceOf(NoJournalsError);
+    expect(harness.suggests.opens).toHaveLength(0);
   });
 });
