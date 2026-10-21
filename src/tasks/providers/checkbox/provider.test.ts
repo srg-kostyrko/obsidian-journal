@@ -321,6 +321,19 @@ describe("CheckboxTaskProvider", () => {
     expect(host.published.get(dayPath)).toHaveLength(1);
   });
 
+  it("changing the marker republishes stamped lines as todo", async () => {
+    const { host, structures, provider, harness } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    structures.setStructure(dayPath, structure({ tags: [{ tag: "#rolled", line: 4 }] }));
+    provider.start();
+    expect(host.published.get(dayPath)?.at(0)?.status).toBe("rolled");
+
+    harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = "#carried";
+    await nextTick();
+
+    expect(host.published.get(dayPath)?.at(0)?.status).toBe("todo");
+  });
+
   // A full refill replaces the provider's whole store, so it goes out as one "all" publish: per-note
   // publishing bumps the index version once per note and makes every consumer recompute that often.
   it("refills every owned note in a single publish", async () => {

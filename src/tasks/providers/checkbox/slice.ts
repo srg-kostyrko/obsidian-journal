@@ -26,6 +26,7 @@ export const checkboxSliceSchema = v.object({
   rule: v.optional(checkboxRuleSchema, { mode: "and", conditions: [] }),
   statusMap: v.optional(v.record(v.string(), v.string()), DEFAULT_STATUS_MAP),
   canonical: v.optional(v.record(v.string(), v.string()), DEFAULT_CANONICAL),
+  rolledMarker: v.optional(v.string(), "#rolled"),
 });
 
 export type CheckboxSliceState = v.InferOutput<typeof checkboxSliceSchema>;
@@ -33,5 +34,11 @@ export type CheckboxSliceState = v.InferOutput<typeof checkboxSliceSchema>;
 export const checkboxSlice = defineSlice<"tasksCheckbox", typeof checkboxSliceSchema>(
   "tasksCheckbox",
   checkboxSliceSchema,
-  { enabled: true, rule: { mode: "and", conditions: [] }, statusMap: DEFAULT_STATUS_MAP, canonical: DEFAULT_CANONICAL },
+  {
+    enabled: true,
+    rule: { mode: "and", conditions: [] },
+    statusMap: DEFAULT_STATUS_MAP,
+    canonical: DEFAULT_CANONICAL,
+    rolledMarker: "#rolled",
+  },
 );

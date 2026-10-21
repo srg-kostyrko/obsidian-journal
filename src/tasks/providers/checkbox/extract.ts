@@ -1,5 +1,5 @@
 import type { AnchorString } from "@/calendar";
-import type { NoteStructure, VaultPath } from "@/infrastructure/host";
+import type { NoteStructure, StructureListItem, VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskItem } from "@/tasks";
 
 import { headingsOf, tagsOf } from "../../note-structure";
@@ -22,12 +22,20 @@ export interface ExtractInput {
   readonly statusMap: Record<string, string>;
   readonly owned: boolean;
   readonly lineDates: LineDates | undefined;
+  readonly rolledMarker: string;
   // The containing note's properties some journal's dated rule names; undefined when none does.
   readonly properties?: Readonly<Record<string, unknown>>;
 }
 
+// Only a tag on the item's own first line counts: a child's tag or a frontmatter tag is not the item's stamp.
+export function carriesMarker(listItem: StructureListItem, structure: NoteStructure, marker: string): boolean {
+  if (marker === "") return false;
+  const wanted = marker.toLowerCase();
+  return structure.tags.some((tag) => tag.line === listItem.line && tag.tag.toLowerCase() === wanted);
+}
+
 export function extractItems(input: ExtractInput): readonly TaskItem[] {
-  const { path, structure, vault, journal, statusMap, owned, lineDates, properties } = input;
+  const { path, structure, vault, journal, statusMap, owned, lineDates, rolledMarker, properties } = input;
   const items: TaskItem[] = [];
   for (const listItem of structure.listItems) {
     const dates = lineDates?.get(listItem.line) ?? {};
@@ -39,7 +47,7 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
       provider: CHECKBOX_PROVIDER_ID,
       key: `${path}:${listItem.line}`,
       path,
-      status: normalizeStatus(listItem.marker, statusMap),
+      status: carriesMarker(listItem, structure, rolledMarker) ? "rolled" : normalizeStatus(listItem.marker, statusMap),
       relations: owned ? (dated ? ["containment", "date"] : ["containment"]) : ["date"],
       capabilities: { movable: true, stampable: true, retargetable: dated },
       display: {
