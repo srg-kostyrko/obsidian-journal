@@ -139,6 +139,7 @@ async function rolloverFor(journals: Record<string, JournalConfig>) {
     notes,
     put,
     putNotelet,
+    structures,
     text,
     resolveMetadata,
   };
@@ -333,6 +334,64 @@ describe("RolloverService", () => {
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     expect(await text(source)).toBe("- [ ] Call Bob #rolled\n");
     expect(second).toMatchObject({ rolled: 0, read: ["2026-10-20"], skippedSources: ["2026-10-20"] });
+  });
+
+  it("a heading renamed since the last parse skips the source rather than moving what sat under it", async () => {
+    const underTasks: TaskRule = {
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
+    };
+    const { roll, put, notes, text } = await rolloverFor({ daily: dayJournal("daily", { mode: "move" }, underTasks) });
+    const source = put("daily", "2026-10-20", "## Tasks\n- [ ] write\n## Log\n- [ ] note\n");
+    const renamed = "## Habits\n- [ ] write\n## Log\n- [ ] note\n";
+    notes.seed(source, renamed);
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(source)).toBe(renamed);
+    expect(await text(target)).toBe("");
+    expect(report).toMatchObject({ rolled: 0, skippedSources: ["2026-10-20"] });
+  });
+
+  it("a tag changed since the last parse skips the source", async () => {
+    const tagged: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+    const { roll, put, notes, text } = await rolloverFor({ daily: dayJournal("daily", { mode: "move" }, tagged) });
+    const source = put("daily", "2026-10-20", "- [ ] write #work\n- [ ] stretch #home\n");
+    const changed = "- [ ] write #workshop\n- [ ] stretch #home\n";
+    notes.seed(source, changed);
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(await text(source)).toBe(changed);
+    expect(await text(target)).toBe("");
+    expect(report).toMatchObject({ rolled: 0, skippedSources: ["2026-10-20"] });
+  });
+
+  it("a structure that agrees on headings and tags in other spellings still rolls", async () => {
+    const underTasks: TaskRule = {
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
+    };
+    const { roll, put, structures, text } = await rolloverFor({ daily: dayJournal("daily", {}, underTasks) });
+    const content = "Tasks\n=====\n> ## Log ##\n- [ ] write **#Work**\n";
+    const source = put("daily", "2026-10-20", content);
+    structures.setStructure(source, {
+      listItems: [{ marker: " ", line: 3, endLine: 3, parent: null }],
+      headings: [
+        { heading: "Tasks", level: 1, line: 0 },
+        { heading: "Log", level: 2, line: 2 },
+      ],
+      tags: [{ tag: "#Work", line: 3 }],
+      frontmatterTags: [],
+    });
+    const target = put("daily", TODAY, "");
+
+    const report = await roll();
+
+    expect(report).toMatchObject({ rolled: 1, skippedSources: [] });
+    expect(await text(target)).toBe("- [ ] write **#Work**\n");
   });
 
   it("reports a source still being indexed instead of calling it empty", async () => {

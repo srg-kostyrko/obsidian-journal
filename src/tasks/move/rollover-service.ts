@@ -52,16 +52,47 @@ function hasTag(line: string, tag: string): boolean {
   return new RegExp(String.raw`(?:^|\s)${escaped}(?=[\s,.;:!?)]|$)`, "iu").test(line);
 }
 
+const QUOTE_PREFIX = /^(?:\s*>)*\s*/u;
+const ATX_HEADING = /^(#{1,6})(?:[ \t]+(.*?))?(?:[ \t]+#+)?[ \t]*$/u;
+const HEADING_UNDERLINE = { 1: /^\s*=+\s*$/u, 2: /^\s*-+\s*$/u } as const;
+
+function holdsHeading(lines: readonly string[], heading: NoteStructure["headings"][number]): boolean {
+  const line = (lines[heading.line] ?? "").replace(QUOTE_PREFIX, "").replace(/\r$/u, "");
+  const atx = ATX_HEADING.exec(line);
+  if (atx !== null) return atx[1]?.length === heading.level && (atx[2] ?? "").trim() === heading.heading.trim();
+  const underline = heading.level === 1 || heading.level === 2 ? HEADING_UNDERLINE[heading.level] : null;
+  return (
+    underline !== null &&
+    underline.test((lines[heading.line + 1] ?? "").replace(QUOTE_PREFIX, "")) &&
+    line.trim() === heading.heading.trim()
+  );
+}
+
+// Looser than hasTag: Obsidian reads a tag wrapped in markup or brackets, and only a tag that is gone
+// or has grown longer matters here.
+function holdsTag(lines: readonly string[], tag: NoteStructure["tags"][number]): boolean {
+  const line = lines[tag.line];
+  if (line === undefined) return false;
+  const escaped = tag.tag.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
+  return new RegExp(String.raw`${escaped}(?![\p{L}\p{N}_/-])`, "iu").test(line);
+}
+
 // metadataCache trails a write. Planned against an older structure, a line stamped a moment ago
-// reads as open and rolls twice, and a line number that has since shifted plans whatever now sits
-// there — so the structure has to agree with the text on every task line before it is trusted.
+// reads as open and rolls twice, a line number that has since shifted plans whatever now sits
+// there, and a renamed heading or tag selects lines the filter no longer names — so the structure
+// has to agree with the text on every task line, heading and tag before it is trusted.
 function inSync(content: string, structure: NoteStructure, marker: string): boolean {
   const lines = content.split("\n");
-  return structure.listItems.every((item) => {
+  const tasksAgree = structure.listItems.every((item) => {
     const line = lines[item.line];
     if (line === undefined || CHECKBOX.exec(line)?.[1] !== item.marker) return false;
     return marker === "" || hasTag(line, marker) === carriesMarker(item, structure, marker);
   });
+  return (
+    tasksAgree &&
+    structure.headings.every((heading) => holdsHeading(lines, heading)) &&
+    structure.tags.every((tag) => holdsTag(lines, tag))
+  );
 }
 
 function selectionOf(filter: TaskRule): TaskRule {
