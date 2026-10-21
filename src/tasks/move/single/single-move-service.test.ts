@@ -1,17 +1,19 @@
 import * as v from "valibot";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import type { PeriodKind } from "@/calendar";
 import { anchor } from "@/calendar/testing";
+import { m } from "@/i18n";
 import { UserAborted } from "@/infrastructure/flows";
 import {
+  NoteStructureService,
   NotesService,
   NoteWriteError,
   WorkspaceService,
   type ActiveEditorState,
   type VaultPath,
 } from "@/infrastructure/host";
-import { FakeNotesService } from "@/infrastructure/host/testing";
+import { FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { JournalsIndex, type JournalConfig } from "@/journals";
@@ -22,6 +24,7 @@ import { overrideWith, testContainer } from "@/testing";
 import { taskRuleSchema } from "../../conditions";
 import { tasksCoreModule } from "../../module";
 import { SingleMoveRefusedError } from "../errors";
+import { RolloverService } from "../rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "../settings";
 import { confirmBlockLinkModal } from "../ui/modals";
 
@@ -36,11 +39,13 @@ function journal(
   name: string,
   type: Exclude<PeriodKind, "decade">,
   move: Partial<JournalMoveConfig> = {},
+  overrides: Partial<JournalConfig> = {},
 ): JournalConfig {
   return fixedJournal(
     name,
     { type },
     {
+      ...overrides,
       folder: name,
       tasks: { providers: {}, filter: v.parse(taskRuleSchema, {}), move: v.parse(journalMoveSchema, move) },
     },
@@ -53,10 +58,11 @@ function target(journalName: string, at: string, path: VaultPath | null): MoveTa
 
 async function moverFor(journals: Record<string, JournalConfig>) {
   const notes = new FakeNotesService();
+  const structures = new FakeNoteStructureService();
   const harness = await testContainer({
     modules: [journalsCoreModule, tasksCoreModule],
     data: { journals },
-    overrides: [overrideWith(NotesService, notes as never)],
+    overrides: [overrideWith(NotesService, notes as never), overrideWith(NoteStructureService, structures as never)],
   });
   const index = harness.resolve(JournalsIndex);
   const put = (journalName: string, at: string, text: string): VaultPath => {
@@ -80,7 +86,7 @@ async function moverFor(journals: Record<string, JournalConfig>) {
   };
   const service = harness.resolve(SingleMoveService);
   const move = (source: ActiveEditorState, to: MoveTarget) => service.move(source, to);
-  return { harness, notes, index, put, edit, text, service, move };
+  return { harness, notes, structures, index, put, edit, text, service, move };
 }
 
 describe("SingleMoveService", () => {
@@ -190,6 +196,7 @@ describe("SingleMoveService", () => {
     const pending = move(state, target("monthly", "2026-10-01", month));
     await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
     expect(harness.modals.lastOpen().definition).toBe(confirmBlockLinkModal);
+    expect(harness.modals.lastOpen().resolvedTitle).toBe(m.tasks_move_block_link_title());
     harness.modals.lastOpen().cancel();
     const result = await pending;
 
@@ -354,7 +361,27 @@ describe("SingleMoveService", () => {
     });
   });
 
-  describe("a source no longer in the active editor", () => {
+  it("edits the source through a background pane that holds it, unsaved typing and all", async () => {
+    const { harness, put, edit, text, move } = await moverFor({
+      daily: journal("daily", "day"),
+      monthly: journal("monthly", "month", { mode: "move" }),
+    });
+    const month = put("monthly", "2026-10-01", "");
+    const { editor, state } = edit("- [ ] Call Bob\n- [ ] Other\n", 0);
+    editor.text = "- [ ] Call Bob\n- [ ] Other\n- [ ] Typed, unsaved\n";
+    const active = harness.host.openEditor("daily/2026-10-19.md", "- [ ] Call Bob\n", 0);
+
+    const result = await move(state, target("monthly", "2026-10-01", month));
+
+    expectOk(result);
+    expect(result.value.outcome).toBe("done");
+    expect(editor.text).toBe("- [ ] Other\n- [ ] Typed, unsaved\n");
+    expect(editor.changes).toHaveLength(1);
+    expect(active.changes).toEqual([]);
+    expect(await text(SOURCE)).toBe("- [ ] Call Bob\n- [ ] Other\n");
+  });
+
+  describe("a source no open view holds", () => {
     it("is rewritten on disk once it still matches", async () => {
       const { harness, put, edit, text, move } = await moverFor({
         daily: journal("daily", "day"),
@@ -362,6 +389,7 @@ describe("SingleMoveService", () => {
       });
       const month = put("monthly", "2026-10-01", "");
       const { state } = edit("- [ ] Call Bob\n- [ ] Other\n", 0);
+      harness.host.closeEditor(SOURCE);
       const elsewhere = harness.host.openEditor("daily/2026-10-19.md", "- [ ] Call Bob\n", 0);
 
       const result = await move(state, target("monthly", "2026-10-01", month));
@@ -372,15 +400,19 @@ describe("SingleMoveService", () => {
       expect(elsewhere.changes).toEqual([]);
     });
 
-    it("is left alone and reported when the file no longer matches", async () => {
+    it("is left alone and reported when the file changes during the target write", async () => {
       const { harness, put, edit, text, move, notes } = await moverFor({
         daily: journal("daily", "day"),
         monthly: journal("monthly", "month", { mode: "move" }),
       });
       const month = put("monthly", "2026-10-01", "");
       const { state } = edit("- [ ] Call Bob\n- [ ] Other\n", 0);
-      harness.host.workspace.activeEditor = null;
-      notes.seed(SOURCE, "- [ ] Saved above\n- [ ] Call Bob\n- [ ] Other\n");
+      harness.host.closeEditor(SOURCE);
+      const process = notes.process.bind(notes);
+      vi.spyOn(notes, "process").mockImplementation((path, transform) => {
+        if (path === month) notes.seed(SOURCE, "- [ ] Saved above\n- [ ] Call Bob\n- [ ] Other\n");
+        return process(path, transform);
+      });
 
       const result = await move(state, target("monthly", "2026-10-01", month));
 
@@ -397,7 +429,7 @@ describe("SingleMoveService", () => {
       });
       const month = put("monthly", "2026-10-01", "");
       const { state } = edit("- [ ] Call Bob\n", 0);
-      harness.host.workspace.activeEditor = null;
+      harness.host.closeEditor(SOURCE);
       const process = notes.process.bind(notes);
       vi.spyOn(notes, "process").mockImplementation((path, transform) =>
         path === SOURCE ? AsyncResult.err(new NoteWriteError(path, "locked")) : process(path, transform),
@@ -420,7 +452,7 @@ describe("SingleMoveService", () => {
     });
     const month = put("monthly", "2026-10-01", "");
     const year = put("yearly", "2026-01-01", "");
-    const { state } = edit("- [ ] One\n- [ ] Two\n", 0);
+    const { state } = edit("- [ ] One\n- [ ] Two\n- [ ] Three\n", 0);
     const process = notes.process.bind(notes);
     const { promise: gate, resolve: release } = Promise.withResolvers<void>();
     const spy = vi.spyOn(notes, "process");
@@ -432,12 +464,118 @@ describe("SingleMoveService", () => {
     const first = service.move(state, target("monthly", "2026-10-01", month));
     await vi.waitFor(() => expect(written()).toEqual([month]));
     const second = service.move({ ...state, cursorLine: 1 }, target("monthly", "2026-10-01", month));
-    const elsewhere = service.move({ ...state, cursorLine: 1 }, target("yearly", "2026-01-01", year));
+    const elsewhere = service.move({ ...state, cursorLine: 2 }, target("yearly", "2026-01-01", year));
     await vi.waitFor(() => expect(written()).toEqual([month, year]));
     release();
     await Promise.all([first, second, elsewhere]);
 
     expect(written()).toEqual([month, year, month]);
     expect(await text(month)).toBe("- [ ] One\n- [ ] Two\n");
+  });
+
+  it("a second move of the same task, queued behind the first, writes nothing", async () => {
+    for (const mode of ["copy", "move"] as const) {
+      const { put, edit, text, service } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", { mode }),
+      });
+      const month = put("monthly", "2026-10-01", "");
+      const { editor, state } = edit("- [ ] Call Bob\n    - detail\n- [ ] Other\n", 0);
+
+      const [first, second] = await Promise.all([
+        service.move(state, target("monthly", "2026-10-01", month)),
+        service.move(state, target("monthly", "2026-10-01", month)),
+      ]);
+
+      expectOk(first);
+      expectOk(second);
+      expect(first.value.outcome).toBe("done");
+      expect(second.value).toEqual({ mode, label: LABEL, outcome: "nothing" });
+      expect(await text(month)).toBe("- [ ] Call Bob\n    - detail\n");
+      expect(editor.changes).toHaveLength(1);
+      expect(editor.text).toContain("- [ ] Other\n");
+    }
+  });
+
+  it("refuses a target that is the source note itself, before any write", async () => {
+    const { put, edit, text, move, notes } = await moverFor({
+      daily: journal("daily", "day", { mode: "move" }),
+      monthly: journal("monthly", "month"),
+    });
+    const month = put("monthly", "2026-10-01", "");
+    expect(put("daily", "2026-10-20", "- [ ] Call Bob\n")).toBe(SOURCE);
+    const { editor, state } = edit("- [ ] Call Bob\n", 0);
+    const process = vi.spyOn(notes, "process");
+
+    for (const to of [target("daily", "2026-10-20", SOURCE), target("daily", "2026-10-20", null)]) {
+      const result = await move(state, to);
+      expectErr(result);
+      expect(result.error).toEqual(new SingleMoveRefusedError("same-note"));
+    }
+
+    expect(process).not.toHaveBeenCalled();
+    expect(editor.changes).toEqual([]);
+    expect(await text(month)).toBe("");
+  });
+
+  it("cancelling the target's creation prompt writes nothing to either note", async () => {
+    const { harness, edit, move, notes, index } = await moverFor({
+      daily: journal("daily", "day"),
+      monthly: journal("monthly", "month", {}, { confirmCreation: true }),
+    });
+    const { editor, state } = edit("- [ ] Call Bob\n", 0);
+
+    const pending = move(state, target("monthly", "2026-10-01", null));
+    await vi.waitFor(() => expect(harness.modals.opens).toHaveLength(1));
+    harness.modals.lastOpen<unknown, boolean>().submit(false);
+    const result = await pending;
+
+    expectErr(result);
+    expect(result.error).toBeInstanceOf(UserAborted);
+    expect(index.get("monthly", anchor("2026-10-01")).isNone()).toBe(true);
+    expect(notes.allMarkdownNotes()).toEqual([SOURCE]);
+    expect(editor.changes).toEqual([]);
+    expect(editor.text).toBe("- [ ] Call Bob\n");
+  });
+
+  it("waits for a roll writing into the same journal", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date(2026, 9, 21, 9, 0, 0));
+    onTestFinished(() => {
+      vi.useRealTimers();
+    });
+    const { harness, put, edit, text, service, notes, structures } = await moverFor({
+      daily: journal("daily", "day"),
+      monthly: journal("monthly", "month"),
+    });
+    const earlier = put("daily", "2026-10-19", "- [ ] Old\n");
+    structures.setStructure(earlier, {
+      listItems: [{ marker: " ", line: 0, endLine: 0, parent: null }],
+      headings: [],
+      tags: [],
+      frontmatterTags: [],
+    });
+    const today = put("daily", "2026-10-21", "");
+    const month = put("monthly", "2026-10-01", "");
+    const { state } = edit("- [ ] Call Bob\n- [ ] Other\n", 0);
+    const process = notes.process.bind(notes);
+    const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+    const spy = vi.spyOn(notes, "process");
+    spy.mockImplementationOnce((path, transform) =>
+      AsyncResult.fromPromise(gate, () => new NoteWriteError(path, "gate")).flatMap(() => process(path, transform)),
+    );
+    const written = (): VaultPath[] => spy.mock.calls.map(([path]) => path);
+
+    const roll = harness.resolve(RolloverService).roll("daily", { interactive: true });
+    await vi.waitFor(() => expect(written()).toEqual([today]));
+    const single = service.move(state, target("daily", "2026-10-21", today));
+    const elsewhere = service.move({ ...state, cursorLine: 1 }, target("monthly", "2026-10-01", month));
+    await vi.waitFor(() => expect(written()).toContain(month));
+    expect(written().filter((path) => path === today)).toHaveLength(1);
+    release();
+    await Promise.all([roll, single, elsewhere]);
+
+    expect(written().filter((path) => path === today)).toHaveLength(2);
+    expect(await text(today)).toBe("- [ ] Old\n- [ ] Call Bob\n");
   });
 });

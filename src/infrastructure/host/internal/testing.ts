@@ -62,6 +62,8 @@ export interface FakeEditorState {
 export interface FakeWorkspaceState {
   activeFile: TFile | null;
   activeEditor: FakeEditorState | null;
+  // Buffers of open markdown views, by path; the leaf holding the path carries its editor.
+  editors: Map<string, FakeEditorState>;
   openPaths: Set<string>;
   // Which window each open path's leaf sits in, and which window the user is currently in.
   // Popout windows are what make workspace-wide leaf reuse steal focus, so leaf lookups that
@@ -111,7 +113,7 @@ interface FakeLeaf {
 }
 
 interface FakeMarkdownLeaf {
-  readonly view: { file: TFile | null };
+  readonly view: { file: TFile | null; editor?: ReturnType<typeof fakeEditor> };
   openFile(file: TFile): Promise<void>;
   getContainer(): { win: Window };
   getRoot(): object;
@@ -150,8 +152,10 @@ export interface FakeHost {
   readonly promptedDeletions: readonly TFile[];
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
-  /** Makes an editor holding `text` for `path` the active one. */
-  openEditor(path: string, text: string, cursorLine?: number): FakeEditorState;
+  /** Opens `path` in a markdown view whose editor holds `text`; the active editor unless `active` is false. */
+  openEditor(path: string, text: string, cursorLine?: number, options?: { active?: boolean }): FakeEditorState;
+  /** Closes the view holding `path`, so no editor holds it any more. */
+  closeEditor(path: string): void;
   putFolder(path: string): TFolder;
   putPlugin(id: string, instance: object): void;
   putCorePlugin(id: string, instance: object, enabled?: boolean): void;
@@ -258,6 +262,7 @@ export function createFakeHost(): FakeHost {
   const workspaceState: FakeWorkspaceState = {
     activeFile: null,
     activeEditor: null,
+    editors: new Map(),
     openPaths: new Set(),
     openWindows: new Map(),
     activeWindow: MAIN_WINDOW,
@@ -588,7 +593,12 @@ export function createFakeHost(): FakeHost {
     let path = initialPath;
     return {
       get view() {
-        return { file: workspaceState.deferredPaths.has(path) ? null : (fileObjects.get(path) ?? null) };
+        if (workspaceState.deferredPaths.has(path)) return { file: null };
+        const state = workspaceState.editors.get(path);
+        return {
+          file: fileObjects.get(path) ?? (state === undefined ? null : makeFile(path)),
+          ...(state !== undefined && { editor: fakeEditor(state) }),
+        };
       },
       async openFile(file: TFile): Promise<void> {
         const win = workspaceState.openWindows.get(path) ?? MAIN_WINDOW;
@@ -764,10 +774,19 @@ export function createFakeHost(): FakeHost {
       attachChild(file);
       return file;
     },
-    openEditor(path, text, cursorLine = 0): FakeEditorState {
+    openEditor(path, text, cursorLine = 0, { active = true } = {}): FakeEditorState {
       const state: FakeEditorState = { path, text, cursorLine, changes: [] };
-      workspaceState.activeEditor = state;
+      workspaceState.editors.set(path, state);
+      workspaceState.openPaths.add(path);
+      workspaceState.openWindows.set(path, workspaceState.openWindows.get(path) ?? MAIN_WINDOW);
+      if (active) workspaceState.activeEditor = state;
       return state;
+    },
+    closeEditor(path): void {
+      workspaceState.editors.delete(path);
+      workspaceState.openPaths.delete(path);
+      workspaceState.openWindows.delete(path);
+      if (workspaceState.activeEditor?.path === path) workspaceState.activeEditor = null;
     },
     putFolder(path): TFolder {
       ensureFolderChain(path);

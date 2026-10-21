@@ -11,8 +11,7 @@ export const editJournalMoveModal = defineModal<JournalMoveConfig>()({
   title: () => m.tasks_move_title(),
 });
 
-// The body says it all, so the dialog carries no heading.
 export const confirmBlockLinkModal = defineModal()({
   component: ConfirmBlockLinkModal,
-  title: () => "",
+  title: () => m.tasks_move_block_link_title(),
 });

@@ -18,8 +18,8 @@ export type RollError =
 export class SingleMoveRefusedError extends Error {
   readonly kind = "single-move-refused" as const;
 
-  constructor(readonly reason: "not-a-task" | "rolled") {
-    super(`The line under the cursor cannot be moved: ${reason}`);
+  constructor(readonly reason: "not-a-task" | "rolled" | "same-note") {
+    super(`The task under the cursor cannot be moved: ${reason}`);
     this.name = "SingleMoveRefusedError";
   }
 }

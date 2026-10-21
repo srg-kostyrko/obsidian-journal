@@ -32,7 +32,13 @@ export interface SingleMoveReport {
   readonly mode: "copy" | "move";
   readonly label: string;
   readonly noteletTitle?: string;
-  readonly outcome: "done" | "changed" | "write-failed";
+  /** "nothing": the task had already left or been stamped by the time the move ran; nothing was written. */
+  readonly outcome: "done" | "nothing" | "changed" | "write-failed";
+}
+
+interface Confirmed {
+  readonly root: PlannedRoot;
+  readonly allowBlockId: boolean;
 }
 
 type SourceOutcome = SingleMoveReport["outcome"];
@@ -61,20 +67,56 @@ export class SingleMoveService {
     source: ActiveEditorState,
     mode: EffectiveMove["mode"],
     rolledMarker: string,
-  ): AsyncResult<SourcePlan, SingleMoveRefusedError | UserAborted> {
+  ): AsyncResult<Confirmed, SingleMoveRefusedError | UserAborted> {
     return attempt.in(this, async function* (this: SingleMoveService) {
+      let allowBlockId = false;
       let planned = planItem(source, source.cursorLine, { mode, rolledMarker });
       if (planned.kind === "refused" && planned.reason === "block-id") {
         yield* this.#modals.open(confirmBlockLinkModal, {}).mapErr(() => new UserAborted(SOURCE));
-        planned = planItem(source, source.cursorLine, { mode, rolledMarker, allowBlockId: true });
+        allowBlockId = true;
+        planned = planItem(source, source.cursorLine, { mode, rolledMarker, allowBlockId });
       }
-      if (planned.kind === "planned") return planned.plan;
-      if (planned.reason === "block-id") throw new InvariantError("planItem refused a block id it was allowed");
-      return yield* AsyncResult.err(new SingleMoveRefusedError(planned.reason));
+      if (planned.kind === "refused") {
+        if (planned.reason === "block-id") throw new InvariantError("planItem refused a block id it was allowed");
+        return yield* AsyncResult.err(new SingleMoveRefusedError(planned.reason));
+      }
+      const root = planned.plan.roots.at(0);
+      if (root === undefined) throw new InvariantError("planItem planned no root");
+      const confirmed: Confirmed = { root, allowBlockId };
+      return confirmed;
     });
   }
 
-  #targetPath(target: MoveTarget): AsyncResult<VaultPath, SingleMoveError> {
+  async #currentText(path: VaultPath): Promise<string | undefined> {
+    const open = this.#workspace.openNoteText(path);
+    if (open.isSome()) return open.value;
+    const read = await this.#notes.read(path);
+    return read.isOk() ? read.value : undefined;
+  }
+
+  // Planned again on the text as it is now, under the lock: a move queued behind another of the same
+  // task would otherwise copy it a second time before its source check refused it.
+  async #replan(
+    path: VaultPath,
+    confirmed: Confirmed,
+    move: EffectiveMove,
+    rolledMarker: string,
+  ): Promise<SourcePlan | null> {
+    const content = await this.#currentText(path);
+    if (content === undefined) return null;
+    const { root, allowBlockId } = confirmed;
+    const again = planItem({ path, content }, root.line, { mode: move.mode, rolledMarker, allowBlockId });
+    if (again.kind === "refused") return null;
+    const now = again.plan.roots.at(0);
+    const same =
+      now?.line === root.line &&
+      now.end === root.end &&
+      now.lines.length === root.lines.length &&
+      now.lines.every((line, index) => line === root.lines[index]);
+    return same ? again.plan : null;
+  }
+
+  #ensureTarget(target: MoveTarget): AsyncResult<VaultPath, SingleMoveError> {
     const existing = target.path ?? this.#index.get(target.journalName, target.anchor).getOrUndefined();
     if (existing !== undefined) return AsyncResult.ok(existing);
     return this.#flows
@@ -83,14 +125,10 @@ export class SingleMoveService {
   }
 
   async #rewriteSource(path: VaultPath, root: PlannedRoot, rewrite: SourceRewrite): Promise<SourceOutcome> {
-    let verified = false;
-    const applied = this.#workspace.replaceLinesInActiveEditor(path, (content) => {
-      verified = true;
-      return lineChange(content, root, rewrite);
-    });
-    if (applied) return "done";
-    if (verified) return "changed";
-    // The editor moved on to another note, which saved this one: the file is the source now.
+    const edited = this.#workspace.replaceLinesInOpenNote(path, (content) => lineChange(content, root, rewrite));
+    if (edited === "applied") return "done";
+    if (edited === "refused") return "changed";
+    // No open view holds the note, so nothing unsaved can be lost: the file is the source.
     let refused = false;
     const written = await this.#notes.process(path, (content) => {
       const outcome = rewriteSource(content, [root], rewrite);
@@ -107,25 +145,26 @@ export class SingleMoveService {
   #write(
     source: ActiveEditorState,
     target: MoveTarget,
-    plan: SourcePlan,
+    confirmed: Confirmed,
     move: EffectiveMove,
     marker: string,
   ): AsyncResult<SingleMoveReport, SingleMoveError> {
     return attempt.in(this, async function* (this: SingleMoveService) {
-      const root = plan.roots.at(0);
-      if (root === undefined) throw new InvariantError("planItem planned no root");
-      const path = yield* this.#targetPath(target);
-      // The target goes first: a failure before the source is written leaves a duplicate, never a gap.
-      yield* this.#notes.process(path, (content) => placeGroups(content, plan.block, move.targetHeading));
-      const rewrite = sourceRewrite(move, marker);
-      const outcome = rewrite === null ? "done" : await this.#rewriteSource(source.path, root, rewrite);
-      const report: SingleMoveReport = {
+      const report = (outcome: SourceOutcome): SingleMoveReport => ({
         mode: move.mode,
         label: target.label,
         ...(target.noteletTitle !== undefined && { noteletTitle: target.noteletTitle }),
         outcome,
-      };
-      return report;
+      });
+      const plan = await this.#replan(source.path, confirmed, move, marker);
+      if (plan === null) return report("nothing");
+      const path = yield* this.#ensureTarget(target);
+      // Only an existing note can be the source, and ensuring one writes nothing.
+      if (path === source.path) return yield* AsyncResult.err(new SingleMoveRefusedError("same-note"));
+      // The target goes first: a failure before the source is written leaves a duplicate, never a gap.
+      yield* this.#notes.process(path, (content) => placeGroups(content, plan.block, move.targetHeading));
+      const rewrite = sourceRewrite(move, marker);
+      return report(rewrite === null ? "done" : await this.#rewriteSource(source.path, confirmed.root, rewrite));
     });
   }
 
@@ -137,8 +176,9 @@ export class SingleMoveService {
         .okOrElse(() => new JournalNotFoundError(target.journalName));
       const move = effectiveMove(config.tasks.move, this.#defaults.state);
       const marker = this.#checkbox.state.rolledMarker;
-      const plan = yield* this.#plan(source, move.mode, marker);
-      return yield* this.#locks.run(target.journalName, () => this.#write(source, target, plan, move, marker));
+      // The confirm stays outside the lock so a pending answer never holds up a roll into the journal.
+      const confirmed = yield* this.#plan(source, move.mode, marker);
+      return yield* this.#locks.run(target.journalName, () => this.#write(source, target, confirmed, move, marker));
     });
   }
 }

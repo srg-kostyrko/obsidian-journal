@@ -2801,6 +2801,7 @@
   "tasks_roll_source_unread": "Не удалось прочитать заметку за {date}.",
   "tasks_move_pick_target": "В какую заметку переместить задачу?",
   "tasks_move_pick_journal": "В какой журнал переместить задачу?",
+  "tasks_move_block_link_title": "Переместить связанную задачу?",
   "tasks_move_block_link_warning": "У этой задачи есть ссылка на блок. Если её переместить, ссылки на неё перестанут работать.",
   "tasks_move_block_link_confirm": "Всё равно переместить",
   "tasks_move_target_row": [

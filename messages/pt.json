@@ -2708,6 +2708,7 @@
   "tasks_roll_source_unread": "Não foi possível ler a nota de {date}.",
   "tasks_move_pick_target": "Mover a tarefa para qual nota?",
   "tasks_move_pick_journal": "Mover a tarefa para qual diário?",
+  "tasks_move_block_link_title": "Mover uma tarefa vinculada?",
   "tasks_move_block_link_warning": "Esta tarefa tem um link de bloco. Movê-la quebra os links que apontam para ela.",
   "tasks_move_block_link_confirm": "Mover mesmo assim",
   "tasks_move_target_row": [

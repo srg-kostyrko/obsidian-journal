@@ -183,6 +183,20 @@ export class WorkspaceService {
     return null;
   }
 
+  // The active editor first, wherever it is: the command ran there. Otherwise a main-window view of
+  // the note. A deferred view has no file and no editor yet, so it holds nothing unsaved.
+  #editorHolding(path: VaultPath): Editor | undefined {
+    const active = this.#app.workspace.activeEditor;
+    if (active?.file?.path === path && active.editor !== undefined) return active.editor;
+    const main = this.#app.workspace.containerEl.win;
+    for (const leaf of this.#app.workspace.getLeavesOfType("markdown")) {
+      if (leaf.getContainer().win !== main) continue;
+      const view = leaf.view as MarkdownView | undefined;
+      if (view?.file?.path === path && view.editor !== undefined) return view.editor;
+    }
+    return undefined;
+  }
+
   #activeEditor(): Editor | undefined {
     return this.#app.workspace.activeEditor?.editor;
   }
@@ -262,16 +276,24 @@ export class WorkspaceService {
     });
   }
 
+  /** The text of an open view of `path`, unsaved typing included. */
+  openNoteText(path: VaultPath): Option<string> {
+    const editor = this.#editorHolding(path);
+    return editor === undefined ? new None<string>() : new Some<string>(editor.getValue());
+  }
+
   // One replaceRange is one undo step. The verdict is reached on the buffer as it stands now, so
   // typing since the caller read it can only refuse the change, never shift where it lands.
-  /** Replaces a line range in the active editor if it still shows `path` and `verify` approves. */
-  replaceLinesInActiveEditor(path: VaultPath, verify: (content: string) => LineReplacement | null): boolean {
-    const active = this.#app.workspace.activeEditor;
-    const editor = active?.editor;
-    if (editor === undefined || active?.file?.path !== path) return false;
+  /** Replaces a line range in an open view of `path` if `verify` approves it against that view's text. */
+  replaceLinesInOpenNote(
+    path: VaultPath,
+    verify: (content: string) => LineReplacement | null,
+  ): "applied" | "refused" | "not-open" {
+    const editor = this.#editorHolding(path);
+    if (editor === undefined) return "not-open";
     const change = verify(editor.getValue());
     const last = editor.lastLine();
-    if (change === null || change.from < 0 || change.to < change.from || change.to > last) return false;
+    if (change === null || change.from < 0 || change.to < change.from || change.to > last) return "refused";
     const { from, to, lines } = change;
     const endOf = (line: number) => ({ line, ch: editor.getLine(line).length });
     if (to < last) {
@@ -282,7 +304,7 @@ export class WorkspaceService {
       // The last line has no newline of its own to take, so the one ending the line above goes.
       editor.replaceRange("", from === 0 ? { line: 0, ch: 0 } : endOf(from - 1), endOf(to));
     }
-    return true;
+    return "applied";
   }
 
   insertNoteLinkAtCursor(targetPath: VaultPath): boolean {

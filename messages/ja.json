@@ -2700,6 +2700,7 @@
   "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
   "tasks_move_pick_target": "タスクをどのノートに移動しますか？",
   "tasks_move_pick_journal": "タスクをどのジャーナルに移動しますか？",
+  "tasks_move_block_link_title": "リンクされたタスクを移動しますか？",
   "tasks_move_block_link_warning": "このタスクにはブロックリンクがあります。移動すると、このタスクを指すリンクが切れます。",
   "tasks_move_block_link_confirm": "それでも移動",
   "tasks_move_target_row": [

@@ -24,6 +24,10 @@ function build(): { service: WorkspaceService; host: FakeHost } {
 
 const path = "Daily/2026-05-13.md" as VaultPath;
 
+function replaceFirst() {
+  return { from: 0, to: 0, lines: ["X"] };
+}
+
 function noop(): void {
   // Stands in for a real MenuItemSpec callback whose invocation is not under test.
 }
@@ -519,7 +523,7 @@ describe("WorkspaceService", () => {
     });
   });
 
-  describe("the active editor", () => {
+  describe("open editors", () => {
     const other = "Daily/2026-05-14.md" as VaultPath;
 
     it("reads no state when no editor is active", () => {
@@ -544,9 +548,9 @@ describe("WorkspaceService", () => {
       const { service, host } = build();
       const editor = host.openEditor(path, "a\nb\nc\nd\n");
 
-      const applied = service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 2, lines: ["B"] }));
+      const applied = service.replaceLinesInOpenNote(path, () => ({ from: 1, to: 2, lines: ["B"] }));
 
-      expect(applied).toBe(true);
+      expect(applied).toBe("applied");
       expect(editor.text).toBe("a\nB\nd\n");
       expect(editor.changes).toHaveLength(1);
     });
@@ -554,15 +558,15 @@ describe("WorkspaceService", () => {
     it("removes the last lines of a buffer with no trailing newline", () => {
       const { service, host } = build();
       const removed = host.openEditor(path, "a\nb\nc");
-      service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 2, lines: [] }));
+      service.replaceLinesInOpenNote(path, () => ({ from: 1, to: 2, lines: [] }));
       expect(removed.text).toBe("a");
 
       const stamped = host.openEditor(path, "a\nb");
-      service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 1, lines: ["b #x"] }));
+      service.replaceLinesInOpenNote(path, () => ({ from: 1, to: 1, lines: ["b #x"] }));
       expect(stamped.text).toBe("a\nb #x");
 
       const emptied = host.openEditor(path, "a\nb");
-      service.replaceLinesInActiveEditor(path, () => ({ from: 0, to: 1, lines: [] }));
+      service.replaceLinesInOpenNote(path, () => ({ from: 0, to: 1, lines: [] }));
       expect(emptied.text).toBe("");
     });
 
@@ -572,31 +576,68 @@ describe("WorkspaceService", () => {
       editor.text = "- [ ] typed above\n- [ ] task\n";
       const seen: string[] = [];
 
-      const applied = service.replaceLinesInActiveEditor(path, (content) => {
+      const applied = service.replaceLinesInOpenNote(path, (content) => {
         seen.push(content);
         return null;
       });
 
-      expect(applied).toBe(false);
+      expect(applied).toBe("refused");
       expect(seen).toEqual(["- [ ] typed above\n- [ ] task\n"]);
       expect(editor.changes).toEqual([]);
     });
 
-    it("writes nothing when the active editor shows another note", () => {
+    it("writes nothing when no view holds the note", () => {
       const { service, host } = build();
       const editor = host.openEditor(other, "a\nb\n");
       const verify = vi.fn(() => ({ from: 0, to: 0, lines: ["A"] }));
 
-      expect(service.replaceLinesInActiveEditor(path, verify)).toBe(false);
+      expect(service.replaceLinesInOpenNote(path, verify)).toBe("not-open");
+      expect(service.openNoteText(path).isNone()).toBe(true);
       expect(verify).not.toHaveBeenCalled();
       expect(editor.text).toBe("a\nb\n");
+    });
+
+    it("edits a main-window view of the note that is not the active editor", () => {
+      const { service, host } = build();
+      host.putFile(path, "a\n");
+      const background = host.openEditor(path, "a\ntyped\n", 0, { active: false });
+      const active = host.openEditor(other, "a\ntyped\n");
+
+      expect(service.openNoteText(path).getOrUndefined()).toBe("a\ntyped\n");
+      expect(service.replaceLinesInOpenNote(path, () => ({ from: 1, to: 1, lines: ["TYPED"] }))).toBe("applied");
+      expect(background.text).toBe("a\nTYPED\n");
+      expect(active.text).toBe("a\ntyped\n");
+      expect(host.files.get(path)?.content).toBe("a\n");
+    });
+
+    it("edits the active editor even in a popout, where the command ran", () => {
+      const { service, host } = build();
+      const editor = host.openEditor(path, "a\n");
+      host.workspace.openWindows.set(path, "popout");
+
+      expect(service.replaceLinesInOpenNote(path, () => ({ from: 0, to: 0, lines: ["A"] }))).toBe("applied");
+      expect(editor.text).toBe("A\n");
+    });
+
+    it("leaves a popout's background view and a deferred view alone", () => {
+      const { service, host } = build();
+      const popout = host.openEditor(path, "a\n", 0, { active: false });
+      host.workspace.openWindows.set(path, "popout");
+      const deferredPath = "Daily/2026-05-15.md" as VaultPath;
+      const deferred = host.openEditor(deferredPath, "b\n", 0, { active: false });
+      host.workspace.deferredPaths.add(deferredPath);
+
+      expect(service.replaceLinesInOpenNote(path, replaceFirst)).toBe("not-open");
+      expect(service.replaceLinesInOpenNote(deferredPath, replaceFirst)).toBe("not-open");
+      expect(popout.changes).toEqual([]);
+      expect(deferred.changes).toEqual([]);
     });
 
     it("refuses a range outside the buffer", () => {
       const { service, host } = build();
       const editor = host.openEditor(path, "a\nb");
 
-      expect(service.replaceLinesInActiveEditor(path, () => ({ from: 1, to: 2, lines: [] }))).toBe(false);
+      expect(service.replaceLinesInOpenNote(path, () => ({ from: 1, to: 2, lines: [] }))).toBe("refused");
       expect(editor.changes).toEqual([]);
     });
   });
