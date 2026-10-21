@@ -55,7 +55,7 @@ describe("SingleMoveCommands", () => {
   let harness: TestHarness;
   const move = vi.fn();
 
-  async function boot(journals: Record<string, ReturnType<typeof fixedJournal>>): Promise<void> {
+  async function boot(journals: Record<string, ReturnType<typeof fixedJournal>>, ready = true): Promise<void> {
     harness = await testContainer({
       modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, commandsModule],
       data: { journals },
@@ -75,6 +75,7 @@ describe("SingleMoveCommands", () => {
         typeId: null,
       });
     }
+    if (ready) index.markReady();
   }
 
   function run(id: string): void {
@@ -104,6 +105,80 @@ describe("SingleMoveCommands", () => {
     for (const id of [CONTAINING, PERIOD_NOTE]) {
       expect(harness.host.commands.get(id)?.checkCallback?.(true)).toBe(true);
     }
+  });
+
+  it("a note in reading mode is not an editor: unlisted, and a press says where to put the cursor", async () => {
+    const reading = harness.host.openEditor(DAY, TEXT, 0);
+    reading.mode = "preview";
+    for (const id of [CONTAINING, PERIOD_NOTE]) {
+      expect(harness.host.commands.get(id)?.checkCallback?.(true)).toBe(false);
+    }
+    const pick = vi.spyOn(harness.resolve(MoveTargetPicker), "pickPeriodTarget");
+    run(CONTAINING);
+    run(PERIOD_NOTE);
+    await settle();
+    expect(harness.notices.messages).toEqual([m.tasks_move_needs_editor(), m.tasks_move_needs_editor()]);
+    expect(pick).not.toHaveBeenCalled();
+    expect(move).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["a plain bullet", "- [ ] Task\n- plain\n", () => m.tasks_move_not_a_task()],
+    ["a rolled line", "- [ ] Task\n- [ ] Done before #rolled\n", () => m.tasks_move_already_rolled()],
+    ["a line under a rolled parent", "- [ ] Parent #rolled\n    - [ ] child\n", () => m.tasks_move_already_rolled()],
+  ])("refuses %s before any picker opens", async (_, text, notice) => {
+    await boot({
+      daily: fixedJournal("daily", { type: "day" }),
+      monthly: fixedJournal("monthly", { type: "month" }),
+      yearly: fixedJournal("yearly", { type: "year" }),
+    });
+    const pick = vi.spyOn(harness.resolve(MoveTargetPicker), "pickPeriodTarget");
+    for (const id of [CONTAINING, PERIOD_NOTE]) {
+      harness.host.openEditor(DAY, text, 1);
+      run(id);
+      await settle();
+    }
+    expect(harness.notices.messages).toEqual([notice(), notice()]);
+    expect(harness.suggests.opens.length).toBe(0);
+    expect(pick).not.toHaveBeenCalled();
+    expect(move).not.toHaveBeenCalled();
+  });
+
+  it("a press before the startup scan waits for the index, then moves the task as the editor holds it", async () => {
+    await boot(
+      { daily: fixedJournal("daily", { type: "day" }), monthly: fixedJournal("monthly", { type: "month" }) },
+      false,
+    );
+    const editor = harness.host.openEditor(DAY, TEXT, 0);
+    run(CONTAINING);
+    await settle();
+    expect(move).not.toHaveBeenCalled();
+    expect(harness.notices.messages).toEqual([]);
+
+    editor.text = "- [ ] Typed above\n- [ ] Call Bob\n";
+    editor.cursorLine = 1;
+    harness.resolve(JournalsIndex).markReady();
+
+    await vi.waitFor(() =>
+      expect(move).toHaveBeenCalledWith(
+        { path: DAY, content: "- [ ] Typed above\n- [ ] Call Bob\n", cursorLine: 1 },
+        PICKED,
+      ),
+    );
+  });
+
+  it("a press that waits keeps the note it was pressed in, even if another is active once the index is ready", async () => {
+    await boot(
+      { daily: fixedJournal("daily", { type: "day" }), monthly: fixedJournal("monthly", { type: "month" }) },
+      false,
+    );
+    harness.host.openEditor(DAY, TEXT, 0);
+    run(CONTAINING);
+    await settle();
+    harness.host.openEditor(ORPHAN, "- [ ] Elsewhere\n", 0);
+    harness.resolve(JournalsIndex).markReady();
+
+    await vi.waitFor(() => expect(move).toHaveBeenCalledWith({ path: DAY, content: TEXT, cursorLine: 0 }, PICKED));
   });
 
   it("without an editor both commands say where to put the cursor", async () => {

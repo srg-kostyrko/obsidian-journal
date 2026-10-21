@@ -12,8 +12,11 @@ import { LoggerFactoryToken } from "@/infrastructure/logger";
 import type { AsyncResult } from "@/infrastructure/result";
 import { NoJournalsError, OutOfTimelineError } from "@/journals/errors";
 import { JournalsIndex } from "@/journals/journals-index";
+import { SettingsService } from "@/settings";
 
+import { checkboxSlice } from "../../providers/checkbox/slice";
 import { SingleMoveRefusedError } from "../errors";
+import { planItem } from "../plan";
 
 import { MoveTargets } from "./containing";
 import { MoveTargetPicker } from "./pick-target";
@@ -72,31 +75,50 @@ export class SingleMoveCommands {
   readonly #targets = inject(MoveTargets);
   readonly #picker = inject(MoveTargetPicker);
   readonly #mover = inject(SingleMoveService);
+  readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #logger = inject(LoggerFactoryToken).named("move-task");
 
   constructor() {
     this.#commands.register({
       id: "move-task-to-containing-period",
       name: m.command_move_task_to_containing_period(),
-      check: () => this.#workspace.hasActiveEditor(),
+      check: () => this.#workspace.isEditingActiveNote(),
       execute: () => void this.#toContaining(),
     });
     this.#commands.register({
       id: "move-task-to-period-note",
       name: m.command_move_task_to_period_note(),
-      check: () => this.#workspace.hasActiveEditor(),
+      check: () => this.#workspace.isEditingActiveNote(),
       execute: () => void this.#toPeriodNote(),
     });
   }
 
-  #source(): ActiveEditorState | undefined {
-    const source = this.#workspace.activeEditorState().getOrUndefined();
-    if (source === undefined) this.#notices.show(m.tasks_move_needs_editor());
+  async #source(): Promise<ActiveEditorState | undefined> {
+    const pressed = this.#workspace.activeEditorState().getOrUndefined();
+    if (pressed === undefined) {
+      this.#notices.show(m.tasks_move_needs_editor());
+      return undefined;
+    }
+    // Commands register before the startup scan lands, and until then the index is empty rather than
+    // authoritative: the note would read as no journal's. The note is the one pressed in, read again
+    // for what was typed during the wait; if another note is active by then, the press still names its own.
+    await this.#index.whenReady();
+    const now = this.#workspace.activeEditorState().getOrUndefined();
+    const source = now?.path === pressed.path ? now : pressed;
+    // Refused before any picker opens, so the user is not asked where a line that cannot move should go.
+    const planned = planItem(source, source.cursorLine, {
+      mode: "copy",
+      rolledMarker: this.#checkbox.state.rolledMarker,
+    });
+    if (planned.kind === "refused" && planned.reason !== "block-id") {
+      this.#notices.show(refusalNotice(planned.reason));
+      return undefined;
+    }
     return source;
   }
 
   async #toContaining(): Promise<void> {
-    const source = this.#source();
+    const source = await this.#source();
     if (source === undefined) return;
     if (this.#index.entryByPath(source.path).isNone()) {
       this.#notices.show(m.tasks_move_not_journal_note());
@@ -114,7 +136,7 @@ export class SingleMoveCommands {
   }
 
   async #toPeriodNote(): Promise<void> {
-    const source = this.#source();
+    const source = await this.#source();
     if (source === undefined) return;
     await this.#report(
       source,
