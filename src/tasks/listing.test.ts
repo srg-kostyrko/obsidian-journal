@@ -12,7 +12,7 @@ import { FakeNoteMetadataService, FakeNoteStructureService, FakeNotesService } f
 import { Option } from "@/infrastructure/result";
 import { JournalsIndex, type JournalConfig, type NoteletEntry } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
-import { fixedJournal } from "@/journals/testing";
+import { fixedJournal, noMove } from "@/journals/testing";
 import { overrideWith, testContainer } from "@/testing";
 
 import { buildTaskListing, type TaskListingDependencies, type TaskListingPeriodRequest } from "./listing";
@@ -1090,7 +1090,11 @@ describe("buildTaskListing — task-note visibility", () => {
   const HOME_NOTE = "Tasks/home.md" as VaultPath;
   const noFilter: TaskRule = { mode: "and", conditions: [] };
   const withRule = (name: string, rule: VisibilityRule): JournalConfig =>
-    fixedJournal(name, { type: "day" }, { tasks: { filter: noFilter, providers: { "note-property": rule } } });
+    fixedJournal(
+      name,
+      { type: "day" },
+      { tasks: { filter: noFilter, move: noMove, providers: { "note-property": rule } } },
+    );
   const matchingWork: VisibilityRule = {
     show: "matching",
     mode: "and",
@@ -1348,6 +1352,7 @@ describe("buildTaskListing — dated checkbox visibility", () => {
       {
         tasks: {
           filter: noFilter,
+          move: noMove,
           providers:
             dated === undefined ? {} : { checkbox: { compose: "inherit", mode: "and", conditions: [], dated } },
         },
@@ -1408,6 +1413,7 @@ describe("buildTaskListing — dated checkbox visibility", () => {
     harness.repository.update("Work", {
       tasks: {
         filter: noFilter,
+        move: noMove,
         providers: {
           checkbox: {
             compose: "inherit",

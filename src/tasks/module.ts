@@ -1,6 +1,7 @@
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
+import { moveDefaultsSlice } from "./move/settings";
 import { TaskProviderRegistry } from "./provider-registry";
 import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkbox-provider.flow";
 import { EditJournalTasksFlow } from "./providers/checkbox/flows/edit-journal-tasks.flow";
@@ -29,6 +30,7 @@ export const tasksCoreModule: Module = {
     c.register(TaskProviderToken).useClass(CheckboxTaskProvider);
     c.register(TaskProviderToken).useClass(NotePropertyTaskProvider);
     c.register(SliceDefinitionToken).useValue(checkboxSlice);
+    c.register(SliceDefinitionToken).useValue(moveDefaultsSlice);
     c.register(SliceDefinitionToken).useValue(notePropertySlice);
     c.register(SliceDefinitionToken).useValue(taskNotesNoticeSlice);
     c.register(EditCheckboxProviderFlow).useClass(EditCheckboxProviderFlow);
