@@ -1,5 +1,5 @@
 import type { AnchorString } from "@/calendar";
-import { FlowError } from "@/infrastructure/flows";
+import { FlowError, type BenignFlowError } from "@/infrastructure/flows";
 
 export class JournalsError extends Error {
   override name = "JournalsError";
@@ -10,6 +10,15 @@ export class JournalNotFoundError extends JournalsError {
 
   constructor(readonly journalName: string) {
     super(`Journal not found: ${journalName}`);
+  }
+}
+
+export class NoJournalsError extends JournalsError implements BenignFlowError {
+  override name = "NoJournalsError";
+  readonly benign = true as const;
+
+  constructor() {
+    super("No journals are configured");
   }
 }
 

@@ -397,6 +397,8 @@
   "command_open_previous": "Apri la nota precedente",
   "command_roll_over": "Riporta le attività non completate",
   "command_roll_over_pick_journal": "In quale diario riportare le attività?",
+  "command_move_task_to_containing_period": "Sposta l'attività nel periodo che la comprende",
+  "command_move_task_to_period_note": "Sposta l'attività nella nota di un periodo",
   "command_open_view": "Apri {name}",
   "command_view_change_shelf": "Cambia scaffale in {name}",
   "command_view_shelf_needs_open_view": "Apri prima {name} per scegliere il suo scaffale.",
@@ -2709,5 +2711,62 @@
   ],
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
   "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
+  "tasks_move_pick_target": "In quale nota vuoi spostare l'attività?",
+  "tasks_move_pick_journal": "In quale diario vuoi spostare l'attività?",
+  "tasks_move_block_link_title": "Spostare un'attività collegata?",
+  "tasks_move_block_link_warning": "Questa attività ha un link a blocco. Spostarla interrompe i link che puntano a essa.",
+  "tasks_move_block_link_confirm": "Sposta comunque",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
+  "tasks_move_needs_editor": "Prima posiziona il cursore su un'attività in una nota.",
+  "tasks_move_not_journal_note": "Questa nota non fa parte di nessun diario.",
+  "tasks_move_no_containing": "Nessun diario con un periodo più lungo comprende il periodo di questa nota.",
+  "tasks_move_not_a_task": "Il cursore non è su un'attività.",
+  "tasks_move_already_rolled": "Questa attività è già stata riportata.",
+  "tasks_move_same_note": "L'attività è già in quella nota.",
+  "tasks_move_out_of_timeline": "Quella data è fuori dalla cronologia del diario.",
+  "tasks_move_failed": "Non è stato possibile spostare l'attività.",
+  "tasks_move_done": [
+    {
+      "declarations": ["input target", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Attività copiata in {target}.",
+        "mode=move": "Attività spostata in {target}."
+      }
+    }
+  ],
+  "tasks_move_nothing": "L'attività non è più dove si trovava. Non è stato spostato nulla.",
+  "tasks_move_source_unread": "Non è stato possibile leggere la nota {noteName}. Non è stato spostato nulla.",
+  "tasks_move_source_changed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La nota {noteName} è cambiata durante lo spostamento. L'attività è stata copiata, ma non contrassegnata come riportata.",
+        "mode=move": "La nota {noteName} è cambiata durante lo spostamento. L'attività è stata copiata, ma non rimossa."
+      }
+    }
+  ],
+  "tasks_move_source_write_failed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Non è stato possibile contrassegnare la nota {noteName} come riportata. L'attività è stata copiata e potrebbe essere spostata di nuovo.",
+        "mode=move": "Non è stato possibile aggiornare la nota {noteName}. L'attività è stata copiata ed è ancora anche lì."
+      }
+    }
+  ],
   "tasks_listing_empty": "Nessuna attività corrisponde a questa query."
 }

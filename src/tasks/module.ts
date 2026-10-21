@@ -1,9 +1,14 @@
 import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
+import { MoveLocks } from "./move/locks";
 import { RolloverCommands } from "./move/rollover-commands";
 import { RolloverService } from "./move/rollover-service";
 import { moveDefaultsSlice } from "./move/settings";
+import { MoveTargets } from "./move/single/containing";
+import { MoveTargetPicker } from "./move/single/pick-target";
+import { SingleMoveCommands } from "./move/single/single-move-commands";
+import { SingleMoveService } from "./move/single/single-move-service";
 import { TaskProviderRegistry } from "./provider-registry";
 import { EditCheckboxProviderFlow } from "./providers/checkbox/flows/edit-checkbox-provider.flow";
 import { EditJournalTasksFlow } from "./providers/checkbox/flows/edit-journal-tasks.flow";
@@ -44,7 +49,11 @@ export const tasksCoreModule: Module = {
     c.register(NotePropertyTicker).useClass(NotePropertyTicker);
     c.register(TaskVisibility).useClass(TaskVisibility);
     c.register(TickService).useClass(TickService);
+    c.register(MoveLocks).useClass(MoveLocks);
     c.register(RolloverService).useClass(RolloverService);
+    c.register(MoveTargets).useClass(MoveTargets);
+    c.register(MoveTargetPicker).useClass(MoveTargetPicker);
+    c.register(SingleMoveService).useClass(SingleMoveService);
   },
 };
 
@@ -53,5 +62,6 @@ export const tasksModule: Module = {
     tasksCoreModule.register(c);
     tasksUiModule.register(c);
     c.register(RolloverCommands).useClass(RolloverCommands).eager();
+    c.register(SingleMoveCommands).useClass(SingleMoveCommands).eager();
   },
 };

@@ -386,6 +386,8 @@
   "command_open_previous": "Відкрити попередню нотатку",
   "command_roll_over": "Перенести незавершені завдання",
   "command_roll_over_pick_journal": "У якому журналі перенести завдання?",
+  "command_move_task_to_containing_period": "Перемістити завдання до періоду, що охоплює нотатку",
+  "command_move_task_to_period_note": "Перемістити завдання до нотатки періоду",
   "command_open_view": "Відкрити {name}",
   "command_view_change_shelf": "Змінити полицю в {name}",
   "command_view_shelf_needs_open_view": "Спочатку відкрийте {name}, щоб вибрати полицю.",
@@ -2791,5 +2793,62 @@
   ],
   "tasks_roll_source_indexing": "Нотатка за {date} ще індексується. Спробуйте ще раз трохи згодом.",
   "tasks_roll_source_unread": "Не вдалося прочитати нотатку за {date}.",
+  "tasks_move_pick_target": "До якої нотатки перемістити завдання?",
+  "tasks_move_pick_journal": "До якого журналу перемістити завдання?",
+  "tasks_move_block_link_title": "Перемістити пов’язане завдання?",
+  "tasks_move_block_link_warning": "Це завдання має посилання на блок. Якщо його перемістити, посилання на нього перестануть працювати.",
+  "tasks_move_block_link_confirm": "Усе одно перемістити",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
+  "tasks_move_needs_editor": "Спершу поставте курсор на завдання в нотатці.",
+  "tasks_move_not_journal_note": "Ця нотатка не належить до жодного журналу.",
+  "tasks_move_no_containing": "Немає журналу з довшим періодом, що охоплює період цієї нотатки.",
+  "tasks_move_not_a_task": "Курсор не стоїть на завданні.",
+  "tasks_move_already_rolled": "Це завдання вже перенесено.",
+  "tasks_move_same_note": "Завдання вже є в цій нотатці.",
+  "tasks_move_out_of_timeline": "Ця дата поза часовою шкалою журналу.",
+  "tasks_move_failed": "Не вдалося перемістити завдання.",
+  "tasks_move_done": [
+    {
+      "declarations": ["input target", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Завдання скопійовано: {target}.",
+        "mode=move": "Завдання переміщено: {target}."
+      }
+    }
+  ],
+  "tasks_move_nothing": "Завдання більше немає на попередньому місці. Нічого не переміщено.",
+  "tasks_move_source_unread": "Не вдалося прочитати нотатку {noteName}. Нічого не переміщено.",
+  "tasks_move_source_changed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Нотатка {noteName} змінилася під час переміщення. Завдання скопійовано, але не позначено як перенесене.",
+        "mode=move": "Нотатка {noteName} змінилася під час переміщення. Завдання скопійовано, але не вилучено."
+      }
+    }
+  ],
+  "tasks_move_source_write_failed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Не вдалося позначити нотатку {noteName} як перенесену. Завдання скопійовано, і його може бути переміщено повторно.",
+        "mode=move": "Не вдалося оновити нотатку {noteName}. Завдання скопійовано, і воно також залишилося в ній."
+      }
+    }
+  ],
   "tasks_listing_empty": "Немає завдань, що відповідають цьому запиту."
 }

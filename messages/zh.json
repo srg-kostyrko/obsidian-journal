@@ -386,6 +386,8 @@
   "command_open_previous": "打开上一条笔记",
   "command_roll_over": "结转未完成的任务",
   "command_roll_over_pick_journal": "在哪个日记中结转任务？",
+  "command_move_task_to_containing_period": "将任务移动到上级期间",
+  "command_move_task_to_period_note": "将任务移动到某个期间的笔记",
   "command_open_view": "打开 {name}",
   "command_view_change_shelf": "切换 {name} 中的书架",
   "command_view_shelf_needs_open_view": "请先打开 {name} 以选择其书架。",
@@ -2692,5 +2694,62 @@
   ],
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
+  "tasks_move_pick_target": "将任务移动到哪条笔记？",
+  "tasks_move_pick_journal": "将任务移动到哪个日记？",
+  "tasks_move_block_link_title": "移动带链接的任务？",
+  "tasks_move_block_link_warning": "此任务带有块链接。移动后，指向它的链接将失效。",
+  "tasks_move_block_link_confirm": "仍然移动",
+  "tasks_move_target_row": [
+    {
+      "declarations": ["input label", "input journal", "input notelet", "input hasJournal", "input hasNotelet"],
+      "selectors": ["hasNotelet", "hasJournal"],
+      "match": {
+        "hasNotelet=yes,hasJournal=yes": "{label} · {notelet} — {journal}",
+        "hasNotelet=yes,hasJournal=*": "{label} · {notelet}",
+        "hasNotelet=*,hasJournal=yes": "{label} — {journal}",
+        "hasNotelet=*,hasJournal=*": "{label}"
+      }
+    }
+  ],
+  "tasks_move_needs_editor": "请先将光标放在笔记中的某个任务上。",
+  "tasks_move_not_journal_note": "此笔记不属于任何日记。",
+  "tasks_move_no_containing": "没有涵盖此笔记期间的更长期间日记。",
+  "tasks_move_not_a_task": "光标不在任务上。",
+  "tasks_move_already_rolled": "此任务已结转。",
+  "tasks_move_same_note": "任务已在该笔记中。",
+  "tasks_move_out_of_timeline": "该日期不在日记的时间线范围内。",
+  "tasks_move_failed": "无法移动任务。",
+  "tasks_move_done": [
+    {
+      "declarations": ["input target", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "已将任务复制到 {target}。",
+        "mode=move": "已将任务移动到 {target}。"
+      }
+    }
+  ],
+  "tasks_move_nothing": "任务已不在原处。未移动任何内容。",
+  "tasks_move_source_unread": "无法读取笔记 {noteName}。未移动任何内容。",
+  "tasks_move_source_changed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "笔记 {noteName} 在移动过程中发生了更改。任务已复制，但未标记为已结转。",
+        "mode=move": "笔记 {noteName} 在移动过程中发生了更改。任务已复制，但未移除。"
+      }
+    }
+  ],
+  "tasks_move_source_write_failed": [
+    {
+      "declarations": ["input noteName", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "无法将笔记 {noteName} 标记为已结转。任务已复制，可能会再次移动。",
+        "mode=move": "无法更新笔记 {noteName}。任务已复制，原处也仍然保留。"
+      }
+    }
+  ],
   "tasks_listing_empty": "没有符合此查询条件的任务。"
 }

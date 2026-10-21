@@ -947,6 +947,19 @@ In move mode, where the source line is removed, **a failure between the two
 writes leaves a duplicate, never a gap.** The target is written first for that
 reason.
 
+**A note an editor holds is written through that editor**, in whichever window
+it sits, as one edit spanning only the changed text: `vault.process` against a
+note with unsaved typing races the view's own save, and the e2e caught exactly
+that — moved lines run onto the end of the typed line. A deferred view has
+loaded nothing and is skipped, so the file is written. Because a view saves on a
+debounce, the target's view is saved before the source is touched, or
+target-before-source would hold in the buffers and not on disk. Only a
+MarkdownView is saved: an embed editor — a canvas card, an editable hover
+popover — saves itself, so a target held only by one is ordered in the buffers
+alone. Even a MarkdownView's save returns at once when one is already in flight,
+leaving the edit to the save it queues behind that one, so the order on disk is
+best-effort in that window rather than guaranteed.
+
 ### Items nest, so movement is per subtree
 
 Eligibility is the move's own: an item is eligible when its status is open
@@ -1002,7 +1015,10 @@ their copies. The provider walks the structure's parent lines, so the walk stops
 at a parent that is not itself a task — `NoteStructure` drops those lines, and
 with them the next parent up — and it cannot see a parent on the note's first line,
 which the structure cannot tell from no parent. The roll's own eligibility check
-walks the text and has neither gap. The user's own queries see no tag on a child
+walks the text and has neither gap. The single-task commands refuse on the same
+text walk, so they may refuse a line the listing still shows as open: one under a
+stamped ancestor with a plain bullet between them, or under a stamped parent on
+the note's first line. The user's own queries see no tag on a child
 and still count it open; stamping every line is what that would take, and it is
 declined above.
 
@@ -1147,8 +1163,19 @@ default.
 
 _"Move task to a period's note"_ takes a line from any note, including one no
 journal owns, so there is no source journal to read from: **the target journal's
-config applies**, because placement is about the target's template. `selection`
-does not apply at all — the user picked the line.
+config applies**, because placement is about the target's template. _"Move task
+to the containing period"_ does have a source journal and uses the target's
+config anyway, so the two single-item commands treat one line the same way.
+`selection` does not apply to either — the user picked the line — so placement
+skips the source-heading match and goes straight to the target heading, then
+the end.
+
+The **containing period** is a coarser journal's period at the anchor whose
+period holds the source note's start date: coarser by write kind (day < week <
+month < quarter < year < decade), among the source journal's shelf, or every
+journal when it is on no shelf — the write-type nav rows' fallback, not a shared
+helper. Custom-interval journals are neither source nor target, since "coarser
+than" is undefined for them; _"a period's note"_ reaches them.
 
 ### Where a moved item lands
 
@@ -1197,10 +1224,12 @@ period's **existing** notelets alongside it. Creating a notelet is
 `CreateNoteletFlow`'s work — it picks a type and asks its questions — and a move
 does not trigger it.
 
-Placement inside a notelet degrades one step: match the source heading if the
-notelet has it, otherwise append at the end. The configured target heading is a
-journal-level setting describing the journal's template, and it says nothing
-about a notelet type's.
+Placement inside a notelet is the same as in a period note: the single-task
+commands skip the source-heading match, so the target journal's configured
+heading applies when the notelet has a heading of that text, and the move
+appends at the end otherwise. The heading describes the journal's template, not
+a notelet type's, so in a notelet it matches only by coincidence of text — which
+is what it takes for a user who gives both templates a `## Tasks` heading.
 
 ### Recurring lines
 

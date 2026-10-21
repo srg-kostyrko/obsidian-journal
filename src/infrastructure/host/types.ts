@@ -33,6 +33,19 @@ export interface WorkspaceEvents {
   "active-note-changed": (path: Option<VaultPath>) => void;
 }
 
+export interface ActiveEditorState {
+  readonly path: VaultPath;
+  readonly content: string;
+  readonly cursorLine: number;
+}
+
+/** Lines `from` to `to`, inclusive, become `lines`. */
+export interface LineReplacement {
+  readonly from: number;
+  readonly to: number;
+  readonly lines: readonly string[];
+}
+
 export interface VaultProperty {
   readonly name: string;
   readonly type: string;

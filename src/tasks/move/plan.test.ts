@@ -6,7 +6,7 @@ import { extractItems } from "../providers/checkbox/extract";
 import { DEFAULT_STATUS_MAP } from "../providers/checkbox/slice";
 
 import { placeGroups } from "./placement";
-import { planSource, type RollSource } from "./plan";
+import { planItem, planSource, type RollSource } from "./plan";
 
 import type { TaskRule } from "../conditions";
 import type { CheckboxRule } from "../providers/checkbox/rule-schema";
@@ -274,5 +274,170 @@ describe("planSource", () => {
     expect(planSource(shuffled, { selection: anySelection, mode: "copy", rolledMarker })).toStrictEqual(
       planSource(source, { selection: anySelection, mode: "copy", rolledMarker }),
     );
+  });
+});
+
+describe("planItem", () => {
+  const copy = { mode: "copy", rolledMarker } as const;
+  const move = { mode: "move", rolledMarker } as const;
+
+  it("the cursor on a child moves the child with its parent as context", () => {
+    const source = sourceOf(["- [ ] Project", "    - [ ] step", "        - detail", "    - [ ] other step"]);
+    expect(planItem(source, 1, move)).toEqual({
+      kind: "planned",
+      plan: {
+        path,
+        roots: [
+          {
+            line: 1,
+            end: 2,
+            firstLine: "    - [ ] step",
+            lines: ["    - [ ] step", "        - detail"],
+            heading: null,
+            hasBlockId: false,
+          },
+        ],
+        refusedForBlockId: [],
+        block: [{ heading: null, lines: ["- [ ] Project", "    - [ ] step", "        - detail"] }],
+        selectionMissedHeading: false,
+      },
+    });
+  });
+
+  it("the cursor on a continuation line resolves to its item", () => {
+    const source = sourceOf(["## Tasks", "- [ ] write", "  more about it", "", "  and after a gap", "- [ ] next"]);
+    for (const line of [2, 3, 4]) {
+      const result = planItem(source, line, copy);
+      expect(result.kind === "planned" ? result.plan.roots.map((root) => [root.line, root.end]) : result).toEqual([
+        [1, 4],
+      ]);
+    }
+  });
+
+  it("a plain bullet line is not a task", () => {
+    const source = sourceOf(["## Tasks", "- [ ] write", "    - plain note", "- plain", "text", ""]);
+    for (const line of [0, 2, 3, 4, 5, 9]) {
+      expect(planItem(source, line, copy)).toEqual({ kind: "refused", reason: "not-a-task" });
+    }
+  });
+
+  it("a checkbox line in a code fence, comment or frontmatter is not a task", () => {
+    const hidden = [
+      ["Example:", "```", "- [ ] example", "```"],
+      ["Example:", "~~~md", "- [ ] example", "~~~"],
+      ["<!--", "- [ ] example", "-->"],
+      ["%%", "- [ ] example", "%%"],
+      ["---", "- [ ] example", "---"],
+    ];
+    for (const lines of hidden) {
+      const line = lines.indexOf("- [ ] example");
+      expect(planItem({ path, content: lines.join("\n") }, line, move)).toEqual({
+        kind: "refused",
+        reason: "not-a-task",
+      });
+    }
+  });
+
+  it("a checkbox line in a comment opened after a backslash-escaped backtick is not a task", () => {
+    const lines = ["Text \\` <!-- hidden `", "- [ ] example", "-->"];
+    expect(planItem({ path, content: lines.join("\n") }, 1, move)).toEqual({ kind: "refused", reason: "not-a-task" });
+  });
+
+  it("the cursor in a code fence nested under a task resolves to that task", () => {
+    const lines = ["- [ ] real", "  ```", "  - [ ] example", "  ```"];
+    const result = planItem({ path, content: lines.join("\n") }, 2, move);
+    expect(result.kind === "planned" ? result.plan.block : result).toEqual([{ heading: null, lines }]);
+  });
+
+  it("a real task after a code fence is planned", () => {
+    const source = { path, content: ["```", "- [ ] example", "```", "- [ ] real"].join("\n") };
+    const result = planItem(source, 3, move);
+    expect(result.kind === "planned" ? result.plan.block : result).toEqual([{ heading: null, lines: ["- [ ] real"] }]);
+  });
+
+  it("a quoted task resolves within its quote", () => {
+    const source = sourceOf(["> - [ ] Parent", ">   - [ ] Child", "> plain", "- [ ] free"]);
+    const child = planItem(source, 1, copy);
+    expect(child.kind === "planned" ? child.plan.block : child).toEqual([
+      { heading: null, lines: ["> - [ ] Parent", ">   - [ ] Child"] },
+    ]);
+    const parent = planItem(source, 0, copy);
+    expect(parent.kind === "planned" ? parent.plan.roots.map((root) => [root.line, root.end]) : parent).toEqual([
+      [0, 1],
+    ]);
+    expect(planItem(source, 2, copy)).toEqual({ kind: "refused", reason: "not-a-task" });
+  });
+
+  it("a rolled line is refused", () => {
+    const source = sourceOf(["- [ ] write #rolled", "- [ ] fresh"]);
+    expect(planItem(source, 0, copy)).toEqual({ kind: "refused", reason: "rolled" });
+    expect(planItem(source, 1, copy).kind).toBe("planned");
+  });
+
+  it("a line under a rolled ancestor is refused, even through a plain bullet", () => {
+    const source = sourceOf([
+      "- [ ] Project #rolled",
+      "    - [ ] step",
+      "    - notes",
+      "        - [ ] deeper",
+      "- [ ] Fresh",
+      "    - [ ] child",
+    ]);
+    for (const line of [1, 3]) expect(planItem(source, line, copy)).toEqual({ kind: "refused", reason: "rolled" });
+    expect(planItem(source, 5, copy).kind).toBe("planned");
+  });
+
+  it.each(["- [ ] write **#rolled**", "- [ ] write ==#rolled==", "- [ ] write [#rolled]", "- [ ] write #work#rolled"])(
+    "a marker Obsidian reads through the markup around it is rolled: %j",
+    (line) => {
+      expect(planItem({ path, content: line }, 0, copy)).toEqual({ kind: "refused", reason: "rolled" });
+    },
+  );
+
+  it.each(["- [ ] write (#rolled)", "- [ ] write x#rolled", "- [ ] write #rolled/sub", "- [ ] write `#rolled`"])(
+    "a marker Obsidian does not read as the tag leaves the line free: %j",
+    (line) => {
+      expect(planItem({ path, content: line }, 0, copy).kind).toBe("planned");
+    },
+  );
+
+  it("a parent stamped inside markup holds back its child", () => {
+    const source = { path, content: ["- [ ] Project **#rolled**", "    - [ ] step"].join("\n") };
+    expect(planItem(source, 1, copy)).toEqual({ kind: "refused", reason: "rolled" });
+  });
+
+  it("reads the rolled marker off the editor text, not a structure that lags it", () => {
+    const parsed = sourceOf(["- [ ] fresh", "- [ ] write"]);
+    const typed = { path, content: "- [ ] fresh #rolled\n- [ ] write" };
+    expect(planItem({ ...parsed, ...typed }, 0, copy)).toEqual({ kind: "refused", reason: "rolled" });
+    expect(planItem({ ...parsed, ...typed }, 1, copy).kind).toBe("planned");
+    const stale = sourceOf(["- [ ] fresh #rolled", "- [ ] write"]);
+    expect(planItem({ ...stale, content: "- [ ] fresh\n- [ ] write" }, 0, copy).kind).toBe("planned");
+  });
+
+  it("a done task is planned", () => {
+    const result = planItem(sourceOf(["- [x] shipped", "- [-] dropped"]), 1, move);
+    expect(result.kind === "planned" ? result.plan.block : result).toEqual([
+      { heading: null, lines: ["- [-] dropped"] },
+    ]);
+  });
+
+  it("move mode refuses a block id unless allowed", () => {
+    const source = sourceOf(["- [ ] Shopping", "    - [ ] milk", "        - note ^n1"]);
+    expect(planItem(source, 1, move)).toEqual({ kind: "refused", reason: "block-id" });
+    const allowed = planItem(source, 1, { ...move, allowBlockId: true });
+    expect(allowed.kind === "planned" ? allowed.plan.block : allowed).toEqual([
+      { heading: null, lines: ["- [ ] Shopping", "    - [ ] milk", "        - note ^n1"] },
+    ]);
+    expect(planItem(source, 0, copy).kind).toBe("planned");
+  });
+
+  it("copy strips the id from the emitted root", () => {
+    const source = sourceOf(["- [ ] Shopping ^list", "    - [ ] milk ^m1", "        - note ^n1"]);
+    const result = planItem(source, 1, copy);
+    expect(result.kind === "planned" ? result.plan.block : result).toEqual([
+      { heading: null, lines: ["- [ ] Shopping", "    - [ ] milk", "        - note"] },
+    ]);
+    expect(result.kind === "planned" ? result.plan.roots.at(0)?.hasBlockId : result).toBe(true);
   });
 });

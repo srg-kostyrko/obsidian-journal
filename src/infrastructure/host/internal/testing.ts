@@ -1,4 +1,5 @@
 import {
+  MarkdownView,
   TFile,
   TFolder,
   type App,
@@ -45,8 +46,34 @@ class FakeDispatcher {
   }
 }
 
+export interface FakeEditorPosition {
+  readonly line: number;
+  readonly ch: number;
+}
+
+// The buffer is separate from the file on disk, the way unsaved typing is: a test edits `text`
+// between a read and a write to stage what the user typed in the meantime.
+export interface FakeEditorState {
+  path: string;
+  text: string;
+  cursorLine: number;
+  readonly changes: { from: FakeEditorPosition; to: FakeEditorPosition; text: string }[];
+  // "preview" is reading mode, where the view keeps its editor but the user cannot type into it.
+  mode: "source" | "preview";
+  // Each save records the buffer it wrote, so a test can tell what reached disk and in what order.
+  readonly saves: string[];
+  // While set, a save takes the buffer only once this settles, the way vault.modify awaits the disk.
+  pendingSave: Promise<void> | null;
+  // Being edited in an embed — a canvas card, an editable hover popover — rather than a MarkdownView.
+  // Only the active editor is the embed; a leaf holding the path is still a MarkdownView.
+  embed: boolean;
+}
+
 export interface FakeWorkspaceState {
   activeFile: TFile | null;
+  activeEditor: FakeEditorState | null;
+  // Buffers of open markdown views, by path; the leaf holding the path carries its editor.
+  editors: Map<string, FakeEditorState>;
   openPaths: Set<string>;
   // Which window each open path's leaf sits in, and which window the user is currently in.
   // Popout windows are what make workspace-wide leaf reuse steal focus, so leaf lookups that
@@ -96,7 +123,7 @@ interface FakeLeaf {
 }
 
 interface FakeMarkdownLeaf {
-  readonly view: { file: TFile | null };
+  readonly view: { file: TFile | null } & Partial<ReturnType<typeof fakeView>>;
   openFile(file: TFile): Promise<void>;
   getContainer(): { win: Window };
   getRoot(): object;
@@ -135,6 +162,16 @@ export interface FakeHost {
   readonly promptedDeletions: readonly TFile[];
 
   putFile(path: string, content?: string, frontmatter?: Record<string, unknown>): TFile;
+  /** Opens `path` in a markdown view whose editor holds `text`; the active editor unless `active` is false. */
+  /** With `embed`, the note is edited in a canvas card or hover popover: active, and in no leaf. */
+  openEditor(
+    path: string,
+    text: string,
+    cursorLine?: number,
+    options?: { active?: boolean; embed?: boolean },
+  ): FakeEditorState;
+  /** Closes the view holding `path`, so no editor holds it any more. */
+  closeEditor(path: string): void;
   putFolder(path: string): TFolder;
   putPlugin(id: string, instance: object): void;
   putCorePlugin(id: string, instance: object, enabled?: boolean): void;
@@ -205,6 +242,61 @@ function metadataWithFrontmatter(metadata: CachedMetadata, frontmatter: Record<s
   return next;
 }
 
+function offsetOf(text: string, position: FakeEditorPosition): number {
+  const lines = text.split("\n");
+  const line = lines[position.line];
+  if (line === undefined || position.ch < 0 || position.ch > line.length) {
+    throw new RangeError(`No position ${position.line}:${position.ch} in the editor`);
+  }
+  return lines.slice(0, position.line).reduce((sum, text) => sum + text.length + 1, 0) + position.ch;
+}
+
+function positionOf(text: string, offset: number): FakeEditorPosition {
+  const before = text.slice(0, Math.max(0, Math.min(offset, text.length))).split("\n");
+  return { line: before.length - 1, ch: before.at(-1)?.length ?? 0 };
+}
+
+function fakeView(state: FakeEditorState) {
+  const view = {
+    editor: fakeEditor(state),
+    getMode: (): "source" | "preview" => state.mode,
+    async save(): Promise<void> {
+      if (state.pendingSave !== null) await state.pendingSave;
+      state.saves.push(state.text);
+    },
+  };
+  return Object.assign<MarkdownView, typeof view>(Object.create(MarkdownView.prototype) as MarkdownView, view);
+}
+
+// An embed's save takes the text to write and indents it into its host, so a bare save() throws.
+function fakeEmbed(state: FakeEditorState) {
+  return {
+    editor: fakeEditor(state),
+    save(text: string, _clear = false): void {
+      // Obsidian's applyIndent splits the text it is given; called with none, it throws like this.
+      if ((text as string | undefined) === undefined) throw new TypeError("Cannot read properties of undefined");
+      state.saves.push(text);
+    },
+  };
+}
+
+function fakeEditor(state: FakeEditorState) {
+  return {
+    offsetToPos: (offset: number): FakeEditorPosition => positionOf(state.text, offset),
+    getValue: (): string => state.text,
+    getCursor: (): FakeEditorPosition => ({ line: state.cursorLine, ch: 0 }),
+    lineCount: (): number => state.text.split("\n").length,
+    lastLine: (): number => state.text.split("\n").length - 1,
+    getLine: (line: number): string => state.text.split("\n")[line] ?? "",
+    replaceRange(text: string, from: FakeEditorPosition, to: FakeEditorPosition = from): void {
+      const start = offsetOf(state.text, from);
+      const end = offsetOf(state.text, to);
+      state.changes.push({ from, to, text });
+      state.text = state.text.slice(0, start) + text + state.text.slice(end);
+    },
+  };
+}
+
 export function createFakeHost(): FakeHost {
   const files = new Map<string, FakeFileSystemEntry>();
   const folders = new Set<string>([""]);
@@ -215,6 +307,8 @@ export function createFakeHost(): FakeHost {
   const workspaceEvents = new FakeDispatcher();
   const workspaceState: FakeWorkspaceState = {
     activeFile: null,
+    activeEditor: null,
+    editors: new Map(),
     openPaths: new Set(),
     openWindows: new Map(),
     activeWindow: MAIN_WINDOW,
@@ -545,7 +639,10 @@ export function createFakeHost(): FakeHost {
     let path = initialPath;
     return {
       get view() {
-        return { file: workspaceState.deferredPaths.has(path) ? null : (fileObjects.get(path) ?? null) };
+        if (workspaceState.deferredPaths.has(path)) return { file: null };
+        const state = workspaceState.editors.get(path);
+        if (state === undefined) return { file: fileObjects.get(path) ?? null };
+        return Object.assign(fakeView(state), { file: fileObjects.get(path) ?? makeFile(path) });
       },
       async openFile(file: TFile): Promise<void> {
         const win = workspaceState.openWindows.get(path) ?? MAIN_WINDOW;
@@ -583,6 +680,12 @@ export function createFakeHost(): FakeHost {
     offref: (ref: EventRef): void => workspaceEvents.detach(ref),
     getActiveFile(): TFile | null {
       return workspaceState.activeFile;
+    },
+    get activeEditor() {
+      const state = workspaceState.activeEditor;
+      if (state === null) return null;
+      const file = fileObjects.get(state.path) ?? makeFile(state.path);
+      return Object.assign(state.embed ? fakeEmbed(state) : fakeView(state), { file });
     },
     getLeavesOfType(type: string): FakeLeaf[] | FakeMarkdownLeaf[] {
       // The tracked branch is keyed by registered journal view types (`journal-view:*`),
@@ -715,6 +818,31 @@ export function createFakeHost(): FakeHost {
       fileObjects.set(path, file);
       attachChild(file);
       return file;
+    },
+    openEditor(path, text, cursorLine = 0, { active = true, embed = false } = {}): FakeEditorState {
+      const state: FakeEditorState = {
+        path,
+        text,
+        cursorLine,
+        changes: [],
+        mode: "source",
+        saves: [],
+        pendingSave: null,
+        embed,
+      };
+      workspaceState.editors.set(path, state);
+      if (!embed) {
+        workspaceState.openPaths.add(path);
+        workspaceState.openWindows.set(path, workspaceState.openWindows.get(path) ?? MAIN_WINDOW);
+      }
+      if (active || embed) workspaceState.activeEditor = state;
+      return state;
+    },
+    closeEditor(path): void {
+      workspaceState.editors.delete(path);
+      workspaceState.openPaths.delete(path);
+      workspaceState.openWindows.delete(path);
+      if (workspaceState.activeEditor?.path === path) workspaceState.activeEditor = null;
     },
     putFolder(path): TFolder {
       ensureFolderChain(path);

@@ -1,5 +1,5 @@
 import { createNanoEvents } from "nanoevents";
-import { Menu, TFile } from "obsidian";
+import { MarkdownView, Menu, TFile } from "obsidian";
 
 import { m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
@@ -8,15 +8,23 @@ import { AsyncResult, InvariantError, None, Some } from "@/infrastructure/result
 import type { Option } from "@/infrastructure/result";
 import { icons } from "@/ui/icons";
 
-import { WorkspaceOpenError } from "../errors";
+import { NoteWriteError, WorkspaceOpenError } from "../errors";
 import { SuggestCancelled } from "../suggests/errors";
 
 import { buildMarkdownLink } from "./markdown-link";
 import { toPaneType } from "./obsidian-bridge";
 import { InternalObsidianAppToken, InternalPluginToken } from "./tokens";
 
-import type { MenuItemSpec, OpenMode, PinTarget, VaultPath, WorkspaceEvents } from "../types";
-import type { Editor, MarkdownView, WorkspaceLeaf } from "obsidian";
+import type {
+  ActiveEditorState,
+  LineReplacement,
+  MenuItemSpec,
+  OpenMode,
+  PinTarget,
+  VaultPath,
+  WorkspaceEvents,
+} from "../types";
+import type { Editor, WorkspaceLeaf } from "obsidian";
 
 // Obsidian exposes link-preference settings only through the untyped Vault.getConfig.
 interface ConfigurableVault {
@@ -57,6 +65,24 @@ const FILE_MENU_SECTIONS = [
 // real gap is a single IPC hop; this is that hop with room for a loaded machine, not a
 // measured bound. Sized generously on purpose — see pickFromMenu for why waiting is free.
 export const NATIVE_PICK_DELIVERY_GRACE_MS = 500;
+
+const HIGH_SURROGATE = /^[\uD800-\uDBFF]$/u;
+const LOW_SURROGATE = /^[\uDC00-\uDFFF]$/u;
+
+// The span of `before` that becomes `text`, with the common prefix and suffix left out and never
+// cutting a surrogate pair in half.
+function differenceOf(before: string, after: string): { start: number; end: number; text: string } {
+  const shorter = Math.min(before.length, after.length);
+  let start = 0;
+  while (start < shorter && before[start] === after[start]) start++;
+  if (start > 0 && HIGH_SURROGATE.test(before[start - 1] ?? "")) start--;
+  let suffix = 0;
+  while (suffix < shorter - start && before[before.length - 1 - suffix] === after[after.length - 1 - suffix]) {
+    suffix++;
+  }
+  if (suffix > 0 && LOW_SURROGATE.test(before[before.length - suffix] ?? "")) suffix--;
+  return { start, end: before.length - suffix, text: after.slice(start, after.length - suffix) };
+}
 
 export class WorkspaceService {
   readonly #app = inject(InternalObsidianAppToken);
@@ -175,6 +201,37 @@ export class WorkspaceService {
     return null;
   }
 
+  // The active editor first, since a command ran there; otherwise a view in any window, because an
+  // edit is not a focus change and a popout's unsaved typing is lost to a disk write all the same.
+  // A deferred view has no file and no editor yet, so it holds nothing unsaved.
+  #editorHolding(path: VaultPath): Editor | undefined {
+    const active = this.#app.workspace.activeEditor;
+    if (active?.file?.path === path && active.editor !== undefined) return active.editor;
+    return this.#markdownViewHolding(path)?.editor;
+  }
+
+  // The active editor can be an embed — a canvas card, an editable hover popover — which is no
+  // MarkdownView and saves itself on its own terms, so only a MarkdownView is ever saved directly.
+  #markdownViewHolding(path: VaultPath): MarkdownView | undefined {
+    const active = this.#app.workspace.activeEditor;
+    if (active instanceof MarkdownView && active.file?.path === path) return active;
+    for (const leaf of this.#app.workspace.getLeavesOfType("markdown")) {
+      if (leaf.isDeferred) continue;
+      const view = leaf.view;
+      if (view instanceof MarkdownView && view.file?.path === path) return view;
+    }
+    return undefined;
+  }
+
+  // Reading mode keeps an editor that the user cannot type into or see a cursor in.
+  #editingView(): { readonly file: TFile | null; readonly editor: Editor } | undefined {
+    const active = this.#app.workspace.activeEditor;
+    const editor = active?.editor;
+    if (active === null || editor === undefined) return undefined;
+    if (active instanceof MarkdownView && active.getMode() === "preview") return undefined;
+    return { file: active.file, editor };
+  }
+
   #activeEditor(): Editor | undefined {
     return this.#app.workspace.activeEditor?.editor;
   }
@@ -240,6 +297,82 @@ export class WorkspaceService {
 
   hasActiveEditor(): boolean {
     return this.#activeEditor() !== undefined;
+  }
+
+  /** Whether the active note is open in an editor the user can type into, not in reading mode. */
+  isEditingActiveNote(): boolean {
+    return this.#editingView() !== undefined;
+  }
+
+  activeEditorState(): Option<ActiveEditorState> {
+    const active = this.#editingView();
+    const file = active?.file;
+    if (active === undefined || !(file instanceof TFile)) return new None<ActiveEditorState>();
+    return new Some<ActiveEditorState>({
+      path: file.path as VaultPath,
+      content: active.editor.getValue(),
+      cursorLine: active.editor.getCursor().line,
+    });
+  }
+
+  /** The text of an open view of `path`, unsaved typing included. */
+  openNoteText(path: VaultPath): Option<string> {
+    const editor = this.#editorHolding(path);
+    return editor === undefined ? new None<string>() : new Some<string>(editor.getValue());
+  }
+
+  // One replaceRange spanning only what changed: an edit covering the whole buffer would move the
+  // cursor and fold state of anyone typing there, and writing through vault.process instead loses
+  // the typing the view has not saved.
+  /** Rewrites an open view of `path` through `transform`, or refuses when it returns null. */
+  processOpenNote(path: VaultPath, transform: (content: string) => string | null): "applied" | "refused" | "not-open" {
+    const editor = this.#editorHolding(path);
+    if (editor === undefined) return "not-open";
+    const before = editor.getValue();
+    const after = transform(before);
+    if (after === null) return "refused";
+    const { start, end, text } = differenceOf(before, after);
+    if (start !== end || text !== "") editor.replaceRange(text, editor.offsetToPos(start), editor.offsetToPos(end));
+    return "applied";
+  }
+
+  // A view saves on a debounce, so an edit made through it reaches disk only later; a caller that
+  // must order its writes on disk saves first.
+  /** Saves the open view of `path`, unsaved typing included; nothing when no view holds it. */
+  saveOpenNote(path: VaultPath): AsyncResult<void, NoteWriteError> {
+    // With only an embed holding the note there is nothing to flush here; the embed autosaves.
+    const view = this.#markdownViewHolding(path);
+    return AsyncResult.fromPromise(
+      (async () => {
+        await view?.save();
+      })(),
+      (cause) => new NoteWriteError(path, cause),
+    );
+  }
+
+  // One replaceRange is one undo step. The verdict is reached on the buffer as it stands now, so
+  // typing since the caller read it can only refuse the change, never shift where it lands.
+  /** Replaces a line range in an open view of `path` if `verify` approves it against that view's text. */
+  replaceLinesInOpenNote(
+    path: VaultPath,
+    verify: (content: string) => LineReplacement | null,
+  ): "applied" | "refused" | "not-open" {
+    const editor = this.#editorHolding(path);
+    if (editor === undefined) return "not-open";
+    const change = verify(editor.getValue());
+    const last = editor.lastLine();
+    if (change === null || change.from < 0 || change.to < change.from || change.to > last) return "refused";
+    const { from, to, lines } = change;
+    const endOf = (line: number) => ({ line, ch: editor.getLine(line).length });
+    if (to < last) {
+      editor.replaceRange(lines.map((line) => `${line}\n`).join(""), { line: from, ch: 0 }, { line: to + 1, ch: 0 });
+    } else if (lines.length > 0) {
+      editor.replaceRange(lines.join("\n"), { line: from, ch: 0 }, endOf(to));
+    } else {
+      // The last line has no newline of its own to take, so the one ending the line above goes.
+      editor.replaceRange("", from === 0 ? { line: 0, ch: 0 } : endOf(from - 1), endOf(to));
+    }
+    return "applied";
   }
 
   insertNoteLinkAtCursor(targetPath: VaultPath): boolean {

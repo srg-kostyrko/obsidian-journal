@@ -6,6 +6,7 @@ import { Flows } from "@/infrastructure/flows";
 import {
   NoteStructureService,
   NotesService,
+  WorkspaceService,
   type NoteNotFoundError,
   type NoteStructure,
   type NoteWriteError,
@@ -32,10 +33,13 @@ import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
 import { NoCurrentPeriodError, type RollError } from "./errors";
+import { lineHasTag } from "./line-tags";
+import { MoveLocks } from "./locks";
+import { rewriteNote, type NoteWriters } from "./note-write";
 import { placeGroups } from "./placement";
 import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
 import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
-import { rewriteSource, type SourceRewrite } from "./source-write";
+import { rewriteSource, sourceRewrite, type SourceRewrite } from "./source-write";
 
 import type { ChangedSource, RollReport } from "./report";
 import type { TaskRule } from "../conditions";
@@ -46,11 +50,6 @@ interface AnchoredPlan {
 }
 
 const CHECKBOX = /^\s*(?:>\s*)*(?:[-*+]|\d+[.)])\s+\[(.)\]/u;
-
-function hasTag(line: string, tag: string): boolean {
-  const escaped = tag.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
-  return new RegExp(String.raw`(?:^|\s)${escaped}(?=[\s,.;:!?)]|$)`, "iu").test(line);
-}
 
 const ATX_HEADING = /^[ \t]*(#{1,6})(?=[ \t]|$)(.*)$/u;
 // Obsidian's text for a heading: trailing whitespace and a whitespace-preceded closing #-run go.
@@ -69,8 +68,7 @@ function holdsHeading(lines: readonly string[], heading: NoteStructure["headings
   return underline !== null && underline.test(lines[heading.line + 1] ?? "") && line.trim() === heading.heading;
 }
 
-// Looser than hasTag: Obsidian reads a tag wrapped in markup or brackets, and only a tag that is gone
-// or has grown longer matters here.
+// Looser than lineHasTag: only a tag that is gone or has grown longer matters here.
 function holdsTag(lines: readonly string[], tag: NoteStructure["tags"][number]): boolean {
   const line = lines[tag.line];
   if (line === undefined) return false;
@@ -87,7 +85,7 @@ function inSync(content: string, structure: NoteStructure, marker: string): bool
   const tasksAgree = structure.listItems.every((item) => {
     const line = lines[item.line];
     if (line === undefined || CHECKBOX.exec(line)?.[1] !== item.marker) return false;
-    return marker === "" || hasTag(line, marker) === carriesMarker(item, structure, marker);
+    return marker === "" || lineHasTag(line, marker) === carriesMarker(item, structure, marker);
   });
   return (
     tasksAgree &&
@@ -107,12 +105,6 @@ function headingOf(selection: TaskRule): string | null {
   return named.at(0) ?? null;
 }
 
-function sourceRewrite(move: EffectiveMove, marker: string): SourceRewrite | null {
-  if (move.mode === "move") return { kind: "remove" };
-  // An empty marker would stamp a bare space and never read back as rolled.
-  return move.stamp && marker !== "" ? { kind: "stamp", marker } : null;
-}
-
 /** Rolls a journal's unfinished checkbox items from its previous notes into today's. */
 export class RolloverService {
   readonly #journals = inject(JournalsRepository);
@@ -125,7 +117,9 @@ export class RolloverService {
   readonly #host = inject(TaskHostToken);
   readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #defaults = inject(SettingsService).getSlice(moveDefaultsSlice);
-  readonly #running = new Map<string, Promise<unknown>>();
+  readonly #locks = inject(MoveLocks);
+  readonly #workspace = inject(WorkspaceService);
+  readonly #writers: NoteWriters = { workspace: this.#workspace, notes: this.#notes };
   readonly #listing: TaskListingDependencies = {
     journals: this.#journals,
     index: this.#index,
@@ -184,15 +178,21 @@ export class RolloverService {
   }
 
   // A note whose structure has not resolved, or lags its text, is not planned: an empty plan would
-  // read as "nothing to roll", a stale one rolls the wrong lines.
+  // read as "nothing to roll", a stale one rolls the wrong lines. An open view is read rather than the
+  // file, since an edit made through it reaches disk only on save; metadataCache parses only what is
+  // saved, so a view holding unsaved typing has no structure that describes it yet.
   async #readSource(path: VaultPath): Promise<RollSource | "indexing" | "unread"> {
-    const content = await this.#notes.read(path);
-    if (content.isErr()) return "unread";
+    const disk = await this.#notes.read(path);
+    if (disk.isErr()) return "unread";
+    const open = this.#workspace.openNoteText(path);
+    // The editor's buffer is LF whatever the file's line endings.
+    if (open.isSome() && open.value !== disk.value.replaceAll(/\r$/gmu, "")) return "indexing";
+    const content = open.isSome() ? open.value : disk.value;
     const structure = this.#structure.get(path);
-    if (structure.isNone() || !inSync(content.value, structure.value, this.#checkbox.state.rolledMarker)) {
+    if (structure.isNone() || !inSync(content, structure.value, this.#checkbox.state.rolledMarker)) {
       return "indexing";
     }
-    return { path, content: content.value, structure: structure.value, items: this.#itemsOf(path, structure.value) };
+    return { path, content, structure: structure.value, items: this.#itemsOf(path, structure.value) };
   }
 
   // The provider's own inputs, so a line rolls exactly when the provider calls it a task.
@@ -225,18 +225,16 @@ export class RolloverService {
     roots: readonly PlannedRoot[],
     rewrite: SourceRewrite,
   ): AsyncResult<"written" | "changed", NoteNotFoundError | NoteWriteError> {
-    // Collected inside the closure: the verdict is reached under vault.process's lock.
-    const refusals: string[] = [];
-    return this.#notes
-      .process(path, (content) => {
+    return rewriteNote(
+      this.#writers,
+      path,
+      (content) => {
         const outcome = rewriteSource(content, roots, rewrite);
-        if ("reason" in outcome) {
-          refusals.push(outcome.reason);
-          return content;
-        }
-        return outcome.content;
-      })
-      .map(() => (refusals.length > 0 ? "changed" : "written"));
+        return "reason" in outcome ? null : outcome.content;
+      },
+      // Saved before the lock is released, so the next roll reads the stamp or removal off disk too.
+      { flush: true },
+    ).map((written) => (written === "refused" ? "changed" : "written"));
   }
 
   // Counted through the listing, not a query of our own, so the count matches what the period shows.
@@ -289,8 +287,11 @@ export class RolloverService {
       if (contributing.length > 0) {
         const target = yield* this.#targetPath(journalName, today, options.interactive);
         const groups = contributing.flatMap(({ plan }) => plan.block);
-        // The target goes first: a failure before the sources are written leaves a duplicate, never a gap.
-        yield* this.#notes.process(target, (content) => placeGroups(content, groups, move.targetHeading));
+        // The target goes first, and reaches disk first: a failure before the sources are written leaves
+        // a duplicate, never a gap.
+        yield* rewriteNote(this.#writers, target, (content) => placeGroups(content, groups, move.targetHeading), {
+          flush: true,
+        });
         const rewrite = sourceRewrite(move, marker);
         if (rewrite !== null) {
           // A failed source is reported, not raised: its items already sit in the target.
@@ -330,24 +331,7 @@ export class RolloverService {
     });
   }
 
-  // One roll per journal at a time: a second one planned before the first wrote would read the same
-  // open lines and copy them again.
   roll(journalName: string, options: { readonly interactive: boolean }): AsyncResult<RollReport, RollError> {
-    const previous = this.#running.get(journalName) ?? Promise.resolve();
-    const run = attempt.in(this, async function* (this: RolloverService) {
-      await previous;
-      return yield* this.#rollNow(journalName, options);
-    });
-    // The tail never rejects: a roll that throws hands its rejection to its own caller, not to the
-    // next roll queued behind it.
-    const settled = Promise.resolve(run).then(
-      () => true,
-      () => false,
-    );
-    this.#running.set(journalName, settled);
-    void settled.then(() => {
-      if (this.#running.get(journalName) === settled) this.#running.delete(journalName);
-    });
-    return run;
+    return this.#locks.run([journalName], () => this.#rollNow(journalName, options));
   }
 }
