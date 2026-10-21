@@ -35,7 +35,12 @@ export class RolloverCommands {
   }
 
   async #journalName(): Promise<string | null> {
-    const active = this.#workspace.activeNote().flatMap((path) => this.#index.entryByPath(path));
+    // The note open at the press, not whichever is open once the wait ends.
+    const pressedIn = this.#workspace.activeNote();
+    // Commands register before the startup scan lands, and until then the index is empty rather
+    // than authoritative: the open note would read as no journal's, and the roll would find no earlier note.
+    await this.#index.whenReady();
+    const active = pressedIn.flatMap((path) => this.#index.entryByPath(path));
     if (active.isSome()) return active.value.journalName;
     const names = [...this.#journals.find().ids()];
     if (names.length === 0) {

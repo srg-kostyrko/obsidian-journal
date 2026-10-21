@@ -51,7 +51,7 @@ describe("RolloverCommands", () => {
   let harness: TestHarness;
   const roll = vi.fn();
 
-  async function boot(journals: Record<string, ReturnType<typeof fixedJournal>>): Promise<void> {
+  async function boot(journals: Record<string, ReturnType<typeof fixedJournal>>, ready = true): Promise<void> {
     harness = await testContainer({
       modules: [journalsCoreModule, tasksCoreModule, commandsModule],
       data: { journals },
@@ -59,6 +59,11 @@ describe("RolloverCommands", () => {
       overrides: [overrideWith(RolloverService, { roll } as never)],
     });
     for (const path of [DAILY, NOTELET, ORPHAN]) harness.host.putFile(path);
+    if (ready) scan();
+  }
+
+  // What the startup scan does: fill the index, then say it is authoritative.
+  function scan(): void {
     const index = harness.resolve(JournalsIndex);
     index.register({ journalName: "daily", anchor: anchor("2026-10-21"), path: DAILY });
     index.register({
@@ -69,6 +74,7 @@ describe("RolloverCommands", () => {
       typeName: "Standup",
       typeId: null,
     });
+    index.markReady();
   }
 
   function setActive(path: VaultPath | null): void {
@@ -97,6 +103,26 @@ describe("RolloverCommands", () => {
     await vi.waitFor(() => expect(harness.notices.messages).toContain(rollNotice(REPORT)));
     expect(roll).toHaveBeenCalledWith("daily", { interactive: true });
     expect(harness.suggests.opens.length).toBe(0);
+  });
+
+  it("a press before the startup scan waits for the index, then rolls the open note's journal", async () => {
+    await boot(
+      { daily: fixedJournal("daily", { type: "day" }), weekly: fixedJournal("weekly", { type: "week" }) },
+      false,
+    );
+    setActive(DAILY);
+    run();
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    expect(roll).not.toHaveBeenCalled();
+    expect(harness.suggests.opens.length).toBe(0);
+    expect(harness.notices.messages).toEqual([]);
+
+    setActive(ORPHAN);
+    scan();
+
+    await vi.waitFor(() => expect(roll).toHaveBeenCalledWith("daily", { interactive: true }));
+    expect(harness.suggests.opens.length).toBe(0);
+    await vi.waitFor(() => expect(harness.notices.messages).toContain(rollNotice(REPORT)));
   });
 
   it("from a notelet it rolls the notelet's journal", async () => {
@@ -129,7 +155,7 @@ describe("RolloverCommands", () => {
     await boot({});
     setActive(ORPHAN);
     run();
-    expect(harness.notices.messages).toContain(m.common_no_journals_yet());
+    await vi.waitFor(() => expect(harness.notices.messages).toContain(m.common_no_journals_yet()));
     expect(harness.suggests.opens.length).toBe(0);
   });
 
