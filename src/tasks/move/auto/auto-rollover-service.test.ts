@@ -627,6 +627,51 @@ describe("AutoRolloverService", () => {
     expect(await text(target)).toBe("- [ ] Call Bob\n- [ ] Later item\n");
   });
 
+  it("a renamed journal stays paused under its new name", async () => {
+    const { put, text, calls, boot, resume, notes, index, harness } = await autoFor({
+      daily: automatic("daily"),
+      work: automatic("work"),
+    });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    const workTarget = put("work", "2026-10-21", "");
+    failWrites(notes, new Set([source]));
+    await boot();
+    expect(calls("daily")).toBe(1);
+
+    expectOk(harness.resolve(JournalsRepository).rename("daily", "diary"));
+    index.register({ journalName: "diary", anchor: anchor("2026-10-20"), path: source });
+    index.register({ journalName: "diary", anchor: anchor("2026-10-21"), path: target });
+    put("work", "2026-10-20", "- [ ] Work item\n");
+    await resume();
+
+    expect(calls("diary")).toBe(0);
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    expect(await text(workTarget)).toBe("- [ ] Work item\n");
+  });
+
+  it("a renamed journal does not announce again what it already said", async () => {
+    const { put, index, boot, resume, harness } = await autoFor({
+      daily: automatic("daily", {}, underTasks),
+      work: automatic("work", {}, underTasks),
+    });
+    const source = put("daily", "2026-10-20", "# Notes\n- [ ] Stray\n");
+    const target = put("daily", "2026-10-21", "");
+    put("work", "2026-10-21", "");
+    await boot();
+
+    expectOk(harness.resolve(JournalsRepository).rename("daily", "diary"));
+    index.register({ journalName: "diary", anchor: anchor("2026-10-20"), path: source });
+    index.register({ journalName: "diary", anchor: anchor("2026-10-21"), path: target });
+    put("work", "2026-10-20", "# Notes\n- [ ] Work stray\n");
+    await resume();
+
+    expect(harness.notices.messages).toEqual([
+      missing("2026-10-20"),
+      named("work", m.tasks_roll_missing_heading({ heading: "Tasks", date: "2026-10-20" })),
+    ]);
+  });
+
   it("a busy vault stops waiting once no journal is automatic any more", async () => {
     const { put, index, notes, harness } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
     put("daily", "2026-10-20", "- [ ] Call Bob\n");

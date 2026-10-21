@@ -13,8 +13,9 @@ import {
 // Nobody pressed anything, so a roll that moved nothing has nothing to say about itself.
 const SILENT_OUTCOMES: ReadonlySet<RollSentence["kind"]> = new Set(["nothing", "no-previous"]);
 
-function keyOf(report: RollReport, anchor: AnchorString, kind: RollSentence["kind"]): string {
-  return `${report.journalName}|${anchor}|${kind}`;
+// No journal name: `seen` is one journal's, and moves with it when the journal is renamed.
+function keyOf(anchor: AnchorString, kind: RollSentence["kind"]): string {
+  return `${anchor}|${kind}`;
 }
 
 // A count sums over every note read, but a line that stays put is the same line on the next roll
@@ -24,7 +25,7 @@ function unseenCount(report: RollReport, kind: RollSentence["kind"], seen: Set<s
     kind === "note-items-skipped" ? report.skippedNoteItemsAt : report.skippedBlockIdsAt;
   let total = 0;
   for (const { anchor, count } of counts) {
-    const key = keyOf(report, anchor, kind);
+    const key = keyOf(anchor, kind);
     if (seen.has(key)) continue;
     seen.add(key);
     total += count;
@@ -47,7 +48,7 @@ function shownText(report: RollReport, sentence: RollSentence, seen: Set<string>
     return count > 0 ? countedSentence(sentence.kind, count) : null;
   }
   if (sentence.anchor === null) return autoText(sentence);
-  const key = keyOf(report, sentence.anchor, sentence.kind);
+  const key = keyOf(sentence.anchor, sentence.kind);
   if (seen.has(key)) return null;
   seen.add(key);
   return autoText(sentence);

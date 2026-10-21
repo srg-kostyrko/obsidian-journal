@@ -9,6 +9,7 @@ import { JournalNotFoundError } from "@/journals/errors";
 import { JournalsIndex } from "@/journals/journals-index";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
+import { JournalsEventsToken } from "@/journals/tokens";
 import { isNotelet, type EntryChangedEvent } from "@/journals/types";
 import { SettingsService } from "@/settings";
 
@@ -42,6 +43,13 @@ function isClean(report: RollReport): boolean {
   );
 }
 
+function rekey<V>(map: Map<string, V>, from: string, to: string): void {
+  const value = map.get(from);
+  if (value === undefined) return;
+  map.delete(from);
+  map.set(to, value);
+}
+
 /** Rolls each opted-in journal into its current note whenever the vault gives a reason to look. */
 export class AutoRolloverService {
   readonly #journals = inject(JournalsRepository);
@@ -57,7 +65,7 @@ export class AutoRolloverService {
   readonly #logger = inject(LoggerFactoryToken).named("auto-rollover");
 
   // In memory on purpose: a record of past runs would be plugin state the note cannot rebuild.
-  readonly #seen = new Set<string>();
+  readonly #seen = new Map<string, Set<string>>();
   readonly #paused = new Map<string, "blocked" | "write-failed">();
   readonly #stops: (() => void)[] = [];
   // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
@@ -73,6 +81,11 @@ export class AutoRolloverService {
     this.#stops.push(
       // A timer does not advance through a suspend, so a return to the app is also a midnight.
       inject(AppActivity).onResume(() => this.#checkpoint({ delayed: true })),
+      // A pause left under the old name would let the journal resume and copy the same items again.
+      inject(JournalsEventsToken).on("renamed", (oldName, newName) => {
+        rekey(this.#paused, oldName, newName);
+        rekey(this.#seen, oldName, newName);
+      }),
       this.#index.events.on("entryChanged", (event) => this.#onEntry(event)),
       // The pause asks for a roll by hand once the leftovers are dealt with; one that wrote every
       // source it took from is that roll.
@@ -238,7 +251,9 @@ export class AutoRolloverService {
     const report = result.value;
     if (report.noTarget) return;
     const unwritten = unwrittenAnchors(report);
-    const notice = noticeFor(report, this.#seen, unwritten.length > 0 ? UNWRITTEN_KINDS : undefined);
+    const seen = this.#seen.get(name) ?? new Set<string>();
+    this.#seen.set(name, seen);
+    const notice = noticeFor(report, seen, unwritten.length > 0 ? UNWRITTEN_KINDS : undefined);
     if (notice !== null) this.#notices.show(notice);
     // The items reached the target but the source still offers them, so the next checkpoint
     // would copy them again.

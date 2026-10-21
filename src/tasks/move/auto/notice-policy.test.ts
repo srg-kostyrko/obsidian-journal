@@ -40,8 +40,6 @@ const blockIds = (read: readonly string[], at: Record<string, number>): RollRepo
     skippedBlockIdsAt: counts,
   });
 };
-const unreadIn = (journalName: string): RollReport =>
-  reportOf({ journalName, read: [anchor("2026-10-20")], unreadSources: [anchor("2026-10-20")] });
 
 const noteItems = (read: readonly string[], at: string, count: number): RollReport =>
   reportOf({
@@ -117,13 +115,6 @@ describe("noticeFor", () => {
     expect(noticeFor(reportOf({ read: [anchor("2026-10-20")] }), seen)).toBeNull();
     expect(noticeFor(reportOf({ noPrevious: true }), seen)).toBeNull();
     expect(seen.size).toBe(0);
-  });
-
-  it("keys warnings by journal", () => {
-    const seen = new Set<string>();
-
-    expect(noticeFor(unreadIn("daily"), seen)).not.toBeNull();
-    expect(noticeFor(unreadIn("work"), seen)).not.toBeNull();
   });
 
   it("an earlier note still indexing is said in the automatic wording", () => {
