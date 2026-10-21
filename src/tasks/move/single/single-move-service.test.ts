@@ -382,6 +382,73 @@ describe("SingleMoveService", () => {
     expect(await text(SOURCE)).toBe("- [ ] Call Bob\n- [ ] Other\n");
   });
 
+  describe("a target an open view holds", () => {
+    it("is written through the view, so typing it has not saved stays intact on its own line", async () => {
+      const { harness, put, edit, text, move, notes } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month"),
+      });
+      const month = put("monthly", "2026-10-01", "# October\n");
+      const other = put("monthly", "2026-09-01", "# September\n");
+      const view = harness.host.openEditor(month, "# October\n", 0, { active: false });
+      view.text = "# October\nNot saved yet.";
+      harness.host.workspace.openWindows.set(month, "popout");
+      const otherView = harness.host.openEditor(other, "# September\n", 0, { active: false });
+      const { state } = edit("- [ ] Call Bob\n    - detail\n", 0);
+      const process = vi.spyOn(notes, "process");
+
+      const result = await move(state, target("monthly", "2026-10-01", month));
+
+      expectOk(result);
+      expect(result.value.outcome).toBe("done");
+      expect(view.text).toBe("# October\nNot saved yet.\n- [ ] Call Bob\n    - detail");
+      expect(view.changes).toHaveLength(1);
+      expect(view.saves).toEqual([view.text]);
+      expect(otherView.changes).toEqual([]);
+      expect(process).not.toHaveBeenCalledWith(month, expect.anything());
+      expect(await text(month)).toBe("# October\n");
+    });
+
+    it("is saved before the source is touched", async () => {
+      const { harness, put, edit, move } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", { mode: "move" }),
+      });
+      const month = put("monthly", "2026-10-01", "");
+      const view = harness.host.openEditor(month, "", 0, { active: false });
+      const { promise: gate, resolve: release } = Promise.withResolvers<void>();
+      view.pendingSave = gate;
+      const { editor, state } = edit("- [ ] Call Bob\n- [ ] Other\n", 0);
+
+      const pending = move(state, target("monthly", "2026-10-01", month));
+      await vi.waitFor(() => expect(view.changes).toHaveLength(1));
+      await new Promise((resolve) => window.setTimeout(resolve, 0));
+      expect(editor.changes).toEqual([]);
+      release();
+      expectOk(await pending);
+
+      expect(view.saves).toEqual(["- [ ] Call Bob\n"]);
+      expect(editor.text).toBe("- [ ] Other\n");
+    });
+
+    it("a failed save leaves the source untouched", async () => {
+      const { harness, put, edit, move } = await moverFor({
+        daily: journal("daily", "day"),
+        monthly: journal("monthly", "month", { mode: "move" }),
+      });
+      const month = put("monthly", "2026-10-01", "");
+      const view = harness.host.openEditor(month, "", 0, { active: false });
+      view.pendingSave = Promise.reject(new Error("disk full"));
+      const { editor, state } = edit("- [ ] Call Bob\n- [ ] Other\n", 0);
+
+      const result = await move(state, target("monthly", "2026-10-01", month));
+
+      expectErr(result);
+      expect(result.error).toBeInstanceOf(NoteWriteError);
+      expect(editor.changes).toEqual([]);
+    });
+  });
+
   describe("a source no open view holds", () => {
     it("is rewritten on disk once it still matches", async () => {
       const { harness, put, edit, text, move } = await moverFor({

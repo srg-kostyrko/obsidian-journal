@@ -6,6 +6,7 @@ import { Flows } from "@/infrastructure/flows";
 import {
   NoteStructureService,
   NotesService,
+  WorkspaceService,
   type NoteNotFoundError,
   type NoteStructure,
   type NoteWriteError,
@@ -34,6 +35,7 @@ import { TaskVisibility } from "../visibility";
 import { NoCurrentPeriodError, type RollError } from "./errors";
 import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
+import { rewriteNote, type NoteWriters } from "./note-write";
 import { placeGroups } from "./placement";
 import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
 import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
@@ -117,6 +119,7 @@ export class RolloverService {
   readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #defaults = inject(SettingsService).getSlice(moveDefaultsSlice);
   readonly #locks = inject(MoveLocks);
+  readonly #writers: NoteWriters = { workspace: inject(WorkspaceService), notes: this.#notes };
   readonly #listing: TaskListingDependencies = {
     journals: this.#journals,
     index: this.#index,
@@ -216,18 +219,15 @@ export class RolloverService {
     roots: readonly PlannedRoot[],
     rewrite: SourceRewrite,
   ): AsyncResult<"written" | "changed", NoteNotFoundError | NoteWriteError> {
-    // Collected inside the closure: the verdict is reached under vault.process's lock.
-    const refusals: string[] = [];
-    return this.#notes
-      .process(path, (content) => {
+    return rewriteNote(
+      this.#writers,
+      path,
+      (content) => {
         const outcome = rewriteSource(content, roots, rewrite);
-        if ("reason" in outcome) {
-          refusals.push(outcome.reason);
-          return content;
-        }
-        return outcome.content;
-      })
-      .map(() => (refusals.length > 0 ? "changed" : "written"));
+        return "reason" in outcome ? null : outcome.content;
+      },
+      { flush: false },
+    ).map((written) => (written === "refused" ? "changed" : "written"));
   }
 
   // Counted through the listing, not a query of our own, so the count matches what the period shows.
@@ -280,8 +280,11 @@ export class RolloverService {
       if (contributing.length > 0) {
         const target = yield* this.#targetPath(journalName, today, options.interactive);
         const groups = contributing.flatMap(({ plan }) => plan.block);
-        // The target goes first: a failure before the sources are written leaves a duplicate, never a gap.
-        yield* this.#notes.process(target, (content) => placeGroups(content, groups, move.targetHeading));
+        // The target goes first, and reaches disk first: a failure before the sources are written leaves
+        // a duplicate, never a gap.
+        yield* rewriteNote(this.#writers, target, (content) => placeGroups(content, groups, move.targetHeading), {
+          flush: true,
+        });
         const rewrite = sourceRewrite(move, marker);
         if (rewrite !== null) {
           // A failed source is reported, not raised: its items already sit in the target.

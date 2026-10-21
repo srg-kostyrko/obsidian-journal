@@ -18,6 +18,7 @@ import { SettingsService } from "@/settings";
 import { checkboxSlice } from "../../providers/checkbox/slice";
 import { SingleMoveRefusedError, type SingleMoveError } from "../errors";
 import { MoveLocks } from "../locks";
+import { rewriteNote, type NoteWriters } from "../note-write";
 import { placeGroups } from "../placement";
 import { planItem, type PlannedRoot, type SourcePlan } from "../plan";
 import { effectiveMove, moveDefaultsSlice, type EffectiveMove } from "../settings";
@@ -65,6 +66,7 @@ export class SingleMoveService {
   readonly #locks = inject(MoveLocks);
   readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #defaults = inject(SettingsService).getSlice(moveDefaultsSlice);
+  readonly #writers: NoteWriters = { workspace: this.#workspace, notes: this.#notes };
 
   #plan(
     source: ActiveEditorState,
@@ -166,8 +168,11 @@ export class SingleMoveService {
       const path = yield* this.#ensureTarget(target);
       // Only an existing note can be the source, and ensuring one writes nothing.
       if (path === source.path) return yield* AsyncResult.err(new SingleMoveRefusedError("same-note"));
-      // The target goes first: a failure before the source is written leaves a duplicate, never a gap.
-      yield* this.#notes.process(path, (content) => placeGroups(content, plan.block, move.targetHeading));
+      // The target goes first, and reaches disk first: a failure before the source is written leaves a
+      // duplicate, never a gap.
+      yield* rewriteNote(this.#writers, path, (content) => placeGroups(content, plan.block, move.targetHeading), {
+        flush: true,
+      });
       const rewrite = sourceRewrite(move, marker);
       return report(rewrite === null ? "done" : await this.#rewriteSource(source.path, confirmed.root, rewrite));
     });
