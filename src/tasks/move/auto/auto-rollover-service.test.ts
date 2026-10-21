@@ -6,6 +6,7 @@ import { formatConjunction, m } from "@/i18n";
 import type { Module } from "@/infrastructure/di";
 import {
   AppActivity,
+  NoteNotFoundError,
   NoteStructureService,
   NotesService,
   NoteWriteError,
@@ -16,7 +17,7 @@ import {
 import { FakeAppActivity, FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { AsyncResult } from "@/infrastructure/result";
 import { expectOk } from "@/infrastructure/result/testing";
-import { JournalsIndex, type JournalConfig } from "@/journals";
+import { JournalsIndex, JournalsRepository, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
@@ -588,6 +589,65 @@ describe("AutoRolloverService", () => {
     expect(await text(workTarget)).toBe("- [ ] Work item\n- [ ] Work item\n");
     expect(calls("daily")).toBe(2);
     expect(calls("work")).toBe(1);
+  });
+
+  it("a roll by hand that skipped an earlier note leaves the pause in place, and a clean one lifts it", async () => {
+    const { put, edit, text, boot, resume, notes, harness, realRoll } = await autoFor({
+      daily: automatic("daily"),
+      work: dayJournal("work"),
+    });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    const failing = new Set([source]);
+    failWrites(notes, failing);
+    await boot();
+    failing.delete(source);
+
+    // Still being typed into: the manual roll skips it as indexing.
+    harness.host.openEditor(source, "- [ ] Call Bob\n- [ ] Typed, not saved\n");
+    const skipped = await realRoll("daily", { interactive: true });
+    expectOk(skipped);
+    expect(skipped.value.skippedSources).toEqual([anchor("2026-10-20")]);
+    harness.host.closeEditor(source);
+    await resume();
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+
+    vi.spyOn(notes, "read").mockImplementationOnce((path) => AsyncResult.err(new NoteNotFoundError(path)));
+    const unread = await realRoll("daily", { interactive: true });
+    expectOk(unread);
+    expect(unread.value.unreadSources).toEqual([anchor("2026-10-20")]);
+    await resume();
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+
+    edit(source, "- [ ] Call Bob #rolled\n");
+    expectOk(await realRoll("daily", { interactive: true }));
+    edit(source, "- [ ] Call Bob #rolled\n- [ ] Later item\n");
+    await resume();
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n- [ ] Later item\n");
+  });
+
+  it("a busy vault stops waiting once no journal is automatic any more", async () => {
+    const { put, index, notes, harness } = await autoFor({ daily: automatic("daily"), work: dayJournal("work") });
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    const syncing = put("work", "2026-10-21", "");
+    const wait = vi.spyOn(harness.resolve(QuietWindow), "wait");
+
+    index.markReady();
+    await vi.advanceTimersByTimeAsync(RESUME_DELAY_MS);
+    const daily = harness.resolve(JournalsRepository).get("daily");
+    expect(daily.isSome()).toBe(true);
+    if (daily.isSome()) {
+      const move = { ...daily.value.tasks.move, automatic: false };
+      expectOk(harness.resolve(JournalsRepository).update("daily", { tasks: { ...daily.value.tasks, move } }));
+    }
+    for (let elapsed = 0; elapsed < 3 * MAX_WAIT_MS; elapsed += 1000) {
+      notes.emitModified(syncing);
+      await vi.advanceTimersByTimeAsync(1000);
+    }
+
+    expect(wait).toHaveBeenCalledOnce();
   });
 
   it("a block link that stays put is announced once per note as the look-back moves on", async () => {

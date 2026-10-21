@@ -31,9 +31,15 @@ function unwrittenAnchors(report: RollReport): readonly string[] {
   return [...new Set([...report.failedSources, ...report.changedSources].map(({ anchor }) => anchor))].toSorted();
 }
 
-// A clean report left nothing behind that the next roll would take again.
+// Clean means every earlier note was read and written: one skipped as indexing or unreadable may be
+// the very note the pause is about, still offering what the paused roll already copied.
 function isClean(report: RollReport): boolean {
-  return report.failedSources.length === 0 && report.changedSources.length === 0;
+  return (
+    report.failedSources.length === 0 &&
+    report.changedSources.length === 0 &&
+    report.skippedSources.length === 0 &&
+    report.unreadSources.length === 0
+  );
 }
 
 /** Rolls each opted-in journal into its current note whenever the vault gives a reason to look. */
@@ -151,6 +157,11 @@ export class AutoRolloverService {
       const verdict = await this.#quiet.wait();
       if (this.#disposed) return false;
       if (verdict === "busy") {
+        // Nothing left to roll, so nothing to wait for.
+        if (this.#optedIn().length === 0) {
+          this.#wantsDelay = false;
+          return false;
+        }
         this.#logger.info("the vault did not settle; waiting for quiet again");
         continue;
       }
