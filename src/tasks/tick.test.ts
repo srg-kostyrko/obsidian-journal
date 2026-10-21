@@ -421,6 +421,22 @@ describe("TickService", () => {
     expect(await contentOf(notes)).toBe("- [•] Ship it\n");
   });
 
+  it("ticks an unchecked rolled line to done", async () => {
+    const { notes, service } = await build({ content: "- [ ] Ship it #rolled\n" });
+
+    expectOk(await service.toggle(item(0, "- [ ] Ship it #rolled", { status: "rolled" satisfies TaskStatus })));
+
+    expect(await contentOf(notes)).toBe("- [x] Ship it #rolled\n");
+  });
+
+  it("ticks a checked rolled line back to todo, reading the line's own symbol", async () => {
+    const { notes, service } = await build({ content: "- [x] Ship it #rolled\n" });
+
+    expectOk(await service.toggle(item(0, "- [x] Ship it #rolled", { status: "rolled" satisfies TaskStatus })));
+
+    expect(await contentOf(notes)).toBe("- [ ] Ship it #rolled\n");
+  });
+
   it("leaves the note untouched when the line moved", async () => {
     const content = "- [ ] Something else\n";
     const { notes, service } = await build({ content });

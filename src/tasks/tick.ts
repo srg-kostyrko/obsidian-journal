@@ -17,6 +17,7 @@ import {
   TaskLineMovedError,
   type TickError,
 } from "./errors";
+import { normalizeStatus } from "./providers/checkbox/normalize";
 import { checkboxSlice } from "./providers/checkbox/slice";
 import { NotePropertyTicker } from "./providers/note-property/tick";
 import { tickTargetStatus } from "./status";
@@ -215,6 +216,14 @@ export class TickService {
     return typeof toggle === "function" ? (toggle as RecurringToggle) : null;
   }
 
+  // The rolled marker hides whether the line is checked, so a rolled line ticks from its own symbol;
+  // reading done for every rolled line would leave a checked one unable to come back.
+  #tickedFrom(status: TaskStatus, firstLine: string | undefined): TaskStatus {
+    if (status !== "rolled" || firstLine === undefined) return status;
+    const symbol = MARKER.exec(firstLine)?.[2];
+    return symbol === undefined ? status : normalizeStatus(symbol, this.#settings.state.statusMap);
+  }
+
   // A line carrying 🔁 needs the Tasks plugin's own toggle command to advance the series; this
   // writes the status character itself, which marks such a line done and creates no next instance.
   toggle(item: TaskItem): AsyncResult<void, TickError> {
@@ -233,7 +242,7 @@ export class TickService {
       return this.#toggleRecurring(item, display);
     }
 
-    const target = tickTargetStatus(item.status);
+    const target = tickTargetStatus(this.#tickedFrom(item.status, firstLine));
     const symbol = canonicalSymbol(this.#settings.state.canonical, target);
     if (symbol === null) return AsyncResult.err(new NoCanonicalSymbolError(target));
     // The verdict is reached inside vault.process's lock, against the content the lock is holding,
