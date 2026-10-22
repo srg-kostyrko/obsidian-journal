@@ -15,12 +15,13 @@ export class TaskIndex {
   readonly #byPath = new Map<VaultPath, Map<string, readonly TaskItem[]>>();
   readonly #emitter: TypedEmitter<TaskIndexEvents> = createNanoEvents();
   #version = 0;
-  // Per-role dated items grouped by date, rebuilt on the first datedIn after a version bump: the
-  // decoration engine asks once per grid cell, so a scan of every item would be per cell. Grouped
-  // rather than sorted because every edit bumps the version, and sorting ~90k entries took ~75 ms
-  // per role on each one; only the distinct dates need ordering, and the query sorts its own slice.
+  // Per-role dated items grouped by date, built on the first datedIn that asks for the role: the
+  // decoration engine asks once per grid cell, so a scan of every item would be per cell. A one-path
+  // publish patches them in place and only an "all" publish drops them, because every edit is a
+  // publish, and rebuilding is a pass over every item in the vault (~90k dated in the #349 spike's
+  // shape, where a full re-sort cost ~75 ms per role per edit). Only the distinct dates are kept in
+  // order; the query sorts its own slice.
   readonly #byRole = new Map<TaskDateRole, DatedGroups>();
-  #byRoleVersion = -1;
   readonly #notes = inject(NotesService);
   // Text is not in metadataCache, so a "line" item's markdown is hydrated lazily on request and
   // cached per path, keyed by mtime — a modified note invalidates precisely, a re-read is free.
@@ -65,8 +66,8 @@ export class TaskIndex {
     for (const byProvider of this.#byPath.values()) {
       for (const items of byProvider.values()) {
         for (const item of items) {
-          const date = item.dates[role];
-          if (date === undefined || !item.relations.includes("date")) continue;
+          const date = datedAs(item, role);
+          if (date === undefined) continue;
           const bucket = byDate.get(date);
           if (bucket) bucket.push(item);
           else byDate.set(date, [item]);
@@ -76,6 +77,39 @@ export class TaskIndex {
     const groups = { dates: [...byDate.keys()].toSorted(), byDate };
     this.#byRole.set(role, groups);
     return groups;
+  }
+
+  #patchGroups(removed: readonly TaskItem[], added: readonly TaskItem[]): void {
+    // Removed by identity: the groups hold the very objects #byPath stored.
+    const gone = new Set(removed);
+    for (const [role, { dates, byDate }] of this.#byRole) {
+      for (const item of removed) {
+        const date = datedAs(item, role);
+        const bucket = date === undefined ? undefined : byDate.get(date);
+        if (date === undefined || bucket === undefined) continue;
+        const kept = bucket.filter((held) => !gone.has(held));
+        if (kept.length > 0) byDate.set(date, kept);
+        else {
+          byDate.delete(date);
+          const at = firstIndexWhere(dates, (held) => held >= date);
+          if (dates[at] === date) dates.splice(at, 1);
+        }
+      }
+      for (const item of added) {
+        const date = datedAs(item, role);
+        if (date === undefined) continue;
+        const bucket = byDate.get(date);
+        if (bucket) bucket.push(item);
+        else {
+          byDate.set(date, [item]);
+          dates.splice(
+            firstIndexWhere(dates, (held) => held >= date),
+            0,
+            date,
+          );
+        }
+      }
+    }
   }
 
   version(): number {
@@ -89,10 +123,6 @@ export class TaskIndex {
   }
 
   datedIn(roles: readonly TaskDateRole[], start: AnchorString, end: AnchorString): readonly TaskItem[] {
-    if (this.#byRoleVersion !== this.#version) {
-      this.#byRole.clear();
-      this.#byRoleVersion = this.#version;
-    }
     const matched = new Map<string, DatedEntry>();
     const distinctRoles = new Set(roles);
     for (const role of distinctRoles) {
@@ -125,10 +155,13 @@ export class TaskIndex {
       if (unchanged) return;
       for (const path of held) this.#set(path, providerId, []);
       for (const [path, group] of next) this.#set(path, providerId, group);
+      this.#byRole.clear();
     } else {
       const deduped = dedupe(items);
-      if (sameItems(this.#itemsAt(scope.path, providerId), deduped)) return;
+      const previous = this.#itemsAt(scope.path, providerId);
+      if (sameItems(previous, deduped)) return;
       this.#set(scope.path, providerId, deduped);
+      this.#patchGroups(previous, deduped);
     }
     this.#version++;
     this.#emitter.emit("changed");
@@ -153,8 +186,12 @@ export class TaskIndex {
 }
 
 interface DatedGroups {
-  readonly dates: readonly AnchorString[];
-  readonly byDate: ReadonlyMap<AnchorString, readonly TaskItem[]>;
+  readonly dates: AnchorString[];
+  readonly byDate: Map<AnchorString, TaskItem[]>;
+}
+
+function datedAs(item: TaskItem, role: TaskDateRole): AnchorString | undefined {
+  return item.relations.includes("date") ? item.dates[role] : undefined;
 }
 
 interface DatedEntry {
