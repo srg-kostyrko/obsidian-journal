@@ -46,6 +46,7 @@ function lineItem(key: string, line: number, provider = "checkbox", endLine = li
 }
 
 const day = (s: string): AnchorString => s as AnchorString;
+const octoberDay = (seed: number): string => `2026-10-${String(10 + (seed % 20)).padStart(2, "0")}`;
 
 function dated(
   key: string,
@@ -359,6 +360,96 @@ describe("TaskIndex.hydrate", () => {
       index.publish("note-property", { path }, [dated("n:1", { due: "2026-11-20" })]);
       expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toEqual([]);
       expect(index.datedIn(roles, day("2026-11-19"), day("2026-11-25"))).toHaveLength(1);
+    });
+
+    it("reflects a full republish after a range was asked about", async () => {
+      const { index } = await build();
+      index.publish("note-property", "all", [dated("n:1", { due: "2026-10-20" })]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toHaveLength(1);
+      index.publish("note-property", "all", [dated("n:1", { due: "2026-11-20" })]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toEqual([]);
+      expect(index.datedIn(roles, day("2026-11-19"), day("2026-11-25"))).toHaveLength(1);
+    });
+
+    it("drops a removed item from a range already asked about", async () => {
+      const { index } = await build();
+      index.publish("note-property", { path }, [
+        dated("n:1", { due: "2026-10-20" }),
+        dated("n:2", { due: "2026-10-21" }),
+      ]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toHaveLength(2);
+      index.publish("note-property", { path }, [dated("n:2", { due: "2026-10-21" })]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25")).map((i) => i.key)).toEqual(["n:2"]);
+      expect(index.datedIn(roles, day("2026-10-20"), day("2026-10-20"))).toEqual([]);
+    });
+
+    it("places a date first seen after a query between the dates around it", async () => {
+      const { index } = await build();
+      index.publish("note-property", { path }, [
+        dated("n:1", { due: "2026-10-19" }),
+        dated("n:3", { due: "2026-10-25" }),
+      ]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25"))).toHaveLength(2);
+      index.publish("note-property", { path }, [
+        dated("n:1", { due: "2026-10-19" }),
+        dated("n:2", { due: "2026-10-22" }),
+        dated("n:3", { due: "2026-10-25" }),
+      ]);
+      expect(index.datedIn(roles, day("2026-10-19"), day("2026-10-25")).map((i) => i.key)).toEqual([
+        "n:1",
+        "n:2",
+        "n:3",
+      ]);
+      expect(index.datedIn(roles, day("2026-10-22"), day("2026-10-22")).map((i) => i.key)).toEqual(["n:2"]);
+    });
+
+    it("keeps another note's and another provider's items when one note changes", async () => {
+      const { index } = await build();
+      const other = "b.md" as VaultPath;
+      index.publish("note-property", { path }, [dated("n:1", { due: "2026-10-20" })]);
+      index.publish("checkbox", { path }, [{ ...dated("c:1", { due: "2026-10-20" }), provider: "checkbox" }]);
+      index.publish("note-property", { path: other }, [{ ...dated("b:1", { due: "2026-10-20" }), path: other }]);
+      expect(index.datedIn(roles, day("2026-10-20"), day("2026-10-20"))).toHaveLength(3);
+      index.publish("note-property", { path }, []);
+      expect(index.datedIn(roles, day("2026-10-20"), day("2026-10-20")).map((i) => i.key)).toEqual(["b:1", "c:1"]);
+    });
+
+    it("answers after a run of edits exactly as an index built from the final state", async () => {
+      const { index } = await build();
+      const paths = ["a.md", "b.md", "c.md"] as VaultPath[];
+      const publishFor = (target: TaskIndex, p: VaultPath, step: number) => {
+        const items = Array.from({ length: step % 4 }, (_, n) => ({
+          ...dated(
+            `${p}:${n}`,
+            n % 2 === 0
+              ? { due: octoberDay(step * 7 + n) }
+              : { scheduled: octoberDay(step * 3 + n), due: octoberDay(step + n) },
+          ),
+          path: p,
+        }));
+        target.publish("note-property", { path: p }, items);
+      };
+      const last = new Map<VaultPath, number>();
+      for (let step = 0; step < 60; step++) {
+        const p = paths[step % paths.length] ?? path;
+        publishFor(index, p, step);
+        last.set(p, step);
+        index.datedIn(roles, day(octoberDay(step)), day(octoberDay(step + 5)));
+        index.datedIn(["done", "due"], day("2026-10-01"), day("2026-10-31"));
+      }
+      const { index: fresh } = await build();
+      for (const [p, step] of last) publishFor(fresh, p, step);
+      for (const range of [
+        ["2026-10-01", "2026-10-31"],
+        ["2026-10-12", "2026-10-18"],
+        ["2026-10-20", "2026-10-20"],
+      ] as const) {
+        for (const asked of [roles, ["due"], ["scheduled"]] as const) {
+          expect(index.datedIn(asked, day(range[0]), day(range[1]))).toEqual(
+            fresh.datedIn(asked, day(range[0]), day(range[1])),
+          );
+        }
+      }
     });
   });
 });
