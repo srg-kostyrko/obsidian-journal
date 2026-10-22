@@ -15,9 +15,11 @@ export class TaskIndex {
   readonly #byPath = new Map<VaultPath, Map<string, readonly TaskItem[]>>();
   readonly #emitter: TypedEmitter<TaskIndexEvents> = createNanoEvents();
   #version = 0;
-  // Per-role dated entries sorted by [date, key], rebuilt on the first datedIn after a version
-  // bump: the decoration engine asks once per grid cell, so a scan of every item would be per cell.
-  readonly #byRole = new Map<TaskDateRole, readonly DatedEntry[]>();
+  // Per-role dated items grouped by date, rebuilt on the first datedIn after a version bump: the
+  // decoration engine asks once per grid cell, so a scan of every item would be per cell. Grouped
+  // rather than sorted because every edit bumps the version, and sorting ~90k entries took ~75 ms
+  // per role on each one; only the distinct dates need ordering, and the query sorts its own slice.
+  readonly #byRole = new Map<TaskDateRole, DatedGroups>();
   #byRoleVersion = -1;
   readonly #notes = inject(NotesService);
   // Text is not in metadataCache, so a "line" item's markdown is hydrated lazily on request and
@@ -56,18 +58,24 @@ export class TaskIndex {
     this.#text.set(path, { mtime, lines: read.value.split("\n") });
   }
 
-  #entriesFor(role: TaskDateRole): readonly DatedEntry[] {
+  #groupsFor(role: TaskDateRole): DatedGroups {
     const cached = this.#byRole.get(role);
     if (cached) return cached;
-    const entries: DatedEntry[] = [];
-    const items = [...this.#byPath.values()].flatMap((byProvider) => [...byProvider.values()].flat());
-    for (const item of items) {
-      const date = item.dates[role];
-      if (date !== undefined && item.relations.includes("date")) entries.push({ date, item });
+    const byDate = new Map<AnchorString, TaskItem[]>();
+    for (const byProvider of this.#byPath.values()) {
+      for (const items of byProvider.values()) {
+        for (const item of items) {
+          const date = item.dates[role];
+          if (date === undefined || !item.relations.includes("date")) continue;
+          const bucket = byDate.get(date);
+          if (bucket) bucket.push(item);
+          else byDate.set(date, [item]);
+        }
+      }
     }
-    const sorted = entries.toSorted(compareEntries);
-    this.#byRole.set(role, sorted);
-    return sorted;
+    const groups = { dates: [...byDate.keys()].toSorted(), byDate };
+    this.#byRole.set(role, groups);
+    return groups;
   }
 
   version(): number {
@@ -88,7 +96,10 @@ export class TaskIndex {
     const matched = new Map<string, DatedEntry>();
     const distinctRoles = new Set(roles);
     for (const role of distinctRoles) {
-      const inRange = entriesBetween(this.#entriesFor(role), start, end);
+      const { dates, byDate } = this.#groupsFor(role);
+      const inRange = datesBetween(dates, start, end).flatMap((date) =>
+        (byDate.get(date) ?? []).map((item) => ({ date, item })),
+      );
       for (const entry of inRange) {
         const known = matched.get(entry.item.key);
         if (!known || compareEntries(entry, known) < 0) matched.set(entry.item.key, entry);
@@ -141,6 +152,11 @@ export class TaskIndex {
   }
 }
 
+interface DatedGroups {
+  readonly dates: readonly AnchorString[];
+  readonly byDate: ReadonlyMap<AnchorString, readonly TaskItem[]>;
+}
+
 interface DatedEntry {
   readonly date: AnchorString;
   readonly item: TaskItem;
@@ -152,20 +168,20 @@ function compareEntries(a: DatedEntry, b: DatedEntry): number {
   return a.item.key < b.item.key ? -1 : 1;
 }
 
-// Entries are sorted by date, so the inclusive range is one contiguous slice found by two bisections.
-function entriesBetween(entries: readonly DatedEntry[], start: AnchorString, end: AnchorString): DatedEntry[] {
-  return entries.slice(
-    firstIndexWhere(entries, (date) => date >= start),
-    firstIndexWhere(entries, (date) => date > end),
+// Dates are sorted, so the inclusive range is one contiguous slice found by two bisections.
+function datesBetween(dates: readonly AnchorString[], start: AnchorString, end: AnchorString): AnchorString[] {
+  return dates.slice(
+    firstIndexWhere(dates, (date) => date >= start),
+    firstIndexWhere(dates, (date) => date > end),
   );
 }
 
-function firstIndexWhere(entries: readonly DatedEntry[], test: (date: AnchorString) => boolean): number {
+function firstIndexWhere(dates: readonly AnchorString[], test: (date: AnchorString) => boolean): number {
   let lo = 0;
-  let hi = entries.length;
+  let hi = dates.length;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
-    const date = entries[mid]?.date;
+    const date = dates[mid];
     if (date !== undefined && test(date)) hi = mid;
     else lo = mid + 1;
   }
