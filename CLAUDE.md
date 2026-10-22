@@ -388,6 +388,16 @@ on it.
   hovering (`mark-limit.e2e.ts`). Such a test reads green for as long as the
   leftover keeps arriving and fails the first night it does not, with nothing
   left to re-drive the hover.
+- From 1.14, Obsidian's drag manager **edge-scrolls** any scroll container
+  whose edge a `dragover` lands near (within 50px) or past, at up to 1px/ms on
+  a rAF loop. It is absent at 1.8.7 and 1.13.7. A synthetic drag reads its
+  coordinates once, so on a target below the fold every event after the first
+  `dragover` fires at a point the pane has scrolled away from. The toolbar
+  reorder failed this way on one nightly in three, always `latest/earliest`:
+  a second, redundant `dragover` reached SortableJS after its 30ms ignore
+  window, now below every item, so the item went to the end. Scroll the
+  source into view before reading coordinates, and send no `dragover` after
+  the one that moves the item (`settings.e2e.ts`).
 - A test that opens `mode=window` must call `closePopoutWindows()`, or the
   popout steals the next test's modals.
 - The suite runs two workers, so a **sibling worker's Obsidian boot can take OS

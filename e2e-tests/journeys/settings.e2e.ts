@@ -541,6 +541,10 @@ describe("settings", () => {
         const sourceFrame = frames[0];
         const targetFrame = frames[1];
         const grip = sourceFrame.querySelector<HTMLElement>("[data-drag-handle]") ?? sourceFrame;
+        // From 1.14, Obsidian edge-scrolls a pane under any dragover near or past its edge, and
+        // the strip mounts below the fold. Once the pane moves, the points captured below go
+        // stale; a dragover at one lands past every item and SortableJS appends the item at the end.
+        sourceFrame.scrollIntoView({ block: "center" });
 
         const centerOf = (el: HTMLElement): { x: number; y: number } => {
           const rect = el.getBoundingClientRect();
@@ -590,10 +594,10 @@ describe("settings", () => {
           firePointer(sourceFrame, "pointerup", source);
           return false;
         }
+        // The first armed dragenter moves the item. A later dragover is not a harmless repeat:
+        // once SortableJS stops ignoring it (30ms), it re-places the item from the pointer, so
+        // its position now depends on how slowly the runner reaches it.
         fireDrag(targetFrame, "dragenter", target);
-        fireDrag(targetFrame, "dragover", target);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        fireDrag(targetFrame, "dragover", target);
         fireDrag(targetFrame, "drop", target);
         fireDrag(sourceFrame, "dragend", target);
         firePointer(sourceFrame, "pointerup", target);
@@ -629,6 +633,8 @@ describe("settings", () => {
         // Both rows are confirmed present by the waitForExist calls above this execute block;
         // this narrows the querySelector type without a raw throw inside the stringified callback.
         if (!sourceFrame || !targetFrame) return;
+        // The toolbar drag test explains this scroll; an execute body is serialized, so it can't be shared.
+        sourceFrame.scrollIntoView({ block: "center" });
 
         const centerOf = (el: HTMLElement): { x: number; y: number } => {
           const rect = el.getBoundingClientRect();
@@ -673,10 +679,8 @@ describe("settings", () => {
           firePointer(sourceFrame, "pointerup", source);
           return false;
         }
+        // The toolbar drag test explains why no dragover follows.
         fireDrag(targetFrame, "dragenter", target);
-        fireDrag(targetFrame, "dragover", target);
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        fireDrag(targetFrame, "dragover", target);
         fireDrag(targetFrame, "drop", target);
         fireDrag(sourceFrame, "dragend", target);
         firePointer(sourceFrame, "pointerup", target);
