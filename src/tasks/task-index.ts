@@ -83,8 +83,8 @@ export class TaskIndex {
     // Removed by identity: the groups hold the very objects #byPath stored.
     const gone = new Set(removed);
     for (const [role, { dates, byDate }] of this.#byRole) {
-      for (const item of removed) {
-        const date = datedAs(item, role);
+      const touched = new Set(removed.map((item) => datedAs(item, role)));
+      for (const date of touched) {
         const bucket = date === undefined ? undefined : byDate.get(date);
         if (date === undefined || bucket === undefined) continue;
         const kept = bucket.filter((held) => !gone.has(held));
