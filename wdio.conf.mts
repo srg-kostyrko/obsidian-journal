@@ -62,6 +62,34 @@ function readPluginLog(): Promise<PluginLogRecord[]> {
   }, "journals");
 }
 
+// Obsidian's reading view renders on the next animation frame, and a ResizeObserver reports
+// only on one, so a window that has stopped producing frames reads as "never rendered" until
+// something forces a frame — a screenshot does. This records whether frames were flowing at the
+// moment of failure, and why Chromium might have stopped them.
+interface FrameState {
+  visibilityState: string;
+  hasFocus: boolean;
+  // ms until a requestAnimationFrame callback ran; null if none ran within the probe window.
+  frameWithinMs: number | null;
+}
+
+async function readFrameState(): Promise<FrameState> {
+  // W3C executeScript awaits a returned promise; the typings model it as nested, hence the await.
+  return await browser.execute(async () => {
+    const frameWithinMs = await new Promise<number | null>((resolve) => {
+      const start = performance.now();
+      const timer = setTimeout(() => {
+        resolve(null);
+      }, 1000);
+      requestAnimationFrame(() => {
+        clearTimeout(timer);
+        resolve(Math.round(performance.now() - start));
+      });
+    });
+    return { visibilityState: document.visibilityState, hasFocus: document.hasFocus(), frameWithinMs };
+  });
+}
+
 function pluginLine(record: PluginLogRecord): string {
   const name = record.name === "" ? "journals" : `journals:${record.name}`;
   const fields = record.fields === undefined ? "" : ` ${JSON.stringify(record.fields)}`;
@@ -217,10 +245,22 @@ export const config: WebdriverIO.Config = {
   // artifact under e2e-tests/.reports.
   afterTest: async function (test, _context, result: { passed: boolean }) {
     if (result.passed) return;
-    const screenshot = await browser.takeScreenshot();
+    // Before the screenshot, which forces the very frame this probe is looking for.
+    let frameState: FrameState | null = null;
+    try {
+      frameState = await readFrameState();
+    } catch {
+      // A wedged renderer cannot answer; the null says so.
+    }
     const name = `${test.parent} ${test.title}`.replaceAll(/[^\w]+/g, "-").toLowerCase();
-    await mkdir(SCREENSHOT_DIR, { recursive: true });
-    await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
+    try {
+      const screenshot = await browser.takeScreenshot();
+      await mkdir(SCREENSHOT_DIR, { recursive: true });
+      await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
+    } catch {
+      // A lost renderer cannot be captured, and throwing here would drop the trail below too —
+      // which is the only record of why it was lost.
+    }
 
     // A screenshot shows a surface that never changed; it cannot show why. The trail can, so it
     // ships beside it — and also goes to stdout, because the job log is what a triager reads
@@ -233,7 +273,7 @@ export const config: WebdriverIO.Config = {
     } catch {
       // A wedged renderer loses the session before the hook runs; whatever was collected still ships.
     }
-    const lines = [
+    const trail = [
       ...records.map((record) => [record.timestamp, pluginLine(record)] as const),
       ...consoleEntries
         .filter(isConsoleEntry)
@@ -242,7 +282,10 @@ export const config: WebdriverIO.Config = {
     ]
       .toSorted(([a], [b]) => a - b)
       .map(([, line]) => line);
-    if (lines.length === 0) return;
+    const lines = [
+      `frames at failure: ${frameState === null ? "renderer did not answer" : JSON.stringify(frameState)}`,
+      ...trail,
+    ];
     await mkdir(LOG_DIR, { recursive: true });
     await writeFile(path.join(LOG_DIR, `${name}.log`), `${lines.join("\n")}\n`);
     // The merged story, not just the plugin's half: the harness markers say when the spec touched
