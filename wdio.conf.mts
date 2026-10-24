@@ -1,14 +1,15 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { env } from "node:process";
+import { env, platform } from "node:process";
 
 import { browser } from "@wdio/globals";
 import { parseObsidianVersions } from "wdio-obsidian-service";
 
 const CACHE_DIR = path.resolve(".obsidian-cache");
 
-const SCREENSHOT_DIR = "./e2e-tests/.reports/screenshots";
-const LOG_DIR = "./e2e-tests/.reports/logs";
+const REPORTS_DIR = "./e2e-tests/.reports";
+const SCREENSHOT_DIR = `${REPORTS_DIR}/screenshots`;
+const LOG_DIR = `${REPORTS_DIR}/logs`;
 
 // Two streams, merged by timestamp into one ordered story. The plugin's own records come from
 // its in-memory buffer (fields intact; e2e fixtures run it at "debug"), and the renderer console
@@ -62,6 +63,34 @@ function readPluginLog(): Promise<PluginLogRecord[]> {
   }, "journals");
 }
 
+// Obsidian's reading view renders on the next animation frame, and a ResizeObserver reports
+// only on one, so a window that has stopped producing frames reads as "never rendered" until
+// something forces a frame — a screenshot does. This records whether frames were flowing at the
+// moment of failure, and why Chromium might have stopped them.
+interface FrameState {
+  visibilityState: string;
+  hasFocus: boolean;
+  // ms until a requestAnimationFrame callback ran; null if none ran within the probe window.
+  frameWithinMs: number | null;
+}
+
+async function readFrameState(): Promise<FrameState> {
+  // W3C executeScript awaits a returned promise; the typings model it as nested, hence the await.
+  return await browser.execute(async () => {
+    const frameWithinMs = await new Promise<number | null>((resolve) => {
+      const start = performance.now();
+      const timer = setTimeout(() => {
+        resolve(null);
+      }, 1000);
+      requestAnimationFrame(() => {
+        clearTimeout(timer);
+        resolve(Math.round(performance.now() - start));
+      });
+    });
+    return { visibilityState: document.visibilityState, hasFocus: document.hasFocus(), frameWithinMs };
+  });
+}
+
 function pluginLine(record: PluginLogRecord): string {
   const name = record.name === "" ? "journals" : `journals:${record.name}`;
   const fields = record.fields === undefined ? "" : ` ${JSON.stringify(record.fields)}`;
@@ -89,6 +118,23 @@ const maxInstances = rawMaxInstances === "" ? 2 : Number(rawMaxInstances);
 if (!Number.isSafeInteger(maxInstances) || maxInstances < 1) {
   throw new TypeError(`E2E_MAX_INSTANCES must be a positive integer; got ${JSON.stringify(env.E2E_MAX_INSTANCES)}`);
 }
+
+// A renderer that dies takes the page's console and the plugin's log with it, so only the browser
+// process can say whether it crashed, hung, or lost its GPU process. Chromium truncates the file at
+// each launch, so it holds the last Obsidian boot of the run — enough for a failure that repeats on
+// every boot, which is the kind that needs it. Chromium will not create the directory, hence onPrepare.
+const CHROMIUM_LOG = path.resolve(REPORTS_DIR, "chromium.log");
+const CHROMIUM_LOG_ARGS = ["--enable-logging", `--log-file=${CHROMIUM_LOG}`];
+
+// Installer 1.5.8 (Electron 28, Chrome 120) is Obsidian's own minimum installer, so the floor legs run
+// on it. On the windows-2025 runner image from 20261018 (OS build 26100.33650; 33438 was fine) its
+// sandboxed GPU process dies with 0xC0000005 at every launch; Chromium falls back through each GPU
+// mode, finds none left, and crashes the browser on purpose
+// (IntentionallyCrashBrowserForUnusableGpuProcess) — which chromedriver reports as a lost renderer.
+// --disable-gpu does not help: software compositing still runs in that process, and starting lower
+// in the fallback chain only exhausts it sooner. Without the sandbox the process does not crash. The test
+// Obsidian opens only fixture vaults, and newer installers are unaffected either way.
+const GPU_ARGS = platform === "win32" ? ["--disable-gpu-sandbox"] : [];
 
 export const config: WebdriverIO.Config = {
   runner: "local",
@@ -118,6 +164,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
+      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS] },
       // Directory excludes, not a spec list: WDIO replaces a capability's `wdio:specs` whenever a
       // suite is named, and every CI run names suites. `wdio:exclude` is honoured either way.
       "wdio:exclude": ["./e2e-tests/interop-1x/**"],
@@ -152,6 +199,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
+      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS] },
       "wdio:exclude": [
         "./e2e-tests/smoke/**",
         "./e2e-tests/integration/**",
@@ -172,6 +220,10 @@ export const config: WebdriverIO.Config = {
   ]),
 
   services: ["obsidian"],
+
+  onPrepare: async function () {
+    await mkdir(REPORTS_DIR, { recursive: true });
+  },
 
   // `obsidian` reporter wraps spec output with the Obsidian version; `junit` makes
   // retry/quarantine visibility a CI artifact.
@@ -217,10 +269,22 @@ export const config: WebdriverIO.Config = {
   // artifact under e2e-tests/.reports.
   afterTest: async function (test, _context, result: { passed: boolean }) {
     if (result.passed) return;
-    const screenshot = await browser.takeScreenshot();
+    // Before the screenshot, which forces the very frame this probe is looking for.
+    let frameState: FrameState | null = null;
+    try {
+      frameState = await readFrameState();
+    } catch {
+      // A wedged renderer cannot answer; the null says so.
+    }
     const name = `${test.parent} ${test.title}`.replaceAll(/[^\w]+/g, "-").toLowerCase();
-    await mkdir(SCREENSHOT_DIR, { recursive: true });
-    await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
+    try {
+      const screenshot = await browser.takeScreenshot();
+      await mkdir(SCREENSHOT_DIR, { recursive: true });
+      await writeFile(path.join(SCREENSHOT_DIR, `${name}.png`), screenshot, "base64");
+    } catch {
+      // A lost renderer cannot be captured, and throwing here would drop the trail below too —
+      // which is the only record of why it was lost.
+    }
 
     // A screenshot shows a surface that never changed; it cannot show why. The trail can, so it
     // ships beside it — and also goes to stdout, because the job log is what a triager reads
@@ -233,7 +297,7 @@ export const config: WebdriverIO.Config = {
     } catch {
       // A wedged renderer loses the session before the hook runs; whatever was collected still ships.
     }
-    const lines = [
+    const trail = [
       ...records.map((record) => [record.timestamp, pluginLine(record)] as const),
       ...consoleEntries
         .filter(isConsoleEntry)
@@ -242,7 +306,10 @@ export const config: WebdriverIO.Config = {
     ]
       .toSorted(([a], [b]) => a - b)
       .map(([, line]) => line);
-    if (lines.length === 0) return;
+    const lines = [
+      `frames at failure: ${frameState === null ? "renderer did not answer" : JSON.stringify(frameState)}`,
+      ...trail,
+    ];
     await mkdir(LOG_DIR, { recursive: true });
     await writeFile(path.join(LOG_DIR, `${name}.log`), `${lines.join("\n")}\n`);
     // The merged story, not just the plugin's half: the harness markers say when the spec touched
