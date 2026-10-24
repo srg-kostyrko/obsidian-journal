@@ -7,8 +7,9 @@ import { parseObsidianVersions } from "wdio-obsidian-service";
 
 const CACHE_DIR = path.resolve(".obsidian-cache");
 
-const SCREENSHOT_DIR = "./e2e-tests/.reports/screenshots";
-const LOG_DIR = "./e2e-tests/.reports/logs";
+const REPORTS_DIR = "./e2e-tests/.reports";
+const SCREENSHOT_DIR = `${REPORTS_DIR}/screenshots`;
+const LOG_DIR = `${REPORTS_DIR}/logs`;
 
 // Two streams, merged by timestamp into one ordered story. The plugin's own records come from
 // its in-memory buffer (fields intact; e2e fixtures run it at "debug"), and the renderer console
@@ -118,6 +119,13 @@ if (!Number.isSafeInteger(maxInstances) || maxInstances < 1) {
   throw new TypeError(`E2E_MAX_INSTANCES must be a positive integer; got ${JSON.stringify(env.E2E_MAX_INSTANCES)}`);
 }
 
+// A renderer that dies takes the page's console and the plugin's log with it, so only the browser
+// process can say whether it crashed, hung, or lost its GPU process. Chromium truncates the file at
+// each launch, so it holds the last Obsidian boot of the run — enough for a failure that repeats on
+// every boot, which is the kind that needs it. Chromium will not create the directory, hence onPrepare.
+const CHROMIUM_LOG = path.resolve(REPORTS_DIR, "chromium.log");
+const CHROMIUM_LOG_ARGS = ["--enable-logging", `--log-file=${CHROMIUM_LOG}`];
+
 export const config: WebdriverIO.Config = {
   runner: "local",
   framework: "mocha",
@@ -146,6 +154,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
+      "goog:chromeOptions": { args: CHROMIUM_LOG_ARGS },
       // Directory excludes, not a spec list: WDIO replaces a capability's `wdio:specs` whenever a
       // suite is named, and every CI run names suites. `wdio:exclude` is honoured either way.
       "wdio:exclude": ["./e2e-tests/interop-1x/**"],
@@ -180,6 +189,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
+      "goog:chromeOptions": { args: CHROMIUM_LOG_ARGS },
       "wdio:exclude": [
         "./e2e-tests/smoke/**",
         "./e2e-tests/integration/**",
@@ -200,6 +210,10 @@ export const config: WebdriverIO.Config = {
   ]),
 
   services: ["obsidian"],
+
+  onPrepare: async function () {
+    await mkdir(REPORTS_DIR, { recursive: true });
+  },
 
   // `obsidian` reporter wraps spec output with the Obsidian version; `junit` makes
   // retry/quarantine visibility a CI artifact.
