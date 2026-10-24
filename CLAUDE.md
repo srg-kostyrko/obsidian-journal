@@ -477,6 +477,31 @@ on it.
   run on the same afternoon, both green on a re-run. Check the asset with `curl`
   before believing the message; the whole leg dies in `onPrepare`, so there is no
   junit and no screenshot to read.
+- A failure screenshot can show the very state the test timed out waiting for.
+  Obsidian's reading view renders on the next animation frame and a
+  ResizeObserver reports only on one, so a window Chromium has stopped producing
+  frames for never renders — until the capture forces a frame. Read the
+  `frames at failure:` line the `afterTest` hook prints before taking the
+  screenshot: `{"frameWithinMs":null,"visibilityState":"hidden"}` is a frame
+  stall, not a slow render, and raising the wait will not fix it. One
+  `ubuntu / earliest/earliest` nightly leg read exactly that.
+- "Unable to receive message from renderer" across many unrelated specs of one
+  leg is the whole Obsidian process dying, and the renderer's own console and the
+  plugin log die with it — `frames at failure: renderer did not answer` is all
+  the hook can say. The browser process's log survives in
+  `e2e-tests/.reports/chromium.log` (truncated per launch, so it holds the last
+  boot of the leg). The known case is installer 1.5.8 on the windows-2025 image
+  from 20261018: its sandboxed GPU process dies with `0xC0000005`, Chromium falls
+  back through every GPU mode and then crashes the browser on purpose
+  (`IntentionallyCrashBrowserForUnusableGpuProcess`), and `--disable-gpu-sandbox`
+  in `wdio.conf.mts` is the fix. `--disable-gpu` is not: software compositing
+  still runs in the GPU process, and starting lower in the fallback chain kills
+  the browser sooner (173 failures against 7). To name a new crash, have the
+  job set the Windows Error Reporting `LocalDumps` registry key, then symbolize
+  the minidump with `minidump-stackwalk` against
+  `https://symbols.electronjs.org` — `Obsidian.exe` is a renamed
+  `electron.exe` and resolves against its PDB. Without Electron's symbols,
+  `cdb` prints export-relative names (`uv_os_getpid+0x42b03`) that mean nothing.
 - A live `npm run dev` rebuilds the same bundle the suite loads, so reverting a
   fix to prove a spec goes red races the watcher and can pass with the bug
   supposedly reinstated. Pause the watcher around any revert-and-verify window.
