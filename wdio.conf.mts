@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { env } from "node:process";
+import { env, platform } from "node:process";
 
 import { browser } from "@wdio/globals";
 import { parseObsidianVersions } from "wdio-obsidian-service";
@@ -126,6 +126,16 @@ if (!Number.isSafeInteger(maxInstances) || maxInstances < 1) {
 const CHROMIUM_LOG = path.resolve(REPORTS_DIR, "chromium.log");
 const CHROMIUM_LOG_ARGS = ["--enable-logging", `--log-file=${CHROMIUM_LOG}`];
 
+// Installer 1.5.8 (Electron 28, Chrome 120) is Obsidian's own minimum installer, so the floor legs run
+// on it. On the windows-2025 runner image from 20261018 (OS build 26100.33650; 33438 was fine) its
+// sandboxed GPU process dies with 0xC0000005 at every launch; Chromium falls back through each GPU
+// mode, finds none left, and crashes the browser on purpose
+// (IntentionallyCrashBrowserForUnusableGpuProcess) — which chromedriver reports as a lost renderer.
+// --disable-gpu does not help: software compositing still runs in that process, and starting lower
+// in the fallback chain only exhausts it sooner. Without the sandbox the process does not crash. The test
+// Obsidian opens only fixture vaults, and newer installers are unaffected either way.
+const GPU_ARGS = platform === "win32" ? ["--disable-gpu-sandbox"] : [];
+
 export const config: WebdriverIO.Config = {
   runner: "local",
   framework: "mocha",
@@ -154,7 +164,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
-      "goog:chromeOptions": { args: CHROMIUM_LOG_ARGS },
+      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS] },
       // Directory excludes, not a spec list: WDIO replaces a capability's `wdio:specs` whenever a
       // suite is named, and every CI run names suites. `wdio:exclude` is honoured either way.
       "wdio:exclude": ["./e2e-tests/interop-1x/**"],
@@ -189,7 +199,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
-      "goog:chromeOptions": { args: CHROMIUM_LOG_ARGS },
+      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS] },
       "wdio:exclude": [
         "./e2e-tests/smoke/**",
         "./e2e-tests/integration/**",
