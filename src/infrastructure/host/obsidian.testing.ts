@@ -492,12 +492,6 @@ export function getFrontMatterInfo(content: string): FrontMatterInfo {
   };
 }
 
-// Obsidian augments HTMLElement with a handful of helpers. Stub them here so
-// tests that exercise code calling these APIs don't fail in happy-dom.
-HTMLElement.prototype.empty = function (): void {
-  this.replaceChildren();
-};
-
 const attachedInputSuggests: AbstractInputSuggest<unknown>[] = [];
 
 const openModals: Modal[] = [];

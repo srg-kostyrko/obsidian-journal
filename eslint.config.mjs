@@ -321,6 +321,11 @@ export default [
       // and `null` (legacy settings), so the rewrite is not equivalent.
       "unicorn/prefer-default-parameters": "off",
 
+      // Rule newly added to unicorn's recommended set in v79, likewise not adopted.
+      // Moves single-use type aliases into the function bodies that use them, away from the
+      // module-level declarations they sit beside.
+      "unicorn/prefer-smaller-scope": "off",
+
       "no-restricted-imports": [
         "error",
         {

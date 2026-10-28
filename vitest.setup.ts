@@ -46,6 +46,9 @@ Object.assign(Node.prototype, { instanceOf });
 Object.assign(UIEvent.prototype, { instanceOf });
 
 Object.assign(HTMLElement.prototype, {
+  empty(this: HTMLElement): void {
+    this.replaceChildren();
+  },
   setText(this: HTMLElement, text: string): void {
     this.textContent = text;
   },
