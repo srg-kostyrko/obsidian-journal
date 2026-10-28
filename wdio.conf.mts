@@ -141,8 +141,10 @@ const GPU_ARGS = platform === "win32" ? ["--disable-gpu-sandbox"] : [];
 // FullyObscured VisibilityNotify as occlusion and backgrounds the page: visibilityState "hidden",
 // no animation frames, no ResizeObserver delivery — the "frames at failure: hidden, null" stall.
 // Measured under xvfb-run with installers 1.5.8 and 1.14.5: the covered window reads hidden with no
-// rAF, and with this switch it stays visible and keeps rendering. --disable-renderer-backgrounding
-// changes nothing there.
+// rAF, and with this switch it stays visible and keeps rendering. The renderer switch
+// cspell:disable-next-line
+// (--disable-renderer-backgrounding) changes nothing there.
+// cspell:disable-next-line
 const OCCLUSION_ARGS = platform === "linux" ? ["--disable-backgrounding-occluded-windows"] : [];
 
 export const config: WebdriverIO.Config = {
