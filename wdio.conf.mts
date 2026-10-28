@@ -136,6 +136,17 @@ const CHROMIUM_LOG_ARGS = ["--enable-logging", `--log-file=${CHROMIUM_LOG}`];
 // Obsidian opens only fixture vaults, and newer installers are unaffected either way.
 const GPU_ARGS = platform === "win32" ? ["--disable-gpu-sandbox"] : [];
 
+// CI runs Linux under one bare Xvfb display with no window manager, so every worker's window opens
+// at the same origin and the newest boot covers the other. Chromium's X11 window takes the
+// FullyObscured VisibilityNotify as occlusion and backgrounds the page: visibilityState "hidden",
+// no animation frames, no ResizeObserver delivery — the "frames at failure: hidden, null" stall.
+// Measured under xvfb-run with installers 1.5.8 and 1.14.5: the covered window reads hidden with no
+// rAF, and with this switch it stays visible and keeps rendering. The renderer switch
+// cspell:disable-next-line
+// (--disable-renderer-backgrounding) changes nothing there.
+// cspell:disable-next-line
+const OCCLUSION_ARGS = platform === "linux" ? ["--disable-backgrounding-occluded-windows"] : [];
+
 export const config: WebdriverIO.Config = {
   runner: "local",
   framework: "mocha",
@@ -164,7 +175,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
-      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS] },
+      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS, ...OCCLUSION_ARGS] },
       // Directory excludes, not a spec list: WDIO replaces a capability's `wdio:specs` whenever a
       // suite is named, and every CI run names suites. `wdio:exclude` is honoured either way.
       "wdio:exclude": ["./e2e-tests/interop-1x/**"],
@@ -199,7 +210,7 @@ export const config: WebdriverIO.Config = {
       browserName: "obsidian",
       browserVersion: appVersion,
       "goog:loggingPrefs": { browser: "ALL" },
-      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS] },
+      "goog:chromeOptions": { args: [...CHROMIUM_LOG_ARGS, ...GPU_ARGS, ...OCCLUSION_ARGS] },
       "wdio:exclude": [
         "./e2e-tests/smoke/**",
         "./e2e-tests/integration/**",

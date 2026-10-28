@@ -483,8 +483,17 @@ on it.
   frames for never renders — until the capture forces a frame. Read the
   `frames at failure:` line the `afterTest` hook prints before taking the
   screenshot: `{"frameWithinMs":null,"visibilityState":"hidden"}` is a frame
-  stall, not a slow render, and raising the wait will not fix it. One
-  `ubuntu / earliest/earliest` nightly leg read exactly that.
+  stall, not a slow render, and raising the wait will not fix it. On Linux CI
+  the stall was occlusion: `xvfb-run` gives both workers one bare display
+  with no window manager, every window opens at the origin, and Chromium's
+  X11 window backgrounds a page on `FullyObscured` — so the worker whose
+  window the other's newest boot covered rendered nothing. The
+  `--disable-backgrounding-occluded-windows` switch in `wdio.conf.mts` stops
+  that, measured under Xvfb on installers 1.5.8 and 1.14.5;
+  `--disable-renderer-backgrounding` does not. Local runs on Hyprland are a
+  different stall (no Wayland frame callbacks on a hidden workspace) that
+  no Chromium switch reaches. A `hidden` reading on Linux CI with the
+  switch in place is a new cause.
 - "Unable to receive message from renderer" across many unrelated specs of one
   leg is the whole Obsidian process dying, and the renderer's own console and the
   plugin log die with it — `frames at failure: renderer did not answer` is all
