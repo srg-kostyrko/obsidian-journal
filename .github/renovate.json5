@@ -85,6 +85,16 @@
       allowedVersions: "<10",
     },
     {
+      // These pin what obsidian-local-rest-api bundles, not what we run: the
+      // shipped code imports zod as a type only, and zod3-shape.test.ts checks
+      // our forged nodes against the host's own zod 3. Its latest (5.3.0) peers
+      // on zod ^3.25.76, so a zod 4 bump cannot produce a lockfile (#554).
+      // Off rather than capped: a vulnerability PR carries its own
+      // allowedVersions and ignores ours. Move both by hand when the host does.
+      matchPackageNames: ["zod", "zod-to-json-schema"],
+      enabled: false,
+    },
+    {
       // .tool-versions says `nodejs latest`, which is not a version Renovate
       // can reason about. Off explicitly rather than by accident.
       matchManagers: ["asdf"],
