@@ -8,6 +8,13 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const isWatch = process.argv.includes("--watch");
 
+class UndefinedImportError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "UndefinedImportError";
+  }
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -46,6 +53,13 @@ export default defineConfig(({ mode }) => ({
       formats: ["cjs"],
     },
     rollupOptions: {
+      // Paraglide only warns when it cannot load its plugin, then emits no messages and the
+      // build still succeeds; every message import then reads undefined and the plugin fails
+      // to load in Obsidian. Vite's handler only prints an "error" level, so throw.
+      onLog(level, log, handler) {
+        if (log.code === "IMPORT_IS_UNDEFINED") throw new UndefinedImportError(log.message);
+        handler(level, log);
+      },
       output: {
         entryFileNames: "main.js",
         assetFileNames: "styles.css",
