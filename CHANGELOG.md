@@ -67,6 +67,12 @@ All notable changes to this project will be documented in this file.
 - One unreadable toolbar item no longer hides the whole toolbar, or erases its other items the next
   time the toolbar is edited. A button or navigation item whose action can't be read is still left
   out, rather than shown with its own label over a different action.
+- A shape or icon at the edge of a calendar day no longer draws over the selected date's ring. A dot
+  at the bottom center used to cut straight through it, and the other edge placements overlapped it
+  by a pixel or two; every edge placement now sits a pixel inside the ring, and the date number moves in
+  to match, so a calendar whose decorations use edge placements grows a few pixels taller. Navigation
+  blocks and timelines keep the same margin, so marks there sit a little further from the edge than
+  before.
 
 ### Changed
 

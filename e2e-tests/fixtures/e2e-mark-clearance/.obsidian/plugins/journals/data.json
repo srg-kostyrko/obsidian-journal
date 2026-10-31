@@ -1,0 +1,143 @@
+{
+  "version": 4,
+  "logging": {
+    "level": "debug"
+  },
+  "decorations": {
+    "decorations": []
+  },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": {
+        "type": "day"
+      },
+      "folder": "day",
+      "timeline": {
+        "start": "",
+        "end": {
+          "kind": "never"
+        }
+      },
+      "dateFormat": "YYYY-MM-DD",
+      "nameTemplate": "{{date}}",
+      "templates": [],
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "noteletField": "journal-notelet",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": {
+        "enabled": false,
+        "anchorDate": "",
+        "allowBefore": false,
+        "sources": []
+      },
+      "notelets": {},
+      "decorations": [
+        {
+          "mode": "and",
+          "conditions": [
+            {
+              "type": "weekday",
+              "weekdays": [0, 1, 2, 3, 4, 5, 6]
+            }
+          ],
+          "styles": [
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "left",
+              "placement_y": "top"
+            },
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "center",
+              "placement_y": "top"
+            },
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "right",
+              "placement_y": "top"
+            },
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "left",
+              "placement_y": "middle"
+            },
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "right",
+              "placement_y": "middle"
+            },
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "left",
+              "placement_y": "bottom"
+            },
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "center",
+              "placement_y": "bottom"
+            },
+            {
+              "type": "shape",
+              "size": 0.4,
+              "shape": "circle",
+              "color": {
+                "type": "custom",
+                "color": "#aa1111"
+              },
+              "placement_x": "right",
+              "placement_y": "bottom"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

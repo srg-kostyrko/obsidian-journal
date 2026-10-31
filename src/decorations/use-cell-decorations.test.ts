@@ -1140,7 +1140,7 @@ describe("useCellDecorations", () => {
       const nonMatching = mountPadding(harness, [DayPeriod.containing(date("2026-05-26"))], ["daily"]); // Tue
       await nextTick();
 
-      expect(matching.value).toBe("max(0.1em, 2px) max(0.6em, 2px)");
+      expect(matching.value).toBe("max(0.1em, 2px) max(0.6em + 3px, 2px)");
       expect(nonMatching.value).toBe(matching.value);
     });
 
@@ -1161,7 +1161,7 @@ describe("useCellDecorations", () => {
       const padding = mountPadding(harness, [DayPeriod.containing(date("2026-05-25"))], ["daily"]);
       await nextTick();
 
-      expect(padding.value).toBe("max(1.6em, 2px) max(1.6em, 2px)");
+      expect(padding.value).toBe("max(1.6em + 3px, 2px) max(1.6em + 3px, 2px)");
     });
   });
 });
