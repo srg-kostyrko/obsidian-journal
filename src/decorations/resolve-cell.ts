@@ -185,8 +185,14 @@ export function horizontalReservation(extents: PaddingExtents): string {
   return axisReservation(Math.max(extents.left, extents.right), Math.max(extents.leftBorder, extents.rightBorder));
 }
 
+// How far marks sit in from every cell edge: clear of the notes calendar's 2px selected-date ring,
+// with a pixel to spare. One value for every surface, because a timeline sizes its columns from
+// this reservation on a grid that has no cell of its own to ask.
+export const MARK_INSET_PX = 3;
+
+// A mark's reservation counts its inset too, or the inset pushes it into the text.
 function axisReservation(mark: number, border: number): string {
-  return `max(${mark + 0.1}em, ${border + 2}px)`;
+  return mark > 0 ? `max(${mark + 0.1}em + ${MARK_INSET_PX}px, ${border + 2}px)` : `max(0.1em, ${border + 2}px)`;
 }
 
 // Reserve the same padding on every cell — the per-side maximum across all cells — so a

@@ -4,13 +4,14 @@ import { computed, nextTick, ref, type ComponentPublicInstance } from "vue";
 import { m } from "@/i18n";
 
 import { capMarks } from "../cap-marks";
-import { PLACEMENTS, type CellMark, type Placement } from "../resolve-cell";
+import { MARK_INSET_PX, PLACEMENTS, type CellMark, type Placement } from "../resolve-cell";
 
 import DecorationIcon from "./DecorationIcon.vue";
 import DecorationShape from "./DecorationShape.vue";
 import { clipBoxOf, popoverOffset, type PopoverOffset } from "./popover-position";
 
 const props = defineProps<{ marks: Readonly<Record<Placement, readonly CellMark[]>>; limit: number }>();
+const markInset = `${MARK_INSET_PX}px`;
 
 const capped = computed(() => capMarks(props.marks, props.limit));
 const open = ref<Placement | null>(null);
@@ -100,7 +101,7 @@ function capturePopover(element: Element | ComponentPublicInstance | null): void
 <style scoped>
 .cell-marks {
   position: absolute;
-  inset: 0;
+  inset: v-bind(markInset);
   pointer-events: none;
   display: grid;
   /* minmax(0, 1fr), not 1fr: a grid item's automatic minimum size is its content, so a slot
@@ -121,7 +122,6 @@ function capturePopover(element: Element | ComponentPublicInstance | null): void
   grid-area: 1/1;
   justify-content: flex-start;
   align-self: start;
-  padding: 1px 0 0 1px;
 }
 .place-left_middle {
   grid-area: 2/1;
@@ -132,7 +132,6 @@ function capturePopover(element: Element | ComponentPublicInstance | null): void
   grid-area: 3/1;
   justify-content: flex-start;
   align-self: end;
-  padding: 0 0 1px 1px;
 }
 .place-center_top {
   grid-area: 1/2;
@@ -153,7 +152,6 @@ function capturePopover(element: Element | ComponentPublicInstance | null): void
   grid-area: 1/3;
   justify-content: flex-end;
   align-self: start;
-  padding: 1px 1px 0 0;
 }
 .place-right_middle {
   grid-area: 2/3;
@@ -164,7 +162,6 @@ function capturePopover(element: Element | ComponentPublicInstance | null): void
   grid-area: 3/3;
   justify-content: flex-end;
   align-self: end;
-  padding: 0 1px 1px 0;
 }
 
 /* The mark grid is pointer-transparent so a click still reaches the cell underneath. The badge

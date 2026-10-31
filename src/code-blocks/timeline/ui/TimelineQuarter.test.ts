@@ -42,6 +42,6 @@ describe("TimelineQuarter", () => {
     const { container } = harness.render(TimelineQuarter, { props: { refDate: anchor("2026-08-15"), shelf: null } });
 
     const grid = container.querySelector<HTMLElement>(".timeline-quarter");
-    expect(grid?.style.getPropertyValue("--journal-cell-padding-inline")).toBe("max(0.6em, 2px)");
+    expect(grid?.style.getPropertyValue("--journal-cell-padding-inline")).toBe("max(0.6em + 3px, 2px)");
   });
 });

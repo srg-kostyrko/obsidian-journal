@@ -94,6 +94,8 @@ const hover = useModifierHoverPreview();
   color: var(--journal-cell-active-color);
   background-color: var(--journal-cell-active-bg);
 }
+/* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear this ring;
+   widening it means widening that too. */
 .notes-calendar-cell[data-selected] {
   box-shadow: inset 0 0 0 2px var(--journal-cell-selected-ring);
 }
