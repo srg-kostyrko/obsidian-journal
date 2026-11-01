@@ -12,7 +12,8 @@ All notable changes to this project will be documented in this file.
   `depth: rollup`. A new **Tasks** view block does the same inside a view, for a window around the
   view's selected date across the journals in its shelf, instead of one note's own period. Both default
   to what is still open — to-do, in progress or on hold — and filter further by `status`, `heading` or
-  `tag`; every journal also gets its own **Listing filter**, under its settings page's **Tasks**
+  `tag` — a tag matching as Obsidian's tag search does, ignoring case and taking in the tags nested
+  under it; every journal also gets its own **Listing filter**, under its settings page's **Tasks**
   section, which a fence or the view block's own filter overrides one condition type at a time rather
   than narrowing — except for the open-tasks default itself, which gives way instead, so a journal whose
   own filter names a status reaches a fence, or a view block, that named none. Each row renders its line

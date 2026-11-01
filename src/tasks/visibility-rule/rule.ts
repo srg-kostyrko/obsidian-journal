@@ -3,7 +3,9 @@ import * as v from "valibot";
 
 import type { VaultPath } from "@/infrastructure/host";
 
-import { lowerScalars, tagMatches } from "./scalars";
+import { carriesAnyTag } from "../tag-match";
+
+import { lowerScalars } from "./scalars";
 
 // Per entry, not per list: an emptied list is a no-op condition, which would quietly widen a
 // Matching rule to every task note over one unreadable entry. The fallback stays because each
@@ -89,8 +91,7 @@ function evaluate(condition: VisibilityCondition, subject: VisibilitySubject) {
   switch (condition.type) {
     case "tag": {
       if (condition.tags.length === 0) return;
-      const tags = subject.tags.map((tag) => tag.toLowerCase());
-      return condition.tags.some((wanted) => tags.some((tag) => tagMatches(tag, wanted.toLowerCase())));
+      return carriesAnyTag(subject.tags, condition.tags);
     }
     case "folder": {
       // An empty entry would be the vault root, and a root that admits every path cannot narrow.
