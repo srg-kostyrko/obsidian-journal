@@ -691,6 +691,18 @@ describe("RolloverService", () => {
       expect(report.alreadyHeld).toBe(0);
     });
 
+    it("is not copied again when its own nested lines hold a code block", async () => {
+      const { roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+      const task = "- [ ] Call Bob\n\t```\n\t555-0100\n\t```\n";
+      put("daily", "2026-10-20", task);
+      const target = put("daily", TODAY, task);
+
+      const report = await roll();
+
+      expect(await text(target)).toBe(task);
+      expect(report.alreadyHeld).toBe(1);
+    });
+
     it("lands once when the same roll runs twice and the first could not mark its source", async () => {
       const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily") });
       const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");

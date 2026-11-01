@@ -8,8 +8,8 @@ import { contentOf, openNote, waitForActiveNote, waitForContent } from "../suppo
 import { waitForState } from "../support/wait.js";
 
 // Today's note already holds the earlier note's task, the way it does after a roll whose mark was
-// lost and a restart cleared the pause, and holds a second one only inside a code fence, as an
-// example. Ships in the fixture so both notes are indexed at boot.
+// lost and a restart cleared the pause — one of them with a code block nested under it — and holds
+// another only inside a code fence, as an example. Ships in the fixture so both notes are indexed at boot.
 const FIXTURE = "./e2e-tests/fixtures/e2e-rollover-held";
 const SOURCE_DATE = "2026-09-25";
 const SOURCE = `daily/${SOURCE_DATE}.md`;
@@ -29,7 +29,7 @@ describe("rolling a task today's note already holds", () => {
     await runCommand("journals:roll-over");
 
     await waitForContent(SOURCE, (content) => content.includes("- [ ] milk #rolled"), "waited for the source stamp");
-    const held = m.tasks_roll_already_held({ count: 1 });
+    const held = m.tasks_roll_already_held({ count: 2 });
     await waitForState(
       noticeTexts,
       (texts) => texts.some((text) => text.includes(held)),
@@ -38,5 +38,6 @@ describe("rolling a task today's note already holds", () => {
     const target = await contentOf(TARGET);
     expect(target?.split("\n").filter((line) => line === "- [ ] milk")).toHaveLength(1);
     expect(target?.split("\n").filter((line) => line === "- [ ] eggs")).toHaveLength(2);
+    expect(target?.split("\n").filter((line) => line === "- [ ] tea")).toHaveLength(1);
   });
 });

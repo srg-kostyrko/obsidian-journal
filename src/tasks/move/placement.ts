@@ -86,12 +86,13 @@ export function placeGroups(target: string, groups: readonly BlockGroup[], targe
 
 const comparable = (line: string): string => line.replace(/\r$/, "").trimEnd();
 
-/** Whether `target` already holds `lines` as written, in one run of lines that are not example text. */
+/** Whether `target` already holds `lines` as written, in one run that starts outside example text. */
 export function holdsAll(target: string, lines: readonly string[]): boolean {
   const targetLines = target.split("\n");
   const hidden = hiddenLines(targetLines);
-  // A hidden line is never equal to a wanted one, so a run cannot pass through a fence or comment.
-  const visible = targetLines.map((line, index) => (hidden.has(index) ? null : comparable(line)));
+  const held = targetLines.map(comparable);
   const wanted = lines.map(comparable);
-  return visible.some((_, start) => wanted.every((line, offset) => visible[start + offset] === line));
+  // Only the root has to be a live line: a fence or comment nested in the task is carried whole, so
+  // it matches as written.
+  return held.some((_, start) => !hidden.has(start) && wanted.every((line, offset) => held[start + offset] === line));
 }
