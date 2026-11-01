@@ -199,8 +199,9 @@ to none it lists nothing and says so.
 | `date`       | `scheduled-or-due`, `due`, `scheduled`, `start`, `done`, `created`    | `scheduled-or-due` |
 | `conditions` | a list of full-form conditions, for what the keys above cannot say    | none               |
 
-`depth: rollup` widens the listing to every other journal in the host's shelf whose periods fall inside
-this one, so a monthly note can list its days' tasks alongside its own. `status`, `heading` and `tag` are
+`depth: rollup` widens the listing to every other journal in the host's shelf — or every journal, when
+the host is on no shelf — whose periods overlap this one, so a monthly note can list its days' tasks
+alongside its own, and a week that spans two months appears in both. `status`, `heading` and `tag` are
 each shorthand for one condition; the owning journal's own **Listing filter** contributes more. See
 [Tasks](/tasks#a-journal-s-own-listing-filter) for how the two combine. `date` names which of a task
 note's, or a dated checkbox line's, dates places it in the period; see [Tasks](/tasks#which-date-places-a-task-note).
@@ -213,7 +214,7 @@ date: due
 ```
 ````
 
-Everything still open under one heading, most recently due first:
+Everything still open under one heading, earliest due first, and tasks with no due date last:
 
 ````markdown
 ```journal-tasks
