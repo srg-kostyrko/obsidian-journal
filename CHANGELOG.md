@@ -73,6 +73,10 @@ All notable changes to this project will be documented in this file.
   to match, so a calendar whose decorations use edge placements grows a few pixels taller. Navigation
   blocks and timelines keep the same margin, so marks there sit a little further from the edge than
   before.
+- A collapsible section's heading — the sections of a journal's or shelf's settings page, the blocks
+  of the main settings page, the maintenance check's groups — can now be reached with Tab and opened
+  or closed with Enter or Space, and tells a screen reader whether it is open. It could only be
+  clicked before, so a keyboard alone could not reach anything inside a closed section.
 
 ### Changed
 
