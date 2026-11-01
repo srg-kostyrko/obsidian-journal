@@ -3,7 +3,9 @@ import { expect } from "@wdio/globals";
 import { m } from "../../src/i18n/paraglide/messages.js";
 import { reloadObsidianOn } from "../support/clock.js";
 import { waitForNotice } from "../support/notices.js";
-import { contentOf, waitForContent } from "../support/vault.js";
+import { contentOf, waitForActiveNote, waitForContent } from "../support/vault.js";
+
+import { openInReadingMode } from "./code-blocks.js";
 
 // Both notes ship in the fixture and no command runs: the boot checkpoint is the only thing that
 // can roll. It reads today when the index is ready, so the clock has to be pinned before the
@@ -34,9 +36,11 @@ async function readNote(path: string): Promise<string> {
 describe("automatic rollover at boot", () => {
   before(async () => {
     await reloadObsidianOn(TODAY, { vault: "./e2e-tests/fixtures/e2e-auto-rollover", plugins: ["journals"] });
+    await openInReadingMode(TARGET);
+    await waitForActiveNote(TARGET);
   });
 
-  it("copies the open task into today's note and marks the original, with no command run", async function () {
+  it("copies the open task into today's reading-mode note and marks the original, with no command run", async function () {
     this.timeout(ROLL_WAIT_MS + 30_000);
     await waitForContent(
       TARGET,
