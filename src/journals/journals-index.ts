@@ -282,6 +282,16 @@ export class JournalsIndex {
     return collision ? "collision" : "registered";
   }
 
+  /** Removes every note claiming `anchor` in `journalName` and promotes none: the date itself is invalid. */
+  rejectAnchor(journalName: string, anchor: AnchorString): void {
+    // Losers first: once none is left, the owner's removal has no copy to promote. Deleting the
+    // element being visited is safe while iterating a Set.
+    const losers = this.#losers.get(journalName)?.get(anchor) ?? [];
+    for (const path of losers) this.unregister(path);
+    const slot = this.#journals.get(journalName)?.get(anchor);
+    if (slot?.isSome() === true) this.unregister(slot.value);
+  }
+
   unregister(path: VaultPath, reason: "deleted" | "unindexed" = "unindexed"): void {
     const existing = this.#byPath.get(path);
     if (!existing) return;

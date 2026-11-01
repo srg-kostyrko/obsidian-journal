@@ -28,6 +28,17 @@ async function notesOnDate(): Promise<FoundNote[]> {
   });
 }
 
+async function existingSprintPaths(): Promise<string[]> {
+  return await browser.executeObsidian(async ({ app }) => {
+    const api = (app as unknown as { plugins: { plugins: Record<string, { api: unknown }> } }).plugins.plugins.journals
+      .api as {
+      existingNotes(selector: string): Promise<{ path: string }[]>;
+    };
+    const notes = await api.existingNotes("sprint");
+    return notes.map((note) => note.path).toSorted();
+  });
+}
+
 // The fixture ships one date twice, as a sync conflict leaves it. Which copy the boot walk makes
 // the date's owner depends on the walk order, so the spec deletes whichever one owns it and expects
 // the other to take the date over — before the fix it stayed unreachable by date until a rescan.
@@ -83,5 +94,22 @@ describe("conflict copy promotion", () => {
     // Filtered to canonical: the boot walk may still be announcing the copy as a loser after the
     // subscription went live.
     expect(announced).toEqual([{ path: remaining, reason: "changed", canonical: true }]);
+  });
+
+  // A custom journal's off-sequence date is rejected at boot. Rejecting its owner must not hand the
+  // date to the copy beside it, which is just as far off the sequence.
+  it("drops both copies of a custom journal's off-sequence date", async () => {
+    await browser.waitUntil(
+      async () => {
+        const paths = await existingSprintPaths();
+        return paths.length > 0;
+      },
+      {
+        timeout: 10_000,
+        timeoutMsg: "the sprint journal never indexed its notes",
+      },
+    );
+
+    expect(await existingSprintPaths()).toEqual(["sprints/2024-01-01.md"]);
   });
 });
