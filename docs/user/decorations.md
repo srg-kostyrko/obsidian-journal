@@ -101,9 +101,13 @@ Example: [Word-count bands](#word-count-bands).
 
 ### Tasks
 
-**Check tasks** asks a question about the tasks a period holds, and it asks the same question that
-period's [task listing](/tasks#listing-tasks-in-a-note) answers: a decoration that lights a day and a
-listing that shows nothing for it cannot disagree. It is one row that reads as a sentence:
+**Check tasks** asks a question about the tasks a period holds. Left at **As in listing** with no
+**Narrow further** rows, it asks the same question that period's
+[task listing](/tasks#listing-tasks-in-a-note) answers, so a decoration that lights a day and a
+listing that shows nothing for it cannot disagree. An explicit **Status** replaces the journal's own
+**Status** condition, and **Narrow further** replaces its conditions of the same type, so either can
+make the dot and the listing answer differently: **Any** · **Done** lights a day whose only task is done
+while the default listing shows nothing. It is one row that reads as a sentence:
 
 - **Which tasks** — **Any** matches when at least one task has the status. **All** matches when the
   period has at least one task and every one of them has the status; a period with no tasks never
@@ -133,9 +137,7 @@ tasks, so a dot can light a day that has no note at all: one task note scheduled
 the task notes and dated lines the cell's journal shows count
 ([task notes](/tasks#which-task-notes-a-journal-shows), [dated lines](/tasks#which-dated-lines-a-journal-shows)).
 **Look in** does not narrow either — a task note is neither the period's note nor one of its notelets,
-and a dated line counts by its date wherever it sits. On a custom-interval
-journal, a decoration that pairs **Check tasks** with an [interval offset](#interval-offset) counts the
-task notes of the whole interval, not only those dated on the offset's day.
+and a dated line counts by its date wherever it sits.
 
 **Narrow further** counts only the tasks that match its **Heading** and **Tag** conditions, with an
 and/or control for combining them. The journal's own listing filter always applies as well: a
@@ -165,11 +167,18 @@ done" can sit side by side.
 Versions before this one had two conditions, **Check if note has open tasks** and **Check if all tasks
 are completed**. On upgrade they become **Check tasks** rows with the status written out: **Any** ·
 **Open** and **All** · **Done**, both looking in **Note and notelets**. Your decorations are not
-otherwise touched, but two things change on days you already decorate:
+otherwise touched, but several things change on days you already decorate:
 
 - Tasks are now read through the journal's listing filter, so on a journal that has one, some dots go
   dark.
 - Notelets are read too, so some dots light that did not.
+- [Dated checkbox lines](/tasks#dated-lines-from-anywhere-in-the-vault) from anywhere in the vault
+  count too: a journal shows every dated line by default, so a line in a project note due on a day can
+  light that day's dot with nothing turned on.
+- Markers are read through the [status map](/tasks#status-symbols). Any marker other than a space used
+  to count as completed; now `[/]` reads as In progress and a marker the map does not name — a theme's
+  `[>]`, say — reads as To-do, both open, so a day holding one no longer matches **All** · **Done**.
+- A [rolled-over](/tasks#copy-and-the-rolled-marker) task is neither open nor done.
 
 ### Has notelet
 
