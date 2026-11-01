@@ -2608,7 +2608,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Places them under {heading} unless they came from a heading the listing filter names.",
+  "tasks_move_summary_heading": "Places them under {heading} unless they came from a heading the listing filter names and today's note has it.",
   "tasks_move_summary_automatic": "Rolls over automatically.",
   "tasks_move_summary_line": [
     {
