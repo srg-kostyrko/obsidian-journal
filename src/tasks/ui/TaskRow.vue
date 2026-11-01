@@ -43,15 +43,15 @@ const markdown = computed(() => {
 // Obsidian renders the row's checkbox itself, inside the markdown, so there is no prop to disable
 // it through: a context row's control has to be disabled on the rendered element, or it keeps
 // accepting focus and a click for an action that deliberately does nothing. Re-applied after every
-// repaint — hydration replaces a row's markdown, and with it the input.
+// repaint — hydration replaces a row's markdown, and with it the input — and whenever the row turns
+// context or stops being it, which a filter edit does under the same key and markdown.
 const line = ref<HTMLElement | null>(null);
-function disableContextCheckboxes(): void {
-  if (!props.row.context) return;
+function syncContextCheckboxes(): void {
   const checkboxes = line.value?.querySelectorAll<HTMLInputElement>("input[type=checkbox]") ?? [];
-  for (const checkbox of checkboxes) checkbox.disabled = true;
+  for (const checkbox of checkboxes) checkbox.disabled = props.row.context;
 }
-onMounted(disableContextCheckboxes);
-watch(markdown, disableContextCheckboxes, { flush: "post" });
+onMounted(syncContextCheckboxes);
+watch([markdown, () => props.row.context], syncContextCheckboxes, { flush: "post" });
 
 // Obsidian follows an internal link only inside its own reading and editing views; in a plugin
 // view nothing would. The row opens the task note itself, and stops the event so a host view that

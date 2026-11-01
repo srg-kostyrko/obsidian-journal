@@ -229,6 +229,23 @@ describe("TaskList", () => {
     expect(disabledFlags()).toEqual([true, false]);
   });
 
+  // A filter edit can turn a context row into a matching one, or back, under the same key and
+  // with the same markdown, so nothing remounts the row or re-renders its input.
+  it("follows a row's context flag when it changes with its markdown unchanged", async () => {
+    harness = await testContainer({
+      modules: [tasksCoreModule],
+      overrides: [overrideWith(MarkdownRenderService, checkboxMarkdown())],
+    });
+    const { rerender } = harness.render(TaskList, { props: { rows: [row({ context: true, line: 3 })] } });
+    expect(disabledFlags()).toEqual([true]);
+
+    await rerender({ rows: [row({ context: false, line: 3 })] });
+    expect(disabledFlags()).toEqual([false]);
+
+    await rerender({ rows: [row({ context: true, line: 3 })] });
+    expect(disabledFlags()).toEqual([true]);
+  });
+
   it("links each row to the note it came from", () => {
     harness.render(TaskList, { props: { rows: [row({ sourceLabel: "2026-09-22" })] } });
     expect(screen.getByRole("link", { name: "2026-09-22" })).toBeTruthy();
