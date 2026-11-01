@@ -124,7 +124,7 @@ export class VaultSubscriptionService {
       const valid = new Set(this.#cycle.intervalsInRange(config.name, min, max));
       for (const [anchor, path] of entries) {
         if (valid.has(anchor)) continue;
-        this.#index.unregister(path);
+        this.#index.rejectAnchor(config.name, anchor);
         this.#logger.debug("anchor off sequence", { path });
       }
     }

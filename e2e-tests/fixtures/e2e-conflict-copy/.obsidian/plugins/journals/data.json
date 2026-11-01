@@ -1,0 +1,35 @@
+{
+  "version": 4,
+  "logging": { "level": "debug" },
+  "journals": {
+    "daily": {
+      "name": "daily",
+      "write": { "type": "day" },
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    },
+    "sprint": {
+      "name": "sprint",
+      "write": { "type": "custom", "every": "week", "duration": 1, "anchorDate": "2024-01-01" },
+      "folder": "sprints",
+      "timeline": { "start": "", "end": { "kind": "never" } },
+      "dateFormat": "YYYY-MM-DD",
+      "frontmatter": {
+        "dateField": "journal-date",
+        "startDateField": "journal-start-date",
+        "endDateField": "journal-end-date",
+        "addStartDate": false,
+        "addEndDate": false
+      },
+      "numbering": { "enabled": false, "anchorDate": "", "allowBefore": false, "sources": [] }
+    }
+  }
+}
