@@ -6,7 +6,15 @@ import { UnsettledReadError } from "../support/errors.js";
 import { dayAnchor } from "./decorations.js";
 import { calendar, openSeededCalendarView } from "./view.js";
 
-const DAY = 14;
+// The month's second Wednesday, not a fixed date: a fixed date lands in the grid's edge column in
+// some months, where the right_top badge sits at the surface's edge — and on a 1024px-wide
+// Windows runner partly past the viewport, so the walk's one-pixel step is "out of bounds". A
+// Wednesday is a middle column whether the week starts on Sunday or Monday.
+const DAY = ((): number => {
+  const now = new Date();
+  const firstWeekday = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  return 8 + ((3 - firstWeekday + 7) % 7);
+})();
 
 // Every geometry read below runs through this. The view mounts its cells before their decorations,
 // so a `browser.execute` measurement taken straight after openSeededCalendarView() can find no
