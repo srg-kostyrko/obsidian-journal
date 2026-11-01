@@ -42,6 +42,36 @@ describe("UiCollapsibleBlock", () => {
     expect(emitted("update:expanded")).toEqual([[false]]);
   });
 
+  it("toggles from the keyboard", async () => {
+    const { emitted } = render(UiCollapsibleBlock, {
+      props: { expanded: false },
+      slots: { trigger: "Title" },
+    });
+
+    await userEvent.tab();
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Title" }));
+    await userEvent.keyboard("{Enter}");
+    await userEvent.keyboard(" ");
+
+    expect(emitted("update:expanded")).toEqual([[true], [false]]);
+  });
+
+  it("reports itself expanded, pointing at its content", () => {
+    render(UiCollapsibleBlock, {
+      props: { expanded: true },
+      slots: { trigger: "Title", default: "<div>Body</div>" },
+    });
+    const trigger = screen.getByRole("button", { name: "Title", expanded: true });
+
+    expect(trigger.getAttribute("aria-controls")).toBe(screen.getByText("Body").parentElement?.id);
+  });
+
+  it("reports itself collapsed", () => {
+    render(UiCollapsibleBlock, { props: { expanded: false }, slots: { trigger: "Title" } });
+
+    expect(screen.getByRole("button", { name: "Title", expanded: false })).toBeTruthy();
+  });
+
   it("does not emit update:expanded when clicking inside #controls", async () => {
     const { emitted } = render(UiCollapsibleBlock, {
       props: { expanded: false },
