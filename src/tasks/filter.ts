@@ -2,9 +2,10 @@ import { match } from "ts-pattern";
 
 import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
 
-import { STATUS_ALIASES, type TaskCondition, type TaskRule } from "./conditions";
+import { STATUS_ALIASES, type StoredTaskCondition, type TaskRule } from "./conditions";
 import { headingsOf, tagsOf } from "./note-structure";
 import { DEFAULT_STATUS_CONDITION } from "./query";
+import { carriesAnyTag } from "./tag-match";
 
 import type { TaskItem } from "./types";
 
@@ -30,32 +31,40 @@ function tagsFor(item: TaskItem, structure: NoteStructure | undefined): readonly
 // undefined means the condition does not apply to this item and is removed from the set — not
 // false, which would silently drop a whole provider under `and`, and not true, which under `or`
 // would carry every item the condition cannot even read.
-function evaluate(condition: TaskCondition, item: TaskItem, structure: NoteStructure | undefined): boolean | undefined {
-  return match(condition)
-    .with({ type: "status" }, (c) => {
-      if (c.statuses.length === 0) return true;
-      const hit = expand(c.statuses).includes(item.status);
-      return c.condition === "is" ? hit : !hit;
-    })
-    .with({ type: "heading" }, (c) => {
-      if (c.headings.length === 0) return true;
-      // structure is undefined on a cold metadataCache read, before it resolves for this note —
-      // drop rather than exclude, so a fence briefly over-matches and self-heals once metadata
-      // resolves, instead of a provider's items vanishing until then.
-      if (item.display.kind !== "line" || structure === undefined) return;
-      const chain = headingsOf(item.display.line, structure);
-      const hit = c.headings.some((heading) => chain.includes(heading));
-      return c.condition === "under" ? hit : !hit;
-    })
-    .with({ type: "tag" }, (c) => {
-      if (c.tags.length === 0) return true;
-      // Same cold-cache read as the heading branch above: drop rather than exclude.
-      const tags = tagsFor(item, structure);
-      if (tags === undefined) return;
-      const hit = c.tags.some((tag) => tags.includes(tag));
-      return c.condition === "has" ? hit : !hit;
-    })
-    .exhaustive();
+function evaluate(
+  condition: StoredTaskCondition,
+  item: TaskItem,
+  structure: NoteStructure | undefined,
+): boolean | undefined {
+  return (
+    match(condition)
+      .with({ type: "status" }, (c) => {
+        if (c.statuses.length === 0) return true;
+        const hit = expand(c.statuses).includes(item.status);
+        return c.condition === "is" ? hit : !hit;
+      })
+      .with({ type: "heading" }, (c) => {
+        if (c.headings.length === 0) return true;
+        // structure is undefined on a cold metadataCache read, before it resolves for this note —
+        // drop rather than exclude, so a fence briefly over-matches and self-heals once metadata
+        // resolves, instead of a provider's items vanishing until then.
+        if (item.display.kind !== "line" || structure === undefined) return;
+        const chain = headingsOf(item.display.line, structure);
+        const hit = c.headings.some((heading) => chain.includes(heading));
+        return c.condition === "under" ? hit : !hit;
+      })
+      .with({ type: "tag" }, (c) => {
+        if (c.tags.length === 0) return true;
+        // Same cold-cache read as the heading branch above: drop rather than exclude.
+        const tags = tagsFor(item, structure);
+        if (tags === undefined) return;
+        const hit = carriesAnyTag(tags, c.tags);
+        return c.condition === "has" ? hit : !hit;
+      })
+      // Fails rather than dropping out: an `and` rule that dropped it would widen to the rest.
+      .with({ type: "unreadable" }, () => false)
+      .exhaustive()
+  );
 }
 
 export function matchesFilter(item: TaskItem, structure: NoteStructure | undefined, filter: TaskRule): boolean {
@@ -107,6 +116,16 @@ export function composeDatedFilter(journalFilter: TaskRule | null, queryFilter: 
   const statusOnly =
     journalFilter === null
       ? null
-      : { mode: journalFilter.mode, conditions: journalFilter.conditions.filter((c) => c.type === "status") };
+      : { mode: journalFilter.mode, conditions: journalFilter.conditions.filter(reachesDated) };
   return composeFilters(statusOnly, queryFilter);
+}
+
+// One it cannot read stays unless it was stored as a line condition: whatever it said about status,
+// reading past it would widen the listing.
+function reachesDated(condition: StoredTaskCondition): boolean {
+  if (condition.type === "status") return true;
+  if (condition.type !== "unreadable") return false;
+  const { raw } = condition;
+  const storedType = typeof raw === "object" && raw !== null && "type" in raw ? raw.type : undefined;
+  return storedType !== "tag" && storedType !== "heading";
 }

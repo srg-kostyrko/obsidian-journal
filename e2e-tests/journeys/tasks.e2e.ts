@@ -1,7 +1,7 @@
 import { $, $$, browser, expect } from "@wdio/globals";
 
 import { m } from "../../src/i18n/paraglide/messages.js";
-import { contentOf, waitForContent } from "../support/vault.js";
+import { contentOf, waitForContent, writeNote } from "../support/vault.js";
 
 import { VISIBLE_LEAF, openInReadingMode } from "./code-blocks.js";
 
@@ -64,6 +64,11 @@ function assertSingleCharacterEdit(before: string, after: string): { before: str
   expect(afterChars.slice(position + 1)).toEqual(beforeChars.slice(position + 1));
 
   return { before: beforeLine, after: afterLine };
+}
+
+async function listsRowContaining(fragment: string): Promise<boolean> {
+  const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+  return texts.some((text) => text.includes(fragment));
 }
 
 describe("journal-tasks fence", () => {
@@ -224,5 +229,22 @@ describe("journal-tasks fence", () => {
     const edit = assertSingleCharacterEdit(before, after);
     expect(edit.before).toBe("- [/] Write the spec");
     expect(edit.after).toBe("- [x] Write the spec");
+  });
+
+  // Reading view re-renders only the sections an edit touched, so the fence above the edited line
+  // stays mounted and only the task index can tell it to rebuild. A reworded line keeps its
+  // position and status, which is exactly the edit that once left the row showing the old text.
+  it("shows a reworded line's new text without reopening the note", async () => {
+    await openInReadingMode(DAY_NOTE);
+    await browser.waitUntil(() => listsRowContaining("Raise the blocker"), {
+      timeoutMsg: "waited for the listing to show 'Raise the blocker'",
+    });
+
+    const before = await readNote(DAY_NOTE);
+    await writeNote(DAY_NOTE, before.replace("- [ ] Raise the blocker", "- [ ] Raise the blocker with ops"));
+
+    await browser.waitUntil(() => listsRowContaining("Raise the blocker with ops"), {
+      timeoutMsg: "waited for the listing to show the reworded line",
+    });
   });
 });

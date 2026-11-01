@@ -7,7 +7,7 @@ import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { SettingsService } from "@/settings";
 import { isUnreadable } from "@/settings/repair";
-import type { TaskCondition } from "@/tasks/conditions";
+import type { StoredTaskCondition, TaskCondition } from "@/tasks/conditions";
 import { moveDefaultsSlice } from "@/tasks/move/settings";
 import RuleEditor from "@/tasks/ui/RuleEditor.vue";
 import { icons } from "@/ui/icons";
@@ -40,7 +40,11 @@ const openMoveDefaults = { mode: moveDefaults.state.mode, stamp: moveDefaults.st
 // A deep copy, not a live binding: the editors below mutate their model in place, and the whole
 // point of the modal is that nothing reaches settings until Save. cloneFnJSON rather than toRaw —
 // toRaw is shallow and the slice embeds reactive proxies at depth.
-const storedConditions = cloneFnJSON(slice.state.rule.conditions);
+// A rule this version cannot read opens empty and says so; a Save that adds no condition writes it
+// back as it was.
+const heldRule = isUnreadable(slice.state.rule) ? slice.state.rule : undefined;
+const storedRule = isUnreadable(slice.state.rule) ? undefined : slice.state.rule;
+const storedConditions = storedRule ? cloneFnJSON(storedRule.conditions) : [];
 
 // Conditions this editor cannot render — currently only `status` — captured once at open time and
 // never touched by the draft below. RuleEditor's model is filtered to the editable arms only, so
@@ -58,7 +62,7 @@ const markerHeldAtOpen = isUnreadable(slice.state.rolledMarker);
 const draft = reactive<{
   statusMap: Record<string, string>;
   canonical: Record<string, string>;
-  rule: { mode: "and" | "or"; conditions: TaskCondition[] };
+  rule: { mode: "and" | "or"; conditions: StoredTaskCondition[] };
   rolledMarker: string;
   moveMode: "copy" | "move";
   moveStamp: boolean;
@@ -66,7 +70,7 @@ const draft = reactive<{
   statusMap: cloneFnJSON(slice.state.statusMap),
   canonical: cloneFnJSON(slice.state.canonical),
   rule: {
-    mode: slice.state.rule.mode,
+    mode: storedRule?.mode ?? "and",
     conditions: storedConditions.filter(isEditableCondition),
   },
   // A held marker is not shown as text: whatever it holds is not a tag, and Save keeps it unless replaced.
@@ -112,10 +116,10 @@ function save(): void {
   slice.state.canonical = draft.canonical;
   // Edited conditions first, then whatever this editor could not render, in its original
   // relative order — a stable, predictable place for conditions the user never saw or touched.
-  slice.state.rule = {
-    mode: draft.rule.mode,
-    conditions: [...draft.rule.conditions, ...preservedConditions],
-  };
+  slice.state.rule =
+    heldRule !== undefined && draft.rule.conditions.length === 0
+      ? heldRule
+      : { mode: draft.rule.mode, conditions: [...draft.rule.conditions, ...preservedConditions] };
   if (!keepsHeldMarker.value) slice.state.rolledMarker = marker.value;
   // Only what the user changed here: an untouched control must not revert a write made elsewhere
   // while the modal was open.
@@ -131,7 +135,11 @@ function save(): void {
     v-model="draft.rule"
     :types="CHECKBOX_CONDITION_TYPES"
     :label="m.tasks_settings_rule()"
-    :description="m.tasks_settings_rule_desc()"
+    :description="
+      heldRule !== undefined && draft.rule.conditions.length === 0
+        ? m.tasks_rule_summary_unreadable()
+        : m.tasks_settings_rule_desc()
+    "
     :errors="ruleErrors"
   />
   <UiCollapsibleBlock v-model:expanded="rolloverOpen" data-testid="checkbox-rollover-section">

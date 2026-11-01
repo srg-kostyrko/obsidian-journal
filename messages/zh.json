@@ -2469,11 +2469,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "未指定状态",
+  "tasks_condition_unreadable": "无法读取此条件，因此没有任何内容与之匹配。",
   "tasks_status_group_open": "未完成",
   "tasks_status_group_done": "已完成",
   "tasks_status_group_all": "全部",
   "tasks_filter_summary_conditions": "显示{conditions}的任务。",
   "tasks_rule_summary_any": "无条件——日记笔记中的每个复选框列表项都是任务。",
+  "tasks_rule_summary_unreadable": "此规则的一部分无法读取，因此没有任何内容匹配。",
   "tasks_rule_summary_conditions": "统计{conditions}的复选框列表项。",
   "tasks_journal_summary_inherit": "继承全库通用规则。",
   "tasks_journal_summary_narrow": "以下列内容收窄全库通用规则：{rule}",
@@ -2708,6 +2710,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "已在打开的编辑器中将 {date} 的笔记标记为已结转，但无法保存。其任务已复制，在保存之前可能会再次结转。",
+        "mode=move": "已在打开的编辑器中移除 {date} 笔记的任务，但暂时无法保存。其任务已复制，在保存之前磁盘上的两个笔记中都会保留。"
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
   "tasks_auto_roll_paused": "{journal} 的自动结转已暂停。请开启“标记为已结转”，或使用“移动”。",
@@ -2719,6 +2731,16 @@
       "match": {
         "count=1": "{journal} 的自动结转已暂停：任务已在当前笔记中，但无法更新 {dates} 的笔记。手动运行“结转未完成的任务”之前，请在 {dates} 的笔记中标记或删除原任务，或删除副本。",
         "count=*": "{journal} 的自动结转已暂停：任务已在当前笔记中，但无法更新 {dates} 的笔记。手动运行“结转未完成的任务”之前，请在 {dates} 的笔记中标记或删除原任务，或删除副本。"
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal} 的自动结转已暂停：任务已在当前笔记中，但 {dates} 的笔记在已打开的编辑器中未能保存。手动运行“结转未完成的任务”之前，请保存 {dates} 的笔记，并保留副本。",
+        "count=*": "{journal} 的自动结转已暂停：任务已在当前笔记中，但 {dates} 的笔记在已打开的编辑器中未能保存。手动运行“结转未完成的任务”之前，请保存 {dates} 的笔记，并保留副本。"
       }
     }
   ],

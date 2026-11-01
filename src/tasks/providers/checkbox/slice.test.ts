@@ -32,14 +32,6 @@ describe("checkboxSlice repair on load", () => {
 
   it.each([
     ["enabled", "yes", true, "enabled"],
-    ["rule", { mode: "nonsense", conditions: [tag] }, { mode: "and", conditions: [tag] }, "rule.mode"],
-    [
-      "rule",
-      { mode: "or", conditions: [tag, { type: "moon-phase" }] },
-      { mode: "or", conditions: [tag] },
-      "rule.conditions.1",
-    ],
-    ["rule", "nonsense", { mode: "and", conditions: [] }, "rule"],
     ["statusMap", { " ": "todo", "?": 5 }, { " ": "todo" }, "statusMap.?"],
     [
       "statusMap",
@@ -55,6 +47,24 @@ describe("checkboxSlice repair on load", () => {
 
     expect(state).toEqual({ ...v.parse(checkboxSliceSchema, siblings), [key]: expected });
     expect(repair?.fields).toMatchObject({ sliceKey: "tasksCheckbox", fields: [field] });
+  });
+
+  // Held rather than repaired: the default, no conditions, counts every checkbox a task.
+  it.each([
+    [
+      { mode: "nonsense", conditions: [tag] },
+      { type: "unreadable", raw: { mode: "nonsense", conditions: [tag] } },
+    ],
+    [
+      { mode: "or", conditions: [tag, { type: "moon-phase" }] },
+      { mode: "or", conditions: [tag, { type: "unreadable", raw: { type: "moon-phase" } }] },
+    ],
+    ["nonsense", { type: "unreadable", raw: "nonsense" }],
+  ] as const)("an unreadable rule (%j) is held as %j, without a repair", async (stored, expected) => {
+    const { state, repair } = await load({ rule: stored });
+
+    expect(state.rule).toEqual(expected);
+    expect(repair).toBeUndefined();
   });
 
   // #rolled in its place would read every line stamped with the user's own marker as open, and roll

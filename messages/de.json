@@ -2488,11 +2488,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "ohne Status",
+  "tasks_condition_unreadable": "Diese Bedingung kann nicht gelesen werden, daher trifft nichts auf sie zu.",
   "tasks_status_group_open": "Offen",
   "tasks_status_group_done": "Erledigt",
   "tasks_status_group_all": "Alle",
   "tasks_filter_summary_conditions": "Zeigt eine Aufgabe an, die {conditions} ist.",
   "tasks_rule_summary_any": "Keine Bedingungen – jeder Kontrollkästchen-Listeneintrag in den Notizen eines Journals ist eine Aufgabe.",
+  "tasks_rule_summary_unreadable": "Ein Teil dieser Regel kann nicht gelesen werden, daher trifft nichts zu.",
   "tasks_rule_summary_conditions": "Zählt einen Kontrollkästchen-Listeneintrag, der {conditions} ist.",
   "tasks_journal_summary_inherit": "Erbt die Vault-weite Regel.",
   "tasks_journal_summary_narrow": "Schränkt die Vault-weite Regel ein: {rule}",
@@ -2727,6 +2729,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "Die Notiz vom {date} wurde im geöffneten Editor als übertragen markiert, konnte dort aber nicht gespeichert werden. Ihre Aufgaben wurden kopiert und werden womöglich erneut übertragen, bis sie gespeichert ist.",
+        "mode=move": "Aus der Notiz vom {date} wurden die Aufgaben im geöffneten Editor entfernt, sie konnte dort aber noch nicht gespeichert werden. Die Aufgaben wurden kopiert und stehen bis zum Speichern in beiden Notizen auf der Festplatte."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Versuche es gleich noch einmal.",
   "tasks_roll_source_unread": "Die Notiz vom {date} konnte nicht gelesen werden.",
   "tasks_auto_roll_paused": "Automatisches Übertragen ist für {journal} pausiert. Schalte „Als übertragen markieren“ ein oder nutze Verschieben.",
@@ -2738,6 +2750,16 @@
       "match": {
         "count=1": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notiz vom {dates} konnte nicht aktualisiert werden. Markiere oder entferne die Originale in der Notiz vom {dates} oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
         "count=*": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notizen vom {dates} konnten nicht aktualisiert werden. Markiere oder entferne die Originale in den Notizen vom {dates} oder lösche die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notiz vom {dates} ist in einem Editor geöffnet, der sie nicht speichern konnte. Speichere die Notiz vom {dates} und behalte die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
+        "count=*": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notizen vom {dates} sind in Editoren geöffnet, die sie nicht speichern konnten. Speichere die Notizen vom {dates} und behalte die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst."
       }
     }
   ],

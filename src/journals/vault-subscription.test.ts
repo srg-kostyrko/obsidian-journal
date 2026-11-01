@@ -261,6 +261,18 @@ describe("VaultSubscriptionService", () => {
       ).toBe(true);
     });
 
+    it("drops every copy of an off-sequence custom note during the boot rebuild", async () => {
+      harness.host.putFile("S/on.md", "", { journal: "s", "journal-date": "2024-01-01" });
+      harness.host.putFile("S/off.md", "", { journal: "s", "journal-date": "2024-01-03" });
+      harness.host.putFile("S/off (conflict).md", "", { journal: "s", "journal-date": "2024-01-03" });
+      await harness.resolve(VaultSubscriptionService).initialize();
+
+      const index = harness.resolve(JournalsIndex);
+      expect(index.entryByPath("S/off.md" as VaultPath).isNone()).toBe(true);
+      expect(index.entryByPath("S/off (conflict).md" as VaultPath).isNone()).toBe(true);
+      expect([...index.entriesFor("s")].map(([anchor]) => anchor)).toEqual(["2024-01-01"]);
+    });
+
     it("keeps an on-grid custom note during the boot rebuild", async () => {
       harness.host.putFile("S/on.md", "", { journal: "s", "journal-date": "2024-01-01" });
       harness.host.putFile("S/off.md", "", { journal: "s", "journal-date": "2024-01-03" });

@@ -6,11 +6,14 @@ import { m } from "@/i18n";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { isUnreadable } from "@/settings/repair";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
 
 import EditJournalTaskNotesModal from "./EditJournalTaskNotesModal.vue";
+
+import type { StoredVisibilityRule, VisibilityRule } from "../../../visibility-rule/rule";
 
 const checkbox = { compose: "narrow", mode: "or", conditions: [{ type: "tag", condition: "has", tags: ["#task"] }] };
 
@@ -23,6 +26,12 @@ async function mount(rule?: unknown) {
   harness.renderModal(EditJournalTaskNotesModal, { props: { journalName: "Daily" } });
   const repository = harness.resolve(JournalsRepository);
   return { repository, providers: () => repository.get("Daily").getOrUndefined()?.tasks.providers };
+}
+
+function readableRule(providers: { "note-property"?: StoredVisibilityRule } | undefined): VisibilityRule | undefined {
+  const rule = providers?.["note-property"];
+  if (isUnreadable(rule)) throw new Error(`rule held unreadable: ${JSON.stringify(rule)}`);
+  return rule;
 }
 
 function saveButton(): HTMLButtonElement {
@@ -137,7 +146,7 @@ describe("EditJournalTaskNotesModal", () => {
     await addCondition("folder");
     await userEvent.type(input(m.tasks_note_property_folder_label()), "/Projects");
     await userEvent.click(saveButton());
-    expect(providers()?.["note-property"]?.conditions).toEqual([{ type: "folder", folders: ["Projects"] }]);
+    expect(readableRule(providers())?.conditions).toEqual([{ type: "folder", folders: ["Projects"] }]);
   });
 
   it("writes a property condition with its values, under Match any", async () => {
@@ -190,7 +199,7 @@ describe("EditJournalTaskNotesModal", () => {
     if (first === undefined) throw new Error("no remove button");
     await userEvent.click(first);
     await userEvent.click(saveButton());
-    expect(providers()?.["note-property"]?.conditions).toEqual([{ type: "folder", folders: ["Projects"] }]);
+    expect(readableRule(providers())?.conditions).toEqual([{ type: "folder", folders: ["Projects"] }]);
   });
 
   it("keeps the saved rule on the journal across a rename", async () => {
@@ -204,6 +213,24 @@ describe("EditJournalTaskNotesModal", () => {
       show: "none",
       mode: "and",
       conditions: [],
+    });
+  });
+
+  describe("a rule this version cannot read", () => {
+    const held = { show: "excluding", conditions: [] };
+
+    it("opens as None, says so, and an untouched Save writes it back as it was", async () => {
+      const { providers } = await mount(held);
+      expect(screen.getByText(m.tasks_rule_summary_unreadable())).toBeTruthy();
+      await userEvent.click(saveButton());
+      expect(providers()?.["note-property"]).toEqual({ type: "unreadable", raw: held });
+    });
+
+    it("is replaced once another choice is saved", async () => {
+      const { providers } = await mount(held);
+      await userEvent.click(screen.getByText(m.tasks_note_visibility_show_all()));
+      await userEvent.click(saveButton());
+      expect(providers()?.["note-property"]).toBeUndefined();
     });
   });
 });

@@ -15,6 +15,17 @@ const SOURCE = `daily/${SOURCE_DATE}.md`;
 const TODAY = "2026-09-26";
 const TARGET = `daily/${TODAY}.md`;
 
+interface MarkerWindow extends Window {
+  __e2eMarkerHeld?: boolean;
+}
+
+async function waitForMarkerHeld(): Promise<void> {
+  await browser.waitUntil(() => browser.execute(() => (window as MarkerWindow).__e2eMarkerHeld === true), {
+    timeout: 15_000,
+    timeoutMsg: "waited for the synced settings to hold the rolled marker unreadable during the roll's read",
+  });
+}
+
 // The plugin's own reload hook, the one Obsidian Sync calls, run from inside the roll's read of the
 // earlier note, after data.json gains a marker that is not a tag. Written at the running version: an
 // older one reads as a downgrade, and the reload keeps what it had.
@@ -54,7 +65,15 @@ async function makeMarkerUnreadableDuringReadOf(path: string): Promise<void> {
           const tasks = await plugin.api.tasksFor("daily", date);
           return tasks.some((task) => task.text.includes("milk"));
         };
-        while (!(await settled())) await new Promise((resolve) => window.setTimeout(resolve, 50));
+        // Bounded, so a reload that never lands releases the roll; the spec reports which wait failed.
+        const deadline = Date.now() + 10_000;
+        let markerHeld = await settled();
+        while (!markerHeld && Date.now() < deadline) {
+          await new Promise((resolve) => window.setTimeout(resolve, 50));
+          markerHeld = await settled();
+        }
+        const win = window as MarkerWindow;
+        win.__e2eMarkerHeld = markerHeld;
         return text;
       };
     },
@@ -78,6 +97,7 @@ describe("rolling over while a sync makes the rolled marker unreadable", () => {
     await makeMarkerUnreadableDuringReadOf(SOURCE);
 
     await runCommand("journals:roll-over");
+    await waitForMarkerHeld();
 
     await waitForNotice(m.tasks_roll_marker_unreadable());
     expect(await contentOf(SOURCE)).toBe(sourceBefore);

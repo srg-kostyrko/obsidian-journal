@@ -1,5 +1,5 @@
 import type { UserAborted } from "@/infrastructure/flows";
-import type { NoteNotFoundError, NoteWriteError } from "@/infrastructure/host";
+import type { NoteNotFoundError, NoteWriteError, VaultPath } from "@/infrastructure/host";
 import type { JournalNotFoundError } from "@/journals/errors";
 import type { NoteCreationError } from "@/journals/notes/note-creation";
 
@@ -41,7 +41,8 @@ export type RollError =
   | NoteCreationError
   | NoteNotFoundError
   | NoteWriteError
-  | RolledMarkerUnreadableError;
+  | RolledMarkerUnreadableError
+  | UnsavedEditError;
 
 export class SingleMoveRefusedError extends Error {
   readonly kind = "single-move-refused" as const;
@@ -53,4 +54,24 @@ export class SingleMoveRefusedError extends Error {
 }
 
 export type SingleMoveError =
-  JournalNotFoundError | NoteCreationError | NoteNotFoundError | NoteWriteError | SingleMoveRefusedError | UserAborted;
+  | JournalNotFoundError
+  | NoteCreationError
+  | NoteNotFoundError
+  | NoteWriteError
+  | SingleMoveRefusedError
+  | UnsavedEditError
+  | UserAborted;
+
+// The open view holds the change but its save failed: disk still has the note as it was, and the view
+// will write the change whenever it next saves.
+export class UnsavedEditError extends Error {
+  readonly kind = "unsaved-edit" as const;
+
+  constructor(
+    readonly path: VaultPath,
+    readonly cause: NoteWriteError,
+  ) {
+    super(`${path} was changed in its open view, but the view could not be saved`);
+    this.name = "UnsavedEditError";
+  }
+}

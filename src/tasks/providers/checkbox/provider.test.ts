@@ -1011,6 +1011,115 @@ describe("CheckboxTaskProvider boot walk", () => {
   });
 });
 
+function settledFlag(promise: Promise<void>): { readonly settled: boolean } {
+  const flag = { settled: false };
+  void promise.then(() => {
+    flag.settled = true;
+  });
+  return flag;
+}
+
+describe("CheckboxTaskProvider whenFilled", () => {
+  it("settles once the boot walk has read every note, not before", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+    notes.release(0);
+    await flush();
+    expect(filled.settled).toBe(false);
+
+    notes.release(1);
+    await flush();
+
+    expect(filled.settled).toBe(true);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("waits for a newer read of a note that overtook the walk's own", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+    notes.release(0);
+    await flush();
+
+    notes.externalEdit(projectPath, "# Ideas\n- [ ] Ship the launch 📅 2026-10-25");
+    notes.release(1);
+    await flush();
+    expect(filled.settled).toBe(false);
+
+    notes.release(2);
+    await flush();
+
+    expect(filled.settled).toBe(true);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-25" });
+  });
+
+  it("settles on readiness when the provider is disabled", async () => {
+    const built = await build({ enabled: false });
+    built.notes.seed(projectPath, projectText);
+    built.structures.setStructure(projectPath, items([1]));
+    built.provider.start();
+    const filled = settledFlag(built.provider.whenFilled());
+    built.harness.resolve(JournalsIndex).markReady();
+    await flush();
+
+    expect(filled.settled).toBe(true);
+  });
+
+  it("settles when a settings change replaces the walk part-way", async () => {
+    const { notes, provider, journals, slice } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+
+    slice.state.rule = { mode: "or", conditions: [] };
+    await nextTick();
+    for (let at = 0; at < 3; at++) {
+      notes.release(at);
+      await flush();
+    }
+
+    expect(filled.settled).toBe(true);
+  });
+
+  it("settles when disabled part-way through the walk", async () => {
+    const { notes, provider, journals, slice } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+
+    slice.state.enabled = false;
+    await nextTick();
+    await flush();
+
+    expect(filled.settled).toBe(true);
+  });
+
+  it("settles when disposed part-way through the walk", async () => {
+    const { notes, provider, journals } = await vault();
+    notes.gated = true;
+    const stop = provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+
+    stop();
+    await flush();
+
+    expect(filled.settled).toBe(true);
+  });
+});
+
 // End to end through the real host and index: the dates come from the provider's own read of the
 // note at fill time, and hydration must deliver the markdown without dropping them.
 describe("CheckboxTaskProvider hydration wiring", () => {
@@ -1103,6 +1212,69 @@ describe("CheckboxTaskProvider content refill", () => {
 
     expect(index.version()).toBe(before);
   });
+
+  // A filter or a tasks decoration rebuilds only off the index version, so an edit either reads has
+  // to reach the index as a changed item even when no line moved and no status changed.
+  describe("an edit to an undated line in a journal's note", () => {
+    const workDay = "Work/2026-09-22.md" as VaultPath;
+    const owner = { journalName: "Work", anchor: anchor("2026-09-22") };
+
+    // The listing refreshes its own notes' text off metadata-changed; a version bump would also
+    // re-evaluate every mounted decoration, none of which reads a line's text.
+    it("leaves the version alone when the line is only reworded", async () => {
+      const { tasks, notes } = await startedCheckboxes(
+        { [workDay]: { text: "- [ ] Pay", lines: [0], owner } },
+        { Work: fixedJournal("Work", { type: "day" }) },
+      );
+      const before = tasks.version();
+
+      notes.seed(workDay, "- [ ] Pay rent");
+      notes.emitMetadataChanged(workDay);
+      await settle();
+
+      expect(tasks.version()).toBe(before);
+    });
+
+    it("bumps the version when the heading above it is renamed", async () => {
+      const { tasks, structures, notes } = await startedCheckboxes(
+        {
+          [workDay]: {
+            text: "## Habits\n- [ ] Pay",
+            lines: [1],
+            headings: [{ heading: "Habits", level: 2, line: 0 }],
+            owner,
+          },
+        },
+        { Work: fixedJournal("Work", { type: "day" }) },
+      );
+      const before = tasks.version();
+
+      const current = structures.get(workDay).getOrUndefined();
+      if (current === undefined) throw new Error("structure not seeded");
+      notes.seed(workDay, "## Tasks\n- [ ] Pay");
+      structures.setStructure(workDay, { ...current, headings: [{ heading: "Tasks", level: 2, line: 0 }] });
+      notes.emitMetadataChanged(workDay);
+      await settle();
+
+      expect(tasks.version()).toBeGreaterThan(before);
+    });
+
+    it("bumps the version when the note gains a frontmatter tag", async () => {
+      const { tasks, structures, notes } = await startedCheckboxes(
+        { [workDay]: { text: "- [ ] Pay", lines: [0], owner } },
+        { Work: fixedJournal("Work", { type: "day" }) },
+      );
+      const before = tasks.version();
+
+      const current = structures.get(workDay).getOrUndefined();
+      if (current === undefined) throw new Error("structure not seeded");
+      structures.setStructure(workDay, { ...current, frontmatterTags: ["#work"] });
+      notes.emitMetadataChanged(workDay);
+      await settle();
+
+      expect(tasks.version()).toBeGreaterThan(before);
+    });
+  });
 });
 
 // An earlier task dropped the test pinning that JournalsRepository's `updated` event carries
@@ -1157,7 +1329,7 @@ describe("CheckboxTaskProvider dated visibility", () => {
     conditions: [{ type: "property", name: "project", values: ["Website"] }],
   } as const;
 
-  it("puts facts on dated lines only, with properties only once a rule names one", async () => {
+  it("puts tags and headings on every line, and properties on dated lines only once a rule names one", async () => {
     const { tasks } = await startedCheckboxes(
       {
         [workDay]: {
@@ -1173,7 +1345,7 @@ describe("CheckboxTaskProvider dated visibility", () => {
     );
     const [dated, undated] = tasks.itemsIn(workDay);
     expect(dated?.facts).toEqual({ tags: ["#bills", "#work"], headings: [] });
-    expect(undated?.facts).toBeUndefined();
+    expect(undated?.facts).toEqual({ tags: ["#work"], headings: [] });
 
     const named = await startedCheckboxes(
       {

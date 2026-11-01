@@ -11,11 +11,11 @@ import * as v from "valibot";
 
 import { buildConditionFormSchemas, conditionFormErrors } from "./condition-form-schema";
 
-import type { TaskCondition } from "../conditions";
+import type { StoredTaskCondition } from "../conditions";
 
 export function buildTaskRuleFormSchema() {
   const schemas = buildConditionFormSchemas();
-  const taskConditionFormSchema = v.variant("type", [schemas.tag, schemas.heading, schemas.status]);
+  const taskConditionFormSchema = v.variant("type", [schemas.tag, schemas.heading, schemas.status, schemas.unreadable]);
 
   return v.object({
     mode: v.picklist(["and", "or"]),
@@ -26,7 +26,7 @@ export function buildTaskRuleFormSchema() {
 export type TaskRuleFormDraft = v.InferInput<ReturnType<typeof buildTaskRuleFormSchema>>;
 
 export function taskRuleConditionErrors(
-  draft: TaskRuleFormDraft | { mode: "and" | "or"; conditions: TaskCondition[] },
+  draft: TaskRuleFormDraft | { mode: "and" | "or"; conditions: StoredTaskCondition[] },
 ): ReadonlyMap<number, string> {
   return conditionFormErrors(buildTaskRuleFormSchema(), draft);
 }

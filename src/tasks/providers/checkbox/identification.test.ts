@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
+import { unreadable } from "@/settings/repair";
 
 import { identifies } from "./identification";
 
@@ -26,6 +27,8 @@ const underTasks = {
   conditions: [{ type: "heading" as const, condition: "under" as const, headings: ["Tasks"] }],
 };
 
+const taggedWith = (tag: string): NoteStructure => ({ ...structure, tags: [{ tag, line: 5 }] });
+
 describe("identifies", () => {
   it("treats an empty vault rule as no constraint", () => {
     expect(identifies(item, { structure, vault: empty, journal: null })).toBe(true);
@@ -33,6 +36,17 @@ describe("identifies", () => {
   it("matches an inline tag on the item's own line", () => {
     expect(identifies(item, { structure, vault: tagged, journal: null })).toBe(true);
     expect(identifies(item, { structure, vault: otherTag, journal: null })).toBe(false);
+  });
+  it("matches a tag the way Obsidian's tag search does: ignoring case, nested tags included", () => {
+    const lacks = { mode: "and" as const, conditions: [{ ...tagged.conditions[0], condition: "lacks" as const }] };
+    for (const tag of ["#Task", "#task/work", "#TASK/Work"]) {
+      expect(identifies(item, { structure: taggedWith(tag), vault: tagged, journal: null })).toBe(true);
+      expect(identifies(item, { structure: taggedWith(tag), vault: lacks, journal: null })).toBe(false);
+    }
+    expect(identifies(item, { structure: taggedWith("#tasks"), vault: tagged, journal: null })).toBe(false);
+    expect(identifies(item, { structure: taggedWith("#tasks"), vault: lacks, journal: null })).toBe(true);
+    const frontmatter = { ...structure, tags: [], frontmatterTags: ["#Task/Work"] };
+    expect(identifies(item, { structure: frontmatter, vault: tagged, journal: null })).toBe(true);
   });
   it("matches a frontmatter tag for every item in the note", () => {
     const noteTagged = { ...structure, tags: [], frontmatterTags: ["#task"] };
@@ -145,5 +159,20 @@ describe("identifies", () => {
       conditions: [...statusOnly.conditions, ...otherTag.conditions],
     };
     expect(identifies(item, { structure, vault: statusAndTag, journal: null })).toBe(false);
+  });
+  it("counts no checkbox a task under a rule holding a condition it cannot read", () => {
+    const unreadable = {
+      mode: "and" as const,
+      conditions: [{ type: "unreadable" as const, raw: { type: "tag", condition: "lack", tags: ["#habit"] } }],
+    };
+    expect(identifies(item, { structure, vault: unreadable, journal: null })).toBe(false);
+    expect(identifies(item, { structure, vault: empty, journal: { ...unreadable, compose: "replace" } })).toBe(false);
+  });
+  // A journal that replaces the vault-wide rule never reads it, so that rule being unreadable, as a
+  // whole or in part, cannot take the journal's tasks away.
+  it("lets a journal's own replacement rule decide when the vault-wide rule cannot be read", () => {
+    const replacing = { ...empty, compose: "replace" as const };
+    expect(identifies(item, { structure, vault: unreadable("not a rule"), journal: replacing })).toBe(true);
+    expect(identifies(item, { structure, vault: unreadable("not a rule"), journal: null })).toBe(false);
   });
 });

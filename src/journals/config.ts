@@ -177,9 +177,7 @@ export const journalConfigSchema = v.object({
       // so the listing filter below is not a sibling of the provider namespace.
       providers: v.optional(
         v.object({
-          // A rule whose conditions cannot be read inherits the global rule whole: repairing inside
-          // it could leave a `replace` rule with no conditions, which counts every checkbox a task.
-          checkbox: v.optional(v.fallback(v.optional(checkboxJournalRuleSchema), undefined)),
+          checkbox: v.optional(checkboxJournalRuleSchema),
           "note-property": v.optional(visibilityRuleSchema),
         }),
         () => ({}),

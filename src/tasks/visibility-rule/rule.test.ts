@@ -168,23 +168,56 @@ describe("admitsSubject", () => {
   });
 });
 
+function readable(stored: unknown): VisibilityRule {
+  const rule = v.parse(visibilityRuleSchema, stored);
+  if ("type" in rule) throw new Error(`unreadable: ${JSON.stringify(rule)}`);
+  return rule;
+}
+
 describe("visibilityRuleSchema", () => {
-  it("defaults a rule it cannot read to all", () => {
+  it("defaults an absent rule to all", () => {
     expect(v.parse(visibilityRuleSchema, {})).toEqual(DEFAULT_VISIBILITY_RULE);
-    expect(v.parse(visibilityRuleSchema, { show: "weird", mode: 3 })).toEqual(DEFAULT_VISIBILITY_RULE);
   });
 
-  it("drops a condition of a type this version does not know and keeps the rest", () => {
+  it("holds a rule it cannot read whole, admitting nothing", () => {
+    const stored = { show: "excluding", conditions: [] };
+    const rule = v.parse(visibilityRuleSchema, stored);
+    expect(rule).toEqual({ type: "unreadable", raw: stored });
+    expect(v.parse(visibilityRuleSchema, "matching")).toEqual({ type: "unreadable", raw: "matching" });
+    expect(admitsSubject(rule, { path: "Work/a.md" as VaultPath, tags: [] })).toBe(false);
+  });
+
+  it("keeps a condition it cannot read as unreadable, holding what was stored", () => {
     const parsed = v.parse(visibilityRuleSchema, {
       show: "matching",
       mode: "or",
       conditions: [{ type: "not-a-real-type" }, { type: "tag", tags: ["#work"] }, "garbage"],
     });
-    expect(parsed).toEqual({ show: "matching", mode: "or", conditions: [{ type: "tag", tags: ["#work"] }] });
+    expect(parsed).toEqual({
+      show: "matching",
+      mode: "or",
+      conditions: [
+        { type: "unreadable", raw: { type: "not-a-real-type" } },
+        { type: "tag", tags: ["#work"] },
+        { type: "unreadable", raw: "garbage" },
+      ],
+    });
+  });
+
+  it("reads a condition whose every value is unreadable as unreadable, not as no condition", () => {
+    const stored = { type: "tag", tags: [3] };
+    expect(readable({ show: "matching", conditions: [stored] }).conditions).toEqual([
+      { type: "unreadable", raw: stored },
+    ]);
+  });
+
+  it("admits nothing through a condition it cannot read under and", () => {
+    const rule = v.parse(visibilityRuleSchema, { show: "matching", conditions: [{ type: "priority" }] });
+    expect(admitsSubject(rule, { path: "Work/a.md" as VaultPath, tags: [] })).toBe(false);
   });
 
   it("keeps the readable entries of a value list holding one it cannot read", () => {
-    const parsed = v.parse(visibilityRuleSchema, {
+    const parsed = readable({
       show: "matching",
       conditions: [
         { type: "tag", tags: ["#work", 3] },
@@ -201,9 +234,7 @@ describe("visibilityRuleSchema", () => {
 
   it("keeps a property condition", () => {
     const condition = { type: "property", name: "projects", values: ["Website"] };
-    expect(v.parse(visibilityRuleSchema, { show: "matching", conditions: [condition] }).conditions).toEqual([
-      condition,
-    ]);
+    expect(readable({ show: "matching", conditions: [condition] }).conditions).toEqual([condition]);
   });
 });
 

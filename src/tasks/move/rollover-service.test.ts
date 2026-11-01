@@ -174,6 +174,7 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
+    unsavedSources: [],
     skippedSources: [],
     unreadSources: [],
     ...overrides,
@@ -829,6 +830,29 @@ describe("RolloverService", () => {
       expect(await text(target)).toBe("");
       expect(view.changes).toEqual([]);
     });
+
+    // The view already holds the stamp or the removal; only its save failed. Saying the tasks are
+    // still there under move would send the user to delete the copies, the last ones left once the
+    // view autosaves.
+    for (const mode of ["copy", "move"] as const) {
+      it(`reports an open source whose save fails under ${mode} as edited but unsaved, not as untouched`, async () => {
+        const { harness, roll, put, text } = await rolloverFor({ daily: dayJournal("daily", { mode }) });
+        const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+        const target = put("daily", TODAY, "");
+        const view = harness.host.openEditor(source, "- [ ] Call Bob\n", 0, { active: false });
+        const failing = Promise.reject(new Error("disk full"));
+        failing.catch(() => undefined);
+        view.pendingSave = failing;
+
+        const report = await roll();
+
+        expect(await text(target)).toBe("- [ ] Call Bob\n");
+        expect(report.failedSources).toEqual([]);
+        expect(report.unsavedSources).toEqual([{ path: source, anchor: "2026-10-20" }]);
+        expect(rollNotice(report)).toContain(m.tasks_roll_source_unsaved({ date: "2026-10-20", mode }));
+        expect(rollNotice(report)).not.toContain(m.tasks_roll_source_write_failed({ date: "2026-10-20", mode }));
+      });
+    }
 
     for (const mode of ["copy", "move"] as const) {
       it(`a second roll right after a ${mode} through an open source's view takes nothing again`, async () => {

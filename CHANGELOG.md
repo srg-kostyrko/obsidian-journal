@@ -12,7 +12,8 @@ All notable changes to this project will be documented in this file.
   `depth: rollup`. A new **Tasks** view block does the same inside a view, for a window around the
   view's selected date across the journals in its shelf, instead of one note's own period. Both default
   to what is still open — to-do, in progress or on hold — and filter further by `status`, `heading` or
-  `tag`; every journal also gets its own **Listing filter**, under its settings page's **Tasks**
+  `tag` — a tag matching as Obsidian's tag search does, ignoring case and taking in the tags nested
+  under it; every journal also gets its own **Listing filter**, under its settings page's **Tasks**
   section, which a fence or the view block's own filter overrides one condition type at a time rather
   than narrowing — except for the open-tasks default itself, which gives way instead, so a journal whose
   own filter names a status reaches a fence, or a view block, that named none. Each row renders its line
@@ -55,12 +56,23 @@ All notable changes to this project will be documented in this file.
   instead of overhanging them whenever the editor was too narrow for the full-size canvas — which
   a 960px-wide window already was. The canvas shrinks to fit its column instead.
 - Plugin API consumers no longer receive `noteAdded` and `noteRemoved` for a note that does not exist whenever a code block preview is shown in a journal's settings.
+- Deleting one of two notes for the same date — the original of a sync-conflict pair, say — now
+  leaves the other one in its place. Until now the calendar, navigation and the plugin API's
+  `notesFor` reported no note for that date until the journal was next re-read, usually at
+  restart, and the copy stayed reachable only by opening it. Plugin API consumers receive
+  `noteAdded` for the copy, with `canonical: true`.
+- Today's note arriving while a journal's code block preview was open in settings — by sync, from
+  another plugin, or created by Journals — no longer goes missing once settings close. The preview
+  held today's date in its place, so the real note counted as a duplicate, and after the preview
+  closed the calendar and `notesFor` reported no note for today until the journal was next re-read.
 - A setting that can't be read no longer resets everything around it. A navigation block keeps its
   other segments, a calendar or startup section keeps its other options, a notelet type keeps its
   folder, templates and counter, a decoration keeps its other styles, a shelf keeps its other
-  decorations, and a journal's listing filter keeps its other conditions; only the unreadable value
-  goes back to its default or is left out. A decoration with an unreadable condition is still dropped
-  whole, so it never marks days it wasn't set up to mark. A view block with one unreadable setting
+  decorations; only the unreadable value goes back to its default or is left out. A decoration with
+  an unreadable condition is still dropped whole, so it never marks days it wasn't set up to mark. A
+  tasks setting — a listing filter, which checkbox items count as tasks, **Dated tasks** or **Task
+  notes** — keeps an unreadable part as it was stored and treats it as matching nothing, so it shows
+  less rather than more, and its editor says which part can't be read. A view block with one unreadable setting
   now shows with that setting at its default, instead of an error saying its settings are not valid.
   The error stays for an unreadable choice of journals, notelet types, task sources or hidden
   weekdays, whose default would show everything that choice left out.
