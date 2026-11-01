@@ -5,6 +5,7 @@ import { pinClock } from "../support/clock.js";
 import { runCommand } from "../support/commands.js";
 import { waitForNotice } from "../support/notices.js";
 import { readRawSettings, waitForSettingsVersion } from "../support/plugin-data.js";
+import { clickIcon, closeSettings, expandSection, openSettings, toggleSettingRow } from "../support/settings.js";
 import { contentOf, openNote, waitForActiveNote } from "../support/vault.js";
 
 // A stored rolled marker the plugin cannot read ("carried" is no tag) is held as it was: rolling is
@@ -21,6 +22,8 @@ describe("rolling over with a rolled marker the plugin cannot read", () => {
     await pinClock(`${TODAY}T12:00:00`);
   });
 
+  after(closeSettings);
+
   it("refuses with a notice and leaves both notes as they were", async () => {
     const sourceBefore = await contentOf(SOURCE);
     const targetBefore = await contentOf(TARGET);
@@ -36,8 +39,12 @@ describe("rolling over with a rolled marker the plugin cannot read", () => {
     expect(await contentOf(TARGET)).toBe(targetBefore);
   });
 
-  // The fixture is stored at an older version, so the boot migration has already saved settings.
-  it("keeps the stored marker in data.json as it was", async () => {
+  // Booting never saves settings, so a setting change makes the plugin write data.json.
+  it("keeps the stored marker in data.json as it was when settings are saved", async () => {
+    await openSettings();
+    await expandSection(m.view_dashboard_section_title());
+    await clickIcon(m.view_dashboard_open({ name: "Calendar" }));
+    await toggleSettingRow(m.view_edit_remember_date_label());
     await waitForSettingsVersion();
 
     const raw = await readRawSettings();
