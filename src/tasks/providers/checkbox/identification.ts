@@ -4,6 +4,7 @@ import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
 import { isUnreadable } from "@/settings/repair";
 
 import { headingsOf, tagsOf } from "../../note-structure";
+import { carriesAnyTag } from "../../tag-match";
 
 import type {
   CheckboxCondition,
@@ -24,8 +25,7 @@ function check(condition: CheckboxCondition, item: StructureListItem, structure:
     match(condition)
       .with({ type: "tag" }, (c) => {
         if (c.tags.length === 0) return true;
-        const present = tagsOf(item, structure);
-        const hit = c.tags.some((tag) => present.includes(tag));
+        const hit = carriesAnyTag(tagsOf(item, structure), c.tags);
         return c.condition === "has" ? hit : !hit;
       })
       .with({ type: "heading" }, (c) => {

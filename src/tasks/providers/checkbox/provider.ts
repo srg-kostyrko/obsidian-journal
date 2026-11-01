@@ -206,10 +206,9 @@ export class CheckboxTaskProvider implements TaskProvider {
     this.#host.publish(this.id, "all", items);
   }
 
-  // Gates the date relation only: a journal reaches its own notes' lines by containment first, and
-  // the listing never asks about those.
+  // Gates the date relation only: a line its period's note holds is shown there whatever the rule.
   admits(item: TaskItem, journalName: string): boolean {
-    if (item.facts === undefined) return true;
+    if (!item.relations.includes("date") || item.facts === undefined) return true;
     const rule = datedRuleOf(this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id]);
     return admitsSubject(rule, { path: item.path, tags: item.facts.tags, properties: item.facts.properties });
   }

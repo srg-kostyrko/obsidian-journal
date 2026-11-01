@@ -5,8 +5,9 @@ import type { VaultPath } from "@/infrastructure/host";
 import { isUnreadable, orUnreadable, type Unreadable } from "@/settings/repair";
 
 import { storedConditionsSchema, type UnreadableCondition } from "../conditions";
+import { carriesAnyTag } from "../tag-match";
 
-import { lowerScalars, tagMatches } from "./scalars";
+import { lowerScalars } from "./scalars";
 
 // Per entry, not per list: an unreadable entry among readable ones only narrows the condition.
 // One whose every entry is unreadable fails, so the condition is kept as unreadable rather than
@@ -84,8 +85,7 @@ function evaluate(condition: VisibilityCondition, subject: VisibilitySubject) {
     }
     case "tag": {
       if (condition.tags.length === 0) return;
-      const tags = subject.tags.map((tag) => tag.toLowerCase());
-      return condition.tags.some((wanted) => tags.some((tag) => tagMatches(tag, wanted.toLowerCase())));
+      return carriesAnyTag(subject.tags, condition.tags);
     }
     case "folder": {
       // An empty entry would be the vault root, and a root that admits every path cannot narrow.

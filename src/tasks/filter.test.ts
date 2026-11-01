@@ -36,6 +36,8 @@ const under = (heading: string): TaskRule => ({
 const noteItem = (frontmatterTags: string[]) =>
   buildTaskItem({ display: { kind: "note", path, title: "Ship it" }, facts: { tags: frontmatterTags } });
 
+const tagged = (tag: string): NoteStructure => ({ ...structure, tags: [{ tag, line: 3 }] });
+
 describe("matchesFilter", () => {
   it("matches a status alias", () => {
     const filter: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["open"] }] };
@@ -61,6 +63,23 @@ describe("matchesFilter", () => {
     const filter: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
     expect(matchesFilter(item, structure, filter)).toBe(true);
     expect(matchesFilter(other, structure, filter)).toBe(false);
+  });
+
+  it("matches a tag the way Obsidian's tag search does: ignoring case, nested tags included", () => {
+    const item = buildTaskItem({
+      display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
+    });
+    const has: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+    const lacks: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "lacks", tags: ["#work"] }] };
+    for (const tag of ["#Work", "#work/client", "#WORK/Client"]) {
+      expect(matchesFilter(item, tagged(tag), has)).toBe(true);
+      expect(matchesFilter(item, tagged(tag), lacks)).toBe(false);
+    }
+    expect(matchesFilter(item, tagged("#workshop"), has)).toBe(false);
+    expect(matchesFilter(item, tagged("#workshop"), lacks)).toBe(true);
+    const upper: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#Work"] }] };
+    expect(matchesFilter(item, tagged("#work/client"), upper)).toBe(true);
+    expect(matchesFilter(noteItem(["#Work/Client"]), undefined, has)).toBe(true);
   });
 
   it("drops a heading condition for a note item rather than failing or passing it", () => {

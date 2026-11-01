@@ -86,16 +86,14 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
         markdown: null,
       },
       dates: { ...dates },
-      // Only a dated line is read by journals other than the note's own: by a dated rule, and by the
-      // owning journal's heading condition on whichever surface asks. Headings ride along so a
-      // heading edit above an unchanged line is a changed item there too.
-      ...(dated && {
-        facts: {
-          tags: tagsOf(listItem, structure),
-          headings: headingsOf(listItem.line, structure),
-          ...(properties !== undefined && { properties }),
-        },
-      }),
+      // What a listing filter and a tasks decoration read, so editing a tag or a heading above an
+      // unchanged line is a changed item. The line's text stays out: nothing but a listing shows
+      // it, and every version bump re-evaluates every mounted decoration.
+      facts: {
+        tags: tagsOf(listItem, structure),
+        headings: headingsOf(listItem.line, structure),
+        ...(dated && properties !== undefined && { properties }),
+      },
     });
   }
   return items;

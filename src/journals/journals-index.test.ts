@@ -83,7 +83,7 @@ describe("JournalsIndex", () => {
       index.register(preview, "preview");
       index.unregister(p("@preview@1"), "deleted");
       expect(captured.entryChanged).toEqual([
-        { entry: preview, kind: "added", reason: "preview", canonical: true },
+        { entry: preview, kind: "added", reason: "preview", canonical: false },
         { entry: preview, kind: "removed", reason: "preview" },
       ]);
     });
@@ -241,6 +241,131 @@ describe("JournalsIndex", () => {
       const atOriginal = index.entryByAnchor("daily", a("2022-01-01"));
       assert(atOriginal.isSome());
       expect(atOriginal.value.path).toBe(p("original.md"));
+    });
+  });
+
+  describe("preview entries", () => {
+    it("a real note registered while a preview mirrors its anchor owns the slot and is canonical", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "@preview@1"), "preview");
+      const captured = capture(index);
+
+      const verdict = index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+
+      expect(verdict).toBe("registered");
+      expect(captured.entryChanged).toMatchObject([{ kind: "added", reason: "appeared", canonical: true }]);
+      expect(index.get("daily", a("2022-01-01")).getOrUndefined()).toBe(p("Daily/2022-01-01.md"));
+    });
+
+    it("never answers a date lookup with the preview path", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "@preview@1"), "preview");
+
+      expect(index.has("daily", a("2022-01-01"))).toBe(false);
+      expect(index.entryByAnchor("daily", a("2022-01-01")).isNone()).toBe(true);
+      expect(index.findPrevious("daily", a("2022-01-05")).isNone()).toBe(true);
+      expect(index.entryByPath(p("@preview@1")).isSome()).toBe(true);
+    });
+
+    it("unregistering the preview leaves the real note resolvable by its date", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "@preview@1"), "preview");
+      index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+
+      index.unregister(p("@preview@1"));
+
+      const atAnchor = index.entryByAnchor("daily", a("2022-01-01"));
+      assert(atAnchor.isSome());
+      expect(atAnchor.value.path).toBe(p("Daily/2022-01-01.md"));
+    });
+
+    it("unregistering the preview leaves a note that already owned the date in place", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "Daily/2022-01-01.md"));
+      index.register(entry("daily", "2022-01-01", "@preview@1"), "preview");
+
+      index.unregister(p("@preview@1"));
+
+      expect(index.get("daily", a("2022-01-01")).getOrUndefined()).toBe(p("Daily/2022-01-01.md"));
+    });
+  });
+
+  describe("collision promotion", () => {
+    it("promotes the remaining copy when the owner is deleted and announces it as canonical", () => {
+      const index = new JournalsIndex();
+      const conflict = entry("daily", "2022-01-01", "original (conflict).md");
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(conflict);
+      const captured = capture(index);
+
+      index.unregister(p("original.md"), "deleted");
+
+      expect(index.get("daily", a("2022-01-01")).getOrUndefined()).toBe(p("original (conflict).md"));
+      expect(captured.entryChanged).toEqual([
+        { entry: entry("daily", "2022-01-01", "original.md"), kind: "removed", reason: "deleted" },
+        { entry: conflict, kind: "added", reason: "changed", canonical: true },
+      ]);
+    });
+
+    it("promotes the remaining copy when the owner is re-dated", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md"));
+
+      index.register(entry("daily", "2022-01-05", "original.md"));
+
+      expect(index.get("daily", a("2022-01-01")).getOrUndefined()).toBe(p("conflict.md"));
+      expect(index.get("daily", a("2022-01-05")).getOrUndefined()).toBe(p("original.md"));
+    });
+
+    it("promotes copies in path order, one per removed owner", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "z-copy.md"));
+      index.register(entry("daily", "2022-01-01", "b-copy.md"));
+
+      index.unregister(p("original.md"));
+      expect(index.get("daily", a("2022-01-01")).getOrUndefined()).toBe(p("b-copy.md"));
+
+      index.unregister(p("b-copy.md"));
+      expect(index.get("daily", a("2022-01-01")).getOrUndefined()).toBe(p("z-copy.md"));
+
+      index.unregister(p("z-copy.md"));
+      expect(index.has("daily", a("2022-01-01"))).toBe(false);
+    });
+
+    it("promotes a renamed copy under its new path", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md"));
+      index.transferPath(p("conflict.md"), p("renamed.md"));
+
+      index.unregister(p("original.md"));
+
+      expect(index.get("daily", a("2022-01-01")).getOrUndefined()).toBe(p("renamed.md"));
+    });
+
+    it("does not promote a copy that has since moved to another date", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md"));
+      index.register(entry("daily", "2022-01-05", "conflict.md"));
+
+      index.unregister(p("original.md"));
+
+      expect(index.has("daily", a("2022-01-01"))).toBe(false);
+    });
+
+    it("does not promote a copy removed with its cleared journal", () => {
+      const index = new JournalsIndex();
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.register(entry("daily", "2022-01-01", "conflict.md"));
+      index.clearJournal("daily");
+
+      index.register(entry("daily", "2022-01-01", "original.md"));
+      index.unregister(p("original.md"));
+
+      expect(index.has("daily", a("2022-01-01"))).toBe(false);
     });
   });
 

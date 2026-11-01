@@ -5,6 +5,7 @@ import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
 import { STATUS_ALIASES, type StoredTaskCondition, type TaskRule } from "./conditions";
 import { headingsOf, tagsOf } from "./note-structure";
 import { DEFAULT_STATUS_CONDITION } from "./query";
+import { carriesAnyTag } from "./tag-match";
 
 import type { TaskItem } from "./types";
 
@@ -57,7 +58,7 @@ function evaluate(
         // Same cold-cache read as the heading branch above: drop rather than exclude.
         const tags = tagsFor(item, structure);
         if (tags === undefined) return;
-        const hit = c.tags.some((tag) => tags.includes(tag));
+        const hit = carriesAnyTag(tags, c.tags);
         return c.condition === "has" ? hit : !hit;
       })
       // Fails rather than dropping out: an `and` rule that dropped it would widen to the rest.
