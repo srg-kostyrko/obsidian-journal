@@ -85,6 +85,9 @@ export const icons = {
     prompts: "lucide-circle-help",
     notelets: "sticky-note",
     tasks: "list-checks",
+    taskDates: "calendar-days",
+    taskStatus: "circle-check",
+    rollover: "redo-2",
   },
 } as const;
 

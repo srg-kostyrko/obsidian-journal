@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneFnJSON } from "@vueuse/core";
-import { computed, reactive } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -9,8 +9,11 @@ import { SettingsService } from "@/settings";
 import type { TaskCondition } from "@/tasks/conditions";
 import { moveDefaultsSlice } from "@/tasks/move/settings";
 import RuleEditor from "@/tasks/ui/RuleEditor.vue";
+import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
+import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
@@ -80,6 +83,16 @@ const errorBag = computed(() => ({ rolledMarker: markerErrors(marker.value) }));
 const markerChanged = computed(() => marker.value !== slice.state.rolledMarker);
 const valid = computed(() => ruleValid.value && errorBag.value.rolledMarker.length === 0);
 
+const rolloverExpanded = ref(false);
+const rolloverHasError = computed(() => errorBag.value.rolledMarker.length > 0);
+// A closed section would hide the reason Save is disabled, so one holding an error stays open. An
+// error also latches it open: otherwise the keystroke that fixes the marker would close the field.
+watch(rolloverHasError, (hasError) => hasError && (rolloverExpanded.value = true), { immediate: true });
+const rolloverOpen = computed({
+  get: () => rolloverExpanded.value || rolloverHasError.value,
+  set: (open: boolean) => (rolloverExpanded.value = open),
+});
+
 function save(): void {
   // Belt-and-braces alongside the disabled Save button: a disabled native <button> never
   // dispatches click, but nothing stops a future caller from invoking save() directly.
@@ -113,30 +126,35 @@ function save(): void {
     :description="m.tasks_settings_rule_desc()"
     :errors="ruleErrors"
   />
-  <UiSettingRow :name="m.tasks_move_title()" heading>
-    <template #description>{{ m.tasks_move_defaults_desc() }}</template>
-  </UiSettingRow>
-  <UiSettingRow :name="m.tasks_checkbox_marker()">
-    <template #description>
-      {{ m.tasks_checkbox_marker_desc() }}
-      <span v-if="markerChanged && errorBag.rolledMarker.length === 0" class="tasks-checkbox-marker-changed">
-        {{ m.tasks_checkbox_marker_changed() }}
-      </span>
-      <span v-for="error of errorBag.rolledMarker" :key="error" class="tasks-move-form-error">{{ error }}</span>
+  <UiCollapsibleBlock v-model:expanded="rolloverOpen" data-testid="checkbox-rollover-section">
+    <template #trigger>
+      <UiIconedRow :icon="icons.section.rollover">{{ m.tasks_move_title() }}</UiIconedRow>
     </template>
-    <UiTextInput v-model="draft.rolledMarker" placeholder="#rolled" data-testid="checkbox-rolled-marker" />
-  </UiSettingRow>
-  <UiSettingRow :name="m.tasks_move_mode()">
-    <template #description>{{ m.tasks_move_mode_desc() }}</template>
-    <UiDropdown v-model="draft.moveMode" data-testid="move-default-mode">
-      <option value="copy">{{ m.tasks_move_mode_copy() }}</option>
-      <option value="move">{{ m.tasks_move_mode_move() }}</option>
-    </UiDropdown>
-  </UiSettingRow>
-  <UiSettingRow :name="m.tasks_move_stamp()">
-    <template #description>{{ m.tasks_move_stamp_desc() }}</template>
-    <UiToggle v-model="draft.moveStamp" :tooltip="m.tasks_move_stamp()" data-testid="move-default-stamp" />
-  </UiSettingRow>
+    <UiSettingRow>
+      <template #description>{{ m.tasks_move_defaults_desc() }}</template>
+    </UiSettingRow>
+    <UiSettingRow :name="m.tasks_checkbox_marker()">
+      <template #description>
+        {{ m.tasks_checkbox_marker_desc() }}
+        <span v-if="markerChanged && errorBag.rolledMarker.length === 0" class="tasks-checkbox-marker-changed">
+          {{ m.tasks_checkbox_marker_changed() }}
+        </span>
+        <span v-for="error of errorBag.rolledMarker" :key="error" class="tasks-move-form-error">{{ error }}</span>
+      </template>
+      <UiTextInput v-model="draft.rolledMarker" placeholder="#rolled" data-testid="checkbox-rolled-marker" />
+    </UiSettingRow>
+    <UiSettingRow :name="m.tasks_move_mode()">
+      <template #description>{{ m.tasks_move_mode_desc() }}</template>
+      <UiDropdown v-model="draft.moveMode" data-testid="move-default-mode">
+        <option value="copy">{{ m.tasks_move_mode_copy() }}</option>
+        <option value="move">{{ m.tasks_move_mode_move() }}</option>
+      </UiDropdown>
+    </UiSettingRow>
+    <UiSettingRow :name="m.tasks_move_stamp()">
+      <template #description>{{ m.tasks_move_stamp_desc() }}</template>
+      <UiToggle v-model="draft.moveStamp" :tooltip="m.tasks_move_stamp()" data-testid="move-default-stamp" />
+    </UiSettingRow>
+  </UiCollapsibleBlock>
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
     <UiButton cta :disabled="!valid" @click="save">{{ m.common_action_submit() }}</UiButton>

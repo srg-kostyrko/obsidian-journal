@@ -120,7 +120,7 @@ describe("checkbox provider modal validation", () => {
     await clickIcon(m.tasks_settings_configure());
     await waitForModalOpen();
 
-    await clickButton(m.tasks_settings_add_condition());
+    await clickIcon(m.tasks_settings_add_condition());
 
     await expect($(`button=${m.common_action_submit()}`)).toBeDisabled();
 
@@ -143,7 +143,7 @@ describe("checkbox provider modal condition values", () => {
     await clickIcon(m.tasks_settings_configure());
     await waitForModalOpen();
 
-    await clickButton(m.tasks_settings_add_condition());
+    await clickIcon(m.tasks_settings_add_condition());
     const input = $(`[aria-label="${m.tasks_settings_condition_tag()}"]`);
     await input.setValue("#work, #home");
     await browser.keys("Tab");
@@ -176,7 +176,7 @@ describe("checkbox provider modal condition values", () => {
     await clickIcon(m.tasks_settings_configure());
     await waitForModalOpen();
 
-    await clickButton(m.tasks_settings_add_condition());
+    await clickIcon(m.tasks_settings_add_condition());
     const input = $(`[aria-label="${m.tasks_settings_condition_tag()}"]`);
     await input.setValue("#work, #home");
     await input.click();
