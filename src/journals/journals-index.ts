@@ -63,6 +63,10 @@ export class JournalsIndex {
   readonly #notelets = new Map<string, NoteletIndex>();
   readonly #byPath = new Map<VaultPath, IndexedNote>();
   readonly #previews = new Set<VaultPath>();
+  // Notes that lost their (journal, anchor) slot to another note, so one can take it over when the
+  // owner leaves — otherwise deleting the original of a sync-conflict pair leaves the copy unreachable
+  // by date until the next rescan.
+  readonly #losers = new Map<string, Map<AnchorString, Set<VaultPath>>>();
   readonly #emitter: TypedEmitter<JournalsIndexEvents> = createNanoEvents();
   readonly #dirty = new Set<string>();
   #flushScheduled = false;
@@ -111,17 +115,54 @@ export class JournalsIndex {
     return noteletIndex;
   }
 
+  #losersAt(journalName: string, anchor: AnchorString): Set<VaultPath> {
+    let byAnchor = this.#losers.get(journalName);
+    if (!byAnchor) {
+      byAnchor = new Map();
+      this.#losers.set(journalName, byAnchor);
+    }
+    let paths = byAnchor.get(anchor);
+    if (!paths) {
+      paths = new Set();
+      byAnchor.set(anchor, paths);
+    }
+    return paths;
+  }
+
+  #dropLoser(journalName: string, anchor: AnchorString, path: VaultPath): void {
+    const byAnchor = this.#losers.get(journalName);
+    const paths = byAnchor?.get(anchor);
+    if (!byAnchor || !paths?.delete(path)) return;
+    if (paths.size === 0) byAnchor.delete(anchor);
+    if (byAnchor.size === 0) this.#losers.delete(journalName);
+  }
+
   // `owner` is the path whose claim on the slot is being checked: a collision loser never owned
   // the anchor slot, so releasing it must not delete the incumbent's — the notelet arm ignores
-  // `owner` because a notelet anchor has no single owner to protect.
-  #releaseSlot(existing: IndexedNote, owner: VaultPath): void {
+  // `owner` because a notelet anchor has no single owner to protect. Returns the loser promoted
+  // into a freed slot, which the caller announces after its own removal. Path order, not arrival
+  // order, picks it, so every device promotes the same copy.
+  #releaseSlot(existing: IndexedNote, owner: VaultPath): IndexedNote | undefined {
     if (isNotelet(existing)) {
       this.#notelets.get(existing.journalName)?.remove(existing);
-      return;
+      return undefined;
     }
     const journalIndex = this.#journals.get(existing.journalName);
     const slot = journalIndex?.get(existing.anchor);
-    if (slot !== undefined && slot.isSome() && slot.value === owner) journalIndex?.delete(existing.anchor);
+    if (journalIndex === undefined || slot === undefined || !slot.isSome() || slot.value !== owner) {
+      this.#dropLoser(existing.journalName, existing.anchor, owner);
+      return undefined;
+    }
+    journalIndex.delete(existing.anchor);
+    const candidates = this.#losers.get(existing.journalName)?.get(existing.anchor);
+    if (candidates === undefined) return undefined;
+    const next = [...candidates].toSorted().at(0);
+    if (next === undefined) return undefined;
+    this.#dropLoser(existing.journalName, existing.anchor, next);
+    const promoted = this.#byPath.get(next);
+    if (promoted === undefined) return undefined;
+    journalIndex.set(existing.anchor, next);
+    return promoted;
   }
 
   // A notelet has no slot to lose; a period note is canonical while it owns its (journal, anchor) slot.
@@ -201,8 +242,9 @@ export class JournalsIndex {
     // An entry already at this path in another slot is the same note re-dated, whatever the origin.
     const reason = existing === undefined ? REASON_BY_ORIGIN[origin] : "changed";
     if (existing !== undefined) {
-      this.#releaseSlot(existing, entry.path);
+      const promoted = this.#releaseSlot(existing, entry.path);
       this.#emitRemoved(existing, "changed");
+      if (promoted) this.#emitAdded(promoted, "changed");
       this.#markDirty(existing.journalName);
     }
     if (isNotelet(entry)) {
@@ -217,14 +259,23 @@ export class JournalsIndex {
       journalIndex = new JournalIndex();
       this.#journals.set(entry.journalName, journalIndex);
     }
+    // A preview stands in for a note that may not exist, so it is reachable by path only: holding
+    // the slot would answer date lookups with a file that is not there and demote the real note
+    // when it arrives.
+    if (this.#previews.has(entry.path)) {
+      this.#byPath.set(entry.path, entry);
+      this.#emitAdded(entry, reason);
+      this.#markDirty(entry.journalName);
+      return "registered";
+    }
     // A different note already owns this (journal, anchor) slot — e.g. a sync conflict copy that
-    // shares the original's frontmatter, or a settings-preview entry mirroring today's real note.
-    // Keep the incumbent as the canonical anchor owner (calendar/navigation resolve to it), but
-    // still track the newcomer by path so entryByPath resolves it. Never overwrite the slot or
-    // orphan the incumbent.
+    // shares the original's frontmatter. Keep the incumbent as the canonical anchor owner
+    // (calendar/navigation resolve to it), but still track the newcomer by path so entryByPath
+    // resolves it, and as a loser so it takes the slot over when the incumbent leaves.
     const occupant = journalIndex.get(entry.anchor);
     const collision = occupant.isSome() && occupant.value !== entry.path;
-    if (!collision) journalIndex.set(entry.anchor, entry.path);
+    if (collision) this.#losersAt(entry.journalName, entry.anchor).add(entry.path);
+    else journalIndex.set(entry.anchor, entry.path);
     this.#byPath.set(entry.path, entry);
     this.#emitAdded(entry, reason);
     this.#markDirty(entry.journalName);
@@ -235,9 +286,10 @@ export class JournalsIndex {
     const existing = this.#byPath.get(path);
     if (!existing) return;
     const preview = this.#previews.delete(path);
-    this.#releaseSlot(existing, path);
+    const promoted = this.#releaseSlot(existing, path);
     this.#byPath.delete(path);
     this.#emitRemoved(existing, preview ? "preview" : reason);
+    if (promoted) this.#emitAdded(promoted, "changed");
     this.#markDirty(existing.journalName);
   }
 
@@ -253,7 +305,12 @@ export class JournalsIndex {
       const slot = journalIndex?.get(existing.anchor);
       // Only move the anchor slot if `from` actually owned it — a collision loser being renamed
       // must not seize the incumbent's slot.
-      if (slot !== undefined && slot.isSome() && slot.value === from) journalIndex?.set(existing.anchor, to);
+      if (slot !== undefined && slot.isSome() && slot.value === from) {
+        journalIndex?.set(existing.anchor, to);
+      } else if (this.#losers.get(existing.journalName)?.get(existing.anchor)?.has(from) === true) {
+        this.#dropLoser(existing.journalName, existing.anchor, from);
+        this.#losersAt(existing.journalName, existing.anchor).add(to);
+      }
     }
     this.#byPath.delete(from);
     this.#byPath.set(to, next);
@@ -271,6 +328,7 @@ export class JournalsIndex {
     }
     journalIndex?.clear();
     this.#journals.delete(journalName);
+    this.#losers.delete(journalName);
     noteletIndex?.clear();
     this.#notelets.delete(journalName);
     this.#markDirty(journalName);
@@ -280,6 +338,7 @@ export class JournalsIndex {
     const names = new Set([...this.#journals.keys(), ...this.#notelets.keys()]);
     this.#byPath.clear();
     this.#previews.clear();
+    this.#losers.clear();
     for (const journalIndex of this.#journals.values()) journalIndex.clear();
     this.#journals.clear();
     for (const noteletIndex of this.#notelets.values()) noteletIndex.clear();

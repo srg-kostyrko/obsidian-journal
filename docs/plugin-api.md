@@ -535,8 +535,12 @@ default case rather than switching exhaustively.
 
 `noteAdded` also carries `canonical`. It is `false` for a note that shares its
 date with another note already owning that date — a sync-conflict copy, usually.
-Navigation, `notesFor` and the calendar resolve the date to the other note. A
-notelet never competes for a date, so `noteletAdded` always reports `true`.
+Navigation, `notesFor` and the calendar resolve the date to the other note. When
+the note owning the date is deleted, re-dated or stops being a journal note, a
+copy left behind takes the date over — the first by path when there are several —
+and `noteAdded` fires for it again, with reason `changed` and `canonical: true`,
+after the owner's `noteRemoved`. A notelet never competes for a date, so
+`noteletAdded` always reports `true`.
 
 ### Writing into a note from a handler
 

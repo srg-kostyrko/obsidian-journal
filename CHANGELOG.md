@@ -55,6 +55,15 @@ All notable changes to this project will be documented in this file.
   instead of overhanging them whenever the editor was too narrow for the full-size canvas — which
   a 960px-wide window already was. The canvas shrinks to fit its column instead.
 - Plugin API consumers no longer receive `noteAdded` and `noteRemoved` for a note that does not exist whenever a code block preview is shown in a journal's settings.
+- Deleting one of two notes for the same date — the original of a sync-conflict pair, say — now
+  leaves the other one in its place. Until now the calendar, navigation and the plugin API's
+  `notesFor` reported no note for that date until the journal was next re-read, usually at
+  restart, and the copy stayed reachable only by opening it. Plugin API consumers receive
+  `noteAdded` for the copy, with `canonical: true`.
+- Today's note arriving while a journal's code block preview was open in settings — by sync, from
+  another plugin, or created by Journals — no longer goes missing once settings close. The preview
+  held today's date in its place, so the real note counted as a duplicate, and after the preview
+  closed the calendar and `notesFor` reported no note for today until the journal was next re-read.
 - A setting that can't be read no longer resets everything around it. A navigation block keeps its
   other segments, a calendar or startup section keeps its other options, a notelet type keeps its
   folder, templates and counter, a decoration keeps its other styles, a shelf keeps its other
