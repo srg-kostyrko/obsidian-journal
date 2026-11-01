@@ -465,8 +465,10 @@ fi
 
 ## §2 API package — conditional
 
-Runs after §1 step 8's tag build is green. It may run before or after step 9
-publishes the draft; §3 runs last, once the release is public.
+Runs after §1 step 8's tag build is green. When the build staged a version, this
+section finishes — the maintainer has approved it and the registry serves it —
+before step 9 publishes the draft, since the notes link to the package. §3 runs
+last, once the release is public.
 
 Resuming straight into this section does **not** mean step 9 finished: its last act is
 dispatching the manual deploy, which leaves no trace on the release itself. Check the
