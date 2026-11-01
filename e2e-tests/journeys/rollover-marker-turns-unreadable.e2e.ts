@@ -10,7 +10,8 @@ import { contentOf, openNote, waitForActiveNote } from "../support/vault.js";
 // A sync can land a rolled marker nobody can read while a roll is reading its earlier notes. The
 // roll started with the readable one, so it must not read the stamped line as open and copy it.
 const FIXTURE = "./e2e-tests/fixtures/e2e-rollover-marker-turns-unreadable";
-const SOURCE = "daily/2026-09-25.md";
+const SOURCE_DATE = "2026-09-25";
+const SOURCE = `daily/${SOURCE_DATE}.md`;
 const TODAY = "2026-09-26";
 const TARGET = `daily/${TODAY}.md`;
 
@@ -19,12 +20,19 @@ const TARGET = `daily/${TODAY}.md`;
 // older one reads as a downgrade, and the reload keeps what it had.
 async function makeMarkerUnreadableDuringReadOf(path: string): Promise<void> {
   await browser.executeObsidian(
-    ({ app }, held, version) => {
+    ({ app }, held, version, date) => {
       const vault = app.vault as unknown as { read(file: { path: string }): Promise<string> };
       const plugin = (
         app as unknown as {
           plugins: {
-            plugins: Record<string, { manifest: { dir: string }; onExternalSettingsChange(): Promise<void> }>;
+            plugins: Record<
+              string,
+              {
+                manifest: { dir: string };
+                api: { tasksFor(selector: string, date: string): Promise<{ text: string }[]> };
+                onExternalSettingsChange(): Promise<void>;
+              }
+            >;
           };
         }
       ).plugins.plugins.journals;
@@ -40,13 +48,19 @@ async function makeMarkerUnreadableDuringReadOf(path: string): Promise<void> {
           JSON.stringify({ ...stored, version, tasksCheckbox: { rolledMarker: "carried" } }),
         );
         await plugin.onExternalSettingsChange();
-        // The hook starts the reload without waiting for it.
-        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        // The hook starts the reload without waiting for it. Held, the marker stamps nothing, so the
+        // stamped line, which an open-tasks answer leaves out while it reads as rolled, joins it.
+        const settled = async (): Promise<boolean> => {
+          const tasks = await plugin.api.tasksFor("daily", date);
+          return tasks.some((task) => task.text.includes("milk"));
+        };
+        while (!(await settled())) await new Promise((resolve) => window.setTimeout(resolve, 50));
         return text;
       };
     },
     path,
     CURRENT_VERSION,
+    SOURCE_DATE,
   );
 }
 
