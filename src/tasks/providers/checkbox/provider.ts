@@ -47,6 +47,10 @@ export class CheckboxTaskProvider implements TaskProvider {
   // Bumped by every walk start, every disable and dispose, so a walk that is no longer the latest
   // stops at its next note rather than racing the one that replaced it.
   #walks = 0;
+  #markFilled: (() => void) | undefined;
+  readonly #filled = new Promise<void>((resolve) => {
+    this.#markFilled = resolve;
+  });
   readonly id = CHECKBOX_PROVIDER_ID;
   readonly settingsRow = CheckboxSettingsRow;
   readonly journalRow = CheckboxJournalRow;
@@ -156,9 +160,14 @@ export class CheckboxTaskProvider implements TaskProvider {
   // notes are skipped, so a walk after the first reads only what the cache never held — a note taken
   // out of Excluded files, or an excluded one a journal has since taken over — and publishes nothing
   // when it read nothing.
+  // A walk replaced part-way leaves the fill to the walk that replaced it; a disable starts one
+  // that returns at once, and dispose marks it itself.
   async #walk(): Promise<void> {
     const run = ++this.#walks;
-    if (!this.#settings.state.enabled) return;
+    if (!this.#settings.state.enabled) {
+      this.#markFilled?.();
+      return;
+    }
     let read = false;
     for (const path of this.#notes.allMarkdownNotes()) {
       if (run !== this.#walks) return;
@@ -169,7 +178,9 @@ export class CheckboxTaskProvider implements TaskProvider {
       read = true;
       await this.#load(path);
     }
-    if (run === this.#walks && read) this.#refillAll();
+    if (run !== this.#walks) return;
+    if (read) this.#refillAll();
+    this.#markFilled?.();
   }
 
   // Obsidian announces no change to Excluded files, so a settings change or a full refill is when
@@ -206,6 +217,10 @@ export class CheckboxTaskProvider implements TaskProvider {
       items.push(...this.#itemsFor(path, undefined));
     }
     this.#host.publish(this.id, "all", items);
+  }
+
+  whenFilled(): Promise<void> {
+    return this.#filled;
   }
 
   // Gates the date relation only: a journal reaches its own notes' lines by containment first, and
@@ -283,6 +298,7 @@ export class CheckboxTaskProvider implements TaskProvider {
       disposed = true;
       for (const stop of stopNoteWatches) stop();
       this.#stopReading();
+      this.#markFilled?.();
     };
   }
 }

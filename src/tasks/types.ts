@@ -61,6 +61,9 @@ export interface TaskProvider {
   // stays on or off globally, so no enable toggle here.
   readonly journalRow?: Component;
   start(): () => void;
+  // Settles once the first fill after index readiness has landed, for a provider whose fill outlives
+  // the readiness continuation it registered at start(). Must also settle when disabled or disposed.
+  whenFilled?(): Promise<void>;
   // Whether `journalName` shows this item. Called from reactive effects, so an implementation reads
   // the journal's config synchronously for the effect to track it. Absent means every journal shows all.
   admits?(item: TaskItem, journalName: string): boolean;

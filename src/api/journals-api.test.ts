@@ -6,14 +6,15 @@ import type { AnchorString } from "@/calendar";
 import { Flows } from "@/infrastructure/flows";
 import {
   NoteMetadataService,
+  NoteReadError,
   NoteStructureService,
   NotesService,
   WorkspaceOpenError,
   WorkspaceService,
 } from "@/infrastructure/host";
-import type { VaultPath } from "@/infrastructure/host";
+import type { NoteNotFoundError, VaultPath } from "@/infrastructure/host";
 import { NoteFileService } from "@/infrastructure/host/internal/note-file-service";
-import { FakeNoteStructureService } from "@/infrastructure/host/testing";
+import { FakeNoteStructureService, FakeNotesService } from "@/infrastructure/host/testing";
 import { AsyncResult, Option } from "@/infrastructure/result";
 import { CreateNoteletFlow } from "@/journals";
 import type { JournalConfig } from "@/journals/config";
@@ -867,6 +868,34 @@ describe("JournalsApiService adjacent reads", () => {
   });
 });
 
+// Holds every note read open until released, which holds the checkbox provider's walk open with it.
+class HeldNotesService extends FakeNotesService {
+  readonly #held: (() => void)[] = [];
+  #released = false;
+
+  override readCached(path: VaultPath): AsyncResult<string, NoteNotFoundError | NoteReadError> {
+    const pending = super.readCached(path);
+    if (this.#released) return pending;
+    const gate = new Promise<void>((resolve) => this.#held.push(resolve));
+    return AsyncResult.fromPromise(
+      gate.then(() =>
+        pending.match({
+          ok: (text) => text,
+          err: (error) => {
+            throw error;
+          },
+        }),
+      ),
+      (cause) => new NoteReadError(path, cause),
+    );
+  }
+
+  release(): void {
+    this.#released = true;
+    for (const resolve of this.#held.splice(0)) resolve();
+  }
+}
+
 async function buildTasksApi(journals: Record<string, JournalConfig>, shelves: Record<string, ShelfConfig> = {}) {
   const structures = new FakeNoteStructureService();
   const harness = await testContainer({
@@ -1364,6 +1393,39 @@ describe("JournalsApiService tasksFor", () => {
     harness.resolve(TaskProviderRegistry).initialize();
 
     await expect(pending).resolves.toEqual([]);
+  });
+
+  // A line's dates exist only once the checkbox walk has read its note, and a line in a note no
+  // journal owns is reached by nothing but its date — so an answer given mid-walk drops it.
+  it("waits for the checkbox walk to read the vault, so a dated line in an unowned note is found", async () => {
+    const notes = new HeldNotesService();
+    const structures = new FakeNoteStructureService();
+    const harness = await testContainer({
+      modules: [journalsCoreModule, shelvesCoreModule, tasksCoreModule, apiModule],
+      data: { journals: { daily }, shelves: {} },
+      initialize: [TaskProviderRegistry],
+      overrides: [overrideWith(NotesService, notes as never), overrideWith(NoteStructureService, structures as never)],
+    });
+    const path = "Projects/a.md" as VaultPath;
+    notes.seed(path, "# Ideas\n- [ ] Pay 📅 2026-10-24");
+    structures.setStructure(path, {
+      listItems: [{ marker: " ", line: 1, endLine: 1, parent: null }],
+      tags: [],
+      headings: [],
+      frontmatterTags: [],
+    });
+    harness.resolve(JournalsIndex).markReady();
+    const api = harness.resolve(JournalsApiService);
+
+    const pending = api.tasksFor("daily", "2026-10-24");
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, 0);
+    });
+    notes.release();
+
+    await expect(pending).resolves.toEqual([
+      expect.objectContaining({ path, line: 1, dates: { due: "2026-10-24" }, relations: ["date"] }),
+    ]);
   });
 
   it("rejects with plugin-unloaded when Journals unloads while a note's task text is being read", async () => {
