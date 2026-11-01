@@ -111,3 +111,10 @@ export class UnsettledReadError extends Error {
     this.name = "UnsettledReadError";
   }
 }
+
+export class TaskRowMissingError extends Error {
+  constructor(fragment: string) {
+    super(`no listing row contains "${fragment}"`);
+    this.name = "TaskRowMissingError";
+  }
+}
