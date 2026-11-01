@@ -72,9 +72,13 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
   const notes = useService(NotesService);
   const shownText = shallowRef(0);
   let shownPaths = new Set<VaultPath>();
+  // A build reads its notes one at a time, so a note it has already read can change before the
+  // build lands, while shownPaths still describes the build before it.
+  let changedWhileBuilding = new Set<VaultPath>();
   onMounted(() => {
     const off = notes.events.on("metadata-changed", (path) => {
       if (shownPaths.has(path)) shownText.value++;
+      else if (pending.value) changedWhileBuilding.add(path);
     });
     onUnmounted(off);
   });
@@ -90,6 +94,7 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
         return;
       }
       pending.value = true;
+      changedWhileBuilding = new Set();
       const next = await buildTaskListing(dependencies, current);
       // A slower earlier build must not overwrite a newer one — the guard leaves the previous
       // rows in place until the build that is actually still current finishes.
@@ -97,6 +102,7 @@ export function useTaskListing(request: () => TaskListingRequest | null): UseTas
       shownPaths = new Set(next.filter((row) => row.item.display.kind === "line").map((row) => row.item.path));
       rows.value = next;
       pending.value = false;
+      if ([...changedWhileBuilding].some((path) => shownPaths.has(path))) shownText.value++;
     },
     { immediate: true },
   );
