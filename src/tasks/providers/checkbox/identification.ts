@@ -57,8 +57,10 @@ function evaluate(
 
 export function identifies(item: StructureListItem, context: IdentificationContext): boolean {
   const { structure, vault, journal } = context;
-  if (isUnreadable(journal) || isUnreadable(vault)) return false;
+  if (isUnreadable(journal)) return false;
+  // A replacement never reads the vault-wide rule, so that one being unreadable takes nothing away.
+  if (journal?.compose === "replace") return evaluate(journal, item, structure);
+  if (isUnreadable(vault)) return false;
   if (!journal || journal.compose === "inherit") return evaluate(vault, item, structure);
-  if (journal.compose === "replace") return evaluate(journal, item, structure);
   return evaluate(vault, item, structure) && evaluate(journal, item, structure);
 }

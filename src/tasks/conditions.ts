@@ -2,7 +2,7 @@
 // any further import here closes a cycle. valibot and the repair markers only.
 import * as v from "valibot";
 
-import { climb, readOrUnreadable, unreadable, type Unreadable } from "@/settings/repair";
+import { climb, readOrUnreadable, unreadableList, type Unreadable } from "@/settings/repair";
 
 // Strict: a fence shows an error for a comparator it does not know, and stored settings keep one
 // as an unreadable condition (below) — reading it as the other comparator would invert it.
@@ -35,7 +35,7 @@ export function storedConditionsSchema<T>(schema: v.GenericSchema<unknown, T>) {
     v.pipe(
       v.unknown(),
       v.transform((items): (T | UnreadableCondition)[] =>
-        Array.isArray(items) ? items.map((item: unknown) => readOrUnreadable(schema, item)) : [unreadable(items)],
+        Array.isArray(items) ? items.map((item: unknown) => readOrUnreadable(schema, item)) : unreadableList(items),
       ),
     ),
     [],

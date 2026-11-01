@@ -115,6 +115,16 @@ export function composeDatedFilter(journalFilter: TaskRule | null, queryFilter: 
   const statusOnly =
     journalFilter === null
       ? null
-      : { mode: journalFilter.mode, conditions: journalFilter.conditions.filter((c) => c.type === "status") };
+      : { mode: journalFilter.mode, conditions: journalFilter.conditions.filter(reachesDated) };
   return composeFilters(statusOnly, queryFilter);
+}
+
+// One it cannot read stays unless it was stored as a line condition: whatever it said about status,
+// reading past it would widen the listing.
+function reachesDated(condition: StoredTaskCondition): boolean {
+  if (condition.type === "status") return true;
+  if (condition.type !== "unreadable") return false;
+  const { raw } = condition;
+  const storedType = typeof raw === "object" && raw !== null && "type" in raw ? raw.type : undefined;
+  return storedType !== "tag" && storedType !== "heading";
 }

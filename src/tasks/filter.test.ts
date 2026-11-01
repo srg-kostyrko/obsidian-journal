@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
+import { unreadable } from "@/settings/repair";
 
 import { composeDatedFilter, composeFilters, matchesFilter } from "./filter";
 import { buildTaskItem } from "./testing";
@@ -224,6 +225,20 @@ describe("composeDatedFilter", () => {
     expect(composeDatedFilter(journal, { mode: "and", conditions: [] }).conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
     ]);
+  });
+
+  // Whatever an unreadable condition said about status, reading past it would widen the listing.
+  it("keeps a condition it cannot read, unless it was stored as a tag or heading one", () => {
+    const status = unreadable({ type: "status", condition: "is-any", statuses: ["done"] });
+    const unknown = unreadable({ type: "priority", above: 2 });
+    const tag = unreadable({ type: "tag", condition: "lack", tags: ["#w"] });
+    const stored: TaskRule = { mode: "and", conditions: [status, unknown, tag] };
+
+    const composed = composeDatedFilter(stored, { mode: "and", conditions: [] });
+
+    expect(composed.conditions).toEqual(expect.arrayContaining([status, unknown]));
+    expect(composed.conditions).not.toContainEqual(tag);
+    expect(matchesFilter(buildTaskItem({ path, status: "todo" }), structure, composed)).toBe(false);
   });
 
   it("keeps every condition the surface names, tag and heading included", () => {

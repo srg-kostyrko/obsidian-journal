@@ -1,5 +1,8 @@
 import * as v from "valibot";
 import { describe, expect, it } from "vitest";
+import { reactive } from "vue";
+
+import { unwrapUnreadable } from "@/settings/repair";
 
 import { taskConditionSchema, taskRuleSchema } from "./conditions";
 
@@ -50,5 +53,13 @@ describe("taskConditionSchema", () => {
     expect(v.parse(taskRuleSchema, { conditions: "tag: #w" }).conditions).toEqual([
       { type: "unreadable", raw: "tag: #w" },
     ]);
+  });
+
+  // Saved through the settings store's reactive proxy, the way every settings write is.
+  it("writes a stored condition list that is not a list back as it was stored", () => {
+    const stored = { mode: "or", conditions: "tag: #w" };
+    const held = reactive(v.parse(taskRuleSchema, stored));
+
+    expect(JSON.parse(JSON.stringify(held, unwrapUnreadable))).toEqual(stored);
   });
 });

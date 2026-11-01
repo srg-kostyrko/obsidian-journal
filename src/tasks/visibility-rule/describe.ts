@@ -44,8 +44,12 @@ export interface VisibilityWording {
 export function describeVisibility(rule: StoredVisibilityRule | undefined, wording: VisibilityWording): string {
   if (isUnreadable(rule)) return m.tasks_rule_summary_unreadable();
   if (rule === undefined || rule.show === "all") return wording.all();
-  if (rule.show === "none" || blockedByUnreadable(rule)) return wording.none();
-  const parts = rule.conditions.flatMap((condition) => describeCondition(condition) ?? []);
+  if (rule.show === "none") return wording.none();
+  const taking = rule.conditions.filter(
+    (condition) => condition.type === "unreadable" || describeCondition(condition) !== undefined,
+  );
+  if (blockedByUnreadable({ mode: rule.mode, conditions: taking })) return m.tasks_rule_summary_unreadable();
+  const parts = taking.flatMap((condition) => describeCondition(condition) ?? []);
   if (parts.length === 0) return wording.all();
   const joined = rule.mode === "or" ? formatDisjunction(parts) : formatConjunction(parts);
   return wording.matching({ conditions: joined });
