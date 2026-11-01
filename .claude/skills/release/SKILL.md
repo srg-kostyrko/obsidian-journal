@@ -46,7 +46,6 @@ twice.
 git switch main && git pull --ff-only
 git status --short
 gh auth status
-npm whoami
 ```
 
 - **A dirty tree stops the release**, with one exception:
@@ -54,11 +53,6 @@ npm whoami
   plugin has been run locally. That file — and only that file — may be
   discarded: `git checkout -- test-vault/.obsidian/community-plugins.json`.
   Anything else dirty: stop and report.
-- **`npm whoami` returning 401 does not block the plugin release.** It blocks §2,
-  and `npm login` is interactive. Say so now, in the first report, so the
-  maintainer can re-authenticate while the build runs. Discovering it after the
-  release notes are public leaves those notes describing an API surface nobody
-  can install.
 
 Then work out where you already are:
 
@@ -227,8 +221,9 @@ as a failed merge.
 git switch -c "release/$VER"
 ```
 
-Then run §2's detection and version rule — the bump, not the publish, which
-waits for a green tag build. If it does not fire, leave
+Then run §2's detection and version rule. This bump is the whole of the decision:
+the tag build publishes whatever version `packages/api/package.json` carries when
+it is not on npm yet. If the rule does not fire, leave
 `packages/api/package.json` alone entirely.
 
 If it does fire, **name the new package version in the changelog bullet that
@@ -386,7 +381,9 @@ gh run watch <id> --exit-status
 ```
 
 `release.yml` re-runs the checks, builds, attests provenance, and opens a
-**draft** release carrying `main.js`, `manifest.json` and `styles.css`.
+**draft** release carrying `main.js`, `manifest.json` and `styles.css`. Its
+`publish-api` job then stages the API package when step 3 bumped it — §2 covers
+what follows, including the maintainer's approval, which comes before step 9.
 
 Nothing about the manual is checked here. It was settled at step 4, and the tag
 this push creates already carries it — which is exactly what `pages.yml` will
@@ -469,8 +466,10 @@ fi
 
 ## §2 API package — conditional
 
-Runs after §1 step 8's tag build is green. It may run before or after step 9
-publishes the draft; §3 runs last, once the release is public.
+Runs after §1 step 8's tag build is green. When the build staged a version, this
+section finishes — the maintainer has approved it and the registry serves it —
+before step 9 publishes the draft, since the notes link to the package. §3 runs
+last, once the release is public.
 
 Resuming straight into this section does **not** mean step 9 finished: its last act is
 dispatching the manual deploy, which leaves no trace on the release itself. Check the
@@ -506,48 +505,55 @@ reads as unchanged. The guard above is what makes that fail loudly instead.
     versioning call the release gets to make. Report it and let the maintainer
     decide whether to fix `apiVersion` or hold the package back.
 
-Publish once the tag build is green. The constraint is simply that an npm
-version number cannot be reused once published, so do not spend one until the
-release build has proven the surface actually ships — that permits publishing
-_before_ the draft release is published, which is worth doing when the notes link
-to the package.
+**The publish is `release.yml`'s `publish-api` job plus the maintainer's approval
+on npmjs.com, not a command run here.** The job runs after the tag build's `build`
+job passes, so a version number — which npm never lets you reuse — is spent only
+once the build has proven the surface ships. It reads the version from
+`packages/api/package.json` at the tag and stages it only when that version is not
+on npm yet: a release that did not bump the package skips the step, and
+re-running a tag build cannot publish twice. `prepublishOnly` still regenerates
+`index.d.ts` from `src/api/public-api.ts` and fails the job if the committed file
+disagrees with its source.
+
+It uses **npm trusted publishing with staging**, the same setup as the
+maintainer's `@qsp/converters`. The job proves itself with GitHub's OIDC token, so
+no npm token exists anywhere and nothing expires, and the package gets a
+provenance attestation. The trusted publisher is **stage-only**: `npm stage
+publish` uploads the version, and it goes live only when the maintainer approves
+it with 2FA on npmjs.com. That approval is the one interactive stop in the whole
+runbook, and it is the maintainer's. The trust is configured on npmjs.com under
+the package's **Settings → Trusted publisher**, for owner `srg-kostyrko`,
+repository `obsidian-journal`, workflow `release.yml`; renaming the workflow file
+breaks it until that setting is changed to match.
+
+Watching the tag build at step 8 therefore watches the staging too. Confirm the
+job's own result rather than the run's summary line:
 
 ```bash
-cd packages/api && npm publish --dry-run --access public
-cd packages/api && npm publish --access public
+gh run view <id> --json jobs --jq '.jobs[] | "\(.name) \(.conclusion)"'
 ```
 
-`prepublishOnly` regenerates `index.d.ts` from `src/api/public-api.ts` and
-refuses to publish if the committed file disagrees with its source.
-
-**The npm OTP prompt is the maintainer's.** This is the one interactive stop in
-the whole runbook.
-
-**`+ package@version` in the publish output is the success signal — the registry
-is not.** npm answers a successful publish with "Your package is being processed
-and may take a few minutes to become available", and for those minutes both
-`npm view` and a cache-bypassed fetch of the registry document keep serving the
-previous version. A single read is therefore not evidence of anything. Poll until
-it flips, and never report a publish as failed on a registry read when the
-publish output said otherwise:
+When it staged a version, **ask the maintainer to approve it on npmjs.com before
+step 9** — the release notes link to the package, so publishing them first points
+readers at a version nobody can install. Then poll until the registry serves it;
+an approved version can take a few minutes to appear, so a single read proves
+nothing either way:
 
 ```bash
 until [ "$(npm view obsidian-journals-api version)" = "<new>" ]; do sleep 30; done
 ```
 
-**A 404 on publish is an auth failure, not a missing package.** npm masks auth
-failures as `404 Not Found` on the publish endpoint so an unauthenticated caller
-cannot probe which private package names exist. Diagnose it:
-
-| Symptom                              | Cause                                                                                                                   |
-| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `npm whoami` → 401                   | Token expired or revoked. `npm_` granular tokens expire — 90 days by default. `npm login` is interactive; hand it over. |
-| `npm whoami` succeeds, publish → 404 | The granular token's package scope does not cover `obsidian-journals-api`, or grants read without write.                |
+**A failed `publish-api` job is red** — see "When something goes red". A `404` or
+`403` is the trust setting, not a missing package: npm masks auth failures as
+`404 Not Found` so a caller cannot probe which package names exist, so check the
+trusted-publisher entry against the owner, repository and workflow file above. A
+failing `git diff --exit-code index.d.ts` is `prepublishOnly` refusing a stale
+committed declaration file. Re-running the job cannot fix that — a re-run checks
+out the same tag — so the version cannot ship from this tag; report it and let the
+maintainer decide.
 
 The changelog bullet already names this version — §1 step 3 wrote it there, while
-the release notes could still be edited. The package carries **no npm provenance
-attestation** — `--provenance` needs CI's OIDC token — and that is deliberate:
-the alternative is an automation token sitting in repository secrets.
+the release notes could still be edited.
 
 ## §3 Post-release
 
