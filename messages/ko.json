@@ -2416,7 +2416,6 @@
   "tasks_settings_edit_rule": "편집",
   "tasks_settings_status_map": "상태 기호",
   "tasks_settings_status_map_desc": "어떤 체크박스 기호가 어떤 상태를 뜻하는지. 두 기호가 같은 상태를 공유하면, 표시된 기호가 작업의 상태가 바뀔 때 노트에 다시 기록됩니다.",
-  "tasks_settings_written_back": "다시 기록됨",
   "tasks_settings_written_back_tooltip": "이 상태에 이 기호를 기록",
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "식별 규칙",

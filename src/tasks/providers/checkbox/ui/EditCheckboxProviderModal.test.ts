@@ -8,15 +8,26 @@ import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
 import { moveDefaultsSlice } from "../../../move/settings";
-import { checkboxSlice } from "../slice";
+import { checkboxSlice, type CheckboxSliceState } from "../slice";
 
 import EditCheckboxProviderModal from "./EditCheckboxProviderModal.vue";
 
-async function mount() {
+async function mount({
+  expand = true,
+  seed = () => undefined,
+}: { expand?: boolean; seed?: (state: CheckboxSliceState) => void } = {}) {
   const harness = await testContainer({ modules: [tasksCoreModule] });
   const slice = harness.resolve(SettingsService).getSlice(checkboxSlice);
+  seed(slice.state);
   const { submit, cancel } = harness.renderModal(EditCheckboxProviderModal);
+  if (expand) await toggleRollover();
   return { harness, slice, submit, cancel };
+}
+
+async function toggleRollover(): Promise<void> {
+  const trigger = screen.getByTestId("checkbox-rollover-section").querySelector<HTMLElement>(".collapsible-trigger");
+  if (!trigger) throw new Error("rollover section has no trigger");
+  await userEvent.click(trigger);
 }
 
 async function save(): Promise<void> {
@@ -30,10 +41,14 @@ async function remap(symbol: string, status: string): Promise<void> {
   await userEvent.selectOptions(select, status);
 }
 
+function statusRows(): HTMLElement[] {
+  return screen.getAllByTestId(/^status-map-row-/);
+}
+
 describe("EditCheckboxProviderModal", () => {
   it("holds the status map and the rule editor in one modal", async () => {
     await mount();
-    expect(screen.getByTestId("status-map-rows")).toBeTruthy();
+    expect(screen.getByTestId("status-map-row-x")).toBeTruthy();
     expect(screen.getByTestId("rule-add-condition")).toBeTruthy();
   });
 
@@ -90,12 +105,9 @@ describe("EditCheckboxProviderModal", () => {
 // through the vault-wide section that this modal replaced. The interactions are unchanged;
 // only the write ends with a Save click, since the editor here binds to the modal's draft.
 describe("status map editor", () => {
-  // Structure, not computed style: @testing-library/vue does not inject an SFC's scoped
-  // <style>, so asserting flex-direction here would pass or fail for the wrong reason.
-  it("wraps every status row in one container rather than dropping them into the row slot", async () => {
+  it("lists one row per mapped symbol", async () => {
     await mount();
-    const rows = screen.getByTestId("status-map-rows");
-    expect(rows.querySelectorAll("[data-testid^='status-map-row-']")).toHaveLength(5);
+    expect(statusRows()).toHaveLength(5);
   });
 
   it("shows a visible stand-in for the space marker", async () => {
@@ -134,18 +146,14 @@ describe("status map editor", () => {
 
   it("does not add a blank or already-mapped symbol", async () => {
     await mount();
-    const before = screen.getByTestId("status-map-rows").querySelectorAll("[data-testid^='status-map-row-']").length;
+    const before = statusRows().length;
 
     await userEvent.click(screen.getByTestId("status-map-add"));
-    expect(screen.getByTestId("status-map-rows").querySelectorAll("[data-testid^='status-map-row-']")).toHaveLength(
-      before,
-    );
+    expect(statusRows()).toHaveLength(before);
 
     await userEvent.type(screen.getByTestId("status-map-new-symbol"), "/");
     await userEvent.click(screen.getByTestId("status-map-add"));
-    expect(screen.getByTestId("status-map-rows").querySelectorAll("[data-testid^='status-map-row-']")).toHaveLength(
-      before,
-    );
+    expect(statusRows()).toHaveLength(before);
   });
 
   it("writes a changed symbol mapping back to the slice on Save", async () => {
@@ -518,6 +526,16 @@ async function typeMarker(text: string): Promise<void> {
 }
 
 describe("rolled marker", () => {
+  it("keeps the rollover section closed at first", async () => {
+    await mount({ expand: false });
+    expect(screen.queryByTestId("checkbox-rolled-marker")).toBeNull();
+  });
+
+  it("opens the rollover section on its own when the marker is invalid", async () => {
+    await mount({ expand: false, seed: (state) => (state.rolledMarker = "#") });
+    expect(screen.getByTestId("checkbox-rolled-marker")).toBeTruthy();
+  });
+
   it("editing the marker shows the consequence line", async () => {
     await mount();
     expect(screen.queryByText(m.tasks_checkbox_marker_changed())).toBeNull();

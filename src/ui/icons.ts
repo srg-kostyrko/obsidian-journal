@@ -87,6 +87,7 @@ export const icons = {
     tasks: "list-checks",
     taskDates: "calendar-days",
     taskStatus: "circle-check",
+    rollover: "redo-2",
   },
 } as const;
 

@@ -2432,7 +2432,6 @@
   "tasks_settings_edit_rule": "Edit",
   "tasks_settings_status_map": "Status symbols",
   "tasks_settings_status_map_desc": "Which checkbox symbol means which status. Where two symbols share a status, the marked one is written back into the note when a task's status changes.",
-  "tasks_settings_written_back": "Written back",
   "tasks_settings_written_back_tooltip": "Write this symbol for this status",
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Identification rule",

@@ -6,7 +6,6 @@ import type { TaskStatus } from "@/tasks";
 import { TASK_STATUSES } from "@/tasks/status";
 import { taskStatusLabel } from "@/tasks/ui/status-label";
 import { icons } from "@/ui/icons";
-import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -83,78 +82,71 @@ function symbolLabel(symbol: string): string {
 </script>
 
 <template>
-  <UiSettingRow :name="m.tasks_settings_status_map()" stacked>
+  <UiSettingRow :name="m.tasks_settings_status_map()">
     <template #description>{{ m.tasks_settings_status_map_desc() }}</template>
-    <div class="tasks-status-map-rows" data-testid="status-map-rows">
-      <div class="tasks-status-map-head">
-        <span></span>
-        <span></span>
-        <span>{{ m.tasks_settings_written_back() }}</span>
-        <span></span>
-      </div>
-      <div
-        v-for="symbol in symbols"
-        :key="symbol"
-        class="tasks-status-map-row"
-        :data-testid="`status-map-row-${symbol}`"
-      >
-        <span class="tasks-status-map-symbol">{{ symbolLabel(symbol) }}</span>
-        <UiDropdown :model-value="statusMap[symbol]" @update:model-value="remapSymbol(symbol, $event)">
-          <option v-for="status in TASK_STATUSES" :key="status" :value="status">{{ taskStatusLabel(status) }}</option>
-        </UiDropdown>
-        <UiIconButton
-          :icon="icons.action.writtenBack"
-          :tooltip="m.tasks_settings_written_back_tooltip()"
-          :data-testid="`written-back-${symbol}`"
-          :data-current="isCurrent(symbol) || null"
-          :class="{ 'tasks-written-back-current': isCurrent(symbol) }"
-          @click="makeCurrent(symbol)"
-        />
-        <UiIconButton
-          :icon="icons.action.delete"
-          :tooltip="m.common_action_delete()"
-          :data-testid="`status-map-remove-${symbol}`"
-          @click="removeSymbol(symbol)"
-        />
-      </div>
-      <div class="tasks-status-map-row">
-        <span></span>
-        <UiTextInput
-          v-model="newSymbol"
-          :aria-label="m.tasks_settings_new_symbol_label()"
-          data-testid="status-map-new-symbol"
-        />
-        <UiButton :disabled="!canAdd" data-testid="status-map-add" @click="addSymbol">
-          {{ m.tasks_settings_add_symbol() }}
-        </UiButton>
-      </div>
-    </div>
+    <UiTextInput
+      v-model="newSymbol"
+      class="tasks-status-map-new-symbol"
+      :aria-label="m.tasks_settings_new_symbol_label()"
+      data-testid="status-map-new-symbol"
+      @keydown.enter="addSymbol"
+    />
+    <UiIconButton
+      :icon="icons.action.add"
+      :tooltip="m.tasks_settings_add_symbol()"
+      :disabled="!canAdd"
+      data-testid="status-map-add"
+      @click="addSymbol"
+    />
+  </UiSettingRow>
+  <UiSettingRow
+    v-for="symbol in symbols"
+    :key="symbol"
+    controls-only
+    class="tasks-status-map-row"
+    :data-testid="`status-map-row-${symbol}`"
+  >
+    <span class="tasks-status-map-symbol">{{ symbolLabel(symbol) }}</span>
+    <UiDropdown
+      class="tasks-status-map-grow"
+      :model-value="statusMap[symbol]"
+      @update:model-value="remapSymbol(symbol, $event)"
+    >
+      <option v-for="status in TASK_STATUSES" :key="status" :value="status">{{ taskStatusLabel(status) }}</option>
+    </UiDropdown>
+    <UiIconButton
+      :icon="icons.action.writtenBack"
+      :tooltip="m.tasks_settings_written_back_tooltip()"
+      :data-testid="`written-back-${symbol}`"
+      :data-current="isCurrent(symbol) || null"
+      :class="{ 'tasks-written-back-current': isCurrent(symbol) }"
+      @click="makeCurrent(symbol)"
+    />
+    <UiIconButton
+      :icon="icons.action.delete"
+      :tooltip="m.common_action_delete()"
+      :data-testid="`status-map-remove-${symbol}`"
+      @click="removeSymbol(symbol)"
+    />
   </UiSettingRow>
 </template>
 
 <style scoped>
-/* UiSettingRow's stacked control is one no-wrap line by contract — a control needing several
-   lines lays them out itself, which is what this wrapper does. */
-.tasks-status-map-rows {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-2-2);
+.tasks-status-map-new-symbol {
+  width: var(--size-4-12);
+  text-align: center;
 }
-.tasks-status-map-row,
-.tasks-status-map-head {
-  display: grid;
-  grid-template-columns: var(--size-4-8) 10em auto auto;
-  align-items: center;
-  gap: var(--size-2-2);
-}
-.tasks-status-map-head {
-  font-size: var(--font-ui-smaller);
-  color: var(--text-faint);
-  text-transform: uppercase;
+.tasks-status-map-row :deep(.setting-item-control) {
+  flex: 1;
 }
 .tasks-status-map-symbol {
+  width: var(--size-4-8);
   font-family: var(--font-monospace);
   text-align: center;
+}
+.tasks-status-map-grow {
+  flex-grow: 1;
+  max-width: none;
 }
 .tasks-written-back-current {
   color: var(--color-accent);

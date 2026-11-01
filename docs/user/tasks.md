@@ -42,8 +42,8 @@ release: every marker used to count as done except a plain space, so a note whos
 `- [/] …` read as "all tasks completed". Now `/` reads as In progress, which is open, and the same goes
 for any other unmapped marker, such as a theme's `[>]`.
 
-Type a marker and click **Add symbol** to map it; the new row starts at To-do, and its dropdown offers
-all seven statuses. A marker is the single character between the brackets, so **Add symbol** stays
+Type a marker into the field on the **Status symbols** row and press its **+** button (**Add symbol**) to map it; the new row starts at To-do, and its dropdown offers
+all seven statuses. A marker is the single character between the brackets, so **+** stays
 disabled until exactly one is typed — one emoji counts as one character. The delete icon on a row removes that mapping — a marker no longer listed falls
 back to To-do, same as one you never added.
 
@@ -73,7 +73,7 @@ Two condition types, each addable more than once:
   nearest one. Write the heading's text, not its `#` markers — those are dropped if you include
   them, so `## Work` and `Work` both mean the same heading.
 
-**Add condition** adds a row; the delete icon next to a row removes it. A new row starts with no
+The **+** button (**Add condition**) on the rule's row adds a condition row; the delete icon next to a row removes it. A new row starts with no
 value, and **Save** stays disabled until every row has at least one — leave one empty and, once
 you have clicked into its field and left it, the row explains why.
 
@@ -631,7 +631,7 @@ it.
 ### Roll-over settings
 
 The **Rolled marker** and the defaults for every journal live in **Checkbox tasks**' settings modal, on
-the main settings page, under **Roll over**:
+the main settings page, in its collapsed **Roll over** section:
 
 - **Rolled marker** — the tag written on a copied line. It must be something Obsidian reads as a tag:
   letters, numbers, `_`, `-` and `/`, not only numbers. Changing it does not touch notes already

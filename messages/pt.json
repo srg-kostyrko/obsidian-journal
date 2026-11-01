@@ -2427,7 +2427,6 @@
   "tasks_settings_edit_rule": "Editar",
   "tasks_settings_status_map": "Símbolos de estado",
   "tasks_settings_status_map_desc": "Qual símbolo de caixa de seleção significa qual estado. Quando dois símbolos compartilham um estado, o marcado é o que é gravado de volta na nota quando o estado de uma tarefa muda.",
-  "tasks_settings_written_back": "Gravado de volta",
   "tasks_settings_written_back_tooltip": "Gravar este símbolo para este estado",
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Regra de identificação",

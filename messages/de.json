@@ -2432,7 +2432,6 @@
   "tasks_settings_edit_rule": "Bearbeiten",
   "tasks_settings_status_map": "Statussymbole",
   "tasks_settings_status_map_desc": "Welches Kontrollkästchen-Symbol welchen Status bedeutet. Teilen sich zwei Symbole einen Status, wird das markierte Symbol in die Notiz zurückgeschrieben, sobald sich der Status einer Aufgabe ändert.",
-  "tasks_settings_written_back": "Zurückgeschrieben",
   "tasks_settings_written_back_tooltip": "Dieses Symbol für diesen Status schreiben",
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Erkennungsregel",

@@ -2430,7 +2430,6 @@
   "tasks_settings_edit_rule": "Modifier",
   "tasks_settings_status_map": "Symboles d’état",
   "tasks_settings_status_map_desc": "Quel symbole de case à cocher correspond à quel état. Lorsque deux symboles partagent le même état, celui qui est marqué est réécrit dans la note quand l’état d’une tâche change.",
-  "tasks_settings_written_back": "Réécrit",
   "tasks_settings_written_back_tooltip": "Réécrire ce symbole pour cet état",
   "tasks_settings_space_symbol": "␣",
   "tasks_settings_rule": "Règle d’identification",
