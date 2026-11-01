@@ -4,8 +4,6 @@ import { m } from "../../src/i18n/paraglide/messages.js";
 import { pinClock } from "../support/clock.js";
 import { runCommand } from "../support/commands.js";
 import { noticeTexts } from "../support/notices.js";
-import { readRawSettings, writeRawSettings } from "../support/plugin-data.js";
-import { triggerExternalSettingsChange } from "../support/plugin.js";
 import { contentOf, openNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -13,6 +11,7 @@ import { waitForState } from "../support/wait.js";
 // longer holds the tasks while its file still does, so a notice saying they "are still there"
 // would send the user to delete the copies that are about to be the only ones left.
 const FIXTURE = "./e2e-tests/fixtures/e2e-rollover-unsaved";
+const AUTOMATIC_FIXTURE = "./e2e-tests/fixtures/e2e-rollover-unsaved-automatic";
 const SOURCE_DATE = "2026-09-25";
 const SOURCE = `daily/${SOURCE_DATE}.md`;
 const TODAY = "2026-09-26";
@@ -36,15 +35,6 @@ function editorText(path: string): Promise<string | undefined> {
       .find((candidate) => candidate.view instanceof obsidian.MarkdownView && candidate.view.file?.path === notePath);
     return leaf?.view instanceof obsidian.MarkdownView ? leaf.view.editor.getValue() : undefined;
   }, path);
-}
-
-async function rollAutomatically(): Promise<void> {
-  const stored = JSON.parse((await readRawSettings()) ?? "{}") as {
-    journals: { daily: { tasks: { move: Record<string, unknown> } } };
-  };
-  stored.journals.daily.tasks.move.automatic = true;
-  await writeRawSettings(JSON.stringify(stored));
-  await triggerExternalSettingsChange();
 }
 
 describe("rolling under move into a note whose open editor cannot save", () => {
@@ -78,10 +68,12 @@ describe("rolling under move into a note whose open editor cannot save", () => {
 });
 
 // The pause an automatic journal takes after such a roll must not repeat the advice for a note that
-// could not be written, where deleting the copies is safe: here they are the only ones left.
+// could not be written, where deleting the copies is safe: here they are the only ones left. The
+// journal rolls automatically from boot, whose first look waits out a 30-second delay, so the roll
+// run by hand lands well before it.
 describe("pausing an automatic journal after its open earlier note could not save", () => {
   before(async () => {
-    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    await browser.reloadObsidian({ vault: AUTOMATIC_FIXTURE, plugins: ["journals"] });
     await pinClock(`${TODAY}T12:00:00`);
   });
 
@@ -89,7 +81,6 @@ describe("pausing an automatic journal after its open earlier note could not sav
     await openNote(SOURCE);
     await waitForActiveNote(SOURCE);
     expect(await failSavesOf(SOURCE)).toBe(true);
-    await rollAutomatically();
 
     await runCommand("journals:roll-over");
 
