@@ -5,7 +5,7 @@ import { describeCheckboxRule, describeJournalRule } from "./describe-rule";
 describe("describeCheckboxRule", () => {
   it("says every checkbox item is a task when there are no conditions", () => {
     expect(describeCheckboxRule({ mode: "and", conditions: [] })).toBe(
-      "No conditions — every checkbox item in a journal's notes is a task.",
+      "No conditions — every checkbox item is a task.",
     );
   });
 
@@ -85,7 +85,7 @@ describe("describeCheckboxRule", () => {
       mode: "and",
       conditions: [{ type: "status", condition: "is", statuses: ["done"] }],
     });
-    expect(text).toBe("No conditions — every checkbox item in a journal's notes is a task.");
+    expect(text).toBe("No conditions — every checkbox item is a task.");
   });
 });
 
