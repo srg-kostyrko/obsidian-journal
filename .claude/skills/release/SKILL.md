@@ -267,8 +267,9 @@ this branch, before step 5**:
 - **A wrong changelog bullet or shipped string** comes back as a maintainer
   question. A bullet the code contradicts is a defect, not a voice to preserve —
   correct the minimum, keeping the author's wording everywhere it is still true.
-  A wrong `messages/*.json` string is an ordinary code fix; edit the file
-  **line-wise**, never through a parse.
+  A wrong `messages/*.json` string is an ordinary code fix; edit that key in all
+  eleven locale files together, **line-wise**, never through a parse — an English-only
+  correction leaves ten locales stating the false claim.
 - **An uncovered feature** — something the release ships with no manual section
   explaining it — comes back the same way: write it now with `/docs-authoring`
   and commit it here, or record the maintainer's reason for ruling it out.
