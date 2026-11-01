@@ -2685,6 +2685,16 @@
   "tasks_roll_no_current_period": "Heute liegt außerhalb der Zeitleiste dieses Journals.",
   "tasks_roll_failed": "Aufgaben konnten nicht übertragen werden.",
   "tasks_roll_missing_heading": "Keine Überschrift {heading} in der Notiz vom {date}. Prüfe den Anzeigefilter des Journals.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} Aufgabe war bereits in der heutigen Notiz und wurde nicht erneut kopiert.",
+        "count=*": "{count} Aufgaben waren bereits in der heutigen Notiz und wurden nicht erneut kopiert."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],

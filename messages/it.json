@@ -2683,6 +2683,16 @@
   "tasks_roll_no_current_period": "Oggi è fuori dalla cronologia di questo diario.",
   "tasks_roll_failed": "Non è stato possibile riportare le attività.",
   "tasks_roll_missing_heading": "Nessuna intestazione {heading} nella nota del {date}. Controlla il filtro dell'elenco del diario.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} attività era già nella nota di oggi, quindi non è stata copiata di nuovo.",
+        "count=*": "{count} attività erano già nella nota di oggi, quindi non sono state copiate di nuovo."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],

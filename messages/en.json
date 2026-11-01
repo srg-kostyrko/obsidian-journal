@@ -2685,6 +2685,16 @@
   "tasks_roll_no_current_period": "Today is outside this journal's timeline.",
   "tasks_roll_failed": "Tasks could not be rolled forward.",
   "tasks_roll_missing_heading": "No {heading} heading in {date}. Check the journal's listing filter.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} task was already in today's note, so it was not copied again.",
+        "count=*": "{count} tasks were already in today's note, so they were not copied again."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],

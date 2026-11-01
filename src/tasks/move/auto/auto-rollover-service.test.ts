@@ -665,7 +665,8 @@ describe("AutoRolloverService", () => {
     await resume();
 
     expect(await text(target)).toBe("- [ ] Call Bob\n- [ ] Later item\n");
-    expect(await text(workTarget)).toBe("- [ ] Work item\n- [ ] Work item\n");
+    // The roll by hand found the work item already there, so only the pause keeps Later work out.
+    expect(await text(workTarget)).toBe("- [ ] Work item\n");
     expect(calls("daily")).toBe(2);
     expect(calls("work")).toBe(1);
   });

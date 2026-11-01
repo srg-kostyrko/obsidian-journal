@@ -38,8 +38,8 @@ import { AutomaticRollRefusedError, NoCurrentPeriodError, type RollError } from 
 import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
 import { rewriteNote, type NoteWriters } from "./note-write";
-import { placeGroups } from "./placement";
-import { planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
+import { holdsAll, placeGroups } from "./placement";
+import { blockOf, emittedLines, planSource, type PlannedRoot, type RollSource, type SourcePlan } from "./plan";
 import { automaticBlocked, effectiveMove, moveDefaultsSlice, type EffectiveMove } from "./settings";
 import { rewriteSource, sourceRewrite, type SourceRewrite } from "./source-write";
 
@@ -123,6 +123,7 @@ function noTargetReport(journalName: string, mode: RollReport["mode"], heading: 
     skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
+    alreadyHeld: 0,
     skippedSources: [],
     unreadSources: [],
   };
@@ -342,18 +343,31 @@ export class RolloverService {
 
       const changedSources: ChangedSource[] = [];
       const failedSources: ChangedSource[] = [];
+      let alreadyHeld = 0;
       if (contributing.length > 0) {
         // The reads await, and the note can be deleted meanwhile.
         if (!createTarget && this.#index.get(journalName, today).isNone()) {
           return noTargetReport(journalName, move.mode, heading);
         }
         const target = yield* this.#targetPath(journalName, today, options.interactive);
-        const groups = contributing.flatMap(({ plan }) => plan.block);
         // The target goes first, and reaches disk first: a failure before the sources are written leaves
-        // a duplicate, never a gap.
-        yield* rewriteNote(this.#writers, target, (content) => placeGroups(content, groups, move.targetHeading), {
-          flush: true,
-        });
+        // a duplicate, never a gap. A root the target already holds line for line — copied by a roll
+        // whose source mark was lost, or by another device — is not copied again, judged against the
+        // target as it stands under the write.
+        yield* rewriteNote(
+          this.#writers,
+          target,
+          (content) => {
+            alreadyHeld = 0;
+            const groups = contributing.flatMap(({ plan }) => {
+              const fresh = plan.roots.filter((root) => !holdsAll(content, emittedLines(root, move.mode)));
+              alreadyHeld += plan.roots.length - fresh.length;
+              return blockOf(plan.lines, fresh, move.mode);
+            });
+            return placeGroups(content, groups, move.targetHeading);
+          },
+          { flush: true },
+        );
         const rewrite = sourceRewrite(move, marker);
         if (rewrite !== null) {
           // A failed source is reported, not raised: its items already sit in the target.
@@ -395,6 +409,7 @@ export class RolloverService {
         skippedBlockIdsAt,
         changedSources,
         failedSources,
+        alreadyHeld,
         skippedSources: read.filter((anchor) => indexing.has(anchor)),
         unreadSources: read.filter((anchor) => unread.has(anchor)),
       };

@@ -40,6 +40,8 @@ export interface RollReport {
   readonly changedSources: readonly ChangedSource[];
   // The source write failed; their items reached the target and are not marked as rolled.
   readonly failedSources: readonly ChangedSource[];
+  // Roots the target already held line for line, so they were marked or removed but not copied again.
+  readonly alreadyHeld: number;
   // Anchors with a note whose metadata had not caught up with its text, so it was not read.
   readonly skippedSources: readonly AnchorString[];
   // Anchors with a note that failed to read, so it was not planned.
@@ -54,6 +56,7 @@ export type RollSentenceKind =
   | "rolled"
   | "nothing"
   | "no-previous"
+  | "already-held"
   | "missing-heading"
   | "note-items-skipped"
   | "block-ids-skipped"
@@ -117,6 +120,15 @@ export function rollSentences(report: RollReport): readonly RollSentence[] {
     ...(heading === null
       ? []
       : perAnchor("missing-heading", report.missingHeading, (date) => m.tasks_roll_missing_heading({ heading, date }))),
+    ...(report.alreadyHeld > 0
+      ? [
+          {
+            kind: "already-held" as const,
+            text: m.tasks_roll_already_held({ count: report.alreadyHeld }),
+            anchor: null,
+          },
+        ]
+      : []),
     ...counted("note-items-skipped", report.skippedNoteItems),
     ...counted("block-ids-skipped", report.skippedBlockIds),
     ...perAnchor("source-changed", uniqueAnchors(report.changedSources), (date) =>

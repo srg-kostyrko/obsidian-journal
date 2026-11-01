@@ -26,6 +26,7 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
+    alreadyHeld: 0,
     skippedSources: [],
     unreadSources: [],
     ...overrides,

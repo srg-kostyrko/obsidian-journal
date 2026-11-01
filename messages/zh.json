@@ -2666,6 +2666,16 @@
   "tasks_roll_no_current_period": "今天不在此日记的时间线范围内。",
   "tasks_roll_failed": "无法结转任务。",
   "tasks_roll_missing_heading": "{date} 的笔记中没有 {heading} 标题。请检查该日记的列表筛选条件。",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} 项任务已在今天的笔记中，因此未再次复制。",
+        "count=*": "{count} 项任务已在今天的笔记中，因此未再次复制。"
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],

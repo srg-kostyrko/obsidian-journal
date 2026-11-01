@@ -83,3 +83,11 @@ export function placeGroups(target: string, groups: readonly BlockGroup[], targe
   }
   return segments.map((seg) => seg.text + seg.term).join("");
 }
+
+const comparable = (line: string): string => line.replace(/\r$/, "").trimEnd();
+
+/** Whether `target` already holds every one of `lines`, compared line for line as written. */
+export function holdsAll(target: string, lines: readonly string[]): boolean {
+  const held = new Set(target.split("\n").map(comparable));
+  return lines.every((line) => held.has(comparable(line)));
+}

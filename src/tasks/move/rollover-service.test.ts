@@ -172,6 +172,7 @@ function reportOf(overrides: Partial<RollReport>): RollReport {
     skippedBlockIdsAt: [],
     changedSources: [],
     failedSources: [],
+    alreadyHeld: 0,
     skippedSources: [],
     unreadSources: [],
     ...overrides,
@@ -631,6 +632,60 @@ describe("RolloverService", () => {
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     expect(await text(source)).toBe("- [ ] Call Bob\n- [x] Done thing\n");
     expect(notes.find(source).map((note) => note.mtime)).toEqual(before);
+  });
+
+  // A restart clears an automatic journal's pause, and two devices can each roll before either
+  // syncs: either way the earlier note can offer what today's note already holds, line for line.
+  describe("a task today's note already holds", () => {
+    for (const mode of ["copy", "move"] as const) {
+      it(`is not copied again under ${mode}, while its original is still handled`, async () => {
+        const { roll, put, text } = await rolloverFor({ daily: dayJournal("daily", { mode }) });
+        const source = put("daily", "2026-10-20", "- [ ] Call Bob\n\t- [ ] Find his number\n- [ ] Write report\n");
+        const target = put("daily", TODAY, "- [ ] Call Bob\n\t- [ ] Find his number\n");
+
+        const report = await roll();
+
+        expect(await text(target)).toBe("- [ ] Call Bob\n\t- [ ] Find his number\n- [ ] Write report\n");
+        expect(await text(source)).toBe(
+          mode === "copy" ? "- [ ] Call Bob #rolled\n\t- [ ] Find his number\n- [ ] Write report #rolled\n" : "",
+        );
+        expect(report.rolled).toBe(2);
+        expect(report.alreadyHeld).toBe(1);
+        expect(rollNotice(report)).toContain(m.tasks_roll_already_held({ count: 1 }));
+      });
+    }
+
+    it("is copied again when it has gained a line today's note does not hold", async () => {
+      const { roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+      put("daily", "2026-10-20", "- [ ] Call Bob\n\t- [ ] Find his number\n");
+      const target = put("daily", TODAY, "- [ ] Call Bob\n");
+
+      const report = await roll();
+
+      expect(await text(target)).toBe("- [ ] Call Bob\n- [ ] Call Bob\n\t- [ ] Find his number\n");
+      expect(report.alreadyHeld).toBe(0);
+      expect(rollNotice(report)).not.toContain(m.tasks_roll_already_held({ count: 1 }));
+    });
+
+    it("lands once when the same roll runs twice and the first could not mark its source", async () => {
+      const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily") });
+      const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+      const target = put("daily", TODAY, "");
+      const process = notes.process.bind(notes);
+      const failing = vi
+        .spyOn(notes, "process")
+        .mockImplementation((path, transform) =>
+          path === source ? AsyncResult.err(new NoteWriteError(path, "disk full")) : process(path, transform),
+        );
+
+      await roll();
+      failing.mockRestore();
+      const second = await roll();
+
+      expect(await text(target)).toBe("- [ ] Call Bob\n");
+      expect(await text(source)).toBe("- [ ] Call Bob #rolled\n");
+      expect(second.alreadyHeld).toBe(1);
+    });
   });
 
   it("writes the target before any source", async () => {
