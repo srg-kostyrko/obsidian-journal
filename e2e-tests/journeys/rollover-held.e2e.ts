@@ -8,7 +8,8 @@ import { contentOf, openNote, waitForActiveNote, waitForContent } from "../suppo
 import { waitForState } from "../support/wait.js";
 
 // Today's note already holds the earlier note's task, the way it does after a roll whose mark was
-// lost and a restart cleared the pause. Ships in the fixture so both notes are indexed at boot.
+// lost and a restart cleared the pause, and holds a second one only inside a code fence, as an
+// example. Ships in the fixture so both notes are indexed at boot.
 const FIXTURE = "./e2e-tests/fixtures/e2e-rollover-held";
 const SOURCE_DATE = "2026-09-25";
 const SOURCE = `daily/${SOURCE_DATE}.md`;
@@ -21,7 +22,7 @@ describe("rolling a task today's note already holds", () => {
     await pinClock(`${TODAY}T12:00:00`);
   });
 
-  it("marks the original without copying it a second time", async () => {
+  it("marks the original without copying it a second time, and copies the one held only as an example", async () => {
     await openNote(SOURCE);
     await waitForActiveNote(SOURCE);
 
@@ -36,5 +37,6 @@ describe("rolling a task today's note already holds", () => {
     );
     const target = await contentOf(TARGET);
     expect(target?.split("\n").filter((line) => line === "- [ ] milk")).toHaveLength(1);
+    expect(target?.split("\n").filter((line) => line === "- [ ] eggs")).toHaveLength(2);
   });
 });

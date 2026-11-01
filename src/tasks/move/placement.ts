@@ -86,8 +86,12 @@ export function placeGroups(target: string, groups: readonly BlockGroup[], targe
 
 const comparable = (line: string): string => line.replace(/\r$/, "").trimEnd();
 
-/** Whether `target` already holds every one of `lines`, compared line for line as written. */
+/** Whether `target` already holds `lines` as written, in one run of lines that are not example text. */
 export function holdsAll(target: string, lines: readonly string[]): boolean {
-  const held = new Set(target.split("\n").map(comparable));
-  return lines.every((line) => held.has(comparable(line)));
+  const targetLines = target.split("\n");
+  const hidden = hiddenLines(targetLines);
+  // A hidden line is never equal to a wanted one, so a run cannot pass through a fence or comment.
+  const visible = targetLines.map((line, index) => (hidden.has(index) ? null : comparable(line)));
+  const wanted = lines.map(comparable);
+  return visible.some((_, start) => wanted.every((line, offset) => visible[start + offset] === line));
 }

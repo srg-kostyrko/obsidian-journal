@@ -667,6 +667,30 @@ describe("RolloverService", () => {
       expect(rollNotice(report)).not.toContain(m.tasks_roll_already_held({ count: 1 }));
     });
 
+    it("is copied again when today's note holds its lines only apart", async () => {
+      const { roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+      put("daily", "2026-10-20", "- [ ] Call Bob\n\t- [ ] Find his number\n");
+      const target = put("daily", TODAY, "- [ ] Call Bob\n- [ ] Call Alice\n\t- [ ] Find his number\n");
+
+      const report = await roll();
+
+      expect(await text(target)).toBe(
+        "- [ ] Call Bob\n- [ ] Call Alice\n\t- [ ] Find his number\n- [ ] Call Bob\n\t- [ ] Find his number\n",
+      );
+      expect(report.alreadyHeld).toBe(0);
+    });
+
+    it("is copied again when today's note holds it only as an example", async () => {
+      const { roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+      put("daily", "2026-10-20", "- [ ] Call Bob\n");
+      const target = put("daily", TODAY, "```md\n- [ ] Call Bob\n```\n<!--\n- [ ] Call Bob\n-->\n");
+
+      const report = await roll();
+
+      expect(await text(target)).toBe("```md\n- [ ] Call Bob\n```\n<!--\n- [ ] Call Bob\n-->\n- [ ] Call Bob\n");
+      expect(report.alreadyHeld).toBe(0);
+    });
+
     it("lands once when the same roll runs twice and the first could not mark its source", async () => {
       const { roll, put, text, notes } = await rolloverFor({ daily: dayJournal("daily") });
       const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
