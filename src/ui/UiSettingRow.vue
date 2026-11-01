@@ -31,6 +31,11 @@ defineProps<{
 </template>
 
 <style scoped>
+/* From 1.13 Obsidian insets headings to line up with the padded rows of a settings group, but
+   strips that padding from a modal's plain rows, which leaves a modal's heading indented. */
+.modal:not(.mod-settings) .setting-item-heading:where(:not(.setting-group *)) {
+  padding-inline: 0;
+}
 .setting-item--stacked {
   flex-direction: column;
   align-items: stretch;
