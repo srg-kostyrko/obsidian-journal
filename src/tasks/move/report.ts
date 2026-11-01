@@ -40,6 +40,8 @@ export interface RollReport {
   readonly changedSources: readonly ChangedSource[];
   // The source write failed; their items reached the target and are not marked as rolled.
   readonly failedSources: readonly ChangedSource[];
+  // The open view holds the mark or removal but could not be saved, so disk still has the note as it was.
+  readonly unsavedSources: readonly ChangedSource[];
   // Anchors with a note whose metadata had not caught up with its text, so it was not read.
   readonly skippedSources: readonly AnchorString[];
   // Anchors with a note that failed to read, so it was not planned.
@@ -59,6 +61,7 @@ export type RollSentenceKind =
   | "block-ids-skipped"
   | "source-changed"
   | "source-write-failed"
+  | "source-unsaved"
   | "source-indexing"
   | "source-unread";
 
@@ -124,6 +127,9 @@ export function rollSentences(report: RollReport): readonly RollSentence[] {
     ),
     ...perAnchor("source-write-failed", uniqueAnchors(report.failedSources), (date) =>
       m.tasks_roll_source_write_failed({ date, mode }),
+    ),
+    ...perAnchor("source-unsaved", uniqueAnchors(report.unsavedSources), (date) =>
+      m.tasks_roll_source_unsaved({ date, mode }),
     ),
     ...perAnchor("source-indexing", report.skippedSources, (date) => m.tasks_roll_source_indexing({ date })),
     ...perAnchor("source-unread", report.unreadSources, (date) => m.tasks_roll_source_unread({ date })),

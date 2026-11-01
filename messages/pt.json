@@ -2722,6 +2722,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "A nota de {date} foi marcada como transferida no editor aberto, mas não pôde ser salva. As tarefas foram copiadas e podem ser transferidas novamente até que ela seja salva.",
+        "mode=move": "As tarefas da nota de {date} foram removidas no editor aberto, mas ela ainda não pôde ser salva. As tarefas foram copiadas e ficam nas duas notas no disco até que ela seja salva."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Tente novamente em instantes.",
   "tasks_roll_source_unread": "Não foi possível ler a nota de {date}.",
   "tasks_auto_roll_paused": "A transferência automática está pausada para {journal}. Ative Marcar como transferida ou use Mover.",
@@ -2732,6 +2742,16 @@
       "match": {
         "count=1": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar a nota de {dates}. Marque ou remova os originais na nota de {dates}, ou apague as cópias, antes de executar Transferir tarefas não concluídas.",
         "count=*": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas não foi possível atualizar as notas de {dates}. Marque ou remova os originais nas notas de {dates}, ou apague as cópias, antes de executar Transferir tarefas não concluídas."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas a nota de {dates} está aberta em um editor que não conseguiu salvá-la. Salve a nota de {dates} e mantenha as cópias antes de executar Transferir tarefas não concluídas.",
+        "count=*": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas as notas de {dates} estão abertas em editores que não conseguiram salvá-las. Salve as notas de {dates} e mantenha as cópias antes de executar Transferir tarefas não concluídas."
       }
     }
   ],

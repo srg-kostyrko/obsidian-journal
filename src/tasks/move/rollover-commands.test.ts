@@ -40,6 +40,7 @@ const REPORT: RollReport = {
   skippedBlockIdsAt: [],
   changedSources: [],
   failedSources: [],
+  unsavedSources: [],
   skippedSources: [],
   unreadSources: [],
 };

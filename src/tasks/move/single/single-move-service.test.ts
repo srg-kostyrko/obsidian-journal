@@ -24,7 +24,7 @@ import { overrideWith, testContainer } from "@/testing";
 
 import { taskRuleSchema } from "../../conditions";
 import { tasksCoreModule } from "../../module";
-import { SingleMoveRefusedError } from "../errors";
+import { SingleMoveRefusedError, UnsavedEditError } from "../errors";
 import { RolloverService } from "../rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "../settings";
 import { confirmBlockLinkModal } from "../ui/modals";
@@ -444,7 +444,8 @@ describe("SingleMoveService", () => {
       const result = await move(state, target("monthly", "2026-10-01", month));
 
       expectErr(result);
-      expect(result.error).toBeInstanceOf(NoteWriteError);
+      expect(result.error).toBeInstanceOf(UnsavedEditError);
+      expect((result.error as UnsavedEditError).cause).toBeInstanceOf(NoteWriteError);
       expect(editor.changes).toEqual([]);
     });
   });

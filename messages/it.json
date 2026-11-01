@@ -2725,6 +2725,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La nota del {date} è stata contrassegnata come riportata nel suo editor aperto, ma non è stato possibile salvarla. Le sue attività sono state copiate e potrebbero essere riportate di nuovo finché non viene salvata.",
+        "mode=move": "Le attività della nota del {date} sono state rimosse nel suo editor aperto, ma non è stato ancora possibile salvarla. Le attività sono state copiate e restano in entrambe le note sul disco finché non viene salvata."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
   "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
   "tasks_auto_roll_paused": "Il riporto automatico è in pausa per {journal}. Attiva Contrassegna come riportata oppure usa Sposta.",
@@ -2735,6 +2745,16 @@
       "match": {
         "count=1": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare la nota del {dates}. Contrassegna o rimuovi gli originali nella nota del {dates}, oppure elimina le copie, prima di eseguire Riporta le attività non completate.",
         "count=*": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma non è stato possibile aggiornare le note del {dates}. Contrassegna o rimuovi gli originali nelle note del {dates}, oppure elimina le copie, prima di eseguire Riporta le attività non completate."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma la nota del {dates} è aperta in un editor che non è riuscito a salvarla. Salva la nota del {dates} e mantieni le copie prima di eseguire Riporta le attività non completate.",
+        "count=*": "Il riporto automatico è in pausa per {journal}: le attività sono già nella nota corrente, ma le note del {dates} sono aperte in editor che non sono riusciti a salvarle. Salva le note del {dates} e mantieni le copie prima di eseguire Riporta le attività non completate."
       }
     }
   ],

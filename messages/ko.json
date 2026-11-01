@@ -2711,6 +2711,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} 노트를 열린 편집기에서 이월됨으로 표시했지만 저장하지 못했습니다. 작업은 복사되었으며 저장될 때까지 다시 이월될 수 있습니다.",
+        "mode=move": "{date} 노트의 작업을 열린 편집기에서 제거했지만 아직 저장하지 못했습니다. 작업은 복사되었으며 저장될 때까지 디스크의 두 노트에 모두 남아 있습니다."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date} 노트를 아직 색인하는 중입니다. 잠시 후 다시 시도하세요.",
   "tasks_roll_source_unread": "{date} 노트를 읽을 수 없습니다.",
   "tasks_auto_roll_paused": "{journal}의 자동 이월이 일시 중지되었습니다. ‘이월됨으로 표시’를 켜거나 이동을 사용하세요.",
@@ -2721,6 +2731,16 @@
       "match": {
         "count=1": "{journal}의 자동 이월이 일시 중지되었습니다: 작업은 이미 현재 노트에 있지만 {dates} 노트를 업데이트할 수 없습니다. {dates} 노트의 원본을 표시하거나 제거하거나 사본을 삭제한 뒤 ‘완료되지 않은 작업 이월’을 실행하세요.",
         "count=*": "{journal}의 자동 이월이 일시 중지되었습니다: 작업은 이미 현재 노트에 있지만 {dates} 노트를 업데이트할 수 없습니다. {dates} 노트의 원본을 표시하거나 제거하거나 사본을 삭제한 뒤 ‘완료되지 않은 작업 이월’을 실행하세요."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal}의 자동 이월이 일시 중지되었습니다: 작업은 이미 현재 노트에 있지만 {dates} 노트를 열린 편집기에서 저장할 수 없습니다. {dates} 노트를 저장하고 사본은 그대로 둔 뒤 ‘완료되지 않은 작업 이월’을 실행하세요.",
+        "count=*": "{journal}의 자동 이월이 일시 중지되었습니다: 작업은 이미 현재 노트에 있지만 {dates} 노트를 열린 편집기에서 저장할 수 없습니다. {dates} 노트를 저장하고 사본은 그대로 둔 뒤 ‘완료되지 않은 작업 이월’을 실행하세요."
       }
     }
   ],
