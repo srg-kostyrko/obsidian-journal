@@ -888,7 +888,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "Narrow further",
-  "decoration_condition_tasks_narrow_description": "Only count tasks matching these, on top of the journal's task filter.",
+  "decoration_condition_tasks_narrow_description": "Only count tasks matching these, in place of the journal's own conditions of the same type.",
   "decoration_condition_tasks_narrow_add": "Add narrowing condition",
   "decoration_condition_tasks_date_label": "Task date",
   "decoration_condition_tasks_describe": [
@@ -1532,7 +1532,7 @@
   "tasks_date_choice_done": "Done date",
   "tasks_date_choice_created": "Created date",
   "view_block_tasks_date_label": "Task date",
-  "view_block_tasks_date_description": "Which of a task note's dates places it in a period.",
+  "view_block_tasks_date_description": "Which of a task's dates places a task note or dated checkbox line in a period.",
   "view_block_tasks_filter_label": "Filter",
   "view_block_tasks_filter_status_default": "No Status condition of its own, so a journal's own listing filter decides where it names one.",
 
@@ -2493,7 +2493,7 @@
   "tasks_status_group_done": "Done",
   "tasks_status_group_all": "All",
   "tasks_filter_summary_conditions": "Shows a task that is {conditions}.",
-  "tasks_rule_summary_any": "No conditions — every checkbox item in a journal's notes is a task.",
+  "tasks_rule_summary_any": "No conditions — every checkbox item is a task.",
   "tasks_rule_summary_unreadable": "Part of this rule can't be read, so nothing matches.",
   "tasks_rule_summary_conditions": "Counts a checkbox item that is {conditions}.",
   "tasks_journal_summary_inherit": "Inherits the vault-wide rule.",
@@ -2608,7 +2608,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Places them under {heading} when the heading they came from is missing.",
+  "tasks_move_summary_heading": "Places them under {heading} unless they came from a heading the listing filter names and today's note has it.",
   "tasks_move_summary_automatic": "Rolls over automatically.",
   "tasks_move_summary_line": [
     {
@@ -2645,7 +2645,7 @@
     }
   ],
   "tasks_move_stamp": "Mark as rolled",
-  "tasks_move_stamp_desc": "Adds the rolled marker to each original line a copy leaves behind, so it no longer reads as unfinished.",
+  "tasks_move_stamp_desc": "Adds the rolled marker to the top line of each group a copy leaves behind, so it and the lines under it no longer read as unfinished.",
   "tasks_move_stamp_on": "On",
   "tasks_move_stamp_off": "Off",
   "tasks_move_stamp_default": [
@@ -2660,7 +2660,7 @@
   ],
   "tasks_move_source_desc": "Which of the earlier period's notes to take tasks from.",
   "tasks_move_heading": "Target heading",
-  "tasks_move_heading_desc": "Where tasks land when the note lacks the heading they sat under. Leave empty to add them at the end.",
+  "tasks_move_heading_desc": "Where tasks land unless the heading they sat under is one the listing filter names and the note has it. Leave empty to add them at the end.",
   "tasks_move_look_back": "Look back",
   "tasks_move_look_back_desc": "How many earlier notes to take unfinished tasks from.",
   "tasks_move_look_back_invalid": "Enter a whole number of 1 or more.",

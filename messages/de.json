@@ -952,7 +952,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "Weiter eingrenzen",
-  "decoration_condition_tasks_narrow_description": "Zählt nur Aufgaben, die diesen entsprechen, zusätzlich zum Aufgabenfilter des Journals.",
+  "decoration_condition_tasks_narrow_description": "Zählt nur Aufgaben, die diesen entsprechen, anstelle der eigenen Bedingungen des Journals vom selben Typ.",
   "decoration_condition_tasks_narrow_add": "Einschränkende Bedingung hinzufügen",
   "decoration_condition_tasks_date_label": "Aufgabendatum",
   "decoration_condition_tasks_describe": [
@@ -1522,7 +1522,7 @@
   "tasks_date_choice_done": "Erledigungsdatum",
   "tasks_date_choice_created": "Erstellungsdatum",
   "view_block_tasks_date_label": "Aufgabendatum",
-  "view_block_tasks_date_description": "Welches Datum einer Aufgabennotiz sie einem Zeitraum zuordnet.",
+  "view_block_tasks_date_description": "Welches Datum einer Aufgabe eine Aufgabennotiz oder eine datierte Kontrollkästchen-Zeile einem Zeitraum zuordnet.",
   "view_block_tasks_filter_label": "Filter",
   "view_block_tasks_filter_status_default": "Keine eigene Status-Bedingung, daher entscheidet der Anzeigefilter eines Journals, wo dieser einen Status nennt.",
   "view_toolbar_shelf_selector_label": "Regalauswahl",
@@ -2493,7 +2493,7 @@
   "tasks_status_group_done": "Erledigt",
   "tasks_status_group_all": "Alle",
   "tasks_filter_summary_conditions": "Zeigt eine Aufgabe an, die {conditions} ist.",
-  "tasks_rule_summary_any": "Keine Bedingungen – jeder Kontrollkästchen-Listeneintrag in den Notizen eines Journals ist eine Aufgabe.",
+  "tasks_rule_summary_any": "Keine Bedingungen – jeder Kontrollkästchen-Listeneintrag ist eine Aufgabe.",
   "tasks_rule_summary_unreadable": "Ein Teil dieser Regel kann nicht gelesen werden, daher trifft nichts zu.",
   "tasks_rule_summary_conditions": "Zählt einen Kontrollkästchen-Listeneintrag, der {conditions} ist.",
   "tasks_journal_summary_inherit": "Erbt die Vault-weite Regel.",
@@ -2608,7 +2608,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Legt sie unter {heading} ab, wenn die Überschrift fehlt, unter der sie standen.",
+  "tasks_move_summary_heading": "Legt sie unter {heading} ab, es sei denn, sie stammen aus einer Überschrift, die der Anzeigefilter nennt und die die heutige Notiz enthält.",
   "tasks_move_summary_automatic": "Überträgt automatisch.",
   "tasks_move_summary_line": [
     {
@@ -2645,7 +2645,7 @@
     }
   ],
   "tasks_move_stamp": "Als übertragen markieren",
-  "tasks_move_stamp_desc": "Fügt jeder ursprünglichen Zeile, die eine Kopie zurücklässt, die Übertragen-Markierung hinzu, damit sie nicht mehr als unerledigt gilt.",
+  "tasks_move_stamp_desc": "Fügt der obersten Zeile jeder Gruppe, die eine Kopie zurücklässt, die Übertragen-Markierung hinzu, damit sie und die Zeilen darunter nicht mehr als unerledigt gelten.",
   "tasks_move_stamp_on": "An",
   "tasks_move_stamp_off": "Aus",
   "tasks_move_stamp_default": [
@@ -2660,7 +2660,7 @@
   ],
   "tasks_move_source_desc": "Aus welchen Notizen des früheren Zeitraums Aufgaben übernommen werden.",
   "tasks_move_heading": "Zielüberschrift",
-  "tasks_move_heading_desc": "Wohin Aufgaben kommen, wenn der Notiz die Überschrift fehlt, unter der sie standen. Leer lassen, um sie am Ende anzufügen.",
+  "tasks_move_heading_desc": "Wohin Aufgaben kommen, es sei denn, der Anzeigefilter nennt die Überschrift, unter der sie standen, und die Notiz enthält sie. Leer lassen, um sie am Ende anzufügen.",
   "tasks_move_look_back": "Rückblick",
   "tasks_move_look_back_desc": "Aus wie vielen früheren Notizen unerledigte Aufgaben übernommen werden.",
   "tasks_move_look_back_invalid": "Gib eine ganze Zahl ab 1 ein.",

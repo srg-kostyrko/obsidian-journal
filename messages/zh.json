@@ -807,7 +807,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "进一步收窄",
-  "decoration_condition_tasks_narrow_description": "在日记的任务筛选条件之外，仅统计符合这些条件的任务。",
+  "decoration_condition_tasks_narrow_description": "仅统计符合这些条件的任务，取代日记自身同类型的条件。",
   "decoration_condition_tasks_narrow_add": "添加限定条件",
   "decoration_condition_tasks_date_label": "任务日期",
   "decoration_condition_tasks_describe": [
@@ -1377,7 +1377,7 @@
   "tasks_date_choice_done": "完成日期",
   "tasks_date_choice_created": "创建日期",
   "view_block_tasks_date_label": "任务日期",
-  "view_block_tasks_date_description": "任务笔记的哪个日期将其归入某个时期。",
+  "view_block_tasks_date_description": "任务的哪个日期将任务笔记或带日期的复选框行归入某个时期。",
   "view_block_tasks_filter_label": "筛选",
   "view_block_tasks_filter_status_default": "没有自己的状态条件，因此指定了状态的日记将由其列表筛选条件决定。",
   "view_toolbar_shelf_selector_label": "书架选择器",
@@ -2474,7 +2474,7 @@
   "tasks_status_group_done": "已完成",
   "tasks_status_group_all": "全部",
   "tasks_filter_summary_conditions": "显示{conditions}的任务。",
-  "tasks_rule_summary_any": "无条件——日记笔记中的每个复选框列表项都是任务。",
+  "tasks_rule_summary_any": "无条件——每个复选框列表项都是任务。",
   "tasks_rule_summary_unreadable": "此规则的一部分无法读取，因此没有任何内容匹配。",
   "tasks_rule_summary_conditions": "统计{conditions}的复选框列表项。",
   "tasks_journal_summary_inherit": "继承全库通用规则。",
@@ -2589,7 +2589,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "原标题缺失时，放在 {heading} 下方。",
+  "tasks_move_summary_heading": "放在 {heading} 下方，除非它们来自列表筛选条件指定且今天的笔记中存在的标题。",
   "tasks_move_summary_automatic": "自动结转。",
   "tasks_move_summary_line": [
     {
@@ -2626,7 +2626,7 @@
     }
   ],
   "tasks_move_stamp": "标记为已结转",
-  "tasks_move_stamp_desc": "为复制后留下的每个原行添加结转标记，使其不再显示为未完成。",
+  "tasks_move_stamp_desc": "为复制后留下的每组的首行添加结转标记，使该行及其下方的行不再显示为未完成。",
   "tasks_move_stamp_on": "开",
   "tasks_move_stamp_off": "关",
   "tasks_move_stamp_default": [
@@ -2641,7 +2641,7 @@
   ],
   "tasks_move_source_desc": "从上一时段的哪些笔记中取出任务。",
   "tasks_move_heading": "目标标题",
-  "tasks_move_heading_desc": "笔记中没有任务原来所在的标题时任务的放置位置。留空则添加到末尾。",
+  "tasks_move_heading_desc": "任务的放置位置，除非任务原来所在的标题是列表筛选条件指定的标题且笔记中有该标题。留空则添加到末尾。",
   "tasks_move_look_back": "回溯笔记数",
   "tasks_move_look_back_desc": "从多少篇之前的笔记中取出未完成的任务。",
   "tasks_move_look_back_invalid": "请输入不小于 1 的整数。",

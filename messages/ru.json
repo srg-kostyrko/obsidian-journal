@@ -958,7 +958,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "Сузить дополнительно",
-  "decoration_condition_tasks_narrow_description": "Учитываются только задачи, подходящие под эти условия, помимо фильтра задач журнала.",
+  "decoration_condition_tasks_narrow_description": "Учитываются только задачи, подходящие под эти условия, вместо собственных условий журнала того же типа.",
   "decoration_condition_tasks_narrow_add": "Добавить уточняющее условие",
   "decoration_condition_tasks_date_label": "Дата задачи",
   "decoration_condition_tasks_describe": [
@@ -1560,7 +1560,7 @@
   "tasks_date_choice_done": "Дата завершения",
   "tasks_date_choice_created": "Дата создания",
   "view_block_tasks_date_label": "Дата задачи",
-  "view_block_tasks_date_description": "Какая дата заметки-задачи относит её к периоду.",
+  "view_block_tasks_date_description": "Какая дата задачи относит заметку-задачу или строку с чекбоксом с датой к периоду.",
   "view_block_tasks_filter_label": "Фильтр",
   "view_block_tasks_filter_status_default": "Нет собственного условия статуса, поэтому решает фильтр списка журнала, если он указывает статус.",
   "view_toolbar_shelf_selector_label": "Выбор полки",
@@ -2566,7 +2566,7 @@
   "tasks_status_group_done": "Выполненные",
   "tasks_status_group_all": "Все",
   "tasks_filter_summary_conditions": "Показывает задачу, которая {conditions}.",
-  "tasks_rule_summary_any": "Нет условий — каждый пункт списка с чекбоксом в заметках журнала считается задачей.",
+  "tasks_rule_summary_any": "Нет условий — каждый пункт списка с чекбоксом считается задачей.",
   "tasks_rule_summary_unreadable": "Часть этого правила не удаётся прочитать, поэтому ничего не подходит.",
   "tasks_rule_summary_conditions": "Считает пункт списка с чекбоксом, который {conditions}.",
   "tasks_journal_summary_inherit": "Наследует правило всего хранилища.",
@@ -2690,7 +2690,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Помещает их под {heading}, если заголовка, под которым они были, нет.",
+  "tasks_move_summary_heading": "Помещает их под {heading}, кроме случая, когда они пришли из заголовка, который указан в фильтре списка и есть в сегодняшней заметке.",
   "tasks_move_summary_automatic": "Переносит автоматически.",
   "tasks_move_summary_line": [
     {
@@ -2727,7 +2727,7 @@
     }
   ],
   "tasks_move_stamp": "Отмечать как перенесённые",
-  "tasks_move_stamp_desc": "Добавляет метку переноса к каждой исходной строке, которую оставляет копирование, чтобы она больше не считалась незавершённой.",
+  "tasks_move_stamp_desc": "Добавляет метку переноса к верхней строке каждой группы, которую оставляет копирование, чтобы она и строки под ней больше не считались незавершёнными.",
   "tasks_move_stamp_on": "Вкл.",
   "tasks_move_stamp_off": "Выкл.",
   "tasks_move_stamp_default": [
@@ -2742,7 +2742,7 @@
   ],
   "tasks_move_source_desc": "Из каких заметок предыдущего периода брать задачи.",
   "tasks_move_heading": "Целевой заголовок",
-  "tasks_move_heading_desc": "Куда попадают задачи, если в заметке нет заголовка, под которым они были. Оставьте пустым, чтобы добавлять их в конец.",
+  "tasks_move_heading_desc": "Куда попадают задачи, кроме случая, когда заголовок, под которым они были, указан в фильтре списка и есть в заметке. Оставьте пустым, чтобы добавлять их в конец.",
   "tasks_move_look_back": "Глубина переноса",
   "tasks_move_look_back_desc": "Из скольких предыдущих заметок брать незавершённые задачи.",
   "tasks_move_look_back_invalid": "Введите целое число не меньше 1.",

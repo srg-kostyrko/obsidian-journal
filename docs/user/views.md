@@ -139,6 +139,9 @@ Lists tasks from a window around the view's date, across the journals in the vie
 - **Journals** — leave all off to include every journal in the view's shelf.
 - **Source** — **Note only**, **Notelets only** or **Note and notelets**.
 - **Sort by** — document order, status, or one of the five date roles a task line can carry.
+- **Task date** — which of a task note's or dated checkbox line's dates places it in the window:
+  **Scheduled or due date** by default. See
+  [Which date places a task note](/tasks#which-date-places-a-task-note).
 - **Filter** — which of those tasks to show, as a list of tag, heading and status conditions matched
   under **Match all conditions** or **Match any condition**. Empty on a new block, which shows what is
   still open unless a journal's own listing filter says otherwise.
