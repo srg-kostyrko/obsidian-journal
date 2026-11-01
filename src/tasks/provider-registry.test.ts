@@ -13,6 +13,10 @@ function registers(provider: TaskProvider): TestOverride {
   return (c) => void c.register(TaskProviderToken).useValue(provider);
 }
 
+function flush(): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, 0));
+}
+
 const registersRegistry: TestOverride = (c) => void c.register(TaskProviderRegistry).useClass(TaskProviderRegistry);
 
 async function build(...providers: readonly TaskProvider[]): Promise<TestHarness> {
@@ -41,6 +45,26 @@ describe("TaskProviderRegistry", () => {
 
     expect(disposeA).toHaveBeenCalledTimes(1);
     expect(disposeB).toHaveBeenCalledTimes(1);
+  });
+
+  it("settles whenFilled only once every provider that reports a fill has filled", async () => {
+    const fill = Promise.withResolvers<void>();
+    const filling: TaskProvider = { ...fakeProvider("a"), whenFilled: () => fill.promise };
+    const harness = await build(filling, fakeProvider("b"));
+    const registry = harness.resolve(TaskProviderRegistry);
+    let settled = false;
+    void registry.whenFilled().then(() => {
+      settled = true;
+    });
+
+    registry.initialize();
+    await flush();
+    expect(settled).toBe(false);
+
+    fill.resolve();
+    await flush();
+
+    expect(settled).toBe(true);
   });
 
   it("does nothing on dispose when initialize was never called", async () => {

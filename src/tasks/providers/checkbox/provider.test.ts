@@ -995,6 +995,115 @@ describe("CheckboxTaskProvider boot walk", () => {
   });
 });
 
+function settledFlag(promise: Promise<void>): { readonly settled: boolean } {
+  const flag = { settled: false };
+  void promise.then(() => {
+    flag.settled = true;
+  });
+  return flag;
+}
+
+describe("CheckboxTaskProvider whenFilled", () => {
+  it("settles once the boot walk has read every note, not before", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+    notes.release(0);
+    await flush();
+    expect(filled.settled).toBe(false);
+
+    notes.release(1);
+    await flush();
+
+    expect(filled.settled).toBe(true);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
+  });
+
+  it("waits for a newer read of a note that overtook the walk's own", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+    notes.release(0);
+    await flush();
+
+    notes.externalEdit(projectPath, "# Ideas\n- [ ] Ship the launch 📅 2026-10-25");
+    notes.release(1);
+    await flush();
+    expect(filled.settled).toBe(false);
+
+    notes.release(2);
+    await flush();
+
+    expect(filled.settled).toBe(true);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-25" });
+  });
+
+  it("settles on readiness when the provider is disabled", async () => {
+    const built = await build({ enabled: false });
+    built.notes.seed(projectPath, projectText);
+    built.structures.setStructure(projectPath, items([1]));
+    built.provider.start();
+    const filled = settledFlag(built.provider.whenFilled());
+    built.harness.resolve(JournalsIndex).markReady();
+    await flush();
+
+    expect(filled.settled).toBe(true);
+  });
+
+  it("settles when a settings change replaces the walk part-way", async () => {
+    const { notes, provider, journals, slice } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+
+    slice.state.rule = { mode: "or", conditions: [] };
+    await nextTick();
+    for (let at = 0; at < 3; at++) {
+      notes.release(at);
+      await flush();
+    }
+
+    expect(filled.settled).toBe(true);
+  });
+
+  it("settles when disabled part-way through the walk", async () => {
+    const { notes, provider, journals, slice } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+
+    slice.state.enabled = false;
+    await nextTick();
+    await flush();
+
+    expect(filled.settled).toBe(true);
+  });
+
+  it("settles when disposed part-way through the walk", async () => {
+    const { notes, provider, journals } = await vault();
+    notes.gated = true;
+    const stop = provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+
+    stop();
+    await flush();
+
+    expect(filled.settled).toBe(true);
+  });
+});
+
 // End to end through the real host and index: the dates come from the provider's own read of the
 // note at fill time, and hydration must deliver the markdown without dropping them.
 describe("CheckboxTaskProvider hydration wiring", () => {
