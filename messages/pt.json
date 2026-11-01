@@ -2720,6 +2720,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "A nota de {date} foi marcada como transferida no editor aberto, mas não pôde ser salva. As tarefas foram copiadas e podem ser transferidas novamente até que ela seja salva.",
+        "mode=move": "As tarefas da nota de {date} foram removidas no editor aberto, mas ela ainda não pôde ser salva. As tarefas foram copiadas e ficam nas duas notas no disco até que ela seja salva."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Tente novamente em instantes.",
   "tasks_roll_source_unread": "Não foi possível ler a nota de {date}.",
   "tasks_auto_roll_paused": "A transferência automática está pausada para {journal}. Ative Marcar como transferida ou use Mover.",

@@ -2725,6 +2725,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} was marked as rolled in its open editor, which could not save it. Its tasks were copied and may roll again until it is saved.",
+        "mode=move": "{date} had its tasks removed in its open editor, which could not save it yet. Its tasks were copied, so until it saves they are in both notes on disk."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date} is still being indexed. Try again in a moment.",
   "tasks_roll_source_unread": "{date} could not be read.",
   "tasks_auto_roll_paused": "Automatic rollover is paused for {journal}. Turn on Mark as rolled or use Move.",

@@ -563,6 +563,28 @@ describe("AutoRolloverService", () => {
     ]);
   });
 
+  // The view holds the stamp but disk does not, and the next look reads disk.
+  it("a source whose open view cannot be saved pauses its journal after one copy", async () => {
+    const { put, text, calls, boot, resume, harness } = await autoFor({ daily: automatic("daily") });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    harness.host.openEditor(source, "- [ ] Call Bob\n", 0, { active: false });
+    const workspace = harness.resolve(WorkspaceService);
+    const save = workspace.saveOpenNote.bind(workspace);
+    vi.spyOn(workspace, "saveOpenNote").mockImplementation((path) =>
+      path === source ? AsyncResult.err(new NoteWriteError(path, "disk full")) : save(path),
+    );
+    await boot();
+    await resume();
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    expect(calls("daily")).toBe(1);
+    expect(harness.notices.messages).toEqual([
+      named("daily", doneFrom("2026-10-20")),
+      pausedUnwritten("daily", ["2026-10-20"]),
+    ]);
+  });
+
   it("the pause names every earlier note that could not be updated", async () => {
     const { put, boot, notes, harness } = await autoFor({
       daily: automatic("daily", { lookBack: 3 }),

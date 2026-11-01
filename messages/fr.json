@@ -2723,6 +2723,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La note du {date} a été marquée comme reportée dans son éditeur ouvert, mais n’a pas pu être enregistrée. Ses tâches ont été copiées et pourraient être reportées à nouveau tant qu’elle n’est pas enregistrée.",
+        "mode=move": "Les tâches de la note du {date} ont été retirées dans son éditeur ouvert, mais elle n’a pas encore pu être enregistrée. Ses tâches ont été copiées et figurent dans les deux notes sur le disque jusqu’à son enregistrement."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
   "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
   "tasks_auto_roll_paused": "Le report automatique est en pause pour {journal}. Activez Marquer comme reportée ou utilisez Déplacer.",

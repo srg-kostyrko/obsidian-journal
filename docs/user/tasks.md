@@ -673,6 +673,11 @@ no unfinished tasks. Four other cases are worth knowing:
   read **"… changed while rolling"** and **"… could not be updated"**, and say the tasks were copied
   but are still in the earlier note too. Either way, mark or remove the originals by hand, or delete
   the copies.
+- **"… in its open editor, which could not save it"** — the earlier note is open, and its editor took
+  the mark, or under **Move** removed the tasks, but could not save. The change is in the editor and
+  reaches the note's file when the editor next saves; until then the file still holds the tasks. Don't
+  delete the copies: under **Move** they are the only ones the editor will keep. Save the earlier note
+  once it can be.
 - **"… could not be read"** — Obsidian failed to read the earlier note, so nothing was taken from it.
   Run the command again once the note opens normally.
 - **"… is still being indexed"** — the earlier note was edited a moment ago and Obsidian has not yet
@@ -739,7 +744,8 @@ copy the same tasks again, and a notice names every earlier note affected. The s
 notice of its own, when a roll fails part-way for any other reason, since today's note may already hold
 what was copied. The tasks
 are then in both notes: mark or remove the originals by hand, or delete the copies from the current
-note, then run **Roll over unfinished tasks**. A run of that command that reads every earlier note — none still being indexed or unreadable — and
+note, then run **Roll over unfinished tasks**. When the notice says the earlier note's open editor could
+not save it, save that note instead and leave the copies, since the editor already holds the change. A run of that command that reads every earlier note — none still being indexed or unreadable — and
 updates every one it took from resumes automatic rolling for the journal; otherwise it stays paused until Obsidian
 restarts. A run of the command that itself leaves an earlier note not updated pauses an automatic journal in the
 same way, with the same notice after the command's own. Renaming a paused journal keeps it paused.

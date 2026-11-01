@@ -2706,6 +2706,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "已在打开的编辑器中将 {date} 的笔记标记为已结转，但无法保存。其任务已复制，在保存之前可能会再次结转。",
+        "mode=move": "已在打开的编辑器中移除 {date} 笔记的任务，但暂时无法保存。其任务已复制，在保存之前磁盘上的两个笔记中都会保留。"
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
   "tasks_auto_roll_paused": "{journal} 的自动结转已暂停。请开启“标记为已结转”，或使用“移动”。",

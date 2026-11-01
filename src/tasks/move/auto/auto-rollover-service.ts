@@ -26,10 +26,15 @@ import type { RollReport, RollSentenceKind } from "../report";
 export const RESUME_DELAY_MS = 30_000;
 
 // The pause notice says the same thing and says what to do about it.
-const UNWRITTEN_KINDS: ReadonlySet<RollSentenceKind> = new Set(["source-changed", "source-write-failed"]);
+const UNWRITTEN_KINDS: ReadonlySet<RollSentenceKind> = new Set([
+  "source-changed",
+  "source-write-failed",
+  "source-unsaved",
+]);
 
 function unwrittenAnchors(report: RollReport): readonly string[] {
-  return [...new Set([...report.failedSources, ...report.changedSources].map(({ anchor }) => anchor))].toSorted();
+  const unwritten = [...report.failedSources, ...report.unsavedSources, ...report.changedSources];
+  return [...new Set(unwritten.map(({ anchor }) => anchor))].toSorted();
 }
 
 // Clean means every earlier note was read and written: one skipped as indexing or unreadable may be
@@ -37,6 +42,7 @@ function unwrittenAnchors(report: RollReport): readonly string[] {
 function isClean(report: RollReport): boolean {
   return (
     report.failedSources.length === 0 &&
+    report.unsavedSources.length === 0 &&
     report.changedSources.length === 0 &&
     report.skippedSources.length === 0 &&
     report.unreadSources.length === 0
