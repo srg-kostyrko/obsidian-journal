@@ -692,6 +692,18 @@ describe("RolloverService", () => {
       expect(report.alreadyHeld).toBe(0);
     });
 
+    // A line under a stamped parent reads as rolled itself, so it is no live copy of the task.
+    it("is copied again when today's note holds it only under a rolled parent", async () => {
+      const { roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
+      put("daily", "2026-10-20", "- [x] Shopping\n\t- [ ] milk\n");
+      const target = put("daily", TODAY, "- [x] Shopping #rolled\n\t- [ ] milk\n");
+
+      const report = await roll();
+
+      expect(await text(target)).toBe("- [x] Shopping #rolled\n\t- [ ] milk\n- [x] Shopping\n\t- [ ] milk\n");
+      expect(report.alreadyHeld).toBe(0);
+    });
+
     it("is not copied again when its own nested lines hold a code block", async () => {
       const { roll, put, text } = await rolloverFor({ daily: dayJournal("daily") });
       const task = "- [ ] Call Bob\n\t```\n\t555-0100\n\t```\n";

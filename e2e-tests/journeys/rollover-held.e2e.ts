@@ -9,7 +9,8 @@ import { waitForState } from "../support/wait.js";
 
 // Today's note already holds the earlier note's task, the way it does after a roll whose mark was
 // lost and a restart cleared the pause — one of them with a code block nested under it — and holds
-// another only inside a code fence, as an example. Ships in the fixture so both notes are indexed at boot.
+// another only inside a code fence, as an example, and a third only under a parent stamped as
+// rolled, which makes that copy read as rolled too. Ships in the fixture so both notes are indexed at boot.
 const FIXTURE = "./e2e-tests/fixtures/e2e-rollover-held";
 const SOURCE_DATE = "2026-09-25";
 const SOURCE = `daily/${SOURCE_DATE}.md`;
@@ -39,5 +40,6 @@ describe("rolling a task today's note already holds", () => {
     expect(target?.split("\n").filter((line) => line === "- [ ] milk")).toHaveLength(1);
     expect(target?.split("\n").filter((line) => line === "- [ ] eggs")).toHaveLength(2);
     expect(target?.split("\n").filter((line) => line === "- [ ] tea")).toHaveLength(1);
+    expect(target?.split("\n").filter((line) => line === "\t- [ ] stamps")).toHaveLength(2);
   });
 });

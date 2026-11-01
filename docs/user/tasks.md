@@ -609,7 +609,8 @@ inside `## Tasks` is left alone. A heading inside a code block or a comment — 
 were written.
 
 A task today's note already holds line for line — the task and every line nested under it, as written,
-together, starting outside any code block or comment — is not copied again; its original is still marked as rolled, or removed under **Move**, and the notice
+together, starting outside any code block or comment and under no parent marked as rolled — is not
+copied again; its original is still marked as rolled, or removed under **Move**, and the notice
 counts it. That is what stops a roll that runs again, after an earlier note could not be marked, from
 copying the same tasks twice. It also means an unfinished `- [ ] Exercise` from yesterday is taken up
 by the `- [ ] Exercise` today's template already wrote, rather than added beside it. A task that has

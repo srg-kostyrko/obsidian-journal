@@ -362,7 +362,7 @@ export class RolloverService {
           (content) => {
             alreadyHeld = 0;
             const groups = contributing.flatMap(({ plan }) => {
-              const fresh = plan.roots.filter((root) => !holdsAll(content, emittedLines(root, move.mode)));
+              const fresh = plan.roots.filter((root) => !holdsAll(content, emittedLines(root, move.mode), marker));
               alreadyHeld += plan.roots.length - fresh.length;
               return blockOf(plan.lines, fresh, move.mode);
             });
