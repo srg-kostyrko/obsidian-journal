@@ -29,9 +29,11 @@ const groupName = useId();
 </template>
 
 <style scoped>
+/* One line, always: a wrapped control reads as two controls, so a crowded row gives way in its
+   description instead. */
 .ui-segmented-control {
   display: flex;
-  flex-wrap: wrap;
+  flex-shrink: 0;
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s);
   overflow: hidden;
@@ -58,6 +60,7 @@ const groupName = useId();
   background-color: var(--background-primary);
   color: var(--text-muted);
   text-align: center;
+  white-space: nowrap;
   cursor: pointer;
 }
 .ui-segmented-control__option:first-child .ui-segmented-control__label {

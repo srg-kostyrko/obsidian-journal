@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { reactive } from "vue";
+import { computed, reactive } from "vue";
 
 import { m } from "@/i18n";
 import { icons } from "@/ui/icons";
-import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -60,59 +59,62 @@ function removeCondition(index: number): void {
   if (condition) touched.delete(condition);
 }
 
-function errorsFor(condition: TaskCondition, index: number): string[] {
-  if (!touched.has(condition)) return [];
-  const message = props.errors?.get(index);
-  return message ? [message] : [];
-}
+// Deduplicated: two conditions failing the same way would otherwise print one message twice.
+const shownErrors = computed(() => {
+  const messages = new Set<string>();
+  for (const [index, condition] of rule.value.conditions.entries()) {
+    const message = props.errors?.get(index);
+    if (message && touched.has(condition)) messages.add(message);
+  }
+  return [...messages];
+});
 </script>
 
 <template>
-  <UiSettingRow :name="label" stacked>
-    <template #description>{{ description }}</template>
-    <div class="tasks-rule-body">
-      <UiDropdown v-if="showMode" v-model="rule.mode">
-        <option value="and">{{ m.tasks_settings_mode_and() }}</option>
-        <option value="or">{{ m.tasks_settings_mode_or() }}</option>
-      </UiDropdown>
-      <div v-for="(condition, index) in rule.conditions" :key="index" class="tasks-rule-condition">
-        <div class="tasks-rule-condition-row" data-testid="rule-condition-row">
-          <RuleConditionRow v-model="rule.conditions[index]" :types="types" @blur="touched.add(condition)" />
-          <UiIconButton
-            :icon="icons.action.delete"
-            :tooltip="m.common_action_delete()"
-            data-testid="rule-remove-condition"
-            @click="removeCondition(index)"
-          />
-        </div>
-        <span v-for="error of errorsFor(condition, index)" :key="error" class="tasks-form-error">{{ error }}</span>
-      </div>
-      <div class="tasks-rule-actions">
-        <UiButton data-testid="rule-add-condition" @click="addCondition">
-          {{ addLabel ?? m.tasks_settings_add_condition() }}
-        </UiButton>
-      </div>
-    </div>
+  <UiSettingRow :name="label">
+    <template #description>
+      {{ description }}
+      <span v-for="error of shownErrors" :key="error" class="tasks-form-error">{{ error }}</span>
+    </template>
+    <UiDropdown v-if="showMode" v-model="rule.mode">
+      <option value="and">{{ m.tasks_settings_mode_and() }}</option>
+      <option value="or">{{ m.tasks_settings_mode_or() }}</option>
+    </UiDropdown>
+    <UiIconButton
+      :icon="icons.action.add"
+      :tooltip="addLabel ?? m.tasks_settings_add_condition()"
+      data-testid="rule-add-condition"
+      @click="addCondition"
+    />
+  </UiSettingRow>
+  <UiSettingRow
+    v-for="(condition, index) in rule.conditions"
+    :key="index"
+    controls-only
+    class="tasks-rule-condition-row"
+    data-testid="rule-condition-row"
+  >
+    <RuleConditionRow v-model="rule.conditions[index]" :types="types" @blur="touched.add(condition)" />
+    <UiIconButton
+      :icon="icons.action.delete"
+      :tooltip="m.common_action_delete()"
+      data-testid="rule-remove-condition"
+      @click="removeCondition(index)"
+    />
   </UiSettingRow>
 </template>
 
 <style scoped>
-.tasks-rule-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-2-2);
-}
-/* One shared grid across every row, so a Heading row's value input lines up with a Tag row's —
-   independent flex containers size their inputs against different dropdown widths. */
-.tasks-rule-condition-row {
+/* One column template on every row, so a Heading row's value input lines up with a Tag row's —
+   independent flex rows would size their inputs against different dropdown widths. */
+.tasks-rule-condition-row :deep(.setting-item-control) {
+  flex: 1;
   display: grid;
   grid-template-columns: 8em 9em 1fr auto;
-  align-items: center;
-  gap: var(--size-2-2);
 }
-.tasks-rule-actions {
-  display: flex;
-  justify-content: flex-end;
+.tasks-rule-condition-row :deep(.setting-item-control > select) {
+  width: auto;
+  max-width: none;
 }
 .tasks-form-error {
   color: var(--text-error);

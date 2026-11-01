@@ -259,9 +259,8 @@ function confirm(): void {
   min-width: 0;
 }
 .import-shelved-row {
-  /* One step in from the shelf row's label. Obsidian indents a heading row's own content by 16px,
-     so the same margin here would leave the two flush rather than nested. */
-  margin-inline-start: var(--size-4-8);
+  /* One step in from the shelf row's label, which UiSettingRow keeps flush with the modal's edge. */
+  margin-inline-start: var(--size-4-4);
 }
 .import-toggle {
   display: inline-flex;
