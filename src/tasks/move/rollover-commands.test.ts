@@ -41,6 +41,7 @@ const REPORT: RollReport = {
   changedSources: [],
   failedSources: [],
   alreadyHeld: 0,
+  unsavedSources: [],
   skippedSources: [],
   unreadSources: [],
 };

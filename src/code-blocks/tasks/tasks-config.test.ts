@@ -14,7 +14,7 @@ import { tasksBlockKeys, tasksBlockSchema, toTaskQuery } from "./tasks-config";
 describe("tasksBlockSchema", () => {
   it("defaults a bare fence's flat fields", () => {
     expect(v.parse(tasksBlockSchema, {})).toEqual({
-      provider: [],
+      provider: undefined,
       source: "both",
       depth: "literal",
       status: undefined,
@@ -40,10 +40,10 @@ describe("tasksBlockSchema", () => {
     ]);
   });
 
-  it("falls back date to scheduled-or-due on an unknown value", () => {
+  it("reads a known date and rejects one it does not know", () => {
     expect(v.parse(tasksBlockSchema, { date: "due" }).date).toBe("due");
-    expect(v.parse(tasksBlockSchema, { date: "whenever" }).date).toBe("scheduled-or-due");
     expect(toTaskQuery(v.parse(tasksBlockSchema, { date: "due" })).date).toBe("due");
+    expect(v.safeParse(tasksBlockSchema, { date: "whenever" }).success).toBe(false);
   });
 
   it("reads a single value written as one thing as a one-item list", () => {
@@ -55,27 +55,37 @@ describe("tasksBlockSchema", () => {
     expect(v.parse(tasksBlockSchema, { status: ["done", "cancelled"] }).status).toEqual(["done", "cancelled"]);
   });
 
-  it("falls back source to both on an unknown value", () => {
+  // A fence is typed by hand and read by its author, so a value it does not know is an error to fix
+  // rather than a default that quietly lists something else.
+  it.each([
+    ["source", "nope"],
+    ["depth", "nope"],
+    ["sort", "priority"],
+    ["status", "in progress"],
+    ["status", ["open", "nope"]],
+    ["tag", { a: 1 }],
+    ["heading", null],
+    ["tag", []],
+    ["conditions", "not-a-list"],
+    ["conditions", [{ type: "tag", condition: "lack", tags: ["#w"] }]],
+    ["conditions", [{ type: "heading", condition: "below", headings: ["Habits"] }]],
+  ] as const)("rejects %s: %j", (key, value) => {
+    expect(v.safeParse(tasksBlockSchema, { [key]: value }).success).toBe(false);
+  });
+
+  it("rejects a body that is not a mapping of options", () => {
+    expect(v.safeParse(tasksBlockSchema, "source:notelets").success).toBe(false);
+  });
+
+  it("reads a known source, depth and sort", () => {
     expect(v.parse(tasksBlockSchema, { source: "notelets" }).source).toBe("notelets");
-    expect(v.parse(tasksBlockSchema, { source: "nope" }).source).toBe("both");
-  });
-
-  it("falls back depth to literal on an unknown value", () => {
     expect(v.parse(tasksBlockSchema, { depth: "rollup" }).depth).toBe("rollup");
-    expect(v.parse(tasksBlockSchema, { depth: "nope" }).depth).toBe("literal");
-  });
-
-  it("falls back sort to document on a role it does not know", () => {
     expect(v.parse(tasksBlockSchema, { sort: "due" }).sort).toBe("due");
-    expect(v.parse(tasksBlockSchema, { sort: "priority" }).sort).toBe("document");
   });
 
-  it("degrades a malformed full-form conditions value to an empty list, rather than an error", () => {
-    expect(v.parse(tasksBlockSchema, { conditions: "not-a-list" }).conditions).toEqual([]);
-  });
-
-  it("degrades a mapping written for a list key to no constraint", () => {
-    expect(v.parse(tasksBlockSchema, { tag: { a: 1 } }).tag).toEqual([]);
+  it("reads a status alias or name, and an empty body as the defaults", () => {
+    expect(v.parse(tasksBlockSchema, { status: ["open", "in-progress"] }).status).toEqual(["open", "in-progress"]);
+    expect(v.parse(tasksBlockSchema, null)).toEqual(v.parse(tasksBlockSchema, {}));
   });
 
   it("registers the journal-tasks key", () => {
@@ -178,14 +188,5 @@ describe("toTaskQuery", () => {
       { type: "status", condition: "is", statuses: ["done"] },
       { type: "tag", condition: "lacks", tags: ["#waiting"] },
     ]);
-  });
-
-  it("still adds a present-but-unconstrained condition for a key that degraded to an empty list", () => {
-    const parsed = v.parse(tasksBlockSchema, { tag: { a: 1 } });
-    expect(toTaskQuery(parsed).filter.conditions).toContainEqual({
-      type: "tag",
-      condition: "has",
-      tags: [],
-    });
   });
 });

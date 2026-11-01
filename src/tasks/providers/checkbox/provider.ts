@@ -11,16 +11,14 @@ import { admitsSubject, referencedProperties } from "@/tasks/visibility-rule/rul
 import { TaskHostToken, type OwnedNote, type TaskItem, type TaskProvider } from "../../types";
 
 import { CHECKBOX_PROVIDER_ID, extractItems, lineDatesOf, lineStampOf, type LineDates } from "./extract";
-import { checkboxJournalRuleSchema, type CheckboxJournalRule } from "./rule-schema";
+import { checkboxJournalRuleSchema, datedRuleOf, type StoredCheckboxJournalRule } from "./rule-schema";
 import { checkboxSlice } from "./slice";
 import CheckboxJournalRow from "./ui/CheckboxJournalRow.vue";
 import CheckboxSettingsRow from "./ui/CheckboxSettingsRow.vue";
 
-// A rule the schema cannot parse must not take the note's items with it — falling back to the
-// global rule alone (the same treatment as no journal rule at all) is safer than dropping the note.
-export function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
-  const parsed = v.safeParse(checkboxJournalRuleSchema, rule);
-  return parsed.success ? parsed.output : null;
+// No rule is the vault rule alone; one the schema cannot read is held whole and counts nothing.
+export function parseJournalRule(rule: unknown): StoredCheckboxJournalRule | null {
+  return rule === undefined ? null : v.parse(checkboxJournalRuleSchema, rule);
 }
 
 interface CachedLineDates {
@@ -43,16 +41,21 @@ export class CheckboxTaskProvider implements TaskProvider {
   // Drawn from one counter rather than per path, so a path cleared by a delete and read again
   // cannot hand a stale in-flight read the number it was waiting for.
   readonly #generation = new Map<VaultPath, number>();
+  readonly #loading = new Map<VaultPath, Promise<boolean>>();
   #reads = 0;
   // Bumped by every walk start, every disable and dispose, so a walk that is no longer the latest
   // stops at its next note rather than racing the one that replaced it.
   #walks = 0;
+  #markFilled: (() => void) | undefined;
+  readonly #filled = new Promise<void>((resolve) => {
+    this.#markFilled = resolve;
+  });
   readonly id = CHECKBOX_PROVIDER_ID;
   readonly settingsRow = CheckboxSettingsRow;
   readonly journalRow = CheckboxJournalRow;
 
   #referencedNow(): readonly string[] {
-    const rules = this.#repository.find().map((journal) => journal.tasks.providers[CHECKBOX_PROVIDER_ID]?.dated);
+    const rules = this.#repository.find().map((journal) => datedRuleOf(journal.tasks.providers[CHECKBOX_PROVIDER_ID]));
     return [...referencedProperties(rules)].toSorted();
   }
 
@@ -122,7 +125,13 @@ export class CheckboxTaskProvider implements TaskProvider {
 
   // Answers whether the entry it settled on still stands — false when a newer read overtook it or
   // the provider was off — so the caller publishes only what is current.
-  async #load(path: VaultPath): Promise<boolean> {
+  #load(path: VaultPath): Promise<boolean> {
+    const loading = this.#loadNow(path);
+    this.#loading.set(path, loading);
+    return loading;
+  }
+
+  async #loadNow(path: VaultPath): Promise<boolean> {
     const generation = ++this.#reads;
     this.#generation.set(path, generation);
     if (!this.#settings.state.enabled) {
@@ -156,9 +165,14 @@ export class CheckboxTaskProvider implements TaskProvider {
   // notes are skipped, so a walk after the first reads only what the cache never held — a note taken
   // out of Excluded files, or an excluded one a journal has since taken over — and publishes nothing
   // when it read nothing.
+  // A walk replaced part-way leaves the fill to the walk that replaced it; a disable starts one
+  // that returns at once, and dispose marks it itself.
   async #walk(): Promise<void> {
     const run = ++this.#walks;
-    if (!this.#settings.state.enabled) return;
+    if (!this.#settings.state.enabled) {
+      this.#markFilled?.();
+      return;
+    }
     let read = false;
     for (const path of this.#notes.allMarkdownNotes()) {
       if (run !== this.#walks) return;
@@ -167,9 +181,17 @@ export class CheckboxTaskProvider implements TaskProvider {
       if (structure.isNone() || structure.value.listItems.length === 0) continue;
       if (this.#ownerOf(path) === undefined && this.#notes.isUserIgnored(path)) continue;
       read = true;
-      await this.#load(path);
+      // A newer read overtook this one: the note is not filled until that one lands.
+      let loading = this.#load(path);
+      while (!(await loading) && run === this.#walks) {
+        const newer = this.#loading.get(path);
+        if (newer === undefined || newer === loading) break;
+        loading = newer;
+      }
     }
-    if (run === this.#walks && read) this.#refillAll();
+    if (run !== this.#walks) return;
+    if (read) this.#refillAll();
+    this.#markFilled?.();
   }
 
   // Obsidian announces no change to Excluded files, so a settings change or a full refill is when
@@ -182,12 +204,14 @@ export class CheckboxTaskProvider implements TaskProvider {
     this.#walks++;
     // An empty generation map discards every read still in flight.
     this.#generation.clear();
+    this.#loading.clear();
     this.#lineDates.clear();
   }
 
   #forget(path: VaultPath): void {
     this.#lineDates.delete(path);
     this.#generation.delete(path);
+    this.#loading.delete(path);
     this.#host.publish(this.id, { path }, []);
   }
 
@@ -208,11 +232,14 @@ export class CheckboxTaskProvider implements TaskProvider {
     this.#host.publish(this.id, "all", items);
   }
 
-  // Gates the date relation only: a journal reaches its own notes' lines by containment first, and
-  // the listing never asks about those.
+  whenFilled(): Promise<void> {
+    return this.#filled;
+  }
+
+  // Gates the date relation only: a line its period's note holds is shown there whatever the rule.
   admits(item: TaskItem, journalName: string): boolean {
-    if (item.facts === undefined) return true;
-    const rule = this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id]?.dated;
+    if (!item.relations.includes("date") || item.facts === undefined) return true;
+    const rule = datedRuleOf(this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id]);
     return admitsSubject(rule, { path: item.path, tags: item.facts.tags, properties: item.facts.properties });
   }
 
@@ -283,6 +310,7 @@ export class CheckboxTaskProvider implements TaskProvider {
       disposed = true;
       for (const stop of stopNoteWatches) stop();
       this.#stopReading();
+      this.#markFilled?.();
     };
   }
 }

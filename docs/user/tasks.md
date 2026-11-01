@@ -67,7 +67,8 @@ Two condition types, each addable more than once:
 - **Tag** — **Has** or **Lacks** a comma-separated list of tags. Checked against tags on the item's own
   line and the note's frontmatter tags, wherever the item sits; a body tag elsewhere in the note does
   not count. Write each tag with or without its leading `#`; the field adds one either way, so the
-  row settles on `#task` whichever you typed.
+  row settles on `#task` whichever you typed. A tag also matches the tags nested under it, as
+  Obsidian's tag search does: `#task` matches `#task/work`, never `#taskforce`. Case does not matter.
 - **Heading** — **Under** or **Not under** a comma-separated list of headings. Checked against every
   heading enclosing the item, from its immediate section up through the note's outline — not only the
   nearest one. Write the heading's text, not its `#` markers — those are dropped if you include
@@ -338,10 +339,14 @@ note](#which-date-places-a-task-note).
 | `depth`      | `literal`          | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own.                       |
 | `status`     | `open`             | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one. The default gives way to [the journal's own **Status** condition](#a-journal-s-own-listing-filter) where it has one.       |
 | `heading`    | none               | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
-| `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                                         |
+| `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag. Case does not matter, and nested tags match: `work` shows `#Work` and `#work/client`, never `#workshop`.                |
 | `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
 | `date`       | `scheduled-or-due` | which of a task note's, or a dated checkbox line's, dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). A checkbox line with no such date is not placed by date.                                         |
 | `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
+
+A **Tag** condition matches the way Obsidian's tag search does, wherever it is written — the `tag` key,
+a `conditions:` entry, a journal's **Listing filter**, a view block's or decoration's own filter: case
+does not matter, and a tag also matches the tags nested under it.
 
 `status`, `heading` and `tag` are each sugar for one condition of that type. `conditions:` adds more —
 it never replaces what the flat keys already added, even one of the same type — which is how a fence
@@ -680,6 +685,11 @@ no unfinished tasks. Four other cases are worth knowing:
   read **"… changed while rolling"** and **"… could not be updated"**, and say the tasks were copied
   but are still in the earlier note too. Either way, mark or remove the originals by hand, or delete
   the copies.
+- **"… in its open editor, which could not save it"** — the earlier note is open, and its editor took
+  the mark, or under **Move** removed the tasks, but could not save. The change is in the editor and
+  reaches the note's file when the editor next saves; until then the file still holds the tasks. Don't
+  delete the copies: under **Move** they are the only ones the editor will keep. Save the earlier note
+  once it can be.
 - **"… could not be read"** — Obsidian failed to read the earlier note, so nothing was taken from it.
   Run the command again once the note opens normally.
 - **"… is still being indexed"** — the earlier note was edited a moment ago and Obsidian has not yet
@@ -746,7 +756,8 @@ copy the same tasks again, and a notice names every earlier note affected. The s
 notice of its own, when a roll fails part-way for any other reason, since today's note may already hold
 what was copied. The tasks
 are then in both notes: mark or remove the originals by hand, or delete the copies from the current
-note, then run **Roll over unfinished tasks**. A run of that command that reads every earlier note — none still being indexed or unreadable — and
+note, then run **Roll over unfinished tasks**. When the notice says the earlier note's open editor could
+not save it, save that note instead and leave the copies, since the editor already holds the change. A run of that command that reads every earlier note — none still being indexed or unreadable — and
 updates every one it took from resumes automatic rolling for the journal; otherwise it stays paused until Obsidian
 restarts. A run of the command that itself leaves an earlier note not updated pauses an automatic journal in the
 same way, with the same notice after the command's own. Renaming a paused journal keeps it paused.

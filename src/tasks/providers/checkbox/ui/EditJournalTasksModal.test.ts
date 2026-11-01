@@ -7,11 +7,14 @@ import { m } from "@/i18n";
 import { JournalsRepository } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { isUnreadable } from "@/settings/repair";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
 
 import EditJournalTasksModal from "./EditJournalTasksModal.vue";
+
+import type { CheckboxJournalRule } from "../rule-schema";
 
 async function mount(providers: unknown = {}) {
   const harness = await testContainer({
@@ -20,6 +23,13 @@ async function mount(providers: unknown = {}) {
   });
   const { submit } = harness.renderModal(EditJournalTasksModal, { props: { journalName: "Daily" } });
   return { harness, repository: harness.resolve(JournalsRepository), submit };
+}
+
+// Every Save here writes a readable rule; a held one is asserted on by its own tests below.
+function storedRule(repository: JournalsRepository): CheckboxJournalRule | undefined {
+  const rule = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+  if (isUnreadable(rule)) throw new Error(`rule held unreadable: ${JSON.stringify(rule)}`);
+  return rule;
 }
 
 describe("EditJournalTasksModal", () => {
@@ -63,7 +73,7 @@ describe("EditJournalTasksModal", () => {
   it("writes nothing to the journal until Save", async () => {
     const { repository } = await mount();
     await userEvent.click(screen.getByTestId("compose-narrow"));
-    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
+    expect(storedRule(repository)).toBeUndefined();
   });
 
   it("writes the journal's rule on Save", async () => {
@@ -74,7 +84,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     expect(stored).toMatchObject({ compose: "narrow" });
     expect(stored?.conditions).toHaveLength(1);
   });
@@ -91,7 +101,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     expect(stored?.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
   });
 
@@ -106,7 +116,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "#work, #home");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     expect(stored?.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#work", "#home"] });
   });
 
@@ -127,7 +137,7 @@ describe("EditJournalTasksModal", () => {
 
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     expect(stored?.conditions).toHaveLength(2);
     expect(stored?.conditions).toContainEqual({ type: "status", condition: "is", statuses: ["done"] });
   });
@@ -140,7 +150,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.click(screen.getByTestId("compose-inherit"));
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
+    expect(storedRule(repository)).toBeUndefined();
   });
 
   it("keeps the journal's dated rule when switched back to inherit", async () => {
@@ -150,7 +160,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.click(screen.getByTestId("compose-inherit"));
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     expect(stored?.compose).toBe("inherit");
     expect(stored?.dated).toEqual(dated);
   });
@@ -161,7 +171,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.click(screen.getByText(m.tasks_note_visibility_show_none()));
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     expect(stored).toEqual({
       compose: "inherit",
       mode: "and",
@@ -173,7 +183,7 @@ describe("EditJournalTasksModal", () => {
   it("stores no entry when neither identification nor the dated rule is set", async () => {
     const { repository } = await mount();
     await userEvent.click(screen.getByText(m.common_action_submit()));
-    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
+    expect(storedRule(repository)).toBeUndefined();
   });
 
   it("a Matching rule with an empty condition cannot be saved", async () => {
@@ -193,7 +203,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.click(screen.getByTestId("compose-narrow"));
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     expect(stored?.compose).toBe("narrow");
     expect(stored?.dated).toEqual(dated);
   });
@@ -221,7 +231,7 @@ describe("EditJournalTasksModal", () => {
     const providers = repository.get("Daily").getOrUndefined()?.tasks.providers;
     expect(providers).toMatchObject({ noteProperty: "after" });
     expect(providers?.checkbox).toMatchObject({ compose: "narrow" });
-    expect(providers?.checkbox?.conditions).toHaveLength(1);
+    expect(storedRule(repository)?.conditions).toHaveLength(1);
   });
 
   // save() must hand the store a copy of the draft's conditions, not the array itself — otherwise
@@ -234,7 +244,7 @@ describe("EditJournalTasksModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    const stored = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox;
+    const stored = storedRule(repository);
     stored?.conditions.push({ type: "tag", condition: "has", tags: ["outside"] });
 
     expect(screen.queryByDisplayValue("outside")).toBeNull();
@@ -250,7 +260,7 @@ describe("EditJournalTasksModal", () => {
       checkbox: { compose: "narrow", mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] },
     });
 
-    const condition = repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox?.conditions[0];
+    const condition = storedRule(repository)?.conditions[0];
     if (condition?.type !== "tag") throw new Error("no seeded tag condition");
     expect(screen.getByDisplayValue("#work")).toBeTruthy();
 
@@ -276,7 +286,7 @@ describe("empty-condition validation", () => {
 
     await userEvent.click(saveButton);
 
-    expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toBeUndefined();
+    expect(storedRule(repository)).toBeUndefined();
   });
 
   // The value only reaches the condition model at a commit boundary (blur or Enter), not on
@@ -324,5 +334,37 @@ describe("empty-condition validation", () => {
     await userEvent.click(screen.getByTestId("compose-inherit"));
 
     expect(saveButton.disabled).toBe(false);
+  });
+
+  describe("a rule this version cannot read", () => {
+    const held = { compose: "override", conditions: [] };
+
+    it("says so, and leaves Save off until a relation is chosen", async () => {
+      await mount({ checkbox: held });
+      expect(screen.getByText(m.tasks_rule_summary_unreadable())).toBeTruthy();
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(true);
+
+      await userEvent.click(screen.getByTestId("compose-inherit"));
+
+      expect(screen.getByText(m.common_action_submit()).closest("button")?.disabled).toBe(false);
+    });
+
+    it("is kept as it was by Cancel", async () => {
+      const { repository } = await mount({ checkbox: held });
+      await userEvent.click(screen.getByText(m.common_action_cancel()));
+      expect(repository.get("Daily").getOrUndefined()?.tasks.providers.checkbox).toEqual({
+        type: "unreadable",
+        raw: held,
+      });
+    });
+
+    it("is replaced once a relation is chosen and saved", async () => {
+      const { repository } = await mount({ checkbox: held });
+      await userEvent.click(screen.getByTestId("compose-narrow"));
+      await userEvent.click(screen.getByTestId("rule-add-condition"));
+      await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+      await userEvent.click(screen.getByText(m.common_action_submit()));
+      expect(storedRule(repository)).toMatchObject({ compose: "narrow" });
+    });
   });
 });

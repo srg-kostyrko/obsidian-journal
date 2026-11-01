@@ -2474,11 +2474,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "ステータスが指定されていない",
+  "tasks_condition_unreadable": "この条件は読み取れないため、何も一致しません。",
   "tasks_status_group_open": "未完了",
   "tasks_status_group_done": "完了",
   "tasks_status_group_all": "すべて",
   "tasks_filter_summary_conditions": "{conditions}タスクを表示します。",
   "tasks_rule_summary_any": "条件なし — ジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
+  "tasks_rule_summary_unreadable": "このルールの一部が読み取れないため、何も一致しません。",
   "tasks_rule_summary_conditions": "{conditions}チェックボックス項目を数えます。",
   "tasks_journal_summary_inherit": "保管庫全体のルールを継承します。",
   "tasks_journal_summary_narrow": "保管庫全体のルールを次の内容で絞り込みます: {rule}",
@@ -2722,6 +2724,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date}のノートは開いているエディターで繰り越し済みとしてマークされましたが、保存できませんでした。タスクはコピーされたため、保存されるまで再度繰り越される可能性があります。",
+        "mode=move": "{date}のノートのタスクは開いているエディターで削除されましたが、まだ保存できていません。タスクはコピーされ、保存されるまではディスク上の両方のノートに残ります。"
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
   "tasks_auto_roll_paused": "{journal}の自動繰り越しは一時停止中です。「繰り越し済みとしてマーク」をオンにするか、「移動」を使用してください。",
@@ -2732,6 +2744,16 @@
       "match": {
         "count=1": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートを更新できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートの元のタスクをマークまたは削除するか、コピーを削除してください。",
         "count=*": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートを更新できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートの元のタスクをマークまたは削除するか、コピーを削除してください。"
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートは開いているエディターで保存できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートを保存し、コピーはそのまま残してください。",
+        "count=*": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートは開いているエディターで保存できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートを保存し、コピーはそのまま残してください。"
       }
     }
   ],

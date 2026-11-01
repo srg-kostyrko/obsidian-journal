@@ -1,10 +1,23 @@
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
+import { isUnreadable } from "@/settings/repair";
 
-import { emptyCondition, visibilityDraftFrom, visibilityFormErrors, visibilityFrom } from "./form";
+import {
+  emptyCondition,
+  visibilityDraftFrom,
+  visibilityFormErrors,
+  visibilityFrom,
+  type VisibilityDraft,
+} from "./form";
 
 import type { VisibilityRule } from "./rule";
+
+function readableFrom(draft: VisibilityDraft): VisibilityRule | undefined {
+  const rule = visibilityFrom(draft);
+  if (isUnreadable(rule)) throw new Error("rule held unreadable");
+  return rule;
+}
 
 describe("visibility form", () => {
   it("round-trips a stored rule unchanged", () => {
@@ -37,7 +50,7 @@ describe("visibility form", () => {
     const draft = visibilityDraftFrom(undefined);
     draft.show = "matching";
     draft.conditions.push({ ...emptyCondition("tag"), tags: "work, , #, ##home" } as never);
-    expect(visibilityFrom(draft)?.conditions).toEqual([{ type: "tag", tags: ["#work", "#home"] }]);
+    expect(readableFrom(draft)?.conditions).toEqual([{ type: "tag", tags: ["#work", "#home"] }]);
   });
 
   it("refuses a tag condition whose entries are all blank", () => {
@@ -53,7 +66,7 @@ describe("visibility form", () => {
     const draft = visibilityDraftFrom(undefined);
     draft.show = "matching";
     draft.conditions.push({ ...emptyCondition("folder"), folders: ["/Projects/", "/", " Areas "] } as never);
-    expect(visibilityFrom(draft)?.conditions).toEqual([{ type: "folder", folders: ["Projects", "Areas"] }]);
+    expect(readableFrom(draft)?.conditions).toEqual([{ type: "folder", folders: ["Projects", "Areas"] }]);
   });
 
   it("refuses a property condition with no name or no value", () => {

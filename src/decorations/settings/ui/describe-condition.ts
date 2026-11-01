@@ -3,6 +3,7 @@ import { match } from "ts-pattern";
 import type { Calendar } from "@/calendar";
 import type { JournalDecorationCondition } from "@/decorations";
 import { formatConjunction, formatDisjunction, m } from "@/i18n";
+import { blockedByUnreadable } from "@/tasks/conditions";
 import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
 
 import { DATE_CONDITION_ANY, storedMonthToDisplay } from "../../date-condition";
@@ -75,8 +76,9 @@ export function describeCondition(
         c.date === "scheduled-or-due"
           ? question
           : m.decoration_condition_tasks_describe_dated({ base: question, date: c.date });
+      if (blockedByUnreadable(c.filter)) return m.tasks_rule_summary_unreadable();
       const parts = c.filter.conditions.flatMap((condition) =>
-        condition.type === "status" ? [] : [describeTagOrHeadingCondition(condition)],
+        condition.type === "tag" || condition.type === "heading" ? [describeTagOrHeadingCondition(condition)] : [],
       );
       if (parts.length === 0) return base;
       const join = c.filter.mode === "or" ? formatDisjunction : formatConjunction;

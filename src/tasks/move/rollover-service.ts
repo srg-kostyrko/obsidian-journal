@@ -34,7 +34,7 @@ import { TaskIndex } from "../task-index";
 import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
-import { AutomaticRollRefusedError, NoCurrentPeriodError, type RollError } from "./errors";
+import { AutomaticRollRefusedError, NoCurrentPeriodError, UnsavedEditError, type RollError } from "./errors";
 import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
 import { rewriteNote, type NoteWriters } from "./note-write";
@@ -124,6 +124,7 @@ function noTargetReport(journalName: string, mode: RollReport["mode"], heading: 
     changedSources: [],
     failedSources: [],
     alreadyHeld: 0,
+    unsavedSources: [],
     skippedSources: [],
     unreadSources: [],
   };
@@ -270,7 +271,7 @@ export class RolloverService {
     path: VaultPath,
     roots: readonly PlannedRoot[],
     rewrite: SourceRewrite,
-  ): AsyncResult<"written" | "changed", NoteNotFoundError | NoteWriteError> {
+  ): AsyncResult<"written" | "changed", NoteNotFoundError | NoteWriteError | UnsavedEditError> {
     return rewriteNote(
       this.#writers,
       path,
@@ -344,6 +345,7 @@ export class RolloverService {
       const changedSources: ChangedSource[] = [];
       const failedSources: ChangedSource[] = [];
       let alreadyHeld = 0;
+      const unsavedSources: ChangedSource[] = [];
       if (contributing.length > 0) {
         // The reads await, and the note can be deleted meanwhile.
         if (!createTarget && this.#index.get(journalName, today).isNone()) {
@@ -373,8 +375,12 @@ export class RolloverService {
           // A failed source is reported, not raised: its items already sit in the target.
           for (const { anchor, plan } of contributing) {
             const outcome = await this.#rewrite(plan.path, plan.roots, rewrite);
-            if (outcome.isErr()) failedSources.push({ path: plan.path, anchor });
-            else if (outcome.value === "changed") changedSources.push({ path: plan.path, anchor });
+            if (outcome.isErr()) {
+              (outcome.error instanceof UnsavedEditError ? unsavedSources : failedSources).push({
+                path: plan.path,
+                anchor,
+              });
+            } else if (outcome.value === "changed") changedSources.push({ path: plan.path, anchor });
           }
         }
       }
@@ -410,6 +416,7 @@ export class RolloverService {
         changedSources,
         failedSources,
         alreadyHeld,
+        unsavedSources,
         skippedSources: read.filter((anchor) => indexing.has(anchor)),
         unreadSources: read.filter((anchor) => unread.has(anchor)),
       };

@@ -2485,11 +2485,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "sans état",
+  "tasks_condition_unreadable": "Cette condition est illisible, donc rien n’y correspond.",
   "tasks_status_group_open": "Ouvertes",
   "tasks_status_group_done": "Terminées",
   "tasks_status_group_all": "Toutes",
   "tasks_filter_summary_conditions": "Affiche une tâche qui est {conditions}.",
   "tasks_rule_summary_any": "Aucune condition — tout élément de liste avec case à cocher dans les notes d’un journal est une tâche.",
+  "tasks_rule_summary_unreadable": "Une partie de cette règle est illisible, donc rien ne correspond.",
   "tasks_rule_summary_conditions": "Compte un élément de liste avec case à cocher qui est {conditions}.",
   "tasks_journal_summary_inherit": "Hérite de la règle de tout le coffre-fort.",
   "tasks_journal_summary_narrow": "Restreint la règle de tout le coffre-fort avec : {rule}",
@@ -2733,6 +2735,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La note du {date} a été marquée comme reportée dans son éditeur ouvert, mais n’a pas pu être enregistrée. Ses tâches ont été copiées et pourraient être reportées à nouveau tant qu’elle n’est pas enregistrée.",
+        "mode=move": "Les tâches de la note du {date} ont été retirées dans son éditeur ouvert, mais elle n’a pas encore pu être enregistrée. Ses tâches ont été copiées et figurent dans les deux notes sur le disque jusqu’à son enregistrement."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
   "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
   "tasks_auto_roll_paused": "Le report automatique est en pause pour {journal}. Activez Marquer comme reportée ou utilisez Déplacer.",
@@ -2743,6 +2755,16 @@
       "match": {
         "count=1": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais la note du {dates} n’a pas pu être mise à jour. Marquez ou supprimez les originaux dans la note du {dates}, ou effacez les copies, avant de lancer Reporter les tâches non terminées.",
         "count=*": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais les notes du {dates} n’ont pas pu être mises à jour. Marquez ou supprimez les originaux dans les notes du {dates}, ou effacez les copies, avant de lancer Reporter les tâches non terminées."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais la note du {dates} est ouverte dans un éditeur qui n’a pas pu l’enregistrer. Enregistrez la note du {dates} et gardez les copies avant de lancer Reporter les tâches non terminées.",
+        "count=*": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais les notes du {dates} sont ouvertes dans des éditeurs qui n’ont pas pu les enregistrer. Enregistrez les notes du {dates} et gardez les copies avant de lancer Reporter les tâches non terminées."
       }
     }
   ],

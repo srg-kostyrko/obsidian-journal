@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { NoteStructure, VaultPath } from "@/infrastructure/host";
+import { unreadable } from "@/settings/repair";
 
 import { composeDatedFilter, composeFilters, matchesFilter } from "./filter";
 import { buildTaskItem } from "./testing";
@@ -35,6 +36,8 @@ const under = (heading: string): TaskRule => ({
 const noteItem = (frontmatterTags: string[]) =>
   buildTaskItem({ display: { kind: "note", path, title: "Ship it" }, facts: { tags: frontmatterTags } });
 
+const tagged = (tag: string): NoteStructure => ({ ...structure, tags: [{ tag, line: 3 }] });
+
 describe("matchesFilter", () => {
   it("matches a status alias", () => {
     const filter: TaskRule = { mode: "and", conditions: [{ type: "status", condition: "is", statuses: ["open"] }] };
@@ -60,6 +63,23 @@ describe("matchesFilter", () => {
     const filter: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
     expect(matchesFilter(item, structure, filter)).toBe(true);
     expect(matchesFilter(other, structure, filter)).toBe(false);
+  });
+
+  it("matches a tag the way Obsidian's tag search does: ignoring case, nested tags included", () => {
+    const item = buildTaskItem({
+      display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
+    });
+    const has: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#work"] }] };
+    const lacks: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "lacks", tags: ["#work"] }] };
+    for (const tag of ["#Work", "#work/client", "#WORK/Client"]) {
+      expect(matchesFilter(item, tagged(tag), has)).toBe(true);
+      expect(matchesFilter(item, tagged(tag), lacks)).toBe(false);
+    }
+    expect(matchesFilter(item, tagged("#workshop"), has)).toBe(false);
+    expect(matchesFilter(item, tagged("#workshop"), lacks)).toBe(true);
+    const upper: TaskRule = { mode: "and", conditions: [{ type: "tag", condition: "has", tags: ["#Work"] }] };
+    expect(matchesFilter(item, tagged("#work/client"), upper)).toBe(true);
+    expect(matchesFilter(noteItem(["#Work/Client"]), undefined, has)).toBe(true);
   });
 
   it("drops a heading condition for a note item rather than failing or passing it", () => {
@@ -121,6 +141,26 @@ describe("matchesFilter", () => {
         ],
       }),
     ).toBe(false);
+  });
+});
+
+describe("matchesFilter with a condition it cannot read", () => {
+  const item = buildTaskItem({
+    display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
+  });
+  const unreadable = { type: "unreadable", raw: { type: "tag", condition: "lack", tags: ["#work"] } } as const;
+
+  it("matches nothing under and, rather than dropping the condition and widening the rule", () => {
+    expect(matchesFilter(item, structure, { mode: "and", conditions: [unreadable] })).toBe(false);
+  });
+
+  it("lets the readable conditions decide under or", () => {
+    const tagged: TaskRule = {
+      mode: "or",
+      conditions: [unreadable, { type: "tag", condition: "has", tags: ["#work"] }],
+    };
+    expect(matchesFilter(item, structure, tagged)).toBe(true);
+    expect(matchesFilter(item, structure, { mode: "or", conditions: [unreadable] })).toBe(false);
   });
 });
 
@@ -204,6 +244,20 @@ describe("composeDatedFilter", () => {
     expect(composeDatedFilter(journal, { mode: "and", conditions: [] }).conditions).toEqual([
       { type: "status", condition: "is", statuses: ["done"] },
     ]);
+  });
+
+  // Whatever an unreadable condition said about status, reading past it would widen the listing.
+  it("keeps a condition it cannot read, unless it was stored as a tag or heading one", () => {
+    const status = unreadable({ type: "status", condition: "is-any", statuses: ["done"] });
+    const unknown = unreadable({ type: "priority", above: 2 });
+    const tag = unreadable({ type: "tag", condition: "lack", tags: ["#w"] });
+    const stored: TaskRule = { mode: "and", conditions: [status, unknown, tag] };
+
+    const composed = composeDatedFilter(stored, { mode: "and", conditions: [] });
+
+    expect(composed.conditions).toEqual(expect.arrayContaining([status, unknown]));
+    expect(composed.conditions).not.toContainEqual(tag);
+    expect(matchesFilter(buildTaskItem({ path, status: "todo" }), structure, composed)).toBe(false);
   });
 
   it("keeps every condition the surface names, tag and heading included", () => {

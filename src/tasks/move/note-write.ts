@@ -7,6 +7,8 @@ import type {
 } from "@/infrastructure/host";
 import { AsyncResult } from "@/infrastructure/result";
 
+import { UnsavedEditError } from "./errors";
+
 export interface NoteWriters {
   readonly workspace: WorkspaceService;
   readonly notes: NotesService;
@@ -23,12 +25,16 @@ export function rewriteNote(
   path: VaultPath,
   transform: (content: string) => string | null,
   options: { readonly flush: boolean },
-): AsyncResult<NoteRewrite, NoteNotFoundError | NoteWriteError> {
+): AsyncResult<NoteRewrite, NoteNotFoundError | NoteWriteError | UnsavedEditError> {
   const open = writers.workspace.processOpenNote(path, transform);
   if (open === "refused") return AsyncResult.ok("refused");
   if (open === "applied") {
     const written: NoteRewrite = "written";
-    return options.flush ? writers.workspace.saveOpenNote(path).map(() => written) : AsyncResult.ok(written);
+    if (!options.flush) return AsyncResult.ok(written);
+    return writers.workspace
+      .saveOpenNote(path)
+      .map(() => written)
+      .mapErr((cause) => new UnsavedEditError(path, cause));
   }
   // Collected inside the closure: the verdict is reached under vault.process's lock.
   let refused = false;

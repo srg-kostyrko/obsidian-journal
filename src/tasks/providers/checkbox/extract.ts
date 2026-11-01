@@ -8,7 +8,7 @@ import { datesIn } from "./dates";
 import { identifies } from "./identification";
 import { normalizeStatus } from "./normalize";
 
-import type { CheckboxJournalRule, CheckboxRule } from "./rule-schema";
+import type { StoredCheckboxJournalRule, StoredCheckboxRule } from "./rule-schema";
 
 export const CHECKBOX_PROVIDER_ID = "checkbox";
 
@@ -17,8 +17,8 @@ export type LineDates = ReadonlyMap<number, Partial<Record<TaskDateRole, AnchorS
 export interface ExtractInput {
   readonly path: VaultPath;
   readonly structure: NoteStructure;
-  readonly vault: CheckboxRule;
-  readonly journal: CheckboxJournalRule | null;
+  readonly vault: StoredCheckboxRule;
+  readonly journal: StoredCheckboxJournalRule | null;
   readonly statusMap: Record<string, string>;
   readonly owned: boolean;
   readonly lineDates: LineDates | undefined;
@@ -86,16 +86,14 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
         markdown: null,
       },
       dates: { ...dates },
-      // Only a dated line is read by journals other than the note's own: by a dated rule, and by the
-      // owning journal's heading condition on whichever surface asks. Headings ride along so a
-      // heading edit above an unchanged line is a changed item there too.
-      ...(dated && {
-        facts: {
-          tags: tagsOf(listItem, structure),
-          headings: headingsOf(listItem.line, structure),
-          ...(properties !== undefined && { properties }),
-        },
-      }),
+      // What a listing filter and a tasks decoration read, so editing a tag or a heading above an
+      // unchanged line is a changed item. The line's text stays out: nothing but a listing shows
+      // it, and every version bump re-evaluates every mounted decoration.
+      facts: {
+        tags: tagsOf(listItem, structure),
+        headings: headingsOf(listItem.line, structure),
+        ...(dated && properties !== undefined && { properties }),
+      },
     });
   }
   return items;

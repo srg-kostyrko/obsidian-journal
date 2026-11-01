@@ -160,7 +160,7 @@ export class JournalsApiService implements JournalsApi {
 
   async #readyForTasks(): Promise<void> {
     await this.#readyForNotes();
-    await Promise.race([this.#taskProviders.whenStarted(), this.#unloaded]);
+    await Promise.race([this.#taskProviders.whenFilled(), this.#unloaded]);
     this.#assertLoaded();
   }
 

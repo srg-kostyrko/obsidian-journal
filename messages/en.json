@@ -2487,11 +2487,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "missing a status",
+  "tasks_condition_unreadable": "This condition can't be read, so nothing matches it.",
   "tasks_status_group_open": "Open",
   "tasks_status_group_done": "Done",
   "tasks_status_group_all": "All",
   "tasks_filter_summary_conditions": "Shows a task that is {conditions}.",
   "tasks_rule_summary_any": "No conditions — every checkbox item in a journal's notes is a task.",
+  "tasks_rule_summary_unreadable": "Part of this rule can't be read, so nothing matches.",
   "tasks_rule_summary_conditions": "Counts a checkbox item that is {conditions}.",
   "tasks_journal_summary_inherit": "Inherits the vault-wide rule.",
   "tasks_journal_summary_narrow": "Narrows the vault-wide rule with: {rule}",
@@ -2735,6 +2737,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "{date} was marked as rolled in its open editor, which could not save it. Its tasks were copied and may roll again until it is saved.",
+        "mode=move": "{date} had its tasks removed in its open editor, which could not save it yet. Its tasks were copied, so until it saves they are in both notes on disk."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "{date} is still being indexed. Try again in a moment.",
   "tasks_roll_source_unread": "{date} could not be read.",
   "tasks_auto_roll_paused": "Automatic rollover is paused for {journal}. Turn on Mark as rolled or use Move.",
@@ -2745,6 +2757,16 @@
       "match": {
         "count=1": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} could not be updated. Mark or remove the originals in {dates}, or delete the copies, before running Roll over unfinished tasks.",
         "count=*": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} could not be updated. Mark or remove the originals in {dates}, or delete the copies, before running Roll over unfinished tasks."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} is open in an editor that could not save it. Save {dates} and keep the copies before running Roll over unfinished tasks.",
+        "count=*": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} are open in editors that could not save them. Save {dates} and keep the copies before running Roll over unfinished tasks."
       }
     }
   ],

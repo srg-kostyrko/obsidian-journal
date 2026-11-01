@@ -2474,11 +2474,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "sin estado",
+  "tasks_condition_unreadable": "Esta condición no se puede leer, así que nada la cumple.",
   "tasks_status_group_open": "Abiertas",
   "tasks_status_group_done": "Hechas",
   "tasks_status_group_all": "Todas",
   "tasks_filter_summary_conditions": "Muestra una tarea que está {conditions}.",
   "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla en las notas de un diario es una tarea.",
+  "tasks_rule_summary_unreadable": "Parte de esta regla no se puede leer, así que nada coincide.",
   "tasks_rule_summary_conditions": "Cuenta un elemento de lista con casilla que está {conditions}.",
   "tasks_journal_summary_inherit": "Hereda la regla de toda la bóveda.",
   "tasks_journal_summary_narrow": "Restringe la regla de toda la bóveda con: {rule}",
@@ -2722,6 +2724,16 @@
       }
     }
   ],
+  "tasks_roll_source_unsaved": [
+    {
+      "declarations": ["input date", "input mode"],
+      "selectors": ["mode"],
+      "match": {
+        "mode=copy": "La nota del {date} se marcó como trasladada en su editor abierto, pero no se pudo guardar. Sus tareas se copiaron y podrían volver a trasladarse hasta que se guarde.",
+        "mode=move": "Se quitaron las tareas de la nota del {date} en su editor abierto, pero aún no se pudo guardar. Sus tareas se copiaron y estarán en ambas notas en el disco hasta que se guarde."
+      }
+    }
+  ],
   "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
   "tasks_roll_source_unread": "No se pudo leer la nota del {date}.",
   "tasks_auto_roll_paused": "El traslado automático está en pausa para {journal}. Activa Marcar como trasladada o usa Mover.",
@@ -2732,6 +2744,16 @@
       "match": {
         "count=1": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudo actualizar la nota del {dates}. Marca o elimina las originales en la nota del {dates}, o borra las copias, antes de ejecutar Trasladar tareas sin terminar.",
         "count=*": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero no se pudieron actualizar las notas del {dates}. Marca o elimina las originales en las notas del {dates}, o borra las copias, antes de ejecutar Trasladar tareas sin terminar."
+      }
+    }
+  ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero la nota del {dates} está abierta en un editor que no pudo guardarla. Guarda la nota del {dates} y conserva las copias antes de ejecutar Trasladar tareas sin terminar.",
+        "count=*": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero las notas del {dates} están abiertas en editores que no pudieron guardarlas. Guarda las notas del {dates} y conserva las copias antes de ejecutar Trasladar tareas sin terminar."
       }
     }
   ],
