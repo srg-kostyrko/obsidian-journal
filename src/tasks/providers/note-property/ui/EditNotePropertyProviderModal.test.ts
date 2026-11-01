@@ -82,6 +82,15 @@ describe("EditNotePropertyProviderModal", () => {
     expect(screen.getByTestId("note-property-status-property")).toBeTruthy();
   });
 
+  it("keeps the status section open once its error is fixed", async () => {
+    await mount((state) => (state.statusProperty = ""), { expand: false });
+
+    await userEvent.type(input("note-property-status-property"), "s");
+
+    expect(screen.queryByText(m.tasks_note_property_property_required())).toBeNull();
+    expect(screen.getByTestId("note-property-status-property")).toBeTruthy();
+  });
+
   it("leaves the slice untouched when edits are cancelled", async () => {
     const { slice, cancel } = await mount();
     const before = structuredClone(JSON.parse(JSON.stringify(slice.state)) as unknown);

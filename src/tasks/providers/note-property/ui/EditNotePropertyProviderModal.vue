@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -38,12 +38,16 @@ const valid = computed(() => Object.keys(errorBag.value).length === 0);
 
 const datesOpen = ref(false);
 const otherOpen = ref(false);
-const statusOpenByUser = ref(false);
-// A closed section would hide the reason Save is disabled, so one holding an error stays open.
+const statusExpanded = ref(false);
+const statusHasError = computed(
+  () => errorBag.value.statusProperty !== undefined || errorBag.value.statusRows !== undefined,
+);
+// A closed section would hide the reason Save is disabled, so one holding an error stays open. An
+// error also latches it open: otherwise the keystroke that fixes a field would close it.
+watch(statusHasError, (hasError) => hasError && (statusExpanded.value = true), { immediate: true });
 const statusOpen = computed({
-  get: () =>
-    statusOpenByUser.value || errorBag.value.statusProperty !== undefined || errorBag.value.statusRows !== undefined,
-  set: (open: boolean) => (statusOpenByUser.value = open),
+  get: () => statusExpanded.value || statusHasError.value,
+  set: (open: boolean) => (statusExpanded.value = open),
 });
 const datesSet = computed(() => NOTE_PROPERTY_DATE_ROLES.filter((role) => draft.dates[role] !== "").length);
 

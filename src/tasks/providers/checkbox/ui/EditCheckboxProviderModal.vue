@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cloneFnJSON } from "@vueuse/core";
-import { computed, reactive, ref } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -83,11 +83,14 @@ const errorBag = computed(() => ({ rolledMarker: markerErrors(marker.value) }));
 const markerChanged = computed(() => marker.value !== slice.state.rolledMarker);
 const valid = computed(() => ruleValid.value && errorBag.value.rolledMarker.length === 0);
 
-const rolloverOpenByUser = ref(false);
-// A closed section would hide the reason Save is disabled, so one holding an error stays open.
+const rolloverExpanded = ref(false);
+const rolloverHasError = computed(() => errorBag.value.rolledMarker.length > 0);
+// A closed section would hide the reason Save is disabled, so one holding an error stays open. An
+// error also latches it open: otherwise the keystroke that fixes the marker would close the field.
+watch(rolloverHasError, (hasError) => hasError && (rolloverExpanded.value = true), { immediate: true });
 const rolloverOpen = computed({
-  get: () => rolloverOpenByUser.value || errorBag.value.rolledMarker.length > 0,
-  set: (open: boolean) => (rolloverOpenByUser.value = open),
+  get: () => rolloverExpanded.value || rolloverHasError.value,
+  set: (open: boolean) => (rolloverExpanded.value = open),
 });
 
 function save(): void {

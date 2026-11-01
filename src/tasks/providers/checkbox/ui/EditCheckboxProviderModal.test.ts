@@ -536,6 +536,14 @@ describe("rolled marker", () => {
     expect(screen.getByTestId("checkbox-rolled-marker")).toBeTruthy();
   });
 
+  it("keeps the rollover section open once the marker is fixed", async () => {
+    await mount({ expand: false, seed: (state) => (state.rolledMarker = "#") });
+
+    await userEvent.type(screen.getByTestId("checkbox-rolled-marker"), "r");
+
+    expect(screen.getByTestId("checkbox-rolled-marker")).toBeTruthy();
+  });
+
   it("editing the marker shows the consequence line", async () => {
     await mount();
     expect(screen.queryByText(m.tasks_checkbox_marker_changed())).toBeNull();
