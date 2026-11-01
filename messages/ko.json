@@ -952,7 +952,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "더 좁히기",
-  "decoration_condition_tasks_narrow_description": "저널의 작업 필터에 더해, 이 조건에 맞는 작업만 셉니다.",
+  "decoration_condition_tasks_narrow_description": "저널 자체의 같은 유형 조건 대신, 이 조건에 맞는 작업만 셉니다.",
   "decoration_condition_tasks_narrow_add": "좁히기 조건 추가",
   "decoration_condition_tasks_date_label": "작업 날짜",
   "decoration_condition_tasks_describe": [
@@ -1522,7 +1522,7 @@
   "tasks_date_choice_done": "완료일",
   "tasks_date_choice_created": "생성 날짜",
   "view_block_tasks_date_label": "작업 날짜",
-  "view_block_tasks_date_description": "작업 노트의 어떤 날짜가 기간에 배치할지 정합니다.",
+  "view_block_tasks_date_description": "작업의 어떤 날짜가 작업 노트나 날짜가 있는 체크박스 행을 기간에 배치할지 정합니다.",
   "view_block_tasks_filter_label": "필터",
   "view_block_tasks_filter_status_default": "자체 상태 조건이 없으므로 상태를 지정한 저널에서는 그 저널의 목록 필터가 결정합니다.",
   "view_toolbar_shelf_selector_label": "선반 선택기",
@@ -2477,7 +2477,7 @@
   "tasks_status_group_done": "완료",
   "tasks_status_group_all": "전체",
   "tasks_filter_summary_conditions": "{conditions} 작업을 표시합니다.",
-  "tasks_rule_summary_any": "조건 없음 — 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
+  "tasks_rule_summary_any": "조건 없음 — 모든 체크박스 목록 항목이 작업입니다.",
   "tasks_rule_summary_unreadable": "이 규칙의 일부를 읽을 수 없어 아무것도 일치하지 않습니다.",
   "tasks_rule_summary_conditions": "{conditions} 체크박스 목록 항목을 집계합니다.",
   "tasks_journal_summary_inherit": "보관함 전체 규칙을 상속합니다.",
@@ -2592,7 +2592,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "원래 있던 제목이 없으면 {heading} 아래에 둡니다.",
+  "tasks_move_summary_heading": "목록 필터에 지정되어 있고 오늘 노트에도 있는 제목에서 온 경우를 제외하고 {heading} 아래에 둡니다.",
   "tasks_move_summary_automatic": "자동으로 이월합니다.",
   "tasks_move_summary_line": [
     {
@@ -2629,7 +2629,7 @@
     }
   ],
   "tasks_move_stamp": "이월됨으로 표시",
-  "tasks_move_stamp_desc": "복사 후 남는 각 원래 줄에 이월 표시를 추가해 더 이상 완료되지 않은 작업으로 보이지 않게 합니다.",
+  "tasks_move_stamp_desc": "복사 후 남는 각 그룹의 맨 위 줄에 이월 표시를 추가해 그 줄과 아래 줄이 더 이상 완료되지 않은 작업으로 보이지 않게 합니다.",
   "tasks_move_stamp_on": "켜기",
   "tasks_move_stamp_off": "끄기",
   "tasks_move_stamp_default": [
@@ -2644,7 +2644,7 @@
   ],
   "tasks_move_source_desc": "이전 기간의 어떤 노트에서 작업을 가져올지.",
   "tasks_move_heading": "대상 제목",
-  "tasks_move_heading_desc": "작업이 있던 제목이 노트에 없을 때 작업을 둘 위치. 비워 두면 끝에 추가합니다.",
+  "tasks_move_heading_desc": "작업이 있던 제목이 목록 필터에 지정되어 있고 노트에도 있는 경우를 제외하고 작업을 둘 위치. 비워 두면 끝에 추가합니다.",
   "tasks_move_look_back": "되돌아볼 노트 수",
   "tasks_move_look_back_desc": "완료되지 않은 작업을 가져올 이전 노트의 수.",
   "tasks_move_look_back_invalid": "1 이상의 정수를 입력하세요.",

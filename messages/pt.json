@@ -952,7 +952,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "Restringir mais",
-  "decoration_condition_tasks_narrow_description": "Conta apenas as tarefas que correspondem a estas, além do filtro de tarefas do diário.",
+  "decoration_condition_tasks_narrow_description": "Conta apenas as tarefas que correspondem a estas, no lugar das condições próprias do diário do mesmo tipo.",
   "decoration_condition_tasks_narrow_add": "Adicionar condição restritiva",
   "decoration_condition_tasks_date_label": "Data da tarefa",
   "decoration_condition_tasks_describe": [
@@ -1522,7 +1522,7 @@
   "tasks_date_choice_done": "Data de conclusão",
   "tasks_date_choice_created": "Data de criação",
   "view_block_tasks_date_label": "Data da tarefa",
-  "view_block_tasks_date_description": "Qual data de uma nota de tarefa a coloca em um período.",
+  "view_block_tasks_date_description": "Qual data de uma tarefa coloca uma nota de tarefa ou uma linha de caixa de seleção com data em um período.",
   "view_block_tasks_filter_label": "Filtro",
   "view_block_tasks_filter_status_default": "Sem condição de Estado própria, portanto o filtro de listagem de um diário decide onde nomeia um.",
   "view_toolbar_shelf_selector_label": "Seletor de prateleira",
@@ -2488,7 +2488,7 @@
   "tasks_status_group_done": "Concluídas",
   "tasks_status_group_all": "Todas",
   "tasks_filter_summary_conditions": "Exibe uma tarefa que está {conditions}.",
-  "tasks_rule_summary_any": "Sem condições — todo item de lista com caixa de seleção nas notas de um diário é uma tarefa.",
+  "tasks_rule_summary_any": "Sem condições — todo item de lista com caixa de seleção é uma tarefa.",
   "tasks_rule_summary_unreadable": "Parte desta regra não pode ser lida, então nada corresponde.",
   "tasks_rule_summary_conditions": "Conta um item de lista com caixa de seleção que está {conditions}.",
   "tasks_journal_summary_inherit": "Herda a regra de todo o cofre.",
@@ -2603,7 +2603,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Coloca-as sob {heading} quando falta o cabeçalho de onde vieram.",
+  "tasks_move_summary_heading": "Coloca-as sob {heading}, a menos que tenham vindo de um cabeçalho nomeado pelo filtro de listagem e presente na nota de hoje.",
   "tasks_move_summary_automatic": "Transfere automaticamente.",
   "tasks_move_summary_line": [
     {
@@ -2640,7 +2640,7 @@
     }
   ],
   "tasks_move_stamp": "Marcar como transferida",
-  "tasks_move_stamp_desc": "Adiciona o marcador de transferência a cada linha original que uma cópia deixa para trás, para que ela deixe de constar como não concluída.",
+  "tasks_move_stamp_desc": "Adiciona o marcador de transferência à primeira linha de cada grupo que uma cópia deixa para trás, para que ela e as linhas abaixo deixem de constar como não concluídas.",
   "tasks_move_stamp_on": "Ativado",
   "tasks_move_stamp_off": "Desativado",
   "tasks_move_stamp_default": [
@@ -2655,7 +2655,7 @@
   ],
   "tasks_move_source_desc": "De quais notas do período anterior as tarefas são tiradas.",
   "tasks_move_heading": "Cabeçalho de destino",
-  "tasks_move_heading_desc": "Onde as tarefas ficam quando a nota não tem o cabeçalho em que estavam. Deixe vazio para adicioná-las ao final.",
+  "tasks_move_heading_desc": "Onde as tarefas ficam, a menos que o cabeçalho em que estavam seja nomeado pelo filtro de listagem e exista na nota. Deixe vazio para adicioná-las ao final.",
   "tasks_move_look_back": "Notas anteriores",
   "tasks_move_look_back_desc": "De quantas notas anteriores as tarefas não concluídas são tiradas.",
   "tasks_move_look_back_invalid": "Digite um número inteiro igual ou maior que 1.",

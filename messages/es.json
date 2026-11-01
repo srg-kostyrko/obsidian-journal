@@ -952,7 +952,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "Restringir más",
-  "decoration_condition_tasks_narrow_description": "Cuenta solo las tareas que coinciden con estas, además del filtro de tareas del diario.",
+  "decoration_condition_tasks_narrow_description": "Cuenta solo las tareas que coinciden con estas, en lugar de las condiciones propias del diario del mismo tipo.",
   "decoration_condition_tasks_narrow_add": "Agregar condición de filtrado",
   "decoration_condition_tasks_date_label": "Fecha de la tarea",
   "decoration_condition_tasks_describe": [
@@ -1522,7 +1522,7 @@
   "tasks_date_choice_done": "Fecha de finalización",
   "tasks_date_choice_created": "Fecha de creación",
   "view_block_tasks_date_label": "Fecha de la tarea",
-  "view_block_tasks_date_description": "Qué fecha de una nota de tarea la sitúa en un período.",
+  "view_block_tasks_date_description": "Qué fecha de una tarea sitúa una nota de tarea o una línea de casilla con fecha en un período.",
   "view_block_tasks_filter_label": "Filtro",
   "view_block_tasks_filter_status_default": "Sin condición de Estado propia, por lo que decide el filtro de listado de un diario donde nombre uno.",
   "view_toolbar_shelf_selector_label": "Selector de estantes",
@@ -2480,7 +2480,7 @@
   "tasks_status_group_done": "Hechas",
   "tasks_status_group_all": "Todas",
   "tasks_filter_summary_conditions": "Muestra una tarea que está {conditions}.",
-  "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla en las notas de un diario es una tarea.",
+  "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla es una tarea.",
   "tasks_rule_summary_unreadable": "Parte de esta regla no se puede leer, así que nada coincide.",
   "tasks_rule_summary_conditions": "Cuenta un elemento de lista con casilla que está {conditions}.",
   "tasks_journal_summary_inherit": "Hereda la regla de toda la bóveda.",
@@ -2595,7 +2595,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Las coloca bajo {heading} si falta el encabezado del que venían.",
+  "tasks_move_summary_heading": "Las coloca bajo {heading}, salvo que vengan de un encabezado que nombra el filtro de listado y que tiene la nota de hoy.",
   "tasks_move_summary_automatic": "Traslada automáticamente.",
   "tasks_move_summary_line": [
     {
@@ -2632,7 +2632,7 @@
     }
   ],
   "tasks_move_stamp": "Marcar como trasladada",
-  "tasks_move_stamp_desc": "Añade la marca de traslado a cada línea original que deja una copia, para que deje de figurar como sin terminar.",
+  "tasks_move_stamp_desc": "Añade la marca de traslado a la primera línea de cada grupo que deja una copia, para que ella y las líneas de debajo dejen de figurar como sin terminar.",
   "tasks_move_stamp_on": "Activado",
   "tasks_move_stamp_off": "Desactivado",
   "tasks_move_stamp_default": [
@@ -2647,7 +2647,7 @@
   ],
   "tasks_move_source_desc": "De qué notas del periodo anterior se toman las tareas.",
   "tasks_move_heading": "Encabezado de destino",
-  "tasks_move_heading_desc": "Dónde van las tareas cuando la nota no tiene el encabezado bajo el que estaban. Déjalo vacío para añadirlas al final.",
+  "tasks_move_heading_desc": "Dónde van las tareas, salvo que el encabezado bajo el que estaban lo nombre el filtro de listado y la nota lo tenga. Déjalo vacío para añadirlas al final.",
   "tasks_move_look_back": "Notas anteriores",
   "tasks_move_look_back_desc": "De cuántas notas anteriores se toman las tareas sin terminar.",
   "tasks_move_look_back_invalid": "Introduce un número entero mayor o igual que 1.",

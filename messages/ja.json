@@ -807,7 +807,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "さらに絞り込む",
-  "decoration_condition_tasks_narrow_description": "ジャーナルのタスクフィルターに加えて、これらに一致するタスクだけを数えます。",
+  "decoration_condition_tasks_narrow_description": "ジャーナル自身の同じ種類の条件の代わりに、これらに一致するタスクだけを数えます。",
   "decoration_condition_tasks_narrow_add": "絞り込み条件を追加",
   "decoration_condition_tasks_date_label": "タスクの日付",
   "decoration_condition_tasks_describe": [
@@ -1377,7 +1377,7 @@
   "tasks_date_choice_done": "完了日",
   "tasks_date_choice_created": "作成日",
   "view_block_tasks_date_label": "タスクの日付",
-  "view_block_tasks_date_description": "タスクノートのどの日付で期間に割り当てるか。",
+  "view_block_tasks_date_description": "タスクのどの日付で、タスクノートや日付付きのチェックボックス行を期間に割り当てるか。",
   "view_block_tasks_filter_label": "フィルター",
   "view_block_tasks_filter_status_default": "独自のステータス条件はありません。ステータスを指定しているジャーナルでは、その一覧フィルターが決定します。",
   "view_toolbar_shelf_selector_label": "棚セレクター",
@@ -2480,7 +2480,7 @@
   "tasks_status_group_done": "完了",
   "tasks_status_group_all": "すべて",
   "tasks_filter_summary_conditions": "{conditions}タスクを表示します。",
-  "tasks_rule_summary_any": "条件なし — ジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
+  "tasks_rule_summary_any": "条件なし — すべてのチェックボックス項目がタスクになります。",
   "tasks_rule_summary_unreadable": "このルールの一部が読み取れないため、何も一致しません。",
   "tasks_rule_summary_conditions": "{conditions}チェックボックス項目を数えます。",
   "tasks_journal_summary_inherit": "保管庫全体のルールを継承します。",
@@ -2595,7 +2595,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "元の見出しがない場合は{heading}の下に置きます。",
+  "tasks_move_summary_heading": "一覧フィルターで指定され、今日のノートにもある見出しから来た場合を除き、{heading}の下に置きます。",
   "tasks_move_summary_automatic": "自動で繰り越します。",
   "tasks_move_summary_line": [
     {
@@ -2632,7 +2632,7 @@
     }
   ],
   "tasks_move_stamp": "繰り越し済みとしてマーク",
-  "tasks_move_stamp_desc": "コピーで残る元の各行に繰り越しマーカーを追加し、未完了として扱われないようにします。",
+  "tasks_move_stamp_desc": "コピーで残る各グループの先頭行に繰り越しマーカーを追加し、その行と下の行が未完了として扱われないようにします。",
   "tasks_move_stamp_on": "オン",
   "tasks_move_stamp_off": "オフ",
   "tasks_move_stamp_default": [
@@ -2647,7 +2647,7 @@
   ],
   "tasks_move_source_desc": "前の期間のどのノートからタスクを取り出すか。",
   "tasks_move_heading": "移動先の見出し",
-  "tasks_move_heading_desc": "元の見出しがノートにない場合のタスクの置き場所。空のままにすると末尾に追加します。",
+  "tasks_move_heading_desc": "元の見出しが一覧フィルターで指定されていて、ノートにもある場合を除いた、タスクの置き場所。空のままにすると末尾に追加します。",
   "tasks_move_look_back": "さかのぼる数",
   "tasks_move_look_back_desc": "未完了のタスクを取り出す前のノートの数。",
   "tasks_move_look_back_invalid": "1以上の整数を入力してください。",

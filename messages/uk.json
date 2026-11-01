@@ -811,7 +811,7 @@
     }
   ],
   "decoration_condition_tasks_narrow_label": "Звузити додатково",
-  "decoration_condition_tasks_narrow_description": "Враховуються лише завдання, що відповідають цим умовам, окрім фільтра завдань журналу.",
+  "decoration_condition_tasks_narrow_description": "Враховуються лише завдання, що відповідають цим умовам, замість власних умов журналу того самого типу.",
   "decoration_condition_tasks_narrow_add": "Додати уточнювальну умову",
   "decoration_condition_tasks_date_label": "Дата завдання",
   "decoration_condition_tasks_describe": [
@@ -1413,7 +1413,7 @@
   "tasks_date_choice_done": "Дата завершення",
   "tasks_date_choice_created": "Дата створення",
   "view_block_tasks_date_label": "Дата завдання",
-  "view_block_tasks_date_description": "Яка дата нотатки-завдання відносить її до періоду.",
+  "view_block_tasks_date_description": "Яка дата завдання відносить нотатку-завдання або рядок із чекбоксом із датою до періоду.",
   "view_block_tasks_filter_label": "Фільтр",
   "view_block_tasks_filter_status_default": "Немає власної умови статусу, тому вирішує фільтр списку журналу, якщо він вказує статус.",
   "view_toolbar_shelf_selector_label": "Вибір полиці",
@@ -2558,7 +2558,7 @@
   "tasks_status_group_done": "Виконані",
   "tasks_status_group_all": "Усі",
   "tasks_filter_summary_conditions": "Показує завдання, яке {conditions}.",
-  "tasks_rule_summary_any": "Немає умов — кожен пункт списку з чекбоксом у нотатках журналу вважається завданням.",
+  "tasks_rule_summary_any": "Немає умов — кожен пункт списку з чекбоксом вважається завданням.",
   "tasks_rule_summary_unreadable": "Частину цього правила не вдається прочитати, тому нічого не підходить.",
   "tasks_rule_summary_conditions": "Враховує пункт списку з чекбоксом, який {conditions}.",
   "tasks_journal_summary_inherit": "Успадковує правило всього сховища.",
@@ -2682,7 +2682,7 @@
       }
     }
   ],
-  "tasks_move_summary_heading": "Розміщує їх під {heading}, якщо заголовка, під яким вони були, немає.",
+  "tasks_move_summary_heading": "Розміщує їх під {heading}, крім випадку, коли вони прийшли із заголовка, який вказано у фільтрі списку і який є в сьогоднішній нотатці.",
   "tasks_move_summary_automatic": "Переносить автоматично.",
   "tasks_move_summary_line": [
     {
@@ -2719,7 +2719,7 @@
     }
   ],
   "tasks_move_stamp": "Позначати як перенесені",
-  "tasks_move_stamp_desc": "Додає мітку перенесення до кожного вихідного рядка, який лишає копіювання, щоб він більше не вважався незавершеним.",
+  "tasks_move_stamp_desc": "Додає мітку перенесення до верхнього рядка кожної групи, яку лишає копіювання, щоб він і рядки під ним більше не вважалися незавершеними.",
   "tasks_move_stamp_on": "Увімк.",
   "tasks_move_stamp_off": "Вимк.",
   "tasks_move_stamp_default": [
@@ -2734,7 +2734,7 @@
   ],
   "tasks_move_source_desc": "З яких нотаток попереднього періоду брати завдання.",
   "tasks_move_heading": "Цільовий заголовок",
-  "tasks_move_heading_desc": "Куди потрапляють завдання, якщо в нотатці немає заголовка, під яким вони були. Залиште порожнім, щоб додавати їх у кінець.",
+  "tasks_move_heading_desc": "Куди потрапляють завдання, крім випадку, коли заголовок, під яким вони були, вказано у фільтрі списку і він є в нотатці. Залиште порожнім, щоб додавати їх у кінець.",
   "tasks_move_look_back": "Глибина перенесення",
   "tasks_move_look_back_desc": "Зі скількох попередніх нотаток брати незавершені завдання.",
   "tasks_move_look_back_invalid": "Введіть ціле число, не менше за 1.",
