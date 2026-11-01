@@ -189,8 +189,12 @@ same prompt; a second failure goes in the report as "not audited".
     invalidated by a later commit in the same cycle.
 - **A string whose claim the code contradicts** — the strings auditor's `truth` other than `holds`.
   This is a code defect, not a docs one: ask the maintainer the same way, and on **correct it** edit
-  `messages/en.json` **line-wise**, never by parsing and re-serializing the file. 3.5.0 nearly shipped
-  two, and neither the changelog step nor any docs check would have caught them.
+  that key in **every** `messages/*.json` **line-wise**, never by parsing and re-serializing a file.
+  Each locale's value is rewritten to the corrected meaning in that locale's own glossary terms, and
+  `npm run check:i18n` must pass. 3.5.0 nearly shipped two, and neither the changelog step nor any
+  docs check would have caught them. Never offer an English-only fix: 3.6.0 shipped six corrections
+  in `en.json` alone, and the other ten locales went on translating the false wording until a
+  follow-up commit on the release branch.
 - **`uncovered`** — an entry auditor's `uncovered: true` on a Bug Fixes entry is dropped, and so is one on a feature only plugin developers meet (the plugin API, which `docs/plugin-api.md` owns). A strings
   item with `explainedAt: null` is uncovered. Merge duplicates naming the same behavior. Then, unless
   `--dry-run`, ask the maintainer one question per item: **write it now** or **ruled out**, with a
@@ -274,7 +278,8 @@ done
 ```
 
 A string the maintainer chose to correct is committed here too, separately —
-`git commit -m "fix(i18n): correct <key> for $LABEL" -- messages/en.json` — and a corrected changelog
+`git commit -m "fix(i18n): correct <key> for $LABEL" -- messages` — every locale in the one commit,
+a diff of one changed line per key per file — and a corrected changelog
 bullet as `git commit -m "docs(changelog): correct <what> for $LABEL" -- CHANGELOG.md`. **Both carry
 their pathspec**, as the loop above does: a bare `git commit -m` would take everything staged.
 Neither is a manual page, so neither belongs in that loop, and both are ordinary source fixes that
