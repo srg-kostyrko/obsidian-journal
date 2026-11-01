@@ -80,28 +80,33 @@ function save(): void {
     </UiSettingRow>
   </template>
 
-  <UiSettingRow :name="m.tasks_note_property_excluded_folders()" stacked>
+  <UiSettingRow :name="m.tasks_note_property_excluded_folders()">
     <template #description>{{ m.tasks_note_property_excluded_folders_desc() }}</template>
-    <div class="tasks-note-property-list">
-      <div v-for="(_, index) in draft.excludedFolders" :key="index" class="tasks-note-property-list-row">
-        <FolderInput
-          v-model="draft.excludedFolders[index]"
-          :aria-label="m.tasks_note_property_folder_label()"
-          :data-testid="`note-property-folder-${index}`"
-        />
-        <UiIconButton
-          :icon="icons.action.delete"
-          :tooltip="m.common_action_delete()"
-          :data-testid="`note-property-folder-remove-${index}`"
-          @click="removeFolder(index)"
-        />
-      </div>
-      <div>
-        <UiButton data-testid="note-property-add-folder" @click="addFolder">
-          {{ m.tasks_note_property_add_folder() }}
-        </UiButton>
-      </div>
-    </div>
+    <UiIconButton
+      :icon="icons.action.add"
+      :tooltip="m.tasks_note_property_add_folder()"
+      data-testid="note-property-add-folder"
+      @click="addFolder"
+    />
+  </UiSettingRow>
+  <UiSettingRow
+    v-for="(_, index) in draft.excludedFolders"
+    :key="index"
+    controls-only
+    class="tasks-note-property-folder-row"
+  >
+    <FolderInput
+      v-model="draft.excludedFolders[index]"
+      class="tasks-note-property-grow"
+      :aria-label="m.tasks_note_property_folder_label()"
+      :data-testid="`note-property-folder-${index}`"
+    />
+    <UiIconButton
+      :icon="icons.action.delete"
+      :tooltip="m.common_action_delete()"
+      :data-testid="`note-property-folder-remove-${index}`"
+      @click="removeFolder(index)"
+    />
   </UiSettingRow>
   <UiSettingRow :name="m.tasks_note_property_archive_tag()">
     <template #description>{{ m.tasks_note_property_archive_tag_desc() }}</template>
@@ -171,14 +176,10 @@ function save(): void {
   color: var(--text-error);
   display: block;
 }
-.tasks-note-property-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-2-2);
+.tasks-note-property-folder-row :deep(.setting-item-control) {
+  flex: 1;
 }
-.tasks-note-property-list-row {
-  display: flex;
-  align-items: center;
-  gap: var(--size-2-2);
+.tasks-note-property-grow {
+  flex-grow: 1;
 }
 </style>
