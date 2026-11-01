@@ -43,6 +43,7 @@ export class CheckboxTaskProvider implements TaskProvider {
   // Drawn from one counter rather than per path, so a path cleared by a delete and read again
   // cannot hand a stale in-flight read the number it was waiting for.
   readonly #generation = new Map<VaultPath, number>();
+  readonly #loading = new Map<VaultPath, Promise<boolean>>();
   #reads = 0;
   // Bumped by every walk start, every disable and dispose, so a walk that is no longer the latest
   // stops at its next note rather than racing the one that replaced it.
@@ -126,7 +127,13 @@ export class CheckboxTaskProvider implements TaskProvider {
 
   // Answers whether the entry it settled on still stands — false when a newer read overtook it or
   // the provider was off — so the caller publishes only what is current.
-  async #load(path: VaultPath): Promise<boolean> {
+  #load(path: VaultPath): Promise<boolean> {
+    const loading = this.#loadNow(path);
+    this.#loading.set(path, loading);
+    return loading;
+  }
+
+  async #loadNow(path: VaultPath): Promise<boolean> {
     const generation = ++this.#reads;
     this.#generation.set(path, generation);
     if (!this.#settings.state.enabled) {
@@ -176,7 +183,13 @@ export class CheckboxTaskProvider implements TaskProvider {
       if (structure.isNone() || structure.value.listItems.length === 0) continue;
       if (this.#ownerOf(path) === undefined && this.#notes.isUserIgnored(path)) continue;
       read = true;
-      await this.#load(path);
+      // A newer read overtook this one: the note is not filled until that one lands.
+      let loading = this.#load(path);
+      while (!(await loading) && run === this.#walks) {
+        const newer = this.#loading.get(path);
+        if (newer === undefined || newer === loading) break;
+        loading = newer;
+      }
     }
     if (run !== this.#walks) return;
     if (read) this.#refillAll();
@@ -193,12 +206,14 @@ export class CheckboxTaskProvider implements TaskProvider {
     this.#walks++;
     // An empty generation map discards every read still in flight.
     this.#generation.clear();
+    this.#loading.clear();
     this.#lineDates.clear();
   }
 
   #forget(path: VaultPath): void {
     this.#lineDates.delete(path);
     this.#generation.delete(path);
+    this.#loading.delete(path);
     this.#host.publish(this.id, { path }, []);
   }
 

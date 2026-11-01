@@ -1022,6 +1022,28 @@ describe("CheckboxTaskProvider whenFilled", () => {
     expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-24" });
   });
 
+  it("waits for a newer read of a note that overtook the walk's own", async () => {
+    const { host, notes, provider, journals } = await vault();
+    notes.gated = true;
+    provider.start();
+    const filled = settledFlag(provider.whenFilled());
+    journals.markReady();
+    await flush();
+    notes.release(0);
+    await flush();
+
+    notes.externalEdit(projectPath, "# Ideas\n- [ ] Ship the launch 📅 2026-10-25");
+    notes.release(1);
+    await flush();
+    expect(filled.settled).toBe(false);
+
+    notes.release(2);
+    await flush();
+
+    expect(filled.settled).toBe(true);
+    expect(datedLines(host.published.get(projectPath))).toEqual({ 1: "2026-10-25" });
+  });
+
   it("settles on readiness when the provider is disabled", async () => {
     const built = await build({ enabled: false });
     built.notes.seed(projectPath, projectText);
