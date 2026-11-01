@@ -49,3 +49,45 @@ jobs:
             --title="$tag" \
             --draft \
             build/main.js manifest.json build/styles.css
+
+  # Stages through npm trusted publishing (OIDC): no npm token lives in the repository, the package
+  # gets a provenance attestation, and the trusted publisher is stage-only, so nothing goes live until
+  # the maintainer approves the version with 2FA on npmjs.com. A release that did not bump packages/api
+  # finds its version already on npm and skips, which also makes re-running a tag build safe.
+  publish-api:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Use Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "24.x"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      # npm stage needs npm >= 11.15.0; don't depend on what the Node image bundles.
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Check whether this version is already published
+        id: published
+        working-directory: packages/api
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if npm view "obsidian-journals-api@$version" version >/dev/null 2>&1; then
+            echo "obsidian-journals-api@$version is already on npm; nothing to publish."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stage obsidian-journals-api
+        if: steps.published.outputs.skip == 'false'
+        working-directory: packages/api
+        run: npm stage publish

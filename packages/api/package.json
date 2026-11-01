@@ -25,6 +25,9 @@
     "url": "git+https://github.com/srg-kostyrko/obsidian-journal.git",
     "directory": "packages/api"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "prepublishOnly": "node ../../scripts/build-api-types.mjs && git diff --exit-code index.d.ts"
   }
