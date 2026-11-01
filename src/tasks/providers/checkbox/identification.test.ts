@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
+import { unreadable } from "@/settings/repair";
 
 import { identifies } from "./identification";
 
@@ -158,5 +159,20 @@ describe("identifies", () => {
       conditions: [...statusOnly.conditions, ...otherTag.conditions],
     };
     expect(identifies(item, { structure, vault: statusAndTag, journal: null })).toBe(false);
+  });
+  it("counts no checkbox a task under a rule holding a condition it cannot read", () => {
+    const unreadable = {
+      mode: "and" as const,
+      conditions: [{ type: "unreadable" as const, raw: { type: "tag", condition: "lack", tags: ["#habit"] } }],
+    };
+    expect(identifies(item, { structure, vault: unreadable, journal: null })).toBe(false);
+    expect(identifies(item, { structure, vault: empty, journal: { ...unreadable, compose: "replace" } })).toBe(false);
+  });
+  // A journal that replaces the vault-wide rule never reads it, so that rule being unreadable, as a
+  // whole or in part, cannot take the journal's tasks away.
+  it("lets a journal's own replacement rule decide when the vault-wide rule cannot be read", () => {
+    const replacing = { ...empty, compose: "replace" as const };
+    expect(identifies(item, { structure, vault: unreadable("not a rule"), journal: replacing })).toBe(true);
+    expect(identifies(item, { structure, vault: unreadable("not a rule"), journal: null })).toBe(false);
   });
 });

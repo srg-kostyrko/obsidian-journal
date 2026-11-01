@@ -2471,11 +2471,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "상태가 지정되지 않은",
+  "tasks_condition_unreadable": "이 조건을 읽을 수 없어 아무것도 일치하지 않습니다.",
   "tasks_status_group_open": "미완료",
   "tasks_status_group_done": "완료",
   "tasks_status_group_all": "전체",
   "tasks_filter_summary_conditions": "{conditions} 작업을 표시합니다.",
   "tasks_rule_summary_any": "조건 없음 — 저널의 노트에 있는 모든 체크박스 목록 항목이 작업입니다.",
+  "tasks_rule_summary_unreadable": "이 규칙의 일부를 읽을 수 없어 아무것도 일치하지 않습니다.",
   "tasks_rule_summary_conditions": "{conditions} 체크박스 목록 항목을 집계합니다.",
   "tasks_journal_summary_inherit": "보관함 전체 규칙을 상속합니다.",
   "tasks_journal_summary_narrow": "보관함 전체 규칙을 다음으로 좁힙니다: {rule}",

@@ -102,10 +102,19 @@ none to offer. Put the journals on one shelf — see
 - **"Note is not connected to a journal".** Navigation and notelet blocks read their journal from the
   note they sit in. Connect the note, or use them only in journal notes.
 - **A message about options.** An option name the block does not know is listed above the block, and a
-  value it does not understand falls back to the default. Check spelling against
-  [Code blocks](/reference/code-blocks).
+  value it does not understand falls back to the default — except in `journal-tasks`, which shows an
+  error naming the option. Check spelling against [Code blocks](/reference/code-blocks).
 - **An empty `journals-home`** — "No journals to show. Check the block's show and shelf options." A
   `shelf` naming a renamed or deleted shelf shows nothing.
+
+## A task rule says part of it can't be read
+
+A tasks setting — a journal's **Listing filter**, which checkbox items count as tasks, **Dated tasks** or
+**Task notes** — holds something this version of the plugin does not understand, usually written by a
+newer version on another device or by hand. Rather than guess, the plugin treats that part as matching
+nothing, so the listing or decoration it feeds shows less, never more. The setting is left exactly as it
+was in your settings file. Open it to see which condition is affected, and delete that condition or
+choose the setting again to replace it.
 
 ## Variables show up as `{{…}}` in notes
 

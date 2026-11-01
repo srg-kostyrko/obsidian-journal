@@ -2487,11 +2487,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "ohne Status",
+  "tasks_condition_unreadable": "Diese Bedingung kann nicht gelesen werden, daher trifft nichts auf sie zu.",
   "tasks_status_group_open": "Offen",
   "tasks_status_group_done": "Erledigt",
   "tasks_status_group_all": "Alle",
   "tasks_filter_summary_conditions": "Zeigt eine Aufgabe an, die {conditions} ist.",
   "tasks_rule_summary_any": "Keine Bedingungen – jeder Kontrollkästchen-Listeneintrag in den Notizen eines Journals ist eine Aufgabe.",
+  "tasks_rule_summary_unreadable": "Ein Teil dieser Regel kann nicht gelesen werden, daher trifft nichts zu.",
   "tasks_rule_summary_conditions": "Zählt einen Kontrollkästchen-Listeneintrag, der {conditions} ist.",
   "tasks_journal_summary_inherit": "Erbt die Vault-weite Regel.",
   "tasks_journal_summary_narrow": "Schränkt die Vault-weite Regel ein: {rule}",

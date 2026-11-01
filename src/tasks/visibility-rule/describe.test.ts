@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
+import { unreadable } from "@/settings/repair";
 
 import { describeVisibility as describe_ } from "./describe";
 
@@ -33,6 +34,22 @@ describe("describeVisibility", () => {
     expect(describeVisibility({ show: "matching", mode: "and", conditions: [{ type: "tag", tags: [] }] })).toBe(
       m.tasks_note_visibility_summary_all(),
     );
+  });
+
+  // Matching skips a condition with nothing to compare, so the summary does too, and says why
+  // nothing matches when a condition it cannot read is what decides.
+  it("says a rule cannot be read when its unreadable condition is what leaves nothing matching", () => {
+    const held = unreadable({ type: "priority", above: 2 });
+    const cannotRead = m.tasks_rule_summary_unreadable();
+    expect(
+      describeVisibility({ show: "matching", mode: "and", conditions: [held, { type: "tag", tags: ["#work"] }] }),
+    ).toBe(cannotRead);
+    expect(describeVisibility({ show: "matching", mode: "or", conditions: [held, { type: "tag", tags: [] }] })).toBe(
+      cannotRead,
+    );
+    expect(
+      describeVisibility({ show: "matching", mode: "or", conditions: [held, { type: "tag", tags: ["#work"] }] }),
+    ).toBe(m.tasks_note_visibility_summary_matching({ conditions: tag }));
   });
 
   it("joins conditions by the rule's mode", () => {

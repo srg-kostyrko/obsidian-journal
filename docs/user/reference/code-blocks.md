@@ -17,7 +17,9 @@ A block's options go inside the fence, one per line as `option: value`. Each jou
 **A wrong option does not break the block.** An option name the block does not know is listed in a
 notice above the block, and a value it does not understand falls back to the default — so a block that
 looks right but ignores your option usually has a misspelled value. `true` and `false` must be written
-that way; `yes`, `no`, `on` and `off` are read as text.
+that way; `yes`, `no`, `on` and `off` are read as text. The `journal-tasks` block is the exception: a
+value it does not understand shows an error naming the option instead, because a default there would
+list different tasks without saying so.
 
 Every block's container carries a class themes and CSS snippets can target: `journal-nav-code-block`,
 `journal-timeline-code-block`, `journal-home-code-block`, `journal-notelets-code-block`,
@@ -185,17 +187,17 @@ each row that ticks the task in its own note — [task notes](/tasks#task-notes)
 included. It needs a note connected to a journal; in one connected
 to none it lists nothing and says so.
 
-| Option       | Values                                                               | Default            |
-| ------------ | -------------------------------------------------------------------- | ------------------ |
-| `provider`   | a list of provider ids, or one id                                    | every one          |
-| `source`     | `note`, `notelets`, `both`                                           | `both`             |
-| `depth`      | `literal`, `rollup`                                                  | `literal`          |
-| `status`     | `open`, `done`, `all`, or one status name such as `on-hold`          | `open`             |
-| `heading`    | a list of headings, or one heading                                   | none               |
-| `tag`        | a list of tags, or one tag                                           | none               |
-| `sort`       | `document`, `status`, `due`, `scheduled`, `start`, `done`, `created` | `document`         |
-| `date`       | `scheduled-or-due`, `due`, `scheduled`, `start`, `done`, `created`   | `scheduled-or-due` |
-| `conditions` | a list of full-form conditions, for what the keys above cannot say   | none               |
+| Option       | Values                                                                | Default            |
+| ------------ | --------------------------------------------------------------------- | ------------------ |
+| `provider`   | a list of provider ids, or one id                                     | every one          |
+| `source`     | `note`, `notelets`, `both`                                            | `both`             |
+| `depth`      | `literal`, `rollup`                                                   | `literal`          |
+| `status`     | `open`, `done`, `all`, or a status name such as `on-hold` — or a list | `open`             |
+| `heading`    | a list of headings, or one heading                                    | none               |
+| `tag`        | a list of tags, or one tag                                            | none               |
+| `sort`       | `document`, `status`, `due`, `scheduled`, `start`, `done`, `created`  | `document`         |
+| `date`       | `scheduled-or-due`, `due`, `scheduled`, `start`, `done`, `created`    | `scheduled-or-due` |
+| `conditions` | a list of full-form conditions, for what the keys above cannot say    | none               |
 
 `depth: rollup` widens the listing to every other journal in the host's shelf whose periods fall inside
 this one, so a monthly note can list its days' tasks alongside its own. `status`, `heading` and `tag` are

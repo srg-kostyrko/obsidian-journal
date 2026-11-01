@@ -12,9 +12,13 @@ import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
-import { emptyCondition, visibilityFormErrors, type VisibilityDraft } from "../visibility-rule/form";
-
-import type { VisibilityCondition } from "../visibility-rule/rule";
+import {
+  emptyCondition,
+  holdsUnreadable,
+  visibilityFormErrors,
+  type EditableVisibilityType,
+  type VisibilityDraft,
+} from "../visibility-rule/form";
 
 defineProps<{ description: string; conditionsDescription: string }>();
 
@@ -31,13 +35,18 @@ const errorBag = computed(() => visibilityFormErrors(draft.value));
 
 // Each type keeps its values in a field the others lack, so a switch replaces the whole row.
 function setType(index: number, type: string): void {
-  draft.value.conditions[index] = emptyCondition(type as VisibilityCondition["type"]);
+  draft.value.conditions[index] = emptyCondition(type as EditableVisibilityType);
 }
 </script>
 
 <template>
   <UiSettingRow :name="m.tasks_note_visibility_show()">
-    <template #description>{{ description }}</template>
+    <template #description>
+      {{ description }}
+      <span v-if="holdsUnreadable(draft)" class="tasks-note-property-form-error">
+        {{ m.tasks_rule_summary_unreadable() }}
+      </span>
+    </template>
     <UiSegmentedControl v-model="draft.show" :options="showOptions" data-testid="note-visibility-show" />
   </UiSettingRow>
   <UiSettingRow v-if="draft.show === 'matching'" :name="m.tasks_note_visibility_conditions()" stacked>
@@ -54,7 +63,11 @@ function setType(index: number, type: string): void {
         data-testid="note-visibility-condition"
       >
         <div class="tasks-note-visibility-condition-row">
+          <span v-if="condition.type === 'unreadable'" class="tasks-note-visibility-unreadable">
+            {{ m.tasks_condition_unreadable() }}
+          </span>
           <UiDropdown
+            v-else
             :model-value="condition.type"
             data-testid="note-visibility-condition-type"
             @update:model-value="setType(index, $event)"
@@ -82,7 +95,7 @@ function setType(index: number, type: string): void {
               <UiButton @click="condition.folders.push('')">{{ m.tasks_note_property_add_folder() }}</UiButton>
             </div>
           </div>
-          <div v-else class="tasks-note-visibility-list">
+          <div v-else-if="condition.type === 'property'" class="tasks-note-visibility-list">
             <UiPropertySuggest v-model="condition.name" :aria-label="m.common_label_property_name()" />
             <div v-for="(_, at) in condition.values" :key="at" class="tasks-note-visibility-list-row">
               <UiTextInput v-model="condition.values[at]" :aria-label="m.tasks_note_property_value()" />
@@ -137,6 +150,10 @@ function setType(index: number, type: string): void {
 .tasks-note-visibility-actions {
   display: flex;
   justify-content: flex-end;
+}
+.tasks-note-visibility-unreadable {
+  grid-column: 1 / -2;
+  color: var(--text-error);
 }
 .tasks-note-property-form-error {
   color: var(--text-error);

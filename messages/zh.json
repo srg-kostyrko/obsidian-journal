@@ -2468,11 +2468,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "未指定状态",
+  "tasks_condition_unreadable": "无法读取此条件，因此没有任何内容与之匹配。",
   "tasks_status_group_open": "未完成",
   "tasks_status_group_done": "已完成",
   "tasks_status_group_all": "全部",
   "tasks_filter_summary_conditions": "显示{conditions}的任务。",
   "tasks_rule_summary_any": "无条件——日记笔记中的每个复选框列表项都是任务。",
+  "tasks_rule_summary_unreadable": "此规则的一部分无法读取，因此没有任何内容匹配。",
   "tasks_rule_summary_conditions": "统计{conditions}的复选框列表项。",
   "tasks_journal_summary_inherit": "继承全库通用规则。",
   "tasks_journal_summary_narrow": "以下列内容收窄全库通用规则：{rule}",

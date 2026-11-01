@@ -103,10 +103,11 @@ describe("journalConfigSchema", () => {
       },
     };
     const parsed = v.parse(journalConfigSchema, cfg);
-    expect(parsed.tasks.providers.checkbox?.compose).toBe("replace");
-    expect(parsed.tasks.providers.checkbox?.conditions).toEqual([
-      { type: "heading", condition: "under", headings: ["Tasks"] },
-    ]);
+    expect(parsed.tasks.providers.checkbox).toEqual({
+      compose: "replace",
+      mode: "and",
+      conditions: [{ type: "heading", condition: "under", headings: ["Tasks"] }],
+    });
   });
 
   it("splits a journal's tasks config into per-provider rules and a listing filter", () => {
@@ -129,7 +130,7 @@ describe("journalConfigSchema", () => {
         filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }] },
       },
     });
-    expect(parsed.tasks.providers.checkbox?.compose).toBe("narrow");
+    expect(parsed.tasks.providers.checkbox).toMatchObject({ compose: "narrow" });
     expect(parsed.tasks.filter.conditions).toHaveLength(1);
   });
 
@@ -142,7 +143,13 @@ describe("journalConfigSchema", () => {
         filter: { mode: "and", conditions: [{ type: "heading", condition: "under", headings: ["## Tasks"] }] },
       },
     });
-    expect(parsed.tasks.providers).toEqual({});
+    expect(parsed.tasks.providers).toEqual({
+      checkbox: {
+        compose: "narrow",
+        mode: "and",
+        conditions: [{ type: "unreadable", raw: { type: "not-a-real-type" } }],
+      },
+    });
     expect(parsed.tasks.filter.conditions).toHaveLength(1);
   });
 
@@ -169,18 +176,17 @@ describe("journalConfigSchema", () => {
     expect(parsed.tasks.providers["note-property"]).toEqual(rule);
   });
 
-  // Each provider key carries its own fallback: one around the namespace would reset the sibling
-  // provider's rule along with the one that failed.
+  // Each provider key is held on its own: one held around the namespace would take the sibling
+  // provider's rule with the one that failed.
   it("keeps a valid checkbox rule when the note-property rule is unreadable", () => {
     const checkbox = { compose: "narrow", mode: "and", conditions: [] };
+    const noteProperty = { show: "weird", conditions: [{ type: "not-a-real-type" }] };
     const degraded = v.parse(journalConfigSchema, {
       ...journalDefaultsFor({ type: "day" }, "Daily"),
-      tasks: {
-        providers: { checkbox, "note-property": { show: "weird", conditions: [{ type: "not-a-real-type" }] } },
-      },
+      tasks: { providers: { checkbox, "note-property": noteProperty } },
     });
     expect(degraded.tasks.providers.checkbox).toEqual(checkbox);
-    expect(degraded.tasks.providers["note-property"]).toEqual({ show: "all", mode: "and", conditions: [] });
+    expect(degraded.tasks.providers["note-property"]).toEqual({ type: "unreadable", raw: noteProperty });
   });
 
   it("keeps a valid note-property rule when the checkbox rule holds a condition type this version does not know", () => {
@@ -194,7 +200,11 @@ describe("journalConfigSchema", () => {
         },
       },
     });
-    expect(parsed.tasks.providers.checkbox).toBeUndefined();
+    expect(parsed.tasks.providers.checkbox).toEqual({
+      compose: "narrow",
+      mode: "and",
+      conditions: [{ type: "unreadable", raw: { type: "not-a-real-type" } }],
+    });
     expect(parsed.tasks.providers["note-property"]).toEqual(rule);
   });
 
@@ -668,15 +678,15 @@ describe("journal tasks repair on load", () => {
     expect(repair?.fields).toMatchObject({ fields: ["tasks.providers"] });
   });
 
-  it("an unreadable note-property rule is dropped alone, keeping the checkbox rule", async () => {
+  it("an unreadable note-property rule is held alone, keeping the checkbox rule", async () => {
     const { tasks, repair } = await loadTasks({ providers: { checkbox, "note-property": 42 } });
 
-    expect(tasks.providers).toEqual({ checkbox });
-    expect(repair?.fields).toMatchObject({ fields: ["tasks.providers.note-property"] });
+    expect(tasks.providers).toEqual({ checkbox, "note-property": { type: "unreadable", raw: 42 } });
+    expect(repair).toBeUndefined();
   });
 
   // The live path: a vault synced from a newer version holds a condition type this one does not know.
-  it("a listing filter condition of an unknown type is dropped alone, keeping the filter's other conditions", async () => {
+  it("a listing filter condition of an unknown type is held alone, keeping the filter's other conditions", async () => {
     const { tasks, repair } = await loadTasks({
       providers: { checkbox },
       filter: { mode: "or", conditions: [heading, { type: "not-a-real-type" }] },
@@ -684,13 +694,13 @@ describe("journal tasks repair on load", () => {
 
     expect(tasks).toEqual({
       providers: { checkbox },
-      filter: { mode: "or", conditions: [heading] },
+      filter: { mode: "or", conditions: [heading, { type: "unreadable", raw: { type: "not-a-real-type" } }] },
       move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
-    expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions.1"] });
+    expect(repair).toBeUndefined();
   });
 
-  it("a listing filter whose only condition is unreadable keeps no condition, and the provider rule stays", async () => {
+  it("a listing filter whose only condition is unreadable keeps it held, and the provider rule stays", async () => {
     const { tasks, repair } = await loadTasks({
       providers: { checkbox },
       filter: { mode: "and", conditions: [{ type: "not-a-real-type" }] },
@@ -698,10 +708,10 @@ describe("journal tasks repair on load", () => {
 
     expect(tasks).toEqual({
       providers: { checkbox },
-      filter: { mode: "and", conditions: [] },
+      filter: { mode: "and", conditions: [{ type: "unreadable", raw: { type: "not-a-real-type" } }] },
       move: { source: "note", targetHeading: "", lookBack: 1, automatic: false },
     });
-    expect(repair?.fields).toMatchObject({ fields: ["tasks.filter.conditions"] });
+    expect(repair).toBeUndefined();
   });
 
   it("an unreadable automatic flag repairs to off, keeping the rest of the move block", async () => {

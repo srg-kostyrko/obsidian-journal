@@ -1,37 +1,46 @@
 import * as v from "valibot";
 
-import { taskConditionSchema, type TaskCondition } from "@/tasks/conditions";
+import { STATUS_ALIASES, taskConditionSchema, type TaskCondition } from "@/tasks/conditions";
 import { taskDateChoiceSchema } from "@/tasks/date-choice";
 import { DEFAULT_TASK_QUERY, taskSorts, type TaskQuery } from "@/tasks/query";
+import { TASK_STATUSES } from "@/tasks/status";
 
-import { asFenceStringList, asRecord } from "../fence-record";
+import { asFenceStringList } from "../fence-record";
 
-// A fence is hand-typed YAML that no repair pass reads, so the schema itself absorbs a bad value:
-// `optional` covers a missing key, `fallback` a present one that fails the enum check (wrong type,
-// or a value the block does not know) — both land on the same default rather than an error panel.
-const sourceEntry = v.optional(
-  v.fallback(v.picklist(["note", "notelets", "both"]), DEFAULT_TASK_QUERY.scope.source),
-  DEFAULT_TASK_QUERY.scope.source,
+// A fence is hand-typed and read by its author, so a value the block does not know fails the
+// schema and the block shows an error naming it, rather than a default that lists something else.
+const sourceEntry = v.optional(v.picklist(["note", "notelets", "both"]), DEFAULT_TASK_QUERY.scope.source);
+const depthEntry = v.optional(v.picklist(["literal", "rollup"]), DEFAULT_TASK_QUERY.scope.depth);
+const sortEntry = v.optional(v.picklist(taskSorts), DEFAULT_TASK_QUERY.sort);
+const dateEntry = v.optional(taskDateChoiceSchema, DEFAULT_TASK_QUERY.date);
+
+// A value written as one thing still means that one thing, and an unquoted `2024` or `no` is the
+// word the user typed. A mapping, a blank value or an empty list names nothing, so it fails.
+function isFenceScalar(value: unknown): boolean {
+  return typeof value === "string" || typeof value === "number" || typeof value === "boolean";
+}
+
+const fenceList = v.pipe(
+  v.unknown(),
+  v.check((value) => isFenceScalar(value) || (Array.isArray(value) && value.length > 0 && value.every(isFenceScalar))),
+  v.transform(asFenceStringList),
 );
-const depthEntry = v.optional(
-  v.fallback(v.picklist(["literal", "rollup"]), DEFAULT_TASK_QUERY.scope.depth),
-  DEFAULT_TASK_QUERY.scope.depth,
-);
-const sortEntry = v.optional(v.fallback(v.picklist(taskSorts), DEFAULT_TASK_QUERY.sort), DEFAULT_TASK_QUERY.sort);
-const dateEntry = v.optional(v.fallback(taskDateChoiceSchema, DEFAULT_TASK_QUERY.date), DEFAULT_TASK_QUERY.date);
+
+const statusName = v.picklist([...TASK_STATUSES, ...Object.keys(STATUS_ALIASES)]);
+const statusList = v.pipe(fenceList, v.array(statusName));
 
 // Raw and flat, one field per fence key, kept 1:1 with what the user writes — `tasksBlockKeys`
 // below is derived straight from this object, so a key added here is a key the fence recognizes.
 const rawEntries = {
-  provider: v.optional(v.pipe(v.unknown(), v.transform(asFenceStringList)), () => [] as string[]),
+  provider: v.optional(fenceList),
   source: sourceEntry,
   depth: depthEntry,
-  status: v.optional(v.pipe(v.unknown(), v.transform(asFenceStringList))),
-  heading: v.optional(v.pipe(v.unknown(), v.transform(asFenceStringList))),
-  tag: v.optional(v.pipe(v.unknown(), v.transform(asFenceStringList))),
+  status: v.optional(statusList),
+  heading: v.optional(fenceList),
+  tag: v.optional(fenceList),
   sort: sortEntry,
   date: dateEntry,
-  conditions: v.optional(v.fallback(v.array(taskConditionSchema), [] as TaskCondition[]), []),
+  conditions: v.optional(v.array(taskConditionSchema), () => [] as TaskCondition[]),
 };
 
 // Derived from the entries so the two can never drift: the block reports any other key as
@@ -44,7 +53,12 @@ export const tasksBlockKeys = Object.keys(rawEntries);
 // compare `output["status"]` (etc.) against `undefined` and misreport every key but `sort` as
 // dropped, even when this schema handled it correctly. Desugaring into a `TaskQuery` is
 // `toTaskQuery`'s job below, kept as a separate, directly testable step.
-export const tasksBlockSchema = v.pipe(v.unknown(), v.transform(asRecord), v.object(rawEntries));
+// A body holding only a comment parses to null, which is a bare fence.
+export const tasksBlockSchema = v.pipe(
+  v.unknown(),
+  v.transform((body) => body ?? {}),
+  v.object(rawEntries),
+);
 
 export type TasksFenceConfig = v.InferOutput<typeof tasksBlockSchema>;
 
@@ -88,7 +102,7 @@ export function toTaskQuery(raw: TasksFenceConfig): TaskQuery {
   conditions.push(...raw.conditions);
 
   return {
-    scope: { provider: raw.provider, source: raw.source, depth: raw.depth },
+    scope: { provider: raw.provider ?? [], source: raw.source, depth: raw.depth },
     filter: { mode: "and", conditions },
     sort: raw.sort,
     date: raw.date,

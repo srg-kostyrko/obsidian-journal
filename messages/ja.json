@@ -2474,11 +2474,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "ステータスが指定されていない",
+  "tasks_condition_unreadable": "この条件は読み取れないため、何も一致しません。",
   "tasks_status_group_open": "未完了",
   "tasks_status_group_done": "完了",
   "tasks_status_group_all": "すべて",
   "tasks_filter_summary_conditions": "{conditions}タスクを表示します。",
   "tasks_rule_summary_any": "条件なし — ジャーナルのノート内のすべてのチェックボックス項目がタスクになります。",
+  "tasks_rule_summary_unreadable": "このルールの一部が読み取れないため、何も一致しません。",
   "tasks_rule_summary_conditions": "{conditions}チェックボックス項目を数えます。",
   "tasks_journal_summary_inherit": "保管庫全体のルールを継承します。",
   "tasks_journal_summary_narrow": "保管庫全体のルールを次の内容で絞り込みます: {rule}",

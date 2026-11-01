@@ -8,7 +8,7 @@ import { datesIn } from "./dates";
 import { identifies } from "./identification";
 import { normalizeStatus } from "./normalize";
 
-import type { CheckboxJournalRule, CheckboxRule } from "./rule-schema";
+import type { StoredCheckboxJournalRule, StoredCheckboxRule } from "./rule-schema";
 
 export const CHECKBOX_PROVIDER_ID = "checkbox";
 
@@ -17,8 +17,8 @@ export type LineDates = ReadonlyMap<number, Partial<Record<TaskDateRole, AnchorS
 export interface ExtractInput {
   readonly path: VaultPath;
   readonly structure: NoteStructure;
-  readonly vault: CheckboxRule;
-  readonly journal: CheckboxJournalRule | null;
+  readonly vault: StoredCheckboxRule;
+  readonly journal: StoredCheckboxJournalRule | null;
   readonly statusMap: Record<string, string>;
   readonly owned: boolean;
   readonly lineDates: LineDates | undefined;

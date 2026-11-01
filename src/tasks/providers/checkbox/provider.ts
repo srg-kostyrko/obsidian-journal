@@ -11,16 +11,14 @@ import { admitsSubject, referencedProperties } from "@/tasks/visibility-rule/rul
 import { TaskHostToken, type OwnedNote, type TaskItem, type TaskProvider } from "../../types";
 
 import { CHECKBOX_PROVIDER_ID, extractItems, lineDatesOf, lineStampOf, type LineDates } from "./extract";
-import { checkboxJournalRuleSchema, type CheckboxJournalRule } from "./rule-schema";
+import { checkboxJournalRuleSchema, datedRuleOf, type StoredCheckboxJournalRule } from "./rule-schema";
 import { checkboxSlice } from "./slice";
 import CheckboxJournalRow from "./ui/CheckboxJournalRow.vue";
 import CheckboxSettingsRow from "./ui/CheckboxSettingsRow.vue";
 
-// A rule the schema cannot parse must not take the note's items with it — falling back to the
-// global rule alone (the same treatment as no journal rule at all) is safer than dropping the note.
-export function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
-  const parsed = v.safeParse(checkboxJournalRuleSchema, rule);
-  return parsed.success ? parsed.output : null;
+// No rule is the vault rule alone; one the schema cannot read is held whole and counts nothing.
+export function parseJournalRule(rule: unknown): StoredCheckboxJournalRule | null {
+  return rule === undefined ? null : v.parse(checkboxJournalRuleSchema, rule);
 }
 
 interface CachedLineDates {
@@ -52,7 +50,7 @@ export class CheckboxTaskProvider implements TaskProvider {
   readonly journalRow = CheckboxJournalRow;
 
   #referencedNow(): readonly string[] {
-    const rules = this.#repository.find().map((journal) => journal.tasks.providers[CHECKBOX_PROVIDER_ID]?.dated);
+    const rules = this.#repository.find().map((journal) => datedRuleOf(journal.tasks.providers[CHECKBOX_PROVIDER_ID]));
     return [...referencedProperties(rules)].toSorted();
   }
 
@@ -211,7 +209,7 @@ export class CheckboxTaskProvider implements TaskProvider {
   // Gates the date relation only: a line its period's note holds is shown there whatever the rule.
   admits(item: TaskItem, journalName: string): boolean {
     if (!item.relations.includes("date") || item.facts === undefined) return true;
-    const rule = this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id]?.dated;
+    const rule = datedRuleOf(this.#repository.get(journalName).getOrUndefined()?.tasks.providers[this.id]);
     return admitsSubject(rule, { path: item.path, tags: item.facts.tags, properties: item.facts.properties });
   }
 

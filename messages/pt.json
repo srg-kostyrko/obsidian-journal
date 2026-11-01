@@ -2482,11 +2482,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "sem estado",
+  "tasks_condition_unreadable": "Esta condição não pode ser lida, então nada a satisfaz.",
   "tasks_status_group_open": "Abertas",
   "tasks_status_group_done": "Concluídas",
   "tasks_status_group_all": "Todas",
   "tasks_filter_summary_conditions": "Exibe uma tarefa que está {conditions}.",
   "tasks_rule_summary_any": "Sem condições — todo item de lista com caixa de seleção nas notas de um diário é uma tarefa.",
+  "tasks_rule_summary_unreadable": "Parte desta regra não pode ser lida, então nada corresponde.",
   "tasks_rule_summary_conditions": "Conta um item de lista com caixa de seleção que está {conditions}.",
   "tasks_journal_summary_inherit": "Herda a regra de todo o cofre.",
   "tasks_journal_summary_narrow": "Restringe a regra de todo o cofre com: {rule}",

@@ -10,6 +10,7 @@ import UiButton from "@/ui/UiButton.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
 
 import { EditJournalTasksFlow } from "../flows/edit-journal-tasks.flow";
+import { datedRuleOf } from "../rule-schema";
 
 import { describeJournalRule } from "./describe-rule";
 
@@ -21,7 +22,7 @@ const journals = useService(JournalsRepository);
 const rule = computed(() => journals.get(journalName).getOrUndefined()?.tasks.providers.checkbox);
 const summary = computed(() => describeJournalRule(rule.value));
 const datedSummary = computed(() =>
-  describeVisibility(rule.value?.dated, {
+  describeVisibility(datedRuleOf(rule.value), {
     all: m.tasks_checkbox_dated_summary_all,
     none: m.tasks_checkbox_dated_summary_none,
     matching: m.tasks_checkbox_dated_summary_matching,

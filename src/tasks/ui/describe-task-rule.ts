@@ -2,10 +2,10 @@ import { match } from "ts-pattern";
 
 import { formatConjunction, formatDisjunction, m } from "@/i18n";
 
+import { blockedByUnreadable, type StoredTaskCondition, type TaskRule } from "../conditions";
+
 import { describeTagOrHeadingCondition } from "./describe-condition";
 import { statusFilterLabel } from "./status-filter-options";
-
-import type { TaskCondition, TaskRule } from "../conditions";
 
 // Describes the listing filter — which tasks a listing shows — as opposed to describe-rule.ts's
 // describeCheckboxRule, which describes an identification rule — what counts as a task in the
@@ -15,19 +15,23 @@ import type { TaskCondition, TaskRule } from "../conditions";
 // exists. Tag and heading share their per-condition phrasing with describe-rule.ts's own messages
 // through describeTagOrHeadingCondition (describe-condition.ts) — those are worded about the
 // condition alone, not about what it counts toward, so they carry over unchanged.
-function describeCondition(condition: TaskCondition): string {
-  return match(condition)
-    .with({ type: "tag" }, describeTagOrHeadingCondition)
-    .with({ type: "heading" }, describeTagOrHeadingCondition)
-    .with({ type: "status" }, (c) =>
-      c.statuses.length === 0
-        ? m.tasks_condition_status_describe_empty()
-        : m.tasks_condition_status_describe({
-            condition: c.condition,
-            statuses: formatConjunction(c.statuses.map(statusFilterLabel)),
-          }),
-    )
-    .exhaustive();
+function describeCondition(condition: StoredTaskCondition): string[] {
+  return (
+    match(condition)
+      .with({ type: "tag" }, (c) => [describeTagOrHeadingCondition(c)])
+      .with({ type: "heading" }, (c) => [describeTagOrHeadingCondition(c)])
+      .with({ type: "status" }, (c) => [
+        c.statuses.length === 0
+          ? m.tasks_condition_status_describe_empty()
+          : m.tasks_condition_status_describe({
+              condition: c.condition,
+              statuses: formatConjunction(c.statuses.map(statusFilterLabel)),
+            }),
+      ])
+      // Matches nothing, so under `or` it adds nothing; blockedByUnreadable covers the rest.
+      .with({ type: "unreadable" }, () => [])
+      .exhaustive()
+  );
 }
 
 // Every production caller either guards an empty condition list itself before calling
@@ -36,7 +40,8 @@ function describeCondition(condition: TaskCondition): string {
 // merged filter lacks one and so never returns an empty list. So this never has to state "no
 // conditions" on its own; a rule with none is not a shape either caller can hand it.
 export function describeTaskRule(rule: TaskRule): string {
-  const parts = rule.conditions.map(describeCondition);
+  if (blockedByUnreadable(rule)) return m.tasks_rule_summary_unreadable();
+  const parts = rule.conditions.flatMap(describeCondition);
   const joined = rule.mode === "or" ? formatDisjunction(parts) : formatConjunction(parts);
   return m.tasks_filter_summary_conditions({ conditions: joined });
 }
