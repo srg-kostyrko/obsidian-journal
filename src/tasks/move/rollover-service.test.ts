@@ -20,6 +20,7 @@ import { JournalsIndex, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
+import { unreadable } from "@/settings/repair";
 import { overrideWith, testContainer } from "@/testing";
 
 import { taskRuleSchema, type TaskRule } from "../conditions";
@@ -29,6 +30,7 @@ import { NOTE_PROPERTY_PROVIDER_ID } from "../providers/note-property/slice";
 import { TaskIndex } from "../task-index";
 import { buildTaskItem } from "../testing";
 
+import { RolledMarkerUnreadableError } from "./errors";
 import { rollNotice, rollSentences, type RollReport } from "./report";
 import { RolloverService } from "./rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "./settings";
@@ -188,6 +190,20 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
+
+async function rollChangingMarker(to: string | ReturnType<typeof unreadable>) {
+  const built = await rolloverFor({ daily: dayJournal("daily", { mode: "copy" }) });
+  built.checkbox.state.rolledMarker = "#carried";
+  const source = built.put("daily", "2026-10-20", "- [ ] Call Bob #carried\n- [ ] Write report\n");
+  const target = built.put("daily", TODAY, "");
+  const read = built.notes.read.bind(built.notes);
+  vi.spyOn(built.notes, "read").mockImplementation((path) => {
+    if (path === source) built.checkbox.state.rolledMarker = to;
+    return read(path);
+  });
+  const result = await built.service.roll("daily", { interactive: true });
+  return { ...built, source, target, result };
+}
 
 describe("RolloverService", () => {
   it("rolls open items from the previous existing note into today's and stamps them", async () => {
@@ -1044,6 +1060,46 @@ describe("RolloverService", () => {
 
     expect(report).toMatchObject({ noPrevious: true, read: [] });
     expect(notes.find(`daily/${TODAY}.md` as VaultPath).isNone()).toBe(true);
+  });
+
+  // Lines stamped with a marker nobody can read would read as open, and roll a second time.
+  it.each([true, false])(
+    "refuses to roll while the rolled marker is held unreadable (interactive %s)",
+    async (interactive) => {
+      const { service, put, text, checkbox, notes } = await rolloverFor({
+        daily: dayJournal("daily", { automatic: true }),
+      });
+      const source = put("daily", "2026-10-20", "- [ ] Call Bob #carried\n- [ ] Write report\n");
+      checkbox.state.rolledMarker = unreadable("carried");
+
+      const result = await service.roll("daily", { interactive, requireAutomatic: !interactive });
+
+      expectErr(result);
+      expect(result.error).toEqual(new RolledMarkerUnreadableError("daily"));
+      expect(await text(source)).toBe("- [ ] Call Bob #carried\n- [ ] Write report\n");
+      expect(notes.find(`daily/${TODAY}.md` as VaultPath).isNone()).toBe(true);
+    },
+  );
+
+  // The setting can change under a roll, a sync landing while it reads: what it planned by is what
+  // it writes by.
+  describe("a rolled marker that changes while the roll reads its sources", () => {
+    it("plans and stamps by the marker it started with", async () => {
+      const { text, source, target, result } = await rollChangingMarker("#done");
+
+      expectOk(result);
+      expect(await text(target)).toBe("- [ ] Write report\n");
+      expect(await text(source)).toBe("- [ ] Call Bob #carried\n- [ ] Write report #carried\n");
+    });
+
+    it("refuses before writing when the marker became unreadable", async () => {
+      const { text, source, target, result } = await rollChangingMarker(unreadable("carried"));
+
+      expectErr(result);
+      expect(result.error).toEqual(new RolledMarkerUnreadableError("daily"));
+      expect(await text(target)).toBe("");
+      expect(await text(source)).toBe("- [ ] Call Bob #carried\n- [ ] Write report\n");
+    });
   });
 });
 

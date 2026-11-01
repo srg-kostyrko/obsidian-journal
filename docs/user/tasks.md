@@ -652,6 +652,14 @@ the main settings page, in its collapsed **Roll over** section:
   marker applies to every line that carries it, not only to lines the command stamped, so if `#rolled`
   already means something else in your vault, change it here: until you do, those lines and the tasks
   nested under them read as **Rolled over** and leave open listings and the calendar's open-task dots.
+  A stored marker that is not a tag — typed into the settings file by hand, say — is kept as it was
+  rather than replaced by `#rolled`, which would read every line it stamped as unfinished and roll it
+  again. The section opens on its own with the field empty, saying the marker can't be read, and
+  until you type a new one nothing rolls: **Roll over unfinished tasks**, the
+  [move task commands](#moving-one-task) and [automatic rollover](#automatic-rollover) each refuse
+  with a notice, automatic rollover once until the marker is fixed. Meanwhile no line reads as
+  **Rolled over**, since which lines the unreadable marker stamped can't be told, so those lines
+  show in open listings and dots. Saving with the field left empty keeps the stored value.
 - **Copy or move** — **Copy** by default.
 - **Mark as rolled** — on by default.
 

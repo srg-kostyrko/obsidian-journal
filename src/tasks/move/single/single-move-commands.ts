@@ -13,6 +13,7 @@ import type { AsyncResult } from "@/infrastructure/result";
 import { NoJournalsError, OutOfTimelineError } from "@/journals/errors";
 import { JournalsIndex } from "@/journals/journals-index";
 import { SettingsService } from "@/settings";
+import { isUnreadable } from "@/settings/repair";
 
 import { checkboxSlice } from "../../providers/checkbox/slice";
 import { SingleMoveRefusedError } from "../errors";
@@ -64,6 +65,9 @@ function refusalNotice(reason: SingleMoveRefusedError["reason"]): string {
     case "same-note": {
       return m.tasks_move_same_note();
     }
+    case "marker-unreadable": {
+      return m.tasks_roll_marker_unreadable();
+    }
   }
 }
 
@@ -106,10 +110,12 @@ export class SingleMoveCommands {
     const now = this.#workspace.activeEditorState().getOrUndefined();
     const source = now?.path === pressed.path ? now : pressed;
     // Refused before any picker opens, so the user is not asked where a line that cannot move should go.
-    const planned = planItem(source, source.cursorLine, {
-      mode: "copy",
-      rolledMarker: this.#checkbox.state.rolledMarker,
-    });
+    const marker = this.#checkbox.state.rolledMarker;
+    if (isUnreadable(marker)) {
+      this.#notices.show(refusalNotice("marker-unreadable"));
+      return undefined;
+    }
+    const planned = planItem(source, source.cursorLine, { mode: "copy", rolledMarker: marker });
     if (planned.kind === "refused" && planned.reason !== "block-id") {
       this.#notices.show(refusalNotice(planned.reason));
       return undefined;

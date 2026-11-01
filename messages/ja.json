@@ -2427,6 +2427,7 @@
   "tasks_checkbox_marker_desc": "コピー時に元の行へ追加するタグ。このタグがある行は繰り越し済みとして扱われます。",
   "tasks_checkbox_marker_required": "タグを入力してください。",
   "tasks_checkbox_marker_invalid": "文字、数字、_、-、/ のみを使い、数字以外の文字を少なくとも1つ含めてください。",
+  "tasks_checkbox_marker_unreadable": "保存されているマーカーを読み取れないため、そのまま保持され、タスクは繰り越されません。置き換えるにはタグを入力してください。",
   "tasks_checkbox_marker_changed": "古いマーカーが付いた行は、再び未完了として扱われます。",
   "tasks_settings_add_condition": "条件を追加",
   "tasks_settings_condition_tag": "タグ",
@@ -2673,6 +2674,7 @@
   "tasks_roll_no_previous": "タスクを繰り越せる以前のノートがありません。",
   "tasks_roll_no_current_period": "今日はこのジャーナルのタイムライン外です。",
   "tasks_roll_failed": "タスクを繰り越せませんでした。",
+  "tasks_roll_marker_unreadable": "繰り越しマーカーを読み取れないため、タスクの繰り越しと移動は行われません。「チェックボックスタスク」の設定で修正してください。",
   "tasks_roll_missing_heading": "{date}のノートに見出し{heading}がありません。ジャーナルの一覧フィルターを確認してください。",
   "tasks_roll_already_held": [
     {
@@ -2737,6 +2739,7 @@
   "tasks_roll_source_indexing": "{date}のノートはまだインデックス作成中です。しばらくしてからもう一度お試しください。",
   "tasks_roll_source_unread": "{date}のノートを読み込めませんでした。",
   "tasks_auto_roll_paused": "{journal}の自動繰り越しは一時停止中です。「繰り越し済みとしてマーク」をオンにするか、「移動」を使用してください。",
+  "tasks_auto_roll_paused_marker": "自動繰り越しは一時停止中です：繰り越しマーカーを読み取れません。「チェックボックスタスク」の設定で修正してください。",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

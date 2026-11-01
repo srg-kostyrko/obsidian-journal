@@ -134,6 +134,15 @@ template itself.
 
 See [Decorations](/decorations).
 
+## Tasks won't roll over and a notice says the rolled marker can't be read
+
+The **Rolled marker** stored in your settings is not something Obsidian reads as a tag — usually because
+it was edited by hand in the settings file. The plugin keeps it as it was instead of falling back to
+`#rolled`, since a different marker would read every line the old one stamped as unfinished and copy it
+again. Open **Checkbox tasks**' settings, type the marker your notes carry into **Rolled marker** in the
+**Roll over** section, and save. Until then, rolling and moving tasks are refused. See
+[Roll-over settings](/tasks#roll-over-settings).
+
 ## Settings fields do not respond
 
 Another plugin may be interfering — this has happened. See

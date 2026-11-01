@@ -2424,6 +2424,7 @@
   "tasks_checkbox_marker_desc": "복사할 때 원래 줄에 추가하는 태그. 이 태그가 있는 줄은 이월됨으로 처리됩니다.",
   "tasks_checkbox_marker_required": "태그를 입력하세요.",
   "tasks_checkbox_marker_invalid": "문자, 숫자, _, -, /만 사용하고 숫자가 아닌 문자를 하나 이상 넣으세요.",
+  "tasks_checkbox_marker_unreadable": "저장된 표시를 읽을 수 없어 그대로 유지되며 작업이 이월되지 않습니다. 바꾸려면 태그를 입력하세요.",
   "tasks_checkbox_marker_changed": "이전 표시가 붙은 줄은 다시 완료되지 않은 작업으로 처리됩니다.",
   "tasks_settings_add_condition": "조건 추가",
   "tasks_settings_condition_tag": "태그",
@@ -2670,6 +2671,7 @@
   "tasks_roll_no_previous": "작업을 이월할 이전 노트가 없습니다.",
   "tasks_roll_no_current_period": "오늘은 이 저널의 타임라인 범위 밖입니다.",
   "tasks_roll_failed": "작업을 이월하지 못했습니다.",
+  "tasks_roll_marker_unreadable": "이월 표시를 읽을 수 없어 작업을 이월하거나 이동하지 않습니다. ‘체크박스 작업’ 설정에서 수정하세요.",
   "tasks_roll_missing_heading": "{date} 노트에 {heading} 제목이 없습니다. 저널의 목록 필터를 확인하세요.",
   "tasks_roll_already_held": [
     {
@@ -2734,6 +2736,7 @@
   "tasks_roll_source_indexing": "{date} 노트를 아직 색인하는 중입니다. 잠시 후 다시 시도하세요.",
   "tasks_roll_source_unread": "{date} 노트를 읽을 수 없습니다.",
   "tasks_auto_roll_paused": "{journal}의 자동 이월이 일시 중지되었습니다. ‘이월됨으로 표시’를 켜거나 이동을 사용하세요.",
+  "tasks_auto_roll_paused_marker": "자동 이월이 일시 중지되었습니다: 이월 표시를 읽을 수 없습니다. ‘체크박스 작업’ 설정에서 수정하세요.",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

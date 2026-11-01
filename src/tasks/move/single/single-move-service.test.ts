@@ -20,10 +20,13 @@ import { expectErr, expectOk } from "@/infrastructure/result/testing";
 import { JournalsIndex, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { SettingsService } from "@/settings";
+import { unreadable } from "@/settings/repair";
 import { overrideWith, testContainer } from "@/testing";
 
 import { taskRuleSchema } from "../../conditions";
 import { tasksCoreModule } from "../../module";
+import { checkboxSlice } from "../../providers/checkbox/slice";
 import { SingleMoveRefusedError, UnsavedEditError } from "../errors";
 import { RolloverService } from "../rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "../settings";
@@ -360,6 +363,26 @@ describe("SingleMoveService", () => {
       expect(result.error).toMatchObject({ reason: "rolled" });
       expect(await text(month)).toBe("");
     });
+
+    it.each(["copy", "move"] as const)(
+      "is refused in %s mode while the rolled marker is held unreadable, and nothing is written",
+      async (mode) => {
+        const { harness, put, edit, text, move } = await moverFor({
+          daily: journal("daily", "day"),
+          monthly: journal("monthly", "month", { mode }),
+        });
+        harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = unreadable("carried");
+        const month = put("monthly", "2026-10-01", "");
+        const { editor, state } = edit("- [ ] Task #carried\n- [ ] Fresh\n", 0);
+
+        const result = await move(state, target("monthly", "2026-10-01", month));
+
+        expectErr(result);
+        expect(result.error).toEqual(new SingleMoveRefusedError("marker-unreadable"));
+        expect(await text(month)).toBe("");
+        expect(editor.changes).toEqual([]);
+      },
+    );
   });
 
   it("edits the source through a background pane that holds it, unsaved typing and all", async () => {

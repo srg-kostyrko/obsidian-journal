@@ -1,7 +1,8 @@
 import * as v from "valibot";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { journalsCoreModule } from "@/journals/module";
+import { unreadable } from "@/settings/repair";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../module";
@@ -66,12 +67,39 @@ describe("checkboxSlice repair on load", () => {
     expect(repair).toBeUndefined();
   });
 
-  // A marker Obsidian does not parse as a tag is stamped and never read back, so the line rolls again.
-  it.each(["rolled", "#123", ""])("a rolled marker %j repairs to #rolled and logs it", async (stored) => {
+  // #rolled in its place would read every line stamped with the user's own marker as open, and roll
+  // it again.
+  it.each(["rolled", "#123", "", 7])("a rolled marker %j is held as it was, not repaired", async (stored) => {
     const { state, repair } = await load({ rolledMarker: stored });
 
+    expect(state.rolledMarker).toEqual(unreadable(stored));
+    expect(repair).toBeUndefined();
+  });
+
+  it("an absent rolled marker reads as #rolled", async () => {
+    const { state, repair } = await load({ enabled: true });
+
     expect(state.rolledMarker).toBe("#rolled");
-    expect(repair?.fields).toMatchObject({ sliceKey: "tasksCheckbox", fields: ["rolledMarker"] });
+    expect(repair).toBeUndefined();
+  });
+
+  it("a held rolled marker is written back as it was stored", async () => {
+    vi.useFakeTimers();
+    onTestFinished(() => void vi.useRealTimers());
+    const harness = await testContainer({
+      modules: [journalsCoreModule, tasksCoreModule],
+      data: { tasksCheckbox: { rolledMarker: "rolled" } },
+    });
+    const saveSpy = vi.spyOn(harness.data, "save");
+
+    harness.settings.getSlice(checkboxSlice).state.enabled = false;
+    await vi.advanceTimersByTimeAsync(300);
+
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect((saveSpy.mock.calls[0]?.[0] as { tasksCheckbox: unknown }).tasksCheckbox).toMatchObject({
+      enabled: false,
+      rolledMarker: "rolled",
+    });
   });
 
   it("a nested-tag rolled marker survives the load", async () => {

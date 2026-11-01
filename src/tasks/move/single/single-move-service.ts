@@ -14,6 +14,7 @@ import { EnsureJournalEntryFlow } from "@/journals/flows";
 import { JournalsIndex } from "@/journals/journals-index";
 import { JournalsRepository } from "@/journals/repository";
 import { SettingsService } from "@/settings";
+import { isUnreadable } from "@/settings/repair";
 
 import { checkboxSlice } from "../../providers/checkbox/slice";
 import { SingleMoveRefusedError, type SingleMoveError } from "../errors";
@@ -226,6 +227,8 @@ export class SingleMoveService {
         .okOrElse(() => new JournalNotFoundError(target.journalName));
       const move = effectiveMove(config.tasks.move, this.#defaults.state);
       const marker = this.#checkbox.state.rolledMarker;
+      // A line the held marker stamped reads as open, so it could be moved a second time.
+      if (isUnreadable(marker)) return yield* AsyncResult.err(new SingleMoveRefusedError("marker-unreadable"));
       // The confirm stays outside the lock so a pending answer never holds up a roll into the journal.
       const confirmed = yield* this.#plan(source, move.mode, marker);
       // The source journal too: a roll of it reads this note and could take the same task. And the note

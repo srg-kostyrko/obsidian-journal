@@ -19,6 +19,7 @@ import { JournalsIndex } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
+import { unreadable } from "@/settings/repair";
 import { overrideWith, testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../module";
@@ -353,6 +354,21 @@ describe("CheckboxTaskProvider", () => {
     expect(host.published.get(dayPath)?.at(0)?.status).toBe("rolled");
 
     harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = "#carried";
+    await nextTick();
+
+    expect(host.published.get(dayPath)?.at(0)?.status).toBe("todo");
+  });
+
+  // Nothing is stamped while the marker is held, since every roll refuses; no line can be told apart
+  // as rolled, so none reads as rolled.
+  it("a rolled marker held unreadable reads no line as rolled", async () => {
+    const { host, structures, provider, harness } = await build();
+    host.owned.set(dayPath, { path: dayPath, journalName: "Daily", rule: undefined });
+    structures.setStructure(dayPath, structure({ tags: [{ tag: "#rolled", line: 4 }] }));
+    provider.start();
+    expect(host.published.get(dayPath)?.at(0)?.status).toBe("rolled");
+
+    harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = unreadable("rolled");
     await nextTick();
 
     expect(host.published.get(dayPath)?.at(0)?.status).toBe("todo");

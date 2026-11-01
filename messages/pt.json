@@ -2435,6 +2435,7 @@
   "tasks_checkbox_marker_desc": "A tag que uma cópia adiciona à linha original. Linhas com ela constam como transferidas.",
   "tasks_checkbox_marker_required": "Digite uma tag.",
   "tasks_checkbox_marker_invalid": "Use apenas letras, números, _, - ou /, com pelo menos um caractere que não seja número.",
+  "tasks_checkbox_marker_unreadable": "O marcador salvo não pode ser lido, por isso é mantido como está e as tarefas não são transferidas. Digite uma tag para substituí-lo.",
   "tasks_checkbox_marker_changed": "As linhas marcadas com o marcador antigo voltarão a constar como não concluídas.",
   "tasks_settings_add_condition": "Adicionar condição",
   "tasks_settings_condition_tag": "Tag",
@@ -2681,6 +2682,7 @@
   "tasks_roll_no_previous": "Não há nenhuma nota anterior da qual transferir tarefas.",
   "tasks_roll_no_current_period": "Hoje está fora da linha do tempo deste diário.",
   "tasks_roll_failed": "Não foi possível transferir as tarefas.",
+  "tasks_roll_marker_unreadable": "O marcador de transferência não pode ser lido, por isso as tarefas não são transferidas nem movidas. Corrija-o nas configurações de Tarefas de caixa de seleção.",
   "tasks_roll_missing_heading": "Nenhum cabeçalho {heading} na nota de {date}. Verifique o filtro de listagem do diário.",
   "tasks_roll_already_held": [
     {
@@ -2745,6 +2747,7 @@
   "tasks_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Tente novamente em instantes.",
   "tasks_roll_source_unread": "Não foi possível ler a nota de {date}.",
   "tasks_auto_roll_paused": "A transferência automática está pausada para {journal}. Ative Marcar como transferida ou use Mover.",
+  "tasks_auto_roll_paused_marker": "A transferência automática está pausada: o marcador de transferência não pode ser lido. Corrija-o nas configurações de Tarefas de caixa de seleção.",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

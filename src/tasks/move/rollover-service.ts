@@ -22,6 +22,7 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
 import { SettingsService } from "@/settings";
+import { isUnreadable } from "@/settings/repair";
 
 import { buildTaskListing, type TaskListingDependencies } from "../listing";
 import { carriesMarker, CHECKBOX_PROVIDER_ID, extractItems } from "../providers/checkbox/extract";
@@ -34,7 +35,13 @@ import { TaskIndex } from "../task-index";
 import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
-import { AutomaticRollRefusedError, NoCurrentPeriodError, UnsavedEditError, type RollError } from "./errors";
+import {
+  AutomaticRollRefusedError,
+  NoCurrentPeriodError,
+  RolledMarkerUnreadableError,
+  UnsavedEditError,
+  type RollError,
+} from "./errors";
 import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
 import { rewriteNote, type NoteWriters } from "./note-write";
@@ -228,7 +235,7 @@ export class RolloverService {
   // read as "nothing to roll", a stale one rolls the wrong lines. An open view is read rather than the
   // file, since an edit made through it reaches disk only on save; metadataCache parses only what is
   // saved, so a view holding unsaved typing has no structure that describes it yet.
-  async #readSource(path: VaultPath): Promise<RollSource | "indexing" | "unread"> {
+  async #readSource(path: VaultPath, marker: string): Promise<RollSource | "indexing" | "unread"> {
     const disk = await this.#notes.read(path);
     if (disk.isErr()) return "unread";
     const open = this.#workspace.openNoteText(path);
@@ -236,15 +243,13 @@ export class RolloverService {
     if (open.isSome() && open.value !== disk.value.replaceAll(/\r$/gmu, "")) return "indexing";
     const content = open.isSome() ? open.value : disk.value;
     const structure = this.#structure.get(path);
-    if (structure.isNone() || !inSync(content, structure.value, this.#checkbox.state.rolledMarker)) {
-      return "indexing";
-    }
-    return { path, content, structure: structure.value, items: this.#itemsOf(path, structure.value) };
+    if (structure.isNone() || !inSync(content, structure.value, marker)) return "indexing";
+    return { path, content, structure: structure.value, items: this.#itemsOf(path, structure.value, marker) };
   }
 
   // The provider's own inputs, so a line rolls exactly when the provider calls it a task.
-  #itemsOf(path: VaultPath, structure: NoteStructure): readonly TaskItem[] {
-    const { enabled, rule, statusMap, rolledMarker } = this.#checkbox.state;
+  #itemsOf(path: VaultPath, structure: NoteStructure, marker: string): readonly TaskItem[] {
+    const { enabled, rule, statusMap } = this.#checkbox.state;
     if (!enabled) return [];
     const owner = this.#host.ownerOf(path, CHECKBOX_PROVIDER_ID).getOrUndefined();
     return extractItems({
@@ -253,7 +258,7 @@ export class RolloverService {
       vault: rule,
       journal: owner === undefined ? null : parseJournalRule(owner.rule),
       statusMap,
-      rolledMarker,
+      rolledMarker: marker,
       owned: true,
       lineDates: undefined,
     });
@@ -320,13 +325,16 @@ export class RolloverService {
         const refused = config.tasks.move.automatic ? automaticBlocked(move) : "not-automatic";
         if (refused !== null) return yield* new Err(new AutomaticRollRefusedError(journalName, refused));
       }
+      // Every line the held marker stamped would read as open and roll a second time. Read once: the
+      // setting can change while the sources are read, and the roll plans and stamps by one marker.
+      const marker = this.#checkbox.state.rolledMarker;
+      if (isUnreadable(marker)) return yield* new Err(new RolledMarkerUnreadableError(journalName));
       const selection = selectionOf(config.tasks.filter);
       const heading = headingOf(selection);
       const createTarget = options.createTarget ?? true;
       if (!createTarget && this.#index.get(journalName, today).isNone()) {
         return noTargetReport(journalName, move.mode, heading);
       }
-      const marker = this.#checkbox.state.rolledMarker;
       const read = this.#lookBack(journalName, today, move);
 
       const plans: AnchoredPlan[] = [];
@@ -334,7 +342,7 @@ export class RolloverService {
       const unread = new Set<AnchorString>();
       for (const anchor of read) {
         for (const path of this.#sourcePaths(journalName, anchor, move.source)) {
-          const source = await this.#readSource(path);
+          const source = await this.#readSource(path, marker);
           if (source === "indexing") indexing.add(anchor);
           else if (source === "unread") unread.add(anchor);
           else plans.push({ anchor, plan: planSource(source, { selection, mode: move.mode, rolledMarker: marker }) });
@@ -350,6 +358,9 @@ export class RolloverService {
         // The reads await, and the note can be deleted meanwhile.
         if (!createTarget && this.#index.get(journalName, today).isNone()) {
           return noTargetReport(journalName, move.mode, heading);
+        }
+        if (isUnreadable(this.#checkbox.state.rolledMarker)) {
+          return yield* new Err(new RolledMarkerUnreadableError(journalName));
         }
         const target = yield* this.#targetPath(journalName, today, options.interactive);
         // The target goes first, and reaches disk first: a failure before the sources are written leaves

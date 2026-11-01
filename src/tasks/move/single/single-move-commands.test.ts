@@ -10,10 +10,13 @@ import { JournalsIndex } from "@/journals";
 import { JournalNotFoundError, NoJournalsError, OutOfTimelineError } from "@/journals/errors";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
+import { SettingsService } from "@/settings";
+import { unreadable } from "@/settings/repair";
 import { shelvesCoreModule } from "@/shelves/module";
 import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { tasksCoreModule } from "../../module";
+import { checkboxSlice } from "../../providers/checkbox/slice";
 import { SingleMoveRefusedError } from "../errors";
 
 import { MoveTargetPicker } from "./pick-target";
@@ -139,6 +142,20 @@ describe("SingleMoveCommands", () => {
       await settle();
     }
     expect(harness.notices.messages).toEqual([notice(), notice()]);
+    expect(harness.suggests.opens.length).toBe(0);
+    expect(pick).not.toHaveBeenCalled();
+    expect(move).not.toHaveBeenCalled();
+  });
+
+  it("refuses before any picker opens while the rolled marker is held unreadable", async () => {
+    harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = unreadable("carried");
+    const pick = vi.spyOn(harness.resolve(MoveTargetPicker), "pickPeriodTarget");
+    for (const id of [CONTAINING, PERIOD_NOTE]) {
+      harness.host.openEditor(DAY, TEXT, 0);
+      run(id);
+      await settle();
+    }
+    expect(harness.notices.messages).toEqual([m.tasks_roll_marker_unreadable(), m.tasks_roll_marker_unreadable()]);
     expect(harness.suggests.opens.length).toBe(0);
     expect(pick).not.toHaveBeenCalled();
     expect(move).not.toHaveBeenCalled();
@@ -342,6 +359,7 @@ describe("SingleMoveCommands", () => {
       ["not-a-task", () => m.tasks_move_not_a_task()],
       ["rolled", () => m.tasks_move_already_rolled()],
       ["same-note", () => m.tasks_move_same_note()],
+      ["marker-unreadable", () => m.tasks_roll_marker_unreadable()],
     ] as const)("explains a %s refusal", async (reason, notice) => {
       expect(await noticeFor(AsyncResult.err(new SingleMoveRefusedError(reason)))).toEqual([notice()]);
     });

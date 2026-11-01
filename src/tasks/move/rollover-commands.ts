@@ -5,7 +5,7 @@ import { CommandService, defineSuggest, NoticeService, SuggestService, Workspace
 import { LoggerFactoryToken } from "@/infrastructure/logger";
 import { JournalsIndex, JournalsRepository } from "@/journals";
 
-import { NoCurrentPeriodError } from "./errors";
+import { NoCurrentPeriodError, RolledMarkerUnreadableError } from "./errors";
 import { rollNotice } from "./report";
 import { RolloverService } from "./rollover-service";
 
@@ -63,6 +63,10 @@ export class RolloverCommands {
     if (error instanceof UserAborted) return;
     if (error instanceof NoCurrentPeriodError) {
       this.#notices.show(m.tasks_roll_no_current_period());
+      return;
+    }
+    if (error instanceof RolledMarkerUnreadableError) {
+      this.#notices.show(m.tasks_roll_marker_unreadable());
       return;
     }
     this.#logger.error("rolling tasks forward failed", { journalName: name, error });

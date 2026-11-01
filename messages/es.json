@@ -2427,6 +2427,7 @@
   "tasks_checkbox_marker_desc": "La etiqueta que una copia añade a la línea original. Las líneas que la llevan figuran como trasladadas.",
   "tasks_checkbox_marker_required": "Introduce una etiqueta.",
   "tasks_checkbox_marker_invalid": "Usa solo letras, números, _, - o /, con al menos un carácter que no sea un número.",
+  "tasks_checkbox_marker_unreadable": "La marca guardada no se puede leer, así que se conserva tal cual y las tareas no se trasladan. Escribe una etiqueta para reemplazarla.",
   "tasks_checkbox_marker_changed": "Las líneas marcadas con la marca anterior volverán a figurar como sin terminar.",
   "tasks_settings_add_condition": "Agregar condición",
   "tasks_settings_condition_tag": "Etiqueta",
@@ -2673,6 +2674,7 @@
   "tasks_roll_no_previous": "No hay ninguna nota anterior desde la que trasladar tareas.",
   "tasks_roll_no_current_period": "Hoy queda fuera de la línea de tiempo de este diario.",
   "tasks_roll_failed": "No se pudieron trasladar las tareas.",
+  "tasks_roll_marker_unreadable": "La marca de traslado no se puede leer, así que las tareas no se trasladan ni se mueven. Corrígela en la configuración de Tareas de casilla.",
   "tasks_roll_missing_heading": "No hay ningún encabezado {heading} en la nota del {date}. Comprueba el filtro de listado del diario.",
   "tasks_roll_already_held": [
     {
@@ -2737,6 +2739,7 @@
   "tasks_roll_source_indexing": "La nota del {date} todavía se está indexando. Vuelve a intentarlo en un momento.",
   "tasks_roll_source_unread": "No se pudo leer la nota del {date}.",
   "tasks_auto_roll_paused": "El traslado automático está en pausa para {journal}. Activa Marcar como trasladada o usa Mover.",
+  "tasks_auto_roll_paused_marker": "El traslado automático está en pausa: la marca de traslado no se puede leer. Corrígela en la configuración de Tareas de casilla.",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],
