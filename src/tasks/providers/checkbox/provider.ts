@@ -11,6 +11,7 @@ import { admitsSubject, referencedProperties } from "@/tasks/visibility-rule/rul
 import { TaskHostToken, type OwnedNote, type TaskItem, type TaskProvider } from "../../types";
 
 import { CHECKBOX_PROVIDER_ID, extractItems, lineDatesOf, lineStampOf, type LineDates } from "./extract";
+import { markerInUse } from "./marker";
 import { checkboxJournalRuleSchema, type CheckboxJournalRule } from "./rule-schema";
 import { checkboxSlice } from "./slice";
 import CheckboxJournalRow from "./ui/CheckboxJournalRow.vue";
@@ -106,7 +107,7 @@ export class CheckboxTaskProvider implements TaskProvider {
       vault: this.#settings.state.rule,
       journal: owner === undefined ? null : parseJournalRule(owner.rule),
       statusMap: this.#settings.state.statusMap,
-      rolledMarker: this.#settings.state.rolledMarker,
+      rolledMarker: markerInUse(this.#settings.state.rolledMarker),
       owned: owner !== undefined,
       lineDates,
       properties: lineDates === undefined || lineDates.size === 0 ? undefined : this.#snapshot(path),

@@ -2505,6 +2505,7 @@
   "tasks_checkbox_marker_desc": "Тег, який копіювання додає до вихідного рядка. Рядки з ним вважаються перенесеними.",
   "tasks_checkbox_marker_required": "Введіть тег.",
   "tasks_checkbox_marker_invalid": "Використовуйте лише літери, цифри, _, - або /, і принаймні один символ, що не є цифрою.",
+  "tasks_checkbox_marker_unreadable": "Збережену мітку не вдається прочитати, тому її залишено як є, а завдання не переносяться. Введіть тег, щоб замінити її.",
   "tasks_checkbox_marker_changed": "Рядки зі старою міткою знову вважатимуться незавершеними.",
   "tasks_settings_add_condition": "Додати умову",
   "tasks_settings_condition_tag": "Тег",
@@ -2760,6 +2761,7 @@
   "tasks_roll_no_previous": "Немає ранішої нотатки, з якої можна перенести завдання.",
   "tasks_roll_no_current_period": "Сьогодні поза часовою шкалою цього журналу.",
   "tasks_roll_failed": "Не вдалося перенести завдання.",
+  "tasks_roll_marker_unreadable": "Мітку перенесення не вдається прочитати, тому завдання не переносяться й не переміщуються. Виправте її в налаштуваннях «Завдання-чекбокси».",
   "tasks_roll_missing_heading": "У нотатці за {date} немає заголовка {heading}. Перевірте фільтр списку журналу.",
   "tasks_roll_note_items_skipped": [
     {
@@ -2808,6 +2810,7 @@
   "tasks_roll_source_indexing": "Нотатка за {date} ще індексується. Спробуйте ще раз трохи згодом.",
   "tasks_roll_source_unread": "Не вдалося прочитати нотатку за {date}.",
   "tasks_auto_roll_paused": "Автоматичне перенесення для {journal} призупинено. Увімкніть «Позначати як перенесені» або виберіть «Перемістити».",
+  "tasks_auto_roll_paused_marker": "Автоматичне перенесення призупинено: мітку перенесення не вдається прочитати. Виправте її в налаштуваннях «Завдання-чекбокси».",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

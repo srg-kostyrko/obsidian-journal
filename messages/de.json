@@ -2440,6 +2440,7 @@
   "tasks_checkbox_marker_desc": "Das Tag, das eine Kopie der ursprünglichen Zeile hinzufügt. Zeilen damit gelten als übertragen.",
   "tasks_checkbox_marker_required": "Gib ein Tag ein.",
   "tasks_checkbox_marker_invalid": "Nur Buchstaben, Ziffern, _, - oder / verwenden, mit mindestens einem Zeichen, das keine Ziffer ist.",
+  "tasks_checkbox_marker_unreadable": "Die gespeicherte Markierung kann nicht gelesen werden, daher bleibt sie unverändert und Aufgaben werden nicht übertragen. Gib ein Tag ein, um sie zu ersetzen.",
   "tasks_checkbox_marker_changed": "Zeilen mit der alten Markierung gelten wieder als unerledigt.",
   "tasks_settings_add_condition": "Bedingung hinzufügen",
   "tasks_settings_condition_tag": "Tag",
@@ -2684,6 +2685,7 @@
   "tasks_roll_no_previous": "Es gibt keine frühere Notiz, aus der Aufgaben übertragen werden können.",
   "tasks_roll_no_current_period": "Heute liegt außerhalb der Zeitleiste dieses Journals.",
   "tasks_roll_failed": "Aufgaben konnten nicht übertragen werden.",
+  "tasks_roll_marker_unreadable": "Die Übertragen-Markierung kann nicht gelesen werden, daher werden Aufgaben weder übertragen noch verschoben. Korrigiere sie in den Einstellungen für Kontrollkästchen-Aufgaben.",
   "tasks_roll_missing_heading": "Keine Überschrift {heading} in der Notiz vom {date}. Prüfe den Anzeigefilter des Journals.",
   "tasks_roll_note_items_skipped": [
     {
@@ -2728,6 +2730,7 @@
   "tasks_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Versuche es gleich noch einmal.",
   "tasks_roll_source_unread": "Die Notiz vom {date} konnte nicht gelesen werden.",
   "tasks_auto_roll_paused": "Automatisches Übertragen ist für {journal} pausiert. Schalte „Als übertragen markieren“ ein oder nutze Verschieben.",
+  "tasks_auto_roll_paused_marker": "Automatisches Übertragen ist pausiert: Die Übertragen-Markierung kann nicht gelesen werden. Korrigiere sie in den Einstellungen für Kontrollkästchen-Aufgaben.",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

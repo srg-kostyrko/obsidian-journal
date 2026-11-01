@@ -12,8 +12,10 @@ import { TimelineService } from "@/journals/timeline";
 import { JournalsEventsToken } from "@/journals/tokens";
 import { isNotelet, type EntryChangedEvent } from "@/journals/types";
 import { SettingsService } from "@/settings";
+import { isUnreadable } from "@/settings/repair";
 
-import { AutomaticRollRefusedError, NoCurrentPeriodError } from "../errors";
+import { checkboxSlice } from "../../providers/checkbox/slice";
+import { AutomaticRollRefusedError, NoCurrentPeriodError, RolledMarkerUnreadableError } from "../errors";
 import { RolloverService, type RollOptions } from "../rollover-service";
 import { automaticBlocked, effectiveMove, moveDefaultsSlice } from "../settings";
 
@@ -62,11 +64,13 @@ export class AutoRolloverService {
   readonly #quiet = inject(QuietWindow);
   readonly #rollover = inject(RolloverService);
   readonly #defaults = inject(SettingsService).getSlice(moveDefaultsSlice);
+  readonly #checkbox = inject(SettingsService).getSlice(checkboxSlice);
   readonly #logger = inject(LoggerFactoryToken).named("auto-rollover");
 
   // In memory on purpose: a record of past runs would be plugin state the note cannot rebuild.
   readonly #seen = new Map<string, Set<string>>();
   readonly #paused = new Map<string, "blocked" | "write-failed">();
+  #markerHeld = false;
   readonly #stops: (() => void)[] = [];
   // number: window.setTimeout returns one; @types/express's Node globals would otherwise widen this to NodeJS.Timeout.
   #timer: number | undefined;
@@ -222,7 +226,15 @@ export class AutoRolloverService {
   }
 
   async #rollAll(): Promise<void> {
-    for (const [name, config] of this.#optedIn()) {
+    const journals = this.#optedIn();
+    if (journals.length === 0) return;
+    if (isUnreadable(this.#checkbox.state.rolledMarker)) {
+      this.#pauseForMarker();
+      return;
+    }
+    // Lifted, so a marker that turns unreadable again is announced again.
+    this.#markerHeld = false;
+    for (const [name, config] of journals) {
       if (this.#disposed) return;
       try {
         await this.#rollJournal(name, config);
@@ -246,6 +258,13 @@ export class AutoRolloverService {
     this.#notices.show(m.tasks_auto_roll_paused({ journal: name }));
   }
 
+  // One notice for every journal: the marker is the vault's, and fixing it resumes them all.
+  #pauseForMarker(): void {
+    if (this.#markerHeld) return;
+    this.#markerHeld = true;
+    this.#notices.show(m.tasks_auto_roll_paused_marker());
+  }
+
   async #rollJournal(name: string, config: JournalConfig): Promise<void> {
     const paused = this.#paused.get(name);
     if (paused === "write-failed") return;
@@ -266,6 +285,10 @@ export class AutoRolloverService {
       // Read again once the roll held the lock, since settings can change while it waits for one.
       if (result.error instanceof AutomaticRollRefusedError) {
         if (result.error.reason === "copy-without-stamp") this.#pauseBlocked(name);
+        return;
+      }
+      if (result.error instanceof RolledMarkerUnreadableError) {
+        this.#pauseForMarker();
         return;
       }
       // Midnight can pass between the check above and the roll's own; settings can delete the

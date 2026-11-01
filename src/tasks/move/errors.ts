@@ -24,18 +24,29 @@ export class AutomaticRollRefusedError extends Error {
   }
 }
 
+// Lines stamped with a marker nobody can read would read as open, and roll a second time.
+export class RolledMarkerUnreadableError extends Error {
+  readonly kind = "rolled-marker-unreadable" as const;
+
+  constructor(readonly journalName: string) {
+    super(`Journal ${journalName} cannot roll: the rolled marker cannot be read`);
+    this.name = "RolledMarkerUnreadableError";
+  }
+}
+
 export type RollError =
   | AutomaticRollRefusedError
   | JournalNotFoundError
   | NoCurrentPeriodError
   | NoteCreationError
   | NoteNotFoundError
-  | NoteWriteError;
+  | NoteWriteError
+  | RolledMarkerUnreadableError;
 
 export class SingleMoveRefusedError extends Error {
   readonly kind = "single-move-refused" as const;
 
-  constructor(readonly reason: "not-a-task" | "rolled" | "same-note") {
+  constructor(readonly reason: "not-a-task" | "rolled" | "same-note" | "marker-unreadable") {
     super(`The task under the cursor cannot be moved: ${reason}`);
     this.name = "SingleMoveRefusedError";
   }

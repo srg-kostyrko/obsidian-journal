@@ -20,6 +20,7 @@ import { JournalsIndex, type JournalConfig } from "@/journals";
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
+import { unreadable } from "@/settings/repair";
 import { overrideWith, testContainer } from "@/testing";
 
 import { taskRuleSchema, type TaskRule } from "../conditions";
@@ -29,6 +30,7 @@ import { NOTE_PROPERTY_PROVIDER_ID } from "../providers/note-property/slice";
 import { TaskIndex } from "../task-index";
 import { buildTaskItem } from "../testing";
 
+import { RolledMarkerUnreadableError } from "./errors";
 import { rollNotice, rollSentences, type RollReport } from "./report";
 import { RolloverService } from "./rollover-service";
 import { journalMoveSchema, type JournalMoveConfig } from "./settings";
@@ -918,6 +920,25 @@ describe("RolloverService", () => {
     expect(report).toMatchObject({ noPrevious: true, read: [] });
     expect(notes.find(`daily/${TODAY}.md` as VaultPath).isNone()).toBe(true);
   });
+
+  // Lines stamped with a marker nobody can read would read as open, and roll a second time.
+  it.each([true, false])(
+    "refuses to roll while the rolled marker is held unreadable (interactive %s)",
+    async (interactive) => {
+      const { service, put, text, checkbox, notes } = await rolloverFor({
+        daily: dayJournal("daily", { automatic: true }),
+      });
+      const source = put("daily", "2026-10-20", "- [ ] Call Bob #carried\n- [ ] Write report\n");
+      checkbox.state.rolledMarker = unreadable("carried");
+
+      const result = await service.roll("daily", { interactive, requireAutomatic: !interactive });
+
+      expectErr(result);
+      expect(result.error).toEqual(new RolledMarkerUnreadableError("daily"));
+      expect(await text(source)).toBe("- [ ] Call Bob #carried\n- [ ] Write report\n");
+      expect(notes.find(`daily/${TODAY}.md` as VaultPath).isNone()).toBe(true);
+    },
+  );
 });
 
 describe("rollNotice", () => {

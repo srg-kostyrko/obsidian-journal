@@ -2438,6 +2438,7 @@
   "tasks_checkbox_marker_desc": "Il tag che una copia aggiunge alla riga originale. Le righe che lo portano risultano riportate.",
   "tasks_checkbox_marker_required": "Inserisci un tag.",
   "tasks_checkbox_marker_invalid": "Usa solo lettere, numeri, _, - o /, con almeno un carattere che non sia un numero.",
+  "tasks_checkbox_marker_unreadable": "Il marcatore salvato non può essere letto, quindi resta invariato e le attività non vengono riportate. Inserisci un tag per sostituirlo.",
   "tasks_checkbox_marker_changed": "Le righe contrassegnate con il vecchio marcatore risulteranno di nuovo non completate.",
   "tasks_settings_add_condition": "Aggiungi condizione",
   "tasks_settings_condition_tag": "Tag",
@@ -2682,6 +2683,7 @@
   "tasks_roll_no_previous": "Non c'è nessuna nota precedente da cui riportare le attività.",
   "tasks_roll_no_current_period": "Oggi è fuori dalla cronologia di questo diario.",
   "tasks_roll_failed": "Non è stato possibile riportare le attività.",
+  "tasks_roll_marker_unreadable": "Il marcatore di riporto non può essere letto, quindi le attività non vengono né riportate né spostate. Correggilo nelle impostazioni di Attività con casella.",
   "tasks_roll_missing_heading": "Nessuna intestazione {heading} nella nota del {date}. Controlla il filtro dell'elenco del diario.",
   "tasks_roll_note_items_skipped": [
     {
@@ -2726,6 +2728,7 @@
   "tasks_roll_source_indexing": "La nota del {date} è ancora in fase di indicizzazione. Riprova tra un momento.",
   "tasks_roll_source_unread": "Non è stato possibile leggere la nota del {date}.",
   "tasks_auto_roll_paused": "Il riporto automatico è in pausa per {journal}. Attiva Contrassegna come riportata oppure usa Sposta.",
+  "tasks_auto_roll_paused_marker": "Il riporto automatico è in pausa: il marcatore di riporto non può essere letto. Correggilo nelle impostazioni di Attività con casella.",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

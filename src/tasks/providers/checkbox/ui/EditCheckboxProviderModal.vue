@@ -6,6 +6,7 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { SettingsService } from "@/settings";
+import { isUnreadable } from "@/settings/repair";
 import type { TaskCondition } from "@/tasks/conditions";
 import { moveDefaultsSlice } from "@/tasks/move/settings";
 import RuleEditor from "@/tasks/ui/RuleEditor.vue";
@@ -18,6 +19,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 import UiToggle from "@/ui/UiToggle.vue";
 
+import { markerInUse } from "../marker";
 import { markerErrors, normalizeMarker } from "../marker-form";
 import { checkboxRuleConditionErrors } from "../rule-form-schema";
 import { isEditableCondition } from "../rule-schema";
@@ -48,6 +50,8 @@ const storedConditions = cloneFnJSON(slice.state.rule.conditions);
 // survives the round trip.
 const preservedConditions = storedConditions.filter((condition) => !isEditableCondition(condition));
 
+const markerHeldAtOpen = isUnreadable(slice.state.rolledMarker);
+
 // `rule.conditions` is typed as the full TaskCondition union, matching RuleEditor's model —
 // CHECKBOX_CONDITION_TYPES above is what actually keeps a status condition out, not this type,
 // which only has to be wide enough for RuleEditor to bind to.
@@ -65,7 +69,8 @@ const draft = reactive<{
     mode: slice.state.rule.mode,
     conditions: storedConditions.filter(isEditableCondition),
   },
-  rolledMarker: slice.state.rolledMarker,
+  // A held marker is not shown as text: whatever it holds is not a tag, and Save keeps it unless replaced.
+  rolledMarker: markerHeldAtOpen ? "" : markerInUse(slice.state.rolledMarker),
   moveMode: moveDefaults.state.mode,
   moveStamp: moveDefaults.state.stamp,
 });
@@ -77,19 +82,22 @@ const ruleErrors = computed(() => checkboxRuleConditionErrors(draft.rule));
 const ruleValid = computed(() => ruleErrors.value.size === 0);
 
 const marker = computed(() => normalizeMarker(draft.rolledMarker));
-const errorBag = computed(() => ({ rolledMarker: markerErrors(marker.value) }));
+const keepsHeldMarker = computed(() => markerHeldAtOpen && marker.value === "");
+const errorBag = computed(() => ({ rolledMarker: keepsHeldMarker.value ? [] : markerErrors(marker.value) }));
 // Read against the slice, not the value at open: a marker changed elsewhere while this is open is
-// the one the stamped lines carry now.
-const markerChanged = computed(() => marker.value !== slice.state.rolledMarker);
+// the one the stamped lines carry now. A held one already reads no line as rolled.
+const markerChanged = computed(
+  () => !isUnreadable(slice.state.rolledMarker) && marker.value !== slice.state.rolledMarker,
+);
 const valid = computed(() => ruleValid.value && errorBag.value.rolledMarker.length === 0);
 
 const rolloverExpanded = ref(false);
-const rolloverHasError = computed(() => errorBag.value.rolledMarker.length > 0);
-// A closed section would hide the reason Save is disabled, so one holding an error stays open. An
+const rolloverNeedsAttention = computed(() => errorBag.value.rolledMarker.length > 0 || keepsHeldMarker.value);
+// A closed section would hide the reason Save is disabled, or the held marker, so either keeps it open. An
 // error also latches it open: otherwise the keystroke that fixes the marker would close the field.
-watch(rolloverHasError, (hasError) => hasError && (rolloverExpanded.value = true), { immediate: true });
+watch(rolloverNeedsAttention, (needed) => needed && (rolloverExpanded.value = true), { immediate: true });
 const rolloverOpen = computed({
-  get: () => rolloverExpanded.value || rolloverHasError.value,
+  get: () => rolloverExpanded.value || rolloverNeedsAttention.value,
   set: (open: boolean) => (rolloverExpanded.value = open),
 });
 
@@ -108,7 +116,7 @@ function save(): void {
     mode: draft.rule.mode,
     conditions: [...draft.rule.conditions, ...preservedConditions],
   };
-  slice.state.rolledMarker = marker.value;
+  if (!keepsHeldMarker.value) slice.state.rolledMarker = marker.value;
   // Only what the user changed here: an untouched control must not revert a write made elsewhere
   // while the modal was open.
   if (draft.moveMode !== openMoveDefaults.mode) moveDefaults.state.mode = draft.moveMode;
@@ -139,6 +147,7 @@ function save(): void {
         <span v-if="markerChanged && errorBag.rolledMarker.length === 0" class="tasks-checkbox-marker-changed">
           {{ m.tasks_checkbox_marker_changed() }}
         </span>
+        <span v-if="keepsHeldMarker" class="tasks-move-form-error">{{ m.tasks_checkbox_marker_unreadable() }}</span>
         <span v-for="error of errorBag.rolledMarker" :key="error" class="tasks-move-form-error">{{ error }}</span>
       </template>
       <UiTextInput v-model="draft.rolledMarker" placeholder="#rolled" data-testid="checkbox-rolled-marker" />

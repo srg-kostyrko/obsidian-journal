@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 import { SettingsService } from "@/settings";
+import { unreadable } from "@/settings/repair";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
@@ -594,6 +595,52 @@ describe("rolled marker", () => {
     expect(screen.getByText(m.tasks_checkbox_marker_invalid())).toBeTruthy();
     expect(submit).not.toHaveBeenCalled();
     expect(slice.state.rolledMarker).toBe("#rolled");
+  });
+
+  describe("held unreadable", () => {
+    const held = unreadable("carried");
+
+    it("opens the rollover section on its own and says the marker can't be read", async () => {
+      await mount({ expand: false, seed: (state) => (state.rolledMarker = held) });
+
+      expect(screen.getByTestId<HTMLInputElement>("checkbox-rolled-marker").value).toBe("");
+      expect(screen.getByText(m.tasks_checkbox_marker_unreadable())).toBeTruthy();
+      expect(screen.queryByText(m.tasks_checkbox_marker_required())).toBeNull();
+    });
+
+    it("an untouched Save keeps the held marker", async () => {
+      const { slice, submit } = await mount({ expand: false, seed: (state) => (state.rolledMarker = held) });
+
+      await userEvent.click(screen.getByTestId("status-map-remove-/"));
+      await save();
+
+      expect(submit).toHaveBeenCalled();
+      expect(slice.state.rolledMarker).toEqual(held);
+      expect(slice.state.statusMap).not.toHaveProperty("/");
+    });
+
+    it("a marker typed in replaces the held one on Save", async () => {
+      const { slice, submit } = await mount({ expand: false, seed: (state) => (state.rolledMarker = held) });
+
+      await typeMarker("carried");
+
+      expect(screen.queryByText(m.tasks_checkbox_marker_unreadable())).toBeNull();
+      expect(screen.queryByText(m.tasks_checkbox_marker_changed())).toBeNull();
+      await save();
+      expect(submit).toHaveBeenCalled();
+      expect(slice.state.rolledMarker).toBe("#carried");
+    });
+
+    it("a marker typed in must still be a tag", async () => {
+      const { slice, submit } = await mount({ expand: false, seed: (state) => (state.rolledMarker = held) });
+
+      await typeMarker("#123");
+      await save();
+
+      expect(screen.getByText(m.tasks_checkbox_marker_invalid())).toBeTruthy();
+      expect(submit).not.toHaveBeenCalled();
+      expect(slice.state.rolledMarker).toEqual(held);
+    });
   });
 
   it.each(["#rolled", "#roll/over", "#\u{FC}ber_2", "#roll-2"])("accepts %s", async (marker) => {

@@ -2438,6 +2438,7 @@
   "tasks_checkbox_marker_desc": "L’étiquette qu’une copie ajoute à la ligne d’origine. Les lignes qui la portent sont considérées comme reportées.",
   "tasks_checkbox_marker_required": "Saisissez une étiquette.",
   "tasks_checkbox_marker_invalid": "Utilisez uniquement des lettres, des chiffres, _, - ou /, avec au moins un caractère qui n’est pas un chiffre.",
+  "tasks_checkbox_marker_unreadable": "Le marqueur enregistré ne peut pas être lu : il est donc conservé tel quel et les tâches ne sont pas reportées. Saisissez une étiquette pour le remplacer.",
   "tasks_checkbox_marker_changed": "Les lignes marquées avec l’ancien marqueur seront de nouveau considérées comme non terminées.",
   "tasks_settings_add_condition": "Ajouter une condition",
   "tasks_settings_condition_tag": "Étiquette",
@@ -2682,6 +2683,7 @@
   "tasks_roll_no_previous": "Aucune note antérieure dont reporter les tâches.",
   "tasks_roll_no_current_period": "Aujourd’hui est en dehors de la chronologie de ce journal.",
   "tasks_roll_failed": "Les tâches n’ont pas pu être reportées.",
+  "tasks_roll_marker_unreadable": "Le marqueur de report ne peut pas être lu : les tâches ne sont donc ni reportées ni déplacées. Corrigez-le dans les paramètres Tâches de case à cocher.",
   "tasks_roll_missing_heading": "Aucun en-tête {heading} dans la note du {date}. Vérifiez le filtre de la liste du journal.",
   "tasks_roll_note_items_skipped": [
     {
@@ -2726,6 +2728,7 @@
   "tasks_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Réessayez dans un instant.",
   "tasks_roll_source_unread": "La note du {date} n’a pas pu être lue.",
   "tasks_auto_roll_paused": "Le report automatique est en pause pour {journal}. Activez Marquer comme reportée ou utilisez Déplacer.",
+  "tasks_auto_roll_paused_marker": "Le report automatique est en pause : le marqueur de report ne peut pas être lu. Corrigez-le dans les paramètres Tâches de case à cocher.",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

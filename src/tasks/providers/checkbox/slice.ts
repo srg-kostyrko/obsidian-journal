@@ -1,6 +1,7 @@
 import * as v from "valibot";
 
 import { defineSlice } from "@/settings";
+import { orUnreadable } from "@/settings/repair";
 
 import { markerProblem } from "./marker";
 import { checkboxRuleSchema } from "./rule-schema";
@@ -27,10 +28,14 @@ export const checkboxSliceSchema = v.object({
   rule: v.optional(checkboxRuleSchema, { mode: "and", conditions: [] }),
   statusMap: v.optional(v.record(v.string(), v.string()), DEFAULT_STATUS_MAP),
   canonical: v.optional(v.record(v.string(), v.string()), DEFAULT_CANONICAL),
+  // Held rather than repaired: #rolled in place of a custom marker reads every line it stamped as
+  // open, and the next roll copies them all again.
   rolledMarker: v.optional(
-    v.pipe(
-      v.string(),
-      v.check((marker) => markerProblem(marker) === null),
+    orUnreadable(
+      v.pipe(
+        v.string(),
+        v.check((marker) => markerProblem(marker) === null),
+      ),
     ),
     "#rolled",
   ),

@@ -2421,6 +2421,7 @@
   "tasks_checkbox_marker_desc": "复制时添加到原行的标签。带有此标签的行视为已结转。",
   "tasks_checkbox_marker_required": "请输入标签。",
   "tasks_checkbox_marker_invalid": "只能使用字母、数字、_、- 或 /，且至少包含一个非数字字符。",
+  "tasks_checkbox_marker_unreadable": "无法读取已保存的标记，因此将按原样保留，任务也不会结转。输入一个标签即可替换。",
   "tasks_checkbox_marker_changed": "带有旧标记的行将重新显示为未完成。",
   "tasks_settings_add_condition": "添加条件",
   "tasks_settings_condition_tag": "标签",
@@ -2665,6 +2666,7 @@
   "tasks_roll_no_previous": "没有可从中结转任务的更早笔记。",
   "tasks_roll_no_current_period": "今天不在此日记的时间线范围内。",
   "tasks_roll_failed": "无法结转任务。",
+  "tasks_roll_marker_unreadable": "无法读取结转标记，因此不会结转或移动任务。请在“复选框任务”设置中修正。",
   "tasks_roll_missing_heading": "{date} 的笔记中没有 {heading} 标题。请检查该日记的列表筛选条件。",
   "tasks_roll_note_items_skipped": [
     {
@@ -2709,6 +2711,7 @@
   "tasks_roll_source_indexing": "{date} 的笔记仍在建立索引。请稍后重试。",
   "tasks_roll_source_unread": "无法读取 {date} 的笔记。",
   "tasks_auto_roll_paused": "{journal} 的自动结转已暂停。请开启“标记为已结转”，或使用“移动”。",
+  "tasks_auto_roll_paused_marker": "自动结转已暂停：无法读取结转标记。请在“复选框任务”设置中修正。",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],

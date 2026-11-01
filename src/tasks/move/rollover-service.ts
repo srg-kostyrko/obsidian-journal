@@ -22,9 +22,11 @@ import { JournalsIndex } from "@/journals/journals-index";
 import { JournalsRepository } from "@/journals/repository";
 import { TimelineService } from "@/journals/timeline";
 import { SettingsService } from "@/settings";
+import { isUnreadable } from "@/settings/repair";
 
 import { buildTaskListing, type TaskListingDependencies } from "../listing";
 import { carriesMarker, CHECKBOX_PROVIDER_ID, extractItems } from "../providers/checkbox/extract";
+import { markerInUse } from "../providers/checkbox/marker";
 import { parseJournalRule } from "../providers/checkbox/provider";
 import { checkboxSlice } from "../providers/checkbox/slice";
 import { NOTE_PROPERTY_PROVIDER_ID } from "../providers/note-property/slice";
@@ -34,7 +36,7 @@ import { TaskIndex } from "../task-index";
 import { TaskHostToken, type TaskItem } from "../types";
 import { TaskVisibility } from "../visibility";
 
-import { AutomaticRollRefusedError, NoCurrentPeriodError, type RollError } from "./errors";
+import { AutomaticRollRefusedError, NoCurrentPeriodError, RolledMarkerUnreadableError, type RollError } from "./errors";
 import { lineHasTag } from "./line-tags";
 import { MoveLocks } from "./locks";
 import { rewriteNote, type NoteWriters } from "./note-write";
@@ -234,7 +236,7 @@ export class RolloverService {
     if (open.isSome() && open.value !== disk.value.replaceAll(/\r$/gmu, "")) return "indexing";
     const content = open.isSome() ? open.value : disk.value;
     const structure = this.#structure.get(path);
-    if (structure.isNone() || !inSync(content, structure.value, this.#checkbox.state.rolledMarker)) {
+    if (structure.isNone() || !inSync(content, structure.value, markerInUse(this.#checkbox.state.rolledMarker))) {
       return "indexing";
     }
     return { path, content, structure: structure.value, items: this.#itemsOf(path, structure.value) };
@@ -251,7 +253,7 @@ export class RolloverService {
       vault: rule,
       journal: owner === undefined ? null : parseJournalRule(owner.rule),
       statusMap,
-      rolledMarker,
+      rolledMarker: markerInUse(rolledMarker),
       owned: true,
       lineDates: undefined,
     });
@@ -318,13 +320,15 @@ export class RolloverService {
         const refused = config.tasks.move.automatic ? automaticBlocked(move) : "not-automatic";
         if (refused !== null) return yield* new Err(new AutomaticRollRefusedError(journalName, refused));
       }
+      // Every line the held marker stamped would read as open and roll a second time.
+      const marker = this.#checkbox.state.rolledMarker;
+      if (isUnreadable(marker)) return yield* new Err(new RolledMarkerUnreadableError(journalName));
       const selection = selectionOf(config.tasks.filter);
       const heading = headingOf(selection);
       const createTarget = options.createTarget ?? true;
       if (!createTarget && this.#index.get(journalName, today).isNone()) {
         return noTargetReport(journalName, move.mode, heading);
       }
-      const marker = this.#checkbox.state.rolledMarker;
       const read = this.#lookBack(journalName, today, move);
 
       const plans: AnchoredPlan[] = [];

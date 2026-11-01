@@ -14,7 +14,7 @@ import { overrideWith, testContainer, type TestHarness } from "@/testing";
 
 import { tasksCoreModule } from "../module";
 
-import { NoCurrentPeriodError } from "./errors";
+import { NoCurrentPeriodError, RolledMarkerUnreadableError } from "./errors";
 import { rollNotice, type RollReport } from "./report";
 import { RolloverCommands } from "./rollover-commands";
 import { RolloverService } from "./rollover-service";
@@ -175,6 +175,14 @@ describe("RolloverCommands", () => {
     setActive(DAILY);
     run();
     await vi.waitFor(() => expect(harness.notices.messages).toContain(m.tasks_roll_no_current_period()));
+  });
+
+  it("says the rolled marker must be fixed while it is held unreadable", async () => {
+    roll.mockReturnValue(AsyncResult.err(new RolledMarkerUnreadableError("daily")));
+    setActive(DAILY);
+    run();
+    await vi.waitFor(() => expect(harness.notices.messages).toContain(m.tasks_roll_marker_unreadable()));
+    expect(harness.logs.records.some((record) => record.level === "error")).toBe(false);
   });
 
   it("reports any other failure as a failed roll", async () => {

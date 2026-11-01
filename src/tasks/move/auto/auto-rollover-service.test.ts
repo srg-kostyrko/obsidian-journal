@@ -21,10 +21,12 @@ import { JournalsIndex, JournalsRepository, type JournalConfig } from "@/journal
 import { journalsCoreModule } from "@/journals/module";
 import { fixedJournal } from "@/journals/testing";
 import { SettingsService } from "@/settings";
+import { unreadable } from "@/settings/repair";
 import { overrideWith, testContainer } from "@/testing";
 
 import { taskRuleSchema, type TaskRule } from "../../conditions";
 import { tasksCoreModule } from "../../module";
+import { checkboxSlice } from "../../providers/checkbox/slice";
 import { NoCurrentPeriodError } from "../errors";
 import { MoveLocks } from "../locks";
 import { RolloverService } from "../rollover-service";
@@ -466,6 +468,64 @@ describe("AutoRolloverService", () => {
     expect(await text(target)).toBe("- [ ] Call Bob\n");
     const paused = m.tasks_auto_roll_paused({ journal: "daily" });
     expect(harness.notices.messages).toEqual([paused, named("daily", doneFrom("2026-10-20")), paused]);
+  });
+
+  it("a rolled marker held unreadable pauses every journal with one notice per session", async () => {
+    const { put, text, calls, boot, resume, harness } = await autoFor(
+      { daily: automatic("daily"), work: automatic("work", { mode: "move" }) },
+      { tasksCheckbox: { rolledMarker: "carried" } },
+    );
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob #carried\n- [ ] Write report\n");
+    const target = put("daily", "2026-10-21", "");
+    const workSource = put("work", "2026-10-20", "- [ ] Work item\n");
+    put("work", "2026-10-21", "");
+    await boot();
+    await resume();
+
+    expect(calls("daily")).toBe(0);
+    expect(calls("work")).toBe(0);
+    expect(await text(source)).toBe("- [ ] Call Bob #carried\n- [ ] Write report\n");
+    expect(await text(target)).toBe("");
+    expect(await text(workSource)).toBe("- [ ] Work item\n");
+    expect(harness.notices.messages).toEqual([m.tasks_auto_roll_paused_marker()]);
+  });
+
+  it("a rolled marker fixed and then held again is announced again", async () => {
+    const { put, edit, text, boot, resume, harness } = await autoFor(
+      { daily: automatic("daily") },
+      { tasksCheckbox: { rolledMarker: "carried" } },
+    );
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    const checkbox = harness.resolve(SettingsService).getSlice(checkboxSlice);
+    await boot();
+
+    checkbox.state.rolledMarker = "#carried";
+    await resume();
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    checkbox.state.rolledMarker = unreadable("carried");
+    edit(source, "- [ ] Call Bob #carried\n- [ ] Later item\n");
+    await resume();
+
+    expect(await text(target)).toBe("- [ ] Call Bob\n");
+    const paused = m.tasks_auto_roll_paused_marker();
+    expect(harness.notices.messages).toEqual([paused, named("daily", doneFrom("2026-10-20")), paused]);
+  });
+
+  it("a rolled marker that turns unreadable while the roll waits behind another move copies nothing", async () => {
+    const { put, text, boot, harness } = await autoFor({ daily: automatic("daily") });
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    const target = put("daily", "2026-10-21", "");
+    const release = holdLock(harness.resolve(MoveLocks), "daily");
+    await boot();
+
+    harness.resolve(SettingsService).getSlice(checkboxSlice).state.rolledMarker = unreadable("carried");
+    release();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(await text(target)).toBe("");
+    expect(await text(source)).toBe("- [ ] Call Bob\n");
+    expect(harness.notices.messages).toEqual([m.tasks_auto_roll_paused_marker()]);
   });
 
   it("a stamp turned off while the roll waits behind another move copies nothing", async () => {

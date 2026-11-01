@@ -2440,6 +2440,7 @@
   "tasks_checkbox_marker_desc": "The tag a copy adds to the original line. Lines carrying it read as rolled.",
   "tasks_checkbox_marker_required": "Enter a tag.",
   "tasks_checkbox_marker_invalid": "Use letters, numbers, _, - or / only, with at least one character that is not a number.",
+  "tasks_checkbox_marker_unreadable": "The stored marker can't be read, so it is kept as it was and tasks are not rolled over. Enter a tag to replace it.",
   "tasks_checkbox_marker_changed": "Lines stamped with the old marker will read as unfinished again.",
   "tasks_settings_add_condition": "Add condition",
   "tasks_settings_condition_tag": "Tag",
@@ -2684,6 +2685,7 @@
   "tasks_roll_no_previous": "There is no earlier note to roll tasks from.",
   "tasks_roll_no_current_period": "Today is outside this journal's timeline.",
   "tasks_roll_failed": "Tasks could not be rolled forward.",
+  "tasks_roll_marker_unreadable": "The rolled marker can't be read, so tasks are not rolled over or moved. Fix it in Checkbox tasks settings.",
   "tasks_roll_missing_heading": "No {heading} heading in {date}. Check the journal's listing filter.",
   "tasks_roll_note_items_skipped": [
     {
@@ -2728,6 +2730,7 @@
   "tasks_roll_source_indexing": "{date} is still being indexed. Try again in a moment.",
   "tasks_roll_source_unread": "{date} could not be read.",
   "tasks_auto_roll_paused": "Automatic rollover is paused for {journal}. Turn on Mark as rolled or use Move.",
+  "tasks_auto_roll_paused_marker": "Automatic rollover is paused: the rolled marker can't be read. Fix it in Checkbox tasks settings.",
   "tasks_auto_roll_paused_unwritten": [
     {
       "declarations": ["input journal", "input dates", "input count"],
