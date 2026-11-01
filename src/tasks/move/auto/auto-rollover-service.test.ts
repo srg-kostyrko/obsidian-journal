@@ -512,6 +512,24 @@ describe("AutoRolloverService", () => {
     expect(harness.notices.messages).toEqual([paused, named("daily", doneFrom("2026-10-20")), paused]);
   });
 
+  it("a rolled marker fixed and held again with no look between is announced again", async () => {
+    const { put, boot, resume, harness } = await autoFor(
+      { daily: automatic("daily") },
+      { tasksCheckbox: { rolledMarker: "carried" } },
+    );
+    put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    const checkbox = harness.resolve(SettingsService).getSlice(checkboxSlice);
+    await boot();
+
+    checkbox.state.rolledMarker = "#carried";
+    checkbox.state.rolledMarker = unreadable("carried");
+    await resume();
+
+    const paused = m.tasks_auto_roll_paused_marker();
+    expect(harness.notices.messages).toEqual([paused, paused]);
+  });
+
   it("a rolled marker that turns unreadable while the roll waits behind another move copies nothing", async () => {
     const { put, text, boot, harness } = await autoFor({ daily: automatic("daily") });
     const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");

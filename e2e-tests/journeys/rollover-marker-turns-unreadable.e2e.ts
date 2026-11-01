@@ -1,0 +1,72 @@
+import { browser, expect } from "@wdio/globals";
+
+import { m } from "../../src/i18n/paraglide/messages.js";
+import { CURRENT_VERSION } from "../../src/settings/version.js";
+import { pinClock } from "../support/clock.js";
+import { runCommand } from "../support/commands.js";
+import { waitForNotice } from "../support/notices.js";
+import { contentOf, openNote, waitForActiveNote } from "../support/vault.js";
+
+// A sync can land a rolled marker nobody can read while a roll is reading its earlier notes. The
+// roll started with the readable one, so it must not read the stamped line as open and copy it.
+const FIXTURE = "./e2e-tests/fixtures/e2e-rollover-marker-turns-unreadable";
+const SOURCE = "daily/2026-09-25.md";
+const TODAY = "2026-09-26";
+const TARGET = `daily/${TODAY}.md`;
+
+// The plugin's own reload hook, the one Obsidian Sync calls, run from inside the roll's read of the
+// earlier note, after data.json gains a marker that is not a tag. Written at the running version: an
+// older one reads as a downgrade, and the reload keeps what it had.
+async function makeMarkerUnreadableDuringReadOf(path: string): Promise<void> {
+  await browser.executeObsidian(
+    ({ app }, held, version) => {
+      const vault = app.vault as unknown as { read(file: { path: string }): Promise<string> };
+      const plugin = (
+        app as unknown as {
+          plugins: {
+            plugins: Record<string, { manifest: { dir: string }; onExternalSettingsChange(): Promise<void> }>;
+          };
+        }
+      ).plugins.plugins.journals;
+      const read = vault.read.bind(vault);
+      vault.read = async (file) => {
+        const text = await read(file);
+        if (file.path !== held) return text;
+        vault.read = read;
+        const dataPath = `${plugin.manifest.dir}/data.json`;
+        const stored = JSON.parse(await app.vault.adapter.read(dataPath)) as Record<string, unknown>;
+        await app.vault.adapter.write(
+          dataPath,
+          JSON.stringify({ ...stored, version, tasksCheckbox: { rolledMarker: "carried" } }),
+        );
+        await plugin.onExternalSettingsChange();
+        // The hook starts the reload without waiting for it.
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        return text;
+      };
+    },
+    path,
+    CURRENT_VERSION,
+  );
+}
+
+describe("rolling over while a sync makes the rolled marker unreadable", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    await pinClock(`${TODAY}T12:00:00`);
+  });
+
+  it("refuses before writing, without copying the stamped line", async () => {
+    const sourceBefore = await contentOf(SOURCE);
+    const targetBefore = await contentOf(TARGET);
+    await openNote(SOURCE);
+    await waitForActiveNote(SOURCE);
+    await makeMarkerUnreadableDuringReadOf(SOURCE);
+
+    await runCommand("journals:roll-over");
+
+    await waitForNotice(m.tasks_roll_marker_unreadable());
+    expect(await contentOf(SOURCE)).toBe(sourceBefore);
+    expect(await contentOf(TARGET)).toBe(targetBefore);
+  });
+});

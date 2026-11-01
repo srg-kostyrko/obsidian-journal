@@ -1,3 +1,5 @@
+import { watch } from "vue";
+
 import { CalendarDate, Clock } from "@/calendar";
 import { formatConjunction, m } from "@/i18n";
 import { inject } from "@/infrastructure/di";
@@ -94,6 +96,16 @@ export class AutoRolloverService {
       }),
       this.#index.events.on("entryChanged", (event) => this.#onEntry(event)),
       this.#rollover.events.on("rolled", (report, options) => this.#onRolled(report, options)),
+      // Lifted the moment the marker reads again, not at the next look: one fixed and then synced back
+      // to a value nobody can read before that look is a new pause, and is announced again. Sync, or
+      // both changes land in one flush and read as none.
+      watch(
+        () => isUnreadable(this.#checkbox.state.rolledMarker),
+        (held) => {
+          if (!held) this.#markerHeld = false;
+        },
+        { flush: "sync" },
+      ),
     );
     // Before the startup scan lands the index is empty rather than authoritative: no entry for
     // today's anchor would read as "no current note".
@@ -232,8 +244,6 @@ export class AutoRolloverService {
       this.#pauseForMarker();
       return;
     }
-    // Lifted, so a marker that turns unreadable again is announced again.
-    this.#markerHeld = false;
     for (const [name, config] of journals) {
       if (this.#disposed) return;
       try {
