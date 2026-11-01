@@ -26,6 +26,8 @@ const underTasks = {
   conditions: [{ type: "heading" as const, condition: "under" as const, headings: ["Tasks"] }],
 };
 
+const taggedWith = (tag: string): NoteStructure => ({ ...structure, tags: [{ tag, line: 5 }] });
+
 describe("identifies", () => {
   it("treats an empty vault rule as no constraint", () => {
     expect(identifies(item, { structure, vault: empty, journal: null })).toBe(true);
@@ -33,6 +35,17 @@ describe("identifies", () => {
   it("matches an inline tag on the item's own line", () => {
     expect(identifies(item, { structure, vault: tagged, journal: null })).toBe(true);
     expect(identifies(item, { structure, vault: otherTag, journal: null })).toBe(false);
+  });
+  it("matches a tag the way Obsidian's tag search does: ignoring case, nested tags included", () => {
+    const lacks = { mode: "and" as const, conditions: [{ ...tagged.conditions[0], condition: "lacks" as const }] };
+    for (const tag of ["#Task", "#task/work", "#TASK/Work"]) {
+      expect(identifies(item, { structure: taggedWith(tag), vault: tagged, journal: null })).toBe(true);
+      expect(identifies(item, { structure: taggedWith(tag), vault: lacks, journal: null })).toBe(false);
+    }
+    expect(identifies(item, { structure: taggedWith("#tasks"), vault: tagged, journal: null })).toBe(false);
+    expect(identifies(item, { structure: taggedWith("#tasks"), vault: lacks, journal: null })).toBe(true);
+    const frontmatter = { ...structure, tags: [], frontmatterTags: ["#Task/Work"] };
+    expect(identifies(item, { structure: frontmatter, vault: tagged, journal: null })).toBe(true);
   });
   it("matches a frontmatter tag for every item in the note", () => {
     const noteTagged = { ...structure, tags: [], frontmatterTags: ["#task"] };

@@ -2,7 +2,8 @@ import { CalendarDate, type AnchorString } from "@/calendar";
 import type { VaultPath } from "@/infrastructure/host";
 import type { TaskDateRole, TaskStatus } from "@/tasks";
 import { isTaskStatus } from "@/tasks/status";
-import { lowerScalars, scalarText, tagMatches } from "@/tasks/visibility-rule/scalars";
+import { carriesAnyTag } from "@/tasks/tag-match";
+import { lowerScalars, scalarText } from "@/tasks/visibility-rule/scalars";
 
 import type { NotePropertySliceState } from "./slice";
 
@@ -16,8 +17,7 @@ export interface IdentifiableNote {
 
 export function identifiesNote(note: IdentifiableNote, path: VaultPath, state: NotePropertySliceState): boolean {
   if (state.excludedFolders.some((folder) => path.startsWith(`${folder.replace(/\/+$/u, "")}/`))) return false;
-  const tags = note.frontmatterTags.map((tag) => tag.toLowerCase());
-  const carries = (wanted: string) => tags.some((tag) => tagMatches(tag, wanted.toLowerCase()));
+  const carries = (wanted: string) => carriesAnyTag(note.frontmatterTags, [wanted]);
   if (state.archiveTag !== "" && carries(state.archiveTag)) return false;
   const rule = state.identify;
   if (rule.by === "tag") return carries(rule.tag);
