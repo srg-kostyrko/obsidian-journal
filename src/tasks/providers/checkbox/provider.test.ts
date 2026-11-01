@@ -1087,6 +1087,69 @@ describe("CheckboxTaskProvider content refill", () => {
 
     expect(index.version()).toBe(before);
   });
+
+  // A filter or a tasks decoration rebuilds only off the index version, so an edit either reads has
+  // to reach the index as a changed item even when no line moved and no status changed.
+  describe("an edit to an undated line in a journal's note", () => {
+    const workDay = "Work/2026-09-22.md" as VaultPath;
+    const owner = { journalName: "Work", anchor: anchor("2026-09-22") };
+
+    // The listing refreshes its own notes' text off metadata-changed; a version bump would also
+    // re-evaluate every mounted decoration, none of which reads a line's text.
+    it("leaves the version alone when the line is only reworded", async () => {
+      const { tasks, notes } = await startedCheckboxes(
+        { [workDay]: { text: "- [ ] Pay", lines: [0], owner } },
+        { Work: fixedJournal("Work", { type: "day" }) },
+      );
+      const before = tasks.version();
+
+      notes.seed(workDay, "- [ ] Pay rent");
+      notes.emitMetadataChanged(workDay);
+      await settle();
+
+      expect(tasks.version()).toBe(before);
+    });
+
+    it("bumps the version when the heading above it is renamed", async () => {
+      const { tasks, structures, notes } = await startedCheckboxes(
+        {
+          [workDay]: {
+            text: "## Habits\n- [ ] Pay",
+            lines: [1],
+            headings: [{ heading: "Habits", level: 2, line: 0 }],
+            owner,
+          },
+        },
+        { Work: fixedJournal("Work", { type: "day" }) },
+      );
+      const before = tasks.version();
+
+      const current = structures.get(workDay).getOrUndefined();
+      if (current === undefined) throw new Error("structure not seeded");
+      notes.seed(workDay, "## Tasks\n- [ ] Pay");
+      structures.setStructure(workDay, { ...current, headings: [{ heading: "Tasks", level: 2, line: 0 }] });
+      notes.emitMetadataChanged(workDay);
+      await settle();
+
+      expect(tasks.version()).toBeGreaterThan(before);
+    });
+
+    it("bumps the version when the note gains a frontmatter tag", async () => {
+      const { tasks, structures, notes } = await startedCheckboxes(
+        { [workDay]: { text: "- [ ] Pay", lines: [0], owner } },
+        { Work: fixedJournal("Work", { type: "day" }) },
+      );
+      const before = tasks.version();
+
+      const current = structures.get(workDay).getOrUndefined();
+      if (current === undefined) throw new Error("structure not seeded");
+      structures.setStructure(workDay, { ...current, frontmatterTags: ["#work"] });
+      notes.emitMetadataChanged(workDay);
+      await settle();
+
+      expect(tasks.version()).toBeGreaterThan(before);
+    });
+  });
 });
 
 // An earlier task dropped the test pinning that JournalsRepository's `updated` event carries
@@ -1141,7 +1204,7 @@ describe("CheckboxTaskProvider dated visibility", () => {
     conditions: [{ type: "property", name: "project", values: ["Website"] }],
   } as const;
 
-  it("puts facts on dated lines only, with properties only once a rule names one", async () => {
+  it("puts tags and headings on every line, and properties on dated lines only once a rule names one", async () => {
     const { tasks } = await startedCheckboxes(
       {
         [workDay]: {
@@ -1157,7 +1220,7 @@ describe("CheckboxTaskProvider dated visibility", () => {
     );
     const [dated, undated] = tasks.itemsIn(workDay);
     expect(dated?.facts).toEqual({ tags: ["#bills", "#work"], headings: [] });
-    expect(undated?.facts).toBeUndefined();
+    expect(undated?.facts).toEqual({ tags: ["#work"], headings: [] });
 
     const named = await startedCheckboxes(
       {
