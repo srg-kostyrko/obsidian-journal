@@ -630,6 +630,18 @@ describe("rolled marker", () => {
       expect(slice.state.statusMap).not.toHaveProperty("/");
     });
 
+    // A sync can land one while the modal is open; Save must not lift the refusal it holds.
+    it("an untouched Save keeps a marker held after the modal opened", async () => {
+      const { slice, submit } = await mount({ expand: false, seed: (state) => (state.rolledMarker = "#carried") });
+      slice.state.rolledMarker = held;
+
+      await userEvent.click(screen.getByTestId("status-map-remove-/"));
+      await save();
+
+      expect(submit).toHaveBeenCalled();
+      expect(slice.state.rolledMarker).toEqual(held);
+    });
+
     it("a marker typed in replaces the held one on Save", async () => {
       const { slice, submit } = await mount({ expand: false, seed: (state) => (state.rolledMarker = held) });
 

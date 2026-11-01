@@ -85,6 +85,9 @@ const draft = reactive<{
 const ruleErrors = computed(() => checkboxRuleConditionErrors(draft.rule));
 const ruleValid = computed(() => ruleErrors.value.size === 0);
 
+// Untouched, the field writes nothing back: a value synced in while the modal was open, held
+// unreadable or not, is newer than what it opened with.
+const openedMarker = draft.rolledMarker;
 const marker = computed(() => normalizeMarker(draft.rolledMarker));
 const keepsHeldMarker = computed(() => markerHeldAtOpen && marker.value === "");
 const errorBag = computed(() => ({ rolledMarker: keepsHeldMarker.value ? [] : markerErrors(marker.value) }));
@@ -120,7 +123,7 @@ function save(): void {
     heldRule !== undefined && draft.rule.conditions.length === 0
       ? heldRule
       : { mode: draft.rule.mode, conditions: [...draft.rule.conditions, ...preservedConditions] };
-  if (!keepsHeldMarker.value) slice.state.rolledMarker = marker.value;
+  if (!keepsHeldMarker.value && draft.rolledMarker !== openedMarker) slice.state.rolledMarker = marker.value;
   // Only what the user changed here: an untouched control must not revert a write made elsewhere
   // while the modal was open.
   if (draft.moveMode !== openMoveDefaults.mode) moveDefaults.state.mode = draft.moveMode;

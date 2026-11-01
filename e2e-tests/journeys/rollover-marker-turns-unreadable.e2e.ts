@@ -5,6 +5,15 @@ import { CURRENT_VERSION } from "../../src/settings/version.js";
 import { pinClock } from "../support/clock.js";
 import { runCommand } from "../support/commands.js";
 import { waitForNotice } from "../support/notices.js";
+import {
+  clickIcon,
+  closeSettings,
+  expandSection,
+  openSettings,
+  submitModal,
+  waitForDialogClosed,
+  waitForModalOpen,
+} from "../support/settings.js";
 import { contentOf, openNote, waitForActiveNote } from "../support/vault.js";
 
 // A sync can land a rolled marker nobody can read while a roll is reading its earlier notes. The
@@ -102,5 +111,78 @@ describe("rolling over while a sync makes the rolled marker unreadable", () => {
     await waitForNotice(m.tasks_roll_marker_unreadable());
     expect(await contentOf(SOURCE)).toBe(sourceBefore);
     expect(await contentOf(TARGET)).toBe(targetBefore);
+  });
+});
+
+// What Obsidian Sync does, through the plugin's own reload hook: data.json gains a marker that is
+// not a tag. Done once the stamped line reads as open, which only a held marker makes it.
+async function syncUnreadableMarker(): Promise<void> {
+  await browser.executeObsidian(async ({ app }, version) => {
+    const plugin = (
+      app as unknown as {
+        plugins: {
+          plugins: Record<
+            string,
+            {
+              manifest: { dir: string };
+              onExternalSettingsChange(): Promise<void>;
+            }
+          >;
+        };
+      }
+    ).plugins.plugins.journals;
+    const dataPath = `${plugin.manifest.dir}/data.json`;
+    const stored = JSON.parse(await app.vault.adapter.read(dataPath)) as Record<string, unknown>;
+    await app.vault.adapter.write(
+      dataPath,
+      JSON.stringify({ ...stored, version, tasksCheckbox: { rolledMarker: "carried" } }),
+    );
+    await plugin.onExternalSettingsChange();
+  }, CURRENT_VERSION);
+  await browser.waitUntil(
+    () =>
+      browser.executeObsidian(async ({ app }, date) => {
+        const api = (
+          app as unknown as {
+            plugins: {
+              plugins: Record<
+                string,
+                { api: { tasksFor(selector: string, date: string): Promise<{ text: string }[]> } }
+              >;
+            };
+          }
+        ).plugins.plugins.journals.api;
+        const tasks = await api.tasksFor("daily", date);
+        return tasks.some((task) => task.text.includes("milk"));
+      }, SOURCE_DATE),
+    { timeout: 10_000, timeoutMsg: "waited for the synced settings to hold the rolled marker unreadable" },
+  );
+}
+
+// The checkbox modal opened while the marker was still readable. Saving it without touching the
+// marker must not write that older value over the one synced in since.
+describe("saving checkbox settings after a sync made the rolled marker unreadable", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    await pinClock(`${TODAY}T12:00:00`);
+  });
+
+  after(closeSettings);
+
+  it("keeps the marker held, so rolling still refuses", async () => {
+    await openSettings();
+    await expandSection(m.tasks_settings_title());
+    await clickIcon(m.tasks_settings_configure());
+    await waitForModalOpen();
+    await syncUnreadableMarker();
+    await submitModal();
+    await waitForDialogClosed();
+    await closeSettings();
+
+    await openNote(SOURCE);
+    await waitForActiveNote(SOURCE);
+    await runCommand("journals:roll-over");
+
+    await waitForNotice(m.tasks_roll_marker_unreadable());
   });
 });
