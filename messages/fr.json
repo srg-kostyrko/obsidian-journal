@@ -2746,6 +2746,16 @@
       }
     }
   ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais la note du {dates} est ouverte dans un éditeur qui n’a pas pu l’enregistrer. Enregistrez la note du {dates} et gardez les copies avant de lancer Reporter les tâches non terminées.",
+        "count=*": "Le report automatique est en pause pour {journal} : les tâches sont déjà dans la note actuelle, mais les notes du {dates} sont ouvertes dans des éditeurs qui n’ont pas pu les enregistrer. Enregistrez les notes du {dates} et gardez les copies avant de lancer Reporter les tâches non terminées."
+      }
+    }
+  ],
   "tasks_auto_roll_paused_error": "Le report automatique est en pause pour {journal} : un report n’a pas abouti, la note actuelle contient donc peut-être déjà des tâches que les notes précédentes proposent encore. Vérifiez les deux avant de lancer Reporter les tâches non terminées.",
   "tasks_auto_roll_source_indexing": "La note du {date} est encore en cours d’indexation. Elle sera reportée à la prochaine vérification.",
   "tasks_auto_roll_prefix": "{journal} : {notice}",

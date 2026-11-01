@@ -162,6 +162,8 @@ const doneFrom = (oldest: string, count = 1): string => m.tasks_roll_done({ coun
 const missing = (date: string): string => named("daily", m.tasks_roll_missing_heading({ heading: "Tasks", date }));
 const pausedUnwritten = (journal: string, dates: readonly string[]): string =>
   m.tasks_auto_roll_paused_unwritten({ journal, dates: formatConjunction(dates), count: dates.length });
+const pausedUnsaved = (journal: string, dates: readonly string[]): string =>
+  m.tasks_auto_roll_paused_unsaved({ journal, dates: formatConjunction(dates), count: dates.length });
 
 // Fails every write `process` makes to one of `paths`, the way a locked or read-only file would.
 function failWrites(notes: FakeNotesService, paths: Set<VaultPath>): void {
@@ -581,7 +583,30 @@ describe("AutoRolloverService", () => {
     expect(calls("daily")).toBe(1);
     expect(harness.notices.messages).toEqual([
       named("daily", doneFrom("2026-10-20")),
-      pausedUnwritten("daily", ["2026-10-20"]),
+      pausedUnsaved("daily", ["2026-10-20"]),
+    ]);
+  });
+
+  // Deleting the copies is safe advice only for a note whose file still holds the tasks; an unsaved
+  // view has already dropped them and will write that out when it next saves.
+  it("advises saving the unsaved note apart from the notes that could not be written", async () => {
+    const { put, boot, resume, notes, harness } = await autoFor({ daily: automatic("daily", { lookBack: 3 }) });
+    const older = put("daily", "2026-10-19", "- [ ] Older item\n");
+    const source = put("daily", "2026-10-20", "- [ ] Call Bob\n");
+    put("daily", "2026-10-21", "");
+    failWrites(notes, new Set([older]));
+    harness.host.openEditor(source, "- [ ] Call Bob\n", 0, { active: false });
+    const workspace = harness.resolve(WorkspaceService);
+    const save = workspace.saveOpenNote.bind(workspace);
+    vi.spyOn(workspace, "saveOpenNote").mockImplementation((path) =>
+      path === source ? AsyncResult.err(new NoteWriteError(path, "disk full")) : save(path),
+    );
+    await boot();
+    await resume();
+
+    expect(harness.notices.messages.slice(1)).toEqual([
+      pausedUnwritten("daily", ["2026-10-19"]),
+      pausedUnsaved("daily", ["2026-10-20"]),
     ]);
   });
 

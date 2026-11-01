@@ -2743,6 +2743,16 @@
       }
     }
   ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas a nota de {dates} está aberta em um editor que não conseguiu salvá-la. Salve a nota de {dates} e mantenha as cópias antes de executar Transferir tarefas não concluídas.",
+        "count=*": "A transferência automática está pausada para {journal}: as tarefas já estão na nota atual, mas as notas de {dates} estão abertas em editores que não conseguiram salvá-las. Salve as notas de {dates} e mantenha as cópias antes de executar Transferir tarefas não concluídas."
+      }
+    }
+  ],
   "tasks_auto_roll_paused_error": "A transferência automática está pausada para {journal}: uma transferência não terminou, então a nota atual pode já conter tarefas que as notas anteriores ainda oferecem. Verifique ambas antes de executar Transferir tarefas não concluídas.",
   "tasks_auto_roll_source_indexing": "A nota de {date} ainda está sendo indexada. Ela será transferida na próxima verificação.",
   "tasks_auto_roll_prefix": "{journal}: {notice}",

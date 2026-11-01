@@ -2748,6 +2748,16 @@
       }
     }
   ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} is open in an editor that could not save it. Save {dates} and keep the copies before running Roll over unfinished tasks.",
+        "count=*": "Automatic rollover is paused for {journal}: the tasks are already in the current note, but {dates} are open in editors that could not save them. Save {dates} and keep the copies before running Roll over unfinished tasks."
+      }
+    }
+  ],
   "tasks_auto_roll_paused_error": "Automatic rollover is paused for {journal}: a roll did not finish, so the current note may already hold tasks the earlier notes still offer. Check both before running Roll over unfinished tasks.",
   "tasks_auto_roll_source_indexing": "{date} is still being indexed. It will be rolled at the next check.",
   "tasks_auto_roll_prefix": "{journal}: {notice}",

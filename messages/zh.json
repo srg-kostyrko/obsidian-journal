@@ -2729,6 +2729,16 @@
       }
     }
   ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal} 的自动结转已暂停：任务已在当前笔记中，但 {dates} 的笔记在已打开的编辑器中未能保存。手动运行“结转未完成的任务”之前，请保存 {dates} 的笔记，并保留副本。",
+        "count=*": "{journal} 的自动结转已暂停：任务已在当前笔记中，但 {dates} 的笔记在已打开的编辑器中未能保存。手动运行“结转未完成的任务”之前，请保存 {dates} 的笔记，并保留副本。"
+      }
+    }
+  ],
   "tasks_auto_roll_paused_error": "{journal} 的自动结转已暂停：一次结转未完成，因此当前笔记中可能已有早先笔记中仍保留的任务。手动运行“结转未完成的任务”之前，请检查两者。",
   "tasks_auto_roll_source_indexing": "{date} 的笔记仍在建立索引。将在下次检查时结转。",
   "tasks_auto_roll_prefix": "{journal}：{notice}",

@@ -2735,6 +2735,16 @@
       }
     }
   ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートは開いているエディターで保存できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートを保存し、コピーはそのまま残してください。",
+        "count=*": "{journal}の自動繰り越しは一時停止中です：タスクはすでに現在のノートにありますが、{dates}のノートは開いているエディターで保存できませんでした。「未完了のタスクを繰り越す」を手動で実行する前に、{dates}のノートを保存し、コピーはそのまま残してください。"
+      }
+    }
+  ],
   "tasks_auto_roll_paused_error": "{journal}の自動繰り越しは一時停止中です：繰り越しが完了しなかったため、以前のノートに残っているタスクがすでに現在のノートにもある可能性があります。「未完了のタスクを繰り越す」を手動で実行する前に、両方を確認してください。",
   "tasks_auto_roll_source_indexing": "{date}のノートはまだインデックス作成中です。次の確認時に繰り越されます。",
   "tasks_auto_roll_prefix": "{journal}：{notice}",

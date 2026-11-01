@@ -32,9 +32,12 @@ const UNWRITTEN_KINDS: ReadonlySet<RollSentenceKind> = new Set([
   "source-unsaved",
 ]);
 
+function anchorsOf(sources: readonly { readonly anchor: string }[]): readonly string[] {
+  return [...new Set(sources.map(({ anchor }) => anchor))].toSorted();
+}
+
 function unwrittenAnchors(report: RollReport): readonly string[] {
-  const unwritten = [...report.failedSources, ...report.unsavedSources, ...report.changedSources];
-  return [...new Set(unwritten.map(({ anchor }) => anchor))].toSorted();
+  return anchorsOf([...report.failedSources, ...report.unsavedSources, ...report.changedSources]);
 }
 
 // Clean means every earlier note was read and written: one skipped as indexing or unreadable may be
@@ -109,23 +112,35 @@ export class AutoRolloverService {
     if (isClean(report) && this.#paused.get(name) === "write-failed") this.#paused.delete(name);
     if (options.requireAutomatic === true || !this.#isAutomatic(name)) return;
     // A roll by hand leaves the same leftovers for the next checkpoint to copy again.
-    const unwritten = unwrittenAnchors(report);
-    if (unwritten.length === 0) return;
+    if (unwrittenAnchors(report).length === 0) return;
     this.#paused.set(name, "write-failed");
     // After the command's own notice, which it shows once the roll has returned.
     const timer = window.setTimeout(() => {
       this.#noticeTimers.delete(timer);
-      this.#notices.show(this.#pausedUnwrittenNotice(name, unwritten));
+      this.#showPausedUnwritten(name, report);
     }, 0);
     this.#noticeTimers.add(timer);
   }
 
-  #pausedUnwrittenNotice(name: string, unwritten: readonly string[]): string {
-    return m.tasks_auto_roll_paused_unwritten({
-      journal: name,
-      dates: formatConjunction(unwritten),
-      count: unwritten.length,
-    });
+  // A note whose file was not written still holds the tasks, so either side may go. An unsaved view
+  // has already dropped them and writes that out when it next saves, so only the copies remain.
+  #showPausedUnwritten(name: string, report: RollReport): void {
+    const unwritten = anchorsOf([...report.failedSources, ...report.changedSources]);
+    const unsaved = anchorsOf(report.unsavedSources);
+    if (unwritten.length > 0) {
+      this.#notices.show(
+        m.tasks_auto_roll_paused_unwritten({
+          journal: name,
+          dates: formatConjunction(unwritten),
+          count: unwritten.length,
+        }),
+      );
+    }
+    if (unsaved.length > 0) {
+      this.#notices.show(
+        m.tasks_auto_roll_paused_unsaved({ journal: name, dates: formatConjunction(unsaved), count: unsaved.length }),
+      );
+    }
   }
 
   // Obsidian replays "create" for every file while it loads, and those notes are not new. The flag
@@ -295,7 +310,7 @@ export class AutoRolloverService {
     // would copy them again.
     if (unwritten.length > 0) {
       this.#paused.set(name, "write-failed");
-      this.#notices.show(this.#pausedUnwrittenNotice(name, unwritten));
+      this.#showPausedUnwritten(name, report);
     }
   }
 

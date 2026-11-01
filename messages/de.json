@@ -2748,6 +2748,16 @@
       }
     }
   ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notiz vom {dates} ist in einem Editor geöffnet, der sie nicht speichern konnte. Speichere die Notiz vom {dates} und behalte die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
+        "count=*": "Automatisches Übertragen ist für {journal} pausiert: Die Aufgaben stehen bereits in der aktuellen Notiz, aber die Notizen vom {dates} sind in Editoren geöffnet, die sie nicht speichern konnten. Speichere die Notizen vom {dates} und behalte die Kopien, bevor du „Unerledigte Aufgaben übertragen“ ausführst."
+      }
+    }
+  ],
   "tasks_auto_roll_paused_error": "Automatisches Übertragen ist für {journal} pausiert: Ein Übertragen wurde nicht abgeschlossen, daher enthält die aktuelle Notiz womöglich schon Aufgaben, die die früheren Notizen noch anbieten. Prüfe beide, bevor du „Unerledigte Aufgaben übertragen“ ausführst.",
   "tasks_auto_roll_source_indexing": "Die Notiz vom {date} wird noch indexiert. Sie wird bei der nächsten Prüfung übertragen.",
   "tasks_auto_roll_prefix": "{journal}: {notice}",

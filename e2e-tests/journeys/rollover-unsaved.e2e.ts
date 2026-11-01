@@ -4,6 +4,8 @@ import { m } from "../../src/i18n/paraglide/messages.js";
 import { pinClock } from "../support/clock.js";
 import { runCommand } from "../support/commands.js";
 import { noticeTexts } from "../support/notices.js";
+import { readRawSettings, writeRawSettings } from "../support/plugin-data.js";
+import { triggerExternalSettingsChange } from "../support/plugin.js";
 import { contentOf, openNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
@@ -36,6 +38,15 @@ function editorText(path: string): Promise<string | undefined> {
   }, path);
 }
 
+async function rollAutomatically(): Promise<void> {
+  const stored = JSON.parse((await readRawSettings()) ?? "{}") as {
+    journals: { daily: { tasks: { move: Record<string, unknown> } } };
+  };
+  stored.journals.daily.tasks.move.automatic = true;
+  await writeRawSettings(JSON.stringify(stored));
+  await triggerExternalSettingsChange();
+}
+
 describe("rolling under move into a note whose open editor cannot save", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
@@ -63,5 +74,33 @@ describe("rolling under move into a note whose open editor cannot save", () => {
     const sourceEditor = await editorText(SOURCE);
     expect(target?.split("\n")).toContain("- [ ] milk");
     expect(sourceEditor?.split("\n")).not.toContain("- [ ] milk");
+  });
+});
+
+// The pause an automatic journal takes after such a roll must not repeat the advice for a note that
+// could not be written, where deleting the copies is safe: here they are the only ones left.
+describe("pausing an automatic journal after its open earlier note could not save", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
+    await pinClock(`${TODAY}T12:00:00`);
+  });
+
+  it("tells the user to save the earlier note and keep the copies", async () => {
+    await openNote(SOURCE);
+    await waitForActiveNote(SOURCE);
+    expect(await failSavesOf(SOURCE)).toBe(true);
+    await rollAutomatically();
+
+    await runCommand("journals:roll-over");
+
+    const paused = m.tasks_auto_roll_paused_unsaved({ journal: "daily", dates: SOURCE_DATE, count: 1 });
+    await waitForState(
+      noticeTexts,
+      (texts) => texts.some((text) => text.includes(paused)),
+      "waited for the pause notice to say the earlier note is unsaved",
+    );
+    const unwritten = m.tasks_auto_roll_paused_unwritten({ journal: "daily", dates: SOURCE_DATE, count: 1 });
+    const notices = await noticeTexts();
+    expect(notices.some((text) => text.includes(unwritten))).toBe(false);
   });
 });

@@ -2735,6 +2735,16 @@
       }
     }
   ],
+  "tasks_auto_roll_paused_unsaved": [
+    {
+      "declarations": ["input journal", "input dates", "input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero la nota del {dates} está abierta en un editor que no pudo guardarla. Guarda la nota del {dates} y conserva las copias antes de ejecutar Trasladar tareas sin terminar.",
+        "count=*": "El traslado automático está en pausa para {journal}: las tareas ya están en la nota actual, pero las notas del {dates} están abiertas en editores que no pudieron guardarlas. Guarda las notas del {dates} y conserva las copias antes de ejecutar Trasladar tareas sin terminar."
+      }
+    }
+  ],
   "tasks_auto_roll_paused_error": "El traslado automático está en pausa para {journal}: un traslado no terminó, así que la nota actual puede tener ya tareas que las notas anteriores aún ofrecen. Revisa ambas antes de ejecutar Trasladar tareas sin terminar.",
   "tasks_auto_roll_source_indexing": "La nota del {date} todavía se está indexando. Se trasladará en la próxima comprobación.",
   "tasks_auto_roll_prefix": "{journal}: {notice}",
