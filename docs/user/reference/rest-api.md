@@ -296,7 +296,7 @@ curl -k -X POST -H "Authorization: Bearer <your-api-key>" \
 
 The host also runs a [Model Context Protocol](https://modelcontextprotocol.io/) server, at `/mcp/`
 on the same port, for MCP-compatible agents rather than scripts. It needs host version 5.1 or
-later. Journals adds five tools to that server automatically — there is nothing to configure.
+later. Journals adds six tools to that server automatically — there is nothing to configure.
 Connect a client the way the host's own README describes, under
 [MCP clients](https://github.com/coddingtonbear/obsidian-local-rest-api#mcp-clients): the endpoint,
 the API key header, and example configs for Claude Code, Claude Desktop, Cursor and other clients.
