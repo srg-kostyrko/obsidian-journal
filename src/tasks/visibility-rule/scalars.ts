@@ -1,4 +1,4 @@
-// Leaf on purpose: rule.ts reads property values and tags through these, and journalConfigSchema imports it.
+// Leaf on purpose: rule.ts reads property values through these, and journalConfigSchema imports it.
 
 export function scalarText(value: unknown): string | undefined {
   return typeof value === "string" || typeof value === "number" || typeof value === "boolean"
@@ -11,9 +11,4 @@ export function scalarText(value: unknown): string | undefined {
 export function lowerScalars(value: unknown): string[] {
   const items: unknown[] = Array.isArray(value) ? value : [value];
   return items.flatMap((item) => scalarText(item)?.toLowerCase() ?? []);
-}
-
-// Obsidian's tag search and TaskNotes' own: `#work` finds `#work/project`, never `#workshop`.
-export function tagMatches(tag: string, wanted: string): boolean {
-  return tag === wanted || tag.startsWith(`${wanted}/`);
 }

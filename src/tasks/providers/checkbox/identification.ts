@@ -3,6 +3,7 @@ import { match } from "ts-pattern";
 import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
 
 import { headingsOf, tagsOf } from "../../note-structure";
+import { carriesAnyTag } from "../../tag-match";
 
 import type { CheckboxCondition, CheckboxJournalRule, CheckboxRule } from "./rule-schema";
 
@@ -17,8 +18,7 @@ function check(condition: CheckboxCondition, item: StructureListItem, structure:
     match(condition)
       .with({ type: "tag" }, (c) => {
         if (c.tags.length === 0) return true;
-        const present = tagsOf(item, structure);
-        const hit = c.tags.some((tag) => present.includes(tag));
+        const hit = carriesAnyTag(tagsOf(item, structure), c.tags);
         return c.condition === "has" ? hit : !hit;
       })
       .with({ type: "heading" }, (c) => {

@@ -67,7 +67,8 @@ Two condition types, each addable more than once:
 - **Tag** — **Has** or **Lacks** a comma-separated list of tags. Checked against tags on the item's own
   line and the note's frontmatter tags, wherever the item sits; a body tag elsewhere in the note does
   not count. Write each tag with or without its leading `#`; the field adds one either way, so the
-  row settles on `#task` whichever you typed.
+  row settles on `#task` whichever you typed. A tag also matches the tags nested under it, as
+  Obsidian's tag search does: `#task` matches `#task/work`, never `#taskforce`. Case does not matter.
 - **Heading** — **Under** or **Not under** a comma-separated list of headings. Checked against every
   heading enclosing the item, from its immediate section up through the note's outline — not only the
   nearest one. Write the heading's text, not its `#` markers — those are dropped if you include
@@ -338,10 +339,14 @@ note](#which-date-places-a-task-note).
 | `depth`      | `literal`          | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own.                       |
 | `status`     | `open`             | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one. The default gives way to [the journal's own **Status** condition](#a-journal-s-own-listing-filter) where it has one.       |
 | `heading`    | none               | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
-| `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag.                                                                                                                         |
+| `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag. Case does not matter, and nested tags match: `work` shows `#Work` and `#work/client`, never `#workshop`.                |
 | `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
 | `date`       | `scheduled-or-due` | which of a task note's, or a dated checkbox line's, dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). A checkbox line with no such date is not placed by date.                                         |
 | `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
+
+A **Tag** condition matches the way Obsidian's tag search does, wherever it is written — the `tag` key,
+a `conditions:` entry, a journal's **Listing filter**, a view block's or decoration's own filter: case
+does not matter, and a tag also matches the tags nested under it.
 
 `status`, `heading` and `tag` are each sugar for one condition of that type. `conditions:` adds more —
 it never replaces what the flat keys already added, even one of the same type — which is how a fence
