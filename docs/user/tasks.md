@@ -128,6 +128,10 @@ The defaults are TaskNotes' own property names, so turning the row on over a vau
 finds its tasks without opening the modal at all. If you changed TaskNotes' settings, let Journals
 [copy them](#setting-up-from-tasknotes) instead.
 
+The first three settings below are always shown. The rest sit in three sections that start collapsed —
+**Date properties**, **Status** and **Other properties** (title, modified, recurrence) — and expand on a
+click. **Status** opens by itself while it holds a problem that keeps **Save** disabled.
+
 - **Identify task notes by** — **Tag**, `#task` by default, or **Property**: a property name, and a
   **Property value** it must hold. Leave the value empty to count every note that has the property at
   all, which is what reaches a `due:` convention whose notes carry no tag. A tag also matches the tags

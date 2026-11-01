@@ -11,12 +11,30 @@ import { notePropertySlice, type NotePropertySliceState } from "../slice";
 
 import EditNotePropertyProviderModal from "./EditNotePropertyProviderModal.vue";
 
-async function mount(seed: (state: NotePropertySliceState) => void = () => undefined) {
+const SECTIONS = ["dates", "status", "other"] as const;
+
+async function mount(
+  seed: (state: NotePropertySliceState) => void = () => undefined,
+  { expand = true }: { expand?: boolean } = {},
+) {
   const harness = await testContainer({ modules: [tasksCoreModule] });
   const slice = harness.resolve(SettingsService).getSlice(notePropertySlice);
   seed(slice.state);
   const { submit, cancel } = harness.renderModal(EditNotePropertyProviderModal);
+  if (expand) for (const section of SECTIONS) await toggleSection(section);
   return { harness, slice, submit, cancel };
+}
+
+function sectionTrigger(section: (typeof SECTIONS)[number]): HTMLElement {
+  const trigger = screen
+    .getByTestId(`note-property-${section}-section`)
+    .querySelector<HTMLElement>(".collapsible-trigger");
+  if (!trigger) throw new Error(`${section} section has no trigger`);
+  return trigger;
+}
+
+async function toggleSection(section: (typeof SECTIONS)[number]): Promise<void> {
+  await userEvent.click(sectionTrigger(section));
 }
 
 // UiPropertySuggest and FolderInput pass a testid to a wrapper or to the input itself.
@@ -47,6 +65,23 @@ function statusRowIndex(value: string): number {
 }
 
 describe("EditNotePropertyProviderModal", () => {
+  it("opens with the dates, status and other sections closed", async () => {
+    await mount(undefined, { expand: false });
+
+    expect(screen.queryByTestId("note-property-date-due")).toBeNull();
+    expect(screen.queryByTestId("note-property-status-property")).toBeNull();
+    expect(screen.queryByTestId("note-property-title-property")).toBeNull();
+    expect(screen.getByTestId("note-property-tag")).toBeTruthy();
+  });
+
+  it("opens the status section on its own when it holds an error", async () => {
+    await mount((state) => (state.statusProperty = ""), { expand: false });
+
+    expect(screen.getByText(m.tasks_note_property_property_required())).toBeTruthy();
+    await toggleSection("status");
+    expect(screen.getByTestId("note-property-status-property")).toBeTruthy();
+  });
+
   it("leaves the slice untouched when edits are cancelled", async () => {
     const { slice, cancel } = await mount();
     const before = structuredClone(JSON.parse(JSON.stringify(slice.state)) as unknown);

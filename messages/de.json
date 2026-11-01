@@ -2528,6 +2528,8 @@
   "tasks_note_property_archive_tag_desc": "Notizen mit diesem Tag werden ausgelassen. Leer lassen, um sie zu behalten.",
   "tasks_note_property_dates": "Datumseigenschaften",
   "tasks_note_property_dates_desc": "Welche Eigenschaft welches Datum enthält. Das Erledigt-Datum wird außerdem gesetzt, wenn eine Aufgabe als erledigt abgehakt wird. Leer lassen, um dieses Datum zu ignorieren.",
+  "tasks_note_property_status_section": "Status",
+  "tasks_note_property_other_section": "Weitere Eigenschaften",
   "tasks_note_property_status_property": "Status-Eigenschaft",
   "tasks_note_property_status_values": "Statuswerte",
   "tasks_note_property_status_values_desc": "Welcher Eigenschaftswert welchen Status bedeutet, unabhängig von Groß- und Kleinschreibung. Jeder andere Wert gilt als zu erledigen. Teilen sich zwei Werte einen Status, wird der markierte Wert in die Notiz zurückgeschrieben, sobald sich der Status einer Aufgabe ändert.",

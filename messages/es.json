@@ -2515,6 +2515,8 @@
   "tasks_note_property_archive_tag_desc": "Las notas con esta etiqueta se omiten. Déjalo vacío para conservarlas.",
   "tasks_note_property_dates": "Propiedades de fecha",
   "tasks_note_property_dates_desc": "Qué propiedad contiene cada fecha. La fecha de finalización también se registra cuando una tarea se marca como hecha. Deja una vacía para ignorar esa fecha.",
+  "tasks_note_property_status_section": "Estado",
+  "tasks_note_property_other_section": "Otras propiedades",
   "tasks_note_property_status_property": "Propiedad de estado",
   "tasks_note_property_status_values": "Valores de estado",
   "tasks_note_property_status_values_desc": "Qué valor de la propiedad significa qué estado, sin distinguir mayúsculas y minúsculas. Cualquier otro valor se lee como pendiente. Cuando dos valores comparten un estado, el marcado es el que se escribe de vuelta en la nota cuando cambia el estado de una tarea.",

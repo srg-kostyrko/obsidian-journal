@@ -2512,6 +2512,8 @@
   "tasks_note_property_archive_tag_desc": "이 태그가 있는 노트는 제외됩니다. 비워 두면 제외하지 않습니다.",
   "tasks_note_property_dates": "날짜 속성",
   "tasks_note_property_dates_desc": "각 날짜를 어떤 속성에 담는지. 완료 날짜는 작업을 완료로 체크할 때도 기록됩니다. 비워 둔 날짜는 무시됩니다.",
+  "tasks_note_property_status_section": "상태",
+  "tasks_note_property_other_section": "기타 속성",
   "tasks_note_property_status_property": "상태 속성",
   "tasks_note_property_status_values": "상태 값",
   "tasks_note_property_status_values_desc": "어떤 속성 값이 어떤 상태를 뜻하는지(대소문자 구분 없음). 그 밖의 값은 할 일로 읽습니다. 두 값이 같은 상태를 공유하면, 표시된 값이 작업의 상태가 바뀔 때 노트에 다시 기록됩니다.",

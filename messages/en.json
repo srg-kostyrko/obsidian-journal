@@ -2528,6 +2528,8 @@
   "tasks_note_property_archive_tag_desc": "Notes with this tag are left out. Leave empty to keep them.",
   "tasks_note_property_dates": "Date properties",
   "tasks_note_property_dates_desc": "Which property holds each date. The done date is also stamped when a task is ticked done. Leave one empty to ignore that date.",
+  "tasks_note_property_status_section": "Status",
+  "tasks_note_property_other_section": "Other properties",
   "tasks_note_property_status_property": "Status property",
   "tasks_note_property_status_values": "Status values",
   "tasks_note_property_status_values_desc": "Which property value means which status, in any letter case. Any other value reads as to-do. Where two values share a status, the marked one is written back into the note when a task's status changes.",

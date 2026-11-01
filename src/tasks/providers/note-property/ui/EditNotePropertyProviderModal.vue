@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive } from "vue";
+import { computed, reactive, ref } from "vue";
 
 import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
@@ -9,7 +9,9 @@ import { SettingsService } from "@/settings";
 import { taskDateChoiceLabel } from "@/tasks/ui/date-choice-label";
 import { icons } from "@/ui/icons";
 import UiButton from "@/ui/UiButton.vue";
+import UiCollapsibleBlock from "@/ui/UiCollapsibleBlock.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiIconedRow from "@/ui/UiIconedRow.vue";
 import UiPropertySuggest from "@/ui/UiPropertySuggest.vue";
 import UiSegmentedControl from "@/ui/UiSegmentedControl.vue";
 import UiSettingRow from "@/ui/UiSettingRow.vue";
@@ -33,6 +35,17 @@ const identifyOptions = [
 
 const errorBag = computed(() => notePropertyFormErrors(draft));
 const valid = computed(() => Object.keys(errorBag.value).length === 0);
+
+const datesOpen = ref(false);
+const otherOpen = ref(false);
+const statusOpenByUser = ref(false);
+// A closed section would hide the reason Save is disabled, so one holding an error stays open.
+const statusOpen = computed({
+  get: () =>
+    statusOpenByUser.value || errorBag.value.statusProperty !== undefined || errorBag.value.statusRows !== undefined,
+  set: (open: boolean) => (statusOpenByUser.value = open),
+});
+const datesSet = computed(() => NOTE_PROPERTY_DATE_ROLES.filter((role) => draft.dates[role] !== "").length);
 
 function addFolder(): void {
   draft.excludedFolders.push("");
@@ -113,57 +126,76 @@ function save(): void {
     <UiTextInput v-model="draft.archiveTag" data-testid="note-property-archive-tag" />
   </UiSettingRow>
 
-  <UiSettingRow :name="m.tasks_note_property_dates()" heading>
-    <template #description>{{ m.tasks_note_property_dates_desc() }}</template>
-  </UiSettingRow>
-  <UiSettingRow v-for="role in NOTE_PROPERTY_DATE_ROLES" :key="role" :name="taskDateChoiceLabel(role)">
-    <UiPropertySuggest
-      v-model="draft.dates[role]"
-      :aria-label="taskDateChoiceLabel(role)"
-      :data-testid="`note-property-date-${role}`"
-    />
-  </UiSettingRow>
-
-  <UiSettingRow :name="m.tasks_note_property_status_property()">
-    <template #description>
-      <span v-for="error of errorBag.statusProperty" :key="error" class="tasks-note-property-form-error">
-        {{ error }}
-      </span>
+  <UiCollapsibleBlock v-model:expanded="datesOpen" data-testid="note-property-dates-section">
+    <template #trigger>
+      <UiIconedRow :icon="icons.section.taskDates">
+        {{ m.tasks_note_property_dates() }}
+        <span class="flair">{{ datesSet }}</span>
+      </UiIconedRow>
     </template>
-    <UiPropertySuggest
-      v-model="draft.statusProperty"
-      :aria-label="m.tasks_note_property_status_property()"
-      data-testid="note-property-status-property"
-    />
-  </UiSettingRow>
-  <UiSettingRow :name="m.tasks_note_property_status_values()" stacked>
-    <template #description>
-      {{ m.tasks_note_property_status_values_desc() }}
-      <span v-for="error of errorBag.statusRows" :key="error" class="tasks-note-property-form-error">{{ error }}</span>
-    </template>
-    <StatusValuesEditor v-model:rows="draft.statusRows" v-model:canonical="draft.canonical" />
-  </UiSettingRow>
+    <UiSettingRow>
+      <template #description>{{ m.tasks_note_property_dates_desc() }}</template>
+    </UiSettingRow>
+    <UiSettingRow v-for="role in NOTE_PROPERTY_DATE_ROLES" :key="role" :name="taskDateChoiceLabel(role)">
+      <UiPropertySuggest
+        v-model="draft.dates[role]"
+        :aria-label="taskDateChoiceLabel(role)"
+        :data-testid="`note-property-date-${role}`"
+      />
+    </UiSettingRow>
+  </UiCollapsibleBlock>
 
-  <UiSettingRow :name="m.tasks_note_property_title_property()">
-    <template #description>{{ m.tasks_note_property_title_property_desc() }}</template>
-    <UiPropertySuggest
-      v-model="draft.titleProperty"
-      :aria-label="m.tasks_note_property_title_property()"
-      data-testid="note-property-title-property"
+  <UiCollapsibleBlock v-model:expanded="statusOpen" data-testid="note-property-status-section">
+    <template #trigger>
+      <UiIconedRow :icon="icons.section.taskStatus">
+        {{ m.tasks_note_property_status_section() }}
+        <span class="flair">{{ draft.statusRows.length }}</span>
+      </UiIconedRow>
+    </template>
+    <UiSettingRow :name="m.tasks_note_property_status_property()">
+      <template #description>
+        <span v-for="error of errorBag.statusProperty" :key="error" class="tasks-note-property-form-error">
+          {{ error }}
+        </span>
+      </template>
+      <UiPropertySuggest
+        v-model="draft.statusProperty"
+        :aria-label="m.tasks_note_property_status_property()"
+        data-testid="note-property-status-property"
+      />
+    </UiSettingRow>
+    <StatusValuesEditor
+      v-model:rows="draft.statusRows"
+      v-model:canonical="draft.canonical"
+      :errors="errorBag.statusRows"
     />
-  </UiSettingRow>
-  <UiSettingRow :name="m.tasks_note_property_modified_property()">
-    <template #description>{{ m.tasks_note_property_modified_property_desc() }}</template>
-    <UiPropertySuggest
-      v-model="draft.modifiedProperty"
-      :aria-label="m.tasks_note_property_modified_property()"
-      data-testid="note-property-modified-property"
-    />
-  </UiSettingRow>
-  <UiSettingRow :name="m.tasks_note_property_recurrence_properties()">
-    <template #description>{{ m.tasks_note_property_recurrence_properties_desc() }}</template>
-    <UiTextInput v-model="draft.recurrenceProperties" data-testid="note-property-recurrence" />
-  </UiSettingRow>
+  </UiCollapsibleBlock>
+
+  <UiCollapsibleBlock v-model:expanded="otherOpen" data-testid="note-property-other-section">
+    <template #trigger>
+      <UiIconedRow :icon="icons.section.properties">{{ m.tasks_note_property_other_section() }}</UiIconedRow>
+    </template>
+    <UiSettingRow :name="m.tasks_note_property_title_property()">
+      <template #description>{{ m.tasks_note_property_title_property_desc() }}</template>
+      <UiPropertySuggest
+        v-model="draft.titleProperty"
+        :aria-label="m.tasks_note_property_title_property()"
+        data-testid="note-property-title-property"
+      />
+    </UiSettingRow>
+    <UiSettingRow :name="m.tasks_note_property_modified_property()">
+      <template #description>{{ m.tasks_note_property_modified_property_desc() }}</template>
+      <UiPropertySuggest
+        v-model="draft.modifiedProperty"
+        :aria-label="m.tasks_note_property_modified_property()"
+        data-testid="note-property-modified-property"
+      />
+    </UiSettingRow>
+    <UiSettingRow :name="m.tasks_note_property_recurrence_properties()">
+      <template #description>{{ m.tasks_note_property_recurrence_properties_desc() }}</template>
+      <UiTextInput v-model="draft.recurrenceProperties" data-testid="note-property-recurrence" />
+    </UiSettingRow>
+  </UiCollapsibleBlock>
 
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>

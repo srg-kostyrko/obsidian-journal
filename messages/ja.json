@@ -2515,6 +2515,8 @@
   "tasks_note_property_archive_tag_desc": "このタグが付いたノートは除外されます。空欄にすると除外しません。",
   "tasks_note_property_dates": "日付のプロパティ",
   "tasks_note_property_dates_desc": "各日付をどのプロパティに保持するか。完了日は、タスクを完了としてチェックしたときにも書き込まれます。空欄にした日付は無視されます。",
+  "tasks_note_property_status_section": "ステータス",
+  "tasks_note_property_other_section": "その他のプロパティ",
   "tasks_note_property_status_property": "ステータスのプロパティ",
   "tasks_note_property_status_values": "ステータスの値",
   "tasks_note_property_status_values_desc": "どのプロパティ値がどのステータスを表すか（大文字・小文字は区別しません）。それ以外の値は未完了として読み取ります。2つの値が同じステータスを共有する場合、マークされた値がタスクのステータス変更時にノートへ書き戻されます。",

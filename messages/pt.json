@@ -2523,6 +2523,8 @@
   "tasks_note_property_archive_tag_desc": "Notas com esta tag são deixadas de fora. Deixe vazio para mantê-las.",
   "tasks_note_property_dates": "Propriedades de data",
   "tasks_note_property_dates_desc": "Qual propriedade guarda cada data. A data de conclusão também é gravada quando uma tarefa é marcada como concluída. Deixe uma vazia para ignorar essa data.",
+  "tasks_note_property_status_section": "Estado",
+  "tasks_note_property_other_section": "Outras propriedades",
   "tasks_note_property_status_property": "Propriedade de estado",
   "tasks_note_property_status_values": "Valores de estado",
   "tasks_note_property_status_values_desc": "Qual valor da propriedade significa qual estado, sem diferenciar maiúsculas de minúsculas. Qualquer outro valor é lido como a fazer. Quando dois valores compartilham um estado, o marcado é o que é gravado de volta na nota quando o estado de uma tarefa muda.",

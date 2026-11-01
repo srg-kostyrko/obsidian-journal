@@ -2526,6 +2526,8 @@
   "tasks_note_property_archive_tag_desc": "Les notes avec cette étiquette sont ignorées. Laissez vide pour les garder.",
   "tasks_note_property_dates": "Propriétés de date",
   "tasks_note_property_dates_desc": "Quelle propriété contient chaque date. La date d'achèvement est aussi inscrite quand une tâche est cochée comme terminée. Laissez-en une vide pour ignorer cette date.",
+  "tasks_note_property_status_section": "État",
+  "tasks_note_property_other_section": "Autres propriétés",
   "tasks_note_property_status_property": "Propriété d'état",
   "tasks_note_property_status_values": "Valeurs d'état",
   "tasks_note_property_status_values_desc": "Quelle valeur de la propriété correspond à quel état, sans tenir compte de la casse. Toute autre valeur est lue comme à faire. Lorsque deux valeurs partagent le même état, celle qui est marquée est réécrite dans la note quand l’état d’une tâche change.",

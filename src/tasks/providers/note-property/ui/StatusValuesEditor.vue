@@ -4,12 +4,14 @@ import type { TaskStatus } from "@/tasks";
 import { TASK_STATUSES } from "@/tasks/status";
 import { taskStatusLabel } from "@/tasks/ui/status-label";
 import { icons } from "@/ui/icons";
-import UiButton from "@/ui/UiButton.vue";
 import UiDropdown from "@/ui/UiDropdown.vue";
 import UiIconButton from "@/ui/UiIconButton.vue";
+import UiSettingRow from "@/ui/UiSettingRow.vue";
 import UiTextInput from "@/ui/UiTextInput.vue";
 
 import type { CanonicalMark, StatusValueRow } from "../form";
+
+defineProps<{ errors?: string[] }>();
 
 const rows = defineModel<StatusValueRow[]>("rows", { required: true });
 const canonical = defineModel<Record<string, CanonicalMark>>("canonical", { required: true });
@@ -61,68 +63,61 @@ function makeCurrent(row: StatusValueRow): void {
 </script>
 
 <template>
-  <div class="tasks-status-values-rows">
-    <div class="tasks-status-values-head">
-      <span></span>
-      <span></span>
-      <span>{{ m.tasks_settings_written_back() }}</span>
-      <span></span>
-    </div>
-    <div
-      v-for="(row, index) in rows"
-      :key="row.id"
-      class="tasks-status-values-row"
-      :data-testid="`note-property-status-row-${index}`"
-    >
-      <UiTextInput
-        v-model="row.value"
-        :aria-label="m.tasks_note_property_status_value_label()"
-        :data-testid="`note-property-status-value-${index}`"
-      />
-      <UiDropdown :model-value="row.status" @update:model-value="remapRow(row, $event)">
-        <option v-for="status in TASK_STATUSES" :key="status" :value="status">{{ taskStatusLabel(status) }}</option>
-      </UiDropdown>
-      <UiIconButton
-        :icon="icons.action.writtenBack"
-        :tooltip="m.tasks_note_property_written_back_tooltip()"
-        :data-testid="`note-property-written-back-${index}`"
-        :data-current="isCurrent(row) || null"
-        :class="{ 'tasks-written-back-current': isCurrent(row) }"
-        @click="makeCurrent(row)"
-      />
-      <UiIconButton
-        :icon="icons.action.delete"
-        :tooltip="m.common_action_delete()"
-        :data-testid="`note-property-status-remove-${index}`"
-        @click="removeRow(row)"
-      />
-    </div>
-    <div>
-      <UiButton data-testid="note-property-add-status-value" @click="addRow">
-        {{ m.tasks_note_property_add_value() }}
-      </UiButton>
-    </div>
-  </div>
+  <UiSettingRow :name="m.tasks_note_property_status_values()">
+    <template #description>
+      {{ m.tasks_note_property_status_values_desc() }}
+      <span v-for="error of errors" :key="error" class="tasks-note-property-form-error">{{ error }}</span>
+    </template>
+    <UiIconButton
+      :icon="icons.action.add"
+      :tooltip="m.tasks_note_property_add_value()"
+      data-testid="note-property-add-status-value"
+      @click="addRow"
+    />
+  </UiSettingRow>
+  <UiSettingRow
+    v-for="(row, index) in rows"
+    :key="row.id"
+    controls-only
+    class="tasks-status-values-row"
+    :data-testid="`note-property-status-row-${index}`"
+  >
+    <UiTextInput
+      v-model="row.value"
+      class="tasks-status-values-grow"
+      :aria-label="m.tasks_note_property_status_value_label()"
+      :data-testid="`note-property-status-value-${index}`"
+    />
+    <UiDropdown :model-value="row.status" @update:model-value="remapRow(row, $event)">
+      <option v-for="status in TASK_STATUSES" :key="status" :value="status">{{ taskStatusLabel(status) }}</option>
+    </UiDropdown>
+    <UiIconButton
+      :icon="icons.action.writtenBack"
+      :tooltip="m.tasks_note_property_written_back_tooltip()"
+      :data-testid="`note-property-written-back-${index}`"
+      :data-current="isCurrent(row) || null"
+      :class="{ 'tasks-written-back-current': isCurrent(row) }"
+      @click="makeCurrent(row)"
+    />
+    <UiIconButton
+      :icon="icons.action.delete"
+      :tooltip="m.common_action_delete()"
+      :data-testid="`note-property-status-remove-${index}`"
+      @click="removeRow(row)"
+    />
+  </UiSettingRow>
 </template>
 
 <style scoped>
-/* UiSettingRow's stacked control is one no-wrap line by contract; this lays out its own lines. */
-.tasks-status-values-rows {
-  display: flex;
-  flex-direction: column;
-  gap: var(--size-2-2);
+.tasks-note-property-form-error {
+  color: var(--text-error);
+  display: block;
 }
-.tasks-status-values-row,
-.tasks-status-values-head {
-  display: grid;
-  grid-template-columns: 12em 10em auto auto;
-  align-items: center;
-  gap: var(--size-2-2);
+.tasks-status-values-row :deep(.setting-item-control) {
+  flex: 1;
 }
-.tasks-status-values-head {
-  font-size: var(--font-ui-smaller);
-  color: var(--text-faint);
-  text-transform: uppercase;
+.tasks-status-values-grow {
+  flex-grow: 1;
 }
 .tasks-written-back-current {
   color: var(--color-accent);
