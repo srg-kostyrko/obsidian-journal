@@ -35,6 +35,7 @@ export interface BlockGroup {
 
 export interface SourcePlan {
   readonly path: VaultPath;
+  readonly lines: readonly string[];
   readonly roots: readonly PlannedRoot[];
   readonly refusedForBlockId: readonly PlannedRoot[];
   readonly block: readonly BlockGroup[];
@@ -83,9 +84,14 @@ function plannedRoot(lines: readonly string[], line: number, heading: string | n
   };
 }
 
-function blockOf(lines: readonly string[], roots: readonly PlannedRoot[], mode: "copy" | "move"): BlockGroup[] {
+/** The lines a root carries into the target. */
+export function emittedLines(root: PlannedRoot, mode: "copy" | "move"): readonly string[] {
+  return mode === "copy" ? root.lines.map(stripId) : root.lines;
+}
+
+/** The groups `roots` carry into the target, each under the context lines it needs above it. */
+export function blockOf(lines: readonly string[], roots: readonly PlannedRoot[], mode: "copy" | "move"): BlockGroup[] {
   // A context line stays in the source, so its target line is always a copy and must not claim the anchor.
-  const emitRoot = (text: string): string => (mode === "copy" ? stripId(text) : text);
   const emitted = new Set<number>();
   // Only neighbors merge: sections that fall back to one destination must still arrive in source order.
   const groups: { heading: string | null; lines: string[] }[] = [];
@@ -98,7 +104,7 @@ function blockOf(lines: readonly string[], roots: readonly PlannedRoot[], mode: 
       emitted.add(ancestor);
       group.lines.push(stripId(lines[ancestor] ?? ""));
     }
-    group.lines.push(...root.lines.map(emitRoot));
+    group.lines.push(...emittedLines(root, mode));
   }
   return groups;
 }
@@ -138,6 +144,7 @@ export function planSource(source: RollSource, options: PlanOptions): SourcePlan
 
   return {
     path,
+    lines,
     roots,
     refusedForBlockId,
     block: blockOf(lines, roots, mode),
@@ -189,6 +196,7 @@ export function planItem(
     kind: "planned",
     plan: {
       path,
+      lines,
       roots: [root],
       refusedForBlockId: [],
       block: blockOf(lines, [root], mode),

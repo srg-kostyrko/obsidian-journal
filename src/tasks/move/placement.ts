@@ -1,4 +1,6 @@
 import { hiddenLines } from "./hidden-lines";
+import { lineHasTag } from "./line-tags";
+import { ancestorsOf } from "./subtree";
 
 import type { BlockGroup } from "./plan";
 
@@ -82,4 +84,23 @@ export function placeGroups(target: string, groups: readonly BlockGroup[], targe
     segments.splice(at, 0, ...inserted);
   }
   return segments.map((seg) => seg.text + seg.term).join("");
+}
+
+const comparable = (line: string): string => line.replace(/\r$/, "").trimEnd();
+
+/**
+ * Whether `target` already holds `lines` as written, in one run that starts outside example text and
+ * under no parent stamped with `rolledMarker`.
+ */
+export function holdsAll(target: string, lines: readonly string[], rolledMarker: string): boolean {
+  const targetLines = target.split("\n");
+  const hidden = hiddenLines(targetLines);
+  const held = targetLines.map(comparable);
+  const wanted = lines.map(comparable);
+  // Only the root has to be a live line: a fence or comment nested in the task is carried whole, so
+  // it matches as written. A copy under a stamped parent reads as rolled itself, so it is not live.
+  const live = (start: number): boolean =>
+    !hidden.has(start) &&
+    ancestorsOf(targetLines, start).every((ancestor) => !lineHasTag(targetLines[ancestor] ?? "", rolledMarker));
+  return held.some((_, start) => wanted.every((line, offset) => held[start + offset] === line) && live(start));
 }

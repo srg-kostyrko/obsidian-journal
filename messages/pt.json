@@ -2682,6 +2682,16 @@
   "tasks_roll_no_current_period": "Hoje está fora da linha do tempo deste diário.",
   "tasks_roll_failed": "Não foi possível transferir as tarefas.",
   "tasks_roll_missing_heading": "Nenhum cabeçalho {heading} na nota de {date}. Verifique o filtro de listagem do diário.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} tarefa já estava na nota de hoje, então não foi copiada novamente.",
+        "count=*": "{count} tarefas já estavam na nota de hoje, então não foram copiadas novamente."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],

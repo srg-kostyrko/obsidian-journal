@@ -2685,6 +2685,16 @@
   "tasks_roll_no_current_period": "Aujourd’hui est en dehors de la chronologie de ce journal.",
   "tasks_roll_failed": "Les tâches n’ont pas pu être reportées.",
   "tasks_roll_missing_heading": "Aucun en-tête {heading} dans la note du {date}. Vérifiez le filtre de la liste du journal.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} tâche figurait déjà dans la note du jour et n’a pas été recopiée.",
+        "count=*": "{count} tâches figuraient déjà dans la note du jour et n’ont pas été recopiées."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],

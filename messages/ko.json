@@ -2671,6 +2671,16 @@
   "tasks_roll_no_current_period": "오늘은 이 저널의 타임라인 범위 밖입니다.",
   "tasks_roll_failed": "작업을 이월하지 못했습니다.",
   "tasks_roll_missing_heading": "{date} 노트에 {heading} 제목이 없습니다. 저널의 목록 필터를 확인하세요.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "작업 {count}개는 이미 오늘 노트에 있어 다시 복사하지 않았습니다.",
+        "count=*": "작업 {count}개는 이미 오늘 노트에 있어 다시 복사하지 않았습니다."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],

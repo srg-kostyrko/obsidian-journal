@@ -608,6 +608,14 @@ inside `## Tasks` is left alone. A heading inside a code block or a comment — 
 `<!-- … -->` — is not one a task lands under. Tasks from the oldest note come first, each note's in the order they
 were written.
 
+A task today's note already holds line for line — the task and every line nested under it, as written,
+together, starting outside any code block or comment and under no parent marked as rolled — is not
+copied again; its original is still marked as rolled, or removed under **Move**, and the notice
+counts it. That is what stops a roll that runs again, after an earlier note could not be marked, from
+copying the same tasks twice. It also means an unfinished `- [ ] Exercise` from yesterday is taken up
+by the `- [ ] Exercise` today's template already wrote, rather than added beside it. A task that has
+gained a nested line since is copied again, whole.
+
 ### Copy, and the rolled marker
 
 By default the command **copies**: the task stays in the earlier note, which keeps the record of what
@@ -761,9 +769,9 @@ devices that both roll before either has synced write the same lines in the same
 that combines identical changes keeps one copy. That can still go wrong: if you edited one of the notes
 between the two rolls, or your sync tool does not combine two identical insertions into one — Obsidian
 Sync's merge is documented to sometimes create duplicate text — today's note can end up with the
-tasks twice. The same happens when a sync delivers the other device's roll in pieces: if today's note,
-with the tasks already in it, arrives and the vault goes quiet before the earlier note's marks or
-removals do, this device still finds the tasks unfinished and takes them again. Nothing is lost when that happens: under **Copy** the originals are
+tasks twice. When a sync delivers the other device's roll in pieces — today's note, with the tasks
+already in it, arriving before the earlier note's marks or removals — this device finds the tasks
+already there and does not copy them again. Nothing is lost when a duplicate does happen: under **Copy** the originals are
 still in the earlier note, a [task listing](#listing-tasks-in-a-note) shows anything left unfinished, and
 the command is there to roll by hand.
 

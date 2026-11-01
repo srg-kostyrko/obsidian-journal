@@ -2763,6 +2763,18 @@
   "tasks_roll_no_current_period": "Сьогодні поза часовою шкалою цього журналу.",
   "tasks_roll_failed": "Не вдалося перенести завдання.",
   "tasks_roll_missing_heading": "У нотатці за {date} немає заголовка {heading}. Перевірте фільтр списку журналу.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count", "local countPlural = count: plural"],
+      "selectors": ["countPlural"],
+      "match": {
+        "countPlural=one": "{count} завдання вже було в сьогоднішній нотатці, тому повторно не скопійовано.",
+        "countPlural=few": "{count} завдання вже були в сьогоднішній нотатці, тому повторно не скопійовано.",
+        "countPlural=many": "{count} завдань вже були в сьогоднішній нотатці, тому повторно не скопійовано.",
+        "countPlural=*": "{count} завдання вже були в сьогоднішній нотатці, тому повторно не скопійовано."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count", "local countPlural = count: plural"],

@@ -2674,6 +2674,16 @@
   "tasks_roll_no_current_period": "Hoy queda fuera de la línea de tiempo de este diario.",
   "tasks_roll_failed": "No se pudieron trasladar las tareas.",
   "tasks_roll_missing_heading": "No hay ningún encabezado {heading} en la nota del {date}. Comprueba el filtro de listado del diario.",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "{count} tarea ya estaba en la nota de hoy, así que no se volvió a copiar.",
+        "count=*": "{count} tareas ya estaban en la nota de hoy, así que no se volvieron a copiar."
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],

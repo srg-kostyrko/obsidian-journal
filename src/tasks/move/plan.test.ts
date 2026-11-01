@@ -306,6 +306,7 @@ describe("planItem", () => {
       kind: "planned",
       plan: {
         path,
+        lines: ["- [ ] Project", "    - [ ] step", "        - detail", "    - [ ] other step"],
         roots: [
           {
             line: 1,

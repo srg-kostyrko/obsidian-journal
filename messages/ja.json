@@ -2674,6 +2674,16 @@
   "tasks_roll_no_current_period": "今日はこのジャーナルのタイムライン外です。",
   "tasks_roll_failed": "タスクを繰り越せませんでした。",
   "tasks_roll_missing_heading": "{date}のノートに見出し{heading}がありません。ジャーナルの一覧フィルターを確認してください。",
+  "tasks_roll_already_held": [
+    {
+      "declarations": ["input count"],
+      "selectors": ["count"],
+      "match": {
+        "count=1": "タスク{count}件は今日のノートに既にあったため、再度コピーしませんでした。",
+        "count=*": "タスク{count}件は今日のノートに既にあったため、再度コピーしませんでした。"
+      }
+    }
+  ],
   "tasks_roll_note_items_skipped": [
     {
       "declarations": ["input count"],
