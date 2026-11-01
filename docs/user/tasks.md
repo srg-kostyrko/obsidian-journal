@@ -47,11 +47,12 @@ all seven statuses. A marker is the single character between the brackets, so **
 disabled until exactly one is typed — one emoji counts as one character. The delete icon on a row removes that mapping — a marker no longer listed falls
 back to To-do, same as one you never added.
 
-Every row carries a **Written back** icon: it marks the marker Journals writes into the note when a
-task's status changes to that value. A status with only one marker still shows it filled in, since that
-marker is the one that gets written; where two or more markers share a status — `x` and `X` both read as
-Done by default — only one of them is filled in at a time, and clicking a grey icon makes that row's
-marker the written-back one instead.
+Every row carries an icon whose tooltip reads "Write this symbol for this status": filled in, it marks
+the marker Journals writes into the note when a task's status changes to that value. At most one
+marker per status is filled in — where two share a status, `x` and `X` both reading as Done by default,
+only `x` is — and clicking a grey icon makes that row's marker the written one instead. Adding a
+marker, or switching a row to another status, never fills its icon in: a status with no written marker
+yet, such as On hold, keeps a grey icon on its only marker until you click it.
 
 **Save** at the bottom of the modal applies both the status map and the identification rule below it;
 **Cancel** discards edits to either.
@@ -92,9 +93,16 @@ Choosing **Narrow** or **Replace** reveals the same condition editor as the vaul
 this journal. The row's own description names which relation is active and, once narrowed or replaced,
 summarizes the rule itself, so you can see it without opening the modal.
 
-The same section carries a **Task notes** row, which decides which [task notes](#task-notes) this
-journal shows; [Which task notes a journal shows](#which-task-notes-a-journal-shows) covers it. Dated
-checkbox lines have their own choice in the **Checkbox tasks** modal, covered under [Which dated lines a
+The same section carries three more rows:
+
+- **Task notes** — which [task notes](#task-notes) this journal shows;
+  [Which task notes a journal shows](#which-task-notes-a-journal-shows) covers it.
+- **Listing filter** — which tasks this journal's listings and task decorations show;
+  [A journal's own listing filter](#a-journal-s-own-listing-filter) covers it.
+- **Roll over** — what rolling unfinished tasks forward does for this journal;
+  [Roll-over settings](#roll-over-settings) covers it.
+
+Dated checkbox lines have their own choice in the **Checkbox tasks** modal, covered under [Which dated lines a
 journal shows](#which-dated-lines-a-journal-shows).
 
 ## Task notes
@@ -160,7 +168,8 @@ click. **Status** opens by itself while it holds a problem that keeps **Save** d
   | `done`        | Done        |
 
   Any other value reads as To-do, and so does a note with no status property at all. Each row's
-  **Written back** icon works the way it does for [checkbox markers](#status-symbols): it marks the
+  "Write this value for this status" icon works the way it does for
+  [checkbox markers](#status-symbols): it marks the
   value written into the note when a task's status changes, `open` for To-do and `done` for Done by
   default.
 
@@ -209,7 +218,7 @@ A surface can name a single date instead — the fence's [`date` key](#fence-key
 **Created date**. A task note with none of the chosen dates appears nowhere.
 
 Two of a listing's settings do not reach task notes. `source` picks between a period's note and its
-notelets, and a task note is neither. `depth: rollup` gathers the periods inside the host one, and a
+notelets, and a task note is neither. `depth: rollup` gathers the periods that overlap the host one, and a
 task note already belongs to every period holding its date, so a month's listing shows the month's
 task notes either way.
 
@@ -287,9 +296,9 @@ Where it applies:
 
 ### Ticking a task note
 
-A task note's row ticks like any other: clicking its checkbox writes the **Written back** value for
-Done into the status property — or, on a row that is already done, the value for To-do. When the
-matching property is set in **Date properties** and **Modified property**, the same click also:
+A task note's row ticks like any other: clicking its checkbox writes the status value marked to be
+written for Done into the status property — or, on a row that is already done, the one for To-do. When
+the matching property is set in **Date properties** and **Modified property**, the same click also:
 
 - writes today's date, as `2026-03-10`, into the done-date property on a tick to Done, and removes that
   property on a tick back to To-do;
@@ -332,17 +341,17 @@ note](#which-date-places-a-task-note).
 
 ### Fence keys
 
-| Key          | Default            | Names                                                                                                                                                                                                                                                                      |
-| ------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `provider`   | every one          | which providers to read tasks from, by id: `checkbox` for **Checkbox tasks**, `note-property` for **Task notes**.                                                                                                                                                          |
-| `source`     | `both`             | `note`, `notelets` or `both`.                                                                                                                                                                                                                                              |
-| `depth`      | `literal`          | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods fall inside this one — a month can list its days' tasks alongside its own.                       |
-| `status`     | `open`             | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one. The default gives way to [the journal's own **Status** condition](#a-journal-s-own-listing-filter) where it has one.       |
-| `heading`    | none               | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                |
-| `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag. Case does not matter, and nested tags match: `work` shows `#Work` and `#work/client`, never `#workshop`.                |
-| `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                     |
-| `date`       | `scheduled-or-due` | which of a task note's, or a dated checkbox line's, dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). A checkbox line with no such date is not placed by date.                                         |
-| `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`. |
+| Key          | Default            | Names                                                                                                                                                                                                                                                                                              |
+| ------------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `provider`   | every one          | which providers to read tasks from, by id: `checkbox` for **Checkbox tasks**, `note-property` for **Task notes**.                                                                                                                                                                                  |
+| `source`     | `both`             | `note`, `notelets` or `both`.                                                                                                                                                                                                                                                                      |
+| `depth`      | `literal`          | `literal` (this period's own note and notelets) or `rollup`, which widens to every other journal in the host's shelf (or every journal, when it is on none) whose periods overlap this one — a month can list its days' tasks alongside its own, and a week that spans two months appears in both. |
+| `status`     | `open`             | `open` (to-do, in progress, on hold), `done` (done, cancelled), `all`, or any single status name — `on-hold`, `rolled` — to show just that one. The default gives way to [the journal's own **Status** condition](#a-journal-s-own-listing-filter) where it has one.                               |
+| `heading`    | none               | one or more headings; only tasks sitting under one of them are shown. Write it as it looks in your note, `## Tasks`, or as bare text, `Tasks` — both mean the same heading.                                                                                                                        |
+| `tag`        | none               | one or more tags; only tasks carrying one of them are shown. Write it with or without its leading `#` — `task` and `#task` both mean the same tag. Case does not matter, and nested tags match: `work` shows `#Work` and `#work/client`, never `#workshop`.                                        |
+| `sort`       | `document`         | `document`, `status`, or a date role (`due`, `scheduled`, `start`, `done`, `created`).                                                                                                                                                                                                             |
+| `date`       | `scheduled-or-due` | which of a task note's, or a dated checkbox line's, dates places it in the period: `scheduled-or-due`, or one date role (`due`, `scheduled`, `start`, `done`, `created`). A checkbox line with no such date is not placed by date.                                                                 |
+| `conditions` | none               | more conditions, of any of the three types above, for anything the flat keys cannot say — see below. Values here are taken **exactly as written**, unlike `heading:` and `tag:`: a heading must be its bare text, `Tasks`, never `## Tasks`, and a tag must carry its `#`.                         |
 
 A **Tag** condition matches the way Obsidian's tag search does, wherever it is written — the `tag` key,
 a `conditions:` entry, a journal's **Listing filter**, a view block's or decoration's own filter: case
@@ -410,10 +419,12 @@ note itself uses. That is also why your theme's own styling for a marker such as
 the same in the listing as it does in the note. A task inside a blockquote or a callout renders, and
 ticks, the same as one at the top level.
 
-Below the line, a small link names the note (or notelet) the task lives in; click it to open that note.
+Beside the line, at the end of the row, a small link names the note (or notelet) the task lives in;
+click it to open that note.
 
 A task note's row is a checkbox followed by a link to the note, named by its title; clicking the link
-opens the task note, and so does the small link below it.
+opens the task note. It has no small source link of its own, and neither has a
+[dated checkbox line](#dated-lines-from-anywhere-in-the-vault) the listing reached by its date.
 
 ### Nesting
 
@@ -634,8 +645,10 @@ group is marked. Every task nested under it, done ones included, reads as **Roll
 so they leave open listings and the calendar's open-task dots along with it and never roll again — but
 your own Dataview, Tasks or search queries see no tag on them and still count them as unfinished.
 
-Turn **Mark as rolled** off and the original is left untouched — which also means the next roll copies
-it again.
+Turn **Mark as rolled** off and the original is left untouched — which also means the next roll takes
+it again. While today's note still holds it [line for line](#where-they-land) it is not copied a second
+time; it is copied again once today's copy no longer matches it line for line — ticked, say, or the
+original gained a nested line — or when a later roll lands it in a different note.
 
 **Move** instead takes the lines out of the earlier note. A task whose group carries a block id is left
 where it is under **Move**, since removing it would break the links to that block, and the notice counts
@@ -673,8 +686,9 @@ that journal. **Edit** opens:
   earlier notes counted are the ones the source reads: under **Notelets only**, periods with a
   notelet, so a period with only its period note is skipped; under **Note and notelets**, periods
   with either, so one holding only notelets still counts. Tasks always land in today's period note, never in a notelet.
-- **Target heading** — the heading tasks go under when the heading they came from is not in today's
-  note. Type the heading's text; leading `#` markers are dropped.
+- **Target heading** — the heading tasks go under unless the heading they came from is one the
+  listing filter names and today's note has it; see [Where they land](#where-they-land). Type the
+  heading's text; leading `#` markers are dropped.
 - **Look back** — how many earlier notes to take tasks from, 1 by default. Each is an existing note, so
   with 3 a journal you write on weekdays reads back to the previous Wednesday on a Monday. With **Mark as rolled**
   on, or under **Move**, a task taken once is marked or removed, so raising it does not bring the same
@@ -684,7 +698,7 @@ that journal. **Edit** opens:
 ### What the notice says
 
 The notice names how many tasks rolled and the oldest note they came from, or that the earlier note held
-no unfinished tasks. Four other cases are worth knowing:
+no unfinished tasks. Five other cases are worth knowing:
 
 - **"No Tasks heading in …"** — the earlier note has none of the headings the listing filter's
   **Under** conditions name, so nothing could match. The notice names the first of them. Usually the
@@ -844,9 +858,10 @@ itself, the task as it then reads is what moves.
 On success the notice reads "Copied the task to …" or "Moved the task to …", with the period — and the
 notelet's name, for a notelet. The other outcomes:
 
-- **"… changed while moving"** — the task, or the lines above it, changed after it was copied, so the
-  original was left as it was. The task is in the destination already: mark or remove the original
-  by hand, or delete the copy.
+- **"… changed while moving"** — the task's own lines changed after it was copied, or lines were added
+  or removed above it, so the original was left as it was. A line above it edited in place, with the
+  line count unchanged, is not noticed: the original is marked or removed as usual. The task is in the
+  destination already: mark or remove the original by hand, or delete the copy.
 - **"… could not be marked as rolled"** or **"… could not be updated"** — the same, when saving the
   original note failed.
 - **"The task is no longer where it was. Nothing was moved."** — by the time the command came to write,
