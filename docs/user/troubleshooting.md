@@ -113,8 +113,13 @@ A tasks setting — a journal's **Listing filter**, which checkbox items count a
 **Task notes** — holds something this version of the plugin does not understand, usually written by a
 newer version on another device or by hand. Rather than guess, the plugin treats that part as matching
 nothing, so the listing or decoration it feeds shows less, never more. The setting is left exactly as it
-was in your settings file. Open it to see which condition is affected, and delete that condition or
-choose the setting again to replace it.
+was in your settings file. Open it to see what is affected:
+
+- When one condition is unreadable, the editor flags that row with "This condition can't be read, so
+  nothing matches it." Delete that condition, or choose the setting again to replace it.
+- When the rule itself is unreadable — how its conditions combine, what it shows, or a list of
+  conditions that is not a list — the editor opens with no conditions and says only "Part of this rule
+  can't be read, so nothing matches." Choose the setting again to replace it.
 
 ## Variables show up as `{{…}}` in notes
 
