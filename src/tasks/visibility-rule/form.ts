@@ -1,36 +1,55 @@
-// Storage stays permissive (rule.ts drops what it cannot read); this schema is stricter and is
-// parsed only against the journal modal's in-memory draft.
+// Storage stays permissive (rule.ts keeps what it cannot read as unreadable); this schema is
+// stricter and is parsed only against the journal modal's in-memory draft.
 import { cloneFnJSON } from "@vueuse/core";
 import * as v from "valibot";
 
 import { m } from "@/i18n";
+import { isUnreadable, type Unreadable } from "@/settings/repair";
 import { conditionValues } from "@/tasks/ui/condition-text";
 
-import { DEFAULT_VISIBILITY_RULE, type VisibilityRule, type VisibilityCondition } from "./rule";
+import { unreadableConditionSchema } from "../conditions";
+
+import {
+  DEFAULT_VISIBILITY_RULE,
+  type StoredVisibilityRule,
+  type VisibilityCondition,
+  type VisibilityRule,
+} from "./rule";
 
 // Tags are one comma-separated field: a tag cannot hold a comma. Folders and property values are
 // one input per entry, since either can.
 export type VisibilityConditionDraft =
   | { id: number; type: "tag"; tags: string }
   | { id: number; type: "folder"; folders: string[] }
-  | { id: number; type: "property"; name: string; values: string[] };
+  | { id: number; type: "property"; name: string; values: string[] }
+  | { id: number; type: "unreadable"; raw: unknown };
+
+export type EditableVisibilityType = Exclude<VisibilityCondition["type"], "unreadable">;
 
 export interface VisibilityDraft {
   show: VisibilityRule["show"];
   mode: VisibilityRule["mode"];
   conditions: VisibilityConditionDraft[];
+  // A stored rule this version cannot read. The draft shows it as None, which is what it does, and
+  // a save that leaves it at None writes it back as it was.
+  held?: Unreadable;
+}
+
+export function holdsUnreadable(draft: VisibilityDraft): boolean {
+  return draft.held !== undefined && draft.show === "none" && draft.conditions.length === 0;
 }
 
 let nextId = 0;
 
-export function emptyCondition(type: VisibilityCondition["type"]): VisibilityConditionDraft {
+export function emptyCondition(type: EditableVisibilityType): VisibilityConditionDraft {
   nextId += 1;
   if (type === "tag") return { id: nextId, type, tags: "" };
   if (type === "folder") return { id: nextId, type, folders: [""] };
   return { id: nextId, type, name: "", values: [""] };
 }
 
-export function visibilityDraftFrom(stored: VisibilityRule | undefined): VisibilityDraft {
+export function visibilityDraftFrom(stored: StoredVisibilityRule | undefined): VisibilityDraft {
+  if (isUnreadable(stored)) return { show: "none", mode: "and", conditions: [], held: stored };
   // The stored rule is a reactive proxy into the journal config; the draft must share none of its
   // arrays, or an edit reaches the store before Save.
   const rule = cloneFnJSON(stored ?? DEFAULT_VISIBILITY_RULE);
@@ -41,6 +60,7 @@ export function visibilityDraftFrom(stored: VisibilityRule | undefined): Visibil
       nextId += 1;
       if (condition.type === "tag") return { id: nextId, type: "tag", tags: condition.tags.join(", ") };
       if (condition.type === "folder") return { id: nextId, type: "folder", folders: condition.folders };
+      if (condition.type === "unreadable") return { id: nextId, type: "unreadable", raw: condition.raw };
       return { id: nextId, type: "property", name: condition.name, values: condition.values };
     }),
   };
@@ -69,6 +89,9 @@ function conditionFrom(draft: VisibilityConditionDraft): VisibilityCondition {
         folders: distinct(draft.folders.map(normalizeFolder).filter((folder) => folder !== "")),
       };
     }
+    case "unreadable": {
+      return { type: "unreadable", raw: draft.raw };
+    }
     case "property": {
       const values = draft.values.map((value) => value.trim()).filter((value) => value !== "");
       return { type: "property", name: draft.name.trim(), values: distinct(values) };
@@ -79,11 +102,13 @@ function conditionFrom(draft: VisibilityConditionDraft): VisibilityCondition {
 function isNoOp(condition: VisibilityCondition): boolean {
   if (condition.type === "tag") return condition.tags.length === 0;
   if (condition.type === "folder") return condition.folders.length === 0;
+  if (condition.type === "unreadable") return false;
   return condition.name === "" || condition.values.length === 0;
 }
 
 // undefined for the default: a journal opened and saved untouched gains no key.
-export function visibilityFrom(draft: VisibilityDraft): VisibilityRule | undefined {
+export function visibilityFrom(draft: VisibilityDraft): StoredVisibilityRule | undefined {
+  if (holdsUnreadable(draft)) return draft.held;
   // Under All or None the form does not validate conditions, so an unfinished row is dropped
   // rather than stored; the finished ones stay, ready for a switch back to Matching.
   const conditions = draft.conditions.map(conditionFrom).filter((condition) => !isNoOp(condition));
@@ -102,6 +127,7 @@ function buildConditionSchema() {
       name: v.pipe(v.string(), v.nonEmpty(m.tasks_note_property_property_required())),
       values,
     }),
+    unreadableConditionSchema,
   ]);
 }
 

@@ -2474,11 +2474,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "sin estado",
+  "tasks_condition_unreadable": "Esta condición no se puede leer, así que nada la cumple.",
   "tasks_status_group_open": "Abiertas",
   "tasks_status_group_done": "Hechas",
   "tasks_status_group_all": "Todas",
   "tasks_filter_summary_conditions": "Muestra una tarea que está {conditions}.",
   "tasks_rule_summary_any": "Sin condiciones — todo elemento de lista con casilla en las notas de un diario es una tarea.",
+  "tasks_rule_summary_unreadable": "Parte de esta regla no se puede leer, así que nada coincide.",
   "tasks_rule_summary_conditions": "Cuenta un elemento de lista con casilla que está {conditions}.",
   "tasks_journal_summary_inherit": "Hereda la regla de toda la bóveda.",
   "tasks_journal_summary_narrow": "Restringe la regla de toda la bóveda con: {rule}",

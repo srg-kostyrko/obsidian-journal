@@ -9,6 +9,8 @@ import * as v from "valibot";
 
 import { m } from "@/i18n";
 
+import { unreadableConditionSchema } from "../conditions";
+
 // Built inside a function rather than at module scope: initLocale() runs in onload(), so an
 // `m.*()` call evaluated at import time would bake in the base locale's message forever.
 export function buildConditionFormSchemas() {
@@ -28,6 +30,8 @@ export function buildConditionFormSchemas() {
       condition: v.picklist(["is", "is-not"]),
       statuses: v.pipe(v.array(v.string()), v.minLength(1, m.tasks_condition_values_required())),
     }),
+    // Saved back as stored: the row can only be deleted, never edited into something readable.
+    unreadable: unreadableConditionSchema,
   };
 }
 

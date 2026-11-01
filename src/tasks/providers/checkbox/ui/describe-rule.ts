@@ -1,9 +1,11 @@
 import { formatConjunction, formatDisjunction, m } from "@/i18n";
+import { isUnreadable } from "@/settings/repair";
+import { blockedByUnreadable } from "@/tasks/conditions";
 import { describeTagOrHeadingCondition } from "@/tasks/ui/describe-condition";
 
-import { isEditableCondition } from "../rule-schema";
+import { isDescribedCondition } from "../rule-schema";
 
-import type { CheckboxJournalRule, CheckboxRule } from "../rule-schema";
+import type { CheckboxJournalRule, StoredCheckboxJournalRule, StoredCheckboxRule } from "../rule-schema";
 
 // An empty condition list means "no constraint" here — the inverse of a decoration's, where it
 // matches nothing — so the empty case gets its own sentence rather than an empty list.
@@ -12,8 +14,9 @@ import type { CheckboxJournalRule, CheckboxRule } from "../rule-schema";
 // creates one (see rule-schema.ts), but the schema is shared with the listing filter and a stored
 // rule could carry one anyway. It never affects matching (identification.ts's no-op arm), so
 // dropping it from the summary states the true rule.
-export function describeCheckboxRule(rule: CheckboxRule | CheckboxJournalRule): string {
-  const conditions = rule.conditions.filter(isEditableCondition);
+export function describeCheckboxRule(rule: StoredCheckboxRule | CheckboxJournalRule): string {
+  if (isUnreadable(rule) || blockedByUnreadable(rule)) return m.tasks_rule_summary_unreadable();
+  const conditions = rule.conditions.filter(isDescribedCondition);
   if (conditions.length === 0) return m.tasks_rule_summary_any();
   const parts = conditions.map(describeTagOrHeadingCondition);
   const joined = rule.mode === "or" ? formatDisjunction(parts) : formatConjunction(parts);
@@ -27,7 +30,8 @@ export function describeCheckboxRule(rule: CheckboxRule | CheckboxJournalRule): 
 // own empty case states for the vault-wide rule. Wrapping describeCheckboxRule for either compose
 // mode's empty case would carry its wording ("No conditions — every checkbox item…") across a
 // mode where it is not true (narrow), so both get their own sentence instead.
-export function describeJournalRule(rule: CheckboxJournalRule | undefined): string {
+export function describeJournalRule(rule: StoredCheckboxJournalRule | undefined): string {
+  if (isUnreadable(rule)) return m.tasks_rule_summary_unreadable();
   if (!rule || rule.compose === "inherit") return m.tasks_journal_summary_inherit();
   if (rule.conditions.length === 0) {
     return rule.compose === "narrow" ? m.tasks_journal_summary_narrow_empty() : m.tasks_journal_summary_replace_empty();

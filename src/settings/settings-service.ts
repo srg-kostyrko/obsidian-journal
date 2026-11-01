@@ -17,7 +17,7 @@ import {
   UnregisteredSliceError,
 } from "./errors";
 import { runMigrations } from "./migrations";
-import { defaultsFrom, repairValue, type DefaultAt, type RepairResult } from "./repair";
+import { defaultsFrom, repairValue, unwrapUnreadable, type DefaultAt, type RepairResult } from "./repair";
 import { SnapshotService } from "./snapshots/snapshot-service";
 import { CollectionDefinitionToken, MigrationToken, SettingsEventsToken, SliceDefinitionToken } from "./tokens";
 import { CURRENT_VERSION } from "./version";
@@ -139,7 +139,7 @@ export class SettingsService {
   // replaced by it and exist nowhere else. The notice is withheld when nothing was written: it
   // promises a backup the user could restore.
   async #snapshotBeforeDowngrade(): Promise<void> {
-    const contents = JSON.stringify({ ...this.#root, version: CURRENT_VERSION });
+    const contents = JSON.stringify({ ...this.#root, version: CURRENT_VERSION }, unwrapUnreadable);
     const written = await this.#snapshots.writePreDowngrade(CURRENT_VERSION, contents, new Date().toISOString());
     if (written.kind === "err") {
       this.#logger.warn("could not snapshot the settings an older version replaced", { error: written.error });
@@ -246,7 +246,10 @@ export class SettingsService {
       this.#notices.show(m.settings_too_new_notice());
       return;
     }
-    const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION })) as Record<string, unknown>;
+    const out = JSON.parse(JSON.stringify({ ...this.#root, version: CURRENT_VERSION }, unwrapUnreadable)) as Record<
+      string,
+      unknown
+    >;
     const result = await this.#pluginData.save(out);
     if (result.kind === "err") {
       this.#logger.error("settings save failed", { error: new SettingsSaveError(result.error) });

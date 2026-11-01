@@ -6,7 +6,8 @@ import { m } from "@/i18n";
 import { useService } from "@/infrastructure/di";
 import { useModal } from "@/infrastructure/host/modals";
 import { JournalsRepository } from "@/journals/repository";
-import type { TaskCondition } from "@/tasks/conditions";
+import { isUnreadable } from "@/settings/repair";
+import type { StoredTaskCondition, TaskCondition } from "@/tasks/conditions";
 import RuleEditor from "@/tasks/ui/RuleEditor.vue";
 import VisibilityRuleEditor from "@/tasks/ui/VisibilityRuleEditor.vue";
 import { visibilityDraftFrom, visibilityFormErrors, visibilityFrom } from "@/tasks/visibility-rule/form";
@@ -27,9 +28,14 @@ const CHECKBOX_CONDITION_TYPES: readonly TaskCondition["type"][] = ["tag", "head
 const api = useModal();
 const journals = useService(JournalsRepository);
 
-const stored = journals.get(journalName).getOrUndefined()?.tasks.providers.checkbox;
+const storedRule = journals.get(journalName).getOrUndefined()?.tasks.providers.checkbox;
+// A rule this version cannot read opens with no relation chosen: Cancel keeps it as it was, and
+// only choosing one replaces it.
+const stored = isUnreadable(storedRule) ? undefined : storedRule;
 
-const compose = ref<CheckboxJournalRule["compose"]>(stored?.compose ?? "inherit");
+const compose = ref<CheckboxJournalRule["compose"] | undefined>(
+  isUnreadable(storedRule) ? undefined : (stored?.compose ?? "inherit"),
+);
 // A deep copy, not a live binding — same reason as EditCheckboxProviderModal's: RuleEditor
 // mutates its model in place, and a shallow `{ ...condition }` per condition still shares each
 // condition's `tags`/`headings` array with the store. cloneFnJSON rather than toRaw, which is
@@ -44,7 +50,7 @@ const preservedConditions = storedConditions.filter((condition) => !isEditableCo
 // Typed as the full TaskCondition union, matching RuleEditor's model — CHECKBOX_CONDITION_TYPES
 // above is what actually keeps a status condition out, not this type, which only has to be wide
 // enough for RuleEditor to bind to.
-const draft = ref<{ mode: "and" | "or"; conditions: TaskCondition[] }>({
+const draft = ref<{ mode: "and" | "or"; conditions: StoredTaskCondition[] }>({
   mode: stored?.mode ?? "and",
   conditions: storedConditions.filter(isEditableCondition),
 });
@@ -52,15 +58,19 @@ const draft = ref<{ mode: "and" | "or"; conditions: TaskCondition[] }>({
 // Inherit renders no RuleEditor at all, so there is nothing to validate — an empty condition
 // left over from a previous narrow/replace draft cannot block a switch back to inherit.
 const ruleErrors = computed(() =>
-  compose.value === "inherit" ? new Map<number, string>() : checkboxRuleConditionErrors(draft.value),
+  compose.value === "inherit" || compose.value === undefined
+    ? new Map<number, string>()
+    : checkboxRuleConditionErrors(draft.value),
 );
 const datedDraft = ref(visibilityDraftFrom(stored?.dated));
-const ruleValid = computed(() => ruleErrors.value.size === 0 && visibilityFormErrors(datedDraft.value).size === 0);
+const ruleValid = computed(
+  () => compose.value !== undefined && ruleErrors.value.size === 0 && visibilityFormErrors(datedDraft.value).size === 0,
+);
 
 function save(): void {
   // Belt-and-braces alongside the disabled Save button: a disabled native <button> never
   // dispatches click, but nothing stops a future caller from invoking save() directly.
-  if (!ruleValid.value) return;
+  if (!ruleValid.value || compose.value === undefined) return;
   // Re-read across the modal's lifetime: the store can change while it is open, so the other
   // task settings this journal holds must come from the current config, not the opening one.
   const config = journals.get(journalName);
@@ -93,7 +103,10 @@ function save(): void {
 
 <template>
   <UiSettingRow :name="m.tasks_journal_compose()" stacked>
-    <template #description>{{ m.tasks_journal_compose_desc() }}</template>
+    <template #description>
+      {{ m.tasks_journal_compose_desc() }}
+      <span v-if="compose === undefined" class="tasks-journal-form-error">{{ m.tasks_rule_summary_unreadable() }}</span>
+    </template>
     <div class="tasks-journal-compose">
       <UiButton :cta="compose === 'inherit'" data-testid="compose-inherit" @click="compose = 'inherit'">
         {{ m.tasks_journal_compose_inherit() }}
@@ -107,19 +120,21 @@ function save(): void {
     </div>
   </UiSettingRow>
   <RuleEditor
-    v-if="compose !== 'inherit'"
+    v-if="compose !== 'inherit' && compose !== undefined"
     v-model="draft"
     :types="CHECKBOX_CONDITION_TYPES"
     :label="m.tasks_settings_rule()"
     :description="m.tasks_settings_rule_desc()"
     :errors="ruleErrors"
   />
-  <UiSettingRow :name="m.tasks_checkbox_dated_title()" heading />
-  <VisibilityRuleEditor
-    v-model="datedDraft"
-    :description="m.tasks_checkbox_dated_desc()"
-    :conditions-description="m.tasks_checkbox_dated_conditions_desc()"
-  />
+  <template v-if="compose !== undefined">
+    <UiSettingRow :name="m.tasks_checkbox_dated_title()" heading />
+    <VisibilityRuleEditor
+      v-model="datedDraft"
+      :description="m.tasks_checkbox_dated_desc()"
+      :conditions-description="m.tasks_checkbox_dated_conditions_desc()"
+    />
+  </template>
   <UiSettingRow controls-only>
     <UiButton @click="api.cancel()">{{ m.common_action_cancel() }}</UiButton>
     <UiButton cta :disabled="!ruleValid" @click="save">{{ m.common_action_submit() }}</UiButton>
@@ -130,5 +145,9 @@ function save(): void {
 .tasks-journal-compose {
   display: flex;
   gap: var(--size-2-2);
+}
+.tasks-journal-form-error {
+  color: var(--text-error);
+  display: block;
 }
 </style>

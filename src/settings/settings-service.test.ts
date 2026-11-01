@@ -22,6 +22,7 @@ import {
 import { v4ToV5Migration } from "./legacy/v4-to-v5";
 import { v5ToV6Migration } from "./legacy/v5-to-v6";
 import { v6ToV7Migration } from "./legacy/v6-to-v7";
+import { unreadable } from "./repair";
 import {
   defineCollection,
   defineNestedCollection,
@@ -1123,6 +1124,27 @@ describe("SettingsService", () => {
     });
     afterEach(() => {
       vi.useRealTimers();
+    });
+
+    // An unreadable value is a wrapper in memory only, so that no version has to read it from disk.
+    it("writes a value it could not read back as it was stored, not as the wrapper holding it", async () => {
+      const ruleSlice = defineSlice(
+        "rules",
+        v.object({ conditions: v.array(v.unknown()), touched: v.optional(v.boolean(), false) }),
+        { conditions: [], touched: false },
+      );
+      const stored = { type: "tag", condition: "lack", tags: ["#w"] };
+      const harness = await testContainer({
+        modules: [testSettingsModule({ slices: [ruleSlice] })],
+        data: { rules: { conditions: [unreadable(stored)] } },
+      });
+      const saveSpy = vi.spyOn(harness.data, "save");
+
+      harness.settings.getSlice(ruleSlice).state.touched = true;
+      await vi.advanceTimersByTimeAsync(300);
+
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+      expect((saveSpy.mock.calls[0][0] as { rules: unknown }).rules).toEqual({ conditions: [stored], touched: true });
     });
 
     it("coalesces multiple mutations within the debounce window into one save", async () => {

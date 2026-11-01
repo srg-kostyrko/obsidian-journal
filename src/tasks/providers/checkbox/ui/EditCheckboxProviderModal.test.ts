@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import { m } from "@/i18n";
 import { SettingsService } from "@/settings";
+import { isUnreadable } from "@/settings/repair";
 import { testContainer } from "@/testing";
 
 import { tasksCoreModule } from "../../../module";
@@ -11,6 +12,8 @@ import { moveDefaultsSlice } from "../../../move/settings";
 import { checkboxSlice, type CheckboxSliceState } from "../slice";
 
 import EditCheckboxProviderModal from "./EditCheckboxProviderModal.vue";
+
+import type { CheckboxRule } from "../rule-schema";
 
 async function mount({
   expand = true,
@@ -22,6 +25,11 @@ async function mount({
   const { submit, cancel } = harness.renderModal(EditCheckboxProviderModal);
   if (expand) await toggleRollover();
   return { harness, slice, submit, cancel };
+}
+
+function readableRule(state: CheckboxSliceState): CheckboxRule {
+  if (isUnreadable(state.rule)) throw new Error(`rule held unreadable: ${JSON.stringify(state.rule)}`);
+  return state.rule;
 }
 
 async function toggleRollover(): Promise<void> {
@@ -60,14 +68,14 @@ describe("EditCheckboxProviderModal", () => {
     const { slice } = await mount();
     const beforeStatusMap = structuredClone({ ...slice.state.statusMap });
     const beforeCanonical = structuredClone({ ...slice.state.canonical });
-    const beforeConditionCount = slice.state.rule.conditions.length;
+    const beforeConditionCount = readableRule(slice.state).conditions.length;
 
     await userEvent.click(screen.getByTestId("status-map-remove-/"));
     await userEvent.click(screen.getByTestId("rule-add-condition"));
 
     expect(slice.state.statusMap).toEqual(beforeStatusMap);
     expect(slice.state.canonical).toEqual(beforeCanonical);
-    expect(slice.state.rule.conditions).toHaveLength(beforeConditionCount);
+    expect(readableRule(slice.state).conditions).toHaveLength(beforeConditionCount);
   });
 
   it("writes the staged status map on Save", async () => {
@@ -97,7 +105,7 @@ describe("EditCheckboxProviderModal", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    expect(slice.state.rule.conditions).toHaveLength(1);
+    expect(readableRule(slice.state).conditions).toHaveLength(1);
   });
 });
 
@@ -265,8 +273,12 @@ describe("rule editor", () => {
 
     await save();
 
-    expect(slice.state.rule.conditions).toHaveLength(2);
-    expect(slice.state.rule.conditions).toContainEqual({ type: "status", condition: "is", statuses: ["done"] });
+    expect(readableRule(slice.state).conditions).toHaveLength(2);
+    expect(readableRule(slice.state).conditions).toContainEqual({
+      type: "status",
+      condition: "is",
+      statuses: ["done"],
+    });
   });
 
   it("adds a tag condition to the global rule, on Save", async () => {
@@ -276,8 +288,8 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await save();
 
-    expect(slice.state.rule.conditions).toHaveLength(1);
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", condition: "has" });
+    expect(readableRule(slice.state).conditions).toHaveLength(1);
+    expect(readableRule(slice.state).conditions.at(0)).toMatchObject({ type: "tag", condition: "has" });
   });
 
   // The store has to hold the spelling metadataCache uses, whatever the user typed — identifies()
@@ -289,7 +301,7 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await save();
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
+    expect(readableRule(slice.state).conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
   });
 
   // userEvent.type is per-character. Typing left to right, appending one value after another,
@@ -305,7 +317,7 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "#work, #home");
     await save();
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#work", "#home"] });
+    expect(readableRule(slice.state).conditions.at(0)).toMatchObject({ type: "tag", tags: ["#work", "#home"] });
   });
 
   // The actual reproduction: a per-keystroke commit re-derives the whole value list from the
@@ -367,7 +379,7 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_heading()), "Work, Home");
     await save();
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "heading", headings: ["Work", "Home"] });
+    expect(readableRule(slice.state).conditions.at(0)).toMatchObject({ type: "heading", headings: ["Work", "Home"] });
   });
 
   // The markdown "#" markers a heading is typed with have to come off before the value reaches
@@ -382,7 +394,7 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_heading()), "## Work");
     await save();
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "heading", headings: ["Work"] });
+    expect(readableRule(slice.state).conditions.at(0)).toMatchObject({ type: "heading", headings: ["Work"] });
   });
 
   // Switching the condition type replaces the whole condition object (tags and headings cannot
@@ -413,7 +425,7 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await userEvent.click(screen.getByText(m.common_action_submit()));
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
+    expect(readableRule(slice.state).conditions.at(0)).toMatchObject({ type: "tag", tags: ["#task"] });
   });
 
   it("removes a condition from the global rule, on Save", async () => {
@@ -427,7 +439,7 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
     await save();
 
-    expect(slice.state.rule.conditions).toHaveLength(1);
+    expect(readableRule(slice.state).conditions).toHaveLength(1);
   });
 
   it("replaces a condition's fields when its type changes, rather than mixing tags and headings, on Save", async () => {
@@ -439,12 +451,12 @@ describe("rule editor", () => {
     await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_heading()), "Work");
     await save();
 
-    expect(slice.state.rule.conditions.at(0)).toMatchObject({
+    expect(readableRule(slice.state).conditions.at(0)).toMatchObject({
       type: "heading",
       condition: "under",
       headings: ["Work"],
     });
-    expect(slice.state.rule.conditions.at(0)).not.toHaveProperty("tags");
+    expect(readableRule(slice.state).conditions.at(0)).not.toHaveProperty("tags");
   });
 
   it("changes the rule's match mode, on Save", async () => {
@@ -454,7 +466,7 @@ describe("rule editor", () => {
     await userEvent.selectOptions(modeSelect, m.tasks_settings_mode_or());
     await save();
 
-    expect(slice.state.rule.mode).toBe("or");
+    expect(readableRule(slice.state).mode).toBe("or");
   });
 
   // `closest(".setting-item")` finds ANY ancestor, so it would still pass if a second setting
@@ -477,7 +489,7 @@ describe("rule editor", () => {
 describe("empty-condition validation", () => {
   it("disables Save while a condition has no values, and Save never reaches the slice", async () => {
     const { slice } = await mount();
-    const before = slice.state.rule.conditions.length;
+    const before = readableRule(slice.state).conditions.length;
 
     await userEvent.click(screen.getByTestId("rule-add-condition"));
     const saveButton: HTMLButtonElement = screen.getByText(m.common_action_submit());
@@ -485,7 +497,7 @@ describe("empty-condition validation", () => {
 
     await userEvent.click(saveButton);
 
-    expect(slice.state.rule.conditions).toHaveLength(before);
+    expect(readableRule(slice.state).conditions).toHaveLength(before);
   });
 
   // The value only reaches the condition model at a commit boundary (blur or Enter), not on
@@ -649,5 +661,27 @@ describe("roll over defaults", () => {
     await userEvent.click(screen.getByText(m.common_action_cancel()));
 
     expect(defaults.state.mode).toBe("copy");
+  });
+});
+
+describe("EditCheckboxProviderModal with a vault rule this version cannot read", () => {
+  const held = { type: "unreadable", raw: { mode: "xor", conditions: [] } } as const;
+
+  it("says so, and an untouched Save writes it back as it was", async () => {
+    const { slice } = await mount({ expand: false, seed: (state) => (state.rule = held) });
+    expect(screen.getByText(m.tasks_rule_summary_unreadable())).toBeTruthy();
+
+    await save();
+
+    expect(slice.state.rule).toEqual(held);
+  });
+
+  it("is replaced once a condition is added and saved", async () => {
+    const { slice } = await mount({ expand: false, seed: (state) => (state.rule = held) });
+    await userEvent.click(screen.getByTestId("rule-add-condition"));
+    await userEvent.type(screen.getByLabelText(m.tasks_settings_condition_tag()), "task");
+    await save();
+
+    expect(readableRule(slice.state).conditions).toEqual([{ type: "tag", condition: "has", tags: ["#task"] }]);
   });
 });

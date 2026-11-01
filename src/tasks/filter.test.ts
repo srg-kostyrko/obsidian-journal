@@ -124,6 +124,26 @@ describe("matchesFilter", () => {
   });
 });
 
+describe("matchesFilter with a condition it cannot read", () => {
+  const item = buildTaskItem({
+    display: { kind: "line", path, line: 3, endLine: 3, parentLine: null, markdown: null },
+  });
+  const unreadable = { type: "unreadable", raw: { type: "tag", condition: "lack", tags: ["#work"] } } as const;
+
+  it("matches nothing under and, rather than dropping the condition and widening the rule", () => {
+    expect(matchesFilter(item, structure, { mode: "and", conditions: [unreadable] })).toBe(false);
+  });
+
+  it("lets the readable conditions decide under or", () => {
+    const tagged: TaskRule = {
+      mode: "or",
+      conditions: [unreadable, { type: "tag", condition: "has", tags: ["#work"] }],
+    };
+    expect(matchesFilter(item, structure, tagged)).toBe(true);
+    expect(matchesFilter(item, structure, { mode: "or", conditions: [unreadable] })).toBe(false);
+  });
+});
+
 describe("composeFilters", () => {
   it("ands a journal's conditions into the query's", () => {
     const composed = composeFilters(under("Tasks"), {

@@ -10,7 +10,7 @@ import UiSettingRow from "@/ui/UiSettingRow.vue";
 import { defaultTaskCondition } from "./rule-condition-defaults";
 import RuleConditionRow from "./RuleConditionRow.vue";
 
-import type { TaskCondition } from "../conditions";
+import type { StoredTaskCondition, TaskCondition } from "../conditions";
 
 // Typed as the mode/conditions pair rather than a named rule type so every caller (the checkbox
 // identification editors and the listing filter's) can bind the same editor to its own rule shape
@@ -18,7 +18,7 @@ import type { TaskCondition } from "../conditions";
 // Conditions are the full TaskCondition union: which arms this instance actually offers is a
 // runtime question, answered by `types` below, not a question the model's own type can answer —
 // see RuleConditionRow.vue for why the checkbox editors still never produce a status condition.
-const rule = defineModel<{ mode: "and" | "or"; conditions: TaskCondition[] }>({ required: true });
+const rule = defineModel<{ mode: "and" | "or"; conditions: StoredTaskCondition[] }>({ required: true });
 
 // `label`/`description` are required, not defaulted to the identification-rule wording: the
 // listing filter's editor names a different thing, and a silent default would make one caller's
@@ -43,7 +43,7 @@ const props = withDefaults(
 // silently reassign an index-keyed touched flag to the wrong row. "Add condition" creates an
 // empty row by design, so its error stays quiet until the user has actually left its input once —
 // showing it immediately would flag the normal first moment of editing as a mistake.
-const touched = reactive(new Set<TaskCondition>());
+const touched = reactive(new Set<StoredTaskCondition>());
 
 function addCondition(): void {
   // `.at(0)` rather than a non-null assertion: every caller passes a non-empty `types`, but
@@ -94,7 +94,16 @@ const shownErrors = computed(() => {
     class="tasks-rule-condition-row"
     data-testid="rule-condition-row"
   >
-    <RuleConditionRow v-model="rule.conditions[index]" :types="types" @blur="touched.add(condition)" />
+    <span v-if="condition.type === 'unreadable'" class="tasks-rule-condition-unreadable">
+      {{ m.tasks_condition_unreadable() }}
+    </span>
+    <RuleConditionRow
+      v-else
+      :model-value="condition"
+      :types="types"
+      @update:model-value="rule.conditions[index] = $event"
+      @blur="touched.add(condition)"
+    />
     <UiIconButton
       :icon="icons.action.delete"
       :tooltip="m.common_action_delete()"
@@ -115,6 +124,10 @@ const shownErrors = computed(() => {
 .tasks-rule-condition-row :deep(.setting-item-control > select) {
   width: auto;
   max-width: none;
+}
+.tasks-rule-condition-unreadable {
+  grid-column: 1 / -2;
+  color: var(--text-error);
 }
 .tasks-form-error {
   color: var(--text-error);

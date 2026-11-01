@@ -2485,11 +2485,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "sans état",
+  "tasks_condition_unreadable": "Cette condition est illisible, donc rien n’y correspond.",
   "tasks_status_group_open": "Ouvertes",
   "tasks_status_group_done": "Terminées",
   "tasks_status_group_all": "Toutes",
   "tasks_filter_summary_conditions": "Affiche une tâche qui est {conditions}.",
   "tasks_rule_summary_any": "Aucune condition — tout élément de liste avec case à cocher dans les notes d’un journal est une tâche.",
+  "tasks_rule_summary_unreadable": "Une partie de cette règle est illisible, donc rien ne correspond.",
   "tasks_rule_summary_conditions": "Compte un élément de liste avec case à cocher qui est {conditions}.",
   "tasks_journal_summary_inherit": "Hérite de la règle de tout le coffre-fort.",
   "tasks_journal_summary_narrow": "Restreint la règle de tout le coffre-fort avec : {rule}",

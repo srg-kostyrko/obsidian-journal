@@ -1,15 +1,22 @@
 import { match } from "ts-pattern";
 
 import type { NoteStructure, StructureListItem } from "@/infrastructure/host";
+import { isUnreadable } from "@/settings/repair";
 
 import { headingsOf, tagsOf } from "../../note-structure";
 
-import type { CheckboxCondition, CheckboxJournalRule, CheckboxRule } from "./rule-schema";
+import type {
+  CheckboxCondition,
+  CheckboxJournalRule,
+  CheckboxRule,
+  StoredCheckboxJournalRule,
+  StoredCheckboxRule,
+} from "./rule-schema";
 
 export interface IdentificationContext {
   readonly structure: NoteStructure;
-  readonly vault: CheckboxRule;
-  readonly journal: CheckboxJournalRule | null;
+  readonly vault: StoredCheckboxRule;
+  readonly journal: StoredCheckboxJournalRule | null;
 }
 
 function check(condition: CheckboxCondition, item: StructureListItem, structure: NoteStructure): boolean {
@@ -30,6 +37,7 @@ function check(condition: CheckboxCondition, item: StructureListItem, structure:
       // Identification decides what counts as a task; a status condition belongs to filtering and
       // never constrains it.
       .with({ type: "status" }, () => true)
+      .with({ type: "unreadable" }, () => false)
       .exhaustive()
   );
 }
@@ -49,6 +57,7 @@ function evaluate(
 
 export function identifies(item: StructureListItem, context: IdentificationContext): boolean {
   const { structure, vault, journal } = context;
+  if (isUnreadable(journal) || isUnreadable(vault)) return false;
   if (!journal || journal.compose === "inherit") return evaluate(vault, item, structure);
   if (journal.compose === "replace") return evaluate(journal, item, structure);
   return evaluate(vault, item, structure) && evaluate(journal, item, structure);

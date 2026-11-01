@@ -23,7 +23,7 @@ import type { CheckboxCondition } from "./rule-schema";
 
 export function buildCheckboxRuleFormSchema() {
   const schemas = buildConditionFormSchemas();
-  const checkboxConditionFormSchema = v.variant("type", [schemas.tag, schemas.heading]);
+  const checkboxConditionFormSchema = v.variant("type", [schemas.tag, schemas.heading, schemas.unreadable]);
 
   return v.object({
     mode: v.picklist(["and", "or"]),

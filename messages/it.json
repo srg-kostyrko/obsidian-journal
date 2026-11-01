@@ -2485,11 +2485,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "senza stato",
+  "tasks_condition_unreadable": "Questa condizione non è leggibile, quindi nulla la soddisfa.",
   "tasks_status_group_open": "Aperte",
   "tasks_status_group_done": "Completate",
   "tasks_status_group_all": "Tutte",
   "tasks_filter_summary_conditions": "Mostra un'attività che è {conditions}.",
   "tasks_rule_summary_any": "Nessuna condizione — ogni elemento di elenco con casella nelle note di un diario è un'attività.",
+  "tasks_rule_summary_unreadable": "Una parte di questa regola non è leggibile, quindi nulla corrisponde.",
   "tasks_rule_summary_conditions": "Conta un elemento di elenco con casella che è {conditions}.",
   "tasks_journal_summary_inherit": "Eredita la regola di tutto il vault.",
   "tasks_journal_summary_narrow": "Restringe la regola di tutto il vault con: {rule}",

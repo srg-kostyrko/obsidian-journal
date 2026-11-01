@@ -146,4 +146,12 @@ describe("identifies", () => {
     };
     expect(identifies(item, { structure, vault: statusAndTag, journal: null })).toBe(false);
   });
+  it("counts no checkbox a task under a rule holding a condition it cannot read", () => {
+    const unreadable = {
+      mode: "and" as const,
+      conditions: [{ type: "unreadable" as const, raw: { type: "tag", condition: "lack", tags: ["#habit"] } }],
+    };
+    expect(identifies(item, { structure, vault: unreadable, journal: null })).toBe(false);
+    expect(identifies(item, { structure, vault: empty, journal: { ...unreadable, compose: "replace" } })).toBe(false);
+  });
 });

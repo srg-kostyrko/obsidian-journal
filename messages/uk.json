@@ -2552,11 +2552,13 @@
     }
   ],
   "tasks_condition_status_describe_empty": "без вказаного статусу",
+  "tasks_condition_unreadable": "Цю умову не вдається прочитати, тому їй нічого не відповідає.",
   "tasks_status_group_open": "Відкриті",
   "tasks_status_group_done": "Виконані",
   "tasks_status_group_all": "Усі",
   "tasks_filter_summary_conditions": "Показує завдання, яке {conditions}.",
   "tasks_rule_summary_any": "Немає умов — кожен пункт списку з чекбоксом у нотатках журналу вважається завданням.",
+  "tasks_rule_summary_unreadable": "Частину цього правила не вдається прочитати, тому нічого не підходить.",
   "tasks_rule_summary_conditions": "Враховує пункт списку з чекбоксом, який {conditions}.",
   "tasks_journal_summary_inherit": "Успадковує правило всього сховища.",
   "tasks_journal_summary_narrow": "Звужує правило всього сховища: {rule}",

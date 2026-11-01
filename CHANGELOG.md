@@ -58,9 +58,11 @@ All notable changes to this project will be documented in this file.
 - A setting that can't be read no longer resets everything around it. A navigation block keeps its
   other segments, a calendar or startup section keeps its other options, a notelet type keeps its
   folder, templates and counter, a decoration keeps its other styles, a shelf keeps its other
-  decorations, and a journal's listing filter keeps its other conditions; only the unreadable value
-  goes back to its default or is left out. A decoration with an unreadable condition is still dropped
-  whole, so it never marks days it wasn't set up to mark. A view block with one unreadable setting
+  decorations; only the unreadable value goes back to its default or is left out. A decoration with
+  an unreadable condition is still dropped whole, so it never marks days it wasn't set up to mark. A
+  tasks setting — a listing filter, which checkbox items count as tasks, **Dated tasks** or **Task
+  notes** — keeps an unreadable part as it was stored and treats it as matching nothing, so it shows
+  less rather than more, and its editor says which part can't be read. A view block with one unreadable setting
   now shows with that setting at its default, instead of an error saying its settings are not valid.
   The error stays for an unreadable choice of journals, notelet types, task sources or hidden
   weekdays, whose default would show everything that choice left out.
