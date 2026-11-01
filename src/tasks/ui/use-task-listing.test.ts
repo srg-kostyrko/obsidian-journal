@@ -35,6 +35,14 @@ function taskItem(path: VaultPath, key: string, markdown: string, status: TaskSt
   };
 }
 
+function lineDisplay(path: VaultPath): TaskItem["display"] {
+  return { kind: "line", path, line: 0, endLine: 0, parentLine: null, markdown: null };
+}
+
+function rowMarkdown(row: { readonly item: TaskItem }): string | null {
+  return row.item.display.kind === "line" ? row.item.display.markdown : null;
+}
+
 function requestFor(anchor: AnchorString): TaskListingRequest {
   return { kind: "period", hostJournal: "daily", anchor, journalNames: ["daily"], query: DEFAULT_TASK_QUERY };
 }
@@ -76,6 +84,23 @@ function setDailyStatuses(harness: TestHarness, statuses: string[]): void {
       },
     }),
   );
+}
+
+async function listingOverNote() {
+  const notes = new FakeNotesService();
+  const harness = await testContainer({
+    modules: [journalsCoreModule, tasksCoreModule],
+    data: { journals: { daily: fixedJournal("daily", { type: "day" }) } },
+    overrides: [overrideWith(NotesService, notes as never)],
+  });
+  const path = "Daily/2026-09-22.md" as VaultPath;
+  notes.seed(path, "- [ ] Pay", {}, { mtime: 1 });
+  harness.resolve(JournalsIndex).register({ journalName: "daily", anchor: "2026-09-22" as AnchorString, path });
+  const tasks = harness.resolve(TaskIndex);
+  tasks.publish("test", { path }, [{ ...taskItem(path, "t1", ""), display: lineDisplay(path) }]);
+  const listing = mountListing(harness, () => requestFor("2026-09-22" as AnchorString));
+  await vi.waitFor(() => expect(listing.rows.value.map(rowMarkdown)).toEqual(["- [ ] Pay"]));
+  return { notes, path, tasks, listing };
 }
 
 describe("useTaskListing", () => {
@@ -387,5 +412,30 @@ describe("useTaskListing", () => {
     notes.emitMetadataChanged(path);
 
     await vi.waitFor(() => expect(rows.value.map((row) => row.source.path)).toEqual([path]));
+  });
+
+  // Rewording a line leaves its item, and so the task index, unchanged on purpose: a bump would
+  // re-evaluate every mounted decoration. The listing re-reads its own notes instead.
+  describe("a note the listing shows is edited without changing its items", () => {
+    it("shows the new text once the note's metadata changes", async () => {
+      const { notes, path, tasks, listing } = await listingOverNote();
+      const versionBefore = tasks.version();
+
+      notes.seed(path, "- [ ] Pay rent", {}, { mtime: 2 });
+      notes.emitMetadataChanged(path);
+
+      await vi.waitFor(() => expect(listing.rows.value.map(rowMarkdown)).toEqual(["- [ ] Pay rent"]));
+      expect(tasks.version()).toBe(versionBefore);
+    });
+
+    it("does not rebuild for a note it does not show", async () => {
+      const { notes, listing } = await listingOverNote();
+      const rowsBefore = listing.rows.value;
+
+      notes.emitMetadataChanged("Other/note.md" as VaultPath);
+      await nextTick();
+
+      expect(listing.rows.value).toBe(rowsBefore);
+    });
   });
 });

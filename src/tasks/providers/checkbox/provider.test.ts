@@ -1088,13 +1088,15 @@ describe("CheckboxTaskProvider content refill", () => {
     expect(index.version()).toBe(before);
   });
 
-  // A listing rebuilds only off the index version, so an edit a listing would show or filter on has
+  // A filter or a tasks decoration rebuilds only off the index version, so an edit either reads has
   // to reach the index as a changed item even when no line moved and no status changed.
   describe("an edit to an undated line in a journal's note", () => {
     const workDay = "Work/2026-09-22.md" as VaultPath;
     const owner = { journalName: "Work", anchor: anchor("2026-09-22") };
 
-    it("bumps the version when the line is reworded", async () => {
+    // The listing refreshes its own notes' text off metadata-changed; a version bump would also
+    // re-evaluate every mounted decoration, none of which reads a line's text.
+    it("leaves the version alone when the line is only reworded", async () => {
       const { tasks, notes } = await startedCheckboxes(
         { [workDay]: { text: "- [ ] Pay", lines: [0], owner } },
         { Work: fixedJournal("Work", { type: "day" }) },
@@ -1105,9 +1107,7 @@ describe("CheckboxTaskProvider content refill", () => {
       notes.emitMetadataChanged(workDay);
       await settle();
 
-      expect(tasks.version()).toBeGreaterThan(before);
-      const [hydrated] = await tasks.hydrate(tasks.itemsIn(workDay));
-      expect(hydrated?.display).toMatchObject({ markdown: "- [ ] Pay rent" });
+      expect(tasks.version()).toBe(before);
     });
 
     it("bumps the version when the heading above it is renamed", async () => {

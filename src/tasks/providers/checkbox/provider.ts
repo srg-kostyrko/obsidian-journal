@@ -10,15 +10,7 @@ import { admitsSubject, referencedProperties } from "@/tasks/visibility-rule/rul
 
 import { TaskHostToken, type OwnedNote, type TaskItem, type TaskProvider } from "../../types";
 
-import {
-  CHECKBOX_PROVIDER_ID,
-  extractItems,
-  lineDatesOf,
-  lineMarkdownOf,
-  lineStampOf,
-  type LineDates,
-  type LineMarkdown,
-} from "./extract";
+import { CHECKBOX_PROVIDER_ID, extractItems, lineDatesOf, lineStampOf, type LineDates } from "./extract";
 import { checkboxJournalRuleSchema, type CheckboxJournalRule } from "./rule-schema";
 import { checkboxSlice } from "./slice";
 import CheckboxJournalRow from "./ui/CheckboxJournalRow.vue";
@@ -34,10 +26,9 @@ export function parseJournalRule(rule: unknown): CheckboxJournalRule | null {
 interface CachedLineDates {
   readonly lines: string;
   readonly dates: LineDates;
-  readonly markdown: LineMarkdown;
 }
 
-const NO_LINE_DATES: CachedLineDates = { lines: "", dates: new Map(), markdown: new Map() };
+const NO_LINE_DATES: CachedLineDates = { lines: "", dates: new Map() };
 
 export class CheckboxTaskProvider implements TaskProvider {
   readonly #host = inject(TaskHostToken);
@@ -108,8 +99,7 @@ export class CheckboxTaskProvider implements TaskProvider {
     // indexed under.
     // Dates are keyed by line, so once the task lines have moved a cached entry would hang them on
     // whichever item now sits there; until the re-read lands the note fills undated instead.
-    const current = cached?.lines === lineStampOf(structure.value) ? cached : undefined;
-    const lineDates = current?.dates;
+    const lineDates = cached?.lines === lineStampOf(structure.value) ? cached.dates : undefined;
     return extractItems({
       path,
       structure: structure.value,
@@ -119,7 +109,6 @@ export class CheckboxTaskProvider implements TaskProvider {
       rolledMarker: this.#settings.state.rolledMarker,
       owned: owner !== undefined,
       lineDates,
-      lineMarkdown: current?.markdown,
       properties: lineDates === undefined || lineDates.size === 0 ? undefined : this.#snapshot(path),
     });
   }
@@ -157,7 +146,6 @@ export class CheckboxTaskProvider implements TaskProvider {
       this.#lineDates.set(path, {
         lines: lineStampOf(structure.value),
         dates: lineDatesOf(read.value, structure.value),
-        markdown: lineMarkdownOf(read.value, structure.value),
       });
     }
     return true;

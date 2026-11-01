@@ -13,7 +13,6 @@ import type { CheckboxJournalRule, CheckboxRule } from "./rule-schema";
 export const CHECKBOX_PROVIDER_ID = "checkbox";
 
 export type LineDates = ReadonlyMap<number, Partial<Record<TaskDateRole, AnchorString>>>;
-export type LineMarkdown = ReadonlyMap<number, string>;
 
 export interface ExtractInput {
   readonly path: VaultPath;
@@ -23,7 +22,6 @@ export interface ExtractInput {
   readonly statusMap: Record<string, string>;
   readonly owned: boolean;
   readonly lineDates: LineDates | undefined;
-  readonly lineMarkdown?: LineMarkdown;
   readonly rolledMarker: string;
   // The containing note's properties some journal's dated rule names; undefined when none does.
   readonly properties?: Readonly<Record<string, unknown>>;
@@ -61,8 +59,7 @@ function underRolledAncestor(
 }
 
 export function extractItems(input: ExtractInput): readonly TaskItem[] {
-  const { path, structure, vault, journal, statusMap, owned, lineDates, lineMarkdown, rolledMarker, properties } =
-    input;
+  const { path, structure, vault, journal, statusMap, owned, lineDates, rolledMarker, properties } = input;
   const byLine = new Map(structure.listItems.map((listItem) => [listItem.line, listItem]));
   const rolled = (listItem: StructureListItem): boolean =>
     carriesMarker(listItem, structure, rolledMarker) || underRolledAncestor(listItem, structure, rolledMarker, byLine);
@@ -86,11 +83,12 @@ export function extractItems(input: ExtractInput): readonly TaskItem[] {
         line: listItem.line,
         endLine: listItem.endLine,
         parentLine: listItem.parent,
-        // A listing rebuilds only off the index version, so the text it shows and filters on rides
-        // along: an edit that rewords a line, or adds a tag to it, is then a changed item.
-        markdown: lineMarkdown?.get(listItem.line) ?? null,
+        markdown: null,
       },
       dates: { ...dates },
+      // What a listing filter and a tasks decoration read, so editing a tag or a heading above an
+      // unchanged line is a changed item. The line's text stays out: nothing but a listing shows
+      // it, and every version bump re-evaluates every mounted decoration.
       facts: {
         tags: tagsOf(listItem, structure),
         headings: headingsOf(listItem.line, structure),
@@ -107,18 +105,6 @@ export function lineDatesOf(text: string, structure: NoteStructure): LineDates {
   for (const listItem of structure.listItems) {
     const dates = datesIn(lines.slice(listItem.line, listItem.endLine + 1).join("\n"));
     if (Object.keys(dates).length > 0) found.set(listItem.line, dates);
-  }
-  return found;
-}
-
-export function lineMarkdownOf(text: string, structure: NoteStructure): LineMarkdown {
-  const lines = text.split("\n");
-  const found = new Map<number, string>();
-  for (const listItem of structure.listItems) {
-    // Blank only when the line fell past end-of-file; left out so the item stays unhydrated, as
-    // TaskIndex.hydrate leaves it.
-    const markdown = lines.slice(listItem.line, listItem.endLine + 1).join("\n");
-    if (markdown !== "") found.set(listItem.line, markdown);
   }
   return found;
 }
