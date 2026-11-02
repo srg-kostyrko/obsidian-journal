@@ -71,6 +71,21 @@ async function listsRowContaining(fragment: string): Promise<boolean> {
   return texts.some((text) => text.includes(fragment));
 }
 
+// A row mounts before its line has text: it renders "" until hydration supplies the markdown, and
+// MarkdownRenderer fills the element after render() returns. So the row count settles first, and a
+// one-shot read of the lines can miss whichever row is still empty.
+async function renderedRowTexts(): Promise<string[]> {
+  let texts: string[] = [];
+  await browser.waitUntil(
+    async () => {
+      texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+      return texts.length > 0 && texts.every((text) => text.trim() !== "");
+    },
+    { timeoutMsg: "waited for every task row to render its line" },
+  );
+  return texts;
+}
+
 describe("journal-tasks fence", () => {
   before(async () => {
     await browser.reloadObsidian({ vault: FIXTURE, plugins: ["journals"] });
@@ -84,7 +99,7 @@ describe("journal-tasks fence", () => {
     // toBeElementsArrayOfSize auto-retries, unlike a one-shot $$().length read.
     await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
-    const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+    const texts = await renderedRowTexts();
     expect(texts[0]).toContain("Ship it");
     expect(texts[1]).toContain("Write the spec");
     expect(texts[2]).toContain("Draft the outline");
@@ -106,7 +121,7 @@ describe("journal-tasks fence", () => {
     await openInReadingMode(DAY_NOTE);
     await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
-    const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+    const texts = await renderedRowTexts();
     const nested = texts.findIndex((text) => text.includes("Draft the outline"));
     expect(nested).toBeGreaterThanOrEqual(0);
 
@@ -123,7 +138,7 @@ describe("journal-tasks fence", () => {
     await openInReadingMode(DAY_NOTE);
     await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
-    const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+    const texts = await renderedRowTexts();
     const quoted = texts.findIndex((text) => text.includes("Raise the blocker"));
     expect(quoted).toBeGreaterThanOrEqual(0);
 
@@ -140,7 +155,7 @@ describe("journal-tasks fence", () => {
     await openInReadingMode(DAY_NOTE);
     await expect($$(TASK_ROWS)).toBeElementsArrayOfSize(6);
 
-    const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+    const texts = await renderedRowTexts();
     const parent = texts.findIndex((text) => text.includes("Groceries run"));
     expect(parent).toBeGreaterThanOrEqual(0);
 
@@ -168,7 +183,7 @@ describe("journal-tasks fence", () => {
     // sort, which is not this test's concern. An index-based pick would silently start ticking a
     // different row the day that sort changes, turning this spec into a confusing failure in an
     // unrelated area instead of a clear one.
-    const texts = await $$(TASK_ROWS).map((row) => row.$(".task-listing-row__line").getText());
+    const texts = await renderedRowTexts();
     const shipItIndex = texts.findIndex((text) => text.includes("Ship it"));
     expect(shipItIndex).toBeGreaterThanOrEqual(0);
     await $$(TASK_ROWS)[shipItIndex].$("input[type=checkbox]").click();
