@@ -205,20 +205,20 @@ export class WorkspaceService {
   // edit is not a focus change and a popout's unsaved typing is lost to a disk write all the same.
   // A deferred view has no file and no editor yet, so it holds nothing unsaved.
   #editorHolding(path: VaultPath): Editor | undefined {
-    const active = this.#app.workspace.activeEditor;
-    if (active?.file?.path === path && active.editor !== undefined) return active.editor;
-    return this.#markdownViewHolding(path)?.editor;
+    const active = this.#editingView();
+    if (active?.file?.path === path) return active.editor;
+    return this.#editingMarkdownViewHolding(path)?.editor;
   }
 
   // The active editor can be an embed — a canvas card, an editable hover popover — which is no
   // MarkdownView and saves itself on its own terms, so only a MarkdownView is ever saved directly.
-  #markdownViewHolding(path: VaultPath): MarkdownView | undefined {
+  #editingMarkdownViewHolding(path: VaultPath): MarkdownView | undefined {
     const active = this.#app.workspace.activeEditor;
-    if (active instanceof MarkdownView && active.file?.path === path) return active;
+    if (active instanceof MarkdownView && active.file?.path === path && active.getMode() === "source") return active;
     for (const leaf of this.#app.workspace.getLeavesOfType("markdown")) {
       if (leaf.isDeferred) continue;
       const view = leaf.view;
-      if (view instanceof MarkdownView && view.file?.path === path) return view;
+      if (view instanceof MarkdownView && view.file?.path === path && view.getMode() === "source") return view;
     }
     return undefined;
   }
@@ -341,7 +341,7 @@ export class WorkspaceService {
   /** Saves the open view of `path`, unsaved typing included; nothing when no view holds it. */
   saveOpenNote(path: VaultPath): AsyncResult<void, NoteWriteError> {
     // With only an embed holding the note there is nothing to flush here; the embed autosaves.
-    const view = this.#markdownViewHolding(path);
+    const view = this.#editingMarkdownViewHolding(path);
     return AsyncResult.fromPromise(
       (async () => {
         await view?.save();

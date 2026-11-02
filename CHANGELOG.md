@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+- Fixed rolling over tasks to a note that's open in reading mode.
+
 ## [3.6.0] - 2026-11-01
 
 ### Features
