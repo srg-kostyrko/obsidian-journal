@@ -590,7 +590,9 @@ export function createFakeHost(): FakeHost {
     if (existing) return existing;
     // Each window and its document are real event targets, so a service listening for focus or
     // visibility can be driven by dispatching the DOM event on them.
-    const document_ = Object.assign(new EventTarget(), { visibilityState: "visible" });
+    // A real document, so a service that writes into a window's <head> can be read back.
+    const document_ = document.implementation.createHTMLDocument("");
+    Object.defineProperty(document_, "visibilityState", { value: "visible", writable: true, configurable: true });
     const created = Object.assign(new EventTarget(), { id, document: document_ });
     Object.defineProperty(created, "activeWindow", { get: () => windowFor(workspaceState.activeWindow) });
     windowObjects.set(id, created as unknown as Window);
