@@ -13,7 +13,40 @@ import type { CellLocator } from "./calendar.js";
 // resolves neither the cascade nor the stacking-relevant computed values.
 
 const DECORATED_BG = "#123456";
+const RING_HEX = "#fedcba";
+const ACTIVE_BG_HEX = "#00aa55";
 const DAY = 15;
+const PLAIN_DAY = 16;
+
+interface CapturedBitmap {
+  toBitmap(): { length: number; readUInt8(offset: number): number };
+}
+interface ElectronHost {
+  electron?: { remote?: { getCurrentWebContents(): { capturePage(rect: object): Promise<CapturedBitmap> } } };
+}
+
+// Reads the pixel the compositor painted at a point inside a cell, off its label. Electron's
+// capturePage, not chromedriver's screenshot, which hangs against Obsidian. The capture is a small
+// square around the point, so the center pixel is found from the bitmap's own size whatever the
+// device pixel ratio is; toBitmap() is blue-green-red-alpha.
+async function paintedHex(anchor: string): Promise<string | undefined> {
+  const reply = await browser.execute(async (cellAnchor: string) => {
+    const box = document
+      .querySelector(`.notes-month-view__day[data-anchor="${CSS.escape(cellAnchor)}"]`)
+      ?.getBoundingClientRect();
+    const remote = (window as unknown as ElectronHost).electron?.remote;
+    if (box === undefined || remote === undefined) return null;
+    const x = Math.round(box.left + 6);
+    const y = Math.round(box.top + box.height / 2);
+    const image = await remote.getCurrentWebContents().capturePage({ x: x - 1, y: y - 1, width: 3, height: 3 });
+    const bytes = image.toBitmap();
+    const side = Math.round(Math.sqrt(bytes.length / 4));
+    const offset = (Math.floor(side / 2) * side + Math.floor(side / 2)) * 4;
+    return [bytes.readUInt8(offset + 2), bytes.readUInt8(offset + 1), bytes.readUInt8(offset)];
+  }, anchor);
+  if (reply === null) return undefined;
+  return `#${reply.map((channel) => channel.toString(16).padStart(2, "0")).join("")}`;
+}
 
 async function px(cell: CellLocator, selector: string, property: string): Promise<string | undefined> {
   const prop = await cell.$(selector).getCSSProperty(property);
@@ -78,7 +111,7 @@ describe("paint order of highlight states around a decoration", () => {
     expect(await layerZ(cell, "selected")).toBe("1");
     // WebDriver strips the spaces from a shorthand, so the ring color is read from its parse.
     const ring = await cell.$('[data-layer="selected"]').getCSSProperty("box-shadow");
-    expect((ring.parsed as { hex?: string }).hex).toBeDefined();
+    expect((ring.parsed as { hex?: string }).hex?.toLowerCase()).toBe(RING_HEX);
     expect(await px(cell, '[data-testid="cell-decoration"]', "z-index")).toBe("auto");
     expect(await decorationBackgroundHex(cell)).toBe(DECORATED_BG);
   });
@@ -92,7 +125,7 @@ describe("paint order of highlight states around a decoration", () => {
     expect(await px(cell, ".cell-marks", "z-index")).toBe("2");
   });
 
-  it("the focus outline still shows on a selected cell", async () => {
+  it("keeps the 2px focus-visible outline on a selected cell", async () => {
     // Tab out of the grid and back, so the cell takes focus by keyboard and :focus-visible matches.
     await browser.execute((anchor) => {
       document.querySelector<HTMLElement>(`.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"]`)?.focus();
@@ -112,6 +145,37 @@ describe("paint order of highlight states around a decoration", () => {
     );
     const width = await cell.getCSSProperty("outline-width");
     expect(typeof width.parsed.value === "number" ? Math.round(width.parsed.value) : width.value).toBe(2);
+  });
+});
+
+describe("the open-note fill on a cell with no decoration", () => {
+  before(async () => {
+    await browser.reloadObsidian({ vault: "./e2e-tests/fixtures/e2e-paint-order", plugins: ["journals"] });
+  });
+
+  after(closePopoutWindows);
+
+  it("paints the saved active background", async () => {
+    const anchor = dayAnchor(PLAIN_DAY);
+    await seedNote(`day/${anchor}.md`, note("daily", anchor, "plain"));
+    await openCalendarView();
+    await clickCell(anchor, false);
+    await waitForActiveNote(`day/${anchor}.md`);
+    await calendar.waitForActive(anchor);
+    await waitForState(
+      () => paintedHex(anchor),
+      (hex) => hex === ACTIVE_BG_HEX,
+      `the open note's cell did not paint ${ACTIVE_BG_HEX}`,
+    );
+  });
+
+  // The -1 fill layers only stay above a host's backgrounds because the cell isolates its own
+  // stacking context. In the sidebar Obsidian's `.workspace-leaf` isolates already, so no pixel
+  // differs when the cell's own isolation is dropped (measured), and the computed value is the
+  // only thing that can guard it for hosts that do not.
+  it("isolates its stacking context so the fill layers stay visible", async () => {
+    const cell = calendar.cell(dayAnchor(PLAIN_DAY));
+    expect(await cell.getCSSProperty("isolation")).toHaveProperty("value", "isolate");
   });
 });
 

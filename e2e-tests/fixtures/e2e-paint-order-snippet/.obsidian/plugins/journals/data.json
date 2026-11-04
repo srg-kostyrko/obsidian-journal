@@ -64,6 +64,17 @@
       ]
     }
   },
+  "appearance": {
+    "today": {
+      "color": { "type": "theme", "name": "text-accent" },
+      "background": { "type": "transparent" }
+    },
+    "active": {
+      "color": { "type": "theme", "name": "text-on-accent" },
+      "background": { "type": "custom", "color": "#00aa55" }
+    },
+    "selectedRing": { "type": "custom", "color": "#fedcba" }
+  },
   "views": {
     "b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c": {
       "id": "b9f3a1c2-0d4e-4f6a-8b1c-2d3e4f5a6b7c",
