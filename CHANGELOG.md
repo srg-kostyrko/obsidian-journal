@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Bug Fixes
 
-- The selected date's ring now shows over more than it did. It used to hide under a decoration background, so on a decorated day nothing marked where the calendar view was, and under any fill on the open note's day or on today. It now shows over a decoration, over the open note's fill and over today's background, unless its color matches the fill it sits on. The open note's fill still sits under a decoration, so the decoration's color, and what it means, stays visible on the note you are reading.
+- The selected date's ring now shows over more than it did. It used to hide under a decoration background, so on a decorated day nothing marked where the calendar view was, and under any fill on the open note's day or on today. It now shows over a decoration and its border, over the open note's fill and over today's background, unless its color matches the fill it sits on. The open note's fill still sits under a decoration, so the decoration's color, and what it means, stays visible on the note you are reading.
 
 ## [3.6.0] - 2026-11-01
 
