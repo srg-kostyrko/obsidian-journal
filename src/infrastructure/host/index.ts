@@ -13,7 +13,6 @@ export {
   WorkspaceOpenError,
 } from "./errors";
 export { AppActivity } from "./internal/app-activity";
-export { WindowCssVariables, type InstalledVariables } from "./internal/window-css-variables";
 export { MarkdownRenderService } from "./internal/markdown-render-service";
 export { MetadataTypeService } from "./internal/metadata-type-service";
 export { NoteMetadataService } from "./internal/note-metadata-service";
@@ -24,6 +23,7 @@ export { PlatformService, type DeviceKind } from "./internal/platform-service";
 export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";
 export { PluginSettingsReader } from "./internal/plugin-settings-reader";
+export { WindowCssVariables, type InstalledVariables } from "./internal/window-css-variables";
 export { WorkspaceService } from "./internal/workspace-service";
 export { TemplaterService } from "./internal/templater-service";
 export { TemplatesService } from "./internal/templates-service";
