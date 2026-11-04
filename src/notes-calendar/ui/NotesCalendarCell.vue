@@ -87,16 +87,17 @@ const hover = useModifierHoverPreview();
 /* [data-active] follows [data-today] so a cell that is both the open note and today resolves
    to the active colors — the note you're viewing wins over the today marker. */
 .notes-calendar-cell[data-today] {
-  color: var(--journal-cell-today-color);
-  background-color: var(--journal-cell-today-bg);
+  color: var(--journal-cell-today-color, var(--journal-saved-cell-today-color, var(--text-accent)));
+  background-color: var(--journal-cell-today-bg, var(--journal-saved-cell-today-bg, transparent));
 }
 .notes-calendar-cell[data-active] {
-  color: var(--journal-cell-active-color);
-  background-color: var(--journal-cell-active-bg);
+  color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--text-on-accent)));
+  background-color: var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)));
 }
 /* Decoration marks sit MARK_INSET_PX (resolve-cell.ts) in from the edge to clear this ring;
    widening it means widening that too. */
 .notes-calendar-cell[data-selected] {
-  box-shadow: inset 0 0 0 2px var(--journal-cell-selected-ring);
+  box-shadow: inset 0 0 0 2px
+    var(--journal-cell-selected-ring, var(--journal-saved-cell-selected-ring, var(--interactive-accent)));
 }
 </style>

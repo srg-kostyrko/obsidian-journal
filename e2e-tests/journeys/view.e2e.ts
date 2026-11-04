@@ -48,7 +48,15 @@ import {
   rightClickCell,
   seedDecorationFixture,
 } from "./decorations.js";
-import { calendar, LIVE_LEAF, MONTH_VIEW, openCalendarView, openSeededCalendarView, TOOLBAR } from "./view.js";
+import {
+  calendar,
+  LIVE_LEAF,
+  MONTH_VIEW,
+  openCalendarInPopout,
+  openCalendarView,
+  openSeededCalendarView,
+  TOOLBAR,
+} from "./view.js";
 
 import type { WorkspaceLeaf } from "obsidian";
 
@@ -86,45 +94,6 @@ async function shiftClickMainCalendarCell(anchor: string): Promise<void> {
     if (!cell) return;
     cell.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, shiftKey: true }));
   }, anchor);
-}
-
-async function openCalendarInPopout(): Promise<void> {
-  const opened = await browser.executeObsidian(async ({ app }) => {
-    const workspace = app.workspace as typeof app.workspace & {
-      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
-    };
-    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
-    let source: WorkspaceLeaf | undefined;
-    workspace.iterateAllLeaves((leaf) => {
-      if (
-        leaf.view.containerEl.ownerDocument.defaultView === mainWindow &&
-        leaf.view.getViewType().startsWith("journal-view:")
-      ) {
-        source = leaf;
-      }
-    });
-    if (!source) return false;
-    const popout = workspace.openPopoutLeaf();
-    await popout.setViewState(source.getViewState());
-    return true;
-  });
-  expect(opened).toBe(true);
-  await browser.waitUntil(
-    () =>
-      browser.executeObsidian(({ app }) => {
-        const workspace = app.workspace as typeof app.workspace & {
-          iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
-        };
-        const mainWindow = workspace.containerEl.ownerDocument.defaultView;
-        let rendered = false;
-        workspace.iterateAllLeaves((leaf) => {
-          if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
-          rendered ||= leaf.view.containerEl.querySelector(".notes-month-view") !== null;
-        });
-        return rendered;
-      }),
-    { timeoutMsg: "calendar view did not render in the popout window" },
-  );
 }
 
 function shiftClickPopoutCalendarCell(anchor: string): Promise<boolean> {
@@ -674,9 +643,8 @@ describe("calendar view", () => {
         "month period button did not become active",
       );
 
-      // --journal-cell-active-bg is bound per calendar surface, so it exists on the button
-      // itself, not on the document body. The probe resolves it from inside the button (custom
-      // properties inherit) so the assertion stays theme-independent.
+      // --journal-cell-active-bg is saved on the window body (as --journal-saved-cell-active-bg, absent while stock) and inherited, so the probe
+      // resolves it from inside the button and the assertion stays theme-independent.
       // The probe answers "no-button" when the toolbar has not painted, which is a render race
       // reported as a styling failure. Wait for the button itself first.
       await $(".journal-view-toolbar [data-period='month']").waitForDisplayed({
@@ -686,7 +654,8 @@ describe("calendar view", () => {
         const button = document.querySelector(".journal-view-toolbar [data-period='month']");
         if (!button) return "no-button";
         const probe = document.createElement("div");
-        probe.style.backgroundColor = "var(--journal-cell-active-bg)";
+        probe.style.backgroundColor =
+          "var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg, var(--interactive-accent)))";
         button.append(probe);
         const expected = getComputedStyle(probe).backgroundColor;
         probe.remove();

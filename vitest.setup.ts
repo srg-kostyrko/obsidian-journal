@@ -49,6 +49,9 @@ Object.assign(HTMLElement.prototype, {
   empty(this: HTMLElement): void {
     this.replaceChildren();
   },
+  setCssProps(this: HTMLElement, props: Record<string, string>): void {
+    for (const [name, value] of Object.entries(props)) this.style.setProperty(name, value);
+  },
   setText(this: HTMLElement, text: string): void {
     this.textContent = text;
   },

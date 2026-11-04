@@ -101,6 +101,7 @@ export class JournalViewLeaf extends ItemView {
   protected onOpen(): Promise<void> {
     const app = createApp(buildRootComponent(this.viewId, this.#state, this.injector));
     provideInjectorOnApp(app, this.injector);
+    this.contentEl.dataset.journalView = this.viewId;
     app.mount(this.contentEl);
     this.#vueApp = app;
     return Promise.resolve();

@@ -2,6 +2,7 @@ import type { Module } from "@/infrastructure/di";
 import { SliceDefinitionToken } from "@/settings";
 
 import { appearanceSlice } from "./slice";
+import { calendarAppearanceStartupModule } from "./startup-module";
 import { calendarAppearanceUiModule } from "./ui-module";
 
 export const calendarAppearanceCoreModule: Module = {
@@ -14,5 +15,6 @@ export const calendarAppearanceModule: Module = {
   register(c) {
     calendarAppearanceCoreModule.register(c);
     calendarAppearanceUiModule.register(c);
+    calendarAppearanceStartupModule.register(c);
   },
 };

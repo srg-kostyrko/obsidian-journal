@@ -23,6 +23,7 @@ export { PlatformService, type DeviceKind } from "./internal/platform-service";
 export { NotesService } from "./internal/notes-service";
 export { PluginData } from "./internal/plugin-data";
 export { PluginSettingsReader } from "./internal/plugin-settings-reader";
+export { WindowCssVariables, type InstalledVariables } from "./internal/window-css-variables";
 export { WorkspaceService } from "./internal/workspace-service";
 export { TemplaterService } from "./internal/templater-service";
 export { TemplatesService } from "./internal/templates-service";

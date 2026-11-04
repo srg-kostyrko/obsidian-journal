@@ -1,8 +1,10 @@
-import { $ } from "@wdio/globals";
+import { $, browser, expect } from "@wdio/globals";
 
 import { runCommand } from "../support/commands.js";
 
 import { calendarSurface } from "./calendar.js";
+
+import type { WorkspaceLeaf } from "obsidian";
 
 const RIBBON_OPEN_CALENDAR = '[aria-label="Open Calendar"]';
 // Re-clicking the ribbon leaves Obsidian's previous (deferred) calendar leaf in the
@@ -38,4 +40,44 @@ export async function openSeededCalendarView(): Promise<void> {
   await $(MONTH_VIEW).waitForExist({
     timeoutMsg: "calendar month view did not render after the open-calendar command",
   });
+}
+
+// Opens a copy of the main window's journal view in a popout and waits for its month grid.
+export async function openCalendarInPopout(): Promise<void> {
+  const opened = await browser.executeObsidian(async ({ app }) => {
+    const workspace = app.workspace as typeof app.workspace & {
+      iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+    };
+    const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+    let source: WorkspaceLeaf | undefined;
+    workspace.iterateAllLeaves((leaf) => {
+      if (
+        leaf.view.containerEl.ownerDocument.defaultView === mainWindow &&
+        leaf.view.getViewType().startsWith("journal-view:")
+      ) {
+        source = leaf;
+      }
+    });
+    if (!source) return false;
+    const popout = workspace.openPopoutLeaf();
+    await popout.setViewState(source.getViewState());
+    return true;
+  });
+  expect(opened).toBe(true);
+  await browser.waitUntil(
+    () =>
+      browser.executeObsidian(({ app }) => {
+        const workspace = app.workspace as typeof app.workspace & {
+          iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => void): void;
+        };
+        const mainWindow = workspace.containerEl.ownerDocument.defaultView;
+        let rendered = false;
+        workspace.iterateAllLeaves((leaf) => {
+          if (leaf.view.containerEl.ownerDocument.defaultView === mainWindow) return;
+          rendered ||= leaf.view.containerEl.querySelector(".notes-month-view") !== null;
+        });
+        return rendered;
+      }),
+    { timeoutMsg: "calendar view did not render in the popout window" },
+  );
 }
