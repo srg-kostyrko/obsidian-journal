@@ -4,7 +4,6 @@ import { CodeBlockService } from "./code-blocks/internal/code-block-service";
 import { CommandService } from "./commands/internal/command-service";
 import { InputSuggestService } from "./input-suggests/internal/input-suggest-service";
 import { AppActivity } from "./internal/app-activity";
-import { DocumentStyles } from "./internal/document-styles";
 import { MarkdownRenderService } from "./internal/markdown-render-service";
 import { MetadataTypeService } from "./internal/metadata-type-service";
 import { NoteMetadataService } from "./internal/note-metadata-service";
@@ -18,6 +17,7 @@ import { PluginSettingsReader } from "./internal/plugin-settings-reader";
 import { TemplaterService } from "./internal/templater-service";
 import { TemplatesService } from "./internal/templates-service";
 import { InternalObsidianAppToken, InternalPluginToken } from "./internal/tokens";
+import { WindowCssVariables } from "./internal/window-css-variables";
 import { WorkspaceService } from "./internal/workspace-service";
 import { modalsModule } from "./modals/module";
 import { SuggestService } from "./suggests/internal/suggest-service";
@@ -40,7 +40,7 @@ export function createHostModule(plugin: Plugin): Module {
       c.register(PlatformService).useClass(PlatformService);
       // Eager, so it is already listening when the first popout opens: a lazy instance misses it.
       c.register(AppActivity).useClass(AppActivity).eager();
-      c.register(DocumentStyles).useClass(DocumentStyles).eager();
+      c.register(WindowCssVariables).useClass(WindowCssVariables).eager();
       c.register(PluginSettingsReader).useClass(PluginSettingsReader);
       c.register(WorkspaceService).useClass(WorkspaceService).eager();
       c.register(TemplaterService).useClass(TemplaterService);
