@@ -213,6 +213,14 @@ describe("JournalViewLeaf", () => {
   });
 
   describe("rendering", () => {
+    it("marks its content element with the view id for snippets", async () => {
+      const { leafInstance } = await buildLeaf(buildView(VIEW_A));
+      const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
+      await leaf.onOpen();
+      expect(leafInstance.contentEl.dataset.journalView).toBe(VIEW_A);
+      await leaf.onClose();
+    });
+
     it("reports that the view was deleted when the view is None", async () => {
       const { leafInstance, containerEl } = await buildLeaf(null, { viewId: "missing" as ViewId });
       const leaf = leafInstance as unknown as { onOpen(): Promise<void>; onClose(): Promise<void> };
