@@ -95,5 +95,7 @@ describe("WindowCssVariables", () => {
     variables.install(() => ({ "--b": "2" }));
     expect(read(host.windowFor("main"))).toBe("");
     expect(read(host.windowFor("main"), "--b")).toBe("");
+    // A window opening after unload must not pick up an entry installed after it.
+    expect(read(openPopout(host, "late"), "--b")).toBe("");
   });
 });

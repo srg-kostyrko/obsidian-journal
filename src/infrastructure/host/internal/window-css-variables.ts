@@ -9,6 +9,16 @@ export interface InstalledVariables {
   remove(): void;
 }
 
+// A late installer may still hold its handle during teardown.
+const INERT: InstalledVariables = {
+  refresh: noop,
+  remove: noop,
+};
+
+function noop(): void {
+  return;
+}
+
 interface Entry {
   variables: () => Record<string, string>;
   applied: Map<Window, Set<string>>;
@@ -20,6 +30,7 @@ export class WindowCssVariables {
   readonly #plugin = inject(InternalPluginToken);
   readonly #entries = new Set<Entry>();
   readonly #windows = new Set<Window>();
+  #unloaded = false;
 
   constructor() {
     this.#windows.add(this.#app.workspace.containerEl.win);
@@ -33,6 +44,7 @@ export class WindowCssVariables {
     // Clearing the windows is what makes install and refresh no-ops afterwards: a settings watcher
     // may still fire during teardown.
     this.#plugin.register(() => {
+      this.#unloaded = true;
       for (const entry of this.#entries) this.#clear(entry);
       this.#entries.clear();
       this.#windows.clear();
@@ -70,6 +82,7 @@ export class WindowCssVariables {
   }
 
   install(variables: () => Record<string, string>): InstalledVariables {
+    if (this.#unloaded) return INERT;
     const entry: Entry = { variables, applied: new Map() };
     this.#entries.add(entry);
     for (const win of this.#windows) this.#write(entry, win);
