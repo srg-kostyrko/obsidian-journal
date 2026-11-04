@@ -132,7 +132,7 @@ export function decorationTextHex(cell: CellLocator): Promise<string | undefined
   return hexProp(decorationOf(cell), "color");
 }
 
-async function borderTop(cell: CellLocator): Promise<{ width: string; hex: string | undefined }> {
+export async function borderTop(cell: CellLocator): Promise<{ width: string; hex: string | undefined }> {
   const border = cell.$(".cell-decoration__border");
   const widthProp = await border.getCSSProperty("border-top-width");
   // Obsidian's default editor zoom scales the inline 3px down to a sub-pixel

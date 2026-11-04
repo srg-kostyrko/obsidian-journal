@@ -3,7 +3,7 @@ import { browser, expect } from "@wdio/globals";
 import { closePopoutWindows, seedNote, waitForActiveNote } from "../support/vault.js";
 import { waitForState } from "../support/wait.js";
 
-import { dayAnchor, decorationBackgroundHex, note } from "./decorations.js";
+import { borderTop, dayAnchor, decorationBackgroundHex, note } from "./decorations.js";
 import { calendar, openCalendarView } from "./view.js";
 
 import type { CellLocator } from "./calendar.js";
@@ -118,7 +118,8 @@ describe("paint order of highlight states around a decoration", () => {
 
   it("the selected ring sits above a decoration border", async () => {
     await cell.$(".cell-decoration__border").waitForExist({ timeoutMsg: "the decorated cell rendered no border" });
-    expect(await px(cell, ".cell-decoration__border", "border-top-width")).toBe("3px");
+    const { width } = await borderTop(cell);
+    expect(width).toBe("3px");
     expect(await px(cell, ".cell-decoration__border", "z-index")).toBe("auto");
     expect(await layerZ(cell, "selected")).toBe("1");
   });
