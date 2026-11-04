@@ -312,6 +312,10 @@ function layers(c: Element) {
 }
 
 describe("NotesCalendarCell state layers", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("renders a selected layer when selected", () => {
     const { container } = mount({ period: may25, cell: stubApi(), selected: true });
     const found = container.querySelectorAll('.notes-calendar-cell__layer[data-layer="selected"]');
