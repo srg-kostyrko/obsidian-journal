@@ -108,6 +108,16 @@ const hover = useModifierHoverPreview();
 .notes-calendar-cell :deep(.decoration-corner) {
   z-index: 2;
 }
+/* The isolated cell traps the popover's z-index, so later sibling cells would paint over its
+   overhang; lift the whole cell while the popover is open. */
+.notes-calendar-cell:has(.mark-overflow__popover) {
+  z-index: var(--layer-popover);
+}
+/* The marks precede the label in the DOM, so at an equal z-index the label paints over a popover
+   that overhangs the badge and takes the pointer, firing the badge's mouseleave. */
+.notes-calendar-cell :deep(.cell-marks:has(.mark-overflow__popover)) {
+  z-index: 3;
+}
 .notes-calendar-cell__layer {
   position: absolute;
   inset: 0;
