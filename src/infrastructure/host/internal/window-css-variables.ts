@@ -14,7 +14,7 @@ interface Entry {
   applied: Map<Window, Set<string>>;
 }
 
-/** Keeps one set of CSS custom properties on the root element of every open window, main and pop-out. */
+/** Keeps one set of CSS custom properties on the body of every open window, main and pop-out. */
 export class WindowCssVariables {
   readonly #app = inject(InternalObsidianAppToken);
   readonly #plugin = inject(InternalPluginToken);
@@ -52,7 +52,7 @@ export class WindowCssVariables {
 
   #write(entry: Entry, win: Window): void {
     const next = entry.variables();
-    const root = win.document.documentElement;
+    const root = win.document.body;
     const names = new Set(Object.keys(next));
     const previous = entry.applied.get(win) ?? new Set<string>();
     for (const name of previous) {
@@ -64,7 +64,7 @@ export class WindowCssVariables {
 
   #clear(entry: Entry): void {
     for (const [win, names] of entry.applied) {
-      for (const name of names) win.document.documentElement.style.removeProperty(name);
+      for (const name of names) win.document.body.style.removeProperty(name);
     }
     entry.applied.clear();
   }

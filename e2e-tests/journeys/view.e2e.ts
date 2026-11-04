@@ -643,7 +643,7 @@ describe("calendar view", () => {
         "month period button did not become active",
       );
 
-      // --journal-cell-active-bg lives on the window root and is inherited, so the probe
+      // --journal-cell-active-bg is saved on the window body (as --journal-saved-cell-active-bg) and inherited, so the probe
       // resolves it from inside the button and the assertion stays theme-independent.
       // The probe answers "no-button" when the toolbar has not painted, which is a render race
       // reported as a styling failure. Wait for the button itself first.
@@ -654,7 +654,7 @@ describe("calendar view", () => {
         const button = document.querySelector(".journal-view-toolbar [data-period='month']");
         if (!button) return "no-button";
         const probe = document.createElement("div");
-        probe.style.backgroundColor = "var(--journal-cell-active-bg)";
+        probe.style.backgroundColor = "var(--journal-cell-active-bg, var(--journal-saved-cell-active-bg))";
         button.append(probe);
         const expected = getComputedStyle(probe).backgroundColor;
         probe.remove();

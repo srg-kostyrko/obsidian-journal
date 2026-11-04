@@ -20,7 +20,7 @@ function openPopout(host: FakeHost, id: string): Window {
   return win;
 }
 
-const read = (win: Window, name = "--a"): string => win.document.documentElement.style.getPropertyValue(name);
+const read = (win: Window, name = "--a"): string => win.document.body.style.getPropertyValue(name);
 
 describe("WindowCssVariables", () => {
   it("sets variables on the main window", () => {

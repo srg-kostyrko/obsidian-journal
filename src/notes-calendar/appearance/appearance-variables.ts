@@ -9,11 +9,11 @@ import { appearanceSlice, type AppearanceSliceState } from "./slice";
 
 export function appearanceVariables(state: AppearanceSliceState): Record<string, string> {
   return {
-    "--journal-cell-today-color": colorToString(state.today.color),
-    "--journal-cell-today-bg": colorToString(state.today.background),
-    "--journal-cell-active-color": colorToString(state.active.color),
-    "--journal-cell-active-bg": colorToString(state.active.background),
-    "--journal-cell-selected-ring": colorToString(state.selectedRing),
+    "--journal-saved-cell-today-color": colorToString(state.today.color),
+    "--journal-saved-cell-today-bg": colorToString(state.today.background),
+    "--journal-saved-cell-active-color": colorToString(state.active.color),
+    "--journal-saved-cell-active-bg": colorToString(state.active.background),
+    "--journal-saved-cell-selected-ring": colorToString(state.selectedRing),
   };
 }
 

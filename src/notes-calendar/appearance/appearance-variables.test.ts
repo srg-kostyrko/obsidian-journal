@@ -18,19 +18,19 @@ describe("appearanceVariables", () => {
     };
 
     expect(appearanceVariables(state)).toEqual({
-      "--journal-cell-today-color": "var(--text-accent)",
-      "--journal-cell-today-bg": "transparent",
-      "--journal-cell-active-color": "#fff",
-      "--journal-cell-active-bg": "var(--interactive-accent)",
-      "--journal-cell-selected-ring": "var(--interactive-accent)",
+      "--journal-saved-cell-today-color": "var(--text-accent)",
+      "--journal-saved-cell-today-bg": "transparent",
+      "--journal-saved-cell-active-color": "#fff",
+      "--journal-saved-cell-active-bg": "var(--interactive-accent)",
+      "--journal-saved-cell-selected-ring": "var(--interactive-accent)",
     });
   });
 });
 
-const rootStyle = (harness: TestHarness) => harness.host.windowFor("main").document.documentElement.style;
+const rootStyle = (harness: TestHarness) => harness.host.windowFor("main").document.body.style;
 
 describe("AppearanceVariables", () => {
-  it("sets the appearance variables on the main window root", async () => {
+  it("sets the appearance variables on the main window body", async () => {
     const harness = await testContainer({ modules: [calendarAppearanceCoreModule] });
     const expected = appearanceVariables(harness.settings.getSlice(appearanceSlice).state);
 
@@ -47,6 +47,6 @@ describe("AppearanceVariables", () => {
     slice.state = { ...slice.state, selectedRing: { type: "custom", color: "#00ff00" } };
     await nextTick();
 
-    expect(rootStyle(harness).getPropertyValue("--journal-cell-selected-ring")).toBe("#00ff00");
+    expect(rootStyle(harness).getPropertyValue("--journal-saved-cell-selected-ring")).toBe("#00ff00");
   });
 });
