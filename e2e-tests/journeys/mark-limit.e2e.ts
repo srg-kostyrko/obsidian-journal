@@ -234,6 +234,37 @@ describe("decoration mark limit", () => {
     );
   });
 
+  // Each cell isolates its own stacking context, so the popover's z-index is trapped inside its
+  // cell and the cells after it would paint over the part hanging into the next row. The cell is
+  // lifted while the popover is open; the DAY cell is never in the grid's last row.
+  it("keeps the popover's overhang above the cells of the next row", async () => {
+    await openSeededCalendarView();
+
+    const cell = calendar.cell(dayAnchor(DAY));
+    const badge = cell.$('.place-left_bottom [data-testid="mark-overflow"]');
+    await badge.waitForDisplayed({ timeoutMsg: "the overflow badge did not render" });
+    const popover = cell.$('.place-left_bottom [data-testid="mark-overflow-popover"]');
+
+    const probe = await settled(async () => {
+      if (!(await hoverAfresh(badge, popover))) return null;
+      return browser.execute((anchor: string) => {
+        const host = document.querySelector(`.notes-month-view__day[data-anchor="${CSS.escape(anchor)}"]`);
+        const el = host?.querySelector(".mark-overflow__popover");
+        if (host == null || !el?.classList.contains("mark-overflow__popover--placed")) return null;
+        const box = el.getBoundingClientRect();
+        const x = box.left + box.width / 2;
+        const y = box.bottom - 3;
+        return {
+          overhangs: y > host.getBoundingClientRect().bottom,
+          inPopover: el.contains(document.elementFromPoint(x, y)),
+        };
+      }, dayAnchor(DAY));
+    }, "the popover's hit test below its cell");
+
+    expect(probe.overhangs).toBe(true);
+    expect(probe.inPopover).toBe(true);
+  });
+
   // A popover hangs off its badge's right edge, so the left_bottom badge of a first-column cell
   // opens one that reaches past the surface it draws over — the seeded view's right sidebar here.
   it("keeps the popover inside the surface it opens over", async () => {
