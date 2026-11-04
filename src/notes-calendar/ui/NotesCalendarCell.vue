@@ -98,12 +98,12 @@ const hover = useModifierHoverPreview();
   color: var(--journal-cell-active-color, var(--journal-saved-cell-active-color, var(--text-on-accent)));
 }
 /* Raised here, not in the decoration: only this cell's isolated context has layers to clear, and
-   z-index in the shared decoration would leak into every other host's stacking context. */
+   z-index in the shared decoration would leak into every other host's stacking context. The border
+   is left out on purpose: it is decoration, not content, so the selected ring paints above it. */
 .notes-calendar-cell :deep(.cell-decoration__content) {
   position: relative;
   z-index: 2;
 }
-.notes-calendar-cell :deep(.cell-decoration__border),
 .notes-calendar-cell :deep(.cell-marks),
 .notes-calendar-cell :deep(.decoration-corner) {
   z-index: 2;

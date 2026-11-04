@@ -116,6 +116,13 @@ describe("paint order of highlight states around a decoration", () => {
     expect(await decorationBackgroundHex(cell)).toBe(DECORATED_BG);
   });
 
+  it("the selected ring sits above a decoration border", async () => {
+    await cell.$(".cell-decoration__border").waitForExist({ timeoutMsg: "the decorated cell rendered no border" });
+    expect(await px(cell, ".cell-decoration__border", "border-top-width")).toBe("3px");
+    expect(await px(cell, ".cell-decoration__border", "z-index")).toBe("auto");
+    expect(await layerZ(cell, "selected")).toBe("1");
+  });
+
   it("the open-note fill stays under the decoration", async () => {
     expect(await layerZ(cell, "active")).toBe("-1");
   });

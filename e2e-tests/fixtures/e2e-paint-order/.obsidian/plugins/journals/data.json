@@ -58,6 +58,24 @@
               },
               "placement_x": "center",
               "placement_y": "bottom"
+            },
+            {
+              "type": "border",
+              "border": "uniform",
+              "left": { "show": true, "width": 3, "style": "solid", "color": { "type": "custom", "color": "#33cc33" } },
+              "right": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": { "type": "custom", "color": "#33cc33" }
+              },
+              "top": { "show": true, "width": 3, "style": "solid", "color": { "type": "custom", "color": "#33cc33" } },
+              "bottom": {
+                "show": true,
+                "width": 3,
+                "style": "solid",
+                "color": { "type": "custom", "color": "#33cc33" }
+              }
             }
           ]
         }
