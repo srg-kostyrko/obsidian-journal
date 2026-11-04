@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 
 ### Features
 
-- CSS snippets can now change the calendar's highlight colors without `!important`. Setting `--journal-cell-today-color`, `--journal-cell-today-bg`, `--journal-cell-active-color`, `--journal-cell-active-bg` or `--journal-cell-selected-ring` from any selector — `body`, `:root`, or the calendar itself — now wins over the colors chosen under **Calendar highlighting**, in the main window and in popout windows alike. Before, those colors were written onto each calendar directly, so a snippet only won with `!important`.
+- CSS snippets can now change the calendar's highlight colors without `!important`. Setting `--journal-cell-today-color`, `--journal-cell-today-bg`, `--journal-cell-active-color`, `--journal-cell-active-bg` or `--journal-cell-selected-ring` from any selector — `body`, `:root`, or the calendar itself — now wins over the colors chosen under **Calendar highlighting**, in the main window and in popout windows alike. Before, those colors were written onto each calendar directly, so a snippet on `body` or `:root` only won with `!important`.
 
 ## [3.6.0] - 2026-11-01
 
